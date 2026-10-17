@@ -1,0 +1,723 @@
+"""eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/STANDARD_MODE.md): the TopoGym
+adapter of the shared layer rcb_limited.py (scripts/eai_standard/, copied unchanged into every standard task). Adapted from
+robot_coding_bench's RoboWits service. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit
+(RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's own model). Logs every call to
+/data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
+
+Crash recovery (rcb_limited.Episode, STANDARD_MODE.md section 13, resume class `approx`: Genesis' GPU contact solver is
+not bit-deterministic): every executed control step is journaled (/data/journal.f64, the exact float32 row given to
+Session.step), every completed call checkpointed (rows, state hash, proprio row). After a crash run.sh exits non-zero,
+compose restarts the container (`restart: on-failure:6`) and this service rebuilds the frozen scene, replays the journal
+up to the last checkpoint and continues the SAME episode, never a reset; a hash mismatch is recorded, not fatal, unless a
+TCP is more than RCB_RESUME_MAX_DEV_M from its checkpoint.
+
+Episode end and grading (two passes: the live episode, then one fresh replay that also records the video): when the
+episode ends (success, the task's failure predicate, the wall clock, an error) the service writes /data/trajectory.npz and
+/data/episode.json (the live result and final-state hash, `live_rows`: the rows the live episode executed). The collect
+hook's SIGUSR1 makes it exit, releasing the GPU; environment/sim/finalize.sh then replays the trajectory once in a fresh
+process, rendering /data/replay.mp4 during that replay, and completes /data/final.json.
+
+Differences from the RoboWits service, all from the simulator: the physics runs on the GPU, so `deterministic` (live and
+replay state hashes equal) is reported and not required; rows are streamed at the task's control rate (control_hz,
+physics_substeps physics steps each); the joint action is per arm the arm joint targets plus the frozen instance gripper target;
+`ee_pose` is solved by bounded least squares over the robot's Genesis forward kinematics; a task whose own failure
+predicate fires (e.g. touching the buzz wire) ends the episode with reason "task_failed"; a family may enable passive grasp
+assistance (the gripper `command` text of /spec says the rule). Genesis' CUDA context belongs to the thread that built the
+scene, so every simulator call runs on the main thread: the HTTP layer serves from a thread and hands submit / observe /
+kinematics, the per-call checkpoint's state hash and proprio row, and the episode end to the main thread's job queue."""
+from __future__ import annotations
+import json, math, os, queue, sys, threading, time, traceback
+import numpy as np
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import rcb_limited as L  # noqa: E402
+
+PROTOCOL = L.PROTOCOL
+DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
+TASK = os.environ.get("RCB_TASK", "cube_pick_place"); INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__), "instance.json"))
+OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
+MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
+LOCK = threading.Lock()
+E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None,
+     "t_first": None}   # t_first: the agent's first request to this service (its clock starts there; main's #163 rule)
+JOBS: queue.Queue = queue.Queue()      # simulator work, executed in order by the main thread
+PID_FILE = os.path.join(DATA, "server.pid")
+# Crash-safe episode bookkeeping, set up before the scene is built (start count, back-off, startup watchdog); the journal row
+# is the action row (its width from the frozen instance: the scene does not exist yet)
+EP = L.Episode(DATA, dim=int(json.load(open(INSTANCE))["action_dim"]), resume="approx")
+EP.startup()
+log = EP.log
+
+
+def on_main(fn, *a):
+    """Run fn on the main thread (the owner of the CUDA context) and return its result or raise its exception."""
+    if threading.current_thread() is threading.main_thread():
+        return fn(*a)
+    done, box = threading.Event(), {}
+
+    def job():
+        try:
+            box["r"] = fn(*a)
+        except BaseException as exc:  # noqa: BLE001 — handed back to the HTTP thread
+            box["e"] = exc
+        finally:
+            done.set()
+    JOBS.put(job); done.wait()
+    if "e" in box:
+        raise box["e"]
+    return box["r"]
+
+
+def ctrl_steps() -> int:
+    return int(S.n_steps) if E["ready"] else 0
+
+
+# Episode ends that are infrastructure failures, never the agent's: a simulator error, and a numerically unstable simulation
+# (rcb_topogym.SIMULATOR_INSTABILITY: a cloth particle faster than PARTICLE_SPEED_LIMIT_M_S, before the task's own failure
+# predicates; finalize.sh applies the same rule to the replay).
+INFRA_REASONS = ("error", "simulator_instability")
+
+
+def instability_fields() -> dict:
+    """The breakdown evidence and the live episode's evidence: its review events (deep task contacts: a success with any
+    is held for review by the grader, rcb_topogym.CONTACT_RULE) and its forcing events (rcb_topogym.FORCING: evidence only)."""
+    ready = E.get("ready")
+    return {"simulator_instability": E["reason"] == "simulator_instability", "instability": getattr(S, "instability", None),
+            "review": S.monitor.review() if ready else None, "forcing": S.monitor.forcing() if ready else None}
+
+
+def write_final() -> None:
+    if L.final_verdict(DATA):           # finalize.sh's verdict, or a give-up after crashes: never overwritten
+        return
+    n = int(E.get("episode_control_steps") or ctrl_steps())
+    L._write_json(os.path.join(DATA, "final.json"), {
+        "success": bool(E["success"]), "infra_error": int(E["reason"] in INFRA_REASONS), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+        "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK,
+        "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"),
+        "live_sha": E.get("live_sha"), **EP.final_fields()})
+
+
+def dump() -> None:
+    """The episode is over: save the recorded trajectory and the live result for the collect hook (main thread). Rows
+    recorded after the live end (the rest of the chunk that ended it, watch holds) were never commanded live: `live_rows`
+    tells the replay where the live episode stopped."""
+    if E.get("dumped"): return
+    E["dumped"] = True
+    try:
+        acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
+        n_live = E.get("end_row"); E["live_rows"] = int(len(acts) if n_live is None else min(int(n_live), len(acts)))
+        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
+                                                                            "reason": E["reason"], "live_rows": E["live_rows"], "resumes": EP.resumes})
+    except Exception as exc:  # noqa
+        traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
+    n = int(E.get("episode_control_steps") or 0)
+    L._write_json(os.path.join(DATA, "episode.json"), {
+        "success": bool(E["success"]), "infra_error": int(E["reason"] in INFRA_REASONS), **instability_fields(), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+        "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
+        "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+    write_final()
+
+
+def finish(reason: str) -> None:
+    if E["done"]: return
+    E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
+    E.setdefault("end_row", len(S._recording) if S._recording is not None else None)   # timeout / error / guard ends
+    if not E["success"]:
+        try: E["success"] = check_success()
+        except Exception: pass
+    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
+    dump()
+
+
+# ---------------------------------------------------------------- scene
+import rcb_topogym as M  # noqa: E402
+try:
+    S = M.Session(TASK, instance=INSTANCE, strict=True)
+    M.atomic_json(os.path.join(DATA, "startup_binding.json"), dict(
+        instance_exact=S.instance_exact, runtime_binding=S.runtime_binding,
+        instance_generated=bool(getattr(S, "instance_generated", False)), instance_sha=S.instance_sha,
+        instance_realized=bool(getattr(S, "instance_realized", False)), assets_exact=bool(getattr(S, "assets_exact", True)),
+        initial_state=getattr(S, "initial_state", None)))
+except M.InstanceMismatch as exc:
+    # This frozen instance is not evaluable. Do not restart it as a GPU crash
+    # or wait for a trajectory that could never have been executed.
+    EP.scene_built()  # cancel the startup watchdog before clean exit
+    # The record is final and complete: `gave_up` and `deterministic` make it a verdict for rcb_limited.final_verdict, so
+    # the collect hook's `rcb_limited.py end` returns at once instead of waiting out its timeout and overwriting the
+    # reason. This host cannot reconstruct the instance: an infrastructure error, not the agent's failure.
+    M.atomic_json(os.path.join(DATA, "final.json"), {
+        "success": False, "replay_success": False, "deterministic": False, "done": True, "finalized": True, "gave_up": True,
+        "instance_mismatch": True, "infra_error": 1, "reason": "instance_mismatch",
+        "error": str(exc), "task": TASK, "protocol": PROTOCOL, **EP.final_fields()})
+    raise SystemExit(0)
+EP.scene_built()                        # the startup watchdog stands down: a long resume replay is not a hang
+E["ready"] = True                       # S exists: ctrl_steps() counts its control steps (a resume replay included)
+CTRL_HZ = float(S.control_hz); SUBSTEPS = int(S.physics_substeps)
+CAMS = list(S.VIDEO_CAMERAS)
+CAM_INFO = S.camera_info(CAMS)
+# The images one call may hold. Every frame a call records stays in memory until its response is sent, and building the
+# response takes about three times the frames' size (a per-frame depth map costs about three RGB frames more): a call
+# without a bound could exhaust the sidecar's memory, and a service killed for memory is never the agent's failure
+# (PROTOCOL §2.6), so one large request could void a failed trial. MAX_FRAMES images of 848x480 peak at about 7.2 GB of
+# the sidecar's 16 GiB (measured on the layer's Recorder and encode_response).
+MAX_FRAMES = 2000                  # /spec max_frames_per_call: cameras x frames; a frame with per-frame depth counts DEPTH_FRAME
+DEPTH_FRAME = 4
+MOUNT = {c: ("static" if CAM_INFO[c]["mount"]["type"] == "static" else f"on the robot link {CAM_INFO[c]['mount']['parent_link']}") for c in CAMS}
+ARMS = list(S.robot.arms)
+LAYOUT = list(S.action_layout)
+ARM = {a: (S.robot.arm_slice[a], S.robot.grip_index[a]) for a in ARMS}
+
+
+def joint_limits() -> dict:
+    return {n: [float(l[0]), float(l[1])] for n, l in zip(LAYOUT, S.robot.limits)}   # float32-exact (rcb_topogym): a row at a limit is not clipped
+LIMITS = joint_limits(); LIM_ARR = np.array([LIMITS[n] for n in LAYOUT], dtype=np.float64)
+
+R_SPEC = S.robot_spec(); K_SPEC = S.kinematics_spec()
+
+# The agent-facing frame (user 2026-10-13: the table height is never disclosed), called the world frame in every text the
+# agent sees (as main's other services call theirs) and "the robot frame" in this file's comments: origin at the robot's
+# kinematic root link on its mounting, axes as the simulator's world (+z up). Everything this service gives or takes (proprio
+# TCP poses, ee_pose targets, /kinematics, camera extrinsics) is in it; the simulator's own world frame (origin on the floor)
+# stays in this process. Physics, the recorded joint rows, graders and state hashes do not depend on it.
+BASE_LINK = S.robot.entity.links[0].name
+T_WR = M._T(R_SPEC["base"]["pose"][:3], R_SPEC["base"]["pose"][3:])        # robot frame -> world (the root link's pose)
+T_RW = np.eye(4); T_RW[:3, :3] = T_WR[:3, :3].T; T_RW[:3, 3] = -T_WR[:3, :3].T @ T_WR[:3, 3]
+Q_WR = M.mat_to_quat(T_WR[:3, :3]); Q_RW = Q_WR * np.array([1.0, -1.0, -1.0, -1.0])
+R_SPEC["base"] = {"type": "fixed", "pose": [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                  "note": f"the origin of the world frame (the robot's kinematic root link {BASE_LINK}; x y z qw qx qy qz)"}
+
+
+def _qmul(a, b) -> np.ndarray:
+    w1, x1, y1, z1 = a; w2, x2, y2, z2 = b
+    return np.array([w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2, w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+                     w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2, w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2])
+
+
+def _moved(T, pos, quat, q_T) -> tuple[np.ndarray, np.ndarray]:
+    return T[:3, :3] @ np.asarray(pos, dtype=np.float64) + T[:3, 3], _qmul(q_T, np.asarray(quat, dtype=np.float64))
+
+
+def to_robot(pos, quat):
+    """A world pose (position, quaternion wxyz) -> the robot frame."""
+    return _moved(T_RW, pos, quat, Q_RW)
+
+
+def to_world(pos, quat):
+    """A robot-frame pose (position, quaternion wxyz) -> the simulator's world frame."""
+    return _moved(T_WR, pos, quat, Q_WR)
+
+
+def camera_to_robot(info: dict) -> dict:
+    """A camera_info entry (or a static mount) with its world extrinsics re-expressed in the robot frame: extrinsic_cv
+    (world -> camera) becomes robot -> camera, cam2world_gl (camera -> world) camera -> robot. Intrinsics and a link
+    mount's link_T_cam_cv are relative already."""
+    out = dict(info)
+    if "extrinsic_cv" in out:
+        E = np.eye(4); E[:3] = np.asarray(out["extrinsic_cv"], dtype=np.float64)
+        out["extrinsic_cv"] = M._r((E @ T_WR)[:3])
+    if "cam2world_gl" in out:
+        out["cam2world_gl"] = M._r(T_RW @ np.asarray(out["cam2world_gl"], dtype=np.float64))
+    if isinstance(out.get("mount"), dict):
+        out["mount"] = camera_to_robot(out["mount"])
+    return out
+
+
+EE = [f"{a}_{k}" for a in ARMS for k in ("x", "y", "z", "qw", "qx", "qy", "qz")]
+N = len(LAYOUT)
+PROPRIO_LAYOUT = (LAYOUT + EE + [f"{n}_cmd" for n in LAYOUT] + [f"{n}_vel" for n in LAYOUT]
+                  + [f"{a}_gripper_opening_m" for a in ARMS] + [f"{n}_effort" for n in LAYOUT])
+# The gripper entries of joint_pos / joint_cmd / joint_vel are in the gripper's COMMAND space (the frozen instance's
+# gripper_space): an opening width in metres, or the native drive coordinate (ALOHA: the finger rail, m; Robotiq 2F-85: the
+# driver joint, rad, 0 = open .. 0.8 = closed), so a measured row is a valid joint_position row. The gripper_opening group
+# is the measured pad gap in metres in both spaces (Session.gripper_width; review 2026-10-10 R2 M7: in the native space it
+# repeated the drive coordinate under a description that called it an opening).
+NATIVE = S.gripper_space == "native"
+GRIP_WORDS = "; ".join(f"{LAYOUT[ARM[a][1]]}: {g['command_unit']}, {g['open_target']:g} = open .. {g['closed_target']:g} = closed"
+                       for a, g in ((a, R_SPEC["grippers"][a]) for a in ARMS)) if NATIVE else ""
+PROPRIO_GROUPS = {   # name: [first column, count, meaning]
+    "joint_pos": [0, N, "measured joint positions in the joint_position layout: per arm its arm joints (rad) + "
+                        + (f"its gripper's native drive coordinate, in the unit and direction of the gripper command ({GRIP_WORDS}; "
+                           "robot_spec.grippers). It is a drive coordinate, not an opening width: see the gripper_opening group"
+                           if NATIVE else "its gripper opening (m)")],
+    "tcp_pose": [N, 7 * len(ARMS), "measured tool-frame (TCP) pose per arm, in the order of the arms: x y z (m) + qw qx qy qz, world frame (spec world.frame); "
+                                   f"the ee_pose action's frame (kinematics tcp_frames {K_SPEC['tcp_frames']})"],
+    "joint_cmd": [N + 7 * len(ARMS), N, "the commanded joint targets being tracked (joint_position layout): the last streamed row step"],
+    "joint_vel": [2 * N + 7 * len(ARMS), N, "measured joint velocities (rad/s; the gripper entries: "
+                                            + ("the rate of the native drive coordinate, in its unit per second)" if NATIVE else "opening rate, m/s)")],
+    "gripper_opening": [3 * N + 7 * len(ARMS), len(ARMS), "measured opening of each gripper (m), in the order of the arms: the gap "
+                                                          "between the two finger pads as they are now (0 = the pads touch; fully open "
+                                                          "is about robot_spec.grippers[arm].opening_m[1]); a gripper closed on a "
+                                                          "rigid object stops above 0 (on cloth, which has no thickness "
+                                                          "between the pads, it reads 0)"
+                                                          + (". Always metres, whatever the unit of the gripper command" if NATIVE else "")],
+    "joint_effort": [3 * N + 8 * len(ARMS), N, "the force each PD drive applied (N m; gripper entries: the actuated finger drive): a "
+                                               "motor-current analogue that rises when the arm pushes against something"],
+}
+WORLD_FRAME = (f"RoboARC's world frame: origin at the robot's root link ({BASE_LINK}) on its mounting, +z up, the table top horizontal; "
+               "no positions of the scene are given; every pose, camera extrinsic and kinematics answer of this service is in it "
+               "(robot_spec.base)")
+SPEC = {
+    "gripper_space": S.gripper_space,
+    "instance_binding_id": (S.runtime_binding or {}).get("binding_id"),
+    "protocol": PROTOCOL, "protocol_compat": L.COMPAT, "simulator": f"topogym ({S.engine_name(True)}, Nyx RGB)", "robot": R_SPEC["name"],
+    "task_text": S.spec["text"], "control_hz": CTRL_HZ, "physics_substeps": SUBSTEPS, "max_chunk_s": MAX_CHUNK_S, "max_watch_s": MAX_WATCH_S,
+    "max_frames_per_call": MAX_FRAMES,
+    "cameras": {c: {"rgb": True, "depth": True, "mounted": MOUNT[c], "resolution": list(CAM_INFO[c]["image_size"]), "calibration_in_obs": OBS_CALIBRATION,
+                    "intrinsic_cv": CAM_INFO[c]["intrinsic_cv"], "mount": camera_to_robot(CAM_INFO[c]["mount"]), "depth_range_m": CAM_INFO[c]["depth_range_m"]} for c in CAMS},
+    "default_cameras": list(CAMS),
+    "action_types": {
+        "joint_position": {"dim": N, "layout": LAYOUT, "units": ("rad for arm joints; native gripper drive targets (ALOHA m, Robotiq rad), see robot_spec.grippers" if S.gripper_space == "native" else "rad for the arm joints; gripper opening width in metres, 0 = closed .. the limit = open"),
+                           "limits": LIMITS,
+                           "semantics": f"absolute joint targets tracked by the robot's PD controllers, streamed at the {CTRL_HZ:g} Hz control rate; rows "
+                                        f"`dt` apart (a multiple of 1/{CTRL_HZ:g} s), hold or linear interpolation between rows (the gripper switches "
+                                        "at the row); out-of-limit values are clipped and reported. An arm joint target moves at most "
+                                        f"{M.JOINT_STEP_LIMIT_RAD:g} rad per control step ({M.JOINT_STEP_LIMIT_RAD * CTRL_HZ:g} rad/s, as ee_pose rows): "
+                                        "a row asking for more takes the control steps it needs and is reported in clipped[]. "
+                                        f"No gripper target goes lower than {M.table_guard_words()}: a target "
+                                        "that would is stopped there (reported in clipped[])"},
+        "ee_pose": {"dim": 8 * len(ARMS), "layout": [f"{a}_{k}" for a in ARMS for k in ("x", "y", "z", "qw", "qx", "qy", "qz", "gripper")],
+                    "frame": WORLD_FRAME, "quaternion": "wxyz, unit norm",
+                    "gripper_units": "same command space and limits as joint_position / robot_spec.grippers",
+                    "semantics": "each row is solved by inverse kinematics (bounded least squares on the robot's forward kinematics, no collision "
+                                 "checking) and driven to in joint space; `dt` is ignored (the joint distance sets the duration); an arm whose IK "
+                                 "fails holds and is reported in plan[]. A solution more than "
+                                 f"{M.IK_JUMP_LIMIT_RAD:g} rad from the current joints on any joint is refused the same way (for a small "
+                                 "pose change that is another IK branch, which would swing the arm): split long moves into rows. The "
+                                 f"table guard applies as for joint_position (no gripper target lower than {M.table_guard_words()}, "
+                                 "reported in clipped[])",
+                    "note": "the pose is each gripper's tool frame (TCP; axes in robot_spec.tcp); same convention as the proprio TCP poses, so "
+                            "an observed pose is a valid target"},
+        "not_yet": ["joint_delta", "joint_velocity", "ee_delta", "joint_torque"]},
+    "proprio_layout": PROPRIO_LAYOUT,
+    "proprio_groups": PROPRIO_GROUPS,
+    "static": {},                       # nothing about where things are (standard mode); the task text names the objects
+    "world": {"frame": WORLD_FRAME, "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
+              "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes "
+                             "(x right, y up, z backward)"},
+    # no step budget (budget.steps stays null: the wall clock is the budget), but a technical episode cap (PROTOCOL §4.5,
+    # max_control_steps): the tooling's runaway guard (rcb_topogym.MAX_STEPS) ends the episode (reason step_guard) at
+    # that many control steps, /observe watches included
+    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800")),
+               "clock": "time_s and elapsed_s count from your first request to the service; time_left_s is wall_clock_s minus "
+                        "that, so it never runs out before the harness's limit does"},   # STANDARD_MODE §5 (the 2.2 layer's key)
+    "max_control_steps": int(S.max_steps),
+    "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
+                "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up (budget.wall_clock_s, "
+                "counted from your first request to this service, any endpoint; meta time_s / time_left_s), after "
+                f"{int(S.max_steps)} control steps (max_control_steps, a technical cap: reason step_guard, graded as it stands), or on a "
+                "simulator error; a simulator "
+                f"breakdown (a non-finite state, any cloth particle faster than {M.PARTICLE_SPEED_LIMIT_M_S:g} m/s, an invalid "
+                f"soft-body solver state, a rigid task contact deeper than {M.BREAKDOWN_PENETRATION_M * 1000:g} mm) ends it with "
+                f"reason {M.SIMULATOR_INSTABILITY}, graded as an infrastructure error, not as the task's failure, unless an arm was "
+                f"forcing (an arm drive at {M.FORCING['near_cap']:.0%} of its torque cap or more while the gripper, or a part it "
+                f"holds, presses on something with {M.FORCING['contact_n']:g} N or more) within the {M.FORCING['attribution_s']:g} s "
+                f"before (reason {M.FORCED_BREAKDOWN}: the agent's failure); forcing itself and task-contact penetration do not end "
+                "it (meta safety records them), but a success with a deep task contact (meta safety review) is held for review "
+                "instead of credited automatically; the recorded trajectory is then replayed once in a fresh process and graded"),
+    "robot_spec": R_SPEC,
+    "kinematics": K_SPEC,
+    "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
+              "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE,
+              "source": f"{S.engine_name()} geometric depth at the same camera rig and pixels as the Nyx RGB (the distance along the optical axis); "
+                        "it may differ from the RGB at transparent surfaces"},
+}
+L.check_spec(SPEC)                      # refuse to start with an incomplete spec or a forbidden field
+
+
+def check_success() -> bool:
+    return S.success()
+
+
+def proprio_row() -> np.ndarray:
+    q = S.joint_positions()
+    ep = [np.concatenate(to_robot(*S.ee_pose(a))) for a in ARMS]
+    # gripper_opening: the measured pad gap (m) in both gripper spaces. Session.gripper_width only reads the finger links'
+    # collision vertices (topogym.robot.grasp_geometry: "never issue robot commands"); q's gripper entry is that gap only in
+    # the width space, and the native drive coordinate otherwise
+    return np.concatenate([q, *ep, S.hold_action(), S.joint_velocities(), [S.gripper_width(a) for a in ARMS], S.joint_efforts()]).astype(np.float32)
+
+
+def grab(cameras: list[str], want_depth: bool) -> tuple[dict, dict]:
+    f = S.env.sensor_frame(depth=want_depth)
+    rgb = {c: np.ascontiguousarray(np.asarray(f.rgb[c])[..., :3]) for c in cameras}
+    return rgb, ({c: np.asarray(f.depth[c], dtype=np.float32) for c in cameras} if want_depth else {})
+
+
+def extrinsics(cameras: list[str]) -> dict:
+    meta = S.env.sensor_frame().camera_metadata
+    return {c: (np.asarray(meta[c]["T_camera_cv_from_world"], dtype=np.float64) @ T_WR)[:3] for c in cameras}
+
+
+def calib(cameras: list[str]) -> dict:
+    return {c: camera_to_robot({k: v[k] for k in ("intrinsic_cv", "extrinsic_cv", "cam2world_gl", "image_size")})
+            for c, v in S.camera_info(cameras).items()}
+
+
+def frames_ok(cams: list, steps: int, fps: int, meta: dict) -> None:
+    """400 (ValueError), before anything is executed, for a call that would hold more than MAX_FRAMES images: `steps`
+    control steps recorded at `fps`, the recorder's first and last frames included."""
+    deep = L.depth_mode(meta) in ("frames", "legacy")
+    try:
+        L.check_frames(len(cams) * (DEPTH_FRAME if deep else 1), int(steps * fps / CTRL_HZ) + 2, limit=MAX_FRAMES)
+    except ValueError as exc:
+        raise ValueError(f"{exc}" + (f" (here a frame with per-frame depth counts {DEPTH_FRAME} images)" if deep else "")) from None
+
+
+class Rec(L.Recorder):
+    """The call's recorder, keeping the image budget while the call runs: how many control steps an ee_pose row or a
+    speed-limited joint row takes is known only then. At the budget it takes no more frames -- the motion goes on, the
+    last frame is always taken -- and meta["frames_skipped"] counts the frames left out."""
+    skipped = 0
+
+    def _capture(self, last: bool) -> None:
+        per = len(self.cams) * (DEPTH_FRAME if self.mode in ("frames", "legacy") else 1)
+        if not last and per * (len(self.steps) + 2) > MAX_FRAMES:
+            self.skipped += 1
+            return
+        super()._capture(last)
+
+
+def recorder(cams: list[str], fps: int, meta: dict) -> L.Recorder:
+    return Rec(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ, time_clock=lambda: S.sim_time_s, fps=fps)
+
+
+# RoboARC's declared safety telemetry (PROTOCOL §4.5; main's docs/benchmarks/roboarc.md, "Safety readings in
+# standard mode"): meta["safety"] carries exactly the fields rcb_topogym._SafetyMonitor.read returns, as on main, with
+# the names of the parts involved (user decision 2026-10-13: names are allowed in standard mode; only positions / poses
+# in the simulator's world frame, the table height and physics parameters are withheld). The fields are forces, depths
+# (mm), ratios, times, counts and names; the table guard's asked_mm / stopped_mm are heights relative to the tabletop.
+# None holds a position or pose, so nothing here needs the robot frame; a field added later that does must go through
+# to_robot first.
+SAFETY_PUBLISHED = ("rules", "scope", "forcing", "task_contact_mm", "held_finger_contact_mm", "review", "soft_volume_ratio",
+                    "attachment_stretch_mm", "table_guard", "ik_jumps")
+
+
+def robot_felt(safety: dict) -> dict:
+    """Session.safety() as published in meta["safety"]: the declared fields (SAFETY_PUBLISHED), part names as they are."""
+    return {k: v for k, v in safety.items() if k in SAFETY_PUBLISHED}
+
+
+def meta_common(cams) -> dict:
+    n = ctrl_steps()
+    return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": S.physics_steps, "sim_time_s": S.sim_time_s,
+            "time_s": round(agent_time(), 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - agent_time(), 1)),
+            "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
+            "safety": robot_felt(S.safety()), **({"cameras": calib(cams)} if OBS_CALIBRATION else {})}
+
+
+def save_call_evidence(idx: int, meta: dict, rec: L.Recorder) -> None:
+    d = os.path.join(DATA, "calls", f"{idx:06d}"); os.makedirs(d, exist_ok=True)
+    json.dump(meta, open(os.path.join(d, "meta.json"), "w"))
+    try:
+        from PIL import Image
+        for c in rec.cams:
+            if rec.frames[c] and rec.frames[c][-1] is not None: Image.fromarray(np.ascontiguousarray(rec.frames[c][-1])).save(os.path.join(d, f"last_{c}.jpg"), quality=85)
+    except Exception:  # noqa
+        pass
+
+
+# ---------------------------------------------------------------- executing chunks
+def clip_joint_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
+    r = row.copy()
+    for j, name in enumerate(LAYOUT):
+        lo, hi = LIM_ARR[j]
+        if r[j] < lo or r[j] > hi:
+            clipped.append({"row": ri, "index": int(j), "reason": f"{name} limit [{lo:.3f},{hi:.3f}]"}); r[j] = float(np.clip(r[j], lo, hi))
+    return r
+
+
+def ctrl_step(a: np.ndarray, rec: L.Recorder, *, row_start=False, notes: list | None = None, ri: int | None = None) -> bool:
+    """One recorded control step. True when the call must stop here: the episode is over (runaway guard, the task's own
+    failure predicate, the wall clock), or the call ran past max_call_wall_s / its client hung up (EP.journal). A gripper
+    target the table guard stopped (rcb_topogym._TableGuard) is reported in `notes` (meta["clipped"]), once per row and arm."""
+    if deadline_reached():
+        finish("timeout")
+        return True
+    row = np.asarray(a, dtype=np.float32)   # exactly what the simulator gets (Session.step casts to float32): the journal row
+    if EP.poll_stop():
+        return True
+    before = S.n_steps
+    guard = S.step(row)
+    if S.n_steps != before and row_start:
+        E["step"] += 1
+    if S.n_steps != before and S.last_guard and notes is not None:
+        for arm in ARMS:
+            e = S.last_guard.get(arm)
+            reason = f"table guard: the {arm} gripper"
+            if e and not any(n["row"] == ri and n["reason"].startswith(reason + " ") for n in notes[-8:]):
+                notes.append({"row": ri, "index": int(ARM[arm][1]), "reason": (
+                    f"{reason} would have reached {e['asked_mm']:+.1f} mm from the tabletop; its target stopped at "
+                    f"{e['stopped_mm']:+.1f} mm (no gripper target goes lower than {M.table_guard_words()})")})
+    stop = EP.journal(S.hold_action(), physics_steps=S.last_step_ticks) if S.n_steps != before else EP.poll_stop()
+    rec.tick()
+    if S.episode_end is not None and "end_row" not in E and S._recording is not None:
+        E["end_row"] = len(S._recording)      # the row at which the live episode ended (success or a failure predicate)
+    if S.episode_end is not None: finish(S.episode_end)
+    elif guard: finish("step_guard")
+    return E["done"] or stop
+
+
+def run_joint_position(A: np.ndarray, dt: float, interp: str, rec: L.Recorder, clipped: list) -> None:
+    """Rows `dt` apart (linear interpolation or hold). Joint-speed limit (rules 2026-10-03, as ee_pose rows): an arm joint
+    target moves at most rcb_topogym.JOINT_STEP_LIMIT_RAD per control step; a row that asks for more takes the control
+    steps it needs (reported in meta["clipped"]), so every row is still reached."""
+    steps_per_row = L.control_periods(dt, CTRL_HZ)
+    q_prev = np.asarray(S.hold_action(), dtype=np.float64)
+    grips = [ARM[a][1] for a in ARMS]
+    arm_cols = [j for j in range(N) if j not in grips]
+    limit = M.JOINT_STEP_LIMIT_RAD
+    for ri, row in enumerate(A):
+        target = clip_joint_row(row.astype(np.float64), clipped, ri)
+        reach = np.abs(target[arm_cols] - q_prev[arm_cols])
+        n = max(steps_per_row, int(math.ceil(float(reach.max(initial=0.)) / limit - 1e-6)))
+        slowed = False
+        for k in range(1, n + 1):
+            a = target.copy() if interp == "hold" or k > steps_per_row else q_prev + (target - q_prev) * (k / steps_per_row)
+            a[grips] = target[grips]                          # the gripper switches at the row
+            cmd = np.asarray(S.hold_action(), dtype=np.float64)
+            d = a[arm_cols] - cmd[arm_cols]
+            if np.any(np.abs(d) > limit + 1e-6):
+                a[arm_cols] = cmd[arm_cols] + np.clip(d, -limit, limit)
+                slowed = True
+            if ctrl_step(a, rec, row_start=k == 1, notes=clipped, ri=ri): return
+        if slowed:
+            j = arm_cols[int(np.argmax(reach))]
+            clipped.append({"row": ri, "index": int(j), "reason": (
+                f"speed: {LAYOUT[j]} asked to move {float(reach.max()):.3f} rad "
+                f"{'at once' if interp == 'hold' else f'in {steps_per_row} control step(s)'}; joint "
+                f"targets move at most {limit:g} rad per control step ({limit * CTRL_HZ:g} rad/s), so this row took {n} "
+                "control steps")})
+        q_prev = target
+
+
+def run_ee_pose(A: np.ndarray, rec: L.Recorder, plan: list, clipped: list) -> None:
+    """IK per row from the measured joints. A solution farther than rcb_topogym.IK_JUMP_LIMIT_RAD from them on any joint
+    is refused (rules 2026-10-03: for a small pose change that is another IK branch, which swings the arm): that arm holds
+    and plan[] says why, as for a failed IK."""
+    for ri, row in enumerate(A):
+        cur = np.asarray(S.hold_action(), dtype=np.float64); goal = cur.copy(); st = {"row": ri}
+        for i, arm in enumerate(ARMS):
+            sl, gi = ARM[arm]; off = 8 * i
+            q = row[off + 3:off + 7]; q = q / max(1e-9, float(np.linalg.norm(q)))
+            try:
+                qa, ep, er = S.ik(arm, *to_world(row[off:off + 3], q))   # the row is in the robot frame
+                if ep > 0.02 or er > 0.35:
+                    raise ValueError(f"no IK solution within 2 cm / 20 deg (residual {ep * 1000:.0f} mm / {math.degrees(er):.0f} deg)")
+                qa = np.clip(qa, LIM_ARR[sl, 0], LIM_ARR[sl, 1])
+                jump, joint = S.ik_jump(arm, qa)
+                if jump > M.IK_JUMP_LIMIT_RAD:
+                    st[arm] = (f"refused: the IK solution is {jump:.2f} rad from the current joints on {joint} (limit "
+                               f"{M.IK_JUMP_LIMIT_RAD:g} rad per ee_pose row): for a small pose change that is another IK "
+                               "branch, which would swing the arm. Split the motion into rows that change each joint by at "
+                               "most that much (for example a few cm and degrees apart), or move the joints with "
+                               "joint_position. This arm holds.")
+                else:
+                    goal[sl] = qa; st[arm] = "Success"
+            except Exception as exc:  # noqa: BLE001
+                st[arm] = f"failed: {str(exc)[:90]}"
+            goal[gi] = float(np.clip(row[off + 7], LIM_ARR[gi, 0], LIM_ARR[gi, 1]))
+        plan.append(st)
+        n = int(np.clip(math.ceil(float(np.max(np.abs(goal - cur))) / 0.04), 4, 400))   # at most ~0.04 rad per control step
+        for k in range(1, n + 1):
+            a = cur + (goal - cur) * (k / n)
+            for arm in ARMS: a[ARM[arm][1]] = goal[ARM[arm][1]]
+            if ctrl_step(a, rec, row_start=k == 1, notes=clipped, ri=ri): return
+
+
+def number(meta: dict, key: str, default: float) -> float:
+    """A request field that must be a finite number. A malformed request is a 400 (ValueError) and moves nothing
+    (PROTOCOL §4.6): null, a string, a non-finite value or a JSON integer beyond the float range (math.isfinite and
+    float() raise OverflowError on it) must never reach float() / int() as a 500, which would end the one episode as an
+    infrastructure error."""
+    v = meta.get(key, default)
+    try:
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v):
+            raise OverflowError
+        return float(v)
+    except OverflowError:
+        raise ValueError(f"{key} must be a finite number (got {repr(v)[:60]})") from None
+
+
+def request_fields(meta: dict) -> tuple[list, int, str]:
+    """The fields /submit and /observe share, checked before anything executes: cameras, video_fps, note."""
+    cams = meta.get("cameras")
+    if cams is not None and not (isinstance(cams, list) and all(isinstance(c, str) for c in cams)):
+        raise ValueError("cameras must be a list of camera names")
+    fps = number(meta, "video_fps", 10)
+    if fps != int(fps) or not 1 <= fps <= CTRL_HZ:
+        raise ValueError(f"video_fps must be an integer in [1, {CTRL_HZ:g}] (got {fps!r})")
+    note = meta.get("note")
+    if note is not None and not isinstance(note, str):
+        raise ValueError("note must be a string")
+    # each camera once, in the order asked for (a repeated name would be rendered and returned once per copy)
+    return list(dict.fromkeys(c for c in (cams or CAMS) if c in CAMS)) or CAMS, int(fps), (note or "")[:500]
+
+
+def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
+    typ = meta.get("type"); dt = number(meta, "dt", 1.0 / CTRL_HZ); interp = meta.get("interpolate", "linear")
+    cams, fps, note = request_fields(meta); video = meta.get("video", "mp4")
+    if typ not in ("joint_position", "ee_pose"): raise ValueError(f"type must be one of joint_position, ee_pose (not yet: {SPEC['action_types']['not_yet']})")
+    dim = SPEC["action_types"][typ]["dim"]
+    if A.ndim != 2 or A.shape[1] != dim: raise ValueError(f"{typ} actions must be (T, {dim}), got {list(A.shape)}")
+    if not np.all(np.isfinite(A)): raise ValueError("actions contain NaN/inf")
+    if typ == "joint_position":
+        L.control_periods(dt, CTRL_HZ)
+    if typ == "joint_position" and A.shape[0] * dt > MAX_CHUNK_S + 1e-9: raise ValueError(f"chunk longer than max_chunk_s={MAX_CHUNK_S}: {A.shape[0]} rows x {dt} s")
+    if typ == "ee_pose" and A.shape[0] > 50: raise ValueError("ee_pose: at most 50 rows per submit")
+    if interp not in ("hold", "linear"): raise ValueError("interpolate must be hold|linear")
+    if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+    # the least the rows take (a joint row: dt; an ee_pose row: 4 control steps); what they take beyond it, Rec bounds
+    frames_ok(cams, A.shape[0] * (L.control_periods(dt, CTRL_HZ) if typ == "joint_position" else 4), fps, meta)
+    rec = recorder(cams, fps, meta); clipped: list = []; plan: list = []
+    E["calls"] += 1; step0 = E["step"]
+    before = ctrl_steps(); before_ticks = S.physics_steps; rec.tick(force=True)
+    if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
+    else: run_ee_pose(A, rec, plan, clipped)
+    rec.tick(force=True, last=True)
+    succ = check_success(); E["success"] = E["success"] or succ
+    out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
+           "physics_steps_chunk": S.physics_steps - before_ticks, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
+           **({"frames_skipped": rec.skipped} if rec.skipped else {})}
+    log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
+         "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
+    save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
+    if succ: finish("success")
+    out["done"] = E["done"]; out["reason"] = E["reason"]
+    return out, rec.parts(video, fps)
+
+
+def do_observe(meta: dict) -> tuple[dict, list]:
+    cams, fps, _ = request_fields(meta)
+    seconds = number(meta, "seconds", 0); video = meta.get("video", "frames")
+    if seconds < 0 or seconds > MAX_WATCH_S: raise ValueError(f"seconds must be in [0, {MAX_WATCH_S}]")
+    if video not in ("mp4", "frames", "both", "none"): raise ValueError("video must be mp4|frames|both|none")
+    watch = seconds > 0 and not E["done"]
+    frames_ok(cams, int(round(seconds * CTRL_HZ)) if watch else 0, fps, meta)
+    rec = recorder(cams, fps, meta); before = ctrl_steps(); before_ticks = S.physics_steps
+    rec.tick(force=True, last=not watch)
+    if watch:
+        hold = np.asarray(S.hold_action(), dtype=np.float64)
+        for _ in range(int(round(seconds * CTRL_HZ))):
+            if ctrl_step(hold, rec): break
+        rec.tick(force=True, last=True)
+        succ = check_success(); E["success"] = E["success"] or succ
+        if succ: finish("success")
+    E["calls"] += 1
+    out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
+           "physics_steps_watch": S.physics_steps - before_ticks, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {})}
+    log({"ev": "observe", "call": E["calls"], "seconds": seconds, "cameras": cams, "control_steps": ctrl_steps() - before})
+    if seconds > 0: save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
+    return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
+
+
+def do_kinematics(req: dict) -> dict:
+    """/kinematics (validated by rcb_limited.parse_kinematics): the tooling's stateless FK / IK, never the simulator; poses
+    in the robot frame (world.frame), mapped to and from the simulator's world here."""
+    if req.get("op") == "ik":
+        req = {**req, "targets": {f: np.r_[to_world(p[:3], p[3:])] for f, p in req["targets"].items()}}
+    out = S.kinematics(req)
+    if out.get("op") == "fk":
+        out["poses"] = {l: [float(v) for v in np.r_[to_robot(p[:3], p[3:])]] for l, p in out["poses"].items()}
+    return out
+
+
+def status() -> dict:
+    return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
+            "elapsed_s": round(agent_time(), 1)}   # from the agent's first request, as time_s (/spec.budget.clock)
+
+
+def agent_time() -> float:
+    """Seconds since the agent's first request to the service (0 before it): the agent's clock. The service is up before
+    the agent starts (the harness installs the agent first), so the service's own start is not that moment."""
+    return 0.0 if E["t_first"] is None else time.time() - E["t_first"]
+
+
+def start_clock(t_first: float) -> None:
+    E["t_first"] = t_first
+    E["deadline"] = time.monotonic() + SPEC["budget"]["wall_clock_s"] - (time.time() - t_first)
+
+
+def touch() -> None:
+    """Every HTTP request passes here (any endpoint; a port probe that only connects does not): the first one starts the
+    agent's clock and is logged in episode.jsonl, so that a resumed service keeps it (never back to full)."""
+    if E["t_first"] is None:
+        t = time.time()
+        start_clock(t)
+        log({"ev": "first_request", "t_first": t})
+
+
+_make_handler = L.make_handler
+
+
+def _touching_handler(svc):
+    """rcb_limited's handler with touch() before every request (L.serve builds its handler with L.make_handler)."""
+    base = _make_handler(svc)
+
+    class Handler(base):
+        def do_GET(self):
+            touch()
+            return base.do_GET(self)
+
+        def do_POST(self):
+            touch()
+            return base.do_POST(self)
+    return Handler
+
+
+L.make_handler = _touching_handler
+
+
+def deadline_reached():
+    return E["ready"] and not E["done"] and time.monotonic() >= E["deadline"]
+
+
+def end_from_signal() -> None:
+    """The collect hook's SIGUSR1 (rcb_limited.Episode runs this in a thread): the main thread ends the episode, dumps it
+    and exits 0 (_end_and_exit), so the GPU is free for finalize.sh's fresh-process replay."""
+    JOBS.put(_end_and_exit)
+
+
+def _end_and_exit() -> None:
+    """Main thread, between simulator jobs. No svc.lock here: an HTTP call holds it while it waits for the main thread."""
+    E["exiting"] = True                     # the HTTP layer answers 409 from now on
+    if not E["done"]: finish("timeout")
+    else: dump()
+    log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the GPU for the fresh-process replay"})
+    if not os.path.exists(PID_FILE):        # a SIGUSR1 that came in during a resume: the hook must still see this process end
+        open(PID_FILE, "w").write(str(os.getpid()))
+    sys.stdout.flush(); sys.stderr.flush()
+    os._exit(0)
+
+
+def replay_row(row) -> None:
+    """One journaled row during a resume (main thread, no rendering asked for). As live: after the task's own episode end
+    Session.step records the row without moving the scene, and the row of that end is remembered (`live_rows`)."""
+    if not S.episode_done:
+        S.step(np.asarray(row, dtype=np.float32))
+        if S.episode_end is not None and "end_row" not in E and S._recording is not None:
+            E["end_row"] = len(S._recording)
+
+
+# ---------------------------------------------------------------- start, or resume after a crash
+E["deadline"] = float("inf")
+S.record_start()                        # before begin(): a resume replay of the journal is recorded too
+EP.begin(step_ticks=lambda row, ticks: S.step(row, _physics_steps=ticks), state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
+         start_event={"task": TASK, "eval_index": S.eval_index})
+_first = [e for e in EP.events() if e.get("ev") == "first_request"]
+if _first:                              # a resumed service: the agent's clock keeps running from its first request
+    start_clock(float(_first[0]["t_first"]))
+write_final()
+open(PID_FILE, "w").write(str(os.getpid()))
+print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
+threading.Thread(target=L.serve, daemon=True, args=(L.Service(
+    spec=SPEC, lock=LOCK, state=E, submit=lambda meta, A: on_main(do_submit, meta, A), observe=lambda meta: on_main(do_observe, meta),
+    kinematics=lambda req: on_main(do_kinematics, req), status=status, on_submit_error=lambda exc: on_main(finish, "error"), log=log,
+    episode=EP, state_sha=lambda: on_main(S.state_sha), proprio=lambda: on_main(proprio_row)),)).start()
+while True:                                 # the main thread: simulator jobs in order; signals are handled between them
+    if deadline_reached():
+        finish("timeout")
+    try:
+        job = JOBS.get(timeout=0.5)
+    except queue.Empty:
+        continue
+    job()

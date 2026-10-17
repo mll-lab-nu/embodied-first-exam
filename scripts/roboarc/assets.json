@@ -2,7 +2,7 @@
  "repo": "eai-v2-internal/robotangle-assets",
  "repo_type": "dataset",
  "private": true,
- "revision": "88e0136e1b97d0acc877190016570d2b57d170d8",
+ "revision": "cb43201c28326efc668e123770d5214928ee8103",
  "files": {
   "instances/blanket-flatten-01-i01/instance.json": "71debdd2bfead3df950615c2fd266f1d7ace9478976d81c006acedd60502df83",
   "instances/blanket-flatten-01-i01/instance_assets/initial_state/arrays.npz": "2b3ae142101f33adeaf5268fae5741c11348f2182ec522f83cfd278dba443621",
@@ -46,6 +46,20 @@
   "instances/blanket-flatten-06-i01/instance_assets/mujoco/scene.json": "3d87e2396227936c59252617c887d717f2f96d35810043c6ccd9371142972569",
   "instances/blanket-flatten-06-i01/instance_assets/mujoco/scene.xml": "dd9376a606a5bd4ce760ef1c559c0a7ccfec9dc790e1def0b319c377d9fa19ae",
   "instances/blanket-flatten-06-i01/instance_assets/mujoco_birth/settled_birth.json": "1d47043c313b115cdc20a5c6cd97230688e65082d1519d5a7ba407a0a5f73c99",
+  "instances/blanket-flatten-07-i01/instance.json": "fb9d3e022da4c9a44b1968517b23335e22162eb3ae8dd15b7f16ce8f64a0f65f",
+  "instances/blanket-flatten-07-i01/instance_assets/initial_state/arrays.npz": "285bbe9895dfa1939fdc8345b65bb756f39d4d5978808c7db3f63890dbff91f7",
+  "instances/blanket-flatten-07-i01/instance_assets/initial_state/manifest.json": "eceb21e777c39a62c1343c676807636e3e9ff221cced5d63d63b1d87c6faaaec",
+  "instances/blanket-flatten-07-i01/instance_assets/mujoco/cloth_vbd_blanket.npz": "09cd3c1c650ce0fc616cabe131c4cd9a0dea80ba401d66c03917c985923e17bc",
+  "instances/blanket-flatten-07-i01/instance_assets/mujoco/scene.json": "f1400f8d7987cce85d8e4b1fa6b4f1d5ac5d0c93301fd9d9bf3185c45602c274",
+  "instances/blanket-flatten-07-i01/instance_assets/mujoco/scene.xml": "0a2523507c864ca815d5874e1def84cf98e3a841cc107f5f0cfd0c70be60d9cc",
+  "instances/blanket-flatten-07-i01/instance_assets/mujoco_birth/settled_birth.json": "ee58a27f9bb6bcc96a5b1472faaf7d835c2a930655cebd5e1bfcdff15427fe87",
+  "instances/blanket-flatten-08-i01/instance.json": "157aeafc085987aaf18418d22f0389ffb4c60bf32b401f9ff9aedccba6568061",
+  "instances/blanket-flatten-08-i01/instance_assets/initial_state/arrays.npz": "f4238c7d0712ddba243cc27dabe75ccec63c76583aeb06d05d46af6a47bd2c4a",
+  "instances/blanket-flatten-08-i01/instance_assets/initial_state/manifest.json": "0c65613086a9c0501a6de3b1a1f78ce1724fefb208bacece62050948c2472172",
+  "instances/blanket-flatten-08-i01/instance_assets/mujoco/cloth_vbd_blanket.npz": "831b8a98f01ec7e45b7c10df8a695e6bb10034111754756914f533e0462331d3",
+  "instances/blanket-flatten-08-i01/instance_assets/mujoco/scene.json": "d17d8e381697f9b6d73cdffd1b59065158f6663a2004214378fd7d20e832534d",
+  "instances/blanket-flatten-08-i01/instance_assets/mujoco/scene.xml": "0a2523507c864ca815d5874e1def84cf98e3a841cc107f5f0cfd0c70be60d9cc",
+  "instances/blanket-flatten-08-i01/instance_assets/mujoco_birth/settled_birth.json": "29446c1cb632a35402c2e13ddf7dbafd1f633ff777ef906eac91be3c2a30589a",
   "instances/blanket-fold-01-i01/instance.json": "bf01fab351ca3606f4e90ff9f55e6bde22de33f5e6b8cec298812a59442247d6",
   "instances/blanket-fold-01-i01/instance_assets/fold_target/blanket_fold_very_easy_target.npz": "f89ec70cb04c94c7d97a72086a66cd0dc081e66d1d71ff9d4544eb682d53a8f8",
   "instances/blanket-fold-01-i01/instance_assets/initial_state/arrays.npz": "2b3ae142101f33adeaf5268fae5741c11348f2182ec522f83cfd278dba443621",
@@ -16136,6 +16150,24 @@
   "instances/knot-untying-05-i01/instance_assets/render_host/instance_assets/ipc_state/dump/dump/cuda/global_geometry/global_vertex_manager.cu/prev_positions.300": "41863f1ceeec7da60af4362b611bfadb441d9039fc7ee3eea70734d80f4d3594",
   "instances/knot-untying-05-i01/instance_assets/render_host/instance_assets/ipc_state/manifest.json": "9f8dc27b090be46357bc3cae15da510c07a3a8d66190163eb546fcc9f4acc14d",
   "instances/knot-untying-05-i01/instance_assets/render_host/runtime_binding.json": "cbeb08813e2d3ced53a0e5fcf9a2231859513d336fd94838b08ac524c19def19",
+  "instances/knot-untying-06-i01/instance.json": "a75cec6ccfbacbeed8f8b579da413873b28634156d4a5b611e705f0c05ecf294",
+  "instances/knot-untying-06-i01/instance_assets/frozen_assets/rope_volume.npz": "aceb9ddee496d3a3c6c9befef48dbc253c37ba068d3a5b4f52bfebdc4e42e1e9",
+  "instances/knot-untying-06-i01/instance_assets/mujoco/rope_rope.npz": "8b2402ac3d67187d06ce1de1c9a68a66560be7c4a9af622cd85bd7cf789022f3",
+  "instances/knot-untying-06-i01/instance_assets/mujoco/scene.json": "a79be38a404e4ded799e75c21df8705417fe223892331ceba463d7118f7f91c3",
+  "instances/knot-untying-06-i01/instance_assets/mujoco/scene.xml": "471e5a95b27f4ec730b1b8fe8757ae96b7a71bf5ae0f02ff1c31ea2b62547fac",
+  "instances/knot-untying-06-i01/instance_assets/mujoco_birth/manifest.json": "8e182074467eb1e5cab2ae74dcbea2e85c71d8571ec0cf634f94bd565899e51d",
+  "instances/knot-untying-06-i01/instance_assets/rope_birth/arrays.npz": "934c58d56802832391772dcb4ec1c9c0d5857302512e94daafc1ed27eaaee13d",
+  "instances/knot-untying-06-i01/instance_assets/rope_birth/manifest.json": "8e182074467eb1e5cab2ae74dcbea2e85c71d8571ec0cf634f94bd565899e51d",
+  "instances/knot-untying-09-i01/instance.json": "13dc76b0e7eb29a45c8484ffba4de21d604563f030d53335fa5f360eef5df218",
+  "instances/knot-untying-09-i01/instance_assets/frozen_assets/rope_volume.npz": "3d7ca75175464d5f0358821db2fa3d10712014fb835d382e21c267a23c92c9bb",
+  "instances/knot-untying-09-i01/instance_assets/mujoco/meshes/cyl0_prism32_1c8e7236c384893c.obj": "1c8e7236c384893c0a7f142737f5ec39bc2183cb966c081f45caf251e3ca40b2",
+  "instances/knot-untying-09-i01/instance_assets/mujoco/meshes/cyl1_prism32_d1b1c118f46c7eda.obj": "d1b1c118f46c7edabd9f7380ffa364a99dd73104510b6bf75f0dcde46b8d9741",
+  "instances/knot-untying-09-i01/instance_assets/mujoco/rope_rope.npz": "ce3cb49e2b2de121f93b6086ae791a9e9f6ca1e564f38b3096fa5768719f9483",
+  "instances/knot-untying-09-i01/instance_assets/mujoco/scene.json": "c2435fea4ab995dcece55ef627babccacf00534a2ac25e5107b2336f891d7879",
+  "instances/knot-untying-09-i01/instance_assets/mujoco/scene.xml": "570c2515ae6da36f50812cb1cfb4d732516e6c20da29b906ea6355a09e9d6c07",
+  "instances/knot-untying-09-i01/instance_assets/mujoco_birth/manifest.json": "641abc29b2d72ec1f12e6936bacaf6d0238aeaf5628efea9bddf8714bad37ce6",
+  "instances/knot-untying-09-i01/instance_assets/rope_birth/arrays.npz": "be6ebd6f1a9b967cc266c67906f7c90799dfa8ad8125d31c510c2854515caca4",
+  "instances/knot-untying-09-i01/instance_assets/rope_birth/manifest.json": "641abc29b2d72ec1f12e6936bacaf6d0238aeaf5628efea9bddf8714bad37ce6",
   "instances/lock-picking-01-i01/instance.json": "f269e87415def7cdd5ba74d07d77f791d2bb6a4250635abd7f86b0ee462ef7b2",
   "instances/lock-picking-01-i01/instance_assets/mujoco/meshes/key_cradle_0_0_9448f81735fc1096.obj": "9448f81735fc109672cb984b55992b2b1fa872b4d524ca49d64a5f734eb32d86",
   "instances/lock-picking-01-i01/instance_assets/mujoco/meshes/key_cradle_0_1_d5529756653d3d75.obj": "d5529756653d3d7576b067502e71edec202546b3304f429e129c1346f4bd9669",
@@ -21395,6 +21427,12 @@
   "blanket-flatten-06-i01": {
    "instance_sha256": "7167b0581345e8e1185abac4e1948f8436295f657aa3bdb0ca83d8b27743510b"
   },
+  "blanket-flatten-07-i01": {
+   "instance_sha256": "26063cd7e761ae6aac5232cc2afbcc698601bc10676f513d02d0a266819069ff"
+  },
+  "blanket-flatten-08-i01": {
+   "instance_sha256": "592b163ebf0ed4eaaeb79fcb5f520d31adf633e67c721fd8d22f7839b43a368e"
+  },
   "blanket-fold-01-i01": {
    "instance_sha256": "8a988bf31238aa4e7fd99826505ddb4a3c5de09b7275756feb58727ad933554f"
   },
@@ -21601,6 +21639,12 @@
   },
   "knot-untying-05-i01": {
    "instance_sha256": "0ba767d4482928264ae184a70b6c2aebdc5a0b8658455a13532bcc77b146a7e1"
+  },
+  "knot-untying-06-i01": {
+   "instance_sha256": "7c90b0bd046b66ab1051753df3110c40908215fbc53153e717cf3189480a2fe0"
+  },
+  "knot-untying-09-i01": {
+   "instance_sha256": "6535db4c1274b33b0b8c0daabffa56cb574a220d7c74808f2413b90d53bd3d3d"
   },
   "lock-picking-01-i01": {
    "instance_sha256": "0cfac1962bd1056b63633c26983d30fb8f15a319ddd5a9e154b165c078dae6ba"

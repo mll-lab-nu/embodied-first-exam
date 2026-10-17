@@ -41,7 +41,8 @@ Inputs, all in this directory, written by scripts/robotangle/release_rebuild.py 
   packages/      per task, the upstream texts (task.toml, README.md, instruction.md, Dockerfiles, compose files, test.sh):
                  the RoboARC base's texts it ports, renamed, with the family's own texts over them for a changed or
                  new design; and the instance's lock (runtime_binding.upstream.json)
-  oracles/       the references (privileged.npz; standard.npz is the same file)
+  oracles/       the references (privileged.npz; standard.npz is the same file, or, where release.json's standard evidence
+                 has "speed_rule", the reference re-timed to the standard service's joint-speed rule)
   assets.json    the frozen instances, not in git: the private HF dataset eai-v2-internal/robotangle-assets (the same
                  dataset as RoboARC's, instances/<base>/), pinned by commit and sha256. The image carries them; a task
                  keeps its runtime_binding.json and stages its instance from the image (/opt/robotangle/stage_instance.py).
@@ -462,6 +463,7 @@ def audit_words(s: str, rec: dict, mode: str, readme: bool) -> str:
                   "        # always computed it, complete_metrics). The birth (physics step 0) still reports it: the frozen instances'\n",
                   "        # The birth (physics step 0) still reports it: the frozen instances'\n")
     assert "(user 20" not in s, "a dated user decision note in an agent-facing text"
+    s = re.sub(r"(?m)^## Task failure conditions\n\s*\n(?=## )", "", s)   # no empty failure section (audit V6, 2026-10-17)
     if mode == "standard":
         s = re.sub(r"(?m)^- Grading: the verifier replays your trajectory twice[^\n]*\n", "", s)
         for rx in STIFFNESS:
@@ -766,6 +768,11 @@ def ref_solution(mode: str, rec: dict) -> str:
             return (f"`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `{ev['trajectory_sha256'][:16]}…`) to "
                     f"`/app/output/`: the MuJoCo reference ({route}), which the verifier scored 1 in two fresh-process "
                     f"replays on {run_words(ev)}.")
+        if ev.get("speed_rule"):     # 2026-10-14: a standard reference re-timed to the joint-speed rule (oracles/<base>/standard.npz)
+            return ("`solution/solve.sh` streams the rows of the standard reference (`solution/oracle_qpos.npy`, one "
+                    "`joint_position` row per control step, `hold`) through the client (`solution/oracle_replay.py`): "
+                    f"{ev['speed_rule']} That episode scored 1 (live and fresh replay, end state `{ev['end_state']}`) on "
+                    f"{run_words(ev)}.")
         return ("`solution/solve.sh` streams the recorded rows of the standard-mode oracle episode "
                 "(`solution/oracle_qpos.npy`, one `joint_position` row per 25 ms control step, `hold`; the same rows as the "
                 "privileged reference) through the client (`solution/oracle_replay.py`). That episode scored 1 (live and "
@@ -863,7 +870,7 @@ NEW_TASK = ("- {date}: new task of {bench} (RoboARC on MuJoCo 3.14.0, docs/bench
 
 def mujoco_changes(mode: str, rec: dict) -> list[str]:
     """The Change Log of a task of this benchmark: the entry that made it (later fixes add theirs, PROTOCOL §2.8)."""
-    date = rec["nop"]["date"]
+    date = rec.get("released") or rec["nop"]["date"]   # a base released before keeps its date (V2)
     if rec.get("template"):
         return [NEW_TASK.format(date=date, bench=BENCH, variation=rec["variation"], family=rec["family"],
                                 template=rec["template"], design=f": {rec['design']}" if rec.get("design") else "", mode=mode)]
@@ -908,6 +915,7 @@ def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
     s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + cap + "\n\n" + nop + "\n\n", s)
     log = mujoco_changes(mode, rec)      # a new benchmark: the RoboARC task's own history stays with that task
     log += fix_changes(base, mode)
+    log += [f"- {c['date']}: {c['text']}" for c in rec.get("changes", ()) if c["mode"] in (mode, "both")]   # later releases (V2)
     return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n" + "\n".join(log) + "\n"
 
 

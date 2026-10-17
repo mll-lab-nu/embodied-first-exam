@@ -1,0 +1,121 @@
+# TopoGym · knot_untying — STANDARD MODE (robot as a service, eai-standard/2.3)
+
+You control a robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw grippers on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get one
+client and one episode. **Task:** Untie and spread the rope on the tabletop until its top-down projection has no crossings or overlaps, then release it. One end of every rope is clamped to the table under a staple and stays clamped.
+
+## Success requirements
+
+- Remove projected crossings, overlaps, collapsed projected segments and exact foldbacks. Nonlocal rope segments must be separated by at least one rope diameter in the top-down view; merely changing over/under order is insufficient.
+- Keep the entire rope close to the tabletop: no point more than 1 mm below it, and no point higher than one rope diameter plus 3 mm above it.
+- Keep the rope volume intact; do not invert or collapse it to bypass the knot.
+- Release all target parts and disengage any assisted grasp. Keep at least 1 mm of verified clearance between the rope and grippers or other robot links that can move. World-fixed bases may touch the rope normally. Interior overlap with any robot part is forbidden; ambiguous bounding-volume overlaps require a native-solid geometry check.
+- During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- Invalid rope volume ends the episode in failure.
+
+## Grader details (in addition to the requirements above)
+
+- The rope is a chain of 363 rigid capsule links (4.5 mm long, 8 mm thick) joined end to end; each joint bends and twists against a spring set by the rope's material (Young's modulus 50 kPa), with damping, and stops bending at 0.9 rad, where neighbouring links touch. The links do not deform: nothing about the rope's shape or volume ends the episode. A link moving faster than 2 m/s or spinning faster than 150 rad/s is slowed by extra damping (a speed clamp); this is not reported and does not end the episode. Pulled harder than about 14.9 N, the rope's links get extra rotational inertia (a tension guard), which only removes energy and is not reported.
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it is: its joint targets become its measured joints for that control step, so it stops pushing (reported in clipped[]).
+- Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`meta["safety"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
+- Simulator breakdown (a MuJoCo instability: a non-finite or diverging acceleration, position or velocity): the episode ends as an infrastructure error, not your failure, unless an arm was forcing (even for one tick) within the 0.25 s before it: then it is your failure (forced_breakdown: what broke and what forced it).
+- The rope is 8 mm thick (radius 4 mm), so its highest point may be at most 11 mm above the tabletop.
+- "Nonlocal" means at least 16 mm apart along the rope: such parts of the rope's centreline must be at least 8 mm apart in the top view. Closer parts are exempt, but an actual crossing always counts.
+- The release check bounds the rope's volume mesh (carried rigidly by its capsule links), element by element, against the robot's collision geometries and decides the close ones with the exact solids: every robot part that can move (grippers, arm links) needs at least 1 mm of clearance from the rope; a world-fixed base may touch it. An overlap with the interior of any robot part means the release is not certified: no success while it lasts, never a failure.
+- Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): rope: 363 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically.
+- Grading: success needs the live episode to succeed (with the thresholds above) AND one fresh-process replay of its rows to succeed; a live failure is final whatever the replay shows. This family's physics runs on the GPU, which is not bit-deterministic, so that replay can differ slightly from the live episode: it runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final targets for up to 2 s (80 control steps), stopping at the first success or failure, so a confirmation that starts a few physics ticks later than in the live episode can still complete; during that hold it accepts rope speeds up to 1.25 mm/s instead of 1 mm/s. Nothing else is relaxed: every other condition, the failure conditions and the confirmation time are the same.
+
+## Rules (real-robot rules)
+- **No reset.** The episode starts when the service comes up and ends on success (all final conditions satisfied for
+  0.5 s), when your time is up, on a simulator error, or when the task's own failure predicate fires (then `meta["reason"]` is `task_failed`). Knocked-over objects stay
+  knocked over.
+- **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
+  joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
+  objects are (no object poses or positions). The success implementation and internal measurements are not exposed;
+  the task requirements above still apply in full.
+- **Your wall-clock budget is 360 min (21600 s)** (`meta["time_left_s"]` counts it down); steps are unlimited. Actions and
+  simulated time are reported as cost. One control step takes about 1.1 s of wall clock here.
+- There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
+  at `/app/output/gen.py` for the record.
+- **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
+  what you look at and where you store it is your code's decision.
+
+## Startup and long-running commands
+
+- Scene initialization and kernel compilation can take minutes. Actual time depends on the task, hardware, and load.
+  Quiet logs during initialization do not by themselves mean failure. Use `python -u` for unbuffered script output.
+- A command tool's wait/yield interval (for example, `yield_time_ms=30000`) is not the command's lifetime.
+  When a command is still running, retain its process/session identifier and continue waiting for that same command.
+  With Codex's `exec_command`, expose the complete result, including `session_id` and `exit_code`, rather than only
+  `output` (for example, `text(r)` instead of only `text(r.output)`). Continue it with `write_stdin` using the returned
+  `session_id` and no input. An outer JavaScript wrapper saying `Script completed` does not prove Python has exited.
+  Use the corresponding wait/status operation if another command tool is provided.
+- Do not rerun a command just because its first wait returned partial logs. Confirm the original process has exited
+  before starting a replacement; if cancellation is necessary, stop only your own identified process and confirm exit.
+- Keep the task's simulator and sensor configuration. Waiting does not extend the actual agent wall-clock budget.
+- Connect with `Robot()` and let its retry loop wait for the existing service (default connection budget: 600 seconds,
+  still subject to the actual agent deadline). Do not try to start or rebuild a simulator yourself.
+- Reconnecting a client accesses the same episode; it does not reset the world. While an action request is still
+  running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
+
+## Time per call
+- One control step takes about 1.1 s of wall clock here. A request returns only when all of its steps have run, and the client gives up waiting after 1800 s for `submit` and 600 s for `get_obs`: a `submit` of the maximum 10 s chunk fits; keep each `get_obs(seconds=...)` watch to at most 263 control steps (6.58 s) (both with a 2x margin).
+- If a request times out in the client anyway, the service still runs it to the end: do NOT send it again (it would run twice). Call `r.get_obs()` (repeat it if it also times out): it answers once the earlier request has finished and shows the state after it.
+
+## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`)
+```python
+from rcb_client import Robot
+r = Robot()                                   # connects to the existing service; retries until ready (default timeout 600 s)
+spec = r.spec()                               # actions, cameras (intrinsics, mounting), robot_spec, world, kinematics, budget
+
+obs = r.get_obs()                             # current frames from 4 cameras: obs.last[cam] -> uint8 (480,848,3)
+obs.meta["proprio"]                           # {"layout": [72 names], "now": [...]}: groups in spec["proprio_groups"]
+obs.meta["cameras"]                           # per camera: intrinsic_cv, extrinsic_cv, cam2world_gl of the LAST frame
+obs = r.get_obs(depth=True)                   # + obs.last_depth[cam]: float32 (480,848) z-depth in metres, 0 = no reading
+obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+
+res = r.submit("joint_position", A, dt=0.1)   # A: (T, 14) rows dt seconds apart; streamed at 40 Hz with linear interpolation
+res = r.submit("ee_pose", P)                  # P: (T, 16) tool-frame targets; inverse kinematics per row
+res.meta["done"], res.meta["reason"], res.meta["plan"], res.meta["clipped"], res.meta["control_steps_chunk"]
+res.video["cam_high"]                          # mp4 bytes of the execution (video="mp4" | "frames" | "both" | "none")
+res.frames["cam_high"]                         # uint8 (N,480,848,3) at video_fps if requested
+res.last["cam_right_wrist"]; res.proprio              # last frame per camera; float32 (N, 72) proprio, one row per frame
+res.frame_step, res.frame_time_s              # per frame: control steps since the episode start, simulated time (s)
+res.extrinsic_cv["cam_right_wrist"]                    # (N,3,4) robot frame -> camera at every frame
+res = r.submit("joint_position", A, dt=0.1, depth="frames")   # + res.depth[cam]: (N,480,848) z-depth per frame (1 mm steps)
+res.group("tcp_pose"); res.group("joint_effort", now=True)   # proprio columns by group name
+r.fk(q)["poses"]["left_tcp"]                   # forward kinematics of the 12 arm joints (spec["kinematics"]); moves nothing
+r.ik({"left_tcp": pose}, seed=q)             # inverse kinematics -> {"ok", "q", "error"}; moves nothing
+res.save("/app/runs/003")                     # meta.json, <cam>.mp4, last/, frames/, proprio.npy, depth, frame_meta.npz
+```
+Cameras: `cam_high` (static); `cam_low` (static); `cam_left_wrist` (on the robot link `left/gripper_base`; it moves, so use the pose that comes with each frame); `cam_right_wrist` (on the robot link `right/gripper_base`; it moves, so use the pose that comes with each frame). Resolution 848×480. `spec["cameras"][cam]` gives the
+intrinsics and the mounting: a static pose, or the parent link and the fixed offset (robot_T_cam = FK(link) · `link_T_cam_cv`).
+A point (X, Y, Z) in a camera's OpenCV frame (x right, y down, z forward) appears at u = fx·X/Z + cx, v = fy·Y/Z + cy;
+depth is that Z. `spec["robot_spec"]` lists the joints with their position, velocity and effort limits, the grippers,
+the PD gains and the tool frames; `spec["world"]` the frame conventions (the robot frame: origin at the robot's root link on its mounting, +z up).
+
+### Action types
+- `joint_position` (14): `left/waist`, `left/shoulder`, `left/elbow`, `left/forearm_roll`, `left/wrist_angle`, `left/wrist_rotate`, `left_gripper`, `right/waist`, `right/shoulder`, `right/elbow`, `right/forearm_roll`, `right/wrist_angle`, `right/wrist_rotate`, `right_gripper`. arm `left`: 6 joint targets (rad), then `left_gripper` = opening width (m, 0 closed .. 0.057385 open); arm `right`: 6 joint targets (rad), then `right_gripper` = opening width (m, 0 closed .. 0.057385 open). Absolute targets tracked by PD controllers.
+  Rows are `dt` apart (`1/40 ≤ dt ≤ 0.5` s, a multiple of the control period); a chunk may cover at most 10 s;
+  out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). The gripper switches at the
+  row. Use `obs.meta["proprio"]["now"][:14]` as the starting row to move smoothly. An arm joint target moves at most
+  0.04 rad per control step (1.6 rad/s, the same speed as `ee_pose` rows): a row that asks for more takes
+  the control steps it needs, and `meta["clipped"]` says so.
+- `ee_pose` (16): per arm (in the order ['left', 'right']) `x y z qw qx qy qz gripper`; robot frame (origin at the robot's root link on its mounting, +z up; the frame of the proprio TCP pose and the camera extrinsics); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and driven to in joint
+  space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is each gripper's **tool frame** (TCP;
+  its approach and finger-closing axes are in `spec["robot_spec"]["tcp"]`), the same convention as the proprio TCP
+  poses, so an observed pose is a valid target. At most 50 rows per submit. A row whose IK solution lies more than
+  0.5 rad from the current joints on any joint is refused the same way as a failed IK (for a small pose change that is
+  another IK branch, which would swing the arm): split long moves into rows a few cm and degrees apart.
+- Both action types: no gripper target goes lower than 15 mm below the tabletop; a target that would bring any part of
+  a gripper lower is stopped there and listed in `meta["clipped"]`. Every response's `meta["safety"]` reports, since the
+  previous call, forcing (the arms' pressing loads and forcing events), the deepest task contact, the longest time above
+  its sustained limit and the review events (rigid families), the lowest rope / cord volume ratio (soft families) and the
+  table-guard stops, against the limits above.
+
+Grasping: assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (rope) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 6 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 2.5 cm / 0.15 rad from its held pose, or the hold has to push or pull its part with more than 60 N averaged over 20 ms) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction).
+
+Objects here: `clamp_rope_leg0`, `clamp_rope_leg1`, `clamp_rope_plate`, `rope`.
