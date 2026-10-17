@@ -72,6 +72,24 @@ GRADING = [
     replay = bool("""),
     ("""(d.get("valid_trial") and d.get("finalized") and replay and complete""",
      """(d.get("valid_trial") and d.get("finalized") and (replay or live) and complete"""),
+    ("""    valid = bool(d.get("valid_trial") and d.get("finalized") and (replay or live) and complete and not errors)
+""", """    valid = bool(d.get("valid_trial") and d.get("finalized") and (replay or live) and complete and not errors)
+    # robot_coding_bench (board 0151; STANDARD_MODE Part 3): in a real-time match graded live, a simulator error of the
+    # world's own step (every errors[] entry where "world") after the agent's first act is the agent's 0, never a
+    # technical failure (a free retry); before its first act it stays one. The match ended at that error, so every
+    # act the seat attempted came before it.
+    agent_sim_error = bool(live and d.get("slowdown") and d.get("reason") == "technical_error" and d.get("errors")
+                           and all(isinstance(e, dict) and e.get("where") == "world" for e in d["errors"])
+                           and not any(d["meter_error"].values()) and not any(d["proxy_error"].values())
+                           and int(((d.get("seats") or {}).get(seats[0]) or {}).get("attempts") or 0) > 0)
+    valid = valid or agent_sim_error
+"""),
+    ("""    else:
+        success = valid
+    out = dict(""", """    else:
+        success = valid
+    success = success and not agent_sim_error
+    out = dict("""),
     ("""missing_log=0, deterministic=int(replay), match_over=""", """missing_log=0, verdict_replay=int(not live), match_over="""),
     ("""abandoned=int(d.get("reason") == "abandoned"))
     hidx = hidden_index(d, contract)""", """abandoned=int(d.get("reason") == "abandoned"))
@@ -88,7 +106,7 @@ GRADING = [
     if live:                                   # no grading replay ran: the sport's replay_* fields would read as errors
         for k in [k for k in out if k.startswith("replay_")]:
             del out[k]
-        out.update(graded_by_live=1, replays=0)   # the protocol's own fields (board 0151)
+        out.update(graded_by_live=1, replays=0, agent_sim_error=int(agent_sim_error))   # board 0151
     if (contract"""),
     ("""        d, r = (json.loads((DATA / f).read_text()) for f in ("final.json", "replay_check.json"))""",
      """        d = json.loads((DATA / "final.json").read_text())

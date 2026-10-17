@@ -8,6 +8,8 @@ library only, no simulator: for every task of scripts/roboolympics/exported.toml
        the same match lost                                             -> success 0, valid 1 (the agent's result)
        a live technical error (errors[])                               -> success 0, technical_failure 1 (infra)
        the same record without verdict_replay (the upstream rule)      -> needs the replay: technical_failure 1
+       a world (simulator) error after the agent's first act       -> real-time: success 0, not infra (agent_sim_error 1);
+                                                                         turn-based or before the first act: infra
   3. its core/service.py skips the validity replay and drops the replay term only under RO_VERDICT_REPLAY=0.
     python3 scripts/roboolympics/tests/test_live_export.py"""
 import importlib.util, json, os, pathlib, subprocess, sys, tomllib
@@ -32,7 +34,7 @@ def record(contract: dict, winner: str, **kw) -> dict:
          "reason": "match_over", "match_winner": winner, "scores": {winner: 11, other: 3}, "finalized": True,
          "graded_ready": True, "valid_trial": True, "errors": [], "meter_error": {s: False for s in seats},
          "proxy_error": {s: False for s in seats}, "transient_api_errors": {s: 0 for s in seats},
-         "unrecovered_api_errors": {s: 0 for s in seats}, "player_modes": {s: "unmetered" for s in seats},
+         "unrecovered_api_errors": {s: 0 for s in seats}, "seats": {}, "player_modes": {s: "unmetered" for s in seats},
          "state_sha": "x", "commands_sha": "y", "source_sha": "z", "steps": 100, "solo": False, "seed": 1,
          "graded_by": "live", "replays": 0, "verdict_replay": False, "deterministic": None}
     d.update(kw)
@@ -68,6 +70,18 @@ def main() -> int:
         bad = g.grade(record(contract, "A", errors=[{"where": "sport", "error": "x"}]), {}, contract, stub)
         if bad.get("success") != 0 or bad.get("technical_failure") != 1:
             errs.append(f"{t.name}: a live technical error: {bad}")
+        # a simulator error of the world's step (STANDARD_MODE Part 3): after the agent's first act the agent's 0 in a
+        # real-time match; before it, or in a turn-based match, a technical failure (infra)
+        realtime = "-standard-realtime" in t.name
+        world = dict(reason="technical_error", match_winner=None, errors=[{"where": "world", "error": "mujoco: bad qacc"}],
+                     slowdown=10 if realtime else None)
+        after = g.grade(record(contract, "A", seats={"A": {"attempts": 3}}, **world), {}, contract, stub)
+        before = g.grade(record(contract, "A", seats={"A": {"attempts": 0}}, **world), {}, contract, stub)
+        if after.get("success") != 0 or after.get("technical_failure") != int(not realtime) or \
+                after.get("agent_sim_error") != int(realtime):
+            errs.append(f"{t.name}: a world error after the first act: {after}")
+        if before.get("success") != 0 or before.get("technical_failure") != 1:
+            errs.append(f"{t.name}: a world error before the first act: {before}")
         old = record(contract, "A"); [old.pop(k) for k in ("graded_by", "replays", "verdict_replay")]
         up = g.grade(old, {}, contract, stub)
         if up.get("technical_failure") != 1:
