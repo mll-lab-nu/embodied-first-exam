@@ -7,24 +7,24 @@
 | Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c; its resource-tier twin is `roboolympics-soccer-jointcpu-i01-standard-realtime`) |
 | Simulator / robot | `mujoco` / `booster-t1` |
 | Family / instance | `soccer_jointmatch` / seed 101 |
-| Oracle | `partial` — PENDING |
+| Oracle | `partial` — soccer-2v2-11, level 5 = our joint-level RL team (sports/soccer/rl/joint/v2: an omnidirectional gait trained with PPO at the joint level, about 1e9 steps, and an RL-trained strategy layer). The three frozen GPU-tier programs of GPT-6 Astra from our v5 pilot (developed on soccer-2v2-10 against level 2, unchanged) win 30 % of 90 practice matches against level 5 v2 (40 % against v1; against v1 on further seeds 48/150 = 32 % and 43 % of 150); a mirror match of v1 is even (24/50); scripted levels 2 and 3 never beat it (0/20, 0/40). Our joint-level reference team (the oracle) lost to level 5 v1 0:10 in both tasks on vanilla Harbor 0.23.0 (valid, replay identical, replay.mp4) |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 10 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` |
 
 ## Task
 Humanoid robot soccer 2 v 2 at the joint level, coach format: the agent commands both Booster T1s (lower bodies) of its
-team with 12 leg joint targets per robot every 20 ms (no walking policy, no kick skill), against a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours, under a team plan),
+team with 12 leg joint targets per robot every 20 ms (no walking policy, no kick skill), against a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours; a learned strategy layer decides what each robot does),
 under the RoboCup Humanoid Soccer League rules with stated deviations. Any method: hand-written control, planning,
 optimisation or learning. A practice service runs full copies of the match world (the opponent as a black box).
 
 ## Difficulty
-Frozen development instance: seed 101, a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours, under a team plan), S = 10. Not one of the sport's official
+Frozen development instance: seed 101, a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours; a learned strategy layer decides what each robot does), S = 10. Not one of the sport's official
 (hidden) seeds, so results here are previews, not official RoboOlympics results.
 
 ## Reference solution
 `solution/`: our joint-level reference team (capture-point walking, `joint_oracle.py` on `team.py`, `walker.py`, `dcm.py`)
-through the same HTTP interface, after a short check of the practice service. PENDING.
+through the same HTTP interface, after a short check of the practice service. soccer-2v2-11, level 5 = our joint-level RL team (sports/soccer/rl/joint/v2: an omnidirectional gait trained with PPO at the joint level, about 1e9 steps, and an RL-trained strategy layer). The three frozen GPU-tier programs of GPT-6 Astra from our v5 pilot (developed on soccer-2v2-10 against level 2, unchanged) win 30 % of 90 practice matches against level 5 v2 (40 % against v1; against v1 on further seeds 48/150 = 32 % and 43 % of 150); a mirror match of v1 is even (24/50); scripted levels 2 and 3 never beat it (0/20, 0/40). Our joint-level reference team (the oracle) lost to level 5 v1 0:10 in both tasks on vanilla Harbor 0.23.0 (valid, replay identical, replay.mp4).
 
 ## Verification
 Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier
@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | | |
 |---|---|
 | Resource tier | **CPU + GPU**: 6 cores, 16 GB, 1 NVIDIA GPU (mjlab + rsl_rl, PyTorch CUDA) |
-| Images | agent `ghcr.io/mll-lab-nu/eai-soccer-joint-gpu:0.1.2@sha256:8c9c783d8c881e73ca023ebfe3da4eb6c06627ad2c468ceacbab48e34ee002ec`; sim and practice `ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` |
+| Images | agent `ghcr.io/mll-lab-nu/eai-soccer-joint-gpu:0.1.3@sha256:7dee4b99af4bd5ec5c0d974176d09c6452c581645fc07295889c8fb4c8b22c69`; sim and practice `ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` |
 
 ### The pair
 This task and roboolympics-soccer-jointcpu-i01-standard-realtime are the same frozen match (seed, opponent, slowdown, start window, review limit, cutoff)

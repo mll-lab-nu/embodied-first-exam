@@ -70,6 +70,58 @@ def _unit(a):
     return np.array([math.cos(a), math.sin(a)])
 
 
+SKILLS = ("rush", "rush_left", "rush_right", "mid", "mid_far", "cover", "press", "forward")
+K = len(SKILLS)
+DEFAULT_SKILLS = (SKILLS.index("rush"), SKILLS.index("mid"))   # the tuned plan: lead rushes, the other mid
+DECIDE_EVERY = 10                                               # control steps between the plan's decisions (0.2 s)
+OBS_DIM = 4 + 2 * (12 + K) + 2 * 11 + 4
+
+
+class Plan:
+    """the strategy layer: obs -> one skill per robot (lead, other); tanh MLP (obs_mu/obs_sd, W*/b*), greedy"""
+
+    def __init__(self, path):
+        z = np.load(path)
+        self.mu, self.sd = z["obs_mu"].astype(np.float64), z["obs_sd"].astype(np.float64)
+        n = int(z["n_layers"])
+        self.W = [z[f"W{i}"].astype(np.float64) for i in range(n)]
+        self.b = [z[f"b{i}"].astype(np.float64) for i in range(n)]
+
+    def logits(self, obs):
+        x = np.clip((np.asarray(obs, np.float64) - self.mu) / self.sd, -10, 10)
+        for i, (W, b) in enumerate(zip(self.W, self.b)):
+            x = x @ W + b
+            if i < len(self.W) - 1:
+                x = np.tanh(x)
+        return x.reshape(2, K)
+
+    def __call__(self, obs):
+        return [int(i) for i in np.argmax(self.logits(obs), axis=1)]
+
+
+def plan_obs(w, team, tr, order, skills):
+    """the strategy layer's input (team frame): the ball, own robots in role order (+ their skills), opponents, game"""
+    ball, bv = np.asarray(tr["ball"], float), np.asarray(tr["ball_v"], float)
+    o = [ball[0] / 5, ball[1] / 3.5, bv[0] / 3, bv[1] / 3]
+
+    def robot(r):
+        st = tr["robots"][r]
+        xy = np.asarray(st["xy"], float)
+        v = S.to_team(team, w.rob[r].vel(w.d))
+        rel = ball - xy
+        return [xy[0] / 5, xy[1] / 3.5, math.cos(st["yaw"]), math.sin(st["yaw"]), float(v[0]), float(v[1]),
+                float(st["fallen"]), float(st["bench"]), rel[0] / 5, rel[1] / 5, math.hypot(*rel) / 5]
+    for j, r in enumerate(order):
+        o += robot(r) + [0.0]
+        o += [1.0 if skills is not None and skills[j] == s else 0.0 for s in range(K)]
+    for r in S.TEAM_ROBOTS[S.OTHER[team]]:
+        o += robot(r)
+    sc = w.score[team] - w.score[S.OTHER[team]]
+    o += [float(np.clip(sc, -3, 3)) / 3, w.clock() / S.HALF_S, 1.0 if w.period == 2 else 0.0,
+          1.0 if (w.ko and not w.ko["in_play"]) else 0.0]
+    return np.asarray(o, np.float32)
+
+
 class JointTeam:
     """soccer.Coach's interface for a team under joint control (World puts the coach's team under joint control)."""
     joint = True
@@ -80,7 +132,8 @@ class JointTeam:
         bp = os.path.join(DIR, version, "ball.npz")
         self.ball = Gait(bp) if os.path.exists(bp) else None      # the ball skill (same network format), optional
         self.ball_r = BALL_RANGE
-        self.policy = policy                          # optional strategy layer (skills per robot); None: the plan
+        pp = os.path.join(DIR, version, "plan.npz") if version else ""
+        self.policy = policy if policy is not None else (Plan(pp) if pp and os.path.exists(pp) else None)
         self.reset()
 
     def reset(self):
@@ -89,6 +142,8 @@ class JointTeam:
         self.phase = {r: 0.0 for r in S.TEAM_ROBOTS[self.team]}
         self.act = {r: np.zeros(12) for r in S.TEAM_ROBOTS[self.team]}
         self.was_down = {r: True for r in S.TEAM_ROBOTS[self.team]}
+        self.skills = None                            # set by the strategy layer (or from outside: training)
+        self.obs = None
 
     # ------------------------------------------------------------------ the plan (team frame)
     def _update_order(self, tr, k):
@@ -204,6 +259,9 @@ class JointTeam:
             if r == lead and self.ball is not None and float(np.hypot(*(b - pos))) < self.ball_r:
                 out[r] = self._ball_input(w, r, tr)
                 continue
+            if self.skills is not None:
+                out[r] = self._skill(SKILLS[self.skills[self.order.index(r)]], pos, yaw, b, mate, opps, rob)
+                continue
             if r == lead or KNOB["plan"] == "chase":
                 out[r] = self._rush(pos, yaw, b, opps)
             elif KNOB["plan"] == "mid":                    # the second robot between the ball and the own goal, 1.5 m off
@@ -213,6 +271,27 @@ class JointTeam:
             else:
                 out[r] = self._cover(pos, yaw, b, mate, opps)
         return out
+
+    def _skill(self, name, pos, yaw, b, mate, opps, rob):
+        face = math.atan2(b[1] - pos[1], b[0] - pos[0])
+        own = np.array([-S.HALF_L, 0.0])
+        if name == "rush":
+            return self._rush(pos, yaw, b, opps)
+        if name == "rush_left":
+            return self._rush(pos, yaw, b, opps, aim=(S.HALF_L, 0.7))
+        if name == "rush_right":
+            return self._rush(pos, yaw, b, opps, aim=(S.HALF_L, -0.7))
+        if name in ("mid", "mid_far"):
+            u = own - b
+            dd = KNOB["mid_d"] if name == "mid" else 2.2
+            return self._go(pos, yaw, b + dd * u / max(float(np.hypot(*u)), 1e-6), face, opps, KNOB["mid_v"])
+        if name == "cover":
+            return self._cover(pos, yaw, b, mate, opps)
+        if name == "press":                           # straight at the ball
+            return self._go(pos, yaw, b, face, [], 1.5)
+        # forward: ahead of the ball toward the opponents' goal, for a rebound
+        u = np.array([S.HALF_L, 0.0]) - b
+        return self._go(pos, yaw, b + 1.5 * u / max(float(np.hypot(*u)), 1e-6), face, opps, 1.2)
 
     def _ball_input(self, w, r, tr):
         """the ball skill's inputs (body frame xy, world-frame physics): the ball, its velocity, the goal centre"""
@@ -227,6 +306,10 @@ class JointTeam:
     # ------------------------------------------------------------------ the joint level
     def decide(self, w, robots=None):
         tr = w.truth(self.team)
+        if self.policy is not None and (self.skills is None or w.k % DECIDE_EVERY == 0):
+            self._update_order(tr, w.k)
+            self.obs = plan_obs(w, self.team, tr, self.order, self.skills)
+            self.skills = list(self.policy(self.obs))
         cmds = self.commands(w, tr)
         d = w.d
         out = {}

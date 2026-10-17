@@ -1682,7 +1682,7 @@ COACH_LEVELS["reference"] = dict(COACH_LEVELS["ref"], style="chase", step=True)
 # chooses skills per robot); levels 1-3 unchanged
 # level 5 (not official; RCB_LEVEL=5): the joint-level RL opponent of rl_joint.py (our own walking policy trained with
 # PPO on the joint level's GPU world, under a team plan): its team is under joint control like the agent's
-RL_LEVELS = {4: ("skills", "v2"), 5: ("joint", "v1")} if N == 2 else {}
+RL_LEVELS = {4: ("skills", "v2"), 5: ("joint", "v2")} if N == 2 else {}
 for _k, (_kind, _ver) in RL_LEVELS.items():
     COACH_LEVELS[_k] = dict(COACH_LEVELS["reference"], rl=_ver, rl_kind=_kind)
 
