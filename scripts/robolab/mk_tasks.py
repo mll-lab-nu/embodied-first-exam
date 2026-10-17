@@ -162,7 +162,7 @@ def on_table_terms(F: dict) -> str:
 
 def default_tolerance(F: dict) -> bool:
     """An object_in_container term that leaves `tolerance` at RoboLab's default."""
-    return "object_in_container" in F["conditionals"] and '"tolerance"' not in F["terms"]
+    return "object_in_container" in F["conditionals"] and not re.search(r"""["']tolerance["']""", F["terms"])
 
 
 TOLERANCE_UNUSED = ("RoboLab passes it to `in_opentop_container` "
@@ -175,7 +175,9 @@ TOLERANCE_TEXT = ("`tolerance` is not set, so it takes `object_in_container`'s d
 
 def set_tolerance(F: dict) -> float | None:
     """The nonzero `tolerance` an object_in_container term sets explicitly (None: unset, zero or not that term)."""
-    m = re.search(r'"tolerance": ([0-9.]+)', F["terms"])
+    m = re.search(r"""["']tolerance["']\s*:\s*([0-9.]+)""", F["terms"])
+    if re.search(r"""["']tolerance["']""", F["terms"]) and not m:
+        raise RuntimeError("a term sets tolerance in a form the generator does not read")
     if "object_in_container" not in F["conditionals"] or not m or float(m.group(1)) == 0.0:
         return None
     return float(m.group(1))
