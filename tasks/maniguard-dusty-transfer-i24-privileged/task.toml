@@ -69,6 +69,7 @@ timeout_sec = 23400.0             # two fresh-process replays, each at most max(
                                   # 0.05-0.09 s): 2 x 10900 s for the 50,000 rows a trajectory may hold, + 1600 s; the grader
                                   # ends a replay that would run past it and writes the reward itself (replay_timed_out)
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
 
 # Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]

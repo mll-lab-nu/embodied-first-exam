@@ -137,9 +137,9 @@ trial's teardown could delete. A cache can reach ~10 GB; it lives as long as the
 - **Docker address pools.** A host with exhausted pools (lab) gives each trial explicit subnets (its agent environment
   through an extra compose file, its separate verifier through a patch of its copy of `tests/docker-compose.yaml`). The
   standard verifier needs no network (`no-network`).
-- **Privileged verifier network.** The privileged verifier keeps Harbor's default network instead of `no-network` (open: PROTOCOL H.6 says the verifier has no network): it starts Isaac Sim, and an Isaac / Omniverse Kit start in a container without any network
-  interface has not been tested (with only the allowlist reachable it starts and loads the scene: Network,
-  below). It downloads nothing: the dataset is mounted and the image is complete.
+- **Verifier network.** Both verifiers run with `[verifier] network_mode = "no-network"` (PROTOCOL H.6): Harbor denies
+  the separate verifier all egress while `tests/test.sh` runs. The privileged verifier starts Isaac Sim offline and
+  downloads nothing: the dataset is mounted and the image is complete.
 
 ## Network
 The agent reaches the model APIs and the package registries (PyPI, apt archives), nothing else: `[agent] network_mode =
@@ -155,7 +155,7 @@ activities (its teleoperated demonstrations, which a task's name locates, and it
 | standard `main` (agent, client only) | the same |
 | standard `sim` (the simulator service) | the same as `main`: Harbor's egress control puts every compose service without a network setting of its own in one namespace, so the service's Isaac start (at container start, about 10 minutes) and a restart after a crash run with the allowlist only; public again while the collect hook runs (a video-only render, when the live video is missing) |
 | `rcb_monitor` | none |
-| privileged verifier | public (Harbor's default) |
+| privileged verifier | none (`no-network`) |
 | standard verifier | none (`no-network`) |
 
 Checked on L40S hosts: under the allowlist GitHub, Hugging Face and NVIDIA's Omniverse content bucket are unreachable,
