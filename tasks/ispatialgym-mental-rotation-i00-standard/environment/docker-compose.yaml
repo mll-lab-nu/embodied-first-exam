@@ -30,7 +30,7 @@ services:
       RCB_DATA: /out
       RCB_WALL_CLOCK_S: "3600"
       RCB_STARTUP_TIMEOUT_S: "2400" # startup watchdog: 2x the slowest scene load measured (214 s), at least 2400 s
-      RCB_COLLECT_BUDGET_S: "7268"
+      RCB_COLLECT_BUDGET_S: "5734"
       PYTHONPATH: /srv
     shm_size: "8gb"
     deploy:
