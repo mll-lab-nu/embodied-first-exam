@@ -546,7 +546,8 @@ def finish(reason: str) -> None:
     E["reason"] = reason
     E["t_end"] = time.time()
     E["episode_control_steps"] = ctrl_steps()
-    E["success"] = bool(S.success)
+    # a simulator error ends the episode: the state after it is judged by nothing (PROTOCOL §4.6), never a success
+    E["success"] = bool(S.success) and reason != "error"
     EP.log(
         {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
          "episode": E["resets"] + 1, "journal_rows": EP.rows}

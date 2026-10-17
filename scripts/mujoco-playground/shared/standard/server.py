@@ -325,7 +325,8 @@ def finish(reason: str) -> None:
     try:
         chk = S.check()
         E["check"] = {k: v for k, v in chk.items() if k != "segments"}
-        E["success"] = bool(chk["success"])
+        # a simulator error ends the episode: the state after it is never judged a success (PROTOCOL §4.6)
+        E["success"] = bool(chk["success"]) and reason != "error"
     except Exception:  # noqa: BLE001
         traceback.print_exc()
     EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),

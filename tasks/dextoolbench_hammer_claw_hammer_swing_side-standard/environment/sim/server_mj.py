@@ -567,12 +567,13 @@ def finalize() -> None:
                                                                                                           "episode": E["resets"] + 1, "reset_budget": RESET_BUDGET}))
             v = {"graded_by": "live", "replays": 0, "n_actions": int(len(A)), "live_state_sha": live_sha, "state_sha": live_sha,
                  "video": False, "video_pending": True, "video_source": "render"}
+            err = E["reason"] == "error"   # a simulator error ended the episode: the state after it is never a success
             if KIND == "dtb":
-                ok = bool(live["done"])
+                ok = bool(live["done"]) and not err
                 v.update(success=ok, live_success=ok, progress=round(float(live["progress"]), 4), goals_reached=int(live["reached"]),
                          n_goals=int(live["n_goals"]), failed_on_timeout=bool(live["failed"]), live_goals_reached=int(live["reached"]))
             else:
-                v.update(success=bool(live["success"]), live_success=bool(live["success"]),
+                v.update(success=bool(live["success"]) and not err, live_success=bool(live["success"]) and not err,
                          **{k: val for k, val in live.items() if k not in ("success", "state_sha", "steps") and isinstance(val, (int, float, bool))})
             # The verdict is final and on disk (finalized) before any video is rendered: the video never changes, hides or
             # delays it (a slow or failing render, or a collect hook that stops waiting, leaves the verdict as it is).

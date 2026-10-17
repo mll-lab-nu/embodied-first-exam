@@ -57,6 +57,8 @@ class Session(_Base):
         self.goals = [[0.0] * 7, [0.0] * 7]; self.reached = 0
     def step(self, tg):
         super().step(tg)
+        self.n_steps = getattr(self, "n_steps", 0) + 1
+        if self.n_steps > int(os.environ.get("STUB_ERROR_AFTER") or 10**9): raise RuntimeError("the simulator blew up")
         if float(np.asarray(tg, float)[0]) == 1.0: self.reached = min(2, self.reached + 1)
     def reset(self): super().reset(); self.reached = 0
     def progress(self):
@@ -281,6 +283,17 @@ class ServerMjPlayground(ServerMj):
         fin = self.end()
         self.assertTrue(fin["success"]); self.assertFalse(fin["video"])
         self.assertEqual(self.grade(ALOHA_TASK)[0], "1")
+
+    def test_a_simulator_error_is_never_a_success(self):
+        """A sim error ends the episode; the state after it passes check() here, and is still not a success."""
+        self.start(STUB_ERROR_AFTER="30"); self.assertTrue(self.up())
+        self.assertEqual(self.submit([[1.0, 1.0]] * 30), 200)
+        self.assertEqual(self.submit([[1.0, 1.0]] * 5), 500)
+        fin = self.end()
+        self.assert_no_replay()
+        self.assertEqual((fin["reason"], fin["success"], fin["live_success"]), ("error", False, False))
+        txt, rw = self.grade(ALOHA_TASK)
+        self.assertEqual((txt, rw["success"], rw["sim_error"], rw["infra_error"]), ("0", 0, 1, 0))
 
     def grade(self, task: Path = ALOHA_TASK):
         return run_grade(task / "tests" / "grade.py", self.data)
