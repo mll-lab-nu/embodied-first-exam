@@ -79,12 +79,15 @@ when a reset does not return there (every archived start and all 4949 archived r
 is one render pass over `trajectory.npz` after the verdict (`render_video`: CPU physics, EGL rendering on the sidecar's
 GPU; median 19 s a trial); it never changes the verdict. The removed replay cost a physics-only re-run of the episode,
 under 20 s at the median and about 1.5 slot-hours over the archive. `infra_error = 1` only for no or an unfinalized
-`final.json`, a give-up after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), and
+`final.json`, a give-up after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), a reset whose
+scene does not rebuild, and
 `instance_mismatch`. Crashes inside the agent's calls (`sim_crashed_on_call`), simulator errors raised by its calls,
 timeouts and failures are the agent's 0. In standard-realtime (owner, 2026-10-17): once the agent's first command has run, a
 simulator error raised by a control step is the agent's 0 (`sim_error = 1`, no `infra_error`), and so is a simulator
-crash (a death with a fatal signal's record in `crash.log`: SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT; past
-`RCB_MAX_RESUMES` such crashes the trial ends `sim_crashed_on_call`); before the first command, a failed reset rebuild,
+crash inside a control step (a death whose fatal-signal record in `crash.log` -- SIGSEGV, SIGBUS, SIGFPE, SIGILL,
+SIGABRT -- shows the crashing thread in the step; past
+`RCB_MAX_RESUMES` such crashes the trial ends `sim_crashed_on_call`); a crash outside a step (building the scene,
+resuming, resetting, rendering, finalizing), anything before the first command, a failed reset rebuild,
 a kill (SIGKILL, SIGTERM, the OOM killer) and a failed resume are infrastructure. Standard mode keeps its rule: a crash
 is the agent's only inside its call (`fatal_signal` is logged as evidence).
 
@@ -160,8 +163,9 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/STAN
   clock"; `scripts/humanoidbench/tests/test_realtime_load.py` measures it on a stub simulator).
 - **Crashes and errors.** Since 2026-10-17 (owner; before, every simulator crash and every error that ended the
   graded episode was infrastructure, owner 2026-10-08): after the agent's first command (the first control step of a
-  row it planned, `first_command` in `episode.jsonl`) a simulator error raised by a control step is the agent's 0, and
-  so are simulator crashes (a fatal signal's record in `crash.log`): past `RCB_MAX_RESUMES` such restarts the trial
+  row the agent sent, `first_command` in `episode.jsonl`) a simulator error raised by a control step is the agent's 0, and
+  so are simulator crashes inside a control step (a fatal signal's record in `crash.log` showing the crashing
+  thread in the step): past `RCB_MAX_RESUMES` such restarts the trial
   ends `sim_crashed_on_call`. Before it, a kill (no record), a failed resume (`resume_failed`) or a reset whose scene
   does not rebuild stay infrastructure (`sim_crashed`, `infra_error = 1`).
 

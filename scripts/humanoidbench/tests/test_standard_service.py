@@ -1057,9 +1057,25 @@ class ResetChecks(Base):
         self.assertEqual(code, 500)
         code, st, _ = call(svc, "GET", "/status")
         self.assertEqual((st["done"], st["reason"]), (True, "error"))
-        self.assertEqual(final(self.data)["reason"], "error")
+        f = final(self.data)
+        self.assertEqual(f["reason"], "error")
         ends = [e for e in events(self.data) if e["ev"] == "end"]
         self.assertTrue(ends[-1].get("reset_failed"), ends)
+        if hasattr(rcb_service, "RESERVED"):                 # the live layer (board 0151; not LIBERO-MAX's variant yet):
+            svc.on_sigusr1()                                 # the agent's reset was legitimate, so infrastructure
+            svc.poll()
+            self.assertEqual((f.get("infra_error"), final(self.data).get("infra_error")), (1, 1))
+
+    def test_an_error_the_agents_call_raised_is_its_zero(self):
+        def boom(s):
+            if s.t == 2:
+                raise ValueError("the simulator refused a step")
+        svc = self.service(FakeSim(goal=99, on_step=boom))
+        self.assertEqual(self.submit(svc, [[0.1]] * 5)[0], 500)
+        svc.on_sigusr1()
+        svc.poll()
+        f = final(self.data)
+        self.assertEqual((f["reason"], f.get("infra_error", 0), f["finalized"]), ("error", 0, True))
 
 
 class Grade(Base):
