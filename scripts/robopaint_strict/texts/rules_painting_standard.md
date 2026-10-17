@@ -2,7 +2,7 @@
 Paint with brush strokes, the way a person paints: each stroke is one sweep of the loaded brush, pressed for the width you want.
 Colouring in or filling areas with a thin line, zigzag or serpentine fills, and contour-offset fills (paths that circle round and
 round inside an area) are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the
-replayed episode with two numbers you can check yourself; only painted strokes on the main sheet count (the practice sheet is
+live episode with two numbers you can check yourself; only painted strokes on the main sheet count (the practice sheet is
 free):
 - **Paint path budget: `path_mm` ≤ {{MAX_PATH_MM}} mm.** `path_mm` is the total length of the brush tip's path while it presses
   on the main sheet with paint (all strokes together, sampled at every physics step). The strokes of our reference solution add up

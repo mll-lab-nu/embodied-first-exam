@@ -362,7 +362,8 @@ Success needs the picture rule and the process rules; `final_reward` is the cont
   - Paintings: blurred CIELAB ΔE, SSIM of L*, edge correlation and paint coverage.
 - The process rules (below) are measured on the strokes themselves.
 - Privileged mode: `s.score()` asks a `scorer` sidecar (the graders' copy), so the agent may check itself.
-- Standard mode: no score at all. The service's episode is replayed in two fresh processes and scored afterwards.
+- Standard mode: the agent gets no score at all. When the episode is over, the sim service scores its live main sheet with the
+  graders' scorer and rules; that is the verdict (Grading and determinism).
 
 ## Why process rules
 GPT-6 Astra (Codex, effort high; 112 trials of the earlier version, which scored only the final sheet against the picture,
@@ -398,7 +399,8 @@ and with the task's numbers.
 
 Where they are applied: `rcb_brush_strict.py` (graders' side only), a `Session` subclass whose `score()` adds the rules, run with
 `rcb_brush.py`'s CLI. The privileged verifier replays with it (`tests/grade.py`), the privileged scoring service imports it
-(`RCB_TOOL_MODULE=rcb_brush_strict`), and the standard collect hook replays with it (`RCB_TOOL=/srv/rcb_brush_strict.py`). The
+(`RCB_TOOL_MODULE=rcb_brush_strict`), and the standard sim service scores the live sheet with it (`RCB_TOOL=/srv/rcb_brush_strict.py`;
+until 2026-10-17 the standard collect hook replayed with it). The
 agent's container holds `rcb_brush.py` only. A trajectory of the earlier version is graded by this version's verifier as it is,
 so it can be re-graded one to one (Calibration), but its published result is not comparable.
 
@@ -612,8 +614,21 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
   The palette is unchanged.
 
 ## Grading and determinism
-- Fresh-process replays: the final states of two replays must agree (`deterministic`), and `live_matches_replay` is
-  reported.
+- **Standard mode: graded by the live episode** (2026-10-17, owner, board 0150/0151: standard modes graded by the live
+  episode; no grading replay; video by one render pass after the verdict). The collect hook first stops the agent's
+  container (`kill -9 -1`); then `finalize.sh` signals the service, which ends the episode, commits a stroke still pressed
+  and scores its live main sheet with `rcb_brush_strict.py`'s `Session.score()`, the same scorer and rule (picture rule
+  and process rules) the privileged verifier's replays use. `final.json` gets the verdict at once (`graded_by = "live"`,
+  `replays = 0`, `success`, `live_success`, `metrics`, `live_sha`, `success_rule`, `instance_exact`); the trajectory and
+  the live sheets (`canvas_live.png`, `canvas_live_practice.png`) are saved. Then the service renders the recorded
+  trajectory once into `replay.mp4` in the same process (`video_pending`, then `video_done`; a failed render is
+  `video_error`, never a change of the verdict) and exits. Before 2026-10-17 the service exited without a score and the
+  hook replayed the trajectory in two fresh processes (`replay_success` of both, `deterministic`, `live_matches_replay`,
+  `gpu_lost`); the score the service recorded of its live sheet (`final.json` `live`) had the picture rule only, because
+  it imported `rcb_brush.py`. A frozen instance that does not rebuild in the sidecar (`instance_sha` against the
+  instance's own) is refused at the start (`instance_mismatch`, `infra_error = 1`) before the agent is served; before,
+  the service crash-looped and the trial had no `final.json` verdict.
+- Privileged fresh-process replays: the final states of two replays must agree (`deterministic`).
 - The episode has no terminal state. It ends with the agent phase, a simulator error, or the 72000-control-step runaway
   guard.
 - Crash recovery (standard mode, docs/STANDARD_MODE.md §13):
@@ -625,14 +640,15 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
 - `RCB_STARTUP_TIMEOUT_S = 600` on every standard task. In 285 standard trials of the brush families (ws, ws3, lab, up to
   50 concurrent lanes), the episode started at most 126 s after Harbor began the environment setup (median about 30 s).
   The Session build alone took at most 106 s. That makes 600 s more than four times the slowest measured start.
-- The collect hook starts with `rcb_limited.py end`. A verdict the service already wrote (it gave up after crashes) is
-  kept, and nothing is replayed. `reward.json` reports `sim_startups`, `resumes`, `resume_state_mismatch`, `gave_up` and
-  `infra_error`.
-- No verdict is infrastructure, never the agent's 0 (standard mode, `tests/grade.py`, 2026-10-10): `infra_error = 1` when
-  `final.json` is missing, unreadable, or without a verdict (not `finalized`, or neither the replays' `deterministic`
-  nor a give-up after crashes), and when the replays could not run (`gpu_lost`, or a replay process without a result
-  although the episode had actions). `sim_error = 1` marks an episode that a simulator error ended. The hook writes
-  `final.json` whole (temporary file + rename).
+- The collect hook is `rcb_limited.py end --wait-key video_done`. A verdict the service already wrote (its live verdict,
+  or a give-up after crashes) is kept. `reward.json` reports `sim_startups`, `resumes`, `resume_state_mismatch`, `gave_up`
+  and `infra_error`.
+- No verdict is infrastructure, never the agent's 0 (standard mode, `tests/grade.py`, 2026-10-10; 2026-10-17):
+  `infra_error = 1` when `final.json` is missing, unreadable, or without a verdict (not `finalized`, or neither the live
+  verdict nor a give-up after crashes), after a give-up the service caused (`sim_crashed`, `resume_failed`,
+  `instance_mismatch`), and when the service could not score the live sheet after an episode that ended normally
+  (`grade_error`, `grader_error = 1`). Crashes inside the agent's own calls (`sim_crashed_on_call`) are the agent's 0;
+  `sim_error = 1` marks an episode that a simulator error ended. The hook writes `final.json` whole (temporary file + rename).
 - Malformed requests (standard mode, `environment/sim/server.py`, second review of 2026-10-10): every field of `/submit`
   and `/observe` is checked before anything is executed (`parse_submit` / `parse_observe`; `note` included, which was
   read after the chunk had run), and whatever a malformed field raises is a 400 that leaves the episode alive. Before, a
@@ -648,8 +664,9 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
     trial had no reward); each replay process gets 1650 s (`--replay-timeout-s`), and one that runs past it is
     `grader_error = 1`. The two replays stay sequential: two sessions at once would not fit the verifier's declared
     minimum (2 CPUs, 3 GB).
-  - standard: the collect hook has 5400 s (was 3600): up to 1500 s for a service that is resuming to end its episode,
-    then the same two replays.
+  - standard: the collect hook has 2820 s (5400 s from 2026-10-10 to 10-17, for two replays): up to 1500 s for a
+    service that is resuming to end its episode, then the live score and one render pass (the replay with the video took
+    at most 252 s, median 124 s, over the 236 recorded standard trials, for up to 72,000 control steps).
 - Privileged deliverable: a file that is not a readable trajectory (not an npz, pickled or object arrays, no `actions`,
   a wrong shape, NaN/inf, more than 72,000 rows) is `bad_trajectory = 1` (was `grader_error = 1` for the unreadable
   ones); every `reward.json` has `deterministic`.
@@ -724,7 +741,7 @@ Resume class `exact` (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); the adapter
 
 `max_frames_per_call` = 640, per-frame depth counted as four images.
 
-Grading: the service dumps the episode, exits, and the hook replays it in two fresh processes.
+Grading (since 2026-10-17): the service scores its live main sheet with the graders' rules, writes the verdict, renders the video once and exits; before, it dumped the episode and exited, and the hook replayed it in two fresh processes.
 
 Per-simulator notes (former STANDARD_MODE §16):
 
@@ -738,7 +755,7 @@ Per-simulator notes (former STANDARD_MODE §16):
 | depth | SAPIEN depth buffer (geometry only: ink and paint never show) |
 | `/kinematics` | SAPIEN's pinocchio (7) |
 | proprio columns (2.0 → 2.2) | 14 → 28 |
-| grading replays | two fresh processes |
+| grading replays | none (live verdict, since 2026-10-17; before: two fresh processes); one render pass for the video |
 | resume class (STANDARD_MODE §13.1) | `exact` |
 
 Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
