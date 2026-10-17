@@ -454,6 +454,29 @@ def normalize_main_cap(task: Path) -> None:
     write_if_changed(p, s[:m.start(1)] + new + s[m.end(1):])
 
 
+VERIFIER_NETWORK_LINE = 'network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network'
+
+
+def normalize_verifier_network(task: Path) -> None:
+    """`[verifier] network_mode = "no-network"` (PROTOCOL Appendix H.6: the verifier has no network; Harbor 0.23 denies the
+    separate verifier environment all egress while tests/test.sh runs). A task that lacks it gets the line after
+    `environment_mode`; one that sets another policy (or `allowed_hosts`) for its verifier is an error, never rewritten."""
+    p = task / "task.toml"
+    s = p.read_text()
+    ver = tomllib.loads(s).get("verifier") or {}
+    if "allowed_hosts" in ver or ver.get("network_mode", "no-network") != "no-network":
+        raise RuntimeError(f'{task.name}: [verifier] sets a network policy other than network_mode = "no-network" (PROTOCOL H.6)')
+    if ver.get("network_mode") == "no-network":
+        return
+    m = re.search(r"(?ms)^\[verifier\]\n(.*?)(?=^\[|\Z)", s)
+    if not m:
+        raise RuntimeError(f"{task.name}: task.toml has no [verifier] table")
+    body = m.group(1)
+    em = re.search(r"(?m)^environment_mode\s*=.*\n", body)
+    at = m.start(1) + (em.end() if em else 0)
+    write_if_changed(p, s[:at] + VERIFIER_NETWORK_LINE + "\n" + s[at:])
+
+
 def normalize_resources(task: Path) -> None:
     """Writes `[metadata.resources]` right after the `[metadata]` keys (replacing an earlier block) when
     scripts/task_resources.toml has a rule for the task."""
@@ -1330,6 +1353,7 @@ def normalize(task: Path) -> None:
     normalize_resources(task)
     normalize_seeds(task)
     normalize_main_cap(task)
+    normalize_verifier_network(task)
     normalize_text_files(task)
     normalize_instruction(task)
     normalize_test_sh(task)

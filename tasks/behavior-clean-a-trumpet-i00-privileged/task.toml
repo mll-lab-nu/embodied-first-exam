@@ -66,6 +66,7 @@ timeout_sec = 85800.0             # two fresh-process replays, each capped at 28
                                   # same cap: PROTOCOL §4) + 30 min (tests/grade.py VERIFIER_TIMEOUT_S); slowest replay
                                   # measured: 1.88 steps/s (filmed, 2026-10-09), Isaac start up to 1,115 s
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
 
 # Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]

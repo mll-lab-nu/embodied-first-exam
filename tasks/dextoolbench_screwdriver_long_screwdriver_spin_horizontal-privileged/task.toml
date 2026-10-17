@@ -62,6 +62,7 @@ oracle = [0]
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"
+network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
 
 # Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
