@@ -1,6 +1,6 @@
 # Standard-mode wire protocol `eai-standard/2.x` (robot as a service)
 
-**Version: `eai-standard/2.4`** (2026-10-08) is the current version. This document is the interoperability
+**Version: `eai-standard/2.4`** is the current version. This document is the interoperability
 specification of every 2.x version a task declares today: what a service answers and a client may send. Minor
 versions only add, so each part holds for the versions after it unless a later part says otherwise, and the shipped
 clients accept every 2.x service. What a task of the standard modes is, and which rules bind it, is in
@@ -21,15 +21,12 @@ types, cameras, proprioception columns, resume class, measured start-up times, k
 Which version a task serves is its `[metadata] protocol` (= `/spec.protocol`); which benchmarks serve which version is
 in their docs, not listed here.
 
-**Names and earlier versions.** `eai-standard/2.x` was called `rcb-limited/2.x` (limited mode) until PROTOCOL v1.0; the
-content is unchanged, services and tasks report the `eai-standard` spelling, and the shipped clients also accept the
-former one. No task declares a version before 2.1: 1.0 (`/step` with one action and base64 images) is retired, 2.0 =
-`/submit` + `/observe` + RCB1, and 2.1 = 2.0 + measured proprioception + optional depth noise + the reference
-implementations' crash recovery (added 2026-09-29 without a version bump).
+**Spelling.** Services and tasks report `eai-standard/2.x`; the shipped clients also accept `rcb-limited/2.x`. No task
+declares a version before 2.1.
 
 **Citing this document.** Numbered sections are unique in the document: §1–§18 are Part 2 (so "§13" is the shared
 layer's crash recovery), §19–§25 are Part 4. The sections of Parts 1 and 3 are cited by their titles. A section whose
-benchmark-specific content moved to the benchmark docs (2026-10-14) keeps its number and points there.
+content is per benchmark points to the benchmarks' docs.
 
 ## Part 1 — `eai-standard/2.1`: the base
 
@@ -111,15 +108,15 @@ the wall clock; the simulated time is recorded as cost.
 The service starts the episode when it is ready (seed hidden inside). The first success ends it; otherwise it ends
 when the agent phase ends (`timeout`) or on an error. The predicate is evaluated once more at episode end.
 
-**The agent's clock (every 2.x service, since 2026-10-13).** `meta.time_s` is the wall time since the agent's **first
+**The agent's clock (every 2.x service).** `meta.time_s` is the wall time since the agent's **first
 request** to the service, whatever the endpoint (`GET /spec`, which the shipped clients send first, counts), and
 `meta.time_left_s` = `spec.budget.wall_clock_s` − `time_s`, never below 0. The clock does not start with the service,
 when the scene is ready, or with a probe that only connects to the port; the first request is logged in
 `episode.jsonl` (`first_request`) and a restarted service reads it back, so a restart never sets the clock back to
 full. `GET /status` `elapsed_s` and the `elapsed_s` of `final.json` are the episode's own time, from the service's
 start of the episode. Why: Harbor counts the agent's cutoff around the agent's run only, and the sidecar starts with
-the environment, before the harness is installed; a clock started with the service ran ahead of the agent's (a median
-of 79 s over 2,322 recorded trials, board 0085). With this rule `time_left_s` never runs out before the agent is
+the environment, before the harness is installed, so a clock started with the service would run ahead of the agent's.
+With this rule `time_left_s` never runs out before the agent is
 stopped, and the agent's real time left is `time_left_s` minus what it spent before its first request. A service that
 ends an episode on its own clock says so in its benchmark's doc. A readiness probe added to a compose file or a runner
 must not send a request to the service before the agent runs: connecting to the port is enough.
@@ -181,7 +178,7 @@ budget is part of a result's configuration: results with different budgets are n
 
 ## Part 2 — `eai-standard/2.2`: capabilities added to 2.1
 
-> Formerly `rcb-limited/2.2`. 2.2 is a minor version of `eai-standard/2.1` (Part 1): everything there holds unless
+> 2.2 is a minor version of `eai-standard/2.1` (Part 1): everything there holds unless
 > this part says otherwise, every 2.2 addition is an optional capability, and a request written for 2.0 or 2.1 gets
 > the same answer as before (plus parts and keys an old client ignores).
 
@@ -433,7 +430,7 @@ numeric ones into `reward.json`, with `infra_error`.
   handler; `episode=EP, state_sha=..., proprio=...` in `L.Service`; `**EP.final_fields()` in `final.json` / `episode.json`.
 
 #### 13.4 Measured scene builds
-Moved to the benchmarks' docs (2026-10-14): each records its own build times next to its `RCB_STARTUP_TIMEOUT_S`.
+In the benchmarks' docs: each records its own build times next to its `RCB_STARTUP_TIMEOUT_S`.
 
 #### 13.5 Cost and tests
 One state hash per call (not per step). A resume replays the episode so far without rendering, on the agent's wall
@@ -457,11 +454,11 @@ Recommended: a benchmark's privileged Session offers the same robot information 
 mode stays privileged (object state through the tooling).
 
 ### 16. Per-simulator notes
-Moved to the benchmarks' docs (2026-10-14): each describes its control rate, `joint_position` and `ee_pose` layouts,
+In the benchmarks' docs: each describes its control rate, `joint_position` and `ee_pose` layouts,
 cameras, depth source, `/kinematics` model, proprio columns, live success rule and video, and resume class.
 
 ### 17. Known issues
-Moved to the benchmarks' docs (2026-10-14).
+In the benchmarks' docs.
 
 ### 18. Versioning
 `protocol` in `/spec` = `metadata.protocol` = `eai-standard/2.2`. The 2.x client accepts every 2.x service under both
@@ -470,7 +467,7 @@ for `include_depth` and ignore the new parts and keys).
 
 ## Part 3 — Standard-realtime mode: `eai-standard/2.3`
 
-Time does not stop. The wire protocol of the standard-realtime mode (protocol-change issue #86), served by
+Time does not stop. The wire protocol of the standard-realtime mode, served by
 standard-realtime tasks only (`mode = "standard-realtime"`, `protocol = "eai-standard/2.3"`); the shared implementation
 is `scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which other benchmarks' realtime services use unchanged. 2.3
 is 2.2 plus the realtime capability below; every 2.2 addition stays optional, so a 2.1 service with this capability is a
@@ -511,7 +508,7 @@ are part of a result's configuration (RUNNING.md).
   missed steps back to back, and more than 0.5 s behind it drops the debt (a stall, counted, its seconds added to
   `stalled_s`) instead of fast-forwarding the robot. Checkpoints every second of robot time while the clock runs; the
   reference implementation resumes a crashed service in the same episode, paused.
-- **What a request can cost the clock** (2026-10-10). A request's body is read, decoded and checked on its HTTP thread:
+- **What a request can cost the clock.** A request's body is read, decoded and checked on its HTTP thread:
   a request that is refused for what it says (404, 413, a malformed body, a wrong type / shape / `dt` / camera, a
   chunk longer than `max_chunk_s`) never reaches the simulator's thread, and neither does `GET /spec`. JSON text is
   parsed in the service's process only up to 1 MiB; a body with more of it is parsed by a child process, one at a time,
@@ -528,8 +525,7 @@ are part of a result's configuration (RUNNING.md).
   too far ahead; too many frames) are answered by the simulator's thread, and a 409 still comes before a 400 for a
   request's fields.
 - **Crashes and simulator errors.** No call spans the clock (`/submit` answers at once), so what the agent's commands
-  caused is told apart by time and by kind (owner, 2026-10-17, board 0151; PROTOCOL H.5: a normal task failure is no
-  infrastructure failure). "After the first command" means after the first control step that ran a row the agent
+  caused is told apart by time and by kind (PROTOCOL H.5: a normal task failure is no infrastructure failure). "After the first command" means after the first control step that ran a row the agent
   sent (held steps before it do not count).
   - A simulator error raised by a control step after the first command (`reason = "error"`) ends the episode as the
     agent's result: `sim_error = 1`, `infra_error = 0`. Before it: infrastructure.
@@ -541,19 +537,12 @@ are part of a result's configuration (RUNNING.md).
     (SIGKILL, SIGTERM, the out-of-memory killer: nothing recorded) and a crash before the first command are not the
     agent's; a failed resume is `resume_failed` (`infra_error = 1`). A reset whose new episode the simulator fails to
     build is infrastructure in both standard modes.
-  - The 2.3 layer (`rcb_realtime.py`) implements this from robot_coding_bench #312; tasks generated before it still
-    record every simulator error and crash as infrastructure.
 - **Agent code** runs where it does in standard mode, in the agent's own container: a controller that streams targets
   through the client, not code uploaded next to the simulator.
 
-The time model matches the one proposed for the Embodied Agent Olympiad's `eai-standard-realtime/1.0` (PR #41: the
-world runs at 1/S of real speed, a command takes effect at the next control step and replaces the one under way, all
-agent latency counts, the agent's own program may act) and uses its `slowdown` name. It stays inside 2.x: no `/start`,
-`/act`, `/wait`, `/ready`, seats, reviews or metering proxy.
-
 ## Part 4 — `eai-standard/2.4`: the operations capability
 
-Status: accepted 2026-10-08 (owner), protocol-change issue #89. Reference implementation:
+Reference implementation:
 [`scripts/eai_standard/v2_4/`](../scripts/eai_standard/v2_4/), with `rcb_limited.py` and `rcb_client.py`. `rcb1.py`,
 `run.sh`, the client image and the client pins are the 2.2 ones in `scripts/eai_standard/`. In the tables below, MUST
 means "required of a service that reports 2.4" (what a 2.4 client may rely on).

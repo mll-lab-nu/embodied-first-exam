@@ -34,9 +34,7 @@ switches off its re-colouring of the lever at reset (Tooling, below), so the des
 Not in this set (descriptions written: `scripts/ambench/descr/`):
 - **FrameAssembly, WipeWindow, TossBall**: AM-Bench's scripted experts did not succeed on the seed-0 instances (FrameAssembly
   0/13, WipeWindow 0/9, TossBall 0/21 runs over the expert's own draw and torch seeds), so there is no reference solution yet.
-  AM-Bench does not pin an Isaac Lab version; on Isaac Lab v2.3.2 (the release for Isaac Sim 5.1, a test image with the
-  same AM-Bench commit) they fail too (three expert tries each, 2026-10-14: all reach the episode's time-out, no GPU fault),
-  so the cause is not the Isaac Lab commit.
+  They fail on Isaac Lab v2.3.2 too (the release for Isaac Sim 5.1), so the cause is not the Isaac Lab commit.
 - AM-Bench's other robot and controller profiles (the quadrotor, the omnidirectional hexa, the under-actuated hexa, the
   end-effector-only robot; L1 and MPC controllers) are variants of the same tasks.
 
@@ -61,7 +59,7 @@ control step 120 × episode length − 1). Each task's description (`descr/<task
 check exactly. Weak checks are kept as AM-Bench wrote them and stated: CabinetPickPlace only tests the can's height and
 speed (a can still held at that height passes); FrameAssembly (not in the set) tests one moment of the frame's centre.
 
-**RotateValve: the unwrapped angle (2026-10-14, board 0110, before the first release).** `base_to_shaft` has no limits,
+**RotateValve: the unwrapped angle.** `base_to_shaft` has no limits,
 and omni.physx (107.3, Isaac Sim 5.1) creates an articulation's revolute joint without limits as a wrapped joint, whose
 position PhysX reports in [-π, π] (omni.physx's own tests: "the joint without limits will be created as regular WRAPPED
 joint"). AM-Bench's check `joint_pos >= 17π/18` on that value also passes a counter-clockwise turn of 190° (reported as
@@ -73,7 +71,7 @@ unchanged; for a clockwise turn below π the two readings agree, so the recorded
 `s.valve_angle()` in the tooling. This is a correction of a wrap-around, not a stricter rule: the upstream threshold,
 direction and timing stay as they are.
 
-## Oracle (PROTOCOL §2.7)
+## Oracle (PROTOCOL §4)
 `oracle = "full"`, 17/17. The reference solution of an instance is AM-Bench's scripted expert for the task
 (`policies/scripted/<task>.py`, `inject_noise=False`), run in closed loop on the frozen instance by `freeze.py` and
 recorded as the rows the tooling executed, followed by 2 s of holding its last command (`solution/oracle_actions.npy`);
@@ -83,13 +81,6 @@ only those, OpenDoor's 395, left a replay that needed one step more nothing to r
 (`solution/oracle_replay.py`) streams them as one-second `ee_pose` chunks (`hold`, dt = 1/120 s) through the client. The
 expert reads the simulator's state between steps, so its own live episode is not the reference: two fresh-process
 replays with the grader's CLI must both succeed and end in the same state before an instance is frozen.
-
-Standard mode (board 0130, 2026-10-15, until 2026-10-17; since then no replay grades the episode, the trajectory is what
-ran, `hold_pad_rows` = 0, and any live GPU fault is an infrastructure failure: Grading): a live success ends the episode at its success step, so the trajectory the
-sim sidecar saves for the graders holds the last command for up to 2 s after it (`hold_pad_rows` in `episode.json`), as
-the privileged reference does; a replay stops at its own success, so the padding runs only where the race of
-Determinism delays it. A live episode that logged GPU faults and did not succeed is an infrastructure failure, not
-the agent's 0.
 
 The experts are not in the image: the Dockerfile copies AM-Bench without `policies/scripted/`, `ambench_learn`, its scripts,
 documentation and git history, blanks the task registrations' `scripted_policy_entry_point`, and fails if anything left
@@ -119,45 +110,26 @@ stateless numpy model of the arm on its airframe (`/kinematics`; checked against
 - CLI: `replay` (one fresh-process replay: the grader's), `film` (the same rows, filmed through the render worker),
   `make-instance`, `run-actions`, `render-worker` (internal).
 
-## Determinism (measured on Isaac Sim 5.1, GPU PhysX, RTX 4090, 2026-10-14)
+## Determinism (Isaac Sim 5.1, GPU PhysX, RTX 4090)
 A fresh process replays a frozen instance's rows to the same end state; every frozen instance was replayed at least twice
-(OpenDoor and CabinetPickPlace four times more) to identical end states. Getting there took five measured fixes:
+to identical end states. The tooling's five fixes make that hold:
 1. **SYNC (IK).** AM-Bench's controller solves its floating-base IK on the CPU (Pyroki / jaxls) from GPU tensors and hands
-   the result back to the GPU every step. Without a device synchronization around that solve, fresh replays of OpenDoor's
-   rows ended in three different states over twelve runs (the controller's first output already differed between
-   processes); with it, identical.
-2. **SYNC (phases).** That left a rarer race (CabinetPickPlace: two end states; with `CUDA_LAUNCH_BLOCKING=1` identical, but
-   3.8× slower): every phase of a control step (pre-physics step, the action's application, the writes to PhysX, the physics
-   step, the buffers' update, dones, rewards, resets, observations) is also bracketed by a synchronization, at no measurable
-   cost: identical.
-3. **PROPELLERS.** AM-Bench animates the propellers by writing their orientations into the robot's USD prims every step;
-   with that on, OpenDoor still parted now and then; switched off, identical (4/4).
-4. **CAMERAS.** With the onboard cameras rendering inside the physics process (Isaac renders after every physics step when
-   they exist; `render()` also calls `forward()`), runs of the same rows still parted, by a varying amount. The cameras are
-   therefore drawn by a second, render-only Isaac process from the physics state (`Renderer`): the physics process is the
-   same with or without cameras (PressButton with cameras ends in the camera-free end state), so a privileged agent can look,
-   and the standard service's live episode is the same computation as its replays.
-5. **SYNC (views).** With the four above, fresh replays still parted on a loaded host (load average 50-76 on 32 cores,
-   other users' Isaac jobs on the GPU): of OpenDoor's frozen rows, one of four plain replays ended in another state (at
-   control step 396 instead of 395), and in one Harbor trial two of three runs did (the oracle's own run and one of the two
-   grader replays); a probe that read the state after every step ended four times out of four in yet another one. Inside a
-   phase, PhysX's tensor views copy state out of GPU buffers and targets into them while Isaac Lab's torch kernels use those
-   buffers right away. So every `get_*` / `set_*` / `apply_*` call on the views of every articulation, rigid object and
-   contact sensor is bracketed by a synchronization too (`sync_views`): eight of eight replays identical, all in the frozen
-   end state (`f778f7c7…`; the load had fallen to 26-40 by then), at no measurable cost (53-67 s per replay, as before).
-   Then all eight tasks, three replays each (load average ~50, two replays at a time, another user's Isaac jobs holding
-   17.7 of 24.5 GB of GPU memory): every replay without a GPU fault (below) ended in its task's frozen end state at the
-   frozen step (22 of 22); the frozen hashes are those of the five fixes.
+   the result back to the GPU every step; a device synchronization brackets that solve.
+2. **SYNC (phases).** Every phase of a control step (pre-physics step, the action's application, the writes to PhysX, the
+   physics step, the buffers' update, dones, rewards, resets, observations) is bracketed by a synchronization, at no
+   measurable cost.
+3. **PROPELLERS.** AM-Bench's propeller animation (orientations written into the robot's USD prims every step) is off.
+4. **CAMERAS.** Rendering inside the physics process (Isaac renders after every physics step when cameras exist;
+   `render()` also calls `forward()`) makes runs part, so the onboard cameras are drawn by a second, render-only Isaac
+   process from the physics state (`Renderer`): the physics process is the same with or without cameras, so a privileged
+   agent can look.
+5. **SYNC (views).** Every `get_*` / `set_*` / `apply_*` call on PhysX's tensor views of every articulation, rigid object
+   and contact sensor is bracketed by a synchronization too (`sync_views`), at no measurable cost.
 
-**What is left: a rare race under Harbor.** Outside Harbor, every clean replay with the five fixes ended in its frozen
-state (29 of 29: the 22 above, OpenDoor's eight, NDT four more with the container throttled to 2 CPUs). Under Harbor,
-2 of the first 6 runs did not, with no GPU fault logged: OpenDoor's oracle run in the agent's container ended one step
-later (success at 396, `5bc99745…`, the state of one pre-fix replay), and NDT's second verifier replay ended in
-`8ecd8c8d…` (success at the same step 1212). It is not Harbor's: outside it, with three replays at once on the shared GPU
-(and the smaller PhysX buffers, below), 2 of 16 parted the same way (OpenDoor again at 396 in `5bc99745…`, NDT in
-`f3da599b…` at 1212) while their twins matched; CPU caps (2 CPUs) alone did not show it. Contention on the GPU shows a
-race left inside a step that none of the five synchronizations reaches. None of these changed an outcome. So the graders
-decide on the outcome in two fresh processes and report the hashes (Grading).
+**What is left: a rare race under GPU contention.** With other jobs on the GPU (three replays at once on a shared card,
+or under Harbor), about 1 in 8 replays still ends one step later or in another end state while succeeding (OpenDoor at
+396 instead of 395, NDT in other last bits); none changed an outcome. So the graders decide on the outcome and report
+the hashes (Grading).
 
 **PhysX buffers.** Isaac Lab sizes PhysX's GPU buffers for thousands of parallel environments; the tooling gives its one
 environment one environment's worth (contacts 2^18, aggregate pairs 2^18, ...): a camera-free process takes 1.2 GB of GPU
@@ -167,19 +139,14 @@ eight tasks' frozen rows replay to their frozen end states with them, no overflo
 
 **GPU faults.** On a crowded GPU, PhysX can fail to launch its kernels (`PhysX error: GPU convexCoreConvexNphase_Kernel fail
 to launch`, `prepareLostFoundPairs`, `updateFrictionPatches`) or CUDA can fail to allocate, and PhysX steps on without
-them: of 25 replays above, one logged 237 such errors and ended elsewhere (PegInHole: `7f8ce9f9…`, no success in 1281
-rows); others that logged them still matched. So the tooling knows the pattern (`rcb_ambench.GPU_FAULT`; not the errors a
+them, and a run that logged them can end elsewhere (a PegInHole replay with 237 such errors failed). So the tooling knows the pattern (`rcb_ambench.GPU_FAULT`; not the errors a
 trajectory can cause itself, such as non-finite forces), and a replay whose output shows any is no result: both graders
 run it once more, then report an infrastructure error (`replay_gpu_fault`), never the agent's 0 or 1. The standard
-service's own output (`server.log`; the render worker logs to `render_worker.log`) is counted too (`live_gpu_faults`):
-until 2026-10-17 a live episode with GPU faults whose outcome differed from its two clean replays was an infrastructure
-error; since then (no replay) a live episode with any GPU fault is (Grading).
-How it was missed at first: the first probes hashed the state after the last step, which Isaac Lab had already reset to the
-next start (End state, above), and the expert's own live episode, which reads the state between steps, happened to keep
-the race in order.
+service's own output (`server.log`; the render worker logs to `render_worker.log`) is counted too (`live_gpu_faults`): a
+live episode with any GPU fault is an infrastructure error (Grading).
 
-**PhysX itself (PullLever).** One task stays non-reproducible with all five (four replays of its reference rows: three
-ended `1ef7b812…`, one `1abad6ac…`, all successful at step 899, no GPU fault): tracing PullLever's replays step by step, the
+**PhysX itself (PullLever).** One task stays non-reproducible with all five (its reference rows succeed at step 899 in
+every replay but end in different states, no GPU fault): tracing PullLever's replays step by step, the
 states and the controller's outputs are identical up to the step where the gripper first touches the lever, and that step
 resolves the contact differently in different processes (the lever moves or not); `CUDA_LAUNCH_BLOCKING=1`, a fixed
 `PYTHONHASHSEED` and PhysX's enhanced determinism do not change that. PullLever is therefore standard only (above).
@@ -197,69 +164,39 @@ those of this GPU model; another GPU model may differ in the last bits (BUILD_ON
   process films the rows (`/logs/verifier/replay.mp4`). An unreadable deliverable is `bad_trajectory`, another task's
   file `wrong_task` (the agent's 0); so is a row whose quaternion has zero or non-finite length (`bad_quaternion_rows`,
   checked when the file is read; the replay CLI also reports a row it refuses as `bad_trajectory`, a verdict, never a
-  replay without a result; board 0121); a replay without a result, a replay time-out, a replay with GPU faults
+  replay without a result); a replay without a result, a replay time-out, a replay with GPU faults
   (`replay_gpu_fault`, above) or `instance_ok = 0` is `grader_error = infra_error = 1`; a replay process that ends
   without a result or with GPU faults is run once more. Each process has max(1800 s, 1500 s + runnable rows / 4);
   `[verifier] timeout_sec` = four of those (7800-13200 s by episode length).
-- **Standard** (since 2026-10-17, owner, boards 0150/0151): graded by the **live episode**, with no grading replay, the same
-  rule for all nine tasks: success = `live_success`, AM-Bench's check as the service ran it after every control step (no
-  end-of-episode hold: AM-Bench has none, and the replays applied none). The service dumps the episode when the collect
-  hook signals it and exits; the hook (`environment/sim/finalize.sh`) writes `final.json` from `episode.json`
-  (`graded_by` "live", `replays` 0), then films the rows once (`rcb_ambench.py film`: a fresh process with the render
-  worker, `replay.mp4`) as the video only: nothing of the film is compared, it is not run again, its failure or its time
-  limit (`RCB_FILM_LIMIT_S` 1800 s) costs the video. The live service does not film: rendering inside the physics process
-  makes AM-Bench's GPU physics timing-dependent (Determinism), and its cameras are drawn by the render worker only for
-  the agent's own frames. No verdict on the agent (`infra_error`): a missing, unreadable or unfinalized `final.json`, no
-  `episode.json`, a give-up after crashes between calls, the episode never ending, GPU faults in the live episode's
-  physics (`live_gpu_faults` > 0, counted in the service's output from its marker before `EP.begin` to the end of
-  that start, so a start that died while building the scene and was restarted does not count: before, they voided a task graded by verdict, and the
-  others when the live outcome differed from the replays' or the live episode failed; with no replay to compare, any
-  fault voids the episode. The validation below saw one such line in a live oracle episode, so this can cost a retry),
-  and the start check: before it serves, the service compares the rebuilt scene's state hash with `instance.json`'s
-  `initial_sha` (`instance_matches`, the check the replays made too) and gives up as infra (`instance_mismatch`) on a
-  mismatch. A crash inside the agent's calls and a simulator error raised by them stay its 0. The trajectory is what
-  ran: the padding after a live success (`hold_pad_rows`, up to 2 s of the last command, for the race above) was for the
-  grading replays and is gone (`hold_pad_rows` = 0).
-  Until 2026-10-17 (YAMLab's grading): two camera-free fresh-process replays and a film; success = live ∧ both replays ∧
-  deterministic (the same outcome), PullLever (`"determinism": "verdict"`) graded by its live episode already.
-  Re-scoring such a trial by its live episode: `final.json` `success` (merged from episode.json), `infra_error` only for a
-  missing live record, a give-up with `infra_error`, or `live_gpu_faults` > 0; `replay_error`, `replay_gpu_faults`, `gpu_lost`
-  and `instance_mismatch` found by a replay are not the live episode's. Cost saved: the two replays, 62 s (median) to
-  ~100 s each, measured on the 9 archived standard trials (the film, 77 s median, stays).
+- **Standard**: graded by the **live episode**, with no grading replay, the same rule for all nine tasks: success =
+  `live_success`, AM-Bench's check as the service ran it after every control step (no end-of-episode hold: AM-Bench has
+  none). The service dumps the episode when the collect hook signals it and exits; the hook
+  (`environment/sim/finalize.sh`) writes `final.json` from `episode.json` (`graded_by` "live", `replays` 0), then films
+  the rows once (`rcb_ambench.py film`: a fresh process with the render worker, `replay.mp4`) as the video only: nothing
+  of the film is compared, it is not run again, its failure or its time limit (`RCB_FILM_LIMIT_S` 1800 s) costs the
+  video. The live service does not film: rendering inside the physics process makes AM-Bench's GPU physics
+  timing-dependent (Determinism), and its cameras are drawn by the render worker only for the agent's own frames. No
+  verdict on the agent (`infra_error`): a missing, unreadable or unfinalized `final.json`, no `episode.json`, a give-up
+  after crashes between calls, the episode never ending, GPU faults in the live episode's physics (`live_gpu_faults` >
+  0, counted in the service's output from its marker before `EP.begin` to the end of that start, so a start that died
+  while building the scene and was restarted does not count; this can cost a retry), and the start check: before it
+  serves, the service compares the rebuilt scene's state hash with `instance.json`'s `initial_sha` (`instance_matches`)
+  and gives up as infra (`instance_mismatch`) on a mismatch. A crash inside the agent's calls and a simulator error
+  raised by them stay its 0. The trajectory is what ran (`hold_pad_rows` = 0). The collect hook has 4800 s; the `main`
+  kill hook (`kill -9 -1`) runs before the sim's (PROTOCOL H.4).
+  Re-scoring a trial recorded before live grading (two replays and a film decided then) by its live episode:
+  `final.json` `success` (merged from episode.json), `infra_error` only for a missing live record, a give-up with
+  `infra_error`, or `live_gpu_faults` > 0; `replay_error`, `replay_gpu_faults`, `gpu_lost` and `instance_mismatch` found
+  by a replay are not the live episode's.
 - Both verifiers run with `network_mode = "no-network"`; every web asset the scenes load is in the image (BUILD_ONLY,
   Data).
 
-## Change log
-- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by one film
-  pass after the verdict (`replay.mp4`, video only). The start-state check moved to the episode's start
-  (`instance_mismatch` = a give-up as infra before serving); live GPU faults are infra for every task. Collect hook
-  7200 s -> 4800 s. The `main` kill hook (`kill -9 -1`) runs before the sim's (PROTOCOL H.4). Privileged tasks unchanged.
-  The 9 standard task dirs regenerated in place (new DIGESTs; the instructions do not change).
-
-## Validation (Harbor, RTX 4090 shared with other users' Isaac jobs, 2026-10-14)
-Oracle, with this tooling and these graders before their port onto main's v2.0 conventions (the port adds main's
-RotateValve unwrapped angle and zero-quaternion check): 17/17 reward 1, `infra_error` 0.
-
-| task | privileged: success step, replay end states | standard: success step, live / replays |
-|---|---|---|
-| cabinet_pick_place | 2752, both `c8c72a8b` | 2752, live = both replays |
-| lemon_harvesting | 1739, both `a0426217` | 1739, live = both replays |
-| ndt | 1212, `bd8da252` / `8ecd8c8d` | 1212, replays equal, live in other last bits |
-| open_door | 396 / 395, `5bc99745` / `f778f7c7` | 395, live = both replays |
-| peg_in_hole | 1041, both `88054491` | 1041, live = both replays (one GPU fault line live) |
-| press_button | 1027, both `fcd4de9b` | 1027, live = both replays |
-| push_slider | 1353, both `01a85d35` | 1353, live = both replays |
-| rotate_valve | 1002, both `1b976104` | 1002, live = both replays |
-| pull_lever | (standard only) | 899, graded by the live episode (`graded_by_live`) |
-
-The two privileged pairs whose end states differ are the race of Determinism; both replays succeeded, so both pass under
-the outcome rule (under the hash rule they would have failed). Privileged `nop`: 8/8 reward 0 (`missing_trajectory`, no
-Isaac process started). Running two privileged trials side by side on the shared card, two of the films (NDT,
-PushSlider) ran out of GPU memory; the films never decide, and the verdicts stand. Standard `nop`: 9/9 reward 0
-(`time_up`, `infra_error` 0; PullLever `graded_by_live`). After the port (the tasks of this pull request): PressButton
-privileged 1 (both replays `fcd4de9b…`); RotateValve privileged 1 (both replays successful, at 1002 in the frozen state
-and at 996 in another: the race again, on the unwrapped angle); RotateValve standard 1 (live = both replays, 1002).
-Conformance: 164 PASS, 0 FAIL (Standard mode, below).
+## Validation (Harbor, RTX 4090 shared with other users' Isaac jobs)
+Oracle 17/17 reward 1, `infra_error` 0 (success at the steps of the task table; two privileged pairs ended in different
+states while both replays succeeded: the race of Determinism). Privileged `nop`: 8/8 reward 0 (`missing_trajectory`,
+no Isaac process started). Standard `nop`: 9/9 reward 0 (`time_up`, `infra_error` 0). Two privileged trials side by side
+on a shared card can run a film out of GPU memory; the films never decide. Conformance: 164 PASS, 0 FAIL (Standard mode,
+below).
 
 ## Standard mode (eai-standard/2.2)
 - **Action**: `ee_pose` (8: AM-Bench's own action) rows `dt` apart (a multiple of 1/120 s, at most 0.5 s), `hold` (each row
@@ -275,29 +212,25 @@ Conformance: 164 PASS, 0 FAIL (Standard mode, below).
 - **Robot spec**: the limits PhysX enforces. AM-Bench's asset gives three arm joints (link2/link3 pitch, link4 roll) ±10 rad,
   more than a turn each way and no joint stop an arm meets: they are reported as `continuous` (`position_limits: null`)
   with the asset's range in `note` (the conformance check reads three equal ranges beyond ±2π as placeholders).
-- **Conformance** (`ci_checks/check-standard-protocol.py --launch`, PressButton, 2026-10-14): 164 PASS, 0 FAIL; the
-  sidecar peaked at 6.5 GB of GPU memory with Isaac Lab's PhysX buffers (physics 2.65 + render worker 3.37), 4.6 GB with
-  the tooling's (PhysX buffers, above).
+- **Conformance** (`ci_checks/check-standard-protocol.py --launch`, PressButton): 164 PASS, 0 FAIL; the sidecar peaks at
+  4.6 GB of GPU memory (PhysX buffers, above).
 - **Episode**: one, no reset; AM-Bench's own time-out stays (the task's episode length; reason `episode_timeout`); simulated
   time advances only with the agent's calls; the wall clock (3600 s) is the budget.
-- **Crash recovery**: resume class `approx` for every task (`scripts/ambench/kill_test.sh`). With `exact`, the kill test
-  failed: the resumed service replayed the journal to a TCP 1e-6 m from its checkpoint (the race of Determinism), and
-  `exact` makes any difference `resume_failed` (`infra_error`). `approx` records the deviation (`resume_state_mismatch`,
-  `resume_max_tcp_dev_m`), ends the episode only beyond `RCB_RESUME_MAX_DEV_M` (5 cm), and the verdict still comes from
-  fresh replays of the whole trajectory. Kill test with `approx` (PushSlider, kill -9 during the fifth call): resumed at
-  control step 480 with the TCP 8.4e-7 m from its checkpoint, the oracle carried on, success at 1353, both replays
-  successful and identical, `infra_error` 0.
+- **Crash recovery**: resume class `approx` for every task (`scripts/ambench/kill_test.sh`): the resumed service replays
+  the journal to a TCP about 1e-6 m from its checkpoint (the race of Determinism), which `exact` would make
+  `resume_failed`. `approx` records the deviation (`resume_state_mismatch`, `resume_max_tcp_dev_m`) and ends the episode
+  only beyond `RCB_RESUME_MAX_DEV_M` (5 cm); the verdict is the resumed live episode's. Kill test (PushSlider, kill -9
+  during the fifth call): resumed at control step 480, the oracle carried on, success at 1353, `infra_error` 0.
 
-## Time budget (D8)
-3600 s for every task of both modes (each task's `[agent] timeout_sec`, from `mk_tasks.py` `CUTOFF_SEC`; the
-proposal's default), stated in each instruction's closing `## Time limit` section. Every Python
+## Time budget
+3600 s for every task of both modes (each task's `[agent] timeout_sec`, from `mk_tasks.py` `CUTOFF_SEC`), stated in each instruction's closing `## Time limit` section. Every Python
 process pays ~2-6 min of Isaac Sim launch and scene build (the upper end with other Isaac jobs on the GPU); stepping runs
 at about 9-15 control steps/s.
 
 ## Declarations
 - **Tooling: thin wrappers only.** The environment's own action, its state, its cameras, recording and replay. Task-level
   skills are never added.
-- **World-frame information (D7).** The privileged instructions give the full scene (the reset distributions and the frozen
+- **World-frame information.** The privileged instructions give the full scene (the reset distributions and the frozen
   instance's state through the tooling). Standard texts give no position of anything (sizes and layout only); NDT's
   inspection point, which nothing in the scene marks, is given as goal geometry.
 - **Pointers to the reference solution.** The reference rows come from AM-Bench's public scripted experts; the image has
@@ -311,30 +244,8 @@ at about 9-15 control steps/s.
 
 ## Easy set
 
-The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
-run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
-Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
-for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
-failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
-**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
-`solved`): kept under its name and reported apart from the main table.
-
-Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
-`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
-Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
-`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
-
-8 of 9 bases are in the easy set; by directory: 16 easy, 0 hard, 1 unverified, 0 pending.
-
-| base | easy set | privileged | standard |
-|---|---|---|---|
-| `ambench-cabinet-pick-place-fahexa-i00` | yes | easy: Luna | easy: Luna |
-| `ambench-lemon-harvesting-fahexa-i00` | yes | easy: Luna | easy: Luna |
-| `ambench-ndt-fahexa-i00` | yes | easy: Luna | easy: Luna |
-| `ambench-open-door-fahexa-i00` | yes | easy: Luna | easy: Luna |
-| `ambench-peg-in-hole-fahexa-i00` |  | easy: Luna | unverified |
-| `ambench-press-button-fahexa-i00` | yes | easy: Luna | easy: Luna |
-| `ambench-pull-lever-fahexa-i00` | yes | — | easy: Luna |
-| `ambench-push-slider-fahexa-i00` | yes | easy: Luna | easy: Luna |
-| `ambench-rotate-valve-fahexa-i00` | yes | easy: Luna | easy: Luna |
+A base whose every mode a screening run solved (a graded success within the task's time limit; logs of solves by runs
+other than GPT-6 Luna checked for shortcuts and for access to tests, solutions or graders) is in the easy set
+(`docs/easy_set.toml`, reason `solved`): kept under its name and reported apart from the main table. 8 of 9 bases are
+in it, each solved by GPT-6 Luna (`codex-gpt6_luna-xhigh`) in every mode it ships; `ambench-peg-in-hole-fahexa-i00`
+stays in the core set (privileged solved by Luna, standard unverified: only Luna attempted it, and failed).

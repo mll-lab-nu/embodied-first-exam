@@ -12,9 +12,9 @@ the allowlist unless the task declares open egress (H.6).
 
 Documents: [`RUNNING.md`](RUNNING.md) (official-run configuration, seeds, retries, gateway, resource enforcement,
 results; enforced by the runner and scheduler), [`STANDARD_MODE.md`](STANDARD_MODE.md) (the `eai-standard/2.x` wire
-format), [`LEAKAGE.md`](LEAKAGE.md) (how answers leak), `docs/benchmarks/<bench>.md` (each benchmark's own choices),
-[`PROTOCOL_HISTORY.md`](PROTOCOL_HISTORY.md) (versions, owner decisions, migrations). Tasks written before v2.0 cite
-v1 section numbers (`PROTOCOL.md §2.10`); the table at the end says where each one went.
+format), [`LEAKAGE.md`](LEAKAGE.md) (how answers leak), [`TAXONOMY.md`](TAXONOMY.md) (metadata values, names, run ids),
+`docs/benchmarks/<bench>.md` (each benchmark's own choices). Older tasks cite v1 section numbers (`PROTOCOL.md §2.10`);
+the table at the end maps them.
 
 ## 1. What a task is
 
@@ -51,7 +51,7 @@ configuration (`config_key`; RUNNING.md "Results").
 | Grading kind | the instruction, the frozen instance, `reward.json` (`replays`, `graded_by_live`) | privileged: two fresh replays, or one by the task's choice; standard modes: the live episode (H.4) |
 | Seeds | `[metadata.seeds]` `default`, `allowed` (list, `{from, to}`, `"any"`), `oracle`, `build` | the default seed only |
 | Network | `[metadata] network` | `"allowlist"`; `"open"` by the author's choice (H.6) |
-| Scene dynamics | `[metadata] dynamics` (`dynamic`: something other than the robot does work by a force other than the robot's and gravity) | none: declared by every task |
+| Scene dynamics | `[metadata] dynamics` (`dynamic`: something other than the robot does work by a force other than the robot's and gravity; TAXONOMY.md "Dynamics") | none: declared by every task |
 | Validated | `[metadata] validated`, else `oracle = "full"` | a recorded marker, not part of the configuration: validated and unvalidated tasks are ranked together |
 | Stricter honour rules | `[metadata.honour] stricter` | none (never looser rules) |
 
@@ -61,10 +61,10 @@ The modes live in one registry, `MODE_REGISTRY` in `scripts/task_conventions.py`
 section here, by pull request (name, what the agent gets, what is graded, time and reset rules, which failures are
 infrastructure, a reference implementation, one benchmark using it, CI support through the registry).
 
-- **privileged** (`-privileged`; formerly unlimited): agent and simulator share a container; the agent may read
+- **privileged** (`-privileged`): agent and simulator share a container; the agent may read
   privileged state, reset freely and plan; the deliverable is a trajectory (`/app/output/trajectory.npz`) or code
   (`task_type = "policy"`), graded offline in the verifier.
-- **standard** (`-standard`; formerly limited; `eai-standard/2.1`, `2.2`, `2.4`): robot as a service. The simulator runs
+- **standard** (`-standard`; `eai-standard/2.1`, `2.2`, `2.4`): robot as a service. The simulator runs
   in a `sim` sidecar the agent cannot open; the agent sends actions and receives images and proprioception through the
   shipped client (`rcb_client.py`, `rcb1.py`); resets within the declared budget; no step caps, the wall clock is the
   only hard budget. Graded by the live episode the sidecar ran (H.4).
@@ -81,7 +81,7 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 |---|---|
 | `/logs/verifier/reward.txt` `1` or `0`; `reward.json` numbers only: `success`, `deterministic` (privileged trajectory tasks), `live_success` and `graded_by_live` (standard modes), `infra_error`, `sim_error`, `grader_error`, `progress`, the resource fields, cost fields (`n_actions`, `sim_steps`) | the same names wherever the concept applies |
 | Every graded trial leaves a playable video (`replay.mp4` in `/logs/verifier/` or the sim sidecar's collected directory) and the replayable trajectory it was graded on (privileged: the deliverable; standard: the sidecar's journal or `trajectory.npz`). The one expected exception: a privileged trial whose agent submitted no trajectory, or none that replays (`missing_trajectory`, `bad_trajectory`, no actions). Standard modes: recorded by the sidecar during the live episode where that is cheap (or where the simulator does not replay bit for bit), else rendered from the trajectory in one pass after the verdict (`live.mp4` / `replay.mp4`). The verdict is written before the video is rendered and never depends on it; the video's time bound covers the longest episode the cutoff allows | `check-video.py`; the runner flags a graded trial without a video and renders it from the trajectory (RUNNING.md "Recordings") |
-| Privileged: success judged on the end state of the replay; ≥ 2 replays with matching final-state hashes (`deterministic`), or one by the task's declared choice. Standard modes: success judged by the sidecar on the live episode, with the task's own rule (a settle or hold window it declares is run on the live simulator); `reward.json` says `graded_by_live = 1`, `replays = 0` | within H.4; `check-live-verdict.py` |
+| Privileged: success judged on the end state of the replay; ≥ 2 replays with matching final-state hashes (`deterministic`), or one by the task's declared choice. A scene build does not depend on the host (sorted listings, no wall clock); an instance rebuilt with another state hash gives no verdict (`instance_mismatch`, an infrastructure failure). Standard modes: success judged by the sidecar on the live episode, with the task's own rule (a settle or hold window it declares is run on the live simulator); `reward.json` says `graded_by_live = 1`, `replays = 0` | within H.4; `check-live-verdict.py` |
 | An infrastructure failure is `infra_error = 1`: not a result, neither a success nor the agent's 0 (H.5) | `scripts/write_task_results.py` |
 | `nop` scores 0; with `oracle = "full"` the oracle scores 1 on every seed in `seeds.oracle` (`/validate`); a task without an oracle gets a human review (a positive example, the predicate, `nop` 0, determinism; recorded in the PR) | the `validated` marker (§2) |
 | Results report success with cost (tokens, money, turns, wall clock, simulation steps) per mode and per comparable configuration; run id `<harness>-<model>-<effort>`; not committed to the repository | RUNNING.md |
@@ -108,10 +108,7 @@ off by default). Derivation, enforcement and the reward fields: RUNNING.md "Reso
 
 ## 7. Versions
 
-v1.0 (2026-09-30: the modes' names), v1.1 (2026-10-08: standard-realtime), v1.1.4 / v1.1.5 (resources, limits),
-v1.2-rc (2026-10-10: limits judged in the trial), **v2.0** (2026-10-14: conventions are advisory, Appendix H binds,
-runner configuration in RUNNING.md, task-declared settings recorded with every result; 2026-10-17: the standard modes
-are graded by the live episode, H.4). The wire protocol's versions:
+This text is **v2.0**. The wire protocol's versions:
 `eai-standard/2.1` (the base: `/spec`, `/status`, `/observe`, `/submit`, RCB1 frames), 2.2 (depth, kinematics, per-call
 bounds; shared layer `scripts/eai_standard/`), 2.3 (2.2 + realtime), 2.4 (2.3 + operation ids and deadlines; layer
 `scripts/eai_standard/v2_4/`). Minor versions only add; `/spec.protocol` equals `metadata.protocol`. A protocol change is
@@ -197,11 +194,11 @@ path and content hash of `task.toml`, `instruction.md`, `README.md` and every fi
 `solution/`), written last by `normalize` and equal to the digest of the task's current files. Results are attributed
 to a task by its digest; a changed file is a changed task. *CI:* `check-dataset-manifest.sh`.
 
-## Former section numbers (v1.x, cited by tasks and code written before v2.0)
+## v1 section numbers (cited by older tasks and code)
 
 | v1 | Now |
 |---|---|
-| §0, D1–D12 | §2 (settings), §3 (modes), §7; D3/D4 §4; D5 §1; D8 §2, H.7; D10/D11 RUNNING.md; history: PROTOCOL_HISTORY.md |
+| §0, D1–D12 | §2 (settings), §3 (modes), §7; D3/D4 §4; D5 §1; D8 §2, H.7; D10/D11 RUNNING.md |
 | §1 checklist, §2.1–2.5 | §1, §5 |
 | §2.6 verifier | H.1 (isolation), §4 (fields) |
 | §2.7 solutions, oracle, nop | H.2, §4 |
@@ -210,7 +207,7 @@ to a task by its digest; a changed file is a changed task. *CI:* `check-dataset-
 | §2.11 external material, network | §5, H.6, RUNNING.md "Network" |
 | §2.12 cutoff | §2, §5, RUNNING.md "The agent's time" |
 | §2.13 seeds | §2, RUNNING.md "Seeds" |
-| §2.14 dynamics, §2.15 modes shipped, §2.16 adding a mode | §2, §3, H.7 |
+| §2.14 dynamics, §2.15 modes shipped, §2.16 adding a mode | §2 (TAXONOMY.md "Dynamics"), §3, H.7 |
 | §3 privileged; §4, §4.1–4.9 standard; §4b realtime; §4c exported | §3, H.3, H.4, §4; wire details STANDARD_MODE.md |
 | §4.7 crash recovery | H.5 (retry); in-trial resume is an implementation detail of the shared layers (STANDARD_MODE.md) |
-| §5 results, token budget; §6 versioning; §7 migration | §4, RUNNING.md; §7; PROTOCOL_HISTORY.md |
+| §5 results, token budget; §6 versioning; §7 migration | §4, RUNNING.md; §7; the migration is complete (no rule) |
