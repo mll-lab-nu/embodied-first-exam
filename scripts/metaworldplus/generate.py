@@ -11,9 +11,12 @@ finished with scripts/task_conventions.py `normalize` (PROTOCOL v1.0 conventions
 Re-running reproduces the tasks exactly.
 """
 
+import ast
+import hashlib
 import json
 import shutil
 import sys
+import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -116,6 +119,16 @@ STD_CHANGES = [
         "a 400 (`true` ran as 1 second). An episode's physics, the grader and the pass rule are unchanged.",
         None,
     ),
+    (
+        "2026-10-17 (owner, board 0150/0151): standard mode is graded by the live episode; no grading replay. "
+        "`success` is Meta-World's check on the live simulator's state after the last executed control step "
+        "(`live_success`, the same rule as before; the fresh replay that also had to succeed and end in the same "
+        "state no longer runs). The video is rendered from the recorded trajectory in one pass after the verdict. "
+        "The frozen start is checked when the episode begins (the instance's hash and the starting state's hash; a "
+        "mismatch is an infrastructure failure), and the agent's leftover processes are stopped before the episode "
+        "ends. What the agent sees and does is unchanged; only the instruction's scoring sentence is new.",
+        None,
+    ),
 ]
 PRIV_CHANGES = [
     (
@@ -129,6 +142,34 @@ PRIV_CHANGES = [
 
 def change_log(changes: list, env: str) -> str:
     return "".join(f"- {text}\n" for text, envs in changes if envs is None or env in envs)
+
+
+def _npy(path: Path, key: str) -> tuple[str, bytes]:
+    """One array of a frozen instance (an .npz of plain .npy members), read with the standard library (the generator
+    needs no numpy): its dtype descriptor and its raw bytes (C order)."""
+    with zipfile.ZipFile(path) as z:
+        raw = z.read(f"{key}.npy")
+    if raw[:6] != b"\x93NUMPY":
+        raise ValueError(f"{path}: {key} is not an .npy member")
+    hlen = int.from_bytes(raw[8:10], "little") if raw[6] == 1 else int.from_bytes(raw[8:12], "little")
+    off = 10 if raw[6] == 1 else 12
+    head = ast.literal_eval(raw[off : off + hlen].decode("latin1"))
+    if head["fortran_order"]:
+        raise ValueError(f"{path}: {key} is in Fortran order")
+    return head["descr"], raw[off + hlen :]
+
+
+def start_shas(instance: Path) -> dict:
+    """What the standard service checks when the episode begins (server_mw.py _check_start): the instance's SHA-256
+    (mw_tool's digest, stored in the file and checked on every load) and the starting state's hash, mw_tool's
+    state_sha() of the restored scene = SHA-256 of the instance's MuJoCo integration state (the scene is set to it)."""
+    descr, data = _npy(instance, "instance_sha")
+    if not descr.startswith("<U"):
+        raise ValueError(f"{instance}: instance_sha is not a string")
+    descr_i, integ = _npy(instance, "integration")
+    if descr_i != "<f8":
+        raise ValueError(f"{instance}: integration is {descr_i}, not float64")
+    return {"instance": data.decode("utf-32-le").rstrip("\x00"), "start": hashlib.sha256(integ).hexdigest()}
 
 
 def box(rec: dict) -> str:
@@ -212,10 +253,9 @@ client and one episode.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
-The episode runs until your time is up. The service then replays the recorded episode in a fresh simulator and applies
-Meta-World's own success check for `{env}-v3` to the state **after the last executed control step**; it must hold in
-the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you want
-graded and stop submitting.
+The episode runs until your time is up. The service then applies Meta-World's own success check for `{env}-v3` to the
+live episode's state **after the last executed control step**. A success reached earlier and then lost does not count:
+end in the state you want graded and stop submitting.
 
 For `{env}-v3` the check is: {SUCCESS[env]} ("The target point" is `meta["task"]["target_pos"]`; everything the
 check needs to hold must hold in that final state.)
@@ -308,8 +348,15 @@ is. Success is judged on the final state, so the agent must also end the episode
 submitted through the client, one row per control step.
 {hold_note(rec)}
 ## Verification
-The sim service replays the recorded episode in a fresh simulator; `tests/grade.py` (separate sandbox, no network)
-reads its `final.json`: `success = replay_success ∧ deterministic ∧ live_success`.
+Graded by the live episode, nothing replayed (owner 2026-10-17, board 0150/0151): when the episode ends, the sim
+service applies Meta-World's success check to the live state after the last executed control step and writes the
+verdict to its `final.json` (`graded_by = "live"`, `replays = 0`); `tests/grade.py` (separate sandbox, no network)
+reads it: `success = live_success`, `infra_error = 1` when there is no verdict on the agent. The frozen start is
+checked when the episode begins (instance hash, starting-state hash). The video is rendered from the recorded
+trajectory in one pass after the verdict and decides nothing. After the agent's time the collect hooks stop the
+agent's processes; the service writes the verdict at once (no grading replay), then renders the video (a scene build,
+the episode's physics and at most about 600 frames of one camera, on the CPU; typically under a minute), all inside the
+sim hook's 840 s.
 
 ## Details
 | | |
@@ -363,9 +410,9 @@ build_timeout_sec = 1800.0
 
 def standard_toml(env: str, rec: dict) -> str:
     # The sim's collect hook: wait (at most 180 s) for the service's PID file, then send SIGUSR1 every 30 s until
-    # final.json says video_done (the verdict is `finalized` before the video is rendered; video_done follows), all
-    # inside one 840 s deadline, so the loop always ends before the hook's timeout_sec = 900. A hook that stops early
-    # leaves the verdict on disk as it is.
+    # final.json says video_done (the live verdict is `finalized` at once, before the video is rendered; video_done
+    # follows), all inside one 840 s deadline, so the loop always ends before the hook's timeout_sec = 900. A hook that
+    # stops early leaves the verdict on disk as it is.
     collect = (
         "t0=$(date +%s); left() { echo $(( 840 - $(date +%s) + t0 )); }; while [ ! -f /data/server.pid ] && "
         "[ $(left) -gt 660 ]; do sleep 2; done; i=0; while [ $(left) -gt 0 ]; do grep -q "
@@ -385,7 +432,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/metaworldplus-{env}-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): MetaWorld+ (Meta-World v3 {env}, Sawyer arm): {GOALS[env]} The agent only gets a client: camera RGB-D, the robot's own state and the target point, and Meta-World's native actions in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): MetaWorld+ (Meta-World v3 {env}, Sawyer arm): {GOALS[env]} The agent only gets a client: camera RGB-D, the robot's own state and the target point, and Meta-World's native actions in chunks; no reset, no object poses; the sim service records the episode and grades the live episode's final state."
 authors = [{{ name = "{AUTHOR}" }}]
 keywords = ["robotics", "mujoco", "metaworld", "sawyer", "code-as-policy", "trajectory", "standard-mode"]
 
@@ -407,6 +454,16 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
+# The agent's time is up: stop whatever it left running in its container, so nothing drives the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: SIGUSR1 to the sim service, which writes the live episode's verdict ("finalized": true) at
+# once -- nothing is replayed to grade it -- then renders the video from the recorded trajectory (video_done). The 840 s
+# deadline covers a crash resume (the journal replayed to rebuild the same episode) and the video of the longest
+# episode the agent's 1800 s allow; a verdict on disk is graded whether or not the video made it.
 [[verifier.collect]]
 service = "sim"
 command = "{collect}"
@@ -452,7 +509,11 @@ FROM {CLIENT_BASE}
 COPY test.sh grade.py /tests/
 RUN chmod +x /tests/test.sh
 """
-STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
+def std_compose(env: str) -> str:
+    """RCB_INSTANCE_SHA / RCB_START_SHA: the frozen instance's hash and its starting state's, which the service checks
+    when the episode begins (start_shas)."""
+    sha = start_shas(FROZEN / env / "instance.npz")
+    return f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only (MuJoCo physics, OSMesa rendering): no GPU reservation.
 services:
@@ -468,6 +529,8 @@ services:
     environment:
       RCB_TOOL: mw_tool
       RCB_INSTANCE: /srv/instance.npz
+      RCB_INSTANCE_SHA: "{sha["instance"]}"
+      RCB_START_SHA: "{sha["start"]}"
       PYTHONPATH: /srv
 """
 
@@ -513,7 +576,7 @@ def make(env: str, rec: dict) -> None:
     put(s / "instruction.md", standard_instruction(env, rec))
     put(s / "README.md", standard_readme(env, rec))
     put(s / "environment/Dockerfile", STD_ENV_DOCKERFILE)
-    put(s / "environment/docker-compose.yaml", STD_COMPOSE)
+    put(s / "environment/docker-compose.yaml", std_compose(env))
     put(s / "environment/rcb_client.py", src=SHARED / "rcb_client.py")
     put(s / "environment/rcb1.py", src=SHARED / "rcb1.py")
     put(s / "environment/sim/server_mw.py", src=SERVER)
