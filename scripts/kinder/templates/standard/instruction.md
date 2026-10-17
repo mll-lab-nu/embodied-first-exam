@@ -15,7 +15,7 @@ and you reach it only through a client. **Task:** {{task_statement}}{{goal_place
   `meta["reason"]`: `"success"`, `"failed"` when its control steps ran out, or `"error"` after a simulator error).
   `spec()` gives the robot's own facts, as its documentation would: each arm joint's axis, position and limits, the
   gripper's grasp point, each camera's field of view and pose.
-- There is nothing to hand in: the service records every episode, replays the last one and grades the replay. Keep the script
+- There is nothing to hand in: the service {{recorded}} and grades the replay. Keep the script
   that drives the robot at `/app/output/gen.py` for the record: save it early and keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run
   the same way, so do not stop early: while the episode runs{{reset_left}}, the run can still pass.
@@ -33,7 +33,7 @@ help(rcb_client)"`); the calls and the endpoints they use:
 |---|---|---|
 | `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the scene is ready |
 | `r.spec()` | `GET /spec` | the robot's facts: the action's layout and bounds, `control_dt` (0.1 s), `max_control_steps` ({{max_steps}}), the cameras, `proprio_layout`, `budget` |
-| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, and `episode`, `resets_left`, `control_steps_total` (all episodes) |{{reset_row}}
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`{{status_extra}} |{{reset_row}}
 | `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the current frames (free), or hold the last command and watch for `seconds` (at most 30) |
 | `r.submit("delta", A, cameras=None, video="mp4", include_depth=False)` | `POST /submit` | runs `A`, one row of {{action_dim}} values per control step, at most {{chunk_rows}} rows a call; stops early when the episode ends{{blocked_note}} |
 

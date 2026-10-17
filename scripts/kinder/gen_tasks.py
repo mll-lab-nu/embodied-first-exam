@@ -254,7 +254,8 @@ def reset_text(n: int, steps: int) -> dict:
                               "(`spec()[\"budget\"][\"reset\"]` is 0, and it is authoritative), and **this episode is "
                               "graded**: a success ends the run at once, and when your time is up it is graded as it "
                               "stands. Once it has ended, `submit` raises `EpisodeOver`.",
-                "reset_row": "", "reset_left": "", "reset_summary": "No reset: one episode, which is graded."}
+                "reset_row": "", "reset_left": "", "reset_summary": "No reset: one episode, which is graded.",
+                "status_extra": "", "recorded": "records the episode, replays it"}
     return {"reset_rule": "- **Episodes and resets.** The episode starts when the service comes up. It ends when the task "
                           "succeeds, after",
             "reset_rule_tail": f"You have **{n} resets** (`spec()[\"budget\"][\"reset\"]`, which is authoritative: if it "
@@ -267,7 +268,9 @@ def reset_text(n: int, steps: int) -> dict:
                                "`meta[\"resets_left\"]` count the episodes.",
             "reset_row": f"\n| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the starting "
                          f"state (at most {n} in all); returns the start's frames |",
-            "reset_left": ", or a reset is left", "reset_summary": f"{n} resets; only the last episode is graded."}
+            "reset_left": ", or a reset is left", "reset_summary": f"{n} resets; only the last episode is graded.",
+            "status_extra": ", and `episode`, `resets_left`, `control_steps_total` (all episodes)",
+            "recorded": "records every episode, replays the last one"}
 
 
 def context(t: dict, d: dict, f: dict) -> dict:
