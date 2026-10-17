@@ -19,6 +19,8 @@
 # benchmark owner's (Qineng Wang) selection after the GPT-6 Astra review (#265). Several shortcut patterns are closed
 # by grader fixes (#243, #244, #248, #254), so some tasks may move back to the core set after a re-grade; RoboWits is
 # small because its reference solver had a hack, and its affected tasks may be re-run once the solver is fixed.
+# 2026-10-16: DexJoCo 4 (#278, group meeting: a task the screening runs solved in both modes; docs/benchmarks/dexjoco.md
+# "Easy set").
 
 [[task]]
 base = "behavior-chop-an-onion-i00"
@@ -109,6 +111,30 @@ base = "behavior-tidying-bedroom-i00"
 benchmark = "BEHAVIOR-1K"
 reason = "shortcut"
 note = "Sol S: goal_fired_while_held; Sol6.1 S: goal_fired_while_held"
+
+[[task]]
+base = "dexjoco-bimanual-assembly-i00"
+benchmark = "DexJoCo"
+reason = "solved"
+note = "Astra (codex-gpt6_astra-high) P+S; Luna (codex-gpt6_luna-xhigh) failed P+S"
+
+[[task]]
+base = "dexjoco-bimanual-hanoi-i00"
+benchmark = "DexJoCo"
+reason = "solved"
+note = "Astra (codex-gpt6_astra-high) P+S; Luna (codex-gpt6_luna-xhigh) failed P+S"
+
+[[task]]
+base = "dexjoco-bimanual-microwave-cook-i00"
+benchmark = "DexJoCo"
+reason = "solved"
+note = "Astra (codex-gpt6_astra-high) P+S; Luna (codex-gpt6_luna-xhigh) failed P+S"
+
+[[task]]
+base = "dexjoco-click-mouse-i00"
+benchmark = "DexJoCo"
+reason = "solved"
+note = "Luna (codex-gpt6_luna-xhigh) P+S"
 
 [[task]]
 base = "maniguard-clutter-pickup-i25"
