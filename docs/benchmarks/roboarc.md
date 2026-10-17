@@ -65,7 +65,7 @@ The six families with a grading hold (blanket-flatten, knot-untying, lock-pickin
 `rcb_topogym.REPLAY_TOLERANCES`) replay a trajectory with the instance's own thresholds and, if the episode has not ended after
 the last row, hold the final targets for up to 2 s; during that hold blanket-flatten accepts 92 % coverage and 80 mm/s cloth
 speed (95 % and 30 mm/s in the rows) and knot-untying a rope speed 0.25 mm/s higher. Standard mode grades the live episode
-strictly and lets its replay confirm in the hold.
+strictly, with no grading replay since 2026-10-17 (Standard grading, below); until then its replay could confirm in the hold.
 
 **The rule.** Privileged success needs both grading replays to succeed AND at least one of them to reach the goal with the
 instance's own thresholds within the trajectory's rows (`tests/grade.py`: `strict_replay_required` 1, `strict_goal_reached`,
@@ -102,7 +102,8 @@ rule's and the new rule's:
   under the old rule is `inconclusive` (re-grade it on the host class it ran on).
 
 Only the 94 tasks of the RoboARC 0.1.0 release are re-graded; a trial of any other task (a later RoboARC task, a Genesis
-`robotangle-*` task) is listed as `skipped` with the reason. Standard trials are skipped too: their grading did not change.
+`robotangle-*` task) is listed as `skipped` with the reason. Standard trials are skipped too: they are re-scored from their
+recorded live fields (Standard grading, below).
 
 **Validation.** 2026-10-14, ws (RTX 4090, `eai-roboarc:0.1.0`, Harbor `-a oracle` / `-a nop`, jobs
 `rav1-{oracle,nop}-<task>`) with this version's privileged `tests/`: the privileged oracle scores 1 with
@@ -113,6 +114,39 @@ construction (the recorded trials' trajectories are not retrievable): blanket-fl
 (a recording that stops 8 control steps before its own success; the replay confirms after 8 steps of hold) is graded 1 by the
 previous `grade.py` (`all_success` 1, `strict_goal_reached` 0) and 0 by this one (`all_success` 1, `success_in_hold_only` 1),
 both deterministic. Without its last 40 rows it fails both (the hold's 2 s do not complete the confirmation).
+
+## Standard grading: the live episode (owner, 2026-10-17, board 0150/0151)
+
+`success` = the live success: the task predicate on the live simulator with the instance's own thresholds, confirmation
+window included (`server.py`: after every `submit` and every watching `observe`, and as the episode stands at its end),
+recorded in `episode.json`. No grading replay runs. `finalize.sh` writes `final.json` from `episode.json` first
+(`graded_by` live, `replays` 0, `state_sha` = the live end-state hash, `video_pending` 1), then runs ONE video-only pass
+(`replay.py`: a plain fresh-process replay of the live rows on the sidecar's GPU that renders `replay.mp4` and, for a
+success held for review, the frames around its live review events; record `replay.video.json`). It never changes the
+verdict, and a failed, killed or GPU-less pass loses only the video. `tests/grade.py` transcribes the result. In `final.json`, `live_success` is the live episode's own success and `success` the verdict: false with an infrastructure failure or when the success is held for review (`held_for_review`). A service that dumped its episode but did not exit in time keeps that live verdict (`service_exit_timed_out`, no video). A missing `trajectory.npz` is recorded (`dump_error`) and changes no verdict. Non-finite numbers are written as null.
+- **Hold.** The grading replay's hold (up to 2 s of the final targets, with `REPLAY_TOLERANCES` in the hold) applied only
+  after a live success, to let a replay that lagged the live episode confirm it. It never turned a live failure into a
+  success, so dropping it loosens nothing. Holding live would loosen the rule, because the privileged twin needs a strict
+  success within the agent's rows. The live episode gets no hold.
+- **Review, forcing, instability.** The live episode's `review` (deep task contacts: a live success is held for review,
+  `success_pending_review`), `forcing` (evidence) and `simulator_instability` (a breakdown without forcing: infrastructure)
+  stay. The replay's `replay_review`, `replay_forcing`, `replay_instability`, `replay_grading`, `replay_grading_policy`,
+  `replay_hold_steps` and `replay_tolerance_needed` are gone.
+- **Start state.** `Session(strict=True)` checks the frozen instance against `runtime_binding.json` when the service builds
+  it. A mismatch is `instance_mismatch`, `infra_error 1`, before anything is served. `tests/grade.py` also checks the live
+  startup record (`startup_binding.json`) against its own copy of the binding. Before 2026-10-17 it compared that record
+  with the replay's as well.
+- **Infrastructure** (H.5): no, unreadable or unfinalized `final.json`, the end timed out, `instance_mismatch`, a give-up
+  after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`, `call_watchdog`), `simulator_instability`
+  in the live episode, a simulator error (reason `error`, as before). The agent's 0: the task's failure predicate,
+  `forced_breakdown`, the wall clock, `step_guard`, `sim_crashed_on_call`. A replay error, a GPU lost after the episode, or
+  a breakdown or instance mismatch met only in the replay no longer voids a trial.
+- **Cost.** The video pass is the same single replay as before, now without the hold, so the sidecar time per trial is
+  about unchanged (the collect phase was about 222-307 slot-hours over the archive, boards 0136 / 0148). The gain is that
+  the verdict no longer depends on the replay and is on disk before it starts.
+- **Re-scoring archived standard trials.** The verdict is the recorded live fields of `final.json`: the `success` of
+  `episode.json`, which the hook merged in before the replay fields. A live instance mismatch, `infra_error` or
+  `simulator_instability` voids it, and a live `review` holds it. Board 0151's report has the function and the counts.
 
 ## Safety readings in standard mode (`meta["safety"]`)
 
@@ -168,3 +202,7 @@ or robot base position either.
 ## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
 
 Serves `eai-standard/2.4` (STANDARD_MODE Part 4; it was first served by RoboTangle's standard tasks, whose release called it "2.3"). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. Its service ends the episode when `time_left_s` reaches 0 until its next task update; since its MuJoCo release (2026-10-13) the clock counts from the agent's first request like the others.
+
+## Change log
+- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; video by one
+  video-only replay pass after the verdict (`finalize.sh`, `replay.py`).

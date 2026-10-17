@@ -22,7 +22,7 @@ client and one episode. **Task:** Thread the rope through the cyan ring (R1) the
 - The material start is the rope end that is farther from the rings at the start.
 - Only the grippers' fingers collide with the rope and the rings: every other robot part (palms, wrists, arm links, bases) passes through them without contact, so only the fingers can push, pinch or hold the rope.
 - Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): rope: 200 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically.
-- Grading: success needs the live episode to succeed (with the thresholds above) AND one fresh-process replay of its rows to succeed; a live failure is final whatever the replay shows. This family's physics runs on the CPU (MuJoCo, float64), so that replay reproduces the live episode on the same host; the rule is kept as a margin: it runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final targets for up to 2 s (50 control steps), stopping at the first success or failure, so a confirmation that starts a few physics ticks later than in the live episode can still complete; the hold uses the thresholds above too (no tolerance for this family). Nothing else changes.
+- Grading: the live episode is the verdict: success needs it to succeed with the thresholds above (within its confirmation time); a live failure is final. Nothing is replayed to grade it: the video is rendered afterwards from the recorded rows and never changes the grade.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode ends on success (all final conditions satisfied for
