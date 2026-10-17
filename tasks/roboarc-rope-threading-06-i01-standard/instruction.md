@@ -11,9 +11,6 @@ client and one episode. **Task:** Thread the rope through the cyan grommet in th
 - Keep the rope intact; collapsed or inverted rope volume is not accepted.
 - Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
 
-## Task failure conditions
-
-
 ## Grader details (in addition to the requirements above)
 
 - The rope is a chain of 496 rigid capsule links (5.5 mm long, 8 mm thick) joined end to end; each joint bends and twists against a spring set by the rope's material, with damping, and stops bending at 0.9 rad, where neighbouring links touch. The links do not deform: nothing about the rope's shape or volume ends the episode. A link moving faster than 6 m/s or spinning faster than 300 rad/s is slowed by extra damping (a speed clamp); this is not reported and does not end the episode. Pulled harder than about 997 N, the rope's links get extra rotational inertia (a tension guard), which only removes energy and is not reported.
