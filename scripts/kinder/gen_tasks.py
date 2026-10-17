@@ -232,16 +232,17 @@ def change_log(t: dict, d: dict, mode: str) -> str:
     if t.get("instance_tag", d["instance_tag"]) != d["instance_tag"]:
         return (f"- 2026-10-16: first version, a new instance replacing `kinder-{t['family']}-{d['instance_tag']}-{mode}` "
                 f"({t['replaces']}): the scene changed, so the task "
-                f"has a new name (PROTOCOL §1, H.8). Agent time limit {CUTOFF_SEC[mode]} s"
-                + ((f"; {RESET_BUDGET} resets." if RESET_BUDGET else "; no reset.") if mode == "standard" else "."))
+                "has a new name (PROTOCOL §1, H.8). Agent time limit 1800 s" + ("; no reset." if mode == "standard" else "."))
     log = ["- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5, docs/benchmarks/kinder.md); the "
            "service already had `POST /reset`. The scene, instance, pass rule and verifier are unchanged, so the task keeps its "
            "name; runs recorded before this date had no reset and are reported separately."] if mode == "standard" else []
     log.append("- 2026-10-16: agent time limit 3600 s -> 1800 s (`[agent] timeout_sec`, both twins; author decision, "
                "docs/benchmarks/kinder.md)" + (", and `RCB_RESET_BUDGET`'s default 10 -> 0 (author decision): one episode, "
                "which the practice and the graded attempt share" if mode == "standard" else "")
-               + ". The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded "
-               "before this date are reported separately.")
+               + ("; the instruction now states where the " + t["goal_mark"]["name"] + " is at the start, measured in "
+                  "the odometry frame" if mode == "standard" and "goal_mark" in t else "")
+               + ". The scene, instance, pass rule and verifier logic are unchanged (`tests/rcb_limits.json` carries the "
+               "new cutoff), so the task keeps its name; runs recorded before this date are reported separately.")
     return "\n".join(log)
 
 
@@ -307,7 +308,7 @@ def context(t: dict, d: dict, f: dict) -> dict:
         # the agent's time limit: CUTOFF_SEC's (PROTOCOL §2.12), never stated as a number in a template: normalize renders
         # the closing section from task.toml, and the texts say "the time limit (`## Time limit`)"
         "agent_timeout": float(CUTOFF_SEC["privileged"]),
-        "verifier_timeout": float(d["verifier_timeout_sec"]), "image_hw": "×".join(map(str, std["image_hw"])),
+        "verifier_timeout": float(t.get("verifier_timeout_sec", d["verifier_timeout_sec"])), "image_hw": "×".join(map(str, std["image_hw"])),
         "ms_single": f"{ms['single']:.1f}", "ms_images": f"{ms['images']:.1f}", "ms_batch": f"{ms['batch']:.1f}",
         "change_log": change_log(t, d, "privileged"), **oracle_fields(t, d, "privileged"),
     }
@@ -320,12 +321,15 @@ def goal_place(t: dict, f: dict) -> str:
         return ""
     g, mark = f["goal_region"], t["goal_mark"]
     dist, bearing = math.hypot(g["x"], g["y"]), math.degrees(math.atan2(g["y"], g["x"]))
-    side = "straight ahead" if abs(bearing) < 5 else f"{abs(bearing):.0f}° to the {'left' if bearing > 0 else 'right'}"
+    side = ("straight ahead" if abs(bearing) < 5
+            else f"{abs(bearing):.0f}° to the {'left' if bearing > 0 else 'right'} of the way it faces")
     height = f", from the floor to {g['height']:g} m up" if mark.get("height") else ""
+    skew = g["skew_deg"]
+    turned = ("" if abs(skew) < 1 else f", its sides turned about {abs(skew):.0f}° "
+              f"{'counter-clockwise' if skew > 0 else 'clockwise'} (seen from above) from the frame's axes")
     return (f" Measured at the start, in the odometry frame (below): the {mark['name']}'s centre is at x = {g['x']:.2f} m, "
-            f"y = {g['y']:.2f} m, {dist:.1f} m from the centre of the base and {side} of the way it faces; it is "
-            f"{g['along_x']:g} m along x by {g['along_y']:g} m along y{height}, its sides about "
-            f"{abs(g['skew_deg']):.0f}° off the frame's axes.")
+            f"y = {g['y']:.2f} m, {dist:.1f} m from the centre of the base and {side}; it is "
+            f"{g['along_x']:g} m along x by {g['along_y']:g} m along y{height}{turned}.")
 
 
 def standard_context(t: dict, d: dict, f: dict, ctx: dict, task_dir: str) -> dict:
@@ -651,7 +655,7 @@ def cmd_verify(args) -> int:
         for k in ("scene_sha", "obs_dim", "action_dim", "action_low", "action_high", "nop_success", "entry_point",
                   "action_doc", "goal_region"):
             if new.get(k) != old.get(k):
-                failed.append(f"{t['family']}: {k} drifted: facts.json {old.get(k)}, measured {new[k]}")
+                failed.append(f"{t['family']}: {k} drifted: facts.json {old.get(k)}, measured {new.get(k)}")
     print("\n".join(f"FAIL {x}" for x in failed) or "verify: all checks pass")
     return 1 if failed else 0
 

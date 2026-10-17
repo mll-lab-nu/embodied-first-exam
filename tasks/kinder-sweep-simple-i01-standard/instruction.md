@@ -2,7 +2,7 @@
 
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) -- a holonomic base, a Kinova Gen3 7-DoF
 arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulator runs in a service you cannot open,
-and you reach it only through a client. **Task:** get the fifty small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the floor near the cubes. The task succeeds the moment all fifty cubes' centres are inside that box. Measured at the start, in the odometry frame (below): the grey box's centre is at x = 0.51 m, y = 0.06 m, 0.5 m from the centre of the base and 7° to the left of the way it faces; it is 0.475 m along x by 0.85 m along y, from the floor to 0.1 m up, its sides about 3° off the frame's axes.
+and you reach it only through a client. **Task:** get the fifty small dark-red cubes scattered on the floor into the translucent grey box marked on the floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the floor near the cubes. The task succeeds the moment all fifty cubes' centres are inside that box. Measured at the start, in the odometry frame (below): the grey box's centre is at x = 0.51 m, y = 0.06 m, 0.5 m from the centre of the base and 7° to the left of the way it faces; it is 0.475 m along x by 0.85 m along y, from the floor to 0.1 m up, its sides turned about 3° clockwise (seen from above) from the frame's axes.
 
 ## Rules (real-robot rules)
 - **No reset: one episode.** The episode starts when the service comes up. It ends when the task succeeds, after

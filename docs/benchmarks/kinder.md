@@ -56,11 +56,14 @@ to be solvable. One standard twin has none of its own yet:
 | standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | 0 (author, 2026-10-16; the protocol's default; 10 from 2026-10-11) | the last episode, replayed in a fresh simulator |
 
 World-frame information (PROTOCOL D7): privileged mode gives KinDER's world state; standard mode gives none -- odometry
-starts at the robot's start pose, and the goal is named by what the cameras see.
+starts at the robot's start pose, and the goal is named by what the cameras see. One exception since 2026-10-16: where
+the goal is a translucent region marked on the floor (dynamo's green square, sweep-simple's grey box), faint in the
+robot's cameras, the standard instruction states its centre, size (and the box's height) in the odometry frame at t = 0,
+measured on the frozen instance (`gen_tasks.py measure`, facts.json `goal_region`).
 
 | standard mode: given (a real TidyBot++ has it) | not given |
 |---|---|
-| the task sentence: goal and success condition | any object's or goal region's position |
+| the task sentence: goal and success condition; dynamo's and sweep-simple's marked goal region at t = 0 (odometry frame) | any object's position; the other goals' positions |
 | `robot_base` RGB, `robot_wrist` RGB-D (the Gen3's RealSense D410), 480×640 | world coordinates; a room camera (`RCB_OBS_ROOM_CAMERA=1`, never overhead) is a knob, off |
 | base odometry (pose, velocity), arm joint angles and velocities, finger position | the goal check before the episode ends (`success` / `failed` only) |
 | `spec()`: action layout and bounds, arm joint axes, positions, limits and torques, the grasp point, camera fields of view and poses, control rate, episode length, budget | masses, friction, the simulator |
@@ -73,7 +76,7 @@ harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: sco
 ```
 Agent, provider and effort settings: docs/RUNNING.md. Agent time cutoff: 1800 s in both modes (author, 2026-10-16;
 3600 s before). Standard tasks grant no reset by default (author, 2026-10-16; the protocol's default): one episode, whose 1000 control steps the practice and the graded attempt share;
-`RCB_RESET_BUDGET=N harbor run ...` runs a configuration with N resets, whose results are reported separately. Build the image: `docker build -f images/kinder/Dockerfile -t
+`RCB_RESET_BUDGET=N harbor run ...` runs a configuration with N resets, whose results are reported separately (the shipped instruction describes the default, one episode; for N > 0 regenerate the tasks with `RESET_BUDGET = N`, which renders the reset rules and `r.reset()`). Build the image: `docker build -f images/kinder/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
 
 ## Results

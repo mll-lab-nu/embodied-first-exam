@@ -2,7 +2,7 @@
 
 You control a simulated TidyBot++ mobile manipulator (KinDER / MuJoCo) -- a holonomic base, a Kinova Gen3 7-DoF
 arm and a Robotiq 2F-85 gripper -- **as if it were real hardware**: the simulator runs in a service you cannot open,
-and you reach it only through a client. **Task:** drive the robot into the translucent green square marked on the floor; three chairs stand in the way and can be pushed. The task succeeds the moment the centre of the robot's base is inside the square. (The red, blue and yellow squares only mark where the chairs started.) Measured at the start, in the odometry frame (below): the green square's centre is at x = 5.12 m, y = -2.48 m, 5.7 m from the centre of the base and 26° to the right of the way it faces; it is 0.85 m along x by 0.85 m along y, its sides about 7° off the frame's axes.
+and you reach it only through a client. **Task:** drive the robot into the translucent green square marked on the floor; three chairs stand in the way and can be pushed. The task succeeds the moment the centre of the robot's base is inside the square. (The red, blue and yellow squares only mark where the chairs started.) Measured at the start, in the odometry frame (below): the green square's centre is at x = 5.12 m, y = -2.48 m, 5.7 m from the centre of the base and 26° to the right of the way it faces; it is 0.85 m along x by 0.85 m along y, its sides turned about 7° counter-clockwise (seen from above) from the frame's axes.
 
 ## Rules (real-robot rules)
 - **No reset: one episode.** The episode starts when the service comes up. It ends when the task succeeds, after
