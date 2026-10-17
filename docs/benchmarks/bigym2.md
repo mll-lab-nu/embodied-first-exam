@@ -102,11 +102,13 @@ deterministic on one host, which `RCB_RESET_BUDGET=N` runs would rely on. The vi
 the recorder; CPU physics and controller, EGL rendering; about a minute a trial at the median); it never changes the
 verdict. The removed replay was a CPU re-run of the episode with the controller (about as long: roughly 3 slot-hours over
 the archive). `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the
-agent's calls, and `instance_mismatch`; simulator errors raised by the agent's calls, crashes inside its calls,
+agent's calls, a reset whose scene does not rebuild and `instance_mismatch`; simulator errors raised by the agent's calls, crashes inside its calls,
 timeouts and failures are the agent's 0. In standard-realtime (owner, 2026-10-17): once the agent's first command has run, a
 simulator error raised by a control step is the agent's 0 (`sim_error = 1`, no `infra_error`), and so is a simulator
-crash (a death with a fatal signal's record in `crash.log`: SIGSEGV, SIGBUS, SIGFPE, SIGILL, SIGABRT; past
-`RCB_MAX_RESUMES` such crashes the trial ends `sim_crashed_on_call`); before the first command, a failed reset rebuild,
+crash inside a control step (a death whose fatal-signal record in `crash.log` -- SIGSEGV, SIGBUS, SIGFPE, SIGILL,
+SIGABRT -- shows the crashing thread in the step; past
+`RCB_MAX_RESUMES` such crashes the trial ends `sim_crashed_on_call`); a crash outside a step (building the scene,
+resuming, resetting, rendering, finalizing), anything before the first command, a failed reset rebuild,
 a kill (SIGKILL, SIGTERM, the OOM killer) and a failed resume are infrastructure. Standard mode keeps its rule: a crash
 is the agent's only inside its call (`fatal_signal` is logged as evidence).
 
@@ -121,7 +123,7 @@ up, the cameras are rendered once per control step (`docs/STANDARD_MODE.md`, "Wh
 clock") -- and `final.json` / `reward.json` carry the clock's record: `clock_s`, `max_lag_s` (now the true maximum),
 `stalls`, `stalled_s`, `stalled_share`, `held_steps`, `late_steps`, `requests_refused`, `request_busy_s`. They are
 evidence and decide no verdict. In both service modes a negative `Content-Length` is refused unread (400), and a
-simulator that fails inside `POST /reset` ends the episode `error` (in realtime: `infra_error = 1`), not `reset`.
+simulator that fails inside `POST /reset` ends the episode `error` (`infra_error = 1` in both modes since 2026-10-17; the agent's reset was legitimate), not `reset`.
 
 The success check stays visible in privileged mode (PROTOCOL, owner 2026-10-02): it is sparse, and every instruction
 states its thresholds. Upstream's reward shaping for the plate tasks (`event_progress`) is off by default and never

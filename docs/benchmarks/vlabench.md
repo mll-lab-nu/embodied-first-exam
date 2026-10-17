@@ -96,8 +96,8 @@ the verdict (`render_video`: a fresh scene, CPU physics, OSMesa rendering; media
 minutes); it never changes the verdict. The removed replay was a CPU re-run of the episode of about the same length
 (about 2.5 slot-hours over the 49 archived trials). Over the archive the live rule changes no graded verdict; the 5 trials
 recorded `infra_error` because their old video ran out of the hook's time get a live verdict (0) instead. `infra_error
-= 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the agent's calls, and
-`instance_mismatch`; a simulator error raised by the agent's call, crashes inside its calls, a timeout and a failure are
+= 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the agent's calls, a
+reset whose scene does not rebuild, and `instance_mismatch`; a simulator error raised by the agent's call, crashes inside its calls, a timeout and a failure are
 the agent's 0.
 `environment/sim/rcb_service.py` is a byte copy of main's `scripts/humanoidbench/shared/standard/rcb_service.py`
 (protocol `eai-standard/2.1`: four endpoints, RCB1, no reset unless `budget.reset > 0`, journal + checkpoints with at

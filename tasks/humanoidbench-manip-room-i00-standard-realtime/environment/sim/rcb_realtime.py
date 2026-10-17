@@ -63,16 +63,17 @@ seconds added to stalled_s).
 
 A crash resumes the same episode from its last checkpoint (one per second of robot time while the clock runs), paused.
 Whose failure it is (owner, 2026-10-17; docs/STANDARD_MODE.md Part 3): once the agent's first command has run (the first
-control step of a row it planned: the "first_command" event), the robot is executing the agent's commands, as inside a
+control step that runs a row the agent sent: the "first_command" event), the robot is executing the agent's commands, as inside a
 call in 2.1.
 - A simulator error raised by a control step after the first command ends the episode "error": the agent's 0
-  (sim_error, no infra_error). Before the first command, or when the simulator fails to rebuild the scene in a reset,
-  it is infrastructure (infra_error = 1).
+  (sim_error, no infra_error). Before the first command, a request's own failure (a render) and a reset whose scene
+  does not rebuild are infrastructure (infra_error = 1).
 - A simulator crash -- a process death with a fatal signal's record in crash.log (SIGSEGV, SIGBUS, SIGFPE, SIGILL,
-  SIGABRT; rcb_service.deaths) -- after the first command is the agent's: past RCB_MAX_RESUMES restarts that were all
-  such crashes, the trial ends `sim_crashed_on_call` (the agent's 0). A kill (SIGKILL, SIGTERM, the OOM killer: no
-  record), a crash before the first command and a failed resume are infrastructure: `sim_crashed`, `resume_failed`
-  (infra_error).
+  SIGABRT; rcb_service.deaths) whose crashing thread was inside a control step (_step) -- after the first command is the
+  agent's: past RCB_MAX_RESUMES restarts that were all such crashes, the trial ends `sim_crashed_on_call` (the agent's
+  0). A kill (SIGKILL, SIGTERM, the OOM killer: no record), a crash outside a control step (building the scene,
+  resuming, resetting, rendering, finalizing; a GPU or driver fault there), a crash before the first command and a
+  failed resume are infrastructure: `sim_crashed`, `resume_failed` (infra_error).
 """
 from __future__ import annotations
 
@@ -262,7 +263,6 @@ class RealtimeService(Service):
         self.requests_refused, self.request_bytes, self.request_busy_s = 0, 0, 0.0
         self._ticks: list[tuple[float, float]] = []        # (wall time, call id) per journal row not yet on disk
         self.commanded = False                             # a row the agent planned has run (the first command)
-        self.error_infra = False                           # the episode's "error" was not the agent's commands'
         super().__init__(sim, **kw)
         self.ticks_path = os.path.join(self.data, "ticks.f64")
         self.ckpt_every = max(1, int(round(CHECKPOINT_S / sim.control_dt)))
@@ -331,14 +331,9 @@ class RealtimeService(Service):
 
     def _write_final(self) -> None:
         self.verdict.update(self._timing_record())   # final.json merges the verdict; none of these keys is a verdict's
-        if self.reason == "error" and self.error_infra:   # a simulator error not raised by the agent's commands
-            self.verdict["infra_error"] = 1
-        else:                                        # (an error the agent's commands raised is its 0: sim_error only;
-            self.verdict.pop("infra_error", None)    # an episode that erred and was reset away is not graded)
-        super()._write_final()
+        super()._write_final()                       # infra_error for an "error" only when error_infra (rcb_service)
 
     def _checkpoint(self, ev: str, **kw) -> None:
-        kw.setdefault("error_infra", self.error_infra)
         if self._ticks:                              # the tick log first: a crash in between leaves it too long
             with open(self.ticks_path, "ab") as f:
                 f.write(np.asarray(self._ticks, dtype=np.float64).tobytes())
@@ -382,10 +377,12 @@ class RealtimeService(Service):
         super()._resume(ev)
 
     def _agent_crashes(self, ev: list[dict], died: list[dict], in_calls: int) -> int:
-        """The deaths since the episode began that were simulator crashes (a fatal signal's record) after the agent's
-        first command: the robot was running its commands, as inside a call in 2.1 (owner, 2026-10-17)."""
+        """The deaths since the episode began that were simulator crashes inside a control step (a fatal signal's
+        record whose crashing thread is in _step: not building the scene, resuming, resetting, rendering, finalizing)
+        after the agent's first command: the robot was running its commands, as inside a call in 2.1 (owner,
+        2026-10-17). A GPU or driver fault outside the step stays infrastructure too."""
         first = [e["ts"] for e in ev if e["ev"] == "first_command"]
-        return sum(1 for d in died if d["fatal_signal"] and first and first[0] < d["restart_ts"])
+        return sum(1 for d in died if d["fatal_signal"] and d["in_step"] and first and first[0] < d["restart_ts"])
 
     def _start_clock(self) -> None:
         if not self.running and not self.done and not self.stopping:
@@ -426,8 +423,9 @@ class RealtimeService(Service):
         if typ is None:                              # nothing planned for this step (the plan ran out, or a gap in it)
             typ, row = self.sim.hold()
             self.held_steps += 1
-        elif not self.commanded:                     # the agent's first command runs now: from here the robot runs
-            self.commanded = True                    # its commands (logged first: a crash in this step is after it)
+        elif src >= 0 and not self.commanded:        # the first control step that runs a row the agent sent: from
+            self.commanded = True                    # here the robot runs its commands (logged first: a crash in this
+                                                     # step is after it; a gap's held target, call -1, is not one)
             self.log("first_command", control_steps=len(self.episode), journal_rows=self.journal_rows, call=int(src))
         before = self.journal_rows
         self._ticks.append((time.time(), float(src)))
@@ -722,11 +720,11 @@ class RealtimeService(Service):
             raise Refused(400, {"error": f"at = {at} is more than max_ahead_steps = {self.max_ahead} control steps "
                                          f"ahead of the next one ({nxt})"})
         at = nxt if at is None else at
-        rows, clipped = self.sim.clip(typ, A)
         late = max(0, nxt - at)
         keep = at - nxt if at > nxt else 0
         try:
             with bad_request():                      # planning runs nothing: whatever fails here changed nothing (400)
+                rows, clipped = self.sim.clip(typ, A)
                 rows = np.asarray(rows, dtype=np.float64)
                 target = self._interp[typ]           # a target can be interpolated and held; a command cannot
                 held = self._in_force(at - 1, nxt, typ) if target else None
@@ -795,15 +793,6 @@ class RealtimeService(Service):
     def _release_watches(self) -> None:
         for w in list(self.watches):
             self._complete_watch(w)
-
-    def _reset(self, meta: dict, parts: dict) -> tuple[dict, list]:
-        """2.1's reset; a simulator that fails to rebuild the scene ends the episode "error" as infrastructure."""
-        self.error_infra = True
-        try:
-            return super()._reset(meta, parts)
-        finally:
-            if not (self.done and self.reason == "error"):
-                self.error_infra = False
 
     def _rt_reset(self, meta: dict, job: _Job) -> None:
         self._reset_view(meta)                       # a refused reset (409, 400) changes nothing: the watches go on

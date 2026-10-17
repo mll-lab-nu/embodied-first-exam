@@ -67,7 +67,8 @@ as infrastructure (`infra_error = 1`) before the agent is served. The video is o
 after the verdict (`render_video`, the `task_view` camera; MuJoCo EGL or PyBullet on the CPU; median about 90 s a
 trial), which never changes the verdict; the removed replay was a physics re-run of the episode (at most about as long;
 about 0.5 slot-hours over the archive). `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after
-crashes not all inside the agent's calls, and `instance_mismatch`; a simulator error raised by the agent's call, crashes
+crashes not all inside the agent's calls, a reset whose scene does not rebuild (the agent's reset was legitimate) and
+`instance_mismatch`; a simulator error raised by the agent's call, crashes
 inside its calls, a timeout and a failure are the agent's 0.
 
 World-frame information (PROTOCOL D7): privileged mode gives KinDER's world state; standard mode gives none -- odometry

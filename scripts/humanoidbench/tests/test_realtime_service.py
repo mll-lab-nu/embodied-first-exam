@@ -592,72 +592,124 @@ class TestCountersSurviveACrash(ByHand):
         self.assertEqual((fin["stalls"], fin["late_steps"], fin["held_steps"], fin["max_lag_s"]), (3, 2, 96, 0.75))
 
 
-def die_by(data: str, sig: int) -> None:
-    """A process of this trial's sidecar that dies by `sig`, as rcb_service.main() sets it up (crash.log)."""
-    code = ("import os, signal, sys; sys.path.insert(0, sys.argv[1]); import rcb_service; "
-            "rcb_service.enable_crash_log(sys.argv[2]); os.kill(os.getpid(), int(sys.argv[3]))")
+# One process of a trial's realtime sidecar, as rcb_service.main() runs it (crash.log), that dies by a signal: "step"
+# inside a control step of the agent's command (sim.step kills it), "build" after building and resuming but before
+# any control step, "held" inside a control step with no command of the agent's (the hold row).
+CHILD = r"""
+import os, sys
+tests, realtime, data, sig, where = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), sys.argv[5]
+sys.path.insert(0, tests)
+sys.path.append(realtime)
+from test_standard_service import FakeSim
+import json, rcb_realtime, rcb_service
+rcb_service.enable_crash_log(data)
+
+class S(FakeSim):
+    control_dt, max_control_steps = 0.01, 10 ** 6
+
+sim = S(goal=1e9)
+svc = rcb_realtime.RealtimeService(sim, data=data, slowdown=1000.0)
+svc.start()
+if where == "build":
+    os.kill(os.getpid(), sig)
+if where == "step":
+    job = rcb_realtime._Job("POST", "/submit", json.dumps({"type": "move", "actions": [[0.1]] * 3,
+                                                           "cameras": []}).encode())
+    svc.dispatch(job)
+sim.on_step = lambda s: os.kill(os.getpid(), sig)
+svc.tick()
+"""
+
+
+def die_in(data: str, sig: int, where: str) -> None:
+    """A sidecar process of this trial (counted, as main() counts it) that dies by `sig` at `where`."""
     import subprocess
-    r = subprocess.run([sys.executable, "-c", code, str(Path(rcb_service.__file__).parent), data, str(int(sig))],
-                       capture_output=True, timeout=60)
-    assert r.returncode == -sig, (r.returncode, r.stderr[-300:])
+    rcb_service.count_start(data)
+    r = subprocess.run([sys.executable, "-c", CHILD, str(HERE), str(REALTIME), data, str(int(sig)), where],
+                       capture_output=True, timeout=120)
+    assert r.returncode == -sig, (r.returncode, r.stderr[-500:])
 
 
-class TestCrashOwner(ByHand):
-    """A simulator crash (a fatal signal's record in crash.log) after the agent's first command is the agent's; a kill,
-    or any crash before the first command, is infrastructure (owner, 2026-10-17)."""
-
-    def make_sim(self):
-        return FastSim()
+class TestCrashOwner(unittest.TestCase):
+    """A simulator crash inside a control step (crash.log's record shows _step on the crashing thread) after the agent's
+    first command is the agent's; a kill, a crash outside a control step (building, resuming, resetting, rendering,
+    finalizing) and any crash before the first command are infrastructure (owner, 2026-10-17; review round 2)."""
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.data = self.tmp.name
-        rcb_service.count_start(self.data)                   # process 1, as main() counts it
-        self.sim = self.make_sim()
-        self.svc = self.service(self.sim)
 
-    def crash_three_times(self, sig: int, command: bool) -> dict:
-        if command:
-            self.submit("move", [[0.1]] * 3, at=0)
-        self.run_steps(100)                                  # a checkpoint (one per second of robot time)
-        for i in range(3):
-            die_by(self.data, sig)                           # the process dies ...
-            rcb_service.count_start(self.data)               # ... and compose starts the next
-            if i < 2:
-                self.service(FastSim())
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def outcome(self, *deaths) -> dict:
+        for sig, where in deaths:
+            die_in(self.data, sig, where)
+        rcb_service.count_start(self.data)                   # the restart that finds the deaths
         with self.assertRaises(rcb_service.GiveUp):
-            self.service(FastSim())
+            svc = rcb_realtime.RealtimeService(FastSim(), data=self.data, slowdown=1000.0)
+            svc.start()
         return json.loads(Path(self.data, "final.json").read_text())
 
-    def test_segfaults_after_the_first_command_are_the_agents(self):
-        fin = self.crash_three_times(signal.SIGSEGV, command=True)
+    def test_segfaults_in_the_agents_steps_are_the_agents(self):
+        fin = self.outcome(*[(signal.SIGSEGV, "step")] * 3)
         self.assertEqual((fin["reason"], fin.get("infra_error", 0), fin["success"]), ("sim_crashed_on_call", 0, False))
+        died = rcb_service.deaths(self.data)
+        self.assertEqual([(d["fatal_signal"], d["in_step"]) for d in died], [(True, True)] * 3)
         ev = [json.loads(x) for x in Path(self.data, "episode.jsonl").read_text().splitlines()]
         self.assertEqual([e["fatal_signal"] for e in ev if e["ev"] == "resuming"], [True, True])
+        self.assertIn("first_command", [e["ev"] for e in ev])
 
-    def test_aborts_after_the_first_command_are_the_agents(self):
-        fin = self.crash_three_times(signal.SIGABRT, command=True)
-        self.assertEqual(fin["reason"], "sim_crashed_on_call")
+    def test_aborts_in_the_agents_steps_are_the_agents(self):
+        self.assertEqual(self.outcome(*[(signal.SIGABRT, "step")] * 3)["reason"], "sim_crashed_on_call")
 
-    def test_kills_after_the_first_command_are_infrastructure(self):
-        fin = self.crash_three_times(signal.SIGKILL, command=True)
+    def test_kills_are_infrastructure(self):
+        fin = self.outcome(*[(signal.SIGKILL, "step")] * 3)
         self.assertEqual((fin["reason"], fin["infra_error"]), ("sim_crashed", 1))
+
+    def test_segfaults_outside_a_step_are_infrastructure(self):
+        """One agent-time segfault, then two in processes that never got past building and resuming (review repro)."""
+        fin = self.outcome((signal.SIGSEGV, "step"), (signal.SIGSEGV, "build"), (signal.SIGSEGV, "build"))
+        self.assertEqual((fin["reason"], fin["infra_error"]), ("sim_crashed", 1))
+        self.assertEqual([d["in_step"] for d in rcb_service.deaths(self.data)], [True, False, False])
 
     def test_segfaults_before_the_first_command_are_infrastructure(self):
-        fin = self.crash_three_times(signal.SIGSEGV, command=False)
+        fin = self.outcome(*[(signal.SIGSEGV, "held")] * 3)
         self.assertEqual((fin["reason"], fin["infra_error"]), ("sim_crashed", 1))
+        ev = [json.loads(x) for x in Path(self.data, "episode.jsonl").read_text().splitlines()]
+        self.assertNotIn("first_command", [e["ev"] for e in ev])
 
     def test_a_kill_among_segfaults_is_infrastructure(self):
-        self.submit("move", [[0.1]] * 3, at=0)
-        self.run_steps(100)
-        for i, sig in enumerate((signal.SIGSEGV, signal.SIGKILL, signal.SIGSEGV)):
-            die_by(self.data, sig)
-            rcb_service.count_start(self.data)
-            if i < 2:
-                self.service(FastSim())
-        with self.assertRaises(rcb_service.GiveUp):
-            self.service(FastSim())
-        self.assertEqual(json.loads(Path(self.data, "final.json").read_text())["reason"], "sim_crashed")
+        fin = self.outcome((signal.SIGSEGV, "step"), (signal.SIGKILL, "step"), (signal.SIGSEGV, "step"))
+        self.assertEqual(fin["reason"], "sim_crashed")
+
+    def test_the_record_must_show_a_step_on_the_crashing_thread(self):
+        rec = (b"Fatal Python error: Segmentation fault\n\nThread 0x1 (most recent call first):\n"
+               b'  File "rcb_service.py", line 1 in _step\n\nCurrent thread 0x2 (most recent call first):\n'
+               b'  File "server.py", line 9 in images\n  File "rcb_realtime.py", line 5 in dispatch\n\n')
+        self.assertFalse(rcb_service.crashed_in_step(rec))
+        self.assertTrue(rcb_service.crashed_in_step(rec.replace(b"in images", b"in _step")))
+
+
+class TestFirstCommand(ByHand):
+    def make_sim(self):
+        return FastSim()
+
+    def test_a_gap_before_a_later_at_is_no_command(self):
+        """A target held through a gap (call -1) or the hold row runs before the agent's row: not its first command."""
+        self.submit("move", [[0.1]] * 3, at=5)
+        self.run_steps(5)
+        self.assertFalse(self.svc.commanded)
+        self.run_steps(1)
+        self.assertTrue(self.svc.commanded)
+
+    def test_a_row_the_simulator_refuses_to_clip_is_a_400(self):
+        def bad(typ, rows):
+            raise ValueError("a row of the wrong layout")
+        self.sim.clip = bad
+        code, body = self.submit("move", [[0.1]])
+        self.assertEqual(code, 400)
+        self.assertFalse(self.svc.done)
 
 
 class TestResetFailure(ByHand):
