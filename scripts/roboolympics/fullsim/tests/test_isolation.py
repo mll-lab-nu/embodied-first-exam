@@ -1,10 +1,10 @@
 """H.1 for the table-tennis twins (#282 review): the policy's user is bounded (RLIMIT_NPROC) and ended with kill(-1)
 as that user; the verifier never ends without a reward. Run as root inside the twin's verifier image:
 
-    docker run --rm --pids-limit 256 -v <hub>/scripts/roboolympics/fullsim/tests:/t:ro <verifier image> \
+    docker run --rm --pids-limit 256 --memory 2g -v <hub>/scripts/roboolympics/fullsim/tests:/t:ro <verifier image> \
         python3 -m unittest discover -s /t
 
-Always with --pids-limit: the fork loop is real (bounded here by RLIMIT_NPROC as the worker sets it, and by the limit).
+Always with --pids-limit and --memory, never on a bare host: the fork loop is real (bounded here by RLIMIT_NPROC as the worker sets it, and by the limit).
 
 (skipped elsewhere: it needs root, the trusted simulator at /opt/trusted and the sandbox user nobody)."""
 
