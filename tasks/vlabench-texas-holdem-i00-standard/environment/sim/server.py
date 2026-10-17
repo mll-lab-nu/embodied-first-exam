@@ -7,10 +7,16 @@ Settings come from environment/docker-compose.yaml:
   RCB_INSTANCE            the frozen instance (the privileged twin's instance.json)
   RCB_TASK_TEXT           the task as the instruction states it, for /spec
   RCB_EPISODE             what ends an episode, for /spec (the instruction's words)
-  RCB_MAX_CONTROL_STEPS   technical episode cap (9000 = 15 min of robot time): the fresh replay that grades the
-                          episode must finish inside the collect hook's timeout
+  RCB_MAX_CONTROL_STEPS   technical episode cap (9000 = 15 min of robot time): the video's pass over the episode
+                          must finish inside the collect hook's timeout
   RCB_IMAGE_HW            the side of every camera's image in pixels (320)
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA   the service's own (rcb_service.main)
+
+The verdict is the live episode's (board 0151): step() reports VLABench's own success check (the task's termination
+condition) at every control step and the episode ends there, so nothing is replayed to grade it; render_video() re-runs
+the trajectory once, after the verdict, to film it. The frozen start: vlb_tool.Session refuses a scene whose initial
+state or compiled model differs from instance.json (InstanceMismatch here), and start_sha (the instance's
+initial_state_sha256) is checked by rcb_service when an episode begins.
 """
 
 from __future__ import annotations
@@ -22,7 +28,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import vlb_tool  # noqa: E402
-from rcb_service import main  # noqa: E402
+from rcb_service import InstanceMismatch, main  # noqa: E402
 
 CAMERAS = ("forward", "left", "right", "wrist")
 ROBOT_BASE = (0, -0.4, 0.78)  # VLABench's franka base; a task series may override it (the instance's episode.robot)
@@ -49,7 +55,14 @@ class VLABench:
     def __init__(self, instance: str, *, task_text: str = "", episode: str = "", image_hw: int = 320,
                  max_control_steps: int = 9000):  # fmt: skip
         self.instance = instance
-        self.s = vlb_tool.Session(instance)
+        try:
+            self.s = vlb_tool.Session(instance)
+        except (RuntimeError, ValueError) as exc:   # the scene does not rebuild the frozen instance (vlb_tool's checks)
+            refused = ("differs from the frozen instance", "another VLABench commit", "solved at the start")
+            if any(k in str(exc) for k in refused):
+                raise InstanceMismatch(str(exc)) from exc
+            raise
+        self.start_sha = self.s.spec["initial_state_sha256"]   # rcb_service checks it when an episode begins
         self.task_text = task_text or self.s.instruction
         self.episode = episode
         self.hw = int(image_hw)
@@ -150,15 +163,12 @@ class VLABench:
     def state_sha(self) -> str:
         return self.s.state_sha()
 
-    # ---------------------------------------------------------------- grading and evidence
-    def verify(self, rows: np.ndarray) -> dict:
-        r = vlb_tool.Session(self.instance).replay(rows)
-        return {"success": r["success"], "state_sha": r["state_sha"]}
-
+    # ---------------------------------------------------------------- evidence (the verdict is the live episode's)
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         np.savez(path, actions=np.asarray(rows, np.float64), meta=np.array(vlb_tool.canonical(meta)))
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
+        """The episode's video, after the verdict: the trajectory re-run once in a fresh scene, filmed."""
         vlb_tool.Session(self.instance).render_video(rows, path, every=max(1, len(rows) // 600))
 
 

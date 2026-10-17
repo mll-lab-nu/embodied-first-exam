@@ -123,17 +123,34 @@ the simulator to 2e-7 m), and thin primitives: `move_ee` (both arms together, Is
 ## Grading
 - Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` twice, each in a fresh process; success = YAMLab's check
   held in both, the final hashes agree, and the rebuilt frozen scene matches the recorded one.
-- Standard: the service dumps the episode and exits on the collect hook's signal; the hook (`environment/sim/finalize.sh`,
-  RoboLab's) replays it in two fresh processes; success = live ∧ replay ∧ deterministic, `live_matches_replay` reported
-  separately. The standard verifier reads only `final.json` with `network_mode = "no-network"`.
-- Whose failure a 0 is (2026-10-10), as RoboLab's (docs/benchmarks/robolab.md, Grading): the standard grader books a
-  missing, unreadable or unfinalized `final.json`, a lost GPU and a replay process without a result (`replay_error`) as
-  `infra_error = 1`; `finalize.sh` writes `final.json` atomically and retries a replay that died once. The privileged
+- Standard (since 2026-10-17, owner, boards 0150/0151): graded by the **live episode**, with no grading replay. The
+  service judges the episode it runs (YAMLab's check after every control step, every stage latched; a task object off the
+  table ends it, `object_fell`), dumps it on the collect hook's signal and exits; the hook (`environment/sim/finalize.sh`,
+  RoboLab's) writes `final.json` from `episode.json` (`graded_by` "live", `replays` 0) before anything else. success =
+  the live success, no infrastructure failure. The standard verifier reads only `final.json` with
+  `network_mode = "no-network"`. YAMLab has no end-of-episode hold, and its replay applied none either, so the live rule is
+  the replay's. Until 2026-10-17 the hook replayed the trajectory in two fresh processes (success = live ∧ replay ∧
+  deterministic); a trial of that version is re-scored by its live episode as RoboLab's (docs/benchmarks/robolab.md,
+  Grading).
+- The start state (standard): before serving, the service compares the rebuilt scene with the instance's recorded state
+  (`state_sha`, or every object pose and joint within tolerance, `Session.instance_matches`); a mismatch is a give-up as an
+  infrastructure failure (`instance_mismatch`, 409 to every request). Before, the strict check crashed the service.
+- Whose failure a 0 is, as RoboLab's (docs/benchmarks/robolab.md, Grading): the standard grader books a missing,
+  unreadable or unfinalized `final.json`, no record of the live episode, a give-up after crashes between calls and an
+  instance mismatch at the start as `infra_error = 1`; a crash inside the agent's calls and a simulator error raised by
+  them stay the agent's 0. `finalize.sh` writes `final.json` atomically. The privileged
   grader books an unreadable deliverable as `bad_trajectory` (the agent's 0) and a replay without a result, a replay
   time-out or `instance_ok = 0` as `grader_error = infra_error = 1`.
-- The replay video never decides a replay (it is filmed during one of the two graded replays): the tooling catches every
-  video failure (`video_ok` false in the replay's result) and the frames go straight to the encoder; a trajectory longer
-  than 18,000 control steps is filmed as a time lapse (at most 9,000 frames), so filming adds a bounded cost.
+- The video (standard, since 2026-10-17) comes from the live episode (`live_video.py`, `live.mp4`): the cameras render
+  only when a frame is asked for, and a filmed replay took 2.4x as long as an unfilmed one (median over the 21 archived
+  standard trials longer than 2000 control steps), so the service never renders for the video. It keeps the tooling's
+  video frame (top + both wrist cameras) at the control steps the agent's own calls already rendered (the call's frames at
+  its `video_fps`, 5 per simulated second by default, and the frame at each call's end), at most one per 6 control steps,
+  as JPEG files (`/data/live_video/`; a resume deletes the frames of the call lost in the crash); only the end state is rendered once more, at the dump. The video's rate is therefore
+  the agent's (at least one frame per call), not a fixed one. The collect hook encodes it after the verdict; a failure
+  costs the video only. Privileged: the replay video never decides a replay: the tooling catches every video failure
+  (`video_ok` false in the replay's result) and the frames go straight to the encoder; a trajectory longer than 18,000
+  control steps is filmed as a time lapse (at most 9,000 frames).
 - Both verifiers run with `network_mode = "no-network"`. Isaac Sim starts and renders offline: the two web assets the
   scene would otherwise fetch from NVIDIA's asset bucket at run time (Isaac Lab's default ground; the three MDL materials
   of YAMLab's workstation USDs) are baked into the image (`images/yamlab/web_assets.txt`, sha256-checked; the workstation
@@ -166,7 +183,9 @@ max(1800 s, 1200 s + rows / 20) (the verifier's first Isaac start is the cold on
 nominal rate) and `[verifier] timeout_sec = 13000` fits two replays of the longest accepted trajectory (100,000 rows:
 6200 s each) plus 600 s; before, 2400 s was shorter than two 1800 s replays and than one cold start plus a long filmed
 replay. Standard: `[[verifier.collect]] timeout_sec = 15000` (was 5400) = the episode end (up to 2700 s through a resume)
-+ two replays of up to 5700 s + 900 s; `finalize.sh` time-boxes each replay inside that deadline.
++ two replays of up to 5700 s + 900 s, until 2026-10-17; now 3600 s (the episode end + the video encode, at most 600 s on
+the CPU, + a margin). The saving: two fresh-process replays per trial (74-149 s each at the median, 400-1000 s at the p90
+over the 31 archived standard trials, on the trial's GPU).
 The tests of these rules run without a simulator and cover YAMLab with RoboLab: `scripts/robolab/tests/test_*.py`.
 
 The tooling's runaway guard ends an episode after 100,000 control steps (`step_guard`, 55.6 min of simulated time). At
@@ -207,6 +226,13 @@ YAMLab's recorder imports, and the two tasks' object assets (~3 GB). It contains
 the CPU); one simulator per ~16 GB of RAM. Isaac keeps generated Python in its Kit cache: the verifier and the standard
 sidecar mount their own `*_trusted` cache volumes; every cache volume is scoped to the trial's compose project.
 
+## Change log
+- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by the sim
+  service during the live episode (`live.mp4`, from the renders of the agent's own calls). The start-state check moved to
+  the episode's start (`instance_mismatch` = a give-up as infra before serving). Collect hook 15000 s -> 3600 s. The
+  `main` kill hook (`kill -9 -1`) runs before the sim's (PROTOCOL H.4). Privileged tasks unchanged. The 10 standard task
+  dirs regenerated in place (new DIGESTs; the instructions do not change).
+
 ## Licences
 YAMLab, its USDs and its dataset (objects, demonstrations): MIT. Isaac Lab: BSD-3-Clause. LeRobot fork: Apache-2.0. Isaac Sim
 5.1 and its wheels: NVIDIA proprietary (no redistribution), hence BUILD_ONLY.
@@ -214,3 +240,35 @@ YAMLab, its USDs and its dataset (objects, demonstrations): MIT. Isaac Lab: BSD-
 ## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
 
 Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact). Its service states no `max_frames_per_call` yet (calls are bounded by `max_watch_s`, `max_chunk_s` and the frame rate).
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders (for this benchmark from the grading records only: the log review was
+partial). It is **hard** when GPT-6 Luna and every later run that attempted it failed, GPT-6 Astra and Claude Opus 5.5
+among them; a standard directory that only Astra solved is hard as well. It is **unverified** when only Luna attempted
+it and failed (the later runs only take bases Luna solved in no mode), and **pending** without a Luna verdict. A base
+whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason `solved`): kept under its name and reported
+apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+5 of 10 bases are in the easy set; by directory: 15 easy, 0 hard, 5 unverified, 0 pending.
+
+| base | easy set | privileged | standard |
+|---|---|---|---|
+| `yamlab-hang-mug-on-tree-i10` |  | easy: Luna | unverified |
+| `yamlab-hang-mug-on-tree-i13` |  | unverified | easy: Luna |
+| `yamlab-hang-mug-on-tree-i15` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus |
+| `yamlab-hang-mug-on-tree-i20` | yes | easy: Luna | easy: Luna |
+| `yamlab-hang-mug-on-tree-i21` |  | unverified | easy: Luna |
+| `yamlab-put-pot-on-cooktop-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `yamlab-put-pot-on-cooktop-i03` |  | easy: Luna | unverified |
+| `yamlab-put-pot-on-cooktop-i04` |  | easy: Luna | unverified |
+| `yamlab-put-pot-on-cooktop-i07` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus |
+| `yamlab-put-pot-on-cooktop-i08` | yes | easy: Astra, Opus, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon |

@@ -49,9 +49,10 @@ benchmark re-verifies on its frozen instance (`scripts/vlabench/freeze.sh`) and 
   cards VLABench's own ranking picks, which are named; `select_mahjong*` and `select_fruit_common_sense` name the
   placemat or plate; `select_poker*` say grasp and lift. The checks themselves are unchanged.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 4000 control steps (400 s of robot time; PR #4's bound). Standard
-  episodes have a technical cap of 9000 control steps (`spec.max_control_steps`, PROTOCOL §4.5 MAY): the fresh replay
-  that grades the episode (~40 ms a step, about 360 s at the cap, plus a scene build) must fit the collect hook, which
-  gives the verdict until 1440 s of its 1500 s and then waits for the video (a second replay) until 1470 s.
+  episodes have a technical cap of 9000 control steps (`spec.max_control_steps`, PROTOCOL §4.5 MAY): the video's
+  re-run of the episode (~40 ms a step, about 360 s at the cap, plus a scene build and rendering) must fit the collect
+  hook, which waits for the verdict until 1440 s and for the video until 2880 s of its 2910 s (since 2026-10-16; until
+  2026-10-17 the verdict itself was a fresh replay, the video a second one).
 - **World frame.** Metres; the robot's base at (0, -0.4, 0.78) facing +y (VLABench's default; (0, -0.4, 0.6) for
   `select_billiards*` and (0, -0.7, 0.7) for `find_unseen_object`, from VLABench's per-series robot configuration): x
   to the robot's right, y forward (across the table), z up; quaternions w x y z. Stated in both instructions and in
@@ -81,17 +82,35 @@ from-scratch build is the maintainers' publication step; the instance hashes are
 whose physics differs shows up as `grader_error`, never as a silent change.
 
 ## Standard-mode service
+
+**Grading, since 2026-10-17 (owner, board 0150/0151): the live episode.** The sim sidecar judges the episode it runs
+with VLABench's own success check (the task's termination condition, `should_terminate_episode`, at every control step;
+`step()` in `scripts/vlabench/shared/standard/server.py`) and ends it there; `rcb_service.py` writes that verdict
+(`graded_by = "live"`, `replays = 0`) once the agent's container is stopped, and no grading replay runs. The old replay
+(`vlb_tool.Session.replay`) re-ran the same rows from the frozen instance under the same check, with no settle or hold
+of its own, so the live rule is exactly as strict. The frozen start is checked on the live simulator: `vlb_tool.Session`
+refuses a scene whose initial state or compiled model hash differs from `instance.json` (`instance_mismatch` here), and
+`start_sha` (`initial_state_sha256`) is checked when the episode begins; both give up as infrastructure (`infra_error =
+1`) before the agent is served (every archived start matched). The video is one render pass over `trajectory.npz` after
+the verdict (`render_video`: a fresh scene, CPU physics, OSMesa rendering; median about 150 s a trial, up to about 8
+minutes); it never changes the verdict. The removed replay was a CPU re-run of the episode of about the same length
+(about 2.5 slot-hours over the 49 archived trials). Over the archive the live rule changes no graded verdict; the 5 trials
+recorded `infra_error` because their old video ran out of the hook's time get a live verdict (0) instead. `infra_error
+= 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the agent's calls, a
+reset whose scene does not rebuild, and `instance_mismatch`; a simulator error raised by the agent's call, crashes inside its calls, a timeout and a failure are
+the agent's 0.
 `environment/sim/rcb_service.py` is a byte copy of main's `scripts/humanoidbench/shared/standard/rcb_service.py`
 (protocol `eai-standard/2.1`: four endpoints, RCB1, no reset unless `budget.reset > 0`, journal + checkpoints with at
 most two resumes, startup watchdog, SIGUSR1 collect hook, `/data` evidence, verdict before video, 413 / 500 handling).
-Since 2026-10-10 `final.json` is `finalized` the moment the verdict is written, before the replay video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict: before, `finalized` came after the video, a second full replay, so
+Since 2026-10-10 `final.json` is `finalized` the moment the verdict is written, before the video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict: before, `finalized` came after the video, a second full replay, so
 the longest episodes needed two replays and two scene builds (750-800 s) inside the hook's 800 s of waiting, and one
 that missed it was graded `infra_error` although its verdict was on disk. The hook's timeout went from 900 to 1500 s
 with that change. The reset budget is pinned to 0 in the compose file (the instruction says one episode, no reset; it
 used to be a `${RCB_RESET_BUDGET:-0}` knob that a host exporting the variable for another benchmark would have switched on).
 `server.py` is VLABench's adapter (the `Sim` contract): cameras, proprioception, `joint_position` clipping into the
-actuators' bounds, holding the last targets while watching, and the fresh replay (`vlb_tool.Session`). The agent's
-client and the verifier (`grade.py`: `success = live_success ∧ replay_success ∧ deterministic`) are main's copies too.
+actuators' bounds, holding the last targets while watching, the frozen start's hash, and the video's re-run (`vlb_tool.Session`). The
+agent's client and the verifier (`grade.py`: `success = live_success`, the live verdict, since 2026-10-17; `live_success ∧
+replay_success ∧ deterministic` before) are main's copies too.
 
 ## Rebuilding
 ```bash
@@ -144,8 +163,8 @@ Final-state hashes of some references (live = replay 1 = replay 2):
 | texas_holdem | 0 | 660 | `c77b7967d5b4788f…` |
 
 ## Open questions
-- **The standard episode cap.** 9000 control steps (900 s of robot time) keeps the grading replay well inside the
-  collect hook (1500 s since 2026-10-10; the replay costs ~40 ms a step: these are the timings of the first trials on
+- **The standard episode cap.** 9000 control steps (900 s of robot time) keeps the video's re-run well inside the
+  collect hook (2910 s since 2026-10-16; a re-run costs ~40 ms a step: these are the timings of the first trials on
   a 7950X, not measured again). In the sample model trial one standard episode (insert_flower) reached the cap after
   53 minutes of the agent's 60, so the cap, not the wall clock, ended it. Raising it needs a longer collect timeout.
 - **Tasks without a reference.** The 57 tasks left out could come in later with `oracle = "none"` and human review
@@ -155,3 +174,63 @@ Final-state hashes of some references (live = replay 1 = replay 2):
 - **eai-standard/2.1 or 2.2.** The standard twins serve 2.1 with main's HumanoidBench layer (byte copies); moving to the
   shared 2.2 layer (`scripts/eai_standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
   `/kinematics`, a per-call wall-clock bound) and its CI identity check.
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
+failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
+**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
+`solved`): kept under its name and reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+15 of 36 bases are in the easy set; by directory: 51 easy, 0 hard, 21 unverified, 0 pending.
+
+| base | easy set | privileged | standard |
+|---|---|---|---|
+| `vlabench-add-condiment-i00` | yes | easy: Astra, Opus, DeepSeek V4.1 Flash | easy: Astra, Opus |
+| `vlabench-book-rearrange-i00` |  | easy: Luna | unverified |
+| `vlabench-find-unseen-object-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-friction-qa-i00` |  | easy: Luna | unverified |
+| `vlabench-hammer-nail-and-hang-picture-i00` |  | easy: Luna | unverified |
+| `vlabench-heat-food-i00` | yes | easy: Astra, Opus, Sol 6.1 | easy: Opus |
+| `vlabench-insert-bloom-flower-i00` |  | unverified | easy: Luna |
+| `vlabench-insert-flower-i00` |  | easy: Luna | unverified |
+| `vlabench-magnetism-qa-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-play-math-game-i00` |  | easy: Luna | unverified |
+| `vlabench-put-box-on-painting-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-reflection-qa-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-billiards-common-sense-i00` |  | easy: Luna | unverified |
+| `vlabench-select-billiards-i00` |  | easy: Luna | unverified |
+| `vlabench-select-billiards-spatial-i00` |  | easy: Luna | unverified |
+| `vlabench-select-book-spatial-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-chemistry-tube-common-sense-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-chemistry-tube-i00` |  | easy: Luna | unverified |
+| `vlabench-select-chemistry-tube-semantic-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-chemistry-tube-spatial-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-drink-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-fruit-common-sense-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-fruit-i00` |  | easy: Luna | unverified |
+| `vlabench-select-mahjong-i00` |  | easy: Luna | unverified |
+| `vlabench-select-mahjong-semantic-i00` |  | easy: Luna | unverified |
+| `vlabench-select-mahjong-spatial-i00` |  | easy: Luna | unverified |
+| `vlabench-select-nth-largest-poker-i00` |  | easy: Luna | unverified |
+| `vlabench-select-painting-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-poker-i00` |  | easy: Luna | unverified |
+| `vlabench-select-poker-semantic-i00` |  | easy: Luna | unverified |
+| `vlabench-select-poker-spatial-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-specific-type-book-i00` |  | easy: Luna | unverified |
+| `vlabench-select-toy-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-unique-type-mahjong-i00` |  | easy: Luna | unverified |
+| `vlabench-take-out-cool-drink-i00` |  | easy: Luna | unverified |
+| `vlabench-texas-holdem-i00` |  | easy: Luna | unverified |
+
+Judgment calls: `vlabench-select-drink-i00`: solved in the first test evaluation (2026-10-02); repo-wide changes only
+since.

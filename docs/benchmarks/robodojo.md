@@ -116,34 +116,46 @@ for bit it had never disagreed (below), and it cost 29-48 % (median 44 %) of the
   (`instance_exact` = 0) did not start from the frozen state and gives no verdict, whatever it ended in
   (`instance_mismatch`, `grader_error` = `infra_error` = 1), as in standard mode. Every graded trial so far rebuilt it
   exactly, on every host. `grade.py --repeat 2` is still the two-replay check, for a determinism measurement by hand.
-- standard: the service ends and dumps the episode on the collect hook's signal; `finalize.sh` replays it once, in a
-  fresh process, with the privileged replay's allowance for the episode's length inside the hook's budget, and runs it
-  once more when it dies without a result or runs out of that allowance while the hook has time left (Isaac does not exit
-  after a fatal GPU error, it waits on a crash dialog, so only a time limit ends it); a replay that still gives no
-  result is `replay_error` / `infra_error`, never the agent's 0; `final.json` is replaced atomically.
-  `success = live_success ∧ replay_success`: one successful replay is enough. The two halves guard each other: a live
-  success that does not repeat in the replay is 0, and so is a replay that succeeds where the live episode did not. The
-  replay still has something to be compared with, the live episode's end state: `deterministic` = `state_identical` =
-  `live_matches_replay` = the replay ended in that state (`determinism_checked` = 1). It is reported and no longer
-  decides: a replay that succeeds in another end state than the live episode passes. For the six standard-only tasks
-  `success = live_success` (Determinism, above; a replay without a result is recorded, never `infra_error`). `no-network`.
-  A missing, unreadable or unfinalized `final.json` is `infra_error`. The live episode starts from the frozen instance
-  (the service is strict); a replay whose process rebuilt the layout to another state is `instance_mismatch` (a
-  `replay_error`: `infra_error`), not for the six standard-only tasks. `final.json` says `replays` = 1 and has one
-  `replay_rc`; `replay_sha2` and `replay2.log` are gone.
-- The one replay is the filmed one (`replay.mp4`). A filmed replay never decides a result: a video that cannot be written
-  gives `video_ok` false and the replay stands. Filming slows the replay (below); the limits are sized for it.
-- What one replay gives up: a trajectory whose outcome differs between fresh processes is no longer caught by the grader
-  (privileged: it scored 0 as not deterministic; now the one replay's result stands. Standard: the live episode and the
-  replay must still both succeed). On the 48 tasks graded this way the physics replays bit for bit: in the first 38
+- standard (since 2026-10-17, owner, boards 0150/0151): graded by the **live episode**, with no grading replay, the same
+  rule for every task: `success = live_success`, RoboDojo's check as the service ran it after every action of the episode
+  the agent ran (no end-of-episode hold: RoboDojo has none, and its replay applied none). The service writes
+  `trajectory.npz` (the deliverable) and `episode.json` on the collect hook's signal and exits; `finalize.sh` writes
+  `final.json` from it (`graded_by` "live", `replays` 0) before anything else. `no-network`. A missing, unreadable or
+  unfinalized `final.json`, no `episode.json`, a give-up after crashes between calls and the episode never ending for the
+  hook are `infra_error`; a crash inside the agent's calls and a simulator error raised by them stay its 0. The start
+  state: before it serves, the service compares the rebuilt layout's state hash with `instance.json`'s `state_sha`
+  (`instance_exact`); a mismatch is a give-up as infra (`instance_mismatch`, 409 to every request). The six tasks graded by
+  verdict reset to states that are not bit-identical by design: their hash is recorded (`instance_checked` = 0), not
+  compared; what is checked for them is only that the layout is `instance.json`'s own (the Session loads it from there).
+  Until 2026-10-17: `success = live_success ∧ replay_success` with one fresh-process replay (`finalize.sh` ran it, filmed,
+  inside a 10800 s hook; a replay without a result was `replay_error` / `infra_error`; a replay that rebuilt another
+  start was `instance_mismatch`), and the six graded by verdict were `live_success` already, their replay recorded.
+  Re-scoring such a trial by its live episode: `final.json` `success` (the live result, merged from episode.json);
+  `infra_error` only when the live record is missing (no or unfinalized `final.json`, the service never ended the
+  episode) or the service gave up with `infra_error`; `replay_error`, `gpu_lost` and `instance_mismatch` found by the
+  replay are not the live episode's. In the archive (305 graded standard trials) this changes no verdict: the six trials
+  where the live episode and its replay disagreed are of tasks graded by verdict, already scored live; one trial whose
+  replay ran out of time (`replay_error`, infra) had failed live, and is the agent's 0 under the live rule.
+- The video (standard, since 2026-10-17) comes from the live episode (`live_video.py`, `live.mp4`). Rendering is not free
+  here: the filmed replay ran at 7.1 actions/s against 10.0 unfilmed (median, Time limits below), and RoboDojo's
+  observation renders all three cameras with depth at once. So the service never renders for the video: it keeps
+  `cam_head` (640×480, JPEG in `/data/live_video/`) at the actions whose observation a call of the agent already rendered
+  (its frames at its `video_fps`, 5 per simulated second by default, and the proprioception at each call's end), at most
+  one per 5 actions; only the end state is rendered once more, at the dump. The video's rate is the agent's (at least one
+  frame per call); a resume's journal replay adds none and deletes the frames of the call lost in the crash. The collect hook encodes it after the verdict (CPU, at most
+  600 s); a frame or an encode that fails costs the video only. Privileged: the one replay is the filmed one
+  (`replay.mp4`); a video that cannot be written gives `video_ok` false and the replay stands.
+- What one replay gives up (2026-10-12): a trajectory whose outcome differs between fresh processes is no longer caught by
+  the privileged grader (it scored 0 as not deterministic; now the one replay's result stands). On the 48 tasks graded this way the physics replays bit for bit: in the first 38
   graded trials of the run that began on 2026-10-11 (36 on these tasks, on AWS and both Slurm clusters) the two replays
   ended in the same state every time, and so did the live episode and its replay; no verdict changes when they are
   re-read under this rule (`all_success` / `replay_success` with `state_identical` in the saved `reward.json`), and no
   trial is rerun.
 - Unit tests with stand-ins for the simulator (CI: check-unit-tests.sh): `scripts/robodojo/tests/test_standard_grading.py`
-  runs the collect hook and the standard grader on both rules, `test_privileged_grading.py` the privileged grader; both
-  check that exactly one replay process runs (in the hook two when the first gave no result and was run again; the
-  privileged grader never runs one again), and that it is the filmed one.
+  runs the collect hook and the standard grader (live success / failure, both kinds of task, crashes between and inside
+  calls, an instance mismatch, no episode.json, a failing, crashing or hanging encode; no replay may start);
+  `test_server.py` (numpy) the real service on a stub Session (the start check, the live video's frames only at rendered
+  actions); `test_privileged_grading.py` the privileged grader (exactly one replay process, the filmed one).
 - Time limits (wall clock only; the verdict rules do not depend on them), for ONE replay since 2026-10-12. Measured in
   the pool on 2026-10-11/12 (35 graded trials on loaded hosts, trajectories of up to 6,241 actions): 47-427 s from the
   start of a replay process until the layout is ready (427 s: a cold first start, which every privileged verifier's
@@ -152,7 +164,9 @@ for bit it had never disagreed (below), and it cost 29-48 % (median 44 %) of the
   2.8 times the slowest start and twice the time the slowest filmed rate needs, so 7200 s for the 15,000 rows a
   trajectory may have (the slowest measured start and rate would need 427 + 15,000 / 4.9 = 3490 s). What came down is
   what was sized for two: `[verifier] timeout_sec` (privileged) 15000 s -> **7800 s** (one replay of 15,000 rows + 600 s
-  for the grader and the resource step); the standard collect hook 18000 s -> **10800 s** (`finalize.sh`'s
+  for the grader and the resource step); the standard collect hook 18000 s -> **10800 s** (until 2026-10-17; now **3600 s**:
+  the episode end + the video encode, no replay, no GPU after the service exits; the saving is the filmed replay, 339 s
+  at the median and 1290 s at the p90 over the 244 archived one-replay trials) (`finalize.sh`'s
   `HOOK_BUDGET_S`, equal to `[[verifier.collect]] timeout_sec`: the episode end, up to 2700 s through a resume, one
   replay of up to 7200 s, 900 s to spare). Inside it the hook's replay now has the same allowance for its length as the
   privileged one, never more than what is left before the deadline minus 300 s; until 2026-10-12 a replay had its share
@@ -162,6 +176,14 @@ for bit it had never disagreed (below), and it cost 29-48 % (median 44 %) of the
   can now take at most 3600 + 7800 = 11400 s (privileged; 18600 before) and 3600 + 10800 + 1200 = 15600 s (standard;
   22800 before). Typical, from the same trials: the privileged verifier took 3.9-27 min with two replays and the
   collect hook 6-25 min; the filmed replay of the standard trials alone took 3-15 min.
+
+## Change log
+- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by the sim
+  service during the live episode (`live.mp4`, `cam_head` at the actions the agent's calls rendered). The start-state
+  check moved to the episode's start (`instance_mismatch` = a give-up as infra before serving). Collect hook 10800 s ->
+  3600 s. The `main` kill hook (`kill -9 -1`) runs before the sim's (PROTOCOL H.4). Privileged tasks unchanged. The 54
+  standard task dirs regenerated in place (new DIGESTs; the instruction changes only for the six tasks graded by
+  verdict: the service no longer replays them for the record).
 
 ## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
 Resume class `exact` (the resumed service is a fresh process whose journal replay is that process's first run), `approx` for
@@ -245,3 +267,81 @@ fork: NVIDIA's cuRobo licence. Isaac Sim 5.1 and its wheels: NVIDIA proprietary 
 ## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
 
 Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six standard-only tasks graded by the live episode (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
+failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
+**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
+`solved`): kept under its name and reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+33 of 54 bases are in the easy set; by directory: 80 easy, 13 hard, 9 unverified, 0 pending.
+
+| base | easy set | privileged | standard |
+|---|---|---|---|
+| `robodojo-align-blocks-i00` | yes | easy: Astra, Opus, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash |
+| `robodojo-arrange-largest-number-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-arrange-largest-number-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-build-tower-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
+| `robodojo-classify-objects-by-language-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-classify-objects-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-cover-blocks-i00` |  | easy: Luna | unverified |
+| `robodojo-deposit-coin-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
+| `robodojo-fasten-screws-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-fill-egg-holder-i00` |  | easy: Astra | hard |
+| `robodojo-fill-pen-holder-i00` | yes | easy: Astra | easy: Astra, Gemini 4 Argon |
+| `robodojo-fold-clothes-i00` | yes | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-fold-clothes-random-i00` | yes | — | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-general-pickup-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-hang-mugs-i00` |  | easy: Astra, Opus | hard |
+| `robodojo-hang-mugs-random-i00` |  | hard | easy: Gemini 4 Argon |
+| `robodojo-imitate-sorting-sequence-i00` |  | easy: Luna | unverified |
+| `robodojo-insert-key-i00` |  | easy: Astra, Gemini 4 Argon | hard |
+| `robodojo-insert-tubes-i00` |  | easy: Luna | unverified |
+| `robodojo-make-kong-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash | hard (only Astra) |
+| `robodojo-make-toast-i00` |  | easy: Astra | hard |
+| `robodojo-make-toast-random-i00` | yes | — | easy: Opus, Gemini 4 Argon |
+| `robodojo-match-and-pick-from-conveyor-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-organize-table-i00` | yes | easy: Astra, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
+| `robodojo-pack-objects-into-box-i00` |  | easy: Astra, Opus, Gemini 4 Argon | hard |
+| `robodojo-pack-objects-into-box-random-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Gemini 4 Argon |
+| `robodojo-pick-from-conveyor-by-image-i00` | yes | easy: Astra, Opus | easy: Opus |
+| `robodojo-play-stacking-toy-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-play-tic-tac-toe-i00` |  | easy: Luna | unverified |
+| `robodojo-play-xylophone-i00` |  | unverified | easy: Luna |
+| `robodojo-plug-in-charger-i00` | yes | easy: Astra, Opus, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon |
+| `robodojo-pour-balls-into-vase-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash |
+| `robodojo-pour-by-language-i00` | yes | — | easy: Opus |
+| `robodojo-pour-liquid-into-cup-i00` | yes | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-pour-liquid-into-cup-random-i00` | yes | — | easy: Astra, Opus, Gemini 3.8 Flash |
+| `robodojo-press-by-number-i00` |  | easy: Luna | unverified |
+| `robodojo-push-t-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus |
+| `robodojo-push-t-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash |
+| `robodojo-put-bottles-into-dustbin-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-solve-equation-i00` |  | easy: Luna | unverified |
+| `robodojo-sort-nesting-dolls-by-size-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
+| `robodojo-sort-nesting-dolls-by-size-random-i00` |  | easy: Luna | unverified |
+| `robodojo-stack-blocks-by-language-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-stack-blocks-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-stack-blocks-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash |
+| `robodojo-stack-bowls-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-stack-bowls-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus |
+| `robodojo-store-laptop-and-headphones-i00` |  | easy: Astra | hard |
+| `robodojo-store-laptop-and-headphones-random-i00` |  | hard | hard |
+| `robodojo-store-tools-in-toolbox-i00` |  | easy: Astra | hard |
+| `robodojo-swap-blocks-i00` |  | easy: Astra | hard |
+| `robodojo-swap-t-i00` | yes | easy: Luna | easy: Luna |
+| `robodojo-sweep-blocks-i00` |  | easy: Luna | unverified |
+| `robodojo-sweep-blocks-random-i00` |  | easy: Astra, Opus | hard (only Astra) |
+
+Judgment calls: `robodojo-put-bottles-into-dustbin-i00`: the standard solves by Opus and Gemini 3.8 Flash relayed a
+bottle over the table instead of the suggested handover, which the task text says is not enforced.

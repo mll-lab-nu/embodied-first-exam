@@ -1,0 +1,935 @@
+<mujoco model="ikea_eket">
+  <compiler angle="radian" meshdir="assets" autolimits="true" />
+  <option timestep="0.000625" iterations="100" ls_iterations="50" tolerance="1e-8" solver="Newton" cone="elliptic" impratio="10" integrator="implicitfast" gravity="0 0 -9.81" ccd_iterations="500" ccd_tolerance="1e-10">
+    <flag multiccd="enable" />
+  </option>
+  <size memory="1G" />
+  <visual>
+    <headlight diffuse="0.55 0.55 0.55" ambient="0.35 0.35 0.35" specular="0.1 0.1 0.1" />
+    <global offwidth="1280" offheight="960" azimuth="120" elevation="-25" />
+    <quality shadowsize="4096" />
+    <map znear="0.005" />
+  </visual>
+  <default>
+    <geom conaffinity="5" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <default class="panda">
+      <material specular="0.5" shininess="0.25" />
+      <joint armature="0.1" damping="1" axis="0 0 1" range="-2.8973 2.8973" />
+      <general dyntype="none" biastype="affine" ctrlrange="-2.8973 2.8973" forcerange="-87 87" />
+      <default class="finger">
+        <joint axis="0 1 0" type="slide" range="0 0.04" />
+      </default>
+      <default class="visual">
+        <geom type="mesh" contype="0" conaffinity="0" group="2" />
+      </default>
+      <default class="collision">
+        <geom type="mesh" group="3" />
+        <default class="fingertip_pad_collision_1">
+          <geom type="box" size="0.0085 0.004 0.0085" pos="0 0.0055 0.0445" />
+        </default>
+        <default class="fingertip_pad_collision_2">
+          <geom type="box" size="0.003 0.002 0.003" pos="0.0055 0.002 0.05" />
+        </default>
+        <default class="fingertip_pad_collision_3">
+          <geom type="box" size="0.003 0.002 0.003" pos="-0.0055 0.002 0.05" />
+        </default>
+        <default class="fingertip_pad_collision_4">
+          <geom type="box" size="0.003 0.002 0.0035" pos="0.0055 0.002 0.0395" />
+        </default>
+        <default class="fingertip_pad_collision_5">
+          <geom type="box" size="0.003 0.002 0.0035" pos="-0.0055 0.002 0.0395" />
+        </default>
+      </default>
+    </default>
+    <default class="part">
+      <geom condim="3" group="0" />
+      <default class="part_visual">
+        <geom contype="0" conaffinity="0" group="1" mass="0" density="0" />
+      </default>
+    </default>
+  </default>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.55 0.65 0.75" rgb2="0.15 0.17 0.2" width="512" height="3072" />
+    <texture name="floor_tex" type="2d" builtin="checker" mark="edge" rgb1="0.32 0.34 0.36" rgb2="0.26 0.28 0.30" markrgb="0.6 0.6 0.6" width="300" height="300" />
+    <material name="floor_mat" texture="floor_tex" texuniform="true" texrepeat="4 4" reflectance="0.05" />
+    <material name="table_mat" rgba="0.62 0.52 0.40 1" />
+    <material name="pedestal_mat" rgba="0.22 0.25 0.28 1" />
+    <material class="panda" name="panda_white" rgba="1 1 1 1" />
+    <material class="panda" name="panda_off_white" rgba="0.901961 0.921569 0.929412 1" />
+    <material class="panda" name="panda_black" rgba="0.25 0.25 0.25 1" />
+    <material class="panda" name="panda_green" rgba="0 1 0 1" />
+    <material class="panda" name="panda_light_blue" rgba="0.039216 0.541176 0.780392 1" />
+    <mesh name="panda_link0_c" file="panda/link0.stl" />
+    <mesh name="panda_link1_c" file="panda/link1.stl" />
+    <mesh name="panda_link2_c" file="panda/link2.stl" />
+    <mesh name="panda_link3_c" file="panda/link3.stl" />
+    <mesh name="panda_link4_c" file="panda/link4.stl" />
+    <mesh name="panda_link5_c0" file="panda/link5_collision_0.obj" />
+    <mesh name="panda_link5_c1" file="panda/link5_collision_1.obj" />
+    <mesh name="panda_link5_c2" file="panda/link5_collision_2.obj" />
+    <mesh name="panda_link6_c" file="panda/link6.stl" />
+    <mesh name="panda_link7_c" file="panda/link7.stl" />
+    <mesh name="panda_hand_c" file="panda/hand.stl" />
+    <mesh file="panda/link0_0.obj" name="panda_link0_0" />
+    <mesh file="panda/link0_1.obj" name="panda_link0_1" />
+    <mesh file="panda/link0_2.obj" name="panda_link0_2" />
+    <mesh file="panda/link0_3.obj" name="panda_link0_3" />
+    <mesh file="panda/link0_4.obj" name="panda_link0_4" />
+    <mesh file="panda/link0_5.obj" name="panda_link0_5" />
+    <mesh file="panda/link0_7.obj" name="panda_link0_7" />
+    <mesh file="panda/link0_8.obj" name="panda_link0_8" />
+    <mesh file="panda/link0_9.obj" name="panda_link0_9" />
+    <mesh file="panda/link0_10.obj" name="panda_link0_10" />
+    <mesh file="panda/link0_11.obj" name="panda_link0_11" />
+    <mesh file="panda/link1.obj" name="panda_link1" />
+    <mesh file="panda/link2.obj" name="panda_link2" />
+    <mesh file="panda/link3_0.obj" name="panda_link3_0" />
+    <mesh file="panda/link3_1.obj" name="panda_link3_1" />
+    <mesh file="panda/link3_2.obj" name="panda_link3_2" />
+    <mesh file="panda/link3_3.obj" name="panda_link3_3" />
+    <mesh file="panda/link4_0.obj" name="panda_link4_0" />
+    <mesh file="panda/link4_1.obj" name="panda_link4_1" />
+    <mesh file="panda/link4_2.obj" name="panda_link4_2" />
+    <mesh file="panda/link4_3.obj" name="panda_link4_3" />
+    <mesh file="panda/link5_0.obj" name="panda_link5_0" />
+    <mesh file="panda/link5_1.obj" name="panda_link5_1" />
+    <mesh file="panda/link5_2.obj" name="panda_link5_2" />
+    <mesh file="panda/link6_0.obj" name="panda_link6_0" />
+    <mesh file="panda/link6_1.obj" name="panda_link6_1" />
+    <mesh file="panda/link6_2.obj" name="panda_link6_2" />
+    <mesh file="panda/link6_3.obj" name="panda_link6_3" />
+    <mesh file="panda/link6_4.obj" name="panda_link6_4" />
+    <mesh file="panda/link6_5.obj" name="panda_link6_5" />
+    <mesh file="panda/link6_6.obj" name="panda_link6_6" />
+    <mesh file="panda/link6_7.obj" name="panda_link6_7" />
+    <mesh file="panda/link6_8.obj" name="panda_link6_8" />
+    <mesh file="panda/link6_9.obj" name="panda_link6_9" />
+    <mesh file="panda/link6_10.obj" name="panda_link6_10" />
+    <mesh file="panda/link6_11.obj" name="panda_link6_11" />
+    <mesh file="panda/link6_12.obj" name="panda_link6_12" />
+    <mesh file="panda/link6_13.obj" name="panda_link6_13" />
+    <mesh file="panda/link6_14.obj" name="panda_link6_14" />
+    <mesh file="panda/link6_15.obj" name="panda_link6_15" />
+    <mesh file="panda/link6_16.obj" name="panda_link6_16" />
+    <mesh file="panda/link7_0.obj" name="panda_link7_0" />
+    <mesh file="panda/link7_1.obj" name="panda_link7_1" />
+    <mesh file="panda/link7_2.obj" name="panda_link7_2" />
+    <mesh file="panda/link7_3.obj" name="panda_link7_3" />
+    <mesh file="panda/link7_4.obj" name="panda_link7_4" />
+    <mesh file="panda/link7_5.obj" name="panda_link7_5" />
+    <mesh file="panda/link7_6.obj" name="panda_link7_6" />
+    <mesh file="panda/link7_7.obj" name="panda_link7_7" />
+    <mesh file="panda/hand_0.obj" name="panda_hand_0" />
+    <mesh file="panda/hand_1.obj" name="panda_hand_1" />
+    <mesh file="panda/hand_2.obj" name="panda_hand_2" />
+    <mesh file="panda/hand_3.obj" name="panda_hand_3" />
+    <mesh file="panda/hand_4.obj" name="panda_hand_4" />
+    <mesh file="panda/finger_0.obj" name="panda_finger_0" />
+    <mesh file="panda/finger_1.obj" name="panda_finger_1" />
+    <material name="rack_mat" rgba="0.30 0.33 0.36 1" />
+    <mesh name="top_m001" file="parts/top/top_m001.obj" />
+    <mesh name="top_m002" file="parts/top/top_m002.obj" />
+    <mesh name="top_m003" file="parts/top/top_m003.obj" />
+    <mesh name="top_m004" file="parts/top/top_m004.obj" />
+    <mesh name="top_m005" file="parts/top/top_m005.obj" />
+    <mesh name="top_m006" file="parts/top/top_m006.obj" />
+    <mesh name="top_m007" file="parts/top/top_m007.obj" />
+    <mesh name="top_m008" file="parts/top/top_m008.obj" />
+    <mesh name="top_m009" file="parts/top/top_m009.obj" />
+    <mesh name="top_m010" file="parts/top/top_m010.obj" />
+    <mesh name="top_m011" file="parts/top/top_m011.obj" inertia="shell" />
+    <mesh name="top_m012" file="parts/top/top_m012.obj" inertia="shell" />
+    <mesh name="top_m013" file="parts/top/top_m013.obj" inertia="shell" />
+    <mesh name="top_m014" file="parts/top/top_m014.obj" inertia="shell" />
+    <mesh name="top_m015" file="parts/top/top_m015.obj" inertia="shell" />
+    <mesh name="bottom_m016" file="parts/bottom/bottom_m016.obj" />
+    <mesh name="bottom_m017" file="parts/bottom/bottom_m017.obj" />
+    <mesh name="bottom_m018" file="parts/bottom/bottom_m018.obj" />
+    <mesh name="bottom_m019" file="parts/bottom/bottom_m019.obj" />
+    <mesh name="bottom_m020" file="parts/bottom/bottom_m020.obj" />
+    <mesh name="bottom_m021" file="parts/bottom/bottom_m021.obj" />
+    <mesh name="bottom_m022" file="parts/bottom/bottom_m022.obj" />
+    <mesh name="bottom_m023" file="parts/bottom/bottom_m023.obj" />
+    <mesh name="bottom_m024" file="parts/bottom/bottom_m024.obj" />
+    <mesh name="bottom_m025" file="parts/bottom/bottom_m025.obj" />
+    <mesh name="bottom_m026" file="parts/bottom/bottom_m026.obj" inertia="shell" />
+    <mesh name="bottom_m027" file="parts/bottom/bottom_m027.obj" inertia="shell" />
+    <mesh name="bottom_m028" file="parts/bottom/bottom_m028.obj" inertia="shell" />
+    <mesh name="bottom_m029" file="parts/bottom/bottom_m029.obj" inertia="shell" />
+    <mesh name="bottom_m030" file="parts/bottom/bottom_m030.obj" inertia="shell" />
+    <mesh name="side_a_m031" file="parts/side_a/side_a_m031.obj" />
+    <mesh name="side_a_m032" file="parts/side_a/side_a_m032.obj" />
+    <mesh name="side_a_m033" file="parts/side_a/side_a_m033.obj" />
+    <mesh name="side_a_m034" file="parts/side_a/side_a_m034.obj" />
+    <mesh name="side_a_m035" file="parts/side_a/side_a_m035.obj" />
+    <mesh name="side_a_m036" file="parts/side_a/side_a_m036.obj" />
+    <mesh name="side_a_m037" file="parts/side_a/side_a_m037.obj" />
+    <mesh name="side_a_m038" file="parts/side_a/side_a_m038.obj" />
+    <mesh name="side_a_m039" file="parts/side_a/side_a_m039.obj" />
+    <mesh name="side_a_m040" file="parts/side_a/side_a_m040.obj" />
+    <mesh name="side_a_m041" file="parts/side_a/side_a_m041.obj" />
+    <mesh name="side_a_m042" file="parts/side_a/side_a_m042.obj" />
+    <mesh name="side_a_m043" file="parts/side_a/side_a_m043.obj" />
+    <mesh name="side_a_m044" file="parts/side_a/side_a_m044.obj" />
+    <mesh name="side_a_m045" file="parts/side_a/side_a_m045.obj" />
+    <mesh name="side_a_m046" file="parts/side_a/side_a_m046.obj" />
+    <mesh name="side_a_m047" file="parts/side_a/side_a_m047.obj" />
+    <mesh name="side_a_m048" file="parts/side_a/side_a_m048.obj" />
+    <mesh name="side_a_m049" file="parts/side_a/side_a_m049.obj" />
+    <mesh name="side_a_m050" file="parts/side_a/side_a_m050.obj" />
+    <mesh name="side_a_m051" file="parts/side_a/side_a_m051.obj" />
+    <mesh name="side_a_m052" file="parts/side_a/side_a_m052.obj" />
+    <mesh name="side_a_m053" file="parts/side_a/side_a_m053.obj" />
+    <mesh name="side_a_m054" file="parts/side_a/side_a_m054.obj" />
+    <mesh name="side_a_m055" file="parts/side_a/side_a_m055.obj" />
+    <mesh name="side_a_m056" file="parts/side_a/side_a_m056.obj" />
+    <mesh name="side_a_m057" file="parts/side_a/side_a_m057.obj" />
+    <mesh name="side_a_m058" file="parts/side_a/side_a_m058.obj" />
+    <mesh name="side_a_m059" file="parts/side_a/side_a_m059.obj" />
+    <mesh name="side_a_m060" file="parts/side_a/side_a_m060.obj" />
+    <mesh name="side_a_m061" file="parts/side_a/side_a_m061.obj" />
+    <mesh name="side_a_m062" file="parts/side_a/side_a_m062.obj" />
+    <mesh name="side_a_m063" file="parts/side_a/side_a_m063.obj" />
+    <mesh name="side_a_m064" file="parts/side_a/side_a_m064.obj" />
+    <mesh name="side_a_m065" file="parts/side_a/side_a_m065.obj" />
+    <mesh name="side_a_m066" file="parts/side_a/side_a_m066.obj" />
+    <mesh name="side_a_m067" file="parts/side_a/side_a_m067.obj" />
+    <mesh name="side_a_m068" file="parts/side_a/side_a_m068.obj" />
+    <mesh name="side_a_m069" file="parts/side_a/side_a_m069.obj" />
+    <mesh name="side_a_m070" file="parts/side_a/side_a_m070.obj" />
+    <mesh name="side_a_m071" file="parts/side_a/side_a_m071.obj" />
+    <mesh name="side_a_m072" file="parts/side_a/side_a_m072.obj" />
+    <mesh name="side_a_m073" file="parts/side_a/side_a_m073.obj" />
+    <mesh name="side_a_m074" file="parts/side_a/side_a_m074.obj" />
+    <mesh name="side_a_m075" file="parts/side_a/side_a_m075.obj" />
+    <mesh name="side_a_m076" file="parts/side_a/side_a_m076.obj" />
+    <mesh name="side_a_m077" file="parts/side_a/side_a_m077.obj" />
+    <mesh name="side_a_m078" file="parts/side_a/side_a_m078.obj" />
+    <mesh name="side_a_m079" file="parts/side_a/side_a_m079.obj" />
+    <mesh name="side_a_m080" file="parts/side_a/side_a_m080.obj" />
+    <mesh name="side_a_m081" file="parts/side_a/side_a_m081.obj" />
+    <mesh name="side_a_m082" file="parts/side_a/side_a_m082.obj" />
+    <mesh name="side_a_m083" file="parts/side_a/side_a_m083.obj" />
+    <mesh name="side_a_m084" file="parts/side_a/side_a_m084.obj" />
+    <mesh name="side_a_m085" file="parts/side_a/side_a_m085.obj" />
+    <mesh name="side_a_m086" file="parts/side_a/side_a_m086.obj" />
+    <mesh name="side_a_m087" file="parts/side_a/side_a_m087.obj" />
+    <mesh name="side_a_m088" file="parts/side_a/side_a_m088.obj" />
+    <mesh name="side_a_m089" file="parts/side_a/side_a_m089.obj" />
+    <mesh name="side_a_m090" file="parts/side_a/side_a_m090.obj" />
+    <mesh name="side_a_m091" file="parts/side_a/side_a_m091.obj" />
+    <mesh name="side_a_m092" file="parts/side_a/side_a_m092.obj" />
+    <mesh name="side_a_m093" file="parts/side_a/side_a_m093.obj" />
+    <mesh name="side_a_m094" file="parts/side_a/side_a_m094.obj" />
+    <mesh name="side_a_m095" file="parts/side_a/side_a_m095.obj" />
+    <mesh name="side_a_m096" file="parts/side_a/side_a_m096.obj" />
+    <mesh name="side_a_m097" file="parts/side_a/side_a_m097.obj" />
+    <mesh name="side_a_m098" file="parts/side_a/side_a_m098.obj" />
+    <mesh name="side_a_m099" file="parts/side_a/side_a_m099.obj" />
+    <mesh name="side_a_m100" file="parts/side_a/side_a_m100.obj" />
+    <mesh name="side_a_m101" file="parts/side_a/side_a_m101.obj" inertia="shell" />
+    <mesh name="side_b_m102" file="parts/side_b/side_b_m102.obj" />
+    <mesh name="side_b_m103" file="parts/side_b/side_b_m103.obj" />
+    <mesh name="side_b_m104" file="parts/side_b/side_b_m104.obj" />
+    <mesh name="side_b_m105" file="parts/side_b/side_b_m105.obj" />
+    <mesh name="side_b_m106" file="parts/side_b/side_b_m106.obj" />
+    <mesh name="side_b_m107" file="parts/side_b/side_b_m107.obj" />
+    <mesh name="side_b_m108" file="parts/side_b/side_b_m108.obj" />
+    <mesh name="side_b_m109" file="parts/side_b/side_b_m109.obj" />
+    <mesh name="side_b_m110" file="parts/side_b/side_b_m110.obj" />
+    <mesh name="side_b_m111" file="parts/side_b/side_b_m111.obj" />
+    <mesh name="side_b_m112" file="parts/side_b/side_b_m112.obj" />
+    <mesh name="side_b_m113" file="parts/side_b/side_b_m113.obj" />
+    <mesh name="side_b_m114" file="parts/side_b/side_b_m114.obj" />
+    <mesh name="side_b_m115" file="parts/side_b/side_b_m115.obj" />
+    <mesh name="side_b_m116" file="parts/side_b/side_b_m116.obj" />
+    <mesh name="side_b_m117" file="parts/side_b/side_b_m117.obj" />
+    <mesh name="side_b_m118" file="parts/side_b/side_b_m118.obj" />
+    <mesh name="side_b_m119" file="parts/side_b/side_b_m119.obj" />
+    <mesh name="side_b_m120" file="parts/side_b/side_b_m120.obj" />
+    <mesh name="side_b_m121" file="parts/side_b/side_b_m121.obj" />
+    <mesh name="side_b_m122" file="parts/side_b/side_b_m122.obj" />
+    <mesh name="side_b_m123" file="parts/side_b/side_b_m123.obj" />
+    <mesh name="side_b_m124" file="parts/side_b/side_b_m124.obj" />
+    <mesh name="side_b_m125" file="parts/side_b/side_b_m125.obj" />
+    <mesh name="side_b_m126" file="parts/side_b/side_b_m126.obj" />
+    <mesh name="side_b_m127" file="parts/side_b/side_b_m127.obj" />
+    <mesh name="side_b_m128" file="parts/side_b/side_b_m128.obj" />
+    <mesh name="side_b_m129" file="parts/side_b/side_b_m129.obj" />
+    <mesh name="side_b_m130" file="parts/side_b/side_b_m130.obj" />
+    <mesh name="side_b_m131" file="parts/side_b/side_b_m131.obj" />
+    <mesh name="side_b_m132" file="parts/side_b/side_b_m132.obj" />
+    <mesh name="side_b_m133" file="parts/side_b/side_b_m133.obj" />
+    <mesh name="side_b_m134" file="parts/side_b/side_b_m134.obj" />
+    <mesh name="side_b_m135" file="parts/side_b/side_b_m135.obj" />
+    <mesh name="side_b_m136" file="parts/side_b/side_b_m136.obj" />
+    <mesh name="side_b_m137" file="parts/side_b/side_b_m137.obj" />
+    <mesh name="side_b_m138" file="parts/side_b/side_b_m138.obj" />
+    <mesh name="side_b_m139" file="parts/side_b/side_b_m139.obj" />
+    <mesh name="side_b_m140" file="parts/side_b/side_b_m140.obj" />
+    <mesh name="side_b_m141" file="parts/side_b/side_b_m141.obj" />
+    <mesh name="side_b_m142" file="parts/side_b/side_b_m142.obj" />
+    <mesh name="side_b_m143" file="parts/side_b/side_b_m143.obj" />
+    <mesh name="side_b_m144" file="parts/side_b/side_b_m144.obj" />
+    <mesh name="side_b_m145" file="parts/side_b/side_b_m145.obj" />
+    <mesh name="side_b_m146" file="parts/side_b/side_b_m146.obj" />
+    <mesh name="side_b_m147" file="parts/side_b/side_b_m147.obj" />
+    <mesh name="side_b_m148" file="parts/side_b/side_b_m148.obj" />
+    <mesh name="side_b_m149" file="parts/side_b/side_b_m149.obj" />
+    <mesh name="side_b_m150" file="parts/side_b/side_b_m150.obj" />
+    <mesh name="side_b_m151" file="parts/side_b/side_b_m151.obj" />
+    <mesh name="side_b_m152" file="parts/side_b/side_b_m152.obj" />
+    <mesh name="side_b_m153" file="parts/side_b/side_b_m153.obj" />
+    <mesh name="side_b_m154" file="parts/side_b/side_b_m154.obj" />
+    <mesh name="side_b_m155" file="parts/side_b/side_b_m155.obj" />
+    <mesh name="side_b_m156" file="parts/side_b/side_b_m156.obj" />
+    <mesh name="side_b_m157" file="parts/side_b/side_b_m157.obj" />
+    <mesh name="side_b_m158" file="parts/side_b/side_b_m158.obj" />
+    <mesh name="side_b_m159" file="parts/side_b/side_b_m159.obj" />
+    <mesh name="side_b_m160" file="parts/side_b/side_b_m160.obj" />
+    <mesh name="side_b_m161" file="parts/side_b/side_b_m161.obj" />
+    <mesh name="side_b_m162" file="parts/side_b/side_b_m162.obj" />
+    <mesh name="side_b_m163" file="parts/side_b/side_b_m163.obj" />
+    <mesh name="side_b_m164" file="parts/side_b/side_b_m164.obj" />
+    <mesh name="side_b_m165" file="parts/side_b/side_b_m165.obj" />
+    <mesh name="side_b_m166" file="parts/side_b/side_b_m166.obj" />
+    <mesh name="side_b_m167" file="parts/side_b/side_b_m167.obj" />
+    <mesh name="side_b_m168" file="parts/side_b/side_b_m168.obj" />
+    <mesh name="side_b_m169" file="parts/side_b/side_b_m169.obj" />
+    <mesh name="side_b_m170" file="parts/side_b/side_b_m170.obj" />
+    <mesh name="side_b_m171" file="parts/side_b/side_b_m171.obj" />
+    <mesh name="side_b_m172" file="parts/side_b/side_b_m172.obj" inertia="shell" />
+  </asset>
+  <worldbody>
+    <light name="key" pos="0.6 -0.8 2.6" dir="-0.25 0.3 -1" directional="true" diffuse="0.6 0.6 0.6" castshadow="true" />
+    <light name="fill" pos="-1 1 2.5" dir="0.3 -0.3 -1" directional="true" diffuse="0.25 0.25 0.25" castshadow="false" />
+    <geom name="floor" type="plane" size="0 0 0.05" material="floor_mat" class="part" />
+    <body name="table" pos="0 0 0">
+      <geom name="table_top" type="box" pos="0 0 0.43" size="0.65 0.4 0.02" material="table_mat" class="part" />
+      <geom name="table_leg0" type="box" pos="0.61 0.36 0.205" size="0.02 0.02 0.205" material="table_mat" class="part" />
+      <geom name="table_leg1" type="box" pos="0.61 -0.36 0.205" size="0.02 0.02 0.205" material="table_mat" class="part" />
+      <geom name="table_leg2" type="box" pos="-0.61 0.36 0.205" size="0.02 0.02 0.205" material="table_mat" class="part" />
+      <geom name="table_leg3" type="box" pos="-0.61 -0.36 0.205" size="0.02 0.02 0.205" material="table_mat" class="part" />
+    </body>
+    <geom name="left_pedestal" type="box" pos="0 -0.5 0.225" size="0.09 0.09 0.225" material="pedestal_mat" class="part" />
+    <body name="left_link0" childclass="panda" pos="0 -0.5 0.45" quat="0.707106781 0 0 0.707106781">
+      <inertial mass="0.629769" pos="-0.041018 -0.00014 0.049974" fullinertia="0.00315 0.00388 0.004285 8.2904e-7 0.00015 8.2299e-6" />
+      <geom mesh="panda_link0_0" material="panda_off_white" class="visual" />
+      <geom mesh="panda_link0_1" material="panda_black" class="visual" />
+      <geom mesh="panda_link0_2" material="panda_off_white" class="visual" />
+      <geom mesh="panda_link0_3" material="panda_black" class="visual" />
+      <geom mesh="panda_link0_4" material="panda_off_white" class="visual" />
+      <geom mesh="panda_link0_5" material="panda_black" class="visual" />
+      <geom mesh="panda_link0_7" material="panda_white" class="visual" />
+      <geom mesh="panda_link0_8" material="panda_white" class="visual" />
+      <geom mesh="panda_link0_9" material="panda_black" class="visual" />
+      <geom mesh="panda_link0_10" material="panda_off_white" class="visual" />
+      <geom mesh="panda_link0_11" material="panda_white" class="visual" />
+      <geom mesh="panda_link0_c" class="collision" />
+      <body name="left_link1" pos="0 0 0.333" gravcomp="1">
+        <inertial mass="4.970684" pos="0.003875 0.002081 -0.04762" fullinertia="0.70337 0.70661 0.0091170 -0.00013900 0.0067720 0.019169" />
+        <joint name="left_joint1" />
+        <geom material="panda_white" mesh="panda_link1" class="visual" />
+        <geom mesh="panda_link1_c" class="collision" />
+        <body name="left_link2" quat="1 -1 0 0" gravcomp="1">
+          <inertial mass="0.646926" pos="-0.003141 -0.02872 0.003495" fullinertia="0.0079620 2.8110e-2 2.5995e-2 -3.925e-3 1.0254e-2 7.04e-4" />
+          <joint name="left_joint2" range="-1.7628 1.7628" />
+          <geom material="panda_white" mesh="panda_link2" class="visual" />
+          <geom mesh="panda_link2_c" class="collision" />
+          <body name="left_link3" pos="0 -0.316 0" quat="1 1 0 0" gravcomp="1">
+            <joint name="left_joint3" />
+            <inertial mass="3.228604" pos="2.7518e-2 3.9252e-2 -6.6502e-2" fullinertia="3.7242e-2 3.6155e-2 1.083e-2 -4.761e-3 -1.1396e-2 -1.2805e-2" />
+            <geom mesh="panda_link3_0" material="panda_white" class="visual" />
+            <geom mesh="panda_link3_1" material="panda_white" class="visual" />
+            <geom mesh="panda_link3_2" material="panda_white" class="visual" />
+            <geom mesh="panda_link3_3" material="panda_black" class="visual" />
+            <geom mesh="panda_link3_c" class="collision" />
+            <body name="left_link4" pos="0.0825 0 0" quat="1 1 0 0" gravcomp="1">
+              <inertial mass="3.587895" pos="-5.317e-2 1.04419e-1 2.7454e-2" fullinertia="2.5853e-2 1.9552e-2 2.8323e-2 7.796e-3 -1.332e-3 8.641e-3" />
+              <joint name="left_joint4" range="-3.0718 -0.0698" />
+              <geom mesh="panda_link4_0" material="panda_white" class="visual" />
+              <geom mesh="panda_link4_1" material="panda_white" class="visual" />
+              <geom mesh="panda_link4_2" material="panda_black" class="visual" />
+              <geom mesh="panda_link4_3" material="panda_white" class="visual" />
+              <geom mesh="panda_link4_c" class="collision" />
+              <body name="left_link5" pos="-0.0825 0.384 0" quat="1 -1 0 0" gravcomp="1">
+                <inertial mass="1.225946" pos="-1.1953e-2 4.1065e-2 -3.8437e-2" fullinertia="3.5549e-2 2.9474e-2 8.627e-3 -2.117e-3 -4.037e-3 2.29e-4" />
+                <joint name="left_joint5" />
+                <geom mesh="panda_link5_0" material="panda_black" class="visual" />
+                <geom mesh="panda_link5_1" material="panda_white" class="visual" />
+                <geom mesh="panda_link5_2" material="panda_white" class="visual" />
+                <geom mesh="panda_link5_c0" class="collision" />
+                <geom mesh="panda_link5_c1" class="collision" />
+                <geom mesh="panda_link5_c2" class="collision" />
+                <body name="left_link6" quat="1 1 0 0" gravcomp="1">
+                  <inertial mass="1.666555" pos="6.0149e-2 -1.4117e-2 -1.0517e-2" fullinertia="1.964e-3 4.354e-3 5.433e-3 1.09e-4 -1.158e-3 3.41e-4" />
+                  <joint name="left_joint6" range="-0.0175 3.7525" />
+                  <geom mesh="panda_link6_0" material="panda_off_white" class="visual" />
+                  <geom mesh="panda_link6_1" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_2" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_3" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_4" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_5" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_6" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_7" material="panda_light_blue" class="visual" />
+                  <geom mesh="panda_link6_8" material="panda_light_blue" class="visual" />
+                  <geom mesh="panda_link6_9" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_10" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_11" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_12" material="panda_green" class="visual" />
+                  <geom mesh="panda_link6_13" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_14" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_15" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_16" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_c" class="collision" />
+                  <body name="left_link7" pos="0.088 0 0" quat="1 1 0 0" gravcomp="1">
+                    <inertial mass="7.35522e-01" pos="1.0517e-2 -4.252e-3 6.1597e-2" fullinertia="1.2516e-2 1.0027e-2 4.815e-3 -4.28e-4 -1.196e-3 -7.41e-4" />
+                    <joint name="left_joint7" limited="false" />
+                    <geom mesh="panda_link7_0" material="panda_white" class="visual" />
+                    <geom mesh="panda_link7_1" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_2" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_3" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_4" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_5" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_6" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_7" material="panda_white" class="visual" />
+                    <geom mesh="panda_link7_c" class="collision" />
+                    <body name="left_hand" pos="0 0 0.107" quat="0.9238795 0 0 -0.3826834" gravcomp="1">
+                      <inertial mass="0.73" pos="-0.01 0 0.03" diaginertia="0.001 0.0025 0.0017" />
+                      <geom mesh="panda_hand_0" material="panda_off_white" class="visual" />
+                      <geom mesh="panda_hand_1" material="panda_black" class="visual" />
+                      <geom mesh="panda_hand_2" material="panda_black" class="visual" />
+                      <geom mesh="panda_hand_3" material="panda_white" class="visual" />
+                      <geom mesh="panda_hand_4" material="panda_off_white" class="visual" />
+                      <geom mesh="panda_hand_c" class="collision" />
+                      <body name="left_left_finger" pos="0 0 0.0584" gravcomp="1">
+                        <inertial mass="0.015" pos="0 0 0" diaginertia="2.375e-6 2.375e-6 7.5e-7" />
+                        <joint name="left_finger_joint1" class="finger" />
+                        <geom mesh="panda_finger_0" material="panda_off_white" class="visual" />
+                        <geom mesh="panda_finger_1" material="panda_black" class="visual" />
+                        <geom mesh="panda_finger_0" class="collision" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_1" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_2" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_3" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_4" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_5" condim="4" friction="1 0.005 0.0001" />
+                      </body>
+                      <body name="left_right_finger" pos="0 0 0.0584" quat="0 0 0 1" gravcomp="1">
+                        <inertial mass="0.015" pos="0 0 0" diaginertia="2.375e-6 2.375e-6 7.5e-7" />
+                        <joint name="left_finger_joint2" class="finger" />
+                        <geom mesh="panda_finger_0" material="panda_off_white" class="visual" />
+                        <geom mesh="panda_finger_1" material="panda_black" class="visual" />
+                        <geom mesh="panda_finger_0" class="collision" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_1" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_2" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_3" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_4" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_5" condim="4" friction="1 0.005 0.0001" />
+                      </body>
+                      <site name="left_tcp" pos="0 0 0.1034" size="0.004" rgba="1 0 0 0.5" group="4" />
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <geom name="right_pedestal" type="box" pos="0 0.5 0.225" size="0.09 0.09 0.225" material="pedestal_mat" class="part" />
+    <body name="right_link0" childclass="panda" pos="0 0.5 0.45" quat="0.707106781 0 0 -0.707106781">
+      <inertial mass="0.629769" pos="-0.041018 -0.00014 0.049974" fullinertia="0.00315 0.00388 0.004285 8.2904e-7 0.00015 8.2299e-6" />
+      <geom mesh="panda_link0_0" material="panda_off_white" class="visual" />
+      <geom mesh="panda_link0_1" material="panda_black" class="visual" />
+      <geom mesh="panda_link0_2" material="panda_off_white" class="visual" />
+      <geom mesh="panda_link0_3" material="panda_black" class="visual" />
+      <geom mesh="panda_link0_4" material="panda_off_white" class="visual" />
+      <geom mesh="panda_link0_5" material="panda_black" class="visual" />
+      <geom mesh="panda_link0_7" material="panda_white" class="visual" />
+      <geom mesh="panda_link0_8" material="panda_white" class="visual" />
+      <geom mesh="panda_link0_9" material="panda_black" class="visual" />
+      <geom mesh="panda_link0_10" material="panda_off_white" class="visual" />
+      <geom mesh="panda_link0_11" material="panda_white" class="visual" />
+      <geom mesh="panda_link0_c" class="collision" />
+      <body name="right_link1" pos="0 0 0.333" gravcomp="1">
+        <inertial mass="4.970684" pos="0.003875 0.002081 -0.04762" fullinertia="0.70337 0.70661 0.0091170 -0.00013900 0.0067720 0.019169" />
+        <joint name="right_joint1" />
+        <geom material="panda_white" mesh="panda_link1" class="visual" />
+        <geom mesh="panda_link1_c" class="collision" />
+        <body name="right_link2" quat="1 -1 0 0" gravcomp="1">
+          <inertial mass="0.646926" pos="-0.003141 -0.02872 0.003495" fullinertia="0.0079620 2.8110e-2 2.5995e-2 -3.925e-3 1.0254e-2 7.04e-4" />
+          <joint name="right_joint2" range="-1.7628 1.7628" />
+          <geom material="panda_white" mesh="panda_link2" class="visual" />
+          <geom mesh="panda_link2_c" class="collision" />
+          <body name="right_link3" pos="0 -0.316 0" quat="1 1 0 0" gravcomp="1">
+            <joint name="right_joint3" />
+            <inertial mass="3.228604" pos="2.7518e-2 3.9252e-2 -6.6502e-2" fullinertia="3.7242e-2 3.6155e-2 1.083e-2 -4.761e-3 -1.1396e-2 -1.2805e-2" />
+            <geom mesh="panda_link3_0" material="panda_white" class="visual" />
+            <geom mesh="panda_link3_1" material="panda_white" class="visual" />
+            <geom mesh="panda_link3_2" material="panda_white" class="visual" />
+            <geom mesh="panda_link3_3" material="panda_black" class="visual" />
+            <geom mesh="panda_link3_c" class="collision" />
+            <body name="right_link4" pos="0.0825 0 0" quat="1 1 0 0" gravcomp="1">
+              <inertial mass="3.587895" pos="-5.317e-2 1.04419e-1 2.7454e-2" fullinertia="2.5853e-2 1.9552e-2 2.8323e-2 7.796e-3 -1.332e-3 8.641e-3" />
+              <joint name="right_joint4" range="-3.0718 -0.0698" />
+              <geom mesh="panda_link4_0" material="panda_white" class="visual" />
+              <geom mesh="panda_link4_1" material="panda_white" class="visual" />
+              <geom mesh="panda_link4_2" material="panda_black" class="visual" />
+              <geom mesh="panda_link4_3" material="panda_white" class="visual" />
+              <geom mesh="panda_link4_c" class="collision" />
+              <body name="right_link5" pos="-0.0825 0.384 0" quat="1 -1 0 0" gravcomp="1">
+                <inertial mass="1.225946" pos="-1.1953e-2 4.1065e-2 -3.8437e-2" fullinertia="3.5549e-2 2.9474e-2 8.627e-3 -2.117e-3 -4.037e-3 2.29e-4" />
+                <joint name="right_joint5" />
+                <geom mesh="panda_link5_0" material="panda_black" class="visual" />
+                <geom mesh="panda_link5_1" material="panda_white" class="visual" />
+                <geom mesh="panda_link5_2" material="panda_white" class="visual" />
+                <geom mesh="panda_link5_c0" class="collision" />
+                <geom mesh="panda_link5_c1" class="collision" />
+                <geom mesh="panda_link5_c2" class="collision" />
+                <body name="right_link6" quat="1 1 0 0" gravcomp="1">
+                  <inertial mass="1.666555" pos="6.0149e-2 -1.4117e-2 -1.0517e-2" fullinertia="1.964e-3 4.354e-3 5.433e-3 1.09e-4 -1.158e-3 3.41e-4" />
+                  <joint name="right_joint6" range="-0.0175 3.7525" />
+                  <geom mesh="panda_link6_0" material="panda_off_white" class="visual" />
+                  <geom mesh="panda_link6_1" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_2" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_3" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_4" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_5" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_6" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_7" material="panda_light_blue" class="visual" />
+                  <geom mesh="panda_link6_8" material="panda_light_blue" class="visual" />
+                  <geom mesh="panda_link6_9" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_10" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_11" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_12" material="panda_green" class="visual" />
+                  <geom mesh="panda_link6_13" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_14" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_15" material="panda_black" class="visual" />
+                  <geom mesh="panda_link6_16" material="panda_white" class="visual" />
+                  <geom mesh="panda_link6_c" class="collision" />
+                  <body name="right_link7" pos="0.088 0 0" quat="1 1 0 0" gravcomp="1">
+                    <inertial mass="7.35522e-01" pos="1.0517e-2 -4.252e-3 6.1597e-2" fullinertia="1.2516e-2 1.0027e-2 4.815e-3 -4.28e-4 -1.196e-3 -7.41e-4" />
+                    <joint name="right_joint7" limited="false" />
+                    <geom mesh="panda_link7_0" material="panda_white" class="visual" />
+                    <geom mesh="panda_link7_1" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_2" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_3" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_4" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_5" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_6" material="panda_black" class="visual" />
+                    <geom mesh="panda_link7_7" material="panda_white" class="visual" />
+                    <geom mesh="panda_link7_c" class="collision" />
+                    <body name="right_hand" pos="0 0 0.107" quat="0.9238795 0 0 -0.3826834" gravcomp="1">
+                      <inertial mass="0.73" pos="-0.01 0 0.03" diaginertia="0.001 0.0025 0.0017" />
+                      <geom mesh="panda_hand_0" material="panda_off_white" class="visual" />
+                      <geom mesh="panda_hand_1" material="panda_black" class="visual" />
+                      <geom mesh="panda_hand_2" material="panda_black" class="visual" />
+                      <geom mesh="panda_hand_3" material="panda_white" class="visual" />
+                      <geom mesh="panda_hand_4" material="panda_off_white" class="visual" />
+                      <geom mesh="panda_hand_c" class="collision" />
+                      <body name="right_left_finger" pos="0 0 0.0584" gravcomp="1">
+                        <inertial mass="0.015" pos="0 0 0" diaginertia="2.375e-6 2.375e-6 7.5e-7" />
+                        <joint name="right_finger_joint1" class="finger" />
+                        <geom mesh="panda_finger_0" material="panda_off_white" class="visual" />
+                        <geom mesh="panda_finger_1" material="panda_black" class="visual" />
+                        <geom mesh="panda_finger_0" class="collision" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_1" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_2" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_3" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_4" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_5" condim="4" friction="1 0.005 0.0001" />
+                      </body>
+                      <body name="right_right_finger" pos="0 0 0.0584" quat="0 0 0 1" gravcomp="1">
+                        <inertial mass="0.015" pos="0 0 0" diaginertia="2.375e-6 2.375e-6 7.5e-7" />
+                        <joint name="right_finger_joint2" class="finger" />
+                        <geom mesh="panda_finger_0" material="panda_off_white" class="visual" />
+                        <geom mesh="panda_finger_1" material="panda_black" class="visual" />
+                        <geom mesh="panda_finger_0" class="collision" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_1" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_2" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_3" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_4" condim="4" friction="1 0.005 0.0001" />
+                        <geom class="fingertip_pad_collision_5" condim="4" friction="1 0.005 0.0001" />
+                      </body>
+                      <site name="right_tcp" pos="0 0 0.1034" size="0.004" rgba="1 0 0 0.5" group="4" />
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="top" pos="-0.28 0 0.5752" quat="0.707106781 0 0.707106781 0">
+      <freejoint name="top_free" />
+      <inertial pos="0 0 0" mass="0.449999988" diaginertia="0.00450241286 0.00236330484 0.00682660798" />
+      <geom type="mesh" mesh="top_m001" name="top_c000" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="top_c001" type="box" pos="-0.123 0 0.002918" size="0.002 0.158 0.0085" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m002" name="top_c002" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m003" name="top_c003" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="top_c004" type="box" pos="-0.118 0 0.009918" size="0.003 0.158 0.0015" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m004" name="top_c005" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m005" name="top_c006" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="top_c007" type="box" pos="-0.11275 0 0.002918" size="0.00225 0.158 0.0085" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m006" name="top_c008" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m007" name="top_c009" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="top_c010" type="box" pos="-0.1085 0 0.008418" size="0.002 0.158 0.003" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m008" name="top_c011" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m009" name="top_c012" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="top_c013" type="box" pos="0.00925 0 0.002918" size="0.11575 0.158 0.0085" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m010" name="top_c014" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="top_m011" rgba="0.93 0.92 0.89 1" class="part_visual" />
+      <geom type="mesh" mesh="top_m012" rgba="0.78 0.62 0.4 1" class="part_visual" />
+      <geom type="mesh" mesh="top_m013" rgba="0.78 0.62 0.4 1" class="part_visual" />
+      <geom type="mesh" mesh="top_m014" rgba="0.78 0.62 0.4 1" class="part_visual" />
+      <geom type="mesh" mesh="top_m015" rgba="0.78 0.62 0.4 1" class="part_visual" />
+      <geom contype="2" conaffinity="2" name="top_dowel_1" type="cylinder" size="0.004494" fromto="-0.0829999976 0.162242586 -0.00133941386 -0.0829999976 0.169596624 -0.0086934519" group="3" rgba="0.9 0.6 0.3 1" priority="1" solref="-14.8148 -0.246914" solimp="0.5 0.5 0.001 0.5 2" friction="0.35 0.005 0.0001" class="part" />
+      <geom contype="4" conaffinity="4" mass="0" name="top_dowel_1_stiff" type="cylinder" size="0.004494" fromto="-0.0829999976 0.162242586 -0.00133941386 -0.0829999976 0.169596624 -0.0086934519" group="3" rgba="0.9 0.6 0.3 1" friction="0.35 0.005 0.0001" class="part" />
+      <geom name="top_core_1" type="cylinder" size="0.00298" fromto="-0.0829999976 0.162242586 -0.00133941386 -0.0829999976 0.169596624 -0.0086934519" group="4" contype="0" conaffinity="0" rgba="0.9 0.3 0.2 1" class="part" />
+      <geom contype="2" conaffinity="2" name="top_dowel_2" type="cylinder" size="0.00449399" fromto="-0.0830000642 -0.162242518 -0.00133948163 -0.0830000642 -0.169596551 -0.00869351432" group="3" rgba="0.9 0.6 0.3 1" priority="1" solref="-14.8148 -0.246914" solimp="0.5 0.5 0.001 0.5 2" friction="0.35 0.005 0.0001" class="part" />
+      <geom contype="4" conaffinity="4" mass="0" name="top_dowel_2_stiff" type="cylinder" size="0.00449399" fromto="-0.0830000642 -0.162242518 -0.00133948163 -0.0830000642 -0.169596551 -0.00869351432" group="3" rgba="0.9 0.6 0.3 1" friction="0.35 0.005 0.0001" class="part" />
+      <geom name="top_core_2" type="cylinder" size="0.00298" fromto="-0.0830000642 -0.162242518 -0.00133948163 -0.0830000642 -0.169596551 -0.00869351432" group="4" contype="0" conaffinity="0" rgba="0.9 0.3 0.2 1" class="part" />
+      <geom contype="2" conaffinity="2" name="top_dowel_3" type="cylinder" size="0.00449399" fromto="0.0969999305 -0.162242534 -0.00133946619 0.0969999305 -0.169596596 -0.00869352821" group="3" rgba="0.9 0.6 0.3 1" priority="1" solref="-14.8148 -0.246914" solimp="0.5 0.5 0.001 0.5 2" friction="0.35 0.005 0.0001" class="part" />
+      <geom contype="4" conaffinity="4" mass="0" name="top_dowel_3_stiff" type="cylinder" size="0.00449399" fromto="0.0969999305 -0.162242534 -0.00133946619 0.0969999305 -0.169596596 -0.00869352821" group="3" rgba="0.9 0.6 0.3 1" friction="0.35 0.005 0.0001" class="part" />
+      <geom name="top_core_3" type="cylinder" size="0.00298" fromto="0.0969999305 -0.162242534 -0.00133946619 0.0969999305 -0.169596596 -0.00869352821" group="4" contype="0" conaffinity="0" rgba="0.9 0.3 0.2 1" class="part" />
+      <geom contype="2" conaffinity="2" name="top_dowel_4" type="cylinder" size="0.00449399" fromto="0.0970000539 0.162242564 -0.00133943635 0.0970000539 0.169596592 -0.00869346438" group="3" rgba="0.9 0.6 0.3 1" priority="1" solref="-14.8148 -0.246914" solimp="0.5 0.5 0.001 0.5 2" friction="0.35 0.005 0.0001" class="part" />
+      <geom contype="4" conaffinity="4" mass="0" name="top_dowel_4_stiff" type="cylinder" size="0.00449399" fromto="0.0970000539 0.162242564 -0.00133943635 0.0970000539 0.169596592 -0.00869346438" group="3" rgba="0.9 0.6 0.3 1" friction="0.35 0.005 0.0001" class="part" />
+      <geom name="top_core_4" type="cylinder" size="0.00298" fromto="0.0970000539 0.162242564 -0.00133943635 0.0970000539 0.169596592 -0.00869346438" group="4" contype="0" conaffinity="0" rgba="0.9 0.3 0.2 1" class="part" />
+    </body>
+    <geom name="rack_top_a" type="box" pos="-0.29791776 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <geom name="rack_top_b" type="box" pos="-0.26208224 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <body name="bottom" pos="0.28 0 0.5752" quat="0.707106781 0 0.707106781 0">
+      <freejoint name="bottom_free" />
+      <inertial pos="0 0 0" mass="0.449999988" diaginertia="0.00450241752 0.0023633095 0.00682660798" />
+      <geom type="mesh" mesh="bottom_m016" name="bottom_c000" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="bottom_c001" type="box" pos="-0.123 0 -0.002918" size="0.002 0.158 0.0085" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m017" name="bottom_c002" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m018" name="bottom_c003" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="bottom_c004" type="box" pos="-0.118 0 -0.0099185" size="0.003 0.158 0.0014995" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m019" name="bottom_c005" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m020" name="bottom_c006" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="bottom_c007" type="box" pos="-0.11275 0 -0.002918" size="0.00225 0.158 0.0085" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m021" name="bottom_c008" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m022" name="bottom_c009" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="bottom_c010" type="box" pos="-0.1085 0 -0.0054185" size="0.002 0.158 0.0059995" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m023" name="bottom_c011" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m024" name="bottom_c012" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom name="bottom_c013" type="box" pos="0.00925 0 -0.002918" size="0.11575 0.158 0.0085" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m025" name="bottom_c014" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="bottom_m026" rgba="0.93 0.92 0.89 1" class="part_visual" />
+      <geom type="mesh" mesh="bottom_m027" rgba="0.78 0.62 0.4 1" class="part_visual" />
+      <geom type="mesh" mesh="bottom_m028" rgba="0.78 0.62 0.4 1" class="part_visual" />
+      <geom type="mesh" mesh="bottom_m029" rgba="0.78 0.62 0.4 1" class="part_visual" />
+      <geom type="mesh" mesh="bottom_m030" rgba="0.78 0.62 0.4 1" class="part_visual" />
+      <geom contype="2" conaffinity="2" name="bottom_dowel_1" type="cylinder" size="0.00449399" fromto="-0.0829999939 -0.16224323 0.00133877021 -0.0829999939 -0.169596554 0.00869209416" group="3" rgba="0.9 0.6 0.3 1" priority="1" solref="-14.8148 -0.246914" solimp="0.5 0.5 0.001 0.5 2" friction="0.35 0.005 0.0001" class="part" />
+      <geom contype="4" conaffinity="4" mass="0" name="bottom_dowel_1_stiff" type="cylinder" size="0.00449399" fromto="-0.0829999939 -0.16224323 0.00133877021 -0.0829999939 -0.169596554 0.00869209416" group="3" rgba="0.9 0.6 0.3 1" friction="0.35 0.005 0.0001" class="part" />
+      <geom name="bottom_core_1" type="cylinder" size="0.00298" fromto="-0.0829999939 -0.16224323 0.00133877021 -0.0829999939 -0.169596554 0.00869209416" group="4" contype="0" conaffinity="0" rgba="0.9 0.3 0.2 1" class="part" />
+      <geom contype="2" conaffinity="2" name="bottom_dowel_2" type="cylinder" size="0.00449399" fromto="-0.0829999556 0.162243173 0.00133882683 -0.0829999556 0.169596524 0.00869217779" group="3" rgba="0.9 0.6 0.3 1" priority="1" solref="-14.8148 -0.246914" solimp="0.5 0.5 0.001 0.5 2" friction="0.35 0.005 0.0001" class="part" />
+      <geom contype="4" conaffinity="4" mass="0" name="bottom_dowel_2_stiff" type="cylinder" size="0.00449399" fromto="-0.0829999556 0.162243173 0.00133882683 -0.0829999556 0.169596524 0.00869217779" group="3" rgba="0.9 0.6 0.3 1" friction="0.35 0.005 0.0001" class="part" />
+      <geom name="bottom_core_2" type="cylinder" size="0.00298" fromto="-0.0829999556 0.162243173 0.00133882683 -0.0829999556 0.169596524 0.00869217779" group="4" contype="0" conaffinity="0" rgba="0.9 0.3 0.2 1" class="part" />
+      <geom contype="2" conaffinity="2" name="bottom_dowel_3" type="cylinder" size="0.004494" fromto="0.0970000524 0.162243251 0.00133874917 0.0970000524 0.169596584 0.00869208243" group="3" rgba="0.9 0.6 0.3 1" priority="1" solref="-14.8148 -0.246914" solimp="0.5 0.5 0.001 0.5 2" friction="0.35 0.005 0.0001" class="part" />
+      <geom contype="4" conaffinity="4" mass="0" name="bottom_dowel_3_stiff" type="cylinder" size="0.004494" fromto="0.0970000524 0.162243251 0.00133874917 0.0970000524 0.169596584 0.00869208243" group="3" rgba="0.9 0.6 0.3 1" friction="0.35 0.005 0.0001" class="part" />
+      <geom name="bottom_core_3" type="cylinder" size="0.00298" fromto="0.0970000524 0.162243251 0.00133874917 0.0970000524 0.169596584 0.00869208243" group="4" contype="0" conaffinity="0" rgba="0.9 0.3 0.2 1" class="part" />
+      <geom contype="2" conaffinity="2" name="bottom_dowel_4" type="cylinder" size="0.00449399" fromto="0.0970000375 -0.16224316 0.0013388398 0.0970000375 -0.169596524 0.0086922038" group="3" rgba="0.9 0.6 0.3 1" priority="1" solref="-14.8148 -0.246914" solimp="0.5 0.5 0.001 0.5 2" friction="0.35 0.005 0.0001" class="part" />
+      <geom contype="4" conaffinity="4" mass="0" name="bottom_dowel_4_stiff" type="cylinder" size="0.00449399" fromto="0.0970000375 -0.16224316 0.0013388398 0.0970000375 -0.169596524 0.0086922038" group="3" rgba="0.9 0.6 0.3 1" friction="0.35 0.005 0.0001" class="part" />
+      <geom name="bottom_core_4" type="cylinder" size="0.00298" fromto="0.0970000375 -0.16224316 0.0013388398 0.0970000375 -0.169596524 0.0086922038" group="4" contype="0" conaffinity="0" rgba="0.9 0.3 0.2 1" class="part" />
+    </body>
+    <geom name="rack_bottom_a" type="box" pos="0.262080849 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <geom name="rack_bottom_b" type="box" pos="0.297919151 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <body name="side_a" pos="-0.37 0 0.57520003" quat="-0.5 0.5 -0.5 -0.5">
+      <freejoint name="side_a_free" />
+      <inertial pos="0 0 0" mass="0.449999988" diaginertia="0.00449369708 0.00682660984 0.00235458883" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m031" name="side_a_c000" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_a_c001" type="box" pos="-0.123 0 0" size="0.002 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m032" name="side_a_c002" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m033" name="side_a_c003" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_a_c004" type="box" pos="-0.118 0.007 0" size="0.003 0.0015 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m034" name="side_a_c005" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m035" name="side_a_c006" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_a_c007" type="box" pos="-0.11275 0 0" size="0.00225 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m036" name="side_a_c008" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m037" name="side_a_c009" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_a_c010" type="box" pos="-0.1085 0.0025 0" size="0.002 0.006 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m038" name="side_a_c011" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m039" name="side_a_c012" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_a_c013" type="box" pos="-0.10325 -1.73472348e-18 0" size="0.00325 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m040" name="side_a_c014" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m041" name="side_a_c015" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_a_c016" type="box" pos="0.0005 0 0" size="0.0795 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m042" name="side_a_c017" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m043" name="side_a_c018" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_a_c019" type="box" pos="0.113 0 0" size="0.012 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m044" name="side_a_c020" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m045" name="side_a_c021" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_a_c022" type="box" pos="-0.0895 0 0" size="0.0105 0.0085 0.141736544" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m046" name="side_a_c023" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m047" name="side_a_c024" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m048" name="side_a_c025" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m049" name="side_a_c026" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m050" name="side_a_c027" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m051" name="side_a_c028" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m052" name="side_a_c029" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m053" name="side_a_c030" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m054" name="side_a_c031" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m055" name="side_a_c032" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m056" name="side_a_seat0" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m057" name="side_a_c034" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m058" name="side_a_c035" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m059" name="side_a_c036" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m060" name="side_a_c037" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m061" name="side_a_c038" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m062" name="side_a_c039" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m063" name="side_a_c040" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m064" name="side_a_c041" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m065" name="side_a_c042" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m066" name="side_a_c043" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m067" name="side_a_c044" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m068" name="side_a_c045" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m069" name="side_a_seat1" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m070" name="side_a_c047" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m071" name="side_a_c048" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m072" name="side_a_c049" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m073" name="side_a_c050" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_a_c051" type="box" pos="0.0905 0 0" size="0.0105 0.0085 0.141736544" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m074" name="side_a_c052" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m075" name="side_a_c053" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m076" name="side_a_c054" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m077" name="side_a_c055" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m078" name="side_a_c056" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m079" name="side_a_c057" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m080" name="side_a_c058" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m081" name="side_a_c059" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m082" name="side_a_c060" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m083" name="side_a_c061" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m084" name="side_a_seat2" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m085" name="side_a_c063" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m086" name="side_a_c064" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m087" name="side_a_c065" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m088" name="side_a_c066" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m089" name="side_a_c067" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m090" name="side_a_c068" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m091" name="side_a_c069" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m092" name="side_a_c070" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m093" name="side_a_c071" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m094" name="side_a_c072" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m095" name="side_a_c073" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m096" name="side_a_c074" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m097" name="side_a_seat3" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m098" name="side_a_c076" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m099" name="side_a_c077" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_a_m100" name="side_a_c078" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="side_a_m101" rgba="0.88 0.9 0.93 1" class="part_visual" />
+    </body>
+    <geom name="rack_side_a_a" type="box" pos="-0.385000181 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <geom name="rack_side_a_b" type="box" pos="-0.354999819 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <body name="back" pos="0.46 0 0.612700009" quat="1 0 0 0">
+      <freejoint name="back_free" />
+      <inertial pos="0 0 0" mass="0.150000006" diaginertia="0.00264062523 0.00132039073 0.00132039073" />
+      <geom name="back_c000" type="box" size="0.00125000009 0.162500009 0.162500009" pos="0 0 0" friction="0.35 0.005 0.0001" rgba="0.8 0.78 0.74 1" class="part" />
+    </body>
+    <geom name="rack_back_a" type="box" pos="0.45255 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <geom name="rack_back_b" type="box" pos="0.46745 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <body name="side_b" pos="0.37 0 0.575200015" quat="-0.5 0.5 -0.5 -0.5">
+      <freejoint name="side_b_free" />
+      <inertial pos="0 0 0" mass="0.449999988" diaginertia="0.00449369615 0.00682660844 0.00235458859" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m102" name="side_b_c000" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_b_c001" type="box" pos="-0.123 0 0" size="0.002 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m103" name="side_b_c002" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m104" name="side_b_c003" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_b_c004" type="box" pos="-0.118 -0.007 0" size="0.003 0.0015 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m105" name="side_b_c005" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m106" name="side_b_c006" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_b_c007" type="box" pos="-0.11275 0 0" size="0.00225 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m107" name="side_b_c008" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m108" name="side_b_c009" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_b_c010" type="box" pos="-0.1085 -0.0025 0" size="0.002 0.006 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m109" name="side_b_c011" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m110" name="side_b_c012" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_b_c013" type="box" pos="-0.10325 1.73472348e-18 0" size="0.00325 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m111" name="side_b_c014" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m112" name="side_b_c015" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_b_c016" type="box" pos="0.0005 0 0" size="0.0795 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m113" name="side_b_c017" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m114" name="side_b_c018" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_b_c019" type="box" pos="0.113 0 0" size="0.012 0.0085 0.158" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m115" name="side_b_c020" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m116" name="side_b_c021" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_b_c022" type="box" pos="-0.0895 0 0" size="0.0105 0.0085 0.141736544" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m117" name="side_b_c023" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m118" name="side_b_c024" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m119" name="side_b_c025" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m120" name="side_b_c026" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m121" name="side_b_c027" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m122" name="side_b_c028" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m123" name="side_b_c029" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m124" name="side_b_c030" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m125" name="side_b_c031" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m126" name="side_b_c032" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m127" name="side_b_seat0" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m128" name="side_b_c034" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m129" name="side_b_c035" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m130" name="side_b_c036" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m131" name="side_b_c037" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m132" name="side_b_c038" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m133" name="side_b_c039" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m134" name="side_b_c040" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m135" name="side_b_c041" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m136" name="side_b_c042" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m137" name="side_b_c043" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m138" name="side_b_c044" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m139" name="side_b_c045" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m140" name="side_b_seat1" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m141" name="side_b_c047" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m142" name="side_b_c048" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m143" name="side_b_c049" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m144" name="side_b_c050" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" name="side_b_c051" type="box" pos="0.0905 0 0" size="0.0105 0.0085 0.141736544" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m145" name="side_b_c052" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m146" name="side_b_c053" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m147" name="side_b_c054" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m148" name="side_b_c055" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m149" name="side_b_c056" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m150" name="side_b_c057" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m151" name="side_b_c058" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m152" name="side_b_c059" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m153" name="side_b_c060" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m154" name="side_b_c061" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m155" name="side_b_seat2" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m156" name="side_b_c063" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m157" name="side_b_c064" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m158" name="side_b_c065" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m159" name="side_b_c066" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m160" name="side_b_c067" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m161" name="side_b_c068" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m162" name="side_b_c069" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m163" name="side_b_c070" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m164" name="side_b_c071" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m165" name="side_b_c072" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m166" name="side_b_c073" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m167" name="side_b_c074" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m168" name="side_b_seat3" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m169" name="side_b_c076" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m170" name="side_b_c077" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom conaffinity="3" type="mesh" mesh="side_b_m171" name="side_b_c078" friction="0.35 0.005 0.0001" group="3" rgba="0.6 0.7 0.9 1" class="part" />
+      <geom type="mesh" mesh="side_b_m172" rgba="0.88 0.9 0.93 1" class="part_visual" />
+    </body>
+    <geom name="rack_side_b_a" type="box" pos="0.354999797 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <geom name="rack_side_b_b" type="box" pos="0.385000203 0 0.4625" size="0.006 0.1 0.0125" quat="1 0 0 0" class="part" material="rack_mat" />
+    <camera name="overview" pos="1.05 -0.95 1.25" xyaxes="0.670913324 0.741535779 -0 -0.328620669 0.297323463 0.896441417" fovy="50" />
+    <camera name="top" pos="0 0 2.1" xyaxes="1 -0 0 0 0.999999816 0.000606060495" fovy="50" />
+    <camera name="side" pos="0 -1.6 0.75" xyaxes="1 -0 0 0 0.0933407087 0.995634226" fovy="45" />
+    <camera name="assembly" pos="0.55 -0.55 0.95" xyaxes="0.707106781 0.707106781 -0 -0.323380833 0.323380833 0.889297292" fovy="45" />
+  </worldbody>
+  <tendon>
+    <fixed name="left_split">
+      <joint joint="left_finger_joint1" coef="0.5" />
+      <joint joint="left_finger_joint2" coef="0.5" />
+    </fixed>
+    <fixed name="right_split">
+      <joint joint="right_finger_joint1" coef="0.5" />
+      <joint joint="right_finger_joint2" coef="0.5" />
+    </fixed>
+  </tendon>
+  <equality>
+    <joint joint1="left_finger_joint1" joint2="left_finger_joint2" solimp="0.95 0.99 0.001" solref="0.005 1" name="left_finger_coupling" />
+    <joint joint1="right_finger_joint1" joint2="right_finger_joint2" solimp="0.95 0.99 0.001" solref="0.005 1" name="right_finger_coupling" />
+    <weld name="joint_side_a" body1="top" body2="side_a" active="false" solref="0.00125 1" solimp="0.9 0.95 0.001 0.5 2" relpose="0 0 0 1 0 0 0" />
+    <weld name="joint_side_b" body1="top" body2="side_b" active="false" solref="0.00125 1" solimp="0.9 0.95 0.001 0.5 2" relpose="0 0 0 1 0 0 0" />
+    <weld name="joint_bottom_a" body1="side_a" body2="bottom" active="false" solref="0.00125 1" solimp="0.9 0.95 0.001 0.5 2" relpose="0 0 0 1 0 0 0" />
+    <weld name="joint_bottom_b" body1="side_b" body2="bottom" active="false" solref="0.00125 1" solimp="0.9 0.95 0.001 0.5 2" relpose="0 0 0 1 0 0 0" />
+  </equality>
+  <contact>
+    <exclude body1="left_link0" body2="left_link1" />
+    <exclude body1="world" body2="left_link0" />
+    <exclude body1="world" body2="left_link1" />
+    <exclude body1="right_link0" body2="right_link1" />
+    <exclude body1="world" body2="right_link0" />
+    <exclude body1="world" body2="right_link1" />
+    <pair geom1="top_core_1" geom2="side_a_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_1" geom2="side_a_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_1" geom2="side_a_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_1" geom2="side_a_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_1" geom2="side_b_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_1" geom2="side_b_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_1" geom2="side_b_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_1" geom2="side_b_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_2" geom2="side_a_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_2" geom2="side_a_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_2" geom2="side_a_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_2" geom2="side_a_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_2" geom2="side_b_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_2" geom2="side_b_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_2" geom2="side_b_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_2" geom2="side_b_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_3" geom2="side_a_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_3" geom2="side_a_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_3" geom2="side_a_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_3" geom2="side_a_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_3" geom2="side_b_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_3" geom2="side_b_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_3" geom2="side_b_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_3" geom2="side_b_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_4" geom2="side_a_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_4" geom2="side_a_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_4" geom2="side_a_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_4" geom2="side_a_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_4" geom2="side_b_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_4" geom2="side_b_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_4" geom2="side_b_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="top_core_4" geom2="side_b_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_1" geom2="side_a_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_1" geom2="side_a_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_1" geom2="side_a_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_1" geom2="side_a_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_1" geom2="side_b_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_1" geom2="side_b_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_1" geom2="side_b_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_1" geom2="side_b_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_2" geom2="side_a_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_2" geom2="side_a_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_2" geom2="side_a_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_2" geom2="side_a_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_2" geom2="side_b_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_2" geom2="side_b_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_2" geom2="side_b_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_2" geom2="side_b_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_3" geom2="side_a_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_3" geom2="side_a_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_3" geom2="side_a_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_3" geom2="side_a_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_3" geom2="side_b_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_3" geom2="side_b_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_3" geom2="side_b_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_3" geom2="side_b_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_4" geom2="side_a_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_4" geom2="side_a_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_4" geom2="side_a_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_4" geom2="side_a_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_4" geom2="side_b_seat0" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_4" geom2="side_b_seat1" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_4" geom2="side_b_seat2" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+    <pair geom1="bottom_core_4" geom2="side_b_seat3" condim="3" friction="0.35 0.35 0.005 0.0001 0.0001" solref="0.00125 2" solimp="0.9 0.99 0.001 0.5 2" />
+  </contact>
+  <actuator>
+    <general class="panda" name="left_actuator1" joint="left_joint1" gainprm="4500" biasprm="0 -4500 -450" />
+    <general class="panda" name="left_actuator2" joint="left_joint2" gainprm="4500" biasprm="0 -4500 -450" ctrlrange="-1.7628 1.7628" />
+    <general class="panda" name="left_actuator3" joint="left_joint3" gainprm="3500" biasprm="0 -3500 -350" />
+    <general class="panda" name="left_actuator4" joint="left_joint4" gainprm="3500" biasprm="0 -3500 -350" ctrlrange="-3.0718 -0.0698" />
+    <general class="panda" name="left_actuator5" joint="left_joint5" gainprm="2000" biasprm="0 -2000 -200" forcerange="-12 12" />
+    <general class="panda" name="left_actuator6" joint="left_joint6" gainprm="2000" biasprm="0 -2000 -200" forcerange="-12 12" ctrlrange="-0.0175 3.7525" />
+    <general class="panda" name="left_actuator7" joint="left_joint7" gainprm="2000" biasprm="0 -2000 -200" forcerange="-12 12" ctrllimited="false" />
+    <general class="panda" name="left_actuator8" tendon="left_split" forcerange="-140 140" ctrlrange="0 255" gainprm="2.74509804 0 0" biasprm="-300 -10000 -100" />
+    <general class="panda" name="right_actuator1" joint="right_joint1" gainprm="4500" biasprm="0 -4500 -450" />
+    <general class="panda" name="right_actuator2" joint="right_joint2" gainprm="4500" biasprm="0 -4500 -450" ctrlrange="-1.7628 1.7628" />
+    <general class="panda" name="right_actuator3" joint="right_joint3" gainprm="3500" biasprm="0 -3500 -350" />
+    <general class="panda" name="right_actuator4" joint="right_joint4" gainprm="3500" biasprm="0 -3500 -350" ctrlrange="-3.0718 -0.0698" />
+    <general class="panda" name="right_actuator5" joint="right_joint5" gainprm="2000" biasprm="0 -2000 -200" forcerange="-12 12" />
+    <general class="panda" name="right_actuator6" joint="right_joint6" gainprm="2000" biasprm="0 -2000 -200" forcerange="-12 12" ctrlrange="-0.0175 3.7525" />
+    <general class="panda" name="right_actuator7" joint="right_joint7" gainprm="2000" biasprm="0 -2000 -200" forcerange="-12 12" ctrllimited="false" />
+    <general class="panda" name="right_actuator8" tendon="right_split" forcerange="-140 140" ctrlrange="0 255" gainprm="2.74509804 0 0" biasprm="-300 -10000 -100" />
+  </actuator>
+  <keyframe>
+    <key name="home" qpos="0 -1.2 0 -2.8 0 1.6 0.785398 0.04 0.04 0 -1.2 0 -2.8 0 1.6 0.785398 0.04 0.04 -0.280006865 -9.57922544e-14 0.574999085 0.707126196 1.2225281e-14 0.707087366 -1.65363466e-14 0.280006865 -5.95405137e-14 0.574999085 0.707087366 -2.87915765e-15 0.707126196 2.06086834e-14 -0.369996847 1.36446035e-13 0.574999319 -0.499993693 0.499993693 -0.500006307 -0.500006307 0.46 0 0.612498154 1 0 0 0 0.369996847 1.33349876e-13 0.574999319 -0.500006307 0.500006307 -0.499993693 -0.499993693" ctrl="0 -1.2 0 -2.8 0 1.6 0.785398 255 0 -1.2 0 -2.8 0 1.6 0.785398 255" />
+  </keyframe>
+</mujoco>

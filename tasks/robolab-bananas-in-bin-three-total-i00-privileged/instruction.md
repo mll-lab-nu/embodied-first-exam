@@ -13,6 +13,7 @@ class BananasInBinTerminations:
         func=object_in_container,
         params={"object": ["banana", "banana_01", "banana_03"], "container": "grey_bin", "logical": "choose", "K": 1, "require_gripper_detached": True, 'require_contact_with': False})
 ```
+`tolerance` is not set, so it takes `object_in_container`'s default, 0.01 m (`/opt/robolab/robolab/core/task/conditionals.py`). RoboLab passes it to `in_opentop_container` (`/opt/robolab/robolab/core/task/predicate_logic.py`), which does not use it: "in" means that the centroid of the object's convex-hull vertices lies within the container's convex hull, open without limit along the container's own up axis, with no margin.
 `logical="choose"` with `K=1` means exactly 1 of the listed objects (`evaluate_logicals` in `/opt/robolab/robolab/core/task/predicate_logic.py`): more than 1 fails as well.
 
 This is a *fixed scene instance*: object poses and the robot's start pose never change between resets. You may reset
@@ -38,7 +39,7 @@ takes here.
 ```python
 from rcb_robolab import Session
 s = Session("bananas_in_bin_three_total", instance="/app/instance.json")   # ~1-2 min: launches Isaac Sim, builds the scene, restores the frozen state
-s.reset()                          # back to the frozen initial state (as often as you like; an exact state restore)
+s.reset()                          # back to the frozen initial state, as often as you like (not every PhysX internal: see Conventions)
 p = s.primitives()                 # thin wrappers of the low-level action; each has a docstring: help(p["move_ee"])
 s.objects()                        # objects: name -> position, orientation_wxyz, bounds, size, velocity (env-local frame)
 p["move_ee"](pos, quat_wxyz, speed=0.2)   # straight-line fingertip move, one differential-IK update per control step

@@ -21,8 +21,10 @@ The bar is at hip height and the walking policy lifts its feet a few centimetres
 None (as `roboolympics-steeplechase-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: The hurdle is fixed (it does not move or topple): its top bar is 0.127 m square, 3.66 m wide, with its top 0.914 m above the track, on a post at each end. Its near face is 10.0 m ahead of where your pelvis starts. The water jump is 3.66 m long measured from the hurdle's near face, and 3.66 m wide, centred on your line: the pit is 0.5 m deep for the first 1.2 m and then slopes up evenly to the track's level at its far edge. There is no water in it. You must go over the hurdle: every time your pelvis or the centre of either foot crosses, going forward, the vertical plane through the middle of the top bar, that point must be higher than the bar's top (0.914 m), and your pelvis must also be between the two ends of the bar; otherwise you fail. You may go over the hurdle in any manner: your hands and feet may touch it or stand on it. Once your pelvis is beyond that plane and until your whole body is beyond the pit's far edge, you fail if your pelvis is outside the pit's width or if any part of you touches the track's surface beside the pit (a contact less than 0.05 m below the track's level; the pit's side walls below that may be touched). You may land in the pit or beyond it, and any part of you may touch the pit's floor and walls and the track before and beyond the pit: there is no fall rule. You succeed when your whole body is beyond the pit's far edge and you then stand for 1.0 s without a break: only your feet on the ground, your torso within 20.0 degrees of vertical, your pelvis moving no faster than 0.35 m/s. The attempt ends after 60 s of robot time. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

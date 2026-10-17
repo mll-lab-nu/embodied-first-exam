@@ -15,7 +15,7 @@ client and one episode. **Task (臨帖):** copy {{TASK_MD}}, shown in the pictur
 - Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
   it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
   simulated time; watching with `seconds > 0` also advances it).
-- There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
+- There is nothing to hand in: the service records your episode as the trajectory and scores the main sheet as your episode left it. Leave your
   script at `/app/output/gen.py` for the record.
 - **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the
   last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()` waits
@@ -55,7 +55,7 @@ client and one episode. **Task (臨帖):** copy {{TASK_MD}}, shown in the pictur
   worst one counts); **stray ink**
   (ink more than 1 mm away from the exemplar's ink, as a fraction of the exemplar's inked area); the **number of strokes** on the
   main sheet. **Success iff IoU ≥ 0.80, boundary F ≥ 0.75, every region covered ≥ 0.80, stray ink ≤ 0.04 and at most
-  {{N}} strokes (continuous brush contacts) on the main sheet** (the recorded episode is replayed twice and both replays must agree). The continuous score
+  {{N}} strokes (continuous brush contacts) on the main sheet** (scored on the main sheet as your episode left it). The continuous score
   is the IoU (scaled by {{N}} / strokes above {{N}} strokes).
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.2`)

@@ -1,0 +1,177 @@
+{
+ "_about": "The state hash (casa_tool.state_hash) the standard-mode sim service logs when a fresh episode starts (episode.jsonl, ev start), per frozen instance: the hash logged by the archived standard and standard-realtime episodes of the RoboCasa series (jobs/, 2026-10-02 .. 2026-10-17, every runner host; `episodes` counts this benchmark's current runs; with the superseded runs, 776 episodes of 102 tasks, every episode of a task logged the same hash; board 0151). The generator writes it into the sim service's environment (RCB_START_SHA): a fresh episode that does not start in this state is refused as instance_mismatch, an infrastructure failure. An instance without an entry is checked by its file's hash only (RCB_INSTANCE_SHA). Re-record it whenever the image or casa_tool changes how a scene is built (import_references.py records start_state_sha for a newly imported instance).",
+ "arrange-vegetables": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "361fa270933684f7869296ba198257401d5ea9d58f809747e3cef56274a069cb"
+ },
+ "close-double-door": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "16167c5d7aa486dd22b590d87bbd7ebba3a663e25fa35eb2ff5006d5fb76ff4d"
+ },
+ "close-drawer": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "e8ee465a1972b7031b6a185c357e78e01f62ef62978d6ce046df8e98615fa13b"
+ },
+ "close-single-door": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "d187647fa60e6d7661a02d350263627ae40eb6e6b0aba5820f4e4f4695ae20ba"
+ },
+ "coffee-press-button": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "b7bc4e9a5bdf4b8230eeb7d9ec07c81fba29aac4bc87d42f7c6df38f6b35418d"
+ },
+ "coffee-serve-mug": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "e92241841e6af91dc703d2a8050e6116c1e4e841bf72b2bc46a5216b47f7a250"
+ },
+ "coffee-setup-mug": {
+  "episodes": 8,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "9c8147fcacfd73b49ee163c4e2e56d64e3e6cf2e3a304b678cf0a9fafccd19ce"
+ },
+ "microwave-thawing": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "48d17847a4799a020c9ba003968098c3141ac12775c1a565a8ca69196eb9cb91"
+ },
+ "open-double-door": {
+  "episodes": 1,
+  "first": "2026-10-02",
+  "last": "2026-10-02",
+  "start_state_sha": "3c1096328873298ec3fdb2afec45e088f83ac130fee4697bbc5cd8d64a607116"
+ },
+ "open-drawer": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "6157e2ca8a8f35f67a83b5bee66122b1bfeef727e398f49c60c9058a927a77db"
+ },
+ "open-single-door": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "0d8ef869a873fe699c7a5739d7a059408d498db4d9ca314efbcc5e9444205bea"
+ },
+ "pnp-cab-to-counter": {
+  "episodes": 1,
+  "first": "2026-10-14",
+  "last": "2026-10-14",
+  "start_state_sha": "bd81c4769c2c1852335ef2b500f5e3c4c7af1fe24a9b240dce437d0e97242bc0"
+ },
+ "pnp-counter-to-cab": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "01cf105272f36242df113a43f15ac8d167a9a9fdd5220e613448b000d0815992"
+ },
+ "pnp-counter-to-microwave": {
+  "episodes": 9,
+  "first": "2026-10-03",
+  "last": "2026-10-17",
+  "start_state_sha": "a35cb15116693c1717903e0b0fa986dab5161b4206fdc8a5ba904c9a5427f48a"
+ },
+ "pnp-counter-to-sink": {
+  "episodes": 1,
+  "first": "2026-10-14",
+  "last": "2026-10-14",
+  "start_state_sha": "61f5a100f0f3b932ed8f55bcf00f8417f48d21b300ca912cce864226b5f8a6f4"
+ },
+ "pnp-counter-to-stove": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "17c202926751dd4f3e55dc1dda7eeca1a38d1f59526e7f310d3cc4e1ae8f9a84"
+ },
+ "pnp-microwave-to-counter": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "642a8a5cda013e72269e94bc3e1f8d05997d9d9f6d6b37a5381d4c2bd1ad311b"
+ },
+ "pnp-sink-to-counter": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "2decd2f6d556c75aaaf519ee4832d564f5f990fea70237d4ac3ee85eafb014b8"
+ },
+ "pnp-stove-to-counter": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "12277c2d34e5cf6f91a00b24be6a6f69cd430984dd4d93eca63e0cf58f0a12e8"
+ },
+ "pre-soak-pan": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "ac535a19539a21a0a1395a2183ec465ad305ddd3a74399d77fe1731c22d1997f"
+ },
+ "prepare-coffee": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "144ca323fd35c66a8ebf32262e1e6070b8ea36273379fa841571d35dfe4d6ff8"
+ },
+ "restock-pantry": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "6af37b55ec03cbf82390c65b69779e15a840b8076a547a86c81fa17cb310b67a"
+ },
+ "turn-off-microwave": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "d7443b73ba455ae4d97caab64d0a97ef3a7928734a2a0198f4c1117b5a8d181c"
+ },
+ "turn-off-sink-faucet": {
+  "episodes": 1,
+  "first": "2026-10-14",
+  "last": "2026-10-14",
+  "start_state_sha": "096195fa42103ed9d32352072f0f14510db96919068d327b51633860d69ed9f8"
+ },
+ "turn-off-stove": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "db4a666974d6df33da1c31872039c9b175b444bc0c75eca231f2ac07a89d5d80"
+ },
+ "turn-on-microwave": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "2846d6476ccaccf1139d0de57ab6f8a3802d87133c5d097d47390efd79bc16ca"
+ },
+ "turn-on-sink-faucet": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "e2780569c6fc4d22279faa6618585b8dce4622ab0838e3eac20ac544af5e8c69"
+ },
+ "turn-on-stove": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "d5b7bdd517c3d5d2af211bea2b783135663bd767c954865b65ababcb48e670b7"
+ },
+ "turn-sink-spout": {
+  "episodes": 1,
+  "first": "2026-10-03",
+  "last": "2026-10-03",
+  "start_state_sha": "d914886876286369e1757c065b4a092a89886ae058dbd204ff6749a255880301"
+ }
+}

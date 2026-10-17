@@ -1,0 +1,3299 @@
+{
+ "arms": {
+  "left": {
+   "pos": [
+    0.0,
+    -0.42,
+    0.45
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "yaw_rad": 1.5707963267948966,
+   "pedestal_top_z": 0.45
+  },
+  "right": {
+   "pos": [
+    0.0,
+    0.42,
+    0.45
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    -0.7071067811865475
+   ],
+   "yaw_rad": -1.5707963267948966,
+   "pedestal_top_z": 0.45
+  }
+ },
+ "parts": {
+  "tray_0": {
+   "pos": [
+    0.0,
+    0.0,
+    0.4081000001899898
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "tray_0_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g003",
+     "source": "/Part/Shape3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g008",
+     "source": "/Part/Shape8",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g009",
+     "source": "/Part/Shape9",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g010",
+     "source": "/Part/Shape10",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g011",
+     "source": "/Part/Shape11",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g012",
+     "source": "/Part/Shape12",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g013",
+     "source": "/Part/Shape13",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g014",
+     "source": "/Part/Shape14",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g015",
+     "source": "/Part/Shape15",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g016",
+     "source": "/Part/Shape16",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g017",
+     "source": "/Part/Shape17",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g018",
+     "source": "/Part/Shape18",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g019",
+     "source": "/Part/Shape19",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g020",
+     "source": "/Part/Shape20",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g021",
+     "source": "/Part/Shape21",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g022",
+     "source": "/Part/Shape22",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g023",
+     "source": "/Part/Shape23",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g024",
+     "source": "/Part/Shape24",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g025",
+     "source": "/Part/Shape25",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g026",
+     "source": "/Part/Shape26",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g027",
+     "source": "/Part/Shape27",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g028",
+     "source": "/Part/Shape28",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g029",
+     "source": "/Part/Shape29",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g030",
+     "source": "/Part/Shape30",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g031",
+     "source": "/Part/Shape31",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g032",
+     "source": "/Part/Shape32",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g033",
+     "source": "/Part/Shape33",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g034",
+     "source": "/Part/Shape34",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g035",
+     "source": "/Part/Shape35",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g036",
+     "source": "/Part/Shape36",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g037",
+     "source": "/Part/Shape37",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g038",
+     "source": "/Part/Shape38",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g039",
+     "source": "/Part/Shape39",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g040",
+     "source": "/Part/Shape40",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g041",
+     "source": "/Part/Shape41",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g042",
+     "source": "/Part/Shape42",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g043",
+     "source": "/Part/Shape43",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g044",
+     "source": "/Part/Shape44",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_0_g045",
+     "source": "/Part/Shape45",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.2800000011920929,
+   "center_design": [
+    0.0,
+    0.0,
+    0.14
+   ],
+   "com": [
+    1.0857168987588501e-17,
+    -1.279309801662542e-17,
+    0.008352265150325795
+   ],
+   "inertia_diag": [
+    0.001604959024450416,
+    0.003686145819661167,
+    0.005215182080141132
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "foot_0": {
+   "pos": [
+    2.0,
+    2.0,
+    0.06
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "foot_0_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "foot_0_g001_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "foot_0_g001_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.02500000037252903,
+   "center_design": [
+    -0.165,
+    -0.095,
+    0.1
+   ],
+   "com": [
+    -2.6815509076509747e-06,
+    4.0345297760673927e-23,
+    -0.014500529409494027
+   ],
+   "inertia_diag": [
+    6.926677898285021e-06,
+    6.926807670617567e-06,
+    2.1845997090331337e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "foot_1": {
+   "pos": [
+    2.2,
+    2.0,
+    0.06
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "foot_1_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "foot_1_g001_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "foot_1_g001_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.02500000037252903,
+   "center_design": [
+    0.165,
+    -0.095,
+    0.1
+   ],
+   "com": [
+    -2.6815509076509747e-06,
+    4.0345297760673927e-23,
+    -0.014500529409494027
+   ],
+   "inertia_diag": [
+    6.926677898285021e-06,
+    6.926807670617567e-06,
+    2.1845997090331337e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "foot_2": {
+   "pos": [
+    2.4,
+    2.0,
+    0.06
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "foot_2_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "foot_2_g001_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "foot_2_g001_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.02500000037252903,
+   "center_design": [
+    -0.165,
+    0.095,
+    0.1
+   ],
+   "com": [
+    -2.6815509076509747e-06,
+    4.0345297760673927e-23,
+    -0.014500529409494027
+   ],
+   "inertia_diag": [
+    6.926677898285021e-06,
+    6.926807670617567e-06,
+    2.1845997090331337e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "foot_3": {
+   "pos": [
+    2.6,
+    2.0,
+    0.06
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "foot_3_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "foot_3_g001_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "foot_3_g001_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.02500000037252903,
+   "center_design": [
+    0.165,
+    0.095,
+    0.1
+   ],
+   "com": [
+    -2.6815509076509747e-06,
+    4.0345297760673927e-23,
+    -0.014500529409494027
+   ],
+   "inertia_diag": [
+    6.926677898285021e-06,
+    6.926807670617567e-06,
+    2.1845997090331337e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_0_0": {
+   "pos": [
+    -0.48,
+    -0.20500000000000002,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_0_0_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_0_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_0_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_0_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_0_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_0_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_0_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_0_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_0_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    -0.165,
+    -0.095,
+    0.29000000000000004
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516634
+   ],
+   "inertia_diag": [
+    0.00024914891952903764,
+    0.00024914679017759626,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_0_1": {
+   "pos": [
+    -0.48,
+    -0.155,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_0_1_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_1_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_1_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_1_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_1_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_1_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_1_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_1_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_1_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    0.165,
+    -0.095,
+    0.29000000000000004
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516634
+   ],
+   "inertia_diag": [
+    0.00024914891952903764,
+    0.00024914679017759626,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_0_2": {
+   "pos": [
+    -0.48,
+    -0.10500000000000001,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_0_2_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_2_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_2_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_2_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_2_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_2_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_2_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_2_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_2_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    -0.165,
+    0.095,
+    0.29000000000000004
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516634
+   ],
+   "inertia_diag": [
+    0.00024914891952903764,
+    0.00024914679017759626,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_0_3": {
+   "pos": [
+    -0.48,
+    -0.05499999999999999,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_0_3_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_3_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_3_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_3_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_3_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_3_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_3_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_3_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_0_3_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    0.165,
+    0.095,
+    0.29000000000000004
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516634
+   ],
+   "inertia_diag": [
+    0.00024914891952903764,
+    0.00024914679017759626,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "tray_1": {
+   "pos": [
+    0.44,
+    0.14,
+    0.4131000002682209
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "tray_1_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g003",
+     "source": "/Part/Shape3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g008",
+     "source": "/Part/Shape8",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g009",
+     "source": "/Part/Shape9",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g010",
+     "source": "/Part/Shape10",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g011",
+     "source": "/Part/Shape11",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g012",
+     "source": "/Part/Shape12",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g013",
+     "source": "/Part/Shape13",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g018",
+     "source": "/Part/Shape18",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g019",
+     "source": "/Part/Shape19",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g020",
+     "source": "/Part/Shape20",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g021",
+     "source": "/Part/Shape21",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g022",
+     "source": "/Part/Shape22",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g023",
+     "source": "/Part/Shape23",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g024",
+     "source": "/Part/Shape24",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g025",
+     "source": "/Part/Shape25",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g026",
+     "source": "/Part/Shape26",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g027",
+     "source": "/Part/Shape27",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g028",
+     "source": "/Part/Shape28",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g029",
+     "source": "/Part/Shape29",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g030",
+     "source": "/Part/Shape30",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g031",
+     "source": "/Part/Shape31",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g032",
+     "source": "/Part/Shape32",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g033",
+     "source": "/Part/Shape33",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g014_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g014_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g015_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g015_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g016_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g016_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g017_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_1_g017_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.2800000011920929,
+   "center_design": [
+    0.0,
+    0.0,
+    0.44
+   ],
+   "com": [
+    -2.202016773668509e-05,
+    -1.296990634538458e-17,
+    0.008431815477331728
+   ],
+   "inertia_diag": [
+    0.0015918989531055593,
+    0.003631433303498994,
+    0.005146852025519629
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_1_0": {
+   "pos": [
+    -0.43,
+    -0.20500000000000002,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_1_0_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_0_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_0_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_0_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_0_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_0_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_0_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_0_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_0_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    -0.165,
+    -0.095,
+    0.59
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516673
+   ],
+   "inertia_diag": [
+    0.00024914891952903764,
+    0.0002491467901775963,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_1_1": {
+   "pos": [
+    -0.43,
+    -0.155,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_1_1_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_1_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_1_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_1_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_1_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_1_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_1_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_1_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_1_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    0.165,
+    -0.095,
+    0.59
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516673
+   ],
+   "inertia_diag": [
+    0.00024914891952903764,
+    0.0002491467901775963,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_1_2": {
+   "pos": [
+    -0.43,
+    -0.10500000000000001,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_1_2_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_2_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_2_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_2_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_2_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_2_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_2_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_2_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_2_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    -0.165,
+    0.095,
+    0.59
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516673
+   ],
+   "inertia_diag": [
+    0.00024914891952903764,
+    0.0002491467901775963,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_1_3": {
+   "pos": [
+    -0.43,
+    -0.05499999999999999,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_1_3_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_3_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_3_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_3_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_3_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_3_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_3_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_3_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_1_3_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    0.165,
+    0.095,
+    0.59
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516673
+   ],
+   "inertia_diag": [
+    0.00024914891952903764,
+    0.0002491467901775963,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "tray_2": {
+   "pos": [
+    0.44,
+    -0.14,
+    0.4131000002682209
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "tray_2_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g003",
+     "source": "/Part/Shape3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g008",
+     "source": "/Part/Shape8",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g009",
+     "source": "/Part/Shape9",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g010",
+     "source": "/Part/Shape10",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g011",
+     "source": "/Part/Shape11",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g012",
+     "source": "/Part/Shape12",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g013",
+     "source": "/Part/Shape13",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g018",
+     "source": "/Part/Shape18",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g019",
+     "source": "/Part/Shape19",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g020",
+     "source": "/Part/Shape20",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g021",
+     "source": "/Part/Shape21",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g022",
+     "source": "/Part/Shape22",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g023",
+     "source": "/Part/Shape23",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g024",
+     "source": "/Part/Shape24",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g025",
+     "source": "/Part/Shape25",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g026",
+     "source": "/Part/Shape26",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g027",
+     "source": "/Part/Shape27",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g028",
+     "source": "/Part/Shape28",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g029",
+     "source": "/Part/Shape29",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g030",
+     "source": "/Part/Shape30",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g031",
+     "source": "/Part/Shape31",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g032",
+     "source": "/Part/Shape32",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g033",
+     "source": "/Part/Shape33",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g014_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g014_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g015_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g015_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g016_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g016_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g017_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_2_g017_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.2800000011920929,
+   "center_design": [
+    0.0,
+    0.0,
+    0.74
+   ],
+   "com": [
+    -2.202016773668509e-05,
+    -1.296990634538458e-17,
+    0.008431815477331728
+   ],
+   "inertia_diag": [
+    0.0015918989531055593,
+    0.003631433303498994,
+    0.005146852025519629
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_2_0": {
+   "pos": [
+    -0.38,
+    -0.20500000000000002,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_2_0_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_0_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_0_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_0_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_0_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_0_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_0_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_0_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_0_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    -0.165,
+    -0.095,
+    0.89
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516686
+   ],
+   "inertia_diag": [
+    0.0002491489195290377,
+    0.0002491467901775963,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_2_1": {
+   "pos": [
+    -0.38,
+    -0.155,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_2_1_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_1_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_1_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_1_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_1_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_1_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_1_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_1_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_1_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    0.165,
+    -0.095,
+    0.89
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516686
+   ],
+   "inertia_diag": [
+    0.0002491489195290377,
+    0.0002491467901775963,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_2_2": {
+   "pos": [
+    -0.38,
+    -0.10500000000000001,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_2_2_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_2_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_2_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_2_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_2_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_2_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_2_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_2_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_2_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    -0.165,
+    0.095,
+    0.89
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516686
+   ],
+   "inertia_diag": [
+    0.0002491489195290377,
+    0.0002491467901775963,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "column_2_3": {
+   "pos": [
+    -0.38,
+    -0.05499999999999999,
+    0.5451
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "column_2_3_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_3_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_3_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_3_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_3_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_3_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_3_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_3_g003_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "column_2_3_g003_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.04500000178813934,
+   "center_design": [
+    0.165,
+    0.095,
+    0.89
+   ],
+   "com": [
+    -2.1753060154840558e-05,
+    3.747828280362789e-21,
+    0.0021397213037516686
+   ],
+   "inertia_diag": [
+    0.0002491489195290377,
+    0.0002491467901775963,
+    2.399485692431493e-06
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "tray_3": {
+   "pos": [
+    -0.44,
+    0.14,
+    0.4131000002682209
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "tray_3_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g003",
+     "source": "/Part/Shape3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g006",
+     "source": "/Part/Shape6",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g007",
+     "source": "/Part/Shape7",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g008",
+     "source": "/Part/Shape8",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g009",
+     "source": "/Part/Shape9",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g010",
+     "source": "/Part/Shape10",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g011",
+     "source": "/Part/Shape11",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g012",
+     "source": "/Part/Shape12",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g013",
+     "source": "/Part/Shape13",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g018",
+     "source": "/Part/Shape18",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g019",
+     "source": "/Part/Shape19",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g020",
+     "source": "/Part/Shape20",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g021",
+     "source": "/Part/Shape21",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g022",
+     "source": "/Part/Shape22",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g023",
+     "source": "/Part/Shape23",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g024",
+     "source": "/Part/Shape24",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g025",
+     "source": "/Part/Shape25",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g026",
+     "source": "/Part/Shape26",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g027",
+     "source": "/Part/Shape27",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g028",
+     "source": "/Part/Shape28",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g029",
+     "source": "/Part/Shape29",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g030",
+     "source": "/Part/Shape30",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g031",
+     "source": "/Part/Shape31",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g032",
+     "source": "/Part/Shape32",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g033",
+     "source": "/Part/Shape33",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g014_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g014_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g015_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g015_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g016_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g016_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g017_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "tray_3_g017_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.2800000011920929,
+   "center_design": [
+    0.0,
+    0.0,
+    1.04
+   ],
+   "com": [
+    -2.202016773668509e-05,
+    -1.296990634538458e-17,
+    0.008633767490827768
+   ],
+   "inertia_diag": [
+    0.0015933062786566642,
+    0.0036328406290501002,
+    0.005146852025519629
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "cap_0": {
+   "pos": [
+    2.8,
+    2.0,
+    0.06
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "cap_0_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "cap_0_g001_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "cap_0_g001_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.00800000037997961,
+   "center_design": [
+    -0.165,
+    -0.095,
+    1.081
+   ],
+   "com": [
+    2.606943323467279e-05,
+    0.0,
+    -0.0010931779107273068
+   ],
+   "inertia_diag": [
+    4.981260569873176e-07,
+    4.9852489685689e-07,
+    7.609893345826631e-07
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "cap_1": {
+   "pos": [
+    3.0,
+    2.0,
+    0.06
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "cap_1_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "cap_1_g001_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "cap_1_g001_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.00800000037997961,
+   "center_design": [
+    0.165,
+    -0.095,
+    1.081
+   ],
+   "com": [
+    2.606943323467279e-05,
+    0.0,
+    -0.0010931779107273068
+   ],
+   "inertia_diag": [
+    4.981260569873176e-07,
+    4.9852489685689e-07,
+    7.609893345826631e-07
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "cap_2": {
+   "pos": [
+    3.2,
+    2.0,
+    0.06
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "cap_2_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "cap_2_g001_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "cap_2_g001_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.00800000037997961,
+   "center_design": [
+    -0.165,
+    0.095,
+    1.081
+   ],
+   "com": [
+    2.606943323467279e-05,
+    0.0,
+    -0.0010931779107273068
+   ],
+   "inertia_diag": [
+    4.981260569873176e-07,
+    4.9852489685689e-07,
+    7.609893345826631e-07
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  },
+  "cap_3": {
+   "pos": [
+    3.4000000000000004,
+    2.0,
+    0.06
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "cap_3_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "cap_3_g001_0",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    },
+    {
+     "geom": "cap_3_g001_1",
+     "source": "added collision envelope",
+     "kind": "mesh",
+     "role": "general"
+    }
+   ],
+   "mass": 0.00800000037997961,
+   "center_design": [
+    0.165,
+    0.095,
+    1.081
+   ],
+   "com": [
+    2.606943323467279e-05,
+    0.0,
+    -0.0010931779107273068
+   ],
+   "inertia_diag": [
+    4.981260569873176e-07,
+    4.9852489685689e-07,
+    7.609893345826631e-07
+   ],
+   "source_inertia": [
+    0.0020000000949949026,
+    0.0020000000949949026,
+    0.0020000000949949026
+   ]
+  }
+ },
+ "bench_top_z": 0.4,
+ "column_rack": {
+  "center": [
+   -0.43,
+   -0.13
+  ],
+  "pitch": 0.05,
+  "pin_layer_h": 0.02,
+  "pocket_layer_h": 0.03,
+  "pocket": 0.022,
+  "pin_slot": 0.009
+ },
+ "parts_box": {
+  "center": [
+   -0.27,
+   -0.13
+  ],
+  "outer": [
+   0.12,
+   0.22
+  ],
+  "wall": 0.005,
+  "floor": 0.004,
+  "wall_h": 0.035,
+  "contents": [
+   "foot_0",
+   "foot_1",
+   "foot_2",
+   "foot_3",
+   "cap_0",
+   "cap_1",
+   "cap_2",
+   "cap_3"
+  ],
+  "drop_seed": 20261015,
+  "note": "dropped from random poses, settled 3 s + 1 s; settled poses are the home keyframe"
+ },
+ "jaws": [
+  {
+   "name": "jaw_s1_foot_0_0",
+   "host": "tray_0",
+   "joint": "jaw_s1_foot_0_0_slide",
+   "axis": [
+    -1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s1-foot-0",
+   "pos_in_host": [
+    -0.1685,
+    -0.095,
+    -0.004500000000000004
+   ]
+  },
+  {
+   "name": "jaw_s1_foot_1_0",
+   "host": "tray_0",
+   "joint": "jaw_s1_foot_1_0_slide",
+   "axis": [
+    -1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s1-foot-1",
+   "pos_in_host": [
+    0.1615,
+    -0.095,
+    -0.004500000000000004
+   ]
+  },
+  {
+   "name": "jaw_s1_foot_2_0",
+   "host": "tray_0",
+   "joint": "jaw_s1_foot_2_0_slide",
+   "axis": [
+    -1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s1-foot-2",
+   "pos_in_host": [
+    -0.1685,
+    0.095,
+    -0.004500000000000004
+   ]
+  },
+  {
+   "name": "jaw_s1_foot_3_0",
+   "host": "tray_0",
+   "joint": "jaw_s1_foot_3_0_slide",
+   "axis": [
+    -1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s1-foot-3",
+   "pos_in_host": [
+    0.1615,
+    0.095,
+    -0.004500000000000004
+   ]
+  },
+  {
+   "name": "jaw_s2_column_0_0",
+   "host": "tray_0",
+   "joint": "jaw_s2_column_0_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s2-column-0",
+   "pos_in_host": [
+    -0.1615,
+    -0.095,
+    0.02049999999999999
+   ]
+  },
+  {
+   "name": "jaw_s2_column_1_0",
+   "host": "tray_0",
+   "joint": "jaw_s2_column_1_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s2-column-1",
+   "pos_in_host": [
+    0.1685,
+    -0.095,
+    0.02049999999999999
+   ]
+  },
+  {
+   "name": "jaw_s2_column_2_0",
+   "host": "tray_0",
+   "joint": "jaw_s2_column_2_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s2-column-2",
+   "pos_in_host": [
+    -0.1615,
+    0.095,
+    0.02049999999999999
+   ]
+  },
+  {
+   "name": "jaw_s2_column_3_0",
+   "host": "tray_0",
+   "joint": "jaw_s2_column_3_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s2-column-3",
+   "pos_in_host": [
+    0.1685,
+    0.095,
+    0.02049999999999999
+   ]
+  },
+  {
+   "name": "jaw_s3_tray_0",
+   "host": "column_0_0",
+   "joint": "jaw_s3_tray_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s3-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14749999999999996
+   ]
+  },
+  {
+   "name": "jaw_s3_tray_1",
+   "host": "column_0_1",
+   "joint": "jaw_s3_tray_1_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s3-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14749999999999996
+   ]
+  },
+  {
+   "name": "jaw_s3_tray_2",
+   "host": "column_0_2",
+   "joint": "jaw_s3_tray_2_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s3-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14749999999999996
+   ]
+  },
+  {
+   "name": "jaw_s3_tray_3",
+   "host": "column_0_3",
+   "joint": "jaw_s3_tray_3_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s3-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14749999999999996
+   ]
+  },
+  {
+   "name": "jaw_s4_column_0_0",
+   "host": "tray_1",
+   "joint": "jaw_s4_column_0_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s4-column-0",
+   "pos_in_host": [
+    -0.1615,
+    -0.095,
+    0.020500000000000018
+   ]
+  },
+  {
+   "name": "jaw_s4_column_1_0",
+   "host": "tray_1",
+   "joint": "jaw_s4_column_1_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s4-column-1",
+   "pos_in_host": [
+    0.1685,
+    -0.095,
+    0.020500000000000018
+   ]
+  },
+  {
+   "name": "jaw_s4_column_2_0",
+   "host": "tray_1",
+   "joint": "jaw_s4_column_2_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s4-column-2",
+   "pos_in_host": [
+    -0.1615,
+    0.095,
+    0.020500000000000018
+   ]
+  },
+  {
+   "name": "jaw_s4_column_3_0",
+   "host": "tray_1",
+   "joint": "jaw_s4_column_3_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s4-column-3",
+   "pos_in_host": [
+    0.1685,
+    0.095,
+    0.020500000000000018
+   ]
+  },
+  {
+   "name": "jaw_s5_tray_0",
+   "host": "column_1_0",
+   "joint": "jaw_s5_tray_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s5-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s5_tray_1",
+   "host": "column_1_1",
+   "joint": "jaw_s5_tray_1_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s5-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s5_tray_2",
+   "host": "column_1_2",
+   "joint": "jaw_s5_tray_2_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s5-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s5_tray_3",
+   "host": "column_1_3",
+   "joint": "jaw_s5_tray_3_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s5-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s6_column_0_0",
+   "host": "tray_2",
+   "joint": "jaw_s6_column_0_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s6-column-0",
+   "pos_in_host": [
+    -0.1615,
+    -0.095,
+    0.020500000000000074
+   ]
+  },
+  {
+   "name": "jaw_s6_column_1_0",
+   "host": "tray_2",
+   "joint": "jaw_s6_column_1_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s6-column-1",
+   "pos_in_host": [
+    0.1685,
+    -0.095,
+    0.020500000000000074
+   ]
+  },
+  {
+   "name": "jaw_s6_column_2_0",
+   "host": "tray_2",
+   "joint": "jaw_s6_column_2_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s6-column-2",
+   "pos_in_host": [
+    -0.1615,
+    0.095,
+    0.020500000000000074
+   ]
+  },
+  {
+   "name": "jaw_s6_column_3_0",
+   "host": "tray_2",
+   "joint": "jaw_s6_column_3_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s6-column-3",
+   "pos_in_host": [
+    0.1685,
+    0.095,
+    0.020500000000000074
+   ]
+  },
+  {
+   "name": "jaw_s7_tray_0",
+   "host": "column_2_0",
+   "joint": "jaw_s7_tray_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s7-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s7_tray_1",
+   "host": "column_2_1",
+   "joint": "jaw_s7_tray_1_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s7-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s7_tray_2",
+   "host": "column_2_2",
+   "joint": "jaw_s7_tray_2_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s7-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s7_tray_3",
+   "host": "column_2_3",
+   "joint": "jaw_s7_tray_3_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s7-tray",
+   "pos_in_host": [
+    0.003500000000000003,
+    0.0,
+    0.14750000000000008
+   ]
+  },
+  {
+   "name": "jaw_s8_cap_0_0",
+   "host": "tray_3",
+   "joint": "jaw_s8_cap_0_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s8-cap-0",
+   "pos_in_host": [
+    -0.1615,
+    -0.095,
+    0.03249999999999997
+   ]
+  },
+  {
+   "name": "jaw_s8_cap_1_0",
+   "host": "tray_3",
+   "joint": "jaw_s8_cap_1_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s8-cap-1",
+   "pos_in_host": [
+    0.1685,
+    -0.095,
+    0.03249999999999997
+   ]
+  },
+  {
+   "name": "jaw_s8_cap_2_0",
+   "host": "tray_3",
+   "joint": "jaw_s8_cap_2_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s8-cap-2",
+   "pos_in_host": [
+    -0.1615,
+    0.095,
+    0.03249999999999997
+   ]
+  },
+  {
+   "name": "jaw_s8_cap_3_0",
+   "host": "tray_3",
+   "joint": "jaw_s8_cap_3_0_slide",
+   "axis": [
+    1.0,
+    0,
+    0
+   ],
+   "travel": 0.0025,
+   "stiffness": 1200.0,
+   "damping": 0.8,
+   "operation": "s8-cap-3",
+   "pos_in_host": [
+    0.1685,
+    0.095,
+    0.03249999999999997
+   ]
+  }
+ ]
+}

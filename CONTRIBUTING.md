@@ -17,11 +17,15 @@ One benchmark per pull request. A pull request that adds tasks **and** changes s
 ## Proposal (new benchmarks)
 Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
 - **verifiable** by a program, in a fresh process, without a learned judge;
-- **solvable** — a positive example the verifier scores 1: an oracle, an upstream expert or policy, a successful
+- **solvable** — a positive example the verifier (standard modes: the sidecar) scores 1: an oracle, an upstream expert or policy, a successful
   model trial, or a hand-built trajectory (tasks without one are human-reviewed and marked unvalidated, PROTOCOL §2, §4);
 - **difficult** for today's coding agents, for a reason that matters for robotics;
-- **reproducible** — bit-exact replay of a frozen scene instance, and the hardware it was checked on;
-- **isolatable** — the verifier can recompute the result in its own sandbox from the declared artifacts;
+- **reproducible** — a frozen scene instance; a privileged trajectory replays bit for bit (and the hardware it was
+  checked on); a standard episode's recorded trajectory reproduces it for the video and audits (where the simulator replays
+  bit for bit; else the video is recorded live);
+- **isolatable** — the result is computed by a party the agent cannot reach: the verifier in its own sandbox from the
+  declared artifacts (privileged), or the sim sidecar on the live episode after the agent's container stops (standard
+  modes, PROTOCOL H.4);
 - **scrubbable** — upstream reference solutions can be removed from everything the agent can reach.
 
 It also states the oracle source (PROTOCOL §4), the minimum compute per trial (CPU cores, memory, GPU memory
@@ -88,7 +92,7 @@ mtime match, and a checkout gives many files one mtime, so a task can silently r
 (`stamp_mtimes.py stage`); a new one does the same.
 
 For a new simulator or family, also replay the oracle (or a positive example) twice in fresh processes and include
-the matching state hashes.
+the matching state hashes (the privileged verdict replays; the standard modes' video is rendered from the trajectory).
 
 ## Tasks without an oracle
 Allowed (`oracle = "partial"` or `"none"` with `oracle_evidence`), but they need **human review**: the pull request is
@@ -126,7 +130,9 @@ The checklist is in PROTOCOL §4.
    update the results site. A release (tag `v<semver>`) gets the same files as assets (`.github/workflows/release.yml`).
 
 ## Rules that apply to every contribution
-- A published task's `environment/` and `tests/` inputs are immutable; changing the scene makes a new task.
+- A published task may be changed in place, its scene included: it keeps its name and gets a new `DIGEST` (PROTOCOL
+  H.8), and results are attributed by digest. Recommended: say what changed and why in the pull request and the README's
+  Change Log.
 - To change a time cutoff (the task author's decision; owner involvement only where official results must stay
   comparable), set the new `[agent] timeout_sec` in the tasks concerned (a generated
   benchmark: its generator's constant, then regenerate), in both twins, run `python3 scripts/task_conventions.py` on them

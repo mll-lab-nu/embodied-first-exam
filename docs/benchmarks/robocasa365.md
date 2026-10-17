@@ -45,7 +45,7 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
 - **Determinism.** CPU physics, bit-exact, with MuJoCo's process-wide mesh cache turned off in `casa_tool`: with the
   cache on, a scene built a second time in one process stepped differently in 14 of 61 candidates here (a mesh served
   from the cache differs in `mesh_polynormal` from a freshly compiled one), which would have broken the agent's own
-  `reset()` and the service's verification replay. With the cache off every build is the cold build a fresh process
+  `reset()` (and, until 2026-10-17, the service's verification replay; now its start hash and video pass). With the cache off every build is the cold build a fresh process
   makes. If the pinned MuJoCo lacks the cache symbols, `casa_tool` raises on import rather than run without it.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 3000 control steps; the references have 85–2189.
   Standard episodes have no step limit (D1).
@@ -57,8 +57,9 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
 
 ## Standard-mode service
 `images/robocasa365/standard/server_casa.py` and the collect hook `scripts/robocasa365/shared/finalize.sh`, the same
-service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: verdict final before the video, the
-hook's budget, request validation). Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint,
+service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: since 2026-10-17 graded by the live
+episode, nothing replayed, the start checked against the frozen instance, the video one render pass after the
+verdict; the hook's budget; request validation). Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint,
 not MuJoCo's left-eye camera 3.4 cm to its left (`docs/benchmarks/robocasa.md`, service item 10): standard-mode results
 from before used the offset calibration.
 
@@ -72,8 +73,13 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   copies of `scripts/humanoidbench/shared/`; `ci_checks/check-tooling-identity.sh`), with
   `scripts/robocasa365/shared/realtime/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
   twin's frozen instance, native controller command (`joint_position`, 13 channels, clipped and reported), success
-  check (`_check_success`, twice per control step), cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU) and fresh
-  replay (a new `casa_tool.Session` in the same process, as the standard service). The robot's cameras move with it:
+  check (`_check_success`, twice per control step) and cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU). Since
+  2026-10-17 (board 0151) the verdict is the live episode's (the shared layer's `graded_by = live`): the last
+  episode's success as it ran, and the adapter's `live_verdict()` adds the standard twin's rule that the scene was not
+  solved at that episode's start; nothing is replayed (before: a new `casa_tool.Session` in the same process replayed
+  it, `success = live ∧ replay ∧ deterministic`). `start_sha` (`RCB_START_SHA`, the standard twin's archived start hash,
+  the same value) is checked by the layer when the first episode begins and after every reset (`instance_mismatch`,
+  infrastructure). The video is rendered from the trajectory after the verdict (the live session rebuilt, one pass). The robot's cameras move with it:
   their intrinsics are in `/spec`, their current poses in every proprioception row (`cam_<camera>_*`, the standard
   twin's `cam2world_gl`). Not served: the 2.1 service's per-response calibration dictionary.
 - **Episode.** The standard twin grades the state after the last step of an episode as long as the agent's time; on a
@@ -97,6 +103,13 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   streaming one row per control step with an image every 0.5 s: no stall, largest lag 0.05 s, an image in 44-65 ms,
   the graded episode's replay deterministic.
 - **Cutoff** 3600 s, the standard twin's.
+
+## Change log
+- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by one
+  render pass from the trajectory after the verdict; the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
+  `RCB_START_SHA` from `scripts/robocasa365/frozen/start_state.json`) before the agent is served, a mismatch is infrastructure
+  (`docs/benchmarks/robocasa.md`, service items 6, 7 and 11). The standard-realtime twin: the shared layer's live verdict with the adapter's `live_verdict()` and `start_sha`; its collect hook's waits (840 s verdict, 870 s video) unchanged. Scene, instances, success check, cutoff and what
+  the agent sees except the instruction's scoring sentence unchanged, so the tasks keep their names.
 
 ## Egress
 The demonstrations are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image contains no
@@ -129,3 +142,77 @@ Harbor runs on the generated tasks (AMD Ryzen 9 7950X, Docker, no GPU): `-a orac
 score 1; `-a nop` scores 0 on four tasks per mode. Scripted cheat attempts score 0 in both modes.
 
 Agent results are not kept in the repository (PROTOCOL D3).
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
+failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
+**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
+`solved`): kept under its name and reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+19 of 50 bases are in the easy set; by directory: 70 easy, 6 hard, 25 unverified, 0 pending.
+
+| base | easy set | privileged | standard | standard-realtime |
+|---|---|---|---|---|
+| `robocasa365-add-lemon-to-fish-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Astra, Opus, Sol 6.1 | — |
+| `robocasa365-assemble-cooking-array-i00` |  | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) | — |
+| `robocasa365-beverage-sorting-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Gemini 4 Argon | — |
+| `robocasa365-bread-and-cheese-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-candle-cleanup-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon | — |
+| `robocasa365-cereal-and-bowl-i00` |  | easy: Astra, Sol 6.1, Gemini 3.8 Flash | hard | — |
+| `robocasa365-choose-measuring-cup-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-clear-food-waste-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | — |
+| `robocasa365-clear-sink-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Gemini 3.8 Flash, Gemini 4 Argon | — |
+| `robocasa365-close-drawer-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-close-oven-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-close-stand-mixer-head-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-cookie-dough-prep-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-deliver-brewed-coffee-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Sol 6.1, Gemini 4 Argon | — |
+| `robocasa365-dessert-upgrade-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-display-meat-variety-i00` |  | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | hard | — |
+| `robocasa365-divide-basins-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-drain-veggies-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol | easy: Gemini 4 Argon | — |
+| `robocasa365-drinkware-consolidation-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-make-ice-lemonade-i00` | yes | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Opus, Gemini 4 Argon | — |
+| `robocasa365-make-loaded-potato-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-meal-prep-staging-i00` | yes | easy: Astra, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus | — |
+| `robocasa365-microwave-defrost-meat-i00` |  | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | hard | — |
+| `robocasa365-open-dishwasher-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol, Gemini 4 Argon, DeepSeek V4.1 Flash | — |
+| `robocasa365-organize-coffee-condiments-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon | — |
+| `robocasa365-oven-broil-fish-i00` | yes | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Astra, Opus | — |
+| `robocasa365-pack-dessert-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-pick-place-cabinet-to-counter-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon | — |
+| `robocasa365-pick-place-sink-to-counter-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-plate-steak-meal-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | — |
+| `robocasa365-portion-in-tupperware-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-pre-rinse-station-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-prep-for-sanitizing-i00` | yes | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Astra, Opus | — |
+| `robocasa365-prep-marinating-meat-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-reheat-meal-i00` | yes | easy: Astra, Gemini 4 Argon | easy: Opus | — |
+| `robocasa365-retrieve-meat-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus, Gemini 3.8 Flash, Gemini 4 Argon | — |
+| `robocasa365-sanitize-prep-cutting-board-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-scrub-bowl-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-searing-meat-i00` |  | easy: Astra, Opus | hard | — |
+| `robocasa365-seasoning-spice-setup-i00` |  | easy: Astra, Sol 6.1, Gemini 4 Argon | hard | — |
+| `robocasa365-set-up-cutting-station-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash | easy: Astra, Sol 6.1 | — |
+| `robocasa365-stocking-breakfast-foods-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-sweeten-coffee-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-thaw-in-sink-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-tong-buffet-setup-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash | easy: Opus | — |
+| `robocasa365-turn-off-microwave-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-turn-on-microwave-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-turn-on-sink-faucet-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-turn-on-stove-i00` |  | easy: Luna | unverified | — |
+| `robocasa365-turn-on-toaster-oven-i00` |  | easy: Luna | unverified | easy: Luna |
+
+Judgment calls: `robocasa365-beverage-sorting-i00`: the one standard solve hit the 3600 s agent timeout after its
+episode was recorded (graded as a success).

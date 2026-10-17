@@ -12,7 +12,9 @@ class Session(Base):
     def __init__(self, task, instance=None, strict=False, depth=False):
         self._init(); self.arm = {a: _Arm() for a in ARMS}; self.joint_ids = {a: list(range(7)) for a in ARMS}
         self._ee = {"left": np.array([0.4, 0.3, 0.9]), "right": np.array([0.4, -0.3, 0.9])}
-    def render_frame(self, c, size=None): return np.zeros((24, 32, 3), np.uint8)
+    _frame_mark = None; _n_restores = 0
+    def render_frame(self, c, size=None):
+        self._frame_mark = ((self._n_restores, self.n_steps), {c}); return np.zeros((24, 32, 3), np.uint8)
     def success(self): return False
     def fallen(self): return None
     def ee_pose(self, a): return self._ee[a].copy(), np.array([1.0, 0, 0, 0])

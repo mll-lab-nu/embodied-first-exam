@@ -9,12 +9,13 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/replay.last.png", service = "sim" },
   { source = "/data/calls/", service = "sim" },
   { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/roboolympics-layup-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboOlympics layup on the same frozen instance as roboolympics-layup-i00-privileged. Make a layup: with the basketball in your right hand take at most two steps towards the basket, jump, and let go of the ball in the air close to the ring so that it enters the basket from above. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 50 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt, replays it in a fresh simulator and grades it with the family's referee."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboOlympics layup on the same frozen instance as roboolympics-layup-i00-privileged. Make a layup: with the basketball in your right hand take at most two steps towards the basket, jump, and let go of the ball in the air close to the ring so that it enters the basket from above. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 50 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "roboolympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "standard-mode", "trajectory", "layup"]
 
@@ -93,10 +94,11 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it.
-# The loops run on the clock, inside timeout_sec: the verdict ("finalized": true, set before any video is rendered) may
-# take until 840 s; then the hook waits for the replay video ("video_pending") until 870 s -- a video that is not ready
-# by then is lost, the verdict is not.
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades the live
+# episode (no grading replay, board 0151). The loops run on the clock, inside timeout_sec: the verdict ("finalized":
+# true, written before any video is rendered) may take until 840 s (the end waits through a crash-recovery resume);
+# then the hook waits for the video, one render pass from the trajectory ("video_pending"), until 870 s -- a video that
+# is not ready by then is lost, the verdict is not.
 [[verifier.collect]]
 service = "sim"
 command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"

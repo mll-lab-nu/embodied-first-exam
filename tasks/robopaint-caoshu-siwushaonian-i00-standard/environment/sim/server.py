@@ -12,15 +12,20 @@ Differences from the RoboLab service, all from the task:
   target at the 20 Hz control rate, one IK solve per control step (SAPIEN's Pinocchio CLIK, no collision checking), at most
   0.25 m/s (a faster row is slowed down and reported);
 - painting has no terminal state: the episode ends only when the agent phase ends (the collect hook) or on a simulator error;
-- the trajectory is replayed in fresh processes by the collect hook (environment/sim/finalize.sh) after this service has exited,
-  exactly as the privileged verifier does, and only then scored;
+- the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): when the collect hook ends the episode
+  (environment/sim/finalize.sh, after the agent's container is stopped) this service commits a stroke still pressed, scores its
+  live main sheet with the graders' scorer and rules (rcb_brush_strict.py: the picture rule and the process rules, the same
+  Session.score() the privileged verifier's replays use) and writes final.json at once ("graded_by": "live"); nothing is
+  replayed to grade it. Then it renders the recorded trajectory once into replay.mp4 ("video_pending" while it runs; it never
+  changes the verdict), sets "video_done" and exits; a frozen instance that does not rebuild here is refused at the start
+  (instance_mismatch, an infrastructure failure), before the agent is served;
 - crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step (the 7 joint targets given to
   Session.step) is journaled and every completed call checkpointed with the state hash; after a crash compose restarts the
   container and this service replays the journal in its fresh process and continues the SAME episode. Resume class `exact`
   (PhysX on the CPU and the CPU brush models repeat bit for bit in a fresh process); the last ee_pose tip target is persisted
   (the start of the next `ee_pose` line)."""
 from __future__ import annotations
-import json, math, os, signal, sys, threading, time, traceback
+import importlib, json, math, os, signal, sys, threading, time, traceback
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -47,6 +52,14 @@ E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "t0":
 EP = L.Episode(DATA, dim=7, resume="exact", persist=("tip_target",))   # the journal rows are Session.step's 7 joint targets
 EP.startup()                           # before the scene is built: start count, back-off after failed starts, startup watchdog
 log = EP.log
+_fin = L.final_verdict(DATA)
+if _fin is not None:
+    # Restarted with the verdict on disk: the service died while it rendered the video (after the verdict), or the container
+    # was restarted after a give-up. The verdict stands and is not touched; only `video_done` is set, so that the collect
+    # hook (`end --wait-key video_done`) does not wait its whole timeout for a video that will not come. Then refuse.
+    if not _fin.get("gave_up") and not _fin.get("video_done"):
+        _fin.update(video_done=True, video_pending=False); L._write_json(os.path.join(DATA, "final.json"), _fin)
+    EP.give_up("restarted after finalize", infra=False)     # never returns; writes nothing over a verdict
 
 
 def ctrl_steps() -> int:
@@ -63,27 +76,66 @@ def write_final() -> None:
                    "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
 
 
-def dump() -> None:
-    """The episode is over: save the recorded trajectory, the live canvas and its hash for the collect hook (lock held)."""
-    if E.get("dumped"): return
+def numbers(d: dict) -> dict:
+    return {k: v for k, v in d.items() if isinstance(v, (int, float, bool))}
+
+
+def dump() -> list | None:
+    """The episode is over (lock held): commit a stroke still pressed, save the recorded trajectory (the deliverable), score
+    the live main sheet with the graders' scorer and rules (S is rcb_brush_strict's Session: the picture rule and the process
+    rules) and write the verdict to final.json at once. Returns the trajectory's rows for the video (None if there are none)."""
+    if E.get("dumped"): return None
     E["dumped"] = True
-    live = {}
+    live, err, acts = {}, None, None
     try:
         S.painter.finish()
         acts = S.record_stop(); E["n_actions"] = int(len(acts))
-        S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode", "steps": E["step"], "reason": E["reason"]})
-        live = S.status(); E["live_sha"] = live["state_sha"]
+        try:
+            S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode", "steps": E["step"], "reason": E["reason"]})
+        except Exception as exc:  # noqa: BLE001 — journal.f64 holds the same rows; the verdict does not depend on this file
+            traceback.print_exc(); E["trajectory_error"] = repr(exc)[:300]
+        live = S.status(); E["live_sha"] = live["state_sha"]      # status() = score() of the live sheets + the state hash
+    except Exception as exc:  # noqa: BLE001
+        traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)}); err = repr(exc)[:300]
+    try:   # evidence for people: a picture that cannot be saved never touches the score
         from PIL import Image
         Image.fromarray(S.canvas("main")).save(os.path.join(DATA, "canvas_live.png"))
         Image.fromarray(S.canvas("practice")).save(os.path.join(DATA, "canvas_live_practice.png"))
     except Exception as exc:  # noqa: BLE001
-        traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
+        traceback.print_exc(); E["canvas_error"] = repr(exc)[:300]
     n = int(E.get("episode_control_steps") or 0)
-    json.dump({"steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
-               "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
-               "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(),
-               "live": {k: v for k, v in live.items() if isinstance(v, (int, float, bool))}}, open(os.path.join(DATA, "episode.json"), "w"))
-    write_final()
+    metrics = {k: v for k, v in numbers(live).items() if not isinstance(v, bool)}
+    ok = bool(live.get("success")) and err is None
+    rec = {"steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
+           "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": True, "task": TASK, "protocol": PROTOCOL,
+           "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(), "live": numbers(live)}
+    json.dump(rec, open(os.path.join(DATA, "episode.json"), "w"))
+    verdict = {**rec, "success": ok, "live_success": ok, "graded_by": "live", "replays": 0, "finalized": True,
+               "success_rule": {k: float(v) for k, v in S.inst["target"]["success"].items()},
+               "metrics": metrics, "instance_exact": bool(S.instance_exact), "video": False, "video_pending": acts is not None and len(acts) > 0,
+               "video_done": False, "video_source": "render", **{k: E[k] for k in ("trajectory_error", "canvas_error") if E.get(k)},
+               # the service could not score the live sheet: not the agent's failure (unless its own call broke the simulator)
+               **({"grade_error": True, "error": f"the live sheet could not be scored: {err}"} if err else {})}
+    E["verdict"] = verdict
+    log({"ev": "verdict", "graded_by": "live", "success": ok, "reason": E["reason"], "n_actions": E.get("n_actions"),
+         "final_reward": metrics.get("final_reward"), "live_sha": E.get("live_sha")})
+    L._write_json(os.path.join(DATA, "final.json"), verdict)
+    return acts if verdict["video_pending"] else None
+
+
+def render(acts) -> None:
+    """The one render pass after the verdict: the recorded trajectory from the frozen instance into replay.mp4 (+ .last.png),
+    as the replays used to film it. A failed render loses the video only; the verdict on disk is not touched."""
+    v = E["verdict"]
+    if acts is not None:
+        try:
+            every = max(2, int(math.ceil(len(acts) / max(1, M.MAX_VIDEO_FRAMES))))
+            S.render_video(acts, os.path.join(DATA, "replay.mp4"), every=every, fps=10)
+            v["video"] = os.path.exists(os.path.join(DATA, "replay.mp4"))
+        except Exception as exc:  # noqa: BLE001
+            traceback.print_exc(); v["video_error"] = repr(exc)[:300]
+    v.update(video_pending=False, video_done=True)
+    L._write_json(os.path.join(DATA, "final.json"), v)
 
 
 def finish(reason: str) -> None:
@@ -93,8 +145,18 @@ def finish(reason: str) -> None:
 
 
 # ---------------------------------------------------------------- scene
-import rcb_brush as M  # noqa: E402
-S = M.Session(instance=INSTANCE, task=TASK, strict=True, render=True)
+# the graders' module (RCB_TOOL: rcb_brush_strict.py, RoboPaint's Session with the process rules in score()): the live sheet is
+# scored with it at the end; nothing it computes reaches the agent
+M = importlib.import_module(os.path.splitext(os.path.basename(os.environ.get("RCB_TOOL") or "rcb_brush_strict.py"))[0])  # noqa: E402
+try:
+    S = M.Session(instance=INSTANCE, task=TASK, strict=True, render=True)
+except RuntimeError as exc:
+    if "instance sha" not in str(exc):
+        raise
+    # The frozen instance does not rebuild here (tooling / simulator drift): the same at every restart and not the agent's
+    # failure. Give up at once with a record (final.json: finalized, gave_up, infra_error = 1), before the agent is served.
+    traceback.print_exc(); log({"ev": "instance_mismatch", "error": str(exc)[:300]})
+    EP.give_up(f"instance_mismatch: {exc}"[:300], infra=True)     # never returns
 if not S.render_enabled:
     raise SystemExit("the sim service needs a Vulkan-capable GPU for its cameras")
 LAYOUT = [f"panda_joint{i}" for i in range(1, 8)]
@@ -490,12 +552,13 @@ def status() -> dict:
 
 def _end_from_signal():
     with LOCK:
-        E["exiting"] = True
+        E["exiting"] = True       # from here on every request is refused (409): the episode is over
         if not E["done"]: finish("timeout")
-        dump()
-        log({"ev": "exit", "reason": "collect hook: episode dumped; the trajectory is replayed in fresh processes next"})
+        acts = dump()             # the live verdict, on disk
+        render(acts)              # then the video, once
+        log({"ev": "exit", "reason": "collect hook: live verdict written, video rendered"})
     sys.stdout.flush(); sys.stderr.flush()
-    os._exit(0)          # finalize.sh starts the replays once this process is gone
+    os._exit(0)          # run.sh keeps the container up for the collect hook
 
 
 L.check_spec(SPEC)                     # a spec that misses a 2.2 field or names a forbidden one never serves

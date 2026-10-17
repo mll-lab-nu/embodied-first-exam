@@ -1,0 +1,288 @@
+{
+ "image": {
+  "id": "sha256:ed950d079b6304219d3b1ec2f428f851e383cec841d38a4c11bd0f25a42dea00",
+  "reference": "ghcr.io/mll-lab-nu/eai-ikea-mujoco:0.3.0"
+ },
+ "note": "per task, what the image's scene builds to: python /opt/tools/rcb_ikea.py info --task <t> inside the image; a task's own \"image\" (a scene added in a later image version) overrides the default image",
+ "runtime": {
+  "mujoco": "3.14.0",
+  "numpy": "2.5.4",
+  "python": "3.12.15"
+ },
+ "tasks": {
+  "burvik": {
+   "actuators": [
+    "left_actuator1",
+    "left_actuator2",
+    "left_actuator3",
+    "left_actuator4",
+    "left_actuator5",
+    "left_actuator6",
+    "left_actuator7",
+    "left_actuator8",
+    "right_actuator1",
+    "right_actuator2",
+    "right_actuator3",
+    "right_actuator4",
+    "right_actuator5",
+    "right_actuator6",
+    "right_actuator7",
+    "right_actuator8"
+   ],
+   "initial_state_sha256": "d563d833bd219a221ce3a1ef628530de5b1e0c666dea0d4019d9b51ad485e85b",
+   "nu": 16,
+   "timestep": 0.000625
+  },
+  "eket": {
+   "actuators": [
+    "left_actuator1",
+    "left_actuator2",
+    "left_actuator3",
+    "left_actuator4",
+    "left_actuator5",
+    "left_actuator6",
+    "left_actuator7",
+    "left_actuator8",
+    "right_actuator1",
+    "right_actuator2",
+    "right_actuator3",
+    "right_actuator4",
+    "right_actuator5",
+    "right_actuator6",
+    "right_actuator7",
+    "right_actuator8"
+   ],
+   "initial_state_sha256": "9815e6dc4b4a98566a644f09a7dac430a05cdc59f4559ca7095f3c12e5b4b034",
+   "nu": 16,
+   "timestep": 0.000625
+  },
+  "gladom": {
+   "actuators": [
+    "left_actuator1",
+    "left_actuator2",
+    "left_actuator3",
+    "left_actuator4",
+    "left_actuator5",
+    "left_actuator6",
+    "left_actuator7",
+    "left_actuator8",
+    "right_actuator1",
+    "right_actuator2",
+    "right_actuator3",
+    "right_actuator4",
+    "right_actuator5",
+    "right_actuator6",
+    "right_actuator7",
+    "right_actuator8"
+   ],
+   "initial_state_sha256": "700c53dd5fd9fe2b610f6bf2db29c52536b98d94f3dd9b191d016c656017238b",
+   "nu": 16,
+   "timestep": 0.000625
+  },
+  "ikea365": {
+   "actuators": [
+    "left_actuator1",
+    "left_actuator2",
+    "left_actuator3",
+    "left_actuator4",
+    "left_actuator5",
+    "left_actuator6",
+    "left_actuator7",
+    "left_actuator8",
+    "right_actuator1",
+    "right_actuator2",
+    "right_actuator3",
+    "right_actuator4",
+    "right_actuator5",
+    "right_actuator6",
+    "right_actuator7",
+    "right_actuator8"
+   ],
+   "initial_state_sha256": "4e9e040022202b3e368d3f36c7f1ac64121cbd21f0345ed82f76f4f674b1483b",
+   "nu": 16,
+   "timestep": 0.000625
+  },
+  "kyrre": {
+   "actuators": [
+    "left_actuator1",
+    "left_actuator2",
+    "left_actuator3",
+    "left_actuator4",
+    "left_actuator5",
+    "left_actuator6",
+    "left_actuator7",
+    "left_actuator8",
+    "right_actuator1",
+    "right_actuator2",
+    "right_actuator3",
+    "right_actuator4",
+    "right_actuator5",
+    "right_actuator6",
+    "right_actuator7",
+    "right_actuator8"
+   ],
+   "initial_state_sha256": "ecd23f8f42cd96e0178526ba95d1206d0a3cb7ec10fb432a5b0b136257b5954c",
+   "nu": 16,
+   "timestep": 0.000625
+  },
+  "lack": {
+   "actuators": [
+    "left_actuator1",
+    "left_actuator2",
+    "left_actuator3",
+    "left_actuator4",
+    "left_actuator5",
+    "left_actuator6",
+    "left_actuator7",
+    "left_actuator8",
+    "right_actuator1",
+    "right_actuator2",
+    "right_actuator3",
+    "right_actuator4",
+    "right_actuator5",
+    "right_actuator6",
+    "right_actuator7",
+    "right_actuator8"
+   ],
+   "initial_state_sha256": "0bddce57c9bcaf3480205cd25a4134e864c11f9d00a624393b84646024e6daa8",
+   "nu": 16,
+   "timestep": 0.000625
+  },
+  "stegesund": {
+   "actuators": [
+    "left/actuator1",
+    "left/actuator2",
+    "left/actuator3",
+    "left/actuator4",
+    "left/actuator5",
+    "left/actuator6",
+    "left/actuator7",
+    "left/actuator8",
+    "right/actuator1",
+    "right/actuator2",
+    "right/actuator3",
+    "right/actuator4",
+    "right/actuator5",
+    "right/actuator6",
+    "right/actuator7",
+    "right/actuator8"
+   ],
+   "initial_state_sha256": "917b2bc63ab1ec624593f08b7aff161dc4f0dea407d53bbeee89396b49fd701c",
+   "nu": 16,
+   "timestep": 0.000625
+  },
+  "stenerik": {
+   "actuators": [
+    "left_actuator1",
+    "left_actuator2",
+    "left_actuator3",
+    "left_actuator4",
+    "left_actuator5",
+    "left_actuator6",
+    "left_actuator7",
+    "left_actuator8",
+    "right_actuator1",
+    "right_actuator2",
+    "right_actuator3",
+    "right_actuator4",
+    "right_actuator5",
+    "right_actuator6",
+    "right_actuator7",
+    "right_actuator8"
+   ],
+   "initial_state_sha256": "3dc8f1b6f99efce3bd3d52151d780d19197f235223e92498ad20034b23c8dfbc",
+   "nu": 16,
+   "timestep": 0.000625
+  },
+  "svallet": {
+   "actuators": [
+    "left_waist",
+    "left_shoulder",
+    "left_elbow",
+    "left_forearm_roll",
+    "left_wrist_angle",
+    "left_wrist_rotate",
+    "left_gripper",
+    "right_waist",
+    "right_shoulder",
+    "right_elbow",
+    "right_forearm_roll",
+    "right_wrist_angle",
+    "right_wrist_rotate",
+    "right_gripper"
+   ],
+   "initial_state_sha256": "22360c69fb8a50efa7b43c43aa856883dea1cae5db7afad9926235211f7b9248",
+   "nu": 14,
+   "timestep": 0.000625
+  },
+  "uppsta": {
+   "actuators": [
+    "left/actuator1",
+    "left/actuator2",
+    "left/actuator3",
+    "left/actuator4",
+    "left/actuator5",
+    "left/actuator6",
+    "left/actuator7",
+    "left/actuator8",
+    "right/actuator1",
+    "right/actuator2",
+    "right/actuator3",
+    "right/actuator4",
+    "right/actuator5",
+    "right/actuator6",
+    "right/actuator7",
+    "right/actuator8"
+   ],
+   "initial_state_sha256": "3b69cfd57f5a5330b09b1435548fc899f34ed1403021e97e96867ab9b4c2ea9c",
+   "nu": 16,
+   "timestep": 0.0003125
+  },
+  "variera": {
+   "actuators": [
+    "left_actuator1",
+    "left_actuator2",
+    "left_actuator3",
+    "left_actuator4",
+    "left_actuator5",
+    "left_actuator6",
+    "left_actuator7",
+    "left_actuator8",
+    "right_actuator1",
+    "right_actuator2",
+    "right_actuator3",
+    "right_actuator4",
+    "right_actuator5",
+    "right_actuator6",
+    "right_actuator7",
+    "right_actuator8"
+   ],
+   "initial_state_sha256": "067105ad8f8329ec711f06a431d9d977385a03c897e62a176801f979e1fc2d45",
+   "nu": 16,
+   "timestep": 0.000625
+  },
+  "vesken": {
+   "actuators": [
+    "left_actuator1",
+    "left_actuator2",
+    "left_actuator3",
+    "left_actuator4",
+    "left_actuator5",
+    "left_actuator6",
+    "left_actuator7",
+    "left_actuator8",
+    "right_actuator1",
+    "right_actuator2",
+    "right_actuator3",
+    "right_actuator4",
+    "right_actuator5",
+    "right_actuator6",
+    "right_actuator7",
+    "right_actuator8"
+   ],
+   "initial_state_sha256": "66aaaacbc3da0fb3b0c81a2e8c0fe6c977f93841aadad10e190e0b0e3ecdbf6d",
+   "nu": 16,
+   "timestep": 0.000625
+  }
+ }
+}

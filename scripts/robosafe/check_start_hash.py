@@ -5,10 +5,11 @@ and equals the hash of RoboSafeBench's own start of the same key (family, member
 image. A mismatch is a blocker: the admission evidence would not cover what the agent gets.
 
     python3 scripts/robosafe/check_start_hash.py --records <jobs dir> [...]    # fast: the trials already run (standard
-                                         # library): each verdict.json's two replays started from the frozen start
+                                         # library): each verdict.json's live episode (from 2026-10-17, board 0151:
+                                         # `start`) or its two replays (before: `replays`) started from the frozen start
     scripts/robosafe/check_start_hash.py --image <tag> [task dirs]          # live: in the image, per task, the service
                                          # built from the task's own environment/sim/ (no physics step) and RoboSafeBench's
-                                         # start of the key, against instance.json (default: every cell-* task; podman)
+                                         # start of the key, against instance.json (default: every rsb-* task; podman)
     python scripts/robosafe/check_start_hash.py --inside <task dir> ...     # what --image runs in the container
 
 Exit 1 on any mismatch, with the task and the three hashes.
@@ -41,7 +42,7 @@ try:
 except RuntimeError as e:                      # the service refuses a start that differs from the frozen one
     out["service"] = "refused: " + str(e)[:120]
 _, _, ep = rcb_rsb.start(dict(inst["key"]))
-out["robosafe"] = ep.state_hash()
+out["robosafebench"] = ep.state_hash()
 print(json.dumps(out))
 """
 
@@ -51,8 +52,12 @@ def records(dirs: list[str]) -> int:
     for d in dirs:
         for f in sorted(glob.glob(os.path.join(d, "**", "verifier", "verdict.json"), recursive=True)):
             t = pathlib.Path(f).parents[1].name.split("__")[0]
-            rp = json.loads(pathlib.Path(f).read_text()).get("replays") or {}
-            ss, fz = rp.get("start_sha") or [], rp.get("frozen_start_sha")
+            v = json.loads(pathlib.Path(f).read_text())
+            if isinstance(v.get("start"), dict):     # the live episode's start, checked by the service (board 0151)
+                ss, fz = [v["start"].get("start_sha")] * 2, v["start"].get("frozen_start_sha")
+            else:                                    # before 2026-10-17: the two grading replays' starts
+                rp = v.get("replays") or {}
+                ss, fz = rp.get("start_sha") or [], rp.get("frozen_start_sha")
             inst = ROOT / "tasks" / t / "environment/sim/instance.json"
             want = json.loads(inst.read_text())["state_sha"] if inst.exists() else fz
             n += 1
@@ -75,7 +80,7 @@ def inside(tasks: list[str]) -> int:
     bad = 0
     with cf.ThreadPoolExecutor(int(os.environ.get("JOBS", "6"))) as ex:
         for t, h in ex.map(one, tasks):
-            ok = "error" not in h and h["instance"] == h["service"] == h["robosafe"]
+            ok = "error" not in h and h["instance"] == h["service"] == h["robosafebench"]
             bad += not ok
             print(("ok       " if ok else "MISMATCH ") + os.path.basename(t.rstrip("/")) + " " + json.dumps(h), flush=True)
     print(f"start hashes of {len(tasks)} task(s), live: {len(tasks) - bad} equal (instance.json = service = RoboSafeBench), {bad} not")
@@ -83,7 +88,7 @@ def inside(tasks: list[str]) -> int:
 
 
 def image(tag: str, tasks: list[str]) -> int:
-    tasks = [str(pathlib.Path(t).resolve()) for t in tasks] or sorted(str(p) for p in (ROOT / "tasks").glob("cell-*-standard"))   # the realtime tasks: check_double_build_rt.py
+    tasks = [str(pathlib.Path(t).resolve()) for t in tasks] or sorted(str(p) for p in (ROOT / "tasks").glob("rsb-*-standard"))   # the realtime tasks: check_double_build_rt.py
     tdir = str(ROOT / "tasks")
     inner = ["/tasks/" + os.path.basename(t) for t in tasks]
     cmd = ["podman", "run", "--rm", "-e", f"JOBS={os.environ.get('JOBS', '6')}", "-v", f"{tdir}:/tasks:ro",

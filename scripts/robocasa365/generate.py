@@ -88,8 +88,8 @@ allowed_hosts = {ALLOWED_HOSTS}
 ACTION_TYPE = {12: "ee_delta", 13: "joint_position", 24: "ee_pose"}
 # Standard mode, the sim service's collect hook (shared/finalize.sh): its timeout, and how long it waits for the verdict
 # (the script's default RCB_COLLECT_WAIT_S; main() checks that the two agree). A number of its own, not the agent's
-# cutoff: it was sized for the replay of an episode as long as a 3600 s agent time limit. Lowering the cutoff
-# (CUTOFF_SEC) keeps it safe; look at it when the cutoff is raised (docs/CUTOFFS.md).
+# cutoff: it was sized for the video's render pass (and a crash-resume replay) of an episode as long as a 3600 s agent
+# time limit. Lowering the cutoff (CUTOFF_SEC) keeps it safe; look at it when the cutoff is raised (docs/CUTOFFS.md).
 COLLECT_TIMEOUT_S = 3600
 COLLECT_WAIT_S = 3450
 # README Change Log entries of single tasks (by environment), after those of every task; both modes.
@@ -146,6 +146,20 @@ CHANGES_STANDARD = [
     "mode results from before this date used the offset calibration**: a point located from the images and the "
     "reported calibration came out about 3.4 cm to the side (agents missed a microwave button by 3.5 cm), so they are "
     "not strictly comparable with later ones.",
+    "2026-10-17 (owner, boards 0150 and 0151): the verdict is the live episode's. The sim service judges the episode it "
+    "ran (the environment's success check on the state after the last executed control step, the scene not solved at "
+    "the start) and no longer replays it in a fresh simulator to grade it: `final.json` says `graded_by = live`, "
+    "`replays = 0`, and `deterministic` / `replay_success` are gone from it and from `reward.json` (`graded_by_live = "
+    "1`). An episode that ended on a simulator error is no success (its last state is a partial step's; before, the "
+    "replay of the executed steps and its hash comparison decided). The frozen start is checked when the "
+    "episode begins, before the agent is served: the instance file's hash and the starting state's hash "
+    "(`RCB_INSTANCE_SHA`, `RCB_START_SHA` in `environment/docker-compose.yaml`; the latter as logged by every archived "
+    "standard episode of the instance); a mismatch is an infrastructure failure (`instance_mismatch`). The video is "
+    "rendered from the trajectory after the verdict in one render pass (before: a second replay) and decides nothing; "
+    "the collect hook waits for it for the rest of its time (before: twice the verdict's time + 120 s). The scene, the "
+    "frozen instance, the success check, the agent's time and what the agent sees, except the instruction's scoring "
+    "sentence, are unchanged, so the task keeps its name. Earlier results were graded live ∧ replay ∧ deterministic; "
+    "their live part is `live_success` in their `final.json`.",
 ]
 
 
@@ -297,10 +311,9 @@ client and one episode.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
-The episode runs until your time is up. The service then replays the recorded episode in a fresh simulator and applies
-the environment's own success check for `{env}` to the state **after the last executed control step**; it must hold
-in the live episode and in the replay. A success reached earlier and then lost does not count: end in the state you
-want graded and stop submitting.
+The episode runs until your time is up. The service then applies the environment's own success check for `{env}` to
+the state of the live episode **after the last executed control step**: the episode as the service ran it, nothing is
+replayed. A success reached earlier and then lost does not count: end in the state you want graded and stop submitting.
 
 {success_text(rec)}{hold_instruction(rec, "standard")}
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
@@ -433,7 +446,7 @@ def standard_readme(rec: dict) -> str:
     task = (
         f"Standard mode (robot as a service, `eai-standard/2.1`) of `{base}-privileged`: the same frozen instance and "
         f"success check, served by the `sim` sidecar (`images/{BENCH}/standard/server_casa.py`, tool module "
-        "`casa_tool`), which records the episode, replays it in a fresh simulator and judges it; the verifier grades "
+        "`casa_tool`), which records the episode and judges it live (nothing is replayed); the verifier grades "
         "the sidecar's record in a container of its own. The agent sees the robot's cameras (RGB-D, calibrated), its "
         "own joints and end effector, and the instruction."
     )
@@ -442,9 +455,13 @@ def standard_readme(rec: dict) -> str:
         "control step." + hold_note(rec).replace("\n", " ").rstrip()
     )
     verification = (
-        "The sim service replays the recorded episode in a fresh simulator and writes the verdict, final at once; "
-        "`tests/grade.py` (separate sandbox, no network) reads its `final.json`: `success = replay_success ∧ "
-        "deterministic ∧ live_success`. The replay video is rendered after the verdict and never decides it."
+        "The sim service judges the live episode when the agent's time is up (the environment's success check on the "
+        "state after the last executed control step; nothing is replayed) and writes the verdict, final at once; "
+        "`tests/grade.py` (separate sandbox, no network) reads its `final.json` (`graded_by = live`): `success = "
+        "live_success ∧ not solved at the start ∧ no simulator error`. The episode's start is checked against the frozen "
+        "instance before the agent is served (`RCB_INSTANCE_SHA`, `RCB_START_SHA`; a mismatch is an infrastructure "
+        "failure, `instance_mismatch`). The video is rendered from the trajectory after the verdict (one render pass) "
+        "and never decides it."
     )
     details = [
         ("Action type", f"`{ACTION_TYPE[rec['action_dim']]}` ({rec['action_dim']} channels, `control_dt` 0.05 s)"),
@@ -510,7 +527,7 @@ artifacts = [
 
 [task]
 name = "robot-coding-bench/{BENCH}-{rec["slug"]}-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): {TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {rec["instruction"]} The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades a fresh replay of it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): {TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {rec["instruction"]} The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
 authors = [{{ name = "{AUTHOR}" }}]
 keywords = [{KEYWORDS.format(bench=BENCH)}, "standard-mode"]
 
@@ -538,11 +555,13 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
-# restarting), which replays the episode in a fresh simulator and writes the verdict with "finalized": true. The hook
-# waits for that verdict (up to {COLLECT_WAIT_S} s), then, bounded, for the optional replay video, which decides nothing.
-# timeout_sec was sized for an episode as long as a 3600 s agent time limit: the replay runs the episode's own physics
-# once more, without its cameras, so it cannot take longer than the episode did (about 0.035 s per control step + one
-# scene build; finalize.sh has the sums). Look at it when the agent's cutoff is raised.
+# restarting), which writes the live episode's verdict with "finalized": true (nothing is replayed to grade it; board
+# 0151): at once, or once a service that crashed has resumed the episode from its journal. The hook waits for that
+# verdict, then for the optional video (rendered from the trajectory in one pass), which decides nothing: up to
+# {COLLECT_WAIT_S} s in all. timeout_sec was sized for an episode as long as a 3600 s agent time limit: the render pass
+# runs the episode's own physics once more, plus about 300 frames, so it takes about as long as the episode's physics
+# (about 0.035 s per control step + one scene build; finalize.sh has the sums). Look at it when the agent's cutoff is
+# raised.
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"
@@ -609,6 +628,23 @@ services:
 """
 
 
+START_STATE = json.loads((FROZEN / "start_state.json").read_text())   # per instance: the state a fresh episode starts in
+
+
+def start_sha_env(rec: dict) -> str:
+    """The state hash a fresh episode of the instance starts in, as a compose environment line, where one is recorded
+    (import_references.py since 2026-10-17, else frozen/start_state.json: the hash every archived standard episode of the
+    instance logged); else nothing."""
+    sha = rec.get("start_state_sha") or (START_STATE.get(rec["slug"]) or {}).get("start_state_sha")
+    return f'      RCB_START_SHA: "{sha}"   # the state its episodes start in (frozen/start_state.json)\n' if sha else ""
+
+
+def start_env(rec: dict) -> str:
+    """The sim service's start check (server_casa.py _start_mismatch; board 0151): the frozen instance's own hash, and
+    the state hash a fresh episode of it starts in."""
+    return f'      RCB_INSTANCE_SHA: "{rec["instance_sha"]}"   # the frozen instance (frozen/report.json)\n' + start_sha_env(rec)
+
+
 # -- standard-realtime twins (PROTOCOL §4b; owner 2026-10-14, board 0112) -----------------------------------------
 # The dynamic environments (each task's `[metadata] dynamics`; PROTOCOL §2) get a `-standard-realtime` twin: the same frozen
 # instance and success check, served by shared/realtime/server.py (rcb_service.Sim on casa_tool.Session) behind the
@@ -660,7 +696,7 @@ services:
       PYTHONPATH: /srv
       RCB_SLOWDOWN: "${{RCB_SLOWDOWN:-{S}}}"                # S = {S}: the world runs at 1/S of real speed (this task's measured RTF; PROTOCOL §4b)
       RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-{RT_RESET_BUDGET}}}"        # {RT_RESET_BUDGET} resets (PROTOCOL §4b default); 0: one episode
-"""
+""" + start_sha_env(rec)   # the realtime layer checks the start state (rcb_service.py start_sha)
 
 
 def realtime_instruction(rec: dict) -> str:
@@ -703,16 +739,15 @@ S x 0.05 s = {0.05 * S:g} s of wall-clock time. `spec()["timing"]["slowdown"]` s
   joints, end effector, the command in force, and each camera's current pose. No object poses, no scene layout, no
   success signal: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
   `meta["reason"]`: `"success"`, `"failed"`, `"error"`).
-- There is nothing to hand in: the service records every control step it ran, replays the last episode in a fresh
-  simulator and grades the replay. Keep the controller at `/app/output/gen.py` for the record.
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran
+  (nothing is replayed). Keep the controller at `/app/output/gen.py` for the record.
 - Do not use the benchmark's demonstrations, trained policies or any published solution; write your own controller.
 - Do not stop early: while the episode runs, or a reset is left, the run can still pass.
 
 ## Scoring
 The episode is graded by the environment's own success check for `{env}` (`_check_success`, run twice after every
 control step, as in the privileged verifier) on the state after its last control step; the episode ends the moment it
-holds. The fresh replay of the recorded episode, the commands the robot actually executed at each control step, must
-succeed as well and end in the same state.
+holds. The live episode is the verdict: the episode the service ran, as it ran; nothing is replayed.
 
 {success_text(rec)}
 ## Time and streaming
@@ -770,10 +805,12 @@ def realtime_readme(rec: dict) -> str:
         "and in the fresh replay, deterministic, with no stall (board 0112, 2026-10-14)."
     )
     verification = (
-        "The sim service judges the episode live (it ends at the first step after which the success check holds), "
-        "records every control step it ran, and after the agent's time replays the graded episode in a fresh simulator "
-        "and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, "
-        "the replay succeeds and ends in the same state. The clock's record (`stalls`, `max_lag_s`, ...) is copied into "
+        "The sim service judges the episode live (it ends at the first step after which the success check holds; "
+        "`graded_by = live`, nothing is replayed), records every control step it ran, and after the agent's time writes "
+        "`final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded and the "
+        "scene was not solved at its start (the adapter's `live_verdict`). The first episode's start is checked against "
+        "the frozen instance (`RCB_START_SHA`; a mismatch is an infrastructure failure, `instance_mismatch`). The video "
+        "is rendered from the trajectory after the verdict and decides nothing. The clock's record (`stalls`, `max_lag_s`, ...) is copied into "
         "`reward.json` and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), "
         "reward 0."
     )
@@ -788,7 +825,14 @@ def realtime_readme(rec: dict) -> str:
     text = readme(head, task, DIFFICULTY_STANDARD.replace("\n", " ").replace("finish in one episode without a reset",
                   "act on a clock that does not stop, with resets"), reference, verification, details)
     return text + ("\n### Change Log\n- 2026-10-14 (owner, board 0112): added. The scene is dynamic (PROTOCOL §2.14), so "
-                   f"the task gets a standard-realtime twin, S = {S}, {RT_RESET_BUDGET} resets.\n")
+                   f"the task gets a standard-realtime twin, S = {S}, {RT_RESET_BUDGET} resets.\n"
+                   "- 2026-10-17 (owner, boards 0150 and 0151): the verdict is the live episode's. The sim service no "
+                   "longer replays the graded episode in a fresh simulator: success = the live episode succeeded and the "
+                   "scene was not solved at its start (`graded_by = live`, `replays = 0`; `deterministic` and "
+                   "`replay_success` are gone). The first episode's start is checked against the frozen instance "
+                   "(`RCB_START_SHA`); a mismatch is an infrastructure failure. The video is rendered from the trajectory "
+                   "after the verdict and decides nothing. The scene, the success check, S, the resets and the agent's "
+                   "time are unchanged, so the task keeps its name.\n")
 
 
 def realtime_toml(rec: dict) -> str:
@@ -807,12 +851,13 @@ artifacts = [
   {{ source = "/data/calls.jsonl", service = "sim" }},
   {{ source = "/data/submitted.f64", service = "sim" }},
   {{ source = "/data/startups.jsonl", service = "sim" }},
+  {{ source = "/data/crash.log", service = "sim" }},
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/{BENCH}-{rec["slug"]}-i00-standard-realtime"
-description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = {rt["slowdown"]}): {TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {rec["instruction"]} The robot and the kitchen move on while the agent thinks ({rt["why"]}), so the agent plans or streams native controller commands from a program of its own through the client (calibrated RGB-D cameras, the robot's own joints and end effector); {RT_RESET_BUDGET} resets, only the last episode graded; no object poses; the sim service records every executed control step and grades a fresh replay of the last episode."
+description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = {rt["slowdown"]}): {TITLE} ({rec["env"]}, {ROBOT_TEXT.replace("**", "")}): {rec["instruction"]} The robot and the kitchen move on while the agent thinks ({rt["why"]}), so the agent plans or streams native controller commands from a program of its own through the client (calibrated RGB-D cameras, the robot's own joints and end effector); {RT_RESET_BUDGET} resets, only the last episode graded; no object poses; the sim service records every executed control step and grades the last episode live."
 authors = [{{ name = "{AUTHOR}" }}]
 keywords = [{KEYWORDS.format(bench=BENCH)}, "standard-realtime-mode"]
 
@@ -840,9 +885,10 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which replays the graded
-# episode (at most {RT_MAX_STEPS} control steps) in a fresh simulator and writes the verdict ("finalized": true) before any
-# video; the hook waits for it until 840 s, then for the replay video ("video_pending") until 870 s.
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which writes the live
+# episode's verdict ("finalized": true; nothing is replayed to grade it, board 0151) before any video: at once, or once a
+# service that crashed has resumed the episode from its journal (at most {RT_MAX_STEPS} control steps). The hook waits for it
+# until 840 s, then for the video ("video_pending", rendered from the trajectory in one pass) until 870 s.
 [[verifier.collect]]
 service = "sim"
 command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\\"finalized\\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\\"video_pending\\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
@@ -923,7 +969,7 @@ def make(rec: dict) -> None:
     put(s / "instruction.md", standard_instruction(rec))
     put(s / "README.md", standard_readme(rec))
     put(s / "environment/Dockerfile", STD_ENV_DOCKERFILE)
-    put(s / "environment/docker-compose.yaml", STD_COMPOSE)
+    put(s / "environment/docker-compose.yaml", STD_COMPOSE + start_env(rec))
     put(s / "environment/rcb_client.py", src=SHARED / "rcb_client.py")
     put(s / "environment/rcb1.py", src=SHARED / "rcb1.py")
     put(s / "environment/sim/server_casa.py", src=SERVER)

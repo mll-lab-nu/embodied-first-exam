@@ -18,6 +18,9 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script
   at `/app/output/gen.py` for the record. The episode is graded as it stands when your time is up: keep working until it
   has succeeded.
+- **Grading.** Your episode is graded as it ran: the service judges the live episode itself, with no replay.
+  It scores 1 if RoboLab's success term held at a control step of it, including the hold of your last
+  command for 30 more control steps after your time is up, else 0.
 - **A busy service has not crashed.** The service answers one request at a time: while a call runs (a long `submit` or
   a watching `get_obs` can take minutes; one call stops at `spec["max_call_wall_s"]`), every other request waits for
   it, `r.status()` from another process included. A client-side timeout while a call is in flight (for example
@@ -80,7 +83,7 @@ Cameras: `egocentric_mirrored_camera` (static, facing the robot across the table
   position more than 2 m from the robot's base on any axis, or a zero quaternion, is rejected (400), nothing moves.
 - A malformed request (a wrong type, a value out of range) is answered 400 with the reason and executes nothing.
 
-Objects here: a Rubik's cube, a red bowl and a banana on the table. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the cube is left of the bowl with the gripper open.
+Objects here: a Rubik's cube, a red bowl and a banana on the table. The Robotiq opens to 8.5 cm. The episode ends by itself the moment the cube is left of the bowl and neither gripper finger touches it.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

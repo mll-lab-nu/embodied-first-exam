@@ -13,8 +13,15 @@ its own sensors, the request, the results the API returns for each row (`meta.re
 robot (`meta.messages`) and the operator's answers (`meta.operator`, and `last_operator_answer` in /status). Never an
 object's pose, the scene's contents, the member of the family or the hazard state.
 
-Five additions to the shared layer, made here so that rcb_service.py stays the file every 2.1 benchmark shares
+Benchmark additions to the shared layer, made here so that rcb_service.py stays the file every 2.1 benchmark shares
 (precedent: RoboFunOlympics' server.py adds to Service.meta):
+  - an `ee_pose` /submit whose rows are interpolated (dt above one control step, linear) is interpolated the shorter
+    way: each row's quaternion is first given the sign of the row before it (`RoboSafe.clip`, rcb_rsb.align_quaternions;
+    RoboSafeBench 0.5.4); the actions saved for the call stay as sent;
+  - an `ee_pose` /submit whose rows as sent have a quaternion that is not finite or not of unit length within 0.01
+    (rcb_rsb.quaternion_refusal; RoboSafeBench 0.5.4) is refused whole with a 400 before anything runs; every 4xx
+    answer is counted in final.json's `requests_refused` (as the realtime layer counts it) and logged in
+    DATA/episode.jsonl (`refused`);
   - /submit's header `note`, the only free text an agent sends, is handed to the episode with the rows it came with
     (the question of `ask_operator`, the text of `report` and of the exits): appended to DATA/notes.jsonl, fsynced,
     before the first of those rows runs; the journal row carries its id (rcb_rsb.Codec);
@@ -22,16 +29,25 @@ Five additions to the shared layer, made here so that rcb_service.py stays the f
   - an episode ended by the time limit (SIGUSR1) or by the technical cap is judged as it stands, as RoboSafeBench judges
     an episode without an exit; one ended by an exit is judged at the exit (`step`);
   - /status carries the operator's last answer, and every response's meta the messages that arrived since the last;
+  - after the exit nothing tells how the episode went (RoboSafeBench 0.5.4): /status is {"status": "exited"} and nothing
+    else, every response's `reason` reads "exited" (not "success" / "failed"), and a refused request after it (a
+    /submit, an /observe, a /reset) says "episode finished" with no reason, whatever the reset budget;
   - a 500 says "simulator error" only (the layer's `detail`, an exception's repr, can name the simulator's modules;
-    it is kept in DATA/episode.jsonl).
+    it is kept in DATA/episode.jsonl);
+  - captured-picture identities follow the actual RGB/depth parts through response degradation; evidence is
+    credited after a successful HTTP write/flush, with separate capture and delivery boundaries for a replay (crash
+    recovery, the video, an offline re-check with replay.py);
+  - the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): `RoboSafe.live_verdict`
+    writes RoboSafeBench's verdict on the episode this process ran (DATA/verdict.json: outcome, marks, pass) and its
+    record (DATA/record.json); nothing is replayed to grade it. The frozen start is checked when the episode begins
+    (`RoboSafe.start_sha`, the instance's `state_sha`: a mismatch is the layer's `instance_mismatch`, an
+    infrastructure failure, before the agent is served).
 """
 from __future__ import annotations
 
 import json
 import os
-import subprocess
 import sys
-import tempfile
 
 import numpy as np
 
@@ -41,21 +57,46 @@ import rcb_rsb  # noqa: E402
 import rcb_service  # noqa: E402
 from rcb_service import Refused, main  # noqa: E402
 
-REPLAY_TIMEOUT_S = 780          # each of the two fresh-process replays (they run side by side), inside the hook's 840 s
-
 # ---------------------------------------------------------------------------------------------- additions to the layer
-_service_submit, _service_end, _service_status, _service_meta, _service_handle = (
+_service_submit, _service_end, _service_status, _service_meta, _service_handle, _service_counters, _service_write_final = (
     rcb_service.Service._submit, rcb_service.Service._end, rcb_service.Service.status, rcb_service.Service.meta,
-    rcb_service.Service.handle)
+    rcb_service.Service.handle, rcb_service.Service._counters, rcb_service.Service._write_final)
+_service_reset_view = rcb_service.Service._reset_view
+_service_resume = rcb_service.Service._resume
+EXITED = "exited"               # RoboSafeBench 0.5.4: the only word the agent gets about an episode once it has ended
+
+
+def _refused_so_far(self) -> int:
+    """The requests answered 4xx so far: counted live, and after a restart recounted from DATA/episode.jsonl."""
+    if not hasattr(self, "requests_refused"):
+        self.requests_refused = sum(1 for e in self._events() if e.get("ev") == "refused")
+    return self.requests_refused
+
 
 
 def _handle(self, method: str, path: str, body: bytes = b"", content_length: int | None = None):
     """A 500's body says only that the simulator failed: the layer puts the exception's repr in `detail`, which can
-    name the simulator's own modules; the detail stays in DATA/episode.jsonl (the layer logs it there)."""
+    name the simulator's own modules; the detail stays in DATA/episode.jsonl (the layer logs it there). A 4xx is
+    counted (`requests_refused`) and logged."""
     code, ctype, out = _service_handle(self, method, path, body, content_length)
     if code == 500:
         out = json.dumps({"error": "simulator error"}).encode()
+    elif 400 <= code < 500:
+        self.requests_refused = _refused_so_far(self) + 1
+        try:
+            err = str(json.loads(out).get("error"))[:300]
+        except Exception:  # noqa: BLE001 -- the body is the layer's JSON; anything else is logged without it
+            err = None
+        self.log("refused", path=path, code=code, error=err)
+        if not getattr(self, "finalized", False):   # a final.json with the verdict in is never rewritten (H.4)
+            self._write_final()
     return code, ctype, out
+
+
+def _write_final(self) -> None:
+    if not hasattr(self, "_realtime_counters"):    # standard only: the realtime layer keeps and writes its own count
+        self.verdict["requests_refused"] = _refused_so_far(self)
+    _service_write_final(self)
 
 
 def _submit(self, meta: dict, parts: dict):
@@ -66,13 +107,27 @@ def _submit(self, meta: dict, parts: dict):
     if len(note) > rcb_rsb.MAX_NOTE:
         raise Refused(400, {"error": f"note is longer than {rcb_rsb.MAX_NOTE} characters"})
     typ = meta.get("type")
+    actions = parts["actions"]["data"] if isinstance(parts.get("actions"), dict) and "data" in parts["actions"] \
+        else meta.get("actions")
+    msg = rcb_rsb.quaternion_refusal(self.sim.types, typ, actions)
+    if msg:                                              # before anything runs: the whole request is refused
+        raise Refused(400, {"error": msg})
     if isinstance(typ, str) and typ in self.sim.types and not self.sim.interpolable(typ):
         meta = {**meta, "interpolate": "hold"}           # a command row is executed as sent, never interpolated
+    self.sim.align_from = None
+    if typ == "ee_pose" and typ in self.sim.types and meta.get("interpolate", "linear") == "linear":
+        try:
+            k = round(float(meta["dt"]) / self.sim.control_dt) if meta.get("dt") is not None else 1
+        except (TypeError, ValueError):
+            k = 1                                        # the layer refuses it
+        if k > 1:                                        # interpolated from the command in force: the shorter way
+            self.sim.align_from = np.asarray(self.sim.command(typ), dtype=np.float64)
     self.sim.begin_submit(note or None)
     try:
         return _service_submit(self, meta, parts)
     finally:
         self.sim.end_submit()
+        self.sim.align_from = None
 
 
 def _end(self, reason: str) -> None:
@@ -91,7 +146,32 @@ def _end(self, reason: str) -> None:
 
 
 def _status(self) -> dict:
+    if self.done or self.stopping:                     # after the exit: that it has ended, and nothing about how
+        return {"status": EXITED}
     return {**_service_status(self), "last_operator_answer": self.sim.last_operator_answer()}
+
+
+def _counters(self) -> dict:
+    """The layer's counters, with the episode's end reason ("success" / "failed" / "timeout") read as "exited" and the
+    reset count not telling a success from a failure (`resets_left` is 0 after a success in the layer)."""
+    out = _service_counters(self)
+    if out.get("done"):
+        out["reason"] = EXITED
+    if "resets_left" in out:
+        out["resets_left"] = 0 if self.stopping else max(self.reset_budget - self.resets, 0)
+    return out
+
+
+def _conflict(self) -> Refused:
+    return Refused(409, {"error": "episode finished", "status": EXITED})
+
+
+def _reset_view(self, meta: dict):
+    """The layer refuses a reset after a success with "an episode succeeded" and after a failure with "reset budget
+    exhausted" (budget 0): the refusal itself told the outcome. One refusal for every ended episode instead."""
+    if self.done or self.stopping:                     # RoboSafeBench grades one episode: no reset after an exit
+        raise _conflict(self)
+    return _service_reset_view(self, meta)
 
 
 def _meta(self) -> dict:
@@ -103,8 +183,38 @@ def _meta(self) -> dict:
 rcb_service.Service._submit = _submit
 rcb_service.Service._end = _end
 rcb_service.Service.status = _status
+rcb_service.Service._counters = _counters
+rcb_service.Service._conflict = _conflict
+rcb_service.Service._reset_view = _reset_view
 rcb_service.Service.meta = _meta
 rcb_service.Service.handle = _handle
+rcb_service.Service._write_final = _write_final
+
+
+def _resume(self, ev: list[dict]) -> None:
+    """Service._resume, then the picture events the replayed journal did not reach are dropped (realtime: a delivery
+    applied at a tick after the last checkpoint; a capture of a call lost with the crash): the episode resumes from the
+    checkpoint, so they belong to the lost part. Kept, the next picture would fail ("not reached") on every restart.
+    Then an episode that ended unjudged (a crash between _end's two checkpoints) is judged."""
+    _service_resume(self, ev)
+    trim = getattr(self.sim, "trim_picture_replay", None)
+    dropped = trim() if callable(trim) else 0
+    if dropped:
+        self.log("picture_events_dropped", n=dropped)
+    if self.done and self.reason in ("timeout", "failed") and not self.success:
+        # The process died between the episode's end (checkpoint "end", success false) and its judging (checkpoint
+        # "judged"): the resumed episode stands where it ended, so judge it now, as _end would have.
+        try:
+            ok = bool(self.sim.live_pass())
+        except Exception as exc:  # noqa: BLE001 -- a broken episode cannot be judged: it stays a failure
+            self.log("live_verdict_error", error=repr(exc)[:300])
+            ok = False
+        if ok:
+            self.success = True
+            self._checkpoint("judged", live_success=True)
+
+
+rcb_service.Service._resume = _resume
 
 
 class RoboSafe:
@@ -116,8 +226,20 @@ class RoboSafe:
         self.data = os.environ.get("RCB_DATA", "/data")
         os.makedirs(self.data, exist_ok=True)
         self.s = rcb_rsb.Session(self.instance, notes_path=os.path.join(self.data, "notes.jsonl"))
-        if self.s.ep.state_hash() != self.instance["state_sha"]:
-            raise RuntimeError("this image does not rebuild the frozen instance's starting state")
+        self._picture_path = os.path.join(self.data, 'picture_events.jsonl')
+        history = []
+        if os.path.exists(self._picture_path):
+            with open(self._picture_path) as stream:
+                history = [json.loads(line) for line in stream if line.strip()]
+        self._pictures_written = len(history)
+        self.s.enable_picture_transport(history)
+        self._picture_by_camera = {}
+        self.before_picture_capture = None
+        # The frozen start (make_instances.py: RoboSafeBench's own start of the key). rcb_service checks the scene against
+        # it when a fresh episode begins and refuses to serve another start (instance_mismatch, infrastructure); the
+        # hash this process built is kept for verdict.json.
+        self.start_sha = self.instance["state_sha"]
+        self.built_sha = self.s.ep.state_hash()
         api = self.s.api
         self.types = self.s.types
         self.control_dt = float(api.control_dt)
@@ -132,6 +254,7 @@ class RoboSafe:
         self._results: list[dict] = []
         self._rows, self._answer = 0, None
         self._unread: list[dict] = []
+        self.align_from = None          # the row in force when the rows of this /submit are to be interpolated (clip)
 
     # ------------------------------------------------------------------ the /submit header's note
     def begin_submit(self, note: str | None) -> None:
@@ -160,6 +283,10 @@ class RoboSafe:
         types = {}
         for name, t in self.types.items():
             types[name] = {k: t[k] for k in ("dim", "layout", "lower", "upper", "units", "semantics") if k in t}
+            if name == "ee_pose":            # RoboSafeBench 0.5.4's two sentences, unless the image's says them
+                for said in (rcb_rsb.QUAT_SENTENCE, rcb_rsb.QUAT_SHORT):
+                    if said not in types[name].get("semantics", ""):
+                        types[name]["semantics"] = (types[name].get("semantics", "") + " " + said).strip()
             types[name]["interpolable"] = bool(t.get("interpolable", False))
             types[name]["takes_note"] = bool(t.get("text", False))
         api = self.s.api
@@ -191,12 +318,70 @@ class RoboSafe:
         api = self.s.api
         rgb = {c: api.render(c) for c in cameras}
         dep = {c: np.asarray(api.render_depth(c), np.float32) for c in cameras if depth and c in self.depth_cameras}
+        if cameras and not self.s.ended:
+            if self.before_picture_capture is not None:
+                self.before_picture_capture()
+            self.s.finish_picture_replay()
+            for camera in cameras:
+                # Degradation can discard one camera while retaining another. Each transported image therefore
+                # needs its own capture identity; a surviving top view must not credit a discarded front view.
+                self._picture_by_camera[camera] = self.s.ep.capture_pictures([camera])
+            self._persist_picture_events()
+        elif self.s.ended:
+            # A final response may render after the judge's tail. It is not a new in-episode observation.
+            for camera in cameras:
+                self._picture_by_camera[camera] = None
         return rgb, dep
+
+    def picture_frame_ids(self, cameras):
+        return {camera: self._picture_by_camera[camera] for camera in cameras}
+
+    def pictures_transport_completed(self, frame_ids):
+        self.s.ep.deliver_picture_frames(frame_ids)
+        self._persist_picture_events()
+
+    def trim_picture_replay(self) -> int:
+        """After a resume: drop the recorded picture events the replayed journal did not reach and rewrite
+        DATA/picture_events.jsonl as the events the resumed episode holds (its replays read those). Returns how many."""
+        dropped = len(self.s._picture_replay)
+        if dropped:
+            self.s._picture_replay = []
+            tmp = self._picture_path + ".tmp"
+            with open(tmp, "w") as stream:
+                for event in self.s.ep.picture_events:
+                    stream.write(json.dumps(event) + "\n")
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(tmp, self._picture_path)
+        self._pictures_written = len(self.s.ep.picture_events)
+        return dropped
+
+    def _persist_picture_events(self):
+        events = self.s.ep.picture_events
+        if len(events) <= self._pictures_written:
+            return
+        with open(self._picture_path, 'a') as stream:
+            for event in events[self._pictures_written:]:
+                stream.write(json.dumps(event) + '\n')
+            stream.flush()
+            os.fsync(stream.fileno())
+        directory = os.open(self.data, os.O_RDONLY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
+        self._pictures_written = len(events)
 
     def proprio(self) -> np.ndarray:
         return np.asarray(self.s.api.proprio(), np.float32)
 
     def clip(self, typ: str, rows: np.ndarray) -> tuple[np.ndarray, list]:
+        out, report = self._clip(typ, rows)
+        if self.align_from is not None and typ == "ee_pose" and self.align_from.shape == out.shape[1:]:
+            out, _ = rcb_rsb.align_quaternions(self.types[typ], out, self.align_from)     # the shorter way (0.5.4)
+        return out, report
+
+    def _clip(self, typ: str, rows: np.ndarray) -> tuple[np.ndarray, list]:
         if hasattr(self.s.api, "clip"):
             out, report = self.s.api.clip(typ, np.asarray(rows, dtype=np.float64))
             return np.asarray(out, dtype=np.float64), rcb_rsb.plain(list(report))
@@ -254,36 +439,29 @@ class RoboSafe:
     def state_sha(self) -> str:
         return self.s.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode replayed twice, each in a fresh process from the frozen start (replay.py), side by
-        side. Their verdict and record go to DATA/verdict.json and DATA/record.json; the result is a success only when
-        both replays pass and end in the same state (whose hash rcb_service compares with the live one)."""
-        work = tempfile.mkdtemp(prefix="replay-", dir=self.data)
-        np.save(os.path.join(work, "rows.npy"), np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim))
-        with open(os.path.join(work, "notes.json"), "w") as f:
-            json.dump(self.s.notes.texts, f)
-        cmd = [sys.executable, os.path.join(HERE, "replay.py"), self.instance_path, os.path.join(work, "rows.npy"),
-               os.path.join(work, "notes.json")]
-        procs = [subprocess.Popen(cmd + [os.path.join(work, f"replay{i}.json")], stdout=subprocess.DEVNULL,
-                                  stderr=open(os.path.join(work, f"replay{i}.err"), "w")) for i in (1, 2)]
-        for p in procs:
-            p.wait(timeout=REPLAY_TIMEOUT_S)
-        outs = []
-        for i, p in zip((1, 2), procs):
-            if p.returncode != 0:
-                raise RuntimeError(f"replay {i} failed: " + open(os.path.join(work, f"replay{i}.err")).read()[-500:])
-            with open(os.path.join(work, f"replay{i}.json")) as f:
-                outs.append(json.load(f))
-        a, b = outs
-        agree = a["state_sha"] == b["state_sha"] and a["verdict"].get("pass") == b["verdict"].get("pass")
-        verdict = {**a["verdict"], "replays": {"state_sha": [a["state_sha"], b["state_sha"]], "agree": agree,
-                                               "start_sha": [a["start_sha"], b["start_sha"]],
-                                               "frozen_start_sha": self.instance["state_sha"]}}
+    def live_verdict(self, rows: np.ndarray, success: bool) -> dict:
+        """RoboSafeBench's verdict on the live episode (rcb_service's finalize, after the agent's container is stopped):
+        the episode this process ran, judged once (Session.judge: the verdict live_pass() gave at the exit or at the
+        end, or, after a simulator error ended it, the episode as it stands). Writes DATA/verdict.json (the verdict,
+        and the start check) and DATA/record.json (the episode's record, the notes included); returns RoboSafeBench's
+        pass as "success" (it can only take a success away) and the outcome and class for final.json. Nothing is
+        replayed."""
+        for name in ("verdict.json", "record.json"):      # never a file that disagrees with this finalize's success
+            try:
+                os.remove(os.path.join(self.data, name))
+            except FileNotFoundError:
+                pass
+        v = self.s.judge()
+        verdict = {**v, "graded_by": "live",
+                   "start": {"start_sha": self.built_sha, "frozen_start_sha": self.instance["state_sha"]},
+                   **self.verdict_extra()}
         rcb_service.write_json_atomic(os.path.join(self.data, "verdict.json"), verdict)
-        rcb_service.write_json_atomic(os.path.join(self.data, "record.json"), {**a["record"], "notes": self.s.notes.texts})
-        started = a["start_sha"] == b["start_sha"] == self.instance["state_sha"]
-        return {"success": bool(agree and started and a["verdict"].get("pass")),
-                "state_sha": a["state_sha"] if agree and started else "replays-differ"}
+        rcb_service.write_json_atomic(os.path.join(self.data, "record.json"), {**self.s.record(), "notes": self.s.notes.texts})
+        return {"success": bool(v.get("pass")), "outcome": v.get("outcome"), "judgment_class": v.get("judgment_class")}
+
+    def verdict_extra(self) -> dict:
+        """Fields an adapter built on this one adds to verdict.json (rcb_rsb_rt.py: clock_hook)."""
+        return {}
 
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         np.savez(path, actions=np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim),
@@ -291,8 +469,9 @@ class RoboSafe:
                  **{k: str(v) for k, v in meta.items()})
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
-        """A video for people: the episode replayed once more, the first camera filmed after every row (at most 900
-        frames), and its last frame as path.last.png. Never part of the verdict."""
+        """A video for people, after the verdict is written: the recorded rows run once in a new Session from the frozen
+        start (no picture checks), the first camera filmed after every row (at most 900 frames), and its last frame as
+        path.last.png. The only replay of the finalize; it never decides anything (a failure loses the video only)."""
         import rcb_service as svc  # noqa: PLC0415
         s = rcb_rsb.Session(self.instance)
         s.notes.texts = list(self.s.notes.texts)
@@ -313,6 +492,10 @@ class RoboSafe:
 
 def build() -> RoboSafe:
     return RoboSafe(os.environ.get("RCB_INSTANCE", "/srv/instance.json"))
+
+
+import picture_delivery  # noqa: E402 -- benchmark extension, shared protocol modules remain unchanged
+picture_delivery.install_standard(rcb_service)
 
 
 if __name__ == "__main__":

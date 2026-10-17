@@ -40,7 +40,7 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
   were validated with). Every reference's success also holds for 10 more still steps.
 - **Determinism.** CPU physics, bit-exact; MuJoCo's process-wide mesh cache is turned off in `casa_tool` (a mesh
   served from the cache can differ from a cold compile of the same file, which breaks bit-exact replay across
-  processes), so every build is a cold build.
+  processes), so every build is a cold build (the standard service's start hash and its video pass rely on it).
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 3000 control steps; the references have 123–393.
   Standard episodes have no step limit (D1).
 - **Standard-mode observations.** The humanoid's six cameras (`robot0_agentview_center/left/right`, `egoview`,
@@ -55,9 +55,17 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
 `images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's (PR #22, not merged
 yet): derived from `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect
 hook is `scripts/robocasa-gr1/shared/finalize.sh`; both files are RoboCasa's byte for byte
-(`docs/benchmarks/robocasa.md`: verdict final before the video, the hook's budget, request validation).
+(`docs/benchmarks/robocasa.md`: since 2026-10-17 graded by the live episode, nothing replayed, the start checked
+against the frozen instance, the video one render pass after the verdict; the hook's budget; request validation).
 Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint, not MuJoCo's left-eye camera 3.4 cm to
 its left (`docs/benchmarks/robocasa.md`, service item 10): standard-mode results from before used the offset calibration.
+
+## Change log
+- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by one
+  render pass from the trajectory after the verdict; the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
+  `RCB_START_SHA` from `scripts/robocasa-gr1/frozen/start_state.json`) before the agent is served, a mismatch is infrastructure
+  (`docs/benchmarks/robocasa.md`, service items 6, 7 and 11). Scene, instances, success check, cutoff and what
+  the agent sees except the instruction's scoring sentence unchanged, so the tasks keep their names.
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image
@@ -90,3 +98,51 @@ in the live state's hash and succeed; the success survives 10 more still steps. 
 MuJoCo's mesh cache.
 
 Agent results are not kept in the repository (PROTOCOL D3).
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
+failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
+**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
+`solved`): kept under its name and reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+9 of 24 bases are in the easy set; by directory: 33 easy, 1 hard, 14 unverified, 0 pending.
+
+| base | easy set | privileged | standard |
+|---|---|---|---|
+| `robocasa-gr1-bottle-to-cabinet-close-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Astra, Gemini 4 Argon |
+| `robocasa-gr1-can-to-drawer-close-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-cup-to-drawer-close-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-cuttingboard-to-basket-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 4 Argon |
+| `robocasa-gr1-cuttingboard-to-cardboardbox-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-cuttingboard-to-pan-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Gemini 4 Argon |
+| `robocasa-gr1-cuttingboard-to-pot-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
+| `robocasa-gr1-cuttingboard-to-tieredbasket-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-milk-to-microwave-close-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-placemat-to-basket-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
+| `robocasa-gr1-placemat-to-bowl-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-placemat-to-plate-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-placemat-to-tieredshelf-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-plate-to-bowl-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-plate-to-cardboardbox-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash, Qwen3.8 27B | easy: Astra, Gemini 4 Argon |
+| `robocasa-gr1-plate-to-pan-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-plate-to-plate-i00` |  | unverified | easy: Luna |
+| `robocasa-gr1-potato-to-microwave-close-i00` |  | easy: Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | hard |
+| `robocasa-gr1-tray-to-cardboardbox-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Opus, Sol 6.1, Sol |
+| `robocasa-gr1-tray-to-plate-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-tray-to-pot-i00` |  | easy: Luna | unverified |
+| `robocasa-gr1-tray-to-tieredbasket-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash | easy: Sol 6.1, Gemini 4 Argon |
+| `robocasa-gr1-tray-to-tieredshelf-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Gemini 4 Argon |
+| `robocasa-gr1-wine-to-cabinet-close-i00` |  | easy: Luna | unverified |
+
+Judgment calls: `robocasa-gr1-cuttingboard-to-pan-i00`: Astra's standard success is borderline (the agent doubted its
+placement); Gemini 4 Argon's is clean.

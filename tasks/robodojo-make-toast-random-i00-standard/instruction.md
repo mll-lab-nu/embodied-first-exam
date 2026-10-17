@@ -41,7 +41,7 @@ it does not apply here: where the description above mentions step_lim, read the 
   reported as cost (`meta["control_steps"]` counts them; the technical cap above is 15,000).
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record. The episode is graded as it stands when it ends or your time is up.
-- **Graded on your live episode.** This task's physics does not replay bit for bit (its resets are not always bit-identical across fresh processes, even with PhysX enhanced determinism (the 15 clutter objects)), so the episode as it happened in the service decides; the service still replays it once for the record.
+- **Graded on your live episode.** This task's physics does not replay bit for bit (its resets are not always bit-identical across fresh processes, even with PhysX enhanced determinism (the 15 clutter objects)), so it has no privileged twin; the episode as it happened in the service decides.
 - **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
   (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
   until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then

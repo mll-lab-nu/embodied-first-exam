@@ -23,8 +23,10 @@ the sport's official (hidden) seeds, so results here are previews, not official 
 `solution/`: our camera-only reference player through the same HTTP interface. level 4 (the strongest official level, unchanged): a mirror match (screen/mirror.py: the level-4 opponent copied onto the player's side, same limits, same true-state prediction) won 18 of 40 (seeds 1-20, each side serving first), so level 4 is beatable by a player of its own ability; our truth-state reference beat level 4 in 2 of 40 seeds (re-screen 2026-10-12, revision 15), this seed 5:3; our camera-only reference 0 of 40; every simple baseline 0 of 20; the live oracle run is in the export report.
 
 ## Verification
-Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier
-(`tests/grade.py`, our core's grader) checks that the replay agrees with the live match, applies the validity rule
+Separate sandbox, no network. The match is graded live (owner, 2026-10-17, board 0151): the sim service records the
+match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
+`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
+the validity rule
 (technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
 valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
 `slowdown`, `opponent_level`).

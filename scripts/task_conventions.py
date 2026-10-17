@@ -79,18 +79,18 @@ BENCHMARKS = [  # (directory prefix, label)
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
     ("roboolympics-", "RoboOlympics"),       # formerly RoboFunOlympics (`robofunolympics-`; renamed 2026-10-14, owner)
-    ("cell-", "RoboSafeBench"),   # neutral: an agent can read its task name (mountinfo, compose project, host name)
+    ("rsb-", "RoboSafeBench"),    # formerly `cell-` (renamed in 0.5.4, the authors); an agent can read its task name
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
     ("ispatialgym-", "iSpatialGym"),
+    ("ikea-", "IKEA MuJoCo"),
 ]
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
 # RoboOlympics' exported tasks (PROTOCOL v1 §4c; scripts/roboolympics/exported.toml) have a cutoff note of their own
 # (CUTOFF_NOTE_TASK below):
-RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
-                     "roboolympics-badminton-match-i01-standard-realtime",
+RO_EXPORTED_TASKS = ("roboolympics-badminton-match-i01-standard-realtime",
                      "roboolympics-badminton-duelrl-i01-standard-realtime",
                      "roboolympics-badminton-match-i02-standard-realtime",
                      "roboolympics-badminton-match-i04-standard-realtime",
@@ -103,7 +103,6 @@ RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
                      "roboolympics-soccerssl-match-i00-standard-realtime",
                      "roboolympics-soccerssl-match-i01-standard-realtime",
                      "roboolympics-tabletennis-duelrl-i01-standard-realtime",
-                     "roboolympics-tabletennis-hitskill-i00-standard",
                      "roboolympics-tabletennis-match-i01-standard-realtime",
                      "roboolympics-tabletennis-match-i02-standard-realtime",
                      "roboolympics-tabletennis-match-i03-standard-realtime",
@@ -626,6 +625,8 @@ def bench_has_mode(bench: str, mode: str) -> bool:
     tasks/ (PROTOCOL §2.15). Read from the repository, not from the directory a task is rendered in."""
     prefixes = tuple(p for p, label in BENCHMARKS if label == bench)
     tasks = Path(__file__).resolve().parents[1] / "tasks"
+    if not tasks.is_dir():  # Source-only generation has no committed task tree.
+        return False
     return any(d.name.startswith(prefixes) and mode_of(d) == mode and bench_of(d) == bench
                for d in tasks.iterdir() if (d / "task.toml").is_file()) if prefixes else False
 

@@ -10,7 +10,12 @@ collect hook); success = upstream judge_success() on the final state, also when 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
 every executed row is journaled; after a crash the service rebuilds the episode and replays the journal. When the
 episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
-and replays the trajectory in two fresh processes."""
+and writes final.json from episode.json.
+
+The verdict is the live episode's (owner 2026-10-17, board 0150/0151): upstream's judge_success() on the state at the
+episode's end, as upstream's evaluation and the privileged verifier's replay judge it; nothing replays it. The frozen
+start is checked when the scene is built, before the agent is served: a start state whose hash is not the instance's
+recorded t = 0 hash gives up as `instance_mismatch` (infra_error)."""
 
 import math, os, sys, threading, time, traceback
 import numpy as np
@@ -43,6 +48,12 @@ INST = M.load_instance(INSTANCE)
 EP = L.Episode(DATA, dim=INST["t0"]["action_dim"], resume="exact")
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
 S = M.Episode(INST)
+START_SHA = S.state_sha()  # before anything else touches the scene: the frozen start, checked here (not in a replay)
+if START_SHA != INST["t0"].get("state_sha"):
+    EP.give_up(
+        f"instance_mismatch: the frozen start state did not rebuild here (start {START_SHA}, frozen {INST['t0'].get('state_sha')})",
+        infra=True,
+    )
 ROWS: list = []  # every executed row (a resume replays them first): trajectory.npz
 CTRL_HZ = 1.0 / S.dt
 SUBSTEPS = int(round(S.dt / float(S.env.current_model.opt.timestep)))
@@ -180,6 +191,9 @@ def summary() -> dict:
         "family": INST["family"],
         "protocol": L.PROTOCOL,
         "n_actions": len(ROWS),
+        "start_sha": START_SHA,
+        "graded_by": "live",
+        "replays": 0,
         **EP.final_fields(),
     }
 
@@ -193,7 +207,8 @@ def finish(reason: str) -> None:
     E["t_end"] = time.time()
     E["episode_control_steps"] = ctrl_steps()
     try:
-        E["success"] = S.success()
+        # a simulator error raised by the agent's actions (reason "error") leaves a post-exception state: never judged
+        E["success"] = False if reason == "error" else S.success()
     except Exception:  # noqa: BLE001
         traceback.print_exc()
     EP.log(
@@ -439,7 +454,7 @@ def status() -> dict:
 
 
 def end_from_signal() -> None:
-    """The collect hook's SIGUSR1: end the episode (the agent's time is over), dump it, exit so the replays can start."""
+    """The collect hook's SIGUSR1: end the episode (the agent's time is over), dump it, exit (the hook then writes final.json)."""
     with LOCK:
         E["exiting"] = True
         if not E["done"]:

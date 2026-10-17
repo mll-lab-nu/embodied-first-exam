@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shared-source rules (PROTOCOL §2.1, D9: copies of shared sources are byte-identical). Two parts:
-# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, DexHand, RoboARC, BiGym 2.0, YAMLab, RoboDojo, Panda Dynamic Scenes and AM-Bench: within one benchmark, every mode, every copy of a shared file is byte-identical
+# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, DexHand, RoboARC, BiGym 2.0, YAMLab, RoboDojo, Panda Dynamic Scenes, AM-Bench and IKEA MuJoCo: within one benchmark, every mode, every copy of a shared file is byte-identical
 #    (the generators copy them from the benchmark's template task unchanged):
 #    - the tooling module rcb_<sim>.py wherever it sits (privileged environment/ and tests/, standard environment/sim/);
 #    - the standard agent side environment/rcb_client.py + rcb1.py and the sim service environment/sim/ (server.py,
@@ -13,7 +13,7 @@
 #    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
 #    `restart: on-failure:N` with N >= 3 (PROTOCOL §4.1, §4.7).
-#    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC) is held to the same rules, with rcb_limited.py and
+#    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC, IKEA MuJoCo) is held to the same rules, with rcb_limited.py and
 #    rcb_client.py from scripts/eai_standard/v2_4/ (docs/STANDARD_MODE.md) and 2.2's rcb1.py and run.sh.
 # 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, BiGym 2.0
 #    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
@@ -45,12 +45,16 @@ MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits"
           "roboolympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py", "ispatialgym": "rcb_ispatialgym.py",
-          "cell": "rcb_rsb.py"}   # cell-: RoboSafeBench
+          "ikea": "rcb_ikea.py",   # IKEA MuJoCo
+          "rsb": "rcb_rsb.py"}   # rsb-: RoboSafeBench
 SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py", "environment/sim/finalize.sh",
           "environment/sim/run.sh", "environment/sim/rcb1.py", "environment/sim/rcb_limited.py", "tests/grade.py"}
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",
          "environment/sim/rcb1.py": "rcb1.py", "environment/sim/run.sh": "run.sh"}
 sha = lambda p: hashlib.sha256(open(p, "rb").read()).hexdigest()[:16]  # noqa: E731
+# board 0151 (2026-10-17): the layer before final_verdict accepted a live verdict; its copies stay valid while each
+# benchmark's pull request regenerates its tasks onto the new layer (remove this once none is left)
+PREV_LIMITED = {"2.2": "064e29250cc1b14d", "2.4": "aab663c695d49fd5"}
 # 4. benchmarks without a generator check mode: (label, tooling module) by directory prefix; a task that serves
 # environment/sim/server_mj.py belongs to the DexToolBench family whatever its prefix (MuJoCo Playground ALOHA / Panda)
 FAMILY = {"dextoolbench_": ("dextoolbench", "rcb_dtb.py"), "metaworldplus-": ("metaworldplus", "mw_tool.py"),
@@ -127,7 +131,7 @@ for t in sorted(os.listdir(tasks)):
             srcf = f"scripts/eai_standard/{'v2_4/' if v24 and f in V24 else ''}{f}"
             if not os.path.isfile(p):
                 bad.append(f"{t}: {rel} missing (eai-standard/{ver} layer, {srcf})")
-            elif sha(p) != ref.get(f):
+            elif sha(p) != ref.get(f) and not (f == "rcb_limited.py" and sha(p) == PREV_LIMITED.get(ver)):
                 bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
         cf = os.path.join(tasks, t, "environment/docker-compose.yaml")
         blk = sim_service(cf) if os.path.isfile(cf) else ""
@@ -161,7 +165,7 @@ for t in sorted(os.listdir(tasks)):
     if bench not in MODULE:
         continue
     module = MODULE[bench]
-    if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c): its own sources
+    if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c; RoboSafeBench 0.5.4): its own sources
         bench += " (exported)"
     dirs[bench] += 1
     for dp, dns, fns in os.walk(os.path.join(tasks, t)):

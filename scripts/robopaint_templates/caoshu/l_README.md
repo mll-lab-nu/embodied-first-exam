@@ -7,8 +7,8 @@ brush model run in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on 
 and records the episode as a (T, 7) trajectory. There is no reset, no sheet readout, no brush state or model and no score: ink is
 permanent and the agent sees the sheets only through the cameras (`canvas_cam` 1024 px over the main sheet, `practice_cam` over the
 practice sheet). It has to find out how the brush marks the paper on the practice sheet. The collect hook
-(`environment/sim/finalize.sh`) ends the episode, lets the service exit, replays the trajectory in two fresh processes, scores the
-replayed main sheet and writes `final.json`; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.
+(`environment/sim/finalize.sh`) ends the episode; the service scores its live main sheet and writes `final.json`, then renders the
+trajectory once into the video; the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.
 
 ## Difficulty
 Same scene, exemplar and rule as `{{NAME}}-privileged` (see its Difficulty: in cursive the cap of {{N}} contacts keeps the brush on the paper wherever the exemplar's ink is connected), without its privileged help: no reset, no sheet readout, no model of the mark and no score. Every stroke on the main sheet is permanent and is seen only through the cameras; how the tool marks the paper has to be learned from test strokes on the practice sheet.
@@ -17,7 +17,7 @@ Same scene, exemplar and rule as `{{NAME}}-privileged` (see its Difficulty: in c
 `solution/`: streams the privileged oracle's joint targets (one row per control step, `hold`) as `joint_position` chunks; the recorded trajectory then equals the privileged oracle's; label `{{ORACLE}}` (task.toml `oracle_evidence`: the recorded runs predate this version), human review in PR #3.
 
 ## Verification
-`success` = both fresh-process replays of the recorded episode meet the rule after the best single shift of the sheet, at most 5 mm along each axis (IoU ≥ 0.80, boundary F ≥ 0.75, every region covered ≥ 0.80 ({{NREG}} regions of the exemplar's ink), stray ≤ 0.04, ≤ {{N}} strokes) ∧ they agree exactly (computed in the sidecar after the agent is gone); every metric of the replayed sheet in `reward.json`; `/logs/verifier/replay.mp4`.
+`success` = the live episode's main sheet meets the rule after the best single shift of the sheet, at most 5 mm along each axis (IoU ≥ 0.80, boundary F ≥ 0.75, every region covered ≥ 0.80 ({{NREG}} regions of the exemplar's ink), stray ≤ 0.04, ≤ {{N}} strokes), scored by the sim sidecar after the agent's container is stopped (`final.json`: `graded_by = "live"`; nothing is replayed to grade it); every metric of the live sheet in `reward.json`; `/logs/verifier/replay.mp4` (the trajectory rendered once after the verdict).
 
 ## Details
 | | |

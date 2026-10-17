@@ -4,7 +4,6 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   "/app/output/",
   { source = "/data/final.json", service = "sim" },
   { source = "/data/episode.jsonl", service = "sim" },
-  { source = "/data/replay_check.json", service = "sim" },
   { source = "/data/replay.mp4", service = "sim" },
   { source = "/data/video.json", service = "sim" },
   { source = "/data/broadcast.jsonl", service = "sim" },
@@ -97,11 +96,11 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then SIGUSR1 ends the match: the service replays it in a fresh process, checks the replay and writes the verdict
-# ("graded_ready"), then the spectator video.
+# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay,
+# board 0151), then the spectator video.
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 300); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 180); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 720); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
 timeout_sec = 1080
 
 [agent]

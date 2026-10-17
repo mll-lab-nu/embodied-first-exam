@@ -33,9 +33,13 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   Appendix H.2). Does the task work with the allowlist only (H.6, unless it declares open egress: oracle run under it, nothing downloaded at run time)? Is a
   solution of it one `pip install` away (a PyPI distribution with its experts or sources: list it in [LEAKAGE.md](LEAKAGE.md), "Packages on PyPI")?
 - Does the verifier depend on anything the agent controlled besides the declared artifacts?
-- Is the predicate checked at the end of the replay, and can it be true without doing the task?
+- Is the predicate checked at the end of the replay (privileged) or of the live episode (standard), and can it be true
+  without doing the task?
 - Standard mode (Appendix H.3, H.4): four endpoints only, RCB1 responses, resets within the declared budget, the
-  verdict from a fresh replay or the trusted live record (`success = replay_success ∧ deterministic` by default).
+  verdict from the sidecar's record of the live episode (`success` = the live episode's, with any settle or hold the
+  task declares run on the live simulator; `graded_by_live = 1`; no grading replay), the frozen start state checked
+  when the episode begins, the agent's processes stopped (a `main` collect hook) before the sidecar is signalled and
+  every later request refused, the video recorded live or rendered from the trajectory after the verdict.
 - Does the task run with Harbor's native agents, without custom adapters or runners, and without any gateway other than
   the recording-only usage gateway (RUNNING.md "Official runs")?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
@@ -75,7 +79,8 @@ Review per family (same generator and predicate), at least two instances per fam
    trajectory or state) that the verifier scores 1.
 2. **Correct predicate** — the grader matches the instruction and cannot be satisfied trivially.
 3. **Negative control** — `nop` scores 0; ideally a wrong trajectory scores 0 too.
-4. **Determinism** — the positive example gives the same verdict in two fresh replays.
+4. **Determinism** — privileged: the positive example gives the same verdict in two fresh replays; standard: its
+   recorded trajectory reproduces the live end state where the simulator replays bit for bit (an audit, not the verdict).
 5. **Record** — post a review comment listing the instances and evidence you checked, check that the task README's
    Verification section says "no oracle; human review in PR #N", then approve and remove the `needs-human-review` label.
 

@@ -467,10 +467,12 @@ def _write_json(path: str, obj: dict) -> None:
 
 
 def final_verdict(data: str) -> dict | None:
-    """final.json if it already holds a verdict that nothing may overwrite: the grading result (finalized, with
-    `deterministic`) or the end of an episode the service gave up after crashes (`gave_up`)."""
+    """final.json if it already holds a verdict that nothing may overwrite: the grading result (finalized: the live
+    episode's, `graded_by` = "live", board 0151; before 2026-10-17 a replay's, with `deterministic`) or the end of an
+    episode the service gave up after crashes (`gave_up`)."""
     fin = _read_json(os.path.join(data, "final.json"))
-    if fin.get("finalized") and (fin.get("gave_up") or fin.get("deterministic") is not None):
+    if fin.get("finalized") and (fin.get("gave_up") or fin.get("graded_by") == "live"
+                                 or fin.get("deterministic") is not None):
         return fin
     return None
 
@@ -495,8 +497,8 @@ class Episode:
       else the episode ends `resume_failed` (infra_error). `approx` (a simulator declared nondeterministic): a
       mismatch is recorded (resume_state_mismatch, and the robot's deviation from its checkpointed proprio: joint_pos and
       tcp_pose) and the episode continues, unless a TCP is more than RCB_RESUME_MAX_DEV_M from where it was
-      (resume_failed, infra_error). The verdict never comes from the live state but from fresh replays of the complete
-      recorded trajectory, so continuing cannot raise a score.
+      (resume_failed, infra_error). The verdict is the live episode's (PROTOCOL H.4), so it is judged on the state the
+      resumed episode continued from; the mismatch stays in final.json for audit.
     - More than RCB_MAX_RESUMES crashes end the episode: `sim_crashed_on_call` if every crash happened while a call was
       being served (the agent's failure), else `sim_crashed` (infra_error = 1). A verdict already on disk is never
       overwritten; the service then idles with its PID file for the collect hook.
@@ -762,7 +764,8 @@ class Episode:
         self.log({"ev": "restart_refused", "reason": reason})
         if not final_verdict(self.data):
             fin = _read_json(self.f_final)
-            fin.update({"success": False, "done": True, "reason": reason, "finalized": True, "gave_up": True, "protocol": PROTOCOL,
+            fin.update({"success": False, "live_success": False, "done": True, "reason": reason, "finalized": True,
+                        "gave_up": True, "replays": 0, "protocol": PROTOCOL, **({} if infra else {"graded_by": "live"}),
                         **self.final_fields(), **({"infra_error": 1} if infra else {})})
             _write_json(self.f_final, fin)
         with open(self.f_pid, "w") as f:
@@ -1031,8 +1034,8 @@ def end_episode(data: str, timeout: float = 21600.0, wait_key: str | None = None
     only to the process that wrote the newest line of startups.jsonl (its SIGUSR1 handler is installed by then).
     Returns 2: final.json already holds the verdict (the service gave up after crashes, or graded in-process; with
     `wait_key`, also waits for that final.json key, e.g. video_done): keep it, run no replays.
-    Returns 0: the service dumped the episode (episode.json) and exited: the hook replays it next.
-    Returns 1: timed out."""
+    Returns 0: the service dumped the episode (episode.json) and exited: the hook merges its live verdict next.
+    Returns 1: timed out (with a verdict on disk still waiting for `wait_key`, e.g. a slow video: 2, the verdict stands)."""
     t0, sent = time.time(), 0.0
     f_pid, f_dump, f_starts = (os.path.join(data, n) for n in ("server.pid", "episode.json", "startups.jsonl"))
     while time.time() - t0 < timeout:
@@ -1040,6 +1043,8 @@ def end_episode(data: str, timeout: float = 21600.0, wait_key: str | None = None
         if fin is not None:
             if not wait_key or fin.get(wait_key) or fin.get("gave_up"):
                 return 2
+            if time.time() - t0 + 2 >= timeout:
+                return 2                     # the verdict is on disk: a video that is not ready never voids it
             time.sleep(2); continue
         try:
             with open(f_pid) as f:
@@ -1061,7 +1066,7 @@ def end_episode(data: str, timeout: float = 21600.0, wait_key: str | None = None
                 except OSError:
                     pass
         time.sleep(2)
-    return 1
+    return 2 if final_verdict(data) is not None else 1   # a verdict that landed during the last wait stands
 
 
 if __name__ == "__main__":

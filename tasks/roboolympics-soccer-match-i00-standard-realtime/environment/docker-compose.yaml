@@ -50,6 +50,7 @@ services:
       RCB_RENDER_VIDEO: "1"
       RCB_BROADCAST: "1"
       RO_REPLAY_TIMEOUT_S: "600"
+      RO_VERDICT_REPLAY: "0"
       RCB_VIDEO_TIMEOUT_S: "1800"
       RO_VIDEO_RENDERER: ""
       PLAYER_MODE_A: "unmetered"

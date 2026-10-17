@@ -46,7 +46,7 @@ An instance is the benchmark's own: one task at difficulty `nominal` (the task's
 `nominal` overrides) and a seed, from which the task's reset draws its per-instance variation (an incoming lateral
 offset, a route, a fixture phase, ...). The environment rebuilds the whole scene on every reset (`reconfigure`), so a
 seed reset is exact; `instance.json` holds the task, the resolved parameters, the seed and the hash of the rebuilt start
-(`initial_sha`), which every replay checks.
+(`initial_sha`), which the privileged verifier's replays and the standard services' scene build check.
 
 The benchmark keeps a bank of verified instances (20 nominal + 10 hard per task), each with a recorded rollout of its
 reference controller and an independent action replay. For each task, `scripts/pandadyn/freeze.py` took the lowest-seed
@@ -105,7 +105,7 @@ repository and not published; only the rows of the 25 frozen instances are, unde
 `reset()` (exact), `snapshot()` / `restore()` (the environment's own exact checkpoints), `state()` / `objects()` /
 `fixtures()` / `params()` (privileged state), `proprio()`, `fk()` / `ik()` (the arm's own Pinocchio model), `actions()`,
 `replay()`, `save_trajectory()`, `render_frame()` / `render_depth()` / `camera_info()` / `render_video()`, `status()`,
-`state_sha()`. The CLI `replay` is the verifier's and the collect hook's fresh-process replay; `make-instance` and
+`state_sha()`. The CLI `replay` is the privileged verifier's fresh-process replay; `make-instance` and
 `run-actions` are the freezing steps. Thin wrappers only: joint targets, kinematics and state; catching, striking,
 carrying and timing are the agent's (Declarations).
 
@@ -119,8 +119,10 @@ CPU PhysX with `enable_enhanced_determinism`, one simulated scene per process, o
   between two replays of the same rollout (226 rollouts replayed at least twice);
 - a seed reset alone rebuilds the recorded start (`initial_state.pkl` of the bank adds nothing), and rendering, the render
   backend (`render_backend="cpu"`, below) and the cameras do not change the physics (same hashes);
-- standard mode: the live episode equals its two fresh-process replays (`live_matches_replay`), and a service killed in
-  the middle of a call resumes the same episode with the same state hash (Crash recovery).
+- standard mode: the live episode equaled its two fresh-process replays (`live_matches_replay`, the oracle trials of
+  2026-10-13, when standard mode was still graded by those replays), and a service killed in the middle of a call resumes
+  the same episode with the same state hash (Crash recovery). Since 2026-10-17 the video pass records the same comparison
+  (`video_matches_live`), for information only.
 
 The tasks are sensitive to the last bits of the actions: the oracle rows rounded to float32 (a relative change of about
 1e-7) fail on 4 of the 13 instances tried (D04 seed 1, D07, D09, D11: a limit violation or an episode that no longer
@@ -139,10 +141,32 @@ before official runs there (PROTOCOL §3).
   end in the same state hash (`deterministic`) and both rebuilt the frozen start (`instance_ok`). A replay that gives no
   result or runs out of its time limit (300 s + rows / 10) is `grader_error` = `infra_error` = 1. Then a filmed replay
   (`replay.mp4`, overview camera) that never changes the verdict.
-- **Standard** (`environment/sim/finalize.sh`, then `tests/grade.py`): the service records the episode; the collect hook
-  ends it, lets the service exit and replays the trajectory in two fresh processes (the first filmed);
-  `success = live_success ∧ replay_success ∧ deterministic` (PROTOCOL §4.8), with no infrastructure error (a replay
-  without a result, a replay that did not rebuild the frozen start, an unfinished hook).
+- **Standard** (`environment/sim/server.py`, `environment/sim/finalize.sh`, then `tests/grade.py`): graded by the live
+  episode, nothing replayed (owner, 2026-10-17, board 0150/0151). `success` = the task's own check as the episode the
+  service ran ended: `Session.success()`, every phase in order with no failure event, no forbidden contact and no
+  safety-limit violation (server.py `finish` / `dump`: `episode.json`). The check is evaluated after every physics step and
+  the episode ends at the first control step where the task has succeeded or failed, so the live predicate already is the
+  whole rule (no settle or hold window; the replays applied the same predicate to the same rows). The collect hook stops
+  the agent's programs (`kill -9 -1` in its container, after the monitor's seal), ends the episode, lets the service
+  exit, and writes `episode.json` into `final.json` (`graded_by` = `live`, `replays` = 0, `live_success`, `live_sha`),
+  then films the trajectory once in a fresh process (`replay.mp4`, overview camera, 25 fps; `video_pending` while it runs,
+  `video_matches_live` afterwards). The frozen start is checked when the service builds the scene: a start state hash
+  other than the instance's `initial_sha` ends the trial before the agent is served (`instance_mismatch`). Infrastructure
+  (`infra_error` = 1, no verdict on the agent): no, an unreadable or an unfinalized `final.json`, the episode not dumped
+  (`dump_error`: no `episode.json` or no `trajectory.npz`), `instance_mismatch`, a give-up after crashes not all inside the
+  agent's calls (`sim_crashed`, `resume_failed`). The agent's 0: a failure of the task, a timeout, no actions, a
+  simulator error from a call (`sim_error`; never a success, even where the task's check passes on the failed step's
+  state: `server.py` `finish()`, with backstops in `finalize.sh` and `tests/grade.py`), crashes all inside the agent's
+  calls (`sim_crashed_on_call`). A failed or
+  slow video costs only the video. Cost: one scene build and at most the horizon's 3,500 control steps filmed (1-3 min of
+  one GPU slot) instead of three passes (two replays, the first one also filmed) and two scene builds.
+- **Standard-realtime** (the shared layer's `rcb_service.py`, `environment/sim/server.py`): graded by the live episode the
+  same way (see "Standard-realtime" below).
+- Change log: 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; the
+  frozen start checked at the episode's start; video by one filming pass after the verdict (standard: a fresh process in
+  the collect hook; standard-realtime: the service's own Session); the standard collect hooks now stop the agent's
+  programs first. Until then: standard `success = live_success ∧ replay_success ∧ deterministic` (two fresh-process
+  replays, the first filmed; PROTOCOL §4.8 of then), standard-realtime live ∧ one fresh-process replay ∧ the live state.
 
 ## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
 Resume class `exact`: every executed control step is journaled (the float64 row the servo received), every completed call
@@ -150,7 +174,7 @@ checkpointed with the state hash; after a crash the restarted service rebuilds t
 3,500 control steps, seconds to a minute) and checks the hash. `scripts/pandadyn/kill_test.sh` runs the oracle with
 Harbor and kills the service with SIGKILL in the middle of a call: on D04 (2026-10-13) the service resumed after 400
 control steps with the same state hash (`exact`, 12.9 s of journal replay, 31.8 s down), the oracle continued, and the
-episode was graded as usual (success, `live_matches_replay`, `resumes` = 1).
+episode was graded as usual (success, `live_matches_replay`, `resumes` = 1; the grading of then).
 
 ## Time budget (D8)
 3600 s for every task of both modes (each task's `[agent] timeout_sec`; the benchmark's own text names no number). A scene
@@ -178,10 +202,13 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   twin's frozen instance, `joint_position` action (clipped to the limits, executed as float64), success check, cameras
   (`overview`, `closeup`, RGB and z-depth, with their calibration in `/spec`) and proprioception columns. Not served: the
   2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. Resets: `Session.reset()`, the
-  scene rebuilt and reset with the instance's seed (exact, about 1 s); 10 by default (PROTOCOL §4b).
-- **Grading.** The live episode, and a replay of its rows in a **fresh process** (`rcb_pandadyn.py replay`, the standard
-  twin's collect-hook replay: a Session holds a SAPIEN scene, one per process), which must succeed and end in the live
-  run's state (CPU PhysX with enhanced determinism). The video is filmed afterwards by the live scene and never decides.
+  scene rebuilt and reset with the instance's seed (exact, about 1 s); 3 per trial ("Reset budget" below).
+- **Grading.** The live episode (since 2026-10-17, board 0151; until then also a replay of its rows in a fresh process,
+  which had to succeed and end in the live run's state): success = the task's own check as the last episode ended
+  (rcb_service's `_finalize`; the adapter's `live_verdict` adds the phase and the end reason and takes nothing away), with
+  the frozen start checked when the first episode begins (`start_sha` = the instance's `initial_sha`). The video is
+  rendered after the verdict from the graded episode's rows by the service's own Session (the scene rebuilt) and never
+  decides.
 - **Reference solution.** `solution/oracle_plan.py` plans the privileged oracle's rows (one per control step, `hold`)
   into the episode from step 0, 10 s per chunk, each chunk at its own step (`at`), so every row runs at its recorded
   control step whatever the wall clock does: `oracle = "full"`.
@@ -212,6 +239,15 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   (2.3 s dropped, largest lag 1.1 s) and once in S08 (0.5 s), at host load 24-71; nop (no request): `timeout`, not a
   success, in all 19. A first oracle run of S04 at S = 2 showed one 0.6 s step (a stall) at step 310: the clock re-anchors
   and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing.
+- **Reset budget: 3** (`RT_RESETS` in `mk_tasks.py`; 10, the mode's default, from 2026-10-14 to 2026-10-17). Every reset
+  restores the same frozen start, and the client lets a program plan up to 10 s ahead (`at`), so the budget is the
+  number of times an agent can rerun an open-loop plan on a deterministic scene, watch the outcome and tune it; the
+  clock that does not stop adds little once the plan is fixed. With 10 resets, the first screening runs (six harness /
+  model runs on nine families, one on all 19) succeeded in 14 of 67 standard-realtime trials against 1 of 87 standard
+  ones (no reset); none of the 14 succeeded in its first episode, 10 in episode 6-11, and 44 of the 53 failed trials used
+  the whole budget. Three resets keep one or two scouting episodes and a real attempt, so the twin still differs
+  from the one-shot standard twin. The check above (three aborted attempts, then the oracle in the fourth episode) uses
+  exactly this budget.
 
 ## Declarations
 - **Tooling: thin wrappers only** (above). No task-level skill (catch, strike, carry) is in the agent's tooling.
@@ -266,3 +302,54 @@ The Panda Dynamic Scenes environment package: MLL Lab, released with this reposi
 ## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
 
 Serves `eai-standard/2.2`. Resume class `exact` (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders (for this benchmark mostly from the grading records only: the log review
+was partial). It is **hard** when GPT-6 Luna and every later run that attempted it failed, GPT-6 Astra and Claude Opus
+5.5 among them; a standard directory that only Astra solved is hard as well. It is **unverified** when only Luna
+attempted it and failed (the later runs only take bases Luna solved in no mode), and **pending** without a Luna verdict.
+A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason `solved`): kept under its name and
+reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+1 of 25 bases are in the easy set; by directory: 33 easy, 11 hard, 24 unverified, 1 pending.
+
+| base | easy set | privileged | standard | standard-realtime |
+|---|---|---|---|---|
+| `pandadyn-d01-reciprocal-cup-relay-i00` |  | easy: Astra, Opus, GLM 5.3 Flash | hard | easy: Astra (3), Opus (9) |
+| `pandadyn-d02-strike-catch-merge-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-d03-cooperative-puck-course-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | hard | easy: Astra (10) |
+| `pandadyn-d04-shared-tray-transport-discharge-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Gemini 4 Argon | easy: Astra (1), Opus (1), GLM 5.3 Flash (7) |
+| `pandadyn-d05-moving-ramp-relay-i00` |  | easy: Astra, Opus | hard | — |
+| `pandadyn-d06-moving-bank-relay-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-d07-spring-gate-switchyard-i00` |  | easy: Astra, Opus, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Opus (7) |
+| `pandadyn-d08-pendulum-energy-relay-i00` |  | easy: Luna | unverified | — |
+| `pandadyn-d09-lever-launch-catch-reload-i00` |  | easy: Astra, Opus | hard | hard |
+| `pandadyn-d10-moving-grasp-handover-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-d11-moving-fixture-unlock-i00` |  | easy: Luna | unverified | — |
+| `pandadyn-d12-reciprocal-sliding-transfer-i00` |  | easy: Luna | unverified | — |
+| `pandadyn-d13-supported-cube-flip-relay-i00` |  | easy: Luna | unverified | — |
+| `pandadyn-s01-cup-route-delivery-i00` |  | easy: Astra, Opus | hard | easy: Astra (9) |
+| `pandadyn-s02-plate-catch-transport-release-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s03-clear-gate-hockey-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s04-impact-release-relay-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s05-sliding-receive-align-deliver-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s06-cube-flip-route-recover-i00` |  | pending | hard | — |
+| `pandadyn-s07-conveyor-load-brake-unload-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s08-load-switch-recover-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s09-toss-recatch-delivery-i00` |  | easy: Astra, Opus, Gemini 4 Argon | hard | easy: Astra (7), Opus (10) |
+| `pandadyn-s10-swinging-load-transit-dock-i00` |  | easy: Luna | unverified | unverified |
+| `pandadyn-s11-cylinder-rescue-route-deliver-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Astra (3), Gemini 3.8 Flash (6) |
+| `pandadyn-s12-moving-bridge-puck-relay-i00` |  | easy: Astra, Opus | hard | easy: Astra (7), Opus (5) |
+
+Standard-realtime cells name each solving run with the resets it used. These trials ran with the earlier budget of 10
+resets; #285 (2026-10-17) lowered it to 3, so a realtime solve that used more than 3 would not count today. The easy-set
+base here, `pandadyn-d04-shared-tray-transport-discharge-i00`, has realtime solves with 1 reset (Astra, Opus).

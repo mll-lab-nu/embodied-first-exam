@@ -21,8 +21,10 @@ From 18.44 m the ball needs more than 13 m/s even on a high arc, and the zone is
 None (as `roboolympics-pitch-target-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: The baseball (0.073 m across, 0.145 kg, it flies in air with drag and spin lift) starts gripped in your right hand. You stand on the pitcher's plate (a slab 0.61 m wide and 0.152 m deep, level with the mound's top) on a mound 5.486 m across whose top is 0.254 m above home plate; in front of the plate the mound falls 1 in 12. The front edge of the pitcher's plate is 18.44 m from the back point of home plate; home plate is 0.432 m wide and as deep, so its front edge is that much nearer. The strike zone is the rectangle above home plate's front edge, 0.432 m wide and from 0.46 m to 1.07 m above home plate. The pitch: you let go of the ball (once: it cannot be gripped again) within 15.0 s of the start, and at that moment at least one of your feet is in contact with the pitcher's plate (it touches the mound and part of its sole is over the plate). You succeed when the ball's centre then crosses the plane of the zone inside the zone, before the ball has touched the ground. You fail if no foot is on the plate at the release; if the ball is not let go in time; if it touches the ground (the mound included) before home plate; if it crosses the plane outside the zone (a ball); if any part of you touches it after the release (your throwing arm may still brush it during the first 0.2 s); if you fall before the call (your pelvis lower than 0.75 m above home plate's level, or any part of you other than your feet on the ground or the mound); or after 20 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

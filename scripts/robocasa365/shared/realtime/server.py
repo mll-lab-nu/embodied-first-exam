@@ -4,8 +4,11 @@ docs/benchmarks/robocasa365.md "Standard-realtime").
 
 The simulator-specific half only: `RoboCasa` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance on the benchmark's own tooling module, casa_tool.Session -- the same scene, native controller
-command, success check (`_check_success`, twice per control step) and replay as the standard twin's service
-(environment/sim/server_casa.py of `-standard`) and the privileged verifier. The protocol, the clock, the plan, the
+command and success check (`_check_success`, twice per control step) as the standard twin's service
+(environment/sim/server_casa.py of `-standard`) and the privileged verifier. The verdict is the live episode's
+(docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): live_verdict() adds the standard twin's rule that the scene was
+not solved at the episode's start, and start_sha (RCB_START_SHA, the frozen instance's starting state) is checked when
+the first episode begins; nothing is replayed to grade it, and the video is rendered from the trajectory afterwards. The protocol, the clock, the plan, the
 episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the
 HumanoidBench sources (ci_checks/check-tooling-identity.sh).
 
@@ -21,7 +24,8 @@ than the verifier's; here an episode ends at the first control step after which 
 rule applied to the trajectory up to that step), after max_control_steps (the privileged deliverable's cap, 3000 steps =
 150 s of robot time), when the agent's time is up, or on a simulator error; the agent has resets (rcb_service).
 
-Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_MAX_CONTROL_STEPS (3000), RCB_DATA,
+Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_START_SHA (the state hash a fresh
+episode of it starts in: scripts/robocasa365/frozen/start_state.json), RCB_MAX_CONTROL_STEPS (3000), RCB_DATA,
 RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service).
 """
 from __future__ import annotations
@@ -46,8 +50,9 @@ CAM_COLS = ("x", "y", "z", "r00", "r01", "r02", "r10", "r11", "r12", "r20", "r21
 class RoboCasa:
     """One frozen RoboCasa365 instance behind the rcb_service.Sim contract (see the module docstring)."""
 
-    def __init__(self, instance: str, max_control_steps: int = casa_tool.MAX_STEPS):
+    def __init__(self, instance: str, max_control_steps: int = casa_tool.MAX_STEPS, start_sha: str | None = None):
         self.instance = instance
+        self.start_sha = start_sha or None           # rcb_service refuses a first episode that does not start there
         self.s = casa_tool.Session(instance, enable_render=True)
         spec = self.s.action_spec
         self.atype = ACTION_NAME[int(spec["dim"])]
@@ -165,27 +170,25 @@ class RoboCasa:
     def state_sha(self) -> str:
         return self.s.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode from the frozen instance in a fresh casa_tool session (as the standard twin's service)."""
-        fresh = casa_tool.Session(self.instance)
-        try:
-            r = fresh.replay(np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim))
-            return {"success": bool(r["success"]) and not r["initial_success"], "state_sha": r["state_sha"]}
-        finally:
-            fresh.close()
+    def live_verdict(self, rows: np.ndarray, success: bool) -> dict:
+        """The standard twin's rule on the live episode, judged on the live session after it ended: a scene solved at the
+        episode's start (its last reset, or the first build) is no success. Nothing is replayed."""
+        initial = bool(self.s.initial_success)
+        return {"success": not initial, "initial_success": initial, "final_reward": float(self.s.reward)}
 
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         a = np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim)
         np.savez(path, actions=a, instance_sha=np.array(self.s.instance_sha), meta=np.array(json.dumps(meta)))
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
+        """After the verdict: the live session rebuilt from the frozen instance runs the trajectory with its camera on."""
         self.s.render_video(np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim), path)
 
 
 def build() -> RoboCasa:
     env = os.environ.get
     return RoboCasa(env("RCB_INSTANCE", os.path.join(HERE, "instance.npz")),
-                    int(env("RCB_MAX_CONTROL_STEPS") or casa_tool.MAX_STEPS))
+                    int(env("RCB_MAX_CONTROL_STEPS") or casa_tool.MAX_STEPS), env("RCB_START_SHA") or None)
 
 
 if __name__ == "__main__":
