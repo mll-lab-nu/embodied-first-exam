@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "id": "book_page_turn",
+  "task": "task.json",
+  "runtime": {
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "scene.py",
+      "checker.py",
+      "task.json"
+    ],
+    "dirs": [
+      "assets"
+    ],
+    "shared": [
+      "arm_rig.py"
+    ]
+  },
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 58,
+    "wuji": 54
+  },
+  "robot": "marvin-bimanual-sharpa-wave",
+  "max_rows": 3000,
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
+  "readme": "README.task.md",
+  "solution": {
+    "privileged": "solution/trajectory.npz",
+    "standard": "solution/trajectory.npz"
+  },
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "solution/ replays the recorded Sharpa Wave episode on the Marvin arms in both modes (553 rows; success after 453 controls): two fresh-process replays with identical state hashes, float32 rows succeed. No Wuji reference solution.",
+    "expert_time_estimate_hours": 3.0,
+    "keywords": [
+      "articulated",
+      "page-turning",
+      "thin-objects",
+      "book",
+      "bimanual",
+      "arm"
+    ]
+  },
+  "control_hz": 50,
+  "timeouts": {
+    "verifier_privileged_sec": 1500,
+    "verifier_standard_sec": 600,
+    "collect_sec": 1500,
+    "replay_sec": 300,
+    "video_sec": 1200
+  },
+  "notes": {
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`). The robot stands at the world origin facing +x; at the start the left arm is parked and the right hand is palm up beside the book; both arms may be used."
+  }
+}

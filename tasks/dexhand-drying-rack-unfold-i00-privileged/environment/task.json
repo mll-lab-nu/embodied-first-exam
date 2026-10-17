@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "id": "drying_rack_unfold",
+  "title": "Unfold a folding sweater dryer and stand it on its legs",
+  "category": "articulated_manipulation",
+  "description": "Unfold a stored folding sweater dryer with one dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2): swing the folded half open about the passive pole hinge, flip out all four passive legs, turn the open rack over and stand it on its four feet; a dropped, collapsed or fallen rack fails the episode at once.",
+  "difficulty": "hard",
+  "mechanism": "free rack with one passive pole hinge and four passive leg hinges (limits, damping, friction loss)",
+  "instruction": "Set up the folding sweater dryer on the kitchen counter with the dexterous hand. It starts fully folded and stored underside up, its four legs folded between the two frame halves. Open the two halves flat about the pole hinge, open all four legs onto their stops, turn the open rack over and stand it on its four feet, then let go: success needs the fold angle at most 0.314 rad, every leg at least 1.571 rad, the rack upright within 10 degrees on all four feet and nothing else, untouched by the hand and still for 50 consecutive controls (1 s). Dropping the rack, pushing it off the counter, or letting it collapse or fall over after it stands ends the episode as a failure at once.",
+  "robot": "sharpa-wave-floating",
+  "physics_dt": 0.002,
+  "control_dt": 0.02,
+  "max_steps": 6000,
+  "table_z": 0.75,
+  "counter": {
+    "center": [
+      0.62,
+      0.0
+    ],
+    "half": [
+      0.75,
+      0.48
+    ]
+  },
+  "rack_pos": [
+    0.3,
+    0.0,
+    0.762
+  ],
+  "wrist_stage": {
+    "origin": [
+      0.62,
+      0.0,
+      0.75
+    ],
+    "ranges": {
+      "x": [
+        -0.85,
+        0.85
+      ],
+      "y": [
+        -0.6,
+        0.6
+      ],
+      "z": [
+        -0.05,
+        1.0
+      ],
+      "rx": [
+        -3.3,
+        3.3
+      ],
+      "ry": [
+        -1.6,
+        1.6
+      ],
+      "rz": [
+        -3.3,
+        3.3
+      ]
+    }
+  },
+  "initial_targets": {
+    "sharpa": [
+      0.0,
+      -0.3,
+      0.45,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "wuji": [
+      0.0,
+      -0.3,
+      0.45,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "cameras": [
+    {
+      "name": "overview",
+      "pos": [
+        -0.75,
+        -1.55,
+        1.85
+      ],
+      "target": [
+        0.62,
+        0.0,
+        0.92
+      ],
+      "fovy": 45
+    },
+    {
+      "name": "side",
+      "pos": [
+        -0.75,
+        -0.9,
+        1.35
+      ],
+      "target": [
+        0.45,
+        0.0,
+        0.85
+      ],
+      "fovy": 45
+    },
+    {
+      "name": "closeup",
+      "pos": [
+        0.3,
+        -0.95,
+        1.15
+      ],
+      "target": [
+        0.45,
+        0.0,
+        0.8
+      ],
+      "fovy": 40
+    }
+  ],
+  "predicate": {
+    "fold_open_max_rad": 0.3141592653589793,
+    "leg_open_min_rad": 1.5707963267948966,
+    "standing_tilt_max_deg": 10.0,
+    "fell_over_tilt_deg": 20.0,
+    "hold_linear_speed_m_s": 0.02,
+    "hold_angular_speed_rad_s": 0.2,
+    "released_hold_steps": 50,
+    "max_height_above_table_m": 0.9,
+    "drop_fall_speed_m_s": 0.05
+  },
+  "modeling": "Rack geometry, masses, inertias, hinge ranges and contact law ported from the approved T20 source (legacy OXO sweater dryer, photo-dimensioned). Leg pivots: source friction loss 0.003 N m kept, damping raised from 0.003 to 0.03 N m s/rad (viscous plastic pivot) so a handled leg does not flutter. Woven net is visual only. Counter lengthened along x (1.1 -> 1.5 m) so the rack can be turned over on it."
+}

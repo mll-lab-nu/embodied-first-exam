@@ -1,0 +1,70 @@
+{
+  "display_title": "Turn one board-book page with the Marvin arms",
+  "exposure": -1.05,
+  "visual_bevel_m": 0.0002,
+  "camera": {
+    "position": [
+      1.32,
+      -0.78,
+      1.38
+    ],
+    "target": [
+      0.42,
+      -0.04,
+      0.88
+    ],
+    "lens": 30
+  },
+  "light_target": [
+    0.51,
+    0.0,
+    0.8
+  ],
+  "lights": [
+    {
+      "name": "Window softbox",
+      "offset": [
+        -0.24,
+        0.22,
+        0.5
+      ],
+      "energy": 14,
+      "size": 0.45,
+      "color": [
+        1,
+        0.95,
+        0.87
+      ]
+    },
+    {
+      "name": "Soft page fill",
+      "offset": [
+        0.28,
+        -0.2,
+        0.4
+      ],
+      "energy": 8,
+      "size": 0.4,
+      "color": [
+        0.85,
+        0.92,
+        1
+      ]
+    },
+    {
+      "name": "Binding rim",
+      "offset": [
+        -0.12,
+        -0.25,
+        0.4
+      ],
+      "energy": 6,
+      "size": 0.3,
+      "color": [
+        1,
+        1,
+        1
+      ]
+    }
+  ]
+}

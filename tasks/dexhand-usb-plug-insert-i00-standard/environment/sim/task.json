@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "id": "usb_plug_insert",
+  "title": "Plug a USB cable into a hub port",
+  "category": "connector_insertion",
+  "description": "Pick up a USB-A plug lying on its side on a desk with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on the right arm of a Tianji Marvin robot, turn it polarity-up, insert it at least 90% deep into the rightmost port of a free four-port hub resting at the desk edge, release it and leave it seated for one second; a dropped plug, a displaced hub or an arm collision fails the episode at once.",
+  "difficulty": "hard",
+  "mechanism": "free rigid plug with a passive ball-joint cable; free hub resting on the counter",
+  "instruction": "Connect the USB cable to the hub. You drive the right arm and hand of a Tianji Marvin robot standing in front of the desk (left arm parked). A four-port USB hub rests free on the desk with its ports facing the desk's front edge (world -y); the cable's USB-A plug lies on its side on the desk, with its 0.5 m cable. Pick up the plug, turn it so its polarized (top) face points up, and insert it into port 4, the rightmost port (hub-local x = +33 mm), then let go. Success requires three stages in order. (1) Grasped and lifted: the thumb and at least one other finger touch the rigid plug (shell, housing or strain relief), the plug touches nothing else, and the plug origin (the centre of its metal shell tip) is at z >= 0.73 m (30 mm above the desk top at z = 0.70 m). (2) Seated in port 4: in that port's frame the shell tip is at least 10.8 mm deep in the 12 mm cavity (90%), within 0.6 mm of the port axis sideways and 0.5 mm vertically, the plug axis is within 5 degrees of the port axis, and the plug's top face is within 20 degrees of the hub's top face (correct polarity). (3) Released: the plug stays seated in port 4 with no hand contact on the plug, its cable or the hub and a plug speed of at most 0.01 m/s for 50 consecutive controls (1 s). The episode ends with success at that moment. A plug seated in any other port never counts. The episode ends immediately with failure when the hub moves more than 20 mm from its start position or tilts more than 20 degrees, when the plug falls below z = 0.685 m, when the plug or hub leaves the workspace box x in [0.25, 1.15] m, y in [-0.40, 0.95] m, z in [0.685, 1.10] m, when the cable's far USB-B end falls more than 5 cm below the desk top, when an arm link, the robot's stand or torso, or the parked left hand touches anything (`robot_collision`: the desk, the floor, the hub, the plug or cable, the working hand or another robot part), when the plug is dropped (after stage 1, at the first control at which the plug has no hand contact on it or its cable, is not engaged at least 3 mm deep in a port, and either falls faster than 0.2 m/s or lies on the desk or floor), or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. Each port is an open rectangular cavity with generous clearance (0.25 mm per side across, 0.15 mm per side in height); the receptacle tongue and contacts are visual, and there are no retention springs, so the plug stays in by friction and its own weight. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.",
+  "robot": "marvin-bimanual-sharpa-wave",
+  "physics_dt": 0.002,
+  "control_dt": 0.02,
+  "max_steps": 3000,
+  "counter_top_z": 0.7,
+  "counter_center_xy": [
+    0.7,
+    0.396
+  ],
+  "counter_half_xy": [
+    0.42,
+    0.51
+  ],
+  "floor_z": -0.2,
+  "rig": "marvin",
+  "marvin": {
+    "base_pos": [
+      0.93,
+      -0.52,
+      -0.1
+    ],
+    "base_yaw": 2.356194490192345
+  },
+  "counter_legs_xy": [
+    [
+      0.32,
+      0.0
+    ],
+    [
+      0.32,
+      0.846
+    ],
+    [
+      1.08,
+      0.46
+    ],
+    [
+      1.08,
+      0.846
+    ]
+  ],
+  "hub_pos": [
+    0.62,
+    -0.1,
+    0.7056
+  ],
+  "hub_yaw": 0.0,
+  "plug_pos": [
+    0.8,
+    -0.03,
+    0.7075
+  ],
+  "plug_yaw": 1.5707963267948966,
+  "target_port": 3,
+  "wrist_stage": {
+    "range": [
+      [
+        0.2,
+        1.1
+      ],
+      [
+        -0.45,
+        0.55
+      ],
+      [
+        0.55,
+        1.3
+      ],
+      [
+        -3.14,
+        3.14
+      ],
+      [
+        -3.14,
+        3.14
+      ],
+      [
+        -3.14,
+        3.14
+      ]
+    ],
+    "quat": [
+      0.0915,
+      0.3415,
+      -0.4085,
+      -0.8415
+    ]
+  },
+  "initial_targets": {
+    "sharpa": [
+      1.5707963267948966,
+      -1.5707963267948966,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -2.2485695147847595,
+      1.2426793530584863,
+      1.7609512731423407,
+      -1.62150218978619,
+      1.8837153344014246,
+      0.7530392419606886,
+      0.5993019376426258,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.3,
+      0.0,
+      0.2,
+      0.0,
+      0.2,
+      0.2,
+      0.0,
+      0.2,
+      0.1,
+      0.2,
+      0.0,
+      0.2,
+      0.1,
+      0.2,
+      0.0,
+      0.2,
+      0.1,
+      0.2,
+      0.0,
+      0.2,
+      0.1,
+      0.0
+    ],
+    "wuji": [
+      1.5707963267948966,
+      -1.5707963267948966,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      -2.2485695147847595,
+      1.2426793530584863,
+      1.7609512731423407,
+      -1.62150218978619,
+      1.8837153344014246,
+      0.7530392419606886,
+      0.5993019376426258,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "cameras": [
+    {
+      "name": "overview",
+      "pos": [
+        0.28,
+        -0.7,
+        1.12
+      ],
+      "xyaxes": [
+        0.824,
+        -0.5665,
+        0.0,
+        0.2594,
+        0.3773,
+        0.889
+      ],
+      "fovy": 40
+    },
+    {
+      "name": "closeup",
+      "pos": [
+        0.47,
+        -0.36,
+        0.83
+      ],
+      "xyaxes": [
+        0.792,
+        -0.6105,
+        0.0,
+        0.2215,
+        0.2874,
+        0.9318
+      ],
+      "fovy": 36
+    }
+  ],
+  "plug_roll": -1.5707963267948966,
+  "workspace": {
+    "min": [
+      0.25,
+      -0.4,
+      0.685
+    ],
+    "max": [
+      1.15,
+      0.95,
+      1.1
+    ]
+  },
+  "checker": {
+    "lift_height_m": 0.03,
+    "min_depth_fraction": 0.9,
+    "max_lateral_m": 0.0006,
+    "max_vertical_m": 0.0005,
+    "max_axis_error_deg": 5.0,
+    "max_polarity_error_deg": 20.0,
+    "engaged_depth_m": 0.003,
+    "max_plug_speed_m_s": 0.01,
+    "hold_controls": 50,
+    "max_hub_displacement_m": 0.02,
+    "max_hub_tilt_deg": 20.0,
+    "max_cable_end_drop_m": 0.05,
+    "below_top_margin_m": 0.015,
+    "drop_fall_speed_m_s": 0.2
+  },
+  "modeling": "Free rigid hub (21.8 g, rubber pads) resting on the counter; free rigid USB-A plug (7 g) with a 0.5 m passive 20-link ball-joint cable (15 g, EI = 2e-5 N m^2) ending in a free USB-B plug; port cavities with generous clearance, visual tongue/contacts, no retention springs; the hub's own upstream cable is a visual rigidly attached to the hub. Robot: Tianji Marvin stand with two 7-DoF arms (right arm active, left arm parked), base on the floor at (0.93, -0.52), yaw 135 deg; floor at z = -0.20 m (desk top 0.70 m, i.e. a 0.90 m counter) and the desk's two front legs set back under the top (visual only) to clear the robot's base plate."
+}

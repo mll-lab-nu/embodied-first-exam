@@ -1,0 +1,181 @@
+{
+  "cameras": [
+    {
+      "fovy": 45,
+      "name": "overview",
+      "pos": [
+        -0.06,
+        -0.84,
+        1.4
+      ],
+      "xyaxes": [
+        0.7593,
+        -0.6508,
+        0.0,
+        0.3146,
+        0.367,
+        0.8754
+      ]
+    },
+    {
+      "fovy": 55,
+      "name": "closeup",
+      "pos": [
+        0.2,
+        -0.27,
+        1.22
+      ],
+      "xyaxes": [
+        0.6459,
+        -0.7634,
+        0.0,
+        0.2346,
+        0.1985,
+        0.9516
+      ]
+    }
+  ],
+  "category": "assembly",
+  "checker": {
+    "channel": {
+      "x_max_m": [
+        0.0099,
+        0.0099,
+        0.0086,
+        0.0086
+      ],
+      "x_min_m": 0.0068,
+      "y_max_m": -0.0022,
+      "y_min_m": -0.0048
+    },
+    "clip_locked_rad": 0.12,
+    "concentric_m": 0.005,
+    "fan_max_displacement_m": 0.03,
+    "fan_max_tilt_rad": 0.1,
+    "free_fall_speed_m_s": 0.2,
+    "hold_angular_rad_s": 0.2,
+    "hold_linear_m_s": 0.02,
+    "hold_steps": 50,
+    "lift_height_m": 0.05,
+    "parallel_rad": 0.0872664626,
+    "seat_axial_m": 0.0025,
+    "table_z": 0.65,
+    "workspace": {
+      "max": [
+        1.1,
+        0.55,
+        1.4
+      ],
+      "min": [
+        0.2,
+        -0.55,
+        0.6
+      ]
+    }
+  },
+  "control_dt": 0.02,
+  "description": "Pick up a detached desk-fan front guard lying flat on the worktop with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2), turn it upright, seat it on the fan's rear guard rim and close all four perimeter clips, which all start swung open, then let go; a dropped guard or a pushed fan fails the episode at once.",
+  "difficulty": "hard",
+  "id": "fan_guard_install",
+  "initial_targets": {
+    "sharpa": [
+      0.4,
+      0.0,
+      0.95,
+      3.0,
+      0.0,
+      0.0,
+      0.3,
+      0.0,
+      0.3,
+      0.0,
+      0.2,
+      0.2,
+      0.0,
+      0.2,
+      0.1,
+      0.2,
+      0.0,
+      0.2,
+      0.1,
+      0.2,
+      0.0,
+      0.2,
+      0.1,
+      0.0,
+      0.2,
+      0.0,
+      0.2,
+      0.1
+    ],
+    "wuji": [
+      0.4,
+      0.0,
+      0.95,
+      3.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "instruction": "Install the front guard on the desk fan. The unpowered fan stands on the worktop facing the operator (its axis points along world -x); its rear wire guard carries four perimeter U clips at 45, 135, 225 and 315 degrees. All four clips start swung open (hinge angle 1.40 rad); the hand has to close every one of them. A closed lower clip (225 or 315 degrees) forms an open-topped U channel that can carry the guard's rim. The detached front guard (0.369 m wire cage, 185 g, with a raised hub cap at its centre) lies flat on the worktop, dome up. Lift the guard, turn it upright with its dome facing the operator, seat its rim on the rear rim, close all four clips over the two rims (the lower clips may be closed before or after the guard is seated; the upper clips can only lock over a seated guard), and take the hand away. Success requires, in order: (1) the guard seated: guard centre within 5 mm of the fan axis, axial seat error within 2.5 mm and guard axis within 5 degrees of the fan axis; (2) the guard still seated, all four clip hinges in their locked range (hinge angle at most 0.12 rad) and the guard rim inside every clip's U channel (in each clip's frame, with origin at its hinge, x toward the operator along world -x and y radially outward, the guard-rim point nearest that clip lies at x from 6.8 to 9.9 mm for the upper clips and 6.8 to 8.6 mm for the lower clips and y from -4.8 to -2.2 mm, i.e. between the rear rim and the clip's lip and inside its bridge), each upper clip having locked at or after the first control at which the guard was seated; (3) the complete condition with no hand contact on the guard, the clips or the fan, guard speed at most 0.02 m/s and angular speed at most 0.2 rad/s, for 50 consecutive controls (1 s). The episode ends with success at that moment; a guard that is only placed, or clips that are only partly closed, never count. The episode ends immediately with failure, checked after every 2 ms physics substep, when the fan moves more than 3 cm from its start or tilts more than 0.10 rad, when the guard touches the worktop, a table leg or the floor after its centre of mass has been lifted more than 5 cm above its resting height (dropped or set back down), or at the first substep at which the guard touches nothing while its centre of mass falls faster than 0.2 m/s (dropped, even if caught again), when the guard touches the fan's base, stem, neck, motor housing, feet or buttons, when the guard's centre of mass falls below the worktop (z < 0.65 m) or leaves the workspace box x in [0.20, 1.10] m, y in [-0.55, 0.55] m, z in [0.60, 1.40] m, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, grasp welds, scripted object motion or direct object forces. The clips are rigid U channels on passive hinges held by an elastic over-centre spring (a modelled snap detent); the guard is a rigid wire cage. The episode allows at most 6000 controls at 50 Hz; reaching that limit without success is a failure.",
+  "max_steps": 6000,
+  "mechanism": "free wire guard; four passive hinged perimeter clips with an elastic over-centre detent",
+  "modeling": "Rigid free wire guard (rim, hoops, spokes, hub cap) and fan; four rigid clip U channels on passive hinges with damping, friction loss and an elastic over-centre tendon detent; all four clips start open, as in the source, and are closed by the hand. Not a model of wire elasticity or snap-leaf bending.",
+  "physics_dt": 0.002,
+  "robot": "sharpa-wave-floating",
+  "schema_version": 1,
+  "title": "Install a desk fan front guard",
+  "wrist_stage": {
+    "origin": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "range": [
+      [
+        -0.2,
+        1.0
+      ],
+      [
+        -0.6,
+        0.6
+      ],
+      [
+        0.35,
+        1.55
+      ],
+      [
+        -3.14,
+        3.14
+      ],
+      [
+        -3.14,
+        3.14
+      ],
+      [
+        -3.14,
+        3.14
+      ]
+    ]
+  }
+}

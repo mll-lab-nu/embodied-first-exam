@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "id": "tray_glass_carry",
+  "task": "task.json",
+  "runtime": {
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "scene.py",
+      "checker.py",
+      "task.json"
+    ],
+    "dirs": [
+      "assets"
+    ],
+    "shared": []
+  },
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 56,
+    "wuji": 52
+  },
+  "robot": "sharpa-wave-floating-bimanual",
+  "max_rows": 3000,
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
+  "readme": "README.task.md",
+  "solution": {
+    "privileged": "solution/trajectory.npz",
+    "standard": "solution/trajectory.npz"
+  },
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "solution/trajectory.npz replays the validated Sharpa Wave authoring trajectory (1,072 controls; the episode ends with success after 952, 120 hold rows of slack) in both modes; it passes two fresh-process replays with identical state hashes and still succeeds with rows rounded to float32.",
+    "expert_time_estimate_hours": 3.0,
+    "keywords": [
+      "bimanual",
+      "transport",
+      "tray",
+      "glasses",
+      "obstacle-avoidance",
+      "spill-free",
+      "hook-grasp"
+    ]
+  },
+  "control_hz": 50,
+  "timeouts": {
+    "verifier_privileged_sec": 1200,
+    "verifier_standard_sec": 600,
+    "collect_sec": 1800,
+    "replay_sec": 600,
+    "video_sec": 600
+  },
+  "notes": {
+    "layout": "Two hands of the selected model, each on its own six-axis wrist stage (no arm): the left hand at the +y end of the tray, the right hand at the -y end. Every row holds both stages' targets and both hands' finger targets (layout below)."
+  }
+}
