@@ -23,6 +23,7 @@ services:
       RCB_DTB_GOAL_TIMEOUT_S: "0"
       RCB_MAX_CONTROL_STEPS: "360000"
       RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-20}"   # DexToolBench standard: 20 resets (PROTOCOL §4.5); 0: one episode
+      RCB_START_SHA: "37b22f4e45c3"   # the frozen start's state hash: an episode on another start is refused (instance_mismatch)
       PYTHONPATH: /srv
       RCB_MJ_ROOT: /opt/rcb_mj
       RCB_WALL_CLOCK_S: "3600"

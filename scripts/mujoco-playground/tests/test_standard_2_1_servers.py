@@ -382,7 +382,10 @@ class ServerCase:
             time.sleep(0.1)
         fin = json.loads((self.data / "final.json").read_text())
         self.assertEqual((fin["reset_budget"], fin["resets"], fin["episodes"], fin["control_steps"], fin["control_steps_total"]), (2, 2, 3, 3, 10))
-        self.assertTrue(fin["deterministic"], fin)                   # the last episode's rows, replayed from the start
+        if self.SERVER.name == "server_mj.py":                       # the live episode's verdict (board 0151)
+            self.assertEqual((fin["graded_by"], fin["replays"], fin["finalized"]), ("live", 0, True), fin)
+        else:
+            self.assertTrue(fin["deterministic"], fin)               # the last episode's rows, replayed from the start
         import numpy as np
         self.assertEqual(np.load(self.data / "trajectory.npz")["actions"].shape, (3, 2))
 
@@ -412,4 +415,7 @@ class TestServerCasa(ServerCase, unittest.TestCase):
 
 
 if __name__ == "__main__":
+    # The live-episode grading tests (board 0151: server_mj, the quadruped hook and service, the realtime adapter) run
+    # with these: this file is the one ci_checks/check-unit-tests.sh lists (test_live_grading imports this module).
+    from test_live_grading import QuadrupedHook, QuadrupedService, Realtime, ServerMj, ServerMjPlayground  # noqa: F401
     unittest.main()
