@@ -55,6 +55,14 @@ behavior; no further retries. Normal task failures do not qualify.
   `attempts.json` and flags a sequence that breaks the rule (`attempts_over_cap`).
 - In-trial crash recovery (a sidecar that replays its journal and resumes the episode, STANDARD_MODE.md) is the shared
   layers' implementation, not a rule; a crash it cannot recover is an infrastructure failure like any other.
+- Standard modes (graded by the live episode, PROTOCOL H.4): an infrastructure failure is one where the live record
+  gives no verdict on the agent: no, an unreadable or an unfinalized `final.json`; the sidecar gave up after crashes
+  that were not all inside the agent's calls (`sim_crashed`, `resume_failed`); the scene did not start from the frozen
+  instance (`instance_mismatch`); a failure of the service the agent did not cause. What the agent's commands caused
+  stays a result, never an infrastructure failure (a retry would be a free second attempt): crashes all inside its
+  calls (`sim_crashed_on_call`), a simulator error its actions raised where the task counts that as the agent's, the
+  cutoff, no actions, a failed settle or hold. The video is never one: a render that fails or runs out of time loses
+  only the video.
 
 ## Results
 Results are not committed (published on the results site and the Hugging Face dataset, keyed by run id
@@ -76,6 +84,11 @@ report derives it from `docs/easy_set.toml` at the commit it publishes, so a tas
 grader fix) counts again without any change to its results. A base listed with `reason = "solved"` was solved in every
 mode by the screening runs its `note` names: core-set numbers of those runs are filtered against them, so report those
 runs on all tasks alongside.
+
+Standard-mode results recorded before the live-grading change (2026-10-17, PROTOCOL H.4) are re-read from their own
+`final.json`: the success the live episode ended with, under that benchmark's live rule; the recorded verdict
+(`reward.json`, `result.json`) stays untouched beside it, and a trial whose `final.json` holds no live verdict keeps
+the recorded one. Each benchmark's doc says which fields carry the live verdict in each of its versions.
 
 ## Resources: limits and their enforcement
 Each task declares its minimum compute, `[metadata.resources]`, its limits `[metadata.resources.limits]` and the docker
@@ -127,6 +140,10 @@ reasoning summaries, tool calls, images and token use with the robot service's l
   task's own image, on the same host class when the replay is only reproducible there, and kept only when the replay
   reaches the recorded final state; `replay.regenerated.json` next to it says how. The grade is never touched, and
   the agent is never rerun for a video.
+- **Standard modes:** no replay grades the episode (PROTOCOL H.4), so the video is what the sidecar recorded during the
+  live episode where that is cheap, or one render of the recorded trajectory after the verdict (each benchmark's doc
+  says which, and what it costs). Either way the verdict is on disk first (`final.json` `finalized`; `video_pending`
+  while the render runs) and `final.json` says `video_source` (`live` / `render`).
 - **Standard mode (RoboTwin):** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
   each stamped with the agent's call and wall/sim time; rendered from the deterministic trajectory at episode end, so it
   costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
