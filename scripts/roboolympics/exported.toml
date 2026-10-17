@@ -6,6 +6,10 @@
 # timeout_sec`, which a re-export must keep: 7200 s, 14400 s for soccerssl-match-i00 / i01, badminton-match-i01 / i02 /
 # i04, badminton-duelrl-i01 and foosball-match-i01).
 # `patched`: files this repository changed after the export (PROTOCOL §4c: sent upstream; a re-export must keep them).
+# Every task: 2026-10-17, board 0151 (owner: the standard modes are graded by the live episode): core/service.py,
+# core/grading.py = tests/grade.py, core/realtime.py (real-time: the control step's own error), spectator/sport_video.py
+# (where present), docker-compose.yaml (RO_VERDICT_REPLAY=0, as #300), task.toml, README.md, written by
+# scripts/roboolympics/live_grading_export.py (run it after a re-export; its --check finds an unpatched task).
 
 # The protocol each mode of these tasks serves (PROTOCOL §4c): ci_checks/check-protocol.py accepts it for the
 # directories listed below only.
@@ -20,7 +24,8 @@ source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["0d7f680cc049"]
 patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
-           "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/spectator/sport_video.py"]   # 2026-10-16, board 0136: a replay video from the players' cameras (no spectator camera / scene in the sport)
+           "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/spectator/sport_video.py",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py"]   # 2026-10-16, board 0136: a replay video from the players' cameras (no spectator camera / scene in the sport)
 
 [[tasks]]
 name = "roboolympics-badminton-match-i02-standard-realtime"
@@ -28,14 +33,17 @@ source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["0d7f680cc049"]
 patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
-           "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/spectator/sport_video.py"]   # 2026-10-16, board 0136: a replay video from the players' cameras (no spectator camera / scene in the sport)
+           "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/spectator/sport_video.py",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py"]   # 2026-10-16, board 0136: a replay video from the players' cameras (no spectator camera / scene in the sport)
 
 [[tasks]]
 name = "roboolympics-foosball-match-i01-standard-realtime"
 source_task = "roboolympics/foosball-match-wallclock-program-standard"
 revision = "foosball-program-v2+core-0.2"
 source_commits = ["d71e9f642ead"]
-patched = ["instruction.md", "environment/docker-compose.yaml"]   # board 0146: LP_NUM_THREADS 2 (OSMesa threads, as the other matches);
+patched = ["instruction.md", "environment/docker-compose.yaml",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "task.toml", "README.md",
+           "environment/sim/core/realtime.py"]   # board 0146: LP_NUM_THREADS 2 (OSMesa threads, as the other matches);
              # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
 
 [[tasks]]
@@ -43,14 +51,16 @@ name = "roboolympics-fencing-bout-i01-standard"
 source_task = "roboolympics/fencing-bout-wallclock-program-standard"
 revision = "fencing-7+core-0.2"
 source_commits = ["a6712a675343"]
-patched = ["task.toml", "environment/docker-compose.yaml"]   # 2026-10-16, board 0146: the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
+patched = ["task.toml", "environment/docker-compose.yaml",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md"]   # 2026-10-16, board 0146: the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
 
 [[tasks]]
 name = "roboolympics-fencing-bout-i02-standard"
 source_task = "roboolympics/fencing-bout-wallclock-program-standard"
 revision = "fencing-7+core-0.2"
 source_commits = ["a6712a675343"]
-patched = ["task.toml", "environment/docker-compose.yaml"]   # 2026-10-16, board 0146: the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
+patched = ["task.toml", "environment/docker-compose.yaml",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md"]   # 2026-10-16, board 0146: the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
 
 [[tasks]]
 name = "roboolympics-soccer-match-i00-standard-realtime"
@@ -58,42 +68,50 @@ source_task = "roboolympics/soccer-match-wallclock-program-standard"
 revision = "soccer-2v2-10+core-0.2"
 source_commits = ["0d7f680cc049"]
 patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
-           "task.toml", "environment/docker-compose.yaml", "README.md"]   # 2026-10-16, board 0136: the replay video's time limits (RCB_VIDEO_TIMEOUT_S 1800 s, collect / verifier timeouts)
+           "task.toml", "environment/docker-compose.yaml", "README.md",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py"]   # 2026-10-16, board 0136: the replay video's time limits (RCB_VIDEO_TIMEOUT_S 1800 s, collect / verifier timeouts)
 
 [[tasks]]
 name = "roboolympics-soccerssl-match-i00-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
 source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+patched = ["instruction.md", "environment/sim/core/realtime.py",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
 
 [[tasks]]
 name = "roboolympics-tabletennis-match-i01-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+patched = ["instruction.md", "environment/sim/core/realtime.py",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
 
 [[tasks]]
 name = "roboolympics-tabletennis-match-i02-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
+patched = ["instruction.md", "environment/sim/core/realtime.py",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md"]   # 2026-10-14, board 0121: the review time limit and its forfeit stated (instruction, game spec timing)
 
 [[tasks]]
 name = "roboolympics-tabletennis-match-i03-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["76cc6251c9ce"]
-patched = ["instruction.md"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
+patched = ["instruction.md",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md",
+           "environment/sim/core/realtime.py"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
 
 [[tasks]]
 name = "roboolympics-tabletennis-match-i04-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["e25d8cc11861"]
-patched = ["instruction.md"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
+patched = ["instruction.md",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md",
+           "environment/sim/core/realtime.py"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
 
 [[tasks]]
 name = "roboolympics-badminton-match-i04-standard-realtime"
@@ -101,21 +119,27 @@ source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["62333496959f"]
 patched = ["instruction.md",   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
-           "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py"]   # 2026-10-16, board 0146: a replay video from the players' cameras (badminton declares no spectator camera / scene; as #271)
+           "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md",
+           "environment/sim/core/realtime.py"]   # 2026-10-16, board 0146: a replay video from the players' cameras (badminton declares no spectator camera / scene; as #271)
 
 [[tasks]]
 name = "roboolympics-soccerssl-match-i01-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
 source_commits = ["91156213b0de"]
-patched = ["instruction.md", "task.toml", "README.md"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction; board 0146: the level-4 opponent named as the learned tier, not "scripted"
+patched = ["instruction.md", "task.toml", "README.md",
+           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml",
+           "environment/sim/core/realtime.py"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction; board 0146: the level-4 opponent named as the learned tier, not "scripted"
 
 [[tasks]]
 name = "roboolympics-tabletennis-duelrl-i01-standard-realtime"
 source_task = "roboolympics/tabletennis-duel-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["13f5e0981a99"]
-patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
+patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",
+           "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md",
+           "environment/sim/core/realtime.py"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
            # 2026-10-16, board 0146: a duel against a built-in seat: leaving after the start is a valid loss (`abandoned`, core/service.py abandon_single), stated in the instruction with the opponent's true-state reads; test.sh fails closed if fexam_reward.py fails
 
 [[tasks]]
@@ -124,5 +148,7 @@ source_task = "roboolympics/badminton-duel-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["b12667a02300"]
 patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction
-           "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py"]   # 2026-10-16, board 0146: a replay video from the players' cameras (badminton declares no spectator camera / scene; as #271)
+           "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py",
+           "environment/sim/core/grading.py", "tests/grade.py", "README.md",
+           "environment/sim/core/realtime.py"]   # 2026-10-16, board 0146: a replay video from the players' cameras (badminton declares no spectator camera / scene; as #271)
            # 2026-10-16, board 0146: a duel against a built-in seat: leaving after the start is a valid loss (`abandoned`, core/service.py abandon_single), stated in the instruction with the opponent's true-state reads; test.sh fails closed if fexam_reward.py fails

@@ -21,8 +21,10 @@ About 30 m of path with a tight turn in 90 s leaves little slack for a robot tha
 None (as `roboolympics-dribble-slalom-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: A size-5 football (0.22 m across, 0.43 kg) lies 0.5 m ahead of you, behind the start line, which is 1.0 m ahead of you and square to the way you face. Six cones (0.3 m high, base radius 0.11 m, free-standing) stand on the line you face along, the first 2.0 m beyond the start line and then every 2.0 m. Each cone has a plane through it, square to the course. On the way out the ball's centre and your pelvis must each cross the plane of cone 1 to its left (your left at the start), of cone 2 to its right, and so on in turn, cone 6 to its right; then round cone 6 and back: the plane of cone 6 to its other side (the left as seen from the start), of cone 5 to the right as seen from the start, and so on in turn, cone 1 to the right as seen from the start; and finally back over the start line, the whole ball and your pelvis. For each plane the first crossing in the direction of travel after the plane before it decides, for the ball and for you separately. You succeed when the whole ball and your pelvis are back over the start line after all twelve planes. You fail if the ball or you cross a plane on the wrong side, if the ball's centre is ever more than 2.0 m from your pelvis (measured along the ground), if you or the ball touch a cone, if a hand or an arm touches the ball (handball; any other part of you may play it), if you fall (your pelvis lower than 0.35 m above the ground, or any part of you other than the feet on the ground), or after 90 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

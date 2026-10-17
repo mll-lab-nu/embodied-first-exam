@@ -21,8 +21,10 @@ Neither built-in gait can jump. The take-off needs both legs' full power in one 
 None (as `roboolympics-standing-long-jump-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: The take-off line is x = 0; you jump towards +x. Your jump is your first flight (nothing of you touches the ground) of at least 0.1 s. Until then: no part of a foot that is on the ground may be on or over the line (the whole foot counts, also the parts of it that are in the air); no run-up and no step: every point where a foot touches the ground must lie within 0.03 m of the place where that foot's sole stood at t = 0, and neither foot may be off the ground for more than 0.05 s while the other is on it (so both feet leave the ground within 0.05 s of each other: a two-foot take-off). Rising on the toes is allowed. The flight must be a jump: your pelvis has to rise at least 0.05 m above its height at lift-off. The first contact after the flight must be with your feet only. The mark is the point nearest the take-off line at which any part of you touches the ground from that landing until you have stood; it must be at least 1.32 m beyond the line. After the landing you may step; you succeed once you stand for 1.0 s without a break: only your feet on the ground, your torso within about 20 degrees of vertical, your pelvis slower than 0.35 m/s. A fall fails the attempt at any time: your pelvis lower than 0.35 m, or any part of you other than your feet on the ground. You fail on a foot on or over the line, a step or shuffle before the take-off, a foot that leaves the ground before the other, a flight that is not a jump, a landing that is not on the feet, a mark short of 1.32 m, a fall, or after 20 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

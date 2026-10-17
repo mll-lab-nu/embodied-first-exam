@@ -3,6 +3,13 @@
 The simulator-specific half only: `RoboFun` implements rcb_service.Sim for one frozen instance, through rcb_rfo.Episode
 (the RoboOlympics Unitree G1 in the family's venue, with the family's referee). The protocol, the episode, crash recovery
 and the finalize live in rcb_service.py, which imports no simulator.
+Grading (owner, 2026-10-17, board 0150/0151): the live episode's referee call is the verdict; nothing is replayed to grade
+it. The referee latches a success the moment it happens and ends the attempt, so the live rule is the one the replay
+applied (no hold, no settle window). The frozen start is checked on the live simulator: build() refuses an image whose
+world does not start at the instance's recorded state hash (InstanceMismatch), and `start_sha` makes the service void a
+graded episode begun by a reset that did not return there (both instance_mismatch, infrastructure). live_verdict()
+records the live referee's call (referee.json, final.json `referee`); the video is rendered from the trajectory after the
+verdict.
 Settings come from environment/docker-compose.yaml:
   RCB_INSTANCE     the frozen instance (the privileged twin's instance.json)
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA   the service's own
@@ -47,7 +54,9 @@ class RoboFun:
         self.instance = load_instance(instance)
         self.ep = Episode(self.instance)
         if not self.ep.instance_check(self.instance)["ok"]:
-            raise RuntimeError("this image does not rebuild the frozen instance's starting state")
+            raise rcb_service.InstanceMismatch("this image does not rebuild the frozen instance's starting state "
+                                               f"({self.ep.t0_sha} != {self.instance['t0'].get('state_sha')})")
+        self.start_sha = self.instance["t0"].get("state_sha") or self.ep.t0_sha   # the frozen start (rcb_service checks it)
         t0, texts = self.instance["t0"], self.instance["texts"]
         self.task_text = texts["sentence"]
         self.rules = texts["rules"]
@@ -145,16 +154,18 @@ class RoboFun:
     def state_sha(self) -> str:
         return self.ep.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode from the frozen start, in a fresh world."""
-        r = replay(self.instance, rows)
-        try:      # the replay's referee record, for people: stages, the rule that ended it, metrics, events
+    def live_verdict(self, rows: np.ndarray, success: bool) -> dict:
+        """The live referee's record of the graded episode, for people and the dashboard: stages, the rule that ended
+        it, metrics, events (referee.json). It adds no rule: the referee's live call is the verdict."""
+        v = self.ep.verdict()
+        rec = {**v, "outcome": self.ep.outcome(), "executed_rows": int(len(rows)), "events": self.ep.world.ref.events[-200:]}
+        try:
             with open(os.path.join(self.data, "referee.json"), "w") as f:
-                json.dump({k: r[k] for k in ("success", "failed", "stages", "stages_total", "progress", "metrics",
-                                             "time_s", "executed_rows", "events")}, f)
+                json.dump(rec, f, default=str)
         except OSError:
             pass
-        return {"success": r["success"], "state_sha": r["state_sha"]}
+        return {"referee": {k: v[k] for k in ("success", "done", "failed", "stages_total", "progress", "time_s")}
+                | {"stages_reached": len(v["stages"]), "outcome": self.ep.outcome()}}
 
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         np.savez(path, actions=np.asarray(rows, dtype=np.float64).reshape(-1, self.raw_dim), family=self.ep.family,

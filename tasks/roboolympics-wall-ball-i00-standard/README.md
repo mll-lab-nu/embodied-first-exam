@@ -21,8 +21,10 @@ To come back five metres through the air the ball has to hit the wall at about 1
 None (as `roboolympics-wall-ball-i00-privileged`).
 
 ## Verification
-The sim sidecar's referee judges the live attempt, then the service replays the recorded attempt in a fresh simulator;
-`tests/grade.py` reads `/data/final.json`: pass iff the live run and the replay succeed and end in the same state. The
+The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
+no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+infrastructure), and the video is rendered from the recorded attempt afterwards. `tests/grade.py` reads
+`/data/final.json`: pass iff the live attempt succeeded. The
 rules: The tennis ball (0.067 m across, 0.0577 kg, it keeps 0.745 of its speed in a bounce, it flies in air with drag) starts gripped against your right palm. A wall stands 5.0 m beyond the line you stay behind; the target is a circle 0.5 m across painted on it, its centre 1.5 m above the ground and 0.0 m to the left of the point straight ahead of you. Let go of the ball (the throw, once); the first thing it touches must be the wall, at a point inside the target circle. Then catch the rebound: a hand's grip closing on the ball in the air (the grip holds a ball whose surface is within 3.5 cm of the palm and that moves no faster than 6 m/s relative to it); either hand may catch, and before the grip the rebound may touch only your hands and forearms. You succeed when the ball has been gripped after the rebound and kept for 1.0 s without a break. You fail if any part of you touches the ground on or beyond the line at any time; if the ball touches the ground at any time before it is caught; if it hits the wall outside the circle; if any part of you touches it after the release and before the wall (your throwing arm may still brush it during the first 0.15 s; it cannot be gripped then); if the rebound touches any part of you other than a hand or a forearm before it is gripped; if you let go of it after the catch; if you fall (your pelvis lower than 0.5 m above the ground, or any part of you other than your feet on the ground); or after 15 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
 
 ## Compute resources

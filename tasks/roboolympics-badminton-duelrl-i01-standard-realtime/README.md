@@ -23,8 +23,10 @@ the sport's official (hidden) seeds, so results here are previews, not official 
 `solution/`: our camera-only reference player through the same HTTP interface. RLBM 2026-10-16, policy bm_cem_v1 with the true shuttle state (v1.1; the shipped policy has no swing option): on this instance (seed 1001, vanilla Harbor 0.23.0) our camera-only reference lost 1:11 (valid, deterministic) and an Azure Astra precheck was 5:5 when Astra forfeited by ready_timeout; live service batch (built-in RL on B, camera reference over HTTP on A, seeds 1-10 x both first servers): reference 0/20 (16 valid, 40:176); in-process (truth, S = 20): mirror RL vs RL seat A 21/40, first server 15/40; as seat A of match-wallclock it beat level 3 in 19 of 20 seeds (217:124) and levels 4 and 5 in 20 of 20; against it on seat B the truth reference won 1/20, short-random, centre, random and nop 0/20; replays identical; limits as the reference; report :8042/read/?doc=rlbm.
 
 ## Verification
-Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier
-(`tests/grade.py`, our core's grader) checks that the replay agrees with the live match, applies the validity rule
+Separate sandbox, no network. The match is graded live (owner, 2026-10-17, board 0151): the sim service records the
+match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
+`replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
+the validity rule
 (technical failures void the trial, a player's own problems are a valid loss), and writes reward.json; success = a
 valid, finished match that the agent won. `tests/fexam_reward.py` adds the hub's fields (`infra_error`, `realtime`,
 `slowdown`, `opponent_level`).
