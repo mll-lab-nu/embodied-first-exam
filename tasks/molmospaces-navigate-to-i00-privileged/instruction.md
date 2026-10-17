@@ -11,7 +11,8 @@ often as you like. Your deliverable is **one open-loop trajectory**, not a gener
 The episode ends after the last row of your trajectory, or after **500 control steps** (the benchmark's
 100 s horizon at 5 Hz), whichever comes first. Success is upstream's `judge_success()` on the state
 at that moment: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. The task has to hold at the end: met earlier and undone by then does not count, and ending
-your trajectory right after the task is met is how you stop there.
+your trajectory right after the task is met is how you stop there. The grader replays your trajectory open-loop from the
+same start in a fresh process, twice; it scores 1 only if both replays succeed and end in the same state.
 
 ## Deliverable
 `/app/output/trajectory.npz` with `actions`: float64 (T, 25), one row per control step, the targets of upstream's

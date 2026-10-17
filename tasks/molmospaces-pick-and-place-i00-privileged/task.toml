@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "robot-coding-bench/molmospaces-pick-and-place-i00-privileged"
-description = "MolmoSpaces pick-and-place (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Pick up the realistic small white bird with feathers and place it in or on the black bowl with colorful grid. Frozen episode: upstream benchmark procthor-objaverse/FrankaPickandPlaceHardBench/FrankaPickandPlaceHardBench_20260206_json_benchmark, episode 134."
+description = "MolmoSpaces pick-and-place (a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base, MuJoCo 3.5.0) in privileged mode: produce one replayable trajectory. Pick up the purple bottle with white cap and place it in or on the clear ashtray with notches. Frozen episode: upstream benchmark procthor-objaverse/FrankaPickandPlaceHardBench/FrankaPickandPlaceHardBench_20260206_json_benchmark, episode 228."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "molmospaces", "mujoco", "franka-robotiq-2f85", "code-as-policy", "trajectory", "pick-and-place"]
 
@@ -18,7 +18,7 @@ dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): sc
 # scene = environment/instance.json (one upstream benchmark episode + its t = 0 state hash); identity = the dataset.toml digest
 expert_time_estimate_hours = 2.0
 oracle = "none"
-oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-pick-and-place-i00-p__rfd3V6M (run codex-gpt6_luna-medium, batch molmospaces-luna-1006b; https://embodied-agent-interface-v2-internal.github.io/runs/molmospaces/codex-gpt6_luna-medium-openrouter/pick_and_place/unlimited/); human review in PR #47"
+oracle_evidence = "no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1: molmospaces-pick-and-place-i00-p__w3GRFg3 (run codex-gpt6_1_sol-high, batch molmo-v2-sol, 2026-10-16; its verifier's replays ran out of time on a loaded host (the earlier 500 s limit), so it was graded 1 offline with the verifier's replay tool: two fresh replays in the task's image, no time limit, both successes with equal final hashes); human review in PR #276"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
