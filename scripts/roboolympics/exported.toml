@@ -121,7 +121,7 @@ name = "roboolympics-soccerssl-match-i01-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
 source_commits = ["91156213b0de"]
-patched = ["instruction.md", "task.toml", "README.md"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction; board 0146: the level-4 opponent named as the learned tier, not "scripted"
+patched = ["instruction.md", "task.toml", "README.md", "instruction.md"]   # 2026-10-16 (#277): the start window and its forfeit stated in the instruction; board 0146: the level-4 opponent named as the learned tier, not "scripted"
 
 [[tasks]]
 name = "roboolympics-tabletennis-duelrl-i01-standard-realtime"
@@ -146,7 +146,7 @@ source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standar
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["dd4db78ea10a"]
 patched = ["environment/docker-compose.yaml", "environment/sim/core/service.py", "tests/grade.py",   # 2026-10-17, board 0146: the sim's code under /root (700), /srv a link: the uploaded skill cannot read it
-           "environment/sim/core/grading.py", "task.toml", "README.md"]   # 2026-10-17 (owner, board 0151): live grading, RO_VERDICT_REPLAY 0 (no grading replay)
+           "environment/sim/core/grading.py", "task.toml", "README.md", "instruction.md"]   # 2026-10-17 (owner, board 0151): live grading, RO_VERDICT_REPLAY 0 (no grading replay)
 
 [[tasks]]
 name = "roboolympics-badminton-matchlow-i01-standard-realtime"
@@ -154,4 +154,4 @@ source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["0cff528341b4"]
 patched = ["environment/docker-compose.yaml", "environment/sim/core/service.py", "tests/grade.py",   # 2026-10-17, board 0146: the sim's code under /root (700), /srv a link: the uploaded skill cannot read it
-           "environment/sim/core/grading.py", "task.toml", "README.md", "environment/sim/spectator/sport_video.py"]   # 2026-10-17 (owner, board 0151): live grading, RO_VERDICT_REPLAY 0 (no grading replay)
+           "environment/sim/core/grading.py", "task.toml", "README.md", "instruction.md", "environment/sim/spectator/sport_video.py"]   # 2026-10-17 (owner, board 0151): live grading, RO_VERDICT_REPLAY 0 (no grading replay)

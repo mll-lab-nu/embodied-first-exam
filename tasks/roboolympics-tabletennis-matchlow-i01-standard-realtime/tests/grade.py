@@ -153,6 +153,9 @@ def grade(d, r, contract, evaluate, audits=None):
             out[s + "_nocode_violations"] = len(audits.get(s, (0, []))[1])
             out[s + "_nocode_forfeit"] = int(bad[s])
     out.update(evaluate(d))
+    if live:                                   # no grading replay ran: the sport's replay_* fields would read as errors
+        for k in [k for k in out if k.startswith("replay_")]:
+            del out[k]
     if (contract.get("official") or {}).get("hidden_seeds"):
         # core 0.2.19: once the sport registered a hidden seed set (frozen), only a match on a registered hidden seed of
         # its cell is official, whatever the sport's own official_config says (its legacy public-seed rule); the

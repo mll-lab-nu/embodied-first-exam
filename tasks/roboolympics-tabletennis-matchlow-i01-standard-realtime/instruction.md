@@ -35,7 +35,7 @@ your program decides when and where, your skill turns each decision into the rob
 ### The skill in the loop
 - To play `hit`, send it as an action: `game act '{"type": "hit", ...}'` with the fields of `skill_contract`. The
   simulator calls the `hit.py` you uploaded in a sandbox of its own (inside the simulator's container, as an
-  unprivileged user on one CPU: no network, not the match's records; a private copy of your upload, the toolkit at the same paths as in your container) with `state` = your observation
+  unprivileged user on one CPU: no network, not the match's records or the simulator's code; a private copy of your upload, the toolkit at the same paths as in your container) with `state` = your observation
   without images (`state["step"]` = the control step your call arrived) and `spec` (`skill_contract`, the toolkit, the
   robot's kinematics and limits, and `timing`), and applies the low-level command your function returns.
 - **Your skill's computation counts.** The world runs on while it computes (1 wall second = 1/S game seconds, S =
