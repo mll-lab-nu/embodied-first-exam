@@ -1,0 +1,67 @@
+{
+  "asset": "Rubber Boots",
+  "author": "L",
+  "source": "https://polyhaven.com/a/rubber_boots",
+  "license": "CC0",
+  "license_source": "https://polyhaven.com/license",
+  "credit": "Powered by Poly Haven",
+  "purpose": "Unassigned T29 visual-asset lead; no physics or task implementation/acceptance implied. Inspect individual component size and real grip material before use.",
+  "files": [
+    {
+      "path": "rubber_boots_2k.gltf",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/2k/rubber_boots/rubber_boots_2k.gltf",
+      "bytes": 6106,
+      "md5": "30b75376dec3c9f19d9b578524e0eb46",
+      "sha256": "1d454fc9d668f4cb1f8c9a80bdbf6c60b1fc187c8759d13928cf6dfbc919a1fb"
+    },
+    {
+      "path": "textures/rubber_boots_nor_gl_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/rubber_boots/rubber_boots_nor_gl_2k.jpg",
+      "bytes": 694489,
+      "md5": "1b0fe7d173324ec7345e40ca9a3f3c92",
+      "sha256": "b105a0a2ee88452fb0e536a06740fda4c4a537d715132d7c20c8d570fcf88bf4"
+    },
+    {
+      "path": "textures/rubber_boots_diff_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/rubber_boots/rubber_boots_diff_2k.jpg",
+      "bytes": 475228,
+      "md5": "8d1be526df43dbd50b462fa6f6bae1a2",
+      "sha256": "edfa6972a7596c601a27398ad3fdaf66d294230cc145ed3b4fe7cb04e20535c5"
+    },
+    {
+      "path": "textures/rubber_boots_arm_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/rubber_boots/rubber_boots_arm_2k.jpg",
+      "bytes": 366279,
+      "md5": "9911bdc3313540a8352dd7f997e71e03",
+      "sha256": "8e79aa61d1bac6c9c0212d9de0956118e0880c36b6a9e071037e95d437b05ee1"
+    },
+    {
+      "path": "textures/rubber_boots_dirty_nor_gl_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/rubber_boots/rubber_boots_dirty_nor_gl_2k.jpg",
+      "bytes": 919521,
+      "md5": "4938e6ee47adb2219df75b111927bebb",
+      "sha256": "c5166dd02d93899a240da1aa4736524f7131c8542811b3c589b4b69c8e92f39a"
+    },
+    {
+      "path": "textures/rubber_boots_dirty_diff_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/rubber_boots/rubber_boots_dirty_diff_2k.jpg",
+      "bytes": 1052242,
+      "md5": "126b6b57e809527fc7da29b2256e175b",
+      "sha256": "67a685564c0a16dfeb996bab01e028a83986f2278db13d7d6cbd2e2120a0198b"
+    },
+    {
+      "path": "textures/rubber_boots_dirty_arm_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/rubber_boots/rubber_boots_dirty_arm_2k.jpg",
+      "bytes": 1338424,
+      "md5": "1885e42b85da7dcafa76f1c585282dac",
+      "sha256": "403014c471163effa23bfe0f7a8a0aecdb6e4c735a255d80f72db80ff34e2f3e"
+    },
+    {
+      "path": "rubber_boots.bin",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Models/gltf/8k/rubber_boots/rubber_boots.bin",
+      "bytes": 653312,
+      "md5": "7c6d47a128a1703b2875208b9a6c5422",
+      "sha256": "2b0aa0fcf7ed8363bdb9a7f200c64620780ef3581f44b63cc55ef5f7bc6c6a9c"
+    }
+  ]
+}

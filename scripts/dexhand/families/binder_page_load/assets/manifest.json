@@ -1,0 +1,36 @@
+{
+ "note": "Reference copies of the accepted T37 scene sources (Avery 05806 binder reconstruction). scene.py rebuilds the binder hardware procedurally from these dimensions (ring radius 14 mm, 1.3 mm wire, stations at -69.85/0/69.85 mm, open stop 0.60 rad, over-centre housing spring, boosters) and the 5.5 x 8.5 in pages with 1/4 in holes; no mesh or texture files are needed. Read-only provenance, not imported at run time.",
+ "scene_id": "T37",
+ "files": [
+  {
+   "path": "source/binder_meta_scene.py",
+   "sha256": "79cb9a30b16ab272a81d21f0bf7cfa476a072480ef8d15063f2cc977973f86ad",
+   "bytes": 6963,
+   "copied_from": "scripts/scene_expansion/repairs/binder_meta_delivery_trajectory_r1/scene.py"
+  },
+  {
+   "path": "source/binder_pages_ASSET_PROVENANCE.md",
+   "sha256": "9aceaeeefbb30aaceecd6f817a2c1401ef7e808fb00165562220439a75fd42db",
+   "bytes": 2691,
+   "copied_from": "scripts/scene_expansion/tasks/binder_pages/ASSET_PROVENANCE.md"
+  },
+  {
+   "path": "source/binder_pages_SPECIFICATION.md",
+   "sha256": "e6ee18b583c7dd50b84e0e18915e956571a95edd44522776c9776724350e7733",
+   "bytes": 2031,
+   "copied_from": "scripts/scene_expansion/tasks/binder_pages/SPECIFICATION.md"
+  },
+  {
+   "path": "source/binder_pages_paper.py",
+   "sha256": "f27c7801216acb3c22bd8997541e7165aa0e55e818a04a8bf284b493d759217e",
+   "bytes": 4429,
+   "copied_from": "scripts/scene_expansion/tasks/binder_pages/paper.py"
+  },
+  {
+   "path": "source/binder_pages_scene.py",
+   "sha256": "867993524d64475b796f92319b923fcd31c51312c901d7238221be0cfbdd2e35",
+   "bytes": 12743,
+   "copied_from": "scripts/scene_expansion/tasks/binder_pages/scene.py"
+  }
+ ]
+}

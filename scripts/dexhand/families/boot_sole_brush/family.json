@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "id": "boot_sole_brush",
+  "task": "task.json",
+  "runtime": {
+    "files": [
+      "runtime.py",
+      "replay.py",
+      "scene.py",
+      "checker.py",
+      "task.json"
+    ],
+    "dirs": [
+      "assets"
+    ],
+    "shared": [
+      "arm_rig.py"
+    ]
+  },
+  "hands": [
+    "sharpa",
+    "wuji"
+  ],
+  "action_dim": {
+    "sharpa": 58,
+    "wuji": 54
+  },
+  "robot": "marvin-bimanual-sharpa-wave",
+  "max_rows": 3000,
+  "instruction": {
+    "privileged": "instruction/privileged.md",
+    "standard": "instruction/standard.md"
+  },
+  "readme": "README.task.md",
+  "solution": {
+    "privileged": "solution/trajectory.npz",
+    "standard": "solution/trajectory.npz"
+  },
+  "metadata": {
+    "oracle": "full",
+    "oracle_evidence": "solution/trajectory.npz: the 1,688-row Sharpa Wave witness on the Marvin right arm (success at control 1,538, then 150 hold rows), authored by tracking the wave-2 floating-hand episode's hand-root poses with arm inverse kinematics (closed loop, joint integral; the brush-transfer segment re-timed 3x slower); two fresh-process replays succeed with identical state hashes, float32-rounded rows succeed, and no arm, stand or parked-hand contact occurs in any physics substep.",
+    "expert_time_estimate_hours": 3.0,
+    "keywords": [
+      "tool_use",
+      "brushing",
+      "cleaning",
+      "debris",
+      "contact-rich",
+      "free-objects"
+    ]
+  },
+  "control_hz": 50,
+  "timeouts": {
+    "verifier_privileged_sec": 1800,
+    "verifier_standard_sec": 600,
+    "collect_sec": 1800,
+    "replay_sec": 300,
+    "video_sec": 1500
+  },
+  "notes": {
+    "layout": "Each row starts with the 14 Marvin arm joint targets (left arm J1-J7, then right arm J1-J7), followed by the left hand's finger targets and then the right hand's (22 per hand for `sharpa`, 20 per hand for `wuji`); the left arm is parked and only the right arm/hand perform the task."
+  }
+}

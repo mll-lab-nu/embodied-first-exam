@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "scene": "T28 Install a desktop RAM module (scene-expansion-50, accepted visual)",
+  "files": {
+    "ram-label.png": {
+      "sha256": "f8117f0ce7fba983430e3e2198b6dd56b794bd80e544fbcdb2157681f5400f6a",
+      "bytes": 21262,
+      "source": "robot_coding_bench/scripts/scene_expansion/repairs/ram_install_meta_delivery_trajectory_r1/assets/ram-label.png"
+    },
+    "t28_geometry_corrections.json": {
+      "sha256": "6b5cf682bf321ca6d21ba4072572bf7b9c1b8b68d129a5e495f41069c1699240",
+      "bytes": 1092,
+      "source": "robot_coding_bench/scripts/scene_expansion/repairs/ram_install_meta_delivery_trajectory_r1/geometry_corrections.json"
+    },
+    "t28_scene.xml": {
+      "sha256": "9073daa6c9f013b75539cb8a4a05ad216d9457cbe09dc11ab64400f71322694d",
+      "bytes": 197623,
+      "source": "robot_coding_bench/scripts/scene_expansion/repairs/ram_install_meta_delivery_trajectory_r1/scene.xml"
+    }
+  },
+  "note": "Copied verbatim from the accepted T28 scene (authored approximate geometry, not manufacturer CAD). scene.py reads t28_scene.xml and the label texture; the corrections file documents the source authors' own task-local geometry changes."
+}
