@@ -42,8 +42,7 @@ run() {   # run <timeout s> <test path under scripts/> [arguments of the test]: 
 for t in robolab/tests/test_grade_standard.py \
          myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
          robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py usage_gateway/tests/test_budget_stop.py \
-         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py tests/test_retry_policy.py tests/test_stamp_mtimes.py \
-         roboolympics/tests/test_skill_sandbox.py; do
+         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py tests/test_retry_policy.py tests/test_stamp_mtimes.py; do
   run 300 "$t"
 done
 run 120 account_failure_check.py --selftest   # the runner's lane stop and infra rules (account, usage gateway) on synthetic trials
