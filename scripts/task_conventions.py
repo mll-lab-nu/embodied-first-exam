@@ -896,6 +896,9 @@ def render_readme(task: Path) -> str:
     secd = {t: b for t, b in sections}
     mode = md.get("mode", mode_of(task))
     twin = base_of(task) + ("-privileged" if mode in SIDECAR_MODES else "-standard")
+    if mode not in SIDECAR_MODES and not task.with_name(twin).is_dir():   # a privileged twin of a realtime task
+        twin = next((base_of(task) + f"-{m}" for m in SIDECAR_MODES if task.with_name(base_of(task) + f"-{m}").is_dir()),
+                    twin)
     seed = md.get("instance_seed")
     sd = seeds_of(md)
     oracle = md.get("oracle", "")
@@ -1255,10 +1258,23 @@ def effective_config(task: Path, seed: int | None = None, env: dict | None = Non
         except ValueError:
             pass
     dg = read_text(task / DIGEST_FILE)
-    return {"protocol_version": PROTOCOL_VERSION, "mode": mode, "cutoff_s": cutoff_for(task), "reset_budget": resets,
-            "slowdown": S, "seed": seeds_of(md)["default"] if seed is None else int(seed), "network": network_of(task),
-            "validated": validated_of(task), "set": set_of(task), "oracle": md.get("oracle", ""),
-            "service_protocol": md.get("protocol", ""), "digest": (dg or "").strip()}
+    cfg = {"protocol_version": PROTOCOL_VERSION, "mode": mode, "cutoff_s": cutoff_for(task), "reset_budget": resets,
+           "slowdown": S, "seed": seeds_of(md)["default"] if seed is None else int(seed), "network": network_of(task),
+           "validated": validated_of(task), "set": set_of(task), "oracle": md.get("oracle", ""),
+           "service_protocol": md.get("protocol", ""), "digest": (dg or "").strip()}
+    if md.get("verifier_wall_clock"):   # the verifier plays a wall-clock match: its CPUs are part of the configuration
+        cfg["verifier_cpus"] = verifier_cpus_of(task)
+    return cfg
+
+
+def verifier_cpus_of(task: Path) -> float | None:
+    """The verifier's pinned CPUs ([verifier.environment] cpus, = [metadata.resources] verifier_min_cpus) of a task
+    whose verifier plays a live wall-clock match ([metadata] verifier_wall_clock; RoboOlympics' privileged twins)."""
+    try:
+        meta = tomllib.loads((task / "task.toml").read_text())
+        return float(meta["verifier"]["environment"]["cpus"])
+    except (OSError, KeyError, TypeError, ValueError, tomllib.TOMLDecodeError):
+        return None
 
 
 CONFIG_KEYS = ("protocol_version", "mode", "cutoff_s", "reset_budget", "slowdown", "network")
@@ -1267,7 +1283,9 @@ CONFIG_KEYS = ("protocol_version", "mode", "cutoff_s", "reset_budget", "slowdown
 def config_key(cfg: dict) -> tuple:
     """What two results must share to be ranked together (the seed is drawn per trial and is not part of it, nor is the
     `validated` marker). Missing fields of a legacy record are "legacy"."""
-    return tuple(cfg.get(k, "legacy") if cfg.get(k, "legacy") is not None else "-" for k in CONFIG_KEYS)
+    key = tuple(cfg.get(k, "legacy") if cfg.get(k, "legacy") is not None else "-" for k in CONFIG_KEYS)
+    # a verifier that plays a wall-clock match: its pinned CPUs too (only such tasks record them; others are unchanged)
+    return key + ((("verifier_cpus", cfg["verifier_cpus"]),) if cfg.get("verifier_cpus") is not None else ())
 
 
 def config_label(cfg: dict) -> str:

@@ -1548,7 +1548,7 @@ COACH_LEVELS[3] = dict(COACH_LEVELS["ref"], style="chase")
 if N == 2:
     for _k in (1, 2, 3):
         COACH_LEVELS[_k] = dict(COACH_LEVELS[_k], step=True)
-COACH_LEVELS["reference"] = dict(COACH_LEVELS["ref"], style="chase", step=True)
+# (the privileged twin's public copy: the reference level is left out, H.2)
 COACH_STYLES = ("positional", "chase", "defensive")   # 5 v 5 team plans (the single-player opponent: positional)
 STAND_X = HALF_L - 0.3 if BOARDS else PLAY_X - 0.4  # where the scripted players may walk (5 v 5: the border strip too)
 STAND_Y = HALF_W - 0.3 if BOARDS else PLAY_Y - 0.4

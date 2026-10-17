@@ -58,6 +58,18 @@ def exported():
     return [n for n in names if getattr(adapter(n), "EXPORT", True)]
 
 
+def solutions():
+    return importlib.import_module("tools.fullsim.solutions").SOLUTIONS
+
+
+class _Solutions(dict):
+    def __missing__(self, sport):
+        return solutions()[sport]
+
+
+SOLUTIONS = _Solutions()
+
+
 def adapter(sport):
     return importlib.import_module("tools.fullsim.adapter").load(sport)
 
@@ -95,9 +107,28 @@ def copy_tree(src, dst):
     shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "lowlevel"))
 
 
-def public_bytes(path):
+def public_edit(ad, rel, data):
+    """The agent's copy of sports/<sport>/<rel> (bytes): the adapter's PUBLIC_EDITS, {rel: [(old, new), ...]}; an old of
+    the form ("<cut>", marker) cuts the file from the line that holds `marker` (the #282 review, H.2: no reference
+    player or reference level in the agent's copy)."""
+    edits = ad.PUBLIC_EDITS.get(rel)
+    if not edits:
+        return data
+    text = data.decode()
+    for old, new in edits:
+        if isinstance(old, tuple):
+            at = text.index(old[1])
+            text = text[: text.rindex("\n", 0, at) + 1] + new
+        else:
+            if text.count(old) != 1:
+                raise SystemExit(f"{ad.SPORT}: PUBLIC_EDITS {rel}: {old[:60]!r} is not in the twin's file exactly once")
+            text = text.replace(old, new)
+    return text.encode()
+
+
+def public_bytes(path, data=None):
     """A file of the twin's simulator as the public copies hold it (scrub_public)."""
-    data = path.read_bytes()
+    data = path.read_bytes() if data is None else data
     if path.suffix in TEXT:
         text = data.decode(errors="surrogateescape")
         data = URL.sub("<link in the trusted copy>", text).encode(errors="surrogateescape")
@@ -127,6 +158,9 @@ def bundle(dst, ad, inst, *, public):
     if public:
         for rel in ad.PUBLIC_DROP_FILES:  # the camera-only reference player: not in the agent's copy (H.2)
             (dst / "sports" / ad.SPORT / rel).unlink(missing_ok=True)
+        for rel in ad.PUBLIC_EDITS:  # a reference player or level inside a file the simulator needs (H.2)
+            f = dst / "sports" / ad.SPORT / rel
+            f.write_bytes(public_edit(ad, rel, f.read_bytes()))
         scrub_public(dst)
     target = dst / "tools/fullsim"
     (target / "sports").mkdir(parents=True)
@@ -153,6 +187,8 @@ def resources(ad):
         "memory_mb": 8192,
         **ad.RESOURCES,
     }
+    # the verifier plays a wall-clock match (#282 review, decision 1): its CPUs are pinned, the minimum = the cap
+    r["verifier_min_cpus"] = float(r["cpus"])
     return r
 
 
@@ -173,6 +209,7 @@ robot = "{getattr(ad, "ROBOT", "franka-panda")}"
 family = "{getattr(ad, "METADATA_FAMILY", None) or ad.FAMILY.replace("-", "_")}"
 mode = "privileged"
 dynamics = "dynamic"
+verifier_wall_clock = true
 instance_seed = {seed}
 opponent_level = {level}
 slowdown = {ad.SLOWDOWN}
@@ -182,7 +219,7 @@ exporter = "roboolympics tools.fullsim.export"
 official = false
 expert_time_estimate_hours = 1.0
 oracle = "partial"
-oracle_evidence = "{getattr(ad, "ORACLE_EVIDENCE", None) or ORACLE_EVIDENCE}"
+oracle_evidence = "{SOLUTIONS[ad.SPORT]["evidence"] or ORACLE_EVIDENCE}"
 [metadata.seeds]
 default = {seed}
 allowed = [{seed}]
@@ -235,12 +272,17 @@ def fill(text, ad, inst, level, seed):
     return text
 
 
+def _twin_s(ad):
+    t = getattr(ad, "TWIN_SLOWDOWN", ad.SLOWDOWN)
+    return "" if t == ad.SLOWDOWN else f" (the twin's world runs at 1/{t}: this formal match is shorter in wall time)"
+
+
 def instruction(ad, inst, level, seed):
     return f"""# Full-simulator {ad.SPORT}: develop a program against level {level}
 
 Win one complete match against the frozen sport's scripted level-{level} opponent, seed {seed}: the same frozen
-instance as `{twin_name(ad, inst)}` (its privileged twin; there you see only camera images). The robot, the actions,
-the rules, the limits and the opponent are unchanged; the world runs at 1/{ad.SLOWDOWN} of real speed.
+instance as `{twin_name(ad, inst)}` (its standard-realtime twin; there you see only camera images). The robot, the actions,
+the rules, the limits and the opponent are unchanged; the world runs at 1/{ad.SLOWDOWN} of real speed{_twin_s(ad)}.
 
 ## Development and deliverable
 `from tools.fullsim.session import Session`; `Session("{ad.SPORT}", level={level}, seed={seed})` gives `state()`,
@@ -258,12 +300,14 @@ valid program early and improve it.
 
 ## Formal evaluation
 A separate verifier without network runs your final program as an unprivileged process against a fresh, unmodified
-match; your program can read a public copy of the simulator for its own predictions, never the referee or the logs.
+match; your program can read a public, read-only copy of the simulator (`/opt/dev`, the same as `/opt/fullsim`) for its
+own predictions, never the trusted copy that runs the match, the referee or the logs.
 There is no formal reset. The original realtime clock runs at S = {ad.SLOWDOWN} while your program computes; each
 review (after a point, a goal or another stoppage) freezes the world (at most {ad.READY_TIMEOUT_S} s). The formal match
 has {ad.MATCH_WALL_S} s of wall time.
-The trusted journal is replayed twice in fresh processes; success is a complete win by the original referee with
-matching replays. This fixed instance does not measure generalization to other instances.
+The service replays the trusted journal once in a fresh process; success is a complete win by the original referee
+with a matching replay. The match runs on the wall clock, so, as in the standard-realtime twin, the verifier's speed
+matters: it runs on {resources(ad)["cpus"]} pinned CPUs. This fixed instance does not measure generalization to other instances.
 """
 
 
@@ -314,10 +358,11 @@ python /tests/grade.py > /logs/verifier/grade.log 2>&1
 """)
     (tests / "test.sh").chmod(0o755)
     # The oracle lives only in solution/, never in the agent's copy of the simulator.
-    shutil.copy2(repo_file(ad, inst, ad.ORACLE), solution / "program.py")
-    for rel in ad.ORACLE_FILES:
+    sol = SOLUTIONS[ad.SPORT]
+    shutil.copy2(repo_file(ad, inst, sol["program"]), solution / "program.py")
+    for rel in sol["files"]:
         shutil.copy2(repo_file(ad, inst, rel), solution / Path(rel).name)
-    files = " ".join(["/solution/program.py"] + [f"/solution/{Path(r).name}" for r in ad.ORACLE_FILES])
+    files = " ".join(["/solution/program.py"] + [f"/solution/{Path(r).name}" for r in sol["files"]])
     (solution / "solve.sh").write_text(f"""#!/bin/bash
 set -eu
 mkdir -p /app/output/policy
@@ -339,8 +384,16 @@ Same frozen sport and instance as the twin; full-simulator development and the f
 state).
 
 ## Verification
-Separate verifier without network; root-owned trusted source, the program as nobody, the original realtime service,
-two fresh journal replays.
+Separate verifier without network; root-owned trusted source, the program as nobody (a process limit; every process
+of nobody is ended with kill(-1) before the verdict, and a survivor makes the trial an infra_error), the original
+realtime service on the wall clock at S = {ad.SLOWDOWN} (the verdict depends on the host's speed, as in the
+standard-realtime twin: the verifier runs on {resources(ad)["cpus"]} pinned CPUs, part of the configuration key), one
+fresh journal replay, then the replay video (replay.mp4) from the record.
+
+## Development copy
+The privileged setting: the full simulator during development (`/opt/fullsim`, read and change any state, reset the
+whole match). In the verifier the program may read the same public copy read-only (`/opt/dev`); the trusted copy that
+runs the formal match is root-only. The public copies hold no reference player and no reference level (H.2).
 """)
     if hub:
         sys.path.insert(0, str(hub / "scripts"))
@@ -374,7 +427,9 @@ def twin_identity(tasks, sports):
             name, twin = task_name(ad, inst), twin_name(ad, inst)
             sim = tasks / twin / "environment/sim"
             compose = (tasks / twin / "environment/docker-compose.yaml").read_text()
-            for key, value in (("RO_SEED", seed), ("RO_LEVEL", level), ("RO_SLOWDOWN", ad.SLOWDOWN)):
+            for key, value in (("RO_SEED", seed), ("RO_LEVEL", level), ("RO_SLOWDOWN", getattr(ad, "TWIN_SLOWDOWN", ad.SLOWDOWN)),
+                               ("RO_FORMAT", ad.FORMAT), ("RCB_ACTION_LEVEL", ad.ACTION_LEVEL),
+                               ("READY_TIMEOUT_S", ad.READY_TIMEOUT_S)):
                 if f'{key}: "{value}"' not in compose:
                     raise SystemExit(f"{name}: twin {twin} does not run {key} = {value}")
             for copy in ("tests/trusted", "tests/dev", "environment/fullsim"):
@@ -389,9 +444,20 @@ def twin_identity(tasks, sports):
                         public and (dropped or any(rel.as_posix().startswith(d) for d in PUBLIC_DROP))
                     ):
                         continue
-                    if not mine.is_file() or mine.read_bytes() != (public_bytes(f) if public else f.read_bytes()):
+                    in_sport = Path(*rel.parts[1:]).as_posix() if rel.parts[0] == "sport" else None
+                    want = (public_bytes(f, public_edit(ad, in_sport, f.read_bytes()) if in_sport else None) if public
+                            else f.read_bytes())
+                    if not mine.is_file() or mine.read_bytes() != want:
                         raise SystemExit(f"{name}/{copy}: {sub} differs from {twin}'s sim/{rel}")
 
+
+UPSTREAM_STUB = ('\ndef install_upstream(hub):\n    """Only the native generator (RoboOlympics tools/fullsim/export.py) installs; this copy renders and checks."""\n'
+                 '    raise SystemExit("install from RoboOlympics: python -m tools.fullsim.export --hub <checkout>")\n\n')
+
+
+def install_upstream(hub):
+    """Only the native generator (RoboOlympics tools/fullsim/export.py) installs; this copy renders and checks."""
+    raise SystemExit("install from RoboOlympics: python -m tools.fullsim.export --hub <checkout>")
 
 
 def main():

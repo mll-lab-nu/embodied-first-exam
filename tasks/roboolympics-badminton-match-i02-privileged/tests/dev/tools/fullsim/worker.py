@@ -10,6 +10,8 @@ import resource
 import sys
 from pathlib import Path
 
+NPROC = 256  # processes + threads of uid nobody (RLIMIT_NPROC counts the whole host's, so not tighter); end_uid_processes ends them
+
 root = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(root))
 resource.setrlimit(resource.RLIMIT_AS, (2 * 1024**3, 2 * 1024**3))
@@ -17,6 +19,8 @@ _cpu = int(sys.argv[2]) if len(sys.argv) > 2 else 1800  # the formal match cutof
 resource.setrlimit(resource.RLIMIT_CPU, (_cpu, _cpu))
 resource.setrlimit(resource.RLIMIT_NOFILE, (128, 128))
 resource.setrlimit(resource.RLIMIT_FSIZE, (16 * 1024**2, 16 * 1024**2))
+# H.1: a bounded number of processes and threads (the program runs as nobody, alone under that uid in the verifier)
+resource.setrlimit(resource.RLIMIT_NPROC, (NPROC, NPROC))
 wire = sys.stdout
 
 

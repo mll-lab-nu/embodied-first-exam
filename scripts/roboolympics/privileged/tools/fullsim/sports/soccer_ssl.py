@@ -21,27 +21,27 @@ FAMILY = "soccerssl-match"
 ROBOT = "ssl-robot"  # the twin's [metadata] robot
 METADATA_FAMILY = "soccer_ssl_match"  # the twin's [metadata] family
 INSTANCES = {"i00": {"level": 2, "seed": 7}}  # the twin's RO_LEVEL / RO_SEED (its docker-compose.yaml)
-SLOWDOWN = 10  # the twin's RO_SLOWDOWN
+TWIN_SLOWDOWN = 10  # the twin's RO_SLOWDOWN
+# The formal match runs at S = 5, not the twin's 10 (#282 review, decision 4: the verifier's length): the service lags
+# 0.06 s at most at S = 10 on a loaded host (the 2026-10-17 Harbor oracle), so S = 5 keeps it valid; development is
+# untimed either way.
+SLOWDOWN = 5
 CUTOFF_S = 14400  # the twin's [agent] timeout_sec
 EVERY = 5  # control steps between two views of the formal match (as table tennis)
 MAX_COMMANDS = 1  # one act per view; a `batch` act commands up to five robots at one boundary (the sport's own)
 READY_TIMEOUT_S = 600  # the twin's READY_TIMEOUT_S (sport.toml [timing] ready_timeout_s)
 # The formal match's wall-clock cutoff: the longest match of the screening's 76 camera-reference matches and the
-# calibration's full-state matches ran 107 200 control steps (1072 s of game time) = 10 720 s at S = 10; 13 500 s
-# leaves 26 % for the service's lag on a loaded machine (12 600 s until 2026-10-16, user decision PRIVALL). The
-# program's CPU limit is the same number.
-MATCH_WALL_S = 13500
+# calibration's full-state matches ran 107 200 control steps (1072 s of game time) = 5 360 s at S = 5; 6 750 s leaves
+# 26 % for the service's lag (13 500 s at S = 10 until 2026-10-17). The program's CPU limit is the same number.
+MATCH_WALL_S = 6750
 REPLAY_TIMEOUT_S = 1800  # the twin's RO_REPLAY_TIMEOUT_S: a fresh-process replay of a whole match
-# VERIFIER_TIMEOUT_S: the default, MATCH_WALL_S + 2 x REPLAY_TIMEOUT_S + 600 + VIDEO_TIMEOUT_S = 19 500 s (5.4 h).
+# VERIFIER_TIMEOUT_S: the default, MATCH_WALL_S + REPLAY_TIMEOUT_S + 600 + VIDEO_TIMEOUT_S (one replay).
 PUBLIC_DROP_FILES = ()  # opponents/ is built on builtin_players.Reference: the development copy needs it
+# ... but not the camera-only reference player (its overhead-camera tracker and TeamPlayer, the wrapper the solution
+# drives with the true state): the agent's copies stop before them (H.2); plugin.players() then offers the team only
+PUBLIC_EDITS = {"builtin_players.py": [(("<cut>", "# the overhead camera: a colour detector"),
+                                        "# (the privileged twin's public copy ends here: the camera-only reference player is left out, H.2)\n")]}
 IMAGE = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
-ORACLE = "tools/fullsim/oracles/soccer_ssl.py"
-ORACLE_EVIDENCE = (
-    "full-state reference program (solution/): the sport's reference team (the camera-only reference player's "
-    "decision code) fed the true state; its formal S = 10 results and its results across levels 1-3 against the "
-    "camera reference are in the RoboOlympics privileged report (tools/fullsim/calibrate.py)"
-)
-ORACLE_FILES = ("sports/soccer_ssl/builtin_players.py",)  # the reference team the oracle drives (numpy only)
 RESOURCES = {
     "min_cpus": 4.0,
     "min_memory_gb": 6.0,

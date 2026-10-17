@@ -78,15 +78,15 @@ python -m tools.fullsim.formal --sport soccer_ssl --policy /app/output/policy --
   --out /tmp/my-self-test-1 --unsafe-local
 ```
 
-Use a new output directory each time. This plays a fresh match on the original realtime service at S = 10
+Use a new output directory each time. This plays a fresh match on the original realtime service at S = 5
 with your program, then replays the journal twice in fresh processes. `--unsafe-local` is a self-test, not the
 trusted grading boundary.
 
 The formal evaluation runs in a separate verifier without network: root owns the trusted simulator and the logs;
 your program runs as nobody, with a read-only public copy of the simulator and a writable scratch directory. The
-world keeps running at S = 10 while your program computes; each review freezes it (at most
+world keeps running at S = 5 while your program computes; each review freezes it (at most
 600 s, else that side loses, as in the twin). Program load 30 s, each exchange 5 s, the formal match
-13500 s of wall time, 2 GiB of address space, 13500 CPU seconds. No model or API calls in the
+6750 s of wall time, 2 GiB of address space, 6750 CPU seconds. No model or API calls in the
 formal evaluation. Success: a complete win by the original referee, confirmed by two fresh replays. A missing,
 invalid, stuck or unfinished program does not win. The deliverable is a program, not a trajectory.
 After the verdict the verifier replays the formal match's record once more and draws `/logs/verifier/replay.mp4`

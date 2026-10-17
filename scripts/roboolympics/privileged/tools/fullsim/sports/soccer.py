@@ -2,7 +2,7 @@
 
 Adapter of the generic full-simulator setting (tools/fullsim): the frozen sport (sports/soccer, soccer-2v2-10, the
 `match` format: one seat A commands both Booster T1 of team A against the scripted team B), its frozen instance (level
-2, seed 7, S = 5, cutoff 7200 s), the declared truth the program sees in the formal match, and the reference program.
+2, seed 7, S = 5, cutoff 7200 s), and the declared truth the program sees in the formal match.
 Nothing of sports/soccer changes: its directory is the twin's simulator byte for byte (PROTOCOL H.7).
 """
 from __future__ import annotations
@@ -27,19 +27,18 @@ REPLAY_TIMEOUT_S = 600                  # the twin's RO_REPLAY_TIMEOUT_S (a whol
 # + up to 3 sudden-death rounds, 20 s of game time per kick: up to 1200 s of wall time) and the service's lag need the
 # rest. The program's review answers are immediate (ready), so reviews add almost nothing.
 MATCH_WALL_S = 4800
+# The agent's copies hold no reference (H.2): the screening's truth reference (reference_check.py) is left out, and so is
+# the scripted coach's "reference" level (in 2 v 2 the same parameters as level 3, the opponent's own code)
+PUBLIC_DROP_FILES = ("builtin_players.py", "reference_check.py")
+PUBLIC_EDITS = {"soccer.py": [('COACH_LEVELS["reference"] = dict(COACH_LEVELS["ref"], style="chase", step=True)\n',
+                               "# (the privileged twin's public copy: the reference level is left out, H.2)\n")]}
 IMAGE = "ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0@sha256:b6fbfae73399a7daee9c623eb34cfe18de63b458349b5a2b9d122c00e9f1602b"
 RESOURCES = {"min_cpus": 6.0, "min_memory_gb": 8.0, "verifier_min_cpus": 6.0, "verifier_min_memory_gb": 8.0,
              "cpus": 6, "memory_mb": 10240}
-ORACLE = "tools/fullsim/oracles/soccer.py"
-ORACLE_FILES = ()                       # the oracle imports the scripted coach from the (public) simulator copy
 ROBOT = "booster-t1"
 DESCRIPTION = ("robot soccer 2 v 2 (RoboCup Humanoid Soccer League rules, soccer-2v2-10): two simulated Booster T1 "
                "humanoids of team A, commanded by one program, against the scripted team B on a boarded 10 x 7 m pitch, "
                "two halves of 5 minutes of game time")
-ORACLE_EVIDENCE = ("full-state reference program (solution/): the screening's truth reference (the frozen scripted coach "
-                   "at the reference level: both robots go for the ball, in-walk kick) as a program reading the declared "
-                   "truth; in step timing it reproduces the in-world truth reference bit for bit; its results at levels "
-                   "2 and 3 and on this instance are in the RoboOlympics privileged report (soccer section)")
 
 TRUTH_DOC = """\
 `view["truth"]` (your team's frame = the world frame for seat A: you attack the goal at x = +5; metres, m/s, radians):

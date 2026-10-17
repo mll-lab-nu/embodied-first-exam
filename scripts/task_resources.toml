@@ -2547,8 +2547,35 @@ trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 6.0
 measured = "author estimate, not yet measured: 6 GiB under the 8 GiB container cap (2 GiB for the monitor's margin), enough for about ten worlds at once; processes 512 and disk 20 GiB: design defaults"
 
-# RoboOlympics' other privileged twins (scripts/roboolympics/privileged/generate.py): the caps that are applied (their
-# [environment] cpus / memory_mb)
+# RoboOlympics' other privileged twins (scripts/roboolympics/privileged/generate.py), like the table-tennis ones (#282
+# review): the agent runs its own simulators; the verifier plays the formal match on the wall clock (the original
+# service and the program, its CPUs pinned: verifier_min_cpus = [verifier.environment] cpus), one fresh replay and
+# the replay video. Humanoid soccer's world needs more cores.
+[[rule]]
+match = "^roboolympics-(badminton|soccerssl)-match-i[0-9]{2}-privileged$"
+min_cpus = 4.0
+min_memory_gb = 6.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 8.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "Harbor 0.23 oracle trials (mll-4090-1 / mll-4090-2, 2026-10-17): CPU-only MuJoCo, no cameras in the match; the verifier holds the service, the program (2 GiB address space), one replay and the video renderer; 4 CPUs pinned (the match runs on the wall clock)"
+
+[[rule]]
+match = "^roboolympics-soccer-match-i[0-9]{2}-privileged$"
+min_cpus = 6.0
+min_memory_gb = 8.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 6.0
+verifier_min_memory_gb = 8.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "Harbor 0.23 oracle trial (mll-4090-2, 2026-10-17): CPU-only MuJoCo with two Booster T1 humanoids per team; the verifier holds the service, the program, one replay and the video renderer; 6 CPUs pinned (the match runs on the wall clock)"
+
+# ... and the caps that are applied (their [environment] cpus / memory_mb)
 [[cap]]
 match = "^roboolympics-(badminton|soccerssl)-match-i[0-9]{2}-privileged$"
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }

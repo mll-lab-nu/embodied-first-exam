@@ -122,28 +122,53 @@ class Program:
         self.stderr.close()
 
 
+def uid_processes(uid):
+    alive = []
+    for d in Path("/proc").iterdir():
+        if not d.name.isdigit():
+            continue
+        try:
+            if d.stat().st_uid == uid:
+                alive.append(int(d.name))
+        except OSError:
+            continue
+    return alive
+
+
 def end_uid_processes(uid, rounds=50):
-    """Kill every process of the policy's user that is still alive (a double fork or setsid leaves the program's
-    process group), until none is left; raises if one survives. Nothing is graded before this returns."""
+    """End every process of the policy's user (a double fork or setsid leaves the program's process group): a child
+    that becomes `uid` sends kill(-1, SIGKILL), which reaches every process of that user at once (a fork loop cannot
+    outrun it), round after round until none is left. Returns True when none is left, False otherwise (the caller
+    grades infra_error = 1); never raises. Nothing is graded before this returns."""
     for _ in range(rounds):
-        alive = []
-        for d in Path("/proc").iterdir():
-            if not d.name.isdigit():
-                continue
+        if not uid_processes(uid):
+            return True
+        try:
+            pid = os.fork()
+        except OSError:
+            pid = -1
+        if pid == 0:  # the child: drop to the program's user, signal all of its processes, exit
             try:
-                if d.stat().st_uid == uid:
-                    alive.append(int(d.name))
-            except OSError:
-                continue
-        if not alive:
-            return
-        for pid in alive:
-            try:
-                os.kill(pid, signal.SIGKILL)
-            except OSError:
+                os.setgroups([])
+                os.setgid(uid)
+                os.setuid(uid)
+                os.kill(-1, signal.SIGKILL)
+            except BaseException:  # noqa: BLE001
                 pass
+            os._exit(0)
+        if pid > 0:
+            try:
+                os.waitpid(pid, 0)
+            except ChildProcessError:
+                pass
+        else:  # no fork possible: signal them one by one
+            for p in uid_processes(uid):
+                try:
+                    os.kill(p, signal.SIGKILL)
+                except OSError:
+                    pass
         time.sleep(0.05)
-    raise RuntimeError(f"processes of uid {uid} survive")
+    return not uid_processes(uid)
 
 
 def sanitize(source, destination):

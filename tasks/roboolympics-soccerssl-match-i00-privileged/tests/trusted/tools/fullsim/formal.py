@@ -12,7 +12,6 @@ import json
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 import threading
 import time
@@ -21,7 +20,7 @@ from pathlib import Path
 from core.realtime import RealtimeService
 from core.sport import Refused
 from tools.fullsim.adapter import load
-from tools.fullsim.program import Program, child_env, end_uid_processes, sanitize
+from tools.fullsim.program import Program, end_uid_processes, sanitize
 from tools.fullsim.session import FROZEN, ROOT, match_config, plain, plugin, plugin_path
 
 
@@ -141,6 +140,7 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
     started = time.monotonic()
     program = service = None
     reason = error = None
+    leftover = False
     refusals = calls = 0
     public = Path(tempfile.mkdtemp(prefix="tt-policy-"))
     public.chmod(0o755)
@@ -233,7 +233,7 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
         if program is not None:
             program.close()
         if not unsafe_local:
-            end_uid_processes(65534)
+            leftover = not end_uid_processes(65534)  # a survivor: no verdict (infra_error), never a crash
         if service is not None and service.phase != "over":
             service.collect()
         if service is not None:
@@ -257,6 +257,7 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
         "slowdown": slowdown,
         "replays": 0,
         "isolation_checked": int(not unsafe_local),
+        "processes_left": int(leftover),
     }
     diagnostics = {
         "sport": ad.SPORT,  # reward.json holds numbers only (Harbor parses every value)
@@ -272,17 +273,9 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
             final = json.loads((out / "match/final.json").read_text())
             if not final.get("graded_ready"):
                 raise ValueError("the service's final.json is not graded yet (replay unfinished)")
-            # Original service already replayed once in a fresh process. Do a second fresh journal replay.
-            second = subprocess.run(
-                [sys.executable, "-m", "core.episode", str(plugin_path(ad.SPORT)), str(out / "match")],
-                cwd=ROOT,
-                env=child_env(),
-                capture_output=True,
-                text=True,
-                timeout=ad.REPLAY_TIMEOUT_S,
-                check=False,
-            )
-            rep = json.loads((out / "match/replay_check.json").read_text()) if second.returncode == 0 else {}
+            # One replay (#282 review, decision 4): the original service's own fresh-process replay of the journal,
+            # which wrote replay_check.json and the verdict in final.json; both must agree with the live match.
+            rep = json.loads((out / "match/replay_check.json").read_text())
             equal = bool(
                 final["deterministic"]
                 and rep.get("state_sha") == final["state_sha"]
@@ -298,8 +291,8 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
                 success=int(valid and final["match_winner"] == "A"),
                 valid=int(valid),
                 deterministic=int(equal),
-                infra_error=int(bool(final["errors"]) or second.returncode != 0),
-                replays=2,
+                infra_error=int(bool(final["errors"])),
+                replays=1,
                 points_for=final["scores"]["A"],
                 points_against=final["scores"]["opponent"],
                 steps=final["steps"],
@@ -309,11 +302,13 @@ def evaluate(policy, out, *, sport, level, seed, slowdown=None, wall_limit=None,
                 final_reason=final["reason"],
                 source_sha=final["source_sha"],
                 continuous=final.get("continuous"),
-                replay_stderr=second.stderr[-2000:],
             )
     except (OSError, ValueError, KeyError, subprocess.SubprocessError) as exc:
         result.update(success=0, valid=0, infra_error=1)
         diagnostics["verification_error"] = f"{type(exc).__name__}: {exc}"
+    if leftover:
+        result.update(success=0, valid=0, infra_error=1)
+        diagnostics["verification_error"] = "processes of the program's user survived kill(-1)"
     (out / "reward.txt").write_text(str(result["success"]) + "\n")
     (out / "reward.json").write_text(json.dumps(result, indent=2))
     (out / "diagnostics.json").write_text(json.dumps(diagnostics, indent=2))

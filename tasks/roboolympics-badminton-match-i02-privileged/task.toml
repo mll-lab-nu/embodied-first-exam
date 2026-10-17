@@ -13,6 +13,7 @@ robot = "franka-panda"
 family = "badminton_match"
 mode = "privileged"
 dynamics = "dynamic"
+verifier_wall_clock = true
 instance_seed = 8
 opponent_level = 2
 source_commits = ["0d7f680cc049"]
@@ -25,15 +26,15 @@ oracle_evidence = "full-state reference program (solution/): the camera-only ref
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)
-min_cpus = 2.0
-min_memory_gb = 4.0
+min_cpus = 4.0
+min_memory_gb = 6.0
 min_gpu_memory_gb = 0.0
 gpu_required = false
 gpu_class = "none"
-verifier_min_cpus = 2.0
-verifier_min_memory_gb = 3.0
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 8.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "author estimate (mll-4090-1, 2026-10-11): CPU-only MuJoCo with OSMesa rendering; one world steps 5 times faster than real time on one core and holds about 0.4 GB; the verifier runs two replays and a filmed one"
+measured = "Harbor 0.23 oracle trials (mll-4090-1 / mll-4090-2, 2026-10-17): CPU-only MuJoCo, no cameras in the match; the verifier holds the service, the program (2 GiB address space), one replay and the video renderer; 4 CPUs pinned (the match runs on the wall clock)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -71,7 +72,7 @@ build_timeout_sec = 1800.0
 cpus = 4
 memory_mb = 16384
 [verifier]
-timeout_sec = 10800.0
+timeout_sec = 10200.0
 environment_mode = "separate"
 network_mode = "no-network"
 

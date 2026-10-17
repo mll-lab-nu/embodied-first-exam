@@ -11,8 +11,6 @@ CUTOFF_S = 7200
 READY_TIMEOUT_S = 300
 MATCH_WALL_S = 1800
 IMAGE = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
-ORACLE = "tools/fullsim/oracles/tabletennis.py"
-ORACLE_FILES = ("sports/tabletennis/builtin_players.py",)
 
 
 def truth(match):

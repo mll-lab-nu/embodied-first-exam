@@ -1,9 +1,8 @@
 """Badminton singles (revision badminton-wallclock-12): the twins of roboolympics-badminton-match-i01/i02-standard-realtime
 (First Exam, exported from fexam-export 0d7f680c)."""
 
-import numpy as np
-
 SPORT = "badminton"
+FORMAT = "match-wallclock"  # the twin's RO_FORMAT
 SOURCE_TASK = "badminton-match-wallclock-program-standard"
 FAMILY = "badminton-match"
 INSTANCES = {"i01": {"level": 1, "seed": 7}, "i02": {"level": 2, "seed": 8}}
@@ -13,8 +12,6 @@ CUTOFF_S = 14400  # the twins' per-task cutoff
 READY_TIMEOUT_S = 300
 MATCH_WALL_S = 7200  # a game to 11 at S = 20: 78-93 min for the camera-only reference
 IMAGE = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
-ORACLE = "tools/fullsim/oracles/badminton.py"
-ORACLE_FILES = ("sports/badminton/builtin_players.py",)
 RESOURCES = {"min_cpus": 4.0, "min_memory_gb": 6.0, "verifier_min_cpus": 4.0, "verifier_min_memory_gb": 8.0}
 DESCRIPTION = (
     "singles badminton on a 0.4-scale court (BWF Laws, one game to 11): Franka Panda with a racket on a gantry base "
@@ -51,11 +48,11 @@ def truth(match):
         "shuttle_pos": [float(x) for x in s.sh_p],
         "shuttle_vel": [float(x) for x in s.sh_v],
         "shuttle_live": bool(s.sh_live),
-        "opponent_xy": [float(x) for x in np.asarray(g.opp_xy())],
+        "opponent_xy": [float(x) for x in g.opp_xy()],
         "opponent_parameters": {k: v for k, v in g.lv.items() if k != "seed"},
         "leg": {k: g.leg[k] for k in LEG_KEYS if k in g.leg},
         "score": list(g.score),
         "qpos": s.d.qpos[s.qa].tolist(),
         "qvel": s.d.qvel[s.va].tolist(),
-        "target": np.asarray(s.target).tolist(),
+        "target": [float(x) for x in s.target],
     }

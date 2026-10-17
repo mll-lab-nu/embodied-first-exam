@@ -23,6 +23,8 @@ def _import_soccer():
                 sys.path.insert(0, str(d))
                 break
     import soccer
+    # the reference level is the solution's own (the agent's copy leaves it out, H.2): level 3's play with the in-walk kick
+    soccer.COACH_LEVELS.setdefault("reference", dict(soccer.COACH_LEVELS["ref"], style="chase", step=True))
     return soccer
 
 

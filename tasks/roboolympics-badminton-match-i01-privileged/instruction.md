@@ -1,7 +1,7 @@
 # Full-simulator badminton: develop a program against level 1
 
 Win one complete match against the frozen sport's scripted level-1 opponent, seed 7: the same frozen
-instance as `roboolympics-badminton-match-i01-standard-realtime` (its privileged twin; there you see only camera images). The robot, the actions,
+instance as `roboolympics-badminton-match-i01-standard-realtime` (its standard-realtime twin; there you see only camera images). The robot, the actions,
 the rules, the limits and the opponent are unchanged; the world runs at 1/20 of real speed.
 
 ## Development and deliverable
@@ -20,12 +20,14 @@ valid program early and improve it.
 
 ## Formal evaluation
 A separate verifier without network runs your final program as an unprivileged process against a fresh, unmodified
-match; your program can read a public copy of the simulator for its own predictions, never the referee or the logs.
+match; your program can read a public, read-only copy of the simulator (`/opt/dev`, the same as `/opt/fullsim`) for its
+own predictions, never the trusted copy that runs the match, the referee or the logs.
 There is no formal reset. The original realtime clock runs at S = 20 while your program computes; each
 review (after a point, a goal or another stoppage) freezes the world (at most 300 s). The formal match
 has 7200 s of wall time.
-The trusted journal is replayed twice in fresh processes; success is a complete win by the original referee with
-matching replays. This fixed instance does not measure generalization to other instances.
+The service replays the trusted journal once in a fresh process; success is a complete win by the original referee
+with a matching replay. The match runs on the wall clock, so, as in the standard-realtime twin, the verifier's speed
+matters: it runs on 4 pinned CPUs. This fixed instance does not measure generalization to other instances.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
