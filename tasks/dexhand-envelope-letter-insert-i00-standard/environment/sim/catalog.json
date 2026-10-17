@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "schema_version": 1,
+      "id": "envelope_letter_insert",
+      "title": "Put a folded letter into an envelope",
+      "category": "paper_handling",
+      "description": "Slide a tri-folded A4 letter across a desk with a dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on the right arm of a dual-arm robot and feed it through the open mouth of a DL wallet envelope until it lies inside the pocket, then let go.",
+      "difficulty": "hard",
+      "mechanism": "free rigid letter card and a free rigid envelope pocket (contact only)",
+      "instruction": "Put the folded letter into the envelope. A tri-folded A4 letter (a stiff 99 x 210 x 2 mm card, 5 g) lies flat on the desk at (0.48, -0.14) m; an empty DL wallet envelope (110 x 220 mm, 6 g) lies flat at (0.48, 0.16) m with its open mouth along its +X long edge and the open flap on the desk beyond the mouth. The envelope is a pocket: back and front walls 4 mm apart, permanent 3 mm side seams (narrowing to nothing over the last 10 mm before the mouth) and a 4 mm bottom seam, and a 30 mm elastic mouth lip that starts closed (flush with the front wall, 4 mm above the back wall); a fingertip or the letter can lift it. Both objects are free and move only through contact. Move the letter to the mouth and feed it in through the mouth, then let go. Stages, measured on the letter's four corners (centre plane) in the envelope's own frame (origin at the envelope centre on the desk, x towards the mouth, mouth line x = 55 mm): (1) the letter is at the mouth: both leading corners are at least 10 mm past the mouth line, inside the side seams (|y| <= 107.6 mm) and between the walls (height 1.2 to 4.4 mm) while both trailing corners are still outside the mouth line; (2) the letter is inserted: at most 5 % of its 99 mm length (4.95 mm) is outside the mouth line, all four corners are inside the side seams, in front of the bottom seam (x >= -51.6 mm) and between the walls; (3) released: stage 2 holds with no contact between the hand and the letter or the envelope, and both objects at rest (linear speed <= 0.01 m/s, angular speed <= 0.2 rad/s), for 50 consecutive controls (1 s). Stages count in order; the episode ends with success when the hold completes. The episode ends immediately with failure, checked after every 2 ms physics substep, when the letter or the envelope falls below the desk top (origin z < 0.698 m), touches the floor, is dropped (touches nothing - no hand, desk or envelope - while its centre of mass falls faster than 0.1 m/s), leaves the desk (origin x outside [0.18, 0.78] m, y outside [-0.40, 0.40] m, or z > 1.00 m), when the letter is pressed through an envelope wall, seam or the mouth lip (any point of the letter's mid-plane inside one of them) or interpenetrates the envelope by more than 0.7 mm, when the envelope is pushed more than 5 cm from its start or tilted more than 0.35 rad, when the robot's arm, stand or parked left hand touches the letter or the envelope, or when the physics becomes unstable; later actions cannot undo a failure. Only robot actuator targets are allowed; no object teleports, welds, scripted object motion or object forces. The episode allows at most 6000 controls at 50 Hz; reaching that limit without success is a failure. Simplifications: the folded letter is simulated as one rigid 2 mm card with rounded fold edges (paper bending is not simulated); the envelope is one rigid pocket whose seams are solid walls, whose open flap is a thin wedge on the desk and whose mouth lip is a passive spring hinge; the flap is never sealed. The hand is on the right arm of a dual-arm robot standing at the desk's +x edge; the left arm stays parked.",
+      "modeling": "The letter is a free rigid card with rounded fold edges (paper bending not simulated); the envelope is one free rigid pocket (walls and seams as solid boxes, side seams tapering at the mouth like a wallet envelope's side flaps, the open flap as a thin wedge on the desk) whose 30 mm mouth lip is a passive elastic hinge that starts closed (0 rad, flush with the front wall) as in the source scene's start. The walls are 4 mm apart (the cavity the rigid 2 mm letter card needs; the source's paper walls are 0.2 mm apart), so the closed mouth admits the letter's rounded leading fold without parting. Geometry, layout and colours follow the approved T38 scene. The hand is mounted on the right flange of a Tianji Marvin dual-arm robot (base at (1.15, -0.25, 0.10) m, facing -x, the base plate on the floor clear of the desk legs); the left arm is parked.",
+      "robot": "marvin-bimanual-sharpa-wave",
+      "physics_dt": 0.002,
+      "control_dt": 0.02,
+      "max_steps": 6000,
+      "desk_top_z": 0.7,
+      "desk": {
+        "center": [
+          0.48,
+          0.0
+        ],
+        "half_x": 0.3,
+        "half_y": 0.4,
+        "thickness_m": 0.045
+      },
+      "envelope": {
+        "pos": [
+          0.48,
+          0.16
+        ],
+        "yaw": 0.0,
+        "depth_m": 0.11,
+        "width_m": 0.22,
+        "wall_m": 0.0008,
+        "gap_m": 0.004,
+        "side_seam_m": 0.003,
+        "bottom_seam_m": 0.004,
+        "lip_m": 0.03,
+        "lip_angle_rad": 0.0,
+        "lip_springref_rad": 0.0,
+        "flap_depth_m": 0.03,
+        "flap_tip_half_width_m": 0.095,
+        "mass_kg": 0.006,
+        "lip_max_angle_rad": 1.2,
+        "lip_stiffness_nm_rad": 0.001,
+        "lip_damping": 0.0005,
+        "seam_taper_m": 0.01
+      },
+      "letter": {
+        "pos": [
+          0.48,
+          -0.14
+        ],
+        "yaw": 0.0,
+        "depth_m": 0.099,
+        "width_m": 0.21,
+        "thickness_m": 0.002,
+        "mass_kg": 0.005
+      },
+      "checker": {
+        "mouth_entry_m": 0.01,
+        "outside_fraction_max": 0.05,
+        "wall_tolerance_m": 0.0006,
+        "hold_steps": 50,
+        "rest_linear_speed_m_s": 0.01,
+        "rest_angular_speed_rad_s": 0.2,
+        "below_desk_tolerance_m": 0.002,
+        "max_height_above_desk_m": 0.3,
+        "envelope_max_shift_m": 0.05,
+        "envelope_max_tilt_rad": 0.35,
+        "unsupported_fall_speed_m_s": 0.1,
+        "max_letter_envelope_penetration_m": 0.0007,
+        "through_wall_inset_m": 0.001
+      },
+      "rig": "marvin",
+      "marvin": {
+        "base_pos": [
+          1.15,
+          -0.25,
+          0.1
+        ],
+        "base_yaw": 3.141593
+      },
+      "cameras": {
+        "overview": {
+          "pos": [
+            -0.05,
+            -0.72,
+            1.38
+          ],
+          "target": [
+            0.56,
+            0.0,
+            0.78
+          ],
+          "fovy": 42
+        },
+        "closeup": {
+          "pos": [
+            0.28,
+            -0.22,
+            1.02
+          ],
+          "target": [
+            0.53,
+            0.14,
+            0.703
+          ],
+          "fovy": 38
+        },
+        "mouth": {
+          "pos": [
+            0.7,
+            0.52,
+            0.86
+          ],
+          "target": [
+            0.53,
+            0.16,
+            0.705
+          ],
+          "fovy": 38
+        }
+      },
+      "initial_targets": {
+        "sharpa": [
+          1.570796,
+          -1.570796,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -0.455573,
+          -0.717942,
+          -0.007252,
+          -1.806142,
+          2.044448,
+          0.308939,
+          -1.026457,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.2,
+          0.0,
+          0.2,
+          0.0,
+          0.2,
+          0.211648,
+          0.0,
+          0.35,
+          0.2,
+          0.25007,
+          0.0,
+          0.35,
+          0.2,
+          0.175592,
+          0.0,
+          0.35,
+          0.2,
+          0.0,
+          0.096823,
+          0.0,
+          0.35,
+          0.2
+        ],
+        "wuji": [
+          1.570796,
+          -1.570796,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -0.455573,
+          -0.717942,
+          -0.007252,
+          -1.806142,
+          2.044448,
+          0.308939,
+          -1.026457,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    }
+  ]
+}
