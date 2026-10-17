@@ -83,6 +83,7 @@ if __name__ == "__main__":
 
 
 def finalize(rc: int, episode: dict | None, final: dict | None = None, video: bytes | None = None, render: bytes | None = None,
+             newest_pid: int | None = None,
              budget: int = 4200) -> tuple[dict, list]:
     td = Path(tempfile.mkdtemp())
     data, srv, bindir = td / "out", td / "srv", td / "bin"
@@ -99,6 +100,8 @@ def finalize(rc: int, episode: dict | None, final: dict | None = None, video: by
     py.write_text(f"#!/bin/sh\nexec {sys.executable} \"$@\"\n"); py.chmod(0o755)   # a venv's python resolves by its path)
     if episode is not None:
         (data / "episode.json").write_text(json.dumps(episode))
+        if newest_pid is not None:                  # startups.jsonl: the newest service start's pid
+            (data / "startups.jsonl").write_text(json.dumps({"ts": 1, "pid": 1}) + "\n" + json.dumps({"ts": 2, "pid": newest_pid}) + "\n")
         np.savez(data / "trajectory.npz", actions=np.zeros((3, 23), np.float32))
     if final is not None:
         (data / "final.json").write_text(json.dumps(final))
@@ -153,9 +156,12 @@ def test_finalize() -> None:
     assert fin == give
     fin, _ = finalize(1, None, final={"success": True, "finalized": False})   # the service never ended the episode
     assert fin["infra_error"] == 1 and fin["success"] is False and G.grade(fin)[1]["infra_error"] == 1
-    fin, calls = finalize(1, ep, video=None, render=mp4)               # dumped, then did not exit in time: still the live verdict
+    fin, calls = finalize(1, {**ep, "pid": 4242}, video=None, render=mp4, newest_pid=4242)   # the newest start dumped, then was late
     assert fin["success"] is True and not fin.get("infra_error") and fin["end_timed_out"] is True and calls == [], (fin, calls)
     assert fin["video_pending"] is False and G.grade(fin)[0]
+    for stale in ({**ep, "pid": 1}, ep):                                # an earlier start's record, or one without a pid: infra
+        fin, calls = finalize(1, stale, video=None, render=mp4, newest_pid=4242)
+        assert fin["infra_error"] == 1 and fin["success"] is False and calls == [], (fin, calls)
     fin, _ = finalize(0, None)                                          # no episode.json: infra
     assert fin["infra_error"] == 1 and G.grade(fin)[1]["infra_error"] == 1
 
@@ -204,6 +210,7 @@ def test_live_video() -> None:
 def test_service_texts() -> None:
     s = (HERE / "shared/server.py").read_text()
     assert "instance_mismatch" in s and "LiveVideo" in s and "fresh-process replays\"" not in s
+    assert '"pid": os.getpid()' in s and 'if resumed and not E["done"]:' in s and 'os.remove(os.path.join(DATA, f))' in s
     t = (HERE / "templates/task.toml").read_text()
     assert "replay1.log" not in t and "/out/live.mp4" in t and "kill -9 -1" in t
 

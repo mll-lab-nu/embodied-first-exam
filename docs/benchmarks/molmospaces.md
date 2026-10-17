@@ -88,8 +88,9 @@ stand-in replays and the real `server.py` on the real shared layer with a stub S
 What is not the agent's failure is flagged, and a reward is always written (2026-10-10). Standard `infra_error = 1`: no
 `final.json` (`missing_log`), an unreadable one (also `grader_error`), an unfinished one (`finalized` 0: the collect hook
 did not write its verdict; these three used to be the agent's 0 or no reward at all), a give-up after crashes between
-calls or a failed resume, a service that did not end its episode for the hook (no `episode.json`: one it dumped before
-failing to exit in time is still the live verdict, `end_timed_out`), a frozen start that did not rebuild
+calls or a failed resume, a service that did not end its episode for the hook (no `episode.json`: one the newest service
+start dumped before failing to exit in time is still the live verdict, `end_timed_out`; a resume whose episode goes on
+deletes one left by a call the crash lost), a frozen start that did not rebuild
 (`instance_mismatch`, found by the service at its start); a give-up after crashes during a call and a simulator error
 raised by the agent's actions stay the agent's failure (reason `error`: the state after the exception is never judged a
 success). `finalize.sh` writes `final.json` whole and renames it into

@@ -43,7 +43,7 @@ r = std_grade({"success": False, "done": True, "reason": "sim_crashed_on_call", 
 r = std_grade({"success": False, "done": True, "reason": "resume_failed", "finalized": True, "gave_up": True, "infra_error": 1}, "giveup_infra"); check(r["infra_error"] == 1 and r["success"] == 0, "standard: give-up with infra_error -> infra_error", r)
 
 # ------------------------------------------------------------------ finalize.sh (the real script; stub `end` and stub video tool)
-def finalize(name, beh="ok", *, end_rc=0, episode=True, pre_final=None, budget=None, success=True):
+def finalize(name, beh="ok", *, end_rc=0, episode=True, pre_final=None, budget=None, success=True, ep_pid=None, newest_pid=None):
     d = os.path.join(td, "fin_" + name); data, srv, bind = (os.path.join(d, x) for x in ("data", "srv", "bin"))
     for x in (data, srv, bind): os.makedirs(x)
     os.symlink(PY, os.path.join(bind, "python"))
@@ -59,7 +59,10 @@ def finalize(name, beh="ok", *, end_rc=0, episode=True, pre_final=None, budget=N
         if res["video"]: open(sys.argv[sys.argv.index("--video") + 1], "wb").write(b"mp4")
         open(out, "w").write(json.dumps(res))
         """))
-    if episode: json.dump({"success": success, "n_actions": 30, "control_steps": 30, "reason": "done", "live_sha": "abc", "graded_by": "live", "replays": 0}, open(os.path.join(data, "episode.json"), "w"))
+    if episode: json.dump({"success": success, "n_actions": 30, "control_steps": 30, "reason": "done", "live_sha": "abc", "graded_by": "live", "replays": 0,
+                           **({"pid": ep_pid} if ep_pid is not None else {})}, open(os.path.join(data, "episode.json"), "w"))
+    if newest_pid is not None:   # startups.jsonl: the newest service start's pid
+        open(os.path.join(data, "startups.jsonl"), "w").write(json.dumps({"ts": 1, "pid": 1}) + "\n" + json.dumps({"ts": 2, "pid": newest_pid}) + "\n")
     if pre_final is not None: json.dump(pre_final, open(os.path.join(data, "final.json"), "w"))
     open(os.path.join(data, "trajectory.npz"), "wb").write(b"x")
     f = os.path.join(d, "finalize.sh"); open(f, "w").write(open(os.path.join(T_STD, "environment/sim/finalize.sh")).read().replace("/srv", srv))
@@ -79,7 +82,13 @@ fin, r, _, _, _ = finalize("mismatchrender", "mismatch"); check(fin["success"] i
 fin, r, dt, out, _ = finalize("hang", "hang", budget=30); check(fin["finalized"] and fin["success"] is True and fin["video"] is False and fin["video_pending"] is False and r["success"] == 1 and dt < 60, f"finalize: a hanging render is ended at the hook's deadline ({dt:.0f} s) and loses only the video", (fin, r, out))
 fin, r, _, _, calls = finalize("noepisode", episode=False); check(fin["infra_error"] == 1 and r["infra_error"] == 1 and r["success"] == 0, "finalize: no episode.json -> infra_error", (fin, r))
 fin, r, _, _, calls = finalize("endrc1", end_rc=1, episode=False, pre_final={"success": True, "finalized": False}); check(fin["finalized"] and fin["infra_error"] == 1 and r["infra_error"] == 1 and r["success"] == 0 and not calls, "finalize: the service never ended the episode (no episode.json) -> infra_error, no render", (fin, r))
-fin, r, _, _, calls = finalize("endrc1dumped", end_rc=1, pre_final={"success": True, "finalized": False}); check(fin["finalized"] and not fin.get("infra_error") and fin["end_timed_out"] is True and r["success"] == 1 and not calls and fin["video_pending"] is False, "finalize: a dumped episode.json is the live verdict when the service was late to exit (no render)", (fin, r, calls))
+for nm, pid in (("endrc1stale", 1), ("endrc1nopid", None)):   # an earlier start's record, or one without a pid: never taken
+    fin, r, _, _, calls = finalize(nm, end_rc=1, ep_pid=pid, newest_pid=4242, pre_final={"success": True, "finalized": False})
+    check(fin["infra_error"] == 1 and r["success"] == 0 and not calls, f"finalize: a late exit's episode.json from another start ({nm}) -> infra_error", (fin, r))
+src = open(os.path.join(T_STD, "environment/sim/server.py")).read()
+check('"pid": os.getpid()' in src and 'if resumed and not E["done"]:' in src and "os.remove(os.path.join(DATA, f))" in src,
+      "service: episode.json names its start; a resume whose episode goes on drops a lost call's episode.json")
+fin, r, _, _, calls = finalize("endrc1dumped", end_rc=1, ep_pid=4242, newest_pid=4242, pre_final={"success": True, "finalized": False}); check(fin["finalized"] and not fin.get("infra_error") and fin["end_timed_out"] is True and r["success"] == 1 and not calls and fin["video_pending"] is False, "finalize: a dumped episode.json is the live verdict when the service was late to exit (no render)", (fin, r, calls))
 gave = {"success": False, "finalized": True, "gave_up": True, "reason": "sim_crashed_on_call"}
 fin, r, _, _, calls = finalize("endrc2", end_rc=2, pre_final=gave); check(fin == gave and r["infra_error"] == 0 and not calls, "finalize: a give-up verdict on disk is kept", (fin, r))
 ct = float(re.search(r'command = "sh /srv/finalize.sh".*\ntimeout_sec = (\d+)', open(os.path.join(T_STD, "task.toml")).read()).group(1))
