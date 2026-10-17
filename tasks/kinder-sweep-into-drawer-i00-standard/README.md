@@ -8,14 +8,14 @@
 | Simulator / robot | `kinder` / `tidybot-plus-plus` |
 | Family / instance | `sweep-into-drawer` / seed 0 |
 | Oracle | `none` — GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1 (it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example); in standard mode, the graded episode of run `codex-gpt6_1_sol-high` of 2026-10-03 (960 control steps, no reset), which the standard service scored 1 (live, fresh replay, deterministic); human review in PR #8 |
-| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-into-drawer-i00-privileged`: the same KinDER instance (`kinder/SweepIntoDrawer3D-o5-v0`, seed
 0) runs in the `sim` sidecar; the agent gets a client and the robot's own sensors -- two
 cameras, joint encoders, the base's odometry -- and
-never the scene's state or the goal check. 10 resets; only the last episode is graded.
+never the scene's state or the goal check. No reset: one episode, which is graded.
 
 Task: get the five small dark-red cubes on top of the kitchen island into the middle drawer of the island's upper row of drawers, which starts closed; a wiper lies next to the cubes. The task succeeds the moment all five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer's two side walls.
 
@@ -50,6 +50,5 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 ## Details
 
 ### Change Log
-- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5,
-  docs/benchmarks/kinder.md); the service already had `POST /reset`. The scene, instance, pass rule and verifier are
-  unchanged, so the task keeps its name; runs recorded before this date had no reset and are reported separately.
+- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5, docs/benchmarks/kinder.md); the service already had `POST /reset`. The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded before this date had no reset and are reported separately.
+- 2026-10-16: agent time limit 3600 s -> 1800 s (`[agent] timeout_sec`, both twins; author decision, docs/benchmarks/kinder.md), and `RCB_RESET_BUDGET`'s default 10 -> 0 (author decision): one episode, which the practice and the graded attempt share. The scene, instance, pass rule and verifier logic are unchanged (`tests/rcb_limits.json` carries the new cutoff), so the task keeps its name; runs recorded before this date are reported separately.

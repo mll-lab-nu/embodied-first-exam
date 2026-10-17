@@ -9,7 +9,8 @@
   facts.json as it is.
 
 What a task says in words comes from subset.toml; every number it states (the scene's digest, the action space, the
-costs) comes from facts.json, which only `measure` writes. The simulator-backed commands run in the image:
+costs, a marked goal's place) comes from facts.json, which only `measure` writes. The simulator-backed commands run in
+the image:
 
   docker run --rm --gpus all -e NVIDIA_DRIVER_CAPABILITIES=compute,graphics,utility -v $PWD:/repo -w /repo \\
     --user $(id -u):$(id -g) -e HOME=/tmp <image: images/kinder/VERSION> python scripts/kinder/gen_tasks.py measure
@@ -39,15 +40,14 @@ TASKS_DIR = ROOT / "tasks"
 sys.path.insert(0, str(ROOT / "scripts")); from task_conventions import normalize  # noqa: E402   (protocol v1.0 conventions)
 # The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
 # timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
-# the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
-# regenerate.
-CUTOFF_SEC = {"privileged": 3600, "standard": 3600}
+# the sim service's wall clock. To change it (the author's decision; the pull request states old -> new), edit it here
+# and regenerate. 1800 s since 2026-10-16 (author decision, both twins; 3600 s before).
+CUTOFF_SEC = {"privileged": 1800, "standard": 1800}
 SHARED, TEMPLATES, ORACLES, FACTS = HERE / "shared", HERE / "templates", HERE / "oracles", HERE / "facts.json"
-# standard mode's default reset budget (RCB_RESET_BUDGET's default; KinDER's own choice, PROTOCOL §4.5; owner
-# 2026-10-11): 10, since the 1000 control steps bound each episode and without a reset the practice and the graded
-# attempt share them; ten, as MyoSuite, because a scripted episode ends in about a minute; RCB_RESET_BUDGET=0 still runs
-# the single-episode configuration
-RESET_BUDGET = 10
+# standard mode's default reset budget (RCB_RESET_BUDGET's default; PROTOCOL §2; author 2026-10-16, before it 10 from
+# 2026-10-11): 0, the protocol's default: one episode, whose 1000 control steps the practice and the graded attempt
+# share; RCB_RESET_BUDGET=N still runs a configuration with N resets
+RESET_BUDGET = 0
 STANDARD = SHARED / "standard"                 # the standard-mode sidecar, client and verifier (eai-standard/2.1)
 IMAGE = "ghcr.io/mll-lab-nu/eai-kinder:" + (ROOT / "images/kinder/VERSION").read_text().strip()
 # The agent container and the verifier of every standard-mode task: the one client base (pinned by digest) and the
@@ -213,6 +213,12 @@ def oracle_fields(t: dict, d: dict, mode: str) -> dict:
     if (ORACLES / t["family"] / mode).is_dir():
         return {"oracle_lines": 'oracle = "full"', "reference_solution": one_line(t["oracle_" + mode]),
                 "oracle_note": "The oracle (`solution/solve.sh`) scores 1; `nop` scores 0."}
+    if "oracle_evidence" not in t:              # no positive example yet: unvalidated (PROTOCOL §2, §4)
+        evidence = "none yet: no positive example is known for this instance (human review pending)"
+        return {"oracle_lines": f'oracle = "none"\nvalidated = false\noracle_evidence = {json.dumps(evidence)}',
+                "reference_solution": "None, and no positive example yet: the task is unvalidated (`validated = false`, "
+                                      "docs/PROTOCOL.md §2, §4) until a human review records one.",
+                "oracle_note": "No oracle; no positive example yet (human review pending). `nop` scores 0."}
     evidence = one_line(t["oracle_evidence"]) + f"; human review in {review}"
     return {"oracle_lines": f'oracle = "none"\noracle_evidence = {json.dumps(evidence, ensure_ascii=False)}',
             "reference_solution": "None. Solvability rests on the positive example in `oracle_evidence` (task.toml), "
@@ -220,10 +226,59 @@ def oracle_fields(t: dict, d: dict, mode: str) -> dict:
             "oracle_note": f"No oracle; human review in {review}. `nop` scores 0."}
 
 
+def change_log(t: dict, d: dict, mode: str) -> str:
+    """The README's Change Log: a task that keeps its instance lists the changes made to it in place; a task with a new
+    instance tag starts its own log, naming the one it replaces."""
+    if t.get("instance_tag", d["instance_tag"]) != d["instance_tag"]:
+        return (f"- 2026-10-16: first version, a new instance replacing `kinder-{t['family']}-{d['instance_tag']}-{mode}` "
+                f"({t['replaces']}): the scene changed, so the task "
+                "has a new name (PROTOCOL §1, H.8). Agent time limit 1800 s" + ("; no reset." if mode == "standard" else "."))
+    log = ["- 2026-10-11: `RCB_RESET_BUDGET`'s default 0 -> 10 (owner decision; PROTOCOL §4.5, docs/benchmarks/kinder.md); the "
+           "service already had `POST /reset`. The scene, instance, pass rule and verifier are unchanged, so the task keeps its "
+           "name; runs recorded before this date had no reset and are reported separately."] if mode == "standard" else []
+    log.append("- 2026-10-16: agent time limit 3600 s -> 1800 s (`[agent] timeout_sec`, both twins; author decision, "
+               "docs/benchmarks/kinder.md)" + (", and `RCB_RESET_BUDGET`'s default 10 -> 0 (author decision): one episode, "
+               "which the practice and the graded attempt share" if mode == "standard" else "")
+               + ("; the instruction now states where the " + t["goal_mark"]["name"] + " is at the start, measured in "
+                  "the odometry frame" if mode == "standard" and "goal_mark" in t else "")
+               + ". The scene, instance, pass rule and verifier logic are unchanged (`tests/rcb_limits.json` carries the "
+               "new cutoff), so the task keeps its name; runs recorded before this date are reported separately.")
+    return "\n".join(log)
+
+
+def reset_text(n: int, steps: int) -> dict:
+    """What the standard instruction and README say about resets: with a budget, the reset rules and `r.reset()`'s row;
+    without one, a single episode and no reset row (the service has no `POST /reset` then)."""
+    if n == 0:
+        return {"reset_rule": "- **No reset: one episode.** The episode starts when the service comes up. It ends when the task "
+                              "succeeds, after", "reset_rule_tail": "No other episode follows "
+                              "(`spec()[\"budget\"][\"reset\"]` is 0, and it is authoritative), and **this episode is "
+                              "graded**: a success ends the run at once, and when your time is up it is graded as it "
+                              "stands. Once it has ended, `submit` raises `EpisodeOver`.",
+                "reset_row": "", "reset_left": "", "reset_summary": "No reset: one episode, which is graded.",
+                "status_extra": "", "recorded": "records the episode, replays it"}
+    return {"reset_rule": "- **Episodes and resets.** The episode starts when the service comes up. It ends when the task "
+                          "succeeds, after",
+            "reset_rule_tail": f"You have **{n} resets** (`spec()[\"budget\"][\"reset\"]`, which is authoritative: if it "
+                               "says 0, there is no reset and the one episode is the run). `r.reset()` starts a new episode "
+                               f"from the same starting state, with its own {steps} control steps, either abandoning "
+                               "the running episode or after one has ended; it returns the start's frames. Once an episode "
+                               "has ended, `submit` raises `EpisodeOver` (its message gives `resets_left`) until you reset. "
+                               "**Only the last episode is graded**: a success ends the run at once, and when your time is "
+                               "up the episode then running is the one graded; `meta[\"episode\"]` and "
+                               "`meta[\"resets_left\"]` count the episodes.",
+            "reset_row": f"\n| `r.reset(cameras=None, include_depth=False)` | `POST /reset` | a new episode from the starting "
+                         f"state (at most {n} in all); returns the start's frames |",
+            "reset_left": ", or a reset is left", "reset_summary": f"{n} resets; only the last episode is graded.",
+            "status_extra": ", and `episode`, `resets_left`, `control_steps_total` (all episodes)",
+            "recorded": "records every episode, replays the last one"}
+
+
 def context(t: dict, d: dict, f: dict) -> dict:
     """The privileged task's placeholders; standard_context() adds its twin's."""
     stmt = one_line(t["task_statement"])
-    base = f"kinder-{t['family']}-{d['instance_tag']}"; full = base + "-privileged"
+    tag = t.get("instance_tag", d["instance_tag"])   # a task whose scene changed carries a new tag (PROTOCOL §1, H.8)
+    base = f"kinder-{t['family']}-{tag}"; full = base + "-privileged"
     std = f["standard"]
     ms = std["step_ms"]
     k, n = kind(f["entry_point"]), max_steps(t, d)
@@ -231,7 +286,7 @@ def context(t: dict, d: dict, f: dict) -> dict:
     mujoco = k == "tidybot"
     return {
         "family": t["family"], "env_id": t["env_id"], "env_name": t["env_id"].split("/")[1].removesuffix("-v0"),
-        "instance_tag": d["instance_tag"], "seed": d["seed"], "max_steps": n, "reset_budget": RESET_BUDGET,
+        "instance_tag": tag, "seed": d["seed"], "max_steps": n, "reset_budget": RESET_BUDGET,
         "category": category, "robot": robot, "robot_id": "tidybot-plus-plus",   # both kinds' robot
         "keywords": ", ".join(f'"{w}"' for w in keywords), "view": "task_view" if mujoco else "render",
         "step_time": f" ({n / 10:g} s at 10 Hz)" if mujoco else "", "step_name": "10 Hz control step" if mujoco else "control step",
@@ -253,10 +308,28 @@ def context(t: dict, d: dict, f: dict) -> dict:
         # the agent's time limit: CUTOFF_SEC's (PROTOCOL §2.12), never stated as a number in a template: normalize renders
         # the closing section from task.toml, and the texts say "the time limit (`## Time limit`)"
         "agent_timeout": float(CUTOFF_SEC["privileged"]),
-        "verifier_timeout": float(d["verifier_timeout_sec"]), "image_hw": "×".join(map(str, std["image_hw"])),
+        "verifier_timeout": float(t.get("verifier_timeout_sec", d["verifier_timeout_sec"])), "image_hw": "×".join(map(str, std["image_hw"])),
         "ms_single": f"{ms['single']:.1f}", "ms_images": f"{ms['images']:.1f}", "ms_batch": f"{ms['batch']:.1f}",
-        **oracle_fields(t, d, "privileged"),
+        "change_log": change_log(t, d, "privileged"), **oracle_fields(t, d, "privileged"),
     }
+
+
+def goal_place(t: dict, f: dict) -> str:
+    """Where a goal marked faintly on the floor (subset.toml `goal_mark`) lies at t = 0, from facts.json, in the
+    odometry frame the standard instruction describes: a sentence after the goal's, or nothing."""
+    if "goal_mark" not in t:
+        return ""
+    g, mark = f["goal_region"], t["goal_mark"]
+    dist, bearing = math.hypot(g["x"], g["y"]), math.degrees(math.atan2(g["y"], g["x"]))
+    side = ("straight ahead" if abs(bearing) < 5
+            else f"{abs(bearing):.0f}° to the {'left' if bearing > 0 else 'right'} of the way it faces")
+    height = f", from the floor to {g['height']:g} m up" if mark.get("height") else ""
+    skew = g["skew_deg"]
+    turned = ("" if abs(skew) < 1 else f", its sides turned about {abs(skew):.0f}° "
+              f"{'counter-clockwise' if skew > 0 else 'clockwise'} (seen from above) from the frame's axes")
+    return (f" Measured at the start, in the odometry frame (below): the {mark['name']}'s centre is at x = {g['x']:.2f} m, "
+            f"y = {g['y']:.2f} m, {dist:.1f} m from the centre of the base and {side}; it is "
+            f"{g['along_x']:g} m along x by {g['along_y']:g} m along y{height}{turned}.")
 
 
 def standard_context(t: dict, d: dict, f: dict, ctx: dict, task_dir: str) -> dict:
@@ -265,13 +338,13 @@ def standard_context(t: dict, d: dict, f: dict, ctx: dict, task_dir: str) -> dic
     stmt = one_line(t.get("standard_statement", t["task_statement"]))
     text = {k: v.format(hw=ctx["image_hw"]) for k, v in SENSORS[kind(f["entry_point"])].items()}
     kinematic = kind(f["entry_point"]) == "kinematic3d"
-    return ctx | text | {"task_dir": task_dir, "task_statement": stmt,
+    return ctx | text | {"task_dir": task_dir, "task_statement": stmt, "goal_place": goal_place(t, f),
                          "task_text_yaml": json.dumps(goal_text(stmt), ensure_ascii=False),   # a YAML string, quotes and all
                          "robot_time": f" ({ctx['robot_seconds']} s of robot time)" if ctx["view"] == "task_view" else "",
                          "chunk_rows": 100,   # max_chunk_s (10 s) / control_dt (0.1 s)
                          "blocked_note": " or at a step the robot refuses (`meta[\"blocked\"]`)" if kinematic else "",
-                         "agent_timeout": float(CUTOFF_SEC["standard"]),
-                         **oracle_fields(t, d, "standard")}
+                         "agent_timeout": float(CUTOFF_SEC["standard"]), "change_log": change_log(t, d, "standard"),
+                         **reset_text(RESET_BUDGET, ctx["max_steps"]), **oracle_fields(t, d, "standard")}
 
 
 def write(path: Path, text: str, executable: bool = False) -> None:
@@ -494,6 +567,28 @@ def stated_bound(v, side: int) -> float | None:
     return round(r - side * 1e-4, 4) if side * (type(v)(r) - v) > 0 else r
 
 
+def goal_region(s, region: str) -> dict:
+    """A goal region on the floor (upstream's `region`: the box KinDER draws and checks, its sides along the world's
+    axes) at t = 0, in the standard twin's odometry frame (origin under the base's centre, x the way it faces, y left):
+    its centre, its extent along each axis, its height, and the angle between its sides and the axes."""
+    oc = s.env.unwrapped._object_centric_env
+    (r,) = oc._ground_fixture.region_objects[region]
+    env, r.env = r.env, oc._robot_env                         # the env KinDER's goal check computes the box in
+    try:
+        x0, y0, _, x1, y1, z1 = r.bbox
+    finally:
+        r.env = env
+    st = s.state()
+    rob = st.get_object_from_name(oc.robot_name)
+    bx, by, th = (float(st.get(rob, k)) for k in ("pos_base_x", "pos_base_y", "pos_base_rot"))
+    dx, dy = (x0 + x1) / 2 - bx, (y0 + y1) / 2 - by
+    quarter = round(-th / (math.pi / 2))                      # the world's x axis, seen from the base: quarter turns + skew
+    ext = (x1 - x0, y1 - y0) if quarter % 2 == 0 else (y1 - y0, x1 - x0)
+    return {"region": region, "x": round(dx * math.cos(th) + dy * math.sin(th), 3),
+            "y": round(-dx * math.sin(th) + dy * math.cos(th), 3), "along_x": round(ext[0], 3),
+            "along_y": round(ext[1], 3), "height": round(z1, 3), "skew_deg": round(math.degrees(-th - quarter * math.pi / 2), 1)}
+
+
 def measure_one(t: dict, d: dict, images: Path) -> dict:
     import numpy as np
     sys.path.insert(0, str(SHARED))
@@ -509,7 +604,8 @@ def measure_one(t: dict, d: dict, images: Path) -> dict:
     f = {"scene_sha": sha, "obs_dim": int(s.obs().shape[0]), "action_dim": int(dim),
          "entry_point": gymnasium.spec(s.env_id).entry_point,
          "action_doc": s.env.unwrapped.metadata.get("action_space_description", ""),
-         "action_low": [stated_bound(v, -1) for v in low], "action_high": [stated_bound(v, +1) for v in high]}
+         "action_low": [stated_bound(v, -1) for v in low], "action_high": [stated_bound(v, +1) for v in high],
+         **({"goal_region": goal_region(s, t["goal_mark"]["region"])} if "goal_mark" in t else {})}
     t0 = time.perf_counter()
     nop = s.replay(np.zeros((s.max_steps, dim)))              # holding still for the whole episode
     f["episode_seconds"] = round(time.perf_counter() - t0, 1)
@@ -557,9 +653,9 @@ def cmd_verify(args) -> int:
         new, old = measure_one(t, d, Path(args.images)), facts.get(t["family"], {})
         failed += checks(t["family"], new)
         for k in ("scene_sha", "obs_dim", "action_dim", "action_low", "action_high", "nop_success", "entry_point",
-                  "action_doc"):
-            if new[k] != old.get(k):
-                failed.append(f"{t['family']}: {k} drifted: facts.json {old.get(k)}, measured {new[k]}")
+                  "action_doc", "goal_region"):
+            if new.get(k) != old.get(k):
+                failed.append(f"{t['family']}: {k} drifted: facts.json {old.get(k)}, measured {new.get(k)}")
     print("\n".join(f"FAIL {x}" for x in failed) or "verify: all checks pass")
     return 1 if failed else 0
 

@@ -2,7 +2,7 @@
 #
 # Which tasks: KinDER's Dynamic3D tasks (MuJoCo, a TidyBot++ mobile manipulator) whose goal a camera can see or a
 # sentence can name, and (the section at the end) other 3D families of KinDER, one variant each. Of all of these, the
-# four with the most task objects (upstream's `oN`) stay (docs/benchmarks/kinder.md), with the fixture. Each ships twice (docs/PROTOCOL.md): privileged mode (tasks/kinder-<family>-i00:
+# four with the most task objects (upstream's `oN`) stay (docs/benchmarks/kinder.md), with the fixture. Each ships twice (docs/PROTOCOL.md): privileged mode (tasks/kinder-<family>-i<NN>-privileged:
 # the simulator and its state, one replayable trajectory) and standard mode (-standard: the robot as a service,
 # eai-standard/2.1, its own sensors only).
 #
@@ -17,8 +17,15 @@
 #
 # Per task, for its README and the human review of a task without an oracle (docs/PROTOCOL.md §2.7):
 #   difficulty        what makes it hard, and how models did
-#   oracle_evidence   the positive example a reviewer checks (the family's, both modes)
+#   oracle_evidence   the positive example a reviewer checks (the family's, both modes); absent: none yet, so the
+#                     task is unvalidated (`[metadata] validated = false`, PROTOCOL §2, §4)
+#   instance_tag, replaces   a task whose scene changed carries a new tag (PROTOCOL §1, H.8); replaces: what the
+#                     default tag's instance was (its README's Change Log)
 #   oracle_privileged, oracle_standard   instead, where oracles/<family>/<mode>/ holds an oracle: what it does
+#   goal_mark         where the goal is a translucent region marked on the floor, which the robot's cameras show
+#                     faintly: upstream's region (`region`, the task JSON's) and what the statement calls it (`name`);
+#                     `measure` places it relative to the robot at t = 0 (facts.json `goal_region`) and the standard
+#                     instruction states that (its height too where `height`: the goal is for objects, not the base)
 # The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs and the package registries), read by gen_tasks.py:
 # KinDER and its baselines are public, so anything more lets a standard-mode agent install the simulator it is not
 # given, and either mode fetch upstream's planners.
@@ -34,6 +41,7 @@ review_pr = 8             # the pull request whose human review covers the tasks
 family = "dynamo"
 env_id = "kinder/Dynamo3D-o3-v0"
 task_view = { position = [-1.0, -1.2, 2.8], lookat = [2.2, 1.9, 0.0], fovy = 70 }  # upstream: 6.75 m up, straight down
+goal_mark = { region = "ground_goal_region", name = "green square" }
 expert_hours = 2.0
 difficulty = """Nonprehensile: three chairs stand between the robot and the floor square, and the base can push them. The
 benchmark's fixture: the pipeline check, with an oracle in both modes."""
@@ -60,12 +68,15 @@ five cubes' centres are inside that drawer, each at least 2.5 cm from the drawer
 
 [[task]]
 family = "scoop-pour"
-env_id = "kinder/ScoopPour3D-o30-v0"
+env_id = "kinder/ScoopPour3D-o50-v0"
+instance_tag = "i01"      # i00 was the o30 variant until 2026-10-16
+replaces = "upstream's o30 variant: 30 cubes"
+verifier_timeout_sec = 1800   # o50, privileged twin's grade.py (standard grades in the sim hook): three 1000-step replays (two graded + the video's, ~81 s each on a light host) and
+                              # the CPU-rendered video, on a loaded host; the default 900 s left too little margin
 expert_hours = 4.0
-difficulty = """Nonprehensile, tool use, dynamics: move 30 small cubes from one bin to another with a scoop, each ending well
-inside the target bin."""
-oracle_evidence = """the privileged-mode trajectories of runs `codex-gpt6_astra-high` (845 steps) and `codex-gpt6_sol-high` (770 steps) of 2026-10-04, each scored 1 by the privileged verifier (two replays, the same final state; verifier and instance unchanged since); no standard-mode example is known yet (docs/benchmarks/kinder.md, Open)"""
-task_statement = """move all 30 small dark-red cubes from the yellow bin into the green bin; a scoop is in the
+difficulty = """Nonprehensile, tool use, dynamics: move 50 small cubes from one bin to another with a scoop, each ending well
+inside the target bin. The variant is upstream's o50 (both cube families use theirs, docs/benchmarks/kinder.md)."""
+task_statement = """move all 50 small dark-red cubes from the yellow bin into the green bin; a scoop is in the
 scene. The task succeeds the moment every cube's centre is inside the green bin, at least 1 cm from each of its inner
 walls and at least 0.5 cm below its rim."""
 
@@ -97,11 +108,14 @@ within the cupboard's 10 cm width and 30 cm depth."""
 
 [[task]]
 family = "sweep-simple"
-env_id = "kinder/SweepSimple3D-o10-sweep_the_blocks_to_the_left_side_of_the_kitchen_island-v0"
+env_id = "kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0"
+instance_tag = "i01"      # i00 was the o10 variant (left side of the island) until 2026-10-16
+replaces = "upstream's o10 variant: ten cubes, the left side of the kitchen island"
+goal_mark = { region = "sweep_region", name = "grey box", height = true }
 expert_hours = 3.0
-difficulty = """Nonprehensile, tool use: ten small cubes on the floor into a box marked at the kitchen island's end, with a
-wiper at hand."""
-oracle_evidence = """GPT-6 Luna's privileged-mode trajectory of 2026-10-04 (it moves the base diagonally by up to 0.14 m a step, beyond standard mode's 0.1 m disc) and its graded standard-mode episode with 50 resets recorded before protocol v1.0, run `codex-gpt6_luna-medium` on the results site; today's privileged verifier scores both 1, and the standard service scores the episode 1 when it is sent through the client"""
-task_statement = """get the ten small dark-red cubes scattered on the floor into the translucent grey box marked on the
+difficulty = """Nonprehensile, tool use: fifty small cubes spread over 2 m² of floor into a box marked at the kitchen island's
+end, with a wiper standing about 1.7 m from where the robot starts. The variant is upstream's o50 (both cube families use
+theirs, docs/benchmarks/kinder.md); of its three goals, the one upstream's README gives as the family's example."""
+task_statement = """get the fifty small dark-red cubes scattered on the floor into the translucent grey box marked on the
 floor at the end of the kitchen island (the free-standing white-topped counter) nearest the robot; a wiper stands on the
-floor next to the cubes. The task succeeds the moment all ten cubes' centres are inside that box."""
+floor near the cubes. The task succeeds the moment all fifty cubes' centres are inside that box."""
