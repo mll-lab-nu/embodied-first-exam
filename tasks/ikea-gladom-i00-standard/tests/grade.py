@@ -18,7 +18,7 @@ not dumped are infra_error. The live video (/data/live.mp4) is evidence only: it
 import json, os, shutil, sys
 
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier"); os.makedirs(LOG, exist_ok=True)
-DATA = os.environ.get("RCB_VERIFIER_DATA", "/data")
+DATA = os.environ.get("RCB_VERIFIER_DATA") or os.environ.get("RCB_DATA") or "/data"   # tests only: the sandbox sets neither
 TASK = sys.argv[1] if len(sys.argv) > 1 else ""
 
 
