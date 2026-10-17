@@ -46,7 +46,9 @@ REALTIME = {
     "S05": ("1.20-1.21", 2), "S07": ("0.46-0.48", 4), "S08": ("0.29", 6), "S09": ("0.92-1.14", 2),
     "S10": ("0.84", 2), "S11": ("0.69-0.94", 3), "S12": ("0.68", 3),
 }
-RT_RESETS = 10        # PROTOCOL §4b: every standard-realtime task allows resets, 10 by default (owner, 2026-10-14)
+RT_RESETS = 3         # the benchmark's choice (PROTOCOL §2), below the mode's default of 10: every reset restores the same
+                      # frozen start, so 10 resets let an agent tune an open-loop plan on a deterministic scene (2026-10-17,
+                      # docs/benchmarks/pandadyn.md "Reset budget"); 10 from 2026-10-14 to 2026-10-17
 POSITION_IN_TEXT = re.compile(r"\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)")
 
 
