@@ -14,12 +14,13 @@ no verdict on the agent) is a replay process that died or ran out of time, a fro
 any other exception here.
 """
 
-import argparse, json, os, subprocess, sys, tempfile, traceback
+import argparse, json, os, subprocess, sys, tempfile, time, traceback
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_molmospaces.py")
-REPLAY_TIMEOUT_S = 500  # three replays fit the verifier's 1800 s (a replay takes 20-120 s)
+BUDGET_S = float(os.environ.get("RCB_VERIFIER_BUDGET_S", 1740))  # task.toml's [verifier] timeout_sec (1800) minus a margin
+T0 = time.monotonic()  # the replays share BUDGET_S (a replay takes 20-120 s, over 500 s on a loaded host)
 
 
 def write(ok: bool, out: dict) -> None:
@@ -62,8 +63,12 @@ def agent_cost(path: str = "/app/output/rcb_session_log.jsonl") -> dict:
     return cost
 
 
-def replay(instance: str, traj: str, video: str | None) -> dict:
-    """One replay in a fresh process; its result (`--out`), or {"error": ...}."""
+def replay(instance: str, traj: str, video: str | None, share: int = 1) -> dict:
+    """One replay in a fresh process, limited to 1/share of the time left of BUDGET_S (share = the replays still to grade);
+    its result (`--out`), or {"error": ...}."""
+    limit = (BUDGET_S - (time.monotonic() - T0)) / share
+    if limit < 20:
+        return {"error": "replay took over the verifier's budget (no time left)"}
     with tempfile.NamedTemporaryFile(suffix=".json") as out:
         cmd = [sys.executable, TOOL, "replay", "--instance", instance, "--traj", traj, "--out", out.name]
         try:
@@ -71,11 +76,11 @@ def replay(instance: str, traj: str, video: str | None) -> dict:
                 cmd + (["--video", video] if video else []),
                 stdout=subprocess.DEVNULL,
                 stderr=sys.stderr,
-                timeout=REPLAY_TIMEOUT_S,
+                timeout=limit,
                 env={**os.environ, "RCB_SESSION_LOG": ""},
             )
         except subprocess.TimeoutExpired:
-            return {"error": f"replay took over {REPLAY_TIMEOUT_S} s"}
+            return {"error": f"replay took over {limit:.0f} s"}
         try:
             return json.load(open(out.name))
         except ValueError:
@@ -118,7 +123,9 @@ def main() -> int:
                 },
             )
             return 0
-        runs = [replay(a.instance, a.traj, None), replay(a.instance, a.traj, None)]
+        runs = [replay(a.instance, a.traj, None, 2)]
+        if "error" not in runs[0]:  # no second replay once the first gave no result: the verdict is infra_error anyway
+            runs.append(replay(a.instance, a.traj, None))
         if any("error" in r for r in runs):
             timed_out = int(any("took over" in str(r.get("error")) for r in runs))
             write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "replay_timed_out": timed_out, **cost})

@@ -1,9 +1,9 @@
 # MolmoSpaces · pick-and-place-next-to — frozen episode
 
-**Task:** Pick up the red tdk vhs tape and place it next to the soap bottle.
+**Task:** Pick up the compact black rail mount with slots and place it next to the bread.
 
 You control a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup) in one episode of Ai2's MolmoSpaces benchmark (upstream package `procthor-objaverse/FrankaPickandPlaceNextToHardBench/FrankaPickandPlaceNextToHardBench_20260305_json_benchmark`,
-episode 89: an Objaverse object), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
+episode 479: an Objaverse object), simulated by upstream's own code (molmo-spaces 0.2.9, MuJoCo 3.5.0) via Python.
 The episode is frozen: the house, every object and the robot start the same way after every reset, and you may reset as
 often as you like. Your deliverable is **one open-loop trajectory**, not a general policy.
 
@@ -11,7 +11,8 @@ often as you like. Your deliverable is **one open-loop trajectory**, not a gener
 The episode ends after the last row of your trajectory, or after **455 control steps** (the benchmark's
 30 s horizon at 15.152 Hz), whichever comes first. Success is upstream's `judge_success()` on the state
 at that moment: the horizontal gap between the two objects' axis-aligned bounding boxes is between 0 and 6 cm; both rest on the same supporting body; and the reference object has moved at most 15 cm and rotated at most 60 degrees from its start pose. The task has to hold at the end: met earlier and undone by then does not count, and ending
-your trajectory right after the task is met is how you stop there.
+your trajectory right after the task is met is how you stop there. The grader replays your trajectory open-loop from the
+same start in a fresh process, twice; it scores 1 only if both replays succeed and end in the same state.
 
 ## Deliverable
 `/app/output/trajectory.npz` with `actions`: float64 (T, 8), one row per control step, the targets of upstream's
