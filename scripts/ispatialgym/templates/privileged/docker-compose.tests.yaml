@@ -1,0 +1,18 @@
+# The verifier replays in Isaac Sim with the same dataset mount and one GPU. Its Kit cache is a TRUSTED volume of this
+# verification only: Isaac keeps generated Python there that Kit imports at startup, so a cache the agent could write
+# never reaches the grader.
+services:
+  main:
+    volumes:
+      - $${RCB_BEHAVIOR_DATA:?set RCB_BEHAVIOR_DATA to the directory holding your licensed BEHAVIOR dataset (docs/benchmarks/ispatialgym.md)}:/bdata:ro
+      - rcb_ispatialgym_cache_trusted:/cache
+    shm_size: "8gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+volumes:
+  rcb_ispatialgym_cache_trusted:
