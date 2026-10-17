@@ -40,6 +40,7 @@ from __future__ import annotations
 import fnmatch
 import functools
 import hashlib
+import os
 import re
 import shutil
 import sys
@@ -1175,18 +1176,23 @@ def validated_of(task: Path) -> bool:
 # The easy set (PROTOCOL §4, RUNNING.md "Results"): task bases kept in the repository and run like any other, but reported
 # apart from the main table and left out of the headline statistics. One central list, docs/easy_set.toml, not a task
 # field: marking a task changes none of its files, so its DIGEST and the results recorded against it stay as they are.
-EASY_SET_FILE = Path(__file__).resolve().parents[1] / "docs" / "easy_set.toml"
+EASY_SET_FILE = Path(os.environ.get("RCB_EASY_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "easy_set.toml")
+# RCB_EASY_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
 EASY_REASONS = {
     "shortcut": "a success came through a goal looser than the task's text, or a grader shortcut (`note`: the pattern)",
     "owner": "the benchmark owner judges the task too easy or not discriminative",
-    "solved": "the screening runs solved the task in every mode it ships (`note`: which runs)",
+    "solved": "the screening runs solved the task in every mode it ships, or the `solved_by` run in any mode (`note`: "
+              "which runs, which modes)",
 }
+# `solved_by` (optional, reason "solved" only): the reference run that solved the base in ANY mode it ships (owner 10-17,
+# board 0155); `easy-set --solved-by luna` lists them. scripts/easy_set_add_solved.py appends such entries.
+SOLVED_BY = {"luna": "codex-gpt6_luna-xhigh"}
 
 
 def easy_set(path: Path = EASY_SET_FILE) -> dict[str, dict]:
     """docs/easy_set.toml as {base: entry}; empty when the file is absent. Entries: `base` (the task name without its
     mode suffix: every mode the base ships is in the set), `benchmark` (its BENCHMARKS label), `reason` (EASY_REASONS),
-    optional `note`. ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`). Parsed once per
+    optional `note` and `solved_by` (SOLVED_BY). ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`). Parsed once per
     version of the file (its mtime), so a long-running reader sees an edited list."""
     try:
         mtime = path.stat().st_mtime_ns
@@ -1245,9 +1251,11 @@ def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) ->
             bad.append(f"{b}: no task directory {b}-<mode> under tasks/")
         if e.get("benchmark") != bench_of(Path(b)):
             bad.append(f"{b}: benchmark {e.get('benchmark')!r}, its label is {bench_of(Path(b))!r}")
-        unknown = set(e) - {"base", "benchmark", "reason", "note"}
+        unknown = set(e) - {"base", "benchmark", "reason", "note", "solved_by"}
         if unknown:
             bad.append(f"{b}: unknown field(s) {', '.join(sorted(unknown))}")
+        if "solved_by" in e and (e["solved_by"] not in SOLVED_BY or e.get("reason") != "solved"):
+            bad.append(f"{b}: solved_by {e['solved_by']!r} needs reason \"solved\" and one of {', '.join(SOLVED_BY)}")
     return bad
 
 
@@ -1345,6 +1353,12 @@ def main(argv: list[str]) -> int:
         print(modes_table())
         return 0
     if argv[:1] == ["easy-set"]:       # `easy-set --check`: docs/easy_set.toml (PROTOCOL §4); `easy-set`: list its tasks
+        if "--solved-by" in argv:      # `easy-set --solved-by luna`: the bases that run solved (SOLVED_BY)
+            who = argv[argv.index("--solved-by") + 1] if len(argv) > argv.index("--solved-by") + 1 else ""
+            for b, e in sorted(easy_set().items()):
+                if e.get("solved_by") == who:
+                    print(b)
+            return 0
         if "--check" in argv:
             bad = check_easy_set()
             for b in bad:

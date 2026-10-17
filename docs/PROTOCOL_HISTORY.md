@@ -40,6 +40,10 @@ recommending, but CI still blocking every convention and the trust-boundary rule
   (their DIGEST, H.8) and a rename new tasks, and either would detach the results already recorded against them
   (`write_task_results.py`'s `digest_match` turns a default-seed trial of another digest into "legacy"; the pool keys
   results by directory name); the list changes no task.
+- Added on 2026-10-17 (owner, board 0155: "你还可以标记一部分task叫做solved by luna", as easy, out of the statistics;
+  any of privileged, standard, standard-realtime solved counts): the easy set's `solved_by = "luna"` entries, every
+  base codex-gpt6_luna-xhigh solved in any mode (`scripts/easy_set_add_solved.py`). The owner chose this over a
+  dashboard-only label knowing it shrinks the main table and leaves Luna 0 on the core set by construction.
 - Changed on 2026-10-17 (owner, boards 0150 / 0151: "standard不需要回放了呀 直接用live的分数"; "privilege用verifier
   standard用live"): the standard modes are graded by the sim sidecar's record of the live episode (H.4). Before, the
   collect hook replayed the journal one or two times in the sidecar and most benchmarks graded `live ∧ replay ∧
