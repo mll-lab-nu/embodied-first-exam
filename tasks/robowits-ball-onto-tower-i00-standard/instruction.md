@@ -12,9 +12,8 @@ when they hold, it keeps your last command for a settle window, inside the same 
 s in which every condition must hold at every 6th control step and at the last one, with each graded object staying
 within 2 mm of where it was when those 2 s began (the *check window*). If the window passes, the episode ends as a
 success; if not, the episode goes on and `meta["settle"]` says why. When your session ends, the same window decides
-once more, after your last command. The window's steps are part of your recorded episode. The service then replays the
-recorded episode, which must end in the same state, and checks the window that ended it again over the same recorded
-steps: the replay adds no second window.
+once more, after your last command. The window's steps are part of your recorded episode, and its result on the live
+simulator is the verdict: nothing is replayed to grade it.
 
 - The footprints of the tower base and of the ball lie inside the table bounds (1 mm tolerance).
 - The ball is still: its speed is below 5 cm/s and its vertical speed below 3 cm/s.
