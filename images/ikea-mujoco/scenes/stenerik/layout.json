@@ -1,0 +1,1112 @@
+{
+ "arms": {
+  "left": {
+   "pos": [
+    0.0,
+    -0.5,
+    0.12
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "yaw_rad": 1.5707963267948966,
+   "pedestal_top_z": 0.12
+  },
+  "right": {
+   "pos": [
+    0.0,
+    0.5,
+    0.12
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    -0.7071067811865475
+   ],
+   "yaw_rad": -1.5707963267948966,
+   "pedestal_top_z": 0.12
+  }
+ },
+ "parts": {
+  "support_1": {
+   "pos": [
+    -0.28,
+    0.0,
+    0.1902
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "support_1_g066",
+     "source": "/Part/Shape_066",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box00",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box01",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box02",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box03",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box04",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box05",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box06",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box07",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box08",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box09",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box10",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box11",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box12",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box13",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box14",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box15",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box16",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box17",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box18",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_1_box19",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.20000000298023224
+  },
+  "support_2": {
+   "pos": [
+    0.28,
+    0.0,
+    0.1902
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "support_2_g066",
+     "source": "/Part/Shape_066",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box00",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box01",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box02",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box03",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box04",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box05",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box06",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box07",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box08",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box09",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box10",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box11",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box12",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box13",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box14",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box15",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box16",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box17",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box18",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "support_2_box19",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.20000000298023224
+  },
+  "crossbar": {
+   "pos": [
+    0.0,
+    -0.215,
+    0.1242
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "crossbar_box00",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box01",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box02",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box03",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box04",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box05",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box06",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box07",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box08",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box09",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box10",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box11",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box12",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box13",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box14",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box15",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "crossbar_box16",
+     "source": "added collision envelope",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.11999999731779099
+  },
+  "backing": {
+   "pos": [
+    0.3998528657168946,
+    0.00445332426659909,
+    0.144
+   ],
+   "quat": [
+    0.9990429387781057,
+    0.009229399201839985,
+    0.01852143664843213,
+    -0.03853545189117682
+   ],
+   "geoms": [
+    {
+     "geom": "backing_g000",
+     "source": "/Part/Shape_000",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.014999999664723873
+  },
+  "pad_1": {
+   "pos": [
+    0.3950349512537092,
+    -0.05837863810687637,
+    0.14442685421819854
+   ],
+   "quat": [
+    0.9990429387781057,
+    0.009229399201839985,
+    0.01852143664843213,
+    -0.03853545189117682
+   ],
+   "geoms": [
+    {
+     "geom": "pad_1_g000",
+     "source": "/Part/Shape_000",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.006000000052154064
+  },
+  "pad_2": {
+   "pos": [
+    0.3982831903320276,
+    -0.01651053178729143,
+    0.1451414282885492
+   ],
+   "quat": [
+    0.992685344304396,
+    -0.11290607838058747,
+    0.02309105311424534,
+    -0.03598371762414479
+   ],
+   "geoms": [
+    {
+     "geom": "pad_2_g000",
+     "source": "/Part/Shape_000",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.006000000052154064
+  },
+  "pad_3": {
+   "pos": [
+    0.4015314294103459,
+    0.02535757453229351,
+    0.1458560023588999
+   ],
+   "quat": [
+    0.9990429387781057,
+    0.009229399201839985,
+    0.01852143664843213,
+    -0.03853545189117682
+   ],
+   "geoms": [
+    {
+     "geom": "pad_3_g000",
+     "source": "/Part/Shape_000",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.006000000052154064
+  },
+  "pad_4": {
+   "pos": [
+    0.4047796684886643,
+    0.06722568085187844,
+    0.14657057642925056
+   ],
+   "quat": [
+    0.992685344304396,
+    -0.11290607838058747,
+    0.02309105311424534,
+    -0.03598371762414479
+   ],
+   "geoms": [
+    {
+     "geom": "pad_4_g000",
+     "source": "/Part/Shape_000",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.006000000052154064
+  },
+  "screw_1": {
+   "pos": [
+    0.4279788731114697,
+    0.06421276768553176,
+    0.17180342091300393
+   ],
+   "quat": [
+    0.6522108483008336,
+    0.3675800652533474,
+    -0.48387616230809327,
+    -0.45317740956168995
+   ],
+   "geoms": [
+    {
+     "geom": "screw_1_g002",
+     "source": "/Part/shank",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.029999999329447746
+  },
+  "screw_2": {
+   "pos": [
+    0.3682986163511175,
+    -0.006425634990631367,
+    0.1977703670998739
+   ],
+   "quat": [
+    -0.5769935138362101,
+    0.7397813244102039,
+    0.24104478026706766,
+    -0.2483938222879722
+   ],
+   "geoms": [
+    {
+     "geom": "screw_2_g002",
+     "source": "/Part/shank",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.029999999329447746
+  },
+  "screw_3": {
+   "pos": [
+    0.3887040153875218,
+    -0.009626921237633188,
+    0.22150788149527292
+   ],
+   "quat": [
+    0.266396062661254,
+    -0.11573547529150671,
+    0.8339111281879938,
+    0.46928740430769866
+   ],
+   "geoms": [
+    {
+     "geom": "screw_3_g002",
+     "source": "/Part/shank",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.029999999329447746
+  },
+  "screw_4": {
+   "pos": [
+    0.3631503730124594,
+    0.03803177957562941,
+    0.2416008009020304
+   ],
+   "quat": [
+    0.6252587426306475,
+    -0.12533701183883594,
+    -0.7612991537111486,
+    0.11732747668786708
+   ],
+   "geoms": [
+    {
+     "geom": "screw_4_g002",
+     "source": "/Part/shank",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.029999999329447746
+  },
+  "screw_5": {
+   "pos": [
+    0.3630709607572232,
+    0.04344457486785765,
+    0.26216472445768885
+   ],
+   "quat": [
+    0.6705058310561576,
+    0.7086443746186712,
+    -0.08733943877021674,
+    0.20153635720709928
+   ],
+   "geoms": [
+    {
+     "geom": "screw_5_g002",
+     "source": "/Part/shank",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.029999999329447746
+  },
+  "screw_6": {
+   "pos": [
+    0.34701839077401825,
+    0.06768611475753639,
+    0.28662586720337385
+   ],
+   "quat": [
+    0.5396853730562585,
+    0.38516840198166435,
+    0.7127039507139951,
+    0.2289936218777311
+   ],
+   "geoms": [
+    {
+     "geom": "screw_6_g002",
+     "source": "/Part/shank",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.029999999329447746
+  }
+ },
+ "initial": {
+  "support_1": {
+   "pos": [
+    -0.28,
+    0.0,
+    0.189998145
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "support_2": {
+   "pos": [
+    0.28,
+    0.0,
+    0.189998145
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "crossbar": {
+   "pos": [
+    -3.77576107e-14,
+    -0.215000009,
+    0.12399988
+   ],
+   "quat": [
+    0.9999999999993303,
+    1.157332729999225e-06,
+    -1.7918211899988003e-15,
+    1.7579743299988226e-12
+   ]
+  },
+  "backing": {
+   "pos": [
+    0.399736219,
+    0.00452709187,
+    0.124485915
+   ],
+   "quat": [
+    0.999244392995456,
+    -1.6306772899925843e-05,
+    3.999666109981812e-05,
+    -0.038866967999823254
+   ]
+  },
+  "pad_1": {
+   "pos": [
+    0.394842802,
+    -0.0582825215,
+    0.125986919
+   ],
+   "quat": [
+    0.9992443929954087,
+    -1.6306730299925076e-05,
+    3.999785749981622e-05,
+    -0.038866967999821415
+   ]
+  },
+  "pad_2": {
+   "pos": [
+    0.398105143,
+    -0.0164094091,
+    0.125983442
+   ],
+   "quat": [
+    0.9917555583377874,
+    -0.12210761604158929,
+    0.004787815381630708,
+    -0.03857096621313709
+   ]
+  },
+  "pad_3": {
+   "pos": [
+    0.401367251,
+    0.0254636943,
+    0.125980816
+   ],
+   "quat": [
+    0.9992443926635717,
+    -1.684783049432763e-05,
+    4.153609728601551e-05,
+    -0.03886697468691416
+   ]
+  },
+  "pad_4": {
+   "pos": [
+    0.404629877,
+    0.067336797,
+    0.125976198
+   ],
+   "quat": [
+    0.9917556865693813,
+    -0.12210657294698152,
+    0.004791076007919722,
+    -0.03857056638325272
+   ]
+  },
+  "screw_1": {
+   "pos": [
+    0.42752778,
+    0.0645085152,
+    0.12819506
+   ],
+   "quat": [
+    0.6417585883408913,
+    0.3717987671974932,
+    -0.5202534142763499,
+    -0.4233768722248907
+   ],
+   "axis_z": 0.18220412328844993
+  },
+  "screw_2": {
+   "pos": [
+    0.369512183,
+    -0.00757509016,
+    0.125776796
+   ],
+   "quat": [
+    -0.6889671063180478,
+    0.6261593842890539,
+    0.18496839608538695,
+    -0.3146989741452745
+   ],
+   "axis_z": 0.14742223583270464
+  },
+  "screw_3": {
+   "pos": [
+    0.385863621,
+    -0.00939863813,
+    0.12894953
+   ],
+   "quat": [
+    0.4963297170843848,
+    -0.2853628730485167,
+    0.646151005109857,
+    0.5046917090858065
+   ],
+   "axis_z": 0.0021138185620352967
+  },
+  "screw_4": {
+   "pos": [
+    0.41155249,
+    0.0300318889,
+    0.129360171
+   ],
+   "quat": [
+    -0.127479556976998,
+    0.7266384308688877,
+    -0.11461818397931867,
+    0.6652880768799576
+   ],
+   "axis_z": -0.08228147462863244
+  },
+  "screw_5": {
+   "pos": [
+    0.373436384,
+    0.00215583282,
+    0.125816337
+   ],
+   "quat": [
+    -0.28729806016103476,
+    -0.0890497714499137,
+    0.6478034473631034,
+    0.6999147493923124
+   ],
+   "axis_z": 0.14484166357839423
+  },
+  "screw_6": {
+   "pos": [
+    0.344450871,
+    0.0677038681,
+    0.125806035
+   ],
+   "quat": [
+    0.6898023779357627,
+    0.32113399097009465,
+    0.5693117489469833,
+    0.3113354649710071
+   ],
+   "axis_z": 0.1455141847090924
+  },
+  "screwdriver": {
+   "pos": [
+    0.200000472,
+    0.220000461,
+    0.123299528
+   ],
+   "quat": [
+    0.9999999999894063,
+    3.2183553799659055e-06,
+    -3.290901059965137e-06,
+    2.614168799972306e-10
+   ]
+  }
+ },
+ "authored": {
+  "support_1": {
+   "drop_or_initial_pos": [
+    -0.28,
+    0.0,
+    0.1902
+   ],
+   "drop_or_initial_quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "support_2": {
+   "drop_or_initial_pos": [
+    0.28,
+    0.0,
+    0.1902
+   ],
+   "drop_or_initial_quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "crossbar": {
+   "drop_or_initial_pos": [
+    0.0,
+    -0.215,
+    0.1242
+   ],
+   "drop_or_initial_quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "backing": {
+   "drop_or_initial_pos": [
+    0.3998528657168946,
+    0.00445332426659909,
+    0.144
+   ],
+   "drop_or_initial_quat": [
+    0.9990429387781057,
+    0.009229399201839985,
+    0.01852143664843213,
+    -0.03853545189117682
+   ]
+  },
+  "pad_1": {
+   "drop_or_initial_pos": [
+    0.3950349512537092,
+    -0.05837863810687637,
+    0.14442685421819854
+   ],
+   "drop_or_initial_quat": [
+    0.9990429387781057,
+    0.009229399201839985,
+    0.01852143664843213,
+    -0.03853545189117682
+   ]
+  },
+  "pad_2": {
+   "drop_or_initial_pos": [
+    0.3982831903320276,
+    -0.01651053178729143,
+    0.1451414282885492
+   ],
+   "drop_or_initial_quat": [
+    0.992685344304396,
+    -0.11290607838058747,
+    0.02309105311424534,
+    -0.03598371762414479
+   ]
+  },
+  "pad_3": {
+   "drop_or_initial_pos": [
+    0.4015314294103459,
+    0.02535757453229351,
+    0.1458560023588999
+   ],
+   "drop_or_initial_quat": [
+    0.9990429387781057,
+    0.009229399201839985,
+    0.01852143664843213,
+    -0.03853545189117682
+   ]
+  },
+  "pad_4": {
+   "drop_or_initial_pos": [
+    0.4047796684886643,
+    0.06722568085187844,
+    0.14657057642925056
+   ],
+   "drop_or_initial_quat": [
+    0.992685344304396,
+    -0.11290607838058747,
+    0.02309105311424534,
+    -0.03598371762414479
+   ]
+  },
+  "screw_1": {
+   "drop_or_initial_pos": [
+    0.4279788731114697,
+    0.06421276768553176,
+    0.17180342091300393
+   ],
+   "drop_or_initial_quat": [
+    0.6522108483008336,
+    0.3675800652533474,
+    -0.48387616230809327,
+    -0.45317740956168995
+   ]
+  },
+  "screw_2": {
+   "drop_or_initial_pos": [
+    0.3682986163511175,
+    -0.006425634990631367,
+    0.1977703670998739
+   ],
+   "drop_or_initial_quat": [
+    -0.5769935138362101,
+    0.7397813244102039,
+    0.24104478026706766,
+    -0.2483938222879722
+   ]
+  },
+  "screw_3": {
+   "drop_or_initial_pos": [
+    0.3887040153875218,
+    -0.009626921237633188,
+    0.22150788149527292
+   ],
+   "drop_or_initial_quat": [
+    0.266396062661254,
+    -0.11573547529150671,
+    0.8339111281879938,
+    0.46928740430769866
+   ]
+  },
+  "screw_4": {
+   "drop_or_initial_pos": [
+    0.3631503730124594,
+    0.03803177957562941,
+    0.2416008009020304
+   ],
+   "drop_or_initial_quat": [
+    0.6252587426306475,
+    -0.12533701183883594,
+    -0.7612991537111486,
+    0.11732747668786708
+   ]
+  },
+  "screw_5": {
+   "drop_or_initial_pos": [
+    0.3630709607572232,
+    0.04344457486785765,
+    0.26216472445768885
+   ],
+   "drop_or_initial_quat": [
+    0.6705058310561576,
+    0.7086443746186712,
+    -0.08733943877021674,
+    0.20153635720709928
+   ]
+  },
+  "screw_6": {
+   "drop_or_initial_pos": [
+    0.34701839077401825,
+    0.06768611475753639,
+    0.28662586720337385
+   ],
+   "drop_or_initial_quat": [
+    0.5396853730562585,
+    0.38516840198166435,
+    0.7127039507139951,
+    0.2289936218777311
+   ]
+  },
+  "screwdriver": {
+   "drop_or_initial_pos": [
+    0.2,
+    0.22,
+    0.12350000000000001
+   ],
+   "drop_or_initial_quat": [
+    1.0,
+    0,
+    0,
+    0
+   ],
+   "source": "tools/screwdrivers.py cross_driver",
+   "recess": {
+    "arm_width": 0.001,
+    "arm_radius": 0.002,
+    "depth": 0.0012
+   },
+   "info": {
+    "type": "cross",
+    "length": 0.1217,
+    "grip_z": 0.09670000000000001,
+    "handle_z": [
+     0.0717,
+     0.1217
+    ],
+    "tip_engage": 0.0012,
+    "handle_af": 0.022,
+    "handle_sides": 8
+   }
+  }
+ },
+ "parts_box": {
+  "center": [
+   0.4,
+   0.0
+  ],
+  "inner": [
+   0.13,
+   0.22
+  ],
+  "wall": 0.006,
+  "height": 0.03,
+  "floor": 0.004,
+  "seed": 20261016
+ }
+}

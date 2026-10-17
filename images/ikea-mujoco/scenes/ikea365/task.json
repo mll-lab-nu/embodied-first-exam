@@ -1,0 +1,150 @@
+{
+ "task": "ikea365",
+ "parts": [
+  "member_a",
+  "member_b",
+  "same_screw",
+  "bowl"
+ ],
+ "root": "member_a",
+ "centers_in_assembly_frame": {
+  "member_a": [
+   0,
+   0,
+   0.02
+  ],
+  "member_b": [
+   0,
+   0,
+   0.02
+  ],
+  "same_screw": [
+   0,
+   0,
+   0.02125
+  ],
+  "bowl": [
+   0,
+   0,
+   0.085
+  ]
+ },
+ "insert_in_member_a_frame": {
+  "z_bottom": 0.00385,
+  "z_top": 0.0071,
+  "note": "female thread Insert_0; screw origin = thread tip"
+ },
+ "assembled_in_member_a_frame": {
+  "member_b": [
+   0,
+   0,
+   0
+  ],
+  "same_screw": [
+   0,
+   0,
+   0.00125
+  ],
+  "member_b_yaw_symmetric": true,
+  "screw_head_seat_z_note": "head bearing face (screw z 0.01675) on member_b seat top (member_a z 0.018)"
+ },
+ "operations": [
+  {
+   "key": "remove_same_screw",
+   "part": "same_screw",
+   "mode": "unthread",
+   "host": "member_a"
+  },
+  {
+   "key": "park_same_screw",
+   "part": "same_screw",
+   "mode": "transport"
+  },
+  {
+   "key": "cross_members",
+   "part": "member_b",
+   "mode": "place",
+   "host": "member_a"
+  },
+  {
+   "key": "return_same_screw",
+   "part": "same_screw",
+   "mode": "transport",
+   "host": "member_a",
+   "target_in_member_a_frame": [
+    0,
+    0,
+    0.01625
+   ]
+  },
+  {
+   "key": "reinstall_same_screw",
+   "part": "same_screw",
+   "mode": "thread",
+   "host": "member_a",
+   "through": "member_b",
+   "joins": [
+    "member_a",
+    "member_b"
+   ],
+   "welds": [
+    "ret_member_a_same_screw",
+    "ret_member_a_member_b"
+   ]
+  },
+  {
+   "key": "turn_stand",
+   "part": "member_a",
+   "mode": "turn"
+  },
+  {
+   "key": "place_bowl",
+   "part": "bowl",
+   "mode": "bowl",
+   "counterparts": [
+    "member_a",
+    "member_b"
+   ]
+  }
+ ],
+ "screw": {
+  "pitch_m": 0.0005,
+  "major_diameter_m": 0.00392,
+  "thread_length_m": 0.00623,
+  "handedness": "right",
+  "head_radius_m": 0.004,
+  "head_height_m": 0.002,
+  "head_center_z_m": 0.01775,
+  "shank_radius_m": 0.0013
+ },
+ "gates": {
+  "axial_m": 0.0001,
+  "lateral_m": 0.0006,
+  "axis_deg": 1.5,
+  "speed_m_s": 0.02,
+  "dwell_s": 0.15,
+  "contact_N": 0.01,
+  "travel_m": 0.001,
+  "turns": 0.4,
+  "contact_window_s": 0.05,
+  "unthread_gap_m": 0.01,
+  "unthread_lateral_m": 0.001,
+  "unthread_engaged_gap_m": 0.005,
+  "unthread_engaged_contact_s": 0.05,
+  "transport_pos_m": 0.0006,
+  "transport_speed_m_s": 0.015,
+  "transport_angle_deg": 1.5,
+  "park_min_distance_m": 0.03,
+  "turn_lift_m": 0.1,
+  "turn_up_z": -0.95,
+  "turn_drift_m": 0.001,
+  "turn_drift_deg": 1.0,
+  "bowl_contact_N": 0.1,
+  "bowl_window_s": 0.25,
+  "settled_speed_m_s": 0.025,
+  "bowl_up_z": -0.95,
+  "support_test_load_N": 2.0,
+  "support_tol_abs_N": 0.05,
+  "support_tol_rel": 0.02
+ }
+}

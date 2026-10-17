@@ -1,0 +1,116 @@
+{
+ "task": "variera",
+ "parts": [
+  "frame_1",
+  "frame_2",
+  "shelf",
+  "screw_1",
+  "screw_2",
+  "screw_3",
+  "screw_4"
+ ],
+ "root": "shelf",
+ "operations": [
+  {
+   "key": "place_left_frame",
+   "part": "frame_1",
+   "host": "shelf",
+   "mode": "place"
+  },
+  {
+   "key": "place_right_frame",
+   "part": "frame_2",
+   "host": "shelf",
+   "mode": "place"
+  },
+  {
+   "key": "lower_shelf",
+   "part": "shelf",
+   "host": "frame_1",
+   "mode": "place"
+  },
+  {
+   "key": "screw_1",
+   "part": "screw_1",
+   "mode": "thread"
+  },
+  {
+   "key": "screw_2",
+   "part": "screw_2",
+   "mode": "thread"
+  },
+  {
+   "key": "screw_3",
+   "part": "screw_3",
+   "mode": "thread"
+  },
+  {
+   "key": "screw_4",
+   "part": "screw_4",
+   "mode": "thread"
+  }
+ ],
+ "assembled_in_shelf_frame": {
+  "frame_1": [
+   -0.148,
+   0.0,
+   -0.079
+  ],
+  "frame_2": [
+   0.148,
+   0.0,
+   -0.079
+  ],
+  "frame_yaw_symmetric": true,
+  "shelf_holes_xy": [
+   [
+    -0.148,
+    -0.113
+   ],
+   [
+    -0.148,
+    0.113
+   ],
+   [
+    0.148,
+    -0.113
+   ],
+   [
+    0.148,
+    0.113
+   ]
+  ],
+  "screw_seated_origin_z": -0.0103
+ },
+ "receivers_in_frame_frame": [
+  [
+   0.0,
+   -0.11305,
+   0.0775
+  ],
+  [
+   0.0,
+   0.11295,
+   0.0775
+  ]
+ ],
+ "screw": {
+  "pitch_m": 0.0005,
+  "major_diameter_m": 0.00392,
+  "thread_length_m": 0.0118,
+  "head_bearing_z_m": 0.0118,
+  "handedness": "right",
+  "note": "threaded tip to head underside (user decision 2026-10-15; source: 6.23 mm thread + smooth shank)"
+ },
+ "gates": {
+  "axial_m": 0.0002,
+  "lateral_m": 0.0006,
+  "axis_deg": 1.5,
+  "speed_m_s": 0.02,
+  "min_turns": 0.4,
+  "pitch_tolerance_rel": 0.2,
+  "hold_s": 0.5,
+  "frame_axial_m": 0.0005,
+  "axial_note": "screw seat-gap gate 0.2 mm (user decision 2026-10-15; source 0.1 mm)"
+ }
+}

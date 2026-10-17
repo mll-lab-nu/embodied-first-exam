@@ -1,0 +1,171 @@
+{
+ "note": "ALOHA-style camera rig per IKEA MuJoCo standard task (scripts/ikea_mujoco/mk_standard_tasks.py writes each task's environment/sim/rig.json from it). center = the middle of the work surface (x, y, its top z), front = the horizontal direction the static cameras look from (unit, world), scale = rig size. cam_high: above the front of the work surface (0.30 scale in front of the centre, 1.0 scale up), looking down at 0.15 scale behind the centre. cam_low: low at the front edge (0.85 scale in front, 0.18 m up), looking at 0.2 scale behind the centre, 0.05 m up. Wrist cameras: Panda: on the hand, 7 cm to the side of the fingers' travel axis, looking at a point 14 cm along the approach axis; ViperX: the arm's own ALOHA wrist camera (model camera). All 848 x 480, vertical field of view 58 degrees.",
+ "defaults": {
+  "width": 848,
+  "height": 480,
+  "fovy": 58.0,
+  "panda_wrist": {
+   "pos": [
+    0.1,
+    0.0,
+    0.03
+   ],
+   "lookat": [
+    0.0,
+    0.0,
+    0.16
+   ],
+   "up": [
+    1.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "tasks": {
+  "lack": {
+   "center": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.0
+  },
+  "eket": {
+   "center": [
+    0.0,
+    0.0,
+    0.5
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.1
+  },
+  "svallet": {
+   "center": [
+    0.05,
+    0.0,
+    0.12
+   ],
+   "front": [
+    -0.6,
+    0.8
+   ],
+   "scale": 0.8
+  },
+  "ikea365": {
+   "center": [
+    0.1,
+    0.0,
+    0.12
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.0
+  },
+  "vesken": {
+   "center": [
+    0.0,
+    0.0,
+    0.4
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.3
+  },
+  "gladom": {
+   "center": [
+    0.0,
+    0.0,
+    0.3
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.2
+  },
+  "variera": {
+   "center": [
+    0.1,
+    0.0,
+    0.12
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.0
+  },
+  "burvik": {
+   "center": [
+    0.02,
+    0.0,
+    0.12
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.1
+  },
+  "stenerik": {
+   "center": [
+    0.08,
+    0.0,
+    0.12
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.0
+  },
+  "stegesund": {
+   "center": [
+    0.55,
+    0.0,
+    0.0
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.1
+  },
+  "kyrre": {
+   "center": [
+    -0.02,
+    0.0,
+    0.1
+   ],
+   "front": [
+    1.0,
+    0.0
+   ],
+   "scale": 1.0
+  },
+  "uppsta": {
+   "center": [
+    0.0,
+    -0.08,
+    0.0
+   ],
+   "front": [
+    0.0,
+    1.0
+   ],
+   "scale": 0.9
+  }
+ }
+}

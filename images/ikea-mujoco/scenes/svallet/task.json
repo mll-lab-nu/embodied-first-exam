@@ -1,0 +1,211 @@
+{
+ "task": "svallet",
+ "parts": [
+  "stand",
+  "shade",
+  "bulb_E12"
+ ],
+ "root": "stand",
+ "centers_assembled_world": {
+  "stand": [
+   0.0,
+   0.0,
+   0.12
+  ],
+  "shade": [
+   0.0,
+   0.0,
+   0.3
+  ],
+  "bulb_E12": [
+   0.0,
+   0.0,
+   0.305
+  ],
+  "jaw_s1_mount_shade_0": [
+   -0.0355,
+   0.0,
+   0.2495
+  ]
+ },
+ "operations": [
+  {
+   "key": "s1-mount-shade",
+   "manual_step": 1,
+   "mode": "press",
+   "part": "shade",
+   "host": "stand",
+   "weld": {
+    "eq": "ret_s1_mount_shade"
+   },
+   "target_pos": [
+    0.0,
+    0.0,
+    0.18
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "part_axis": [
+    0.0,
+    0.0,
+    1.0
+   ],
+   "tilt": "axis",
+   "points": [
+    [
+     -0.039,
+     0.0,
+     -0.04799999999999999
+    ]
+   ],
+   "host_points": [
+    [
+     -0.039,
+     0.0,
+     0.132
+    ]
+   ],
+   "counterparts": [
+    "stand",
+    "jaw_s1_mount_shade_0"
+   ],
+   "dependencies": [],
+   "approach_m": 0.03,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   },
+   "min_turns": null,
+   "jaw": [
+    {
+     "name": "jaw_s1_mount_shade_0",
+     "joint": "jaw_s1_mount_shade_0_slide",
+     "min_peak_m": 0.00025,
+     "max_final_m": 0.0007
+    }
+   ]
+  },
+  {
+   "key": "s2-thread-E12-bulb",
+   "manual_step": 2,
+   "mode": "screw",
+   "part": "bulb_E12",
+   "host": "shade",
+   "weld": {
+    "eq": "ret_s2_thread_bulb"
+   },
+   "target_pos": [
+    0.0,
+    0.0,
+    0.0050000000000000044
+   ],
+   "target_quat": [
+    1,
+    0,
+    0,
+    0
+   ],
+   "axis": [
+    0,
+    0,
+    -1
+   ],
+   "part_axis": [
+    0,
+    0,
+    -1
+   ],
+   "tilt": "axis",
+   "points": [
+    [
+     0.0,
+     0.0,
+     0.025000000000000022
+    ]
+   ],
+   "host_points": [
+    [
+     0.0,
+     0.0,
+     0.030000000000000027
+    ]
+   ],
+   "counterparts": [
+    "shade"
+   ],
+   "dependencies": [
+    "s1-mount-shade"
+   ],
+   "approach_m": 0.03,
+   "gates": {
+    "axial_m": 0.0006,
+    "lateral_m": 0.0008,
+    "axis_deg": 2.0,
+    "speed_m_s": 0.02,
+    "dwell_s": 0.15,
+    "min_travel_m": 0.004,
+    "min_contact_N": 0.03
+   },
+   "min_turns": 0.25,
+   "jaw": []
+  }
+ ],
+ "jaw": {
+  "name": "jaw_s1_mount_shade_0",
+  "host": "stand",
+  "joint": "jaw_s1_mount_shade_0_slide",
+  "axis": [
+   1.0,
+   0.0,
+   0.0
+  ],
+  "stiffness_N_m": 1200.0,
+  "damping_N_s_m": 0.8,
+  "travel_m": 0.0025,
+  "source_max_drive_force_N": 10.0
+ },
+ "endpoint": {
+  "floor_body": "stand",
+  "floor_geom": "bench",
+  "min_floor_normal_N": 0.1,
+  "root_upright_deg": 3.0,
+  "root_quat": [
+   1,
+   0,
+   0,
+   0
+  ],
+  "cable_gate": "skipped"
+ },
+ "mechanism": {
+  "period_steps": 4,
+  "corridor_lateral_m": 0.015,
+  "corridor_gap_min_m": -0.003,
+  "corridor_axis_deg": 15.0
+ },
+ "thread": {
+  "model": "Factory geometric SDF, no prescribed helical law",
+  "scale": 0.75,
+  "female_insert_offset_m": 0.001,
+  "handedness": "right (tighten = rotation about host +z while the bulb advances along host +z)"
+ },
+ "limitations": [
+  "Simplified open shade/stand geometry; mounting key uses compliant connector proxy",
+  "E12 nominal diameter represented by0.75-scale Factory SDF threads; pitch/profile not Edison CAD",
+  "Cable segmentation, mass, stiffness, slack path and routing are uncalibrated; all links stay active through assembly/reset/support"
+ ]
+}

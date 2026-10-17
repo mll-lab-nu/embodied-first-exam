@@ -1,0 +1,166 @@
+{
+ "task": "eket",
+ "parts": [
+  "top",
+  "bottom",
+  "side_a",
+  "back",
+  "side_b"
+ ],
+ "root": "top",
+ "canonical_in_cabinet_frame": {
+  "top": [
+   1.9840831470829823e-08,
+   -1.0783658212221159e-07,
+   0.1635822464138744
+  ],
+  "bottom": [
+   5.340831471523089e-09,
+   -1.002071831207596e-07,
+   -0.1635808554836092
+  ],
+  "side_a": [
+   1.1173315883628021e-09,
+   0.16649992427393623,
+   3.7424954468789906e-08
+  ],
+  "back": [
+   -0.1077499935706929,
+   -0.0005001155397531126,
+   -0.0004999639619359952
+  ],
+  "side_b": [
+   -1.3644139630619723e-08,
+   -0.1664999027033976,
+   1.2742726648862224e-07
+  ]
+ },
+ "goals_in_top_frame": {
+  "top": [
+   0.0,
+   0.0,
+   0.0
+  ],
+  "bottom": [
+   -1.4499999999306734e-08,
+   7.629399001451986e-09,
+   -0.3271631018974836
+  ],
+  "side_a": [
+   -1.872349988246702e-08,
+   0.16650003211051834,
+   -0.16358220898891992
+  ],
+  "back": [
+   -0.10775001341152438,
+   -0.0005000077031709904,
+   -0.1640822103758104
+  ],
+  "side_b": [
+   -3.3484971101449545e-08,
+   -0.1664997948668155,
+   -0.1635821189866079
+  ]
+ },
+ "operations": [
+  {
+   "key": "side_a_entry",
+   "manual_step": 1
+  },
+  {
+   "key": "side_a_slide",
+   "manual_step": 1
+  },
+  {
+   "key": "side_b_entry",
+   "manual_step": 2
+  },
+  {
+   "key": "side_b_slide",
+   "manual_step": 2
+  },
+  {
+   "key": "back_slide",
+   "manual_step": 3
+  },
+  {
+   "key": "bottom_entry",
+   "manual_step": 4
+  },
+  {
+   "key": "bottom_slide",
+   "manual_step": 4
+  }
+ ],
+ "entry_offsets_in_top_frame": {
+  "side_a": [
+   0.011,
+   0,
+   0
+  ],
+  "side_b": [
+   0.011,
+   0,
+   0
+  ],
+  "bottom": [
+   -0.011,
+   0,
+   -0.0055
+  ]
+ },
+ "frame_joints": {
+  "joint_side_a": {
+   "body1": "top",
+   "body2": "side_a",
+   "latched_after": "side_a_slide"
+  },
+  "joint_side_b": {
+   "body1": "top",
+   "body2": "side_b",
+   "latched_after": "side_b_slide"
+  },
+  "joint_bottom_a": {
+   "body1": "side_a",
+   "body2": "bottom",
+   "latched_after": "bottom_slide"
+  },
+  "joint_bottom_b": {
+   "body1": "side_b",
+   "body2": "bottom",
+   "latched_after": "bottom_slide"
+  }
+ },
+ "collision": "exact convex pieces of the source contact meshes (mitres, chamfers, grooves, channels, keyholes); dowels: rib-envelope cylinders (source compliant contact) + rigid core cylinders paired only with the keyhole seat end walls; back: source box; visuals: source contact meshes",
+ "dowel_contact": {
+  "source": "30 N/m, 1 N s/m implicit compliant contact",
+  "geoms": [
+   "top_dowel_1",
+   "top_dowel_2",
+   "top_dowel_3",
+   "top_dowel_4",
+   "bottom_dowel_1",
+   "bottom_dowel_2",
+   "bottom_dowel_3",
+   "bottom_dowel_4"
+  ],
+  "solref": [
+   -14.814814814814817,
+   -0.2469135802469136
+  ],
+  "solimp": [
+   0.5,
+   0.5,
+   0.001,
+   0.5,
+   2
+  ],
+  "nominal_effective_mass_kg": 0.225
+ },
+ "excluded": [
+  "steps 5-6 (back press/turn, collars and pins)",
+  "top force fixture of the source diagnostic (a robot holds parts)",
+  "source per-operation driver step budgets",
+  "loose hardware: none in steps 1-4"
+ ]
+}
