@@ -8,8 +8,10 @@ library only, no simulator: for every task of scripts/roboolympics/exported.toml
        the same match lost                                             -> success 0, valid 1 (the agent's result)
        a live technical error (errors[])                               -> success 0, technical_failure 1 (infra)
        the same record without verdict_replay (the upstream rule)      -> needs the replay: technical_failure 1
-       a world (simulator) error after the agent's first act       -> real-time: success 0, not infra (agent_sim_error 1);
-                                                                         turn-based or before the first act: infra
+       a control-step error (where world_step) after the agent's first applied act, finalized
+                                                                      -> real-time: success 0, not infra (agent_sim_error 1);
+                                                                         turn-based, no applied act, unfinalized, or another
+                                                                         `where` (bookkeeping): infra
   3. its core/service.py skips the validity replay and drops the replay term only under RO_VERDICT_REPLAY=0.
     python3 scripts/roboolympics/tests/test_live_export.py"""
 import importlib.util, json, os, pathlib, subprocess, sys, tomllib
@@ -73,10 +75,16 @@ def main() -> int:
         # a simulator error of the world's step (STANDARD_MODE Part 3): after the agent's first act the agent's 0 in a
         # real-time match; before it, or in a turn-based match, a technical failure (infra)
         realtime = "-standard-realtime" in t.name
-        world = dict(reason="technical_error", match_winner=None, errors=[{"where": "world", "error": "mujoco: bad qacc"}],
+        world = dict(reason="technical_error", match_winner=None, errors=[{"where": "world_step", "error": "mujoco: bad qacc"}],
                      slowdown=10 if realtime else None)
-        after = g.grade(record(contract, "A", seats={"A": {"attempts": 3}}, **world), {}, contract, stub)
-        before = g.grade(record(contract, "A", seats={"A": {"attempts": 0}}, **world), {}, contract, stub)
+        after = g.grade(record(contract, "A", seats={"A": {"attempts": 3, "applied": 2}}, **world), {}, contract, stub)
+        # acts refused (409 / 429) never reached the world: attempts without an applied act is still infra
+        before = g.grade(record(contract, "A", seats={"A": {"attempts": 3, "applied": 0}}, **world), {}, contract, stub)
+        unfin = g.grade(record(contract, "A", seats={"A": {"applied": 2}}, finalized=False, **world), {}, contract, stub)
+        book = g.grade(record(contract, "A", seats={"A": {"applied": 2}}, **dict(world, errors=[{"where": "world", "error":
+                                                                                     "OSError: disk full"}])), {}, contract, stub)
+        if unfin.get("technical_failure") != 1 or book.get("technical_failure") != 1:
+            errs.append(f"{t.name}: an unfinalized record or a bookkeeping error must stay infra: {unfin} / {book}")
         if after.get("success") != 0 or after.get("technical_failure") != int(not realtime) or \
                 after.get("agent_sim_error") != int(realtime):
             errs.append(f"{t.name}: a world error after the first act: {after}")

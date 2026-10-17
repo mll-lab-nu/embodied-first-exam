@@ -101,7 +101,7 @@ timeout_sec = 30
 # board 0151), then the spectator video.
 [[verifier.collect]]
 service = "sim"
-command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 300); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 600); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 180); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 720); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
 timeout_sec = 1080
 
 [agent]

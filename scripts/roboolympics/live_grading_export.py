@@ -15,8 +15,11 @@ without it:
                                     deterministic and none of the sport's legacy replay_* fields
   environment/docker-compose.yaml   RO_VERDICT_REPLAY: "0"; the video's time limit at least the old replay's (the time the
                                     replay no longer takes)
-  task.toml                         the hook's comment; the verdict wait 600 -> 300 s where the video wait grows to 600 s
-                                    (the hook's timeout unchanged); the replay_check.json artifact dropped
+  task.toml                         the hook's comment; where the video's limit grows to 600 s the hook waits 720 s for it
+                                    and 180 s for the verdict (its timeout unchanged); the replay_check.json artifact dropped
+  environment/sim/core/realtime.py  (real-time) the control step (apply_pending + m.step) fails under its own `where`,
+                                    "world_step": only that, after the agent's first applied act, is the agent's 0
+  environment/sim/spectator/sport_video.py   (where present) compares its replay's end with final.json, not replay_check.json
   README.md                         Verification
 Every replacement asserts its source text (or that it was applied already: the script is idempotent). Then
 scripts/task_conventions.py normalize (DIGEST).
@@ -74,14 +77,16 @@ GRADING = [
      """(d.get("valid_trial") and d.get("finalized") and (replay or live) and complete"""),
     ("""    valid = bool(d.get("valid_trial") and d.get("finalized") and (replay or live) and complete and not errors)
 """, """    valid = bool(d.get("valid_trial") and d.get("finalized") and (replay or live) and complete and not errors)
-    # robot_coding_bench (board 0151; STANDARD_MODE Part 3): in a real-time match graded live, a simulator error of the
-    # world's own step (every errors[] entry where "world") after the agent's first act is the agent's 0, never a
-    # technical failure (a free retry); before its first act it stays one. The match ended at that error, so every
-    # act the seat attempted came before it.
-    agent_sim_error = bool(live and d.get("slowdown") and d.get("reason") == "technical_error" and d.get("errors")
-                           and all(isinstance(e, dict) and e.get("where") == "world" for e in d["errors"])
+    # robot_coding_bench (board 0151; STANDARD_MODE Part 3): in a real-time match graded live and finalized, a simulator
+    # error of the control step itself (every errors[] entry where "world_step": the agent's commands applied, then the
+    # world's step; core/realtime.py) after the agent's first applied act is the agent's 0, never a technical failure (a
+    # free retry); before it, any other technical error (bookkeeping, rendering, metering) or an unfinalized record stays
+    # infrastructure. The match ended at that error, so every act the seat applied came before it.
+    agent_sim_error = bool(live and d.get("finalized") and d.get("slowdown") and d.get("reason") == "technical_error"
+                           and d.get("errors")
+                           and all(isinstance(e, dict) and e.get("where") == "world_step" for e in d["errors"])
                            and not any(d["meter_error"].values()) and not any(d["proxy_error"].values())
-                           and int(((d.get("seats") or {}).get(seats[0]) or {}).get("attempts") or 0) > 0)
+                           and int(((d.get("seats") or {}).get(seats[0]) or {}).get("applied") or 0) > 0)
     valid = valid or agent_sim_error
 """),
     ("""    else:
@@ -113,6 +118,38 @@ GRADING = [
         rc = DATA / "replay_check.json"         # absent under live grading (final.json verdict_replay false)
         r = json.loads(rc.read_text()) if rc.exists() or d.get("verdict_replay") is not False else {}"""),
 ]
+REALTIME = [
+    ("""                    self.apply_pending()
+                    events = self.m.step()
+""", """                    try:                                # robot_coding_bench (board 0151): the control step itself
+                        self.apply_pending()
+                        events = self.m.step()
+                    except Exception as exc:  # noqa: BLE001
+                        exc.rcb_where = "world_step"    # its own `where` in final.json errors (tests/grade.py)
+                        raise
+"""),
+    ("""        except Exception as exc:  # noqa: BLE001
+            self.failure("world", exc)""",
+     """        except Exception as exc:  # noqa: BLE001
+            self.failure(getattr(exc, "rcb_where", "world"), exc)   # world_step: the control step; else bookkeeping"""),
+]
+SPORT_VIDEO = [
+    ("""video.json records whether this replay ended in the verdict replay's
+state (replay_check.json state_sha, scores, k).""", """video.json records whether this replay ended in the live match's
+recorded state (final.json state_sha, scores, steps; board 0151: no verdict replay)."""),
+    ("""    try:
+        rc = json.loads((Path(data) / "replay_check.json").read_text())
+    except (OSError, ValueError):
+        rc = {}
+    same = bool(rc) and all(res.get(k) == rc.get(k) for k in ("state_sha", "scores", "k"))""",
+     """    try:                                    # robot_coding_bench (board 0151): the live record, no verdict replay
+        fin = json.loads((Path(data) / "final.json").read_text())
+    except (OSError, ValueError):
+        fin = {}
+    same = bool(fin) and res.get("state_sha") == fin.get("state_sha") and res.get("scores") == fin.get("scores") \\
+        and res.get("k") == fin.get("steps")"""),
+    ('"matches_verdict_replay": same', '"matches_live_record": same'),
+]
 README_RX = re.compile(r"Separate sandbox, no network\. The sim service replays the recorded match in a fresh process; the verifier\n"
                        r"\(`tests/grade\.py`, our core's grader\) checks that the replay agrees with the live match, applies the validity rule\n")
 README_NEW = ("Separate sandbox, no network. The match is graded live (owner, 2026-10-17, board 0151): the sim service records the\n"
@@ -143,6 +180,12 @@ def patch(t: pathlib.Path) -> dict[str, str]:
     out["environment/sim/core/service.py"] = sub_all(rd("environment/sim/core/service.py"), SERVICE, f"{t.name} service.py")
     for rel in ("environment/sim/core/grading.py", "tests/grade.py"):
         out[rel] = sub_all(rd(rel), GRADING, f"{t.name} {rel}")
+    if t.name.endswith("-standard-realtime"):       # the real-time loop: the control step's own `where`
+        out["environment/sim/core/realtime.py"] = sub_all(rd("environment/sim/core/realtime.py"), REALTIME,
+                                                          f"{t.name} realtime.py")
+    if (t / "environment/sim/spectator/sport_video.py").is_file():
+        out["environment/sim/spectator/sport_video.py"] = sub_all(rd("environment/sim/spectator/sport_video.py"),
+                                                                  SPORT_VIDEO, f"{t.name} sport_video.py")
     c = rd("environment/docker-compose.yaml")
     if 'RO_VERDICT_REPLAY: "0"' not in c:
         c = re.sub(r'(?m)^(\s+)RO_REPLAY_TIMEOUT_S: "(\d+)"\n',
@@ -153,13 +196,16 @@ def patch(t: pathlib.Path) -> dict[str, str]:
     tt = rd("task.toml")
     if vid and int(vid.group(1)) < rep and re.search(r'for i in \$\(seq 1 600\); do grep -q .*for i in \$\(seq 1 ' + vid.group(1)
                                                          + r'\); do \[ -f /data/video\.json', tt):
-        # the video's limit at least the verdict replay's had (which no longer runs); the hook's own timeout unchanged:
-        # the verdict wait 600 -> 300 s (it is written at the match's end now), the video wait + (600 - 300)
-        new_vid = rep
+        # the video's limit at least the verdict replay's had (which no longer runs), and the hook waits 120 s more than
+        # that limit for it; the hook's own timeout unchanged: the verdict wait shrinks by what the video wait grows
+        # (the verdict is written at the match's end now: 600 -> 180 s for a 300 -> 720 s video wait)
+        new_vid, wait = rep, rep + 120
+        verdict_wait = 600 - (wait - int(vid.group(1)))
+        assert verdict_wait >= 120, f"{t.name}: the verdict wait would be {verdict_wait} s"
         c = c.replace(f'RCB_VIDEO_TIMEOUT_S: "{vid.group(1)}"', f'RCB_VIDEO_TIMEOUT_S: "{new_vid}"', 1)
-        tt = re.sub(r"for i in \$\(seq 1 600\); do grep -q", "for i in $(seq 1 300); do grep -q", tt, count=1)
+        tt = re.sub(r"for i in \$\(seq 1 600\); do grep -q", f"for i in $(seq 1 {verdict_wait}); do grep -q", tt, count=1)
         tt = re.sub(r"for i in \$\(seq 1 " + vid.group(1) + r"\); do \[ -f /data/video\.json",
-                    f"for i in $(seq 1 {int(vid.group(1)) + 300}); do [ -f /data/video.json", tt, count=1)
+                    f"for i in $(seq 1 {wait}); do [ -f /data/video.json", tt, count=1)
     out["environment/docker-compose.yaml"] = c
     if HOOK_NEW not in tt and "no grading\n# replay" not in tt and "no grading replay" not in tt:   # (#300's tasks say it already)
         tt, n = HOOK_RX.subn(HOOK_NEW, tt)

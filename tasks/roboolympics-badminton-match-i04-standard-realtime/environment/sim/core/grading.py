@@ -108,14 +108,16 @@ def grade(d, r, contract, evaluate, audits=None):
     complete = d.get("reason") in COMPLETE and (single or d.get("match_winner") in side.values())
     errors = bool(d.get("errors") or any(d["meter_error"].values()) or any(d["proxy_error"].values()))
     valid = bool(d.get("valid_trial") and d.get("finalized") and (replay or live) and complete and not errors)
-    # robot_coding_bench (board 0151; STANDARD_MODE Part 3): in a real-time match graded live, a simulator error of the
-    # world's own step (every errors[] entry where "world") after the agent's first act is the agent's 0, never a
-    # technical failure (a free retry); before its first act it stays one. The match ended at that error, so every
-    # act the seat attempted came before it.
-    agent_sim_error = bool(live and d.get("slowdown") and d.get("reason") == "technical_error" and d.get("errors")
-                           and all(isinstance(e, dict) and e.get("where") == "world" for e in d["errors"])
+    # robot_coding_bench (board 0151; STANDARD_MODE Part 3): in a real-time match graded live and finalized, a simulator
+    # error of the control step itself (every errors[] entry where "world_step": the agent's commands applied, then the
+    # world's step; core/realtime.py) after the agent's first applied act is the agent's 0, never a technical failure (a
+    # free retry); before it, any other technical error (bookkeeping, rendering, metering) or an unfinalized record stays
+    # infrastructure. The match ended at that error, so every act the seat applied came before it.
+    agent_sim_error = bool(live and d.get("finalized") and d.get("slowdown") and d.get("reason") == "technical_error"
+                           and d.get("errors")
+                           and all(isinstance(e, dict) and e.get("where") == "world_step" for e in d["errors"])
                            and not any(d["meter_error"].values()) and not any(d["proxy_error"].values())
-                           and int(((d.get("seats") or {}).get(seats[0]) or {}).get("attempts") or 0) > 0)
+                           and int(((d.get("seats") or {}).get(seats[0]) or {}).get("applied") or 0) > 0)
     valid = valid or agent_sim_error
     direct = d.get("play") == "direct"
     audits = audits or {}
