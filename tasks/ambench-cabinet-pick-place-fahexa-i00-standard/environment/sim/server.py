@@ -4,9 +4,10 @@ with a 4-joint arm and a two-finger gripper; see docs/STANDARD_MODE.md). Owns th
 proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl and keeps /data/final.json current. Nothing
 about objects ever leaves this process.
 
-The physics runs camera-free, exactly as the grader's replays: the two onboard cameras are drawn by a second Isaac process
-(rcb_ambench.Renderer) from the states this one sends it (measured: rendering inside the physics process makes AM-Bench's
-GPU physics timing-dependent), so the live episode is the same computation as its fresh-process replays.
+The physics runs camera-free: the two onboard cameras are drawn by a second Isaac process (rcb_ambench.Renderer) from the
+states this one sends it (measured: rendering inside the physics process makes AM-Bench's GPU physics timing-dependent), so
+the live episode is the same computation as a fresh-process replay of its rows (the privileged grader's), and the live
+episode is what is graded (no grading replay since 2026-10-17).
 
 Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13, resume class `approx`): every executed control step is
 journaled (the 8-value row handed to Session.step), every completed call is checkpointed with the scene's state hash.
@@ -23,9 +24,13 @@ Differences from the YAMLab service, all from the robot and the simulator:
 - the airframe is free-flying: /kinematics is the arm on its base (frame `base`, or world with `base_pose`);
 - the episode ends at the first control step where AM-Bench's success check holds, or at the task's own time-out (its
   episode length), or when the time is up;
-- the episode is NOT replayed here: when it ends the service writes /data/trajectory.npz + /data/episode.json (live result
-  and end-state hash); the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh replays the trajectory in
-  two fresh processes and completes final.json."""
+- the episode is graded as it ran (owner 2026-10-17, board 0150/0151: no grading replay): when it ends the service writes
+  /data/trajectory.npz (the deliverable) + /data/episode.json (the live result and the end-state hash); the collect hook's
+  SIGUSR1 makes it exit, and environment/sim/finalize.sh writes final.json from it, then films the rows once (an
+  illustration, never a verdict);
+- the start state is checked before the agent is served: the rebuilt scene's state hash against the frozen instance's
+  (instance.json `initial_sha`); a mismatch ends the trial as an infrastructure failure (`instance_mismatch`, a give-up:
+  nothing is served)."""
 from __future__ import annotations
 import json, math, os, sys, threading, time, traceback
 from typing import Callable
@@ -40,16 +45,15 @@ INSTANCE = os.environ.get("RCB_INSTANCE", os.path.join(os.path.dirname(__file__)
 TEXTS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "texts.json")))    # task_text, episode (mk_tasks.py)
 OBS_CALIBRATION = os.environ.get("RCB_OBS_CALIBRATION", "1") == "1"
 CTRL_HZ = 120; SUBSTEPS = 1; ACTION_DIM = 8
-HOLD_PAD_S = 2.0          # the last command held after a live success in the graded trajectory (dump())
 MAX_CHUNK_S = float(os.environ.get("RCB_MAX_CHUNK_S", "10")); MAX_WATCH_S = float(os.environ.get("RCB_MAX_WATCH_S", "30"))
 LOCK = threading.Lock(); PID_FILE = os.path.join(DATA, "server.pid")
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 # Resume class `approx` for every AM-Bench task: GPU PhysX replays the journal to the checkpoint's state almost always, but
 # a rare race inside a step can leave the last bits different (docs/benchmarks/ambench.md, Determinism; the kill test
 # measured a replayed TCP 1e-6 m from its checkpoint, which `exact` turns into resume_failed). A resume records the
-# deviation (resume_state_mismatch, resume_max_tcp_dev_m) and continues; the verdict comes from fresh replays of the
-# complete recorded trajectory, or, for a task graded by verdict (instance.json "determinism": "verdict"), the live
-# episode after the resume.
+# deviation (resume_state_mismatch, resume_max_tcp_dev_m) and continues; the verdict is the live episode's after the
+# resume (every task since 2026-10-17; before, fresh replays of the complete recorded trajectory decided, except for a task
+# graded by verdict, instance.json "determinism": "verdict").
 VERDICT = json.load(open(INSTANCE)).get("determinism") == "verdict"
 EP = L.Episode(DATA, dim=ACTION_DIM, resume="approx")
 EP.startup()             # start count, back-off after failed starts, startup watchdog (RCB_STARTUP_TIMEOUT_S) until scene_built()
@@ -77,17 +81,10 @@ def dump() -> None:
     E["dumped"] = True
     try:
         acts = S.actions(); E["live_sha"] = S.status()["state_sha"]; E["n_actions"] = int(len(acts))
-        # A live success ends the episode at its success step N, so the journal has no row after N. The race of
-        # docs/benchmarks/ambench.md (Determinism) can move a fresh replay's success one step later (OpenDoor 395 -> 396):
-        # with nothing left to run that replay would fail a correct episode. The trajectory the graders replay therefore
-        # holds the last command for up to HOLD_PAD_S after a live success, as the privileged reference does (Oracle);
-        # a replay stops at its own success, so the padding runs only where the race delayed it.
+        # The trajectory is what ran (since 2026-10-17). Until then, after a live success it also held the last command
+        # for up to 2 s (`hold_pad_rows`), for the grading replays: the race of docs/benchmarks/ambench.md
+        # (Determinism) could move a fresh replay's success one step later. No replay grades the episode any more.
         pad = 0
-        if E["success"] and len(acts):
-            pad = max(0, min(int(round(HOLD_PAD_S * CTRL_HZ)), int(M.MAX_STEPS) - int(len(acts))))
-            if pad:
-                acts = np.concatenate([np.asarray(acts, dtype=np.float64),
-                                       np.repeat(np.asarray(S.hold_action(), dtype=np.float64)[None, :], pad, axis=0)])
         E["hold_pad_rows"] = pad
         S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
                                                                             "reason": E["reason"], "resumes": EP.resumes,
@@ -98,7 +95,8 @@ def dump() -> None:
     L._write_json(os.path.join(DATA, "episode.json"),
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": S.env_id, "protocol": PROTOCOL,
-                   "n_actions": E.get("n_actions"), "hold_pad_rows": E.get("hold_pad_rows", 0), "live_sha": E.get("live_sha"), **EP.final_fields()})
+                   "n_actions": E.get("n_actions"), "hold_pad_rows": E.get("hold_pad_rows", 0), "live_sha": E.get("live_sha"),
+                   "determinism_verdict_mode": VERDICT, **INSTANCE_CHECK, **EP.final_fields()})
     write_final()
 
 
@@ -113,7 +111,20 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 import rcb_ambench as M  # noqa: E402
-S = M.Session(INSTANCE, strict=True, cameras=True, depth=True)
+S = M.Session(INSTANCE, strict=False, cameras=True, depth=True)   # the start-state check is below (instance_mismatch)
+# The frozen initial state, checked before anything is served: the rebuilt scene's state hash against instance.json's
+# `initial_sha` (what strict mode refused by raising, which crashed the service until the collect hook gave up; the
+# replays checked it again until 2026-10-17).
+INSTANCE_CHECK = {"instance_sha": S.initial_sha, "instance_expected_sha": L._read_json(INSTANCE).get("initial_sha"),
+                  "instance_exact": bool(S.instance_matches), "instance_matches": bool(S.instance_matches)}
+if not S.instance_matches:
+    L._write_json(os.path.join(DATA, "final.json"), {"task": S.env_id, "protocol": PROTOCOL, "instance_mismatch": True, **INSTANCE_CHECK})
+    try:
+        S.renderer.close()
+    except Exception:  # noqa: BLE001
+        pass
+    EP.give_up(f"instance_mismatch: the rebuilt scene's state {S.initial_sha} is not the frozen instance's "
+               f"{INSTANCE_CHECK['instance_expected_sha']}", infra=True)   # never returns
 CAMS = list(S._cams)
 MOUNT = {"ee_camera": "on the end effector (ee_link), looking along the gripper", "base_camera": "on the airframe (base_link), looking forward"}
 EPISODE_STEPS = int(round(float(S.env.cfg.episode_length_s) * CTRL_HZ)) - 1     # AM-Bench's time-out step
@@ -423,7 +434,7 @@ def end_from_signal() -> None:
         E["exiting"] = True
         if not E["done"]: finish("time_up")         # the agent's time ran out with the episode still running
         else: dump()
-        log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the simulator for the fresh-process replays"})
+        log({"ev": "exit", "reason": "collect hook: episode dumped (graded by the live episode), releasing the simulator"})
         if not os.path.exists(PID_FILE):   # a SIGUSR1 that came in during a resume: the hook still needs to see this process end
             open(PID_FILE, "w").write(str(os.getpid()))
     sys.stdout.flush(); sys.stderr.flush()
@@ -431,7 +442,7 @@ def end_from_signal() -> None:
         S.renderer.close()
     except Exception:  # noqa: BLE001
         pass
-    os._exit(0)          # frees the GPU and the memory: finalize.sh starts the replays once this process is gone
+    os._exit(0)          # frees the GPU and the memory: finalize.sh writes final.json, then films, once this process is gone
 
 
 def replay_row(row) -> None:
@@ -441,6 +452,10 @@ def replay_row(row) -> None:
         S.step(np.asarray(row, dtype=np.float64))
 
 
+# The physics of the episode starts here (a resume replays the journal first): finalize.sh counts the GPU faults in
+# server.log only from this marker on, in the starts that reached it (a start that died while building the scene and was
+# restarted is not the episode's physics).
+print("[rcb] the episode's physics starts (live_gpu_faults are counted from here)", flush=True)
 EP.begin(state=E, step=replay_row, state_sha=lambda: S.status()["state_sha"], proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
          start_event={"task": S.env_id, "cameras": CAMS, "kinematics_check": S.kinematics_check, "dropped_events": S.dropped_events})
 E["ready"] = True; write_final()
