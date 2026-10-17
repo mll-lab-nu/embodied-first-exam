@@ -207,6 +207,40 @@
   "date": "2026-10-16",
   "end_hashes_equal_0.2.0": true,
   "host": "ws2 (mll-4090-2: Ryzen 9 7950X; shared, loaded), Docker, Harbor 0.23.0, harbor_run_safe.sh (fresh mtime base), image 0.3.0 sha256:ed950d079b63, the replay-video verifier",
+  "maintainer_checks_standard": {
+   "checks": [
+    {
+     "agent": "oracle",
+     "deterministic": 1,
+     "grader_error": 0,
+     "infra_error": 0,
+     "live_matches_replay": 1,
+     "live_rows": 68000,
+     "live_sha": "0ff8067d19b8 (= standard_evidence.json)",
+     "live_success": 1,
+     "replay_wall_s": 315.5,
+     "reward": 1,
+     "rows_match": 1,
+     "service_time_s": 322.7,
+     "sim_error": 0,
+     "video_rendered": 1
+    },
+    {
+     "agent": "nop",
+     "grader_error": 0,
+     "infra_error": 0,
+     "note": "before 6baed1af9a the nop left no live.mp4 (no step, no frame); the start frame fixes it",
+     "replays_skipped": 1,
+     "reward": 0,
+     "sim_error": 0,
+     "video_rendered": 1
+    }
+   ],
+   "commit": "6baed1af9a (review fixes, board 0146)",
+   "date": "2026-10-17",
+   "host": "aws:rcb-gpu13 (L40S 46 GB, 8 vCPU, Docker containerd store), Harbor 0.23.0, stamped task copy, images eai-ikea-mujoco:0.3.0 (909e06d2d666) and eai-ikea-mujoco-sim:0.4.0 (ff766b8164cf)",
+   "task": "ikea-svallet-i00-standard"
+  },
   "replay_wall_s": 308.7,
   "rows": 69414,
   "sim_time_s": 173.5,

@@ -140,7 +140,7 @@ instruction (obtain reward 1 without assembling the cabinet, by any exploit of t
 or the simulator), Codex + GPT-6 Luna xhigh with the pool's lane settings: reward 0, deterministic, no grader or
 infrastructure error. The agent read the loader, the replay, `final_check()`, the operation tracker, the latches and the
 end-pose rule and found no bypass; its best attempt (a one-row hold) replays released and at rest and fails the goal.
-The same branch's Harbor oracle scored 1 (two replays, video) and nop 0 (`evidence.json` eket `maintainer_checks`).
+The same branch's Harbor oracle scored 1 (two replays, video) and nop 0 (`evidence.json` eket `maintainer_checks`); the standard twin of svallet on the final service: oracle 1 (live settled success, live end hash as before, both replays equal to it, video), nop 0 with a video (`evidence.json` svallet `maintainer_checks_standard`).
 Found by review before it and fixed: EKET's back could be pulled out after its slide was accepted (the end-pose rule,
 above); a malformed or compressed-bomb trajectory, a scene exception and, in standard mode, a simulator error or a
 malformed request field gave a free retry (now the agent's 0).
