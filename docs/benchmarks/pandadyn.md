@@ -229,6 +229,13 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
 - **Contact and safety telemetry.** None is published beyond the robot's own proprioception (motor torques, joint and
   TCP motion), which is what the safety limits are judged on; contact forces stay private (PROTOCOL §4.5).
 
+- **Scene motion in the privileged instruction** (2026-10-16, #281). The template's sentence "Things move by themselves
+  from the first control step on: the scene does not wait for the robot." is written for the 19 dynamic families only
+  (`REALTIME` in `mk_tasks.py`); the six static ones (D05, D08, D11, D12, D13, S06) used to carry it too, against their
+  own scene text ("Nothing moves by itself"). Only those six privileged `instruction.md` files and their DIGEST changed;
+  instance, grading and oracle are the same. Results recorded before stand: the scene text was right, and a privileged
+  agent steps the simulator itself and sees that nothing moves.
+
 ## Notes on the tasks' checks
 The instructions describe each check exactly as the task's code implements it (`scripts/pandadyn/descr/`, written from
 the code alone, never from the reference controllers). Writing them brought up properties of the benchmark's own checks
