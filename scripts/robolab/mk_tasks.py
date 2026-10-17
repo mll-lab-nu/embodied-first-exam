@@ -136,14 +136,117 @@ def review_note(F: dict, mode: str) -> str:
             f"and the `nop` result).\n")
 
 
-def objects_block(F: dict) -> str:
+# The texts below state rules the grader applies, read from the grader's own sources so that they cannot drift from it
+# (2026-10-16 instruction audit): the on-table families of the tooling, and the standard collect hook and verifier.
+_TOOL_SRC = (HERE / "shared/rcb_robolab.py").read_text()
+_ON_TABLE = re.search(r"(?m)^ON_TABLE = \(([^)]*)\)", _TOOL_SRC)
+ON_TABLE = tuple(re.findall(r'"([^"]+)"', _ON_TABLE.group(1))) if _ON_TABLE else ()
+if not ON_TABLE or 'term.params = {**params, "surface": "table"}' not in _TOOL_SRC:
+    raise RuntimeError("shared/rcb_robolab.py: ON_TABLE or its term replacement not found")
+# RoboLab v0.3.1: WorldState.is_supported_on_surface(obj, surface) defaults, the support test of the on-table term
+SUPPORT_RULE = (": the contact force between the object and the table is at least 0.1 N and points upwards, within 45° "
+                "of vertical. An object held in the air, resting only on other objects, or dropped on the floor does not count")
+SUPPORT_TEXT = "rest on the table top" + SUPPORT_RULE
+SUPPORT_SRC = "RoboLab's `WorldState.is_supported_on_surface`, `/opt/robolab/robolab/core/world/world_state.py`"
+
+
+def on_table_terms(F: dict) -> str:
+    """The success term as graded here for an ON_TABLE family: the tooling's replacement of upstream's term."""
+    t, n = re.subn(r"func=object_outside_of,", "func=object_outside_of_and_on_surface,", F["terms"])
+    t, m = re.subn(r"params=\{([^{}]*?)\s*\}", lambda g: "params={" + g.group(1) + ', "surface": "table"}', t)
+    if n != 1 or m != 1:
+        raise RuntimeError("on-table family: its term is not a single object_outside_of with a flat params dict")
+    return t
+
+
+def default_tolerance(F: dict) -> bool:
+    """An object_in_container term that leaves `tolerance` at RoboLab's default."""
+    return "object_in_container" in F["conditionals"] and '"tolerance"' not in F["terms"]
+
+
+TOLERANCE_TEXT = ("`tolerance` is not set, so it takes `object_in_container`'s default, 0.01 m "
+                  "(`/opt/robolab/robolab/core/task/conditionals.py`). RoboLab passes it to `in_opentop_container` "
+                  "(`/opt/robolab/robolab/core/task/predicate_logic.py`), which does not use it: \"in\" means that the "
+                  "centroid of the object's convex-hull vertices lies within the container's convex hull, open without "
+                  "limit along the container's own up axis, with no margin.")
+
+
+def standard_grading() -> str:
+    """The standard mode's pass rule, read from the collect hook (finalize.sh) and the verifier (grade.py)."""
+    fin = (HERE / "template/standard/environment/sim/finalize.sh").read_text()
+    grade = (HERE / "template/standard/tests/grade.py").read_text()
+    n = len(re.findall(r"(?m)^\s*run_replay \d+ \d+ --no-settle\b", fin))
+    ok = re.search(r"(?m)^ok = (.*)$", grade)
+    need = ('out["replay_success"] = bool(a and a.get("success")) and bool(b and b.get("success"))',
+            'out["deterministic"] = bool(a and b) and a["state_sha"] == b["state_sha"]')
+    if n != 2 or not ok or not all(f'd.get("{k}")' in ok.group(1) for k in ("success", "replay_success", "deterministic")) \
+            or not all(x in fin for x in need):
+        raise RuntimeError("standard grader changed: update standard_grading()")
+    return ("- **Grading.** When the episode ends, the service's record of it (every control step it ran, including the\n"
+            "  hold at the end of your session) is replayed open-loop from the same initial state in two fresh simulator\n"
+            "  processes, exactly as recorded; it scores 1 only if the live episode succeeded, both replays succeed and both\n"
+            "  end in the same state (equal state hashes), else 0.")
+
+
+def objects_block(fam: str, F: dict) -> str:
     objs = ", ".join(f"`{o}`" for o in F["objects"] + ["table"])
     cond = ", ".join(f"`{c}`" for c in F["conditionals"])
     note = F["note"].strip()
-    return (f"The scene objects are the env's rigid objects (`s.objects()`: {objs}; see\n"
-            f"`/opt/robolab/robolab/tasks/{F['task_file']}`). RoboLab's success predicate is the `success` termination\n"
+    head = (f"The scene objects are the env's rigid objects (`s.objects()`: {objs}; see\n"
+            f"`/opt/robolab/robolab/tasks/{F['task_file']}`). ")
+    if fam in ON_TABLE:
+        return (head + f"RoboLab declares the success predicate as the `success` termination term in that file ({cond} in\n"
+                f"`/opt/robolab/robolab/core/task/conditionals.py`):\n```python\n{F['terms']}\n```\n"
+                f"This task does not grade that term. Its tooling and grader replace it (`ON_TABLE` in `rcb_robolab.py`) with "
+                f"RoboLab's own `object_outside_of_and_on_surface` (same file), the same parameters and surface `table`; this "
+                f"is the success predicate here (`s.status()`, `s.replay` and the grader all use it), and it also ends the "
+                f"episode:\n```python\n{on_table_terms(F)}\n```\n"
+                f"Each listed object must be outside the container as above, the gripper must not touch it, and it must also "
+                f"rest on the table top ({SUPPORT_SRC}){SUPPORT_RULE}.\n"
+                + (f"{note}\n" if note else ""))
+    return (head + f"RoboLab's success predicate is the `success` termination\n"
             f"term in that file ({cond} in `/opt/robolab/robolab/core/task/conditionals.py`); it also ends the episode:\n"
-            f"```python\n{F['terms']}\n```\n" + (f"{note}\n" if note else ""))
+            f"```python\n{F['terms']}\n```\n" + (f"{TOLERANCE_TEXT}\n" if default_tolerance(F) else "")
+            + (f"{note}\n" if note else ""))
+
+
+def standard_goal(fam: str, F: dict) -> str:
+    """families.json's standard goal, plus the on-table rule of the ON_TABLE families."""
+    g = F["standard_goal"].rstrip()
+    if fam not in ON_TABLE:
+        return g
+    objs = re.search(r'"object": \[([^\]]*)\]', F["terms"])
+    n = len(re.findall(r'"[^"]+"', objs.group(1))) if objs else 0
+    if not n:
+        raise RuntimeError(f"{fam}: no object list in its term")
+    return g + f" {'It' if n == 1 else 'Each of them'} must also {SUPPORT_TEXT}."
+
+
+def change_log_1016(fam: str, F: dict, mode: str) -> str:
+    """The README Change Log entry of the 2026-10-16 text fixes (instruction audit), with what applies to this task."""
+    items = []
+    if fam in ON_TABLE:
+        items.append("the on-table rule of 2026-10-14 is now stated: the success predicate is RoboLab's "
+                     "`object_outside_of_and_on_surface` (surface `table`; the object rests on the table top, held in the air or "
+                     "dropped on the floor does not count)" + (", shown next to the quoted upstream `object_outside_of` term "
+                                                              "that it replaces" if mode == "privileged" else ""))
+    if mode == "privileged":
+        if default_tolerance(F):
+            items.append("the instruction states `object_in_container`'s default `tolerance` (0.01 m), which "
+                         "`in_opentop_container` does not use")
+        items.append("the Tooling comment on `s.reset()` no longer calls it an exact state restore (the Conventions say "
+                     "that not every PhysX internal is restored)")
+    else:
+        items.append("the Rules state the pass rule: two fresh-process replays of the recorded episode, live success, both "
+                     "replays successful and both ending in the same state")
+        if "neither gripper finger touches it" in F["standard_objects"]:   # the two families that said "with the gripper open"
+            items.append("\"with the gripper open\" is now \"and neither gripper finger touches it\" (the term's "
+                         "`require_gripper_detached`)")
+    body = "; ".join(f"({i}) {t}" for i, t in enumerate(items, 1))
+    return (f"- 2026-10-16 (in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8; texts only). From the instruction audit of "
+            f"2026-10-16, the instruction now states the rules the grader applies: {body}. The scene, the frozen instance, "
+            f"the tooling, the success term and the grader are unchanged, so the task keeps its name and results under the "
+            f"2026-10-14 DIGEST are graded the same way.\n")
 
 
 def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
@@ -173,9 +276,11 @@ def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[by
               "SEED": str(F["seed"]), "IMAGE": image, "IMAGE_VERSION": version, "ALLOWED_HOSTS": ALLOWED_HOSTS,
               "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip()}
     priv = {"GOAL": F["goal"], "GOAL_TOML": toml_str(F["goal"]), "ROBOLAB_TASK": F["robolab_task"], "README_GOAL": F.get("readme_goal", F["goal"]),
-            "DIFFICULTY": F["difficulty"], "OBJECTS_BLOCK": objects_block(F), **per_mode("privileged"),
+            "DIFFICULTY": F["difficulty"], "OBJECTS_BLOCK": objects_block(fam, F), **per_mode("privileged"),
+            "CHANGE_LOG_1016": change_log_1016(fam, F, "privileged"),
             "REFERENCE_SOLUTION": reference("privileged", F.get("reference_solution", ""))}
-    std = {"INSTANCE_TEXT": toml_str(I["text"]), "STANDARD_GOAL": F["standard_goal"],
+    std = {"INSTANCE_TEXT": toml_str(I["text"]), "STANDARD_GOAL": standard_goal(fam, F), "STANDARD_GRADING": standard_grading(),
+           "CHANGE_LOG_1016": change_log_1016(fam, F, "standard"),
            "CHANGE_LOG_EXTRA": "".join(f"- {x}\n" for x in F.get("change_log", [])), "STANDARD_OBJECTS": F["standard_objects"].rstrip() + "\n",
            **per_mode("standard"),
            "REFERENCE_SOLUTION": reference("standard", "`solution/oracle_replay.py` streams the privileged oracle's joint targets "
