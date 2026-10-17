@@ -7,7 +7,8 @@
 # NVIDIA_VISIBLE_DEVICES=all it can expose every GPU of the host.
 # Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
-# Grading (environment/sim/finalize.sh): one fresh-process replay on this GPU after the service has exited.
+# Grading: the live episode (environment/sim/finalize.sh writes its verdict); then one video-only replay on this GPU
+# after the service has exited.
 services:
   main:
     pids_limit: 8192   # rcb-monitor
@@ -18,7 +19,7 @@ services:
     cpus: 8   # rcb-monitor
     mem_limit: 12288m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/eai-roboarc:0.1.0
+    image: ghcr.io/mll-lab-nu/eai-roboarc:0.2.0
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro

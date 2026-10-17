@@ -146,9 +146,27 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
   successes): a trial is graded on the host it ran on.
 - Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` twice; success = the predicate held in both, the final
   hashes agree, and the rebuilt frozen scene matches the recorded one.
-- Standard: the service dumps the episode and exits on the collect hook's signal; the hook (`environment/sim/finalize.sh`)
-  replays it in two fresh processes; success = live ∧ replay ∧ deterministic, `live_matches_replay` reported separately.
-  The standard verifier only reads `final.json` and runs with `network_mode = "no-network"`.
+- Standard (since 2026-10-17, owner, boards 0150/0151): graded by the **live episode**, with no grading replay. The
+  service judges the episode it runs: RoboLab's success term after every control step (the first step where it holds
+  ends the episode), and when the agent's time is up (the collect hook's signal, after the agent's container is stopped)
+  it holds the last command for `SETTLE_STEPS` = 30 more control steps on the live simulator while the term is checked
+  (`settle_steps`; since 2026-10-14, the same hold the privileged replay applies after a trajectory's last row; a
+  simulator error during the hold is recorded, `settle_error`, and the term is judged as it stands). It then
+  writes `trajectory.npz` (the deliverable) and `episode.json` and exits; the hook (`environment/sim/finalize.sh`) writes
+  `final.json` from it (`graded_by` "live", `replays` 0) before anything else. success = the live success, no
+  infrastructure failure. The standard verifier only reads `final.json` and runs with `network_mode = "no-network"`.
+  Until 2026-10-17 the hook replayed the trajectory in two fresh processes (`--no-settle`) and success was
+  live ∧ replay ∧ deterministic; re-scoring such a trial by its live episode: `final.json` `success` (the live result, merged
+  from episode.json; it already included the 2026-10-14 term and hold for trials on that version), `infra_error` only
+  when the live record is missing (no or unfinalized `final.json`, no `live_sha`: no episode.json, or the service never
+  ended the episode) or the service gave up with `infra_error` (`sim_crashed`, `resume_failed`); `replay_error`,
+  `gpu_lost` and `instance_mismatch` found by a replay are not the live episode's; trials re-graded by board 0130
+  (`regrade_*` in reward.json) keep their recorded verdict.
+- The start state (standard): the service builds the frozen scene and, before it serves anything, compares it with the
+  instance's recorded state: the state hash (`instance.json` `state_sha`) or, if the hash differs, every object pose and
+  robot joint within the tooling's tolerance (`Session.instance_matches`, as the tooling's strict mode). A scene that
+  matches neither is a give-up as an infrastructure failure (`instance_mismatch`, `infra_error` = 1; the service answers
+  409). Before 2026-10-17 the strict check raised, the service crashed and restarted until the hook timed out.
 - The privileged verifier keeps Harbor's default network (PROTOCOL §2.6 recommends no-network): it starts Isaac Sim, and
   a Kit start in a container without any network interface has not been tested on our hosts (with only the model APIs
   reachable it starts and builds the scene: Network). Grading downloads nothing: RoboLab's assets, since image 0.1.2 the
@@ -166,17 +184,27 @@ our first sweep were agents running out of time mid-attempt (raised 2026-09-26, 
   replays of the longest accepted trajectory (100,000 rows: 14,234 s each) plus 600 s; before, the 2400 s verifier limit
   was shorter than two 1800 s replays. Standard: `[[verifier.collect]] timeout_sec = 15000` = the episode end (up to
   2700 s through a resume) + two replays of up to 5700 s (an Isaac start + an episode stepped for the whole 5400 s budget)
-  + 900 s; `finalize.sh` (`HOOK_BUDGET_S`, the same number) gives each replay what is left before that deadline minus
-  300 s, shared between the replays still to run, so a slow replay is recorded (`replay_error`, `infra_error`) instead of
-  Harbor killing the hook. None of this was measured on a GPU host for this change (static + synthetic tests only).
+  + 900 s, until 2026-10-17; now `timeout_sec = 3600` (`HOOK_BUDGET_S`, the same number) = the episode end (up to 2700 s
+  through a resume) + the video encode (at most 600 s, CPU, at most 3001 frames) + a margin, and the hook uses no GPU after
+  the service exits. The saving: the two fresh-process replays, 333-377 s each at the median and 1600-2400 s at the p90
+  over the 168 archived standard trials (an Isaac start of ~40-90 s + the episode at the live rate), on the trial's GPU.
 - Tests without a simulator (numpy only): `scripts/robolab/tests/test_*.py`, each run as a script (RoboLab and YAMLab
-  together): both graders on synthetic records, the whole `finalize.sh` with stand-in replays (dies, hangs, crashes after
-  its result, retry), the tooling's replay CLI with a failing video, and the real `server.py` on the real shared layer with
-  a stub simulator over HTTP (malformed requests, the step cap).
-- The replay video never decides a replay: the tooling catches a writer that cannot open, a frame that cannot be rendered
-  or written and an encoder that fails at close (`video_ok` false in the replay's result; `stop_video()` returns None),
-  and the frames go straight to the encoder. A trajectory longer than 9,000 control steps is filmed as a time lapse (at
-  most 9,000 frames, `MAX_VIDEO_FRAMES`).
+  together): both graders on synthetic records, the whole `finalize.sh` with stand-ins for the service's end and the video
+  encode (live success / failure / settle failure, crashes between and inside calls, instance mismatch, no episode.json,
+  a failing, crashing or hanging encode; no case may start a replay), the tooling's replay CLI with a failing video, and the
+  real `server.py` on the real shared layer with a stub simulator over HTTP (malformed requests, the step cap, the start
+  check, the live video's frames and a broken camera).
+- The video (standard, since 2026-10-17) is filmed during the live episode by the service (`live_video.py`): Isaac Lab
+  renders every camera with each control step anyway (the observation), so a frame (the tooling's `_video_frame`: the
+  viewport cameras + the wrist camera) is taken every 3 control steps (5 per simulated second) and written as a JPEG file
+  (`/data/live_video/`, crash-safe; a resume skips the frames on disk and deletes those of the call lost in the crash); past 3000 slots the slot doubles (a time lapse).
+  Cost: one JPEG encode per 3 control steps (a few ms against 70-300 ms per control step; the archived filmed replays,
+  which filmed every step, took 1.1x the unfilmed ones). The collect hook encodes `live.mp4` + `live.last.png` after the
+  verdict (CPU, `RCB_VIDEO_LIMIT_S` 600 s); a frame or an encode that fails costs the video only (`video` false,
+  `video_error`), never the verdict. Privileged: the replay video never decides a replay: the tooling catches a writer
+  that cannot open, a frame that cannot be rendered or written and an encoder that fails at close (`video_ok` false in the
+  replay's result; `stop_video()` returns None), and the frames go straight to the encoder. A trajectory longer than
+  9,000 control steps is filmed as a time lapse (at most 9,000 frames, `MAX_VIDEO_FRAMES`).
 - `scripts/robolab/regrade.sh <task> <trial> <out>` re-grades a finished trial with the current task version in two fresh
   processes (the review's determinism check), on the host the trial ran on.
 
@@ -262,6 +290,13 @@ each first held.
   the agent could still have released the object; the label is "re-graded under 2026-10-14 rules (conservative)".
 - **Privileged trials are close to exact.**
 
+## Change log
+- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by the sim
+  service during the live episode (`live.mp4`, a frame every 3 control steps). The start-state check moved to the
+  episode's start (`instance_mismatch` = a give-up as infra before serving). Collect hook 15000 s -> 3600 s. The `main`
+  kill hook (`kill -9 -1`) runs before the sim's (PROTOCOL H.4). Privileged tasks unchanged. The 53 standard task dirs
+  regenerated in place (new DIGESTs; instruction: the Grading sentence only).
+
 ## Licences
 RoboLab: Apache-2.0 (code and assets); Isaac Lab: BSD-3-Clause on GitHub, its pip wheels and Isaac Sim 5.1 are NVIDIA
 proprietary software (no redistribution), hence BUILD_ONLY.
@@ -272,7 +307,7 @@ Resume class `exact` (Isaac, CPU PhysX: the resumed service is a fresh process, 
 
 Its service states no `max_frames_per_call` yet.
 
-A resume replays at ~20 steps/s. Grading: the service dumps the episode, exits, and the hook replays it in two fresh processes.
+A resume replays at ~20 steps/s. Grading (since 2026-10-17): the service judges the live episode, dumps it and exits; the hook writes `final.json` from it, with no replay (two fresh-process replays before).
 
 Known issue: per-call state hashing on Isaac is new with crash recovery; its PRs re-check `live_matches_replay`.
 
@@ -288,7 +323,7 @@ Per-simulator notes (former STANDARD_MODE §16):
 | depth | Isaac `distance_to_image_plane` |
 | `/kinematics` | numpy model of the USD joints (7) |
 | proprio columns (2.0 → 2.2) | 16 → 32 |
-| grading replays | two fresh processes |
+| grading replays | none since 2026-10-17 (graded by the live episode; two fresh processes before) |
 | resume class (STANDARD_MODE §13.1) | `exact` |
 
 Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):

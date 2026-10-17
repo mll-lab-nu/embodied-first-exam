@@ -16,11 +16,19 @@ What the agent gets: camera RGB (+ depth) with each camera's calibration, the ro
 positions and last command, and the task's instruction. Never an object's pose, the scene layout or the success check.
 The episode runs until the agent's time is up; the state after the last executed control step is graded.
 
+The verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): the environment's own success
+check on the state after the last control step this service executed, not already solved at the start, and the
+episode not ended by a simulator error. Nothing is replayed to grade it. The frozen initial state is checked when the
+episode begins (the instance file's hash, RCB_INSTANCE_SHA, and the start state's hash, RCB_START_SHA, both from the
+generator): a scene that did not build to it is refused (instance_mismatch, an infrastructure failure) before the agent
+is served.
+
 Evidence under /data: episode.jsonl (every call), calls/NNNNNN/ (meta + actions), and at the end trajectory.npz
-((T, dim) per control step) and final.json with a fresh replay's verdict (deterministic = same final state hash) and
-"finalized": true, written together in one atomic step. Only then replay.mp4 and replay.last.png are rendered (a second
-replay): optional, they can add "video": true to final.json and nothing else, and no failure there (an exception, a
-crash, the collect hook running out of time) changes the verdict. /data/video.pending exists while that rendering runs.
+((T, dim) per control step) and final.json with the verdict and "finalized": true, written together in one atomic step.
+Only then replay.mp4 and replay.last.png are rendered, from trajectory.npz (one render pass, video_source "render"):
+optional, they can add "video": true to final.json and nothing else, and no failure there (an exception, a crash, the
+collect hook running out of time) changes the verdict. /data/video.pending exists (and final.json says
+"video_pending": true) while that rendering runs.
 
 A request is validated as a whole before any physics: whatever is wrong with it is a 400 and nothing ran (PROTOCOL
 §4.6). Only an error while the simulator executes is a 500, which ends the episode.
@@ -77,7 +85,7 @@ faulthandler.dump_traceback_later(STARTUP_TIMEOUT_S, exit=True)
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
 REC_PATH = os.path.join(DATA, "record.f64")  # journal: every executed control step's action, float64 (N,) rows
 FINAL = os.path.join(DATA, "final.json")
-VIDEO_PENDING = os.path.join(DATA, "video.pending")  # exists while the optional replay video is being rendered
+VIDEO_PENDING = os.path.join(DATA, "video.pending")  # exists while the optional video is being rendered
 VIDEO_TMP = os.path.join(DATA, "replay.tmp.mp4")  # the video under construction; renamed to replay.mp4 when complete
 
 
@@ -106,6 +114,12 @@ def _load_final() -> dict:
     return d if isinstance(d, dict) else {}
 
 
+def _graded(d: dict) -> bool:
+    """final.json holds a verdict: "graded_by" since 2026-10-17 (the live episode's), "deterministic" before (a replay's),
+    or "finalized" (a verdict, or a give-up, that is final)."""
+    return bool(d.get("finalized")) or "graded_by" in d or "deterministic" in d
+
+
 def _remove(*paths: str) -> None:
     for p in paths:
         try:
@@ -116,13 +130,15 @@ def _remove(*paths: str) -> None:
 
 def _give_up(reason: str, infra: bool) -> None:
     """End the trial's episode without a new one: mark it failed, keep the PID file for the collect hook, and idle.
-    A verdict already on disk (final.json has "deterministic") is never overwritten (PROTOCOL §4.7), whatever else the
-    file says: at most its missing "finalized" flag is set, which changes nothing the verdict says."""
+    A verdict already on disk is never overwritten (PROTOCOL §4.7), whatever else the file says: at most its missing
+    "finalized" flag is set, or a "video_pending" left by a process that died rendering the video is cleared (that
+    video is lost), which changes nothing the verdict says."""
     log({"ev": "restart_refused", "reason": reason})
     prev = _load_final()
-    if "deterministic" in prev:
-        if not prev.get("finalized"):
+    if _graded(prev):
+        if not prev.get("finalized") or prev.get("video_pending"):
             prev["finalized"] = True
+            prev["video_pending"] = False
             _dump_final(prev)
     else:
         prev.update({"success": False, "done": True, "reason": reason, "finalized": True, "protocol": PROTOCOL})
@@ -633,73 +649,85 @@ def run_observe(q: dict):
     return out, rec.parts(video if seconds > 0 else ("frames" if video == "mp4" else video), fps)
 
 
-def _render_video(ver, A: np.ndarray) -> None:
-    """The replay video: strictly optional, and only after the verdict is final on disk. It is rendered under a
-    temporary name and renamed when complete; success adds "video": true to final.json and nothing else. Any failure
-    here (an exception; a crash, after which the restarted service finds the verdict and idles; the collect hook giving
-    up on it) leaves final.json exactly as finalize() wrote it."""
+def _render_video(A: np.ndarray) -> None:
+    """The video: strictly optional, and only after the verdict is final on disk. One render pass: the live session is
+    rebuilt from the frozen instance and runs the recorded trajectory again with its camera on (nothing is compared or
+    judged; the agent's container is gone and LOCK keeps requests out meanwhile). It is rendered under a temporary name
+    and renamed when complete; success adds "video": true to final.json and nothing else. Any failure here (an
+    exception; a crash, after which the restarted service finds the verdict and idles; the collect hook giving up on
+    it) leaves the verdict exactly as finalize() wrote it."""
     t = time.time()
     try:
-        ver.render_video(A, VIDEO_TMP, every=max(2, len(A) // 300), fps=10)
+        S.render_video(A, VIDEO_TMP, every=max(2, len(A) // 300), fps=10)
         os.replace(VIDEO_TMP[:-4] + ".last.png", os.path.join(DATA, "replay.last.png"))
         os.replace(VIDEO_TMP, os.path.join(DATA, "replay.mp4"))
-        d = _load_final()
-        if d.get("finalized") and "deterministic" in d:
-            d["video"] = True
-            _dump_final(d)
-            E["verdict"]["video"] = True
+        E["verdict"]["video"] = True
         log({"ev": "video", "video_s": round(time.time() - t, 1)})
     except Exception as exc:  # noqa: BLE001
         traceback.print_exc()
         try:
-            log({"ev": "video_error", "error": repr(exc)[:300]})
+            log({"ev": "video_error", "error": repr(exc)[:300], "video_s": round(time.time() - t, 1)})
         except Exception:  # noqa: BLE001
             pass
     finally:
+        E["verdict"]["video_pending"] = False
+        try:
+            if _load_final().get("finalized"):
+                write_final()  # "video" and "video_pending" only: the verdict's fields are E["verdict"]'s, unchanged
+        except Exception:  # noqa: BLE001
+            traceback.print_exc()
         _remove(VIDEO_PENDING, VIDEO_TMP, VIDEO_TMP[:-4] + ".last.png")
 
 
 def finalize() -> None:
-    """The episode is over: replay it in a fresh simulator and write the verdict together with "finalized": true (one
-    atomic write of final.json), then, and only then, render the optional video."""
+    """The episode is over: the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151).
+    success = the environment's success check (`_check_success`, as the live episode last ran it) holds on the state
+    after the last executed control step, the scene was not solved at the start, and the episode did not end on a
+    simulator error (whose state is the partial step's, not the last executed one). Nothing is replayed to grade it.
+    The trajectory and the verdict with "finalized": true are written (one atomic write of final.json); then, and only
+    then, the optional video is rendered from the trajectory."""
     with LOCK:
-        t = time.time()
-        ver = A = None
+        A = None
         try:
             A = np.asarray(RECORD, float).reshape(-1, N)
             live_sha = S.state_sha()
             live = S.check()
+            initial = bool(getattr(S, "initial_success", False))
             np.savez(
                 os.path.join(DATA, "trajectory.npz"),
                 actions=A,
                 tool=TOOL.__name__,
                 meta=json.dumps({"source": "standard-mode episode", "reason": E["reason"]}),
             )
-            ver = TOOL.Session(INSTANCE, enable_render=True)
-            r1 = ver.replay(A)
-            det = r1["state_sha"] == live_sha
+            live_ok = bool(live["success"])
             E["verdict"] = {
-                "deterministic": bool(det),
+                "graded_by": "live",
+                "replays": 0,
+                "live_success": live_ok,
+                "initial_success": initial,
+                "success": bool(live_ok and not initial and E["reason"] != "error"),
                 "live_state_sha": live_sha,
-                "replay_success": bool(r1["success"]),
-                "live_success": bool(live["success"]),
-                "initial_success": bool(r1["initial_success"]),
-                "success": bool(det and r1["success"] and live["success"] and not r1["initial_success"]),
-                "final_reward": float(r1["final_reward"]),
+                "state_sha": live_sha,
+                "final_reward": float(live.get("reward") or 0.0),
+                "n_actions": int(len(A)),
+                "video": False,
+                "video_pending": True,
+                "video_source": "render",
             }
         except Exception as exc:  # noqa: BLE001
             traceback.print_exc()
             log({"ev": "finalize_error", "error": repr(exc)})
-            E["verdict"] = {"finalize_error": repr(exc)[:300]}
-            ver = None
-        if ver is not None:
+            E["verdict"] = {"finalize_error": repr(exc)[:300], "graded_by": "live", "replays": 0}
+            A = None
+        if A is not None:
             # Announced before the verdict is written: whoever sees the verdict also sees that a video is on its way.
             open(VIDEO_PENDING, "w").close()
         E["finalized"] = True
         write_final()  # the verdict and "finalized": true, in one atomic write; nothing below changes them
-        if ver is not None:
-            log({"ev": "verdict", "control_steps": int(len(A)), "verify_s": round(time.time() - t, 1)})
-            _render_video(ver, A)
+        if A is not None:
+            log({"ev": "verdict", "control_steps": int(len(A)), "success": E["verdict"]["success"],
+                 "live_success": E["verdict"]["live_success"]})
+            _render_video(A)
 
 
 def finish(reason: str) -> None:
@@ -833,6 +861,25 @@ _renderer(False)  # opens the renderer before the first request
 calib()
 
 
+def _start_mismatch(sha: str) -> str | None:
+    """Why the scene just built is not the frozen instance's start, or None. The verdict is the live episode's, so no
+    later replay from the frozen instance checks the start: it is checked here, before the agent is served (board
+    0151). RCB_INSTANCE_SHA: the instance's own hash (casa_tool checks the file against it on load; this checks that the
+    file is the task's frozen instance); RCB_START_SHA: the state hash a fresh episode of this instance starts in
+    (scripts/<benchmark>/frozen/start_state.json). A frozen instance is never solved at its start (the generator only
+    publishes verified ones), so a scene that is is not that instance either."""
+    want = os.environ.get("RCB_INSTANCE_SHA", "")
+    have = str(getattr(S, "instance_sha", ""))
+    if want and have != want:
+        return f"the instance file has hash {have[:16]}, the task's frozen instance {want[:16]}"
+    want = os.environ.get("RCB_START_SHA", "")
+    if want and sha != want:
+        return f"the scene starts in state {sha[:16]}, the frozen instance in {want[:16]}"
+    if getattr(S, "initial_success", False):
+        return "the scene is solved at the start; the frozen instance is not"
+    return None
+
+
 def _resume_or_start() -> None:
     """Fresh start, or (after a crash: compose restarts the container) resume the SAME episode. The journal holds every
     executed control step; the log holds, per completed call, the step count and the state hash. Replaying the journal up
@@ -847,12 +894,16 @@ def _resume_or_start() -> None:
             os.remove(REC_PATH)
         except OSError:
             pass
-        log({"ev": "start", "tool": TOOL.__name__, "state_sha": S.state_sha(), "protocol": PROTOCOL})
+        sha = S.state_sha()
+        log({"ev": "start", "tool": TOOL.__name__, "state_sha": sha, "protocol": PROTOCOL})
+        bad = _start_mismatch(sha)
+        if bad:  # before the port is bound: the agent is never served a scene that is not the task's
+            _give_up(f"instance_mismatch: {bad}", infra=True)
         write_final()
         E["t0"] = time.time()
         return
     fin = _load_final()
-    if "deterministic" in fin:  # the verdict is on disk: nothing is replayed, redone or rewritten
+    if _graded(fin):  # the verdict is on disk: nothing is replayed, redone or rewritten
         _give_up("restarted after finalize", infra=False)
     resumes = [e for e in ev if e.get("ev") == "resumed"]
     in_call = bool(ev) and ev[-1].get("ev") == "call_begin"

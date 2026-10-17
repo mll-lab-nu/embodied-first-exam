@@ -11,6 +11,7 @@ eai-standard/2.4 layer, with a stub Session (fake_service.py; needs numpy, no si
   4. meta["safety"] holds the declared fields as on main (rules, scope, forcing, task_contact_mm, held_finger_contact_mm,
      review, soft_volume_ratio, attachment_stretch_mm, table_guard, ik_jumps), with the names of the parts involved, and
      no other field of the reading (user decision 2026-10-13: names are allowed, positions are not).
+  5. then test_live_grade.py: the collect hook and the grader (graded by the live episode, board 0151).
 usage: python3 scripts/roboarc/tests/test_server_requests.py [repo root]"""
 import json, os, shutil, socket, subprocess, sys, tempfile, time, urllib.error, urllib.request
 import numpy as np
@@ -174,4 +175,7 @@ finally:
 shutil.rmtree(TMP, ignore_errors=True)
 for e in errs: print("FAIL", e)
 print(f"{'FAIL' if errs else 'ok'} roboarc standard service: {n} checks, {len(errs)} failed")
-sys.exit(1 if errs else 0)
+# the collect hook and the grader on synthetic records (board 0151: the live episode is the verdict; standard library only,
+# chained here because ci_checks/check-unit-tests.sh lists this file)
+live = subprocess.run([sys.executable, os.path.join(HERE, "test_live_grade.py")])
+sys.exit(1 if errs or live.returncode else 0)

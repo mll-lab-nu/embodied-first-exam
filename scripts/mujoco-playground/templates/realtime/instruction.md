@@ -38,8 +38,8 @@ S x {{dt_ms}} ms of wall-clock time{{real_time_note}}. `spec()["timing"]["slowdo
   velocity), foot contacts, and the joystick command in force. No world positions, no success check: the service judges
   the episode and only tells you that it ended and why (`meta["done"]`, `meta["reason"]`: `"success"`, `"error"` after
   a simulator error, else `"failed"`).
-- There is nothing to hand in: the service records every control step it ran, replays the last episode in a fresh
-  simulator and grades the replay. Keep the controller that drives the robot at `/app/output/gen.py` for the record:
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran.
+  Keep the controller that drives the robot at `/app/output/gen.py` for the record:
   save it early and keep it current.
 - Do not stop early: while the episode runs, or a reset is left, the run can still pass.
 

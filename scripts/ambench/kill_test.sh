@@ -44,7 +44,7 @@ rs = [e for e in ev if e.get("ev") == "resumed"]
 ck = sum(1 for e in ev if e.get("ev") == "checkpoint")
 # resume class approx (ambench.md, Determinism): the resume may leave the last bits different (resume_state_mismatch), but
 # the robot must be where it was (the TCP within 1 mm) and the episode must still be graded and succeed
-want = {"success": 1, "deterministic": 1, "resumes": 1, "sim_startups": 2, "infra_error": 0}
+want = {"success": 1, "graded_by_live": 1, "replays": 0, "resumes": 1, "sim_startups": 2, "infra_error": 0}
 bad = {k: rw.get(k) for k, v in want.items() if rw.get(k) != v}
 print(json.dumps({"reward": rw, "resumed": rs, "checkpoints": ck}, indent=1))
 ok = (not bad and len(rs) == 1 and rs[0].get("class") == "approx" and float(rw.get("resume_max_tcp_dev_m") or 0) <= 1e-3)

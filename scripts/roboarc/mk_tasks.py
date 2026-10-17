@@ -41,7 +41,8 @@ Inputs, all in this directory, written by scripts/robotangle/release_rebuild.py 
   packages/      per task, the upstream texts (task.toml, README.md, instruction.md, Dockerfiles, compose files, test.sh):
                  the RoboARC base's texts it ports, renamed, with the family's own texts over them for a changed or
                  new design; and the instance's lock (runtime_binding.upstream.json)
-  oracles/       the references (privileged.npz; standard.npz is the same file)
+  oracles/       the references (privileged.npz; standard.npz is the same file, or, where release.json's standard evidence
+                 has "speed_rule", the reference re-timed to the standard service's joint-speed rule)
   assets.json    the frozen instances, not in git: the private HF dataset eai-v2-internal/robotangle-assets (the same
                  dataset as RoboARC's, instances/<base>/), pinned by commit and sha256. The image carries them; a task
                  keeps its runtime_binding.json and stages its instance from the image (/opt/robotangle/stage_instance.py).
@@ -462,6 +463,7 @@ def audit_words(s: str, rec: dict, mode: str, readme: bool) -> str:
                   "        # always computed it, complete_metrics). The birth (physics step 0) still reports it: the frozen instances'\n",
                   "        # The birth (physics step 0) still reports it: the frozen instances'\n")
     assert "(user 20" not in s, "a dated user decision note in an agent-facing text"
+    s = re.sub(r"(?m)^## Task failure conditions\n\s*\n(?=## )", "", s)   # no empty failure section (audit V6, 2026-10-17)
     if mode == "standard":
         s = re.sub(r"(?m)^- Grading: the verifier replays your trajectory twice[^\n]*\n", "", s)
         for rx in STIFFNESS:
@@ -766,6 +768,11 @@ def ref_solution(mode: str, rec: dict) -> str:
             return (f"`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `{ev['trajectory_sha256'][:16]}…`) to "
                     f"`/app/output/`: the MuJoCo reference ({route}), which the verifier scored 1 in two fresh-process "
                     f"replays on {run_words(ev)}.")
+        if ev.get("speed_rule"):     # 2026-10-14: a standard reference re-timed to the joint-speed rule (oracles/<base>/standard.npz)
+            return ("`solution/solve.sh` streams the rows of the standard reference (`solution/oracle_qpos.npy`, one "
+                    "`joint_position` row per control step, `hold`) through the client (`solution/oracle_replay.py`): "
+                    f"{ev['speed_rule']} That episode scored 1 (live and fresh replay, end state `{ev['end_state']}`) on "
+                    f"{run_words(ev)}.")
         return ("`solution/solve.sh` streams the recorded rows of the standard-mode oracle episode "
                 "(`solution/oracle_qpos.npy`, one `joint_position` row per 25 ms control step, `hold`; the same rows as the "
                 "privileged reference) through the client (`solution/oracle_replay.py`). That episode scored 1 (live and "
@@ -863,7 +870,7 @@ NEW_TASK = ("- {date}: new task of {bench} (RoboARC on MuJoCo 3.14.0, docs/bench
 
 def mujoco_changes(mode: str, rec: dict) -> list[str]:
     """The Change Log of a task of this benchmark: the entry that made it (later fixes add theirs, PROTOCOL §2.8)."""
-    date = rec["nop"]["date"]
+    date = rec.get("released") or rec["nop"]["date"]   # a base released before keeps its date (V2)
     if rec.get("template"):
         return [NEW_TASK.format(date=date, bench=BENCH, variation=rec["variation"], family=rec["family"],
                                 template=rec["template"], design=f": {rec['design']}" if rec.get("design") else "", mode=mode)]
@@ -889,7 +896,8 @@ FIX_STRICT_GOAL_NO_HOLD = ("- 2026-10-14: tests/grade.py, the same file in every
 
 def fix_changes(base: str, mode: str) -> list[str]:
     """The Change Log entries of fixes after the release (PROTOCOL §2.8: same name and frozen instance, new digest). The
-    standard twins are unchanged; every privileged task's tests/grade.py changed (the families with a grading hold, whose
+    standard twins' entry (LIVE_CHANGE, 2026-10-17) comes last, after the later releases' (rewrite_readme); every
+    privileged task's tests/grade.py changed (the families with a grading hold, whose
     packages state the strict rule (R_HOLD_STRICT), change their verdicts)."""
     if mode == "standard":
         return []
@@ -908,6 +916,8 @@ def rewrite_readme(s: str, base: str, mode: str, rec: dict) -> str:
     s = re.sub(r"(?ms)^(## Verification\n.*?)(?=^## )", lambda m: m.group(1).rstrip() + cap + "\n\n" + nop + "\n\n", s)
     log = mujoco_changes(mode, rec)      # a new benchmark: the RoboARC task's own history stays with that task
     log += fix_changes(base, mode)
+    log += [f"- {c['date']}: {c['text']}" for c in rec.get("changes", ()) if c["mode"] in (mode, "both")]   # later releases (V2)
+    log += [LIVE_CHANGE] if mode == "standard" else []          # graded by the live episode (board 0151)
     return s.rstrip() + "\n\n### Provenance\n" + provenance(base, rec) + "\n\n### Change Log\n" + "\n".join(log) + "\n"
 
 
@@ -1125,6 +1135,67 @@ def mujoco_lines(name: str, s: str, rec: dict) -> str:
     return s
 
 
+# ---------------------------------------------------------------- standard: graded by the live episode (owner 2026-10-17)
+# Board 0150/0151: the standard twins are graded by the live episode; no grading replay runs. The sidecar's collect hook
+# (shared/standard/sim/finalize.sh) writes final.json from the live episode's record first and then renders the video in
+# one video-only pass (shared/standard/sim/replay.py); tests/grade.py credits the live success. These are the standard
+# texts that described the grading replay; every replacement asserts that its source text is there.
+LIVE_GRADING_RX = re.compile(r"(?m)^- Grading: success needs the live episode to succeed \(with the thresholds above\) AND one "
+                             r"fresh-process replay of its rows to succeed; .*$")
+LIVE_GRADING = ("- Grading: the live episode is the verdict: success needs it to succeed with the thresholds above (within its "
+                "confirmation time); a live failure is final. Nothing is replayed to grade it: the video is rendered afterwards "
+                "from the recorded rows and never changes the grade.")
+LIVE_VERIFICATION_RX = re.compile(r"(?m)^\| verification \| `success` = live success ∧ replay success: .*\|$")
+LIVE_VERIFICATION = ("| verification | `success` = the live success: the task predicate on the live simulator with the instance's own "
+                     "thresholds (its confirmation time included), as the sim service recorded it (`final.json`: `graded_by` live, "
+                     "`replays` 0); no grading replay (owner, 2026-10-17, board 0150/0151). The frozen instance is checked when the "
+                     "service builds it (`instance_mismatch`: infrastructure). After the verdict is written, one video-only "
+                     "fresh-process replay in the sidecar's collect hook renders `/logs/verifier/replay.mp4` (and, for a success held "
+                     "for review, the frames around its live review events); a failed video never changes the verdict |")
+LIVE_TEXTS = {
+    "README.md": [("(`environment/sim/finalize.sh`) replays the trajectory once in a fresh process for success, rendering the video during\n"
+                   "that replay.",
+                   "(`environment/sim/finalize.sh`) writes the live episode's verdict, then renders the video in one video-only\n"
+                   "replay of the recorded rows (no grading replay).")],
+    "task.toml": [('  { source = "/data/replay.verdict.json", service = "sim" },\n',
+                   '  { source = "/data/replay.video.json", service = "sim" },          # the video-only pass\'s record\n'),
+                  ('  { source = "/data/replay.json", service = "sim" },              # the collect hook\'s fresh-process replay\n',
+                   '  { source = "/data/replay.json", service = "sim" },              # the collect hook\'s video-only pass (stdout)\n'),
+                  ('command = "sh /srv/finalize.sh"   # end + dump + exit the service, one fresh-process replay with the video, write final.json',
+                   'command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json (the live verdict), then one video-only replay'),
+                  ("\n[[verifier.collect]]\nservice = \"sim\"\n",
+                   "\n# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after\n"
+                   "# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.\n"
+                   "[[verifier.collect]]\nservice = \"main\"\ncommand = \"kill -9 -1 2>/dev/null; exit 0\"\ntimeout_sec = 30\n"
+                   "\n[[verifier.collect]]\nservice = \"sim\"\n"),   # PROTOCOL H.4 (board 0151, #303): main's kill hook first
+                  ("timeout_sec = 27000              # the end (a resume replay included) <= 1 h, the replay <= the agent's budget",
+                   "timeout_sec = 27000              # the end (a resume replay included) <= 1 h; the video pass after the verdict <= the agent's budget")],
+    "environment/docker-compose.yaml": [
+        ("# Grading (environment/sim/finalize.sh): one fresh-process replay on this GPU after the service has exited.",
+         "# Grading: the live episode (environment/sim/finalize.sh writes its verdict); then one video-only replay on this GPU\n"
+         "# after the service has exited.")],
+}
+LIVE_CHANGE = ("- 2026-10-17 (owner, board 0150/0151): graded by the live episode; no grading replay. `success` = the live success "
+               "(the instance's own thresholds; a live success with a deep task contact is still held for review); the fresh-process "
+               "replay of the collect hook (with its grading hold and replay tolerances) no longer decides anything and runs only "
+               "as the video-only pass after the verdict, so a replay failure, a GPU lost after the episode or a breakdown met only "
+               "in the replay no longer voids a trial. The frozen instance, the rows and the agent's texts other than the grading "
+               "line are unchanged.")
+
+
+def live_grading(name: str, s: str, base: str) -> str:
+    """A standard twin's texts: graded by the live episode, the replay a video-only pass (the block comment above)."""
+    if name in ("instruction.md", "README.md"):
+        s = LIVE_GRADING_RX.sub(LIVE_GRADING, s)
+        assert "fresh-process replay of its rows to succeed" not in s, f"{base} {name}: a grading-replay sentence is left"
+    if name == "README.md":
+        s, n = LIVE_VERIFICATION_RX.subn(LIVE_VERIFICATION, s)
+        assert n == 1, f"{base} README.md: expected one verification row, found {n}"
+    for old, new in LIVE_TEXTS.get(name, ()):
+        s = swap(s, old, new, f"{base} {name} (live grading)")
+    return s
+
+
 def dev_binding(inst_dir: pathlib.Path, dev: dict, bridge: bool = False, direct: bool = False) -> bytes:
     """--dev: the binding of a local frozen instance (canonical sha256, every asset's sha256) to the dev image's runtime
     and identity, with the same keys as binding()."""
@@ -1150,19 +1221,20 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
     for mode in ("privileged", "standard"):
         t = out / f"{BENCH}-{base}-{mode}"; up = PKG / f"{base}-{mode}"; dirs.append(t)
         rd = lambda n: (up / n).read_text()  # noqa: E731
-        put(t / "task.toml", difficulty_words(rewrite_toml(rd("task.toml"), base, rec), rec, base).encode())
+        live = (lambda n, x: live_grading(n, x, base)) if mode == "standard" else (lambda n, x: x)  # noqa: E731
+        put(t / "task.toml", live("task.toml", difficulty_words(rewrite_toml(rd("task.toml"), base, rec), rec, base)).encode())
         fence = "`fence`" in rd("instruction.md")
-        put(t / "README.md", audit_words(r5_words(frame_words(flat_words(rewrite_readme(separation_words(rd("README.md"), f"{t.name}/README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode), mode), rec, mode, True).encode())
+        put(t / "README.md", live("README.md", audit_words(r5_words(frame_words(flat_words(rewrite_readme(separation_words(rd("README.md"), f"{t.name}/README.md"), base, mode, rec), fence), f"{t.name}/README.md", mode), mode), rec, mode, True)).encode())
         ins = grasp_text(contact_text(chain_text(mujoco_text(text(instance_facts(separation_words(rd("instruction.md"), f"{t.name}/instruction.md"), rec, mode)), rec), rec), rec), rec).replace("RoboARC", "RoboARC (simulator package `topogym`)", 1)
         ins = flat_words(review_fixes_r2(review_fixes(ins, "instruction.md", base, mode), base, mode), fence)
         ins = clock_words(r5_words(frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode), mode), mode)
-        put(t / "instruction.md", audit_words(ins, rec, mode, False).encode())
+        put(t / "instruction.md", live("instruction.md", audit_words(ins, rec, mode, False)).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
             if (up / n).is_file():
                 assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"
                 text_n = limits_env(n, staged(n, gpu_lines(n, image_lines(rd(n))), base), base, mode)
                 text_n = text_n.replace("docs/benchmarks/robotangle.md", f"docs/benchmarks/{BENCH}.md")   # the benchmark's page
-                put(t / n, family_words(n, mujoco_lines(n, text_n, rec) if mujoco else text_n, rec).encode())
+                put(t / n, live(n, family_words(n, mujoco_lines(n, text_n, rec) if mujoco else text_n, rec)).encode())
         goal_images(up, t, (t / "instruction.md").read_text())
         put(t / "tests/test.sh", family_words("tests/test.sh", (up / "tests/test.sh").read_text(), rec).encode(), exe=True)
         lock = binding(base, inst_src, mujoco, direct) if dev is None else dev_binding(inst_src, dev, mujoco, direct)

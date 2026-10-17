@@ -11,14 +11,16 @@ compose restarts the container (`restart: on-failure:6`) and this service rebuil
 up to the last checkpoint and continues the SAME episode, never a reset; a hash mismatch is recorded, not fatal, unless a
 TCP is more than RCB_RESUME_MAX_DEV_M from its checkpoint.
 
-Episode end and grading (two passes: the live episode, then one fresh replay that also records the video): when the
+Episode end and grading (the live episode is the verdict; owner 2026-10-17, board 0150/0151: no grading replay): when the
 episode ends (success, the task's failure predicate, the wall clock, an error) the service writes /data/trajectory.npz and
-/data/episode.json (the live result and final-state hash, `live_rows`: the rows the live episode executed). The collect
-hook's SIGUSR1 makes it exit, releasing the GPU; environment/sim/finalize.sh then replays the trajectory once in a fresh
-process, rendering /data/replay.mp4 during that replay, and completes /data/final.json.
+/data/episode.json (the live verdict: the task predicate on the live simulator with the instance's own thresholds, its
+review / forcing / instability evidence, the final-state hash, `live_rows`: the rows the live episode executed). The
+collect hook's SIGUSR1 makes it exit, releasing the GPU; environment/sim/finalize.sh then writes /data/final.json from
+episode.json and only afterwards renders /data/replay.mp4 in one video-only pass (a fresh-process replay of the rows that
+never changes the verdict). The frozen instance is checked when the scene is built (Session(strict=True): a mismatch is
+`instance_mismatch`, infrastructure, before anything is served).
 
-Differences from the RoboWits service, all from the simulator: the physics runs on the GPU, so `deterministic` (live and
-replay state hashes equal) is reported and not required; rows are streamed at the task's control rate (control_hz,
+Differences from the RoboWits service, all from the simulator: rows are streamed at the task's control rate (control_hz,
 physics_substeps physics steps each); the joint action is per arm the arm joint targets plus the frozen instance gripper target;
 `ee_pose` is solved by bounded least squares over the robot's Genesis forward kinematics; a task whose own failure
 predicate fires (e.g. touching the buzz wire) ends the episode with reason "task_failed"; a family may enable passive grasp
@@ -74,7 +76,7 @@ def ctrl_steps() -> int:
 
 # Episode ends that are infrastructure failures, never the agent's: a simulator error, and a numerically unstable simulation
 # (rcb_topogym.SIMULATOR_INSTABILITY: a cloth particle faster than PARTICLE_SPEED_LIMIT_M_S, before the task's own failure
-# predicates; finalize.sh applies the same rule to the replay).
+# predicates).
 INFRA_REASONS = ("error", "simulator_instability")
 
 
@@ -142,11 +144,11 @@ except M.InstanceMismatch as exc:
     # This frozen instance is not evaluable. Do not restart it as a GPU crash
     # or wait for a trajectory that could never have been executed.
     EP.scene_built()  # cancel the startup watchdog before clean exit
-    # The record is final and complete: `gave_up` and `deterministic` make it a verdict for rcb_limited.final_verdict, so
+    # The record is final and complete: `gave_up` makes it a verdict for rcb_limited.final_verdict, so
     # the collect hook's `rcb_limited.py end` returns at once instead of waiting out its timeout and overwriting the
     # reason. This host cannot reconstruct the instance: an infrastructure error, not the agent's failure.
     M.atomic_json(os.path.join(DATA, "final.json"), {
-        "success": False, "replay_success": False, "deterministic": False, "done": True, "finalized": True, "gave_up": True,
+        "success": False, "live_success": False, "graded_by": "live", "replays": 0, "done": True, "finalized": True, "gave_up": True,
         "instance_mismatch": True, "infra_error": 1, "reason": "instance_mismatch",
         "error": str(exc), "task": TASK, "protocol": PROTOCOL, **EP.final_fields()})
     raise SystemExit(0)
@@ -313,7 +315,7 @@ SPEC = {
                 f"holds, presses on something with {M.FORCING['contact_n']:g} N or more) within the {M.FORCING['attribution_s']:g} s "
                 f"before (reason {M.FORCED_BREAKDOWN}: the agent's failure); forcing itself and task-contact penetration do not end "
                 "it (meta safety records them), but a success with a deep task contact (meta safety review) is held for review "
-                "instead of credited automatically; the recorded trajectory is then replayed once in a fresh process and graded"),
+                "instead of credited automatically; the live episode is graded as it ended (nothing is replayed to grade it)"),
     "robot_spec": R_SPEC,
     "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -673,7 +675,7 @@ def deadline_reached():
 
 def end_from_signal() -> None:
     """The collect hook's SIGUSR1 (rcb_limited.Episode runs this in a thread): the main thread ends the episode, dumps it
-    and exits 0 (_end_and_exit), so the GPU is free for finalize.sh's fresh-process replay."""
+    and exits 0 (_end_and_exit), so the GPU is free for finalize.sh's video-only pass."""
     JOBS.put(_end_and_exit)
 
 
@@ -682,7 +684,7 @@ def _end_and_exit() -> None:
     E["exiting"] = True                     # the HTTP layer answers 409 from now on
     if not E["done"]: finish("timeout")
     else: dump()
-    log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the GPU for the fresh-process replay"})
+    log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the GPU for the video-only pass"})
     if not os.path.exists(PID_FILE):        # a SIGUSR1 that came in during a resume: the hook must still see this process end
         open(PID_FILE, "w").write(str(os.getpid()))
     sys.stdout.flush(); sys.stderr.flush()

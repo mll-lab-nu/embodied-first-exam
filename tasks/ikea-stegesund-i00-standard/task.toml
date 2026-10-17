@@ -21,7 +21,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/ikea-stegesund-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.4): IKEA MuJoCo STEGESUND roll stand (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. Build the STEGESUND roll stand: press half B onto half A at the two leg crossings, push the shelf in from the foot end, drive the four bolts through the legs into the shelf's rail ends with the hex key, stand the frame up and drop the top rod into the two crotches. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records the episode and the verifier replays it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.4): IKEA MuJoCo STEGESUND roll stand (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. Build the STEGESUND roll stand: press half B onto half A at the two leg crossings, push the shelf in from the foot end, drive the four bolts through the legs into the shelf's rail ends with the hex key, stand the frame up and drop the top rod into the two crotches. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
 authors = [{ name = "Xiaoyu" }]
 keywords = ["robotics", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "standard-mode", "trajectory"]
 
@@ -36,7 +36,7 @@ dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2): only 
 protocol = "eai-standard/2.4"           # the shared 2.4 service layer; 2.1 / 2.2 requests are served unchanged
 oracle = "full"
 grasp = "physical (finger friction; no assisted grasp, no welds to a gripper)"
-success_rule = "the scene's success.py + the terminal rules (released, at rest, no breakdown): live after each call (the first settled success ends the episode), and on the verifier's replays at the end of the rows and after a 1.0 s hold"
+success_rule = "the scene's success.py + the terminal rules (released, at rest, no breakdown): evaluated by the sim service on the live episode after each call (the first settled success ends the episode) and at its end: at the last row and again after a 1.0 s hold of it (on a copy); no grading replay"
 instance_seed = 0                 # one frozen scene: images/ikea-mujoco scene stegesund, digest 4e0cbabcd4c7
 expert_time_estimate_hours = 8
 
@@ -82,8 +82,8 @@ allowed = [0]
 oracle = [0]
 
 [verifier]
-timeout_sec = 24360.0
-environment_mode = "separate"     # tests/Dockerfile: the IKEA MuJoCo image; replays /data/trajectory.npz without network
+timeout_sec = 600.0
+environment_mode = "separate"     # tests/Dockerfile: the shared client base; transcribes the sim service's final.json, no network
 network_mode = "no-network"
 
 # Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
@@ -92,10 +92,17 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json (the verifier replays the trajectory)
-timeout_sec = 7200                # the end waits through a call in progress or a crash-recovery resume
+command = "sh /srv/finalize.sh"   # end (judge the live episode as it stands) + dump + exit the service, write final.json; no replay
+timeout_sec = 7200                # the end waits through a call in progress, a crash-recovery resume and the live video's close
 
 [agent]
 timeout_sec = 10800.0             # Agent wall-clock budget (the privileged twin's; PROTOCOL v2.0 H.7); verifier has its own budget
@@ -109,8 +116,8 @@ memory_mb = 10240
 
 [verifier.environment]
 build_timeout_sec = 1800.0
-cpus = 4                          # two replays at once (+ the video replay, privileged): the timeouts assume a core each
-memory_mb = 8192
+cpus = 2                          # reads final.json, copies the live video: no simulator
+memory_mb = 2048
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

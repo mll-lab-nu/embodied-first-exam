@@ -55,7 +55,7 @@ standard; the other six: Luna failed standard and Astra was not run on them).
   global RNG and its restorers edit the MuJoCo model (table height, fixed bodies), so the instance is a snapshot, not a
   seed: `instance.npz` holds the full physics state (`mjSTATE_INTEGRATION`), mocap targets, controls, every numeric
   `MjModel` array a task can change, and the env's Python-side task state (counters, flags). Its hash is checked
-  whenever a task rebuilds it (privileged verifier, standard service, every replay). Its `meta` entry never says which
+  whenever a task rebuilds it (privileged verifier and its replays, the standard service when its episode begins). Its `meta` entry never says which
   demonstration the scene came from (the reference is that demonstration's actions, and the agent reads
   `/app/instance.npz`; PROTOCOL §2.7): `rcb_dexjoco.save_instance` refuses such keys and values, `generate.py` refuses
   an instance that carries them, and `ci_checks/check-agent-pointers.py` reads the archive's string members. The
@@ -71,8 +71,8 @@ standard; the other six: Luna failed standard and Astra was not run on them).
   different final-state hashes, and the references of `bimanual_assembly` and `fold_glasses` fail on fewer than 4
   (measured in the image on a 32-thread host, 2026-10-10: 4, 8, 16, 32 and 64 threads agree on all 11 references, which
   were made with the default, one thread per core). Every container that runs the simulator therefore sets
-  `OPENBLAS_NUM_THREADS=4` (the sim sidecar: service, resume and the hook's replays; the privileged agent container and
-  verifier): the references' numerics on any host that lets the container run on 4 CPUs. It also stops the default
+  `OPENBLAS_NUM_THREADS=4` (the sim sidecar: service, resume and the hook's video pass; the privileged agent container
+  and verifier): the references' numerics on any host that lets the container run on 4 CPUs. It also stops the default
   from spinning against the containers' 4-CPU quota: `bimanual_hanoi` ran at 35 control steps/s that way on the
   32-thread host, 150 with 4 threads (the `steps_per_s` of `facts.json` are without a quota).
   - **4 visible CPUs are the minimum** (`min_cpus = verifier_min_cpus = 4`, `scripts/task_resources.toml`). The
@@ -87,8 +87,8 @@ standard; the other six: Luna failed standard and Astra was not run on them).
     read: min(visible CPUs, `OPENBLAS_NUM_THREADS`)). With fewer than 4 no verdict on the agent is produced:
     the privileged verifier replays nothing and writes `too_few_cpus = 1`, `grader_error = 1`, `infra_error = 1`
     (a missing or malformed file is still the agent's 0: that needs no simulation); the standard service starts no
-    episode (`final.json`: `reason = "too_few_cpus"`, `gave_up`, `infra_error = 1`; the port never opens, so the
-    agent's client times out), the collect hook checks the count of each of its replay processes, and `tests/grade.py`
+    episode (`final.json`: `reason = "too_few_cpus"`, `gave_up`, `infra_error = 1`; the service answers every request
+    with the refusal, 409), the collect hook checks the live episode's count, and `tests/grade.py`
     reports `too_few_cpus = 1` with `grader_error = 1` and `infra_error = 1`. `visible_cpus` and `blas_threads` are in
     every `reward.json` that had a simulation. In the privileged agent's container the tooling only warns (stderr): the
     agent's own runs are the agent's business, the verdict is the verifier's.
@@ -139,21 +139,40 @@ unchanged), resume class `exact`:
   (damped least squares within the joint ranges).
 - **robot_spec:** joints with the simulator's limits (arm torque limits; hand position actuators unlimited in effort),
   the hand drives' gains, the tcp definition (DexJoCo's `attachment_site`, the flange), the arm bases.
-- **evidence and grading:** the collect hook (`finalize.sh`) ends the service, replays the recorded trajectory in two
-  fresh processes and renders `replay.mp4` in a third; success = live ∧ both replays ∧ deterministic.
-- **the hook's time:** the recorded episode has no step cap; a replay steps the physics the live episode stepped,
-  without rendering or the agent's thinking time. The hook has 7200 s (`[[verifier.collect]] timeout_sec`, passed to
-  `finalize.sh` as `RCB_COLLECT_BUDGET_S`), about 3500 s per replay: more than the service can have spent stepping
-  unless the agent drove it for two thirds of its 5400 s without a pause. A replay still running a minute before the
-  end is stopped and the trial is an infrastructure failure. The replays run one after the other (side by side they are
-  no faster on the sidecar's 4 CPUs). The video gets what is left (at most 1200 s) and never changes the verdict, which
-  is on disk (`finalized`) before it starts. `final.json` is written whole (temporary file + rename).
+- **grading (since 2026-10-17, owner, boards 0150/0151): the live episode.** `success` = DexJoCo's own success check
+  (`Session.step`, with this benchmark's tightened checks such as water_plant's aim and 30-step hold) on the episode the
+  service ran, recorded by the service in `episode.json` when the episode ends; `final.json` has `graded_by = "live"`,
+  `replays = 0`, `live_success`, `live_sha` (the final-state hash). Nothing is replayed to grade it. No settle window
+  is needed: the episode ends at the first success, so the replays that graded it before ran the same rows through the
+  same check and never judged a state the live check had not (on the 35 archived standard trials, live and replay
+  agreed on every one). Before: success = live ∧ two fresh-process replays succeed ∧ the same final-state hash.
+- **start state:** the service checks the frozen instance when the episode begins (`server.py`, before
+  `Episode.begin`): a scene that does not rebuild to the instance's recorded state hash (`instance_exact`) gets no
+  episode; the service gives up (`instance_mismatch = 1`, `infra_error = 1`, 409 to every request) before the agent is
+  served. A resume after a crash is checked against its checkpoint's hash, as before.
+- **video:** the collect hook (`finalize.sh`) ends the service, writes the verdict into `final.json` (`finalized`,
+  `video_pending = true`), then renders `replay.mp4` in one video-only pass (`environment/sim/video.py`, a fresh
+  process: the trajectory stepped once from the frozen instance, the default static camera and the right hand camera,
+  at most ~1500 frames). It compares nothing and decides nothing; a video that fails or runs out of time is only a
+  missing video (`video = false`). Cost: about 9 CPU-minutes per trial (the video pass of the 35 archived trials: median
+  530 s, at most 960 s, physics included); the two grading replays it replaces took a median of 93 s per trial, plus
+  the extra replay the old video process ran before filming.
+- **the hook's time:** `[[verifier.collect]] timeout_sec` = 5580 s (`RCB_COLLECT_BUDGET_S`): up to 900 s for the service
+  to end and dump the episode (seconds in practice), then the video, bounded by `RCB_COLLECT_VIDEO_MAX_S` = 4500 s (the
+  3600 s cutoff + 900 s: the physics of the longest episode the cutoff allows, rendered). `final.json` is written whole
+  (temporary file + rename).
 - **no verdict is infrastructure:** `tests/grade.py` reports `infra_error = 1` (never the agent's 0) when `final.json` is
-  missing, unreadable, or without a verdict (not `finalized`, or neither the replays' `deterministic` nor a give-up
-  after crashes), when a replay gave no result or ran out of the hook's time, and when the sidecar ran fewer than 4
-  OpenBLAS threads (`too_few_cpus`, with `grader_error = 1`; Threads above). An episode that a simulator error
-  ended (`reason = "error"`) is reported as `sim_error = 1` and stays the trial's result: `eai-standard/2.2` has no
-  rule that makes it an infrastructure failure (that rule is standard-realtime's, PROTOCOL §4b).
+  missing, unreadable, or without a verdict (not `finalized`, or neither the live verdict `graded_by` nor a give-up),
+  when the service did not end and dump its episode for the hook, after a give-up following crashes that were not all
+  inside the agent's calls (`sim_crashed`, `resume_failed`), on `instance_mismatch`, and when the sidecar ran fewer than
+  4 OpenBLAS threads (`too_few_cpus`, with `grader_error = 1`; Threads above). Crashes all inside the agent's calls
+  (`sim_crashed_on_call`), a task failure and the timeout are the agent's 0. An episode that a simulator error ended
+  (`reason = "error"`) is reported as `sim_error = 1` and stays the trial's result: `eai-standard/2.2` has no rule that
+  makes it an infrastructure failure (that rule is standard-realtime's, PROTOCOL §4b).
+- **tests:** `scripts/dexjoco/tests/test_standard_grading.py` (run with `test_standard_server.py`): the hook and the
+  grader on synthetic records (live success 1, live failure 0, a sim error or crashes in calls 0 and not infra, crashes
+  between calls and a hook that got no episode infra, a failed or late video changes nothing, nothing calls the
+  replay tooling) and the service's start-state refusal on the stub simulator.
 - **malformed requests:** a request is checked in full before anything is executed (`parse_submit` / `parse_observe`
   under `checked`): a field of the wrong JSON type (a number or an object as `note`, a string or
   a list as `dt` / `seconds` / `video_fps`, a string as `cameras`), a number too large for a float, NaN, a bad `depth`
@@ -162,7 +181,7 @@ unchanged), resume class `exact`:
   fuzzes these functions (13,068 requests, numpy only, no simulator).
 - `ci_checks/check-standard-protocol.py` passes against a live service of a single-arm and a bimanual task (velocity limits are null:
   WARN only). Crash recovery: the service killed between calls and inside a call resumes the same episode
-  (`resumes = 2`, exact hash) and the oracle still ends in success with `live_matches_replay`.
+  (`resumes = 2`, exact hash) and the oracle still ends in success (checked with the replays of the time, 2026-10).
 
 ## World-frame information (D7)
 Privileged mode gives world coordinates (object poses through the tooling, the table height and the arm bases in the
@@ -186,6 +205,13 @@ python3 scripts/dexjoco/generate.py && python3 scripts/dexjoco/generate.py --che
 ```
 
 ## Change log
+- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; video by one
+  render pass from the trajectory after the verdict (`video.py`); the frozen instance checked when the episode begins
+  (`instance_mismatch`, infrastructure). `final.json` / `reward.json` no longer carry `replay_success`, `deterministic`,
+  `live_matches_replay`; they carry `graded_by` / `graded_by_live`, `replays = 0`, `live_success`. The collect hook's
+  timeout is 5580 s (was 7200 s). The scenes, instances, pass rules and what the agent sees are unchanged, so the tasks
+  keep their names. Past results: the live result is the archived `final.json` `success` (episode.json merged in), equal
+  to the recorded verdict on all 35 archived standard trials.
 - 2026-10-14 (review of board 0105, B-M3 and B6-3; the scenes, the success checks and the references are unchanged, so
   the tasks keep their names):
   - all 22 tasks: the committed instances (`instances/<family>/instance.npz` and its copies in `environment/`,

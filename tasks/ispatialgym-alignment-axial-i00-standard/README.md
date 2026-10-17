@@ -27,12 +27,15 @@ demonstration of this instance, at least 300). Holding still does not succeed (`
 None.
 
 ## Verification
-`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays of the recorded trajectory agree),
-computed in the sidecar; success is iSpatialGym's own geometric success as `run_isg --mode policy` judges it (the BDDL goal
+`success` = the live episode's success, judged by the sim sidecar at every control step the episode runs; nothing
+replays it (2026-10-17). Success is iSpatialGym's own geometric success as `run_isg --mode policy` judges it (the BDDL goal
 and every measured target within the isg-v2 tolerances x 3, held over the last 45 control steps with the task's objects and the robot at rest: upstream's settle-eval).
-`live_matches_replay`, upstream's symbolic success and the success step are reported apart, and so are the
-crash-recovery fields; `/logs/verifier/replay.mp4`. `infra_error` = 1 (no verdict on the agent) when `final.json` is
-missing, unreadable or not finalized, a replay did not run to its result, or the frozen instance did not rebuild.
+Upstream's symbolic success and the success step are reported apart, and so are the crash-recovery fields; the video
+(`/logs/verifier/live.mp4`, the head camera) is recorded during the episode (a video-only render, `replay.mp4`, only
+when it is missing) and never decides anything. The frozen start
+is checked when the sidecar builds the scene, before the agent is served. `infra_error` = 1 (no verdict on the agent) when
+`final.json` is missing, unreadable or not finalized, the service never ended the episode, it gave up after crashes not
+all inside the agent's calls, or the frozen start did not rebuild (`instance_mismatch`).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -44,8 +47,8 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | GPU memory | 6 GB | 6 GB |
 
 - GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: L40S 48GB / L4 24GB / RTX 4090 24GB.
-- Measured: freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process, the collect hook replays in fresh processes one after the other; the agent's container runs the client only
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 9 GiB GPU memory, 21 GiB memory. Limits measured: freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process, the collect hook replays in fresh processes one after the other; the agent's container runs the client only -> max(1.5 x peak, peak + 4) for the trial (GPU 4.6 GiB, memory 13.5 GiB with the agent's client); the agent's own memory, processes and disk: the standard modes' defaults.
+- Measured: freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process (plus the live video's encoder, 540 px at 10 fps, not measured), the collect hook replays nothing (graded live, 2026-10-17); the agent's container runs the client only
+- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 9 GiB GPU memory, 21 GiB memory. Limits measured: freezing the 14 instances (RTX 4090, 2026-10-14, docker stats and nvidia-smi every 20 s, four Isaac processes at once): one Isaac process with the robot's three 1080x1080 cameras holds 12-13 GiB of memory and 3.5-4.6 GiB of GPU memory, 4-7 cores while Isaac starts and the scene loads, about 1 core after; the sim service is one such process (plus the live video's encoder, 540 px at 10 fps, not measured), the collect hook replays nothing (graded live, 2026-10-17); the agent's container runs the client only -> max(1.5 x peak, peak + 4) for the trial (GPU 4.6 GiB, memory 13.5 GiB with the agent's client); the agent's own memory, processes and disk: the standard modes' defaults.
 
 ## Details
 | | |

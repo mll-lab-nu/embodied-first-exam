@@ -182,7 +182,7 @@
   },
   "runtime": {
     "source": {
-      "sha256": "37aa7ac005a828824289215606e8c7531d2222936cce25cbba15c3b8f91025a2",
+      "sha256": "c9171f7932cebdee016b7ee1e8abd9a1afba7563a32364d91dffe85b14a51565",
       "files": 443
     },
     "python": "3.11.15",
@@ -199,8 +199,8 @@
     "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
   },
   "image": {
-    "reference": "eai-roboarc:0.1.0-noinst",
-    "id": "sha256:1f2153746214000d37ccd417005c541c98f1a62f99d2cde796121d747af16d77",
+    "reference": "eai-roboarc:0.2.0-noinst",
+    "id": "sha256:9d0bd3a6996a9f2ce79759e331e6775a9263e7f1fcc17b52ec543aaed055e6c4",
     "repo_digests": []
   }
 }

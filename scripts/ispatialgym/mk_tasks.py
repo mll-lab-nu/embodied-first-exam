@@ -186,7 +186,7 @@ def render_task(t: dict, out: Path) -> None:
     v = {"task": t["task"], "subtask": t["subtask"], "family": t["family"], "family_kw": t["family"].replace("_", "-"),
          "expert_hours": t.get("expert_hours", 1.0), "max_steps": facts["max_steps"], "max_steps_s": f"{facts['max_steps'] / 30:.1f}",
          "max_steps_reason": "failed: the episode's control steps ran out",
-         "settle_steps": facts["settle_steps"], "settle_s": f"{facts['settle_steps'] / 30:.1f}", "collect_s": int(3600 + 2 * replay_s + 600),
+         "settle_steps": facts["settle_steps"], "settle_s": f"{facts['settle_steps'] / 30:.1f}", "collect_s": int(3600 + replay_s + 600),   # the end (<= 1 h through a resume) + a video-only render when the live video is missing
          "verifier_s": 2 * max(2400, replay_s) + 600, "replay_timeout_s": max(2400, replay_s),   # grade_privileged.py's formula
          "load_mins": "-".join(dict.fromkeys(str(max(1, round(x / 60))) for x in (min(loads), max(loads)))),   # measured, fresh processes
          "load_max": max(loads), "startup_s": max(2400, -(-2 * max(loads) // 100) * 100),

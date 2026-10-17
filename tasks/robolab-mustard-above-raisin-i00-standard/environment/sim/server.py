@@ -17,10 +17,16 @@ Differences from the RoboTwin service, all from the simulator:
 - the wrist camera moves: every frame carries each camera's pose (the wrist one from the gripper link's measured pose and
   the camera's fixed mount), depth comes from the same renders as the RGB, /kinematics from a numpy model of the arm
   (rcb_robolab: camera_info, render_depth, proprio, kinematics: the privileged tooling's own calls);
-- the episode is NOT replayed here. On Isaac only the first replay in a process is bit-exact, and a second Isaac
-  simulator in this container would not fit next to the live one. So when the episode ends the service writes
-  /data/trajectory.npz + /data/episode.json (live result and state hash); the collect hook's SIGUSR1 makes it exit, and
-  environment/sim/finalize.sh replays the trajectory in two fresh processes and completes /data/final.json."""
+- the episode is graded as it ran (owner 2026-10-17, board 0150/0151: no grading replay). When it ends the service
+  writes /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: RoboLab's success term, checked
+  after every control step and through the hold of the last command after the agent's phase; the end-state hash); the
+  collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh writes /data/final.json from it;
+- the start state is checked before the agent is served: the rebuilt scene against the frozen instance's recorded state
+  (instance.json `state_sha`, else every object pose and robot joint within the tooling's tolerance); a scene that matches
+  neither ends the trial as an infrastructure failure (`instance_mismatch`, a give-up: nothing is served);
+- the video is filmed live (live_video.py): Isaac Lab renders every camera with each control step anyway, so a frame (the
+  viewport cameras + the wrist camera, the tooling's own video frame) is kept every 3 control steps (5 per simulated
+  second) as a JPEG file; the collect hook encodes live.mp4 after the verdict."""
 from __future__ import annotations
 import math, os, sys, threading, time, traceback
 from typing import Callable
@@ -28,6 +34,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import live_video  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
@@ -70,23 +77,26 @@ def dump() -> None:
     L._write_json(os.path.join(DATA, "episode.json"),
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
-                   "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), "settle_steps": E.get("settle_steps"), **EP.final_fields()})
+                   "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), "settle_steps": E.get("settle_steps"),
+                   **({"settle_error": E["settle_error"]} if E.get("settle_error") else {}), **INSTANCE_CHECK, **EP.final_fields()})
     write_final()
+    VIDEO.last(ctrl_steps())  # after the verdict is on disk: a render that fails or hangs here never costs it
 
 
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
     if reason == "timeout" and not E["success"] and not S.episode_done and ctrl_steps():
-        # the agent's phase is over: the last command is held for up to SETTLE_STEPS control steps (journaled and recorded,
-        # so the replays run them too) while RoboLab's term is checked, as the replay does after a trajectory's last row
+        # the agent's phase is over: the last command is held for up to SETTLE_STEPS control steps on the live simulator
+        # (journaled and recorded: the trajectory holds them) while RoboLab's term is checked, as the privileged grader's
+        # replay does after a trajectory's last row; the live verdict includes this hold
         try:
             hold = np.asarray(S.hold_action(), dtype=np.float32); n = 0
             while n < M.SETTLE_STEPS and not S.episode_done:
-                n += 1; S.step(hold); EP.journal(hold)
+                n += 1; S.step(hold); EP.journal(hold); VIDEO.offer(ctrl_steps())
             E["settle_steps"] = n
-        except Exception:  # noqa
-            traceback.print_exc()
+        except Exception as exc:  # noqa: BLE001 -- a simulator error during the hold: recorded; the term is judged as it stands
+            traceback.print_exc(); E["settle_error"] = repr(exc)[:300]; log({"ev": "settle_error", "error": E["settle_error"]})
     E["episode_control_steps"] = ctrl_steps()
     if not E["success"]:
         try: E["success"] = check_success()
@@ -97,7 +107,17 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 import rcb_robolab as M  # noqa: E402
-S = M.Session(TASK, instance=INSTANCE, strict=True, depth=True)
+S = M.Session(TASK, instance=INSTANCE, strict=False, depth=True)   # the start-state check is below (instance_mismatch)
+# The frozen initial state, checked before anything is served: the rebuilt scene's state hash against instance.json's
+# `state_sha`; a differing hash with every object pose and robot joint within the tooling's tolerance is accepted
+# (another host's last bits, as the tooling's strict mode does), anything else is an infrastructure failure.
+INSTANCE_CHECK = {"instance_sha": S.instance_sha, "instance_expected_sha": L._read_json(INSTANCE).get("state_sha"),
+                  "instance_exact": bool(S.instance_exact), "instance_matches": bool(S.instance_matches)}
+if not S.instance_matches:
+    L._write_json(os.path.join(DATA, "final.json"), {"task": TASK, "protocol": PROTOCOL, "instance_mismatch": True, **INSTANCE_CHECK})
+    EP.give_up(f"instance_mismatch: the rebuilt scene (state {S.instance_sha}) is not the frozen instance "
+               f"({INSTANCE_CHECK['instance_expected_sha']}) and its poses differ", infra=True)   # never returns
+VIDEO = live_video.LiveVideo(DATA, ctrl_hz=CTRL_HZ, frame=S._video_frame, log=EP.log)   # Isaac Lab renders every step anyway
 LAYOUT = [f"panda_joint{i}" for i in range(1, 8)] + ["gripper"]
 MOUNT = {"wrist_cam": "on the gripper (wrist)", "over_shoulder_left_camera": "static, over the robot's left shoulder",
          "egocentric_mirrored_camera": "static, facing the robot across the table"}
@@ -310,7 +330,7 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded control step, journaled for crash recovery. True when the call must stop here: the episode is over
     (RoboLab's success term also terminates it), or the service stops the call (max_call_wall_s, the client hung up)."""
     a = np.asarray(a, dtype=np.float32)                    # the exact row Session.step executes (and records)
-    over = S.step(a); stop = EP.journal(a); rec.tick()
+    over = S.step(a); stop = EP.journal(a); rec.tick(); VIDEO.offer(ctrl_steps())
     if over: finish("success" if check_success() else "step_guard")
     return E["done"] or stop
 
@@ -452,23 +472,26 @@ def end_from_signal() -> None:
         E["exiting"] = True
         if not E["done"]: finish("timeout")
         else: dump()
-        log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the simulator for the fresh-process replays"})
+        log({"ev": "exit", "reason": "collect hook: episode dumped (graded by the live episode), releasing the simulator"})
         if not os.path.exists(PID_FILE):   # a SIGUSR1 that came in during a resume: the hook still needs to see this process end
             open(PID_FILE, "w").write(str(os.getpid()))
     sys.stdout.flush(); sys.stderr.flush()
-    os._exit(0)          # frees the GPU and the memory: finalize.sh starts the replays once this process is gone
+    os._exit(0)          # frees the GPU and the memory: finalize.sh writes final.json once this process is gone
 
 
 def replay_row(row) -> None:
     """One journaled row during a resume (no rendering asked for). A row the scene can no longer take (the episode ended
     earlier than logged) is skipped: the state hash check then refuses the resume (class exact)."""
     if not S.episode_done:
-        S.step(np.asarray(row, dtype=np.float32))
+        S.step(np.asarray(row, dtype=np.float32)); VIDEO.offer(ctrl_steps())   # slots already on disk are skipped
 
 
 S.record_start()         # the resume replay is recorded too: trajectory.npz is the whole episode
-EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
+VIDEO.offer(0)           # the start state (a restarted service has it on disk already)
+resumed = EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
          start_event={"task": TASK, "seed": S.seed, "cameras": CAMS, "kinematics_check": S.kinematics_check})
+if resumed:
+    VIDEO.truncate(ctrl_steps())   # frames of the call lost in the crash show rolled-back states
 E["ready"] = True; write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)

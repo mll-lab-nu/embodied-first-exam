@@ -244,9 +244,42 @@ def hands_section(widths: dict, mode: str, layout: str | None = None, reason: st
             "agent cannot switch it during an episode. `spec()[\"hand\"]` names it, and "
             "`spec()[\"action_types\"][\"joint_position\"]` gives the row width "
             f"(`{sharpa}` for `sharpa`" + (f", `{wuji}` for `wuji`" if wuji else "") + ") and the exact order. "
-            "The episode record names the hand, and grading replays with that hand."
+            "The episode record names the hand; the service grades the episode it ran with that hand."
         )
     return "\n".join(lines) + "\n"
+
+
+# The standard twins' grading (owner, 2026-10-17, board 0151), for every README: the trusted sim service judges the
+# live episode; no replay. Plugin families' shared README.task.md describe both modes; standard_verification()
+# rewrites their replay sentences for the standard twin (the privileged README is unchanged).
+STANDARD_GRADING = (
+    "The trusted sim service judges the episode it ran (the last one after resets) with the task's predicate and\n"
+    "the selected hand, after the agent's container is stopped; its record (`final.json`, `graded_by = \"live\"`) is the\n"
+    "verdict, and nothing is replayed to grade it. The isolated verifier reads only the service's artifacts. The\n"
+    "service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the\n"
+    "verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance\n"
+    "that does not build at the episode's start are infrastructure errors.")
+PRIVILEGED_HASHES = ", and identical final\nstate hashes"   # the essential READMEs' privileged rule (two replays)
+_STANDARD_REWRITES = (
+    # "{{MODE}} mode. The verifier rebuilds ... A replay ends at the first success or the first failure."
+    (re.compile(r"\{\{MODE\}\} mode\. The verifier rebuilds the frozen scene with the recorded hand.*?A replay ends at the"
+                r"\s+first\s+success\s+or\s+the\s+first\s+failure\.", re.S),
+     "Standard mode. " + STANDARD_GRADING + "\nThe episode ends at the first success or the first failure."),
+    # pot_shelf_transfer, paper_half_fold: "Standard: the trusted (simulator) service journals every executed row; ..."
+    (re.compile(r"Standard: the trusted (simulator )?service journals every executed\s+row;.*?(agree|live hash\))\.", re.S),
+     "Standard: t" + STANDARD_GRADING[1:]),
+)
+
+
+def standard_verification(text: str) -> str:
+    """A plugin family's README.task.md for its standard twin: the replay sentences become the live grading."""
+    for pattern, new in _STANDARD_REWRITES:
+        text = pattern.sub(lambda _m: new, text)
+    section = text.split("## Verification", 1)[-1].split("\n## ", 1)[0]
+    stale = re.search(r"live (final )?hash|collect hook replays|replay successes|in\s+standard\s+mode\s+the\s+replay", section)
+    if "## Verification" in text and stale:
+        raise ValueError(f"standard README still describes a grading replay: {stale.group(0)!r}")
+    return text
 
 
 def fill(text: str, values: dict) -> str:
@@ -277,7 +310,8 @@ def plugin_texts(folder: Path, manifest: dict, spec: dict, mode: str, name: str)
     }
     instruction_text = fill(_family_file(folder, manifest["instruction"][mode]).read_text(), values)
     readme = manifest["readme"]
-    body = fill(_family_file(folder, readme[mode] if isinstance(readme, dict) else readme).read_text(), values)
+    body = _family_file(folder, readme[mode] if isinstance(readme, dict) else readme).read_text()
+    body = fill(standard_verification(body) if mode == "standard" and not isinstance(readme, dict) else body, values)
     oracle = manifest.get("metadata", {}).get("oracle", "none")
     hands = ", ".join(f"{hand} {widths[hand]}" for hand in manifest.get("hands", ["sharpa", "wuji"]))
     header = f"""# {name}
@@ -438,16 +472,45 @@ def write_solution(task: Path, mode: str, trajectory: Path, hands: dict[str, Pat
 
 
 def grading(manifest: dict | None) -> str:
-    """Per-family grader limits read by the shared grade.py / finalize.py (default replay timeout 1400 s). The replay
-    video runs after the verdict in the time left of the step it runs in (board 0136): the privileged verifier's
-    timeout_sec and the standard collect hook's timeout_sec are written here for that bound; video_timeout_s (at least
-    the replay timeout) caps it."""
+    """Per-family grader limits read by the privileged grade.py (default replay timeout 1400 s). The replay video runs
+    after the verdict in the time left of the verifier (board 0136): its timeout_sec is written here for that bound;
+    video_timeout_s (at least the replay timeout) caps it."""
     timeouts = (manifest or {}).get("timeouts", {})
     return json.dumps({"replay_timeout_s": int(timeouts.get("replay_sec", 1400)),
                        # the video replays the whole episode again: never a shorter bound than the replay's own
                        "video_timeout_s": max(int(timeouts.get("video_sec", 1400)), int(timeouts.get("replay_sec", 1400))),
                        "verifier_timeout_s": int(timeouts.get("verifier_privileged_sec", 3600)),
                        "collect_timeout_s": int(timeouts.get("collect_sec", 3600))}, sort_keys=True) + "\n"
+
+
+# Standard collect hook (finalize.sh): `rcb_limited.py end` waits at most END_WAIT_S for the service to end and dump
+# its episode; then the verdict is written from the service's record (no replay, board 0151) and one video process
+# films the trajectory. That process is the family's replay.py `--video`: it steps the episode once without rendering
+# (replay_sec bounds that) and once more filming it (video_sec), so it gets both. The hook's timeout covers the end,
+# the video and VIDEO_MARGIN_S (finalize.py) + 60 s, and is never longer than before the replays were removed.
+END_WAIT_S = 300
+# The files that declare the frozen instance, when present in the sim dir: the service compares their sha256 with
+# grading.json's record when an episode begins (instance_mismatch: an infrastructure failure, no episode).
+INSTANCE_FILES = ("instance.json", "catalog.json", "task.json", "wuji_reset.json", "offered_hands.json")
+
+
+def std_video_s(manifest: dict | None) -> int:
+    timeouts = (manifest or {}).get("timeouts", {})
+    replay = int(timeouts.get("replay_sec", 1400))
+    return replay + max(int(timeouts.get("video_sec", 1400)), replay)
+
+
+def std_collect_s(manifest: dict | None) -> int:
+    timeouts = (manifest or {}).get("timeouts", {})
+    return min(int(timeouts.get("collect_sec", 3600)), END_WAIT_S + std_video_s(manifest) + 120)
+
+
+def std_grading(manifest: dict | None, runtime: Path) -> str:
+    """The standard collect hook's limits (finalize.py) and the frozen instance's file hashes (server.py)."""
+    shas = {name: hashlib.sha256((runtime / name).read_bytes()).hexdigest()
+            for name in INSTANCE_FILES if (runtime / name).is_file()}
+    return json.dumps({"video_timeout_s": std_video_s(manifest), "collect_timeout_s": std_collect_s(manifest),
+                       "instance_sha256": shas}, sort_keys=True) + "\n"
 
 
 def release_families() -> list[str]:
@@ -730,10 +793,8 @@ def toml(spec: dict, mode: str, name: str, manifest: dict | None = None) -> str:
                 "server.log",
                 "journal.f64",
                 "startups.jsonl",
-                "replay1.json",
-                "replay2.json",
-                "replay1.log",
-                "replay2.log",
+                "video.json",
+                "video.log",
             )
         ]
     evidence = (
@@ -796,10 +857,17 @@ environment_mode = "separate"
 network_mode = "no-network"
 
 {
-        f"""[[verifier.collect]]
+        f"""# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+[[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"
-timeout_sec = {int(timeouts.get("collect_sec", 3600))}
+command = "sh /srv/finalize.sh"   # end the episode, write its live verdict (no replay), then one video pass
+timeout_sec = {std_collect_s(manifest)}                # the end wait, the video and a margin (generate.py std_collect_s)
 """
         if standard
         else ""
@@ -940,9 +1008,9 @@ The last replay state must satisfy the complete released-hold predicate; later r
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
 joint positions, velocities, actuator efforts, wrist pose and current targets. A failure ends an episode at once; a
-reset starts a new one (see `## Episodes and resets`). The service records every action and watch step, then replays
-the graded episode in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
-needed.
+reset starts a new one (see `## Episodes and resets`). The service records every action and watch step, then judges
+the graded episode as it ran (that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`;
+no trajectory hand-in is needed.
 
 ```python
 from rcb_client import Robot
@@ -1068,9 +1136,8 @@ No packaged oracle. An authoring-only contact controller and recording tool live
 `scripts/dexhand/families/assemble_hamburger/`; neither is copied into the agent's environment or image.
 
 ## Verification
-{"The isolated verifier replays numeric motor targets twice in fresh processes." if mode == "privileged" else "The trusted simulator records the episode and replays its targets twice in fresh processes; the isolated verifier reads only those service artifacts."}
-Both replays must pass and have identical final integration state hashes.
-{"The replay hash must also equal the live final hash." if mode == "standard" else ""}
+{"The isolated verifier replays numeric motor targets twice in fresh processes." if mode == "privileged" else STANDARD_GRADING}
+{"Both replays must pass and have identical final integration state hashes." if mode == "privileged" else ""}
 The frozen recipe comes from the task, never from an agent archive. A no-op fails.
 Human review and full agent-trial calibration remain pending; report this task as provisional.
 
@@ -1112,9 +1179,8 @@ No low-level oracle is provided. Checker state fixtures exercise intended positi
 These fixtures validate logical recognition; they do not demonstrate a realizable action trajectory.
 
 ## Verification
-{"The separate verifier replays the submitted numeric rows twice in fresh processes." if mode == "privileged" else "The trusted sidecar records its episode; its collect hook replays the rows twice in fresh processes. The separate verifier grades only the sidecar artifacts."}
-Success requires all ordered stage holds and the terminal hold, and no invariant violation. Repeated final hashes must
-agree{" with the live final hash" if mode == "standard" else ""}. `nop` and wrong-state controls are checked by the
+{"The separate verifier replays the submitted numeric rows twice in fresh processes." if mode == "privileged" else STANDARD_GRADING}
+Success requires all ordered stage holds and the terminal hold, and no invariant violation.{" Repeated final hashes must agree." if mode == "privileged" else ""} `nop` and wrong-state controls are checked by the
 validation tooling. Missing standard service artifacts are infrastructure errors. No oracle; human review and a
 review PR number remain pending. Every task is provisional and must be reported separately until solvability review.
 
@@ -1167,8 +1233,7 @@ def essential_readme(spec: dict, mode: str, name: str, twin: str) -> str:
     verification = (
         "The separate verifier replays the submitted numeric rows twice in fresh processes, with the hand recorded "
         "in the archive." if mode == "privileged" else
-        "The trusted sidecar records its episode and hand; its collect hook replays the rows twice in fresh processes. "
-        "The separate verifier grades only the sidecar artifacts."
+        STANDARD_GRADING
     )
     return f"""# {name}
 
@@ -1196,8 +1261,7 @@ a terminal hold must be reached through contact alone.
 
 ## Verification
 {verification}
-Reward 1 needs every ordered stage and the terminal hold with no invariant or guard violation, and identical final
-state hashes{" equal to the live final hash" if mode == "standard" else ""}. Invariants and guards are checked at every 2 ms
+Reward 1 needs every ordered stage and the terminal hold with no invariant or guard violation{PRIVILEGED_HASHES if mode == "privileged" else ""}. Invariants and guards are checked at every 2 ms
 physics substep and fail the episode immediately (a dropped, slipped or knocked-away object ends it as a failure);
 partial completion fails. Rows of the wrong width for the recorded hand, a forged or unknown hand label, non-finite
 or out-of-range targets and wrist motion are rejected with reward 0. `scripts/dexhand/tests/test_essential_strict.py`
@@ -1324,6 +1388,18 @@ def change_log(spec: dict, mode: str, frames: int | None = None) -> str:
             + (" The video films every 2nd step but at most 1500 frames (a 640x480 OSMesa frame takes ~0.3 s)."
                if spec["id"].startswith("essential_") else "")
             + " The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.")
+    if mode == "standard":
+        lines.append(
+            "- 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay; video "
+            "by one render pass from the trajectory after the verdict. `success` is the sim service's own verdict on "
+            "the episode it ran (the same predicate a replay recomputed: the same rows through the same step, a "
+            "success ending the episode); the collect hook no longer replays it twice in fresh processes, and "
+            "`final.json` / `reward.json` drop `replay_success`, `deterministic` and `live_matches_replay` "
+            "(`graded_by = \"live\"`, `replays = 0`). The service checks the frozen instance's files against the "
+            "generator's record when an episode begins (`instance_mismatch`, an infrastructure error). A collect "
+            "hook on `main` (`kill -9 -1`) stops whatever the agent left running before the service ends the "
+            "episode. The agent's "
+            "side (the instruction's grading sentence aside), the scene and the predicate are unchanged.")
     if spec["id"] in HELD_ROTATION_BEFORE:
         bound = spec["invariants"]["body_rotation"][1]
         lines.append(
@@ -1388,8 +1464,9 @@ def render(destination: Path, only: set[str] | None = None) -> list[Path]:
                     if (LIBRARY / spec["id"] / "offered_hands.json").is_file():
                         copy(LIBRARY / spec["id"] / "offered_hands.json", runtime / "offered_hands.json")
                 write(runtime / "catalog.json", json.dumps({"schema_version": 1, "tasks": [spec]}, indent=2) + "\n")
-                write(runtime / "grading.json", grading(manifest))
                 write(runtime / "instance.json", json.dumps(spec, indent=2, sort_keys=True) + "\n")
+                write(runtime / "grading.json",
+                      grading(manifest) if mode == "privileged" else std_grading(manifest, runtime))
             if mode == "privileged":
                 write(
                     task / "environment/Dockerfile",

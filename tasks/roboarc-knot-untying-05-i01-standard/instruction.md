@@ -11,9 +11,6 @@ client and one episode. **Task:** Untie and spread the rope on the tabletop unti
 - During confirmation, every target point or rigid body's linear speed must be at most 1 mm/s and its displacement from the start of confirmation at most 1 mm.
 - Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
 
-## Task failure conditions
-
-
 ## Grader details (in addition to the requirements above)
 
 - The rope is a chain of 301 rigid capsule links (4.5 mm long, 8 mm thick) joined end to end; each joint bends and twists against a spring set by the rope's material, with damping, and stops bending at 0.9 rad, where neighbouring links touch. The links do not deform: nothing about the rope's shape or volume ends the episode. A link moving faster than 2 m/s or spinning faster than 150 rad/s is slowed by extra damping (a speed clamp); this is not reported and does not end the episode. Pulled harder than about 14.9 N, the rope's links get extra rotational inertia (a tension guard), which only removes energy and is not reported.
@@ -23,7 +20,7 @@ client and one episode. **Task:** Untie and spread the rope on the tabletop unti
 - The rope is 8 mm thick (radius 4 mm), so its highest point may be at most 11 mm above the tabletop.
 - "Nonlocal" means at least 16 mm apart along the rope: such parts of the rope's centreline must be at least 8 mm apart in the top view. Closer parts are exempt, but an actual crossing always counts.
 - The release check bounds the rope's volume mesh (carried rigidly by its capsule links), element by element, against the robot's collision geometries and decides the close ones with the exact solids: every robot part that can move (grippers, arm links) needs at least 1 mm of clearance from the rope; a world-fixed base may touch it. An overlap with the interior of any robot part means the release is not certified: no success while it lasts, never a failure.
-- Grading: success needs the live episode to succeed (with the thresholds above) AND one fresh-process replay of its rows to succeed; a live failure is final whatever the replay shows. This family's physics runs on the CPU (MuJoCo, float64), so that replay reproduces the live episode on the same host; the rule is kept as a margin: it runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final targets for up to 2 s (80 control steps), stopping at the first success or failure, so a confirmation that starts a few physics ticks later than in the live episode can still complete; during that hold it accepts rope speeds up to 1.25 mm/s instead of 1 mm/s. Nothing else is relaxed: every other condition, the failure conditions and the confirmation time are the same.
+- Grading: the live episode is the verdict: success needs it to succeed with the thresholds above (within its confirmation time); a live failure is final. Nothing is replayed to grade it: the video is rendered afterwards from the recorded rows and never changes the grade.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode ends on success (all final conditions satisfied for

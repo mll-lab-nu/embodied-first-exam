@@ -63,6 +63,23 @@ ONE_REPLAY_LIVE = ("2026-10-12: the collect hook replays the episode ONCE in a f
                    "replay is recorded (`replay_success`; `state_identical`: it ended in the live episode's state; "
                    "`deterministic`: it reached the live episode's verdict) and never decides. The collect hook's limit 18000 s "
                    "-> 10800 s; inside it the replay has max(1800 s, 1200 s + actions / 2.5). No trial needs a rerun.")
+LIVE_1017 = ("2026-10-17 (owner, boards 0150/0151; in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8): standard modes graded "
+             "by the live episode; no grading replay; video by the sim service during the live episode (`live.mp4`). `success` "
+             "is the live episode's success as the service judged it (RoboDojo's check passed at an action); for a task whose "
+             "physics replays bit for bit it was `live_success` and the success of one fresh-process replay, for a task graded "
+             "by verdict it already was the live success and the replay that was recorded no longer runs. The collect hook's "
+             "limit 10800 s -> 3600 s, and it needs no GPU after the service exits. The start-state check is made by the "
+             "service before it serves the agent: a rebuilt layout whose state hash is not the frozen instance's ends the "
+             "trial as an infrastructure failure (`instance_mismatch`, a give-up; before, the strict check made the service "
+             "crash and restart until the hook timed out, and the replay's check was a second chance to find it); a task "
+             "graded by verdict has resets that are not bit-identical, so its hash is recorded, not compared. The video "
+             "(`replay.mp4` before) is kept by the service during the episode, a frame of `cam_head` at the actions the "
+             "agent's own calls already rendered (no extra render), and encoded after the verdict; it never decides "
+             "anything. A collect hook on `main` (`kill -9 -1`) now stops whatever the agent left running in its container "
+             "before the service ends the episode (PROTOCOL H.4). reward.json: `graded_by_live` = 1, `replays` = 0, no "
+             "`replay_success` / `deterministic` / `state_identical`. The scene, the frozen layout, RoboDojo's success check, "
+             "the agent's interface and the time limit are unchanged; a trial recorded before this date is re-scored by its "
+             "live episode (docs/benchmarks/robodojo.md, Grading).")
 CHANGE_LOG_ALL = {   # README Change Log entries of every task (PROTOCOL §2.8), after the task's own (instance_overrides.json)
     "privileged": ["2026-10-11: agent time limit 5400 s -> 3600 s (`[agent] timeout_sec`; owner decision, "
                    "docs/benchmarks/robodojo.md), and `instruction.md` states the cutoff at the top. The scene, the frozen layout, "
@@ -85,7 +102,8 @@ CHANGE_LOG_ALL = {   # README Change Log entries of every task (PROTOCOL §2.8),
                  "reached 0 while the agent still had that time. `/spec` says what the clock counts from "
                  "(`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. "
                  "The service never ended an episode on this clock: the scene, the frozen instance, the pass rule "
-                 "and the grader are unchanged, so the task keeps its name and earlier results stand."],
+                 "and the grader are unchanged, so the task keeps its name and earlier results stand.",
+                 LIVE_1017],
 }
 REGISTRY = "ghcr.io/mll-lab-nu"
 MODES = ("privileged", "standard")
@@ -196,19 +214,18 @@ def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: s
     common["TOML_LAYOUT"] = (f"on RoboDojo's frozen layout ({common['LAYOUT_FILE']}); standard only, no privileged twin." if live else
                              f"on the same frozen layout as the privileged task ({common['LAYOUT_FILE']}).")
     common["TOML_GRADING"] = ("the sim service records the episode and grades it as it happened live (the physics does not "
-                              "replay bit for bit; the replay is recorded only)." if live else
-                              "the sim service records the episode as a trajectory and grades it.")
-    common["STD_VERDICT"] = (f"the live episode succeeded: this task is graded by its live episode, which the trusted service "
-                             f"ran (`instance.json` sets `\"determinism\": \"verdict\"` because {I.get('determinism_why')}); "
-                             f"the replay is recorded (`replay_success`, `state_identical`, `deterministic`) and never "
-                             f"decides" if live else
-                             "the live episode succeeded and the replay succeeds (`success` = `live_success` and "
-                             "`replay_success`: one successful replay is enough, the owner's decision of 2026-10-12; whether the "
-                             "replay ended in the live episode's state is reported as `deterministic` = `state_identical` = "
-                             "`live_matches_replay` and does not decide)")
+                              "replay bit for bit)." if live else
+                              "the sim service records the episode as a trajectory and grades the live episode.")
+    # Every standard task is graded by its live episode (owner 2026-10-17, board 0151): no grading replay. A task graded by
+    # verdict was already; it keeps its note (why it has no privileged twin).
+    common["STD_VERDICT"] = ("the live episode succeeded: every standard task is graded by its live episode, which the "
+                             "trusted service ran, with no grading replay (since 2026-10-17; before, `success` = `live_success` "
+                             "and the success of one fresh-process replay)" + (
+                                 f"; this task already was (`instance.json` sets `\"determinism\": \"verdict\"` because "
+                                 f"{I.get('determinism_why')})" if live else ""))
     common["LIVE_NOTE"] = (f"\n- **Graded on your live episode.** This task's physics does not replay bit for bit "
-                           f"({I.get('determinism_why')}), so the episode as it happened in the service decides; the service "
-                           f"still replays it once for the record." if live else "")
+                           f"({I.get('determinism_why')}), so it has no privileged twin; the episode as it happened in the "
+                           f"service decides." if live else "")
     # Change Log (PROTOCOL §2.8): per-task entries of instance_overrides.json "change_log", the last section of both READMEs
     log = OVERRIDES.get(task, {}).get("change_log") or []
     MT = json.loads((HERE / "model_trials.json").read_text())

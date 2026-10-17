@@ -54,7 +54,8 @@ class PictureResume(unittest.TestCase):
         self.assertIs(server.rcb_service.Service._resume, server._resume)
         logged, calls = [], []
         svc = types.SimpleNamespace(sim=types.SimpleNamespace(trim_picture_replay=lambda: 2),
-                                    log=lambda ev, **kw: logged.append((ev, kw)))
+                                    log=lambda ev, **kw: logged.append((ev, kw)),
+                                    done=False, reason=None, success=False)     # an episode still running
         orig = server._service_resume
         server._service_resume = lambda self, ev: calls.append(ev)
         try:

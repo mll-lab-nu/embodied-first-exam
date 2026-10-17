@@ -45,7 +45,7 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
 - **Determinism.** CPU physics, bit-exact, with MuJoCo's process-wide mesh cache turned off in `casa_tool`: with the
   cache on, a scene built a second time in one process stepped differently in 14 of 61 candidates here (a mesh served
   from the cache differs in `mesh_polynormal` from a freshly compiled one), which would have broken the agent's own
-  `reset()` and the service's verification replay. With the cache off every build is the cold build a fresh process
+  `reset()` (and, until 2026-10-17, the service's verification replay; now its start hash and video pass). With the cache off every build is the cold build a fresh process
   makes. If the pinned MuJoCo lacks the cache symbols, `casa_tool` raises on import rather than run without it.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 3000 control steps; the references have 85–2189.
   Standard episodes have no step limit (D1).
@@ -57,8 +57,9 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
 
 ## Standard-mode service
 `images/robocasa365/standard/server_casa.py` and the collect hook `scripts/robocasa365/shared/finalize.sh`, the same
-service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: verdict final before the video, the
-hook's budget, request validation). Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint,
+service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: since 2026-10-17 graded by the live
+episode, nothing replayed, the start checked against the frozen instance, the video one render pass after the
+verdict; the hook's budget; request validation). Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint,
 not MuJoCo's left-eye camera 3.4 cm to its left (`docs/benchmarks/robocasa.md`, service item 10): standard-mode results
 from before used the offset calibration.
 
@@ -72,8 +73,13 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   copies of `scripts/humanoidbench/shared/`; `ci_checks/check-tooling-identity.sh`), with
   `scripts/robocasa365/shared/realtime/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
   twin's frozen instance, native controller command (`joint_position`, 13 channels, clipped and reported), success
-  check (`_check_success`, twice per control step), cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU) and fresh
-  replay (a new `casa_tool.Session` in the same process, as the standard service). The robot's cameras move with it:
+  check (`_check_success`, twice per control step) and cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU). Since
+  2026-10-17 (board 0151) the verdict is the live episode's (the shared layer's `graded_by = live`): the last
+  episode's success as it ran, and the adapter's `live_verdict()` adds the standard twin's rule that the scene was not
+  solved at that episode's start; nothing is replayed (before: a new `casa_tool.Session` in the same process replayed
+  it, `success = live ∧ replay ∧ deterministic`). `start_sha` (`RCB_START_SHA`, the standard twin's archived start hash,
+  the same value) is checked by the layer when the first episode begins and after every reset (`instance_mismatch`,
+  infrastructure). The video is rendered from the trajectory after the verdict (the live session rebuilt, one pass). The robot's cameras move with it:
   their intrinsics are in `/spec`, their current poses in every proprioception row (`cam_<camera>_*`, the standard
   twin's `cam2world_gl`). Not served: the 2.1 service's per-response calibration dictionary.
 - **Episode.** The standard twin grades the state after the last step of an episode as long as the agent's time; on a
@@ -97,6 +103,13 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   streaming one row per control step with an image every 0.5 s: no stall, largest lag 0.05 s, an image in 44-65 ms,
   the graded episode's replay deterministic.
 - **Cutoff** 3600 s, the standard twin's.
+
+## Change log
+- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by one
+  render pass from the trajectory after the verdict; the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
+  `RCB_START_SHA` from `scripts/robocasa365/frozen/start_state.json`) before the agent is served, a mismatch is infrastructure
+  (`docs/benchmarks/robocasa.md`, service items 6, 7 and 11). The standard-realtime twin: the shared layer's live verdict with the adapter's `live_verdict()` and `start_sha`; its collect hook's waits (840 s verdict, 870 s video) unchanged. Scene, instances, success check, cutoff and what
+  the agent sees except the instruction's scoring sentence unchanged, so the tasks keep their names.
 
 ## Egress
 The demonstrations are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image contains no

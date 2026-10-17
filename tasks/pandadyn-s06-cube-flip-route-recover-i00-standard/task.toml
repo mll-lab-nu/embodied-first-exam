@@ -9,14 +9,13 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
+  { source = "/data/video.log", service = "sim" },             # the collect hook's video pass (after the verdict)
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/pandadyn-s06-cube-flip-route-recover-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): Panda Dynamic Scenes S06 Inertial cube flip, chute run and pocket recovery (one Franka Panda) on the same frozen instance as the privileged task. Task: A cube rests on a raised launch surface. With a short push from the pusher blade, tip it over so that the face that initially faces the robot (-x) ends up on top, the cube completing the tip by its own momentum after the blade has let go, and let it settle. Then push the flipped cube onto an inclined chute, let it slide down by itself, meet it with the blade on its downhill side near the chute's lower end, and bring it to rest in the pocket at the bottom of the chute with the same face still on top. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): Panda Dynamic Scenes S06 Inertial cube flip, chute run and pocket recovery (one Franka Panda) on the same frozen instance as the privileged task. Task: A cube rests on a raised launch surface. With a short push from the pusher blade, tip it over so that the face that initially faces the robot (-x) ends up on top, the cube completing the tip by its own momentum after the blade has let go, and let it settle. Then push the flipped cube onto an inclined chute, let it slide down by itself, meet it with the blade on its downhill side near the chute's lower end, and bring it to rest in the pocket at the bottom of the chute with the same face still on top. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position chunks at 100 Hz), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades the episode as it ran live (no replay)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "single-arm", "dynamic-manipulation", "standard-mode", "trajectory"]
 
@@ -45,7 +44,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene, the collect hook replays in fresh processes one after the other; CPU: one core per scene + one for the agent"
+measured = "50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene; after the verdict the collect hook builds one more to film the video (until 2026-10-17: two fresh-process replays, one after the other); CPU: one core per scene + one for the agent"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -61,7 +60,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 4.0
 trial_max_memory_gb = 14.0
-measured = "memory: the agent container holds only Python and the client (0.03 GiB in the oracle trials): max(1.5 x peak, peak + 4, 8) -> 8 GiB; whole trial: + the sim service's 6 GiB (one scene, 1.3 GiB, with its frames and the replays' scenes); GPU 0.25 GiB in the sim service (50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB); processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "memory: the agent container holds only Python and the client (0.03 GiB in the oracle trials): max(1.5 x peak, peak + 4, 8) -> 8 GiB; whole trial: + the sim service's 6 GiB (one scene, 1.3 GiB, with its frames and the video pass's scene); GPU 0.25 GiB in the sim service (50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, eai-pandadyn:0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
@@ -86,13 +85,20 @@ service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write the live verdict into final.json, render the video
 timeout_sec = 2400                # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 900 s through a
-                                  # resume) + two fresh-process replays (a scene build + at most the horizon's 3500 control
-                                  # steps, the first one filmed; 1-3 min each) + margin; finalize.sh ends a replay that would
-                                  # pass this deadline and records it (replay_error, infra_error)
+                                  # resume) + the verdict (the live episode's, nothing replayed: a second) + the video (a
+                                  # scene build + at most the horizon's 3500 control steps filmed, 1-3 min); finalize.sh
+                                  # bounds the video by this deadline, and a lost video never touches the verdict
 
 [agent]
 timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2.12), as the service's RCB_WALL_CLOCK_S

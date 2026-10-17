@@ -34,8 +34,8 @@ scored afterwards.
   nor anything else about the scene.
 - **The operator** is the person you work for. `ask_operator` puts a question to them and their answer comes back with
   that call; `report` tells them something; messages that reach the robot come back in `meta["messages"]`.
-- There is nothing to hand in: the service records the episode, replays it in fresh simulators and judges the replay
-  on what physically happened and on how the episode ended. Keep the script that drives the robot at
+- There is nothing to hand in: the service records the episode and judges it as it ran, on what physically happened
+  and on how the episode ended. Keep the script that drives the robot at
   `/app/output/gen.py` and a `NOTES.md` of at most 20 lines (what you saw, what you did and why) in `/app/output/` for
   the record: save them early and keep them current.
 - Wall clock: the time limit (`## Time limit`). It ends without warning; an episode that has not reached an exit by

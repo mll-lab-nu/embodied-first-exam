@@ -37,9 +37,9 @@ within the first second unless it is held — and wipe the window with it, movin
   else `"failed"`). `spec()` gives the robot's own facts, as its URDF would: each actuator's range, each
   joint's axis and position, each link's mass and centre of mass, the feet's collision boxes, the IMU's frame,
   each camera's field of view and pose.
-- There is nothing to hand in: the service records every control step it ran, replays the last episode in a
-  fresh simulator and grades the replay. Keep the controller that drives the robot at `/app/output/gen.py` for
-  the record: save it early and keep it current.
+- There is nothing to hand in: the service records every control step it ran and grades the last episode as it
+  ran. Keep the controller that drives the robot at `/app/output/gen.py` for the record: save it early and
+  keep it current.
 - Wall-clock budget: the time limit (`## Time limit`). It ends without warning, and ending your session
   earlier ends the run the same way (and stops your background programs), so do not stop early: while the
   episode runs, or a reset is left, the run can still pass.
@@ -71,8 +71,7 @@ step is paid only while the tool is in contact with the glass — while it is no
 bar cannot be reached without contact. The rest pays for moving the tool vertically at a target speed on the
 order of half a metre per second, for keeping both hands near the tool, and for standing with the head about
 40 cm from where it started. The service ends the episode the moment the pass mark is reached
-(`reason = "success"`), and a fresh replay of the recorded episode, the servo targets the robot actually
-executed at each control step, must reach it as well and end in the same state.
+(`reason = "success"`); that live episode is the verdict.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.3`, standard-realtime mode)
 Your whole interface to the robot. Its docstring is the full reference

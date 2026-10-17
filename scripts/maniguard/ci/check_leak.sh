@@ -20,7 +20,7 @@ if name.endswith("-privileged"):
     dirs = {"instance": INSTANCE}
 else:
     allowed = {"Dockerfile", "docker-compose.yaml", "client-requirements.txt", "rcb_client.py", "rcb1.py"}
-    dirs = {"sim": {"server.py", "finalize.sh", "run.sh", "rcb_limited.py", "rcb1.py", "rcb_maniguard.py", "instance"}}
+    dirs = {"sim": {"server.py", "finalize.sh", "run.sh", "rcb_limited.py", "rcb1.py", "rcb_maniguard.py", "live_video.py", "instance"}}
 dirs["rcb_monitor"] = {"monitor.py", "rcb_limits.py", "selftest.py", "limits.json"}   # the resource monitor sidecar's code (check-monitor.py)
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)

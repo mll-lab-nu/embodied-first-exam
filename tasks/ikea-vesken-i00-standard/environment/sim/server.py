@@ -5,7 +5,8 @@ Adapted from the RoboTangle / RoboARC standard services.
 
 Physics: the scene's own runtime (rcb_ikea.Session, the privileged twin's tooling, copied unchanged): MuJoCo 3.14.0 on
 the CPU, float64; one control step = data.ctrl[:] = row, then 4 physics steps of the scene (S.step: physics + the
-scene's mechanism + its success monitor). Exactly what the privileged grader replays.
+scene's mechanism + its success monitor). Exactly what the privileged grader replays; in this mode the live episode
+itself is graded (owner, 2026-10-17, board 0150/0151: no grading replay).
 HTTP (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1), POST /kinematics (stateless FK / IK on
 a scratch copy of the robot's MuJoCo model). Nothing about the furniture parts ever leaves this process.
 
@@ -26,7 +27,7 @@ Speed rule (clamp, not fail; the robots' real limits, rcb_ikea.JOINT_SPEED_LIMIT
 table that rcb_ikea.Session.applied() also enforces in both modes and in the grader's replay): each limited target (the arm
 joints; a gripper only if the table limits it, none today) moves at most its limit x control step from the previous control
 step's target. A row that asks for more takes the control steps it needs (each one executed, journaled and recorded, so
-the verifier's replay runs exactly what ran, and the Session clamp leaves those rows unchanged) and meta["clipped"] says
+a replay of the recorded trajectory runs exactly what ran, and the Session clamp leaves those rows unchanged) and meta["clipped"] says
 so. An unlimited gripper switches at the row.
 
 Budget: the wall clock only (PROTOCOL v2.0 H.7: the privileged twin's cutoff). spec budget.wall_clock_s (RCB_WALL_CLOCK_S,
@@ -35,9 +36,13 @@ before Harbor's [agent] timeout_sec does; at 0 the episode ends (reason "timeout
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU is bit-deterministic): every executed control
 step is journaled (journal.f64, float64), every completed call checkpointed (rows, state hash, proprio). After a crash
-compose restarts the container and the service replays the journal and continues the SAME episode.
+compose restarts the container and the service replays the journal and continues the SAME episode (a resume, not a
+grading replay).
 
-Episode end (the live verdict = the grader's verdict, rcb_ikea.Session.final_check(), as RoboWits #243 / BEHAVIOR #254):
+Start state: the scene is checked file by file against runtime_binding.json and its initial-state hash, actuators and
+runtime before the episode begins; a mismatch writes final.json `instance_mismatch` (infra_error 1) and serves nothing.
+
+Episode end (the live verdict is THE verdict: the grader's rule, rcb_ikea.Session.final_check(), on the live simulator):
   - success: the first time status()["success"] holds (success.py AND released AND at rest AND no breakdown so far)
     AND the settled check passes: final_check() on a snapshot (the last executed row held SETTLE_S more, the same rules
     again), restored bit-exactly afterwards (evaluating never changes the physics or the journal). If the settled check
@@ -46,10 +51,11 @@ Episode end (the live verdict = the grader's verdict, rcb_ikea.Session.final_che
   - sim_breakdown: status()["breakdown"] (a non-finite state, a MuJoCo BADQACC / BADQPOS / BADQVEL warning, a part
     contact deeper than 10 mm), checked on every control step; no success;
   - timeout (the wall clock), or error (a simulator error).
-Then the service writes /data/trajectory.npz (rcb_ikea layout: ctrl (N, nu) float64 = every executed control step,
-substeps, timestep, actuators) and /data/episode.json (live result, final state hash); the collect hook (finalize.sh) ends
-the service and writes final.json. The verifier replays trajectory.npz itself (two fresh processes, rcb_ikea.py replay,
-final_check(): the terminal rules at the end of the rows and after a 1.0 s hold of the last row), with no network.
+An episode that ends otherwise (timeout, the collect hook's end) is judged as it stands by the same two checks on the
+live state (finish()). Then the service writes /data/trajectory.npz (rcb_ikea layout: ctrl (N, nu) float64 = every
+executed control step, substeps, timestep, actuators: the deliverable, replayable) and /data/episode.json (the live
+verdict, final state hash); the collect hook (finalize.sh) ends the service and writes final.json (graded_by "live",
+replays 0). The verifier only transcribes it; nothing is replayed to grade.
 A live video of cam_high (/data/live.mp4, RCB_LIVE_FPS frames per simulated second) is recorded during the episode; it
 never affects the verdict."""
 from __future__ import annotations
@@ -123,9 +129,11 @@ L._write_json(os.path.join(DATA, "startup_binding.json"), {
     "scene_digest": R.digest(files), "runtime": runtime, "runtime_matches": runtime == BINDING["runtime"]})
 if not (instance_exact and instance_ok and runtime == BINDING["runtime"]):
     # the sidecar's scene or runtime is not the one the task was validated on: infrastructure, never the agent's 0
+    # (`gave_up` / `graded_by` mark a verdict on disk for rcb_limited.final_verdict(): the collect hook keeps it)
     EP.scene_built()
     L._write_json(os.path.join(DATA, "final.json"), {
-        "success": False, "done": True, "finalized": True, "deterministic": False, "instance_mismatch": True, "infra_error": 1,
+        "success": False, "done": True, "finalized": True, "gave_up": True, "graded_by": "live", "replays": 0,
+        "instance_mismatch": True, "infra_error": 1,
         "reason": "instance_mismatch", "task": TASK, "protocol": PROTOCOL, **EP.final_fields(),
         "differing_files": sorted(k for k in set(files) | set(BINDING["scene_files"]) if files.get(k) != BINDING["scene_files"].get(k))[:50]})
     open(PID_FILE, "w").write(str(os.getpid()))
@@ -376,9 +384,9 @@ SPEC = {
                 "the episode goes on, meta settle_failed counts it), on a "
                 "simulator breakdown (reason sim_breakdown, no success: a non-finite state, a MuJoCo BADQACC / BADQPOS / "
                 f"BADQVEL warning, a part contact deeper than {R.BREAKDOWN_DEPTH_M * 1000:g} mm), when the wall-clock budget "
-                "is used up (reason timeout; graded as it stands), or on a simulator error. The recorded control steps are "
-                "then replayed from the initial state in fresh processes and graded: the same rules at the end of the rows "
-                f"and again after the last row is held {R.SETTLE_S:g} s more"),
+                "is used up (reason timeout; graded as it stands: the same rules on the live state, and again after the last "
+                f"row is held {R.SETTLE_S:g} s more on a copy), or on a simulator error. The live episode is the verdict: "
+                "nothing is replayed to grade it"),
     "robot_spec": R_SPEC, "kinematics": K_SPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
               "frames_encoding": "uint16 mm, zlib", "noise": L.DEPTH_NOISE,
@@ -499,7 +507,8 @@ def episode_json() -> None:
         "elapsed_s": round(((E.get("t_end") or time.time()) - E["t_first"]) if E["t_first"] else 0.0, 1),
         "service_time_s": round(service_time(), 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
         "n_actions": E.get("n_actions"), "live_rows": E.get("live_rows"), "live_sha": E.get("live_sha"), "live_verdict": E.get("verdict"),
-        "live_video": LIVE["path"] and os.path.basename(LIVE["path"]), "live_video_frames": LIVE["frames"], **EP.final_fields()})
+        "live_video": LIVE["path"] and os.path.basename(LIVE["path"]), "live_video_frames": LIVE["frames"],
+        "settle_failed": E.get("settle_failed", 0), "settled_verdict": E.get("settled_verdict"), **EP.final_fields()})
 
 
 def verdict() -> dict:
@@ -557,7 +566,7 @@ def finish(reason: str) -> None:
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time()
     if not E["success"] and reason not in ("sim_breakdown", "error"):
         try:
-            E["success"] = bool(verdict()["success"]) and bool(settled()["success"])   # graded as it stands (the verifier's replays decide)
+            E["success"] = bool(verdict()["success"]) and bool(settled()["success"])   # graded as it stands: the verdict
         except Exception:  # noqa: BLE001
             traceback.print_exc()
     if reason in ("sim_breakdown", "error"):

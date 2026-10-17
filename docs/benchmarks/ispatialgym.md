@@ -65,7 +65,7 @@ rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the
 |---|---|---|
 | agent gets | `/app/goal.png`; three RGB cameras with calibration; proprioception in the odometry frame; `robot_spec`; stateless FK / IK | the simulator in its container from the frozen start: every object's state, unlimited resets, the robot's cameras, `robot_spec`, stateless FK / IK; `/app/goal.png` |
 | not given | object poses, the world frame, resets, the goal check | the goal, any target, any success check; motion primitives or planners |
-| deliverable, grading | the episode the sidecar records; live ∧ two fresh replays ∧ deterministic, in the sidecar | `/app/output/trajectory.npz` (≤ the step budget); two fresh replays in the verifier, both succeed and agree |
+| deliverable, grading | the episode the sidecar records, graded live: the sidecar's success at the episode's end, nothing replayed (Grading) | `/app/output/trajectory.npz` (≤ the step budget); two fresh replays in the verifier, both succeed and agree |
 
 The privileged agent's image is eai-ispatialgym with a layer that removes, and the build then asserts gone: every BDDL
 problem (goals), the docs (they preview the reference demonstrations; the fork's link the authors' pages), tests,
@@ -77,6 +77,30 @@ atoms, one neutral goal atom) from the image's own copy. Upstream's success-chec
 BEHAVIOR-1K's do; with no goal, target or problem in the container it has nothing to check, and the tooling reports no
 success. Measured: the same 300 rows give bit-identical start and final states in the agent's simulator and the
 verifier's, for all 12 tasks.
+
+## Grading (standard)
+- **The live episode is the verdict.** The sidecar judges upstream's success under settle-eval at every control step the
+  episode runs (`rcb_ispatialgym.Session.step`); the episode ends at the first step it holds, and `success` in
+  `final.json` is that result (`episode.json`, merged by `finalize.sh`). The at-rest window is part of that predicate
+  (the last 45 control steps of the live episode), so no hold is added after the agent's container stops; the rule is the
+  privileged twin's, which its verifier judges on two fresh replays.
+- **Nothing replays the episode.** Before 2026-10-17 the collect hook replayed the trajectory twice in fresh processes
+  (a scene load of 3-17 min + the episode's steps, each) and required live ∧ both replays ∧ equal end states.
+- **The frozen start** is checked when the sidecar builds the scene, before the agent is served (the start-state hash
+  of `facts.json`, else every object pose and robot joint within 2 mm / 0.02 rad); a mismatch gives up as
+  `instance_mismatch` (`infra_error = 1`). On a resume the rebuilt start is checked again.
+- **Video**: recorded live (`/out/live.mp4`): the head camera's frame that every control step renders anyway for the
+  agent's observations, every third step (10 fps, 540 px), copied in the control loop and encoded by a thread
+  (`rcb_ispatialgym.LiveVideo`; a full queue or an unreadable frame drops that frame, counted, rather than wait or stop;
+  closing is bounded to 4 min). A resume records it anew from the start, as
+  it replays the journal. The service closes it when the collect hook ends the episode; a failed recording loses only
+  the video. Only when `live.mp4` is missing or does not play, `finalize.sh` runs ONE video-only render
+  (`rcb_ispatialgym.py replay --video`, `replay.mp4`) after the verdict, whose success and hash are not read; the
+  collect hook's bound covers it (the end, up to 1 h, + a scene load and the whole step budget + 10 min).
+- **Infrastructure** (`infra_error = 1`): no or unfinalized `final.json`, the service never ended the episode (no
+  `episode.json`; one it dumped before failing to exit in time is still the verdict, `end_timed_out`), a give-up
+  after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), `instance_mismatch`. A crash inside the
+  agent's calls (`sim_crashed_on_call`) and a simulator error raised by its actions (`error`) score 0.
 
 ## Where upstream keeps the answers
 
@@ -125,3 +149,8 @@ RTX 4090 with four processes at once).
 - **GPU memory.** One trial's Isaac process takes 4-7 GiB of GPU memory; three trials beside other work on one 24 GB card
   ran out of it at start-up (an infrastructure failure, `infra_error = 1`). The service exits non-zero on a start-up error so
   that compose restarts it (Isaac's Kit otherwise exits 0).
+
+## Change log
+- 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay (the collect hook's
+  two fresh-process replays are gone); the start state is checked at the live start; video recorded live by the sim
+  service (`live.mp4`), a video-only render only when that is missing.

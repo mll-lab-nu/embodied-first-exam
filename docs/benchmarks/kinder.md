@@ -53,7 +53,23 @@ to be solvable. One standard twin has none of its own yet:
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
 | privileged | the simulator, its full state (`get_state`/`set_state`) and the goal check | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
-| standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | 0 (author, 2026-10-16; the protocol's default; 10 from 2026-10-11) | the last episode, replayed in a fresh simulator |
+| standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | 0 (author, 2026-10-16; the protocol's default; 10 from 2026-10-11) | the last episode, as it ran (live; nothing replayed) |
+
+Grading in standard mode, since 2026-10-17 (owner, board 0150/0151): the live episode. The sim sidecar judges the
+episode it runs with KinDER's own goal check (the environment's `terminated`, at every control step; `step()` in
+`scripts/kinder/shared/standard/server.py`) and ends it there; `rcb_service.py` writes that verdict (`graded_by =
+"live"`, `replays = 0`) once the agent's container is stopped, and no grading replay runs. The old replay re-ran the same
+rows from the frozen scene under the same check (`Session.replay`), with no settle or hold of its own, so the live rule
+is exactly as strict; the 16 archived standard trials keep their verdicts. The frozen start is checked on the live
+simulator: `start_sha` is the instance's recorded `scene_sha` (the state hash right after reset; every archived start
+matched), and a KinDER that no longer builds the instance (rcb_kinder's own check) is `instance_mismatch`; both give up
+as infrastructure (`infra_error = 1`) before the agent is served. The video is one render pass over `trajectory.npz`
+after the verdict (`render_video`, the `task_view` camera; MuJoCo EGL or PyBullet on the CPU; median about 90 s a
+trial), which never changes the verdict; the removed replay was a physics re-run of the episode (at most about as long;
+about 0.5 slot-hours over the archive). `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after
+crashes not all inside the agent's calls, a reset whose scene does not rebuild (the agent's reset was legitimate) and
+`instance_mismatch`; a simulator error raised by the agent's call, crashes
+inside its calls, a timeout and a failure are the agent's 0.
 
 World-frame information (PROTOCOL D7): privileged mode gives KinDER's world state; standard mode gives none -- odometry
 starts at the robot's start pose, and the goal is named by what the cameras see. One exception since 2026-10-16: where
@@ -82,7 +98,7 @@ ghcr.io/mll-lab-nu/eai-kinder:$(cat images/kinder/VERSION) .` (from the reposito
 ## Results
 
 Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (verdict, cost, what happened),
-`reward.json`, the replay's last frame and videos are published on the results site, keyed by run id. Standard-mode
+`reward.json`, the video's last frame and videos are published on the results site, keyed by run id. Standard-mode
 runs with none (the default from 2026-10-16), with 10 (the default 2026-10-11 to 2026-10-16) and with 50 (the
 optional capability before it) are reported separately (PROTOCOL D1), as are runs with the 3600 s cutoff (before 2026-10-16), and runs recorded before
 protocol v1.0 are marked as such.

@@ -16,8 +16,8 @@ Standard-mode twin of `molmospaces-navigate-to-i00-privileged` (the same frozen 
 `eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
 model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
-service exit, replays the trajectory in two fresh processes and writes `final.json`; the verifier grades those artifacts
-in a separate sandbox (`tests/Dockerfile`).
+service exit and writes `final.json` from the live episode's result (nothing is replayed to grade it), then renders
+`replay.mp4`; the verifier grades those artifacts in a separate sandbox (`tests/Dockerfile`).
 
 ## Difficulty
 That of `molmospaces-navigate-to-i00-privileged` (its README), without resets, object poses or a success check: every move is planned from camera
@@ -27,13 +27,14 @@ images, depth and the robot's own proprioception, within the benchmark's 100 s o
 None is shipped (see `molmospaces-navigate-to-i00-privileged`).
 
 ## Verification
-`success` = live success ∧ replay success ∧ deterministic. The episode follows upstream's evaluation: one upstream
-`Task.step` per executed row; it ends at upstream's `is_done()` (500 control steps), at the agent's `done`,
-or when the agent's time is up; then upstream's `judge_success()` on the final state: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. The two fresh-process
-replays of the recorded rows (`rcb_molmospaces.py replay`) must succeed and end in the same state; `replay.mp4` is
-rendered after the verdict. `infra_error = 1` (no verdict on the agent): no, an unreadable or an unfinished `final.json`,
-a service that gave up after crashes between calls or never ended the episode, a replay process without a result, a
-frozen start the image no longer builds. No oracle; human review in PR #276 (PROTOCOL §2.7: per family, this task
+`success` = the live episode's success, judged by the sim service (graded live, no replay: 2026-10-17). The episode
+follows upstream's evaluation: one upstream `Task.step` per executed row; it ends at upstream's `is_done()`
+(500 control steps), at the agent's `done`, or when the agent's time is up; then upstream's
+`judge_success()` on the final state: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. The service checks the frozen start (the instance's t = 0 state hash)
+when it builds the scene, before the agent is served. `replay.mp4` is rendered by one video-only pass from
+`trajectory.npz` after the verdict, which it never changes. `infra_error = 1` (no verdict on the agent): no, an
+unreadable or an unfinished `final.json`, a service that gave up after crashes between calls or never ended the
+episode, a frozen start the image no longer builds (`instance_mismatch`). No oracle; human review in PR #276 (PROTOCOL §2.7: per family, this task
 and its twin, a positive example and the `nop` result).
 
 ## Compute resources
@@ -62,3 +63,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - 2026-10-10 (review round 3, board 0067): the shared service layer and the client only (`environment/sim/rcb_limited.py`, `environment/rcb_client.py`). A camera named more than once in `cameras` is rendered and returned once (N copies of one name made the service build N x N images within the frame budget, which could exhaust its memory). A service that has given up on the episode (it could not start it, or could not resume it after its crashes) answers every request with 409 and the reason, and `Robot()` / `wait_ready()` raise `EpisodeOver` at once; before, nothing answered and they waited out their timeout (up to an hour). The adapter, the collect hook, the grader, the scene and the pass rule are unchanged.
 - 2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`, `environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta["time_s"]` and `meta["time_left_s"]` count from the agent's first request to the service (any endpoint), and a restarted service keeps that moment; before, they counted from the service's own start of the episode (when its scene was ready). Where the service is ready before the agent's phase begins (the harness is installed in between: a median of 79 s over the recorded standard trials), that clock ran ahead of the agent's and `time_left_s` reached 0 while the agent still had that time. `/spec` says what the clock counts from (`budget.clock`), and the instruction's `## Time limit` tells the agent to plan by `time_left_s`. The service never ended an episode on this clock: the scene, the frozen instance, the pass rule and the grader are unchanged, so the task keeps its name and earlier results stand.
 - 2026-10-16: the frozen episode, the base image and the replay limit. The frozen episode is the one the 2026-10-16 selection rule picks (docs/benchmarks/molmospaces.md, Instances: the target small in the fixed cameras for the pick families, a longer travel for open and close); for every family but navigate-to and open-door that is a different episode, so results recorded on those tasks before this date are of another episode. Base image 0.2.5 (the assets of the new episodes). `environment/sim/finalize.sh`: the two grading replays share the time left before the hook's deadline (1740 s of its 1800 s; the first gets half of it, about 865 s after a prompt end) instead of 500 s each, which ended genuine successes on a loaded host as `replay_failed` + `infra_error`; the verdict, the pass rule and upstream's success rule are unchanged. `instruction.md` now states the pass rule (live success, both replays succeed and end in the same state), which only this README stated.
+- 2026-10-17 (owner, board 0150/0151): graded by the live episode, no grading replay. `environment/sim/finalize.sh` writes `final.json` from the live episode's result (`graded_by` "live", `replays` 0) and no longer replays it twice; `replay.mp4` comes from one video-only pass after the verdict. `environment/sim/server.py` checks the frozen start's hash when it builds the scene, before the agent is served (`instance_mismatch`, infra; was checked in the replays). `tests/grade.py`: success = the live success. Upstream's success rule, the scene and the episode are unchanged; a trial that passed live but failed a replay (none recorded) would now pass.

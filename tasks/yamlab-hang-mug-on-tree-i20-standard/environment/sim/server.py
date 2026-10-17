@@ -20,9 +20,18 @@ Differences from the RoboLab service, all from the robot and the simulator:
   never steps physics); depth from the same renders; /kinematics from numpy models of both arms;
 - the episode ends at the first control step where YAMLab's success check (evaluation thresholds) has latched every stage,
   or when a task object falls off the table (YAMLab's own termination), or when the time is up;
-- the episode is NOT replayed here (a second Isaac simulator in this container would not fit next to the live one): when it
-  ends the service writes /data/trajectory.npz + /data/episode.json (live result and state hash); the collect hook's SIGUSR1
-  makes it exit, and environment/sim/finalize.sh replays the trajectory in two fresh processes and completes final.json."""
+- the episode is graded as it ran (owner 2026-10-17, board 0150/0151: no grading replay): when it ends the service writes
+  /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: YAMLab's success check, latched stage by
+  stage after every control step; the end-state hash); the collect hook's SIGUSR1 makes it exit, and
+  environment/sim/finalize.sh writes final.json from it;
+- the start state is checked before the agent is served: the rebuilt scene against the frozen instance's recorded state
+  (instance.json `state_sha`, else every object pose and robot joint within the tooling's tolerance); a scene that matches
+  neither ends the trial as an infrastructure failure (`instance_mismatch`, a give-up: nothing is served);
+- the video is filmed live (live_video.py) from renders the service makes anyway: this tooling renders on demand (one
+  sim.render() per new state), so a frame (the tooling's video frame: top + both wrist cameras) is kept only at a control
+  step the agent's own call already rendered (its frames at its video_fps, 5 per simulated second by default), at most
+  one per 6 control steps; no extra render is made for the video during the episode (one, of the end state, at its end).
+  The collect hook encodes live.mp4 after the verdict."""
 from __future__ import annotations
 import math, os, sys, threading, time, traceback
 from typing import Callable
@@ -30,6 +39,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import live_video  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
 DATA = os.environ.get("RCB_DATA", "/data"); os.makedirs(DATA, exist_ok=True); os.makedirs(os.path.join(DATA, "calls"), exist_ok=True)
@@ -72,8 +82,9 @@ def dump() -> None:
     L._write_json(os.path.join(DATA, "episode.json"),
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
-                   "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+                   "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **INSTANCE_CHECK, **EP.final_fields()})
     write_final()
+    VIDEO.last(ctrl_steps(), frame=S._video_frame)   # the end state, rendered once if no call rendered it (after the verdict)
 
 
 def finish(reason: str) -> None:
@@ -88,7 +99,26 @@ def finish(reason: str) -> None:
 
 # ---------------------------------------------------------------- scene
 import rcb_yamlab as M  # noqa: E402
-S = M.Session(TASK, instance=INSTANCE, strict=True, depth=True)
+S = M.Session(TASK, instance=INSTANCE, strict=False, depth=True)   # the start-state check is below (instance_mismatch)
+# The frozen initial state, checked before anything is served: the rebuilt scene's state hash against instance.json's
+# `state_sha`; a differing hash with every object pose and robot joint within the tooling's tolerance is accepted
+# (another host's last bits, as the tooling's strict mode does), anything else is an infrastructure failure.
+INSTANCE_CHECK = {"instance_sha": S.instance_sha, "instance_expected_sha": L._read_json(INSTANCE).get("state_sha"),
+                  "instance_exact": bool(S.instance_exact), "instance_matches": bool(S.instance_matches)}
+if not S.instance_matches:
+    L._write_json(os.path.join(DATA, "final.json"), {"task": TASK, "protocol": PROTOCOL, "instance_mismatch": True, **INSTANCE_CHECK})
+    EP.give_up(f"instance_mismatch: the rebuilt scene (state {S.instance_sha}) is not the frozen instance "
+               f"({INSTANCE_CHECK['instance_expected_sha']}) and its poses differ", infra=True)   # never returns
+
+
+def live_frame():
+    """The video frame of the current state if a call already rendered it (the tooling's render mark), else None: the
+    video never makes the service render (sim.render) during the episode."""
+    mark = getattr(S, "_frame_mark", None)
+    if not mark or mark[0] != (S._n_restores, S.n_steps):
+        return None
+    return S._video_frame()
+VIDEO = live_video.LiveVideo(DATA, ctrl_hz=CTRL_HZ, frame=live_frame, log=EP.log)
 ARMS = M.ARMS
 LAYOUT = [f"{a}_{j}" for a in ARMS for j in list(M.ARM_JOINTS) + ["gripper"]]
 CAMS = list(M.CAMERAS)
@@ -302,7 +332,7 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     (success, a task object off the table, the runaway guard), or the service stops the call (max_call_wall_s, the client
     hung up)."""
     a = np.asarray(a, dtype=np.float32)                    # the exact row Session.step executes (and records)
-    over = S.step(a); stop = EP.journal(a); rec.tick()
+    over = S.step(a); stop = EP.journal(a); rec.tick(); VIDEO.offer(ctrl_steps())
     if over: finish(end_reason())
     return E["done"] or stop
 
@@ -399,7 +429,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     before = ctrl_steps(); rec.tick(force=True)
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan, clipped)
-    rec.tick(force=True, last=True)
+    rec.tick(force=True, last=True); VIDEO.offer(ctrl_steps())
     succ = E["success"] or check_success(); E["success"] = succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True}
@@ -428,7 +458,7 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         hold = np.asarray(S.hold_action(), dtype=np.float64)
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
-        rec.tick(force=True, last=True)
+        rec.tick(force=True, last=True); VIDEO.offer(ctrl_steps())
         succ = E["success"] or check_success(); E["success"] = succ
         if succ: finish("success")
     else:
@@ -458,11 +488,11 @@ def end_from_signal() -> None:
         E["exiting"] = True
         if not E["done"]: finish("timeout")
         else: dump()
-        log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the simulator for the fresh-process replays"})
+        log({"ev": "exit", "reason": "collect hook: episode dumped (graded by the live episode), releasing the simulator"})
         if not os.path.exists(PID_FILE):   # a SIGUSR1 that came in during a resume: the hook still needs to see this process end
             open(PID_FILE, "w").write(str(os.getpid()))
     sys.stdout.flush(); sys.stderr.flush()
-    os._exit(0)          # frees the GPU and the memory: finalize.sh starts the replays once this process is gone
+    os._exit(0)          # frees the GPU and the memory: finalize.sh writes final.json once this process is gone
 
 
 def replay_row(row) -> None:
@@ -473,8 +503,11 @@ def replay_row(row) -> None:
 
 
 S.record_start()         # the resume replay is recorded too: trajectory.npz is the whole episode
-EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
+VIDEO.offer(0)           # the start state (rendered for /spec's images; a restarted service has it on disk already)
+resumed = EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
          start_event={"task": TASK, "assets": S.assets, "cameras": CAMS, "kinematics_check": S.kinematics_check})
+if resumed:
+    VIDEO.truncate(ctrl_steps())   # frames of the call lost in the crash show rolled-back states
 E["ready"] = True; write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)

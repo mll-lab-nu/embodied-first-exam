@@ -295,7 +295,7 @@ class TestEvidence(Rig):
             time.sleep(0.05)
         self.assertTrue(self.svc.done)
         fin = self.finalize()
-        self.assertTrue(fin["deterministic"], fin)
+        self.assertEqual((fin["graded_by"], fin["replays"]), ("live", 0), fin)     # board 0151: nothing replayed
         for k in ("clock_s", "max_lag_s", "stalls", "stalled_s", "stalled_share", "held_steps", "late_steps"):
             self.assertIn(k, fin)
         notes = [json.loads(x)["text"] for x in open(os.path.join(self.data, "notes.jsonl"))]

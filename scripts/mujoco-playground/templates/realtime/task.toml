@@ -11,12 +11,13 @@ artifacts = [
   { source = "/data/calls.jsonl", service = "sim" },
   { source = "/data/submitted.f64", service = "sim" },
   { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/{{name}}-standard-realtime"
-description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = {{slowdown}}): MuJoCo Playground {{env}} ({{robot_name}}) on the same frozen instance as {{name}}-privileged: {{task_toml}} Once an episode starts the robot runs at {{control_hz}} Hz whatever the agent does, so the agent streams joint position targets from a controller program of its own through the client (cameras that follow the robot, the robot's joints, IMU, foot contacts and the joystick command); {{rt_resets}} resets (only the last episode is graded), no world state; the sim service records every executed control step, replays the last episode in a fresh simulator and grades it."
+description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = {{slowdown}}): MuJoCo Playground {{env}} ({{robot_name}}) on the same frozen instance as {{name}}-privileged: {{task_toml}} Once an episode starts the robot runs at {{control_hz}} Hz whatever the agent does, so the agent streams joint position targets from a controller program of its own through the client (cameras that follow the robot, the robot's joints, IMU, foot contacts and the joystick command); {{rt_resets}} resets (only the last episode is graded), no world state; the sim service records every executed control step and grades the last episode live (no grading replay)."
 authors = [{ name = "{{author}}" }]
 keywords = ["robotics", "mujoco", "mujoco-playground", "{{robot_tax}}", "quadruped", "locomotion", "{{kind}}", "trajectory", "standard-realtime-mode"]
 
@@ -45,13 +46,13 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it in a
-# fresh simulator. The verdict ("finalized": true, set before any video is rendered) may take until 840 s; then the
-# hook waits for the replay video ("video_pending") until 870 s -- a video that is not ready by then is lost, the
-# verdict is not.
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which writes the live
+# episode's verdict (nothing is replayed: board 0151; seconds after the signal). The hook waits for it ("finalized":
+# true, set before any video is rendered) until 300 s (840 s while a replay decided it); then for the video, one render
+# pass over the episode ("video_pending"), until 870 s -- a video that is not ready by then is lost, the verdict is not.
 [[verifier.collect]]
 service = "sim"
-command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 300 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
 timeout_sec = 900
 
 [agent]

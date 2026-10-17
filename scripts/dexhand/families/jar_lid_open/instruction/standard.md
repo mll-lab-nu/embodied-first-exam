@@ -19,8 +19,8 @@ The simulator runs in a separate service. You receive camera RGB, optional calib
 joint positions, velocities, actuator efforts, wrist pose and current targets. The service serves no jar or lid pose,
 contact, lid turn or stage; it reports only whether the episode has ended and whether in success or failure
 (`task_failure`, without the failure's name). An episode ends at the first success or the first failure (see the task
-text); after that the service accepts no more actions until a reset (see `## Episodes and resets`). The service records every action and watch step, then replays the graded episode with the
-recorded hand in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
+text); after that the service accepts no more actions until a reset (see `## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
+(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
 needed.
 
 ```python

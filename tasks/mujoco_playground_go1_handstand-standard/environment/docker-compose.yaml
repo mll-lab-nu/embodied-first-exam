@@ -26,6 +26,8 @@ services:
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "1800"
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in about a second
+      RCB_COLLECT_BUDGET_S: "1200"   # the collect hook's timeout_sec (task.toml): finalize.sh fits the verdict and the video in
+      RCB_COLLECT_VIDEO_MAX_S: "600"   # the video pass's bound (at most the horizon, ~150 frames: well under a minute)
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
       RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-10}"   # Playground quadrupeds standard: 10 resets (PROTOCOL §4.5); 0: one episode

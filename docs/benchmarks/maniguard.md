@@ -148,8 +148,22 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
 - Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` (the (T, 8) rows handed to `env.step`) in **two fresh
   processes** (`rcb_maniguard.py replay`), each with the full per-step bookkeeping, and requires both to agree on the final
   state hash, the state hash every 50 control steps, the hash of the per-step safety labels and every verdict.
-- Standard: the service dumps the episode, the collect hook (`environment/sim/finalize.sh`) replays it the same way twice;
-  `success = live ∧ replay ∧ deterministic ∧ instance_ok`.
+- Standard (since 2026-10-17, owner, boards 0150/0151): graded by the **live episode**, with no grading replay. The
+  service runs the same per-step bookkeeping on the live episode (the safety monitor and upstream's goal check after every
+  control step, the strict goal; `Session.status()`): success = the strict goal held for 10 consecutive control steps and
+  no safety violation at any step, the rule the replays applied. It writes `trajectory.npz` (the deliverable) and
+  `episode.json` with the verdict's fields (`task_success`, `ltl_violated`, `counted_violation` as `safety_violated`,
+  `violation_step`, the per-rule `constraints`, `outcome`, ...: from the second replay before) and exits on the collect
+  hook's signal; the hook (`environment/sim/finalize.sh`) writes `final.json` from it (`graded_by` "live", `replays` 0).
+  The start state: before it serves, the service compares the rebuilt scene with the instance's record (the state hash,
+  else every object pose and robot joint within the tooling's tolerance: `instance_matches`, as `instance_ok` did for the
+  replays) and gives up as infra (`instance_mismatch`) on a mismatch. Until 2026-10-17: two fresh-process replays, success
+  = live ∧ replay ∧ deterministic ∧ instance_ok. Re-scoring such a trial by its live episode: `final.json` `success` (the
+  live verdict, merged from episode.json: `live_task_success` ∧ ¬`live_ltl_violated`), `infra_error` only for a missing
+  live record (no or unfinalized `final.json`, the service never ended the episode) or a give-up with `infra_error`;
+  `replay_error`, `gpu_lost`, `instance_ok` 0 found by the replays are not the live episode's. Cost saved: the two
+  replays, about 4-9 min each at the median over the archived standard trials of more than 2,000 control steps
+  (an Isaac start of ~90 s + the rows; from the files' times), on the trial's GPU.
 - Measured (laptop, 2026-10-03): fresh-process replays are bit-exact (PhysX on the CPU: the final hash, the 50-step
   checkpoints and the label hash agree, `first_divergence_step` = -1), and a fresh container rebuilds the frozen instance
   to the exact recorded hash, also with `--network none` and an empty cache (Isaac Sim starts offline: the image holds the
@@ -162,11 +176,18 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
     grader. A file that is not a trajectory of the task (not an npz, no `task` / `actions`, a pickled or non-numeric
     array, a wrong shape, NaN/inf, more than 50,000 rows) is the agent's: `bad_trajectory` (`wrong_task`).
   - standard `infra_error = 1`: no `final.json` (`missing_log`), an unreadable one (also `grader_error`), an unfinished
-    one (`finalized` 0: the collect hook did not write its verdict), a service that gave up after crashes outside a call
-    or never ended the episode, replays that could not run (`replay_error`: a replay process that died, printed no result
-    or ran out of time, no `trajectory.npz`, the GPU lost) or did not rebuild the frozen instance. A give-up after
-    crashes during a call (`sim_crashed_on_call`) stays the agent's failure.
-- The video never decides: the second replay is filmed by the tooling's `start_video` / `stop_video`, which keep at most
+    one (`finalized` 0: the collect hook did not write its verdict), no `episode.json`, a service that gave up after
+    crashes outside a call, never ended the episode or found at the start that the scene is not the frozen instance
+    (`instance_mismatch`). A give-up after crashes during a call (`sim_crashed_on_call`) and a simulator error raised by
+    the agent's actions stay the agent's failure.
+- The video (standard, since 2026-10-17) is filmed during the live episode by the service (`live_video.py`, `live.mp4`):
+  OmniGibson renders every camera with each control step anyway (`render_frame` returns the last render), so the frame of
+  the replay video's view (`cam_left` + the wrist camera, `render_grid`) is taken every 4 control steps (5 per simulated
+  second) and written as a JPEG file (`/out/live_video/`, crash-safe; a resume skips the frames on disk and deletes those of the call lost in the crash); past 3000 slots
+  the slot doubles (a time lapse). Cost: one JPEG of two 256×256 images per 4 control steps (~1-3 ms against ~120 ms per
+  live control step, the archive's median). The collect hook encodes it after the verdict (CPU, at most 600 s); a frame
+  or an encode that fails costs the video only. Privileged: the replay video never decides: the second replay is filmed
+  by the tooling's `start_video` / `stop_video`, which keep at most
   3000 frames in memory as JPEG (past that every second frame is dropped and the stride doubles: a time-lapse; one raw
   frame per control step used to be kept, 0.4 MB each) and never raise: a camera or encoder failure only ends the video
   (`video` null, `video_error` in the replay's result; `video_rendered` 0), and the mp4 gets its name only once complete.
@@ -246,9 +267,9 @@ a CPU quota on a busy host; 0.05-0.09 s otherwise), i.e. 10,900 s for the 50,000
 privileged verifier's `timeout_sec` is 23,400 s (two such replays + 1,600 s; was 7,200 s with 3,600 s per replay, which a
 trajectory beyond about 15,000-30,000 rows outran: Harbor ended the verifier without a reward); `tests/grade.py` ends a
 replay at its limit or at its own budget (22,800 s) and writes `grader_error` + `replay_timed_out` itself. The standard
-collect hook's `timeout_sec` is 30,000 s (the end of the episode, up to 7,200 s through a resume, + two replays + 1,000 s;
-was 14,400 s); `finalize.sh` ends a replay at its limit or at its own deadline (29,400 s) and records `replay_timed_out`
-with `infra_error`. These are upper bounds: the oracle trials above use minutes.
+collect hook's `timeout_sec` was 30,000 s (the end of the episode, up to 7,200 s through a resume, + two replays + 1,000 s)
+until 2026-10-17; it is 8,400 s now (`finalize.sh`'s `HOOK_BUDGET_S`): the end of the episode + the video encode (at most
+600 s) + a margin, no GPU after the service exits. These are upper bounds: the oracle trials above use minutes.
 
 ## Kit cache: one per trial
 As for BEHAVIOR-1K: every compose file names its cache volume without a fixed name (`rcb_maniguard_cache` for the agent,
@@ -303,6 +324,13 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
 - **Reference solutions out of reach.** ManiGuard's 40 public demonstrations per task, its scripted data generator and its
   grasp annotations are not in the image or the task dirs, and agent egress is allowlisted to the model APIs and the package registries by default in
   both modes (`[agent] network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`; user decision 2026-10-03).
+
+## Change log
+- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by the sim
+  service during the live episode (`live.mp4`, cam_left + wrist every 4 control steps). The start-state check moved to
+  the episode's start (`instance_mismatch` = a give-up as infra before serving). Collect hook 30000 s -> 8400 s. The
+  `main` kill hook (`kill -9 -1`) runs before the sim's (PROTOCOL H.4). Privileged tasks unchanged. The 30 standard task
+  dirs regenerated in place (new DIGESTs; the instructions do not change).
 
 ## Licences
 ManiGuard code: Apache-2.0 (the evaluator modules in the image). ManiGuard-Bench task files: CC BY-NC 4.0 (copied unchanged
@@ -368,5 +396,5 @@ Per-simulator notes (former STANDARD_MODE §16):
 | depth | OmniGibson `depth_linear` |
 | `/kinematics` | numpy model of the articulation (7 arm joints), world frame |
 | proprio columns (2.0 → 2.2) | — → 43 (no 2.0 version) |
-| grading replays | two fresh processes |
+| grading replays | none since 2026-10-17 (graded by the live episode; two fresh processes before) |
 | resume class (STANDARD_MODE §13.1) | `approx` (until measured) |

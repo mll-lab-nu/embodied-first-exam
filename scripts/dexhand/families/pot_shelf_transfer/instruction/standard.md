@@ -4,7 +4,7 @@
 
 The service executes and records every row you submit, and the first failure ends the episode, so check each chunk
 before you send it: a reset starts a new episode from the same start, 20 times at most, and only the last episode is
-graded (see `## Episodes and resets`). Grading replays the recorded episode; there is no trajectory to hand in. Keep
+graded (see `## Episodes and resets`). The service grades the episode it ran; there is no trajectory to hand in. Keep
 working until an episode has succeeded.
 
 ## Robot, scene and control
@@ -38,7 +38,7 @@ Row layout, `wuji` (54): 0-13 the same arm targets; 14-33 the left Wuji fingers 
 (little); 34-53 the right Wuji fingers in the same order (`r_wuji_r_...`). Both hands start open at the same arm pose.
 
 ## Success
-The service evaluates the predicate after every physics step it executes, and grading replays the recorded rows.
+The service evaluates the predicate after every physics step it executes, and that is the graded verdict.
 Success needs both stages, in order:
 1. **Bimanual carry**: for at least 0.5 s in total (250 steps) the pot's base is above z = 0.785 m, neither the worktop
    nor the shelf bears on it, and each hand pushes it upward with at least 0.5 N (sum of the vertical components of
@@ -85,7 +85,7 @@ bimanual carry is counted over the whole episode, and the 2 s released hold must
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
 positions, velocities, actuator efforts, both wrist poses and current targets. The service records every executed
-step and replays the graded episode in two fresh processes. Leave your
+step and judges the graded episode as it ran (that is the verdict; nothing is replayed). Leave your
 controller at `/app/output/gen.py`; no trajectory hand-in is needed.
 
 ```python

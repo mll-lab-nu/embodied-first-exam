@@ -3,7 +3,7 @@ Letter the exemplar with pen strokes, the way a scribe writes it: each stroke of
 coming from the pen (the pressure on the pointed pen and the direction of travel); going over a stroke again
 is fine. Colouring in or filling the letters' shapes, zigzag or serpentine fills (back-and-forth passes across a stroke), and
 contour-offset fills are not allowed and fail the task, even when the sheet matches the picture. The grader checks this on the
-replayed episode with two numbers you can compute yourself; only inked strokes on the main sheet count (the practice sheet is
+live episode with two numbers you can compute yourself; only inked strokes on the main sheet count (the practice sheet is
 free):
 - `path_mm`: the total length of the pen tip's path while it presses on the main sheet with ink (all strokes together, sampled
   at every physics step);

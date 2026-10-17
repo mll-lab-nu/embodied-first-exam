@@ -1,7 +1,9 @@
 """The real environment/sim/server.py of RoboLab and YAMLab + the real eai-standard/2.2 layer, on a fake simulator:
 malformed requests are 400s that execute nothing and leave the episode alive; valid requests still run; the step cap is in
-/spec and ends the episode with reason step_guard."""
-import json, os, socket, subprocess, sys, tempfile, time, urllib.error, urllib.request
+/spec and ends the episode with reason step_guard. Graded by the live episode (board 0151): the start-state check gives up
+as an infrastructure failure before serving (instance_mismatch); the live video's frames are written during the episode
+and a broken camera stops the video, never the episode."""
+import json, os, signal, socket, subprocess, sys, tempfile, time, urllib.error, urllib.request
 ROOT = (sys.argv[1] if len(sys.argv) > 1 else os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))); HERE = os.path.dirname(os.path.abspath(__file__)); LAYER = os.path.join(ROOT, "scripts/eai_standard")
 sys.dont_write_bytecode = True; sys.path.insert(0, LAYER)
 import rcb1
@@ -124,5 +126,57 @@ def clock(bench):
     check("first request" in spec["budget"].get("clock", "") and code == 200 and m["time_s"] <= lag + 0.1 and m["time_left_s"] >= 5400 - lag - 0.2,
           f"{bench} the clock starts at the first request, not with the service: time_s {m.get('time_s')}, time_left_s {m.get('time_left_s')} of 5400 ({lag:.2f} s after it)")
     s.stop()
+def start_check(bench):
+    """FAKE_INSTANCE=mismatch: the service gives up before serving (final.json: gave_up, infra_error 1, instance_mismatch) and
+    answers 409; FAKE_INSTANCE=sha (hash differs, poses within tolerance): served, recorded instance_exact false."""
+    td = tempfile.mkdtemp(prefix=f"inst_{bench}_"); port = free_port(); data = os.path.join(td, "data")
+    e = {"PATH": "/usr/bin:/bin", "RCB_DATA": data, "TEST_PORT": str(port), "RCB_WALL_CLOCK_S": "5400", "PYTHONDONTWRITEBYTECODE": "1",
+         "FAKE_INSTANCE": "mismatch", "RCB_PORT": str(port)}   # the refusal binds RCB_PORT
+    log = open(os.path.join(td, "server.log"), "w")
+    p = subprocess.Popen([sys.executable, os.path.join(HERE, "run_server.py"), os.path.join(ROOT, "scripts", bench, "template/standard/environment/sim/server.py"),
+                          os.path.join(HERE, "stubs", bench), os.path.join(ROOT, "scripts/eai_standard")], env=e, stdout=log, stderr=subprocess.STDOUT, cwd=td)
+    fin, code = {}, None
+    for _ in range(200):
+        try:
+            fin = json.load(open(os.path.join(data, "final.json")))
+            if fin.get("gave_up"): break
+        except Exception:
+            pass
+        time.sleep(0.1)
+    for _ in range(50):
+        try:
+            urllib.request.urlopen(f"http://127.0.0.1:{port}/status", timeout=5); code = 200; break
+        except urllib.error.HTTPError as exc:
+            code = exc.code; break
+        except Exception:
+            time.sleep(0.1)
+    p.kill(); p.wait(); log.close()
+    ev = [json.loads(l) for l in open(os.path.join(data, "episode.jsonl"))] if os.path.exists(os.path.join(data, "episode.jsonl")) else []
+    check(fin.get("gave_up") and fin.get("infra_error") == 1 and fin.get("instance_mismatch") is True and fin.get("finalized") is True
+          and fin.get("success") is False and code == 409 and not any(e.get("ev") == "start" for e in ev),
+          f"{bench} instance mismatch at the start: a give-up as infra before anything is served (final {fin}, /status {code})")
+    s = Srv(bench, {"FAKE_INSTANCE": "sha"}); code, m = s.post("/submit", {"type": "joint_position", "actions": [[0.0] * (8 if bench == "robolab" else 14)]})
+    check(code == 200, f"{bench} instance hash differs but poses match: served ({code})")
+    os.kill(s.p.pid, signal.SIGUSR1); s.p.wait(timeout=60); s.log.close()
+    ep = json.load(open(os.path.join(s.td, "data", "episode.json")))
+    check(ep.get("instance_exact") is False and ep.get("instance_matches") is True, f"{bench} episode.json records the start check ({ep.get('instance_exact')}, {ep.get('instance_matches')})")
+def video(bench, dim, hz):
+    """The live video: frames during the episode (RoboLab: every 3 control steps; YAMLab: only at steps a call rendered),
+    the end state's frame at the dump; a broken camera stops the video and nothing else."""
+    s = Srv(bench); row = [0.0] * dim
+    code, m = s.post("/submit", {"type": "joint_position", "actions": [row] * 60, "dt": 1.0 / hz, "video_fps": 5})
+    vd = os.path.join(s.td, "data", "live_video"); frames = sorted(f for f in os.listdir(vd) if f[:-4].isdigit())
+    steps = [int(f[:-4]) for f in frames]; every = max(1, round(hz / 5))
+    check(code == 200 and len(steps) >= 60 // every and all(b - a >= 1 for a, b in zip(steps, steps[1:])) and steps[0] == 0,
+          f"{bench} live video: {len(steps)} frames over 60 control steps (one per {every}), first at step 0 ({steps[:6]})")
+    os.kill(s.p.pid, signal.SIGUSR1); s.p.wait(timeout=60); s.log.close()
+    check(os.path.exists(os.path.join(vd, "last.jpg")) and os.path.exists(os.path.join(s.td, "data", "episode.json")), f"{bench} the end state's frame is taken at the dump")
+    s = Srv(bench, {"FAKE_VIDEO": "broken"})
+    code, m = s.post("/submit", {"type": "joint_position", "actions": [row] * 10, "dt": 1.0 / hz}); st = s.get("/status")
+    ev = [json.loads(l) for l in open(os.path.join(s.td, "data", "episode.jsonl"))]
+    check(code == 200 and st["control_steps"] == 10 and not st["done"] and any(e.get("ev") == "live_video_stopped" for e in ev),
+          f"{bench} a broken camera stops the video, not the episode ({code}, {st['control_steps']} steps, done {st['done']})")
+    s.stop()
 run("robolab", 8, 8, 15); run("yamlab", 14, 16, 30); clock("robolab"); clock("yamlab")
+start_check("robolab"); start_check("yamlab"); video("robolab", 8, 15); video("yamlab", 14, 30)
 print("server:", "ALL OK" if not bad else f"{bad} FAILED"); sys.exit(1 if bad else 0)

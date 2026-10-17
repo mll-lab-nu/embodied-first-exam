@@ -16,12 +16,15 @@ demonstration of this instance, at least 300). Holding still does not succeed (`
 None.
 
 ## Verification
-`success` = live success ∧ replay success ∧ deterministic (two fresh-process replays of the recorded trajectory agree),
-computed in the sidecar; success is iSpatialGym's own geometric success as `run_isg --mode policy` judges it (the BDDL goal
+`success` = the live episode's success, judged by the sim sidecar at every control step the episode runs; nothing
+replays it (2026-10-17). Success is iSpatialGym's own geometric success as `run_isg --mode policy` judges it (the BDDL goal
 and every measured target within the isg-v2 tolerances x 3, held over the last $settle_steps control steps with the task's objects and the robot at rest: upstream's settle-eval).
-`live_matches_replay`, upstream's symbolic success and the success step are reported apart, and so are the
-crash-recovery fields; `/logs/verifier/replay.mp4`. `infra_error` = 1 (no verdict on the agent) when `final.json` is
-missing, unreadable or not finalized, a replay did not run to its result, or the frozen instance did not rebuild.
+Upstream's symbolic success and the success step are reported apart, and so are the crash-recovery fields; the video
+(`/logs/verifier/live.mp4`, the head camera) is recorded during the episode (a video-only render, `replay.mp4`, only
+when it is missing) and never decides anything. The frozen start
+is checked when the sidecar builds the scene, before the agent is served. `infra_error` = 1 (no verdict on the agent) when
+`final.json` is missing, unreadable or not finalized, the service never ended the episode, it gave up after crashes not
+all inside the agent's calls, or the frozen start did not rebuild (`instance_mismatch`).
 
 ## Details
 | | |
