@@ -1,0 +1,262 @@
+{
+ "arms": {
+  "left": {
+   "pos": [
+    0.0,
+    -0.43,
+    0.12
+   ],
+   "quat": [
+    0.7071067811865476,
+    0.0,
+    0.0,
+    0.7071067811865475
+   ],
+   "yaw_rad": 1.5707963267948966,
+   "pedestal_top_z": 0.12,
+   "model": "ViperX 300s (menagerie aloha.xml arm)",
+   "park_q": [
+    0.0,
+    -1.85,
+    1.55,
+    0.0,
+    0.8,
+    0.0
+   ]
+  },
+  "right": {
+   "pos": [
+    0.6,
+    0.0,
+    0.12
+   ],
+   "quat": [
+    6.123233995736766e-17,
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "yaw_rad": -3.141592653589793,
+   "pedestal_top_z": 0.12,
+   "model": "ViperX 300s (menagerie aloha.xml arm)",
+   "park_q": [
+    0.0,
+    -1.85,
+    1.55,
+    0.0,
+    -0.3,
+    0.0
+   ]
+  }
+ },
+ "parts": {
+  "stand": {
+   "pos": [
+    0.0,
+    0.0,
+    0.2342
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "stand_g000",
+     "source": "/Part/Shape0",
+     "kind": "cylinder",
+     "role": "general"
+    },
+    {
+     "geom": "stand_g001",
+     "source": "/Part/Shape1",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "stand_g002",
+     "source": "/Part/Shape2",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "stand_g003",
+     "source": "/Part/Shape3",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "stand_g004",
+     "source": "/Part/Shape4",
+     "kind": "box",
+     "role": "general"
+    },
+    {
+     "geom": "stand_g005",
+     "source": "/Part/Shape5",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.2199999988079071
+  },
+  "jaw_s1_mount_shade_0": {
+   "pos": [
+    -0.0355,
+    0.0,
+    0.1295
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "jaw_s1_mount_shade_0_g000",
+     "source": "/Part/Shape0",
+     "kind": "box",
+     "role": "general"
+    }
+   ],
+   "mass": 0.0020000000949949026
+  },
+  "shade": {
+   "pos": [
+    0.24,
+    0.0,
+    0.1902
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "shade_socket_stop",
+     "source": "added: socket bottom stop (not in source)",
+     "kind": "cylinder"
+    },
+    {
+     "geom": "shade_shell_*",
+     "source": "/Part/Shape0",
+     "kind": "exact_convex_decomposition",
+     "pieces": 48
+    },
+    {
+     "geom": "shade_key_*",
+     "source": "/Part/Shape1",
+     "kind": "exact_convex_decomposition",
+     "pieces": 4
+    }
+   ],
+   "mass": 0.07999999821186066
+  },
+  "bulb_E12": {
+   "pos": [
+    -0.2,
+    0.0,
+    0.1587
+   ],
+   "quat": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "geoms": [
+    {
+     "geom": "bulb_E12_g000",
+     "source": "/Part/Shape0",
+     "kind": "cylinder",
+     "role": "general"
+    },
+    {
+     "geom": "bulb_E12_g001",
+     "source": "/Part/Shape1",
+     "kind": "cylinder",
+     "role": "general"
+    }
+   ],
+   "mass": 0.02500000037252903
+  }
+ },
+ "inertia": {
+  "stand": {
+   "mass_kg": 0.2199999988079071,
+   "com_m": [
+    -0.006811,
+    0.0,
+    -0.08434
+   ],
+   "principal_kg_m2": [
+    0.0005197455639817922,
+    0.000843432281265689,
+    0.0008689759965720416
+   ],
+   "full_kg_m2": [
+    0.0007874126004778489,
+    0.0008434322812656889,
+    0.0006013089600759849,
+    0.0,
+    0.00014775598979089346,
+    0.0
+   ],
+   "density_kg_m3": 426.31836519333535
+  },
+  "shade": {
+   "mass_kg": 0.07999999821186066,
+   "com_m": [
+    -0.000194,
+    0.0,
+    -0.004577
+   ],
+   "principal_kg_m2": [
+    0.00011577625008620451,
+    0.0001225341996212001,
+    0.00012304381142759792
+   ],
+   "full_kg_m2": [
+    0.00012244509156204448,
+    0.00012304381142759792,
+    0.00011586535814536012,
+    -3.3823461181644556e-21,
+    -7.708745168499344e-07,
+    -6.181749964068491e-22
+   ],
+   "density_kg_m3": 1631.961140038216
+  },
+  "bulb_E12": {
+   "mass_kg": 0.02500000037252903,
+   "com_m": [
+    0.0,
+    0.0,
+    -0.021832
+   ],
+   "principal_kg_m2": [
+    3.6972414610382904e-06,
+    5.8774393267832475e-06,
+    5.8774393267832475e-06
+   ],
+   "full_kg_m2": [
+    5.8774393267832475e-06,
+    5.8774393267832475e-06,
+    3.6972414610382904e-06,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "density_kg_m3": 823.534512720619
+  }
+ },
+ "posts": [
+  "shade_post_0",
+  "shade_post_1",
+  "shade_post_2"
+ ]
+}

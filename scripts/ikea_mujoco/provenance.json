@@ -1,0 +1,242 @@
+{
+ "note": "Upstream provenance of the IKEA MuJoCo scenes, moved out of the image (PROTOCOL v2.0 H.2: nothing the agent can read points at upstream material). Removed from images/ikea-mujoco/scenes/<task>/ on 2026-10-15; the second batch (stenerik, stegesund, kyrre, uppsta) on 2026-10-16.",
+ "tasks": {
+  "burvik": {
+   "task.json:source": {
+    "manual": "AA-2445102-1",
+    "url": "https://www.ikea.com/us/en/assembly_instructions/burvik-side-table-white__AA-2545102-1-100.pdf",
+    "url_document_id": "AA-2545102-1-100",
+    "assets": "astra-assembly robobench/suites/manual_assembly/assets/burvik (fingerprint f8e84e8e6838a4898d33)",
+    "grader": "mechanics/frames/grader.py endpoint_report (via grader/burvik.py)",
+    "mechanics": "mechanics/frames/controller.py operation()/turn(), legacy/spec.py ops/acceptance"
+   },
+   "docstrings": {
+    "success.py": [
+     "Port of the source endpoint grader (astra-assembly robobench/suites/manual_assembly/grader/burvik.py\n-> mechanics/frames/grader.py endpoint_report) with the acceptance gates of legacy/spec.py:"
+    ],
+    "scene.py": [
+     "from the astra-assembly"
+    ],
+    "mechanism.py": [
+     "Source: mechanics/frames/controller.py operation(): once"
+    ]
+   }
+  },
+  "eket": {
+   "task.json:source": {
+    "repo": "astra-assembly cb7cc30",
+    "product": "EKET 70332124 (EKET_70332124_35x25x35)",
+    "manual": "AA-1914763-5 steps 1-4",
+    "assets": "robobench/suites/manual_assembly/assets/eket/{top,bottom,side_a,side_b,back}.usd (fingerprint b0e840fe9822cda735e6)",
+    "grader": "robobench/suites/manual_assembly/grader/eket.py + mechanics/eket/{observation,scope,frozen/spec}.py",
+    "driver": "diagnostics/eket/operations.py (entry offsets, latch joints)"
+   },
+   "docstrings": {
+    "success.py": [
+     "(port of the source grader robobench/suites/manual_assembly/grader/eket.py)."
+    ],
+    "eket_ops.py": [
+     "Source: astra-assembly robobench/suites/manual_assembly/mechanics/eket/{frozen/spec.py, observation.py,\nscope.py} and diagnostics/eket/operations.py.  Every"
+    ]
+   }
+  },
+  "gladom": {
+   "task.json:source": {
+    "manual": "AA-1832218-3",
+    "url": "https://www.ikea.com/dk/da/assembly_instructions/gladom-bakkebord-orange__AA-1832218-3-2.pdf",
+    "assets": "astra-assembly cb7cc30 robobench/suites/manual_assembly/assets/gladom (manifest fingerprint 24b49407c3a491033540)",
+    "mechanics": "mechanics/frames/{spec0f,controller,state_ops}.py (physics source 0f1e719)",
+    "grader": "mechanics/frames/grader.py endpoint_report + controller acceptance gates",
+    "robot_spec": "RoboProbe experiments/astra_assembly/task_specs.py TASKS[gladom]"
+   },
+   "docstrings": {
+    "success.py": [
+     "Port of the source endpoint grader (robobench/suites/manual_assembly/mechanics/frames/grader.py\nendpoint_report) for the robot scene:"
+    ],
+    "gladom_mechanism.py": [
+     "GLADOM retention mechanism (source: mechanics/frames/controller.py operation() + state_ops.fixed())."
+    ]
+   },
+   "layout.json:source_usd": {
+    "/part_info/frame_a": "assets/gladom/frame_a.usda",
+    "/part_info/frame_b": "assets/gladom/frame_b.usda",
+    "/part_info/ring": "assets/gladom/ring.usda",
+    "/part_info/tray": "assets/gladom/tray.usda",
+    "/part_info/screw_long": "assets/gladom/screw_long.usda",
+    "/part_info/screw_bottom": "assets/gladom/screw_bottom.usda",
+    "/part_info/screw_ring_l": "assets/gladom/screw_ring_l.usda",
+    "/part_info/screw_ring_r": "assets/gladom/screw_ring_r.usda"
+   }
+  },
+  "ikea365": {
+   "task.json:source": {
+    "geometry": "astra-assembly cb7cc30 robobench/suites/manual_assembly/assets/ikea365/{member_a,member_b,same_screw,bowl}.usda, accepted version c5af013e (member_b counterbore-rim colliders Shape_014..021 disabled, user-approved 2026-09-27)",
+    "manual": "AA-2568481-2 (IKEA 365+ serving stand 206.023.21), steps 1-2 complete assembly, physical turn, step 3 bowl use",
+    "grader": "robobench/suites/manual_assembly/grader/ikea365.py -> mechanics/fasteners/grading.py (endpoint_report + strict_support_report)",
+    "mechanics": "mechanics/fasteners/scene.py + diagnostics/fasteners/controller.py,run.py (operation gates, post-seat fixed-joint retention)"
+   },
+   "layout.json:meta.*.source": {
+    "member_a": "/src/astra/robobench/suites/manual_assembly/assets/ikea365/member_a.usda",
+    "member_b": "/src/astra/robobench/suites/manual_assembly/assets/ikea365/member_b.usda",
+    "same_screw": "/src/astra/robobench/suites/manual_assembly/assets/ikea365/same_screw.usda",
+    "bowl": "/src/astra/robobench/suites/manual_assembly/assets/ikea365/bowl.usda",
+    "screwdriver": "tools/screwdrivers.py cross_driver"
+   },
+   "docstrings": {
+    "mechanism.py": [
+     "Source: astra-assembly mechanics/fasteners (scene.py, f27_math.py) + diagnostics/fasteners\n(controller.py contact_operation/transport/retention, run.py operation dispatch + Ledger).\n"
+    ],
+    "success.py": [
+     "Port of the source grader grader/ikea365.py = mechanics/fasteners/grading.py:\n  check_success = endpoint_report(...)['success'] and strict_support_report(...)['verified']\n"
+    ]
+   }
+  },
+  "lack": {
+   "task.json:source": {
+    "geometry": "astra-assembly cb7cc30 robobench/suites/manual_assembly/assets/lack/{table,leg}.usd (fingerprint ef6a63e1a744f1a9): 0.55 x 0.55 x 0.049 m slab with four preinstalled Factory M16 studs, four 0.049 m square x 0.40 m legs with an M16 nut in a 32 mm bore",
+    "manual": "IKEA LACK 30449908, AA-207276-4, four-leg default (LackCfg num_legs=4)",
+    "mechanics": "mechanics/lack/engine.py + criteria.py, assembly/scenes/ikea_table_assembly.py: thread contact is physical SDF (nut/stud); a leg that is seated on a vacant stud and descending slower than seat_speed is locked to the tabletop with a pre-authored fixed joint at its current relative pose (latched until reset, one leg per stud)",
+    "grader": "grader/lack.py endpoint_report: all legs welded to distinct studs, leg origin height above slab top in [0, 0.012] m, lateral offset to the assigned stud <= 0.020 m, leg axis within 10 deg of the tabletop axis",
+    "masses": "tabletop 1.0 kg, leg 0.12 kg (manifest simulation_masses_kg)"
+   },
+   "docstrings": {
+    "lack_mechanism.py": [
+     "Port of astra-assembly mechanics/lack/{engine,criteria}.py (post_step -> assign_connections ->\n_reconcile_welds). Every"
+    ],
+    "success.py": [
+     "Port of the source endpoint grader (astra-assembly robobench/suites/manual_assembly/grader/lack.py,\nendpoint_report): success"
+    ]
+   }
+  },
+  "svallet": {
+   "task.json:source": {
+    "commit": "astra-assembly cb7cc30 (pressfits mechanics pinned 198adbbc)",
+    "manual": "AA-2140039-1 (https://www.ikea.com/us/en/assembly_instructions/svallet-work-lamp-with-led-bulb__AA-2140039-1_pub.pdf)",
+    "geometry": "assets/svallet/{stand,shade,bulb_E12,jaw_s1_mount_shade_0}.usda: parameterized reconstruction, not exact IKEA CAD",
+    "material": "uncalibrated diagnostic mass/friction/compliance",
+    "scope": "Unpowered mechanical steps1-2, shade mount and E12 bulb; cable assessment required",
+    "operations": "mechanics/pressfits/specs/svallet.json operations; acceptance gates from diagnostics/pressfits/operation_svallet.py",
+    "grader": "grader/svallet.py -> mechanics/pressfits/endpoint.py endpoint_report",
+    "cable": {
+     "enabled": false,
+     "decision": "User decision 2026-09-27: remove the prewired cable behind this option, off by default; the pinned cable model in svallet.json is kept and cable.enabled=true builds it unchanged",
+     "when_disabled": "The 50 cable_* bodies (cable_socket_00-09, cable_supply_00-38, cable_plug) and the 51 cable links are not built; the cable gates (endpoint cable_connected, audit cable_verified, cable_tether_load pull test) are recorded as skipped, not passed",
+     "scope_deviation": "User-directed deviation from manual AA-2140039-1; the manual inventory entry prewired_cable: 1 is unchanged"
+    }
+   },
+   "docstrings": {
+    "success.py": [
+     "Port of the source grader grader/svallet.py -> mechanics/pressfits/endpoint.py endpoint_report:"
+    ],
+    "svallet_mechanism.py": [
+     "Source: diagnostics/pressfits/operation_svallet.py (operation acceptance -> e.connect(op)) and\nmechanics/pressfits/state_ops.py connect(): a fixed joint"
+    ]
+   }
+  },
+  "variera": {
+   "task.json:source": {
+    "geometry": "untrusted/assembly27/11-ikea-scene/variera_latest/scene.usda (4.6 mm round shelf holes, receivers flush with frame tops, modified slotted screw heads)",
+    "manual": "AA-741461-4 (VARIERA shelf insert), printed step 1; stacked shelves (steps 2-3) excluded",
+    "grader": "astra-assembly robobench/suites/manual_assembly/grader/variera.py (geometry gates) + latest-export private evaluator description (four distinct receivers, relative screw rotation with pitch-consistent descent, head seated at shelf holes, held 0.5 s)",
+    "mechanics": "latest export: all parts free, no furniture-to-world welds, no success welds; threads are geometric SDF contact"
+   },
+   "docstrings": {
+    "success.py": [
+     "Ported from the source VARIERA grader (robobench/suites/manual_assembly/grader/variera.py:\nscrew"
+    ]
+   }
+  },
+  "vesken": {
+   "task.json:source": {
+    "repo": "astra-assembly cb7cc30",
+    "manual": "AA-1842283-5",
+    "scope": "Body steps1-8;23operations,24bodyparts. Never full-manual completion.",
+    "geometry": "assets/vesken/*.usda (manifest fingerprint 79b10c765d25b90dac28), parameterized reconstruction, not exact IKEA CAD",
+    "connector_model": "Rigid cam/shoulder against force-driven prismatic spring jaw; uncalibrated compliant snap surrogate",
+    "mechanics": "mechanics/pressfits/{scene,state_ops}.py",
+    "gates": "diagnostics/pressfits/operation_vesken.py",
+    "grader": "grader/vesken.py + mechanics/pressfits/endpoint.py"
+   },
+   "docstrings": {
+    "success.py": [
+     "Port of the source endpoint (grader/vesken.py -> mechanics/pressfits/endpoint.py endpoint_report):"
+    ],
+    "vesken_mechanism.py": [
+     "Source: mechanics/pressfits/{scene,state_ops}.py (Connections/<op> FixedJoint host->part, enabled by\nconnect() with the CURRENT relative pose) and diagnostics/pressfits/operation_vesken.py (the\nacceptance gates that decide when connect() is called)."
+    ]
+   },
+   "layout.json:source_usd": {
+    "/parts/tray_0": "assets/vesken/tray_0.usda",
+    "/parts/foot_0": "assets/vesken/foot_0.usda",
+    "/parts/foot_1": "assets/vesken/foot_1.usda",
+    "/parts/foot_2": "assets/vesken/foot_2.usda",
+    "/parts/foot_3": "assets/vesken/foot_3.usda",
+    "/parts/column_0_0": "assets/vesken/column_0_0.usda",
+    "/parts/column_0_1": "assets/vesken/column_0_1.usda",
+    "/parts/column_0_2": "assets/vesken/column_0_2.usda",
+    "/parts/column_0_3": "assets/vesken/column_0_3.usda",
+    "/parts/tray_1": "assets/vesken/tray_1.usda",
+    "/parts/column_1_0": "assets/vesken/column_1_0.usda",
+    "/parts/column_1_1": "assets/vesken/column_1_1.usda",
+    "/parts/column_1_2": "assets/vesken/column_1_2.usda",
+    "/parts/column_1_3": "assets/vesken/column_1_3.usda",
+    "/parts/tray_2": "assets/vesken/tray_2.usda",
+    "/parts/column_2_0": "assets/vesken/column_2_0.usda",
+    "/parts/column_2_1": "assets/vesken/column_2_1.usda",
+    "/parts/column_2_2": "assets/vesken/column_2_2.usda",
+    "/parts/column_2_3": "assets/vesken/column_2_3.usda",
+    "/parts/tray_3": "assets/vesken/tray_3.usda",
+    "/parts/cap_0": "assets/vesken/cap_0.usda",
+    "/parts/cap_1": "assets/vesken/cap_1.usda",
+    "/parts/cap_2": "assets/vesken/cap_2.usda",
+    "/parts/cap_3": "assets/vesken/cap_3.usda"
+   }
+  },
+  "stenerik": {
+   "task.json:source": {
+    "definition": "astra-assembly robobench/suites/manual_assembly/mechanics/fasteners/assets/stenerik.json (f27d60d)",
+    "geometry": "robobench/suites/manual_assembly/assets/stenerik/*.usda",
+    "grader": "robobench/suites/manual_assembly/mechanics/fasteners/grading.py endpoint_report + strict_support_report",
+    "gates": "robobench/suites/manual_assembly/diagnostics/fasteners/controller.py contact_operation / release_pad",
+    "manual": "AA-2372559-2"
+   },
+   "docstrings": {
+    "stenerik_mech.py": [
+     "Ported from astra-assembly robobench/suites/manual_assembly/diagnostics/fasteners/controller.py\n(contact_operation, release_pad) and mechanics/fasteners/state_ops.py (connect). The source replaces"
+    ],
+    "success.py": [
+     "Port of the source grader (astra-assembly robobench/suites/manual_assembly/mechanics/fasteners/\ngrading.py, StenerikGrader.check_success = endpoint_report AND strict_support):"
+    ]
+   }
+  },
+  "kyrre": {
+   "task.json:source": {
+    "repo": "astra-assembly cb7cc30",
+    "manual": "AA-2118871-4",
+    "scope": "Two manual steps, all13parts,12operations; final turn/support is separate validation",
+    "geometry": "robobench/suites/manual_assembly/assets/kyrre/*.usda (parameterized reconstruction, not IKEA CAD)",
+    "operations": "mechanics/pressfits/specs/kyrre.json",
+    "gates": "diagnostics/pressfits/operation_kyrre.py (fd_speed_rule_2026-09-27)",
+    "endpoint": "mechanics/pressfits/endpoint.py + kyrre_bearing.py; final turn-over + gravity support from diagnostics/pressfits/common.py support_probe"
+   },
+   "docstrings": {
+    "kyrre_mechanism.py": [
+     "Source: astra-assembly diagnostics/pressfits/operation_kyrre.py (pinned b718 gates) and\nmechanics/pressfits/state_ops.connect. A weld"
+    ],
+    "success.py": [
+     "Ported from the source endpoint (mechanics/pressfits/endpoint.py endpoint_report + kyrre_bearing.evaluate)\nand the final turn-over/gravity-support probe (diagnostics/pressfits/common.py support_probe):"
+    ]
+   }
+  },
+  "stegesund": {
+   "task.json:source": {
+    "manual": "IKEA STEGESUND roll stand (AA-2652783-1)"
+   }
+  },
+  "uppsta": {
+   "task.json:source": {
+    "manual": "IKEA UPPSTA toy hammering block (AA-2300462-4)"
+   }
+  }
+ }
+}
