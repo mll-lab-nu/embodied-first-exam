@@ -362,9 +362,15 @@ class Service:
         player's own problem; API and infrastructure failures are Harbor agent errors, rerun, not handled here. Before
         the start the session end is a no-show (Service.no_show_at_collect, core rule 5, core 0.2.7). True = the side
         lost."""
-        if len(self.cfg.side_list()) != 1 or not self.in_play():
+        # robot_coding_bench (board 0146, 2026-10-16): a built-in seat (RO_BUILTIN_SEATS, core/builtin_seat.py) never ends
+        # a session, so a duel against one is a single side here: the HTTP side that leaves after the start loses
+        # "abandoned", as against a scripted opponent (before: "collected", an unfinished match, not a valid trial).
+        from .builtin_seat import parse as builtin_parse
+        builtin = set(builtin_parse(os.environ.get("RO_BUILTIN_SEATS")))
+        played = [s for s in self.cfg.seats if s not in builtin]
+        if not played or len({self.cfg.side_of(s) for s in played}) != 1 or not self.in_play():
             return False
-        self.lose(self.cfg.seats[0], "abandoned")
+        self.lose(played[0], "abandoned")
         return True
 
     def end(self, reason, forfeiting=None):
