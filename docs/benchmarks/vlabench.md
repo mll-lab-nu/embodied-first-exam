@@ -155,3 +155,63 @@ Final-state hashes of some references (live = replay 1 = replay 2):
 - **eai-standard/2.1 or 2.2.** The standard twins serve 2.1 with main's HumanoidBench layer (byte copies); moving to the
   shared 2.2 layer (`scripts/eai_standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
   `/kinematics`, a per-call wall-clock bound) and its CI identity check.
+
+## Easy set
+
+The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
+run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
+for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
+failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
+**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
+`solved`): kept under its name and reported apart from the main table.
+
+Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
+`codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
+Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
+`claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
+
+15 of 36 bases are in the easy set; by directory: 51 easy, 0 hard, 21 unverified, 0 pending.
+
+| base | easy set | privileged | standard |
+|---|---|---|---|
+| `vlabench-add-condiment-i00` | yes | easy: Astra, Opus, DeepSeek V4.1 Flash | easy: Astra, Opus |
+| `vlabench-book-rearrange-i00` |  | easy: Luna | unverified |
+| `vlabench-find-unseen-object-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-friction-qa-i00` |  | easy: Luna | unverified |
+| `vlabench-hammer-nail-and-hang-picture-i00` |  | easy: Luna | unverified |
+| `vlabench-heat-food-i00` | yes | easy: Astra, Opus, Sol 6.1 | easy: Opus |
+| `vlabench-insert-bloom-flower-i00` |  | unverified | easy: Luna |
+| `vlabench-insert-flower-i00` |  | easy: Luna | unverified |
+| `vlabench-magnetism-qa-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-play-math-game-i00` |  | easy: Luna | unverified |
+| `vlabench-put-box-on-painting-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-reflection-qa-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-billiards-common-sense-i00` |  | easy: Luna | unverified |
+| `vlabench-select-billiards-i00` |  | easy: Luna | unverified |
+| `vlabench-select-billiards-spatial-i00` |  | easy: Luna | unverified |
+| `vlabench-select-book-spatial-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-chemistry-tube-common-sense-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-chemistry-tube-i00` |  | easy: Luna | unverified |
+| `vlabench-select-chemistry-tube-semantic-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-chemistry-tube-spatial-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-drink-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-fruit-common-sense-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-fruit-i00` |  | easy: Luna | unverified |
+| `vlabench-select-mahjong-i00` |  | easy: Luna | unverified |
+| `vlabench-select-mahjong-semantic-i00` |  | easy: Luna | unverified |
+| `vlabench-select-mahjong-spatial-i00` |  | easy: Luna | unverified |
+| `vlabench-select-nth-largest-poker-i00` |  | easy: Luna | unverified |
+| `vlabench-select-painting-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-poker-i00` |  | easy: Luna | unverified |
+| `vlabench-select-poker-semantic-i00` |  | easy: Luna | unverified |
+| `vlabench-select-poker-spatial-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-specific-type-book-i00` |  | easy: Luna | unverified |
+| `vlabench-select-toy-i00` | yes | easy: Luna | easy: Luna |
+| `vlabench-select-unique-type-mahjong-i00` |  | easy: Luna | unverified |
+| `vlabench-take-out-cool-drink-i00` |  | easy: Luna | unverified |
+| `vlabench-texas-holdem-i00` |  | easy: Luna | unverified |
+
+Judgment calls: `vlabench-select-drink-i00`: solved in the first test evaluation (2026-10-02); repo-wide changes only
+since.
