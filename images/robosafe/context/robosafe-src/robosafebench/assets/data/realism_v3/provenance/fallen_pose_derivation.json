@@ -1,0 +1,64 @@
+{
+  "underlying_source_commit": "b5bf3128ffb2435129ea2a85e46206e081f388f1",
+  "input_source_pack_sha256": "51e45c1455c3064dbcbc1f935a5a8ec390782c21700a076f4b8eeefd26bd401c",
+  "input_source_manifest_sha256": "f61c78366b4939c3463ebac341d0946b9ba16b84d1bd5c526ddd406bc538d283",
+  "derived_pack_sha256": "90732b9d3d61a02651b95b78c2cb00e6facab88678dc8425c04ab0d5367f01ff",
+  "fitting_script_sha256": "f7a1693fde5bea7afe8189cb6049ebc8a6232d73ed93b7802aa8de72d5ed5a46",
+  "all_diffuse_files_byte_identical": true,
+  "canonicalized_png_encoding_only": [
+    "a4_down_prone_0.png",
+    "a4_down_prone_1.png",
+    "a4_down_prone_2.png",
+    "a4_down_prone_3.png",
+    "a4_down_prone_4.png",
+    "a4_down_prone_5.png",
+    "a4_down_prone_6.png",
+    "a4_down_side_0.png",
+    "a4_down_side_1.png",
+    "a4_down_side_2.png",
+    "a4_down_side_3.png",
+    "a4_down_side_4.png",
+    "a4_down_side_5.png",
+    "a4_down_side_6.png",
+    "a5_down_side_0.png",
+    "a5_down_side_1.png",
+    "a5_down_side_2.png",
+    "a5_down_side_3.png",
+    "a5_down_side_4.png",
+    "a5_down_side_5.png",
+    "a5_down_side_6.png"
+  ],
+  "physics_modified": false,
+  "calibration_reports": {
+    "a1_down_prone_support_fit.json": "afae8fe4eea87e3d4e041804d3239040d14a59ad1bd17951481a3b35b07b33f7",
+    "a1_down_side_support_fit.json": "f286d062b481692f6445e8695f2f95fbeb702d13093bbc258e324b1e68cb64e6",
+    "a2_down_prone_support_fit.json": "3124b9fcd69eaf22f9810cc63515b9ea6099a1ce1bd759dbcaf3ea4cb00c31a7",
+    "a2_down_side_support_fit.json": "a840356f774d92bc4251ca8e9158c6b1e4b5384b44aeff99a656d1cc971e0fc5",
+    "a3_down_prone_support_fit.json": "368418320d01fd1e83f2ad5897fc8e0104c18d956219b3dcbd3ecf85946096ce",
+    "a3_down_side_support_fit.json": "b58d354a3a288413b0e5fe395a368ff135dbd940eb95b568be2e3f6982e5ad4c",
+    "a4_down_prone_support_fit.json": "6ac913372e69df7813d2de2ce9eefee560a49cbc69a6ab076949ff20fa3a6926",
+    "a4_down_side_support_fit.json": "159c8ae3073241f4f93ec70d72aae7cdf54b9abacd3b8e7a6f5c0a0312032879",
+    "a5_down_prone_support_fit.json": "62a97e96b485b31d00037b67c350b8a9c356fddbd714c9b8c0fbd1cd84dcac08",
+    "a5_down_side_support_fit.json": "885ebf591b7526e3d16b350283c892a2fd8d917825d3e7bc8259fe25d491da9c",
+    "a6_down_prone_support_fit.json": "eb8889392596938818ff0d30d8ebab21f1d593821258b371b03e3ab0a28aa871",
+    "a6_down_side_support_fit.json": "ba2422de964cab076782b6cb06ed4364ffc3aeaf4bd53610f8326aa8f3a18651",
+    "target_prone.json": "c4aa5b59822c5fea7caabfd2ca55a66dd6e22663a60f71414e717b4901997373",
+    "target_side.json": "31964c800c86e79d6a0c7ba7c282960ba3cdb91dc0f9b89f92ac8384987692aa"
+  },
+  "limits": [
+    "Garment seams and angular hems remain visible.",
+    "Coarse native anatomical primitives and detailed visual surfaces have different precision.",
+    "Host mesh checks and camera review do not establish installed-image admission."
+  ],
+  "audit_metadata_repairs": {
+    "a5_down_prone": {
+      "reason": "Alpha-cut left an unreferenced hair vertex in the original probe set; select 16 distinct points per region from identical original weighted clouds intersected with truly retained faces.",
+      "previous_report_sha256": "87ba4d0347a0fadf86b51a8c7024175bf3fdd9d6998b9c11d9764f8964fab2f4",
+      "new_report_sha256": "62a97e96b485b31d00037b67c350b8a9c356fddbd714c9b8c0fbd1cd84dcac08",
+      "head_probe_count": 16,
+      "trunk_probe_count": 16,
+      "weighted_clouds_identical": true,
+      "runtime_mesh_data_changed": false
+    }
+  }
+}

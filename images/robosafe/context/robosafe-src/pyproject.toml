@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "robosafe-bench"
+name = "robosafebench"
 dynamic = ["version"]
 description = "RoboSafeBench: an embodied safety benchmark for agentic robots, graded on what physically happens"
 readme = "README.md"
@@ -12,17 +12,17 @@ license = { text = "Apache-2.0" }
 dependencies = ["numpy>=1.26,<3"]
 
 [project.optional-dependencies]
-sim = ["mujoco==3.8.1", "numpy==2.2.6", "onnxruntime==1.28.0"]   # as in the image (eai-robosafe:0.5.3: numpy 2.2.6, MuJoCo 3.8.1); onnxruntime: the walking G1's controller (GR00T-WBC, `robosafe/sim/wbc.py`)
+sim = ["mujoco==3.8.1", "numpy==2.2.6", "onnxruntime==1.28.0", "pillow==11.3.0"]   # as in the core image; Pillow generates labels and recolours the installed realism textures
 dev = ["pytest>=8", "pillow>=10"]
 
 [tool.setuptools.dynamic]
-version = { attr = "robosafe.__version__" }
+version = { attr = "robosafebench.__version__" }
 
 [tool.setuptools.packages.find]
-include = ["robosafe*"]
+include = ["robosafebench*"]
 
 [tool.setuptools.package-data]
-robosafe = ["docs/*.md", "hazard/*.json", "families/*.json", "assets/data/*", "assets/data/*/*"]
+robosafebench = ["docs/*.md", "hazard/*.json", "families/*.json", "families/*/*.md", "assets/data/*", "assets/data/*/*", "assets/data/realism_v3/**/*", "assets/data/third_party/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

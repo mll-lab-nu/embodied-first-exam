@@ -1,0 +1,504 @@
+{
+  "plastic": {
+    "file": "plastic.png",
+    "tint": true,
+    "texrepeat": [
+      6,
+      6
+    ],
+    "specular": 0.35,
+    "shininess": 0.45,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "drawn for this set from noise",
+      "license": "CC0 1.0",
+      "author": "RoboSafeBench realism pilot"
+    },
+    "note": "moulded plastic: fine grain and faint mottling"
+  },
+  "brushed_metal": {
+    "file": "brushed_metal.png",
+    "tint": true,
+    "texrepeat": [
+      4,
+      4
+    ],
+    "specular": 0.85,
+    "shininess": 0.8,
+    "reflectance": 0.08,
+    "source": {
+      "provider": "drawn for this set from noise",
+      "license": "CC0 1.0",
+      "author": "RoboSafeBench realism pilot"
+    },
+    "note": "brushed steel: streaks along one axis"
+  },
+  "painted": {
+    "file": "painted.png",
+    "tint": true,
+    "texrepeat": [
+      3,
+      3
+    ],
+    "specular": 0.25,
+    "shininess": 0.3,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "drawn for this set from noise",
+      "license": "CC0 1.0",
+      "author": "RoboSafeBench realism pilot"
+    },
+    "note": "painted wood or metal: a little orange peel"
+  },
+  "rubber": {
+    "file": "rubber.png",
+    "tint": true,
+    "texrepeat": [
+      10,
+      10
+    ],
+    "specular": 0.05,
+    "shininess": 0.1,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "drawn for this set from noise",
+      "license": "CC0 1.0",
+      "author": "RoboSafeBench realism pilot"
+    },
+    "note": "rubber with flecks"
+  },
+  "ceramic": {
+    "file": "ceramic.png",
+    "tint": true,
+    "texrepeat": [
+      4,
+      4
+    ],
+    "specular": 0.6,
+    "shininess": 0.7,
+    "reflectance": 0.03,
+    "source": {
+      "provider": "drawn for this set from noise",
+      "license": "CC0 1.0",
+      "author": "RoboSafeBench realism pilot"
+    },
+    "note": "glazed ceramic"
+  },
+  "fabric": {
+    "file": "fabric.png",
+    "tint": true,
+    "texrepeat": [
+      8,
+      8
+    ],
+    "specular": 0.03,
+    "shininess": 0.05,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Cotton Jersey",
+      "url": "https://polyhaven.com/a/cotton_jersey",
+      "license": "CC0 1.0",
+      "author": "colormass, Rico Cilliers"
+    },
+    "note": ""
+  },
+  "fabric_coarse": {
+    "file": "fabric_coarse.png",
+    "tint": true,
+    "texrepeat": [
+      5,
+      5
+    ],
+    "specular": 0.03,
+    "shininess": 0.05,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Caban",
+      "url": "https://polyhaven.com/a/caban",
+      "license": "CC0 1.0",
+      "author": "colormass, Rico Cilliers"
+    },
+    "note": ""
+  },
+  "leather_t": {
+    "file": "leather_t.png",
+    "tint": true,
+    "texrepeat": [
+      4,
+      4
+    ],
+    "specular": 0.3,
+    "shininess": 0.4,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Leather White",
+      "url": "https://polyhaven.com/a/leather_white",
+      "license": "CC0 1.0",
+      "author": "Rob Tuytel"
+    },
+    "note": ""
+  },
+  "wax": {
+    "file": "wax.png",
+    "tint": true,
+    "texrepeat": [
+      6,
+      6
+    ],
+    "specular": 0.2,
+    "shininess": 0.5,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "drawn for this set from noise",
+      "license": "CC0 1.0",
+      "author": "RoboSafeBench realism pilot"
+    },
+    "note": "candle wax"
+  },
+  "paper": {
+    "file": "paper.png",
+    "tint": true,
+    "texrepeat": [
+      6,
+      6
+    ],
+    "specular": 0.05,
+    "shininess": 0.1,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "drawn for this set from noise",
+      "license": "CC0 1.0",
+      "author": "RoboSafeBench realism pilot"
+    },
+    "note": "paper fibres"
+  },
+  "cardboard": {
+    "file": "cardboard.png",
+    "tint": true,
+    "texrepeat": [
+      5,
+      5
+    ],
+    "specular": 0.05,
+    "shininess": 0.1,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "drawn for this set from noise",
+      "license": "CC0 1.0",
+      "author": "RoboSafeBench realism pilot"
+    },
+    "note": "brown corrugated board",
+    "cpu_color_refinement": {
+      "source_sha256": "cb5a4885a5ea4ebb161ae8232c9a5491983bbbd2a6df399489c31f1c8ed6fbd4",
+      "converted_sha256": "2099f04e65decbaa74392d3b292bdd413c00cf50d187c127151006fc4956dad9",
+      "method": "Neutral near-white fibres; caller RGB retained; reduced fibre contrast."
+    }
+  },
+  "wood_light": {
+    "file": "wood_light.png",
+    "tint": false,
+    "texrepeat": [
+      3,
+      3
+    ],
+    "specular": 0.15,
+    "shininess": 0.3,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Oak Veneer 01",
+      "url": "https://polyhaven.com/a/oak_veneer_01",
+      "license": "CC0 1.0",
+      "author": "Jenelle van Heerden"
+    },
+    "note": ""
+  },
+  "wood_dark": {
+    "file": "wood_dark.png",
+    "tint": false,
+    "texrepeat": [
+      3,
+      3
+    ],
+    "specular": 0.15,
+    "shininess": 0.3,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "American Walnut Veneer",
+      "url": "https://polyhaven.com/a/american_walnut_veneer",
+      "license": "CC0 1.0",
+      "author": "Jenelle van Heerden"
+    },
+    "note": ""
+  },
+  "plywood": {
+    "file": "plywood.png",
+    "tint": false,
+    "texrepeat": [
+      3,
+      3
+    ],
+    "specular": 0.15,
+    "shininess": 0.3,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Plywood",
+      "url": "https://polyhaven.com/a/plywood",
+      "license": "CC0 1.0",
+      "author": "Rob Tuytel"
+    },
+    "note": ""
+  },
+  "leather": {
+    "file": "leather.png",
+    "tint": false,
+    "texrepeat": [
+      4,
+      4
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Brown Leather",
+      "url": "https://polyhaven.com/a/brown_leather",
+      "license": "CC0 1.0",
+      "author": "Rob Tuytel"
+    },
+    "note": ""
+  },
+  "marble": {
+    "file": "marble.png",
+    "tint": false,
+    "texrepeat": [
+      1.5,
+      1.5
+    ],
+    "specular": 0.5,
+    "shininess": 0.6,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Marble 01",
+      "url": "https://polyhaven.com/a/marble_01",
+      "license": "CC0 1.0",
+      "author": "Rob Tuytel"
+    },
+    "note": ""
+  },
+  "granite": {
+    "file": "granite.png",
+    "tint": false,
+    "texrepeat": [
+      1.5,
+      1.5
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Granite Tile",
+      "url": "https://polyhaven.com/a/granite_tile",
+      "license": "CC0 1.0",
+      "author": "Charlotte Baglioni"
+    },
+    "note": ""
+  },
+  "terracotta": {
+    "file": "terracotta.png",
+    "tint": false,
+    "texrepeat": [
+      6,
+      6
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Clay Plaster",
+      "url": "https://polyhaven.com/a/clay_plaster",
+      "license": "CC0 1.0",
+      "author": "Amal Kumar"
+    },
+    "note": ""
+  },
+  "soil": {
+    "file": "soil.png",
+    "tint": false,
+    "texrepeat": [
+      8,
+      8
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Brown Mud",
+      "url": "https://polyhaven.com/a/brown_mud",
+      "license": "CC0 1.0",
+      "author": "Rob Tuytel"
+    },
+    "note": ""
+  },
+  "floor_laminate": {
+    "file": "floor_laminate.png",
+    "tint": false,
+    "texrepeat": [
+      0.6,
+      0.6
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Laminate Floor 02",
+      "url": "https://polyhaven.com/a/laminate_floor_02",
+      "license": "CC0 1.0",
+      "author": "Dario Barresi, Charlotte Baglioni"
+    },
+    "note": ""
+  },
+  "wall_plaster": {
+    "file": "wall_plaster.png",
+    "tint": false,
+    "texrepeat": [
+      0.5,
+      0.5
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Beige Wall 001",
+      "url": "https://polyhaven.com/a/beige_wall_001",
+      "license": "CC0 1.0",
+      "author": "Dimitrios Savva, Rico Cilliers"
+    },
+    "note": ""
+  },
+  "wall_paint": {
+    "file": "wall_paint.png",
+    "tint": false,
+    "texrepeat": [
+      0.5,
+      0.5
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Painted Plaster Wall",
+      "url": "https://polyhaven.com/a/painted_plaster_wall",
+      "license": "CC0 1.0",
+      "author": "Amal Kumar"
+    },
+    "note": ""
+  },
+  "wall_tiles": {
+    "file": "wall_tiles.png",
+    "tint": false,
+    "texrepeat": [
+      0.6,
+      0.6
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Interior Tiles",
+      "url": "https://polyhaven.com/a/interior_tiles",
+      "license": "CC0 1.0",
+      "author": "Charlotte Baglioni"
+    },
+    "note": ""
+  },
+  "carpet": {
+    "file": "carpet.png",
+    "tint": false,
+    "texrepeat": [
+      1.0,
+      1.0
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Dirty Carpet",
+      "url": "https://polyhaven.com/a/dirty_carpet",
+      "license": "CC0 1.0",
+      "author": "Rohit Seervi"
+    },
+    "note": ""
+  },
+  "denim": {
+    "file": "denim.png",
+    "tint": false,
+    "texrepeat": [
+      6,
+      6
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Denim Fabric",
+      "url": "https://polyhaven.com/a/denim_fabric",
+      "license": "CC0 1.0",
+      "author": "Rob Tuytel"
+    },
+    "note": ""
+  },
+  "table_wood": {
+    "file": "table_wood.png",
+    "tint": false,
+    "texrepeat": [
+      1,
+      1
+    ],
+    "specular": 0.15,
+    "shininess": 0.3,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Wood Table 001",
+      "url": "https://polyhaven.com/a/wood_table_001",
+      "license": "CC0 1.0",
+      "author": "Dimitrios Savva, Rico Cilliers"
+    },
+    "note": ""
+  },
+  "floor_concrete": {
+    "file": "floor_concrete.png",
+    "tint": false,
+    "texrepeat": [
+      0.5,
+      0.5
+    ],
+    "specular": 0.1,
+    "shininess": 0.15,
+    "reflectance": 0.0,
+    "source": {
+      "provider": "Poly Haven",
+      "name": "Concrete Floor Painted",
+      "url": "https://polyhaven.com/a/concrete_floor_painted",
+      "license": "CC0 1.0",
+      "author": "Rob Tuytel"
+    },
+    "note": ""
+  }
+}

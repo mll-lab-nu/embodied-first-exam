@@ -1,0 +1,1261 @@
+{
+ "kind": "toddler",
+ "mode": "mesh",
+ "align": "points",
+ "variants": {
+  "t1_sitting_floor": {
+   "base": "t1",
+   "group": "light",
+   "pose": "sitting_floor",
+   "desc": "toddler, light skin",
+   "geoms": [
+    {
+     "tris": 3643,
+     "obj": "t1_sitting_floor_0.obj",
+     "png": "t1_sitting_floor_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 88,
+     "obj": "t1_sitting_floor_1.obj",
+     "png": "t1_sitting_floor_1.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 172,
+     "obj": "t1_sitting_floor_2.obj",
+     "png": "t1_sitting_floor_2.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "eyes",
+     "rebaked": false
+    },
+    {
+     "tris": 2226,
+     "obj": "t1_sitting_floor_3.obj",
+     "png": "t1_sitting_floor_3.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "trousers",
+     "rebaked": false
+    },
+    {
+     "tris": 3262,
+     "obj": "t1_sitting_floor_4.obj",
+     "png": "t1_sitting_floor_4.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "shirt",
+     "rebaked": false
+    },
+    {
+     "tris": 23384,
+     "obj": "t1_sitting_floor_5.obj",
+     "png": "t1_sitting_floor_5.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "skin",
+     "rebaked": false
+    }
+   ],
+   "points": {
+    "head": [
+     2.5640849443675506e-09,
+     -0.04252728074789043,
+     0.6512759327888489
+    ],
+    "pelvis": [
+     0.0,
+     -0.010261457413434963,
+     0.32359692454338074
+    ],
+    "torso": [
+     0.0,
+     -0.007221060572192043,
+     0.48277801275253296
+    ],
+    "upper_arm_left": [
+     0.06854356452822685,
+     -0.02871543634682891,
+     0.46960796415805817
+    ],
+    "forearm_left": [
+     0.07230618968605995,
+     -0.06600587815046308,
+     0.3733531981706619
+    ],
+    "hand_left": [
+     0.07767679914832115,
+     -0.10481882467865943,
+     0.30704040825366974
+    ],
+    "thigh_left": [
+     0.061079273000359535,
+     -0.08511075936257838,
+     0.32307571172714233
+    ],
+    "shin_left": [
+     0.10062094777822495,
+     -0.22646318376064298,
+     0.30745938420295715
+    ],
+    "foot_left": [
+     0.1204889602959156,
+     -0.3011908233165741,
+     0.30346862971782684
+    ],
+    "arm_left": [
+     0.07280436158180237,
+     -0.0546665387228131,
+     0.42269450426101685
+    ],
+    "leg_left": [
+     0.061079273000359535,
+     -0.08511075936257838,
+     0.32307571172714233
+    ],
+    "upper_arm_right": [
+     -0.06854356452822685,
+     -0.02871543634682891,
+     0.46960796415805817
+    ],
+    "forearm_right": [
+     -0.07230618968605995,
+     -0.06600587815046308,
+     0.3733531981706619
+    ],
+    "hand_right": [
+     -0.07767679914832115,
+     -0.10481882467865943,
+     0.30704040825366974
+    ],
+    "thigh_right": [
+     -0.061079273000359535,
+     -0.08511075936257838,
+     0.32307571172714233
+    ],
+    "shin_right": [
+     -0.10062094777822495,
+     -0.22646318376064298,
+     0.30745938420295715
+    ],
+    "foot_right": [
+     -0.1204889602959156,
+     -0.3011908233165741,
+     0.30346862971782684
+    ],
+    "arm_right": [
+     -0.07280436158180237,
+     -0.0546665387228131,
+     0.42269450426101685
+    ],
+    "leg_right": [
+     -0.061079273000359535,
+     -0.08511075936257838,
+     0.32307571172714233
+    ]
+   },
+   "raw_triangles": 32775,
+   "mh": {
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo"
+    ]
+   },
+   "bbox_own": [
+    [
+     -0.14204198122024536,
+     -0.33175987005233765,
+     0.25119033455848694
+    ],
+    [
+     0.14204198122024536,
+     0.04672190174460413,
+     0.7143633961677551
+    ]
+   ]
+  },
+  "t1_standing": {
+   "base": "t1",
+   "group": "light",
+   "pose": "standing",
+   "desc": "toddler, light skin",
+   "geoms": [
+    {
+     "tris": 3643,
+     "obj": "t1_standing_0.obj",
+     "png": "t1_standing_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 88,
+     "obj": "t1_standing_1.obj",
+     "png": "t1_standing_1.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 172,
+     "obj": "t1_standing_2.obj",
+     "png": "t1_standing_2.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "eyes",
+     "rebaked": false
+    },
+    {
+     "tris": 2226,
+     "obj": "t1_standing_3.obj",
+     "png": "t1_standing_3.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "trousers",
+     "rebaked": false
+    },
+    {
+     "tris": 3262,
+     "obj": "t1_standing_4.obj",
+     "png": "t1_standing_4.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "shirt",
+     "rebaked": false
+    },
+    {
+     "tris": 23384,
+     "obj": "t1_standing_5.obj",
+     "png": "t1_standing_5.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "skin",
+     "rebaked": false
+    }
+   ],
+   "points": {
+    "head": [
+     2.5640849443675506e-09,
+     -0.006965375039726456,
+     0.6553376019001007
+    ],
+    "pelvis": [
+     0.0,
+     -0.010261457413434963,
+     0.32359692454338074
+    ],
+    "torso": [
+     0.0,
+     0.004546917742118269,
+     0.48356571793556213
+    ],
+    "upper_arm_left": [
+     0.06911855563521385,
+     0.0029503188561648417,
+     0.4702843874692917
+    ],
+    "forearm_left": [
+     0.0740472637116909,
+     -0.020305702462792372,
+     0.3733265697956085
+    ],
+    "hand_left": [
+     0.08029099553823471,
+     -0.06016204133629797,
+     0.3077128231525421
+    ],
+    "thigh_left": [
+     0.05048550106585026,
+     -0.015024747699499115,
+     0.24690819531679153
+    ],
+    "shin_left": [
+     0.06823661923408508,
+     -0.009255669079720967,
+     0.10048538446426392
+    ],
+    "foot_left": [
+     0.07710900902748108,
+     -0.010535853914916514,
+     0.02357923984527588
+    ],
+    "arm_left": [
+     0.07397044450044632,
+     -0.023731258930638408,
+     0.4238404482603073
+    ],
+    "leg_left": [
+     0.05048550106585026,
+     -0.015024747699499115,
+     0.24690819531679153
+    ],
+    "upper_arm_right": [
+     -0.06911855563521385,
+     0.0029503188561648417,
+     0.4702843874692917
+    ],
+    "forearm_right": [
+     -0.0740472637116909,
+     -0.020305702462792372,
+     0.3733265697956085
+    ],
+    "hand_right": [
+     -0.08029099553823471,
+     -0.06016204133629797,
+     0.3077128231525421
+    ],
+    "thigh_right": [
+     -0.05048550106585026,
+     -0.015024747699499115,
+     0.24690819531679153
+    ],
+    "shin_right": [
+     -0.06823661923408508,
+     -0.009255669079720967,
+     0.10048538446426392
+    ],
+    "foot_right": [
+     -0.07710900902748108,
+     -0.010535853914916514,
+     0.02357923984527588
+    ],
+    "arm_right": [
+     -0.07397044450044632,
+     -0.023731258930638408,
+     0.4238404482603073
+    ],
+    "leg_right": [
+     -0.05048550106585026,
+     -0.015024747699499115,
+     0.24690819531679153
+    ]
+   },
+   "raw_triangles": 32775,
+   "mh": {
+    "skin": "young_caucasian_female/young_caucasian_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "female_casualsuit02/female_casualsuit02.mhclo"
+    ]
+   },
+   "bbox_own": [
+    [
+     -0.09973070025444031,
+     -0.10635901987552641,
+     4.308462209627037e-08
+    ],
+    [
+     0.09973070025444031,
+     0.05993349477648739,
+     0.7191854119300842
+    ]
+   ]
+  },
+  "t2_sitting_floor": {
+   "base": "t2",
+   "group": "dark",
+   "pose": "sitting_floor",
+   "desc": "toddler, dark skin",
+   "geoms": [
+    {
+     "tris": 3643,
+     "obj": "t2_sitting_floor_0.obj",
+     "png": "t2_sitting_floor_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 88,
+     "obj": "t2_sitting_floor_1.obj",
+     "png": "t2_sitting_floor_1.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 1616,
+     "obj": "t2_sitting_floor_2.obj",
+     "png": "t2_sitting_floor_2.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "trousers",
+     "rebaked": false
+    },
+    {
+     "tris": 2504,
+     "obj": "t2_sitting_floor_3.obj",
+     "png": "t2_sitting_floor_3.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "shirt",
+     "rebaked": false
+    },
+    {
+     "tris": 172,
+     "obj": "t2_sitting_floor_4.obj",
+     "png": "t2_sitting_floor_4.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "eyes",
+     "rebaked": false
+    },
+    {
+     "tris": 20344,
+     "obj": "t2_sitting_floor_5.obj",
+     "png": "t2_sitting_floor_5.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "skin",
+     "rebaked": false
+    }
+   ],
+   "points": {
+    "head": [
+     3.300553719221e-10,
+     -0.04097938910126682,
+     0.6582144796848297
+    ],
+    "pelvis": [
+     0.0,
+     -0.010375382378697375,
+     0.3265949785709381
+    ],
+    "torso": [
+     0.0,
+     -0.007377308560535282,
+     0.48711469769477844
+    ],
+    "upper_arm_left": [
+     0.06950409337878227,
+     -0.029135724529623958,
+     0.4739583730697632
+    ],
+    "forearm_left": [
+     0.07355048879981041,
+     -0.0674374997615814,
+     0.3762146681547165
+    ],
+    "hand_left": [
+     0.07895665988326073,
+     -0.10723846778273581,
+     0.30859415233135223
+    ],
+    "thigh_left": [
+     0.06261649169027805,
+     -0.0842235768213868,
+     0.3261150121688843
+    ],
+    "shin_left": [
+     0.10509461164474487,
+     -0.22643510252237317,
+     0.3101603090763092
+    ],
+    "foot_left": [
+     0.12689511477947235,
+     -0.3028620630502701,
+     0.30599942803382874
+    ],
+    "arm_left": [
+     0.07405649870634079,
+     -0.05591041408479211,
+     0.4258258789777756
+    ],
+    "leg_left": [
+     0.06261649169027805,
+     -0.0842235768213868,
+     0.3261150121688843
+    ],
+    "upper_arm_right": [
+     -0.06950409337878227,
+     -0.029135724529623958,
+     0.4739583730697632
+    ],
+    "forearm_right": [
+     -0.07355048879981041,
+     -0.0674374997615814,
+     0.3762146681547165
+    ],
+    "hand_right": [
+     -0.07895665988326073,
+     -0.10723846778273581,
+     0.30859415233135223
+    ],
+    "thigh_right": [
+     -0.06261649169027805,
+     -0.0842235768213868,
+     0.3261150121688843
+    ],
+    "shin_right": [
+     -0.10509461164474487,
+     -0.22643510252237317,
+     0.3101603090763092
+    ],
+    "foot_right": [
+     -0.12689511477947235,
+     -0.3028620630502701,
+     0.30599942803382874
+    ],
+    "arm_right": [
+     -0.07405649870634079,
+     -0.05591041408479211,
+     0.4258258789777756
+    ],
+    "leg_right": [
+     -0.06261649169027805,
+     -0.0842235768213868,
+     0.3261150121688843
+    ]
+   },
+   "raw_triangles": 28367,
+   "mh": {
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "male_casualsuit02/male_casualsuit02.mhclo"
+    ]
+   },
+   "bbox_own": [
+    [
+     -0.15564700961112976,
+     -0.3336935341358185,
+     0.2522471249103546
+    ],
+    [
+     0.15632489323616028,
+     0.05285329371690752,
+     0.7205719947814941
+    ]
+   ]
+  },
+  "t2_standing": {
+   "base": "t2",
+   "group": "dark",
+   "pose": "standing",
+   "desc": "toddler, dark skin",
+   "geoms": [
+    {
+     "tris": 3643,
+     "obj": "t2_standing_0.obj",
+     "png": "t2_standing_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 88,
+     "obj": "t2_standing_1.obj",
+     "png": "t2_standing_1.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 1616,
+     "obj": "t2_standing_2.obj",
+     "png": "t2_standing_2.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "trousers",
+     "rebaked": false
+    },
+    {
+     "tris": 2504,
+     "obj": "t2_standing_3.obj",
+     "png": "t2_standing_3.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "shirt",
+     "rebaked": false
+    },
+    {
+     "tris": 172,
+     "obj": "t2_standing_4.obj",
+     "png": "t2_standing_4.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "eyes",
+     "rebaked": false
+    },
+    {
+     "tris": 20344,
+     "obj": "t2_standing_5.obj",
+     "png": "t2_standing_5.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "skin",
+     "rebaked": false
+    }
+   ],
+   "points": {
+    "head": [
+     3.300553719221e-10,
+     -0.004961251281201799,
+     0.6620202362537384
+    ],
+    "pelvis": [
+     0.0,
+     -0.010375382378697375,
+     0.3265949785709381
+    ],
+    "torso": [
+     0.0,
+     0.004501350922510057,
+     0.4879090487957001
+    ],
+    "upper_arm_left": [
+     0.07002130895853043,
+     0.0027759275399148755,
+     0.4746069759130478
+    ],
+    "forearm_left": [
+     0.07505426555871964,
+     -0.021407959982752776,
+     0.3761158138513565
+    ],
+    "hand_left": [
+     0.081153254956007,
+     -0.062265895307064036,
+     0.3091881722211838
+    ],
+    "thigh_left": [
+     0.05082348547875881,
+     -0.015172848477959617,
+     0.2505812793970108
+    ],
+    "shin_left": [
+     0.06876827403903008,
+     -0.009251869749277823,
+     0.10250688344240189
+    ],
+    "foot_left": [
+     0.07792357355356216,
+     -0.01054345117881894,
+     0.02346146758645773
+    ],
+    "arm_left": [
+     0.07504305988550186,
+     -0.02474076719954607,
+     0.4269419014453888
+    ],
+    "leg_left": [
+     0.05082348547875881,
+     -0.015172848477959617,
+     0.2505812793970108
+    ],
+    "upper_arm_right": [
+     -0.07002130895853043,
+     0.0027759275399148755,
+     0.4746069759130478
+    ],
+    "forearm_right": [
+     -0.07505426555871964,
+     -0.021407959982752776,
+     0.3761158138513565
+    ],
+    "hand_right": [
+     -0.081153254956007,
+     -0.062265895307064036,
+     0.3091881722211838
+    ],
+    "thigh_right": [
+     -0.05082348547875881,
+     -0.015172848477959617,
+     0.2505812793970108
+    ],
+    "shin_right": [
+     -0.06876827403903008,
+     -0.009251869749277823,
+     0.10250688344240189
+    ],
+    "foot_right": [
+     -0.07792357355356216,
+     -0.01054345117881894,
+     0.02346146758645773
+    ],
+    "arm_right": [
+     -0.07504305988550186,
+     -0.02474076719954607,
+     0.4269419014453888
+    ],
+    "leg_right": [
+     -0.05082348547875881,
+     -0.015172848477959617,
+     0.2505812793970108
+    ]
+   },
+   "raw_triangles": 28367,
+   "mh": {
+    "skin": "young_african_female/young_african_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "male_casualsuit02/male_casualsuit02.mhclo"
+    ]
+   },
+   "bbox_own": [
+    [
+     -0.11430122703313828,
+     -0.10895206034183501,
+     2.094055063092367e-08
+    ],
+    [
+     0.11493287980556488,
+     0.06306011974811555,
+     0.7252917289733887
+    ]
+   ]
+  },
+  "t3_sitting_floor": {
+   "base": "t3",
+   "group": "medium",
+   "pose": "sitting_floor",
+   "desc": "toddler, medium skin",
+   "geoms": [
+    {
+     "tris": 3643,
+     "obj": "t3_sitting_floor_0.obj",
+     "png": "t3_sitting_floor_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 88,
+     "obj": "t3_sitting_floor_1.obj",
+     "png": "t3_sitting_floor_1.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 1982,
+     "obj": "t3_sitting_floor_2.obj",
+     "png": "t3_sitting_floor_2.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "trousers",
+     "rebaked": false
+    },
+    {
+     "tris": 5186,
+     "obj": "t3_sitting_floor_3.obj",
+     "png": "t3_sitting_floor_3.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "shirt",
+     "rebaked": false
+    },
+    {
+     "tris": 172,
+     "obj": "t3_sitting_floor_4.obj",
+     "png": "t3_sitting_floor_4.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "eyes",
+     "rebaked": false
+    },
+    {
+     "tris": 21784,
+     "obj": "t3_sitting_floor_5.obj",
+     "png": "t3_sitting_floor_5.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "skin",
+     "rebaked": false
+    }
+   ],
+   "points": {
+    "head": [
+     -1.2610797961443154e-09,
+     -0.041002241894602734,
+     0.6483428776264191
+    ],
+    "pelvis": [
+     0.0,
+     -0.010155126452445965,
+     0.31976521015167236
+    ],
+    "torso": [
+     0.0,
+     -0.007080595707520813,
+     0.4777117371559143
+    ],
+    "upper_arm_left": [
+     0.06825942546129227,
+     -0.028353247791528674,
+     0.4645085632801056
+    ],
+    "forearm_left": [
+     0.07191126421093941,
+     -0.06533499807119367,
+     0.3692546486854553
+    ],
+    "hand_left": [
+     0.07695754989981651,
+     -0.10387203097343443,
+     0.30353178083896637
+    ],
+    "thigh_left": [
+     0.06057112291455269,
+     -0.0842434838414192,
+     0.31926050782203674
+    ],
+    "shin_left": [
+     0.09984852746129036,
+     -0.22414761781692502,
+     0.30372561514377594
+    ],
+    "foot_left": [
+     0.11957095190882683,
+     -0.29801227152347565,
+     0.29972603917121887
+    ],
+    "arm_left": [
+     0.07243914529681206,
+     -0.0541017912328243,
+     0.4179838001728058
+    ],
+    "leg_left": [
+     0.06057112291455269,
+     -0.0842434838414192,
+     0.31926050782203674
+    ],
+    "upper_arm_right": [
+     -0.06825942546129227,
+     -0.028353247791528674,
+     0.4645085632801056
+    ],
+    "forearm_right": [
+     -0.07191126421093941,
+     -0.06533499807119367,
+     0.3692546486854553
+    ],
+    "hand_right": [
+     -0.07695754989981651,
+     -0.10387203097343443,
+     0.30353178083896637
+    ],
+    "thigh_right": [
+     -0.06057112291455269,
+     -0.0842434838414192,
+     0.31926050782203674
+    ],
+    "shin_right": [
+     -0.09984852746129036,
+     -0.22414761781692502,
+     0.30372561514377594
+    ],
+    "foot_right": [
+     -0.11957095190882683,
+     -0.29801227152347565,
+     0.29972603917121887
+    ],
+    "arm_right": [
+     -0.07243914529681206,
+     -0.0541017912328243,
+     0.4179838001728058
+    ],
+    "leg_right": [
+     -0.06057112291455269,
+     -0.0842434838414192,
+     0.31926050782203674
+    ]
+   },
+   "raw_triangles": 32855,
+   "mh": {
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "male_casualsuit06/male_casualsuit06.mhclo"
+    ]
+   },
+   "bbox_own": [
+    [
+     -0.14708104729652405,
+     -0.32780081033706665,
+     0.24807342886924744
+    ],
+    [
+     0.14945025742053986,
+     0.0572786331176758,
+     0.7074031233787537
+    ]
+   ]
+  },
+  "t3_standing": {
+   "base": "t3",
+   "group": "medium",
+   "pose": "standing",
+   "desc": "toddler, medium skin",
+   "geoms": [
+    {
+     "tris": 3643,
+     "obj": "t3_standing_0.obj",
+     "png": "t3_standing_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 88,
+     "obj": "t3_standing_1.obj",
+     "png": "t3_standing_1.png",
+     "tex_size": [
+      512,
+      512
+     ],
+     "role": "hair",
+     "rebaked": false
+    },
+    {
+     "tris": 1982,
+     "obj": "t3_standing_2.obj",
+     "png": "t3_standing_2.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "trousers",
+     "rebaked": false
+    },
+    {
+     "tris": 5186,
+     "obj": "t3_standing_3.obj",
+     "png": "t3_standing_3.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "shirt",
+     "rebaked": false
+    },
+    {
+     "tris": 172,
+     "obj": "t3_standing_4.obj",
+     "png": "t3_standing_4.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "eyes",
+     "rebaked": false
+    },
+    {
+     "tris": 21784,
+     "obj": "t3_standing_5.obj",
+     "png": "t3_standing_5.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "skin",
+     "rebaked": false
+    }
+   ],
+   "points": {
+    "head": [
+     -1.2610797961443154e-09,
+     -0.00525935715995725,
+     0.6521837115287781
+    ],
+    "pelvis": [
+     0.0,
+     -0.010155126452445965,
+     0.31976521015167236
+    ],
+    "torso": [
+     0.0,
+     0.004584895679727226,
+     0.47849223017692566
+    ],
+    "upper_arm_left": [
+     0.06881362572312355,
+     0.0029378806939348865,
+     0.46517214179039
+    ],
+    "forearm_left": [
+     0.07356824353337288,
+     -0.020184102468192553,
+     0.3692108541727066
+    ],
+    "hand_left": [
+     0.07942620292305946,
+     -0.05975765734910963,
+     0.30417484045028687
+    ],
+    "thigh_left": [
+     0.05001746490597725,
+     -0.014883764088153823,
+     0.2438397854566574
+    ],
+    "shin_left": [
+     0.0675881989300251,
+     -0.00910044508054852,
+     0.09887426346540451
+    ],
+    "foot_left": [
+     0.0763665996491909,
+     -0.01031275140121579,
+     0.02283203974366188
+    ],
+    "arm_left": [
+     0.07354192435741425,
+     -0.023534558364190137,
+     0.41910843551158905
+    ],
+    "leg_left": [
+     0.05001746490597725,
+     -0.014883764088153823,
+     0.2438397854566574
+    ],
+    "upper_arm_right": [
+     -0.06881362572312355,
+     0.0029378806939348865,
+     0.46517214179039
+    ],
+    "forearm_right": [
+     -0.07356824353337288,
+     -0.020184102468192553,
+     0.3692108541727066
+    ],
+    "hand_right": [
+     -0.07942620292305946,
+     -0.05975765734910963,
+     0.30417484045028687
+    ],
+    "thigh_right": [
+     -0.05001746490597725,
+     -0.014883764088153823,
+     0.2438397854566574
+    ],
+    "shin_right": [
+     -0.0675881989300251,
+     -0.00910044508054852,
+     0.09887426346540451
+    ],
+    "foot_right": [
+     -0.0763665996491909,
+     -0.01031275140121579,
+     0.02283203974366188
+    ],
+    "arm_right": [
+     -0.07354192435741425,
+     -0.023534558364190137,
+     0.41910843551158905
+    ],
+    "leg_right": [
+     -0.05001746490597725,
+     -0.014883764088153823,
+     0.2438397854566574
+    ]
+   },
+   "raw_triangles": 32855,
+   "mh": {
+    "skin": "young_asian_female/young_asian_female.mhmat",
+    "hair": "short01/short01.mhclo",
+    "clothes": [
+     "male_casualsuit06/male_casualsuit06.mhclo"
+    ]
+   },
+   "bbox_own": [
+    [
+     -0.11082211136817932,
+     -0.10600134730339048,
+     2.4251097134437305e-08
+    ],
+    [
+     0.11285490542650223,
+     0.05965506285429005,
+     0.7122328877449036
+    ]
+   ]
+  }
+ },
+ "poses": {
+  "standing": "standing",
+  "sitting": "sitting_floor"
+ },
+ "tint": {
+  "skin": "head",
+  "hair": "hair",
+  "shirt": "torso_shape",
+  "trousers": null
+ },
+ "keep": [],
+ "source": {
+  "provider": "MakeHuman system assets via MPFB2 (generated here)",
+  "name": "MakeHuman CC0 human",
+  "url": "https://static.makehumancommunity.org/assets/assetpacks/makehuman_system_assets.html",
+  "license": "CC0 1.0",
+  "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "author": "MakeHuman community (system assets); generated and posed for this set",
+  "attribution": "Human figures generated with MakeHuman/MPFB2 from the CC0 makehuman_system_assets pack (CC0; credit not required)"
+ },
+ "original_files": {
+  "t1_sitting_floor.glb": "55d4e0cb0cd639534634f3f928f874e62605720938aa168d195606c12d7479ad",
+  "t1_standing.glb": "eeccf78f2c6480c7de8ecec6c396664c38d031d3c3c0593e23c40e9655811fe9",
+  "t2_sitting_floor.glb": "81537013eee21e1740907ce4c7bc7a1f94d202981a7adca0c4711d370cde2359",
+  "t2_standing.glb": "f6952c799457e793f1e0d7965adf3139bec8ffa39eec69099fbc28832f199805",
+  "t3_sitting_floor.glb": "d14ad7f85d3b2a7ecf74ffaf0f08af5fa9ad53f6352142f9c7abb637b456a290",
+  "t3_standing.glb": "9bef60cb8113c9d335680ccda4e03545e5e39a0aee2cd68e274dc310ebc988ff"
+ },
+ "converted_files": {
+  "t1_sitting_floor_0.obj": "81e8a2277f22bf6897f54f85a91f413fc32d1b525fb0e5294bb796369aa4303e",
+  "t1_sitting_floor_0.png": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd",
+  "t1_sitting_floor_1.obj": "78413d0087006fa39267537d5514f4fd46d27e4c0fd3687f841fc533e9ea87fa",
+  "t1_sitting_floor_1.png": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64",
+  "t1_sitting_floor_2.obj": "36b659c2789b308e5f322e36edf0602d8f7507e7c6730cfe4ed01540d90b80d4",
+  "t1_sitting_floor_2.png": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72",
+  "t1_sitting_floor_3.obj": "9dee7e04397289010542fb1ad629922fde79c5f72eeb08a4efa3dec6e7c88b3a",
+  "t1_sitting_floor_3.png": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521",
+  "t1_sitting_floor_4.obj": "8e4beb51e65c9b8281ac254b5d02222a98c6e77d54fc06196764e139f8db1472",
+  "t1_sitting_floor_4.png": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521",
+  "t1_sitting_floor_5.obj": "69c0d4591c0c9f18c91ee0fcff5ac23eff89df42e9d781b07896d4c28b2559db",
+  "t1_sitting_floor_5.png": "8fa1d5766d63bd1ce17da0186441cbd0bb17da083d8d1e093bc73b87aebb5a38",
+  "t1_standing_0.obj": "4a509c03f5df859c491e8fdf7623db8f0164b76ca22ffaf59120894482da61f9",
+  "t1_standing_0.png": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd",
+  "t1_standing_1.obj": "5ed9f18d2416cee2a62955f0206ca4f3cb2aace83e6c3e1997a1dfb24b8ad1c7",
+  "t1_standing_1.png": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64",
+  "t1_standing_2.obj": "3c0c9241e87dfd0217d40d5b2f42010eaa9b5091edeff65dd07ada0e344ed64e",
+  "t1_standing_2.png": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72",
+  "t1_standing_3.obj": "342fb97cebe7a1c2ab6e27d2b20cec0aeda8876a97ac1387928eaa237eccd5c7",
+  "t1_standing_3.png": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521",
+  "t1_standing_4.obj": "cad185b6b96d38fae4263d6b014737a54c59956a5d49450ca450aadee4a36472",
+  "t1_standing_4.png": "7d70a03ede58c0dd0ffa5c6f2e7b818e6c33834e21a10fb5471bd20af122e521",
+  "t1_standing_5.obj": "84a47e9472b62ad0546f27c5fde86572c42dbc61ddc3ec6f05b45b43aaafa98e",
+  "t1_standing_5.png": "8fa1d5766d63bd1ce17da0186441cbd0bb17da083d8d1e093bc73b87aebb5a38",
+  "t2_sitting_floor_0.obj": "48d1d789b74011c6d4afa87a4552790b787f1df11cf57f63222b27c20f6326ec",
+  "t2_sitting_floor_0.png": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd",
+  "t2_sitting_floor_1.obj": "32a6a14d7b636dbf74b229392fdcf0bc22c23c09f05080abebad8b60e1627794",
+  "t2_sitting_floor_1.png": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64",
+  "t2_sitting_floor_2.obj": "6dbfd0b798b5ee99e1901199a622e8b7a5bf334d4e25b5104147d3b9f6d1e67f",
+  "t2_sitting_floor_2.png": "0a37de0dc666a569bd95a58aac46514811c1ec1a777cc3e5cd3f84bde5b98df1",
+  "t2_sitting_floor_3.obj": "70fb5cc8ad9e74db749370301da3d8d9d017d13a2dca64bdeff6f90565ffd5fa",
+  "t2_sitting_floor_3.png": "0a37de0dc666a569bd95a58aac46514811c1ec1a777cc3e5cd3f84bde5b98df1",
+  "t2_sitting_floor_4.obj": "0e70ab37d991310f8d97d3b678fc2278aae2d51cbba850dfc9debfebcbc7428e",
+  "t2_sitting_floor_4.png": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72",
+  "t2_sitting_floor_5.obj": "4da523e248ae0ba3d5c3e93a8c3d4fced0f5fe18d84c77c8643ee667f643347b",
+  "t2_sitting_floor_5.png": "2e128f732c9c1c64e0fc4349f1e65f1f697a1538bae65c8678b97d907b31e329",
+  "t2_standing_0.obj": "29310434bf5f0dc81c329f35faff5b708d5dc9eeb78b157567df82a8dbfe6cd2",
+  "t2_standing_0.png": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd",
+  "t2_standing_1.obj": "4806246dda3ab6b982636584dc58f8bb1cc962c50c54bf820c4a4c261122aa01",
+  "t2_standing_1.png": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64",
+  "t2_standing_2.obj": "8fd8d2e4d49797a6ee3dfa0052faf77cf502b79ea175bb0773b28a0ef012e741",
+  "t2_standing_2.png": "0a37de0dc666a569bd95a58aac46514811c1ec1a777cc3e5cd3f84bde5b98df1",
+  "t2_standing_3.obj": "2ca4a0d46b27125bc5df4225c85b8cb5eaad42b717c3cfbf4587cc7ae64dfe8b",
+  "t2_standing_3.png": "0a37de0dc666a569bd95a58aac46514811c1ec1a777cc3e5cd3f84bde5b98df1",
+  "t2_standing_4.obj": "bfa134f35309db0060d8b8c739f79c06c32b10a02d69dc111884f654810c2116",
+  "t2_standing_4.png": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72",
+  "t2_standing_5.obj": "55bd9fdd19ec60cd533f609cfcfa77f7483ce6204a2745747392be0d85638d81",
+  "t2_standing_5.png": "2e128f732c9c1c64e0fc4349f1e65f1f697a1538bae65c8678b97d907b31e329",
+  "t3_sitting_floor_0.obj": "bd7a8dc8d5b184122bb174ec607406ff6658ada2c960ba6e7cb2fe61340d4199",
+  "t3_sitting_floor_0.png": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd",
+  "t3_sitting_floor_1.obj": "f3ca0ca1ff2d8dba74cba217a30fc36911ca8b586124f529d8e6a80c557f2bd0",
+  "t3_sitting_floor_1.png": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64",
+  "t3_sitting_floor_2.obj": "c38b01a0f79563be27b939a386f89b8bf50415a4f3e2b5d543ad1fe2164dd7bc",
+  "t3_sitting_floor_2.png": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca",
+  "t3_sitting_floor_3.obj": "e5a196c30dffed66679533386683f4222bffba79e1010200224110c9120bda9d",
+  "t3_sitting_floor_3.png": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca",
+  "t3_sitting_floor_4.obj": "af39662982e6a413f79c5b2f3233827aeecec0aa9529e8aa8a20046b1881c386",
+  "t3_sitting_floor_4.png": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72",
+  "t3_sitting_floor_5.obj": "ee4f703f774b04782d151a263ba77c8d9da3f0fd55c36440410d14d6cd21d486",
+  "t3_sitting_floor_5.png": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4",
+  "t3_standing_0.obj": "ffba48e190f40cc4d330ef2f59e8ba5ce0360810a3e4dba787ce831901014a25",
+  "t3_standing_0.png": "0b3664bdd25e3cbd593d0271994c7fed6a212ab76e4fa52392468230a0f686fd",
+  "t3_standing_1.obj": "bcb0962a4aa9b31bfb8fa2b691efb0816e08f0c7280c8850461016039bcbc603",
+  "t3_standing_1.png": "ac5cd6563ff47be7e0f177b732caa435f252775dfd825b77273c03c17b8a0f64",
+  "t3_standing_2.obj": "5305f12cd01b348c96c3b9588a4c29133d3ab2441d27e25ba2ab8a54d75c2881",
+  "t3_standing_2.png": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca",
+  "t3_standing_3.obj": "88e2ef348c1a2fd7ff5cac30609bf1e70d3a2bc2c448a266d8778d75d48708d0",
+  "t3_standing_3.png": "8bc11ca85b2b459be84153af5f3d6b0ca0d574972a6b885f2e583733ba75efca",
+  "t3_standing_4.obj": "87648273b4d9d1631f60424733a8f05ce226f2b174632e2cd1de62f0c9cd35a9",
+  "t3_standing_4.png": "5ac98bd72bc4ac049cfe22ffe270b4bebeb9da2e760005549c9ea3ed74510b72",
+  "t3_standing_5.obj": "80d64312ce898899e369ca295e7ddc8f8e46d1e36d4ecdb08d24012accc7d5a2",
+  "t3_standing_5.png": "bb4914df3e8ccc85b8419f568e46ee24e272955b0a4689af1f65887ab5128aa4"
+ },
+ "cpu_v3": {
+  "preserve_authored_uvs": true,
+  "lossy_rebake": false,
+  "collision_unchanged": true,
+  "hand_cut_covered_by_cuff": false
+ }
+}

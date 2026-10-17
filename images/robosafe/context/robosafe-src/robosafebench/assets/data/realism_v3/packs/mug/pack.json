@@ -1,0 +1,85 @@
+{
+ "kind": "mug",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 10000,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": true,
+     "material": {
+      "specular": "0.5",
+      "shininess": "0.6"
+     }
+    }
+   ],
+   "raw_triangles": 16644,
+   "after_bbox": [
+    [
+     -0.0421,
+     -0.04,
+     0.0
+    ],
+    [
+     0.0664,
+     0.0401,
+     0.0951
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.04111,
+     -0.04111,
+     0.0
+    ],
+    [
+     0.074495,
+     0.04111,
+     0.095127
+    ]
+   ],
+   "fit": "z",
+   "scale": [
+    0.8299047319932998,
+    0.8299047319932998,
+    0.8299047319932998
+   ],
+   "rotation": "z:180"
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "shell",
+  "mode": "whole"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Google Scanned Objects (Gazebo Fuel, owner GoogleResearch)",
+   "name": "Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White",
+   "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White",
+   "file_url": "https://fuel.gazebosim.org/1.0/GoogleResearch/models/Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White/1/Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White.zip",
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "author": "Google LLC (Google Scanned Objects)",
+   "attribution": "\"Threshold_Porcelain_Coffee_Mug_All_Over_Bead_White\" from Google Scanned Objects by Google LLC, CC BY 4.0, modified (decimated, re-oriented for MuJoCo)"
+  }
+ },
+ "original_files": {
+  "model.zip": "dc34f175364540e239ae74f71e5b951a48aa99ccb48aaaf8c8c11771c5c56aa1"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "b5ccd0deeeb609305dcba0e3420246f3e63a32a998eb794aeaaadf697877f4c8",
+  "default_0.png": "87a50d50ef260ca078b5f517ef0a1a090f2f7439f52702b6d283e8985f0ab071"
+ }
+}
