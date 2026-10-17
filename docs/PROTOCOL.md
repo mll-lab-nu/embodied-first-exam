@@ -80,8 +80,8 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 | Recommended | Notes |
 |---|---|
 | `/logs/verifier/reward.txt` `1` or `0`; `reward.json` numbers only: `success`, `deterministic` (privileged trajectory tasks), `live_success` and `graded_by_live` (standard modes), `infra_error`, `sim_error`, `grader_error`, `progress`, the resource fields, cost fields (`n_actions`, `sim_steps`) | the same names wherever the concept applies |
-| Every graded trial leaves a playable video (`replay.mp4` in `/logs/verifier/` or the sim sidecar's collected directory) and the replayable trajectory it was graded on (privileged: the deliverable; standard: the sidecar's journal or `trajectory.npz`). The one expected exception: a privileged trial whose agent submitted no trajectory, or none that replays (`missing_trajectory`, `bad_trajectory`, no actions). Standard modes: recorded by the sidecar during the live episode where that is cheap, else rendered from the trajectory in one pass after the verdict. The verdict is written before the video is rendered and never depends on it; the video's time bound covers the longest episode the cutoff allows | `check-video.py`; the runner flags a graded trial without a video and renders it from the trajectory (RUNNING.md "Recordings") |
-| Privileged: success judged on the end state of the replay; ≥ 2 replays with matching final-state hashes (`deterministic`), or one by the task's declared choice. Standard modes: success judged by the sidecar on the live episode, with the task's own rule (a settle or hold window it declares is run on the live simulator); `reward.json` says `graded_by_live = 1`, `replays = 0` | within H.4 |
+| Every graded trial leaves a playable video (`replay.mp4` in `/logs/verifier/` or the sim sidecar's collected directory) and the replayable trajectory it was graded on (privileged: the deliverable; standard: the sidecar's journal or `trajectory.npz`). The one expected exception: a privileged trial whose agent submitted no trajectory, or none that replays (`missing_trajectory`, `bad_trajectory`, no actions). Standard modes: recorded by the sidecar during the live episode where that is cheap (or where the simulator does not replay bit for bit), else rendered from the trajectory in one pass after the verdict (`live.mp4` / `replay.mp4`). The verdict is written before the video is rendered and never depends on it; the video's time bound covers the longest episode the cutoff allows | `check-video.py`; the runner flags a graded trial without a video and renders it from the trajectory (RUNNING.md "Recordings") |
+| Privileged: success judged on the end state of the replay; ≥ 2 replays with matching final-state hashes (`deterministic`), or one by the task's declared choice. Standard modes: success judged by the sidecar on the live episode, with the task's own rule (a settle or hold window it declares is run on the live simulator); `reward.json` says `graded_by_live = 1`, `replays = 0` | within H.4; `check-live-verdict.py` |
 | An infrastructure failure is `infra_error = 1`: not a result, neither a success nor the agent's 0 (H.5) | `scripts/write_task_results.py` |
 | `nop` scores 0; with `oracle = "full"` the oracle scores 1 on every seed in `seeds.oracle` (`/validate`); a task without an oracle gets a human review (a positive example, the predicate, `nop` 0, determinism; recorded in the PR) | the `validated` marker (§2) |
 | Results report success with cost (tokens, money, turns, wall clock, simulation steps) per mode and per comparable configuration; run id `<harness>-<model>-<effort>`; not committed to the repository | RUNNING.md |
@@ -124,9 +124,9 @@ job `invariants` (`ci_checks/run_invariants.sh`) runs exactly the checks named h
 incomplete run; `ci_checks/check-ci-selftest.py --tier invariants` breaks real tasks in each way and requires the
 checks to fail. What CI cannot see (images, endpoints, the runner) is the reviewer's and the runner's to hold.
 
-**H.1 Verifier isolation.** The verdict is computed (standard modes: transcribed from the sim sidecar's record, H.4)
-in a sandbox of its own (`[verifier] environment_mode = "separate"`, an image built from `tests/`, `tests/Dockerfile`
-shipping `test.sh`) that receives only the declared artifacts. `tests/test.sh` first empties `/logs/verifier`, and removes from `/app/output` whatever is not the agent's
+**H.1 Verifier isolation.** The verifier runs in a sandbox of its own (`[verifier] environment_mode = "separate"`, an
+image built from `tests/`, `tests/Dockerfile` shipping `test.sh`) that receives only the declared artifacts (standard
+modes: it transcribes the sidecar's verdict, H.4). `tests/test.sh` first empties `/logs/verifier`, and removes from `/app/output` whatever is not the agent's
 own regular file or directory (links out of it, FIFOs, devices) before anything reads the agent's files; reward files
 are written fresh. No writable volume crosses the trust boundary: a named volume mounted by a trusted container (the
 verifier, a sidecar) is `*_trusted` and never mounted by the agent's container; the agent's container binds no task
@@ -161,12 +161,13 @@ agent's controller runs in the agent's own container; no agent code runs next to
 **H.4 Trusted verdict.** The verdict comes only from a trusted source. Privileged: a replay, in a fresh process, of
 the agent's deliverable from the frozen initial state, in the verifier. Standard and standard-realtime: the sim
 sidecar's record of the live episode (`final.json`), judged by the service on the episode it ran, from a frozen
-initial state it checked when the episode began; no grading replay is required, and the verifier transcribes the
-record and re-simulates nothing. What keeps that record trusted: the agent cannot write the sidecar's state (its
-volumes are `*_trusted`, it publishes no port); the evidence is collected only from the sidecar; the episode ends when
-the agent's time is up and nothing the agent's container sends after that runs (the service refuses it, and collect
-hooks may stop the agent's leftover processes first), so the sidecar finalizes an episode the agent can no longer
-change; the sidecar keeps the episode's journal or trajectory as the deliverable. Nothing the agent's container writes
+initial state it checked when the episode began, and the verifier transcribes the
+record; no replay decides it, and nothing the verifier renders afterwards (a video) does. What keeps that record
+trusted: the agent cannot write the sidecar's state (its volumes are `*_trusted`, it publishes no port); the evidence is
+collected only from the sidecar; when the agent's time is up a collect hook stops every process the agent left running
+(`kill -9 -1` in its container) before the sidecar is signalled, and from that signal on the service refuses every
+request (a settle or hold window included), so the sidecar finalizes an episode the agent can no longer change; the
+sidecar keeps the episode's journal or trajectory as the deliverable. Nothing the agent's container writes
 decides, except the privileged deliverable that is replayed; the verifier uses no network; a verdict once written in
 a trial is never rewritten (a later re-grade keeps the original beside it). The frozen instance the verifier or the
 sidecar grades against and the one the trial ran from are byte-identical copies.

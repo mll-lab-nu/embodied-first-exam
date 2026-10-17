@@ -21,7 +21,8 @@ Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
   model trial, or a hand-built trajectory (tasks without one are human-reviewed and marked unvalidated, PROTOCOL §2, §4);
 - **difficult** for today's coding agents, for a reason that matters for robotics;
 - **reproducible** — a frozen scene instance; a privileged trajectory replays bit for bit (and the hardware it was
-  checked on); a standard episode's recorded trajectory reproduces it for the video and audits;
+  checked on); a standard episode's recorded trajectory reproduces it for the video and audits (where the simulator replays
+  bit for bit; else the video is recorded live);
 - **isolatable** — the result is computed by a party the agent cannot reach: the verifier in its own sandbox from the
   declared artifacts (privileged), or the sim sidecar on the live episode after the agent's container stops (standard
   modes, PROTOCOL H.4);

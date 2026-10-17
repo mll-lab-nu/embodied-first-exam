@@ -54,15 +54,19 @@ behavior; no further retries. Normal task failures do not qualify.
   job; batch_eval_live's `run_policy.py` uses it. `write_task_results.py` keeps every attempt of a task x run id in
   `attempts.json` and flags a sequence that breaks the rule (`attempts_over_cap`).
 - In-trial crash recovery (a sidecar that replays its journal and resumes the episode, STANDARD_MODE.md) is the shared
-  layers' implementation, not a rule; a crash it cannot recover is an infrastructure failure like any other.
+  layers' implementation, not a rule; a crash it cannot recover is an infrastructure failure, unless every crash was
+  the agent's (below).
 - Standard modes (graded by the live episode, PROTOCOL H.4): an infrastructure failure is one where the live record
-  gives no verdict on the agent: no, an unreadable or an unfinalized `final.json`; the sidecar gave up after crashes
+  gives no verdict on the agent: no, an unreadable or an unfinalized `final.json` (`finalized`: the verdict is on
+  disk, written before any video); the sidecar gave up after crashes
   that were not all inside the agent's calls (`sim_crashed`, `resume_failed`); the scene did not start from the frozen
   instance (`instance_mismatch`); a failure of the service the agent did not cause. What the agent's commands caused
   stays a result, never an infrastructure failure (a retry would be a free second attempt): crashes all inside its
-  calls (`sim_crashed_on_call`), a simulator error its actions raised where the task counts that as the agent's, the
-  cutoff, no actions, a failed settle or hold. The video is never one: a render that fails or runs out of time loses
-  only the video.
+  calls (`sim_crashed_on_call`), a simulator error its actions raised where the task counts that as the agent's
+  (standard-realtime counts every crash and simulator error as infrastructure, since no call spans one: STANDARD_MODE.md
+  Part 3), the cutoff, no actions, a failed settle or hold. The video is never one: a render that fails or runs out of
+  time loses only the video. A resume that continued from a state that does not match its checkpoint exactly (`approx`
+  resume class, `resume_state_mismatch = 1`) keeps its live verdict and is flagged for audit.
 
 ## Results
 Results are not committed (published on the results site and the Hugging Face dataset, keyed by run id
@@ -86,9 +90,10 @@ mode by the screening runs its `note` names: core-set numbers of those runs are 
 runs on all tasks alongside.
 
 Standard-mode results recorded before the live-grading change (2026-10-17, PROTOCOL H.4) are re-read from their own
-`final.json`: the success the live episode ended with, under that benchmark's live rule; the recorded verdict
-(`reward.json`, `result.json`) stays untouched beside it, and a trial whose `final.json` holds no live verdict keeps
-the recorded one. Each benchmark's doc says which fields carry the live verdict in each of its versions.
+`final.json`: the success the live episode ended with, under that benchmark's live rule, where that version's live
+record applied the task's whole rule (a settle or hold that only the replay ran does not count as checked); the recorded
+verdict (`reward.json`, `result.json`) stays untouched beside it, and a trial whose `final.json` holds no such live
+verdict, or that was re-graded later under a stricter rule, keeps the recorded one. Each benchmark's doc says which fields carry the live verdict in each of its versions.
 
 ## Resources: limits and their enforcement
 Each task declares its minimum compute, `[metadata.resources]`, its limits `[metadata.resources.limits]` and the docker

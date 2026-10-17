@@ -8,12 +8,17 @@ RUNNING.md ("Infrastructure failures"). For every standard / standard-realtime t
     for a replay, or a replay that can decide);
   - run: each distinct tests/grade.py (one run per content, standard library only) is given synthetic records in a
     temporary directory (RCB_DATA, RCB_VERIFIER_LOG_DIR) and must answer
+      a finalized live success, no replay fields                -> reward 1, infra_error 0 (no replay is waited for)
       no final.json                                             -> reward 0, infra_error 1 (no verdict on the agent)
+      an unfinalized final.json (the hook was killed)           -> reward 0, infra_error 1
+      a give-up after crashes between calls (sim_crashed)       -> reward 0, infra_error 1
       a finalized live failure at the cutoff                    -> reward 0, infra_error 0 (the agent's result)
       a give-up after crashes inside the agent's calls          -> reward 0, infra_error 0 (never a free retry)
       replay_success / deterministic true, the live episode not -> reward 0 (a replay never grants a success)
-    A grader that does not read RCB_DATA / RCB_VERIFIER_LOG_DIR is checked statically only.
-Tasks a benchmark exports with its own runtime (`scripts/<bench>/exported.toml`) are checked the same way.
+    The records are the shared layers' common fields; a benchmark whose grader needs more of its own (e.g. a verdict
+    file next to final.json) may fail the success case, which is then a finding to read, not a rule. A grader that does
+    not read RCB_DATA / RCB_VERIFIER_LOG_DIR, or a task without tests/grade.py, is checked statically only (the summary
+    says how many). One run per distinct content of tests/*.py + tests/*.json.
 
     python3 ci_checks/check-live-verdict.py [task dirs]      # default: every task
 """
@@ -29,8 +34,17 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+STATIC_ONLY: list[str] = []                         # standard tasks whose grader could not be run here
+LIVE_OK = {"finalized": True, "graded_by": "live", "replays": 0, "success": True, "live_success": True, "done": True,
+           "reason": "success", "n_actions": 10, "control_steps": 10, "video": True}
 CASES = (
+    ("a finalized live success", LIVE_OK, 1, 0),
     ("no final.json", None, 0, 1),
+    ("an unfinalized final.json", {**LIVE_OK, "finalized": False, "success": False, "live_success": True,
+                                   "done": False, "reason": None}, 0, 1),
+    ("a give-up after crashes between calls",
+     {"finalized": True, "success": False, "live_success": False, "done": True, "reason": "sim_crashed",
+      "gave_up": True, "infra_error": 1}, 0, 1),
     ("a finalized live failure at the cutoff",
      {"finalized": True, "graded_by": "live", "replays": 0, "success": False, "live_success": False, "done": True,
       "reason": "timeout", "n_actions": 10, "video": True}, 0, 0),
@@ -57,6 +71,7 @@ def run_grader(grader: Path, record: dict | None) -> tuple[int | None, dict, str
         log.mkdir()
         if record is not None:
             (data / "final.json").write_text(json.dumps(record))
+            (data / "trajectory.npz").write_bytes(b"")      # present, as the service always writes one
         env = {**os.environ, "RCB_DATA": str(data), "RCB_VERIFIER_LOG_DIR": str(log), "PYTHONDONTWRITEBYTECODE": "1"}
         try:
             p = subprocess.run([sys.executable, str(grader.resolve())], cwd=tmp, env=env, capture_output=True, text=True,
@@ -78,6 +93,7 @@ def run_grader(grader: Path, record: dict | None) -> tuple[int | None, dict, str
 def check(tasks: list[Path]) -> list[str]:
     errs: list[str] = []
     seen: dict[str, str] = {}                       # grader content hash -> the first task that has it
+    STATIC_ONLY.clear()
     for task in tasks:
         if not mode_of(task):
             continue
@@ -91,11 +107,14 @@ def check(tasks: list[Path]) -> list[str]:
             errs.append(f"{task.name}: its verifier reads `replay_success` (no replay grades a standard episode)")
         grader = task / "tests" / "grade.py"
         if not grader.is_file():
+            STATIC_ONLY.append(task.name)
             continue
         text = grader.read_text(errors="replace")
         if "RCB_DATA" not in text or "RCB_VERIFIER_LOG_DIR" not in text:
+            STATIC_ONLY.append(task.name)
             continue
-        h = hashlib.sha256(text.encode()).hexdigest()
+        h = hashlib.sha256(b"".join(p.name.encode() + p.read_bytes() for p in sorted((task / "tests").iterdir())
+                                    if p.is_file() and p.suffix in (".py", ".json"))).hexdigest()
         if h in seen:
             continue
         seen[h] = task.name
@@ -106,7 +125,11 @@ def check(tasks: list[Path]) -> list[str]:
                 continue
             if reward != want_reward:
                 errs.append(f"{task.name}: tests/grade.py on {name}: reward {reward}, expected {want_reward}")
-            if want_infra is not None and int(bool(rw.get("infra_error"))) != want_infra:
+            try:
+                got_infra = int(float(rw.get("infra_error") or 0) != 0)
+            except (TypeError, ValueError):
+                got_infra = 1
+            if want_infra is not None and got_infra != want_infra:
                 errs.append(f"{task.name}: tests/grade.py on {name}: infra_error {rw.get('infra_error')}, expected "
                             f"{want_infra}")
     return errs
@@ -123,7 +146,8 @@ def main(argv: list[str]) -> int:
         if len(errs) > 60:
             print(f"  ... {len(errs) - 60} more")
         return 1
-    print(f"check-live-verdict: {n} standard task(s) graded by the live episode")
+    print(f"check-live-verdict: {n} standard task(s) graded by the live episode ({len(STATIC_ONLY)} checked statically "
+          "only: no runnable tests/grade.py)")
     return 0
 
 

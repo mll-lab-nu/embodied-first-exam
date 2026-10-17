@@ -138,8 +138,8 @@ on which the frozen instance does not rebuild to its stored initial state report
 ### Evidence and grading (agent never sees this)
 `/data/episode.jsonl` (one record per call: type, rows, dt, cameras, note, clipped, plan, physics steps, success),
 `/data/calls/NNNNNN/` (meta + last frames per call), and on end: `trajectory.npz` (the graded episode, the deliverable),
-`final.json`, then `replay.mp4`. The collect hook signals the service by PID after the agent container is stopped; the
-service judges the episode it ran (the task's success rule, with any settle or hold window run on the live simulator)
+`final.json`, then `replay.mp4`. The collect hook signals the service by PID after a collect hook has stopped
+the agent's processes; from then on the service refuses every request, and it judges the episode it ran (the task's success rule, with any settle or hold window run on the live simulator)
 and writes the verdict into `final.json` (`success`, `live_success`, `graded_by` = `live`, `replays` = 0); nothing is
 replayed to grade it (PROTOCOL H.4). The video is recorded during the episode or rendered from `trajectory.npz` after
 the verdict (`video_source`), and never decides anything. A separate verifier transcribes `final.json` into
@@ -444,7 +444,7 @@ negative `Content-Length` (CI job `unit-tests`).
 ### 14. Evidence and grading (the agent never sees this)
 `episode.jsonl` (calls, checkpoints, resumes), `journal.f64`, `startups.jsonl`, `calls/NNNNNN/` (meta + last frames per call),
 `server.log`, and at the end `trajectory.npz`, `final.json`, `replay.mp4`. The collect hook signals the service by PID
-after the agent container is stopped; the service judges the live episode in-process (or dumps it with its live verdict
+after a collect hook has stopped the agent's processes; the service judges the live episode in-process (or dumps it with its live verdict
 and exits), and the hook writes `final.json`, then the video (recorded live or rendered from the trajectory: the
 benchmark's doc). A separate, network-less verifier transcribes `final.json` (PROTOCOL H.4). A GPU lost to a host
 systemd reload before the episode was judged is reported as `gpu_lost` (`infra_error`).
