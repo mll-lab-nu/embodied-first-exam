@@ -9,8 +9,7 @@ artifacts = [
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
+  { source = "/data/film.log", service = "sim" },              # the collect hook's film pass (the video; never decides anything)
   "/app/output/",
 ]
 
@@ -39,13 +38,20 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, film, write final.json
-timeout_sec = 7200                # = finalize.sh's HOOK_BUDGET_S (RCB_COLLECT_TIMEOUT_S; keep them equal): the episode end (up to
-                                  # 2700 s through a resume) + two camera-free fresh-process replays of at most one episode
-                                  # (an Isaac start, 1.5-6 min, + up to 7200 control steps at 10-15 steps/s) + the filmed
-                                  # illustration; finalize.sh ends a replay that would pass this deadline and records it
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json from the live episode (no replay), then film once
+timeout_sec = 4800                # = finalize.sh's HOOK_BUDGET_S (RCB_COLLECT_TIMEOUT_S; keep them equal): the episode end (up to
+                                  # 2700 s through a resume) + ONE film pass (the video only, at most 1800 s: an Isaac start and
+                                  # the render worker's, 1.5-6 min, + at most one episode, 7200 control steps at 10-15 steps/s)
+                                  # + a margin; graded by the live episode since 2026-10-17 (7200 s with two replays before)
 
 [agent]
 timeout_sec = @@AGENT_TIMEOUT_S@@.0              # the agent's cutoff, this task's own (PROTOCOL §2.12)

@@ -32,7 +32,7 @@ services:
       RCB_RENDER_LOG: /data/render_worker.log   # the render worker's own log: its messages are not the physics process's
       RCB_WALL_CLOCK_S: "3600"
       RCB_STARTUP_TIMEOUT_S: "2400"
-      RCB_COLLECT_TIMEOUT_S: "7200"
+      RCB_COLLECT_TIMEOUT_S: "4800"   # = task.toml's [[verifier.collect]] timeout_sec (finalize.sh's HOOK_BUDGET_S)
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
     shm_size: "8gb"
