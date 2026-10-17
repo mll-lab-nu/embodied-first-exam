@@ -67,8 +67,8 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
 | privileged | the simulator (`rcb_quadruped.Session`) and its full state | unlimited | its `trajectory.npz`, replayed in two fresh processes |
-| standard (2.2) | cameras (Go1, Spot: four that follow the robot; Barkour: one that follows it and its head camera; RGB, optional depth), joints, IMU (gyro, accelerometer, gravity's direction, velocimeter), foot contacts; the feet's FK/IK in the trunk frame | 10 (`RCB_RESET_BUDGET`, from 2026-10-14; before: none) | the service's record of the last episode: live check, two fresh-process replays, determinism |
-| standard-realtime (2.3; BarkourJoystick only) | as standard, minus FK/IK, plus the joystick command in force in the proprioception; time does not stop (S = 1) | 10 (`RCB_RESET_BUDGET`) | the service's record of the last episode: live check, a fresh replay, determinism |
+| standard (2.2) | cameras (Go1, Spot: four that follow the robot; Barkour: one that follows it and its head camera; RGB, optional depth), joints, IMU (gyro, accelerometer, gravity's direction, velocimeter), foot contacts; the feet's FK/IK in the trunk frame | 10 (`RCB_RESET_BUDGET`, from 2026-10-14; before: none) | the live episode's verdict: the task's check on the last episode as the service ran it (since 2026-10-17; before: live check, two fresh-process replays, determinism) |
+| standard-realtime (2.3; BarkourJoystick only) | as standard, minus FK/IK, plus the joystick command in force in the proprioception; time does not stop (S = 1) | 10 (`RCB_RESET_BUDGET`) | the live episode's verdict, as standard (since 2026-10-17; before: live check, a fresh replay, determinism) |
 
 ## Reference solutions
 - **Go1 joystick:** MuJoCo Playground's own Go1 joystick policy (`experimental/sim2sim/onnx/go1_policy.onnx`, the one its
@@ -219,6 +219,42 @@ fresh-process replay of its record ends in the live state hash. Generator: `pyth
   (trajectory = its rows only, deterministic), an idle episode 11 -> reward 0, a reset after a success refused.
   Scene, instances, success checks and the grader's pass rule unchanged; earlier quadruped standard results ran with
   one episode and are reported separately.
+- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; video by one
+  render pass over the trajectory after the verdict. All 9 quadruped standard tasks, BarkourJoystick standard-realtime
+  and the 4 ALOHA / Panda standard tasks (`server_mj.py`, as DexToolBench's): Grading, below. Every replay that decided
+  a verdict is gone (2.2 quadrupeds: the collect hook's two fresh-process replays; realtime: the layer's fresh `Session`;
+  `server_mj.py`: its in-process verification replay); `final.json` / `reward.json` have `graded_by` (`graded_by_live`
+  = 1), `replays = 0`, `live_success`, no `replay_success` / `deterministic` / `live_matches_replay`. The rules are
+  unchanged: each replay ran the recorded rows through the same check the live service runs at the episode's end (the
+  holds are inside `check()`; ALOHA's `right_holds` is a contact in the final state), so live and replay could only
+  differ by nondeterminism, which no archived trial showed. The frozen start is now checked when the episode begins
+  (the start's state hash against the instance's `state_sha`; DexToolBench's instances have none, its compose files
+  carry `RCB_START_SHA`): a mismatch is no episode, `instance_mismatch`, `infra_error = 1`. The collect hooks wait
+  300 s for the verdict (2.2: the end of the service, then the hook writes it; `server_mj.py` / realtime: 840 -> 300 s)
+  and as long as before for the video. Scenes, instances, pass rules and what the agent sees are unchanged (the realtime
+  instruction's grading sentence says "as it ran" instead of "replays"); the tasks keep their names.
+
+## Grading (standard modes, since 2026-10-17)
+- **2.2 quadrupeds** (`shared/standard/`): the service runs `rcb_quadruped.Session.check()` on the live simulator when
+  the episode ends (`finish()`; a getup / stand episode ends the moment its hold is met, a joystick episode passes only
+  at the horizon) and writes it to `episode.json`; `finalize.sh` makes it `final.json`'s `success` (`graded_by =
+  "live"`), then `video.py` renders `replay.mp4` in one fresh process (at most the horizon, ~150 frames: well under a
+  minute on the CPU). `server.py` builds the scene with `check_hash=False` and gives up before serving the agent when the
+  start's hash is not the instance's `state_sha` (`instance_mismatch`, infrastructure; before, the tooling raised and
+  compose restarted the service until it gave up).
+- **Standard-realtime** (BarkourJoystick): the shared layer's live verdict (`rcb_service._finalize`); `server.py`'s
+  `step()` reports `check()` after every control step (joystick: success only at the horizon), its `start_sha` is the
+  instance's `state_sha`, and it has no `live_verdict()`: the replay applied nothing the live check lacks. The video is
+  the layer's render pass on the service's own simulator after the verdict.
+- **`server_mj.py`** (ALOHA, Panda; DexToolBench, [`dextoolbench.md`](dextoolbench.md)): `finalize()` reads the
+  tooling's `check()` of the live final state (ALOHA, Panda) or the goal tracker's progress (DexToolBench), writes the
+  verdict, then renders `replay.mp4` in one pass over the trajectory on its own simulator (EGL on the sidecar's GPU).
+- **Infrastructure** (`infra_error = 1`, no verdict on the agent): a missing, unreadable or unfinalized `final.json`, a
+  give-up after crashes between calls or a failed resume, a frozen start that did not build, a service that did not end
+  its episode for the collect hook, a service-side failure writing the verdict (`finalize_error`). Crashes all inside
+  the agent's calls (`sim_crashed_on_call`), a simulator error from a call (2.2 / 2.1: `sim_error`, the agent's 0; 2.3:
+  the layer's own rule, PROTOCOL §4b), a fall, a timeout are the agent's result. A video that fails is only a missing
+  video.
 
 ## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
 The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`; until 2026-10-14 `scripts/task_dynamics.toml`)
@@ -229,8 +265,8 @@ frozen moments: an external force that is neither the robot's nor gravity).
   with `shared/realtime/server.py`, which implements `rcb_service.Sim` on `rcb_quadruped.Session`: the standard twin's
   instance, schedule, pushes, termination rule, check and replay; the proprioception adds `cmd_vx`, `cmd_vy`, `cmd_wz`
   (the command in force; standard mode has it in `meta["command_now"]`). Not served: the 2.2 additions (`/kinematics`,
-  per-frame camera poses, depth modes) and the `done` action. Graded on the live episode, a replay in a fresh `Session`
-  and their final states being equal; the clock's record is evidence only. The `sim` service reserves a GPU for EGL
+  per-frame camera poses, depth modes) and the `done` action. Graded on the live episode (since 2026-10-17; before, also a
+  replay in a fresh `Session` and their final states being equal); the clock's record is evidence only. The `sim` service reserves a GPU for EGL
   rendering (`server.py` writes the NVIDIA EGL ICD manifest when the image has none and `rcb_quadruped` probes EGL).
 - **Slowdown S = 1, resets 10, cutoff 1800 s** (the standard twin's). RTF of the service (mll-4090-1 at load 44, 4 CPUs;
   board 0112): 31.6 with the clock flat out (`RCB_SLOWDOWN=0.01`, the reference's 1000 rows planned from step 0).
@@ -263,14 +299,15 @@ sensor size: ALOHA's overhead and wrist cameras, 158.52 and 216.45 px; until 202
 fx = fy = 216.45 for them) and camera-to-world pose: the viewpoint the image is rendered from, in the state the response
 ends in (until 2026-10-10 the position was MuJoCo's left-eye camera, 3.4 cm to the side, and the pose was the one at
 service start). Cameras carry `moving` (true for ALOHA's wrist cameras). `final.json` is `finalized` as soon as the
-replay's verdict is in it; the video is rendered afterwards and sets `video_done`, which is what the collect hook waits
+live episode's verdict is in it; the video is rendered afterwards and sets `video_done`, which is what the collect hook waits
 for (the MetaWorld+ service, `images/metaworld/standard/server_mw.py`, follows the same rules). DexToolBench's own eval
 gives each goal 10 s; here the standard twins have **no per-goal limit** and **20 resets** (owner, 2026-10-13: the
 optional reset capability; until then one episode, no reset) and an episode cap of 360,000 control steps (100 min of
 robot time, `spec.max_control_steps`), while the privileged tasks give each goal 30 s (replayed offline, free resets).
 DexToolBench episodes end when all goals are reached, at the cap, or when the agent's time is up; Playground episodes
 run to the end of the agent phase and the final state is graded. The service journals and resumes like the shared
-layer (journal `record.f64`; startup watchdog `RCB_STARTUP_TIMEOUT_S`, default 300 s) and replays the recorded episode
-in a fresh simulator at the end (`deterministic`: same final state hash). It implements the optional reset capability.
+layer (journal `record.f64`; startup watchdog `RCB_STARTUP_TIMEOUT_S`, default 300 s); until 2026-10-17 it also replayed
+the recorded episode in a fresh simulator at the end (`deterministic`: same final state hash), and now grades the live
+episode (Grading, above). It implements the optional reset capability.
 
 **Quadrupeds (`eai-standard/2.2`).** MuJoCo Playground's quadruped tasks serve the shared 2.2 layer. Their service implements the optional reset capability; the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`. The service states no `max_frames_per_call` yet.

@@ -8,15 +8,13 @@ artifacts = [
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
-  { source = "/data/replay3.log", service = "sim" },           # and its third, which renders replay.mp4
+  { source = "/data/video.log", service = "sim" },             # the collect hook's video pass, which renders replay.mp4
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/{{name}}-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): MuJoCo Playground {{env}} ({{robot_name}}) on the same frozen instance as {{name}}-privileged: {{task_toml}} The agent only gets a client: four cameras that follow the robot (RGB, optional depth), the robot's joints and IMU, joint position chunks at 50 Hz, the feet's kinematics; {{resets}} resets (only the last episode is graded), no world state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): MuJoCo Playground {{env}} ({{robot_name}}) on the same frozen instance as {{name}}-privileged: {{task_toml}} The agent only gets a client: four cameras that follow the robot (RGB, optional depth), the robot's joints and IMU, joint position chunks at 50 Hz, the feet's kinematics; {{resets}} resets (only the last episode is graded), no world state; the sim service records the episode and grades it live (no grading replay)."
 authors = [{ name = "{{author}}" }]
 keywords = ["robotics", "mujoco", "mujoco-playground", "{{robot_tax}}", "quadruped", "locomotion", "{{kind}}", "code-as-policy", "trajectory", "standard-mode"]
 
@@ -38,10 +36,17 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 1200
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write the live verdict into final.json, then the video
+timeout_sec = 1200                # the service's end (<= 900 s) + one video pass of at most the horizon (finalize.sh: RCB_COLLECT_BUDGET_S)
 
 [agent]
 timeout_sec = {{agent_timeout}}.0
