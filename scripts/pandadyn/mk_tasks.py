@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-"""Generate the Panda Dynamic Scenes tasks: tasks/pandadyn-<code>-<name>-iNN-privileged and -standard (eai-standard/2.2) for
+"""Generate the Panda Dynamic Scenes tasks: tasks/pandadyn-<code>-<name>-iNN-privileged and -standard (eai-standard/2.1) for
 every frozen instance in scripts/pandadyn/instances.json, and -standard-realtime (eai-standard/2.3) for the dynamic families
-in REALTIME (docs/benchmarks/pandadyn.md).
+in REALTIME (docs/benchmarks/pandadyn.md). The two standard modes share one adapter (template/realtime/environment/sim/
+server.py, the rcb_service.Sim contract), one service layer (rcb_service.py; the realtime twin adds rcb_realtime.py's
+clock on top) and one reset budget (RESETS): they differ only in the clock.
 
     python3 scripts/pandadyn/mk_tasks.py              # (re)write every Panda Dynamic Scenes task dir; `git diff tasks/` stays empty
     python3 scripts/pandadyn/mk_tasks.py --check      # write nothing; exit 1 if a task dir differs from the generator's
@@ -16,9 +18,10 @@ Inputs, all in the repository:
                                            (scene: what both modes may read; scene_privileged: privileged mode only)
   scripts/pandadyn/shared/rcb_pandadyn.py  the tooling (privileged environment/ + tests/, standard environment/sim/)
   scripts/pandadyn/template/<mode>/        every other task file; a *.tmpl file is filled with the instance's values (@@KEY@@)
-  scripts/eai_standard/                    the eai-standard/2.2 layer, copied unchanged, and the standard client (client.env)
-  scripts/humanoidbench/shared/            the eai-standard/2.3 realtime layer (realtime/rcb_realtime.py, rcb_client.py;
-                                           standard/rcb_service.py, grade.py), copied unchanged into the standard-realtime twins
+  scripts/eai_standard/                    rcb1.py and the client image (client.env, client-requirements.txt)
+  scripts/humanoidbench/shared/            the shared standard service (standard/rcb_service.py, rcb_client.py, grade.py; the
+                                           eai-standard/2.1 layer, into both standard modes) and the realtime layer
+                                           (realtime/rcb_realtime.py, rcb_client.py; into the standard-realtime twins), unchanged
   images/pandadyn/                         VERSION (the base image tag) and the environment package (the servo fractions
                                            of each task are read from its source)
 Both twins of an instance are written to a scratch directory, passed through scripts/task_conventions.py's normalize() and
@@ -46,9 +49,56 @@ REALTIME = {
     "S05": ("1.20-1.21", 2), "S07": ("0.46-0.48", 4), "S08": ("0.29", 6), "S09": ("0.92-1.14", 2),
     "S10": ("0.84", 2), "S11": ("0.69-0.94", 3), "S12": ("0.68", 3),
 }
-RT_RESETS = 3         # the benchmark's choice (PROTOCOL §2), below the mode's default of 10: every reset restores the same
-                      # frozen start, so 10 resets let an agent tune an open-loop plan on a deterministic scene (2026-10-17,
-                      # docs/benchmarks/pandadyn.md "Reset budget"); 10 from 2026-10-14 to 2026-10-17
+RESETS = 3            # the reset budget of both standard modes (PROTOCOL §2; docs/benchmarks/pandadyn.md "Reset budget"):
+                      # every reset restores the same frozen start, so 10 resets let an agent tune an open-loop plan on a
+                      # deterministic scene (standard-realtime: 10 from 2026-10-14 to 2026-10-17, then 3); standard: none
+                      # until 2026-10-17, then 3, the realtime twin's (owner: the two standard modes aligned, board 0153)
+ADAPTER = HERE / "template/realtime/environment/sim/server.py"   # the one rcb_service.Sim adapter of both standard modes
+# The standard copy of the adapter: the same code under this docstring (the realtime twin's docstring describes its clock).
+STD_ADAPTER_DOC = '''"""eai-standard/2.1 sim service for Panda Dynamic Scenes' standard tasks -- the adapter behind the shared standard
+service layer (`python /srv/server.py`: rcb_service.main(build); docs/STANDARD_MODE.md Part 1, docs/benchmarks/pandadyn.md
+"Standard mode").
+
+The simulator-specific half only: `PandaDyn` implements rcb_service.Sim (the contract documented in rcb_service.py) for
+one frozen instance, on the benchmark's own tooling rcb_pandadyn.Session (ManiSkill 3.0.1 / SAPIEN 3.0.3, CPU PhysX at
+1000 Hz, one or two Franka Pandas behind their Ruckig + torque servos). The code below is the standard-realtime twin's
+adapter, byte for byte (scripts/pandadyn/mk_tasks.py writes this copy): the two standard modes share the scene, the action,
+the cameras, the proprioception, the success rule, the reset and the trajectory, and differ only in the clock (here the
+world is frozen between the agent's calls; the realtime twin runs rcb_realtime.py on top of the same service layer). The
+protocol, the episode, the resets, crash recovery and the finalize are rcb_service.py's, an unchanged copy of the
+HumanoidBench source.
+
+What the agent gets: the two static cameras (RGB, z-depth on request) with their calibration, the robot's own
+proprioception (joints, fingers, hand TCP and tool poses, velocities, apertures, motor torques, the targets in force), the
+`joint_position` action (per arm 7 absolute joint targets + the total aperture, clipped to the limits) and POST /reset
+within the task's budget (RCB_RESET_BUDGET). Nothing about objects or fixtures leaves this process.
+
+The verdict is the live episode's (owner, 2026-10-17, board 0151; docs/benchmarks/pandadyn.md "Grading"): the task's
+own check as the last episode ended in this process, judged by rcb_service after the agent's container is gone; nothing
+is replayed to grade it. The task's check is the episode's end (the first control step where it succeeded or failed), so
+there is no settle window to add (live_verdict below only records the phase and the end reason). The frozen start is
+checked when the first episode begins and after every reset: `start_sha` is the instance's recorded `initial_sha`
+(rcb_service refuses a scene that starts elsewhere: instance_mismatch, an infrastructure failure). The video is rendered
+after the verdict from the graded episode's rows by this process's Session (render_video: the scene rebuilt, the rows
+filmed).
+
+Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_TEXTS (texts.json: the task text),
+RCB_DATA, RCB_RESET_BUDGET, RCB_WALL_CLOCK_S (rcb_service).
+"""
+'''
+
+
+def std_adapter() -> bytes:
+    """The adapter for the standard twins: the realtime twin's server.py with its module docstring replaced."""
+    src = ADAPTER.read_text()
+    if not src.startswith('"""'):
+        raise RuntimeError(f"{ADAPTER} must start with its module docstring")
+    end = src.index('"""', 3) + 4                          # the closing quotes and their newline
+    if src[end - 1] != "\n":
+        raise RuntimeError(f"{ADAPTER}: the module docstring's closing quotes must end their line")
+    return (STD_ADAPTER_DOC + src[end:]).encode()
+
+
 POSITION_IN_TEXT = re.compile(r"\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)")
 
 
@@ -219,7 +269,10 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
             # only the dynamic families (REALTIME) start moving on their own; in the static ones nothing moves by itself
             "SCENE_MOTION": " Things move by themselves from the first control step on: the scene does not wait for the robot."
                             if code in REALTIME else ""}
-    std = {"GOALS_STD": goals_std, "STANDARD_NOTES": std_text(D["standard_notes"], f"{code} standard_notes"),
+    std = {"GOALS_STD": goals_std,
+           # the dynamic families (REALTIME) move by themselves; the static ones' scene text says what moves (#281)
+           "STD_MOTION": ("The scene is dynamic: from the episode's first control step on, things move by themselves (as "
+                          "described above), and they do not wait for the robot. " if code in REALTIME else ""), "STANDARD_NOTES": std_text(D["standard_notes"], f"{code} standard_notes"),
            "SUMMARY": std_text(D["summary"], f"{code} summary"), "ROBOT_SETUP": std_text(D["robot_setup"], f"{code} robot_setup"),
            "SCENE": std_text(D["scene"], f"{code} scene"), "PHASES_BLOCK": phases_block(True), "FAILURES_BLOCK": fails_block(True),
            "CONTACT_RULES": std_text(D["contact_rules"], f"{code} contact_rules")}
@@ -230,12 +283,12 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
                          f"horizon of {num(horizon)} s of simulated time, {int(round(horizon * 100))} control steps), when your time is up, or "
                          f"on a simulator error; the simulated clock advances only with the control steps you run")}
     out: dict[str, dict[str, tuple[bytes, int]]] = {}
-    modes = [("privileged", priv), ("standard", std)]
+    modes = [("privileged", priv), ("standard", {**std, "RESETS": str(RESETS)})]
     if code in REALTIME:
         rtf, S = REALTIME[code]
         modes.append(("standard-realtime", {**std, "SLOWDOWN": str(S), "RTF": rtf, "WALL_MS": str(10 * S),
-                                            "HORIZON_WALL_S": num(round(horizon * S, 1)), "RT_RESETS": str(RT_RESETS),
-                                            "RT_RESETS_PLUS1": str(RT_RESETS + 1)}))
+                                            "HORIZON_WALL_S": num(round(horizon * S, 1)), "RT_RESETS": str(RESETS),
+                                            "RT_RESETS_PLUS1": str(RESETS + 1)}))
     for mode, extra in modes:
         common["AGENT_TIMEOUT_S"] = str(agent_timeout(mode))
         files: dict[str, tuple[bytes, int]] = {}
@@ -267,18 +320,19 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
             req = CLIENT.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
             files["environment/client-requirements.txt"] = ((LAYER / req).read_bytes(), 0o644)
             files["solution/oracle_qpos.npy"] = (oracle_b, 0o644)          # one row per control step, planned with `hold`
-        else:
+        else:                                       # standard: the realtime twin's adapter on the shared 2.1 service
             files["environment/sim/rcb_pandadyn.py"] = (tool, 0o644)
             files["environment/sim/instance.json"] = (inst_b, 0o644)
-            files["environment/sim/texts.json"] = ((json.dumps(texts, indent=1, ensure_ascii=False) + "\n").encode(), 0o644)
-            for rel, src in (("environment/rcb_client.py", "rcb_client.py"), ("environment/rcb1.py", "rcb1.py"),
-                             ("environment/sim/rcb_limited.py", "rcb_limited.py"), ("environment/sim/rcb1.py", "rcb1.py"),
-                             ("environment/sim/run.sh", "run.sh")):
-                files[rel] = ((LAYER / src).read_bytes(), 0o755 if rel.endswith(".sh") else 0o644)
+            # only the task text (the realtime twin's texts.json also keeps an "episode" text that nothing reads)
+            files["environment/sim/texts.json"] = ((json.dumps({"task_text": texts["task_text"]}, indent=1, ensure_ascii=False) + "\n").encode(), 0o644)
+            files["environment/sim/server.py"] = (std_adapter(), 0o644)
+            for rel, src in (("environment/rcb_client.py", RT_LAYER / "standard/rcb_client.py"), ("environment/rcb1.py", LAYER / "rcb1.py"),
+                             ("environment/sim/rcb_service.py", RT_LAYER / "standard/rcb_service.py"),
+                             ("environment/sim/rcb1.py", LAYER / "rcb1.py"), ("tests/grade.py", RT_LAYER / "standard/grade.py")):
+                files[rel] = (src.read_bytes(), 0o644)
             req = CLIENT.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
             files["environment/client-requirements.txt"] = ((LAYER / req).read_bytes(), 0o644)
             files["solution/oracle_qpos.npy"] = (oracle_b, 0o644)          # one row per control step, streamed with `hold`
-            files["solution/oracle_meta.json"] = (json.dumps({"K": 1, "interpolate": "hold", "source": "the privileged oracle's rows"}, indent=1).encode() + b"\n", 0o644)
         out[f"{base(task, i)}-{mode}"] = files
     return out
 

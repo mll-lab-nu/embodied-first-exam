@@ -1,240 +1,189 @@
-"""eai-standard/2.2 client (formerly rcb-limited/2.x) — the only thing a standard-mode agent gets (installed at
-/opt/tools/rcb_client.py).
+"""eai-standard/2.1 client: your whole interface to the robot (installed at /opt/tools/rcb_client.py, on PYTHONPATH).
 
-    from rcb_client import Robot
-    r = Robot()                                  # finds the service (sim:8000, then localhost:8000), waits for warm-up
-    spec = r.spec()                              # actions, cameras (+ intrinsics, mounting), robot_spec, world, budget, kinematics
-    obs = r.get_obs()                            # current frames: obs.last[cam] -> uint8 (H,W,3); obs.meta["proprio"]
-    obs = r.get_obs(depth=True)                  # + obs.last_depth[cam] -> float32 (H,W) z-depth in metres, 0 = no reading
-    res = r.submit("joint_position", A, dt=0.1)  # A: (T, dim) rows dt apart; returns the execution video
-    res = r.submit("ee_pose", P)                 # (T, dim) end-effector targets (see spec()["action_types"])
-    res.video[cam] -> mp4 bytes    res.frames[cam] -> uint8 (N,H,W,3) if video="frames"/"both"    res.last[cam]
-    res.proprio -> float32 (N, D), one row per frame (names: spec()["proprio_layout"]; res.group("tcp_pose"))
-    res.frame_step -> int64 (N,) control step of each frame    res.frame_time_s -> float64 (N,) simulated time
-    res.extrinsic_cv[cam] -> float64 (N,3,4) world->camera per frame (res.meta["cameras"]: intrinsics + the last frame's pose)
-    res = r.submit(..., depth="frames")          # + res.depth[cam] -> float32 (N,H,W) metres, one per frame (1 mm steps)
-    r.fk(q)                                      # {"ok", "poses": {frame: [x,y,z, quaternion]}}: forward kinematics, no physics
-    r.ik({frame: pose}, seed=q)                  # {"ok", "q", "error": {frame: {"pos_m", "rot_rad"}}}: inverse kinematics
-    res.save("/app/runs/003")                    # meta.json, <cam>.mp4, last/<cam>.jpg, frames/<cam>/NNN.jpg, proprio.npy, depth, frame_meta.npz
-    obs = r.get_obs(seconds=3, video="both")     # hold the last command, let physics run 3 s, return the video
-    r.status()                                   # calls, control steps, done, reason, elapsed time
-    res.meta["time_left_s"]                      # your time limit minus the time since your first request to the service:
-                                                 # never out before your time is (spec()["budget"]["clock"]); plan by it
+    from rcb_client import Robot, EpisodeOver
+    r = Robot()            # finds the service (SIM_URL, http://sim:8000, http://localhost:8000), waits until it is ready
 
-Nothing is put into your context automatically: what you look at, and where you store it, is your code's decision.
+Calls (each is one HTTP request; every answer that carries data is an RCB1 frame, decoded into a Result):
+    r.spec()                                 GET /spec, fetched when connecting: the robot's facts. "action_types"
+                                             ("joint_position": dim, layout (actuator order), lower/upper, range_rad,
+                                             units, semantics), "control_dt" (0.02 s), "max_control_steps" (the
+                                             episode), "cameras" {name: rgb, depth, hw, fovy_deg, pose, mounted},
+                                             "proprio_layout" and "proprio" (joints, axes, positions), "imu", "links"
+                                             (masses, centres of mass, the feet's boxes), "depth", "budget" {"reset",
+                                             "wall_clock_s"}, "episode" (what ends it)
+    r.status()                               GET /status: calls, rows, control_steps, done, reason, elapsed_s
+    r.get_obs(cameras=None, seconds=0.0, video_fps=10, include_depth=False, video="frames")
+                                             POST /observe. seconds=0: the current frames, free (no time passes).
+                                             seconds>0 (at most spec()["max_watch_s"]): holds the last servo targets and
+                                             lets the episode run that long, returning what the cameras saw
+    r.submit("joint_position", actions, dt=None, interpolate="linear", cameras=None, video_fps=10, video="mp4",
+             include_depth=False, note="")   POST /submit: run a chunk, actions (T, dim): rows dt apart (a multiple of
+                                             control_dt, which is the default; T x dt at most spec()["max_chunk_s"]);
+                                             each control step's targets are the row (interpolate="hold") or a straight
+                                             line from the previous row's ("linear")
+    r.reset(cameras=None, include_depth=False)
+                                             POST /reset, only when spec()["budget"]["reset"] > 0: abandons the
+                                             running episode and starts a new one from the same starting state; only
+                                             the last episode is graded, and a success ends the trial
 
-If a call fails with a connection error or a 5xx, the service may have crashed; it restarts and resumes the SAME episode
-(never a reset) in the state after the last call it completed, which you may not have received. r.wait_ready() waits
-until it answers again (resuming replays the episode so far: long episodes can take minutes); then check r.status()
-before you continue (spec()["on_service_error"]).
+cameras=None means every camera in spec()["cameras"]; ask for fewer to save time. video: "mp4" (one H.264 file per
+camera), "frames" (the images as arrays), "both" or "none" (only the last frame: the fastest). include_depth adds depth
+for the cameras that have it.
+
+Result (what get_obs / submit / reset return):
+    res.meta                 dict: calls, rows, control_steps (this episode), sim_time_s, time_s, time_left_s,
+                             proprio {"layout", "now"}, done, reason ("success" | "failed" | "timeout" | "error";
+                             None while the episode runs), and per call: executed_rows, control_steps_chunk,
+                             clipped [{row, index, reason}] (values outside [-1, 1] are clipped, not refused);
+                             with a reset budget also episode, resets_left
+    res.last[cam]            uint8 H x W x 3: the last frame, always
+    res.frames[cam]          uint8 N x H x W x 3 (video="frames"/"both")     res.video[cam]   mp4 bytes
+    res.depth[cam]           float16 N x H x W, metres, 0 = nothing in range (include_depth)
+    res.proprio              float32 rows of spec()["proprio_layout"]: one at the call's start, one every 1/video_fps s,
+                             one at its end
+    res.done                 the episode is over
+    res.save(dir)            meta.json, <cam>.mp4, last/<cam>.jpg, frames/<cam>/NNN.jpg, depth_<cam>.npy, proprio.npy
+
+Errors: ValueError -- refused, nothing ran (400: wrong type or shape, NaN, a bad dt, too many frames, an unknown
+camera; or a request over 64 MB, refused before it is sent); EpisodeOver -- the episode, or the trial, is over (409);
+RuntimeError -- the service failed (5xx: see spec()["on_service_error"]) or the endpoint does not exist in this run
+(404).
 """
 from __future__ import annotations
-import json, os, pathlib, sys, time, zlib
+
+import json
+import os
+import pathlib
+import time
+
 import numpy as np
 import requests
+
 import rcb1
 
-PROTOCOL = "eai-standard/2.2"         # also talks to 2.0 / 2.1 services (they ignore depth and send no frame metadata)
-ACCEPTED = ("eai-standard/2.", "rcb-limited/2.")   # every 2.x service, under the protocol's current and former name
+PROTOCOLS = ("eai-standard/2.", "rcb-limited/2.")   # any 2.x service, under either name (rcb-limited is the old one)
+MAX_BODY = 64 * 1024 * 1024                          # the protocol's request limit: a larger request is refused
 
 
 class EpisodeOver(RuntimeError):
     pass
 
 
-def _over(r) -> str:
-    """What a 409 says: the reason the episode is over. A service that gave up on the episode for good (it refused to
-    start it, or could not resume it after its crashes) answers every request with one, GET /spec and /status too."""
-    try: err = r.json()
-    except Exception: return "episode finished"
-    if not isinstance(err, dict): return "episode finished"
-    if err.get("gave_up"):
-        return (f"the sim service gave up on this episode: {err.get('reason')}"
-                + (" (an infrastructure failure, recorded as one: not a result of your actions)" if err.get("infra_error") else "")
-                + ". It will not serve this trial again: waiting or calling again cannot help.")
-    return err.get("reason")
-
-
-def _decode_depth_frames(p: dict) -> np.ndarray:
-    a = np.frombuffer(zlib.decompress(p["data"]), dtype="<u2").reshape(p["shape"])
-    return a.astype(np.float32) / 1000.0
-
-
 class Result:
-    """Decoded RCB1 response: meta (dict), video (cam -> mp4 bytes), frames (cam -> uint8 (N,H,W,3)), last (cam -> uint8
-    (H,W,3)), last_depth (cam -> float32 (H,W) m), depth (cam -> float32 (N,H,W) m, one per frame), proprio (float32 (N,D)),
-    frame_step (int64 (N,)), frame_time_s (float64 (N,)), extrinsic_cv (cam -> float64 (N,3,4)). save(dir) writes it out;
-    show(cam, k) returns one frame; group(name) the proprio columns of one spec()["proprio_groups"] group. stopped: None,
-    or why the service stopped the call early ("max_call_wall_s": it ran longer than spec()["max_call_wall_s"]); then
-    meta["executed_rows"] < the rows sent, and meta["proprio"]["now"] is where the robot is."""
-    def __init__(self, meta: dict, parts: dict, spec: dict | None = None):
-        self.meta = meta; self.raw = parts; self._spec = spec or {}; self.stopped = meta.get("stopped")
-        self.video, self.frames, self.last, self.last_depth, self.depth, self.extrinsic_cv = {}, {}, {}, {}, {}, {}
-        self.proprio = None; self.frame_step = None; self.frame_time_s = None
+    """A decoded RCB1 answer: meta, video, frames, last, depth, proprio; save(dir) writes them all out."""
+
+    def __init__(self, meta: dict, parts: dict):
+        self.meta, self.raw = meta, parts
+        self.video, self.frames, self.last, self.depth, self.proprio = {}, {}, {}, {}, None
         for name, p in parts.items():
             kind, data = p["kind"], p["data"]
-            if name.startswith("video/") and kind == "mp4": self.video[name[6:]] = data
-            elif name.startswith("frames/") and kind == "array": self.frames[name[7:]] = data
-            elif name.startswith("last/") and kind == "array": self.last[name[5:]] = data
-            elif name.startswith("last_depth/") and kind == "array": self.last_depth[name[11:]] = np.asarray(data, dtype=np.float32)
-            elif name.startswith("depth_frames/") and p.get("codec") == "zlib": self.depth[name[13:]] = _decode_depth_frames(p)
-            elif name.startswith("depth/") and kind == "array": self.depth[name[6:]] = np.asarray(data, dtype=np.float32)   # 2.1 form
-            elif name.startswith("extrinsic_cv/") and kind == "array": self.extrinsic_cv[name[13:]] = data
-            elif name == "proprio": self.proprio = data
-            elif name == "frame_step": self.frame_step = data
-            elif name == "frame_time_s": self.frame_time_s = data
+            if name.startswith("video/") and kind == "mp4":
+                self.video[name[6:]] = data
+            elif name.startswith("frames/"):
+                self.frames[name[7:]] = data
+            elif name.startswith("last/"):
+                self.last[name[5:]] = data
+            elif name.startswith("depth/"):
+                self.depth[name[6:]] = data
+            elif name == "proprio":
+                self.proprio = data
 
     @property
-    def done(self) -> bool: return bool(self.meta.get("done"))
-
-    def show(self, camera: str, k: int = -1) -> np.ndarray:
-        if camera in self.frames: return self.frames[camera][k]
-        return self.last[camera]
-
-    def group(self, name: str, now: bool = False) -> np.ndarray:
-        """Columns of proprio group `name` (spec()["proprio_groups"]): (N, n) over the frames, or (n,) of meta["proprio"]["now"]."""
-        first, n = self._spec["proprio_groups"][name][:2]
-        if now: return np.asarray(self.meta["proprio"]["now"], dtype=np.float64)[first:first + n]
-        return self.proprio[:, first:first + n]
+    def done(self) -> bool:
+        return bool(self.meta.get("done"))
 
     def save(self, out_dir: str) -> str:
-        out = pathlib.Path(out_dir); out.mkdir(parents=True, exist_ok=True)
+        from PIL import Image
+        out = pathlib.Path(out_dir)
+        out.mkdir(parents=True, exist_ok=True)
         (out / "meta.json").write_text(json.dumps(self.meta, indent=1))
-        for cam, b in self.video.items(): (out / f"{cam}.mp4").write_bytes(b)
-        try:
-            from PIL import Image
-            for cam, img in self.last.items():
-                (out / "last").mkdir(exist_ok=True); Image.fromarray(np.ascontiguousarray(img)).save(out / "last" / f"{cam}.jpg", quality=90)
-            for cam, arr in self.frames.items():
-                d = out / "frames" / cam; d.mkdir(parents=True, exist_ok=True)
-                for i, f in enumerate(arr): Image.fromarray(np.ascontiguousarray(f)).save(d / f"{i:03d}.jpg", quality=85)
-        except ImportError:
-            for cam, img in self.last.items(): np.save(out / f"last_{cam}.npy", img)
-            for cam, arr in self.frames.items(): np.save(out / f"frames_{cam}.npy", arr)
-        for cam, arr in self.last_depth.items(): np.save(out / f"last_depth_{cam}.npy", arr)
-        for cam, arr in self.depth.items(): np.savez_compressed(out / f"depth_{cam}.npz", depth_mm=np.rint(arr * 1000).astype(np.uint16))
-        if self.proprio is not None: np.save(out / "proprio.npy", self.proprio)
-        if self.frame_step is not None:
-            np.savez(out / "frame_meta.npz", frame_step=self.frame_step, frame_time_s=self.frame_time_s,
-                     **{f"extrinsic_cv/{c}": e for c, e in self.extrinsic_cv.items()})
+        for cam, b in self.video.items():
+            (out / f"{cam}.mp4").write_bytes(b)
+        for cam, img in self.last.items():
+            (out / "last").mkdir(exist_ok=True)
+            Image.fromarray(np.ascontiguousarray(img)).save(out / "last" / f"{cam}.jpg", quality=90)
+        for cam, arr in self.frames.items():
+            d = out / "frames" / cam
+            d.mkdir(parents=True, exist_ok=True)
+            for i, f in enumerate(arr):
+                Image.fromarray(np.ascontiguousarray(f)).save(d / f"{i:03d}.jpg", quality=85)
+        for cam, arr in self.depth.items():
+            np.save(out / f"depth_{cam}.npy", arr)
+        if self.proprio is not None:
+            np.save(out / "proprio.npy", self.proprio)
         return str(out)
 
 
 class Robot:
-    def __init__(self, base: str | None = None, timeout: float = 3600.0):
-        """Connect to the sim service and wait until it answers GET /spec. `timeout` (seconds) is how long to wait for a
-        service that is still starting: the default outlasts every task's start-up watchdog (the longest is 2400 s; an
-        Isaac Sim start on a busy host takes 10-30 minutes), so the first Robot() returns when the simulator is up. The
-        wait is part of your wall-clock budget; progress is printed to stderr once a minute."""
-        cands = [base or os.environ.get("SIM_URL"), "http://sim:8000", "http://localhost:8000"]
-        t0 = time.time(); last = None; told = t0
+    def __init__(self, base: str | None = None, timeout: float = 600.0):
+        candidates = [c for c in (base or os.environ.get("SIM_URL"), "http://sim:8000", "http://localhost:8000") if c]
+        t0, last = time.time(), None
         while time.time() - t0 < timeout:
-            for b in [c for c in cands if c]:
+            for b in candidates:
                 try:
-                    r = requests.get(b + "/spec", timeout=(5, 30))
-                    if r.status_code == 503: last = "warming up"; break
-                    if r.status_code == 409: raise EpisodeOver(_over(r))   # it gave up for good: no wait brings it back
-                    r.raise_for_status(); self.base = b; self._spec = r.json()
-                    if not str(self._spec.get("protocol", "")).startswith(ACCEPTED):
-                        raise RuntimeError(f"not a 2.x service: protocol {self._spec.get('protocol')!r}")
+                    r = requests.get(b + "/spec", timeout=(5, 60))
+                    if r.status_code == 503:
+                        last = "warming up"
+                        continue
+                    r.raise_for_status()
+                    self.base, self._spec = b, r.json()
+                    if not str(self._spec.get("protocol", "")).startswith(PROTOCOLS):
+                        raise RuntimeError(f"not an eai-standard/2.x service: {self._spec.get('protocol')}")
                     return
-                except requests.exceptions.RequestException as e:
-                    last = e
-            if time.time() - told >= 60:
-                told = time.time()
-                print(f"[rcb_client] still waiting for the sim service to start ({told - t0:.0f} s of at most {timeout:.0f} s; "
-                      f"last answer: {str(last)[:200]})", file=sys.stderr, flush=True)
+                except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+                    last = e                         # not up yet (the scene takes about a minute), or busy
             time.sleep(2)
-        raise RuntimeError(f"sim service unavailable after {time.time() - t0:.0f} s (Robot(timeout={timeout:.0f}); last answer: {last}). "
-                           "If the simulator is still starting, call Robot() again: nothing has been executed.")
+        raise RuntimeError(f"sim service unavailable: {last}")
 
     def spec(self) -> dict:
         return self._spec
 
-    def _post(self, path: str, meta: dict, parts: list, timeout: float) -> Result:
-        body = rcb1.encode(meta, parts)
-        r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"}, timeout=(5, timeout))
-        if r.status_code == 409:
-            raise EpisodeOver(_over(r) if r.headers.get("Content-Type", "").startswith("application/json") else "episode finished")
-        if r.status_code >= 400:
-            try: err = r.json()
-            except Exception: err = {"error": r.text[:300]}
-            raise ValueError(f"{r.status_code}: {err.get('error')} {err.get('detail', '')}".strip())
-        m, p = rcb1.decode(r.content); return Result(m, p, self._spec)
-
-    def _common(self, cameras, video_fps, depth, include_depth) -> dict:
-        if isinstance(cameras, str): cameras = [cameras]      # one camera name, not its characters
-        cams = list(cameras) if cameras is not None else self._spec.get("default_cameras")
-        if depth is None or depth is False: depth = "frames" if include_depth else "none"
-        elif depth is True: depth = "last"
-        m = {"cameras": cams, "video_fps": None if video_fps is None else int(video_fps), "depth": depth}
-        return {k: v for k, v in m.items() if v is not None}
-
-    def submit(self, action_type: str, actions, dt: float | None = None, interpolate: str = "linear", cameras=None,
-               video_fps: int | None = None, video: str = "mp4", depth=None, include_depth: bool = False, note: str = "") -> Result:
-        """Execute a chunk of low-level actions (T, dim); see spec()['action_types'] for dims, layouts, limits and semantics.
-        dt defaults to one control period, cameras to spec()['default_cameras']; depth: None | True (= "last") | "frames"."""
-        a = np.asarray(actions, dtype=np.float32)
-        if a.ndim == 1: a = a[None, :]
-        if dt is None and self._spec.get("control_hz"): dt = 1.0 / float(self._spec["control_hz"])
-        meta = {"type": action_type, "interpolate": interpolate, "video": video, "note": note,
-                **({} if dt is None else {"dt": float(dt)}), **self._common(cameras, video_fps, depth, include_depth)}
-        res = self._post("/submit", meta, [rcb1.array_part("actions", a)], timeout=1800)
-        if res.stopped:
-            print(f"[rcb_client] the service stopped this call early ({res.stopped}): {res.meta.get('executed_rows')} of {len(a)} rows "
-                  "executed; meta['proprio']['now'] is where the robot is", file=sys.stderr)
-        return res
-
-    def get_obs(self, cameras=None, seconds: float = 0.0, video_fps: int | None = None, depth=None, include_depth: bool = False,
-                video: str = "frames") -> Result:
-        """Current frames (seconds=0, free) or hold the last command and watch for `seconds` (returns the video).
-        depth: None | True (= "last": the last frame's depth) | "frames" (one depth map per frame)."""
-        meta = {"seconds": float(seconds), "video": video, **self._common(cameras, video_fps, depth, include_depth)}
-        res = self._post("/observe", meta, [], timeout=600)
-        if res.stopped:
-            print(f"[rcb_client] the service stopped this watch early ({res.stopped}) after {res.meta.get('control_steps_watch')} control "
-                  "steps", file=sys.stderr)
-        return res
-
     def status(self) -> dict:
         r = requests.get(self.base + "/status", timeout=(5, 60))
-        if r.status_code == 409: raise EpisodeOver(_over(r))   # the service gave up for good (wait_ready() ends here too)
-        r.raise_for_status(); return r.json()
-
-    def wait_ready(self, timeout: float = 3600.0) -> dict:
-        """After a connection error: wait until the service answers GET /status again (it resumes the same episode after a
-        crash), then return the status. Raises RuntimeError after `timeout` seconds, and EpisodeOver at once when the
-        service answers that it gave up on the episode."""
-        t0 = time.time(); last = None
-        while time.time() - t0 < timeout:
-            try:
-                return self.status()
-            except requests.exceptions.RequestException as e:
-                last = e
-            time.sleep(5)
-        raise RuntimeError(f"sim service did not come back within {timeout:.0f} s: {last}")
-
-    def kinematics(self, body: dict) -> dict:
-        """POST /kinematics (stateless: never moves the robot, never advances time). Raises ValueError on a bad request."""
-        r = requests.post(self.base + "/kinematics", json=body, timeout=(5, 120))
-        if r.status_code >= 400:
-            try: err = r.json()
-            except Exception: err = {"error": r.text[:300]}
-            raise ValueError(f"{r.status_code}: {err.get('error')} {err.get('detail', '')}".strip())
+        r.raise_for_status()
         return r.json()
 
-    def fk(self, q, links=None, base_pose=None) -> dict:
-        """Forward kinematics: q in spec()['kinematics']['joint_names'] order -> {"ok", "frame", "poses": {link: [x,y,z, quat]}}
-        (quaternion order spec()['world']['quaternion_order']; a mobile robot answers in its base frame unless base_pose is given)."""
-        body = {"op": "fk", "q": [float(v) for v in np.asarray(q).reshape(-1)]}
-        if links is not None: body["links"] = list(links)
-        if base_pose is not None: body["base_pose"] = [float(v) for v in base_pose]
-        return self.kinematics(body)
+    def get_obs(self, cameras=None, seconds: float = 0.0, video_fps: int = 10, include_depth: bool = False,
+                video: str = "frames") -> Result:
+        meta = {"cameras": _names(cameras), "seconds": float(seconds), "video_fps": int(video_fps),
+                "include_depth": bool(include_depth), "video": video}
+        return self._post("/observe", meta, [], timeout=900)
 
-    def ik(self, targets: dict, seed=None, base_pose=None, **opts) -> dict:
-        """Inverse kinematics: {frame: [x,y,z, quat]} (frames from spec()['kinematics']['ik_targets']) and an optional seed q ->
-        {"ok", "q", "error": {frame: {"pos_m", "rot_rad"}}}. opts: tol_pos_m, tol_rot_rad, max_iters."""
-        body = {"op": "ik", "targets": {k: [float(v) for v in p] for k, p in targets.items()}, **opts}
-        if seed is not None: body["seed"] = [float(v) for v in np.asarray(seed).reshape(-1)]
-        if base_pose is not None: body["base_pose"] = [float(v) for v in base_pose]
-        return self.kinematics(body)
+    def submit(self, action_type: str, actions, dt: float | None = None, interpolate: str = "linear", cameras=None,
+               video_fps: int = 10, video: str = "mp4", include_depth: bool = False, note: str = "") -> Result:
+        a = np.asarray(actions, dtype=np.float64)
+        if a.ndim == 1:
+            a = a[None, :]
+        if not np.all(np.isfinite(a)):
+            raise ValueError("actions contain NaN or inf")
+        meta = {"type": action_type, "dt": None if dt is None else float(dt), "interpolate": interpolate,
+                "cameras": _names(cameras), "video_fps": int(video_fps), "video": video,
+                "include_depth": bool(include_depth), "note": note}
+        return self._post("/submit", meta, [rcb1.array_part("actions", a)], timeout=1800)
+
+    def reset(self, cameras=None, include_depth: bool = False) -> Result:
+        return self._post("/reset", {"cameras": _names(cameras), "include_depth": bool(include_depth)}, [], timeout=900)
+
+    def _post(self, path: str, meta: dict, parts: list, timeout: float) -> Result:
+        body = rcb1.encode(meta, parts)
+        if len(body) > MAX_BODY:                     # the service would close the connection on it unread
+            raise ValueError(f"{path}: {len(body)} bytes, over the protocol's {MAX_BODY}: send fewer rows")
+        r = requests.post(self.base + path, data=body, headers={"Content-Type": "application/x-rcb1"},
+                          timeout=(5, timeout))
+        if r.headers.get("Content-Type", "").startswith("application/x-rcb1") and r.status_code == 200:
+            return Result(*rcb1.decode(r.content))
+        try:
+            err = r.json()
+        except ValueError:
+            err = {"error": r.text[:300]}
+        msg = f"{r.status_code} {path}: {err.get('error')}" + (f" ({err['detail']})" if err.get("detail") else "")
+        if r.status_code == 409:
+            raise EpisodeOver(msg + (f"; reason {err['reason']}" if err.get("reason") else "")
+                              + (f"; resets_left {err['resets_left']}" if "resets_left" in err else ""))
+        if r.status_code in (400, 413):
+            raise ValueError(msg)
+        raise RuntimeError(msg)
+
+
+def _names(cameras) -> list[str] | None:
+    return None if cameras is None else [cameras] if isinstance(cameras, str) else list(cameras)
