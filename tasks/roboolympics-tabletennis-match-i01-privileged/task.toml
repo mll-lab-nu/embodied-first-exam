@@ -13,6 +13,7 @@ robot = "franka-panda"
 family = "tabletennis_match"
 mode = "privileged"
 dynamics = "dynamic"
+verifier_wall_clock = true
 instance_seed = 22
 opponent_level = 2
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
