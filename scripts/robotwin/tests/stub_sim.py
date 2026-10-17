@@ -5,7 +5,10 @@ rcb_live.py), so the service under test is the shipped file, unchanged.
 The "scene": 16 driven joints whose positions follow their drive targets at once. The left wrist camera's pose follows
 the left arm's first joint. The task succeeds when fl_joint1's target is above 0.5 and RoboTwin's left-gripper-open
 clause holds. Failure injection (environment variables): RCB_STUB_HASH_MISMATCH (the instance never rebuilds),
-RCB_STUB_REPLAY_FAIL (the verification replay raises), RCB_STUB_VIDEO_S (render_video sleeps that long),
+RCB_STUB_REPLAY_FAIL (a replay raises; every replay also leaves the marker stub_replayed in RCB_DATA, if set, so a test can
+assert that the standard service replays nothing), RCB_STUB_VIDEO_S (render_video sleeps that long), RCB_STUB_VIDEO_FAIL
+(render_video raises), RCB_STUB_STEP_RAISE (a physics step raises once fl_joint1's target is below -2.5: a
+simulator error caused by the agent's action),
 RCB_STUB_SUCCESS_AFTER (the task succeeds only from that many physics steps on: objects that settle while the agent
 watches), RCB_STUB_CRASH_ON_SUCCESS_SHA=k (the process dies at the k-th state hash taken while the task succeeds, once
 per data directory: a crash between a successful call's physics and its checkpoint, k=1, or later)."""
@@ -140,6 +143,8 @@ class Session:
             for j, p, v in zip(self._joints, row[:16], row[16:32]):
                 j.set_drive_target(p); j.set_drive_velocity_target(v)
             r.left_gripper_val, r.right_gripper_val = float(row[32]), float(row[33])
+        if os.environ.get("RCB_STUB_STEP_RAISE") and self.env.robot.left_arm_joints[0].drive_target < -2.5:
+            raise RuntimeError("PhysX: articulation exploded (stub)")
         if self._recording is not None:
             self._recording.append(self._row())
         self._sim_steps += 1; self.env.sim_steps = self._sim_steps
@@ -168,6 +173,8 @@ class Session:
         np.savez(path, actions=np.asarray(actions, dtype=np.float64), task=self.task, seed=self.seed, meta=json.dumps(meta or {}))
 
     def replay(self, actions):
+        if os.environ.get("RCB_DATA"):
+            with open(os.path.join(os.environ["RCB_DATA"], "stub_replayed"), "a") as f: f.write("replay\n")
         if os.environ.get("RCB_STUB_REPLAY_FAIL"):
             raise RuntimeError("CUDA out of memory (stub)")
         self._too_long(len(actions))
@@ -176,11 +183,25 @@ class Session:
             self.step(row)
         return {"success": bool(self.env.check_success()), "sim_steps": self._sim_steps, "state_sha": self.state_sha()}
 
+    def reset(self):
+        self._recording = None; self._build()
+
+    def _state_vector(self):
+        return self._row()
+
     def render_frame(self, camera="head_camera", size=None):
         return np.zeros((240, 320, 3), np.uint8)
 
+    def render_grid(self, cameras=(), cols=3, size=(320, 240)):     # what rcb_live renders (the real one, when imageio is there)
+        if os.environ.get("RCB_STUB_VIDEO_FAIL"):
+            raise RuntimeError("renderer lost (stub)")
+        rows = -(-max(1, len(cameras)) // cols)
+        return np.full((size[1] * rows, size[0] * cols, 3), int(self.env.robot.left_arm_joints[0].drive_target * 100) % 256, np.uint8)
+
     def render_video(self, actions, path, **kw):
         time.sleep(float(os.environ.get("RCB_STUB_VIDEO_S", "0")))
+        if os.environ.get("RCB_STUB_VIDEO_FAIL"):
+            raise RuntimeError("video encoder failed (stub)")
         open(path, "wb").write(b"stub")
         return {}
 
