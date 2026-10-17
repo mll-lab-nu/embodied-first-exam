@@ -905,9 +905,9 @@ verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "author estimate (ws-1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
 
-# roboolympics, exported matches (standard-realtime): 6 task(s)
+# roboolympics, exported matches (standard-realtime): 13 task(s)
 [[rule]]
-match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-standard-realtime$"
+match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-standard-realtime$"
 min_cpus = 8.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 0.0
@@ -946,7 +946,7 @@ measured = "vanilla Harbor 0.23.0 on ws-3 (32 cores), 2026-10-15, oracle and nop
 
 # roboolympics, standard-realtime: 13 task(s)
 [[rule]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 min_cpus = 3.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 1.0
@@ -1072,7 +1072,7 @@ trial_max_memory_gb = 16.0
 measured = "author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default"
 
 [[limit]]
-match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-standard-realtime$"
+match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-standard-realtime$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 4.0
@@ -1117,7 +1117,7 @@ trial_max_memory_gb = 12.0
 measured = "design defaults of RoboOlympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB"
 
 [[limit]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -2478,7 +2478,7 @@ match = "^roboarc-(blanket-flatten|blanket-fold)-.*-privileged$"
 main = { cpus = 8.0, memory_gb = 30.0, pids = 8192 }
 
 [[cap]]
-match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
+match = "^roboolympics-(?!(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-).*-standard-realtime$"   # not the exported matches (their own rules)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
@@ -2609,7 +2609,7 @@ match = "^cell-.*-standard-realtime$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 [[cap]]
-match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl)-match-i[0-9]{2}-standard-realtime$"
+match = "^roboolympics-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl)-i[0-9]{2}-standard-realtime$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }   # the sim service's own pids_limit (RoboOlympics' exported docker-compose.yaml)
 

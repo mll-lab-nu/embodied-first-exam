@@ -91,14 +91,21 @@ BENCHMARKS = [  # (directory prefix, label)
 # (CUTOFF_NOTE_TASK below):
 RO_EXPORTED_TASKS = ("roboolympics-badminton-actskill-i00-standard",
                      "roboolympics-badminton-match-i01-standard-realtime",
+                     "roboolympics-badminton-duelrl-i01-standard-realtime",
                      "roboolympics-badminton-match-i02-standard-realtime",
+                     "roboolympics-badminton-match-i04-standard-realtime",
                      "roboolympics-fencing-bout-i01-standard",
                      "roboolympics-fencing-bout-i02-standard",
+                     "roboolympics-foosball-match-i01-standard-realtime",
                      "roboolympics-soccer-match-i00-standard-realtime",
                      "roboolympics-soccerssl-match-i00-standard-realtime",
+                     "roboolympics-soccerssl-match-i01-standard-realtime",
+                     "roboolympics-tabletennis-duelrl-i01-standard-realtime",
                      "roboolympics-tabletennis-hitskill-i00-standard",
                      "roboolympics-tabletennis-match-i01-standard-realtime",
-                     "roboolympics-tabletennis-match-i02-standard-realtime")
+                     "roboolympics-tabletennis-match-i02-standard-realtime",
+                     "roboolympics-tabletennis-match-i03-standard-realtime",
+                     "roboolympics-tabletennis-match-i04-standard-realtime")
 # PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
