@@ -35,8 +35,8 @@ joint positions, velocities, actuator efforts, wrist pose and current targets; o
 conditions are not published; the service reports only whether the episode ended (`done`, with reason `success` or
 `task_failure`). An episode ends at the first success
 or the first failure (see the task text); after that the service accepts no more actions until a reset (see
-`## Episodes and resets`). The service records every action and watch step, then replays the graded episode with the
-recorded hand in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
+`## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
+(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
 needed.
 
 ```python

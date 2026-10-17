@@ -26,7 +26,7 @@ the targets at the start keep them. The task, predicate and fail-fast rules are 
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own joint
 positions, velocities, actuator efforts, both palm poses (`l_hand_palm`, `r_hand_palm`) and current targets. Object poses, contacts and the predicate
 state are not published. A failure ends the episode; a reset starts a new one (see `## Episodes and resets`). The
-service records every executed row and replays the graded episode in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory
+service records every executed row and judges the graded episode as it ran (that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory
 hand-in is needed.
 
 ```python

@@ -34,10 +34,13 @@ actuator targets only; it
 never drives an object pose or applies an object force, and it is never copied into the agent's environment or image.
 
 ## Verification
-standard mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
-in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final state hashes; in standard mode the replay
-hash must also equal the live final hash. A replay ends at the first success or the first failure. Failures are
+Standard mode. The trusted sim service judges the episode it ran (the last one after resets) with the task's predicate and
+the selected hand, after the agent's container is stopped; its record (`final.json`, `graded_by = "live"`) is the
+verdict, and nothing is replayed to grade it. The isolated verifier reads only the service's artifacts. The
+service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
+verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
+that does not build at the episode's start are infrastructure errors.
+The episode ends at the first success or the first failure. Failures are
 fail-fast and permanent and are checked after every 2 ms physics substep: a cell, the door, the remote or the tray
 below the table top or outside the workspace box, any of them touching the floor, the remote or the tray moved more
 than 3 cm or tilted more than 15 degrees, the gray cell touching the table, the green cell touching the table again
@@ -82,3 +85,4 @@ manipulation feasibility with an arm-mounted hand in simulation, not a zero-shot
 ### Change Log
 - 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.
 - 2026-10-16 (board 0136, video only): the collect hook renders the replay video in its remaining time (timeout_sec minus 60 s, at most the video limit). The video films at most 300 steps (a longer episode at a larger stride; an OSMesa frame of an arm scene takes up to ~3.6 s on two cores), and the video, verifier and collect limits cover the longest archive the row limit allows. The verdict, the replays and `reward.json` are unchanged.
+- 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay; video by one render pass from the trajectory after the verdict. `success` is the sim service's own verdict on the episode it ran (the same predicate a replay recomputed: the same rows through the same step, a success ending the episode); the collect hook no longer replays it twice in fresh processes, and `final.json` / `reward.json` drop `replay_success`, `deterministic` and `live_matches_replay` (`graded_by = "live"`, `replays = 0`). The service checks the frozen instance's files against the generator's record when an episode begins (`instance_mismatch`, an infrastructure error). The agent's side (the instruction's grading sentence aside), the scene and the predicate are unchanged.

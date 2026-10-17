@@ -35,9 +35,12 @@ Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 traje
 ## Verification
 standard mode. Privileged: the isolated verifier reads only `actions` and `hand` from `/app/output/trajectory.npz`,
 rebuilds the frozen scene for that hand and replays the rows twice in fresh processes; reward 1 iff both replays
-succeed and their final state hashes are identical. Standard: the trusted simulator service journals every executed
-row; its collect hook replays the episode twice in fresh processes, and the isolated verifier grades only those
-service artifacts (live success, both replay successes, identical hashes, replay hash equal to the live hash).
+succeed and their final state hashes are identical. Standard: the trusted sim service judges the episode it ran (the last one after resets) with the task's predicate and
+the selected hand, after the agent's container is stopped; its record (`final.json`, `graded_by = "live"`) is the
+verdict, and nothing is replayed to grade it. The isolated verifier reads only the service's artifacts. The
+service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
+verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
+that does not build at the episode's start are infrastructure errors.
 
 The verdict is computed from simulator state only: fold angle > 2.6 rad, mean plastic crease angle on the fold line
 > 2.2 rad with coverage >= 0.9, free-edge to fixed-edge distance < 18 mm, strain < 0.08, every paper vertex over the
@@ -85,3 +88,4 @@ fibre or adhesive-peel model.
 ### Change Log
 - 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.
 - 2026-10-16 (board 0136, video only): the collect hook renders the replay video in its remaining time (timeout_sec minus 60 s) instead of a fixed 300 s, which cut the video of episodes longer than ~10k steps. The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.
+- 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay; video by one render pass from the trajectory after the verdict. `success` is the sim service's own verdict on the episode it ran (the same predicate a replay recomputed: the same rows through the same step, a success ending the episode); the collect hook no longer replays it twice in fresh processes, and `final.json` / `reward.json` drop `replay_success`, `deterministic` and `live_matches_replay` (`graded_by = "live"`, `replays = 0`). The service checks the frozen instance's files against the generator's record when an episode begins (`instance_mismatch`, an infrastructure error). The agent's side (the instruction's grading sentence aside), the scene and the predicate are unchanged.

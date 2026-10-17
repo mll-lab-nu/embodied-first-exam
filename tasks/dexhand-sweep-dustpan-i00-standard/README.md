@@ -35,10 +35,11 @@ force-bearing contacts per handle, grip drift <= 4.4 mm, rotation <= 0.022 rad).
 
 ## Verification
 The trusted simulator service journals every executed row with the hand it runs (`DEXHAND_HAND`, default `sharpa`),
-evaluates the predicate after every 0.5 ms physics step, ends the episode at the first success or failure, and its
-collect hook replays the recorded rows twice in fresh processes. The separate verifier reads only the service's
-`final.json`: reward 1 requires live success, both replay successes, identical replay hashes and agreement with the
-live hash. Missing service evidence is an infrastructure error. Release status: provisional (human review).
+evaluates the predicate after every 0.5 ms physics step and ends the episode at the first success or failure. That
+live episode is the verdict (`final.json`, `graded_by = "live"`): nothing is replayed to grade it (owner, 2026-10-17,
+board 0151). The separate verifier reads only the service's `final.json`: reward 1 requires live success. The
+collect hook then renders `replay.mp4` from the recorded rows in one video-only pass, which never changes the
+verdict. Missing service evidence is an infrastructure error. Release status: provisional (human review).
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -70,3 +71,4 @@ hardware identification is claimed. The arm and hand meshes are baked into the `
 ### Change Log
 - 2026-10-14 (board 0109, before the first scored run): 20 resets in standard mode (owner; PROTOCOL §4.5, DexToolBench's value). `POST /reset` starts a new episode from the frozen start (the same state hash as a fresh process); only the last episode is graded, a success ends the trial; `reward.json` adds `resets` and `reset_budget`. Before, one trial was one episode.
 - 2026-10-16 (board 0136, video only): the collect hook renders the replay video in its remaining time (timeout_sec minus 60 s) instead of a fixed 300 s, which cut the video of episodes longer than ~10k steps. The verdict, the replays and `reward.json` are unchanged; earlier results stay valid.
+- 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay; video by one render pass from the trajectory after the verdict. `success` is the sim service's own verdict on the episode it ran (the same predicate a replay recomputed: the same rows through the same step, a success ending the episode); the collect hook no longer replays it twice in fresh processes, and `final.json` / `reward.json` drop `replay_success`, `deterministic` and `live_matches_replay` (`graded_by = "live"`, `replays = 0`). The service checks the frozen instance's files against the generator's record when an episode begins (`instance_mismatch`, an infrastructure error). The agent's side (the instruction's grading sentence aside), the scene and the predicate are unchanged.
