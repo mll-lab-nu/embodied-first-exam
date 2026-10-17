@@ -24,7 +24,18 @@ python "$SRV/rcb_limited.py" end "$DATA" --timeout 7200; rc=$?
 if [ "$rc" = 2 ]; then
     echo "[finalize] final.json already holds the verdict (a give-up)"; exit 0
 fi
-if [ "$rc" != 0 ] && [ -s "$DATA/episode.json" ]; then
+# a late exit's episode.json counts only when the newest service start wrote it (never a stale one from before a crash)
+if [ "$rc" != 0 ] && [ -s "$DATA/episode.json" ] && python - <<'PY'
+import json, os, sys
+d = os.environ.get("RCB_DATA", "/out")
+try:
+    ep = json.load(open(os.path.join(d, "episode.json")))
+    last = json.loads([x for x in open(os.path.join(d, "startups.jsonl")) if x.strip()][-1])
+    sys.exit(0 if ep.get("pid") is not None and ep.get("pid") == last.get("pid") else 1)
+except Exception:
+    sys.exit(1)
+PY
+then
     echo "[finalize] the service dumped its episode but did not exit in time (rc $rc): final.json from its episode.json"
 elif [ "$rc" != 0 ]; then
     echo "[finalize] the service did not end the episode (rc $rc): recorded as an infrastructure failure"

@@ -83,6 +83,8 @@ def load(p: pathlib.Path) -> dict:
 
 
 def candidate(mode: str, rw: dict) -> bool:
+    if mode != "privileged" and rw.get("graded_by_live"):
+        return False                    # graded by the live episode (board 0151): no replay, no `deterministic` to re-grade
     if rw.get("success"):
         return True
     if mode == "privileged":

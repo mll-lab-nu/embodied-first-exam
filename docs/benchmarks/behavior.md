@@ -278,7 +278,10 @@ its log has no failed download: the scene loads from the mounted dataset alone.
   Isaac start + the episode at 1.9-3.5 control steps/s on an 8-vCPU L40S; board 0136 measured about 630 slot-hours of
   BEHAVIOR collect time over 553 standard trials). `[[verifier.collect]] timeout_sec` = 23400 s (was 52200 s): the end
   (up to 2 h through a resume) + the video render when it runs (up to 4 h) + 30 min. Before 2026-10-17 (below):
-  `success = live ∧ replay ∧ deterministic`, two fresh-process replays in the hook.
+  `success = live ∧ replay ∧ deterministic`, two fresh-process replays in the hook. The settle window is logged as a call
+  (`/settle`), so a crash there counts as inside the agent's calls; known limit: a native crash (segfault) of the service
+  in the window restarts the sim container and with it ends the collect hook running there (no finalized `final.json`:
+  infrastructure).
 - **Replays that agree (2026-10-14, failure analysis item 16).** 15 trials of the 10-08..10-14 runs (7 privileged, 8
   standard) completed the task live or in a replay and scored 0 because their two fresh-process replays (or the live run
   and a replay) ended in different states; all are transition or heat tasks (setting_the_fire, slicing_vegetables,

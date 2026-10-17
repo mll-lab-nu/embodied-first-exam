@@ -101,6 +101,15 @@ class StandardGrader(unittest.TestCase):
         self.check({**EPISODE, "finalized": False, "done": True}, "0", success=0, live_success=1, finalized=0, infra_error=1)
         self.check({k: v for k, v in GOOD.items() if k != "finalized"}, "0", success=0, infra_error=1)
 
+    def test_a_post_exception_state_is_never_a_success(self):
+        self.check({**GOOD, "success": True, "live_success": True, "reason": "error"}, "0", success=0, infra_error=0, sim_error=1)
+
+    def test_live_graded_trials_are_no_regrade_candidates(self):
+        sys.path.insert(0, str(ROOT / "scripts" / "behavior"))
+        import regrade
+        self.assertFalse(regrade.candidate("standard", {"graded_by_live": 1, "finalized": 1, "success": 0, "live_success": 0}))
+        self.assertTrue(regrade.candidate("standard", {"finalized": 1, "success": 0, "deterministic": 0}))   # an old record
+
     def test_layer_infra_verdicts(self):
         self.check({"success": False, "done": True, "reason": "sim_crashed", "finalized": True, "gave_up": True, "infra_error": 1}, "0",
                    infra_error=1, gave_up=1)
@@ -137,7 +146,7 @@ def tiny_mp4(path: Path) -> bool:
     return r.returncode == 0 and path.exists()
 
 
-def finalize(episode: dict | None = EPISODE, live_video: str = "good", **env) -> dict:
+def finalize(episode: dict | None = EPISODE, live_video: str = "good", newest_pid: int | None = None, **env) -> dict:
     """Run the real finalize.sh in a scratch /out with the stand-in python; returns final.json (plus "_stdout", "_args").
     live_video: "good" (a playable live.mp4), "bad" (a file that does not play) or "none"."""
     with tempfile.TemporaryDirectory(prefix="rcb_behavior_fin_") as tmp:
@@ -148,6 +157,8 @@ def finalize(episode: dict | None = EPISODE, live_video: str = "good", **env) ->
         mp4 = tmp / "v.mp4"; have = tiny_mp4(mp4)
         if episode is not None:
             (out / "episode.json").write_text(json.dumps(episode))
+        if newest_pid is not None:                              # startups.jsonl: the newest service start's pid
+            (out / "startups.jsonl").write_text(json.dumps({"ts": 1, "pid": 1}) + "\n" + json.dumps({"ts": 2, "pid": newest_pid}) + "\n")
         (out / "final.json").write_text(json.dumps({**(episode or {}), "finalized": False}))     # the service's own copy
         np.savez(out / "trajectory.npz", actions=np.zeros((3, 25), np.float32), task="picking_up_trash")
         if live_video == "good" and have:
@@ -234,10 +245,14 @@ class Finalize(unittest.TestCase):
         self.assertEqual(fin["_args"], [])
 
     def test_a_dumped_episode_is_the_verdict_when_the_service_is_late_to_exit(self):
-        fin = finalize(FAKE_END_RC=1, live_video="none")       # episode.json written, the process did not exit in time
+        ep = {**EPISODE, "pid": 4242, "startup": 2}
+        fin = finalize(ep, FAKE_END_RC=1, live_video="none", newest_pid=4242)   # the newest start dumped, then did not exit
         self.assertTrue(fin["success"]); self.assertTrue(fin["end_timed_out"]); self.assertNotIn("infra_error", fin)
         self.assertEqual(fin["_args"], [])                      # no render while the service may still hold the GPU
         self.assertEqual((self.graded(fin)["success"], self.graded(fin)["infra_error"]), (1, 0))
+        for stale in ({**EPISODE, "pid": 1}, EPISODE):          # an earlier start's record, or one without a pid: never taken
+            fin = finalize(stale, FAKE_END_RC=1, live_video="none", newest_pid=4242)
+            self.assertEqual(fin.get("infra_error"), 1); self.assertFalse(fin["success"])
 
     def test_a_give_up_on_disk_is_kept(self):
         fin = finalize(episode=None, FAKE_END_RC=2)                            # rc 2: final.json holds the verdict

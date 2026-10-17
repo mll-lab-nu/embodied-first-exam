@@ -221,7 +221,10 @@ class EpisodeEnd(unittest.TestCase):
             ep = self.end(s)
             self.assertTrue(ep["success"]); self.assertTrue(ep["settled_success"]); self.assertEqual(ep["reason"], "success")
             self.assertEqual(ep["settle_steps"], 25); self.assertEqual(self.steps_log(s), 40)   # held still on the live simulator
-            self.assertEqual((ep["graded_by"], ep["replays"]), ("live", 0))
+            self.assertEqual((ep["graded_by"], ep["replays"]), ("live", 0)); self.assertEqual(ep["pid"], s.p.pid)
+            ev = [json.loads(l) for l in (s.out / "episode.jsonl").read_text().splitlines()]
+            self.assertTrue([e for e in ev if e.get("ev") == "call_begin" and e.get("path") == "/settle"])   # the window is a call
+            self.assertTrue([e for e in ev if e.get("ev") == "call_end" and e.get("path") == "/settle"])
             self.assertEqual(len(np.load(s.out / "trajectory.npz")["actions"]), 15)     # the agent's rows only
             self.assertEqual(ep["n_actions"], 15)
         finally:
@@ -334,6 +337,20 @@ class ResumeEndsEarly(unittest.TestCase):
             self.assertTrue(fin["gave_up"]); self.assertTrue(fin["finalized"]); self.assertEqual(fin["infra_error"], 1)
             self.assertFalse(fin["success"]); self.assertTrue(fin["reason"].startswith("resume_failed"), fin["reason"])
             self.assertIsNone(s.p.poll())
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+    def test_a_resume_drops_a_lost_calls_episode_record(self):
+        s = Service()
+        s.wait()
+        self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
+        s.kill()
+        (s.out / "episode.json").write_text(json.dumps({"success": True, "reason": "success"}))   # from a call the crash lost
+        s = Service(work=s.work)
+        try:
+            s.wait()
+            self.assertFalse(s.get("/status")["done"])
+            self.assertFalse((s.out / "episode.json").exists())   # never taken for this episode's record by finalize.sh
         finally:
             s.kill(); shutil.rmtree(s.work, ignore_errors=True)
 

@@ -104,6 +104,7 @@ def dump() -> None:
         "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), "sim_breakdown": S.breakdown is not None,
         "settle_steps": int(E.get("settle_steps") or 0), "settled_success": bool(E.get("settled_success")),
         "q_score": st.get("q_score"), "goal_first_step": st.get("goal_first_step"), "graded_by": "live", "replays": 0,
+        "startup": EP.n_startups, "pid": os.getpid(),   # which service start wrote it (finalize.sh's late-exit check)
         **EP.final_fields()})
     write_final()
 
@@ -111,7 +112,9 @@ def dump() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if not E["success"]:
+    if reason == "error":               # a simulator error the agent's actions raised: the state after it is never judged
+        E["success"] = False
+    elif not E["success"]:
         try: E["success"] = check_success()
         except Exception: pass
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
@@ -320,7 +323,7 @@ SPEC = {
     "episode": ("one episode, no reset: it ends as a success once the task's goal has held for "
                 f"{M.REST_STEPS / CTRL_HZ:g} s of simulated time in a row ({M.REST_STEPS} control steps) with no goal object in a "
                 f"gripper (assisted grasping lets go when both fingers are commanded open) and every goal object at rest (slower "
-                f"than {M.REST_SPEED_M_S:g} m/s; the goal objects: every object the goal names, a tool or appliance it names (even inside a `not`) included); when your time is up first, the service holds "
+                f"than {M.REST_SPEED_M_S:g} m/s; the goal objects: every object the goal names, a tool or appliance it names (even inside a `not`) included); when your episode is still running at the end of your time (you stopped early, or your time ran out), the service holds "
                 f"the robot still (your last command, the base at 0) for up to {M.SETTLE_STEPS / CTRL_HZ:g} s more on this simulator, and a "
                 "goal that settles there counts as a success; when the robot has fallen over, i.e. its "
                 f"base has been tilted more than {math.degrees(math.acos(M.FALL_TILT_TOLERANCE)):.1f} degrees from upright (the z of its up "
@@ -442,8 +445,10 @@ def clip_joint_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
 def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded and journaled control step. True when the call must stop: the episode is over (the BDDL goal holding
     also terminates it), or the layer stops the call (max_call_wall_s, the client hung up)."""
-    term, trunc = S.step(a); stop = EP.journal(a); rec.tick(); video_step()
+    term, trunc = S.step(a); stop = EP.journal(a)
+    # the end first: an error in the recording below then cannot turn a completed rule into reason "error"
     if term or trunc: finish("success" if check_success() else (S.end_reason or "step_guard"))
+    rec.tick(); video_step()
     return E["done"] or stop
 
 
@@ -573,11 +578,14 @@ def end_live() -> None:
         dump(); return
     E["acts"] = S.record_stop()
     n = 0
+    cid = EP.call_begin("/settle")      # logged as a call: a crash of the process in the window counts as in the agent's calls
     try:
         while n < M.SETTLE_STEPS and E["acts"] is not None and len(E["acts"]) and not S.episode_done:
             S.step(np.asarray(S.hold_action().cpu(), dtype=np.float64).reshape(-1)); n += 1; video_step()
     except Exception as exc:  # noqa: BLE001 -- the window could not run on: the episode is judged where it stopped
         traceback.print_exc(); log({"ev": "settle_error", "after_steps": n, "error": repr(exc)[:300]})
+    finally:
+        EP.call_end(cid, "/settle", settle_steps=n)
     E["settle_steps"] = n
     ok = check_success()
     E["settled_success"] = bool(ok and n > 0)
@@ -654,8 +662,8 @@ resumed = EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=prop
                    start_event={"task": TASK, "instance_id": S.instance_id, "cameras": CAMS}, on_end=_end_from_signal)
 if resumed and S.episode_done and not E["done"]:
     # the replayed episode ended although the logged one had not: with the goal holding it is a success like any other
-    # (the two fresh replays of the recorded trajectory still decide); anything else (a fall the live run did not have)
-    # is the resume's divergence, not the agent's: no verdict on the agent (resume_failed, infra_error = 1)
+    # (the resumed live episode is the verdict); anything else (a fall the live run did not have) is the resume's
+    # divergence, not the agent's: no verdict on the agent (resume_failed, infra_error = 1)
     log({"ev": "resume_ended_early", "skipped_rows": REPLAY["skipped"], "end_reason": S.end_reason, "success": check_success()})
     if check_success():
         E["ready"] = True
@@ -663,6 +671,14 @@ if resumed and S.episode_done and not E["done"]:
         E["ready"] = False
     else:
         EP.give_up(f"resume_failed: the replayed episode ended ({S.end_reason or 'step_guard'}) before the logged one did", infra=True)
+if resumed and not E["done"]:
+    # the episode goes on: an episode.json from a call the crash lost (it ended there, then was rolled back to the last
+    # checkpoint) is not this episode's record; finalize.sh must never take it for one
+    for f in ("episode.json", "trajectory.npz"):
+        try:
+            os.remove(os.path.join(DATA, f))
+        except OSError:
+            pass
 E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)

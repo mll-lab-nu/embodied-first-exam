@@ -31,7 +31,8 @@ try:
     breakdown = bool(d.get("sim_breakdown")) or reason.startswith("failure: simulator breakdown")
     infra = bool(d.get("infra_error")) or not finalized
     live = bool(d.get("live_success", d.get("success")))
-    ok = live and bool(d.get("success")) and not d.get("gave_up") and not infra
+    # reason "error": a simulator error the agent's actions raised; the state after it is never judged a success
+    ok = live and bool(d.get("success")) and reason != "error" and not d.get("gave_up") and not infra
     out = {"success": int(ok), "live_success": int(live), "graded_by_live": 1, "replays": 0,
            "finalized": int(finalized), "missing_log": 0, "n_actions": int(d.get("n_actions") or 0), "sim_steps": int(d.get("control_steps") or 0),
            "physics_steps": int(d.get("physics_steps") or 0), "steps": int(d.get("steps") or 0), "elapsed_s": num("elapsed_s"),
