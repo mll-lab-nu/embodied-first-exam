@@ -1,19 +1,23 @@
 """Standard-mode verifier (MolmoSpaces): reads what the sim service (which the agent could not touch) wrote:
-/data/final.json (live success, two fresh-process replays of the recorded trajectory, determinism, crash-recovery
-fields), /data/trajectory.npz, /data/replay.mp4. success = live success AND replay success AND deterministic, the
-replays having started in the instance's t = 0 state. Numeric-only reward.json; a reward is always written.
+/data/final.json (the live episode's result and the crash-recovery fields), /data/trajectory.npz, /data/replay.mp4.
+success = the live episode's success: upstream judge_success() on the state at the episode's end, judged by the service;
+nothing replays it (owner 2026-10-17, board 0150/0151). The video is rendered after the verdict and never decides it.
+Numeric-only reward.json; a reward is always written.
 
 infra_error = 1 means no verdict on the agent (success is 0, the trial is not the agent's failure). The agent can reach
 none of these: final.json is missing (the service never came up or its record was not collected: missing_log) or
 unreadable (also grader_error); the collect hook did not finish (`finalized` false: only the service's own running copy
 is there); a give-up after crashes between calls or a failed resume (docs/STANDARD_MODE.md §13); the service not
-ending its episode for the collect hook; a replay process that gave no result; replays that did not start in the
-instance's t = 0 state. A give-up after crashes during a call is finalized by the service and stays the agent's failure."""
+ending its episode for the collect hook; a frozen start that did not rebuild (instance_mismatch: checked by the service
+when it builds the scene, before the agent is served). A give-up after crashes during a call is finalized by the
+service and stays the agent's failure, and so is a simulator error raised by the agent's actions (reason "error")."""
 
 import json, os, shutil, traceback
 
 LOG = "/logs/verifier"
 DATA = "/data"
+LOG = os.environ.get("RCB_VERIFIER_LOG_DIR") or LOG  # a check's synthetic records (ci_checks/check-live-verdict.py)
+DATA = os.environ.get("RCB_DATA") or DATA
 os.makedirs(LOG, exist_ok=True)
 
 
@@ -26,17 +30,19 @@ def write(ok, out):
 def grade(d: dict):
     finalized = bool(d.get("finalized"))
     # the collect hook writes `finalized` with its verdict (and the service with a give-up): without it the file is the
-    # service's own running copy, which says nothing about the replays
+    # service's own running copy, before the collect hook ended the episode
     infra = bool(d.get("infra_error")) or not finalized
-    ok = bool(d.get("success")) and bool(d.get("replay_success")) and bool(d.get("deterministic"))
-    ok = ok and not d.get("instance_mismatch") and not d.get("gave_up") and not infra
+    reason = str(d.get("reason") or "")
+    mismatch = bool(d.get("instance_mismatch")) or reason.startswith("instance_mismatch")
+    live = bool(d.get("live_success", d.get("success")))
+    # reason "error": a simulator error the agent's actions raised; the state after it is never judged (the agent's 0)
+    ok = live and bool(d.get("success")) and reason != "error" and not mismatch and not d.get("gave_up") and not infra
     num = lambda k: float(d.get(k) or 0)  # noqa: E731
     return ok, {
         "success": int(ok),
-        "live_success": int(bool(d.get("success"))),
-        "replay_success": int(bool(d.get("replay_success"))),
-        "deterministic": int(bool(d.get("deterministic"))),
-        "live_matches_replay": int(bool(d.get("live_matches_replay"))),
+        "live_success": int(live),
+        "graded_by_live": 1,
+        "replays": 0,
         "finalized": int(finalized),
         "missing_log": 0,
         "n_actions": int(d.get("n_actions") or 0),
@@ -45,9 +51,9 @@ def grade(d: dict):
         "steps": int(d.get("steps") or 0),
         "elapsed_s": float(d.get("elapsed_s") or 0),
         "video_rendered": int(bool(d.get("video"))),
-        # a replay process gave no result, or the image no longer builds the frozen start: not the agent's 0
-        "grader_error": int(bool(d.get("replay_failed") or d.get("instance_mismatch"))),
-        "instance_mismatch": int(bool(d.get("instance_mismatch"))),
+        "video_pending": int(bool(d.get("video_pending"))),
+        "grader_error": 0,
+        "instance_mismatch": int(mismatch),
         # an infrastructure failure, not the agent's (PROTOCOL §2.6): the module docstring lists the cases
         "infra_error": int(infra),
         "gave_up": int(bool(d.get("gave_up"))),
@@ -63,7 +69,7 @@ def grade(d: dict):
 
 def main():
     p = f"{DATA}/final.json"
-    none = {"success": 0, "finalized": 0, "deterministic": 0, "infra_error": 1}
+    none = {"success": 0, "live_success": 0, "graded_by_live": 1, "replays": 0, "finalized": 0, "infra_error": 1}
     if not os.path.exists(p):  # written only by the trusted sidecar: its absence is never the agent's doing
         write(False, {**none, "missing_log": 1, "grader_error": 0})
         return

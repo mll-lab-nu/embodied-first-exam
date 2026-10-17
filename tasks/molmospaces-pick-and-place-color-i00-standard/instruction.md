@@ -13,9 +13,8 @@ client and one episode.
   15.152 Hz; `spec["max_control_steps"]`, counted by `meta["control_steps"]`), when you submit `done`
   (`r.submit("done", [])`), or when your time is up.
 - **Success** is upstream's `judge_success()` on the state at that moment: the rule of pick-and-place, for the receptacle of the named colour (the other, differently coloured receptacle does not count): the robot does not touch the object; that receptacle supports the object (at least 50% of its weight through contact, or upstream's on-receptacle test, or within 5 mm and 10 degrees, relative to the receptacle, of a pose in which it was supported at an earlier control step); and that receptacle has moved at most 15 cm and tilted at most 60 degrees. The task has to hold at the
-  end: met earlier and undone by then does not count, so end the episode with `done` once it holds. The recorded
-  episode is then replayed from the same start in a fresh process, twice: it scores 1 only if the live episode and
-  both replays succeed and the two replays end in the same state.
+  end: met earlier and undone by then does not count, so end the episode with `done` once it holds. The service
+  judges your episode itself, on the state it ends in; it scores 1 if that state succeeds.
 - Your only budget is the time limit (`## Time limit`), from your start (the service's `time_s` and `time_left_s`
   count from your first request to it, so `time_left_s` never reaches 0 before your time is up: plan by it).
   Simulated time only advances with your commands (and `get_obs(seconds=...)`).
