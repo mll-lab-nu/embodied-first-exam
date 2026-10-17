@@ -72,7 +72,9 @@ class Session:
         self.lower = -np.ones(4); self.upper = np.ones(4)
         self.reset()
     def reset(self): self.q = np.zeros(4); self.targets = np.zeros(4); self.n = 0
-    def step(self, a): a = np.clip(np.asarray(a, float), -1, 1); self.targets = a; self.q = self.q + 0.01 * a; self.n += 1
+    def step(self, a):
+        a = np.clip(np.asarray(a, float), -1, 1); self.targets = a; self.q = self.q + 0.01 * a; self.n += 1
+        if a[3] == 0.5: raise RuntimeError("simulation unstable")   # a simulator error after the state moved
     def hold_targets(self): return np.array([0.0, 0.0, 0.0, self.targets[3]])
     def proprio(self): return self.q.astype(np.float32)
     def state_sha(self): return hashlib.sha256(self.q.tobytes()).hexdigest()
@@ -241,6 +243,32 @@ class TestLiveVerdict(Case):
         self.assertEqual((fin["success"], fin["video"], fin["video_pending"]), (True, False, False))
         out = self.grade()
         self.assertEqual((out["success"], out["infra_error"]), (1, 0))
+
+    def test_a_simulator_error_after_a_success_is_a_0(self):
+        """Review of #306: the check still reported the step before the error while the state was the failed step's."""
+        self.start(); self.wait_up()
+        self.assertEqual(self.submit([[1.0, 0.0, 0.0, -1.0]] * 40), 200)   # x = 0.4: a success so far
+        self.assertEqual(self.submit([[1.0, 0.0, 0.0, 0.5]]), 500)          # the simulator raises: the episode ends
+        fin = self.end_episode()
+        self.assert_live_verdict(fin)
+        self.assertEqual((fin["reason"], fin["success"], fin["live_success"]), ("error", False, False))
+        out = self.grade()
+        self.assertEqual((out["success"], out["sim_error"], out["infra_error"]), (0, 1, 0))
+
+    def test_a_failed_finalize_on_disk_is_never_rewritten(self):
+        self.start(); self.wait_up()
+        self.assertEqual(self.submit([[1.0, 0.0, 0.0, -1.0]] * 5), 200)
+        self.stop()
+        rec = {"finalized": True, "finalize_error": "OSError()", "done": True, "reason": "timeout"}
+        (self.data / "final.json").write_text(json.dumps(rec))
+        self.start()
+        t0 = time.time()
+        while time.time() - t0 < 30 and not any(e["ev"] == "restart_refused" for e in self.events()):
+            time.sleep(0.05)
+        fin = self.final()
+        self.assertEqual((fin["finalize_error"], fin["reason"], fin.get("infra_error")), ("OSError()", "timeout", None))
+        out = self.grade()
+        self.assertEqual((out["success"], out["infra_error"], out["grader_error"]), (0, 1, 1))
 
     def test_a_simulator_error_from_the_agents_actions_is_a_0(self):
         (self.data / "final.json").write_text(json.dumps({"finalized": True, "graded_by": "live", "replays": 0,

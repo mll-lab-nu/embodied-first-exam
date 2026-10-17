@@ -73,7 +73,9 @@ to grade it (privileged mode is unchanged: the verifier's two fresh-process repl
   `final.json` as `success` = `live_success`, with `graded_by = "live"`, `replays = 0`, the live end state's hash
   (`state_sha` = `live_state_sha`) and `"finalized": true`, in one atomic write. The check is a predicate on that one
   state, with no hold or settle window, so the live rule is exactly the rule the replay applied (and the privileged
-  twin's). Until 2026-10-17 the service also replayed the episode in a fresh session in the same process
+  twin's). An episode that ended on a simulator error (`reason = "error"`) is no success: `Session.step` raised before
+  the check was updated, so it would report the step before while the state is the failed step's (review of #306).
+  Until 2026-10-17 the service also replayed the episode in a fresh session in the same process
   (`success = live ∧ replay ∧ deterministic`); that replay is gone. The crash-recovery replay (the journal replayed to
   resume the same episode after a sidecar crash) stays: it grades nothing.
 - **Start state.** Checked when the episode begins (`_check_start()`), before the agent is served: the instance's

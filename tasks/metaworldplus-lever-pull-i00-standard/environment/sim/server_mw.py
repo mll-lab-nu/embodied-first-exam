@@ -109,8 +109,9 @@ def _write_json(path: str, obj: dict) -> None:
 
 def _verdict_on_disk(fin: dict) -> bool:
     """final.json holds a verdict: the live one (graded_by, since 2026-10-17) or, from a service of before, a replay's
-    (deterministic). It is never rewritten."""
-    return bool(fin.get("finalized")) and ("graded_by" in fin or "deterministic" in fin)
+    (deterministic), or the service's failure to write one (finalize_error: infrastructure, final as well). It is never
+    rewritten."""
+    return bool(fin.get("finalized")) and ("graded_by" in fin or "deterministic" in fin or "finalize_error" in fin)
 
 
 def _give_up(reason: str, infra: bool) -> None:
@@ -651,11 +652,14 @@ def finalize() -> None:
                 tool=TOOL.__name__,
                 meta=json.dumps({"source": "standard-mode episode", "reason": E["reason"]}),
             )
+            # An episode ended by a simulator error is no success: Session.step raised before Meta-World's check was
+            # updated, so check() still reports the step before while the state is the failed step's.
+            ok = bool(live["success"]) and E["reason"] != "error"
             E["verdict"] = {
                 "graded_by": "live",
                 "replays": 0,
-                "live_success": bool(live["success"]),
-                "success": bool(live["success"]),
+                "live_success": ok,
+                "success": ok,
                 "state_sha": live_sha,
                 "live_state_sha": live_sha,
                 "final_reward": float(live.get("reward") or 0.0),
