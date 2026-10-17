@@ -36,13 +36,13 @@ revision = "badminton-wallclock-12+duel-14+core-0.2"
 play = "program"
 action_level = "low"
 source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
-source_commits = ["ac4b123de3c9"]
+source_commits = ["02c93822a35e"]
 exporter = "roboolympics tools/export_fexam.py"
 player_mode = "unmetered"
 official = false
 expert_time_estimate_hours = 0.5
 oracle = "partial"
-oracle_evidence = "level 2, the low level (the agent's own act in the loop, uploaded to the simulator): our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 in 4 of 4 and level 2 in 2 of 4 with our toolkit-only reference act (its API test 512/519 hidden requests), the platform's act 4/4 and 0/4; in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act (348/352 requests); level 2 because models won level 1"
+oracle_evidence = "level 2, the low level (the agent's own act in the loop, served from its own container): our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 in 4 of 4 and level 2 in 2 of 4 with our toolkit-only reference act (its API test 512/519 hidden requests), the platform's act 4/4 and 0/4; in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act (348/352 requests); level 2 because models won level 1"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)

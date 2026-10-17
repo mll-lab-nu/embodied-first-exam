@@ -7,7 +7,7 @@
 | Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c) |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `badminton_matchlow` / seed 8 |
-| Oracle | `partial` — level 2, the low level (the agent's own act in the loop, uploaded to the simulator): our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 in 4 of 4 and level 2 in 2 of 4 with our toolkit-only reference act (its API test 512/519 hidden requests), the platform's act 4/4 and 0/4; in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act (348/352 requests); level 2 because models won level 1 |
+| Oracle | `partial` — level 2, the low level (the agent's own act in the loop, served from its own container): our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 in 4 of 4 and level 2 in 2 of 4 with our toolkit-only reference act (its API test 512/519 hidden requests), the platform's act 4/4 and 0/4; in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act (348/352 requests); level 2 because models won level 1 |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 20 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` |
@@ -20,7 +20,7 @@ Frozen development instance: seed 8, level 2, slowdown S = 20. Not one of
 the sport's official (hidden) seeds, so results here are previews, not official RoboOlympics results.
 
 ## Reference solution
-`solution/`: our camera-only reference player through the same HTTP interface. level 2, the low level (the agent's own act in the loop, uploaded to the simulator): our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 in 4 of 4 and level 2 in 2 of 4 with our toolkit-only reference act (its API test 512/519 hidden requests), the platform's act 4/4 and 0/4; in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act (348/352 requests); level 2 because models won level 1.
+`solution/`: our camera-only reference player through the same HTTP interface. level 2, the low level (the agent's own act in the loop, served from its own container): our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 in 4 of 4 and level 2 in 2 of 4 with our toolkit-only reference act (its API test 512/519 hidden requests), the platform's act 4/4 and 0/4; in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act (348/352 requests); level 2 because models won level 1.
 
 ## Verification
 Separate sandbox, no network. The sim service replays the recorded match in a fresh process; the verifier

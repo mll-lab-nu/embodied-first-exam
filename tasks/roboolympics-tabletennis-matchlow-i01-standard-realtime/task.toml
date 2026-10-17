@@ -36,13 +36,13 @@ revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 play = "program"
 action_level = "low"
 source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
-source_commits = ["ac4b123de3c9"]
+source_commits = ["02c93822a35e"]
 exporter = "roboolympics tools/export_fexam.py"
 player_mode = "unmetered"
 official = false
 expert_time_estimate_hours = 0.5
 oracle = "partial"
-oracle_evidence = "level 1, the easiest level, the low level (the agent's own hit in the loop, no execution scatter): our toolkit-only reference skill with the camera-only reference strategy lost 0:5 on this seed (twice) and on seeds 2-9 (its slow serves bounce twice on its own court; volleys on the receive), so the oracle is partial. Feasibility: the platform's own hit packaged as an uploadable skill (the same sandbox process) with the truth-state reference strategy wins level 1 in 7 of 8 development seeds of our evaluator's competition test (no wall clock), this seed 5:1, where our reference skill wins 0 of 4; through this task's live upload path with the camera-only strategy it scored 2:5, 1:5, 2:5; the platform's hit meets every development request of the contract (118/118)"
+oracle_evidence = "level 1, the easiest level, the low level (the agent's own hit in the loop, no execution scatter): our toolkit-only reference skill with the camera-only reference strategy lost 0:5 on this seed (twice) and on seeds 2-9 (its slow serves bounce twice on its own court; volleys on the receive), so the oracle is partial. Feasibility: the platform's own hit packaged as a skill (the same sandbox process) with the truth-state reference strategy wins level 1 in 7 of 8 development seeds of our evaluator's competition test (no wall clock), this seed 5:1, where our reference skill wins 0 of 4; through the live service (core 0.2.32's upload path) with the camera-only strategy it scored 2:5, 1:5, 2:5; the platform's hit meets every development request of the contract (118/118)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/PROTOCOL.md §2.9)

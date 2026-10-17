@@ -144,10 +144,10 @@ patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",
 name = "roboolympics-tabletennis-matchlow-i01-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["ac4b123de3c9"]
+source_commits = ["02c93822a35e"]
 
 [[tasks]]
 name = "roboolympics-badminton-matchlow-i01-standard-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
-source_commits = ["ac4b123de3c9"]
+source_commits = ["02c93822a35e"]
