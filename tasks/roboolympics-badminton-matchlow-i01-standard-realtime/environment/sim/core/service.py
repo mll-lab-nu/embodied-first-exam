@@ -536,6 +536,8 @@ class Service:
                      "video": bool(self.video_info.get("video")), "video_info": self.video_info, "elapsed_s": round(time.monotonic() - self.t0, 1), **v, **self.extra_final(),
                      "continuous": cont, "seed_proof": self.seed_proof(),
                      "sport_fields": sport}
+            if live:                             # the protocol's own fields (board 0151): graded by the live match
+                final.update(graded_by="live", replays=0)
             compat = {k: v for k, v in sport.items() if k not in final}     # see COMPAT below
             if "score" not in final and "score" not in compat:
                 compat["score"] = final["scores"]

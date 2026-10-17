@@ -158,13 +158,13 @@ name = "roboolympics-tabletennis-matchlow-i01-standard-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["02c93822a35e"]
-patched = ["environment/docker-compose.yaml", "environment/sim/core/service.py", "environment/sim/core/grading.py",
-           "tests/grade.py"]   # 2026-10-17 (owner, board 0151): live grading, RO_VERDICT_REPLAY 0 (no grading replay)
+patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml",
+           "task.toml", "environment/sim/core/realtime.py", "README.md"]   # 2026-10-17 (owner, board 0151): live grading (scripts/roboolympics/live_grading_export.py)
 
 [[tasks]]
 name = "roboolympics-badminton-matchlow-i01-standard-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["02c93822a35e"]
-patched = ["environment/docker-compose.yaml", "environment/sim/core/service.py", "environment/sim/core/grading.py",
-           "tests/grade.py"]   # 2026-10-17 (owner, board 0151): live grading, RO_VERDICT_REPLAY 0 (no grading replay)
+patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml",
+           "task.toml", "environment/sim/core/realtime.py", "README.md"]   # 2026-10-17 (owner, board 0151): live grading (scripts/roboolympics/live_grading_export.py)

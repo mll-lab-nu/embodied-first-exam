@@ -108,6 +108,17 @@ def grade(d, r, contract, evaluate, audits=None):
     complete = d.get("reason") in COMPLETE and (single or d.get("match_winner") in side.values())
     errors = bool(d.get("errors") or any(d["meter_error"].values()) or any(d["proxy_error"].values()))
     valid = bool(d.get("valid_trial") and d.get("finalized") and (replay or live) and complete and not errors)
+    # robot_coding_bench (board 0151; STANDARD_MODE Part 3): in a real-time match graded live and finalized, a simulator
+    # error of the control step itself (every errors[] entry where "world_step": the agent's commands applied, then the
+    # world's step; core/realtime.py) after the agent's first applied act is the agent's 0, never a technical failure (a
+    # free retry); before it, any other technical error (bookkeeping, rendering, metering) or an unfinalized record stays
+    # infrastructure. The match ended at that error, so every act the seat applied came before it.
+    agent_sim_error = bool(live and d.get("finalized") and d.get("slowdown") and d.get("reason") == "technical_error"
+                           and d.get("errors")
+                           and all(isinstance(e, dict) and e.get("where") == "world_step" for e in d["errors"])
+                           and not any(d["meter_error"].values()) and not any(d["proxy_error"].values())
+                           and int(((d.get("seats") or {}).get(seats[0]) or {}).get("applied") or 0) > 0)
+    valid = valid or agent_sim_error
     direct = d.get("play") == "direct"
     audits = audits or {}
     bad = {s: bool(direct and d["player_modes"].get(s) == "model" and audits.get(s, (0, []))[1]) for s in seats}
@@ -124,9 +135,9 @@ def grade(d, r, contract, evaluate, audits=None):
         success = valid and winner == side[seats[0]]
     else:
         success = valid
+    success = success and not agent_sim_error
     out = dict(success=int(success), valid_trial=int(valid), technical_failure=int(not valid), grader_error=0,
-               missing_log=0, verdict_replay=int(not live), graded_by_live=int(live), replays=0 if live else 1,
-               match_over=int(d.get("reason") == "match_over"),
+               missing_log=0, verdict_replay=int(not live), match_over=int(d.get("reason") == "match_over"),
                seed=int(d.get("seed") or 0), official_config=int(official(d, contract)),
                video_rendered=int(bool(d.get("video")) or (DATA / "replay.mp4").exists()), direct_play=int(direct),
                lowlevel_actions=int(d.get("action_level") == "low"), solo=int(solo),
@@ -159,6 +170,7 @@ def grade(d, r, contract, evaluate, audits=None):
     if live:                                   # no grading replay ran: the sport's replay_* fields would read as errors
         for k in [k for k in out if k.startswith("replay_")]:
             del out[k]
+        out.update(graded_by_live=1, replays=0, agent_sim_error=int(agent_sim_error))   # board 0151
     if (contract.get("official") or {}).get("hidden_seeds"):
         # core 0.2.19: once the sport registered a hidden seed set (frozen), only a match on a registered hidden seed of
         # its cell is official, whatever the sport's own official_config says (its legacy public-seed rule); the
