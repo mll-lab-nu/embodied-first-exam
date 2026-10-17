@@ -1,10 +1,14 @@
 """eai-standard/2.1 sim service for RoboTwin 2.0 (see docs/STANDARD_MODE.md).
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
-keeps /data/final.json current, and on episode end exports the recorded (T,34) trajectory, replays it for
-success + determinism and renders the six-view /data/replay.mp4. It also produces /data/live.mp4 (rcb_live.py: call-stamped frames only
-while physics runs, skipped while nothing moves; by default rendered from the trajectory at the end), saves each call's actions under /data/calls/, and appends the
-trajectory to /data/trajectory_live.f64 after every call (crash-safe). Nothing about objects ever leaves this process."""
+keeps /data/final.json current, and on episode end grades the live episode: success = RoboTwin's check_success on the
+episode this service ran (it ends at the first call after which the check holds; at the end of the agent's time the
+final state is checked once more), nothing replayed (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151). The verdict
+goes to final.json first ("finalized": true, "graded_by": "live"); then the recorded (T,34) trajectory, which is the
+deliverable, is rendered once for people: the six-view /data/replay.mp4 and /data/live.mp4 (rcb_live.py: call-stamped
+frames only while physics ran, skipped while nothing moved) in one pass ("video_pending": true while it runs; it never
+changes the verdict). It also saves each call's actions under /data/calls/ and appends the trajectory to
+/data/trajectory_live.f64 after every call (crash-safe). Nothing about objects ever leaves this process."""
 from __future__ import annotations
 import errno, io, json, math, os, signal, sys, threading, time, traceback
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -59,8 +63,8 @@ def _dump_final(d: dict) -> None:
 
 
 def _verdict_on_disk(d: dict) -> bool:
-    """The replay's verdict (replay_success + deterministic) is written before any video; from then on it stands."""
-    return isinstance(d, dict) and d.get("replay_success") is not None and d.get("deterministic") is not None
+    """The live episode's verdict is written before any video; from then on it stands."""
+    return isinstance(d, dict) and d.get("graded_by") == "live"
 
 
 def _give_up(reason: str, infra: bool) -> None:
@@ -71,7 +75,8 @@ def _give_up(reason: str, infra: bool) -> None:
     try: prev = json.load(open(os.path.join(DATA, "final.json")))
     except Exception: prev = {}  # noqa
     if not isinstance(prev, dict): prev = {}
-    if _verdict_on_disk(prev): prev["finalized"] = True      # the verdict stands; only a video may be missing
+    if _verdict_on_disk(prev): prev.update(finalized=True, video_pending=False)   # the verdict stands; only a video may be missing
+    elif prev.get("finalized"): pass   # an earlier give-up or finalize error stands as written
     else: prev.update({"success": False, "done": True, "reason": reason, "finalized": True, "protocol": PROTOCOL, **({"infra_error": 1} if infra else {})})
     _dump_final(prev)
     open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
@@ -85,6 +90,11 @@ _n_starts = sum(1 for _ in open(os.path.join(DATA, "startups.jsonl")))
 if _n_starts > 1 and not os.path.exists(os.path.join(DATA, "episode.jsonl")): time.sleep(min(120, 20 * (_n_starts - 1)))
 if os.environ.get("RCB_TEST_CRASH_ONCE") and sum(1 for _ in open(os.path.join(DATA, "startups.jsonl"))) == 1:
     sys.exit("RCB_TEST_CRASH_ONCE: simulated startup crash")   # test hook for the restart path (never set in tasks)
+# A restart that finds the trial already decided (the verdict, e.g. the service died while it rendered the video; or a
+# give-up) keeps it and idles at once, without rebuilding the scene.
+try: _fin0 = json.load(open(os.path.join(DATA, "final.json")))
+except Exception: _fin0 = {}  # noqa
+if isinstance(_fin0, dict) and (_verdict_on_disk(_fin0) or _fin0.get("finalized")): _give_up("restarted after finalize", infra=False)
 
 
 def log(ev: dict) -> None:
@@ -93,37 +103,46 @@ def log(ev: dict) -> None:
 
 
 def write_final() -> None:
-    _dump_final({"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "physics_steps": int(E.get("episode_physics_steps") or (int(S._sim_steps) if E["ready"] else 0)),
+    """success = live_success: RoboTwin's check_success on the live episode (E["success"]); "graded_by": "live" marks the
+    verdict (written once, at the episode's end, before any video). "video_pending": the one render pass is running."""
+    _dump_final({"success": bool(E["success"]), "live_success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "physics_steps": int(E.get("episode_physics_steps") or (int(S._sim_steps) if E["ready"] else 0)),
                  "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK, "protocol": PROTOCOL,
-                 "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replay_success": E.get("replay_success"),
-                 "deterministic": E.get("deterministic"), "video": bool(E.get("video")),
-                 # the verification replay itself failed (not the agent's episode): no verdict, an infrastructure error
+                 "finalized": bool(E.get("finalized")), "n_actions": E.get("n_actions"), "replays": 0,
+                 **({"graded_by": "live", "live_sha": E.get("live_sha"), "video_source": "render", "video_pending": bool(E.get("video_pending"))} if E.get("graded_by") else {}),
+                 "video": bool(E.get("video")),
+                 **{k: E[k] for k in ("trajectory_error", "video_error") if E.get(k)},
+                 # the service could not record the episode's end (not the agent's episode): no verdict, an infrastructure error
                  **({"finalize_error": 1, "infra_error": 1} if E.get("finalize_error") else {}),
                  **{k: E[k] for k in ("live_video", "live_frames", "live_skipped", "live_mode", "live_fps", "live_error", "live_truncated") if k in E}})
 
 
 def finalize() -> None:
+    """The verdict is the live episode's (E["success"], judged by finish() on this simulator after the agent's last call):
+    written at once, nothing replayed. Then the deliverable (trajectory.npz; trajectory_live.f64 holds the same rows) and
+    ONE render pass from it for the videos, which can no longer change the verdict."""
     with LOCK:
+        acts = None
         try:
             try: E.update(LIVE.close())
             except Exception as exc: E["live_error"] = repr(exc)  # noqa
             flush_traj()
-            acts = S.record_stop(); live_sha = S.state_sha()
-            S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (v2)", "steps": E["step"], "reason": E["reason"]})
-            E["n_actions"] = int(len(acts))
-            rep = S.replay(acts); E["replay_success"] = bool(rep["success"]); E["deterministic"] = rep["state_sha"] == live_sha
-            log({"ev": "replay", "n_actions": int(len(acts)), "replay_success": E["replay_success"], "deterministic": E["deterministic"]})
-            write_final()   # the verdict is on disk before any video is rendered (videos never gate grading)
+            acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
             try:
-                S.render_video(acts, os.path.join(DATA, "replay.mp4"), every=max(10, len(acts) // 600), fps=25); E["video"] = True
-            except Exception:  # noqa
-                traceback.print_exc()
-            try: E.update(LIVE.render_from_trajectory(acts))   # labelled live.mp4 (replay mode: rendered now, zero cost during the episode)
-            except Exception as exc: E["live_error"] = repr(exc)  # noqa
+                S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (v2)", "steps": E["step"], "reason": E["reason"]})
+            except Exception as exc:  # noqa — the journal trajectory_live.f64 holds the same rows; the verdict does not depend on it
+                traceback.print_exc(); E["trajectory_error"] = repr(exc)[:300]
+            E["graded_by"] = "live"; E["video_pending"] = True; E["finalized"] = True
+            log({"ev": "verdict", "graded_by": "live", "success": bool(E["success"]), "reason": E["reason"], "n_actions": E["n_actions"], "live_sha": E["live_sha"]})
+            write_final()   # the verdict is on disk before any video is rendered (videos never gate grading)
         except Exception as exc:  # noqa
             traceback.print_exc(); log({"ev": "finalize_error", "error": repr(exc)})
-            if E.get("deterministic") is None: E["finalize_error"] = repr(exc)   # no verdict was reached: the grader reports infra_error
-        E["finalized"] = True; write_final()
+            E["finalize_error"] = repr(exc); E["finalized"] = True; write_final()   # no verdict: the grader reports infra_error
+            return
+        try:   # one pass over the trajectory renders both videos (replay.mp4: six views; live.mp4: labelled by call)
+            E.update(LIVE.render_videos(acts, os.path.join(DATA, "replay.mp4"), every=max(10, len(acts) // 600), fps=25))
+        except Exception as exc:  # noqa — a failed render loses the video only
+            traceback.print_exc(); E["video_error"] = repr(exc)[:300]
+        E["video_pending"] = False; write_final()
 
 
 def start_finalize() -> None:
@@ -152,9 +171,10 @@ try:
     # replays rows an agent wrote, reads the finger targets instead: rcb_traj.Session.gripper_opening).
     S = Session(TASK, instance=INSTANCE, enable_render=True, gripper_state="command")
 except RuntimeError as _exc:
-    # This host does not rebuild the frozen instance (PROTOCOL §3: seen for four tasks on L40S cards). No episode has
-    # begun, so after one retry say so in final.json (infra_error) instead of crash-looping until compose gives up.
-    if "instance state hash" in str(_exc) and _n_starts >= 2 and not any(e.get("ev") == "start" for e in _events()):
+    # This host does not rebuild the frozen instance (PROTOCOL §3: seen for four tasks on L40S cards). Before an episode
+    # began: after one retry say so in final.json (infra_error) instead of crash-looping until compose gives up. On a
+    # resume (the episode began on this host, so the rebuild drifted since): at once; the episode cannot be continued.
+    if "instance state hash" in str(_exc) and (_n_starts >= 2 or any(e.get("ev") == "start" for e in _events())):
         traceback.print_exc(); _give_up(f"instance_mismatch: {_exc}"[:300], infra=True)
     raise
 E["built"] = True; faulthandler.cancel_dump_traceback_later()    # the scene exists: the startup watchdog stands down (a resume replay may take minutes)

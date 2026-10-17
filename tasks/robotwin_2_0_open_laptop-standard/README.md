@@ -14,9 +14,9 @@
 ## Task
 Standard-mode twin of `robotwin_2_0_open_laptop-privileged` (same frozen instance, RoboTwin seed 60417): the agent gets
 only the `eai-standard/2.1` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar
-(`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, records the episode as a (T, 34)
-trajectory, replays it in a fresh process for success + determinism, and renders the six-view video. The verifier
-runs in a separate sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against the privileged task to
+(`environment/docker-compose.yaml`, GPU on the sidecar), which owns the seed, judges the live episode, records it as a
+(T, 34) trajectory and renders the six-view video from it once after the verdict. The verifier runs in a separate
+sandbox (`tests/Dockerfile`) over the sidecar's artifacts. Compare against the privileged task to
 measure the cost of losing resets, privileged state and planning primitives.
 
 ## Difficulty
@@ -26,7 +26,13 @@ Same scene, instance and success rule as `robotwin_2_0_open_laptop-privileged` (
 `solution/`: streams the privileged-mode expert's joint targets (every K physics steps, dt = K/250 s, linear interpolation) as `joint_position` chunks
 
 ## Verification
-`success` = live success ∧ replay success ∧ deterministic, computed inside the sidecar; `/logs/verifier/replay.mp4`
+`success` = the live episode's: RoboTwin's `check_success` holds after one of the agent's calls (which ends the
+episode) or on the final state when the agent's time is up, judged by the sim sidecar on the episode it ran
+(`final.json`: `graded_by = "live"`, `replays = 0`, the end state's hash `live_sha`); nothing is replayed to grade it.
+The scene is checked against the frozen instance's initial-state hash when it is built, before the agent is served
+(a mismatch is `instance_mismatch`, an infrastructure failure). After the verdict the sidecar renders the recorded
+trajectory once, on its GPU, into `replay.mp4` (six views) and `live.mp4` (labelled by call); the verifier copies them
+to `/logs/verifier/`. A video that fails or runs out of time is lost, the verdict is not.
 
 ## Compute resources
 Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -54,3 +60,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 - 2026-10-13 (board 0086): the service's copy of the tooling only (`environment/sim/rcb_traj.py`, one line of `environment/sim/server.py`). The tooling now refuses to save or replay a trajectory of more than 200,000 rows, the privileged verifier's cap; a standard episode has no row cap, so the service lifts it for its own session (`S.max_rows = None`). Nothing an agent sees and nothing the service grades changes.
 - 2026-10-13 (board 0100): base image `eai-robotwin` 0.1.2, whose scrub of RoboTwin's expert also removes the reference poses that `load_actors` computed only for the expert. The standard-mode agent never reaches the env, so nothing it observes changes; the scene, the instance and the judge are unchanged.
 - 2026-10-14 (board 0113): the tooling only (`environment/sim/rcb_traj.py`): while it builds the scene, `glob.glob` returns its matches sorted, so that a task which lists files to draw an object depends on its seed alone, not on the host's directory order (four RoboTwin tasks did; this one lists no files while it builds its scene). Its scene, frozen instance (same initial-state hash), verifier and pass rule are unchanged.
+- 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay; video by one render pass after the verdict. `success` is RoboTwin's `check_success` on the episode the sim sidecar ran, as the live part of the old rule was; the replay of the recorded trajectory whose success and determinism also had to hold is gone, and `replay.mp4` and `live.mp4` come from one pass over the trajectory instead of two. The collect hook first stops what the agent left running in its container (`kill -9 -1`), and waits up to 2200 s for the video. The scene, the instance, the success rule and everything the agent sees are unchanged.
