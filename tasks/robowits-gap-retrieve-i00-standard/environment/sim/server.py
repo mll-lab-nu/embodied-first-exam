@@ -74,7 +74,7 @@ def write_final() -> None:
         "deterministic": E.get("deterministic"), "live_sha": E.get("live_sha"), "replay_sha": E.get("replay_sha"), "video": bool(E.get("video")),
         "video_done": bool(E.get("video_done")), "backend": BACKEND, "grade_error": bool(E.get("grade_error")),
         "instance_exact": E.get("instance_exact"), "settle": E.get("settle"), "agent_time_s": E.get("agent_time_s"),
-        **EP.final_fields()})
+        "final_window": E.get("final_window"), "replay_settle": E.get("replay_settle"), **EP.final_fields()})
 
 
 VERDICT_KEYS = ("success", "replay_success", "deterministic", "grade_error", "n_actions", "live_sha", "replay_sha", "reason")
@@ -83,14 +83,18 @@ VERDICT_KEYS = ("success", "replay_success", "deterministic", "grade_error", "n_
 def finalize() -> None:
     with LOCK:
         acts = None
+        if E.get("final_window") is None:     # a service restarted after the episode ended: the end event has it
+            E["final_window"] = logged_final_window()
         try:
             acts = S.record_stop(); live_sha = S.state_sha()
             S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],
-                                                                               "reason": E["reason"], "resumes": EP.resumes})
+                                                                               "reason": E["reason"], "resumes": EP.resumes,
+                                                                               "final_window": E.get("final_window")})
             E["n_actions"] = int(len(acts)); E["live_sha"] = live_sha
-            # the recorded rows hold the live settle window too; the replay adds its own window after them (a scene at rest
-            # stays at rest) and its state after the rows is what must equal the live final state
-            rep = S.replay(acts); E["replay_success"] = bool(rep["success"]); E["replay_sha"] = rep["state_sha_rows"]
+            # one settle window, never a second: the window that ended the episode is in the recorded rows and is checked
+            # again over them (grading_replay); the state after the rows is what must equal the live final state
+            rep = grading_replay(acts, E.get("final_window"), E["reason"])
+            E["replay_success"] = bool(rep["success"]); E["replay_sha"] = rep["state_sha_rows"]; E["replay_settle"] = rep["settle"]
             E["deterministic"] = rep["state_sha_rows"] == live_sha
             log({"ev": "replay", "n_actions": int(len(acts)), "replay_success": E["replay_success"], "deterministic": E["deterministic"]})
         except Exception as exc:  # noqa
@@ -105,12 +109,73 @@ def finalize() -> None:
         verdict = {k: E.get(k) for k in VERDICT_KEYS}
         if acts is not None and len(acts):
             try:
-                S.start_video(os.path.join(DATA, "replay.mp4"), fps=15); S.replay(acts); S.stop_video()   # + replay.last.png
+                # the rows only when they hold the window (or none is run: step_guard), else the window after them, as graded
+                S.start_video(os.path.join(DATA, "replay.mp4"), fps=15)
+                S.replay(acts, settle=not E.get("final_window") and E["reason"] != "step_guard"); S.stop_video()   # + replay.last.png
                 E["video"] = video_ok(os.path.join(DATA, "replay.mp4"))
             except Exception:  # noqa
                 traceback.print_exc()
         E.update(verdict)                # whatever the video did, the verdict written above is the one that stays
         E["video_done"] = True; write_final()
+
+
+def logged_final_window():
+    """The final settle window's length from the episode log's last `end` event (None without one)."""
+    w = None
+    try:
+        for line in open(os.path.join(DATA, "episode.jsonl")):
+            try:
+                ev = json.loads(line)
+            except ValueError:
+                continue
+            if ev.get("ev") == "end":
+                w = ev.get("final_window")
+    except OSError:
+        pass
+    return w
+
+
+def grading_replay(acts: np.ndarray, window, reason: str) -> dict:
+    """The grading replay of the recorded episode from the frozen instance, with ONE settle window (the instruction's success
+    criterion; 2026-10-17, audit M5: before, the window that ended the episode was replayed with the rows and a second one
+    was added after them). scripts/robowits/regrade.py (replay_standard) does the same for recorded trials.
+    - `window` > 0: the episode ended on a settle window the live service ran, inside the last call (reason "success") or
+      after the agent's last command at the end of its phase ("agent_exit" / "timeout"). Its steps are the last `window`
+      recorded rows (the held command, journaled and recorded). The replay runs the rows before it, then checks that same
+      window over those recorded rows (Session.settle_check fed the recorded rows instead of the held command); a replay
+      whose window outlasts the recorded one (the live window stopped at a failure) holds the command for the rest.
+    - reason "step_guard": the cap leaves no step for a window (Session.step raises past it), so the episode is graded
+      without one, a failure (2026-10-17, audit M6: before, the window raised here and the trial became a grade error).
+    - any other end without such a window (a simulator error before any window passed, an end-of-phase window that
+      raised): the window after the last row. (An error right after a window passed keeps that window: settle() and
+      finish() record where it ended, and a window not at the end of the rows is dropped.)
+    Returns success, settle (the window's result), state_sha_rows (the state after all recorded rows: the live final state)."""
+    acts = np.asarray(acts, dtype=np.float32)
+    if reason == "step_guard":
+        st = S.replay(acts, settle=False)
+        return {"success": False, "state_sha_rows": st["state_sha_rows"],
+                "settle": {"success": False, "why": "the episode ended at the step cap: graded without a settle window", "steps": 0, "max_move_m": 0.0}}
+    w = int(window or 0)
+    if not 0 < w <= len(acts):
+        st = S.replay(acts)
+        return {"success": bool(st["success"]), "settle": st.get("settle"), "state_sha_rows": st["state_sha_rows"]}
+    S.reset()
+    for a in acts[:len(acts) - w]:
+        S.step(a)
+    rows = list(acts[len(acts) - w:]); sha: dict = {}
+
+    def recorded_step(hold) -> bool:
+        if not rows:
+            return S.step(hold)
+        guard = S.step(rows.pop(0))
+        if not rows:
+            sha["rows"] = S.state_sha()
+        return guard
+
+    sc = S.settle_check(step=recorded_step)
+    while rows:                              # the replay's window stopped before the recorded one ended: run the rest
+        recorded_step(None)
+    return {"success": bool(sc["success"]), "settle": sc, "state_sha_rows": sha.get("rows") or S.state_sha()}
 
 
 def video_ok(path: str) -> bool:
@@ -140,6 +205,10 @@ def settle(step) -> bool:
     goal must hold for 2 s, the graded objects released and at rest. Its steps are part of the episode (journaled and
     recorded, so the grading replay runs them too). Remembers the result for final.json and the call's meta."""
     r = S.settle_check(step=step); E["settle"] = r
+    if not r["success"] and r["why"].startswith("the step cap") and not S.episode_done:   # the call was stopped instead
+        r["why"] = "the call stopped during the settle window (max_call_wall_s reached or the client hung up)"
+    if r["success"]:                    # a passed window ends the episode: the recorded rows end with it (grading_replay),
+        E["final_window"] = int(r["steps"]); E["final_window_end"] = ctrl_steps()   # even if the call fails after it
     log({"ev": "settle", **r})
     return bool(r["success"])
 
@@ -152,10 +221,15 @@ def finish(reason: str) -> None:
         # privileged grader does after the last action of a trajectory); never after a simulator error or at the step cap
         try:
             E["success"] = settle(journal_step)
+            E["final_window"] = int(E["settle"]["steps"])    # the recorded rows end with this window (grading_replay)
+            E["final_window_end"] = ctrl_steps()
         except Exception:  # noqa
             traceback.print_exc()
+    if E.get("final_window") and E.get("final_window_end") != ctrl_steps():
+        E["final_window"] = None        # rows came after that window (a call that failed after it went on): not the end
     E["episode_control_steps"] = ctrl_steps()
-    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
+    log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"]),
+         "final_window": E.get("final_window")})
     write_final(); start_finalize()
 
 
@@ -262,7 +336,9 @@ SPEC = {
                 "on (meta[\"settle\"] says why). It also ends when the agent's phase ends (the same window then decides; reason "
                 "\"agent_exit\" when the agent ended its session with time left, \"timeout\" at the time limit), on a simulator "
                 "error, or after max_control_steps control steps (a technical cap, reason \"step_guard\": the call in progress "
-                "stops there); the recorded trajectory is then replayed and graded"),
+                "stops there, and no settle window is run, so the episode ends as a failure); the recorded trajectory is then "
+                "replayed and graded: the replay must reach the same state, and the settle window that ended the episode, whose "
+                "steps are part of the recording, must pass again over those same steps (no second window is added)"),
 }
 L.check_spec(SPEC)                      # refuse to start with an incomplete spec or a forbidden field
 
@@ -483,7 +559,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     log({"ev": "submit", "call": E["calls"], "type": typ, "rows": E["step"] - step0, "dt": dt, "interpolate": interp, "cameras": cams, "note": note,
          "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    if succ: finish("success")
+    if succ: finish("success")          # settle() recorded the window: the recorded rows end with it
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
 
@@ -504,7 +580,7 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         if not E["done"] and not EP.stopping and check_success():
             E["success"] = settle(lambda a: ctrl_step(a, rec)); settled = E["settle"]
         rec.tick(force=True, last=True)
-        if E["success"]: finish("success")
+        if E["success"]: finish("success")  # settle() recorded the window (finish drops it if rows came after it)
     E["calls"] += 1
     out = {**meta_common(cams), "obs_id": E["calls"], "seconds": seconds, "control_steps_watch": ctrl_steps() - before,
            "physics_steps_watch": (ctrl_steps() - before) * SUBSTEPS, "ok": True, **({"frames_skipped": rec.skipped} if rec.skipped else {}),
