@@ -1154,6 +1154,85 @@ def validated_of(task: Path) -> bool:
     return md.get("oracle") == "full"
 
 
+# The easy set (PROTOCOL §4, RUNNING.md "Results"): task bases kept in the repository and run like any other, but reported
+# apart from the main table and left out of the headline statistics. One central list, docs/easy_set.toml, not a task
+# field: marking a task changes none of its files, so its DIGEST and the results recorded against it stay as they are.
+EASY_SET_FILE = Path(__file__).resolve().parents[1] / "docs" / "easy_set.toml"
+EASY_REASONS = {
+    "shortcut": "a success came through a goal looser than the task's text, or a grader shortcut (`note`: the pattern)",
+    "owner": "the benchmark owner judges the task too easy or not discriminative",
+    "solved": "the screening runs solved the task in every mode it ships (`note`: which runs)",
+}
+
+
+def easy_set(path: Path = EASY_SET_FILE) -> dict[str, dict]:
+    """docs/easy_set.toml as {base: entry}; empty when the file is absent. Entries: `base` (the task name without its
+    mode suffix: every mode the base ships is in the set), `benchmark` (its BENCHMARKS label), `reason` (EASY_REASONS),
+    optional `note`. ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`). Parsed once per
+    version of the file (its mtime), so a long-running reader sees an edited list."""
+    try:
+        mtime = path.stat().st_mtime_ns
+    except FileNotFoundError:
+        return {}
+    return dict(_easy_set(path, mtime))
+
+
+@functools.lru_cache(maxsize=8)
+def _easy_set(path: Path, mtime: int) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    for e in tomllib.loads(path.read_text(encoding="utf-8")).get("task", []):
+        b = e.get("base") if isinstance(e, dict) else None
+        if not isinstance(b, str) or not b:
+            raise ValueError(f"{path.name}: an entry without a base: {e!r}")
+        if b in out:
+            raise ValueError(f"{path.name}: {b} listed twice")
+        out[b] = e
+    return out
+
+
+def set_of(task: Path) -> str:
+    """`easy` when the task's base is in the easy set (docs/easy_set.toml), else `core`. A marker like `validated`,
+    never part of config_key: the headline statistics count `core` tasks only. Recorded with each result as the value
+    when it was written; reports re-derive it from the list at the commit they publish. A malformed list never stops a
+    result from being written (a warning, and `core`): `easy-set --check` reports it."""
+    try:
+        es = easy_set()
+    except (ValueError, OSError) as e:                  # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
+        if str(e) not in _EASY_WARNED:
+            _EASY_WARNED.add(str(e))
+            print(f"WARN {EASY_SET_FILE.name}: {e} (every task counts as core; task_conventions.py easy-set --check)",
+                  file=sys.stderr)
+        return "core"
+    return "easy" if base_of(Path(task)) in es else "core"
+
+
+_EASY_WARNED: set[str] = set()
+
+
+def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) -> list[str]:
+    """What is wrong with the easy set: an unknown reason, a base no task directory has, a benchmark label that is not
+    the base's."""
+    tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
+    try:
+        es = easy_set(path)
+    except (ValueError, OSError) as e:
+        return [str(e)]
+    names = {p.name for p in tasks_dir.iterdir() if (p / "task.toml").is_file()}
+    have = {base_of(Path(n)) for n in names}
+    bad = []
+    for b, e in es.items():
+        if not isinstance(e.get("reason"), str) or e["reason"] not in EASY_REASONS:
+            bad.append(f"{b}: reason {e.get('reason')!r} is not one of {', '.join(EASY_REASONS)}")
+        if b not in have:
+            bad.append(f"{b}: no task directory {b}-<mode> under tasks/")
+        if e.get("benchmark") != bench_of(Path(b)):
+            bad.append(f"{b}: benchmark {e.get('benchmark')!r}, its label is {bench_of(Path(b))!r}")
+        unknown = set(e) - {"base", "benchmark", "reason", "note"}
+        if unknown:
+            bad.append(f"{b}: unknown field(s) {', '.join(sorted(unknown))}")
+    return bad
+
+
 def effective_config(task: Path, seed: int | None = None, env: dict | None = None) -> dict:
     """The configuration a trial of `task` runs under: what the task declares, with the run-time overrides a runner
     passes in `env` (RCB_RESET_BUDGET, RCB_SLOWDOWN) and the seed it chose (None: the default seed). Recorded with each
@@ -1172,8 +1251,8 @@ def effective_config(task: Path, seed: int | None = None, env: dict | None = Non
     dg = read_text(task / DIGEST_FILE)
     return {"protocol_version": PROTOCOL_VERSION, "mode": mode, "cutoff_s": cutoff_for(task), "reset_budget": resets,
             "slowdown": S, "seed": seeds_of(md)["default"] if seed is None else int(seed), "network": network_of(task),
-            "validated": validated_of(task), "oracle": md.get("oracle", ""), "service_protocol": md.get("protocol", ""),
-            "digest": (dg or "").strip()}
+            "validated": validated_of(task), "set": set_of(task), "oracle": md.get("oracle", ""),
+            "service_protocol": md.get("protocol", ""), "digest": (dg or "").strip()}
 
 
 CONFIG_KEYS = ("protocol_version", "mode", "cutoff_s", "reset_budget", "slowdown", "network")
@@ -1246,6 +1325,18 @@ def snapshot(task: Path) -> dict[str, bytes]:
 def main(argv: list[str]) -> int:
     if argv[:1] == ["modes"]:          # the mode registry for the shell checks (PROTOCOL §2.16)
         print(modes_table())
+        return 0
+    if argv[:1] == ["easy-set"]:       # `easy-set --check`: docs/easy_set.toml (PROTOCOL §4); `easy-set`: list its tasks
+        if "--check" in argv:
+            bad = check_easy_set()
+            for b in bad:
+                print(f"FAIL docs/easy_set.toml: {b}")
+            if not bad:
+                print(f"ok docs/easy_set.toml: {len(easy_set())} task bases")
+            return 1 if bad else 0
+        root = Path(__file__).resolve().parents[1] / "tasks"
+        for t in sorted(p for p in root.iterdir() if (p / "task.toml").is_file() and set_of(p) == "easy"):
+            print(t.name)
         return 0
     check = "--check" in argv
     dirs = [Path(a) for a in argv if a != "--check" and (Path(a) / "task.toml").is_file()]
