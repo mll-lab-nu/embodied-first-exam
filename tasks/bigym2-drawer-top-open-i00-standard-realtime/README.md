@@ -27,7 +27,10 @@ None (as `bigym2-drawer-top-open-i00-privileged`).
 As `bigym2-drawer-top-open-i00-standard`: the sidecar judges the live episode with BiGym's own success check and writes that verdict to
 `/data/final.json` (`graded_by = "live"`); nothing is replayed to grade it (owner, 2026-10-17, board 0151). The
 trajectory holds the commands the simulator executed at each control step, so it reproduces the live run whatever the
-timing was; the video is rendered from it in one pass after the verdict. `tests/grade.py` reads `final.json`. Success condition: the top drawer is out to within 10% of its full travel (within about 0.038 m of fully open).
+timing was; the video is rendered from it in one pass after the verdict. `tests/grade.py` reads `final.json`. After
+the agent's first command, a simulator error raised by a control step and a simulator crash (a fatal signal) are the
+agent's 0; before it, a kill, a failed resume and a reset that does not rebuild the scene are infrastructure
+(`infra_error = 1`; owner, 2026-10-17, docs/STANDARD_MODE.md). Success condition: the top drawer is out to within 10% of its full travel (within about 0.038 m of fully open).
 No oracle; human review in PR #123 (PROTOCOL §2.7).
 
 ## Compute resources
@@ -58,3 +61,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
   episode begins: a scene that does not rebuild the frozen instance's starting state (exactly, or within upstream's
   tolerance on another CPU) gives up as infrastructure (`instance_mismatch`). The scene, instance, pass rule and the
   agent's interface are unchanged, so the task keeps its name; every archived verdict is the same under the live rule.
+- 2026-10-17 (2; owner): after the agent's first command a simulator error raised by a control step is the agent's 0
+  (`sim_error = 1`, no longer `infra_error`), and so are simulator crashes with a fatal signal (`sim_crashed_on_call`);
+  kills, failed resumes, a reset that does not rebuild the scene and failures before the first command stay
+  infrastructure.
