@@ -14,7 +14,7 @@ hardware**: the simulator runs in a service you cannot open. You get one client 
 - Steps are unlimited; **the time limit (`## Time limit`)** is your only budget (`meta["time_left_s"]` is the service's count of
   it). Actions and simulated time are reported as cost (a runaway guard stops the robot after 72000 control steps = 1 h of
   simulated time; watching with `seconds > 0` also advances it).
-- There is nothing to hand in: the service records your episode as the trajectory, which is replayed and scored. Leave your
+- There is nothing to hand in: the service records your episode as the trajectory and scores the main sheet as your episode left it. Leave your
   script at `/app/output/gen.py` for the record.
 - **A service restart is not a reset.** If the service crashes, it restarts and resumes the SAME episode in the state after the
   last call it completed (the call that was running is lost as a whole: you get a connection error). `r.wait_ready()` waits
