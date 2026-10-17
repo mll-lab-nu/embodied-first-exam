@@ -46,10 +46,13 @@ conditions at one instant, without the window (`predicate`: RoboWits' alone).
   away from the robot), so the cube's centre must be past it, on its far side from the robot.
 - On the table, released and at rest: the cube past the line has the bottom of its bounding box no more than 2 cm
   below the table top (a cube pushed off the table does not count), no part of the robot touches it, and it moves at
-  most 2 mm during the check window.
+  most 2 mm during the check window. The cubes that count (past the line and on the table) are taken when the check
+  window begins and must stay the same through it: a further cube that crosses the line, or a counted cube that leaves
+  the table or comes back over the line, fails the window when a checked step (every 6th control step of those 2 s and
+  the last) finds the set changed.
 
 Not checked: anything else: whether the cube is on the table top or still on a slope, its height and orientation, and
-the other two cubes.
+the other two cubes (except that neither may become a counted cube during the check window).
 
 Task text vs grader ("Move any of the three cubes to the left of the goal line."): "To the left of the goal line"
 means beyond it, farther from the robot than the line, not to the left as the robot sees it.
