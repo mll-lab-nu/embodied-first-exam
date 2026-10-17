@@ -21,6 +21,74 @@
 # small because its reference solver had a hack, and its affected tasks may be re-run once the solver is fixed.
 # 2026-10-16: DexJoCo 4 (#278, group meeting: a task the screening runs solved in both modes; docs/benchmarks/dexjoco.md
 # "Easy set").
+# 2026-10-17: AM-Bench 8 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/ambench.md "Easy set").
+# 2026-10-17: RoboCasa 9 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/robocasa.md "Easy set").
+# 2026-10-17: RoboCasa365 19 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/robocasa365.md "Easy set").
+# 2026-10-17: RoboCasa-GR1 9 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/robocasa-gr1.md "Easy set").
+# 2026-10-17: MetaWorld+ 29 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/metaworldplus.md "Easy set").
+# 2026-10-17: VLABench 15 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/vlabench.md "Easy set").
+# 2026-10-17: LIBERO-MAX 29 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/libero-max.md "Easy set").
+# 2026-10-17: RoboDojo 33 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/robodojo.md "Easy set").
+# 2026-10-17: Panda Dynamic Scenes 1 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/pandadyn.md "Easy set").
+# 2026-10-17: YAMLab 5 (the owner's screening: every mode the base ships solved by a screening run;
+# docs/benchmarks/yamlab.md "Easy set").
+
+[[task]]
+base = "ambench-cabinet-pick-place-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-lemon-harvesting-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-ndt-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-open-door-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-press-button-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-pull-lever-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "S: Luna"
+
+[[task]]
+base = "ambench-push-slider-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "ambench-rotate-valve-fahexa-i00"
+benchmark = "AM-Bench"
+reason = "solved"
+note = "P: Luna; S: Luna"
 
 [[task]]
 base = "behavior-chop-an-onion-i00"
@@ -137,6 +205,180 @@ reason = "solved"
 note = "Luna (codex-gpt6_luna-xhigh) P+S"
 
 [[task]]
+base = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 3.8 Flash (Luna failed)"
+
+[[task]]
+base = "libero-max-goal-akita-black-bowl-on-wooden-cabinet-top-obstacle-insertion-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-flat-stove-off-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-flat-stove-on-illumination-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-flat-stove-on-illumination-switch-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-flat-stove-on-sensor-noise-onset-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-wine-bottle-on-plate-receptacle-relocation-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-wine-bottle-on-wine-rack-top-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-goal-yellow-stove-on-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "libero-max-long-black-bowl-in-wooden-cabinet-bottom-closed-obstacle-insertion-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-object-butter-in-basket-distractor-burst-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-chocolate-pudding-in-basket-sensor-noise-onset-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-cream-cheese-in-basket-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-green-chocolate-pudding-in-red-basket-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-milk-in-basket-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-milk-in-basket-illumination-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-orange-juice-in-basket-distractor-burst-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-orange-juice-in-basket-illumination-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-object-salad-dressing-in-basket-sensor-noise-onset-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-camera-shift-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-illumination-switch-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-obstacle-insertion-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-receptacle-relocation-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i00"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "libero-max-spatial-akita-black-bowl-on-plate-sensor-noise-onset-i01"
+benchmark = "LIBERO-MAX"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
 base = "maniguard-clutter-pickup-i25"
 benchmark = "ManiGuard"
 reason = "owner"
@@ -175,6 +417,186 @@ reason = "owner"
 base = "maniguard-stack-retrieve-i21"
 benchmark = "ManiGuard"
 reason = "owner"
+
+[[task]]
+base = "metaworldplus-assembly-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-bin-picking-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-box-close-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-button-press-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-button-press-wall-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-coffee-button-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-coffee-pull-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-coffee-push-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-dial-turn-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-door-close-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-drawer-close-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-faucet-open-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-hammer-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-handle-press-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-handle-press-side-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-pick-out-of-hole-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-pick-place-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-plate-slide-back-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-plate-slide-back-side-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-plate-slide-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-plate-slide-side-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-push-back-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-reach-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-reach-wall-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-shelf-place-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-soccer-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-sweep-into-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-window-close-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "metaworldplus-window-open-i00"
+benchmark = "MetaWorld+"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "pandadyn-d04-shared-tray-transport-discharge-i00"
+benchmark = "Panda Dynamic Scenes"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Gemini 4 Argon (Luna failed); RT: Astra, Opus, GLM 5.3 Flash (Luna failed)"
 
 [[task]]
 base = "roboarc-blanket-flatten-01-i01"
@@ -332,6 +754,426 @@ reason = "owner"
 base = "roboarc-rope-threading-02-i01"
 benchmark = "RoboARC"
 reason = "owner"
+
+[[task]]
+base = "robocasa-coffee-press-button-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robocasa-coffee-setup-mug-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B (Luna failed); S: Opus, Sol 6.1 (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-bottle-to-cabinet-close-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon (Luna failed); S: Astra, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-cuttingboard-to-basket-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-cuttingboard-to-pan-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Gemini 4 Argon (Luna failed); judgment: Astra's standard success is borderline (the agent doubted its placement); Gemini 4 Argon's is clean"
+
+[[task]]
+base = "robocasa-gr1-cuttingboard-to-pot-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Sol 6.1, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-placemat-to-basket-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Sol 6.1, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-plate-to-cardboardbox-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash, Qwen3.8 27B (Luna failed); S: Astra, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-tray-to-cardboardbox-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Opus, Sol 6.1, Sol (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-tray-to-tieredbasket-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash (Luna failed); S: Sol 6.1, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-gr1-tray-to-tieredshelf-i00"
+benchmark = "RoboCasa-GR1"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash (Luna failed); S: Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-open-drawer-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Sol 6.1, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-pnp-counter-to-cab-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna; judgment: the one standard solve hit the 3600 s agent timeout after its episode was recorded (graded as a success)"
+
+[[task]]
+base = "robocasa-pnp-counter-to-microwave-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B (Luna failed); S: Astra, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa-pnp-counter-to-sink-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robocasa-pnp-sink-to-counter-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robocasa-turn-on-microwave-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robocasa-turn-sink-spout-i00"
+benchmark = "RoboCasa"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robocasa365-add-lemon-to-fish-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon (Luna failed); S: Astra, Opus, Sol 6.1 (Luna failed)"
+
+[[task]]
+base = "robocasa365-beverage-sorting-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon (Luna failed); S: Gemini 4 Argon (Luna failed); judgment: the one standard solve hit the 3600 s agent timeout after its episode was recorded (graded as a success)"
+
+[[task]]
+base = "robocasa365-candle-cleanup-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-clear-food-waste-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-clear-sink-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Sol 6.1, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-deliver-brewed-coffee-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon (Luna failed); S: Sol 6.1, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-drain-veggies-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol (Luna failed); S: Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-make-ice-lemonade-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Gemini 4 Argon (Luna failed); S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-meal-prep-staging-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robocasa365-open-dishwasher-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Sol, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed)"
+
+[[task]]
+base = "robocasa365-organize-coffee-condiments-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-oven-broil-fish-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robocasa365-pick-place-cabinet-to-counter-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-plate-steak-meal-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-prep-for-sanitizing-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robocasa365-reheat-meal-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Gemini 4 Argon (Luna failed); S: Opus (Luna failed)"
+
+[[task]]
+base = "robocasa365-retrieve-meat-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robocasa365-set-up-cutting-station-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash (Luna failed); S: Astra, Sol 6.1 (Luna failed)"
+
+[[task]]
+base = "robocasa365-tong-buffet-setup-i00"
+benchmark = "RoboCasa365"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash (Luna failed); S: Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-align-blocks-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-arrange-largest-number-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-arrange-largest-number-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-build-tower-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-classify-objects-by-language-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-classify-objects-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-deposit-coin-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-fasten-screws-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-fill-pen-holder-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra (Luna failed); S: Astra, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-fold-clothes-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Astra, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-fold-clothes-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-general-pickup-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-make-toast-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-match-and-pick-from-conveyor-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-organize-table-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Gemini 4 Argon (Luna failed); S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-pack-objects-into-box-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-pick-from-conveyor-by-image-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus (Luna failed); S: Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-play-stacking-toy-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-plug-in-charger-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, GLM 5.3 Flash (Luna failed); S: Opus, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-pour-balls-into-vase-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 3.8 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-pour-by-language-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-pour-liquid-into-cup-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Astra, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-pour-liquid-into-cup-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "S: Astra, Opus, Gemini 3.8 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-push-t-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-push-t-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-put-bottles-into-dustbin-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); judgment: the standard solves by Opus and Gemini 3.8 Flash relayed a bottle over the table instead of the suggested handover, which the task text says is not enforced"
+
+[[task]]
+base = "robodojo-sort-nesting-dolls-by-size-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-stack-blocks-by-language-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-stack-blocks-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "robodojo-stack-blocks-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash (Luna failed)"
+
+[[task]]
+base = "robodojo-stack-bowls-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "robodojo-stack-bowls-random-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "robodojo-swap-t-i00"
+benchmark = "RoboDojo"
+reason = "solved"
+note = "P: Luna; S: Luna"
 
 [[task]]
 base = "robolab-banana-in-bowl-i00"
@@ -494,3 +1336,123 @@ base = "robowits-move-cube-i00"
 benchmark = "RoboWits"
 reason = "shortcut"
 note = "Astra P: pushed_off_table_shortcut; Luna P: pushed_off_table_shortcut"
+
+[[task]]
+base = "vlabench-add-condiment-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Astra, Opus, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "vlabench-find-unseen-object-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-heat-food-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Astra, Opus, Sol 6.1 (Luna failed); S: Opus (Luna failed)"
+
+[[task]]
+base = "vlabench-magnetism-qa-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-put-box-on-painting-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-reflection-qa-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-book-spatial-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-chemistry-tube-common-sense-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-chemistry-tube-semantic-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-chemistry-tube-spatial-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-drink-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna; judgment: solved in the first test evaluation (2026-10-02); repo-wide changes only since"
+
+[[task]]
+base = "vlabench-select-fruit-common-sense-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-painting-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-poker-spatial-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "vlabench-select-toy-i00"
+benchmark = "VLABench"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "yamlab-hang-mug-on-tree-i15"
+benchmark = "YAMLab"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed); S: Opus (Luna failed)"
+
+[[task]]
+base = "yamlab-hang-mug-on-tree-i20"
+benchmark = "YAMLab"
+reason = "solved"
+note = "P: Luna; S: Luna"
+
+[[task]]
+base = "yamlab-put-pot-on-cooktop-i00"
+benchmark = "YAMLab"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 4 Argon (Luna failed); S: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon (Luna failed)"
+
+[[task]]
+base = "yamlab-put-pot-on-cooktop-i07"
+benchmark = "YAMLab"
+reason = "solved"
+note = "P: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus (Luna failed)"
+
+[[task]]
+base = "yamlab-put-pot-on-cooktop-i08"
+benchmark = "YAMLab"
+reason = "solved"
+note = "P: Astra, Opus, DeepSeek V4.1 Flash (Luna failed); S: Astra, Opus, Gemini 4 Argon (Luna failed)"
