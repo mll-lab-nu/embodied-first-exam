@@ -46,8 +46,13 @@ d = os.environ.get("RCB_DATA", "/out")
 def last_json(name):
     out = {}
     try:
-        for line in open(os.path.join(d, name)):
-            if line.strip().startswith("{"): out = json.loads(line)
+        for line in open(os.path.join(d, name), errors="replace"):
+            if line.strip().startswith("{"):
+                try:
+                    j = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(j, dict) and "replays" in j: out = j
     except Exception:
         pass
     return out

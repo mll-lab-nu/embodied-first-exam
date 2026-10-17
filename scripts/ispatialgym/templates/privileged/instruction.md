@@ -11,7 +11,7 @@ $goal_rule
   step ($max_steps_s s of simulated time). Write it with `s.save_trajectory(path)`, which saves `s.rows`.
 - **How it is graded.** The grader replays your rows open-loop from the frozen start, in two fresh processes, each within
   $replay_timeout_s s. It scores 1 if both replays succeed (a replay stops at its first success) and both end in the same
-  state. A file that is not a `(T, 23)` array `actions` of finite numbers, or that has more than $max_steps rows, scores 0.
+  state. A file that is not a `(T, 23)` array `actions` of finite float32 numbers, or that has more than $max_steps rows, scores 0.
 - **Save early.** Only what is in `/app/output/` when your time runs out is graded: save a trajectory as soon as you have
   one and overwrite it when you have a better one. Also leave the script that made it at `/app/output/gen.py`.
 

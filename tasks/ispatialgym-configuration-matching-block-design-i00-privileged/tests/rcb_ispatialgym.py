@@ -671,7 +671,7 @@ class StepError(RuntimeError):
     """A control step of the replayed rows raised (after the start rebuilt): the trajectory's own outcome, not the host's."""
 
     def __init__(self, step: int, exc: BaseException):
-        super().__init__(f"step {step}: {exc!r}"[:500]); self.step, self.kind = step, type(exc).__name__
+        super().__init__(f"step {step}: {exc!r}"[:500]); self.step, self.kind = step, f"{type(exc).__name__}: {str(exc)[:120]}"
 
 
 def run_rows(s: Session, rows: np.ndarray, video: str | None = None, info: dict | None = None) -> dict:
@@ -683,7 +683,11 @@ def run_rows(s: Session, rows: np.ndarray, video: str | None = None, info: dict 
         for i, a in enumerate(rows):
             try:
                 done = s.step(a)
+            except (MemoryError, OSError) as exc:            # the host's, not the rows': stays an infrastructure failure
+                raise RuntimeError(f"step {s.n}: {exc!r}") from exc
             except Exception as exc:  # noqa: BLE001
+                if "OutOfMemory" in type(exc).__name__ or "CUDA" in str(exc)[:300]:
+                    raise RuntimeError(f"step {s.n}: {exc!r}") from exc
                 raise StepError(s.n, exc) from exc
             if vid is not None and i % 3 == 0:
                 vid.add(head)
@@ -698,6 +702,8 @@ def run_rows(s: Session, rows: np.ndarray, video: str | None = None, info: dict 
 
 
 def cmd_replay(a) -> None:
+    import signal
+    signal.signal(signal.SIGPIPE, signal.SIG_IGN)    # a dead encoder is an EPIPE the recorder absorbs, never a kill
     out: dict[str, Any] = {"replays": []}
     try:
         s = Session(a.instance)
