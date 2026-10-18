@@ -11,6 +11,12 @@
   "time_s": 140.0,
   "stages": []
  },
+ "hurdles-freestanding": {
+  "success": false,
+  "failed": "time",
+  "time_s": 140.0,
+  "stages": []
+ },
  "shuttle-run": {
   "success": false,
   "failed": "time",
@@ -53,6 +59,18 @@
   "time_s": 20.0,
   "stages": []
  },
+ "jump-rope": {
+  "success": false,
+  "failed": "time",
+  "time_s": 60.0,
+  "stages": []
+ },
+ "long-rope": {
+  "success": false,
+  "failed": "the rope touched the robot",
+  "time_s": 0.94,
+  "stages": []
+ },
  "pole-vault": {
   "success": false,
   "failed": "time",
@@ -87,6 +105,18 @@
   "success": false,
   "failed": "time",
   "time_s": 30.0,
+  "stages": []
+ },
+ "juggling-feet": {
+  "success": false,
+  "failed": "time",
+  "time_s": 60.0,
+  "stages": []
+ },
+ "juggling-head": {
+  "success": false,
+  "failed": "the ball touched the ground",
+  "time_s": 2.23,
   "stages": []
  },
  "header": {
@@ -143,6 +173,18 @@
   "time_s": 15.0,
   "stages": []
  },
+ "dunk-realgrasp": {
+  "success": false,
+  "failed": "time",
+  "time_s": 15.0,
+  "stages": []
+ },
+ "dunk-between-legs": {
+  "success": false,
+  "failed": "time",
+  "time_s": 40.0,
+  "stages": []
+ },
  "basketball-dribble": {
   "success": false,
   "failed": "time",
@@ -157,10 +199,30 @@
    "bounce"
   ]
  },
+ "tennis-return-realgrasp": {
+  "success": false,
+  "failed": "the ball bounced twice before the racket hit it",
+  "time_s": 4.9,
+  "stages": [
+   "bounce"
+  ]
+ },
  "tennis-serve": {
   "success": false,
   "failed": "time",
   "time_s": 20.0,
+  "stages": []
+ },
+ "tennis-serve-realgrasp": {
+  "success": false,
+  "failed": "time",
+  "time_s": 20.0,
+  "stages": []
+ },
+ "badminton-serve": {
+  "success": false,
+  "failed": "time",
+  "time_s": 15.0,
   "stages": []
  },
  "table-tennis-return": {

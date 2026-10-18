@@ -111,6 +111,7 @@ class Scene:
                       material="ground", friction="1 0.005 0.0001", **STANDABLE)
         self.grippables: dict[str, dict] = {}       # body name -> {"radius": reach of its surface from its origin}
         self.hand_tools: dict[str, str] = {}        # side -> MJCF fragment mounted on that hand (world.py)
+        self.real_hands: dict[str, str] = {}        # side -> "dex1": Unitree's Dex1-1 gripper instead of the pad (realhand.py)
         self.cameras: list[str] = []
         self.ground: list[str] = ["floor"]          # geoms that count as "the ground" for falls and landings
         self._n = 0

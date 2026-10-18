@@ -3,7 +3,7 @@
 A family is one sport task for one Unitree G1: a venue, a start, and a referee. It is one Python module,
 `shared/rfo/tasks/<family_snake>.py`, defining `Task(TaskBase)`, plus a referee test `tests/test_<family_snake>.py`
 and, where one exists, a reference solution `oracles/<family>/oracle.py`. The generator copies the core package
-(`shared/rfo/{__init__,scene,looks,world,referee,task}.py`; `testing.py` stays here, for the tests) and the family's module (as `rfo_task.py`) into the task
+(`shared/rfo/{__init__,scene,looks,world,referee,task,realhand}.py`; `testing.py` stays here, for the tests) and the family's module (as `rfo_task.py`) into the task
 directories; a task directory never holds another family's module.
 
 Read first: `shared/rfo/task.py` (the hooks), `shared/rfo/scene.py` (venue building, collision classes, balls; how a
@@ -90,6 +90,33 @@ again there. A family declares what is grippable (`sc.ball(..., grippable=True)`
 (racket, paddle, club) is `sc.hand_tools["right"] = "<geom .../>"` (MJCF in the frame of the wrist mount: +z along the
 forearm away from the wrist; `contype="4" conaffinity="0"`); its geoms are the robot part `right_tool`, replace the
 pad, and collide with the rest of the robot's body (explicit pairs, `world.py`).
+
+A **real hand** (`shared/rfo/realhand.py`) holds by contact and friction only, never by a weld: `sc.real_hands["right"] =
+"dex1"` (and/or `"left"`) in `build()` puts Unitree's Dex1-1 two-finger parallel gripper on that wrist mount instead of
+the pad (0.55 kg; a 78 × 67 × 63 mm housing, two jaws 80 mm long beyond it with rubber pads, 90 mm stroke, closing along
+the mount's x, the palm's normal: jaw `a` on the palm side, `b` on the back). The row's `grip_<side>` is then its closure
+command in [0, 1] (0 open, 90 mm between the pads; 1 closed; continuous): each jaw's setpoint moves to 45 mm × the
+command at up to 187.5 mm/s (the opening's setpoint at 375 mm/s, the full stroke in 0.24 s; the jaws themselves briefly
+reach about 0.45 m/s when a clamp springs open) and a force-limited PD servo (20 000
+N/m, 80 N s/m, ±120 N) drives the jaw to it (an opening command starts from where the jaws are: a clamp lets go at
+once), so the clamp on an object is min(120 N, 10 N per mm that the commanded
+opening is below its width). What it holds can slip, turn in the jaws and drop. At reset, place a free body between the
+open jaws (`w.jaw_frame(side)` gives the jaw centre and its axes: x closing, y across the jaws, z along the fingers;
+site `<side>_jaw_centre`) and call `w.close_on(side, name, closure=1.0)`: the jaws close on it with the rest of the
+world held still and the grasp settles for 0.3 s (deterministic; it raises if the jaws do not hold it); that closure is
+the start row's grip value. `w.held[side]` is the body touching both jaws now (by contact, every physics step), so
+`ref.airborne()` treats it as held; no grip / release events. The housing and the jaws are part `<side>_hand`
+(`ref.part("hands")`); one jaw is `ref.geoms(body="<side>_hand_jaw_a")` (or `_b`). They collide with the props like the
+hulls (contype 4) and, by explicit pairs, with the rest of the robot and with the other gripper; the pads' contact
+parameters win over the held object's (priority 2: friction 1.0, torsional 5 mm, condim 4). A world with a real hand
+gets elliptic friction cones and `impratio` 100 (MuJoCo's soft friction otherwise lets a clamped handle creep), which
+applies to all of its contacts. Proprioception gains `jaw_opening_<side>`, `jaw_speed_<side>`, `jaw_force_<side>` at the
+end; `Session.state()["real_hands"]` and `spec()["robot_facts"]["real_hands"]` describe them. The Dex1-1 is sold for the
+G1 (and H2, R1), not the H1-2: an H1-2 family lists it as a deviation (there it sits on the mount where the Inspire hand's
+palm ends; the Inspire finger bodies, about 0.05 kg per hand, go, the palm and its shell stay). Other departures from the
+device, said in the tasks' texts: one command (no separate speed and force settings), no 5 N minimum force, and two
+pads at friction 1.0 and 120 N hold about 240 N of shear, some five times its rated 5 kg friction-grasp load. A side has
+a tool or a real hand, not both. `tests/test_real_hand.py` shows it.
 
 ## The Task
 

@@ -18,8 +18,9 @@ A control step is 10 ms (10 physics steps of 1 ms). An action is a row of one of
     lowcmd    29 x (q, dq, tau, kp, kd) + grips 2                            Unitree's LowCmd for every joint
 
 Joint order (Unitree's SDK; the G1's, the H1-2 has waist yaw only): left leg 6 (hip pitch, roll, yaw, knee, ankle pitch, roll), right leg 6, waist yaw, roll,
-pitch, left arm 7 (shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw), right arm 7. grip_left / grip_right:
->= 0.5 closes that hand's grip (it holds an object whose surface is within 3.5 cm of the palm), < 0.5 opens it.
+pitch, left arm 7 (shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw), right arm 7. grip_left / grip_right, per
+hand: on a fist pad >= 0.5 closes that hand's grip (it holds an object whose surface is within 3.5 cm of the palm),
+< 0.5 opens it; on a gripper (a family's real hand, rfo/realhand.py) it is the jaws' closure command, 0 open to 1 closed.
 
 Python (privileged mode):
     from rcb_rfo import Session
@@ -188,6 +189,13 @@ class Episode:
                           "rule": "a closed grip holds the nearest grippable object whose surface is within reach_m of "
                                   "the palm (a point 4.5 cm beyond the wrist flange along the forearm) and that moves "
                                   "no faster than max_relative_speed_m_s relative to it; opening the grip lets it go"}}
+        if self.world.hands:                      # a real hand (rfo/realhand.py): only in the families that have one
+            facts["real_hands"] = self.world.hands.facts()
+            pads = [s for s in ("left", "right") if s not in self.world.real_hands]
+            if pads:                              # the weld grip is the pad sides' only
+                facts["grip"]["sides"] = pads
+            else:
+                del facts["grip"]
         return facts
 
     def close(self) -> None:
@@ -331,7 +339,8 @@ class Session:
         return {"time_s": w.t, "pelvis_xyz_yaw": w.pelvis().tolist(), "com": w.com().tolist(),
                 "q": w.d.qpos[r.qadr].tolist(), "dq": w.d.qvel[r.vadr].tolist(), "q_target": r.arb.target().tolist(),
                 "held": dict(w.held), "left_palm": w.d.site_xpos[r.palm["left"]].tolist(),
-                "right_palm": w.d.site_xpos[r.palm["right"]].tolist(), "task": w.task.privileged(w)}
+                "right_palm": w.d.site_xpos[r.palm["right"]].tolist(), "task": w.task.privileged(w),
+                **({"real_hands": w.hands.state()} if w.hands else {})}
 
     def image(self, camera: str, h: int | None = None, w: int | None = None, depth: bool = False):
         return self.ep.image(camera, h, w, depth)
