@@ -121,7 +121,7 @@ chunks loses nothing. A real H1 does not wait. The standard-realtime mode (PROTO
 `tasks/humanoidbench-*-i00-standard-realtime`, 10 tasks, one per family, `mode = "standard-realtime"`) is standard mode with the same
 instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the closing `## Time limit` section of every instruction, PROTOCOL §2) and client, on a
 clock that does not stop (`scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which extends `rcb_service.py`; the
-wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/STANDARD_MODE.md "Standard-realtime mode"):
+wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Standard-realtime mode"):
 
 - **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
   at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every 20 ms of wall time
@@ -147,7 +147,7 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/STAN
   sidecar's GPU, against a 20 ms step. A service that falls behind runs the missed steps back to back; more than
   0.5 s behind, it drops the debt (a stall) instead of fast-forwarding the robot. Requests cannot slow the clock: a request is read, decoded and checked off the simulator's thread (large
   JSON bodies by a child process), waiting requests are served once the clock has caught up, and the cameras are
-  rendered once per control step for everyone who asks (`docs/STANDARD_MODE.md`, "What a request can cost the
+  rendered once per control step for everyone who asks (`docs/protocol/standard_mode.md`, "What a request can cost the
   clock"; `scripts/humanoidbench/tests/test_realtime_load.py` measures it on a stub simulator).
 - **Crashes and errors.** After the agent's first command (the first control step of a
   row the agent sent, `first_command` in `episode.jsonl`) a simulator error raised by a control step is the agent's 0, and
@@ -215,7 +215,7 @@ harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # 
 harbor run -p tasks/humanoidbench-loco-walk-i00-standard-realtime -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard-realtime -a oracle   # streams the same 999 rows
 ```
-Agent, provider and effort settings: docs/RUNNING.md. Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
+Agent, provider and effort settings: docs/protocol/running.md. Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
 with none (one episode), whose results are reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-humanoidbench:$(cat images/humanoidbench/VERSION) .` (from the
 repository root).

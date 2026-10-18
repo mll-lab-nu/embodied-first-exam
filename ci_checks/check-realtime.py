@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Standard-realtime tasks (docs/PROTOCOL.md §4b): each task declares its slowdown S and its reset budget, and the
+"""Standard-realtime tasks (docs/protocol/README.md §4b): each task declares its slowdown S and its reset budget, and the
 declarations agree. The values are the task's own choice (PROTOCOL §0: template defaults S from the measured real-time
 factor, 10 resets); this check holds no per-benchmark list. For every task whose directory ends in `-standard-realtime`:
   - slowdown: its sim service sets `RCB_SLOWDOWN` with a default (`"${RCB_SLOWDOWN:-S}"`, S > 0) in

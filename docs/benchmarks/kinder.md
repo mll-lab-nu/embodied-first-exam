@@ -85,7 +85,7 @@ measured on the frozen instance (`gen_tasks.py measure`, facts.json `goal_region
 harbor run -p tasks/kinder-scoop-pour-i01-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
-Agent, provider and effort settings: docs/RUNNING.md. Agent time cutoff: 1800 s in both modes. Standard tasks grant no reset by default (the protocol's default): one episode, whose 1000 control steps the practice and the graded attempt share;
+Agent, provider and effort settings: docs/protocol/running.md. Agent time cutoff: 1800 s in both modes. Standard tasks grant no reset by default (the protocol's default): one episode, whose 1000 control steps the practice and the graded attempt share;
 `RCB_RESET_BUDGET=N harbor run ...` runs a configuration with N resets, whose results are reported separately (the shipped instruction describes the default, one episode; for N > 0 regenerate the tasks with `RESET_BUDGET = N`, which renders the reset rules and `r.reset()`). Build the image: `docker build -f images/kinder/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
 

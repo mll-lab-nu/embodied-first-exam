@@ -431,10 +431,10 @@ WORKDIR /tests
 def priv_test_sh(fam: str) -> str:
     return f"""#!/bin/bash
 # Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in a fresh process.
-# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, docs/PROTOCOL.md §2.6).
+# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, docs/protocol/README.md §2.6).
 # Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent
 # left there (a planted reward, a symlink) can count. rm never follows symlinks.
-rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)
+rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/protocol/README.md §2.6)
 mkdir -p /logs/verifier
 python /tests/grade.py --family {fam} --instance /tests/instance.npz --traj /app/output/trajectory.npz --repeat 2 \\
   --video-deadline-s {PRIV_VIDEO_DEADLINE} 2> /logs/verifier/grade.log
@@ -731,7 +731,7 @@ def std_compose(fam: str) -> str:
     return f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and OSMesa rendering; no GPU reservation.
-# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/protocol/standard_mode.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 services:
   main:
@@ -780,7 +780,7 @@ STD_TEST_SH = """#!/bin/bash
 # Verifier (separate sandbox): the sim sidecar's artifacts were uploaded to /data by Harbor.
 # Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent
 # left there (a planted reward, a symlink) can count. rm never follows symlinks.
-rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)
+rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/protocol/README.md §2.6)
 mkdir -p /logs/verifier
 python /tests/grade.py 2> /logs/verifier/grade.log
 """

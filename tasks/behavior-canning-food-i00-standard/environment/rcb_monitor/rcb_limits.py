@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resource limits (docs/PROTOCOL.md §2.10): the sustained-violation rule, shared by the monitor sidecar (monitor.py) and
+"""Resource limits (docs/protocol/README.md §2.10): the sustained-violation rule, shared by the monitor sidecar (monitor.py) and
 the verifier step, and the verifier step itself.
 
 Copies of this file live in every task (environment/rcb_monitor/ for the monitor, tests/ for the verifier), byte-identical

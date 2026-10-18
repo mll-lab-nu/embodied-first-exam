@@ -3,7 +3,7 @@
 # (Pyroki @ 2eafc99 with JAX 0.4.28 on the CPU, acados @ fa0af20 built with qpOASES). What is left out on purpose: AM-Bench's
 # scripted experts (source/ambench/ambench/policies/scripted/, the reference solutions; the task registrations' pointer to them is
 # blanked), its policy-learning package (ambench_learn), its scripts, documentation and git history: nothing an agent can read
-# here locates a solution (docs/PROTOCOL.md §2.7). Every web asset the twelve tasks' scenes load at run time (objects'
+# here locates a solution (docs/protocol/README.md §2.7). Every web asset the twelve tasks' scenes load at run time (objects'
 # payloads and materials, the robot's paint, Isaac Lab's ground, NDT's warehouse scene) is baked in under /opt/isaac-assets
 # (images/ambench/web_assets.txt), mirroring the asset buckets' layouts: the tasks run with closed egress.
 # Tag = images/ambench/VERSION; build from the repo root (images/ambench/BUILD_ONLY has the command, licences and checks):

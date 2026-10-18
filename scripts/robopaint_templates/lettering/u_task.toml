@@ -9,7 +9,7 @@ keywords = ["robotics", "robopaint", "maniskill", "sapien", "lettering", "callig
 
 [metadata]
 author_name = "qineng"
-task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the CPU) + the pointed-pen model (rcb_brush.py, CPU)
 robot = "franka-panda"            # PandaStick with a dip pen: rigid holder + a collision-free 6 mm flexible point; TCP = the point
 family = "{{FAMILY}}"

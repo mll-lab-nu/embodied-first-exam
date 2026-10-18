@@ -75,7 +75,7 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py 
   `ghcr.io/mll-lab-nu/eai-robowits:<images/robowits/VERSION>`, public; the Dockerfile pins the uv, huggingface_hub,
   imageio and asset-bundle versions. The GPU renders the three cameras; physics runs
   on the CPU.
-- `scripts/build_images.sh` builds it as `eai-robowits` (docs/RUNNING.md, "Base images").
+- `scripts/build_images.sh` builds it as `eai-robowits` (docs/protocol/running.md, "Base images").
 - Standard agent containers and verifiers use the shared client base, pinned by digest, and the shared pip pins
   (`scripts/eai_standard/client.env`, `client-requirements.txt`, copied into `environment/`; `check-standard-client.sh`).
 - 12 of the 15 families load BlenderKit models, which may not be redistributed (`images/robowits/NOTICE`). Each user
@@ -108,7 +108,7 @@ which was graded on ws (AMD, with `instance_exact = 1`).
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
-RUNNING.md "The agent's time"); every instruction states it in its closing `## Time limit` section. The families are
+docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section. The families are
 bimanual physical puzzles that take several attempts, every Python process pays about a minute of scene build before
 its first step, and a standard-mode crash resume replays the episode on the agent's clock.
 
@@ -182,7 +182,7 @@ demonstrations of its seed tasks (the LeRobot dataset its README names; the imag
 ## Standard mode (eai-standard/2.2)
 `joint_position` (16) and `ee_pose` (16, right arm first, IK per row on RoboWits' pink/pinocchio IK, gripper-tip frame);
 cameras `ego` (static) and `wrist_right` / `wrist_left` (link-mounted); Genesis rasterizer depth; `/kinematics` on
-pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`episode`). STANDARD_MODE.md §16.
+pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`episode`). docs/protocol/standard_mode.md §16.
 - Requests: the adapter checks the type and range of every field of a `/submit` header
   and an `/observe` body before it executes or counts anything, and answers 400: `type`, `dt` (a finite number in
   [1/30, 0.5] s and, for `joint_position`, a whole number of 1/30 s periods within 1e-6 of a period: never rounded),
@@ -191,7 +191,7 @@ pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`ep
   (finite, (T, 16), at most 10 s or 50 `ee_pose` rows). `ee_pose` gripper widths outside 0 .. 0.1 are clipped and
   listed in `meta.clipped`, like out-of-limit joint targets; an IK result that is not finite counts as an IK failure
   (the arm holds).
-- Crash recovery (STANDARD_MODE.md §13): `restart: on-failure:6`, `command: sh /srv/run.sh`; the adapter declares the
+- Crash recovery (docs/protocol/standard_mode.md §13): `restart: on-failure:6`, `command: sh /srv/run.sh`; the adapter declares the
   resume class `exact` on the CPU backend and `approx` on the GPU backend. A smoke test outside Harbor (the service
   killed between calls) resumes with the state hash matching; the Harbor acceptance test (kill the sidecar of a running
   trial) has not been run.
@@ -220,7 +220,7 @@ The tooling records (T, 16) JOINT_ABS rows (per arm 7 joints + gripper width) at
   replay, rendering (`render_frame` / `render_grid` / `render_video`) and thin wrappers of the low-level action (joint
   moves, IK moves without collision checking, gripper, hold). Task-level skills (grasp, place, navigate) are never added
   to it; reference solutions keep theirs under `solution/`.
-- **World-frame information.** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+- **World-frame information.** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
   `scripts/robowits/ci/advisory-world-frame.sh`): no object poses or positions, no world coordinates of workspace items. Their success
   criterion is stated in words and distances relative to the objects and the table top; the corners of the predicate's
   table-bounds rectangle and the goal line's coordinate are withheld. Given: object names, sizes and colours, the robot
@@ -268,7 +268,7 @@ licensed to whoever downloads them, never in the image or the repository (`image
   hinge, the hold_cup coaster) is in each criterion's "Not checked".
 - Standard `final.json` `reason`: "agent_exit" when the collect hook ended the episode while the service's
   clock of the agent (`meta["time_left_s"]`) still had more than 60 s, "timeout" otherwise; `agent_time_s` is that clock.
-  docs/STANDARD_MODE.md still names the end of the agent's phase `timeout` for every service.
+  docs/protocol/standard_mode.md still names the end of the agent's phase `timeout` for every service.
 
 ## Standard-mode service details
 
@@ -293,7 +293,7 @@ Per-simulator notes:
 | `/kinematics` | pinocchio on the URDF (14 arm joints) |
 | proprio columns | 80 |
 | grading replays | none (live verdict); one render pass for the video |
-| resume class (STANDARD_MODE §13.1) | `exact` (CPU backend), `approx` (GPU backend) |
+| resume class (docs/protocol/standard_mode.md §13.1) | `exact` (CPU backend), `approx` (GPU backend) |
 
 Measured scene builds (episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
 

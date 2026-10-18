@@ -1,7 +1,7 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container. The trial is
 # graded by its LIVE episode, the one the agent ran, with no grading replay (owner 2026-10-17, board 0150/0151).
-#   1. `rcb_limited.py end` (the shared first half, docs/STANDARD_MODE.md §13.3): SIGUSR1 to the service, which ends
+#   1. `rcb_limited.py end` (the shared first half, docs/protocol/standard_mode.md §13.3): SIGUSR1 to the service, which ends
 #      the episode, writes trajectory.npz + episode.json (the live result: RoboDojo's check, after every action; the
 #      end-state hash), takes the video's last frame and exits. It waits through a crash-recovery resume (no PID file
 #      until the service is ready again), signals only the newest service process, resends every 30 s, and exits 2 when

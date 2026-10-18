@@ -241,7 +241,7 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
-RUNNING.md "The agent's time"); `instruction.md` states it once, in its closing `## Time limit` section, and the
+docs/protocol/running.md "The agent's time"); `instruction.md` states it once, in its closing `## Time limit` section, and the
 templates' own text says "the time limit (`## Time limit`)". What the agent has to fit into it:
 - learning the brush's mark from test strokes on the practice sheet: width against press depth, the drag of the tuft, the
   paint's blending (the privileged mode gives the exact sheet but no brush model);
@@ -451,7 +451,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
 - Privileged fresh-process replays: the final states of two replays must agree (`deterministic`).
 - The episode has no terminal state. It ends with the agent phase, a simulator error, or the 72000-control-step runaway
   guard.
-- Crash recovery (standard mode, docs/STANDARD_MODE.md §13):
+- Crash recovery (standard mode, docs/protocol/standard_mode.md §13):
   - Resume class `exact`: PhysX on the CPU and the CPU brush models repeat bit for bit in a fresh process, so a resumed
     episode must reach the checkpoint's state hash.
   - The journal rows are the 7 joint targets of each control step.
@@ -487,7 +487,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
   a wrong shape, NaN/inf, more than 72,000 rows) is `bad_trajectory = 1`; every `reward.json` has `deterministic`.
 - The privileged `scorer` service has `restart: on-failure:6`. It keeps no state a request needs: after a
   restart the next `s.score()` replays the posted actions from the reset. Known limit: the scorer is inside the trial's
-  resource scope (in privileged mode every service is, RUNNING.md "Resources"; `scripts/task_resources.toml` adds 5 GiB for it
+  resource scope (in privileged mode every service is, docs/protocol/running.md "Resources"; `scripts/task_resources.toml` adds 5 GiB for it
   to the trial's memory limit and caps it at 7 GiB). With `RCB_LIMITS_ENFORCE=1` an out-of-memory kill inside the
   scorer would therefore count against the agent, which cannot enter that container but does decide how many actions
   it posts. Taking it out of the scope is a change to `scripts/rcb_monitor/inject.py` (the service class) and the
@@ -512,7 +512,7 @@ Every copy of the tooling is byte-identical within a family and across the six f
   sheets, rendering and replay. No stroke planner or painting skill is added to the agent's tooling; the reference
   solutions keep theirs under `solution/`.
 - **World-frame information.** Standard tasks never say where things are in the world: no sheet heights or centres,
-  no well positions, no pixel-to-world formula (STANDARD_MODE.md §10, `scripts/robopaint_strict/ci/advisory-world-frame.sh`).
+  no well positions, no pixel-to-world formula (docs/protocol/standard_mode.md §10, `scripts/robopaint_strict/ci/advisory-world-frame.sh`).
   - Accepted consequence: the calibrated `canvas_cam` above the main sheet tells roughly where the sheet is.
   - Privileged tasks give the sheets through the tooling.
 
@@ -525,7 +525,7 @@ Every copy of the tooling is byte-identical within a family and across the six f
 | `/kinematics` | SAPIEN's pinocchio model (7 joints) |
 | proprio | 28 columns |
 
-More in STANDARD_MODE.md §16.
+More in docs/protocol/standard_mode.md §16.
 
 ## Licences
 - ManiSkill and SAPIEN: Apache-2.0.
@@ -552,7 +552,7 @@ Per-simulator notes:
 | `/kinematics` | SAPIEN's pinocchio (7) |
 | proprio columns | 28 |
 | grading replays | none (live verdict); one render pass for the video |
-| resume class (STANDARD_MODE §13.1) | `exact` |
+| resume class (docs/protocol/standard_mode.md §13.1) | `exact` |
 
 Measured scene builds (episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
 

@@ -1,6 +1,6 @@
 """Task names across protocol versions: jobs run before protocol v1.0 used `<task>` (privileged) and `<task>-limited`
 (standard); since v1.0 every task directory ends in its mode, `-privileged` or `-standard`, and since v1.1 also
-`-standard-realtime` (docs/PROTOCOL.md §2.2, D12). A mode is recognised by its whole suffix only."""
+`-standard-realtime` (docs/protocol/README.md §2.2, D12). A mode is recognised by its whole suffix only."""
 
 MODES = ("standard-realtime", "privileged", "standard")   # longest suffix first
 

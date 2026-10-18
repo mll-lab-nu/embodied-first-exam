@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Crash-recovery acceptance test for one AM-Bench standard task (docs/STANDARD_MODE.md §13; resume class approx):
+# Crash-recovery acceptance test for one AM-Bench standard task (docs/protocol/standard_mode.md §13; resume class approx):
 # run the task's oracle with Harbor, kill -9 the sim service in the middle of the episode (once N calls are checkpointed,
 # while the next call runs), and check that the service resumed the same episode, the oracle carried on, the
 # episode was graded as usual, with the robot resumed where it was (TCP within 1 mm; the last bits may differ).

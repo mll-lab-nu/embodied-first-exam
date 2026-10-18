@@ -9,14 +9,14 @@ from the collect hook ends the episode, /data evidence. Differences, all from ro
   (mobile Panda, absolute joint targets) or `ee_pose` (GR1, absolute grip-site poses solved by whole-body IK);
 - watching (/observe with seconds > 0) holds the robot still (S.hold_targets(): delta channels zero, the rest kept);
 - cameras are the robot's own (they move with its base), so every response carries their current calibration;
-- protocol v1.0 items the MuJoCo service gets in the migration (docs/PROTOCOL.md §7): the eai-standard/2.1 name, a
+- protocol v1.0 items the MuJoCo service gets in the migration (docs/protocol/README.md §7): the eai-standard/2.1 name, a
   simulator error (500) ends the episode with reason "error", an oversized body is answered with 413.
 
 What the agent gets: camera RGB (+ depth) with each camera's calibration, the robot's own joints, end-effector
 positions and last command, and the task's instruction. Never an object's pose, the scene layout or the success check.
 The episode runs until the agent's time is up; the state after the last executed control step is graded.
 
-The verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): the environment's own success
+The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): the environment's own success
 check on the state after the last control step this service executed, not already solved at the start, and the
 episode not ended by a simulator error. Nothing is replayed to grade it. The frozen initial state is checked when the
 episode begins (the instance file's hash, RCB_INSTANCE_SHA, and the start state's hash, RCB_START_SHA, both from the
@@ -680,7 +680,7 @@ def _render_video(A: np.ndarray) -> None:
 
 
 def finalize() -> None:
-    """The episode is over: the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151).
+    """The episode is over: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151).
     success = the environment's success check (`_check_success`, as the live episode last ran it) holds on the state
     after the last executed control step, the scene was not solved at the start, and the episode did not end on a
     simulator error (whose state is the partial step's, not the last executed one). Nothing is replayed to grade it.

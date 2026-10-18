@@ -37,7 +37,7 @@ Benchmark additions to the shared layer, made here so that rcb_service.py stays 
   - captured-picture identities follow the actual RGB/depth parts through response degradation; evidence is
     credited after a successful HTTP write/flush, with separate capture and delivery boundaries for a replay (crash
     recovery, the video, an offline re-check with replay.py);
-  - the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): `RoboSafe.live_verdict`
+  - the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): `RoboSafe.live_verdict`
     writes RoboSafeBench's verdict on the episode this process ran (DATA/verdict.json: outcome, marks, pass) and its
     record (DATA/record.json); nothing is replayed to grade it. The frozen start is checked when the episode begins
     (`RoboSafe.start_sha`, the instance's `state_sha`: a mismatch is the layer's `instance_mismatch`, an

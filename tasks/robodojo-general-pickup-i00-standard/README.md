@@ -35,7 +35,7 @@ the live episode succeeded: every standard task is graded by its live episode, w
 human review in PR #142 (a model trial solved it). `nop` (no actions) scores 0.
 
 ## Compute resources
-Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
 
 | | Agent phase | Verifier |
 |---|---|---|
@@ -45,7 +45,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: L40S 48GB / L4 24GB / RTX 4090 24GB.
 - Measured: heaviest scene (pour_liquid_into_cup_random), a client driving 12 joint_position chunks, then the collect hook's two fresh-process replays (the first filmed): sim sidecar docker peak 16.0 GiB (anon 14.9), GPU 9.5 GiB, up to 16 cores while Isaac starts; agent container under 0.1 GiB; per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10 (the verifier phase then replayed as the privileged verifier does: docker peak 15.7 GiB, GPU 9.6 GiB); since 2026-10-17 (board 0151) the collect hook replays nothing: after the service exits it only encodes the live video on the CPU, so the sidecar's peak is the live service's
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 16 GiB GPU memory, 33 GiB memory. Limits measured: GPU (sim sidecar): 9.5 GiB on the heaviest scene (sampler, RTX 4090, 10-10) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container max(1.5 x peak, peak + 4, 8) = 8 (a client under 0.1 GiB; no agent-trial sample yet); whole trial: + the sim sidecar's 25 GiB (docker peak 16.0 GiB); processes 512 and disk 20 GiB: design defaults.
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 16 GiB GPU memory, 33 GiB memory. Limits measured: GPU (sim sidecar): 9.5 GiB on the heaviest scene (sampler, RTX 4090, 10-10) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container max(1.5 x peak, peak + 4, 8) = 8 (a client under 0.1 GiB; no agent-trial sample yet); whole trial: + the sim sidecar's 25 GiB (docker peak 16.0 GiB); processes 512 and disk 20 GiB: design defaults.
 
 ## Details
 | | |

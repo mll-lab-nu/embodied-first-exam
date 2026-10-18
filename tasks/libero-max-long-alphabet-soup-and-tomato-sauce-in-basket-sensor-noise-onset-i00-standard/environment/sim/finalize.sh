@@ -2,7 +2,7 @@
 # [[verifier.collect]] hook, run inside the `sim` sidecar once the agent's container is gone (task.toml).
 #   1. Wait for the service's PID file (after a crash it appears once the service has resumed the episode): up to 180 s.
 #   2. SIGUSR1, re-sent every 30 s in case the service was restarting: the service ends the episode ("timeout" unless it
-#      ended already) and writes the verdict -- the live episode's, nothing is replayed (docs/PROTOCOL.md H.4; board
+#      ended already) and writes the verdict -- the live episode's, nothing is replayed (docs/protocol/README.md H.4; board
 #      0151) -- with "finalized": true into final.json, within seconds of the signal (rcb_service.py _finalize).
 #   3. Then the video: the service replays the trajectory once in a fresh process with the camera on (server.py
 #      render_video), "video_pending": true while it does. The hook waits for it up to RCB_COLLECT_WAIT_S from its

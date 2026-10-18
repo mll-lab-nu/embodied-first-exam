@@ -26,7 +26,7 @@ mode gives poses); "std" never says where things are (docs/benchmarks/robowits.m
 are a string or {"priv": ..., "std": ...}. Terms used: footprint, not held, table bounds (defined in mk_tasks.py).
 
 Measured scene builds (`build_s`, standard-mode episode start minus the end of Harbor's environment setup, laptop
-2.0 / 2.2 rounds) set RCB_STARTUP_TIMEOUT_S = max(900, 2 x the slowest build across hosts) (STANDARD_MODE.md §13.3);
+2.0 / 2.2 rounds) set RCB_STARTUP_TIMEOUT_S = max(900, 2 x the slowest build across hosts) (docs/protocol/standard_mode.md §13.3);
 the RoboWits CPU-backend builds measured 47-234 s across 94 trials on every host, so 900 s holds for every "pr" family."""
 
 TABLE = "the table bounds"   # a term of the criterion texts, defined once per instruction (mk_tasks.CRITERION_TERMS)

@@ -8,7 +8,7 @@ episode, /data evidence. Differences, all from Meta-World:
   Meta-World's Sawyer has no arm actuators (the hand is driven by a mocap weld), so there is no `joint_position`;
 - watching (/observe with seconds > 0) holds the hand still (S.hold_targets()), since actions are deltas;
 - cameras and proprioception come from the tool module (mw_tool.CAMERA_VIEWS, mw_tool.PROPRIO_LAYOUT);
-- like the MuJoCo service since the migration (docs/PROTOCOL.md §7): a simulator error (500) ends the episode with
+- like the MuJoCo service since the migration (docs/protocol/README.md §7): a simulator error (500) ends the episode with
   reason "error", an oversized body is answered with 413. Requests are validated in full before any physics runs: a
   malformed one (`dt` / `seconds` / `video_fps` not a finite number, `cameras` not a list of names, ...) is a 400 that
   changes nothing.

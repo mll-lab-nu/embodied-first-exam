@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for DexJoCo (docs/STANDARD_MODE.md): the adapter of the shared layer rcb_limited.py;
+"""eai-standard/2.2 sim service for DexJoCo (docs/protocol/standard_mode.md): the adapter of the shared layer rcb_limited.py;
 the simulator is rcb_dexjoco.Session (DexJoCo on MuJoCo 3.4, CPU physics, OSMesa rendering).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.

@@ -603,11 +603,11 @@ def std_readme(fam: str, f: dict) -> str:
                + (" The oracle scores 1 and `nop` scores 0." if f["oracle"] == "full" else ""))
     ver += review_line(f, ", with its privileged twin")
     cls = "exact" if f["backend"] == "cpu" else "approx"
-    rows = [("Protocol", f"`{PROTOCOL}` (docs/STANDARD_MODE.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control "
+    rows = [("Protocol", f"`{PROTOCOL}` (docs/protocol/standard_mode.md): `submit` chunks of `joint_position` (16, streamed at the 30 Hz control "
                          "rate with the agent's `dt`) or `ee_pose` (16, IK per row); `observe` frames or a watch window; stateless "
                          "`kinematics`; binary RCB1 responses"),
             ("Crash recovery", f"`restart: on-failure:6`; the service replays its journal and resumes the same episode (resume class "
-                               f"`{cls}`, docs/STANDARD_MODE.md §13)"),
+                               f"`{cls}`, docs/protocol/standard_mode.md §13)"),
             ("Agent and verifier image", f"`{CLIENT_IMAGE}` with the shared pins (`environment/{CLIENT_REQUIREMENTS}`)"),
             ("Instance", f"the privileged twin's frozen instance (`environment/sim/instance.json`): entry {f['eval_index']} of RoboWits' "
                          f"`eval_dataset_50/{num(f)}.json`")] + bk_detail(f, "into the `sim` sidecar") + host_detail(f)
@@ -651,7 +651,7 @@ keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "c
 
 [metadata]
 author_name = "qineng"
-task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "robowits"            # RoboWits @ 9cc30ae on Genesis 0.4.7 (CPU physics backend, EGL rendering)
 robot = "marvin-bimanual"
 family = "{fam}"
@@ -734,7 +734,7 @@ timeout_sec = 30
 service = "sim"
 # end the episode (SIGUSR1 to the live service, through a crash resume if one is under way): the service runs the settle
 # window after the agent's last command on the live simulator and writes the live verdict (nothing is replayed), then
-# renders the video once; wait for it (final.json video_done), then hand over the record (docs/STANDARD_MODE.md §13.3)
+# renders the video once; wait for it (final.json video_done), then hand over the record (docs/protocol/standard_mode.md §13.3)
 command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout {ct - 120}; cat /data/final.json"
 timeout_sec = {ct}                # service up (a resume replays the journal first), the settle window, then the video
 
@@ -782,7 +782,7 @@ def std_compose(fam: str, f: dict) -> str:
              "# No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).",
              ("# Genesis runs physics on the GPU here (particle-heavy scene, not bit-exact) and renders the cameras through EGL." if gpu else
               "# Genesis runs physics on the CPU (bit-deterministic) and needs the GPU only for EGL camera rendering."),
-             "# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the",
+             "# Crash recovery (docs/protocol/standard_mode.md §13): run.sh exits non-zero when the service crashes, compose restarts the",
              "# container (same container, same /data) and the service replays its journal into the same episode, never a reset."]
     out = "\n".join(lines) + "\n" + (BK_NOTE if f["blenderkit"] else "")
     out += "services:\n  main:\n    depends_on: [sim]\n  sim:\n"
@@ -817,13 +817,13 @@ def priv_tests_dockerfile(f: dict) -> str:
             f"ENV PYTHONPATH=/tests QD_OFFLINE_CACHE=0{gpu}\nWORKDIR /tests\n")
 
 
-CLEAR_LOGS = ("rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)\n"
+CLEAR_LOGS = ("rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/protocol/README.md §2.6)\n"
               "mkdir -p /logs/verifier\n")
 
 
 def priv_test_sh(fam: str) -> str:
     return ("#!/bin/bash\n# Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in a fresh process.\n"
-            "# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/PROTOCOL.md).\n" + CLEAR_LOGS +
+            "# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/protocol/README.md).\n" + CLEAR_LOGS +
             f"python /tests/grade.py --family {fam} --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \\\n"
             f"  --budget {FM.FAMILIES[fam].get('verifier_timeout_s') or 1800} 2> /logs/verifier/grade.log\n")
 

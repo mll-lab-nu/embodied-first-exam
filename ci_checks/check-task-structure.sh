@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# ADVISORY (docs/PROTOCOL.md §1). Harbor task contract: the canonical files exist and scripts are executable. solution/solve.sh is required unless the
-# task declares `oracle = "none"` (docs/PROTOCOL.md §2.1, §2.7).
+# ADVISORY (docs/protocol/README.md §1). Harbor task contract: the canonical files exist and scripts are executable. solution/solve.sh is required unless the
+# task declares `oracle = "none"` (docs/protocol/README.md §2.1, §2.7).
 t="$1"; rc=0
 for f in task.toml instruction.md README.md environment/Dockerfile tests/test.sh; do
   [ -f "$t/$f" ] || { echo "FAIL $t: missing $f"; rc=1; }
@@ -11,9 +11,9 @@ if [ "$oracle" != "none" ]; then
   [ -f "$t/solution/solve.sh" ] || { echo "FAIL $t: missing solution/solve.sh (or declare oracle = \"none\")"; rc=1; }
   [ -f "$t/solution/solve.sh" ] && { [ -x "$t/solution/solve.sh" ] || { echo "FAIL $t: solution/solve.sh not executable"; rc=1; }; }
 fi
-# No agent results in the repository (docs/PROTOCOL.md D3): they are published on the results site.
+# No agent results in the repository (docs/protocol/README.md D3): they are published on the results site.
 [ -e "$t/results" ] && { echo "FAIL $t: results/ does not belong in the repository (PROTOCOL D3)"; rc=1; }
-# README in the standard layout (docs/PROTOCOL.md §2.1, §2.9).
+# README in the standard layout (docs/protocol/README.md §2.1, §2.9).
 python3 - "$t" "$(cd "$(dirname "$0")/.." && pwd)" <<'PY' || rc=1
 import re, sys, pathlib
 t = pathlib.Path(sys.argv[1]); s = (t / "README.md").read_text() if (t / "README.md").is_file() else ""

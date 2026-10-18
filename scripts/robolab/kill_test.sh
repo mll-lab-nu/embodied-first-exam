@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Crash-recovery acceptance test for one RoboLab standard task (docs/STANDARD_MODE.md §13; resume class exact):
+# Crash-recovery acceptance test for one RoboLab standard task (docs/protocol/standard_mode.md §13; resume class exact):
 # run the task's oracle with Harbor, kill -9 the sim service in the middle of the episode (once N calls are checkpointed,
 # while the next call runs), and check that the service resumed the same episode exactly, the oracle carried on, the
 # episode was graded as usual (by the live episode, graded_by_live = 1; no replay since 2026-10-17).

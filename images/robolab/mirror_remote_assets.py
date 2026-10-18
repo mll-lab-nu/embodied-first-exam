@@ -4,7 +4,7 @@ the layers at the copies.
 
 RoboLab's scenes reference NVIDIA's public Omniverse content bucket by URL: the MDL material modules of the tables, the
 bins and the robot with their textures, and a few props. Kit fetches them when a scene is built. A container without
-that network access (the agent's egress is the model APIs only, docs/PROTOCOL.md §2.7) cannot: the materials fail to
+that network access (the agent's egress is the model APIs only, docs/protocol/README.md §2.7) cannot: the materials fail to
 compile ("could not find module ... in module path", "Unable to find SdrShaderNode") and the table renders as a red
 surface, while physics is unchanged. The image therefore holds the files (images/robolab/Dockerfile runs this script
 last).

@@ -1,6 +1,6 @@
 # RoboTwin 2.0
 
-RoboTwin 2.0's standard tasks serve `eai-standard/2.1` (docs/STANDARD_MODE.md Part 1), the service the base protocol
+RoboTwin 2.0's standard tasks serve `eai-standard/2.1` (docs/protocol/standard_mode.md Part 1), the service the base protocol
 was written from. Generators: `scripts/robotwin_mk_task.py` (privileged), `scripts/robotwin_mk_limited.py` (standard,
 inside the eai-robotwin image); shared files checked by `scripts/robotwin_sync_shared.py --check`.
 

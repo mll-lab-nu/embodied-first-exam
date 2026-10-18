@@ -10,7 +10,7 @@ The copy is the package's simulation code only (scenes, tasks, success predicate
 the benchmark's own command-line front end (cli.py, which drives its validation tooling) is left out, and so is
 everything outside the package (its validation controllers, recorded rollouts, reports and documents). Comments and
 configuration keys the code never reads that name that tooling are reworded or dropped (SCRUB, DROP_CONFIG_KEYS): the
-agent reads this package in privileged mode, and nothing it reads may point to a solution (docs/PROTOCOL.md §2.7).
+agent reads this package in privileged mode, and nothing it reads may point to a solution (docs/protocol/README.md §2.7).
 Nothing executable changes; ci_checks would not catch a behavioural edit, so SCRUB holds comment and message text only.
 """
 from __future__ import annotations

@@ -95,7 +95,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   its thresholds in words (distances, angles, hold time), including MyoSuite's own failure thresholds, of which baoding's
   is a height in the world frame ("a ball's height below 1.25 m"). No object or goal position is given in either mode.
 - **Budget: 3600 s**, uniform within the benchmark and both modes. The number lives in each task's own
-  `[agent] timeout_sec`, written by the generator (PROTOCOL §2, RUNNING.md "The agent's time"), and every instruction
+  `[agent] timeout_sec`, written by the generator (PROTOCOL §2, docs/protocol/running.md "The agent's time"), and every instruction
   states it in its closing `## Time limit` section.
 
 ## Modes
@@ -143,7 +143,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   within one or two seconds of simulated time, so a single episode would be one blind attempt at muscle-level control.
   The compose file sets `RCB_RESET_BUDGET` to 10 (`RCB_RESET_BUDGET=0` runs a single episode). The shared 2.2
   layer has no reset, so the adapter adds `POST /reset` itself (`shared/standard/server.py`, the semantics of
-  [`STANDARD_MODE.md`](../STANDARD_MODE.md) "Optional reset capability"): it abandons the running
+  [`docs/protocol/standard_mode.md`](../protocol/standard_mode.md) "Optional reset capability"): it abandons the running
   episode, or follows one that has ended, and restores the frozen instance (`Session.reset()`, the privileged mode's
   reset); only the last episode is graded (its rows are `trajectory.npz`), a success ends the trial (409 after it), the
   wall clock never restarts; `/status`, every `meta` and `final.json` count `episode`, `resets_left`,
@@ -235,7 +235,7 @@ that score 0; an apple_lift trajectory that leaves the apple on the table scores
 
 - `bash ci_checks/run_all.sh tasks/myosuite-*`: every check of these tasks passes.
 - `python3 scripts/task_conventions.py --check tasks/myosuite-*/` and `python3 scripts/myosuite/generate.py --check`: clean.
-- Crash recovery (STANDARD_MODE.md): the key_turn service killed (`kill -9`) after the first 30 rows of the
+- Crash recovery (docs/protocol/standard_mode.md): the key_turn service killed (`kill -9`) after the first 30 rows of the
   oracle stream; the service resumed the same episode (`resumes` 1, exact hash) and the oracle succeeded.
 - `ci_checks/check-standard-protocol.py` against a live hand_reach service: every /spec, /status, /observe and 404
   check passes; its live part assumes a `joint_position` action type, which a
@@ -306,4 +306,4 @@ the standard-realtime twin's service);
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.2` (MuJoCo on the CPU, resume class `exact`); `max_frames_per_call` = 1000. Its service implements the optional reset capability (STANDARD_MODE Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.
+Serves `eai-standard/2.2` (MuJoCo on the CPU, resume class `exact`); `max_frames_per_call` = 1000. Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

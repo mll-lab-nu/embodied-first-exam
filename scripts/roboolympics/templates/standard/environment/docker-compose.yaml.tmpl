@@ -1,6 +1,6 @@
 # Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim. CPU only: MuJoCo physics and OSMesa rendering; no GPU reservation.
-# Crash recovery (docs/STANDARD_MODE.md): compose restarts a crashed service (same container, same /data) and the
+# Crash recovery (docs/protocol/standard_mode.md): compose restarts a crashed service (same container, same /data) and the
 # service replays its journal into the same episode, never a reset.
 services:
   main:

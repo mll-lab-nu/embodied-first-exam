@@ -781,7 +781,7 @@ def infra_exception(exc: BaseException) -> bool:
     """Which errors in /submit or /observe are the service's infrastructure (reason "error", infra_error): the render
     process (ikea_nyx.RenderError), the host (OSError: disk, pipes; MemoryError). Everything else raised while the agent's
     rows run (the scene's code, MuJoCo) is a simulator error the rows caused (sim_error 1: the agent's 0,
-    STANDARD_MODE.md "500"), so an agent cannot void a failed episode by breaking the simulator. Both end the episode
+    docs/protocol/standard_mode.md "500"), so an agent cannot void a failed episode by breaking the simulator. Both end the episode
     with reason "error"."""
     render = getattr(sys.modules.get("ikea_nyx"), "RenderError", ())
     return isinstance(exc, (OSError, MemoryError) + ((render,) if render else ()))

@@ -53,7 +53,7 @@ operator told by a decline, a question or a report). The video (`replay.mp4`) is
 recorded rows and decides nothing.
 
 ## Compute resources
-Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
 
 | | Agent phase | Verifier |
 |---|---|---|
@@ -63,7 +63,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: not needed.
 - Measured: the standard tasks' measurements (a university HPC cluster, 2026-10-13: sim sidecar CPU p90 4.74 / max 5.28 cores during finalize, PSS max 2.84 GB; main PSS max 0.74 GB; a whole trial's PSS max 4.75 GB), the same simulator and finalize; the realtime clock keeps about a fifth of one core busy while it runs (4 ms of physics per 20 ms step, eai-robosafe on a university HPC cluster node, 2026-10-14)
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 6 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 14 GiB memory. Limits measured: author estimate, the standard tasks' (the same client and harness in the agent's container): 6 GiB under its 8 GiB cap; whole trial 14 GiB with the sim service's 8 GiB cap; processes 512: design default.
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 6 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 14 GiB memory. Limits measured: author estimate, the standard tasks' (the same client and harness in the agent's container): 6 GiB under its 8 GiB cap; whole trial 14 GiB with the sim service's 8 GiB cap; processes 512: design default.
 
 ## Details
 | | |

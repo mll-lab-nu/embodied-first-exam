@@ -24,7 +24,7 @@ A task whose author chose open egress declares it, `[metadata] network = "open"`
 leaves such a task alone, and a runner does not narrow its copy to the gateway (`network` prints the declaration).
 
 A run with no restriction at all: `public` on a copy of the task directories (never in tasks/: CI requires the list
-there), and run that copy (docs/RUNNING.md).
+there), and run that copy (docs/protocol/running.md).
 
 `only <hosts>`: Harbor can add hosts to a task's allowlist at run time (`--allow-agent-host`) but not take any off, and
 the model APIs' hosts also serve what a trial does not get (account connectors, files, web tools). A run through the

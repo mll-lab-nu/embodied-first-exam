@@ -68,7 +68,7 @@
 # ======================================================================================================
 
 # ==== [task.standard] =================================================================================
-#   Each task's standard-mode twin (tasks/*-standard/, docs/PROTOCOL.md §4, eai-standard/2.1): the same instance and
+#   Each task's standard-mode twin (tasks/*-standard/, docs/protocol/README.md §4, eai-standard/2.1): the same instance and
 #   success rule, but the agent sees only head-camera RGB, joint angles/velocities, a pelvis IMU and room_camera
 #   (the standard configuration; a run may turn them off or add depth), through a client. Its prose, per task:
 #     ends            how the episode can end early other than by success ("when the robot falls (...)");
@@ -81,7 +81,7 @@
 #                     for tasks that leave the default one's view (the recording camera frozen at t=0)
 #   The SAY / DO NOT rule above applies to every one of them.
 #
-# Per task, for the human review of a task without an oracle (docs/PROTOCOL.md §2.7): `oracle_evidence`, the
+# Per task, for the human review of a task without an oracle (docs/protocol/README.md §2.7): `oracle_evidence`, the
 # positive example a reviewer checks, or why none is known. A task with oracles/<family>/<mode>/ has an oracle instead.
 # The agent's egress allowlist is scripts/set_agent_egress.py's HOSTS (the model APIs and the package registries), read by gen_tasks.py:
 # upstream is a public commit, so anything more lets the agent fetch back the reward the image deletes.
@@ -100,7 +100,7 @@ review_pr = 9               # the pull request whose human review covers the tas
 # (docs/benchmarks/humanoidbench.md); `RCB_RESET_BUDGET=0 harbor run ...` still runs the single-episode configuration.
 standard_reset_budget = 50
 # Standard-realtime tasks' reset budget: 50, the owner's decision of 2026-10-08 (the same as standard's; a per-benchmark
-# exception to the mode's default of 0, docs/PROTOCOL.md §4.5 and §4b); `RCB_RESET_BUDGET` overrides it. RCB_SLOWDOWN defaults to 1 (real time); other values are reported apart.
+# exception to the mode's default of 0, docs/protocol/README.md §4.5 and §4b); `RCB_RESET_BUDGET` overrides it. RCB_SLOWDOWN defaults to 1 (real time); other values are reported apart.
 realtime_reset_budget = 50
 realtime_review_pr = 83     # the pull request that added the standard-realtime tasks; the owner approved them there (2026-10-08)
 # Physics relative to upstream, one README row per task (and a Change Log line). Every task runs on MuJoCo 3.3.7

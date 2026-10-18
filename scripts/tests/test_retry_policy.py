@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""INVARIANT test (docs/PROTOCOL.md Appendix H.5), part of the required CI job `invariants`: infrastructure failures
+"""INVARIANT test (docs/protocol/README.md Appendix H.5), part of the required CI job `invariants`: infrastructure failures
 allow at most one full retry with the same instance, seed and configuration; a failed retry gets the default handling
 and no further retry; normal task failures never qualify (scripts/retry_policy.py). Standard library only."""
 import sys

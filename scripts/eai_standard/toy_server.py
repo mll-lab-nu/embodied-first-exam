@@ -1,6 +1,6 @@
 """A toy eai-standard/2.2 sim service: the smallest complete adapter of the shared layer (rcb_limited.py), on a numpy
 "simulator" (a 3-joint point robot pushing a block on a plane), CPU only. selftest.py drives it to test the layer's crash
-recovery; it is also the reference for how a benchmark's environment/sim/server.py uses Episode (docs/STANDARD_MODE.md).
+recovery; it is also the reference for how a benchmark's environment/sim/server.py uses Episode (docs/protocol/standard_mode.md).
 
 Env: RCB_DATA (record dir), RCB_TOY_RESUME (exact | approx), RCB_TOY_MODE (inprocess: the live episode's verdict, written in-process, as
 RoboWits | dump: dump the episode and exit on SIGUSR1, as RoboLab / BEHAVIOR / RoboPaint), test knobs RCB_TOY_STEP_S (wall

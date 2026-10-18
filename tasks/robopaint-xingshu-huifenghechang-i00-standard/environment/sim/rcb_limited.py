@@ -1,5 +1,5 @@
 """eai-standard/2.2 (formerly rcb-limited/2.2): the HTTP layer, the protocol helpers and the crash recovery that every
-2.2 sim service shares (docs/STANDARD_MODE.md, Part 2; the 2.1 base is its Part 1).
+2.2 sim service shares (docs/protocol/standard_mode.md, Part 2; the 2.1 base is its Part 1).
 
 The source is scripts/eai_standard/rcb_limited.py; the generators copy it unchanged into every standard task's
 environment/sim/ (ci_checks/check-tooling-identity.sh). A service keeps its simulator to itself (scene, action
@@ -398,7 +398,7 @@ def check_spec(spec: dict) -> None:
         raise RuntimeError("default_cameras must be cameras")
 
 
-# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/STANDARD_MODE.md)
+# ---------------------------------------------------------------- crash recovery (PROTOCOL §4.7; docs/protocol/standard_mode.md)
 MAX_RESUMES = int(os.environ.get("RCB_MAX_RESUMES", "2"))
 STARTUP_TIMEOUT_S = float(os.environ.get("RCB_STARTUP_TIMEOUT_S", "900"))     # a task with a slower scene build sets more
 MAX_CALL_WALL_S = float(os.environ.get("RCB_MAX_CALL_WALL_S", "900"))         # < the client's 1800 s /submit read timeout

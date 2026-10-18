@@ -93,7 +93,7 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   instructions say which bowl is meant.
 
 ## Grading (standard mode)
-The standard mode is graded by the live episode; nothing is replayed to grade it (docs/PROTOCOL.md H.4). The
+The standard mode is graded by the live episode; nothing is replayed to grade it (docs/protocol/README.md H.4). The
 privileged mode: the verifier's two fresh-process replays.
 
 - **Live success.** LIBERO's success check on the episode the sim service ran: `lmx_tool.Session.step` reports it

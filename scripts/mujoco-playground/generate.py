@@ -162,7 +162,7 @@ CUTOFF = {"privileged": 1800, "standard": 1800, "standard-realtime": 1800}
 STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and rendering (EGL when a GPU is there, else OSMesa); no GPU reservation.
-# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/protocol/standard_mode.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 services:
   main:

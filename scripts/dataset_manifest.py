@@ -69,7 +69,7 @@ def entry(t: Path) -> dict:
             "family": str(md.get("family", "")), "oracle": md.get("oracle", ""), "timeout_sec": tc.cutoff_for(t),
             "dynamics": md.get("dynamics", ""), "protocol": md.get("protocol", ""), "simulator": md.get("simulator", ""),
             "robot": md.get("robot", ""),
-            # the settings results are grouped by (PROTOCOL v2.0 §2, RUNNING.md "Results"): rankings compare only tasks
+            # the settings results are grouped by (PROTOCOL v2.0 §2, docs/protocol/running.md "Results"): rankings compare only tasks
             # and results of one configuration; `validated` is a marker, ranked together
             "reset_budget": tc.reset_budget_of(t), "slowdown": tc.slowdown_of(t), "network": tc.network_of(t),
             "validated": tc.validated_of(t), "set": tc.set_of(t), "protocol_version": tc.PROTOCOL_VERSION,
@@ -108,7 +108,7 @@ def render_md(rows: list[dict], commit: str) -> str:
                    + f" | {sum(r['set'] == 'easy' for r in rs) or '—'} | {net['allowlist']} / {net['open']} |")
     out += ["", "## Comparable configurations", "",
             "Results are ranked only within one configuration: protocol version, mode, cutoff, reset budget, slowdown S and "
-            "network (`scripts/task_conventions.py` `config_key`; docs/RUNNING.md \"Results\"). Validated and unvalidated tasks "
+            "network (`scripts/task_conventions.py` `config_key`; docs/protocol/running.md \"Results\"). Validated and unvalidated tasks "
             "(no `oracle = \"full\"` and no `[metadata] validated = true`) are ranked together; the columns below count "
             "them for reference. Each task's settings are in `tasks.json`.", "",
             "| Mode | Cutoff | Resets | S | Network | Validated tasks | Unvalidated tasks |", "|---|---|---|---|---|---|---|"]

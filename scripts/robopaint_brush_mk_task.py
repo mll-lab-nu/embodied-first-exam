@@ -462,7 +462,7 @@ OIL_METRICS = [("de_mean", r"(mean (?:CIELAB )?ΔE (?:<=|≤) )(-?\d+(?:\.\d+)?)
 
 
 def pair_dirs(root: Path, base: str) -> tuple[Path, Path]:
-    """The pair's two task directories (docs/PROTOCOL.md §2.2): <base>-privileged and <base>-standard."""
+    """The pair's two task directories (docs/protocol/README.md §2.2): <base>-privileged and <base>-standard."""
     return root / f"{base}-privileged", root / f"{base}-standard"
 
 

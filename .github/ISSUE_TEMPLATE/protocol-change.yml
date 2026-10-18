@@ -1,5 +1,5 @@
 name: Protocol change
-description: Propose a change to docs/PROTOCOL.md or the standard-mode wire protocol (eai-standard/2.x).
+description: Propose a change to docs/protocol/README.md or the standard-mode wire protocol (eai-standard/2.x).
 title: "[protocol] <change>"
 labels: ["protocol-change"]
 body:

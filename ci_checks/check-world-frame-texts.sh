@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ADVISORY helper (docs/PROTOCOL.md §5: world-frame information in the texts is decided per benchmark, consistent within
+# ADVISORY helper (docs/protocol/README.md §5: world-frame information in the texts is decided per benchmark, consistent within
 # it). A benchmark that declares "no world coordinates in the standard tasks' texts" (its docs/benchmarks/<bench>.md,
 # "World-frame information") runs this from its own hook, scripts/<bench>/ci/advisory-world-frame.sh, with its directory
 # prefix; shared CI names no benchmark (board 0124). Such a benchmark's standard tasks never say WHERE things are in the

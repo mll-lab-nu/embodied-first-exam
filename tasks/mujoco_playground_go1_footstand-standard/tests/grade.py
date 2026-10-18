@@ -73,7 +73,7 @@ write(
         "grader_error": int(bool(d.get("instance_mismatch"))),
         "instance_mismatch": int(bool(d.get("instance_mismatch"))),
         # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
-        # resume (docs/STANDARD_MODE.md §13), the service not ending its episode for the collect hook, a scene that did
+        # resume (docs/protocol/standard_mode.md §13), the service not ending its episode for the collect hook, a scene that did
         # not start in the instance's t = 0 state, a final.json the collect hook never finalized
         "infra_error": int(infra),
         "no_verdict": int(unfinished),

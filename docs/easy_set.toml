@@ -1,4 +1,4 @@
-# The easy set (docs/PROTOCOL.md §4, docs/RUNNING.md "Results"): task bases KEPT in the repository and run like any
+# The easy set (docs/protocol/README.md §4, docs/protocol/running.md "Results"): task bases KEPT in the repository and run like any
 # other task, but reported apart from the main table and left OUT of the headline statistics.
 #
 # One entry per task base (the task name without its mode suffix); it covers every mode the base ships. Fields:

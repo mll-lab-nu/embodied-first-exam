@@ -1,9 +1,9 @@
 """eai-standard/2.2 sim service for YAMLab (Isaac Lab / Isaac Sim 5.1; two I2RT YAM arms with parallel grippers; see
-docs/STANDARD_MODE.md). Owns the scene. HTTP surface (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit,
+docs/protocol/standard_mode.md). Owns the scene. HTTP surface (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit,
 POST /kinematics (RCB1 bodies, RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call
 to /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13, resume class `exact`): every executed control step is
+Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13, resume class `exact`): every executed control step is
 journaled (the 14-D float32 row handed to Session.step), every completed call is checkpointed with the scene's state hash.
 After a crash compose restarts the container (`restart: on-failure:6`, run.sh exits non-zero) and this service, a fresh
 process, rebuilds the frozen scene, replays the journal up to the last checkpoint (the first run in a fresh process:

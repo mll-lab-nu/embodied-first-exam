@@ -137,7 +137,7 @@ the simulator to 2e-7 m), and thin primitives: `move_ee` (both arms together, Is
   `replay_error`, `gpu_lost` and an `instance_mismatch` found by a replay are not the live episode's; YAMLab's trials
   are re-scored as RoboLab's.
 
-## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
+## Crash recovery (standard mode, docs/protocol/standard_mode.md §13)
 Resume class `exact`: the resumed service is a fresh process whose journal replay is that process's first run, so the
 state hash at the last checkpoint must match exactly (else `resume_failed`, `infra_error`). `RCB_STARTUP_TIMEOUT_S = 1800`
 (the compose file's value; see Time budget).
@@ -148,7 +148,7 @@ hash exactly, resumes the same episode, the oracle continues from the reported s
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
-RUNNING.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
+docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
 own text names no number. Every Python process pays ~1.5-2.5 min of Isaac Sim launch and scene build (more on a loaded
 host). A trial's first Isaac start in a container compiles the shaders into the trial's fresh Kit cache (up to ~10 min on
 a heavily loaded host); the standard sidecar's startup watchdog is therefore 1800 s (as BEHAVIOR-1K), and the standard
@@ -169,7 +169,7 @@ step budget); a privileged trajectory may hold at most that many rows.
 and `ee_pose` (16: both tool frames + both gripper targets per row, closed-loop differential IK, at most 0.25 m/s); cameras
 `top`, `left_wrist`, `right_wrist` (640×480, z-depth); `/kinematics` from numpy models of both arms (`q` = left joint1..6,
 right joint1..6); 58 proprio columns (joints and fingers, both tool poses, gripper targets, velocities, gripper openings,
-arm efforts). STANDARD_MODE.md §16. Requests are checked completely before the first control step, as RoboLab's
+arm efforts). docs/protocol/standard_mode.md §16. Requests are checked completely before the first control step, as RoboLab's
 (docs/benchmarks/robolab.md, Standard mode): wrong types, out-of-range values, an `ee_pose` position more than 3 m from
 the world origin on any axis or a zero quaternion are 400s that execute nothing.
 
@@ -177,7 +177,7 @@ the world origin on any axis or a zero quaternion are 400s that execute nothing.
 - **Tooling: thin wrappers only.** IK moves, joint moves, gripper commands, hold, plus the frozen instance, state, stage
   flags, recording, replay and rendering. Task-level skills (grasp, lift, handover, place, hang) are never added to the
   agent's tooling.
-- **World-frame information (D7).** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+- **World-frame information (D7).** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
   `scripts/yamlab/ci/advisory-world-frame.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
   privileged state through the tooling and the world heights of the success check in the instruction.
 

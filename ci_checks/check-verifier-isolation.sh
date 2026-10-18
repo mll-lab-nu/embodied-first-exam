@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# INVARIANT (docs/PROTOCOL.md Appendix H.1 verifier isolation, H.3 the standard trust boundary's topology, H.4 evidence
+# INVARIANT (docs/protocol/README.md Appendix H.1 verifier isolation, H.3 the standard trust boundary's topology, H.4 evidence
 # from a sidecar, H.6 egress): part of the required CI job `invariants` (ci_checks/run_invariants.sh); no task value can
 # turn a rule here off. The verifier must run in its own sandbox, never in the container the agent controlled.
 # task.toml: [verifier].environment_mode = "separate"; tests/Dockerfile exists and ships /tests/test.sh (image pins:

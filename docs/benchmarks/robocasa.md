@@ -102,7 +102,7 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items
    same physics plus its cameras within the agent's hour. Cost per trial: about one replay's worth of CPU time
    (0.035 s per step, about 3 minutes for a 5,000-step episode, 30–60 minutes at most for an hour-long one) on the
    sidecar's CPUs, no GPU. The hook's 3600 s is a number of its own, sized for the agent cutoff of 3600 s (the cutoff is
-   each task's own `[agent] timeout_sec`, PROTOCOL.md §2, RUNNING.md "The agent's time"): lowering the cutoff keeps it
+   each task's own `[agent] timeout_sec`, docs/protocol/README.md §2, docs/protocol/running.md "The agent's time"): lowering the cutoff keeps it
    safe, raising it means raising `COLLECT_TIMEOUT_S` in the three RoboCasa generators too.
 8. **Request validation.** A request is checked as a whole before any physics (`parse_submit` / `parse_observe`):
    a `dt`, `seconds` or `video_fps` that is not a finite number in range, `cameras` that is not a list of names,
@@ -111,7 +111,7 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items
    episode. Kept as it was: camera names the robot does not have are ignored, and an unknown `video` value means
    "last frame only". `dt = 0` is a 400.
 9. `time_left_s` counts from the agent's first request to the service (any endpoint; logged as `first_request` in
-   `episode.jsonl`, which a resume reads back), as in every other benchmark (STANDARD_MODE.md, "The agent's clock").
+   `episode.jsonl`, which a resume reads back), as in every other benchmark (docs/protocol/standard_mode.md, "The agent's clock").
    `time_s` counts from the agent's first request too; `elapsed_s` from the episode's start (the service ready).
 
 Tests: `scripts/robocasa/tests/test_graders.py` (CI `unit-tests`): the grader on forged records and, with numpy, the

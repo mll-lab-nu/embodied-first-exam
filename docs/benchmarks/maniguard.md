@@ -241,7 +241,7 @@ primitives. Every one scores 0, for the reason given.
 
 ## Time budget
 **3600 s** for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
-RUNNING.md "The agent's time"), stated in every instruction's closing `## Time limit` section; the benchmark's own text
+docs/protocol/running.md "The agent's time"), stated in every instruction's closing `## Time limit` section; the benchmark's own text
 names no number. Every Python process pays an Isaac Sim 4.5 launch and the scene load (23 s with a warm cache, 239 s with
 a cold one, which every trial's first process has: Kit's shaders and OmniGibson's `torch.compile` kernels; then roughly
 20 control steps per wall second). ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A
@@ -304,7 +304,7 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
 - **Tooling: thin wrappers only.** Joint targets (`move_joints`), the gripper, `hold`, an IK move (`ik`, `move_ee`: numpy
   IK then a joint-space line, no collision checking), `ee_pose`, state, cameras, recording, replay. No grasp, place, close
   or carry skills.
-- **World-frame information (D7).** Standard tasks never say where things are (STANDARD_MODE.md,
+- **World-frame information (D7).** Standard tasks never say where things are (docs/protocol/standard_mode.md,
   `scripts/maniguard/ci/advisory-world-frame.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
   base pose is in `robot_spec`. Privileged tasks give everything through the tooling.
 - **Reference solutions out of reach.** ManiGuard's 40 public demonstrations per task, its scripted data generator and its
@@ -373,4 +373,4 @@ Per-simulator notes:
 | `/kinematics` | numpy model of the articulation (7 arm joints), world frame |
 | proprio columns | 43 |
 | grading replays | none (graded by the live episode) |
-| resume class (STANDARD_MODE.md) | `approx` (until measured) |
+| resume class (docs/protocol/standard_mode.md) | `approx` (until measured) |
