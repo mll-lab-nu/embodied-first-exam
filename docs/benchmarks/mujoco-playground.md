@@ -192,7 +192,8 @@ frozen moments: an external force that is neither the robot's nor gravity).
 | `scripts/mujoco-playground/shared/rcb_quadruped.py` | the tooling (privileged), the verifier's replay CLI and the service's simulator |
 | `shared/standard/server.py` | the 2.2 adapter on `scripts/eai_standard/rcb_limited.py`; `finalize.sh`, the collect hook |
 | `make_instances.py`, `select_instances.py`, `oracle.py` | candidates (Playground's code, JAX), selection and freezing, references |
-| `instances/`, `oracles/`, `selection/` | the frozen instances, the reference rows, every candidate tried |
+| `instances/`, `selection/` | the frozen instances, every candidate tried |
+| `tasks/mujoco_playground_<env>-privileged/solution/oracle.npy` | the reference rows (their one committed copy, read back by `generate.py`; `select_instances.py` writes a new one to `oracles/<Env>.npy`, read from there until the tasks are regenerated, then deleted) |
 | `train/` | the reference-policy training (CPU PPO), not used by any task |
 | `shared/realtime/` | the standard-realtime twin's service (`server.py`, the 2.3 adapter) and its reference (`oracle_plan.py`, `solve.sh`) |
 | `generate.py`, `templates/` | the task directories (`--check` compares) |

@@ -181,8 +181,8 @@ proprioception, the cameras' calibration; no table height, no object or workspac
 The goals state their thresholds as relative distances (e.g. "within 0.20 m of the plant").
 
 ## Reference solutions
-The demonstration's own actions (`scripts/dexjoco/instances/<family>/oracle_trajectory.npz`, built by
-`make_instances.py` in the image), replayed until the episode ends in success. The standard client sends float32, so
+The demonstration's own actions (`solution/oracle_trajectory.npz`, built by `make_instances.py` in the image),
+replayed until the episode ends in success. The standard client sends float32, so
 the rows are rounded to float32 for both modes; every family still succeeds, `bimanual_hanoi` after holding its last row
 8 more steps (the rounded rows end its 20-step hold count short). Standard mode streams the same rows through the client
 as `ee_pose` chunks; the recorded trajectory is then exactly the privileged reference.
@@ -194,6 +194,11 @@ docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp -v $PWD:/repo -w /repo ghc
     python scripts/dexjoco/make_instances.py --all                     # check the instances and oracles, refresh facts.json
 python3 scripts/dexjoco/generate.py && python3 scripts/dexjoco/generate.py --check
 ```
+The committed `instance.npz` and `oracle_trajectory.npz` of a family are the ones in its privileged task dir
+(`tasks/dexjoco-<family>-i00-privileged/environment/instance.npz`, `.../solution/oracle_trajectory.npz`);
+`scripts/dexjoco/instances/<family>/` holds `facts.json`. `make_instances.py` writes a new or rebuilt pair next to
+`facts.json` (starting from the committed pair without `--demo`), `generate.py` takes it from there while it exists;
+delete it there once the tasks are regenerated.
 
 ## Standard-mode service details
 

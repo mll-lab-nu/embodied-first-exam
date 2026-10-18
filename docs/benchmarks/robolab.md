@@ -8,9 +8,10 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
 
 ## Tasks and generator
 - One generator: `python3 scripts/robolab/mk_tasks.py` writes every RoboLab task dir (both modes) from
-  `scripts/robolab/` alone: `families.json` (per family: RoboLab's task class and file, the goal, the success term's
-  source, the texts of both modes, the oracle level, the cited positives), `instances/<family>.json` (the frozen
-  instances), `oracles/<family>/` (the reference solutions and the standard oracle's recorded joint targets), `shared/`
+  `scripts/robolab/`: `families.json` (per family: RoboLab's task class and file, the goal, the success term's
+  source, the texts of both modes, the oracle level, the cited positives), the frozen instance (one copy, in the committed
+  task dir: `tasks/robolab-<family>-i00-privileged/environment/instance.json`, read back by the generator),
+  `oracles/<family>/` (the reference solutions and the standard oracle's recorded joint targets), `shared/`
   (the tooling `rcb_robolab.py`, the oracles' skills `ref_primitives.py`), `template/<mode>/` (every other task file) and
   `scripts/eai_standard/` (the 2.2 layer and the standard client). Both twins of a family are written to a scratch
   directory, passed through `scripts/task_conventions.py`'s `normalize()` and then synced into `tasks/`. Re-running it leaves
@@ -23,7 +24,9 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
   evaluation loop does), with its state hash, made in the image by `rcb_robolab.py make-instance --task <f> --seed 0`;
   the tasks carry it in `environment/` and `tests/` (privileged) and `environment/sim/` (standard). Each instance was
   checked in a second fresh process: the same hash, success false at t = 0 and during a 1 s hold.
-- New family: add its entry to `families.json` and `instances/`, then run the generator and `cd tasks && harbor add --scan .`.
+- New family: add its entry to `families.json` and its frozen instance as `scripts/robolab/instances/<family>.json` (the
+  generator reads it from there while it exists), run the generator and `cd tasks && harbor add --scan .`, then delete
+  `scripts/robolab/instances/<family>.json`: the task dir's copy is the one kept.
 
 ## Oracle and review
 - banana_in_bowl and rubiks_cube_left_of_bowl have a reference solution: `solution/oracle_<family>.py`, a human-written

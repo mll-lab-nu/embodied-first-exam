@@ -21,10 +21,15 @@ Sources (everything a rerun needs; a rerun reproduces the committed tasks, `git 
   own `review_pr`: a pull request number, or a batch name that REVIEW_PRS below resolves (the third batch: THIRD_BATCH_PR);
 - scripts/behavior/bddl/<family>.bddl: the task's BDDL problem (its :goal block is quoted in the privileged instruction;
   goal.py words the predicates it uses), as in the image's /behavior-src/bddl3/bddl/activity_definitions/<family>/problem0.bddl;
-- scripts/behavior/instances/<family>.json: the frozen instance (2026 challenge public_test instance 301 and its state
-  hash), copied unchanged into environment/, tests/ and the standard sidecar;
-- scripts/behavior/solutions/<family>/{privileged,standard}/: a reference solution where one was written (the template's
-  is in its own solution/); families without one declare oracle = "none" and get no solution/ (PROTOCOL §2.7).
+- the frozen instance (2026 challenge public_test instance 301 and its state hash) of every family: its canonical copy is
+  tasks/behavior-<family>-i00-privileged/environment/instance.json, copied unchanged into tests/ and the standard sidecar
+  (a freshly frozen instance is scripts/behavior/instances/<family>.json, used while it exists; delete it once the
+  family's tasks are generated);
+- a family's reference solution where one was written: the privileged task's solution/oracle_*.py and the standard
+  task's solution/oracle_qpos.npy + oracle_meta.json are the canonical copies (the rest of solution/ is the template's);
+  a new one goes into scripts/behavior/solutions/<family>/{privileged,standard}/, used while it exists, like a fresh
+  instance. Families without one declare oracle = "none" and get no solution/ (PROTOCOL §2.7).
+All family inputs are read into memory before any task dir is rewritten (a regeneration replaces those dirs).
 The oracle level of every task (template twins included) comes from families.json: "full" only when a recorded oracle run
 scored 1 on a byte-identical grader, frozen instance and oracle code, with every tooling change since off the oracle and
 replay path; "partial" with the per-mode "oracle_evidence" otherwise; "none" with the cited positive, or with the official
@@ -35,14 +40,15 @@ Agent results are not in the repository (PROTOCOL D3): the positives are cited b
 "include": false stay in families.json (their inputs are kept) but are not generated.
 
 A new family: its BDDL problem into bddl/, an entry in families.json, then freeze its instance in the GPU container
-(dataset mounted read-only), e.g.
+(dataset mounted read-only; `mkdir -p scripts/behavior/instances` first), e.g.
   docker run --rm --gpus all --shm-size 8g -v $RCB_BEHAVIOR_DATA:/data:ro \
     -v $PWD/tasks/behavior-picking-up-trash-i00-privileged:/t:ro -v $PWD/scripts/behavior/instances:/o \
     ghcr.io/mll-lab-nu/eai-behavior:0.1.1 bash -c \
     "cd /tmp && python /t/environment/rcb_behavior.py make-instance --task <family> --instance-id 301 \
      --robot-config /t/environment/r1pro_primitives_eval.yaml --out /o/<family>.json"
 (the family must be registered in the tooling's TASKS, environment/rcb_behavior.py of the template, which every task
-copies), then run this script, `harbor run -a nop` on both twins (and `-a oracle` with a reference solution), and
+copies), then run this script, delete scripts/behavior/instances/<family>.json (and solutions/<family>/: the task dirs
+now hold them), `harbor run -a nop` on both twins (and `-a oracle` with a reference solution), and
 `cd tasks && harbor add --scan .`."""
 from __future__ import annotations
 
@@ -464,8 +470,34 @@ def standard_description(fam: str, seed: int, text: str) -> str:
             f'service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."\n')
 
 
+PRIV_SOLUTION = "oracle_*.py"                                   # a family's own files in solution/ (the rest is the template's)
+STD_SOLUTION = ("oracle_qpos.npy", "oracle_meta.json")
+INSTANCES: dict[str, str] = {}                                  # family -> instance.json text (load_inputs)
+SOLUTIONS: dict[tuple[str, str], dict[str, bytes]] = {}         # (family, mode) -> {file name: bytes}
+
+
+def load_inputs(families: list[str], F: dict) -> None:
+    """Every family's frozen instance and reference solution, from a fresh import under scripts/behavior/ when there is one,
+    else from the committed task dirs (ROOT/tasks, the canonical copies); read before generate() rewrites any task dir."""
+    tasks = ROOT / "tasks"
+    for fam in dict.fromkeys([TEMPLATE, *families]):
+        new = HERE / "instances" / f"{fam}.json"
+        INSTANCES[fam] = (new if new.exists() else tasks / priv(fam) / "environment/instance.json").read_text()
+        if F[fam]["oracle"] not in ("full", "partial") or fam == TEMPLATE:   # the template's solution/ is its own
+            continue
+        for mode, task, names in (("privileged", priv(fam), None), ("standard", std(fam), STD_SOLUTION)):
+            new = HERE / "solutions" / fam / mode
+            if new.is_dir():
+                files = sorted(new.iterdir())
+            else:
+                sol = tasks / task / "solution"
+                files = sorted(sol.glob(PRIV_SOLUTION)) if names is None else [sol / n for n in names]
+            assert files, (fam, mode, "no reference solution")
+            SOLUTIONS[fam, mode] = {f.name: f.read_bytes() for f in files}
+
+
 def instance_text(fam: str) -> str:
-    return json.loads((HERE / "instances" / f"{fam}.json").read_text()).get("text", "")
+    return json.loads(INSTANCES[fam]).get("text", "")
 
 
 # ---------------------------------------------------------------- tasks
@@ -475,7 +507,7 @@ def refresh_templates(src: Path, out: Path, F: dict) -> None:
         if out != src:
             copy_tree(src / t, out / t, ())
     p, s = out / TP, out / TS
-    inst = (HERE / "instances" / f"{TEMPLATE}.json").read_text()
+    inst = INSTANCES[TEMPLATE]
     for f in (p / "environment/instance.json", p / "tests/instance.json", s / "environment/sim/instance.json"):
         f.write_text(inst)
     for name in TOOLING:
@@ -495,14 +527,14 @@ def refresh_templates(src: Path, out: Path, F: dict) -> None:
 
 def make_privileged(fam: str, e: dict, src: Path, out: Path) -> None:
     dst = out / priv(fam); oracle = e["oracle"] in ("full", "partial")          # a reference solution exists
-    copy_tree(src / TP, dst, ("instance.json", "oracle_*.py") if oracle else ("instance.json", "solution"))
-    inst = (HERE / "instances" / f"{fam}.json").read_text()
+    copy_tree(src / TP, dst, ("instance.json", PRIV_SOLUTION) if oracle else ("instance.json", "solution"))
+    inst = INSTANCES[fam]
     assert json.loads(inst)["task"] == fam and int(json.loads(inst)["instance_id"]) == e["instance_id"], fam
     for d in ("environment", "tests"):
         (dst / d / "instance.json").write_text(inst)
     if oracle:
-        for f in sorted((HERE / "solutions" / fam / "privileged").iterdir()):
-            shutil.copy(f, dst / "solution" / f.name)
+        for name, data in SOLUTIONS[fam, "privileged"].items():
+            (dst / "solution" / name).write_bytes(data)
         sub(dst / "solution/solve.sh", [(TEMPLATE, fam)])
     sub(dst / "tests/test.sh", [(f"--family {TEMPLATE}", f"--family {fam}")])
     tt = dst / "task.toml"
@@ -540,14 +572,14 @@ def make_privileged(fam: str, e: dict, src: Path, out: Path) -> None:
 
 def make_standard(fam: str, e: dict, src: Path, out: Path) -> None:
     dst = out / std(fam); oracle = e["oracle"] in ("full", "partial")
-    copy_tree(src / TS, dst, ("oracle_qpos.npy", "oracle_meta.json") if oracle else ("solution",))
+    copy_tree(src / TS, dst, STD_SOLUTION if oracle else ("solution",))
     p = out / priv(fam)
     shutil.copy(p / "environment/instance.json", dst / "environment/sim/instance.json")
     for name in TOOLING:
         shutil.copy(p / "environment" / name, dst / "environment/sim" / name)
     if oracle:
-        for f in sorted((HERE / "solutions" / fam / "standard").iterdir()):
-            shutil.copy(f, dst / "solution" / f.name)
+        for name, data in SOLUTIONS[fam, "standard"].items():
+            (dst / "solution" / name).write_bytes(data)
     seed = e["instance_id"]; text = instance_text(fam)
     sub(dst / "environment/docker-compose.yaml", [(f"RCB_TASK: {TEMPLATE}", f"RCB_TASK: {fam}")])
     tt = dst / "task.toml"
@@ -572,6 +604,7 @@ def check_template(src: Path) -> None:
 
 
 def generate(families: list[str], F: dict, src: Path, out: Path) -> list[Path]:
+    load_inputs(families, F)
     check_template(src)
     refresh_templates(src, out, F)
     dirs = [out / TP, out / TS]

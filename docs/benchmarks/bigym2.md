@@ -148,11 +148,15 @@ These notes stay in this page: no task file the agent sees mentions them.
 ## Build and run
 ```bash
 docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) .
-docker run --rm --gpus all --network none -e NVIDIA_DRIVER_CAPABILITIES=all -v "$PWD/scripts/bigym2:/w" -w /w \
-  ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) python make_instances.py --check   # instances/ rebuild
+docker run --rm --gpus all --network none -e NVIDIA_DRIVER_CAPABILITIES=all -v "$PWD:/w" -w /w/scripts/bigym2 \
+  ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) python make_instances.py --check   # the instances rebuild
 python3 scripts/bigym2/gen_tasks.py check          # tasks/ is what the generator writes (`render` rewrites it)
 harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/protocol/running.md
 ```
+The frozen instances live in the task dirs only (`tasks/bigym2-<family>-i00-privileged/environment/instance.json`, read
+back by `gen_tasks.py`). A new family: add it to `scripts/bigym2/tasks.json`, run `make_instances.py --only <family>`
+(it writes `scripts/bigym2/instances/<family>-i00.json`, which `gen_tasks.py` reads while it exists), `gen_tasks.py render`,
+`cd tasks && harbor add --scan .`, then delete `scripts/bigym2/instances/<family>-i00.json`.
 
 ## Measured (RTX 4090, host load ~25 on 32 cores)
 - Every task builds in ~1 s; a reset (with the controller's 200-step warm-up) takes under 1 s; 5–12 ms per control step

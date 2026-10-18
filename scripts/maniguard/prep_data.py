@@ -164,12 +164,19 @@ def stream_all(z: dict, members: list[dict], root: pathlib.Path) -> None:
         raise IOError(f"{z['dest']}: the zip's sha256 {h.hexdigest()} != {z['sha256']}")
 
 
+def instance_dir(key: str) -> pathlib.Path:
+    """A task's instance files: where mk_tasks.py reads them (scripts/maniguard/instances/<key>/ or the committed task dir)."""
+    sys.path.insert(0, str(HERE))
+    from mk_tasks import instance_dir as where
+    return where(key)
+
+
 def subset_prefixes(tasks: list[str], extra_scenes: list[str] = ()) -> tuple[set, list]:
     # every particle system: objects' abilities name systems their scene never holds (a pepper shaker's black_pepper), and
     # OmniGibson checks a system name against the systems/ directories of the dataset (0.83 GB)
     pre = {"VERSION", "metadata/", "systems/"}; used = []
     for key in list(tasks) + list(extra_scenes):
-        f = pathlib.Path(key) if key in extra_scenes else HERE / "instances" / key / "scene_ep1.json"
+        f = pathlib.Path(key) if key in extra_scenes else instance_dir(key) / "scene_ep1.json"
         scene = json.loads(f.read_text())
         for name, o in scene["objects_info"]["init_info"].items():
             if o.get("class_name") == "DatasetObject":
