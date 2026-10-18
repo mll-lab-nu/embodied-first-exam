@@ -1303,7 +1303,10 @@ def validated_of(task: Path) -> bool:
 CORE_SET_FILE = Path(os.environ.get("RCB_CORE_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "core_set.toml")
 # RCB_CORE_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
 CORE_LUNA = ("failed", "no result yet")
-CORE_FIELDS = ("task", "base", "benchmark", "mode", "luna")
+CORE_FIELDS = ("task", "base", "benchmark", "mode", "luna", "pick")
+# `pick = "owner"`: a dir the benchmark owner put in by hand. The regeneration keeps it whatever the reference run's
+# verdict, so its `luna` may also be "success".
+CORE_PICKS = ("owner",)
 
 
 @functools.lru_cache(maxsize=8)
@@ -1378,8 +1381,8 @@ def readme_table(tasks_dir: Path | None = None) -> str:
 
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
     """What is wrong with the core set: no file, no `generated_from` commit, an unknown top-level key, a listed task dir
-    that is not a plain name or does not exist, a base / benchmark / mode that is not the dir's, an unknown `luna` value or
-    field."""
+    that is not a plain name or does not exist, a base / benchmark / mode that is not the dir's, an unknown `luna` or
+    `pick` value (`luna = "success"` only with `pick = "owner"`) or field."""
     tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
     if not path.is_file():
         return [f"{path.name}: no such file"]
@@ -1403,8 +1406,11 @@ def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) ->
         for k, want in (("base", base_of(d)), ("benchmark", bench_of(d)), ("mode", mode_of(d))):
             if e.get(k) != want:
                 bad.append(f"{t}: {k} {e.get(k)!r}, the dir's is {want!r}")
-        if e.get("luna") not in CORE_LUNA:
-            bad.append(f"{t}: luna {e.get('luna')!r} is not one of {', '.join(CORE_LUNA)}")
+        if "pick" in e and e["pick"] not in CORE_PICKS:
+            bad.append(f"{t}: pick {e['pick']!r} is not one of {', '.join(CORE_PICKS)}")
+        if e.get("luna") not in CORE_LUNA and not (e.get("pick") == "owner" and e.get("luna") == "success"):
+            bad.append(f"{t}: luna {e.get('luna')!r} is not one of {', '.join(CORE_LUNA)}"
+                       + (" (\"success\" only with pick = \"owner\")" if e.get("luna") == "success" else ""))
         unknown = set(e) - set(CORE_FIELDS)
         if unknown:
             bad.append(f"{t}: unknown field(s) {', '.join(sorted(unknown))}")
