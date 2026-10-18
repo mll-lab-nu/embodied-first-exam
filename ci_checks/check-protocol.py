@@ -31,7 +31,9 @@ def _own_protocols() -> dict[str, dict[str, set[str]]]:
         d = tomllib.loads(man.read_text())
         protos = {m: {p} if isinstance(p, str) else set(p) for m, p in d.get("protocols", {}).items()}
         for t in d.get("tasks", []):
-            out[t["name"]] = protos
+            # a task may name its one protocol (`protocol`): then only that one of its mode's list is accepted for it
+            own = t.get("protocol")
+            out[t["name"]] = {m: ps & {own} for m, ps in protos.items()} if own else protos
     return out
 
 

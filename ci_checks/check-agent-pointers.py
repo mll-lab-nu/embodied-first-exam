@@ -44,6 +44,10 @@ FILES = re.compile(r"""(?<![\w.-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrec
 ALLOW = [
     (r"^maniguard-", r"^environment/instance/NOTICE$", r"datasets/IDEAS-Lab-Northwestern/ManiGuard-Bench|github\.com/NU-IDEAS-Lab/ManiGuard",
      "CC BY-NC 4.0 attribution the licence requires, of the scene files' dataset (its demonstrations are other datasets, not named)"),
+    (r"^roboengineer-anycar-", r"^environment/public/(?:scripts/control_transfer/components/)?anycarbench/(?:NOTICE|circuits\.json)$",
+     r"^https://github\.com/f1db/f1db/?$",
+     "CC BY 4.0 attribution the licence requires, of F1DB's historical circuit outlines (track geometry the instruction "
+     "gives the agent, not a controller or a demonstration)"),
 ]
 
 

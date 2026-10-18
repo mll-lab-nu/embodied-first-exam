@@ -61,6 +61,12 @@ if [ -f "$root/scripts/robosafe/tests/test_grade_rt.py" ]; then run 300 robosafe
 for t in test_054_reporting test_admission_import test_release_export test_realtime_seed_export test_frozen_source_guard test_variant_export test_image_publication test_mechanism_selection; do
   if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
 done
+# roboEngineer (#329): the Control Transfer verifier on stub sidecar records and the frozen spec / pin checks (standard
+# library; the service and rollout tests need MuJoCo and the evaluator images: docs/benchmarks/roboengineer.md)
+for t in control_transfer/tests/test_verifier_diagnostics.py control_transfer/tests/test_neuralfly_spec.py \
+         control_transfer/tests/test_go2_spec.py quadrotor_landing/tests/test_native.py; do
+  if [ -f "$root/scripts/$t" ]; then run 300 "$t"; fi
+done
 # DexHand's graders, privileged and standard, on stub replays (its tasks pull request adds the test)
 if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/tests/test_grading.py; fi
 # IKEA MuJoCo's privileged grader on a stub replay that crashes or not (its tasks pull request adds the test)

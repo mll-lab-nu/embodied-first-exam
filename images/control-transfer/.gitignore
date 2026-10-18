@@ -1,0 +1,2 @@
+# Local build inputs include private calibration assets and must never be committed.
+/assets/

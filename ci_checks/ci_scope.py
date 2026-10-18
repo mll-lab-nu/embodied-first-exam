@@ -73,6 +73,10 @@ UNITS: dict[str, list[str]] = {
     "AM-Bench": _own("ambench"),
     "iSpatialGym": _own("ispatialgym"),
     "IKEA MuJoCo": _own("ikea_mujoco", "images/ikea-mujoco/"),
+    "roboEngineer": _own("roboengineer", "scripts/control_transfer/", "scripts/quadrotor_landing/",
+                         "scripts/roboengineer_presentation/", "images/control-transfer/", "images/quadrotor-landing/",
+                         "docs/benchmarks/roboengineer", "docs/benchmarks/control-transfer.md",
+                         "docs/benchmarks/quadrotor-landing.md"),
 }
 # changes that no check reads: they need only the repo-level checks (which always run). Everything not listed here and
 # not a benchmark's own path runs the full suite.
