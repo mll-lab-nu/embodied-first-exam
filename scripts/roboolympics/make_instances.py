@@ -5,7 +5,7 @@
     scripts/roboolympics/dev.sh /rfo/make_instances.py --check                   # compare with the committed files
 
 The committed instance of a family is its privileged task's environment/instance.json
-(tasks/roboolympics-<family>-i00-privileged/; dev.sh mounts tasks/ at /tasks). Writing puts a new or remade one at
+(tasks/roboolympics-fun-<family>-i00-privileged/; dev.sh mounts tasks/ at /tasks). Writing puts a new or remade one at
 scripts/roboolympics/instances/<family>-i00.json, which gen_tasks.py reads instead while it exists: render the tasks,
 then delete it there. --check compares with that file when it exists, else with the committed one.
 
@@ -25,7 +25,7 @@ def instance_path(fam: str) -> pathlib.Path:
     """The family's frozen instance: instances/<f>-i00.json while it exists (a new or remade one), else the committed
     privileged task's environment/instance.json (in the image: /tasks, which dev.sh mounts)."""
     new = HERE / "instances" / f"{fam}-i00.json"
-    return new if new.is_file() else HERE.parent.parent / "tasks" / f"roboolympics-{fam}-i00-privileged/environment/instance.json"
+    return new if new.is_file() else HERE.parent.parent / "tasks" / f"roboolympics-fun-{fam}-i00-privileged/environment/instance.json"
 
 
 def main() -> int:

@@ -114,7 +114,7 @@ add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
 add python3 ci_checks/check-build-stamps.py
 # PROTOCOL §4: the core set (docs/core_set.toml) names existing task dirs, with their base, benchmark label and mode
 add python3 scripts/task_conventions.py core-set --check
-# every task dir has its benchmark label; a task-dir prefix two benchmarks share (roboolympics-) names each base explicitly
+# every task dir has its benchmark label (its BENCHMARKS prefix)
 add python3 scripts/task_conventions.py benchmarks --check
 
 t0=$SECONDS

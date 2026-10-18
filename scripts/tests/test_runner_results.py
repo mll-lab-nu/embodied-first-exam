@@ -296,32 +296,24 @@ def test_core_set():
 
 def test_benchmarks():
     """Every task dir has its benchmark label, the label results and reports are grouped by (dataset_manifest.py,
-    the pool): a prefix two benchmarks share (RoboOlympics-Fun / -Match, board 0160) names every base in
-    BENCHMARK_BASES. The real tree is clean; an unlisted base, a listed base without a task dir and a base in two lists
-    are found."""
+    the pool): the first BENCHMARKS prefix the name starts with. The real tree is clean; a name no prefix claims is
+    found."""
     sys.path.insert(0, str(ROOT / "scripts"))
     import task_conventions as tc
     bad = tc.check_benchmarks()
     check(not bad, f"benchmark labels: {bad[:5]}")
-    fun, match = tc.BENCHMARK_BASES["RoboOlympics-Fun"], tc.BENCHMARK_BASES["RoboOlympics-Match"]
-    check(tc.bench_of(Path(fun[0])) == "RoboOlympics-Fun" and tc.bench_of(Path(f"{match[0]}-standard-realtime"))
-          == "RoboOlympics-Match" and tc.bench_of(Path("roboolympics-no-such-i00-standard")) == ""
-          and tc.bench_of(Path("robocasa-gr1-x-i00-standard")) == "RoboCasa-GR1", "bench_of on a shared prefix")
+    check(tc.bench_of(Path("roboolympics-fun-sprint-i00")) == "RoboOlympics-Fun"
+          and tc.bench_of(Path("roboolympics-match-tabletennis-match-i01-standard-realtime")) == "RoboOlympics-Match"
+          and tc.bench_of(Path("roboolympics-sprint-i00-standard")) == ""
+          and tc.bench_of(Path("robocasa-gr1-x-i00-standard")) == "RoboCasa-GR1", "bench_of: the first matching prefix")
     with tempfile.TemporaryDirectory() as td:
-        for n in (f"{fun[0]}-privileged", f"{match[0]}-standard-realtime", "roboolympics-no-such-i00-standard"):
-            (Path(td) / n).mkdir()
-            (Path(td) / n / "task.toml").write_text("")
-        saved = dict(tc.BENCHMARK_BASES)
-        try:
-            tc.BENCHMARK_BASES["RoboOlympics-Match"] = (match[0], fun[0])
-            found = tc.check_benchmarks(Path(td))
-        finally:
-            tc.BENCHMARK_BASES.clear()
-            tc.BENCHMARK_BASES.update(saved)
-        check(any("no-such" in x and "no benchmark label" in x for x in found), f"an unlisted base: {found[:3]}")
-        check(any(fun[0] in x and "listed for" in x and " and " in x for x in found), f"a base in two lists: {found[:3]}")
-        check(any(fun[1] in x and "no task directory" in x for x in found), f"a listed base without a dir: {found[:3]}")
-    print("ok benchmark labels: every task dir has one; a shared prefix decided by BENCHMARK_BASES")
+        for n in ("roboolympics-fun-sprint-i00-privileged", "no-such-bench-i00-standard"):
+            (Path(td) / "roboolympics-fun" / n).mkdir(parents=True)
+            (Path(td) / "roboolympics-fun" / n / "task.toml").write_text("")
+        found = tc.check_benchmarks(Path(td))
+        check(not any("sprint" in x for x in found) and any("no-such-bench" in x and "no benchmark label" in x for x in found),
+              f"an unclaimed name: {found[:3]}")
+    print("ok benchmark labels: every task dir has one (its BENCHMARKS prefix)")
 
 
 def caps(task: Path) -> list[str]:

@@ -22,10 +22,10 @@ FROZEN = "0d7f680cc04918f419230588732aedbb9ccdc900"
 # The privileged twins of the exported standard-realtime matches (PROTOCOL H.7): same instance (seed, opponent level,
 # frozen simulator source), same seeds, same cutoff. (instance id, opponent level, seed)
 INSTANCES = (("i01", 2, 22), ("i02", 3, 12))
-TASKS = tuple((level, f"roboolympics-tabletennis-match-{i}-privileged") for i, level, _ in INSTANCES)
-SEEDS = {f"roboolympics-tabletennis-match-{i}-privileged": seed for i, _, seed in INSTANCES}
+TASKS = tuple((level, f"roboolympics-match-tabletennis-match-{i}-privileged") for i, level, _ in INSTANCES)
+SEEDS = {f"roboolympics-match-tabletennis-match-{i}-privileged": seed for i, _, seed in INSTANCES}
 TWINS = {
-    f"roboolympics-tabletennis-match-{i}-privileged": f"roboolympics-tabletennis-match-{i}-standard-realtime"
+    f"roboolympics-match-tabletennis-match-{i}-privileged": f"roboolympics-match-tabletennis-match-{i}-standard-realtime"
     for i, _, _ in INSTANCES
 }
 SOURCE_TEMPLATE = "tasks/@TWIN@/environment/sim"

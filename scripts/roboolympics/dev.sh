@@ -4,7 +4,7 @@
 #   scripts/roboolympics/dev.sh -c "from rfo.testing import make; ..."
 # PYTHONPATH = shared/ (rfo, rcb_rfo); RFO_OUT (default /tmp/rfo_out) is mounted at /out for images and videos.
 # RFO_RW=1 mounts /rfo read-write (make_instances.py, make_oracles.py write into this directory). The repository's tasks/
-# is mounted read-only at /tasks (the committed frozen instances: tasks/roboolympics-<family>-i00-privileged/environment/).
+# is mounted read-only at /tasks (the committed frozen instances: tasks/roboolympics-fun-<family>-i00-privileged/environment/).
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 OUT="${RFO_OUT:-/tmp/rfo_out}"; mkdir -p "$OUT"

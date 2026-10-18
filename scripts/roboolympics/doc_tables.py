@@ -21,7 +21,7 @@ def tables() -> tuple[str, str]:
     fam_rows, rev_rows, n_full, cat_now = [], [], 0, None
     for i, (fam, spec) in enumerate(fams.items(), 1):
         new = HERE / "instances" / f"{fam}-i00.json"
-        task = HERE.parent.parent / "tasks" / f"roboolympics-{fam}-i00-privileged/environment/instance.json"
+        task = HERE.parent.parent / "tasks" / f"roboolympics-fun-{fam}-i00-privileged/environment/instance.json"
         inst = json.loads((new if new.is_file() else task).read_text())
         full = spec["oracle"] == "full"
         n_full += full
