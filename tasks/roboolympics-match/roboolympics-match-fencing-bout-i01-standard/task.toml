@@ -1,0 +1,121 @@
+# Exported by RoboOlympics tools/export_fexam.py from fencing-bout-wallclock-program-standard (sports/fencing/sport.toml): do not edit.
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  "/app/output/",
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/video.json", service = "sim" },
+  { source = "/data/broadcast.jsonl", service = "sim" },
+]
+
+[task]
+name = "robot-coding-bench/roboolympics-match-fencing-bout-i01-standard"
+description = "STANDARD (RoboOlympics / Embodied Agent Olympics, our own service): robot epee fencing, one bout against the scripted opponent at level 1, program play (eai-standard-turn/1.0: the world waits for the player whose turn it is; the player's chess clock of 60 minutes of real time runs on its own turns, reviews included, and a player whose clock runs out loses). Camera images and the player's own state only. Frozen development instance (seed and level fixed, not an official seed). two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-body policy on the legs, waist and free arm, the point skill on the sword arm) holding real epees fence one FIE direct-elimination bout (15 touches or 9 minutes of fencing time, no draws; unwillingness to fight, FIE t.124) phrase by phrase: every phrase starts on guard 1.95 m apart, both fencers choose one of nine tactical intentions (lunge, low lunge, point in line, reactive line, stop-hit, counter-attack, delayed lunge, retreat, draw), each starts after a random 0-50 ms, and the phrase is played out as it was measured in MuJoCo (2916 phrases: every pair of intentions and delays); format bout: you against a scripted fencer that reads your choices (levels 1-2, `game spec` opponent), format duel: two players choosing at the same time. Exported from RoboOlympics task fencing-bout-wallclock-program-standard by tools/export_fexam.py."
+authors = [{ name = "RoboOlympics (CHIGUI0)" }]
+keywords = ["robotics", "roboolympics", "sports", "fencing", "mujoco", "standard-mode", "vision", "turn-based"]
+
+[metadata]
+author_name = "RoboOlympics"
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "unitree-g1"
+family = "fencing_bout"
+mode = "standard"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+protocol = "eai-standard-turn/1.0"
+instance_seed = 39
+opponent_level = 1
+chess_clock_s = 3600
+revision = "fencing-7+core-0.2"
+play = "program"
+action_level = "low"
+source_task = "roboolympics/fencing-bout-wallclock-program-standard"
+source_commits = ["a6712a675343"]
+exporter = "roboolympics tools/export_fexam.py"
+player_mode = "unmetered"
+official = false
+expert_time_estimate_hours = 0.5
+oracle = "full"
+oracle_evidence = "in process (fencing-7): the oracle beats level 1 on this seed 15:11; over 40 player seeds the reference wins this instance 62.5 %, the equilibrium mix 47.5 % (fresh-seed means 61.5 %, 53.5 %); none of the nine constant intentions nor a random player wins it; live on vanilla Harbor 0.23.0 (2026-10-15, the exported task) the oracle won 15:11 in 25 phrases, replay identical (the world is deterministic)"
+
+[metadata.resources]
+# minimum compute to run this task (docs/protocol/README.md §2.9)
+min_cpus = 3.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "vanilla Harbor 0.23.0 on ws-3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: RoboOlympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only"
+
+[metadata.resources.limits]
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 4.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 12.0
+measured = "design defaults of RoboOlympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB"
+
+[metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
+main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 256 }
+
+[metadata.seeds]
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 39
+allowed = [39]
+oracle = [39]
+
+[verifier]
+timeout_sec = 2040.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running (a program would keep playing; the match is graded as it stands).
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay,
+# board 0151), then the spectator video.
+[[verifier.collect]]
+service = "sim"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 960); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
+timeout_sec = 1860
+
+[agent]
+timeout_sec = 7200
+# The agent reaches the model APIs, the package registries and the sim (localhost:8000, Harbor's egress control).
+network_mode = "allowlist"
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 1200.0
+cpus = 2
+memory_mb = 6144
+
+[verifier.environment]
+build_timeout_sec = 600.0
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

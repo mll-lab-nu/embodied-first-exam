@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the RoboOlympics tasks: tasks/roboolympics-<family>-i00-privileged and -standard (eai-standard/2.1)
+"""Generate the RoboOlympics tasks: tasks/roboolympics-fun-<family>-i00-privileged and -standard (eai-standard/2.1)
 for every family in scripts/roboolympics/families.json (docs/benchmarks/roboolympics.md).
 
     python3 scripts/roboolympics/gen_tasks.py render     # (re)write every task dir; `git diff tasks/` stays empty
@@ -9,7 +9,7 @@ Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 
 
 Inputs, all in the repository:
   scripts/roboolympics/families.json           per family: the seed, the oracle level, the review evidence
-  tasks/roboolympics-<f>-i00-privileged/environment/instance.json
+  tasks/roboolympics-fun-<f>-i00-privileged/environment/instance.json
                                                the frozen instance + the texts and numbers the tasks quote
                                                   (make_instances.py, in the simulator image): the committed task dir
                                                   holds the one copy, which this reads back. make_instances.py writes a
@@ -21,7 +21,7 @@ Inputs, all in the repository:
                                                   the clients, the oracle drivers (solution/)
   scripts/roboolympics/oracles/<family>/       oracle.py (privileged) and result.json (make_oracles.py); the standard
                                                   twin's rows (make_oracles.py) have one committed copy,
-                                                  tasks/roboolympics-<f>-i00-standard/solution/rows.npz, read back like
+                                                  tasks/roboolympics-fun-<f>-i00-standard/solution/rows.npz, read back like
                                                   the instance (a new standard_rows.npz next to oracle.py is read instead
                                                   while it exists; delete it once the tasks are rendered)
   scripts/roboolympics/templates/<mode>/       every other task file; *.tmpl is filled with the instance's values
@@ -36,7 +36,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/roboolympics"
 SHARED = HERE / "shared"
 REGISTRY = "ghcr.io/mll-lab-nu"
-PREFIX = "roboolympics"
+PREFIX = "roboolympics-fun"
 RESET_BUDGET = 50        # standard mode's attempts (RoboOlympics' own choice, PROTOCOL §4.5; owner, 2026-10-12)
 RT_RESET_BUDGET = 10     # standard-realtime: PROTOCOL §4b's default (owner, 2026-10-14: every realtime task, 10 resets)
 # The standard-realtime twins (PROTOCOL §4b; owner, 2026-10-14, board 0112): the families whose scene is dynamic

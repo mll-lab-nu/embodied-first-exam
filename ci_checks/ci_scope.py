@@ -104,7 +104,7 @@ def changed_paths(diff_from: str | None, base: str) -> list[str]:
 
 
 def label_of_task(name: str) -> str | None:
-    return tc.bench_of(Path(name)) or None   # a shared prefix (RoboOlympics-Fun / -Match): BENCHMARK_BASES decides
+    return tc.bench_of(Path(name)) or None
 
 
 def owners(path: str) -> set[str]:

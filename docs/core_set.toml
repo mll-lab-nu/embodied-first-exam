@@ -4009,757 +4009,838 @@ luna = "failed"
 # ---- RoboOlympics-Fun
 
 [[task]]
-task = "roboolympics-backflip-i00-privileged"
-base = "roboolympics-backflip-i00"
+task = "roboolympics-fun-backflip-i00-privileged"
+base = "roboolympics-fun-backflip-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-backflip-i00-standard"
-base = "roboolympics-backflip-i00"
+task = "roboolympics-fun-backflip-i00-standard"
+base = "roboolympics-fun-backflip-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-badminton-serve-i00-privileged"
-base = "roboolympics-badminton-serve-i00"
+task = "roboolympics-fun-badminton-serve-i00-privileged"
+base = "roboolympics-fun-badminton-serve-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-badminton-serve-i00-standard"
-base = "roboolympics-badminton-serve-i00"
+task = "roboolympics-fun-badminton-serve-i00-standard"
+base = "roboolympics-fun-badminton-serve-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "success"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-balance-beam-i00-privileged"
-base = "roboolympics-balance-beam-i00"
+task = "roboolympics-fun-balance-beam-i00-privileged"
+base = "roboolympics-fun-balance-beam-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
-
-[[task]]
-task = "roboolympics-balance-beam-i00-standard"
-base = "roboolympics-balance-beam-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-balance-board-i00-privileged"
-base = "roboolympics-balance-board-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-balance-board-i00-standard"
-base = "roboolympics-balance-board-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-basketball-dribble-i00-privileged"
-base = "roboolympics-basketball-dribble-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-basketball-dribble-i00-standard"
-base = "roboolympics-basketball-dribble-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-box-jump-i00-privileged"
-base = "roboolympics-box-jump-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-box-jump-i00-standard"
-base = "roboolympics-box-jump-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-catch-and-shoot-i00-privileged"
-base = "roboolympics-catch-and-shoot-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-catch-and-shoot-i00-standard"
-base = "roboolympics-catch-and-shoot-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-catch-and-shoot-i00-standard-realtime"
-base = "roboolympics-catch-and-shoot-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard-realtime"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-clean-and-jerk-i00-privileged"
-base = "roboolympics-clean-and-jerk-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-clean-and-jerk-i00-standard"
-base = "roboolympics-clean-and-jerk-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-discus-i00-privileged"
-base = "roboolympics-discus-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-discus-i00-standard"
-base = "roboolympics-discus-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-dribble-slalom-i00-privileged"
-base = "roboolympics-dribble-slalom-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-dribble-slalom-i00-standard"
-base = "roboolympics-dribble-slalom-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-dunk-between-legs-i00-privileged"
-base = "roboolympics-dunk-between-legs-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "no result yet"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-dunk-between-legs-i00-standard"
-base = "roboolympics-dunk-between-legs-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "no result yet"
-pick = "owner"
-
-[[task]]
-task = "roboolympics-dunk-i00-privileged"
-base = "roboolympics-dunk-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-dunk-i00-standard"
-base = "roboolympics-dunk-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-dunk-realgrasp-i00-privileged"
-base = "roboolympics-dunk-realgrasp-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "no result yet"
-pick = "owner"
-
-[[task]]
-task = "roboolympics-dunk-realgrasp-i00-standard"
-base = "roboolympics-dunk-realgrasp-i00"
+task = "roboolympics-fun-balance-beam-i00-standard"
+base = "roboolympics-fun-balance-beam-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-high-jump-i00-privileged"
-base = "roboolympics-high-jump-i00"
+task = "roboolympics-fun-balance-board-i00-privileged"
+base = "roboolympics-fun-balance-board-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
-
-[[task]]
-task = "roboolympics-high-jump-i00-standard"
-base = "roboolympics-high-jump-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-hurdles-freestanding-i00-privileged"
-base = "roboolympics-hurdles-freestanding-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "no result yet"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-hurdles-freestanding-i00-standard"
-base = "roboolympics-hurdles-freestanding-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "no result yet"
-pick = "owner"
-
-[[task]]
-task = "roboolympics-hurdles-i00-privileged"
-base = "roboolympics-hurdles-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-hurdles-i00-standard"
-base = "roboolympics-hurdles-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-javelin-i00-privileged"
-base = "roboolympics-javelin-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-javelin-i00-standard"
-base = "roboolympics-javelin-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-juggle-three-i00-privileged"
-base = "roboolympics-juggle-three-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-juggle-three-i00-standard"
-base = "roboolympics-juggle-three-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-juggle-three-i00-standard-realtime"
-base = "roboolympics-juggle-three-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "standard-realtime"
-luna = "failed"
-
-[[task]]
-task = "roboolympics-juggling-feet-i00-privileged"
-base = "roboolympics-juggling-feet-i00"
-benchmark = "RoboOlympics-Fun"
-mode = "privileged"
-luna = "no result yet"
-pick = "owner"
-
-[[task]]
-task = "roboolympics-juggling-feet-i00-standard"
-base = "roboolympics-juggling-feet-i00"
+task = "roboolympics-fun-balance-board-i00-standard"
+base = "roboolympics-fun-balance-board-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-juggling-head-i00-privileged"
-base = "roboolympics-juggling-head-i00"
+task = "roboolympics-fun-basketball-dribble-i00-privileged"
+base = "roboolympics-fun-basketball-dribble-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
-luna = "no result yet"
+luna = "failed"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-juggling-head-i00-standard"
-base = "roboolympics-juggling-head-i00"
+task = "roboolympics-fun-basketball-dribble-i00-standard"
+base = "roboolympics-fun-basketball-dribble-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-juggling-head-i00-standard-realtime"
-base = "roboolympics-juggling-head-i00"
+task = "roboolympics-fun-box-jump-i00-privileged"
+base = "roboolympics-fun-box-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-box-jump-i00-standard"
+base = "roboolympics-fun-box-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-i00-privileged"
+base = "roboolympics-fun-catch-and-shoot-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-i00-standard"
+base = "roboolympics-fun-catch-and-shoot-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-i00-standard-realtime"
+base = "roboolympics-fun-catch-and-shoot-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard-realtime"
 luna = "failed"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-juggling-i00-privileged"
-base = "roboolympics-juggling-i00"
+task = "roboolympics-fun-clean-and-jerk-i00-privileged"
+base = "roboolympics-fun-clean-and-jerk-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-juggling-i00-standard"
-base = "roboolympics-juggling-i00"
+task = "roboolympics-fun-clean-and-jerk-i00-standard"
+base = "roboolympics-fun-clean-and-jerk-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-jump-rope-i00-privileged"
-base = "roboolympics-jump-rope-i00"
+task = "roboolympics-fun-discus-i00-privileged"
+base = "roboolympics-fun-discus-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-discus-i00-standard"
+base = "roboolympics-fun-discus-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dribble-slalom-i00-privileged"
+base = "roboolympics-fun-dribble-slalom-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dribble-slalom-i00-standard"
+base = "roboolympics-fun-dribble-slalom-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dunk-between-legs-i00-privileged"
+base = "roboolympics-fun-dunk-between-legs-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-jump-rope-i00-standard"
-base = "roboolympics-jump-rope-i00"
+task = "roboolympics-fun-dunk-between-legs-i00-standard"
+base = "roboolympics-fun-dunk-between-legs-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "no result yet"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-layup-i00-privileged"
-base = "roboolympics-layup-i00"
+task = "roboolympics-fun-dunk-i00-privileged"
+base = "roboolympics-fun-dunk-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-layup-i00-standard"
-base = "roboolympics-layup-i00"
+task = "roboolympics-fun-dunk-i00-standard"
+base = "roboolympics-fun-dunk-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-long-rope-i00-privileged"
-base = "roboolympics-long-rope-i00"
+task = "roboolympics-fun-dunk-realgrasp-i00-privileged"
+base = "roboolympics-fun-dunk-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-long-rope-i00-standard"
-base = "roboolympics-long-rope-i00"
+task = "roboolympics-fun-dunk-realgrasp-i00-standard"
+base = "roboolympics-fun-dunk-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-long-rope-i00-standard-realtime"
-base = "roboolympics-long-rope-i00"
+task = "roboolympics-fun-high-jump-i00-privileged"
+base = "roboolympics-fun-high-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-high-jump-i00-standard"
+base = "roboolympics-fun-high-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-hurdles-freestanding-i00-privileged"
+base = "roboolympics-fun-hurdles-freestanding-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-hurdles-freestanding-i00-standard"
+base = "roboolympics-fun-hurdles-freestanding-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-hurdles-i00-privileged"
+base = "roboolympics-fun-hurdles-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-hurdles-i00-standard"
+base = "roboolympics-fun-hurdles-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-javelin-i00-privileged"
+base = "roboolympics-fun-javelin-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-javelin-i00-standard"
+base = "roboolympics-fun-javelin-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-i00-privileged"
+base = "roboolympics-fun-juggle-three-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-i00-standard"
+base = "roboolympics-fun-juggle-three-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-i00-standard-realtime"
+base = "roboolympics-fun-juggle-three-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard-realtime"
 luna = "failed"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-pitch-target-i00-privileged"
-base = "roboolympics-pitch-target-i00"
+task = "roboolympics-fun-juggling-feet-i00-privileged"
+base = "roboolympics-fun-juggling-feet-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
-luna = "failed"
+luna = "no result yet"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-pitch-target-i00-standard"
-base = "roboolympics-pitch-target-i00"
+task = "roboolympics-fun-juggling-feet-i00-standard"
+base = "roboolympics-fun-juggling-feet-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-pole-vault-i00-privileged"
-base = "roboolympics-pole-vault-i00"
+task = "roboolympics-fun-juggling-head-i00-privileged"
+base = "roboolympics-fun-juggling-head-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
-luna = "failed"
+luna = "no result yet"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-pole-vault-i00-standard"
-base = "roboolympics-pole-vault-i00"
+task = "roboolympics-fun-juggling-head-i00-standard"
+base = "roboolympics-fun-juggling-head-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-shot-put-i00-privileged"
-base = "roboolympics-shot-put-i00"
+task = "roboolympics-fun-juggling-head-i00-standard-realtime"
+base = "roboolympics-fun-juggling-head-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-i00-privileged"
+base = "roboolympics-fun-juggling-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-shot-put-i00-standard"
-base = "roboolympics-shot-put-i00"
+task = "roboolympics-fun-juggling-i00-standard"
+base = "roboolympics-fun-juggling-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-jump-rope-i00-privileged"
+base = "roboolympics-fun-jump-rope-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-jump-rope-i00-standard"
+base = "roboolympics-fun-jump-rope-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-slalom-i00-privileged"
-base = "roboolympics-slalom-i00"
+task = "roboolympics-fun-layup-i00-privileged"
+base = "roboolympics-fun-layup-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-slalom-i00-standard"
-base = "roboolympics-slalom-i00"
+task = "roboolympics-fun-layup-i00-standard"
+base = "roboolympics-fun-layup-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-standing-long-jump-i00-privileged"
-base = "roboolympics-standing-long-jump-i00"
+task = "roboolympics-fun-long-rope-i00-privileged"
+base = "roboolympics-fun-long-rope-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-long-rope-i00-standard"
+base = "roboolympics-fun-long-rope-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-long-rope-i00-standard-realtime"
+base = "roboolympics-fun-long-rope-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-pitch-target-i00-privileged"
+base = "roboolympics-fun-pitch-target-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-standing-long-jump-i00-standard"
-base = "roboolympics-standing-long-jump-i00"
+task = "roboolympics-fun-pitch-target-i00-standard"
+base = "roboolympics-fun-pitch-target-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-steeplechase-i00-privileged"
-base = "roboolympics-steeplechase-i00"
+task = "roboolympics-fun-pole-vault-i00-privileged"
+base = "roboolympics-fun-pole-vault-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-steeplechase-i00-standard"
-base = "roboolympics-steeplechase-i00"
+task = "roboolympics-fun-pole-vault-i00-standard"
+base = "roboolympics-fun-pole-vault-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tennis-return-realgrasp-i00-privileged"
-base = "roboolympics-tennis-return-realgrasp-i00"
+task = "roboolympics-fun-shot-put-i00-privileged"
+base = "roboolympics-fun-shot-put-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-shot-put-i00-standard"
+base = "roboolympics-fun-shot-put-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-slalom-i00-privileged"
+base = "roboolympics-fun-slalom-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-slalom-i00-standard"
+base = "roboolympics-fun-slalom-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-standing-long-jump-i00-privileged"
+base = "roboolympics-fun-standing-long-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-standing-long-jump-i00-standard"
+base = "roboolympics-fun-standing-long-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-steeplechase-i00-privileged"
+base = "roboolympics-fun-steeplechase-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-steeplechase-i00-standard"
+base = "roboolympics-fun-steeplechase-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-tennis-return-realgrasp-i00-privileged"
+base = "roboolympics-fun-tennis-return-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "success"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-tennis-return-realgrasp-i00-standard"
-base = "roboolympics-tennis-return-realgrasp-i00"
+task = "roboolympics-fun-tennis-return-realgrasp-i00-standard"
+base = "roboolympics-fun-tennis-return-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-tennis-return-realgrasp-i00-standard-realtime"
-base = "roboolympics-tennis-return-realgrasp-i00"
+task = "roboolympics-fun-tennis-return-realgrasp-i00-standard-realtime"
+base = "roboolympics-fun-tennis-return-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard-realtime"
 luna = "failed"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-tennis-serve-i00-privileged"
-base = "roboolympics-tennis-serve-i00"
+task = "roboolympics-fun-tennis-serve-i00-privileged"
+base = "roboolympics-fun-tennis-serve-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tennis-serve-i00-standard"
-base = "roboolympics-tennis-serve-i00"
+task = "roboolympics-fun-tennis-serve-i00-standard"
+base = "roboolympics-fun-tennis-serve-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tennis-serve-realgrasp-i00-privileged"
-base = "roboolympics-tennis-serve-realgrasp-i00"
+task = "roboolympics-fun-tennis-serve-realgrasp-i00-privileged"
+base = "roboolympics-fun-tennis-serve-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "success"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-tennis-serve-realgrasp-i00-standard"
-base = "roboolympics-tennis-serve-realgrasp-i00"
+task = "roboolympics-fun-tennis-serve-realgrasp-i00-standard"
+base = "roboolympics-fun-tennis-serve-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "no result yet"
 pick = "owner"
 
 [[task]]
-task = "roboolympics-triple-jump-i00-privileged"
-base = "roboolympics-triple-jump-i00"
+task = "roboolympics-fun-triple-jump-i00-privileged"
+base = "roboolympics-fun-triple-jump-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-triple-jump-i00-standard"
-base = "roboolympics-triple-jump-i00"
+task = "roboolympics-fun-triple-jump-i00-standard"
+base = "roboolympics-fun-triple-jump-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-vault-i00-privileged"
-base = "roboolympics-vault-i00"
+task = "roboolympics-fun-vault-i00-privileged"
+base = "roboolympics-fun-vault-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-vault-i00-standard"
-base = "roboolympics-vault-i00"
+task = "roboolympics-fun-vault-i00-standard"
+base = "roboolympics-fun-vault-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-volleyball-spike-i00-privileged"
-base = "roboolympics-volleyball-spike-i00"
+task = "roboolympics-fun-volleyball-spike-i00-privileged"
+base = "roboolympics-fun-volleyball-spike-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-volleyball-spike-i00-standard"
-base = "roboolympics-volleyball-spike-i00"
+task = "roboolympics-fun-volleyball-spike-i00-standard"
+base = "roboolympics-fun-volleyball-spike-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-volleyball-spike-i00-standard-realtime"
-base = "roboolympics-volleyball-spike-i00"
+task = "roboolympics-fun-volleyball-spike-i00-standard-realtime"
+base = "roboolympics-fun-volleyball-spike-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-wall-ball-i00-privileged"
-base = "roboolympics-wall-ball-i00"
+task = "roboolympics-fun-wall-ball-i00-privileged"
+base = "roboolympics-fun-wall-ball-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-wall-ball-i00-standard"
-base = "roboolympics-wall-ball-i00"
+task = "roboolympics-fun-wall-ball-i00-standard"
+base = "roboolympics-fun-wall-ball-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 # ---- RoboOlympics-Match
 
 [[task]]
-task = "roboolympics-badminton-duelrl-i01-standard-realtime"
-base = "roboolympics-badminton-duelrl-i01"
+task = "roboolympics-match-badminton-duelrl-i01-standard-realtime"
+base = "roboolympics-match-badminton-duelrl-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-badminton-match-i01-privileged"
-base = "roboolympics-badminton-match-i01"
+task = "roboolympics-match-badminton-match-i01-privileged"
+base = "roboolympics-match-badminton-match-i01"
 benchmark = "RoboOlympics-Match"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-badminton-match-i01-standard-realtime"
-base = "roboolympics-badminton-match-i01"
+task = "roboolympics-match-badminton-match-i01-standard-realtime"
+base = "roboolympics-match-badminton-match-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-badminton-match-i02-privileged"
-base = "roboolympics-badminton-match-i02"
+task = "roboolympics-match-badminton-match-i02-privileged"
+base = "roboolympics-match-badminton-match-i02"
 benchmark = "RoboOlympics-Match"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-badminton-match-i02-standard-realtime"
-base = "roboolympics-badminton-match-i02"
+task = "roboolympics-match-badminton-match-i02-standard-realtime"
+base = "roboolympics-match-badminton-match-i02"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-badminton-match-i04-standard-realtime"
-base = "roboolympics-badminton-match-i04"
+task = "roboolympics-match-badminton-match-i04-standard-realtime"
+base = "roboolympics-match-badminton-match-i04"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-badminton-matchlow-i01-standard-realtime"
-base = "roboolympics-badminton-matchlow-i01"
+task = "roboolympics-match-badminton-matchlow-i01-standard-realtime"
+base = "roboolympics-match-badminton-matchlow-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-fencing-bout-i01-standard"
-base = "roboolympics-fencing-bout-i01"
+task = "roboolympics-match-fencing-bout-i01-standard"
+base = "roboolympics-match-fencing-bout-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-foosball-match-i01-standard-realtime"
-base = "roboolympics-foosball-match-i01"
+task = "roboolympics-match-foosball-match-i01-standard-realtime"
+base = "roboolympics-match-foosball-match-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-soccer-jointcpu-i01-standard-realtime"
-base = "roboolympics-soccer-jointcpu-i01"
+task = "roboolympics-match-soccer-jointcpu-i01-standard-realtime"
+base = "roboolympics-match-soccer-jointcpu-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-soccer-jointgpu-i01-standard-realtime"
-base = "roboolympics-soccer-jointgpu-i01"
+task = "roboolympics-match-soccer-jointgpu-i01-standard-realtime"
+base = "roboolympics-match-soccer-jointgpu-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-soccer-match-i00-privileged"
-base = "roboolympics-soccer-match-i00"
+task = "roboolympics-match-soccer-match-i00-privileged"
+base = "roboolympics-match-soccer-match-i00"
 benchmark = "RoboOlympics-Match"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-soccer-match-i00-standard-realtime"
-base = "roboolympics-soccer-match-i00"
+task = "roboolympics-match-soccer-match-i00-standard-realtime"
+base = "roboolympics-match-soccer-match-i00"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-soccerssl-match-i00-privileged"
-base = "roboolympics-soccerssl-match-i00"
+task = "roboolympics-match-soccerssl-match-i00-privileged"
+base = "roboolympics-match-soccerssl-match-i00"
 benchmark = "RoboOlympics-Match"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-soccerssl-match-i00-standard-realtime"
-base = "roboolympics-soccerssl-match-i00"
+task = "roboolympics-match-soccerssl-match-i00-standard-realtime"
+base = "roboolympics-match-soccerssl-match-i00"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-soccerssl-match-i01-standard-realtime"
-base = "roboolympics-soccerssl-match-i01"
+task = "roboolympics-match-soccerssl-match-i01-standard-realtime"
+base = "roboolympics-match-soccerssl-match-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tabletennis-duelrl-i01-standard-realtime"
-base = "roboolympics-tabletennis-duelrl-i01"
+task = "roboolympics-match-tabletennis-duelrl-i01-standard-realtime"
+base = "roboolympics-match-tabletennis-duelrl-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tabletennis-match-i01-privileged"
-base = "roboolympics-tabletennis-match-i01"
+task = "roboolympics-match-tabletennis-match-i01-privileged"
+base = "roboolympics-match-tabletennis-match-i01"
 benchmark = "RoboOlympics-Match"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tabletennis-match-i01-standard-realtime"
-base = "roboolympics-tabletennis-match-i01"
+task = "roboolympics-match-tabletennis-match-i01-standard-realtime"
+base = "roboolympics-match-tabletennis-match-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tabletennis-match-i02-privileged"
-base = "roboolympics-tabletennis-match-i02"
+task = "roboolympics-match-tabletennis-match-i02-privileged"
+base = "roboolympics-match-tabletennis-match-i02"
 benchmark = "RoboOlympics-Match"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tabletennis-match-i02-standard-realtime"
-base = "roboolympics-tabletennis-match-i02"
+task = "roboolympics-match-tabletennis-match-i02-standard-realtime"
+base = "roboolympics-match-tabletennis-match-i02"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tabletennis-match-i03-standard-realtime"
-base = "roboolympics-tabletennis-match-i03"
+task = "roboolympics-match-tabletennis-match-i03-standard-realtime"
+base = "roboolympics-match-tabletennis-match-i03"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tabletennis-match-i04-standard-realtime"
-base = "roboolympics-tabletennis-match-i04"
+task = "roboolympics-match-tabletennis-match-i04-standard-realtime"
+base = "roboolympics-match-tabletennis-match-i04"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 [[task]]
-task = "roboolympics-tabletennis-matchlow-i01-standard-realtime"
-base = "roboolympics-tabletennis-matchlow-i01"
+task = "roboolympics-match-tabletennis-matchlow-i01-standard-realtime"
+base = "roboolympics-match-tabletennis-matchlow-i01"
 benchmark = "RoboOlympics-Match"
 mode = "standard-realtime"
 luna = "failed"
+pick = "owner"
 
 # ---- RoboPaint
 

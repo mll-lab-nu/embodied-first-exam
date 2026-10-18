@@ -50,8 +50,8 @@ def load(sport: str) -> ModuleType:
 
 
 def task_name(ad, inst: str) -> str:
-    return f"roboolympics-{ad.FAMILY}-{inst}-privileged"
+    return f"roboolympics-match-{ad.FAMILY}-{inst}-privileged"
 
 
 def twin_name(ad, inst: str) -> str:
-    return f"roboolympics-{ad.FAMILY}-{inst}-standard-realtime"
+    return f"roboolympics-match-{ad.FAMILY}-{inst}-standard-realtime"

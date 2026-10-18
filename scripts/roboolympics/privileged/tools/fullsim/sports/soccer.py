@@ -1,4 +1,4 @@
-"""The privileged twin of the exported humanoid soccer 2 v 2 match (roboolympics-soccer-match-i00-standard-realtime).
+"""The privileged twin of the exported humanoid soccer 2 v 2 match (roboolympics-match-soccer-match-i00-standard-realtime).
 
 Adapter of the generic full-simulator setting (tools/fullsim): the frozen sport (sports/soccer, soccer-2v2-10, the
 `match` format: one seat A commands both Booster T1 of team A against the scripted team B), its frozen instance (level
