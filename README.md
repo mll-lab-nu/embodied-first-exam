@@ -10,26 +10,25 @@ simulator), a standard mode (robot as a service) and, for dynamic tasks, a stand
 
 ```bash
 git clone --recurse-submodules git@github.com:mll-lab-nu/embodied-first-exam.git && cd embodied-first-exam
-uv tool install harbor==0.23.0
+uv tool install -e .                             # the `efe` command, with Harbor (harbor==0.23.0)
 cp .env.example .env                             # API keys, or a Claude / ChatGPT subscription login
-
-# one line: the core set (docs/core_set.toml), every mode
-scripts/run.py -a codex -m openai/gpt-6-luna
-
-# --all: every task; --privileged / --standard / --standard-realtime: those modes only (combinable)
-scripts/run.py --all --standard -a claude-code -m anthropic/claude-fable-5-1
-scripts/run.py --core --privileged --standard-realtime -a codex -m openai/gpt-6-luna -n 8
-
-# one task, and the reference checks: the oracle scores 1, the nop agent scores 0
-scripts/run.py --task robotwin_2_0_stack_blocks_two-privileged -a oracle
-scripts/run.py --task robotwin_2_0_stack_blocks_two-privileged -a nop
-harbor view jobs
 ```
 
-Needs Docker, and an NVIDIA GPU with `nvidia-container-toolkit` for the GPU simulators.
+Run from the repository root, with `efe` or with plain Harbor (the same runs):
 
-`scripts/run.py` only picks the task dirs (`--benchmark <label>` and `--dry-run` too) and runs `harbor run -p tasks -i <task> …`;
-every other argument (`-a`, `-m`, `-n` concurrent trials, `-k` attempts, `--ak`, `-y`) goes to Harbor unchanged.
+| What | `efe` | `harbor` |
+|---|---|---|
+| the core set ([docs/core_set.toml](docs/core_set.toml)), every mode | `efe run -a codex -m openai/gpt-6-luna` | `harbor run --registry-path registry.json -d core -a codex -m openai/gpt-6-luna` |
+| every task | `efe run --all …` | `harbor run -p tasks …` |
+| one mode (core) | `efe run --standard …` (`--privileged`, `--standard-realtime`; combinable) | `harbor run --registry-path registry.json -d core -i '*-standard' …` |
+| one mode (all) | `efe run --all --standard …` | `harbor run -p tasks -i '*-standard' …` |
+| one task | `efe run --task <task> …` | `harbor run -p tasks/<task> …` |
+| one benchmark | `efe run --benchmark "RoboTwin 2.0" …` | `harbor run -p tasks -i 'robotwin_2_0_*' …` |
+
+Every other argument goes to Harbor unchanged (`-a` agent, `-m` model, `-n` concurrent trials, `-k` attempts, `--ak`,
+`-y`); `efe list …` prints the task dirs a run would take, and any other `efe` subcommand is Harbor's (`efe view jobs`).
+The reference checks: `-a oracle` scores 1, `-a nop` scores 0. Needs Docker, and an NVIDIA GPU with
+`nvidia-container-toolkit` for the GPU simulators.
 
 ## Tasks
 
