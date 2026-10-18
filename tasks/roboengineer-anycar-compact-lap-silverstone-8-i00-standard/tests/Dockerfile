@@ -2,5 +2,6 @@ FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c3
 LABEL roboengineer.instance_sha256="40ecdfeb531b3f8112ca0caaf241147080777200a699d469f0096b72ba95e0d7"
 COPY grade.py test.sh instance.json /tests/
 RUN echo '40ecdfeb531b3f8112ca0caaf241147080777200a699d469f0096b72ba95e0d7  /tests/instance.json' | sha256sum -c - && chmod +x /tests/test.sh
-# resource limits: the verifier step and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
-COPY rcb_limits.py rcb_limits.json /tests/
+# resource limits: the verifier step (from the monitor image) and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
+COPY --from=ghcr.io/mll-lab-nu/eai-monitor:0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
+COPY rcb_limits.json /tests/rcb_limits.json
