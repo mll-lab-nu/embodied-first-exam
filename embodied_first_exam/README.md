@@ -1,7 +1,7 @@
 # embodied_first_exam/: the code a benchmark's tasks share
 
-One folder per benchmark, `embodied_first_exam/<benchmark>/` (the benchmark's directory name under `scripts/` and
-`docs/benchmarks/`, with `-` written `_`). It holds the single source of what many of the benchmark's task dirs would
+One folder per benchmark, `embodied_first_exam/<benchmark>/`: the same folder name as its task dirs' `tasks/<benchmark>/`
+(`scripts/task_conventions.py` `BENCHMARK_DIRS`, e.g. `behavior-1k`, `robosafebench`, `roboolympics-fun`). It holds the single source of what many of the benchmark's task dirs would
 otherwise each carry a copy of: the tooling the agent imports (`rcb_<benchmark>.py` and its helpers), the graders, the
 simulator service's adapter and shared assets. What is specific to one task (its frozen instance, reference solution,
 texts, Dockerfiles, compose file) stays in `tasks/<benchmark>/<task>/`.
