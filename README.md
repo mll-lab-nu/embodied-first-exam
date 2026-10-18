@@ -10,14 +10,13 @@ simulator), a standard mode (robot as a service) and, for dynamic tasks, a stand
 
 ```bash
 git clone --recurse-submodules git@github.com:mll-lab-nu/embodied-first-exam.git && cd embodied-first-exam
-uv tool install --force -e . --with-executables-from harbor     # harbor 0.23.0 with the flags below, and efe
+uv tool install --force -e . --with-executables-from harbor     # harbor 0.23.0 with the flags below
 cp .env.example .env
 
 harbor run -a codex -m openai/gpt-6-luna              # core set (default, --core)
 harbor run --all -a codex -m openai/gpt-6-luna        # every task
 harbor run --standard -a codex -m openai/gpt-6-luna   # --privileged / --standard / --standard-realtime
 harbor run -p tasks/<task> -a oracle                  # one task
-efe run --all -a codex -m openai/gpt-6-luna           # efe run: the same
 ```
 
 ## Tasks
