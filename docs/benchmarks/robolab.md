@@ -24,8 +24,8 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
   evaluation loop does), with its state hash, made in the image by `rcb_robolab.py make-instance --task <f> --seed 0`;
   the tasks carry it in `environment/` and `tests/` (privileged) and `environment/sim/` (standard). Each instance was
   checked in a second fresh process: the same hash, success false at t = 0 and during a 1 s hold.
-- New family: add its entry to `families.json` and its frozen instance as `scripts/robolab/instances/<family>.json` (the
-  generator reads it from there while it exists), run the generator and `cd tasks && harbor add --scan .`, then delete
+- New family: add its entry to `families.json` and its frozen instance as `scripts/robolab/instances/<family>.json`
+  (`mkdir -p scripts/robolab/instances` first; the generator reads it from there while it exists), run the generator and `cd tasks && harbor add --scan .`, then delete
   `scripts/robolab/instances/<family>.json`: the task dir's copy is the one kept.
 
 ## Oracle and review

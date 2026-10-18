@@ -29,7 +29,7 @@ def instance_path(fam: str) -> pathlib.Path:
     """The family's frozen instance: instances/<f>-i00.json while it exists (a new or remade one), else the committed
     privileged task's environment/instance.json (in the image: /tasks, which dev.sh mounts)."""
     new = HERE / "instances" / f"{fam}-i00.json"
-    return new if new.is_file() else HERE.parents[1] / "tasks" / f"roboolympics-{fam}-i00-privileged/environment/instance.json"
+    return new if new.is_file() else HERE.parent.parent / "tasks" / f"roboolympics-{fam}-i00-privileged/environment/instance.json"
 
 
 def main() -> int:

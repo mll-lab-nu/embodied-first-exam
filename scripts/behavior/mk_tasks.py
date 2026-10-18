@@ -492,6 +492,12 @@ def load_inputs(families: list[str], F: dict) -> None:
             else:
                 sol = tasks / task / "solution"
                 files = sorted(sol.glob(PRIV_SOLUTION)) if names is None else [sol / n for n in names]
+                # every other file of the committed solution/ is the template's (a family file not read back would be lost)
+                tpl = tasks / (TP if mode == "privileged" else TS) / "solution"
+                template_names = ({f.name for f in tpl.iterdir()} - {f.name for f in tpl.glob(PRIV_SOLUTION)} if names is None
+                                  else {f.name for f in tpl.iterdir()} - set(names))
+                extra = sorted({f.name for f in sol.iterdir()} - template_names - {f.name for f in files})
+                assert not extra, (fam, mode, "solution/ files this does not read back", extra)
             assert files, (fam, mode, "no reference solution")
             SOLUTIONS[fam, mode] = {f.name: f.read_bytes() for f in files}
 

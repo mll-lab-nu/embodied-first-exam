@@ -36,7 +36,7 @@ def main() -> int:
                 path = ROOT / "tasks" / f"bigym2-{fam}-i00-privileged" / "environment/instance.json"
             same = path.is_file() and path.read_text() == text
             bad += not same
-            print(f"{'ok  ' if same else 'DIFF'} {path.name}", flush=True)
+            print(f"{'ok  ' if same else 'DIFF'} {fam}", flush=True)
         else:
             path.parent.mkdir(exist_ok=True)
             path.write_text(text)
