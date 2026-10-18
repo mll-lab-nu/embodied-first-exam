@@ -114,6 +114,8 @@ add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
 add python3 ci_checks/check-build-stamps.py
 # PROTOCOL §4: the easy set (docs/easy_set.toml) names existing task bases, with a known reason and their benchmark label
 add python3 scripts/task_conventions.py easy-set --check
+# every task dir has its benchmark label; a task-dir prefix two benchmarks share (roboolympics-) names each base explicitly
+add python3 scripts/task_conventions.py benchmarks --check
 
 t0=$SECONDS
 printf %s "$cmds" | python3 "$root/ci_checks/parallel.py" --advisory; rc=$?

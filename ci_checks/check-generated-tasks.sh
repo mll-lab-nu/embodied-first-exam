@@ -39,7 +39,7 @@ gens=("kinder/gen_tasks.py check" "humanoidbench/gen_tasks.py check" "behavior/m
 for g in "roboolympics/gen_tasks.py check" "roboolympics/privileged/generate.py --check" "roboolympics/fullsim/generate.py --check" "roboarc/mk_tasks.py --check" "yamlab/mk_tasks.py --check" \
          "pandadyn/mk_tasks.py --check" "ambench/mk_tasks.py --check" "ispatialgym/mk_tasks.py --check" "robodojo/mk_tasks.py --check" \
          "ikea_mujoco/mk_tasks.py --check" "ikea_mujoco/mk_standard_tasks.py --check" \
-         "bigym2/gen_tasks.py check" "robofunolympics/gen_tasks.py check" \
+         "bigym2/gen_tasks.py check" \
          "dexhand/generate.py --check --release" \
          "molmospaces/mk_tasks.py --check" \
          "control_transfer/gen_tasks.py check" "quadrotor_landing/gen_tasks.py check" \

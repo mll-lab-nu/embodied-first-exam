@@ -6,6 +6,7 @@ pre-v1.0 task (old field names, protocol spelling, README layout); renaming dire
 
     python3 scripts/task_conventions.py tasks/<task> [...]     # normalize these tasks
     python3 scripts/task_conventions.py --check tasks/<task>   # exit 1 if normalizing would change anything
+    python3 scripts/task_conventions.py benchmarks [--check]   # every task dir's benchmark label (BENCHMARK_BASES)
 
 What it does:
 - `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-standard-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
@@ -82,7 +83,9 @@ BENCHMARKS = [  # (directory prefix, label)
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
-    ("roboolympics-", "RoboOlympics"),       # formerly RoboFunOlympics (`robofunolympics-`; renamed 2026-10-14, owner)
+    # one task-dir prefix, two benchmarks (owner 2026-10-18, board 0160): BENCHMARK_BASES below names every base of each
+    ("roboolympics-", "RoboOlympics-Fun"),    # the humanoid sports families (formerly RoboFunOlympics, renamed 2026-10-14)
+    ("roboolympics-", "RoboOlympics-Match"),  # the matches RoboOlympics exports with its own service, and their twins
     ("rsb-", "RoboSafeBench"),    # formerly `cell-` (renamed in 0.5.4, the authors); an agent can read its task name
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
@@ -90,6 +93,41 @@ BENCHMARKS = [  # (directory prefix, label)
     ("ikea-", "IKEA MuJoCo"),
     ("roboengineer-", "roboEngineer"),   # its own multi-round runtime eai-policy/1.x (scripts/roboengineer/exported.toml)
 ]
+# A prefix that several BENCHMARKS labels share: the label of a task is the one whose list names its base (the task name
+# without the mode suffix), explicitly and completely (`task_conventions.py benchmarks --check`: every task dir has a
+# label, every listed base has a task dir, no base in two lists). The task dirs keep their names: results are keyed by
+# them. RoboOlympics (owner 2026-10-18, board 0160): RoboOlympics-Fun = the single-humanoid sports families of
+# scripts/roboolympics/families.json (gen_tasks.py); RoboOlympics-Match = the tasks RoboOlympics' own exporter writes
+# (scripts/roboolympics/exported.toml: matches, duels, bouts) and their privileged twins.
+RO_FUN_BASES = (
+    "roboolympics-backflip-i00", "roboolympics-balance-beam-i00", "roboolympics-balance-board-i00",
+    "roboolympics-basketball-dribble-i00", "roboolympics-bowling-i00", "roboolympics-box-jump-i00",
+    "roboolympics-boxing-i00", "roboolympics-catch-and-shoot-i00", "roboolympics-catch-i00",
+    "roboolympics-clean-and-jerk-i00", "roboolympics-crawl-i00", "roboolympics-discus-i00",
+    "roboolympics-dribble-slalom-i00", "roboolympics-dunk-i00", "roboolympics-free-throw-i00",
+    "roboolympics-golf-putt-i00", "roboolympics-header-i00", "roboolympics-high-bar-swing-i00",
+    "roboolympics-high-jump-i00", "roboolympics-hurdles-i00", "roboolympics-javelin-i00",
+    "roboolympics-juggle-three-i00", "roboolympics-juggling-i00", "roboolympics-kick-target-i00",
+    "roboolympics-layup-i00", "roboolympics-long-jump-i00", "roboolympics-paddle-bounce-i00",
+    "roboolympics-penalty-kick-i00", "roboolympics-pitch-target-i00", "roboolympics-pole-vault-i00",
+    "roboolympics-shot-put-i00", "roboolympics-shuttle-run-i00", "roboolympics-slalom-i00", "roboolympics-sprint-i00",
+    "roboolympics-standing-long-jump-i00", "roboolympics-steeplechase-i00", "roboolympics-table-tennis-return-i00",
+    "roboolympics-tennis-return-i00", "roboolympics-tennis-serve-i00", "roboolympics-toes-to-bar-i00",
+    "roboolympics-trap-ball-i00", "roboolympics-triple-jump-i00", "roboolympics-vault-i00",
+    "roboolympics-vertical-jump-i00", "roboolympics-volley-shot-i00", "roboolympics-volleyball-bump-i00",
+    "roboolympics-volleyball-serve-i00", "roboolympics-volleyball-set-i00", "roboolympics-volleyball-spike-i00",
+    "roboolympics-wall-ball-i00",
+)
+RO_MATCH_BASES = (
+    "roboolympics-badminton-duelrl-i01", "roboolympics-badminton-match-i01", "roboolympics-badminton-match-i02",
+    "roboolympics-badminton-match-i04", "roboolympics-badminton-matchlow-i01", "roboolympics-fencing-bout-i01",
+    "roboolympics-fencing-bout-i02", "roboolympics-foosball-match-i01", "roboolympics-soccer-jointcpu-i01",
+    "roboolympics-soccer-jointgpu-i01", "roboolympics-soccer-match-i00", "roboolympics-soccerssl-match-i00",
+    "roboolympics-soccerssl-match-i01", "roboolympics-tabletennis-duelrl-i01", "roboolympics-tabletennis-match-i01",
+    "roboolympics-tabletennis-match-i02", "roboolympics-tabletennis-match-i03", "roboolympics-tabletennis-match-i04",
+    "roboolympics-tabletennis-matchlow-i01",
+)
+BENCHMARK_BASES = {"RoboOlympics-Fun": RO_FUN_BASES, "RoboOlympics-Match": RO_MATCH_BASES}   # label -> its bases
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
@@ -315,7 +353,44 @@ def modes_table() -> str:
 
 
 def bench_of(task: Path) -> str:
-    return next((label for prefix, label in BENCHMARKS if task.name.startswith(prefix)), "")
+    """The task's BENCHMARKS label (a task dir or a base): its first matching prefix's label; where several labels share
+    that prefix, the one whose BENCHMARK_BASES list names the base. "" for a name no label claims."""
+    name = Path(task).name
+    prefix = next((p for p, _ in BENCHMARKS if name.startswith(p)), None)
+    labels = [label for p, label in BENCHMARKS if p == prefix]
+    if len(labels) <= 1:
+        return labels[0] if labels else ""
+    base = base_of(Path(name))
+    return next((label for label in labels if base in BENCHMARK_BASES.get(label, ())), "")
+
+
+def check_benchmarks(tasks_dir: Path | None = None) -> list[str]:
+    """What is wrong with the benchmark labels (`benchmarks --check`): a task dir no label claims, a base listed for a
+    shared prefix that has no task dir, a base in two lists, a listed base outside its label's prefix, a prefix shared
+    by labels without a list."""
+    tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
+    names = sorted(p.name for p in tasks_dir.iterdir() if (p / "task.toml").is_file())
+    have = {base_of(Path(n)) for n in names}
+    bad = [f"{n}: no benchmark label (scripts/task_conventions.py BENCHMARKS / BENCHMARK_BASES)" for n in names
+           if not bench_of(Path(n))]
+    seen: dict[str, str] = {}
+    for label, bases in BENCHMARK_BASES.items():
+        prefixes = [p for p, lab in BENCHMARKS if lab == label]
+        if not prefixes:
+            bad.append(f"BENCHMARK_BASES {label!r}: not a BENCHMARKS label")
+        for b in bases:
+            if b in seen:
+                bad.append(f"{b}: listed for {seen[b]!r} and {label!r}")
+            seen[b] = label
+            if b not in have:
+                bad.append(f"{b}: listed for {label!r}, but no task directory {b}-<mode> under tasks/")
+            if prefixes and not b.startswith(tuple(prefixes)):
+                bad.append(f"{b}: listed for {label!r}, outside its prefix {prefixes}")
+    for p in {p for p, _ in BENCHMARKS}:
+        labs = [lab for q, lab in BENCHMARKS if q == p]
+        if len(labs) > 1 and any(lab not in BENCHMARK_BASES for lab in labs):
+            bad.append(f"prefix {p!r} is shared by {labs}: each needs its list in BENCHMARK_BASES")
+    return bad
 
 
 def read_text(p: Path) -> str | None:
@@ -1410,6 +1485,19 @@ def snapshot(task: Path) -> dict[str, bytes]:
 def main(argv: list[str]) -> int:
     if argv[:1] == ["modes"]:          # the mode registry for the shell checks (PROTOCOL §2.16)
         print(modes_table())
+        return 0
+    if argv[:1] == ["benchmarks"]:     # `benchmarks --check`: every task dir has its label (BENCHMARK_BASES); `benchmarks`: the labels
+        root = Path(__file__).resolve().parents[1] / "tasks"
+        if "--check" in argv:
+            bad = check_benchmarks(root)
+            for b in bad:
+                print(f"FAIL benchmark labels: {b}")
+            if not bad:
+                n = sum(1 for p in root.iterdir() if (p / "task.toml").is_file())
+                print(f"ok benchmark labels: {n} task dirs, each with its label")
+            return 1 if bad else 0
+        for t in sorted(p for p in root.iterdir() if (p / "task.toml").is_file()):
+            print(f"{t.name}\t{bench_of(t)}")
         return 0
     if argv[:1] == ["easy-set"]:       # `easy-set --check`: docs/easy_set.toml (PROTOCOL §4); `easy-set`: list its tasks
         if "--solved-by" in argv:      # `easy-set --solved-by luna`: the bases that run solved (SOLVED_BY)

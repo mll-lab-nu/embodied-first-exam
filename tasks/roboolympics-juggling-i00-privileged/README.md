@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Fun |
 | Mode | privileged |
 | Twin | `roboolympics-juggling-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
