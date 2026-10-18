@@ -39,17 +39,16 @@ assert IMAGE == f"ghcr.io/mll-lab-nu/eai-ikea-mujoco:{VERSION}", (IMAGE, VERSION
 sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as TC  # noqa: E402  the protocol's conventions: every generator ends with normalize(task_dir)
 # Work in progress, not shipped (owner 2026-10-16, the YAMLab rule: a task ships only with an oracle): no reference passes
-# the arm joint-speed clamp in either mode yet; each needs a new closed-loop reference. Rendered to
-# scripts/ikea_mujoco/wip/tasks/ (not tasks/, not in any manifest) so the work stays on the branch.
+# the arm joint-speed clamp in either mode yet; each needs a new closed-loop reference. Not rendered in either mode (no
+# task directory, not in any manifest); their scenes stay in the image. task -> why.
 WIP = {
     # the second batch (2026-10-16): in WIP until its reference passes every acceptance gate on the final physics
     "stenerik": ("no reference passes yet: the closed-loop build seats all six screws, joins both supports and peels the "
-                 "four pads on the final physics, but its pad presses stay below the 1 N / 0.3 s bond gate "
-                 "(scripts/ikea_mujoco/wip/oracles/stenerik/)"),
+                 "four pads on the final physics, but its pad presses stay below the 1 N / 0.3 s bond gate"),
     "kyrre": ("no reference passes: the author's demo (within the joint-speed limits) loses screw 2-1 at its hole under "
               "the final physics (4 of 9 welds), and one replay of it takes 12,316 s on a dedicated Quest core (85 % of "
-              "the budget); every time-warp of the demo breaks it by the second screw (scripts/ikea_mujoco/wip/oracles/kyrre/)"),
-    "uppsta": ("timing: the closed-loop reference passes final_check (scripts/ikea_mujoco/wip/oracles/uppsta/), but one "
+              "the budget); every time-warp of the demo breaks it by the second screw"),
+    "uppsta": ("timing: the closed-loop reference passes final_check, but one "
                "successful replay takes about 6000 s on a fast host (guide run 5911 / 6139 s on ws2; a demo-length replay "
                "8407 s on a Quest Xeon 6230R core) against the 4320 s bar: the two screw drives cost 22-26 ms per row "
                "(1300-2100 contacts with the helical thread geoms), about 4400 s, and the demo already moves at the limits "
@@ -58,7 +57,6 @@ WIP = {
                "through the two top holes (8 variants; not a fit problem: the prism is inscribed in the rod's cylinder, as in "
                "RoboARC, and the seated rods clear the top by >= 4 mm)"),
 }
-WIP_TASKS = HERE / "wip" / "tasks"
 # The agent's egress (PROTOCOL §2.11, H.6): the two lines `scripts/set_agent_egress.py allowlist` writes, with that
 # script's HOSTS (read from its text: it acts on import), in both modes.
 _HOSTS = re.findall(r'"([^"]+)"', re.search(r"(?ms)^HOSTS = \[(.*?)\]", (ROOT / "scripts/set_agent_egress.py").read_text()).group(1))
@@ -67,12 +65,12 @@ EGRESS = ('network_mode = "allowlist"      # model APIs and package registries (
 
 
 def default_tasks() -> list[str]:
-    """Every task in bindings.json; the WIP ones only where their render directory exists (not on main)."""
-    return sorted(t for t in BIND["tasks"] if t not in WIP or WIP_TASKS.is_dir())
+    """Every task in bindings.json but the WIP ones."""
+    return sorted(t for t in BIND["tasks"] if t not in WIP)
 
 
 def task_dir(t: str, mode: str = "privileged") -> pathlib.Path:
-    return (WIP_TASKS if t in WIP else TASKS) / name(t, mode)
+    return TASKS / name(t, mode)
 
 
 # Closed-loop references (built phase by phase on the final physics with true-state feedback, recorded as the executed
@@ -94,13 +92,6 @@ CLOSED_LOOP = {
                "each carried part held on its reference pose (near the host: on its connector error) by an integral loop "
                "through damped-least-squares IK, a gentle press until the weld engages, one arm move re-pathed in joint "
                "space to avoid a self-contact; the rows are the targets executed within the joint-speed limits"),
-    "uppsta": ("a closed-loop reference built on the final physics by `scripts/ikea_mujoco/wip/oracles/uppsta/search.py` "
-               "(`uppsta_oracle.py`): the guide is the author's demo (each 2.5 ms tick reached over its two rows) run in the "
-               "scene without the prism rule, where it assembles the block; segment by segment (the arms' releases), each "
-               "grasp approach offset to where the part really is, each carried part held on its guide pose (relative to "
-               "the board near it) by an integral loop through damped-least-squares IK, the hex key's tip servoed onto the "
-               "hole's axis, a screw's spin matched modulo 60 degrees, a part pressed a little deeper before its release "
-               "where it would tip over; the rows are the targets executed within the joint-speed limits"),
 }
 
 
@@ -119,13 +110,11 @@ def ref_words(t: str):
 
 def closed_loop_ref(t: str):
     """The task's own reference file (CLOSED_LOOP or OWN_REFS), None if it has none. A new reference is dropped in as
-    scripts/ikea_mujoco/oracles/<task>/<task>_ref.npz or <task>.npz (wip/oracles/<task>/ for a WIP task) and taken from
-    there while it exists; otherwise the canonical copy is the standard twin's solution/oracle_actions.npz in tasks/ (the
+    scripts/ikea_mujoco/oracles/<task>/<task>_ref.npz or <task>.npz and taken from there while it exists; otherwise the canonical copy is the standard twin's solution/oracle_actions.npz in tasks/ (the
     privileged solution/trajectory.npz is the same file). Once both twins are rendered the dropped-in file is not kept."""
     if not ref_words(t):
         return None
-    for d in (HERE / "oracles" / t, HERE / "wip" / "oracles" / t):      # a WIP task's reference lives under wip/oracles/
-      for f in (d / f"{t}_ref.npz", d / f"{t}.npz"):
+    for f in (HERE / "oracles" / t / f"{t}_ref.npz", HERE / "oracles" / t / f"{t}.npz"):
         if f.is_file():
             return f
     f = task_dir(t, "standard") / "solution/oracle_actions.npz"
@@ -602,25 +591,19 @@ def main() -> int:
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--demos", type=pathlib.Path, default=None)
     a = ap.parse_args()
+    bad = [t for t in a.tasks if t in WIP]
+    if bad:
+        ap.error(f"{bad}: work in progress, not rendered (WIP)")
     tasks = a.tasks or default_tasks()
     changed = []
+    for t in sorted(WIP) if not a.tasks else []:
+        stale = TASKS / name(t)                 # a WIP task has no privileged dir under tasks/
+        if stale.is_dir():
+            changed.append(f"{name(t)} (removed from tasks/: WIP)")
+            if not a.check:
+                shutil.rmtree(stale)
     for t in tasks:
         dst = task_dir(t)
-        for mode in ("privileged", "standard"):        # a task promoted out of WIP leaves scripts/ikea_mujoco/wip/
-            old_wip = WIP_TASKS / name(t, mode)
-            if t not in WIP and old_wip.is_dir():
-                changed.append(f"{old_wip.name} (removed from {WIP_TASKS.relative_to(ROOT)})")
-                if not a.check:
-                    shutil.rmtree(old_wip)
-        stale = TASKS / name(t)
-        if t in WIP and stale.is_dir():        # a WIP task leaves tasks/ (its render lives under scripts/ikea_mujoco/wip/)
-            changed.append(f"{name(t)} (moved to {WIP_TASKS.relative_to(ROOT)})")
-            if not a.check:
-                WIP_TASKS.mkdir(parents=True, exist_ok=True)
-                if not dst.exists():
-                    shutil.move(str(stale), str(dst))
-                else:
-                    shutil.rmtree(stale)
         with tempfile.TemporaryDirectory() as tmp:
             out = pathlib.Path(tmp) / name(t)
             twin = task_dir(t, "standard")

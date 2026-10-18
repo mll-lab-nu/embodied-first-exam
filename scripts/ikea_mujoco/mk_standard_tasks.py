@@ -17,6 +17,7 @@ copied unchanged into every task:
   scripts/ikea_mujoco/standard/ server.py, ikea_rig.py, finalize.sh (the sim service), grade.py (the verifier: transcribes
                                the live episode's final.json; no grading replay, owner 2026-10-17, board 0150/0151),
                                oracle_replay.py (the reference solution); std_reference.py makes the references
+  scripts/roboarc/shared/       nyx_direct.py (RoboARC's Nyx driver, which ikea_nyx.py uses)
 Images: the sim sidecar runs images/ikea-mujoco/sim (eai-ikea-mujoco + Nyx in its own venv, EGL, ffmpeg); the agent and the
 verifier the shared standard client base (scripts/eai_standard/client.env)."""
 from __future__ import annotations
@@ -34,9 +35,8 @@ IMAGE = P.IMAGE
 SIM_IMAGE = f"ghcr.io/mll-lab-nu/eai-ikea-mujoco-sim:{(ROOT / 'images/ikea-mujoco/sim/VERSION').read_text().strip()}"
 CLIENT_IMAGE = dict(l.split("=", 1) for l in (EAI / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))["CLIENT_IMAGE"]
 RIGS = json.loads((STD / "rigs.json").read_text())
-# RoboARC's Nyx driver (its shared/nyx_direct.py, sha256 4809c45a7a5c...), a byte-identical copy kept here so that this
-# benchmark builds from its own paths; copied unchanged into every task (ikea_nyx.py uses it)
-NYX_DIRECT = STD / "nyx_direct.py"
+# RoboARC's Nyx driver, read from RoboARC's own source and copied unchanged into every task (ikea_nyx.py uses it)
+NYX_DIRECT = ROOT / "scripts/roboarc/shared/nyx_direct.py"
 AGENT_S = P.AGENT_S               # the privileged twin's wall-clock cutoff (PROTOCOL v2.0 H.7): the only hard budget
 # The speed rule's numbers, for the texts: THE table is rcb_ikea.JOINT_SPEED_LIMITS_RAD_S / GRIPPER_SPEED_LIMITS (the
 # service and the grader read it); checked against its source here, so the texts cannot drift from it.
@@ -46,8 +46,7 @@ assert "(2.175, 2.175, 2.175, 2.175, 2.61, 2.61, 2.61)" in _RCB_SRC and "j: 3.14
     and "\nGRIPPER_SPEED_LIMITS: dict = {}" in _RCB_SRC, "rcb_ikea's speed table changed: update SPEEDS and the texts"
 PROTOCOL = "eai-standard/2.4"
 # Tasks that ship privileged-only (a privileged task without a standard twin): none. The tasks out of this wave in BOTH
-# modes are mk_tasks.WIP (no reference passes under the arm joint-speed clamp; P.task_dir: rendered under
-# scripts/ikea_mujoco/wip/tasks/, never under tasks/). Their standard twins render there too, without a reference. The
+# modes are mk_tasks.WIP (no reference passes under the arm joint-speed clamp; rendered in neither mode). The
 # scans behind WIP (2026-10-15, fresh replays with final_check): eket, 10 retimings + the original rows on the fix-3b scene
 # with the EPA-patched MuJoCo (track at lags 0-0.3, centred, straight-line dilation) all stop before side B's slide;
 # vesken, 11 retimings (the same, plus two despike settings) all stop at 6 of the 23 snap connections.
@@ -459,7 +458,7 @@ velocity limits ({speed_words(t, 0, True)}). The reference needs {e.get('rows', 
 time).
 
 ## Reference solution
-{f"None yet: this task is work in progress ({P.WIP[t]}); `solution/solve.sh` needs a `solution/oracle_actions.npz` that passes. " if t in P.WIP else ""}`solution/solve.sh` runs `solution/oracle_replay.py`: it submits the control steps of `solution/oracle_actions.npz` through
+`solution/solve.sh` runs `solution/oracle_replay.py`: it submits the control steps of `solution/oracle_actions.npz` through
 the client as `joint_position` chunks of 10 s, `hold`, one control step per row, as float64 (the client's transport;
 `Robot.submit` sends float32), so the service executes exactly those rows. {std_ref_text(t, ref)},
 so the service's speed limiter never has to act (`n_clipped` 0).
@@ -558,9 +557,9 @@ def main() -> int:
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--refs", type=pathlib.Path, default=None)
     a = ap.parse_args()
-    bad = [t for t in a.tasks if t in NO_TWIN]
+    bad = [t for t in a.tasks if t in NO_TWIN or t in P.WIP]
     if bad:
-        ap.error(f"{bad}: privileged-only in this wave (NO_TWIN)")
+        ap.error(f"{bad}: privileged-only in this wave (NO_TWIN) or work in progress (WIP)")
     tasks = a.tasks or [t for t in P.default_tasks() if t not in NO_TWIN]
     changed = []
     for t in sorted(set(NO_TWIN) | set(P.WIP)) if not a.tasks else []:
