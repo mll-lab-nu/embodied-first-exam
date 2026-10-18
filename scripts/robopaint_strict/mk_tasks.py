@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the RoboPaint tasks: tasks/robopaint-<family>-<target>-i<NN>-{privileged,standard} (docs/benchmarks/robopaint.md).
+"""Generate the RoboPaint tasks: tasks/robopaint/robopaint-<family>-<target>-i<NN>-{privileged,standard} (docs/benchmarks/robopaint.md).
 
     python3 scripts/robopaint_strict/mk_tasks.py                          # (re)write every pair; `git diff tasks/` stays empty
     python3 scripts/robopaint_strict/mk_tasks.py --check                  # write nothing; exit 1 if a task dir differs
@@ -8,8 +8,10 @@ Needs only Python 3 (no simulator, no numpy). Then `cd tasks && harbor add --sca
 
 Two stages, the second on the output of the first:
   1. the pair without process rules: scripts/robopaint_brush_mk_task.py --refresh into a temporary directory. It rebuilds the pair
-     from its committed frozen files (instance, picture, reference plan), the committed tooling of its family's template pair
-     (graders, sidecars, solution code, and the wiring of rcb_brush_strict.py) and the texts of scripts/robopaint_templates/;
+     from its committed frozen files (instance, picture, reference plan), the committed code of its family's template pair
+     (sidecars, solution code, and the wiring of rcb_brush_strict.py), the shared tooling and graders of
+     embodied_first_exam/robopaint/ (the task's Dockerfiles COPY them --from the pinned files-only image images/robopaint-files/)
+     and the texts of scripts/robopaint_templates/;
   2. the process rules (this script), added to that pair:
   - every copy of the frozen instance gets the rules in target.success: max_path_mm everywhere; calligraphy and lettering
     min_mark_width_mm (colouring in = a longer path of thin marks); paintings max_scribble, max_scribble_share,
@@ -19,9 +21,10 @@ Two stages, the second on the output of the first:
     on the main sheet (reference_path_mm, reference_mark_width_mm, measured by measure_reference.py in the base image);
     max_path_mm = path_factor x that path rounded up to round_mm, min_mark_width_mm = mark_factor x that width rounded down to
     0.01 mm. The scene and its hash (instance_sha) do not change;
-  - rcb_brush_strict.py (this directory: graders' side only, tests/, environment/scorer/, environment/sim/) applies them: the
-    verifier replays with it (tests/grade.py, tests/Dockerfile), the privileged scoring service imports it (RCB_TOOL_MODULE) and the
-    standard collect hook replays with it (RCB_TOOL). The tasks' wiring comes with the template pair's code; this script checks it;
+  - rcb_brush_strict.py (embodied_first_exam/robopaint/: graders' side only) applies them: the privileged verifier replays with it
+    (grade.py; tests/Dockerfile COPYs both --from the files-only image), the privileged scoring service imports it
+    (RCB_TOOL_MODULE; this script writes its copy into environment/scorer/) and the standard sim service scores with it (RCB_TOOL;
+    the copy in environment/sim/). The tasks' wiring comes with the template pair's code; this script checks it;
   - the texts: the rules from texts/rules_<group>_<mode>.md in instruction.md (after "Target and score"), texts/readme_<mode>.md
     in README.md, a sentence in the task.toml description, the oracle evidence (rules.json: oracle_evidence, or the family's own
     entry in oracle_evidence_family, or the pair's own entry in oracle_evidence_pairs), and the pair's change log (rules.json
@@ -41,6 +44,11 @@ import argparse, json, math, os, pathlib, re, subprocess, sys, tempfile
 sys.dont_write_bytecode = True
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts" / "robopaint_strict"
+sys.path.insert(0, str(ROOT / "scripts"))
+import files_image  # noqa: E402  (files-only images: images/robopaint-files/FILES.json)
+sys.path.pop(0)
+FILES = "robopaint-files"
+SHARED = ROOT / files_image.spec(FILES)["source"]   # embodied_first_exam/robopaint/: the tooling's and the graders' one source
 MODULE = "rcb_brush_strict.py"
 GROUP = {
     "kaishu": "calligraphy",
@@ -55,7 +63,7 @@ SRC_RE = re.compile(r"^robopaint-(kaishu|xingshu|caoshu|lettering|acrylic|oil)-(
 RULE_KEYS = ("max_path_mm", "min_mark_width_mm", "max_scribble", "max_scribble_share", "scribble_min_mm",
              "stroke_gap_mm", "mark_min_width_mm", "max_stroke_path_mm")
 SPLIT_KEYS = ("stroke_gap_mm", "mark_min_width_mm", "max_stroke_path_mm")   # = rcb_brush_strict.SPLIT_KEYS
-PLACES = {"privileged": ("tests/", "environment/scorer/"), "standard": ("environment/sim/",)}  # the graders' copies of MODULE
+PLACES = {"privileged": ("environment/scorer/",), "standard": ("environment/sim/",)}  # the sidecars' copies of MODULE (bind-mounted)
 # README "Change Log" entries of every pair, by mode, written after rules.json's change_log_all: the second review of board 0067
 # (kept here, next to the code they describe; rules.json holds the earlier ones).
 CODE_CHANGES = {
@@ -136,10 +144,9 @@ GROUP_CHANGES = {
         "nothing is re-run (scripts/robopaint_strict/regrade.py). The instruction states the rule.",
     ],
 }
-WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code
+WIRING = {  # (file, what it holds when rcb_brush_strict.py is wired in), from the template pair's code (privileged grade.py: main)
     "privileged": (
-        ("tests/grade.py", MODULE),
-        ("tests/Dockerfile", f" {MODULE} "),
+        ("tests/Dockerfile", files_image.copy_line(FILES, MODULE, f"/tests/{MODULE}")),
         ("environment/docker-compose.yaml", "RCB_TOOL_MODULE: rcb_brush_strict"),
     ),
     "standard": (("environment/docker-compose.yaml", f"RCB_TOOL: /srv/{MODULE}"),),
@@ -247,9 +254,9 @@ def rebuild_base(todo: list[str], out: pathlib.Path) -> None:
         sys.executable,
         str(ROOT / "scripts" / "robopaint_brush_mk_task.py"),
         "--refresh",
-        *[str(ROOT / "tasks" / f"{b}-privileged") for b in todo],
+        *[str(ROOT / "tasks" / "robopaint" / f"{b}-privileged") for b in todo],
         "--template-root",
-        str(ROOT / "tasks"),
+        str(ROOT / "tasks" / "robopaint"),
         "--out-root",
         str(out),
     ]
@@ -262,7 +269,7 @@ def plan_pair(base: str, cfg: dict, stage: pathlib.Path) -> dict:
     """{task dir name: {rel path: (bytes, mode)}} for both twins of the pair <base>, from stage 1's output in `stage`."""
     fam, slug = SRC_RE.match(base).groups()
     rule, v = rules_for(base, cfg)
-    module = (HERE / MODULE).read_bytes()
+    module = (SHARED / MODULE).read_bytes()
     texts = {p.name: p.read_text(encoding="utf-8") for p in (HERE / "texts").glob("*.md")}
     out = {}
     for mode in ("privileged", "standard"):
@@ -443,16 +450,18 @@ def main() -> int:
     bad = [b for b in todo if not SRC_RE.match(b) or b not in cfg["reference_path_mm"]]
     if bad:
         raise SystemExit(f"not a RoboPaint brush pair with a reference path in rules.json: {bad}")
-    diffs = []
+    diffs = files_image.check(FILES)   # the shared sources still hash to FILES.json (what the pinned image was built from)
+    if MODULE not in (SHARED / "privileged" / "grade.py").read_text():
+        diffs.append(f"embodied_first_exam/robopaint/privileged/grade.py: {MODULE} is not wired in (the verifier replays with it)")
     with tempfile.TemporaryDirectory(prefix="robopaint_base_") as td:
         stage = pathlib.Path(td)
         rebuild_base(todo, stage)
         for base in todo:
             for name, files in normalized(plan_pair(base, cfg, stage)).items():
-                diffs += sync(ROOT / "tasks" / name, files, a.check)
+                diffs += sync(ROOT / "tasks" / "robopaint" / name, files, a.check)
     if not a.pairs:  # task dirs whose pair is no longer generated
         made = {f"{b}-{m}" for b in todo for m in ("privileged", "standard")}
-        for t in sorted((ROOT / "tasks").glob("robopaint-*")):
+        for t in sorted((ROOT / "tasks" / "robopaint").glob("robopaint-*")):
             if t.is_dir() and t.name not in made:
                 diffs.append(f"stale  {t.name} (no reference path in rules.json: remove it)")
     for d in diffs:

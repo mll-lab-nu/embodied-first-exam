@@ -36,11 +36,15 @@ SWITCH = re.compile(r"\bRCB_RENDER_VIDEO\b|\bRCB_VIDEO_[A-Z_]+\b")
 BOUND = re.compile(r"""["']?(video_timeout_s|replay_timeout_s)["']?\s*[:=]\s*["']?([0-9]+(?:\.[0-9]+)?)""")
 
 
-def texts(d: Path):
-    """The text files of a build context, and those its Dockerfile takes from a files-only image (at their sources)."""
+def texts(d: Path, problems: list[str] | None = None):
+    """The text files of a build context, and those its Dockerfile takes from a files-only image (at their sources; a
+    line it cannot resolve goes to `problems`)."""
     if not d.is_dir():
         return
-    for p in sorted(d.rglob("*")) + sorted(files_image.copied(d / "Dockerfile").values()):
+    got, bad = files_image.copied_from(d / "Dockerfile")
+    if problems is not None:
+        problems += [f"{d.parent.name}: {b}" for b in bad]
+    for p in sorted(d.rglob("*")) + sorted(got.values()):
         if p.suffix in TEXT and p.is_file() and not p.is_symlink() and p.stat().st_size <= MAX_BYTES:
             try:
                 yield p, p.read_text(errors="replace")
@@ -65,8 +69,8 @@ def check(task: Path) -> list[str]:
     mode = mode_of(task)
     if not mode:
         return errs
-    tests = list(texts(task / "tests"))
-    env = list(texts(task / "environment"))
+    tests = list(texts(task / "tests", errs))
+    env = list(texts(task / "environment", errs))
     in_tests = any(MP4.search(s) for _, s in tests)
     if mode == "privileged":
         if not in_tests:

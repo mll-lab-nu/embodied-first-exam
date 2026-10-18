@@ -4,7 +4,7 @@
      the verdict (success 1 / failure 0), written to final.json before the video; the one render pass renders the recorded
      rows once; nothing is replayed (the stub counts replays); a failed video or evidence picture keeps the verdict; a live sheet that cannot be
      scored is grade_error (infra after a normal end, the agent's 0 after its own simulator error);
-  2. tests/grade.py on synthetic final.json files (no final.json, unfinalized, give-ups, an old replay-rule record);
+  2. the standard verifier's grade.py (embodied_first_exam/robopaint/standard/grade.py: the verifier image's /tests/grade.py) on synthetic final.json files (no final.json, unfinalized, give-ups, an old replay-rule record);
   3. environment/sim/finalize.sh with the real rcb_limited.py: a verdict with its video is kept; a verdict whose video ran out
      of time is kept (video lost); no verdict -> infrastructure.
 Needs numpy and sh (Pillow is stood in for when missing): python3 scripts/robopaint_strict/tests/test_live_grading.py [repo root]"""
@@ -20,7 +20,7 @@ except ImportError:      # the CI job installs numpy and requests only: a stand-
     _img = types.ModuleType("PIL.Image")
     _img.fromarray = lambda a: types.SimpleNamespace(save=lambda path, *x, **k: open(path, "wb").write(np.asarray(a).tobytes()))
     sys.modules["PIL"] = types.ModuleType("PIL"); sys.modules["PIL"].Image = _img; sys.modules["PIL.Image"] = _img
-paths = sorted(glob.glob(os.path.join(ROOT, "tasks/robopaint-*-standard/environment/sim/server.py")))
+paths = sorted(glob.glob(os.path.join(ROOT, "tasks/robopaint/robopaint-*-standard/environment/sim/server.py")))
 assert paths and len({open(p, "rb").read() for p in paths}) == 1, "the RoboPaint standard tasks share one server.py"
 SIM = os.path.dirname(paths[0]); TASK = os.path.dirname(os.path.dirname(SIM))
 SRC = open(paths[0]).read()
@@ -108,7 +108,7 @@ def episode(name, stub, reason=None):
 
 def grade(data):
     log = data + ".verifier"; shutil.rmtree(log, ignore_errors=True)
-    r = subprocess.run([sys.executable, os.path.join(TASK, "tests/grade.py")], capture_output=True, text=True,
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "embodied_first_exam/robopaint/standard/grade.py")], capture_output=True, text=True,
                        env={**os.environ, "RCB_DATA": data, "RCB_VERIFIER_LOG_DIR": log})
     assert r.returncode == 0, r.stderr
     out = json.load(open(os.path.join(log, "reward.json")))

@@ -8,7 +8,7 @@ robot-free score with the cap = the number of contacts, and pictures.
 
     python cs_plan.py opt  --exemplar work/ex/wen --out work/plan/wen [--workers 8] [--nfev 25]
     python cs_plan.py eval --exemplar work/ex/wen --out work/plan/wen
-Needs RCB_TOOLS = a directory with rcb_brush.py, rcb_brush_score.py, opt_calli.py (the template pair's tests/ and solution/).
+Needs RCB_TOOLS = a directory with rcb_brush.py, rcb_brush_score.py, opt_calli.py (embodied_first_exam/robopaint/ and the template pair's solution/).
 """
 from __future__ import annotations
 

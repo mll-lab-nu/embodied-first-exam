@@ -376,6 +376,11 @@ MUTATIONS = [
      "a DIGEST that is not the digest of the task's current files"),
     ("a RoboPaint agent image gets a file derived from the target", RP, "+environment/target_strokes.json", append("{}"),
      RP_LEAK, "not an allowed agent-side file"),
+    ("a RoboPaint agent image takes a grader from the files-only image", RP, "environment/Dockerfile",
+     sub(r"^(COPY --from=\S+) /rcb_brush\.py /opt/tools/rcb_brush\.py$", r"\1 /rcb_brush_score.py /opt/tools/rcb_brush.py"),
+     RP_LEAK, "only an allowed agent-side file of the pinned"),
+    ("a RoboPaint task dir's own rcb_brush.py with grader code, next to the files-only image's", RP, "+environment/rcb_brush.py",
+     append("def score_canvas(sheet):\n    pass\n"), RP_LEAK, "grader code ('def score_canvas') in the agent's tooling"),
     # PROTOCOL §4b: a standard-realtime task declares its slowdown S and its reset budget, and they agree
     ("a standard-realtime task.toml whose slowdown is not its service's",
      "humanoidbench-loco-walk-i00-standard-realtime", TOML, sub(r"^slowdown = [0-9.]+", "slowdown = 2"), REALTIME,

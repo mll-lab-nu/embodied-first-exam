@@ -36,7 +36,7 @@ ORACLE_STATS
 
 ## Verification
 Oracle label `{{ORACLE}}`: the recorded oracle runs predate this version's files (task.toml `oracle_evidence`); human review in PR #3.
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`); pass iff
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`/tests/grade.py`); pass iff
 both replayed main sheets meet the rule, the final-state hashes (ink of both sheets + robot state + brush state) agree and the
 rebuilt frozen instance matches the recorded one (target picture and scoring data included). Physics is PhysX on the CPU and the
 brush runs in float64 on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit
