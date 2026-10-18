@@ -1,9 +1,10 @@
 # eket closed-loop reference
 
 The one reference for both modes of `ikea-eket-i00` is kept in the task directories only: the standard
-`tasks/ikea-eket-i00-standard/solution/oracle_actions.npz`, the same file as the privileged `solution/trajectory.npz`. Its rows are the EXECUTED targets: `data.ctrl` after `rcb_ikea.Session.applied()`. Every row
-is within the arm joint-speed limits + 1e-9 of the previous row, starting from the keyframe ctrl, so the clamp never
-changes a row on replay. Keys: `ctrl` (70210, 16) float64, `substeps` 4, `timestep` 0.000625, `actuators`.
+`tasks/ikea-eket-i00-standard/solution/oracle_actions.npz`, the same file as the privileged `solution/trajectory.npz`.
+Its rows are the EXECUTED targets: `data.ctrl` after `rcb_ikea.Session.applied()`. Every row is within the arm
+joint-speed limits + 1e-9 of the previous row, starting from the keyframe ctrl, so the clamp never changes a row on
+replay. Keys: `ctrl` (70210, 16) float64, `substeps` 4, `timestep` 0.000625, `actuators`.
 
 The physics is the final one: the prism rule, fix 3b dowels, the arm clamp, MuJoCo 3.14.0 with the EPA byte patch, and
 numpy SIMD masking.
@@ -21,7 +22,8 @@ numpy SIMD masking.
 Rebuild: `python rec_guide.py runs/guide.npz && python build_ref.py --out runs/b3` (scene dir on `IKEA_SCENES`, the
 shared `rcb_ikea.py` on `PYTHONPATH`, the demo at `EKET_DEMO`, the masking variables set). The result is bit-identical
 to that reference. A new build is rendered into both task directories by dropping its `ref.npz` here as
-`eket_ref.npz` (`scripts/ikea_mujoco/mk_tasks.py` and `mk_standard_tasks.py` take it while it exists) and is not kept.
+`eket_ref.npz` (`scripts/ikea_mujoco/mk_tasks.py` and `mk_standard_tasks.py` take it while it exists); delete it after
+that (`oracles/*/*.npz` is git-ignored).
 
 ## Phases (demo rows; the left arm moves the panels, the right arm holds the top)
 | phase | demo rows | gate (eket_ops / success.py) | closed loop |

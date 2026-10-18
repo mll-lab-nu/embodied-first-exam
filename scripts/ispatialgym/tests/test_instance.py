@@ -1,5 +1,5 @@
-"""iSpatialGym's frozen instance on the CPU, no simulator: every task's instance (mk_tasks.instance_file: its tasks/ copy,
-or scripts/ispatialgym/instances/<task>/ while that exists) restores upstream's TRO exactly
+"""iSpatialGym's frozen instance on the CPU, no simulator: every task's instance (mk_tasks.instance_file: its tasks/
+copy, or scripts/ispatialgym/instances/<task>/ while that exists) restores upstream's TRO exactly
 (mk_tasks.split_instance's inverse, rcb_ispatialgym.restore_goal), holds no target, role name or host path, and the
 start-only BDDL problem states no goal (shared/neutral_bddl.py).   python3 scripts/ispatialgym/tests/test_instance.py"""
 import json

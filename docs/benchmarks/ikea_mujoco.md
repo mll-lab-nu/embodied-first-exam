@@ -141,8 +141,9 @@ Each task has one reference for both modes, every row within the joint-speed lim
 - lack: the authors' demo passed through the clamp;
 - svallet, gladom, variera: the demo time-dilated or centred to the limits (`standard/std_reference.py`); variera's
   demo ended holding the screwdriver, so a 240-row release tail is appended;
-- eket, ikea365, vesken: closed-loop references built on the final physics (build scripts in `oracles/<task>/`): the demo as the phase
-  guide, with true-state feedback (Jacobian-IK servos, gates, local searches), recorded as the executed rows;
+- eket, ikea365, vesken: closed-loop references built on the final physics (build scripts in `oracles/<task>/`): the
+  demo as the phase guide, with true-state feedback (Jacobian-IK servos, gates, local searches), recorded as the
+  executed rows;
 - stegesund: the authors' speed-limited demo, unchanged.
 
 Harbor on the final images: privileged oracle 1 / nop 0 on all eight, standard oracle 1 (live settled success) / nop 0

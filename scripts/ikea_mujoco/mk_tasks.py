@@ -110,8 +110,9 @@ def ref_words(t: str):
 
 def closed_loop_ref(t: str):
     """The task's own reference file (CLOSED_LOOP or OWN_REFS), None if it has none. A new reference is dropped in as
-    scripts/ikea_mujoco/oracles/<task>/<task>_ref.npz or <task>.npz and taken from there while it exists; otherwise the canonical copy is the standard twin's solution/oracle_actions.npz in tasks/ (the
-    privileged solution/trajectory.npz is the same file). Once both twins are rendered the dropped-in file is not kept."""
+    scripts/ikea_mujoco/oracles/<task>/<task>_ref.npz or <task>.npz (git-ignored) and taken from there while it exists;
+    otherwise the canonical copy is the standard twin's solution/oracle_actions.npz in tasks/ (the privileged
+    solution/trajectory.npz is the same file). Once both twins are rendered the dropped-in file can be deleted."""
     if not ref_words(t):
         return None
     for f in (HERE / "oracles" / t / f"{t}_ref.npz", HERE / "oracles" / t / f"{t}.npz"):

@@ -125,7 +125,8 @@ The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `downlo
 The frozen instances are kept in the task directories only: the standard twin's `environment/sim/` (`instance.json`,
 `goal.json`, `facts.json`, `upstream.json`) and `environment/goal.png`. `instances` and `measure` write
 `scripts/ispatialgym/instances/<task>/` (git-ignored; `measure` stages the task's instance there from `tasks/`), which
-`render` prefers for that task; delete it once the task is rendered.
+`render` prefers for that task (it says so); delete it once the task is rendered. `instances` imports the tasks named
+by `--task`, else only those with no standard twin in `tasks/` yet.
 
 ## Positive examples (oracle none, PROTOCOL §4)
 Upstream's recorded demonstration of each instance (the eval data's `-demo.hdf5`, `data/demo_0/action`, unchanged), handed

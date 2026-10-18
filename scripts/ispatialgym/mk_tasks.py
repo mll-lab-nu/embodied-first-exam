@@ -6,7 +6,8 @@
       plus goal.png and upstream.json; the BDDL problem is not copied (iSpatialGym's own file, in the image):
       upstream.json records its sha256, which the tooling checks at load
   python3 scripts/ispatialgym/mk_tasks.py measure --task T   facts.json of one instance, in the image on a GPU
-  python3 scripts/ispatialgym/mk_tasks.py render       write every task directory from templates/, shared/ and the instances
+  python3 scripts/ispatialgym/mk_tasks.py render       write every task directory from templates/, shared/ and the
+                                                       instances
   python3 scripts/ispatialgym/mk_tasks.py --check      render into a temporary tree and diff it with tasks/
 The frozen instances live in tasks/ only: the standard twin's environment/sim/ holds instance.json, goal.json, facts.json
 and upstream.json, its environment/goal.png the goal image (instance_file). `instances` and `measure` work in
@@ -94,12 +95,20 @@ def split_instance(template: dict, meta: dict, tro: dict) -> tuple[dict, dict]:
 
 
 def cmd_instances(a) -> None:
-    """Copy the picked instance of every task out of upstream's eval dataset (instance 0 of its subtask)."""
+    """Copy the picked instance of the chosen tasks out of upstream's eval dataset (instance 0 of its subtask) into
+    instances/<task>/: the tasks named by --task, else every task that has no standard twin in tasks/ yet."""
+    unknown = sorted(set(a.task or ()) - {t["task"] for t in tasks()})
+    if unknown:
+        raise SystemExit(f"not in subset.toml: {unknown}")
     data = Path(a.data) / "ispatialgym-eval-instances"
     index = [json.loads(line) for line in (data / "metadata/instances.jsonl").read_text().splitlines() if line.strip()]
     episodes = {(e["subtask"], e["instance"]): e for e in
                 (json.loads(line) for line in (data / "metadata/episodes.jsonl").read_text().splitlines() if line.strip())}
-    for t in tasks():
+    chosen = [t for t in tasks() if (t["task"] in a.task if a.task else
+                                     not (ROOT / "tasks" / task_dir_name(t)).is_dir())]
+    if not chosen:
+        print("every task already has its instance in tasks/; name one with --task to re-import it")
+    for t in chosen:
         rec = next(r for r in index if r["subtask"] == t["subtask"] and r["instance"] == t["instance"])
         files = {k: data / v for k, v in rec["files"].items()}
         out = HERE / "instances" / t["task"]
@@ -165,7 +174,10 @@ def instance_file(task: str, name: str) -> Path:
 
 
 def read_instance(task: str) -> dict[str, bytes]:
-    """The instance's files in memory: render() removes the task directories (the canonical copy) before it writes them."""
+    """The instance's files in memory: render() removes the task directories (the canonical copy) before it writes
+    them."""
+    if (HERE / "instances" / task).is_dir():
+        print(f"using fresh instance dir for {task} (scripts/ispatialgym/instances/{task}/)", file=sys.stderr)
     return {n: instance_file(task, n).read_bytes() for n in INSTANCE_FILES}
 
 
@@ -318,7 +330,7 @@ def cmd_measure(a) -> None:
     determinism probe live, and its replay (the final states must be equal)."""
     out = Path(a.work) / a.task
     out.mkdir(parents=True, exist_ok=True)
-    inst = HERE / "instances" / a.task              # the docker mount: the task's instance, staged from tasks/ if not there
+    inst = HERE / "instances" / a.task      # the docker mount: the task's instance, staged from tasks/ if not there
     if not inst.is_dir():
         files = read_instance(a.task)
         inst.mkdir(parents=True)
@@ -351,6 +363,8 @@ def main() -> None:
     s = sub.add_parser("instances")
     s.add_argument("--data", required=True, help="upstream's eval data at subset.toml's upstream_data (the Hugging Face dataset, ispatialgym-eval-instances/)")
     s.add_argument("--bddl", required=True, help="ispatialgym/assets/bddl of iSpatialGym at subset.toml's upstream (only hashed)")
+    s.add_argument("--task", action="append",
+                   help="import this task (repeatable; default: the tasks with no standard twin in tasks/)")
     s = sub.add_parser("measure", help="facts.json of one task (needs the image, a GPU and $RCB_BEHAVIOR_DATA)")
     s.add_argument("--task", required=True)
     s.add_argument("--probe", type=int, default=300, help="rows of the determinism probe")
