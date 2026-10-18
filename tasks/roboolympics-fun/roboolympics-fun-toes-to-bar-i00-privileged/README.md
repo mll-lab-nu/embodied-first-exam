@@ -21,7 +21,7 @@ The bar is 0.80 m above your pelvis and your legs are 0.75 m long: hip flexion a
 `solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: a knee-tuck snap with bent elbows, timed on the back-swing: 5 repetitions in 7.8 s; 12 of 12 variants when it was written. Measured (make_oracles.py): success after 7.78 s of the 60 s limit, live and in a fresh replay, ending in the same state.
 
 ## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in two fresh processes (`rcb_rfo.py replay`:
+`/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in two fresh processes (`rcb_rfo.py replay`:
 one sim row per control step until the referee ends the attempt). Pass iff the referee's verdict is a success in both
 and both end in the same state. The rules: The bar is 0.028 m thick, 2.8 m above the floor, 2.4 m long between its two uprights, along the y axis; it turns freely about its own axis. Both hands grip it from the start. A repetition has two parts, in this order. The touch: both feet touch the bar at the same moment, each at a point between your two hands (shins, knees or anything else on the bar is not a touch, and does not fail). The hang: afterwards the centres of both feet are at least 1.4 m below the bar and behind it (x less than the bar's; the heels back behind the bar), both at the same moment (in your dead hang they are 1.55 m below it). You succeed when the hang of repetition 5 is reached. Swinging is allowed (a kip is legal), as is bending the knees on the way. You fail the moment either hand no longer grips the bar, any part of you touches the uprights, the mats or the floor, or after 60 s.
 
@@ -47,5 +47,5 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Instance | `environment/instance.json` = `tests/instance.json`: the family's parameters, t = 0 state hash `f5933e91e283246e633371f019a3be76d4758c20a67e97b2a7bdb77bdd8bc538` |
 | Episode | 6000 control steps (60 s at 100 Hz) |
 | Action | sim rows of 151 floats per control step (`rfo/world.py`); six action types are views of it |
-| Tooling | `environment/rcb_rfo.py`, `environment/rfo/` (the world, the action layer, the referee's toolkit) and `environment/rfo_task.py` (this family's rules), the same files as in `tests/` (scripts/roboolympics/shared/) |
+| Tooling | `/opt/tools/rcb_rfo.py`, `/opt/tools/rfo/` (the world, the action layer, the referee's toolkit; from the files-only image images/roboolympics-fun-files/, built from embodied_first_exam/roboolympics-fun/) and `environment/rfo_task.py` (this family's rules), the same files in the verifier's `/tests/` |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; docs/benchmarks/roboolympics.md) |
