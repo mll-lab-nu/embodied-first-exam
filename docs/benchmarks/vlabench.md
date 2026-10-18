@@ -11,7 +11,7 @@ on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 | image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
 | standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + `scripts/vlabench/shared/standard/server.py` |
 | standard client | the shared client base and exact pins of `scripts/eai_standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
-| generator | `scripts/vlabench/` (`frozen/`: the instances and references, imported from PR #4 @ ad3c510; `freeze.sh` → `frozen/report.json`, `generate.py` → `tasks/`, finished with `scripts/task_conventions.py`; `generate.py --check`) |
+| generator | `scripts/vlabench/` (the instances and references, imported from PR #4 @ ad3c510, committed only in the privileged tasks: `environment/instance.json`, `solution/oracle.npy`, which `generate.py` and `freeze.sh` read; a new import goes to `frozen/<task>/` and is deleted once its tasks are generated; `freeze.sh` → `frozen/report.json`, `generate.py` → `tasks/`, finished with `scripts/task_conventions.py`; `generate.py --check`) |
 
 ## Scope
 VLABench @ cf588fe has 96 native tasks that PR #4 surveyed. A task is in when it has a reference solution that this

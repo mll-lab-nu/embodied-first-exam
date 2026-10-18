@@ -10,7 +10,7 @@ each on one frozen instance, in both modes: 100 tasks.
 | metadata | `simulator = "mujoco"`, `robot = "sawyer"`, `family = "metaworld/<env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` (`images/metaworld/`), CPU only |
 | standard client | the one client base and pins of `scripts/eai_standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` byte copies of the MuJoCo standard tasks' (accepting both protocol spellings) |
-| generator | `scripts/metaworldplus/` (`freeze.sh` → `frozen/`, `generate.py` → `tasks/`) |
+| generator | `scripts/metaworldplus/` (`freeze.sh` → `frozen/`, `generate.py` → `tasks/`); each instance and oracle is committed once, in its privileged task (`environment/instance.npz`, `solution/oracle.npz`), which `generate.py` reads; `frozen/` keeps `report.json` (a fresh `freeze.sh` run's `frozen/<env>/` is deleted once its tasks are generated) |
 
 ## Task definition
 - **Instance.** Meta-World's reset randomization (object and goal positions) drawn with the instance seed: 0, except
@@ -122,6 +122,7 @@ docker build -t ghcr.io/mll-lab-nu/eai-metaworld:$(cat images/metaworld/VERSION)
     -f images/metaworld/Dockerfile images/metaworld          # ~780 MB
 bash scripts/metaworldplus/freeze.sh            # instances + oracles -> scripts/metaworldplus/frozen/ (~1 min)
 python3 scripts/metaworldplus/generate.py       # -> tasks/metaworldplus-* ; re-running reproduces them exactly
+rm -r scripts/metaworldplus/frozen/*/           # tasks/ keeps the instances and oracles; frozen/report.json stays
 cd tasks && harbor add --scan . && cd ..
 bash ci_checks/run_all.sh tasks/metaworldplus-*
 ```

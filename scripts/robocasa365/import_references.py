@@ -13,6 +13,8 @@ reference's actions, and re-verifies both with this benchmark's tooling (shared/
 4. informational: whether the success survives 10 more "hold still" steps (the README says so when it does not).
 
 Writes frozen/<slug>/instance.npz, frozen/<slug>/oracle.npz (key `actions`, (T, dim) float64) and frozen/report.json.
+generate.py takes frozen/<slug>/ while it exists and copies it into the tasks; then delete frozen/<slug>/ (the
+privileged task keeps the committed copy, environment/instance.npz and solution/oracle.npz).
 
     bash scripts/<benchmark>/import_references.sh <PR #4 checkout> [env ...]
 """

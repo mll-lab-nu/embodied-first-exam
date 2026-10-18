@@ -5,11 +5,13 @@
     python3 scripts/<bench>/generate.py PreSoakPan
     python3 scripts/<bench>/generate.py --check    # render into a temporary directory and compare with tasks/
 
-Inputs: envs.py, frozen/<slug>/{instance,oracle}.npz and frozen/report.json (import_references.sh), the shared sources
-in shared/ (with the collect hook finalize.sh) and the standard-mode service images/<bench>/standard/server_casa.py.
+Inputs: envs.py, frozen/report.json and frozen/start_state.json, each instance and reference (frozen(): a fresh
+import_references.sh run's frozen/<slug>/{instance,oracle}.npz, else the copies already in the privileged task in
+tasks/), the shared sources in shared/ (with the collect hook finalize.sh) and the standard-mode service images/<bench>/standard/server_casa.py.
 Every task directory is rewritten; shared files are copied byte for byte. Re-running reproduces the tasks exactly.
 """
 
+import functools
 import json
 import shutil
 import sys
@@ -50,6 +52,20 @@ DIFFICULTY_STANDARD = (
 
 SHARED = HERE / "shared"
 FROZEN = HERE / "frozen"
+# Each environment's instance and reference: frozen/<slug>/{instance,oracle}.npz while that directory exists (a fresh
+# import_references.sh run), else the committed copies in its privileged task (canonical: environment/instance.npz,
+# solution/oracle.npz in tasks/<bench>-<slug>-i00-privileged/; every other copy in tasks/ is the same file). After a
+# fresh import, generate the tasks and delete frozen/<slug>/: tasks/ keeps the only copy.
+CANONICAL = {"instance.npz": "environment/instance.npz", "oracle.npz": "solution/oracle.npz"}
+
+
+@functools.cache
+def frozen(name: str, file: str) -> bytes:
+    """frozen/<name>/<file>, else its canonical copy in tasks/ (read once, before a task directory is rewritten)."""
+    f = FROZEN / name / file
+    if not f.exists():
+        f = ROOT / "tasks" / f"{BENCH}-{name}-i00-privileged" / CANONICAL[file]
+    return f.read_bytes()
 SERVER = ROOT / f"images/{BENCH}/standard/server_casa.py"
 VERSION = (ROOT / f"images/{BENCH}/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-{BENCH}:{VERSION}"
@@ -590,17 +606,19 @@ def reset_dir(d: Path) -> None:
     d.mkdir(parents=True)
 
 
-def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644) -> None:
+def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644, data: bytes | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if src is not None:
         shutil.copyfile(src, path)
+    elif data is not None:
+        path.write_bytes(data)
     else:
         path.write_text(text)
     path.chmod(mode)
 
 
 def make(rec: dict, out: Path = ROOT / "tasks") -> None:
-    fz = FROZEN / rec["slug"]
+    inst, oracle = frozen(rec["slug"], "instance.npz"), frozen(rec["slug"], "oracle.npz")  # before reset_dir
     p = out / f"{BENCH}-{rec['slug']}-i00-privileged"
     reset_dir(p)
     put(p / "task.toml", privileged_toml(rec))
@@ -608,15 +626,15 @@ def make(rec: dict, out: Path = ROOT / "tasks") -> None:
     put(p / "README.md", privileged_readme(rec))
     put(p / "environment/Dockerfile", PRIV_ENV_DOCKERFILE)
     put(p / "environment/casa_tool.py", src=SHARED / "casa_tool.py")
-    put(p / "environment/instance.npz", src=fz / "instance.npz")
+    put(p / "environment/instance.npz", data=inst)
     put(p / "tests/Dockerfile", PRIV_TESTS_DOCKERFILE)
     put(p / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(p / "tests/grade.py", src=SHARED / "grade_privileged.py")
     put(p / "tests/casa_tool.py", src=SHARED / "casa_tool.py")
-    put(p / "tests/instance.npz", src=fz / "instance.npz")
+    put(p / "tests/instance.npz", data=inst)
     put(p / "solution/solve.sh", src=SHARED / "solve_privileged.sh", mode=0o755)
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
-    put(p / "solution/oracle.npz", src=fz / "oracle.npz")
+    put(p / "solution/oracle.npz", data=oracle)
 
     s = out / f"{BENCH}-{rec['slug']}-i00-standard"
     reset_dir(s)
@@ -631,13 +649,13 @@ def make(rec: dict, out: Path = ROOT / "tasks") -> None:
     put(s / "environment/sim/finalize.sh", src=SHARED / "finalize.sh")
     put(s / "environment/sim/casa_tool.py", src=SHARED / "casa_tool.py")
     put(s / "environment/sim/rcb1.py", src=SHARED / "rcb1.py")
-    put(s / "environment/sim/instance.npz", src=fz / "instance.npz")
+    put(s / "environment/sim/instance.npz", data=inst)
     put(s / "tests/Dockerfile", STD_TESTS_DOCKERFILE)
     put(s / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(s / "tests/grade.py", src=SHARED / "grade_standard.py")
     put(s / "solution/solve.sh", src=SHARED / "solve_standard.sh", mode=0o755)
     put(s / "solution/oracle_replay.py", src=SHARED / "oracle_standard.py")
-    put(s / "solution/oracle.npz", src=fz / "oracle.npz")
+    put(s / "solution/oracle.npz", data=oracle)
     normalize(p)
     normalize(s)
 

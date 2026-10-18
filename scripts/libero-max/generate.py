@@ -5,7 +5,9 @@
     python3 scripts/libero-max/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
 Inputs: cases.json (the chosen LIBERO-MAX cases with their frozen event parameters, select_cases.py), frozen/<case>/
-{instance.json, oracle.npy, report.json} (freeze.sh), the templates in templates/, the shared sources in shared/ (copied
+report.json (freeze.sh), each case's instance.json and oracle.npy (source(): a fresh freeze.sh run's frozen/<case>/ copies
+while they exist, else the ones in the committed privileged task whose instance.json is that case; delete them from frozen/ once the case is
+generated: tasks/ keeps the only copy), the templates in templates/, the shared sources in shared/ (copied
 byte for byte) and the standard client's base image and pins (scripts/eai_standard/). Each task directory is written
 from scratch and finished with scripts/task_conventions.py (normalize, PROTOCOL v1.0.1); a libero-max-* directory this
 does not write is removed. Re-running reproduces the tasks exactly.
@@ -15,6 +17,7 @@ they can be replaced by independently drawn ones without touching this generator
 """
 
 import filecmp
+import functools
 import json
 import re
 import shutil
@@ -37,6 +40,48 @@ TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
 TEMPLATES = HERE / "templates"
 FROZEN = HERE / "frozen"
+# The canonical committed copy of a case's instance and reference, in its privileged task (the standard twin and tests/
+# carry the same files).
+CANONICAL = {"instance.json": "environment/instance.json", "oracle.npy": "solution/oracle.npy"}
+
+
+@functools.cache
+def committed() -> dict[str, Path]:
+    """case_id -> its committed privileged task directory, from each one's environment/instance.json (`case.case_id`). Not
+    looked up by task name: the name's -iNN counts repeats of a base name in cases.json order, so it can move to another
+    case when a case is added or removed."""
+    out: dict[str, Path] = {}
+    for f in sorted((ROOT / "tasks").glob("libero-max-*-privileged/environment/instance.json")):
+        cid = json.loads(f.read_text())["case"]["case_id"]
+        if cid in out:
+            raise SystemExit(f"{cid}: two committed privileged tasks, {out[cid].name} and {f.parents[1].name}")
+        out[cid] = f.parents[1]
+    return out
+
+
+def source(case_id: str, file: str) -> Path:
+    """Where a case's instance.json / oracle.npy comes from: frozen/<case>/ (a fresh freeze.sh run), else the committed
+    privileged task whose instance is that case (committed())."""
+    f = FROZEN / case_id / file
+    if f.exists():
+        return f
+    if case_id not in committed():
+        raise SystemExit(f"{case_id}: no frozen/{case_id}/{file} and no committed task of this case (run freeze.sh)")
+    return committed()[case_id] / CANONICAL[file]
+
+
+@functools.cache
+def frozen(case_id: str, file: str) -> bytes:
+    """source()'s bytes, read once: render_all reads every case's files before it writes any task directory. An
+    instance must be its case's and match the start hash freeze.sh recorded (frozen/<case>/report.json)."""
+    f = source(case_id, file)
+    data = f.read_bytes()
+    if file == "instance.json":
+        inst = json.loads(data)
+        rep = json.loads((FROZEN / case_id / "report.json").read_text())
+        if inst["case"]["case_id"] != case_id or inst["initial_state_sha"] != rep["initial_state_sha"]:
+            raise SystemExit(f"{f}: not the instance of {case_id} (case_id / initial_state_sha differ from its report.json)")
+    return data
 VERSION = (ROOT / "images/libero-max/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-libero-max:{VERSION}"
 _EAI = ROOT / "scripts/eai_standard"
@@ -310,10 +355,12 @@ def reset_dir(d: Path) -> None:
     d.mkdir(parents=True)
 
 
-def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644) -> None:
+def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644, data: bytes | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if src is not None:
         shutil.copyfile(src, path)
+    elif data is not None:
+        path.write_bytes(data)
     else:
         path.write_text(text)
     path.chmod(mode)
@@ -356,6 +403,7 @@ def names_for(cases: list) -> dict:
 def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     fz = FROZEN / case["case_id"]
     rep = json.loads((fz / "report.json").read_text())
+    inst, oracle = frozen(case["case_id"], "instance.json"), frozen(case["case_id"], "oracle.npy")  # read by render_all
     ch = case["scenario"]["change"]
     words, detail = event_text(case["scenario"]["change_type"], ch)
     instruction = sentence(rep["language"])
@@ -419,15 +467,15 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     put(p / "README.md", render("README.md", {**values, "change_log_extra": priv_log}))
     put(p / "environment/Dockerfile", PRIV_ENV_DOCKERFILE)
     put(p / "environment/lmx_tool.py", src=SHARED / "lmx_tool.py")
-    put(p / "environment/instance.json", src=fz / "instance.json")
+    put(p / "environment/instance.json", data=inst)
     put(p / "tests/Dockerfile", PRIV_TESTS_DOCKERFILE)
     put(p / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(p / "tests/grade.py", src=SHARED / "grade.py")
     put(p / "tests/lmx_tool.py", src=SHARED / "lmx_tool.py")
-    put(p / "tests/instance.json", src=fz / "instance.json")
+    put(p / "tests/instance.json", data=inst)
     put(p / "solution/solve.sh", src=SHARED / "solve_privileged.sh", mode=0o755)
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
-    put(p / "solution/oracle.npy", src=fz / "oracle.npy")
+    put(p / "solution/oracle.npy", data=oracle)
 
     s = out / f"{name}-standard"
     reset_dir(s)
@@ -441,13 +489,13 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     for f in ("server.py", "rcb_service.py", "rcb1.py", "finalize.sh"):
         put(s / "environment/sim" / f, src=SHARED / "standard" / f)
     put(s / "environment/sim/lmx_tool.py", src=SHARED / "lmx_tool.py")
-    put(s / "environment/sim/instance.json", src=fz / "instance.json")
+    put(s / "environment/sim/instance.json", data=inst)
     put(s / "tests/Dockerfile", STD_TESTS_DOCKERFILE)
     put(s / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(s / "tests/grade.py", src=SHARED / "standard/grade.py")
     put(s / "solution/solve.sh", src=SHARED / "standard/solve.sh", mode=0o755)
     put(s / "solution/oracle_replay.py", src=SHARED / "standard/oracle_replay.py")
-    put(s / "solution/oracle.npy", src=fz / "oracle.npy")
+    put(s / "solution/oracle.npy", data=oracle)
     normalize(p)
     normalize(s)
     return p, s
@@ -456,6 +504,8 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
 def render_all(out: Path) -> list[str]:
     cases = json.loads((HERE / "cases.json").read_text())["cases"]
     names = names_for(cases)
+    for c in cases:  # every case's instance and reference, before any task directory is rewritten (frozen() caches them)
+        frozen(c["case_id"], "instance.json"), frozen(c["case_id"], "oracle.npy")
     done = []
     for c in cases:
         rep = json.loads((FROZEN / c["case_id"] / "report.json").read_text())

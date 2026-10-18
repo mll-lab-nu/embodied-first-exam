@@ -383,7 +383,8 @@ class TestGeneratorStartShas(unittest.TestCase):
             import generate
         except ImportError as exc:   # task_conventions needs Python 3.11 (tomllib)
             self.skipTest(f"the generator does not import here: {exc}")
-        frozen = sorted((ROOT / "scripts/metaworldplus/frozen").glob("*/instance.npz"))
+        # the committed instances: one per environment, in its privileged task (generate.frozen's canonical copy)
+        frozen = sorted((ROOT / "tasks").glob("metaworldplus-*-i00-privileged/environment/instance.npz"))
         self.assertEqual(len(frozen), 50)
         for p in frozen:
             got = generate.start_shas(p)

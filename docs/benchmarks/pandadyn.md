@@ -69,8 +69,12 @@ are in `scripts/pandadyn/instances.json`; `instance.json`, which the agent reads
 ## Tasks and generator
 `scripts/pandadyn/mk_tasks.py` (`--check`) writes both twins of every instance in `instances.json` from
 `scripts/pandadyn/descr/<code>.json` (what the task asks and exactly what its check tests, written from the task's code;
-`scene` is what both modes may read, `scene_privileged` privileged mode only), `frozen/`, `template/<mode>/`, `shared/`
-and `scripts/eai_standard/`, and passes them through `scripts/task_conventions.py`'s `normalize()`.
+`scene` is what both modes may read, `scene_privileged` privileged mode only), each instance's `instance.json` and
+`oracle_actions.npy`, `template/<mode>/`, `shared/` and `scripts/eai_standard/`, and passes them through
+`scripts/task_conventions.py`'s `normalize()`. The instance files live only in the tasks; `mk_tasks.py` reads them from
+the standard task (`environment/sim/instance.json`, `solution/oracle_qpos.npy`); `freeze.py` writes a new instance
+to `scripts/pandadyn/frozen/<task>-iNN/`, which `mk_tasks.py` takes while it exists and which is deleted once the tasks
+are generated.
 `scripts/pandadyn/sync_env.py` copies the environment package into `images/pandadyn/` (below).
 
 ## Success (the task's own)

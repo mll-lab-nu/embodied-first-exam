@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate the RoboDojo tasks: tasks/robodojo-<task>-iNN-privileged (and, once its service exists, -standard) for every
-task of RoboDojo's simulation benchmark (42 tasks + the 12 `_random` generalisation variants) with a frozen instance in
-scripts/robodojo/frozen/<task>-iNN/.
+task of RoboDojo's simulation benchmark (42 tasks + the 12 `_random` generalisation variants) with a frozen instance:
+a committed standard task tasks/robodojo-<task>-iNN-standard, or a new one in scripts/robodojo/frozen/<task>-iNN/.
 
     python3 scripts/robodojo/mk_tasks.py              # (re)write every RoboDojo task dir; `git diff tasks/` stays empty
     python3 scripts/robodojo/mk_tasks.py --check      # write nothing; exit 1 if a task dir differs from the generator's
@@ -10,7 +10,12 @@ Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 
 Inputs, all in the repository:
   scripts/robodojo/dimensions.json          RoboDojo's five capability dimensions and their tasks (its documentation)
   scripts/robodojo/descr/<task>.json        what the task asks and exactly what its check tests, written from RoboDojo's code
-  scripts/robodojo/frozen/<task>-iNN/       instance.json: RoboDojo's evaluation layout, frozen (rcb_robodojo.py make-instance)
+  instance.json (per instance)              RoboDojo's evaluation layout, frozen (rcb_robodojo.py make-instance). Read from
+                                            scripts/robodojo/frozen/<task>-iNN/ while it exists (written by sync_frozen.py for
+                                            a new or changed instance), else from the committed standard task (frozen_file():
+                                            tasks/<base>-standard/environment/sim/instance.json; every task of the instance
+                                            carries the same file). After sync_frozen.py, generate and delete frozen/: tasks/
+                                            keeps the only copy.
   scripts/robodojo/shared/rcb_robodojo.py   the tooling (privileged environment/ + tests/)
   scripts/robodojo/template/<mode>/         every other task file; a *.tmpl file is filled with the instance's values (@@KEY@@)
   images/robodojo/VERSION                   the base image tag
@@ -169,9 +174,26 @@ def dimension_of(task: str, dims: dict) -> str:
     raise KeyError(task)
 
 
+def instance_ids(task: str) -> list[int]:
+    """The task's instances: frozen/<task>-iNN/ (sync_frozen.py's output, not generated yet) and its committed standard tasks
+    (every instance has one; a standard-only task has no privileged twin). To drop an instance, delete its task dirs."""
+    ids = {int(p.name[-2:]) for p in (HERE / "frozen").glob(f"{task}-i[0-9][0-9]") if p.is_dir()}
+    stem = base(task, 0).removesuffix("-i00")
+    ids |= {int(p.name.removesuffix("-standard")[-2:]) for p in (ROOT / "tasks").glob(f"{stem}-i[0-9][0-9]-standard") if p.is_dir()}
+    return sorted(ids)
+
+
+def frozen_file(task: str, i: int) -> tuple[pathlib.Path, bytes]:
+    """(where from, instance.json) of one instance: frozen/<task>-iNN/instance.json while it exists, else the canonical
+    committed copy, tasks/<base>-standard/environment/sim/instance.json."""
+    f = HERE / "frozen" / f"{task}-i{i:02d}" / "instance.json"
+    if not f.exists():
+        f = ROOT / "tasks" / f"{base(task, i)}-standard" / "environment/sim/instance.json"
+    return f.parent, f.read_bytes()
+
+
 def plan_instance(task: str, i: int, D: dict, dims: dict, conv: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
-    fz = HERE / "frozen" / f"{task}-i{i:02d}"
-    inst_b = (fz / "instance.json").read_bytes(); I = json.loads(inst_b)
+    fz, inst_b = frozen_file(task, i); I = json.loads(inst_b)
     if I.get("task") != task:
         raise RuntimeError(f"{fz}: instance.json is for {I.get('task')}")
     tool = (HERE / "shared/rcb_robodojo.py").read_bytes()
@@ -346,11 +368,10 @@ def main() -> int:
     diffs, made, missing = [], set(), []
     for dpath in sorted((HERE / "descr").glob("*.json")):
         D = json.loads(dpath.read_text()); task = D["task"]
-        frozen = sorted((HERE / "frozen").glob(f"{task}-i[0-9][0-9]"))
-        if not frozen:
+        ids = instance_ids(task)
+        if not ids:
             missing.append(task); continue
-        for fz in frozen:
-            i = int(fz.name[-2:])
+        for i in ids:
             for name, files in normalized(plan_instance(task, i, D, dims, conv, version), normalize).items():
                 made.add(name); diffs += sync(ROOT / "tasks" / name, files, a.check)
     for t in sorted((ROOT / "tasks").glob("robodojo-*")):
