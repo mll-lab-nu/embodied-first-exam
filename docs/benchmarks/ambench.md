@@ -242,10 +242,10 @@ at about 9-15 control steps/s.
 - **AM-Bench's controller sees the scene.** For some tasks the IK caps the airframe's position using object poses (e.g.
   CabinetPickPlace's cabinet): part of the environment in both modes; the agent never receives those poses.
 
-## Easy set
+## Screening
 
 A base whose every mode a screening run solved (a graded success within the task's time limit; logs of solves by runs
-other than GPT-6 Luna checked for shortcuts and for access to tests, solutions or graders) is in the easy set
-(`docs/easy_set.toml`, reason `solved`): kept under its name and reported apart from the main table. 8 of 9 bases are
-in it, each solved by GPT-6 Luna (`codex-gpt6_luna-xhigh`) in every mode it ships; `ambench-peg-in-hole-fahexa-i00`
-stays in the core set (privileged solved by Luna, standard unverified: only Luna attempted it, and failed).
+other than GPT-6 Luna checked for shortcuts and for access to tests, solutions or graders), and every base GPT-6 Luna
+(`codex-gpt6_luna-xhigh`) solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their
+names. Luna solved 8 of the 9 bases in every mode they ship and `ambench-peg-in-hole-fahexa-i00` in privileged mode
+(standard unverified: only Luna attempted it, and failed), so no AM-Bench task is in the core set.
