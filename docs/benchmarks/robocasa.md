@@ -10,7 +10,7 @@ Omron mobile base), each on one frozen instance, in both modes: 58 tasks.
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa:0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| generator | `scripts/robocasa/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
+| generator | `scripts/robocasa/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`); each instance and reference is committed once, in its privileged task (`environment/instance.npz`, `solution/oracle.npz`), which `generate.py` reads; `frozen/` keeps `report.json` and `start_state.json` (a fresh import's `frozen/<slug>/` is deleted once its tasks are generated) |
 
 ## Scope
 All 29 of RoboCasa v0.2's 111 kitchen environments that have an official demonstration in the dataset registry
@@ -160,7 +160,7 @@ RoboCasa's own object archives on UT Box (CC-BY-4.0, as RoboCasa licenses its as
 ## Rebuilding the tasks
 ```bash
 docker build -t ghcr.io/mll-lab-nu/eai-robocasa:$(cat images/robocasa/VERSION) images/robocasa
-bash scripts/robocasa/import_references.sh <PR #4 checkout>   # instances + references -> scripts/robocasa/frozen/
+bash scripts/robocasa/import_references.sh <PR #4 checkout>   # instances + references -> scripts/robocasa/frozen/ (delete <slug>/ after generating)
 python3 scripts/robocasa/generate.py                            # -> tasks/robocasa-* (ends with scripts/task_conventions.py normalize); re-running reproduces them
 python3 scripts/robocasa/generate.py --check                    # tasks/ equals a fresh render (no simulator needed)
 cd tasks && harbor add --scan . && cd ..
@@ -168,7 +168,7 @@ bash ci_checks/run_all.sh tasks/robocasa-*
 ```
 The instances and references were authored in PR #4 (`scripts/coverage/author_demo.py` there: freeze the
 demonstration's initial state, execute its actions with the native controller, validate in fresh processes);
-`frozen/` keeps them, and `import_references.sh` re-verifies them with this benchmark's tooling.
+the privileged tasks keep them, and `import_references.sh` re-verifies them with this benchmark's tooling.
 
 ## Evidence
 `scripts/robocasa/frozen/report.json`, for all 29: not solved at the start; `reset()` bit-exact; the reference

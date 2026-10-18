@@ -39,10 +39,12 @@ Not in this set (descriptions written: `scripts/ambench/descr/`):
   end-effector-only robot; L1 and MPC controllers) are variants of the same tasks.
 
 ## Tasks and generator
-- `python3 scripts/ambench/mk_tasks.py` writes every AM-Bench task dir from `scripts/ambench/` alone: `instances.json`
+- `python3 scripts/ambench/mk_tasks.py` writes every AM-Bench task dir from `scripts/ambench/` and the instance files the tasks already hold: `instances.json`
   (`modes`, per task the frozen instance with its hashes and provenance, and the task's own `modes` where it has fewer:
   PullLever, `["standard"]`),
-  `frozen/<task>-iNN/` (`instance.json`, `oracle_actions.npy`), `descr/<task>.json` (what the task asks and exactly what its
+  each instance's `instance.json` and `oracle_actions.npy` (committed only in the tasks: `mk_tasks.py` reads the standard
+  task's `environment/sim/instance.json` and `solution/oracle_qpos.npy`, or `frozen/<task>-iNN/` while a fresh `freeze.py`
+  run's output is there; delete it once the tasks are generated), `descr/<task>.json` (what the task asks and exactly what its
   check tests, written from the task's code), `shared/rcb_ambench.py` (the tooling), `template/<mode>/` and
   `scripts/eai_standard/` (the 2.2 layer and the standard client). Re-running it leaves `git diff tasks/` empty; `--check`
   only compares.

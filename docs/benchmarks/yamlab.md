@@ -20,9 +20,11 @@ instances and spread over the placement schedule. `scripts/yamlab/instances.json
 ids and, under `pruned`, the removed ids; `freeze.py`'s `KEEP` applies the same cut.
 
 ## Tasks and generator
-- `python3 scripts/yamlab/mk_tasks.py` writes every YAMLab task dir (both modes) from `scripts/yamlab/` alone:
+- `python3 scripts/yamlab/mk_tasks.py` writes every YAMLab task dir (both modes) from `scripts/yamlab/` and the instance files the tasks already hold:
   `instances.json` (per family, the frozen instances in order with their source demonstration, assets and oracle hashes),
-  `frozen/<family>-iNN/` (`instance.json`, `oracle_actions.npy`), `shared/rcb_yamlab.py` (the tooling), `template/<mode>/`
+  each instance's `instance.json` and `oracle_actions.npy` (committed only in the tasks: `mk_tasks.py` reads the standard
+  task's `environment/sim/instance.json` and `solution/oracle_qpos.npy`, or `frozen/<family>-iNN/` while a fresh
+  `freeze.py` run's output is there; delete it once the tasks are generated), `shared/rcb_yamlab.py` (the tooling), `template/<mode>/`
   and `scripts/eai_standard/` (the 2.2 layer and the standard client). Re-running it leaves `git diff tasks/` empty;
   `--check` only compares.
 - Selection (`scripts/yamlab/select_instances.py`, in the image, on a GPU host) and freezing (`scripts/yamlab/freeze.py`):
