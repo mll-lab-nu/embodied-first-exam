@@ -145,7 +145,7 @@ control except for `essential_two_object` and `essential_pen_regrasp`, which nee
 **Wuji start states that differ from the Sharpa start.** Two families need a Wuji-specific start because the Sharpa
 start cannot be held by the Wuji geometry; only hand joints (and, where physically necessary, the held objects' start
 poses) differ, found by closing the Wuji fingers in physics; the task, predicate and fail-fast rules are unchanged:
-- `essential_two_object`: `task_library/essential_two_object/wuji_reset.json` declares the Wuji finger targets and
+- `essential_two_object`: its `wuji_reset.json` (in the generated task's `environment/`) declares the Wuji finger targets and
   both walnuts' start poses in the Wuji grasp (`initial_objects`; formed by releasing the walnuts above the open hand
   while the fingers close). Walnut B's (and A's) reference pose is its pose after the reset settle, as for Sharpa. The
   start holds both walnuts for 60 s of hold actions; a searched open-loop finger controller completes stage 1.
@@ -205,7 +205,8 @@ forward kinematics.
 ## Essential dexterity families
 
 Six fixed-wrist scenes isolate finger control. Each family owns its folder `scripts/dexhand/task_library/<family>/`
-(`task.json`, `assets/manifest.json` with provenance and credits, `render.json`, `README.md`, authoring `tools/`); its
+(`task.json`, `assets/manifest.json` with the asset licenses and provenance, `render.json`, `README.md`, authoring
+`tools/`); its
 `scene.py`, packaged assets, oracle (`solution/`) and `wuji_reset.json` are committed once, in its generated privileged
 task (see "Generator"). `task_library/index.json` registers them, `library.py` validates the registration and asset
 inventory, and `sync_essential_catalog.py` freezes them into `essential_catalog.json`, the specification the generator
@@ -996,7 +997,9 @@ README layout, test.sh). Never edit a generated task file: edit the family's sou
   once, in the generated task directories; the family folder keeps what the generator interprets (`family.json`,
   `task.json` where it is not shipped, texts, manifests) and the authoring material. `scripts/dexhand/sources.py`
   stages each family's source folder from both (its docstring has the mapping); a file put in the family folder wins,
-  which is how a new family or an edit enters. After regenerating, `python3 scripts/dexhand/sources.py --clean` removes
+  which is how a new family or an edit enters; a solution slot (`trajectory.npz`, or `trajectory.json` with its parts,
+  and each `<hand>/`) is replaced as a whole. A file deleted or renamed in a family (for example in a `runtime.dirs`
+  folder) must be deleted or renamed in its task directories too, or its old copy is staged again. After regenerating, `python3 scripts/dexhand/sources.py --clean` removes
   the family-folder files that now equal their task copy (`--check` fails while one is left). Authoring tools, family
   tests and the MuJoCo suites read the runtime from the family folder: run `sources.py --unpack [family ...]` first.
 - Shared sources, copied unchanged into every task (`ci_checks/check-tooling-identity.sh`): `rcb_dexhand.py`,

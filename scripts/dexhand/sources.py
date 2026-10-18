@@ -20,8 +20,11 @@ once, in the family's generated task directories:
 `folder()` stages a family's source folder: its committed files plus every canonical copy that the folder does not
 hold itself. A file present in the family folder wins, which is how a new family, or a changed file, enters: put it
 in the family folder, regenerate, then `python3 scripts/dexhand/sources.py --clean` removes every family-folder file
-that is now byte-identical to its canonical copy (`generate.py --check` fails while such a duplicate is left). A file
-dropped from a family must be dropped from its task directories too (regenerating keeps a canonical copy otherwise).
+that is now byte-identical to its canonical copy (`generate.py --check` fails while such a duplicate is left). A
+solution slot (`<solution dir>/<stem>.npz`, or `<stem>.json` with its parts, and each `<hand>/` folder) is replaced as
+a whole: once the family folder holds either form, none of the slot's canonical files is staged, and a slot holding
+both forms is an error. A file deleted or renamed in a family (a `runtime.dirs` file, say) must be deleted or renamed
+in its task directories too, or its old canonical copy is staged again.
 
 Authoring tools, the family tests and the MuJoCo suites under `tests/` read the runtime from the family folder:
 `python3 scripts/dexhand/sources.py --unpack [family ...]` writes the canonical copies into the family folders first,
@@ -64,20 +67,26 @@ def runtime_bytes(path: Path) -> bytes:
     return data
 
 
-def _solution(task_solution: Path, declared: Path) -> dict[str, Path]:
-    """A task's `solution/trajectory.npz` (or `trajectory.json` and its parts) under the family's declared name."""
+def slot(declared: Path) -> tuple[str, str]:
+    """A solution slot: the two names one set of rows can have (`<stem>.npz`, or `<stem>.json` with its parts)."""
+    return (declared.with_suffix(".npz").as_posix(), declared.with_suffix(".json").as_posix())
+
+
+def _solution(task_solution: Path, declared: Path) -> dict[str, tuple[Path, tuple | None]]:
+    """A task's `solution/trajectory.npz` (or `trajectory.json` and its parts) under the family's declared name,
+    as one slot: staged only as a whole (`folder`)."""
     if declared.suffix == ".json":
         manifest = task_solution / "trajectory.json"
         if not manifest.is_file():
             return {}
-        copies = {declared.as_posix(): manifest}
+        copies = {declared.as_posix(): (manifest, slot(declared))}
         for part in json.loads(manifest.read_text())["parts"]:
-            copies[(declared.parent / part["file"]).as_posix()] = task_solution / part["file"]
+            copies[(declared.parent / part["file"]).as_posix()] = (task_solution / part["file"], slot(declared))
         return copies
-    return {declared.as_posix(): task_solution / "trajectory.npz"}
+    return {declared.as_posix(): (task_solution / "trajectory.npz", slot(declared))}
 
 
-def _hand_solutions(task_solution: Path, solution_dir: Path) -> dict[str, Path]:
+def _hand_solutions(task_solution: Path, solution_dir: Path) -> dict[str, tuple[Path, tuple | None]]:
     copies = {}
     for hand in HANDS:
         name = "trajectory.json" if (task_solution / hand / "trajectory.json").is_file() else "trajectory.npz"
@@ -85,51 +94,69 @@ def _hand_solutions(task_solution: Path, solution_dir: Path) -> dict[str, Path]:
     return copies
 
 
-def plugin_copies(folder: Path) -> dict[str, Path]:
-    """{family-relative path: canonical task copy} of a plugin family (`families/<family>/family.json`)."""
+def _plugin_entries(folder: Path) -> dict[str, tuple[Path, tuple | None]]:
+    """{family-relative path: (canonical task copy, solution slot or None)} of a plugin family."""
     manifest = json.loads((folder / "family.json").read_text())
     family = manifest["id"]
     privileged, standard = task_dir(family, "privileged"), task_dir(family, "standard")
     runtime = manifest.get("runtime", {})
-    copies = {relative: privileged / "environment" / relative for relative in runtime.get("files", [])}
+    copies = {relative: (privileged / "environment" / relative, None) for relative in runtime.get("files", [])}
     for relative in runtime.get("dirs", []):
         base = privileged / "environment" / relative
         for file in sorted(base.rglob("*")) if base.is_dir() else []:
             if file.is_file() and "__pycache__" not in file.parts:
-                copies[(Path(relative) / file.relative_to(base)).as_posix()] = file
+                copies[(Path(relative) / file.relative_to(base)).as_posix()] = (file, None)
     solution = manifest.get("solution") or {}
     if solution:
         copies.update(_solution(standard / "solution", Path(solution["standard"])))
         copies.update(_solution(privileged / "solution", Path(solution["privileged"])))   # the privileged rows win
         copies.update(_hand_solutions(privileged / "solution", Path(solution["privileged"]).parent))
-    return {relative: path for relative, path in copies.items() if path.is_file()}
+    return copies
 
 
-def essential_copies(family: str) -> dict[str, Path]:
-    """{family-relative path: canonical task copy} of an essential family (`task_library/<family>/`)."""
+def _essential_entries(family: str) -> dict[str, tuple[Path, tuple | None]]:
+    """{family-relative path: (canonical task copy, solution slot or None)} of an essential family."""
     module = next(entry["module"] for entry in json.loads((LIBRARY / "index.json").read_text())["tasks"]
                   if entry["id"] == family)
     task = task_dir(family, "privileged")
     environment = task / "environment"
-    copies = {"scene.py": environment / f"{module}.py"}
+    copies = {"scene.py": (environment / f"{module}.py", None)}
     for name in ("wuji_reset.json", "offered_hands.json"):
-        copies[name] = environment / name
+        copies[name] = (environment / name, None)
     manifest = LIBRARY / family / "assets/manifest.json"
     if manifest.is_file():
         for name in json.loads(manifest.read_text()).get("runtime_files", []):
-            copies[f"assets/{name}"] = environment / "object_assets" / family / name
+            copies[f"assets/{name}"] = (environment / "object_assets" / family / name, None)
     name = "trajectory.json" if (task / "solution/trajectory.json").is_file() else "trajectory.npz"
     copies.update(_solution(task / "solution", Path("solution") / name))
     copies.update(_hand_solutions(task / "solution", Path("solution")))
-    return {relative: path for relative, path in copies.items() if path.is_file()}
+    return copies
+
+
+def entries(folder: Path) -> dict[str, tuple[Path, tuple | None]]:
+    """The canonical copies a family folder can take from tasks/: {family-relative path: (task file, slot)}."""
+    if (folder / "family.json").is_file():
+        found = _plugin_entries(folder)
+    elif folder.parent == LIBRARY:
+        found = _essential_entries(folder.name)
+    else:
+        found = {}
+    return {relative: value for relative, value in found.items() if value[0].is_file()}
 
 
 def copies_of(folder: Path) -> dict[str, Path]:
-    if (folder / "family.json").is_file():
-        return plugin_copies(folder)
-    if folder.parent == LIBRARY:
-        return essential_copies(folder.name)
-    return {}
+    """The canonical copies `folder` takes: every entry, except a solution slot the folder fills itself (a
+    family-folder `trajectory.npz` or `trajectory.json` replaces the slot's rows as a whole, never file by file)."""
+    return {relative: path for relative, (path, rows) in entries(folder).items()
+            if rows is None or not any((folder / name).is_file() for name in rows)}
+
+
+def origin(path: Path) -> Path:
+    """A staged file's family-folder path (for messages); any other path unchanged."""
+    for source, target in _STAGED.items():
+        if path.is_relative_to(target):
+            return source / path.relative_to(target)
+    return path
 
 
 def reset() -> None:
@@ -148,7 +175,10 @@ def folder(source: Path) -> Path:
     key = source.resolve()
     if key not in _STAGED:
         if _STAGE is None:
-            _STAGE = tempfile.TemporaryDirectory(prefix="dexhand-sources-")
+            try:   # next to the checkout (a large data disk here), else the system's temporary directory
+                _STAGE = tempfile.TemporaryDirectory(prefix="dexhand-sources-", dir=ROOT.parent)
+            except OSError:
+                _STAGE = tempfile.TemporaryDirectory(prefix="dexhand-sources-")
         _COUNT[0] += 1
         target = Path(_STAGE.name) / str(_COUNT[0]) / source.name
         shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
@@ -156,6 +186,9 @@ def folder(source: Path) -> Path:
             if not (target / relative).exists():
                 (target / relative).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(canonical, target / relative)
+        for rows in {rows for _, rows in entries(source).values() if rows}:
+            if all((target / name).is_file() for name in rows):
+                raise ValueError(f"{source.name}: solution slot holds both {rows[0]} and {rows[1]}; keep one")
         _STAGED[key] = target
     return _STAGED[key]
 
@@ -168,9 +201,13 @@ def family_folders(names: list[str] | None = None) -> list[Path]:
 
 def duplicates(source: Path) -> list[Path]:
     """Family-folder files that are byte-identical to their canonical task copy (left over from --unpack or a
-    regenerated edit): the canonical copy is the only one to keep."""
-    return [source / relative for relative, canonical in sorted(copies_of(source).items())
-            if (source / relative).is_file() and (source / relative).read_bytes() == canonical.read_bytes()]
+    regenerated edit; an `.obj` also when it differs only by the converter's URL line): keep only the canonical copy."""
+    found = []
+    for relative, (canonical, _) in sorted(entries(source).items()):
+        path = source / relative
+        if path.is_file() and canonical.read_bytes() in (path.read_bytes(), runtime_bytes(path)):
+            found.append(path)
+    return found
 
 
 def main() -> int:

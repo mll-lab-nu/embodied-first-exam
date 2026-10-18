@@ -392,7 +392,7 @@ def solution_shape(source: Path) -> tuple[int, int, str, str | None]:
     with np.load(source, allow_pickle=False) as archive:
         actions = archive["actions"]
         if actions.ndim != 2:
-            raise ValueError(f"{source}: actions must be a 2-D array")
+            raise ValueError(f"{sources.origin(source)}: actions must be a 2-D array")
         hand = str(archive["hand"]) if "hand" in archive.files else "sharpa"
         task = str(archive["task"]) if "task" in archive.files else None
         return int(actions.shape[0]), int(actions.shape[1]), hand, task
@@ -477,7 +477,8 @@ def write_solution(task: Path, mode: str, trajectory: Path, hands: dict[str, Pat
     for rows, target in folders:
         for source, name in solution_files(rows):
             if source.stat().st_size >= MAX_FILE_BYTES:
-                OVERSIZED.add(str(source.relative_to(ROOT) if source.is_relative_to(ROOT) else source))
+                source_path = sources.origin(source)
+                OVERSIZED.add(str(source_path.relative_to(ROOT) if source_path.is_relative_to(ROOT) else source_path))
             copy(source, target / name)
         copy(SOLUTION / "solution_parts.py", target / "solution_parts.py")
         copy(SOLUTION / runner, target / runner)
