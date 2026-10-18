@@ -1354,6 +1354,55 @@ def set_of(task: Path) -> str:
 _EASY_WARNED: set[str] = set()
 
 
+# The core set: the task DIRS (each mode its own task) the headline statistics are computed on, docs/core_set.toml:
+# every task dir minus the easy set and minus the dirs the reference run (SOLVED_BY "luna") solved, regenerated from
+# the eval pool's verdicts. A list, not a task field, like the easy set: listing a task changes none of its files.
+CORE_SET_FILE = Path(__file__).resolve().parents[1] / "docs" / "core_set.toml"
+CORE_LUNA = ("failed", "no result yet")
+
+
+def core_set(path: Path = CORE_SET_FILE) -> dict[str, dict]:
+    """docs/core_set.toml as {task dir: entry}; empty when the file is absent. ValueError on a malformed file."""
+    out: dict[str, dict] = {}
+    if not path.is_file():
+        return out
+    for e in tomllib.loads(path.read_text(encoding="utf-8")).get("task", []):
+        t = e.get("task") if isinstance(e, dict) else None
+        if not isinstance(t, str) or not t:
+            raise ValueError(f"{path.name}: an entry without a task: {e!r}")
+        if t in out:
+            raise ValueError(f"{path.name}: {t} listed twice")
+        out[t] = e
+    return out
+
+
+def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
+    """What is wrong with the core set: a task dir that does not exist, a base / benchmark / mode that is not the
+    dir's, a task whose base is in the easy set, an unknown `luna` value or field."""
+    tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
+    try:
+        cs, es = core_set(path), easy_set()
+    except (ValueError, OSError) as e:
+        return [str(e)]
+    bad = []
+    for t, e in cs.items():
+        d = tasks_dir / t
+        if not (d / "task.toml").is_file():
+            bad.append(f"{t}: no task directory under tasks/")
+            continue
+        for k, want in (("base", base_of(d)), ("benchmark", bench_of(d)), ("mode", mode_of(d))):
+            if e.get(k) != want:
+                bad.append(f"{t}: {k} {e.get(k)!r}, the dir's is {want!r}")
+        if base_of(d) in es:
+            bad.append(f"{t}: its base is in docs/easy_set.toml")
+        if e.get("luna") not in CORE_LUNA:
+            bad.append(f"{t}: luna {e.get('luna')!r} is not one of {', '.join(CORE_LUNA)}")
+        unknown = set(e) - {"task", "base", "benchmark", "mode", "luna"}
+        if unknown:
+            bad.append(f"{t}: unknown field(s) {', '.join(sorted(unknown))}")
+    return bad
+
+
 def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) -> list[str]:
     """What is wrong with the easy set: an unknown reason, a base no task directory has, a benchmark label that is not
     the base's."""
@@ -1501,6 +1550,17 @@ def main(argv: list[str]) -> int:
             return 1 if bad else 0
         for t in sorted(p for p in root.iterdir() if (p / "task.toml").is_file()):
             print(f"{t.name}\t{bench_of(t)}")
+        return 0
+    if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml; `core-set`: list its task dirs
+        if "--check" in argv:
+            bad = check_core_set()
+            for b in bad:
+                print(f"FAIL docs/core_set.toml: {b}")
+            if not bad:
+                print(f"ok docs/core_set.toml: {len(core_set())} task dirs")
+            return 1 if bad else 0
+        for t in sorted(core_set()):
+            print(t)
         return 0
     if argv[:1] == ["easy-set"]:       # `easy-set --check`: docs/easy_set.toml (PROTOCOL §4); `easy-set`: list its tasks
         if "--solved-by" in argv:      # `easy-set --solved-by luna`: the bases that run solved (SOLVED_BY)
