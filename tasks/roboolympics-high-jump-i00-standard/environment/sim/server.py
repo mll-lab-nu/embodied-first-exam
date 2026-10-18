@@ -86,8 +86,7 @@ class RoboFun:
             "action_types": types,
             "start_command": self.instance["t0"]["hold"],     # the command in force at t = 0 (type and row)
             "units": "vx, vy: m/s in the robot's own frame (x forward, y left); wz: rad/s (+ turns left); joint targets: "
-                     "rad; *_dq: rad/s; *_tau: N m; *_kp: N m/rad; *_kd: N m s/rad; grip_left, grip_right: >= 0.5 "
-                     "closes the hand's grip, < 0.5 opens it",
+                     "rad; *_dq: rad/s; *_tau: N m; *_kp: N m/rad; *_kd: N m s/rad; " + self._grip_units(),
             "cameras": {c: {"hw": list(IMAGE_HW), "fovy_deg": self.mounts[c]["fovy_deg"], "mounted": self.mounts[c]["mounted"],
                             "pose_t0": {"frame": "the robot at t = 0: origin on the floor under the pelvis, x the way it "
                                                  "faces, y left, z up",
@@ -100,10 +99,21 @@ class RoboFun:
                                  "(rad/s) and acceleration (m/s^2, gravity included) in the sensor's frame; holding_*: "
                                  "1 while that hand grips something; mode: 0 stand, 1 walk, 2 run, 3 run_arms, 4 joints / "
                                  "lowcmd, 5 walk_falcon, 6 walk_agile (the G1's); cmd_*: the velocity command in force; time_s: "
-                                 "the episode's time"},
+                                 "the episode's time" + ("; jaw_opening_* (m), jaw_speed_* (m/s, + opening), jaw_force_* "
+                                 "(N, the clamp force, + closing): a gripper's jaws; its holding_* is 1 while both jaws "
+                                 "touch the same object" if self.facts.get("real_hands") else "")},
             "referee": "once an attempt is over, every response's meta carries the referee's call: meta['outcome'] "
                        "('success' or the rule that ended it) and meta['stages_reached'] of meta['stages_total']",
         }
+
+    def _grip_units(self) -> str:
+        real = self.facts.get("real_hands", {}).get("sides", [])
+        if not real:
+            return "grip_left, grip_right: >= 0.5 closes the hand's grip, < 0.5 opens it"
+        out = [f"grip_{s}: the {s} gripper's closure command, 0 (open, 90 mm) to 1 (closed)" for s in real]
+        out += [f"grip_{s}: >= 0.5 closes the {s} hand's grip, < 0.5 opens it" for s in ("left", "right")
+                if s not in real]
+        return "; ".join(out)
 
     def interpolable(self, typ: str) -> bool:
         return True

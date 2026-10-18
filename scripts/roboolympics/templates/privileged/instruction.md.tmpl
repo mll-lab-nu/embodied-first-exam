@@ -47,7 +47,7 @@ done = s.step("walk", row)             # one control step (10 ms) of one row; Tr
 s.rows                                 # the sim rows of every step since the last reset: what save_trajectory() writes
 s.status()                             # the referee: success, done, failed, stages, progress, metrics, events
 s.state()                              # privileged state: pelvis (x, y, z, yaw), centre of mass, joints, the palms,
-                                       # what each hand holds, and the task's objects under "task"
+                                       # what each hand holds, and the task's objects under "task"@@STATE_HANDS@@
 s.world                                # everything: s.world.m, s.world.d (MuJoCo model and data), s.world.robot
                                        # (addresses, limits), s.world.ref (the referee), s.world.task (the rules)
 s.image("head_left")                   # a camera's RGB image (270 x 480; the cameras: @@CAMERAS@@)

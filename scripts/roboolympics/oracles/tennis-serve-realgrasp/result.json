@@ -1,0 +1,12 @@
+{
+ "family": "tennis-serve-realgrasp",
+ "steps": 350,
+ "time_s": 3.5,
+ "time_limit_s": 20.0,
+ "metrics": {
+  "strike_speed_m_s": 13.265,
+  "landing_x_m": 16.265,
+  "landing_y_m": 3.126
+ },
+ "deterministic": true
+}
