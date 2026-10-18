@@ -1,0 +1,736 @@
+{
+    "versions": {
+        "omnigibson": {
+            "version": "3.7.2",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "bddl": {
+            "version": "3.7.0",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "behavior-1k-assets": {
+            "version": "3.7.2rc1"
+        },
+        "omnigibson-robot-assets": {
+            "version": null,
+            "git_hash": null
+        }
+    },
+    "metadata": {},
+    "state": {
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ori": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "registry": {
+            "system_registry": {},
+            "object_registry": {
+                "desk_iotfzl_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -1.3021131753921509,
+                            -2.949998378753662,
+                            0.6246658563613892
+                        ],
+                        "ori": [
+                            0.0013271044008433819,
+                            -0.0005110846250317991,
+                            -6.436956027755514e-05,
+                            0.9999989867210388
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "target_half_french_toast_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -1.3028669357299805,
+                            -2.966731309890747,
+                            0.7418464422225952
+                        ],
+                        "ori": [
+                            -1.3634228707815055e-05,
+                            -7.561557140434161e-06,
+                            -0.0007996972417458892,
+                            0.9999999403953552
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        },
+                        "MaxTemperature": {
+                            "max_temperature": 23.0
+                        }
+                    }
+                },
+                "stack_can_of_bay_leaves_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -1.300041675567627,
+                            -2.964874744415283,
+                            0.7921952605247498
+                        ],
+                        "ori": [
+                            -0.009182036854326725,
+                            0.01998518966138363,
+                            -0.001369512639939785,
+                            0.9997574687004089
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "stack_can_of_bay_leaves_ep1_2": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -1.3023474216461182,
+                            -2.964897632598877,
+                            0.8640274405479431
+                        ],
+                        "ori": [
+                            -0.009983166120946407,
+                            0.019437704235315323,
+                            -0.0026253662072122097,
+                            0.9997581243515015
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "stack_can_of_bay_leaves_ep1_3": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            -1.301011085510254,
+                            -2.963606834411621,
+                            0.9358634948730469
+                        ],
+                        "ori": [
+                            -0.010689026676118374,
+                            0.018906399607658386,
+                            -0.008166889660060406,
+                            0.9997310042381287
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "goal_region__target_half_french_toast_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -1.300011396408081,
+                            -2.602790355682373,
+                            0.7420358061790466
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    "non_kin": {},
+                    "radius": 0.05387871339917183,
+                    "height": -1,
+                    "size": -1
+                },
+                "agent_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            -1.8228888511657715,
+                            -2.966771364212036,
+                            0.7551286220550537
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.000000238418579
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "joint_vel": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "controllers": {
+                        "arm_0": {
+                            "goal_is_valid": false,
+                            "goal": null
+                        },
+                        "gripper_0": {
+                            "goal_is_valid": false,
+                            "goal": null,
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        -0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": false
+                            }
+                        }
+                    },
+                    "non_kin": {},
+                    "ag_obj_constraint_params": {
+                        "0": {}
+                    }
+                }
+            }
+        }
+    },
+    "init_info": {
+        "class_module": "omnigibson.scenes.scene_base",
+        "class_name": "Scene",
+        "args": {
+            "scene_file": {
+                "versions": {
+                    "omnigibson": {
+                        "version": "3.7.2",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "bddl": {
+                        "version": "3.7.0",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "behavior-1k-assets": {
+                        "version": "3.7.2rc1"
+                    },
+                    "omnigibson-robot-assets": {
+                        "version": null,
+                        "git_hash": null
+                    }
+                },
+                "metadata": {},
+                "state": {
+                    "pos": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "ori": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "registry": {
+                        "system_registry": {},
+                        "object_registry": {
+                            "desk_iotfzl_0": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        -1.3021128177642822,
+                                        -2.9499990940093994,
+                                        0.6246658563613892
+                                    ],
+                                    "ori": [
+                                        0.0013271044008433819,
+                                        -0.0005110846250317991,
+                                        -6.436956027755514e-05,
+                                        0.9999989867210388
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "target_half_french_toast_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -1.3028669357299805,
+                                        -2.966731309890747,
+                                        0.7418464422225952
+                                    ],
+                                    "ori": [
+                                        -1.3634229617309757e-05,
+                                        -7.561561233160319e-06,
+                                        -0.000799685949459672,
+                                        0.9999997019767761
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    },
+                                    "MaxTemperature": {
+                                        "max_temperature": 23.0
+                                    }
+                                }
+                            },
+                            "stack_can_of_bay_leaves_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -1.3000264167785645,
+                                        -2.964876413345337,
+                                        0.7922019958496094
+                                    ],
+                                    "ori": [
+                                        -0.009190279990434647,
+                                        0.020100610330700874,
+                                        -0.0013919670600444078,
+                                        0.9997547268867493
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "stack_can_of_bay_leaves_ep1_2": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -1.3023160696029663,
+                                        -2.9648940563201904,
+                                        0.8640406131744385
+                                    ],
+                                    "ori": [
+                                        -0.010042814537882805,
+                                        0.019534336403012276,
+                                        -0.002668223576620221,
+                                        0.9997552037239075
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "stack_can_of_bay_leaves_ep1_3": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        -1.3009694814682007,
+                                        -2.963593006134033,
+                                        0.9358763694763184
+                                    ],
+                                    "ori": [
+                                        -0.010773220099508762,
+                                        0.018983177840709686,
+                                        -0.008223220705986023,
+                                        0.9997279644012451
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "goal_region__target_half_french_toast_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        -1.300011396408081,
+                                        -2.602790355682373,
+                                        0.7420358061790466
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                },
+                                "non_kin": {},
+                                "radius": 0.05387871339917183,
+                                "height": -1,
+                                "size": -1
+                            }
+                        }
+                    }
+                },
+                "init_info": {
+                    "class_module": "omnigibson.scenes.scene_base",
+                    "class_name": "Scene",
+                    "args": {
+                        "scene_file": null
+                    }
+                },
+                "objects_info": {
+                    "init_info": {
+                        "desk_iotfzl_0": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "desk_iotfzl_0",
+                                "category": "desk",
+                                "model": "iotfzl",
+                                "scale": [
+                                    0.999945342540741,
+                                    0.9999765753746033,
+                                    0.9999732971191406
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "1361d96508c01035836af43f2a75d6de"
+                            }
+                        },
+                        "target_half_french_toast_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "target_half_french_toast_ep1_1",
+                                "category": "half_french_toast",
+                                "model": "enjjdg",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "af90d4ee7d29ccfd40e664fa69e228ab"
+                            }
+                        },
+                        "stack_can_of_bay_leaves_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "stack_can_of_bay_leaves_ep1_1",
+                                "category": "can_of_bay_leaves",
+                                "model": "ppwvjf",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "4f630dd3d1e08527c784b69dbd4dcdf2"
+                            }
+                        },
+                        "stack_can_of_bay_leaves_ep1_2": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "stack_can_of_bay_leaves_ep1_2",
+                                "category": "can_of_bay_leaves",
+                                "model": "ppwvjf",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "4f630dd3d1e08527c784b69dbd4dcdf2"
+                            }
+                        },
+                        "stack_can_of_bay_leaves_ep1_3": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "stack_can_of_bay_leaves_ep1_3",
+                                "category": "can_of_bay_leaves",
+                                "model": "ppwvjf",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "4f630dd3d1e08527c784b69dbd4dcdf2"
+                            }
+                        },
+                        "goal_region__target_half_french_toast_ep1_1": {
+                            "class_module": "omnigibson.objects.primitive_object",
+                            "class_name": "PrimitiveObject",
+                            "args": {
+                                "name": "goal_region__target_half_french_toast_ep1_1",
+                                "primitive_type": "Sphere",
+                                "relative_prim_path": "/goal_region__target_half_french_toast_ep1_1",
+                                "category": "goal_region_marker",
+                                "fixed_base": true,
+                                "visual_only": true,
+                                "rgba": [
+                                    0.1,
+                                    0.8,
+                                    0.2,
+                                    1.0
+                                ],
+                                "radius": 0.053878712654113765
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "objects_info": {
+        "init_info": {
+            "desk_iotfzl_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "desk_iotfzl_0",
+                    "category": "desk",
+                    "model": "iotfzl",
+                    "scale": [
+                        0.999945342540741,
+                        0.9999765753746033,
+                        0.9999732971191406
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "1361d96508c01035836af43f2a75d6de"
+                }
+            },
+            "target_half_french_toast_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "target_half_french_toast_ep1_1",
+                    "category": "half_french_toast",
+                    "model": "enjjdg",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "af90d4ee7d29ccfd40e664fa69e228ab"
+                }
+            },
+            "stack_can_of_bay_leaves_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "stack_can_of_bay_leaves_ep1_1",
+                    "category": "can_of_bay_leaves",
+                    "model": "ppwvjf",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "4f630dd3d1e08527c784b69dbd4dcdf2"
+                }
+            },
+            "stack_can_of_bay_leaves_ep1_2": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "stack_can_of_bay_leaves_ep1_2",
+                    "category": "can_of_bay_leaves",
+                    "model": "ppwvjf",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "4f630dd3d1e08527c784b69dbd4dcdf2"
+                }
+            },
+            "stack_can_of_bay_leaves_ep1_3": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "stack_can_of_bay_leaves_ep1_3",
+                    "category": "can_of_bay_leaves",
+                    "model": "ppwvjf",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "4f630dd3d1e08527c784b69dbd4dcdf2"
+                }
+            },
+            "goal_region__target_half_french_toast_ep1_1": {
+                "class_module": "omnigibson.objects.primitive_object",
+                "class_name": "PrimitiveObject",
+                "args": {
+                    "name": "goal_region__target_half_french_toast_ep1_1",
+                    "primitive_type": "Sphere",
+                    "relative_prim_path": "/goal_region__target_half_french_toast_ep1_1",
+                    "category": "goal_region_marker",
+                    "fixed_base": true,
+                    "visual_only": true,
+                    "rgba": [
+                        0.1,
+                        0.8,
+                        0.2,
+                        1.0
+                    ],
+                    "radius": 0.053878712654113765
+                }
+            },
+            "agent_0": {
+                "class_module": "omnigibson.robots.franka",
+                "class_name": "FrankaPanda",
+                "args": {
+                    "name": "agent_0",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self_collisions": true,
+                    "fixed_base": true,
+                    "controller_config": {
+                        "arm_0": {
+                            "name": "JointController",
+                            "motor_type": "position",
+                            "command_input_limits": null,
+                            "command_output_limits": null,
+                            "use_delta_commands": false,
+                            "use_impedances": false
+                        },
+                        "gripper_0": {
+                            "name": "MultiFingerGripperController",
+                            "command_input_limits": null,
+                            "mode": "binary"
+                        }
+                    },
+                    "action_type": "continuous",
+                    "action_normalize": false,
+                    "reset_joint_pos": [
+                        -3.290514723630622e-05,
+                        1.8240387362311594e-05,
+                        -6.153710728540318e-06,
+                        -0.06982055306434631,
+                        -8.45706308609806e-05,
+                        0.0805763378739357,
+                        -6.24230524408631e-05,
+                        0.01997292973101139,
+                        0.01958896592259407
+                    ],
+                    "obs_modalities": [
+                        "rgb"
+                    ],
+                    "include_sensor_names": null,
+                    "exclude_sensor_names": null,
+                    "grasping_mode": "assisted",
+                    "expected_file_hash": "9ddd461281d1c875d2ae552f61751c3f"
+                }
+            }
+        }
+    }
+}

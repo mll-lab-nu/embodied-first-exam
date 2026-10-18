@@ -98,7 +98,7 @@ def trial_config(trial, task, r):
     `[metadata.seeds] default`), else the task's default seed (`seed_source = "default"`). Run-time overrides: the trial's
     recorded environment. A trial of another version of the task (its `task_checksum` is not the task's DIGEST now) keeps
     only what its name says; the rest is "legacy"."""
-    tdir = ROOT / "tasks" / task
+    tdir = tc.task_dir(task, ROOT / "tasks")
     hc = load_json(trial / "config.json")
     env = {}
     for src in ((hc.get("environment") or {}).get("env"), (hc.get("agent") or {}).get("env"), hc.get("env")):
@@ -160,7 +160,7 @@ def main(argv):
             trials.append((trial, json.load(open(trial / "result.json"))))
     for trial, r in sorted(trials, key=lambda tr: (started(tr[1]), tr[0].name)):
         task = canonical(r["task_name"].split("/")[-1])   # also pre-v1.0 jobs
-        tdir = ROOT / "tasks" / task
+        tdir = tc.task_dir(task, ROOT / "tasks")
         if not tdir.is_dir(): continue
         rw = load_reward(trial)
         ar = r.get("agent_result") or {}; mode = mode_of(task); limited = mode != "privileged"; fam = base(task).replace("robotwin_2_0_", "")

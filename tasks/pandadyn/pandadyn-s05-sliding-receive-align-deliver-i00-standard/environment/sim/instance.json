@@ -1,0 +1,38 @@
+{
+ "task": "S05-SlidingReceiveAlignDeliver",
+ "env_id": "PandaMultiStage/S05-SlidingReceiveAlignDeliver-v0",
+ "difficulty": "nominal",
+ "seed": 0,
+ "parameters": {
+  "horizon": 25.0,
+  "object_mass": 0.035,
+  "tool_mass": 0.2,
+  "tool_half": 0.09,
+  "radius": 0.018,
+  "preview": 0.65,
+  "incoming_speed": 0.58,
+  "fixture_speed": 0.04,
+  "restitution": 0.1,
+  "table_friction": 0.08,
+  "tool_friction": 0.05,
+  "friction": 0.05,
+  "target_offset": 0.03,
+  "target_tolerance": 0.014,
+  "receiver_base_x": -0.3
+ },
+ "physics_hz": 1000,
+ "arms": {
+  "panda-0": "single"
+ },
+ "action_dim": 8,
+ "control_hz": 100,
+ "horizon_s": 25.0,
+ "phases": [
+  "source_to_tray",
+  "inertial_staging",
+  "transport_turn",
+  "match_receiver",
+  "support_transfer"
+ ],
+ "initial_sha": "3e8c593a279d91761562c5a7bbcf3ba7b67b01cb4ef95a73aeae5a7ba7d6caff"
+}

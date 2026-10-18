@@ -1,8 +1,0 @@
-{
- "task": "stack_blocks_two",
- "seed": 60417,
- "embodiment": "aloha-agilex",
- "state_sha": "8ec211100185",
- "text": "Stack the green block on top of the red block (either arm may be used), then open both grippers.",
- "n_active_joints": 16
-}

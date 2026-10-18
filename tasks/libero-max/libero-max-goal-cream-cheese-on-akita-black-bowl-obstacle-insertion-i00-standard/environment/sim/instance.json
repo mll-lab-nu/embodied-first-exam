@@ -1,0 +1,74 @@
+{
+ "case": {
+  "case_id": "pro-position-goal-t06-i06-obstacle_insertion-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 6,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/position/libero_goal/task_6",
+   "change": {
+    "object": "wine_bottle_1",
+    "offset_m": [
+     0.0,
+     -0.14,
+     0.0
+    ],
+    "operation": "insert_obstacle",
+    "placement_rule": "target_support_approach_ring",
+    "preserve_initial_z": true,
+    "relative_to": "cream_cheese_1",
+    "support_entity": "main_table"
+   },
+   "change_family": "OBSTACLE",
+   "change_type": "obstacle_insertion",
+   "expected_response_mode": "replan",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1694704167
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-position-goal-t06-i06-obstacle_insertion-d1",
+   "seed": 1694704167,
+   "setup": [
+    {
+     "object": "wine_bottle_1",
+     "offworld_position_m": [
+      -2.0,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    }
+   ],
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "cream_cheese_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/position",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_goal_swap/put_the_cream_cheese_in_the_bowl.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "position",
+   "init_reference_bddl_file": "libero_goal_swap/put_the_cream_cheese_in_the_bowl.bddl",
+   "init_states_file": "libero_goal_swap/put_the_cream_cheese_in_the_bowl.pruned_init",
+   "language": "Put the cream cheese on the bowl",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 6,
+  "task_name": "put_the_cream_cheese_in_the_bowl",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "603339472128c19f1df952a31e93e0d98d2863de012049b3a3281a279e4a1c1d",
+ "instance_sha": "44a4354da62ef3d7368c7456d15deb64e36f6f691126ed7b046be6486ee309e4",
+ "schema": "eai-libero-max-instance/1"
+}

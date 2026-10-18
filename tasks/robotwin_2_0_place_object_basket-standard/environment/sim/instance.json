@@ -1,8 +1,0 @@
-{
- "task": "place_object_basket",
- "seed": 60417,
- "embodiment": "aloha-agilex",
- "state_sha": "be76657fec8f",
- "text": "Use one arm to grab the target object and put it in the basket, then use the other arm to grab the basket, and finally move the basket slightly away.",
- "n_active_joints": 16
-}

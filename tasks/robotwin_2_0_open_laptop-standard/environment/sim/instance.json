@@ -1,8 +1,0 @@
-{
- "task": "open_laptop",
- "seed": 60417,
- "embodiment": "aloha-agilex",
- "state_sha": "3d88a3fb6934",
- "text": "Use one arm to open the laptop.",
- "n_active_joints": 16
-}

@@ -1,0 +1,113 @@
+{
+ "task": "setting_mousetraps",
+ "challenge_task": "setting_mousetraps",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Set the four mousetraps, which lie on the bathroom cabinet, on the bathroom floor, with exactly two of them under or next to one of the bathroom sinks.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "047770f838b7272d",
+ "action_dim": 25,
+ "challenge_max_steps": 15294,
+ "objects": {
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -0.088,
+    2.7468,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "sink.n.01_1": {
+   "category": "furniture_sink",
+   "position": [
+    -2.164,
+    2.2234,
+    0.6278
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "mousetrap.n.01_4": {
+   "category": "mousetrap",
+   "position": [
+    1.9496,
+    2.3704,
+    0.8862
+   ],
+   "orientation_xyzw": [
+    0.0001,
+    0.0,
+    0.9861,
+    0.166
+   ]
+  },
+  "mousetrap.n.01_2": {
+   "category": "mousetrap",
+   "position": [
+    2.152,
+    2.4139,
+    0.8861
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0001,
+    0.1009,
+    0.9949
+   ]
+  },
+  "cabinet.n.01_1": {
+   "category": "bottom_cabinet",
+   "position": [
+    2.0926,
+    2.0246,
+    0.4919
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    1.0,
+    -0.0
+   ]
+  },
+  "mousetrap.n.01_3": {
+   "category": "mousetrap",
+   "position": [
+    1.931,
+    2.2708,
+    0.8862
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0001,
+    0.2886,
+    0.9574
+   ]
+  },
+  "mousetrap.n.01_1": {
+   "category": "mousetrap",
+   "position": [
+    2.0432,
+    1.6714,
+    0.8862
+   ],
+   "orientation_xyzw": [
+    -0.0001,
+    0.0,
+    -0.7704,
+    0.6376
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

@@ -1,0 +1,129 @@
+{
+  "schema": "control-transfer/1",
+  "protocol": "eai-policy/1.1",
+  "name": "anycar-circuit-compact-v3-silverstone-8",
+  "goal": "Track a complete compact F1-inspired lap, targeted at 28 seconds within a 30-second episode, avoiding collisions/offtrack.",
+  "score": "Ordered completion and time-indexed position/heading/speed accuracy. Safety violation gives zero. No nearest-waypoint score.",
+  "max_rounds": 3,
+  "adaptation_cases": 3,
+  "held_out_cases": 10,
+  "training_backend": "nominal MuJoCo CPU",
+  "evaluation_backend": "native MuJoCo CPU + OSMesa + NumPy CPU",
+  "policy_abi": "anycar-controller/1 bounded numeric JSON",
+  "default_policy": {
+    "schema": "anycar-controller/1",
+    "position_gain": 1.2,
+    "heading_gain": 1.0,
+    "speed_gain": 0.25,
+    "integral_gain": 0.08,
+    "drive_scale": 1.0,
+    "steering_scale": 1.0,
+    "steering_bias": 0.0,
+    "preview": 0.06
+  },
+  "bounds": {
+    "position_gain": [
+      0.1,
+      4.0
+    ],
+    "heading_gain": [
+      0.1,
+      4.0
+    ],
+    "speed_gain": [
+      0.0,
+      3.0
+    ],
+    "integral_gain": [
+      0.0,
+      1.0
+    ],
+    "drive_scale": [
+      0.0,
+      2.0
+    ],
+    "steering_scale": [
+      0.2,
+      2.0
+    ],
+    "steering_bias": [
+      -0.12,
+      0.12
+    ],
+    "preview": [
+      0.0,
+      0.3
+    ]
+  },
+  "channels": [
+    "x",
+    "y",
+    "yaw",
+    "forward_speed",
+    "lateral_speed",
+    "yaw_rate",
+    "wheel_fl",
+    "wheel_fr",
+    "wheel_bl",
+    "wheel_br",
+    "steering",
+    "target_x",
+    "target_y",
+    "target_yaw",
+    "target_speed",
+    "target_curvature",
+    "requested_speed",
+    "requested_steering"
+  ],
+  "units": [
+    "m",
+    "m",
+    "rad",
+    "m/s",
+    "m/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad",
+    "m",
+    "m",
+    "rad",
+    "m/s",
+    "1/m",
+    "m/s",
+    "rad"
+  ],
+  "image_interval_s": 1.0,
+  "limitations": "Procedural chassis with retained contact-wheel mechanism. Rigid Coulomb friction is not deformable sand. No learned vehicle model is evaluated. F1-inspired: periodic smoothing and minor-axis widening, then 45m normalization. Not exact scaled circuit outlines; tight corners/crossovers may be removed.",
+  "track_id": "silverstone-8",
+  "horizon_s": 30.0,
+  "geometry": "F1-inspired: periodic smoothing and minor-axis widening, then 45m normalization. Not exact scaled circuit outlines; tight corners/crossovers may be removed.",
+  "task_variant": "circuit-compact-lap/3",
+  "route_revision": "compact-30s/1",
+  "target_lap_time_s": 28.0,
+  "scaled_length_m": 45.00000000003459,
+  "runtime_budget": {
+    "schema": "anycar-lap-budget/1",
+    "track_id": "silverstone-8",
+    "route_revision": "compact-30s/1",
+    "horizon_upper_bound_s": 30,
+    "control_steps_upper_bound": 1500,
+    "telemetry_rows_upper_bound": 301,
+    "decoded_frames_upper_bound": 301,
+    "render_wall_time_estimate_s": 120,
+    "wall_time_estimate_basis": "CPU OSMesa planning estimate; validate on deployment hardware",
+    "wall_time_is_guaranteed_bound": false
+  },
+  "completion": "Every ordered forward gate and the finish line within 30 simulated seconds",
+  "geometry_modifications": {
+    "smoothing_sigma_samples": 192,
+    "source_samples": 1024,
+    "minor_axis_widening": 1.70026503046635
+  },
+  "observation_revision": "anycar-dashed-cones/1",
+  "visual_feedback": "Dashed public commanded centerline in both video panels with cosmetic orange-and-white cones and black bases; no moving target dot or privileged overlay.",
+  "image_sampling": "31 images at fixed one-second times from 0 through 30 s; all 301 noisy 10 Hz rows.",
+  "request_timeout_s": 1200
+}

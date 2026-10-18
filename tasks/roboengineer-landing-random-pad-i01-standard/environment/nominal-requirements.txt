@@ -1,3 +1,0 @@
-numpy==2.3.1
-mujoco==3.5.0
-Pillow==12.2.0

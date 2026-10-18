@@ -1,7 +1,0 @@
-{
- "task_text": "Hold the object at the goal: its centre within 0.010 m of the goal site for 50 consecutive control steps (1.0 s). Failure (the episode ends): the object more than 0.30 m from the goal (dropped). The object starts resting in the hand and falls if the hand does not grip it.",
- "default_cameras": [
-  "hand_top"
- ],
- "reference": null
-}

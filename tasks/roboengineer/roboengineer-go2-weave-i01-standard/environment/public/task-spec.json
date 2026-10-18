@@ -1,0 +1,577 @@
+{
+  "schema": "control-transfer/1",
+  "protocol": "eai-policy/1.1",
+  "name": "go2-weave",
+  "goal": "Execute a predeclared body velocity command schedule to pass four alternating poles without contact; no global-position feedback.",
+  "score": "Success requires four ordered alternating crossings, clearance >=0.16 m, no pole/body-ground collision, final x beyond last pole +0.35 m; score combines crossing fraction and tracking quality, unsuccessful capped at 49.",
+  "max_rounds": 3,
+  "adaptation_cases": 3,
+  "held_out_cases": 10,
+  "training_backend": "nominal MuJoCo CPU; GPU training may export the same bounded numeric artifact",
+  "evaluation_backend": "native MuJoCo CPU / NumPy CPU / OSMesa software rendering",
+  "policy_abi": "go2-controller/1 bounded JSON; validated numeric parameters, 17x12 offsets and 12x6 feedback gains",
+  "default_policy": {
+    "schema": "go2-controller/1",
+    "enabled": true,
+    "parameters": {
+      "height": 0.3,
+      "stance_width": 0.12,
+      "period": 0.5,
+      "swing_height": 0.06,
+      "stride_gain": 1.0,
+      "lateral_gain": 1.0,
+      "push_pd_scale": 0.25,
+      "yaw_gain": 1.0,
+      "attitude_gain": 0.5,
+      "rate_gain": 0.04,
+      "support": 1.0,
+      "crouch_height": 0.2,
+      "push_duration": 0.16,
+      "extend_height": 0.4,
+      "push_gain": 2.8,
+      "jump_forward": 1.0,
+      "jump_yaw": 1.0,
+      "flight_time": 0.35,
+      "landing_height": 0.28
+    },
+    "kp": [
+      45.0,
+      45.0,
+      45.0,
+      45.0,
+      45.0,
+      45.0,
+      45.0,
+      45.0,
+      45.0,
+      45.0,
+      45.0,
+      45.0
+    ],
+    "kd": [
+      1.4,
+      1.4,
+      1.4,
+      1.4,
+      1.4,
+      1.4,
+      1.4,
+      1.4,
+      1.4,
+      1.4,
+      1.4,
+      1.4
+    ],
+    "joint_bias": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "trajectory": [
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "feedback": [
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    ]
+  },
+  "bounds": {
+    "height": [
+      0.2,
+      0.36
+    ],
+    "stance_width": [
+      0.09,
+      0.18
+    ],
+    "period": [
+      0.25,
+      1.2
+    ],
+    "swing_height": [
+      0.015,
+      0.13
+    ],
+    "stride_gain": [
+      0.0,
+      2.0
+    ],
+    "lateral_gain": [
+      0.3,
+      1.5
+    ],
+    "push_pd_scale": [
+      0.0,
+      1.0
+    ],
+    "yaw_gain": [
+      0.0,
+      2.0
+    ],
+    "attitude_gain": [
+      0.0,
+      2.5
+    ],
+    "rate_gain": [
+      0.0,
+      0.3
+    ],
+    "support": [
+      0.0,
+      2.0
+    ],
+    "crouch_height": [
+      0.16,
+      0.28
+    ],
+    "push_duration": [
+      0.08,
+      0.35
+    ],
+    "extend_height": [
+      0.3,
+      0.42
+    ],
+    "push_gain": [
+      0.0,
+      5.0
+    ],
+    "jump_forward": [
+      0.0,
+      2.5
+    ],
+    "jump_yaw": [
+      0.0,
+      4.0
+    ],
+    "flight_time": [
+      0.1,
+      0.7
+    ],
+    "landing_height": [
+      0.22,
+      0.35
+    ]
+  },
+  "channels": [
+    "FL_hip_joint",
+    "FL_thigh_joint",
+    "FL_calf_joint",
+    "FR_hip_joint",
+    "FR_thigh_joint",
+    "FR_calf_joint",
+    "RL_hip_joint",
+    "RL_thigh_joint",
+    "RL_calf_joint",
+    "RR_hip_joint",
+    "RR_thigh_joint",
+    "RR_calf_joint",
+    "dq_FL_hip_joint",
+    "dq_FL_thigh_joint",
+    "dq_FL_calf_joint",
+    "dq_FR_hip_joint",
+    "dq_FR_thigh_joint",
+    "dq_FR_calf_joint",
+    "dq_RL_hip_joint",
+    "dq_RL_thigh_joint",
+    "dq_RL_calf_joint",
+    "dq_RR_hip_joint",
+    "dq_RR_thigh_joint",
+    "dq_RR_calf_joint",
+    "imu_roll",
+    "imu_pitch",
+    "imu_yaw",
+    "gyro_x",
+    "gyro_y",
+    "gyro_z",
+    "command_vx",
+    "command_vy",
+    "command_yaw_rate",
+    "command_roll",
+    "command_pitch",
+    "command_jump",
+    "command_yaw"
+  ],
+  "units": [
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad",
+    "rad",
+    "rad",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "m/s",
+    "m/s",
+    "rad/s",
+    "rad",
+    "rad",
+    "m",
+    "rad"
+  ],
+  "image_interval_s": 1.0,
+  "feedback": "37 noisy proprioceptive/public-command channels and sampled images; no global position, velocity, contact flags, scores, hidden parameters or seeds.",
+  "limitations": "A simulated port of published quadruped performance tasks, not a hardware calibration; MuJoCo contacts differ from other simulators."
+}

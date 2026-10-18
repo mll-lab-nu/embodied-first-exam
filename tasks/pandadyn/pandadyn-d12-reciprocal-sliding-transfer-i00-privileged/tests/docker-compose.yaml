@@ -1,0 +1,10 @@
+# The verifier rebuilds the scene and replays in SAPIEN, which needs a Vulkan device (the NVIDIA GPU); physics is CPU PhysX.
+services:
+  main:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

@@ -1,0 +1,89 @@
+# YAMLab · HangMugOnTree-v0 — frozen instance i21
+
+You control two simulated **I2RT YAM arms with parallel two-finger grippers** on a workstation table (YAMLab's bimanual
+setup on Isaac Lab / Isaac Sim 5.1, PhysX physics) via Python. **Task:** Pick up the mug with the **left** arm, hand it over to the **right** arm (the right gripper takes it, then the left one lets go, with the mug kept lifted), and hang the mug on the mug tree, released by both grippers.
+
+The scene's two task objects are `mug` (YAMLab asset `Mug/mug_021`, 11.7 × 7.7 × 8.5 cm) and `mug_tree` (YAMLab asset `MugTree/mug_tree_021`, 18.5 × 18.6 × 36.6 cm): `s.objects()` gives their poses, sizes (in their own frames: x × y × z, the root at the box centre) and bounding boxes, `p["get_object_points"](name)` their mesh points.
+
+This is a *fixed scene instance*: the objects' poses and the robot's start pose never change between resets. You may
+reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
+
+## Success (YAMLab's own check, with its evaluation thresholds)
+1. **pick**: the **left** gripper grasps the mug (YAMLab's grasp detection: both fingers of that gripper touch the mug with at least 0.1 N, on their pads) and the mug's centre is more than 5 cm above its resting height (z > 0.8490 m), for 8 consecutive control steps;
+2. **handover**: the **right** gripper grasps the mug, the left gripper does not, and the mug's centre stays more than 5 cm above its resting height, for 30 consecutive control steps (as in YAMLab, the left fingers' friction is raised when the left gripper first grasps the mug and lowered again when both grippers hold it: YAMLab's own handover aid);
+3. **hang**: the mug's centre within 0.131 m (horizontally) of the mug tree's centre and more than 5 cm above the height it would rest at on the table (z > 0.8440 m), **neither** gripper grasping it, and its height steady (within 3.0 cm of where this stage started), for 30 consecutive control steps.
+
+The stages are checked after every control step, in order (a stage is only checked once the previous one has latched),
+and a latched stage stays latched. The episode **ends by itself** at the first control step where every stage has latched
+(success; rows after it are never executed), or when a task object falls more than 1 cm below the table top (failure).
+`s.status()` reports the stages; `s.success_params()` has the numbers above.
+
+## Deliverable
+Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
+open-loop from the same initial state in two fresh processes and scored 1 if the task succeeds in both replays and both
+end in the same state, else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
+as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
+The file holds `task` and `actions`, a (T, 14) float array of at most **100,000 rows** (one per control step, 55.6 min of
+robot time); anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0. Each replay has
+max(1800 s, 1200 s + 1 s per 20 rows) of wall clock, several times what a replay takes here.
+
+## Tooling (already installed; run `python` from any directory)
+```python
+from rcb_yamlab import Session
+s = Session("hang_mug_on_tree", instance="/app/instance.json")   # ~2-3 min (the first start ~10 min): launches Isaac Sim, builds the scene, restores the frozen state
+s.reset()                          # back to the frozen initial state (as often as you like; an exact state restore)
+p = s.primitives()                 # thin wrappers of the low-level action; each has a docstring: help(p["move_ee"])
+s.objects()                        # name -> position, orientation_wxyz, size (own frame), bounds (AABB), velocity
+p["move_ee"](left=(pos, quat_wxyz), right=(pos, None), speed=0.15)   # tool frames along straight lines, both arms together (differential IK)
+p["move_joints"](left=q6, right=q6); p["set_gripper"]("left", 1.0); p["open_gripper"]("right"); p["hold"](10)
+s.ee_pose("left"); s.joint_positions("right"); s.ik_step("left", pos, quat_wxyz)   # kinematics helpers
+s.render_frame("top")              # RGB uint8 (480, 640, 3) of "top" (static, above the table), "left_wrist" or "right_wrist"; s.render_grid()
+s.step(action)                     # one low-level action (14 values) = one control step (1/30 s)
+s.record_start(); ...; actions = s.record_stop()   # (T, 14) actions, one row per control step
+s.status()                         # {'success', 'stages', 'progress', 'sim_steps', 'resets', 'state_sha', 'terminated', 'end_reason'}
+s.replay(actions)                  # resets, replays open-loop, returns status
+s.save_trajectory(actions, "/app/output/trajectory.npz")
+s.render_video(actions, "/app/output/check.mp4")   # replays from the frozen state, writes a video (top + both wrist cameras)
+s.render_depth("top")              # with Session(..., depth=True): float32 (H, W) z-depth in metres (0 = no reading), pixel-aligned with render_frame
+s.camera_info()                    # per camera: intrinsic_cv, extrinsic_cv (world->camera, OpenCV axes), cam2world_gl, mount, moves
+s.robot_spec(); s.proprio()        # joints + limits, grippers, gains, tool frames; measured joints, tool poses, gripper openings, efforts
+s.kinematics({"op": "fk", "q": q12}); s.kinematics({"op": "ik", "targets": {"left_tcp": pose7}, "seed": q12})   # stateless FK / IK
+p["get_object_points"](name); s.body_pose("left", "link_6"); s.gripper_opening("right"); s.fallen()
+s.start_video("/app/output/try.mp4"); ...; s.stop_video()   # film the steps in between; s.state_sha(): the state's hash
+```
+The primitives are deliberately thin (IK moves, joint moves, grippers, hold): grasping, lifting, handing over and placing
+are yours to build from them. YAMLab's source is in `/opt/yamlab` (read-only reference: the task and its checks are in
+`yamlab/envs/tasks/`).
+
+The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
+`python /opt/tools/rcb_yamlab.py replay --task hang_mug_on_tree --instance /app/instance.json --traj /app/output/trajectory.npz`
+
+## Conventions
+- World frame: metres, x forward (from the arm bases towards the far side of the table), y to the left, z up;
+  quaternions are **WXYZ**. The left arm's base is at (0.2525, 0.305, 0.76), the right arm's at (0.2525, -0.305, 0.76),
+  both facing +x; the table top is at z = 0.7517.
+- Action (14): `[left joint1..6, left gripper, right joint1..6, right gripper]`, YAMLab's own action. Joints: absolute
+  position targets (rad) tracked by PD drives. Gripper: the position target of that arm's `left_finger` joint in metres,
+  **-0.0475 = fully open .. 0.0 = closed** (YAMLab mirrors it onto `right_finger`); a closing gripper stops at whatever is
+  between its fingers. `s.hold_action()` is the no-op.
+- Tool frame `left_tcp` / `right_tcp` (`s.ee_pose(arm)`, `move_ee`, `ik_step`): the midpoint of the gripper's two
+  fingertips, 0.1426 m from `link_6` along `link_6`'s +z axis (the approach direction), with `link_6`'s orientation. At the
+  home pose (all joints 0, grippers open) both tool frames point forward (+x) at z = 0.924.
+- Control runs at 30 Hz (sim dt 1/120 s, decimation 4). There is no step budget: the time limit (`## Time limit`) is your only
+  budget (a runaway guard ends an episode after 100,000 control steps, `end_reason` `step_guard`: the most a trajectory
+  may hold).
+- One `Session` per process (Isaac Sim launches once, then the scene builds: ~1.5-3 min; the very first start in this
+  container also compiles Isaac's shaders, ~10 min on a busy host). Physics is PhysX on the
+  **CPU**; rendering (on the GPU) happens only when a frame is asked for and never moves anything. Stepping runs at about
+  60-120 control steps/s. Do not call `s.close()` before writing every output.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resource limits
+Limits for the whole trial, all its processes together (every simulator you start included): at most **16 GiB of GPU memory**, **24 GiB of memory**, **512 processes** and **20 GiB** of new files under `/app`, `/tmp` and `/root`. GPU memory counts what a process reserves (JAX, for example, reserves most of the card unless told not to). These limits may be enforced (from protocol v1.2 on): when enforcement is on, exceeding one for 60 s within any 2 minutes, or a process killed for lack of memory, ends the trial as a failure (reward 0), whatever the deliverable. A monitor outside your container measures every few seconds; the current values are in `/run/rcb-limits/usage.json`. When enforcement is on and GPU memory goes above 1.5 times its limit, the monitor also kills the process holding the most of it at once, to protect the machine; that alone does not fail the trial. CPU is capped at 8 cores for your container; the cap only slows you down.
+
+## Time limit
+You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

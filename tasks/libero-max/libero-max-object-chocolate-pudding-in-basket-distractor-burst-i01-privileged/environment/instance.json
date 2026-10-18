@@ -1,0 +1,158 @@
+{
+ "case": {
+  "case_id": "pro-semantic-object-t08-i09-distractor_burst-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 9,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/semantic/libero_object/task_8",
+   "change": {
+    "distractor_count": 5,
+    "operation": "insert_distractors",
+    "placements": [
+     {
+      "object": "orange_juice_1",
+      "offset_m": [
+       0.0245583,
+       0.09988279,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "salad_dressing_1",
+      "offset_m": [
+       -0.10218913,
+       0.06339299,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "bbq_sauce_1",
+      "offset_m": [
+       -0.11906284,
+       -0.10056825,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "ketchup_1",
+      "offset_m": [
+       0.06400989,
+       -0.15695623,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     },
+     {
+      "object": "alphabet_soup_1",
+      "offset_m": [
+       0.13357857,
+       0.00977803,
+       0.0
+      ],
+      "preserve_initial_z": true,
+      "relative_to": "chocolate_pudding_1",
+      "support_entity": "floor"
+     }
+    ]
+   },
+   "change_family": "CLUTTER",
+   "change_type": "distractor_burst",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1710360342
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-semantic-object-t08-i09-distractor_burst-d1",
+   "seed": 1710360342,
+   "setup": [
+    {
+     "object": "orange_juice_1",
+     "offworld_position_m": [
+      -2.0,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "salad_dressing_1",
+     "offworld_position_m": [
+      -2.2,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "bbq_sauce_1",
+     "offworld_position_m": [
+      -2.4,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "ketchup_1",
+     "offworld_position_m": [
+      -2.6,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    },
+    {
+     "object": "alphabet_soup_1",
+     "offworld_position_m": [
+      -2.8,
+      0.0,
+      -5.0
+     ],
+     "operation": "remove_object"
+    }
+   ],
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "chocolate_pudding_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/semantic",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_object_lan/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "semantic",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object_lan/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.pruned_init",
+   "language": "lift chocolate pudding and put it in basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 8,
+  "task_name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "cb756e21456e7ce405d64623b6f5fea69972e98b1d89d703cd087d4e5b8b9fe7",
+ "instance_sha": "e4fdbc4bb2b5f3948e0d8ecd73ec0fe85978812fd7f5692235ec8cb30422b7c9",
+ "schema": "eai-libero-max-instance/1"
+}

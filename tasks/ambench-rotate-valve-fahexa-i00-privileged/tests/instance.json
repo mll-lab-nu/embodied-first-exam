@@ -1,9 +1,0 @@
-{
- "env_id": "RotateValve-Am-FAHexa-Abs-PID-Direct-v0",
- "seed": 0,
- "task": "RotateValve",
- "action_dim": 8,
- "control_hz": 120,
- "episode_length_s": 20.0,
- "initial_sha": "5bfceb57120de994dca306348115910883573b611ba46d353754ebd5911772d4"
-}

@@ -1,7 +1,0 @@
-{
- "task_text": "Pick up the object from the table and put it in the target receptacle: the object's position within 0.1 m of the target (rotation is ignored) for 100 consecutive control steps (1.0 s). Failure (the episode ends): the palm more than 0.5 m from the object.",
- "default_cameras": [
-  "hand_top"
- ],
- "reference": null
-}

@@ -1,8 +1,0 @@
-{
- "task": "lift_pot",
- "seed": 28831,
- "embodiment": "aloha-agilex",
- "state_sha": "d5a53adb35d6",
- "text": "Use arms to lift the pot.",
- "n_active_joints": 16
-}

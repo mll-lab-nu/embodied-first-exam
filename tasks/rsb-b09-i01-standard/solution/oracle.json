@@ -1,1 +1,0 @@
-{"plan": [{"type": "ask_operator", "row": [], "text": "Your hand is in the cabinet's doorway. Could you take it out, please, so that I can shut the door?"}, {"type": "joint_position", "rows": [0, 752]}, {"type": "done", "row": [], "text": "The cabinet door is shut."}]}

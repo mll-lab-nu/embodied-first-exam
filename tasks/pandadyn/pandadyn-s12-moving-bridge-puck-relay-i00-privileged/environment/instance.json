@@ -1,0 +1,34 @@
+{
+ "task": "S12-MovingBridgePuckRelay",
+ "env_id": "PandaMultiStage/S12-MovingBridgePuckRelay-v0",
+ "difficulty": "nominal",
+ "seed": 1,
+ "parameters": {
+  "horizon": 32.0,
+  "object_mass": 0.035,
+  "tool_mass": 0.2,
+  "tool_half": 0.05,
+  "radius": 0.018,
+  "preview": 0.65,
+  "incoming_speed": 0.35,
+  "fixture_speed": 0.04,
+  "restitution": 0.1,
+  "table_friction": 0.015,
+  "tool_friction": 0.3
+ },
+ "physics_hz": 1000,
+ "arms": {
+  "panda-0": "single"
+ },
+ "action_dim": 8,
+ "control_hz": 100,
+ "horizon_s": 32.0,
+ "phases": [
+  "incoming_strike",
+  "physical_bridge_transfer",
+  "exit_interception",
+  "second_strike",
+  "closing_gate_goal"
+ ],
+ "initial_sha": "85b2a00bf3ad36444016fbe14017df038991df404ef6b2958a78760915fb64cc"
+}

@@ -1,7 +1,0 @@
-{
- "task_text": "Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Success: the key's hinge angle above 3.14 rad for 50 consecutive control steps (1.0 s). Failure (the episode ends): the index or thumb tip more than 0.10 m from the key head.",
- "default_cameras": [
-  "hand_top"
- ],
- "reference": null
-}

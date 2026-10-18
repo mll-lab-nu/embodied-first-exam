@@ -1,0 +1,26 @@
+{
+  "family": "essential_pen_regrasp",
+  "initial_fingers": {
+    "r_wuji_r_thumb_cmc_flex": 1.291,
+    "r_wuji_r_thumb_cmc_abd": 0.004066,
+    "r_wuji_r_thumb_mcp": 1.058587,
+    "r_wuji_r_thumb_ip": 0.390404,
+    "r_wuji_r_index_finger_mcp_flex": 0.77615,
+    "r_wuji_r_index_finger_mcp_abd": 0.252052,
+    "r_wuji_r_index_finger_pip": -0.178796,
+    "r_wuji_r_index_finger_dip": 0.501508,
+    "r_wuji_r_middle_finger_mcp_flex": 1.237982,
+    "r_wuji_r_middle_finger_mcp_abd": -0.286978,
+    "r_wuji_r_middle_finger_pip": 0.684481,
+    "r_wuji_r_middle_finger_dip": 1.294791,
+    "r_wuji_r_ring_finger_mcp_flex": 0.303572,
+    "r_wuji_r_ring_finger_mcp_abd": 0.379783,
+    "r_wuji_r_ring_finger_pip": -0.322839,
+    "r_wuji_r_ring_finger_dip": 1.15798,
+    "r_wuji_r_pinky_mcp_flex": -0.019178,
+    "r_wuji_r_pinky_mcp_abd": -0.268267,
+    "r_wuji_r_pinky_pip": 0.376012,
+    "r_wuji_r_pinky_dip": 0.193509
+  },
+  "provenance": "Authoring random search (w-core, 2026-10-14): Wuji Hand 2.2 finger targets at reset such that the settled object is held and no invariant fails during a 500-control hold. Not a task policy."
+}

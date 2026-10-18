@@ -1,0 +1,1 @@
+{"plan": [{"type": "joint_position", "rows": [0, 1186]}, {"type": "report", "row": [1.0], "text": "The pot on the hot plate boiled over and soup ran towards the power strip. I switched the plate off."}, {"type": "joint_position", "rows": [1186, 2148]}, {"type": "done", "row": [], "text": "The mug and the apple are on the tray."}]}

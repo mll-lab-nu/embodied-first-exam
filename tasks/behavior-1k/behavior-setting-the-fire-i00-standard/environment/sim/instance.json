@@ -1,0 +1,113 @@
+{
+ "task": "setting_the_fire",
+ "challenge_task": "setting_the_fire",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Light a fire in the living-room fireplace. Two pieces of firewood lie on the floor, and a newspaper and a cigar lighter lie on the table; put the newspaper inside the fireplace with both pieces of firewood on top of it, set the newspaper and both pieces of firewood on fire, and switch the lighter off again.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "8cdc59b3ea707030",
+ "action_dim": 25,
+ "challenge_max_steps": 13677,
+ "objects": {
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    3.8669,
+    5.6663,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "firewood.n.01_2": {
+   "category": "firewood",
+   "position": [
+    4.0905,
+    4.0602,
+    0.0253
+   ],
+   "orientation_xyzw": [
+    -0.0138,
+    0.0207,
+    0.3208,
+    0.9468
+   ]
+  },
+  "table.n.02_1": {
+   "category": "coffee_table",
+   "position": [
+    3.5198,
+    5.2904,
+    0.3646
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    -0.0,
+    1.0
+   ]
+  },
+  "firewood.n.01_1": {
+   "category": "firewood",
+   "position": [
+    4.3066,
+    4.5444,
+    0.0253
+   ],
+   "orientation_xyzw": [
+    -0.0249,
+    -0.0004,
+    0.9701,
+    0.2415
+   ]
+  },
+  "cigar_lighter.n.01_1": {
+   "category": "lighter",
+   "position": [
+    3.4298,
+    5.5957,
+    0.432
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    -0.7801,
+    0.6256
+   ]
+  },
+  "newspaper.n.03_1": {
+   "category": "newspaper",
+   "position": [
+    3.4836,
+    5.8351,
+    0.4452
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0001,
+    0.9962,
+    -0.0872
+   ]
+  },
+  "wood_fireplace.n.01_1": {
+   "category": "wood_fireplace",
+   "position": [
+    6.0045,
+    6.7024,
+    0.6518
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    1.0,
+    0.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

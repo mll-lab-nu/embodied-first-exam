@@ -1,0 +1,138 @@
+{
+  "category": "finger_gaiting",
+  "description": "Turn a real rotary-encoder cap on a complete controller housing through two forward revolutions and one reverse revolution, using continuous load-bearing contact and overlapping finger handoffs.",
+  "difficulty": "hard",
+  "id": "essential_rotary_gait",
+  "instruction": "Keep the wrist fixed. Rotate the rotary encoder knob to +720 degrees, then reverse to +360 degrees and hold it still. The real encoder cap has its actual rounded outer profile, normal surface friction and bearing resistance, and a passive unlimited-turn hinge. There is no task-object actuator or powered turning assistance. Maintain load-bearing hand contact throughout and perform at least four contact handoffs involving overlapping fingers.",
+  "invariants": {
+    "force": [
+      0,
+      80
+    ],
+    "palm_drift": [
+      0,
+      0.003
+    ],
+    "rotor_hand_contacts": [
+      1,
+      null
+    ],
+    "speed": [
+      0,
+      12
+    ],
+    "wrist_rotation": [
+      0,
+      0.01
+    ]
+  },
+  "mechanism": "smooth_passive_rotary_knob",
+  "parameters": {
+    "bearing_damping": 0.0007,
+    "bearing_frictionloss": 0.001,
+    "finger_velocity_gain": -0.1,
+    "half_length_m": 0.0075,
+    "initial_fingers": {
+      "right_index_DIP": 0.06154731690954612,
+      "right_index_MCP_AA": 0.017456268941165944,
+      "right_index_MCP_FE": 0.299682337682437,
+      "right_index_PIP": 0.0028741170072224833,
+      "right_middle_DIP": 0.22835162150434735,
+      "right_middle_MCP_AA": 0.09847944143866984,
+      "right_middle_MCP_FE": 0.28643407781208224,
+      "right_middle_PIP": 0.019297107365786943,
+      "right_pinky_CMC": 0.0,
+      "right_pinky_DIP": 0.0,
+      "right_pinky_MCP_AA": 0.0,
+      "right_pinky_MCP_FE": 0.0,
+      "right_pinky_PIP": 0.0,
+      "right_ring_DIP": 0.0,
+      "right_ring_MCP_AA": 0.0,
+      "right_ring_MCP_FE": 0.0,
+      "right_ring_PIP": 0.0,
+      "right_thumb_CMC_AA": -3.846609130540357e-05,
+      "right_thumb_CMC_FE": 0.020802312188296535,
+      "right_thumb_IP": 0.0008920778005456608,
+      "right_thumb_MCP_AA": -0.002894780926220363,
+      "right_thumb_MCP_FE": 0.0023054518522488696
+    },
+    "initial_position": [
+      0.118,
+      -0.015,
+      0.335
+    ],
+    "initial_wrist": [
+      -0.08,
+      0,
+      0.29,
+      0,
+      0,
+      0
+    ],
+    "locked_wrist": true,
+    "radius_m": 0.026864133834838867,
+    "reset_gravity_compensation": true,
+    "reset_settle_steps": 150
+  },
+  "scene": "essential_rotary_gait",
+  "stages": [
+    {
+      "bounds": {
+        "rotor_fingers": [
+          1,
+          5
+        ],
+        "rotor_handoffs": [
+          4,
+          null
+        ],
+        "speed": [
+          0,
+          0.25
+        ],
+        "turn": [
+          12.446370614359173,
+          12.686370614359172
+        ]
+      },
+      "hold_steps": 5,
+      "name": "two_forward_turns"
+    },
+    {
+      "bounds": {
+        "rotor_fingers": [
+          1,
+          5
+        ],
+        "speed": [
+          0,
+          0.25
+        ],
+        "turn": [
+          6.163185307179586,
+          6.403185307179586
+        ]
+      },
+      "hold_steps": 5,
+      "name": "one_reverse_turn"
+    }
+  ],
+  "terminal": {
+    "bounds": {
+      "rotor_fingers": [
+        1,
+        5
+      ],
+      "speed": [
+        0,
+        0.06
+      ],
+      "turn": [
+        6.163185307179586,
+        6.403185307179586
+      ]
+    },
+    "hold_steps": 25
+  },
+  "title": "Multi-turn encoder knob with fixed-wrist finger gait"
+}

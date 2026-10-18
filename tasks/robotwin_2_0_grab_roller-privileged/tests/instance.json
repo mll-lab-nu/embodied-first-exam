@@ -1,8 +1,0 @@
-{
- "task": "grab_roller",
- "seed": 60417,
- "embodiment": "aloha-agilex",
- "state_sha": "a62ef39c84d0",
- "text": "Use both arms to grab the roller on the table.",
- "n_active_joints": 16
-}

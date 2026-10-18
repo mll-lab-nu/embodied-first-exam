@@ -1,0 +1,143 @@
+{
+ "task": "clutter_pickup/task_0028",
+ "family": "clutter_pickup",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "3646da2b9c180dbb791fe8f0220b403e6aa7e9641fa8b36ef6ef1c40d2b289da",
+ "diagnostics_sha256": "88c332b651a1e268a3f79a342654d9e9f83ce580039b5d1e23e196298018a115",
+ "pipeline": "table",
+ "gpu_dynamics": false,
+ "state_sha": "2ef0663763b82cb5",
+ "objects": {
+  "bar_cowjqr_0": {
+   "category": "bar",
+   "position": [
+    2.42841,
+    8.34678,
+    0.53089
+   ],
+   "orientation_xyzw": [
+    0.0157,
+    0.0157,
+    0.70693,
+    -0.70693
+   ]
+  },
+  "teacup_67": {
+   "category": "teacup",
+   "position": [
+    3.44377,
+    9.06545,
+    1.13646
+   ],
+   "orientation_xyzw": [
+    -0.02081,
+    0.00026,
+    6e-05,
+    0.99978
+   ]
+  },
+  "chalice_65": {
+   "category": "chalice",
+   "position": [
+    3.56851,
+    9.14916,
+    1.16039
+   ],
+   "orientation_xyzw": [
+    -0.01978,
+    -0.00316,
+    -0.06893,
+    0.99742
+   ]
+  },
+  "wineglass_63": {
+   "category": "wineglass",
+   "position": [
+    3.36848,
+    9.10699,
+    1.18657
+   ],
+   "orientation_xyzw": [
+    -0.01944,
+    -0.00152,
+    0.03794,
+    0.99909
+   ]
+  },
+  "wineglass_64": {
+   "category": "wineglass",
+   "position": [
+    3.40707,
+    9.33318,
+    1.17862
+   ],
+   "orientation_xyzw": [
+    -0.02482,
+    -0.00766,
+    -0.0411,
+    0.99882
+   ]
+  },
+  "plate_62": {
+   "category": "plate",
+   "position": [
+    3.45646,
+    8.81906,
+    1.12208
+   ],
+   "orientation_xyzw": [
+    -0.01899,
+    -0.00362,
+    -0.0621,
+    0.99788
+   ]
+  },
+  "mug_61": {
+   "category": "mug",
+   "position": [
+    3.43358,
+    9.18498,
+    1.13451
+   ],
+   "orientation_xyzw": [
+    -0.02058,
+    0.00188,
+    0.08037,
+    0.99655
+   ]
+  },
+  "goal_region__teacup_67": {
+   "category": "goal_region_marker",
+   "position": [
+    3.44377,
+    8.56596,
+    1.16651
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}

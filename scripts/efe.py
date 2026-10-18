@@ -6,12 +6,18 @@ flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywh
   harbor run --all -a codex -m openai/gpt-6-luna      # every task
   harbor run --standard -a claude-code -m anthropic/claude-fable-5-1   # --privileged / --standard / --standard-realtime
   harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # -i / -x filter within the set
-  harbor run -p tasks/<task> -a nop                   # one task: Harbor's own -p, untouched
+  harbor run --benchmark roboarc --standard -a codex -m openai/gpt-6-luna   # one benchmark's core tasks, one mode
+  harbor run -p tasks/<benchmark>/<task> -a nop       # one task: Harbor's own -p, untouched
+  harbor run -p tasks/<benchmark> -a nop              # every task of one benchmark: Harbor's own -p, untouched
 
 Set: --core (default) or --all. Modes: any of --privileged, --standard, --standard-realtime; none = every mode.
---benchmark <label> keeps one benchmark (its README label). --list prints the task dirs and runs nothing.
-A `harbor run` that names its own tasks (-p, -d, -t, -c) is Harbor's, unchanged; so is every other subcommand."""
-import fnmatch, sys
+--benchmark <name> keeps a benchmark: its README label or its folder under tasks/ (repeatable). With any of these flags,
+-p <dir> (a task dir, a benchmark folder or tasks/) narrows the set to the task dirs under it, and -c <file> is layered
+after the wrapper's job config. --list prints the task
+dirs and runs nothing. The tasks are handed to Harbor as one dataset per benchmark folder (Harbor's local datasets are
+not searched recursively). A `harbor run` that names its own tasks (-p, -d, -t, -c) and none of these flags is Harbor's,
+unchanged; so is every other subcommand."""
+import fnmatch, json, os, sys, tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,43 +37,98 @@ def harbor(args: list[str], app=None) -> int:
     return app() or 0
 
 
+def bench_label(name: str) -> str | None:
+    """A --benchmark value as its BENCHMARKS label: the label itself (any case) or its folder under tasks/."""
+    by = {**{lab.lower(): lab for lab in tc.BENCHMARK_DIRS}, **{f: lab for lab, f in tc.BENCHMARK_DIRS.items()}}
+    return by.get(name) or by.get(name.lower())
+
+
+def under(paths: list[str]) -> set[str] | None:
+    """The task dir names under the -p paths (a task dir, a benchmark folder, tasks/); None: no -p given."""
+    if not paths:
+        return None
+    out: set[str] = set()
+    for a in paths:
+        d = Path(a).expanduser().resolve()
+        if (d / "task.toml").is_file():
+            out.add(d.name)
+        else:
+            out |= {t.parent.name for pat in ("*/task.toml", "*/*/task.toml") for t in d.glob(pat)}
+    return out
+
+
+def config_file(pick: list[str]) -> str:
+    """A Harbor job config (-c) with the picked task dirs: one local dataset per benchmark folder, its task_names the
+    picked dirs. Harbor reads it when the job is built; the caller removes it afterwards."""
+    by: dict[str, list[str]] = {}
+    for t in pick:
+        by.setdefault(str(tc.task_dir(t).parent), []).append(t)
+    cfg = {"datasets": [{"path": d, "task_names": names} for d, names in sorted(by.items())]}
+    fd, path = tempfile.mkstemp(prefix="efe-job-", suffix=".json")
+    with os.fdopen(fd, "w") as f:
+        json.dump(cfg, f, indent=1)
+    return path
+
+
 def run(argv: list[str], app=None) -> int:
-    """`harbor run` with the set / mode flags: picks the task dirs, then `harbor run -p <clone>/tasks -i <task> ...`."""
+    """`harbor run` with the set / mode / benchmark flags: picks the task dirs, then `harbor run -c <job config> ...`
+    (config_file: one dataset per benchmark folder)."""
+    ours = ("--core", "--all", "--benchmark", "--list")
     if any(a in SOURCES or a.startswith(tuple(s + "=" for s in SOURCES if s.startswith("--"))) for a in argv):
-        if not any(a in MODES or a in ("--core", "--all", "--benchmark", "--list") for a in argv):
+        if not any(a in MODES or a in ours or a.startswith("--benchmark=") for a in argv):
             return harbor(["run", *argv], app)                # the user's own task source: plain Harbor
-    use_all, modes, benches, inc, exc, listing, rest = False, set(), [], [], [], False, []
+    use_all, modes, benches, inc, exc, paths, listing, rest = False, set(), [], [], [], [], False, []
     it = iter(argv)
     for a in it:
         if a in ("--all", "--core"):
             use_all = a == "--all"
         elif a in MODES:
             modes.add(MODES[a])
-        elif a == "--benchmark":
-            benches.append(next(it, ""))
+        elif a == "--benchmark" or a.startswith("--benchmark="):
+            b = a.split("=", 1)[1] if "=" in a else next(it, "")
+            lab = bench_label(b)
+            if lab is None:
+                print(f"--benchmark {b!r}: not a benchmark (a README label or a folder under tasks/: "
+                      f"{', '.join(sorted(tc.BENCHMARK_DIRS.values()))})", file=sys.stderr)
+                return 2
+            benches.append(lab)
         elif a in ("-i", "--include-task-name"):
             inc.append(next(it, ""))
         elif a in ("-x", "--exclude-task-name"):
             exc.append(next(it, ""))
+        elif a in ("-p", "--path") or a.startswith("--path="):
+            paths.append(a.split("=", 1)[1] if "=" in a else next(it, ""))
+        elif a in ("-c", "--config"):
+            rest += [a, next(it, "")]                          # the user's config: layered after ours
+        elif a in SOURCES or a.startswith(tuple(s + "=" for s in SOURCES if s.startswith("--") and s != "--config")):
+            print(f"{a}: names its own tasks; it does not combine with {', '.join((*ours, *MODES))}", file=sys.stderr)
+            return 2
         elif a == "--list":
             listing = True
         elif a in ("-h", "--help"):
             print(__doc__); return harbor(["run", "--help"], app)
         else:
             rest.append(a)
-    tasks = sorted(p.name for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    tasks = [t.name for t in tc.iter_tasks()]
     pick = tasks if use_all else sorted(set(tc.core_set()) & set(tasks))
-    pick = [t for t in pick if (not modes or tc.mode_of(ROOT / "tasks" / t) in modes)
-            and (not benches or tc.bench_of(ROOT / "tasks" / t) in benches)
+    scope = under(paths)
+    pick = [t for t in pick if (scope is None or t in scope)
+            and (not modes or tc.mode_of(Path(t)) in modes)
+            and (not benches or tc.bench_of(Path(t)) in benches)
             and (not inc or any(fnmatch.fnmatchcase(t, p) for p in inc))
             and not any(fnmatch.fnmatchcase(t, p) for p in exc)]
     if not pick:
         print("no task matches", file=sys.stderr); return 2
     print(f"{len(pick)} task(s) of the {'full' if use_all else 'core'} set"
-          + (f", {', '.join(sorted(modes))}" if modes else ""), file=sys.stderr)
+          + (f", {', '.join(sorted(modes))}" if modes else "")
+          + (f", {', '.join(sorted(set(benches)))}" if benches else ""), file=sys.stderr)
     if listing:
         print("\n".join(pick)); return 0
-    return harbor(["run", "-p", str(ROOT / "tasks"), *[x for t in pick for x in ("-i", t)], *rest], app)
+    cfg = config_file(pick)
+    try:
+        return harbor(["run", "-c", cfg, *rest], app)
+    finally:
+        os.unlink(cfg)
 
 
 def main() -> int:
