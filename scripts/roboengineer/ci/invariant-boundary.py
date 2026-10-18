@@ -7,7 +7,8 @@ environment/sim/ (the `sim` sidecar) and tests/. For every roboengineer-* task a
 the task again from its generator into a scratch directory and requires that
   1. environment/public/ holds exactly the files, with exactly the bytes, the generator's public copy writes (the
      generators copy an explicit allowlist of public modules: nothing private becomes public by being added beside them);
-  2. environment/Dockerfile is the generator's (it copies public/ and the pinned nominal requirements only);
+  2. environment/Dockerfile is the generator's (it copies public/, the pinned nominal requirements and, for AnyCar, the
+     two track data files from the pinned files-only image, scripts/files_image.py);
   3. no file under environment/public/ is a trusted / native evaluator module, an instance, or a solution file;
   4. environment/sim/instance.json and tests/instance.json are one frozen instance (byte-identical).
 Standard library only (the generators need no simulator). Usage: invariant-boundary.py [task dirs...]

@@ -111,7 +111,7 @@ python -m control_public.anycar_nominal --track monaco --full-lap --out /app/out
 python -m scripts.control_transfer.trusted.anycar --track suzuka --policy policy.json --out preview
 ```
 
-Public allowlist adds `components/anycarbench/tracks.py`, `circuits.json`, `LICENSE.f1db` and `NOTICE`; no converter or private bank belongs in the agent image. Runtime requires no extra dependency beyond existing NumPy/MuJoCo. Offline conversion only uses PyYAML, svgpathtools1.8.0 and svgwrite1.4.3:
+Public allowlist adds `components/anycarbench/tracks.py`, `circuits.json`, `LICENSE.f1db` and `NOTICE`; no converter or private bank belongs in the agent image. The agent image takes `circuits.json` and `compact_routes.json` (6.6 MB together) from the files-only image `eai-control-transfer-anycar-files` (`images/control-transfer-anycar-files/FILES.json` pins it; not public), which `gen_tasks.py` writes as `COPY --from` lines into `environment/Dockerfile`, at the same `/app` paths as the other public files; the trusted `sim/` tree keeps its own copies. After changing either file: `python3 scripts/files_image.py build control-transfer-anycar-files`, push, `pin` the new digest, render (`gen_tasks.py check` fails until the image matches the sources). Runtime requires no extra dependency beyond existing NumPy/MuJoCo. Offline conversion only uses PyYAML, svgpathtools1.8.0 and svgwrite1.4.3:
 
 ```bash
 python -m scripts.control_transfer.trusted.anycar_build_tracks --source <pinned-f1db-checkout> --output scripts/control_transfer/components/anycarbench/circuits.json
