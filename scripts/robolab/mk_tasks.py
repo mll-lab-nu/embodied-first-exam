@@ -11,8 +11,12 @@ Inputs, all in the repository:
   scripts/robolab/families.json          per family: RoboLab's task class and file, the goal, the success term's source and
                                          its notes, the texts of both modes, the oracle level and the cited positives
                                          (`tasks: false`: frozen, not generated yet)
-  scripts/robolab/instances/<f>.json     the frozen instance (RoboLab's canonical seeded reset), written in the image by
-                                         `python rcb_robolab.py make-instance --task <f> --seed 0 --out <f>.json`
+  tasks/robolab-<f>-i00-privileged/environment/instance.json
+                                         the frozen instance (RoboLab's canonical seeded reset), made in the image by
+                                         `python rcb_robolab.py make-instance --task <f> --seed 0 --out <f>.json`; the
+                                         committed task dir holds the one copy, which the generator reads back. A new
+                                         family's instance goes to scripts/robolab/instances/<f>.json, read from there
+                                         while that file exists; delete it once the family's task dirs are committed
   scripts/robolab/oracles/<f>/           families with a reference solution: oracle_<f>.py (privileged) and the standard
                                          oracle's joint targets oracle_qpos.npy + oracle_meta.json, recorded from its run
   scripts/robolab/shared/                rcb_robolab.py (the tooling: privileged environment/ + tests/, standard
@@ -276,12 +280,22 @@ def change_log_1016(fam: str, F: dict, mode: str) -> str:
             f"2026-10-14 DIGEST are graded the same way.\n")
 
 
+def instance_bytes(fam: str) -> bytes:
+    """The family's frozen instance: scripts/robolab/instances/<f>.json for a new family (until its task dirs are
+    committed), else the committed privileged task's environment/instance.json (the canonical copy; the privileged
+    tests/ and the standard environment/sim/ copies are the same bytes)."""
+    new = HERE / "instances" / f"{fam}.json"
+    if new.is_file():
+        return new.read_bytes()
+    return (ROOT / "tasks" / task_dir(fam, "privileged") / "environment/instance.json").read_bytes()
+
+
 def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
     """{task dir name: {relative path: (content, mode)}} for both modes of one family."""
-    inst = (HERE / "instances" / f"{fam}.json").read_bytes()
+    inst = instance_bytes(fam)
     I = json.loads(inst)
     if I.get("task") != fam or int(I.get("seed", -1)) != F["seed"] or I.get("text") != F["goal"]:
-        raise RuntimeError(f"{fam}: instances/{fam}.json does not match families.json (task, seed, text)")
+        raise RuntimeError(f"{fam}: its instance.json does not match families.json (task, seed, text)")
     if "none" in (oracle_level(F, "privileged"), oracle_level(F, "standard")) and not F["positives"]:
         raise RuntimeError(f"{fam}: oracle none and no positive example: not a task yet (PROTOCOL §2.7)")
     for mode in ("privileged", "standard"):

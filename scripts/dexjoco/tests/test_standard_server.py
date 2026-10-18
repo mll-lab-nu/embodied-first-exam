@@ -206,7 +206,8 @@ class Facts(unittest.TestCase):
         seen = {}
         for d in sorted((DEXJOCO / "instances").iterdir()):
             facts = json.loads((d / "facts.json").read_text())
-            z = np.load(d / "instance.npz", allow_pickle=False)
+            inst = DEXJOCO.parents[1] / "tasks" / f"dexjoco-{d.name.replace('_', '-')}-i00-privileged" / "environment"
+            z = np.load(inst / "instance.npz", allow_pickle=False)
             own = set(range(46 if d.name.startswith("bimanual_") else 23))
             self.assertTrue(own <= {int(j) for j in z["model__actuator_trnid"][:, 0]}, d.name)    # the robot's: all actuated
             parent, adr, num, mocap = (z[f"model__body_{k}"] for k in ("parentid", "jntadr", "jntnum", "mocapid"))

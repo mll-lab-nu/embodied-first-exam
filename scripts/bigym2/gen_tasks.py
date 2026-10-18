@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generate the BiGym 2.0 tasks: tasks/bigym2-<family>-i00-privileged, -standard (eai-standard/2.1) and
--standard-realtime (eai-standard/2.3) for every frozen instance in scripts/bigym2/instances/ (docs/benchmarks/bigym2.md).
+-standard-realtime (eai-standard/2.3) for every family of scripts/bigym2/tasks.json (docs/benchmarks/bigym2.md).
 
     python3 scripts/bigym2/gen_tasks.py render     # (re)write every BiGym 2.0 task dir; `git diff tasks/` stays empty
     python3 scripts/bigym2/gen_tasks.py check      # write nothing; exit 1 if a task dir differs from the generator's
@@ -9,7 +9,12 @@ Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 
 Inputs, all in the repository:
   scripts/bigym2/tasks.json                 per family: upstream's task and sentence, the success rule in words, the seed,
                                             a positive example (`evidence`)
-  scripts/bigym2/instances/<f>-i00.json     the frozen instance + the numbers the texts quote (make_instances.py)
+  tasks/bigym2-<f>-i00-privileged/environment/instance.json
+                                            the frozen instance + the numbers the texts quote (make_instances.py): the
+                                            committed task dir holds the one copy, which the generator reads back. A new
+                                            family's instance is written to scripts/bigym2/instances/<f>-i00.json and read
+                                            from there while that file exists; delete it once the family's task dirs are
+                                            committed
   scripts/bigym2/shared/                    the tooling (rcb_bigym2.py, grade.py), the sim service (standard/: the BiGym 2.0
                                             adapter server.py on rcb_service.py; realtime/: rcb_realtime.py) and clients
   scripts/bigym2/templates/<mode>/          every other task file; a *.tmpl file is filled with the instance's values (@@KEY@@)
@@ -228,13 +233,21 @@ def files_of(tdir: pathlib.Path, vals: dict) -> dict[str, tuple[bytes, int]]:
     return out
 
 
+def instance_path(fam: str) -> pathlib.Path:
+    """The family's frozen instance: scripts/bigym2/instances/<f>-i00.json for a new family (until its task dirs are
+    committed), else the committed privileged task's environment/instance.json (the canonical copy; its tests/ and the
+    standard tasks' environment/sim/ copies are the same bytes)."""
+    new = HERE / "instances" / f"{fam}-i00.json"
+    return new if new.is_file() else ROOT / "tasks" / task_dir(fam, "privileged") / "environment/instance.json"
+
+
 def plan(fam: str, task: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
     """{task dir name: {relative path: (content, mode)}} for the three modes of one instance."""
-    path = HERE / "instances" / f"{fam}-i00.json"
+    path = instance_path(fam)
     raw = path.read_bytes()
     inst = json.loads(raw)
     if inst["family"] != fam or inst["task"] != task["upstream_task"] or inst["seed"] != task["seed"]:
-        raise RuntimeError(f"{path.name} does not match tasks.json (family, upstream task, seed)")
+        raise RuntimeError(f"{path.relative_to(ROOT)} does not match tasks.json (family, upstream task, seed)")
     vals = values(fam, task, inst, version)
     tool = (SHARED / "rcb_bigym2.py").read_bytes()
     std = SHARED / "standard"

@@ -82,13 +82,19 @@ never copied into the task and not replayed here.
 - One Isaac simulator per 32 GB of host RAM; the compose files cap torch / OpenMP pools at 8 threads.
 
 ## Tasks and generator
-- `python3 scripts/maniguard/mk_tasks.py` writes every included task dir (both modes) from `scripts/maniguard/` alone:
+- `python3 scripts/maniguard/mk_tasks.py` writes every included task dir (both modes) from `scripts/maniguard/`:
   `families.json` (the evaluator's settings per family; per task: rank, `include`, modes, the human texts, the oracle
-  level), `instances/<family>/<task>/` (ManiGuard-Bench's `scene_ep1.json` + `diagnostics.jsonl` at revision `af09438ceb`,
-  unchanged, CC BY-NC 4.0 per `instances/NOTICE`, and our `instance.json`), `shared/rcb_maniguard.py` (the tooling),
-  `template/<mode>/` and `scripts/eai_standard/`. Every text that is in the task files (prompt, goal region and conditions,
-  the LTL specification and its thresholds) is rendered from `instances/`, so the instruction states what the verifier
-  checks. `--check` only compares; CI runs it.
+  level), `shared/rcb_maniguard.py` (the tooling), `template/<mode>/`, `oracles/<family>/<task>/README_oracle.md` and
+  `scripts/eai_standard/`, plus each task's instance files (ManiGuard-Bench's `scene_ep1.json` + `diagnostics.jsonl` at
+  revision `af09438ceb`, unchanged, CC BY-NC 4.0 per `scripts/maniguard/instances/NOTICE`, and our `instance.json`) and
+  its reference solution (`oracle_trajectory.npz`, `oracle_gen.py`). Those have one copy in the repository, the committed
+  privileged task's `environment/instance/` and `solution/`, which the generator reads back. A new instance (made with
+  `rcb_maniguard.py make-instance`) goes into `scripts/maniguard/instances/<family>/<task>/`, a new or remade reference
+  solution next to its `README_oracle.md`; the generator reads those while they exist, and they are deleted once the task
+  dirs are generated and committed. `instances/` keeps the instances of the tasks that are not generated
+  (`include: false`). Every text that is in the task files (prompt, goal region and conditions, the LTL specification and
+  its thresholds) is rendered from the instance files, so the instruction states what the verifier checks. `--check`
+  only compares; CI runs it.
 - The 20 shortlisted dry tasks (ranks 1-20, hardest first) and the 16 variety tasks (ranks 21-36) are in
   `families.json`; the included ones are in the tables above. Only dry tasks: ManiGuard's family runner evaluates every
   *liquid* pipeline with GPU dynamics (`EVAL_USE_GPU_DYNAMICS`); the tooling follows the runner for any liquid task
@@ -188,10 +194,10 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
 ## Positive examples (the oracle)
 ManiGuard publishes 40 scripted demonstrations per task (`IDEAS-Lab-Northwestern/datagen-<family>-v1-joint-5cam`, LeRobot,
 30 Hz, CC BY-NC 4.0), recorded by its data generator in a scene built object by object. A privileged task's reference
-trajectory is one of them, time-resampled to the evaluator's 20 Hz: `scripts/maniguard/oracles/<family>/<task>/oracle_gen.py`
+trajectory is one of them, time-resampled to the evaluator's 20 Hz: the privileged task's `solution/oracle_gen.py`
 fetches the pinned episode (sha256-checked), reads the generator's commanded joint targets at the midpoint of each control
-step and appends 40 rows holding the last one; `oracle_trajectory.npz` is its output, `README_oracle.md` its record (the
-task README's reference solution). The generator re-samples each episode's placements (the sponge, the dust, the cap), so a
+step and appends 40 rows holding the last one; `oracle_trajectory.npz` is its output,
+`scripts/maniguard/oracles/<family>/<task>/README_oracle.md` its record (the task README's reference solution). The generator re-samples each episode's placements (the sponge, the dust, the cap), so a
 demonstration replays only approximately in the frozen scene: per task, its demonstrations are replayed in order until one
 reaches the strict goal (the README says which failed and why). Where none can, the oracle keeps the demonstration and
 redoes the failing step on the tooling: `lid_transport/task_0016`, whose four demonstrations tried never get the cap welded
@@ -313,8 +319,8 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
 
 ## Licences
 ManiGuard code: Apache-2.0 (the evaluator modules in the image). ManiGuard-Bench task files: CC BY-NC 4.0 (copied unchanged
-into `scripts/maniguard/instances/` and the task dirs, `instances/NOTICE`). The reference trajectories
-(`scripts/maniguard/oracles/`, the tasks' `solution/`) derive from ManiGuard's public demonstrations (CC BY-NC 4.0) and
+into the task dirs and, for the tasks not generated, `scripts/maniguard/instances/`; `instances/NOTICE`). The reference
+trajectories (the tasks' `solution/`) derive from ManiGuard's public demonstrations (CC BY-NC 4.0) and
 carry the same licence; each `README_oracle.md` names its source. The long-finger robot asset: Apache-2.0.
 BEHAVIOR-1K code: MIT; the BEHAVIOR Data Bundle: no redistribution (mounted, never copied). Isaac Sim 4.5 / Omniverse Kit:
 NVIDIA proprietary, hence BUILD_ONLY. Spot: GPL-3.0-or-later (in the never-distributed image only).

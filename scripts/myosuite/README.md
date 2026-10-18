@@ -11,7 +11,7 @@ docker run --rm --network none --user $(id -u):$(id -g) -e HOME=/tmp -v $PWD:/re
 
 | path | what |
 |---|---|
-| `instances/<family>.npz` | the frozen instance: the family's MyoSuite env after `seed(0)`, `reset(seed=0)` (`shared/rcb_myosuite.py make-instance`): MuJoCo integration state, the model arrays resets edit, the env's Python state, and its state hash |
+| `tasks/myosuite-<family>-i00-privileged/environment/instance.npz` | the frozen instance (its one committed copy, which `generate.py` and `make_facts.py` read back): the family's MyoSuite env after `seed(0)`, `reset(seed=0)` (`shared/rcb_myosuite.py make-instance`): MuJoCo integration state, the model arrays resets edit, the env's Python state, and its state hash. A new or rebuilt one goes to `instances/<family>.npz` (`make_facts.py` freezes a new family's there), read instead while it exists; delete it once the tasks are regenerated |
 | `instances/<family>.json` | the facts the task texts quote (`make_facts.py`, in the image) |
 | `oracles/<family>.npy` | reference rows (key_turn, obj_hold, arm_reach): MyoSuite's NPG baseline policies (`myosuite/agents/baslines_NPG/`, in the MyoSuite wheel, removed from the image) rolled out from the instance and cut at the first success; float32-exact |
 | `shared/rcb_myosuite.py` | the task tooling (privileged `Session`, replay CLI), copied into every task (privileged `environment/` and `tests/`, standard `environment/sim/`) |
