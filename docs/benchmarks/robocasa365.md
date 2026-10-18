@@ -181,7 +181,7 @@ By directory: 70 easy, 6 hard, 25 unverified, 0 pending.
 | `robocasa365-sanitize-prep-cutting-board-i00` | easy: Luna | unverified | — |
 | `robocasa365-scrub-bowl-i00` | easy: Luna | unverified | — |
 | `robocasa365-searing-meat-i00` | easy: Astra, Opus | hard | — |
-| `robocasa365-seasoning-spice-setup-i00` | easy: Astra, Sol 6.1, Gemini 4 Argon | hard | — |
+| `robocasa365-seasoning-spice-setup-i00` | easy: Luna, Astra, Sol 6.1, Gemini 4 Argon | hard | — |
 | `robocasa365-set-up-cutting-station-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash | easy: Astra, Sol 6.1 | — |
 | `robocasa365-stocking-breakfast-foods-i00` | easy: Luna | unverified | — |
 | `robocasa365-sweeten-coffee-i00` | easy: Luna | unverified | — |

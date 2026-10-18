@@ -1329,7 +1329,7 @@ def core_set(path: Path = CORE_SET_FILE) -> dict[str, dict]:
         mtime = path.stat().st_mtime_ns
     except FileNotFoundError:
         return {}
-    return dict(_core_set(path, mtime)[1])
+    return {t: dict(e) for t, e in _core_set(path, mtime)[1].items()}
 
 
 def core_set_commit(path: Path = CORE_SET_FILE) -> str | None:
@@ -1344,9 +1344,9 @@ def set_of(task: Path) -> str:
     """`core` when the task dir is listed in docs/core_set.toml, else `excluded`. A marker like `validated`, never part
     of config_key: the headline statistics count `core` tasks only. Recorded with each result as the value when it was
     written; reports re-derive it from the list at the commit they publish. A malformed list never stops a result from
-    being written (a warning, and `core`): `core-set --check` reports it."""
+    being written: a missing or malformed list gives a warning and `core`; `core-set --check` reports it."""
     try:
-        cs = core_set()
+        cs = _core_set(CORE_SET_FILE, CORE_SET_FILE.stat().st_mtime_ns)[1]
     except (ValueError, OSError) as e:                  # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
         if str(e) not in _CORE_WARNED:
             _CORE_WARNED.add(str(e))
@@ -1377,8 +1377,9 @@ def readme_table(tasks_dir: Path | None = None) -> str:
 
 
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
-    """What is wrong with the core set: no file, no `generated_from` commit, a listed task dir that does not exist, a
-    base / benchmark / mode that is not the dir's, an unknown `luna` value or field."""
+    """What is wrong with the core set: no file, no `generated_from` commit, an unknown top-level key, a listed task dir
+    that is not a plain name or does not exist, a base / benchmark / mode that is not the dir's, an unknown `luna` value or
+    field."""
     tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
     if not path.is_file():
         return [f"{path.name}: no such file"]
@@ -1388,8 +1389,14 @@ def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) ->
         return [str(e)]
     bad = [] if isinstance(g, str) and re.fullmatch(r"[0-9a-f]{40}", g) else \
         [f"{path.name}: generated_from {g!r} is not a full commit id"]
+    unknown = set(tomllib.loads(path.read_text(encoding="utf-8"))) - {"generated_from", "task"}
+    if unknown:
+        bad.append(f"{path.name}: unknown top-level key(s) {', '.join(sorted(unknown))}")
     for t, e in cs.items():
         d = tasks_dir / t
+        if t != Path(t).name:
+            bad.append(f"{t}: not a task dir name")
+            continue
         if not (d / "task.toml").is_file():
             bad.append(f"{t}: no task directory under tasks/")
             continue
