@@ -117,7 +117,7 @@ VERIFY_STANDARD = (
     "missing, unreadable or not finalized, the service never ended the episode, it gave up after crashes not all inside the\n"
     "agent's calls, or the frozen start did not rebuild (`instance_mismatch`).")
 SIDECAR = (
-    "The agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar\n"
+    "The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar\n"
     "(`environment/docker-compose.yaml`: GPU on the sidecar, the licensed dataset mounted read-only at `/data`, the service's own\n"
     "record in `/out`), which owns the scene, judges the episode and records it as a (T, 25) trajectory and a video. The\n"
     "collect hook (`environment/sim/finalize.sh`) ends the episode (the settle window on the live simulator when it was still\n"
@@ -447,7 +447,7 @@ def readme_standard(fam: str, e: dict, text: str) -> str:
                              "entries are per-step targets) or of `ee_pose` (16, both end effectors, cuRobo IK per row); `observe` "
                              "frames or a watch window; binary RCB1 responses"),
             ("Crash recovery", "`restart: on-failure:6`; the service journals every control step (`journal.f64`) and resumes the same "
-                               "episode after a crash (resume class `approx`, docs/STANDARD_MODE.md §13.1); startup watchdog "
+                               "episode after a crash (resume class `approx`, docs/protocol/standard_mode.md §13.1); startup watchdog "
                                "`RCB_STARTUP_TIMEOUT_S` = 1800 s"),
             ("Dataset", "the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition)"),
             ("Budget", "the agent's time is the `Agent time budget` row (the number is this task's `[agent] timeout_sec`; docs/benchmarks/behavior.md)"),

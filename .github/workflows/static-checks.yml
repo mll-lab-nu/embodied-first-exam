@@ -1,5 +1,5 @@
 name: static-checks
-# Two tiers (docs/PROTOCOL.md v2.0): `invariants` (required: Appendix H) and `advisories` (warnings only); `unit-tests`
+# Two tiers (docs/protocol/README.md v2.0): `invariants` (required: Appendix H) and `advisories` (warnings only); `unit-tests`
 # (not required). Scope (ci_checks/ci_scope.py, docs: CONTRIBUTING.md "Review and merge"): a pull request runs the checks on what it
 # can affect -- one benchmark's own paths changed: that benchmark's tasks, generator check and unit tests (plus the cheap
 # repo-level checks on everything); anything shared (ci_checks/, .github/, shared scripts/ modules and tables, shared
@@ -23,7 +23,7 @@ concurrency:
 # to be increased"). To go back to GitHub's runners, put `ubuntu-latest` in both `runs-on` lines. Do not give these
 # runners the `docker` label: validate-task.yml targets [self-hosted, docker] and runs Harbor trials.
 jobs:
-  # THE required check (docs/PROTOCOL.md Appendix H; board 0124): every check and test that enforces the eight
+  # THE required check (docs/protocol/README.md Appendix H; board 0124): every check and test that enforces the eight
   # invariants, nothing else. ci_checks/run_invariants.sh runs with `set -euo pipefail`, an explicit expected count of
   # commands (parallel.py --expect) and an INVARIANT-PASS line from each: a failure, an error or an incomplete run fails
   # this job. No continue-on-error anywhere in it. Branch protection's required context: `invariants`.
@@ -44,7 +44,7 @@ jobs:
           else
             bash ci_checks/run_invariants.sh
           fi
-  # Every other check (docs/PROTOCOL.md §1-§7 are recommendations): findings are warnings, never a failure of the
+  # Every other check (docs/protocol/README.md §1-§7 are recommendations): findings are warnings, never a failure of the
   # workflow (continue-on-error; exit 3 = warnings only), shown as annotations, in the job summary and, on a pull
   # request, in the "Advisories (not blocking)" section of its sticky overview comment (ci_checks/pr_overview.py;
   # this job also posts the overview and the labels: new-task, task-fix, shared, cutoff-change).

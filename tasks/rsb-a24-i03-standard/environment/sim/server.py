@@ -24,7 +24,7 @@ Six additions to the shared layer, made here so that rcb_service.py stays the fi
   - /status carries the operator's last answer, and every response's meta the messages that arrived since the last;
   - a 500 says "simulator error" only (the layer's `detail`, an exception's repr, can name the simulator's modules;
     it is kept in DATA/episode.jsonl);
-  - the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): `RoboSafe.live_verdict`
+  - the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): `RoboSafe.live_verdict`
     writes RoboSafeBench's verdict on the episode this process ran (DATA/verdict.json: outcome, marks, pass) and its
     record (DATA/record.json); nothing is replayed to grade it. The frozen start is checked when the episode begins
     (`RoboSafe.start_sha`, the instance's `state_sha`: a mismatch is the layer's `instance_mismatch`, an

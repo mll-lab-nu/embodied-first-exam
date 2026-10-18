@@ -1,10 +1,10 @@
 """eai-standard/2.2 sim service for RoboDojo's simulation benchmark (RoboDojo's own evaluator on its Isaac Lab 2.3 fork /
-Isaac Sim 5.1; two ARX X5 arms with parallel grippers; see docs/STANDARD_MODE.md). Owns the scene. HTTP surface
+Isaac Sim 5.1; two ARX X5 arms with parallel grippers; see docs/protocol/standard_mode.md). Owns the scene. HTTP surface
 (rcb_limited): GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics (RCB1 bodies, RCB1 responses: videos /
 frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl and keeps /data/final.json
 current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13, resume class `exact`, or `approx` for the tasks graded
+Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13, resume class `exact`, or `approx` for the tasks graded
 by verdict): every executed action is
 journaled (the 14-D row handed to Session.step), every completed call is checkpointed with the scene's state hash. After a
 crash compose restarts the container and this service, a fresh process, rebuilds the frozen layout, replays the journal up

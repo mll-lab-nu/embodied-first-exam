@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Every check, in two tiers (board 0124; docs/PROTOCOL.md: only Appendix H binds):
+# Every check, in two tiers (board 0124; docs/protocol/README.md: only Appendix H binds):
 #   1. the invariants: ci_checks/run_invariants.sh (the required CI job `invariants`); a failure fails this run (exit 1);
 #   2. the advisory checks (the CI job `advisories`): ci_checks/parallel.py --advisory, findings are warnings (exit 3).
 # Exit 0: everything clean; 1: an invariant failed (or the invariant run was incomplete); 3: advisory findings only.
@@ -106,7 +106,7 @@ add python3 ci_checks/check-video.py"$targs"
 # PROTOCOL H.4 (board 0151): the standard modes' graders transcribe the live episode's verdict (graded_by_live), no replay
 # decides, and agent-caused ends are never infrastructure failures (synthetic records through each distinct grade.py)
 add python3 ci_checks/check-live-verdict.py"$targs"
-# The task protocol (docs/PROTOCOL.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths
+# The task protocol (docs/protocol/README.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths
 add python3 ci_checks/check-protocol.py"$pargs"
 # PROTOCOL §6: the resource monitor sidecar's copies and the verifier step (its isolation: run_invariants.sh)
 add python3 ci_checks/check-monitor.py --tier advisory"$pargs"

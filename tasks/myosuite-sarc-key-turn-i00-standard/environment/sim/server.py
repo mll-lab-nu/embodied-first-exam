@@ -1,7 +1,7 @@
-"""eai-standard/2.2 sim service for the MyoSuite tasks (docs/STANDARD_MODE.md): the adapter of the shared layer
+"""eai-standard/2.2 sim service for the MyoSuite tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_myosuite.Session (MyoSuite 2.12.2 on MuJoCo, CPU). HTTP surface: GET /spec,
 GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET,
-the optional reset capability of docs/STANDARD_MODE.md; MyoSuite's standard tasks default to 10 in their compose
+the optional reset capability of docs/protocol/standard_mode.md; MyoSuite's standard tasks default to 10 in their compose
 file, PROTOCOL §4.5). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's (environment/sim/instance.npz, the privileged twin's). The action is MyoSuite's own:

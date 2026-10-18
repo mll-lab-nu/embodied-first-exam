@@ -223,7 +223,7 @@ class TestEnd(Live):
 
 class TestSimulatorError(Live):
     """A simulator error raised by a control step after the agent's first command is the agent's 0 (owner, 2026-10-17;
-    STANDARD_MODE Part 3; before, every error that ended the graded episode was infrastructure)."""
+    docs/protocol/standard_mode.md Part 3; before, every error that ended the graded episode was infrastructure)."""
 
     def make_sim(self):
         def boom(sim):

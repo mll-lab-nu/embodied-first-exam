@@ -2,7 +2,7 @@
 #
 # Which tasks: KinDER's Dynamic3D tasks (MuJoCo, a TidyBot++ mobile manipulator) whose goal a camera can see or a
 # sentence can name, and (the section at the end) other 3D families of KinDER, one variant each. Of all of these, the
-# four with the most task objects (upstream's `oN`) stay (docs/benchmarks/kinder.md), with the fixture. Each ships twice (docs/PROTOCOL.md): privileged mode (tasks/kinder-<family>-i<NN>-privileged:
+# four with the most task objects (upstream's `oN`) stay (docs/benchmarks/kinder.md), with the fixture. Each ships twice (docs/protocol/README.md): privileged mode (tasks/kinder-<family>-i<NN>-privileged:
 # the simulator and its state, one replayable trajectory) and standard mode (-standard: the robot as a service,
 # eai-standard/2.1, its own sensors only).
 #
@@ -15,7 +15,7 @@
 # only where upstream's own looks down from high overhead, which would hand the agent a map: a camera where a lab would
 # put one instead, looking down less than 45 degrees.
 #
-# Per task, for its README and the human review of a task without an oracle (docs/PROTOCOL.md §2.7):
+# Per task, for its README and the human review of a task without an oracle (docs/protocol/README.md §2.7):
 #   difficulty        what makes it hard, and how models did
 #   oracle_evidence   the positive example a reviewer checks (the family's, both modes); absent: none yet, so the
 #                     task is unvalidated (`[metadata] validated = false`, PROTOCOL §2, §4)

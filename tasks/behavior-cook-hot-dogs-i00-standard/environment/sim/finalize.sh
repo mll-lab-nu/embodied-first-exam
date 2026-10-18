@@ -1,7 +1,7 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container (main's
 # `kill -9 -1` hook runs first). The verdict is the LIVE episode's (owner 2026-10-17, board 0150/0151): nothing replays it.
-#   1. end the episode with the shared first half (rcb_limited.py end, docs/STANDARD_MODE.md §13.3): it waits through
+#   1. end the episode with the shared first half (rcb_limited.py end, docs/protocol/standard_mode.md §13.3): it waits through
 #      a resume after a crash (no PID file until the service is ready again), SIGUSR1s the process that wrote the newest
 #      startups.jsonl line, and returns 0 once the service has ended the episode -- when the agent's episode was still
 #      running, after the success rule's settle window on the live simulator (server.py end_live) -- written

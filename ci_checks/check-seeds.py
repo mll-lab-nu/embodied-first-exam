@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADVISORY. Seeds (docs/PROTOCOL.md §2): every task names the frozen instances it may run from. For every task:
+"""ADVISORY. Seeds (docs/protocol/README.md §2): every task names the frozen instances it may run from. For every task:
   - task.toml has `[metadata.seeds]` with `default` (an integer), `allowed` (a list of distinct integers, a range
     `{ from = A, to = B }` with both ends included, or "any"; `default` among them; a range or "any" only with
     `build = "runtime"`: the task builds a seed's instance itself, since they cannot all be committed) and `oracle` (the seeds the reference solution is for: a subset of `allowed`; empty when `oracle = "none"`, not

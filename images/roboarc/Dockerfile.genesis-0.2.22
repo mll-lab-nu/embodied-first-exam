@@ -7,7 +7,7 @@
 # images/robotangle/README.md.
 # rcb-topogym: Genesis 1.2.1 / Nyx with cu128 torch and original pyuipc 0.0.25 materials (libuipc 292c98c3 plus the
 # determinism patches in images/topogym/uipc-patches: summation order fixed, physics unchanged).
-# Infrastructure only, no benchmark code (docs/rcb/PROTOCOL.md §1): the task tooling (rcb_topogym.py) comes with each task,
+# Infrastructure only, no benchmark code (docs/protocol/README.md §1): the task tooling (rcb_topogym.py) comes with each task,
 # and prune.py removes everything that could hold a reference solution. Tag = images/topogym/VERSION + CUDA profile; build: scripts/build_images.sh
 # topogym (from the repository root, which is the build context; .dockerignore keeps it small).
 # UIPC_WHEEL=build compiles libuipc (stages uipc-compile, uipc-build); UIPC_WHEEL=prebuilt installs the audited wheel and

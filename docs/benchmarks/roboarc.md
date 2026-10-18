@@ -163,5 +163,5 @@ or robot base position either.
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.4` (STANDARD_MODE Part 4). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. Its service ends the episode when `time_left_s` reaches 0 (counted from the agent's first request), until its next task update.
+Serves `eai-standard/2.4` (docs/protocol/standard_mode.md Part 4). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. Its service ends the episode when `time_left_s` reaches 0 (counted from the agent's first request), until its next task update.
 

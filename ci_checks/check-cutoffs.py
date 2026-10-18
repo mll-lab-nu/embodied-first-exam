@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The agent's time cutoff (docs/PROTOCOL.md §2.12): each task sets its own, and says it once, at the end of its instruction.
+"""The agent's time cutoff (docs/protocol/README.md §2.12): each task sets its own, and says it once, at the end of its instruction.
 
 The number is the task's `[agent] timeout_sec` in task.toml, set by its author (or its benchmark's generator) in the
 pull request that adds or changes the task, as in Terminal-Bench; there is no table. For every task given (default:

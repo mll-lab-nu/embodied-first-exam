@@ -1,6 +1,6 @@
 BUILD_ONLY: ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION> is never published
-(docs/PROTOCOL.md §2.4, D5). An evaluation host builds it locally, or takes it from the organization's own non-public
-copy of the package (docs/PROTOCOL.md §7, item 1); the RoboLab tasks reference that tag and Harbor finds it in the local
+(docs/protocol/README.md §2.4, D5). An evaluation host builds it locally, or takes it from the organization's own non-public
+copy of the package (docs/protocol/README.md §7, item 1); the RoboLab tasks reference that tag and Harbor finds it in the local
 Docker image store.
 
 Why

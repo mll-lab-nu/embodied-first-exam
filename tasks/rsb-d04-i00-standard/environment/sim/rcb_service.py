@@ -1,5 +1,5 @@
-"""eai-standard/2.1 sim service: the simulator-agnostic half of a standard-mode sidecar (docs/PROTOCOL.md §4,
-docs/STANDARD_MODE.md).
+"""eai-standard/2.1 sim service: the simulator-agnostic half of a standard-mode sidecar (docs/protocol/README.md §4,
+docs/protocol/standard_mode.md).
 
 The robot as a service: the agent reaches a simulator it cannot open over HTTP. GET /spec, GET /status, POST /observe
 and POST /submit; POST /reset exists only when the run grants resets (budget.reset > 0); everything else is 404.
@@ -28,7 +28,7 @@ Evidence under DATA, never visible to the agent:
   trajectory.npz       the graded episode (the deliverable: every control step since the last reset, as executed)
   replay.mp4, replay.last.png   the episode's video, rendered from trajectory.npz after the verdict (for people only)
 
-The verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): success = the episode this
+The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): success = the episode this
 service ran ended in success under the task's rule (the adapter's step()), judged here, after the agent's container is
 gone; nothing is replayed to grade it. An adapter may add its benchmark's own record of the live episode with
 live_verdict(rows, success) -> dict, e.g. a settle window run on the live simulator: its "success" can only take a
@@ -862,7 +862,7 @@ class Service:
             self._finalize()
 
     def _finalize(self) -> None:
-        """The verdict: the live episode's (docs/PROTOCOL.md H.4). The graded episode (every control step since the last
+        """The verdict: the live episode's (docs/protocol/README.md H.4). The graded episode (every control step since the last
         reset) is saved as the trajectory, the deliverable that stays replayable, and the success is the one the live
         episode ended with (plus the adapter's live_verdict(), which can only take it away): final from the moment it is
         written ("finalized": true). Nothing is replayed to grade it. Then a video for humans, rendered from the

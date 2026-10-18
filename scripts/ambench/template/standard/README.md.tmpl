@@ -13,7 +13,7 @@
 
 ## Task
 @@STD_INTRO@@AM-Bench environment `@@ENV_ID@@`, its seeded reset with seed
-@@SEED@@): @@README_GOAL@@ The agent gets only the `eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in
+@@SEED@@): @@README_GOAL@@ The agent gets only the `eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in
 the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar), which owns the scene and records the episode as a
 (T, 8) trajectory of AM-Bench's own end-effector pose actions. The collect hook (`environment/sim/finalize.sh`) ends the
 episode, lets the service exit, writes `final.json` from the live episode's record (no replay) and then films the
@@ -45,7 +45,7 @@ agent's time-out with the check never met, reward 0.
 | Action space | `submit` chunks of `ee_pose` (8: AM-Bench's own action, the tool frame's target pose + the gripper command, streamed at 120 Hz with the agent's `dt`, a multiple of 1/120 s, `hold` or `linear`); `observe` frames or a watch window; `/kinematics` (FK / IK of the arm on its airframe, stateless); binary RCB1 responses |
 | Cameras | `ee_camera` (on the end effector), `base_camera` (on the airframe, looking forward), 384×384 RGB, z-depth on request; drawn by a render-only Isaac process from the physics state |
 | Images | the `sim` sidecar runs eai-ambench (BUILD_ONLY, `images/ambench/BUILD_ONLY`); the agent container and the verifier run the shared client image with its pip pins (`scripts/eai_standard/client.env`) |
-| Crash recovery | resume class @@RESUME_CLASS@@: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode (docs/STANDARD_MODE.md §13) |
+| Crash recovery | resume class @@RESUME_CLASS@@: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode (docs/protocol/standard_mode.md §13) |
 | Generator | `scripts/ambench/mk_tasks.py` (`scripts/ambench/instances.json`, `frozen/`, `template/standard/`, `shared/`, `scripts/eai_standard/`); docs/benchmarks/ambench.md |
 
 ### Change Log

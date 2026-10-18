@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Two tiers (board 0124). INVARIANT (docs/PROTOCOL.md Appendix H.1; `--tier invariants`, part of the required CI job):
+"""Two tiers (board 0124). INVARIANT (docs/protocol/README.md Appendix H.1; `--tier invariants`, part of the required CI job):
 the monitor sidecar that check-verifier-isolation.sh exempts is held to its own isolation (no network, its code
 read-only, the beacons read-only in every other service, its seal the first sidecar collect hook), and tests/test.sh
 sanitizes /app/output before anything reads the agent's files. ADVISORY (`--tier advisory`): the copies of the monitor's

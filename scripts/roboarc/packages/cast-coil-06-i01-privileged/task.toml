@@ -10,7 +10,7 @@ keywords = ["robotics", "topogym", "genesis", "aloha", "code-as-policy", "trajec
 [metadata]
 author_name = "jianwen"
 tooling_version = "18"
-task_type = "trajectory"          # trajectory | policy   (see docs/rcb/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "topogym"             # TopoGym on Genesis 1.2.1 (CPU float64 physics, Nyx RGB)
 robot = "aloha"
 family = "cast_coil"

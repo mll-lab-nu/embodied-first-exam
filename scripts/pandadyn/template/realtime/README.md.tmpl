@@ -13,7 +13,7 @@
 
 ## Task
 Standard-realtime twin of `@@PRIV@@` (same frozen instance and success check as it and as `@@STD@@`): the agent gets only
-the realtime client (`eai-standard/2.3`, docs/STANDARD_MODE.md Part 3); the simulator runs in the `sim` sidecar on a clock
+the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = @@SLOWDOWN@@** (one 10 ms control step every @@WALL_MS@@ ms of wall-clock time), with
 @@RT_RESETS@@ resets (only the last episode is graded). @@README_GOAL@@
 

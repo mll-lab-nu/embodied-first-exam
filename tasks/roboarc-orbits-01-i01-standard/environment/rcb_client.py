@@ -1,4 +1,4 @@
-"""eai-standard/2.4 client (the 2.2 client, formerly rcb-limited/2.x, plus operation ids; docs/STANDARD_MODE.md) — the
+"""eai-standard/2.4 client (the 2.2 client, formerly rcb-limited/2.x, plus operation ids; docs/protocol/standard_mode.md) — the
 only thing a standard-mode agent gets (installed at /opt/tools/rcb_client.py). Against a 2.4 service every submit /
 get_obs carries an operation id and a request deadline: after a timeout, `r.operation_status()` (or
 `r.operation_status(r.last_operation_id)`) says whether the call ran; never re-send it blindly.

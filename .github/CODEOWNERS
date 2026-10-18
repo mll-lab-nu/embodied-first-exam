@@ -1,9 +1,7 @@
 # Shared files need a review from one of these maintainers (enforced by branch protection on main).
-/docs/PROTOCOL.md               @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
-/docs/STANDARD_MODE.md           @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
+/docs/protocol/                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /docs/TAXONOMY.md               @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /docs/REVIEWING.md              @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
-/docs/LEAKAGE.md                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /ci_checks/                     @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /.github/                       @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /scripts/build_images.sh        @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
@@ -12,7 +10,6 @@
 /README.md                      @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /CONTRIBUTING.md                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /AGENTS.md                      @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
-/docs/RUNNING.md                @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /docs/benchmarks/               @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /scripts/task_conventions.py    @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0
 /scripts/task_names.py          @JamesKrW @williamzhangNU @QinengWang-Aiden @changhechen @CHIGUI0

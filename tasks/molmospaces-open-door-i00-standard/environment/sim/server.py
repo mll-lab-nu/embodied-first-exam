@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for MolmoSpaces (docs/STANDARD_MODE.md, docs/benchmarks/molmospaces.md): the adapter
+"""eai-standard/2.2 sim service for MolmoSpaces (docs/protocol/standard_mode.md, docs/benchmarks/molmospaces.md): the adapter
 of the shared layer rcb_limited.py; the simulator is rcb_molmospaces.Episode (upstream MolmoSpaces, MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl; nothing about objects ever leaves this process.

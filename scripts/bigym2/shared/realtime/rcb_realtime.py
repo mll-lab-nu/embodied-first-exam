@@ -1,5 +1,5 @@
 """eai-standard/2.3, the standard-realtime mode's protocol: the sim service of HumanoidBench's `-standard-realtime` tasks
-(docs/PROTOCOL.md §4b, docs/STANDARD_MODE.md "Standard-realtime mode"; docs/benchmarks/humanoidbench.md). Entry
+(docs/protocol/README.md §4b, docs/protocol/standard_mode.md "Standard-realtime mode"; docs/benchmarks/humanoidbench.md). Entry
 point of the sidecar: `python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged). 2.3 is 2.2 plus the realtime
 capability, every 2.2 addition optional: this service is rcb_service's 2.1 service with the capability, and reports
 eai-standard/2.3.
@@ -26,7 +26,7 @@ and finalize. Only the time model differs. In standard mode time moves only insi
   and returns what the cameras saw. It never changes the plan.
 - `cameras = []` asks for no images at all (in 2.1 an empty list means every camera): a controller's proprio-only call.
 
-Grading is 2.1's: the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151), judged by
+Grading is 2.1's: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151), judged by
 this service, nothing replayed. Every executed control step's sim row is journaled (trajectory_live.f64) and the graded
 episode's rows are saved as the trajectory: the rows the simulator applied, not what was submitted, so the trajectory
 reproduces the live run however the timing went (the video is rendered from it). Evidence added (never visible to the agent):
@@ -63,7 +63,7 @@ More than MAX_LAG_S behind, the service drops the debt instead of fast-forwardin
 seconds added to stalled_s).
 
 A crash resumes the same episode from its last checkpoint (one per second of robot time while the clock runs), paused.
-Whose failure it is (owner, 2026-10-17; docs/STANDARD_MODE.md Part 3): once the agent's first command has run (the first
+Whose failure it is (owner, 2026-10-17; docs/protocol/standard_mode.md Part 3): once the agent's first command has run (the first
 control step that runs a row the agent sent: the "first_command" event), the robot is executing the agent's commands, as inside a
 call in 2.1.
 - A simulator error raised by a control step after the first command ends the episode "error": the agent's 0

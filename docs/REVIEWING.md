@@ -1,6 +1,6 @@
 # Reviewing pull requests
 
-Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors follow
+Guide for maintainers. The contract is [protocol/README.md](protocol/README.md); contributors follow
 [CONTRIBUTING.md](../CONTRIBUTING.md).
 
 ## Order of work
@@ -31,7 +31,7 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
 - Can the agent reach a solution, a pointer to one, or the success predicate (images, tooling, docs, network)? In the
   image too: recorded episodes, demonstration files, a `source_url` or dataset name in instance metadata (PROTOCOL
   Appendix H.2). Does the task work with the allowlist only (H.6, unless it declares open egress: oracle run under it, nothing downloaded at run time)? Is a
-  solution of it one `pip install` away (a PyPI distribution with its experts or sources: list it in [LEAKAGE.md](LEAKAGE.md), "Packages on PyPI")?
+  solution of it one `pip install` away (a PyPI distribution with its experts or sources: list it in [protocol/leakage.md](protocol/leakage.md), "Packages on PyPI")?
 - Does the verifier depend on anything the agent controlled besides the declared artifacts?
 - Is the predicate checked at the end of the replay (privileged) or of the live episode (standard), and can it be true
   without doing the task?
@@ -41,7 +41,7 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
   when the episode begins, the agent's processes stopped (a `main` collect hook) before the sidecar is signalled and
   every later request refused, the video recorded live or rendered from the trajectory after the verdict.
 - Does the task run with Harbor's native agents, without custom adapters or runners, and without any gateway other than
-  the recording-only usage gateway (RUNNING.md "Official runs")?
+  the recording-only usage gateway (protocol/running.md "Official runs")?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
 - Names end in their mode, `-privileged` / `-standard` / `-standard-realtime`; README in the standard layout; no `results/` in task directories.
 - Modes (PROTOCOL §3, Appendix H.7): a benchmark may ship any subset of privileged, standard and standard-realtime; a missing
@@ -68,10 +68,10 @@ Guide for maintainers. The contract is [PROTOCOL.md](PROTOCOL.md); contributors 
 - Compute resources (PROTOCOL §6): are the minimums measured (what does `measured` cite?) rather than copied from the
   `[environment]` caps? Does `gpu_class` match the simulator (Isaac Sim / Omniverse: `rtx`)? Would the oracle run on a
   machine with exactly these values?
-- Resource limits (PROTOCOL §6, RUNNING.md "Resources"): would an honest agent stay inside them (one simulator at the task's defaults on the
+- Resource limits (PROTOCOL §6, protocol/running.md "Resources"): would an honest agent stay inside them (one simulator at the task's defaults on the
   largest card it runs on, the tooling's own replay checks, videos it is told to write)? Is the scope `trial` in
   privileged mode and `agent` in standard modes, and does `instruction.md` have the rendered paragraph just before the closing `## Time limit`? Does
-  `measured` cite real peaks (and say where there are none)? Do the caps leave the margin RUNNING.md "Resources" names above the limits?
+  `measured` cite real peaks (and say where there are none)? Do the caps leave the margin protocol/running.md "Resources" names above the limits?
 
 ## Human review (oracle `partial` or `none`)
 Review per family (same generator and predicate), at least two instances per family:

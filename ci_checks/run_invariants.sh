@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The required CI job `invariants` (.github/workflows/static-checks.yml): every check and test that enforces the eight
-# invariants of docs/PROTOCOL.md Appendix H, and nothing else (all other checks are advisory: ci_checks/run_all.sh).
+# invariants of docs/protocol/README.md Appendix H, and nothing else (all other checks are advisory: ci_checks/run_all.sh).
 # It fails on any failure, on any error, and on any incomplete run: `set -euo pipefail`, no check is allowed to warn
 # instead of failing, ci_checks/parallel.py --expect requires exactly the scheduled commands to complete with exit 0, every
 # command must print its `INVARIANT-PASS <id>` line, the per-task checks must have covered every task in scope, and the

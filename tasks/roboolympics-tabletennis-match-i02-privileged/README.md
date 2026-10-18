@@ -32,7 +32,7 @@ pinned (4, minimum = cap). If any process of the program's user survives the end
 is the program's 0 (never a win, never a retry).
 
 ## Compute resources
-Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
 
 | | Agent phase | Verifier |
 |---|---|---|
@@ -42,4 +42,4 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: not needed.
 - Measured: author estimate (RoboOlympics, mll-4090-1, 2026-10-15): CPU-only MuJoCo 3.3.7, no cameras; one world about 0.4 GB, 470 control steps/s on one core; the verifier holds the service, the policy (2 GiB address space) and two fresh replays
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 6 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 6 GiB memory. Limits measured: author estimate, not yet measured: 6 GiB under the 8 GiB container cap (2 GiB for the monitor's margin), enough for about ten worlds at once; processes 512 and disk 20 GiB: design defaults.
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 6 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 6 GiB memory. Limits measured: author estimate, not yet measured: 6 GiB under the 8 GiB container cap (2 GiB for the monitor's margin), enough for about ten worlds at once; processes 512 and disk 20 GiB: design defaults.

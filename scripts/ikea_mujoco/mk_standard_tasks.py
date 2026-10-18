@@ -169,7 +169,7 @@ simulator = "mujoco"              # plain MuJoCo 3.14.0, CPU float64, the scene'
 robot = "{r['robot']}"            # both arms (docs/TAXONOMY.md)
 family = "ikea_{t}"
 mode = "standard"                 # RGB + proprioception only; no part poses, no success predicate, no reset
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2): only the robot and gravity do work; springs, latches and threads are passive
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): only the robot and gravity do work; springs, latches and threads are passive
 protocol = "{PROTOCOL}"           # the shared 2.4 service layer; 2.1 / 2.2 requests are served unchanged
 oracle = "full"
 grasp = "physical (finger friction; no assisted grasp, no welds to a gripper)"
@@ -275,7 +275,7 @@ def test_sh(t: str) -> str:
     return f'''#!/bin/bash
 # Verifier (separate sandbox, no network): the sim sidecar's artifacts were uploaded to /data by Harbor. grade.py
 # transcribes final.json, the live episode's verdict (no grading replay), into reward.json / reward.txt.
-rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/rcb/PROTOCOL.md §2.6)
+rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/protocol/README.md §2.6)
 # The agent's files are untrusted input (PROTOCOL v2.0 H.1): no link out of /app/output, no FIFO, socket or device.
 find /app/output -mindepth 1 \\( -type l -o -type p -o -type s -o -type b -o -type c \\) -delete 2>/dev/null || true
 mkdir -p /logs/verifier

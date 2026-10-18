@@ -22,7 +22,7 @@ import argparse, json, os, pathlib, sys, tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robodojo"
 OVERRIDES = json.loads((HERE / "instance_overrides.json").read_text())   # per-task determinism class, physics, change log
-# The agent's time limit is CUTOFF_SEC below, written into `[agent] timeout_sec` (docs/PROTOCOL.md §2.12), from which
+# The agent's time limit is CUTOFF_SEC below, written into `[agent] timeout_sec` (docs/protocol/README.md §2.12), from which
 # scripts/task_conventions.py (normalize) writes the instruction's closing `## Time limit` section, the README row and the
 # standard service's RCB_WALL_CLOCK_S (ci_checks/check-cutoffs.py compares). The instruction's own text names none: CUTOFF
 # is what RoboDojo adds to the closing `## Time limit` section, placed right after the task's introduction.

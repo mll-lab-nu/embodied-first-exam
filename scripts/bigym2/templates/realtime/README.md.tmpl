@@ -17,7 +17,7 @@ trajectory holds the commands the simulator executed at each control step, so it
 timing was; the video is rendered from it in one pass after the verdict. `tests/grade.py` reads `final.json`. After
 the agent's first command, a simulator error raised by a control step and a simulator crash inside a control step (a
 fatal signal) are the agent's 0; before it, a kill, a failed resume and a reset that does not rebuild the scene are infrastructure
-(`infra_error = 1`; owner, 2026-10-17, docs/STANDARD_MODE.md). Success condition: @@SUCCESS@@.
+(`infra_error = 1`; owner, 2026-10-17, docs/protocol/standard_mode.md). Success condition: @@SUCCESS@@.
 @@FAIL_SENTENCE@@@@REVIEW@@
 
 ## Details

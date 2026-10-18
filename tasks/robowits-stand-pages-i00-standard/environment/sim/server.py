@@ -1,16 +1,16 @@
-"""eai-standard/2.2 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/STANDARD_MODE.md): the RoboWits
+"""eai-standard/2.2 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/protocol/standard_mode.md): the RoboWits
 adapter of the shared layer rcb_limited.py (scripts/eai_standard/). Source: scripts/robowits/shared/server.py, copied
 unchanged into every RoboWits standard task as environment/sim/server.py by scripts/robowits/mk_tasks.py.
 Owns the scene. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1
 responses: videos / frames / depth / proprio / per-frame step, time and camera poses as raw blobs, never base64), POST
 /kinematics (stateless FK / IK on the robot's own model). Logs every call to /data/episode.jsonl, keeps /data/final.json
-current, and grades the live episode (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): success = the settle window
+current, and grades the live episode (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): success = the settle window
 that ended the episode passed on this simulator (inside the agent's last call, or after its last command when its phase
 is over: Session.settle_check), nothing replayed. The verdict goes to final.json first ("finalized", "graded_by":
 "live"); then the recorded (T, 16) trajectory, the deliverable, is rendered once into /data/replay.mp4 for people
 ("video_pending" while it runs; it never changes the verdict). Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step is journaled
+Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13): every executed control step is journaled
 (/data/journal.f64, the exact row handed to the simulator), every completed call checkpointed (rows, state hash, proprio
 row). After a crash, run.sh exits non-zero, compose restarts the container (`restart: on-failure:6`) and this service
 rebuilds the frozen scene, replays the journal up to the last checkpoint and continues the SAME episode, never a reset.
@@ -182,7 +182,7 @@ def finish(reason: str) -> None:
     if not E["success"] and reason in ("timeout", "agent_exit"):
         # the agent phase is over: the last command is held for the settle window and the verdict taken there (as the
         # privileged grader does after the last action of a trajectory); never after a simulator error or at the step cap.
-        # The window is the end of the agent's last call (RUNNING.md): it runs as a call ("/settle"), so a crash of the
+        # The window is the end of the agent's last call (docs/protocol/running.md): it runs as a call ("/settle"), so a crash of the
         # simulator inside it counts as a crash inside the agent's calls on the resume (sim_crashed_on_call when it
         # repeats), never as an infrastructure crash between calls.
         cid = EP.call_begin("/settle")

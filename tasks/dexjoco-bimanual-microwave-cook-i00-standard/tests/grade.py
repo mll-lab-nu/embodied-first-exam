@@ -63,7 +63,7 @@ def verdict(d):
         "visible_cpus": int(num("visible_cpus")),
         "blas_threads": int(num("blas_threads")),
         # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
-        # resume (docs/STANDARD_MODE.md §13), the service not ending its episode for the collect hook, a scene that did
+        # resume (docs/protocol/standard_mode.md §13), the service not ending its episode for the collect hook, a scene that did
         # not start in the instance's frozen state, too few CPUs, a collect hook that left no verdict
         "infra_error": int(bool(d.get("infra_error")) or no_verdict or bool(d.get("too_few_cpus"))
                            or bool(d.get("instance_mismatch"))),

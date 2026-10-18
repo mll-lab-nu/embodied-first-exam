@@ -46,7 +46,7 @@ README gives the count); `full`: it reaches all of them.
 | privileged | the tooling (`rcb_dtb.Session`), the full state, free resets | unlimited | 30 s | the handed-in trajectory, replayed from the start |
 | standard (`eai-standard/2.1`) | the robot's cameras (RGB-D, calibrated) and proprioception, the current goal pose, through `rcb_client.py` | **20**; `RCB_RESET_BUDGET=0`: none | none (episode cap 360,000 control steps) | the last episode as it ran (live) |
 
-Both modes give the agent 60 minutes (PROTOCOL §2, RUNNING.md "The agent's time").
+Both modes give the agent 60 minutes (PROTOCOL §2, docs/protocol/running.md "The agent's time").
 
 ## Resets in standard mode
 `POST /reset` (`r.reset()`) abandons the running episode and starts a new one from the frozen start: the robot at its

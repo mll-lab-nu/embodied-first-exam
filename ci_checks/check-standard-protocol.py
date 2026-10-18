@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""eai-standard/2.2 (formerly rcb-limited/2.2) conformance test, run against a LIVE sim service (docs/STANDARD_MODE.md).
+"""eai-standard/2.2 (formerly rcb-limited/2.2) conformance test, run against a LIVE sim service (docs/protocol/standard_mode.md).
 
     check-standard-protocol.py --url http://127.0.0.1:8000 [--task tasks/<t>-standard] [--out DIR] [--watch 0.5]
     check-standard-protocol.py --launch tasks/<t>-standard [--port 18000] [--out DIR]   # compose up the task's sidecar, test, down

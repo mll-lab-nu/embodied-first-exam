@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# INVARIANT (docs/PROTOCOL.md Appendix H.4 identical instance copies, H.7 twins share one frozen instance): part of the
+# INVARIANT (docs/protocol/README.md Appendix H.4 identical instance copies, H.7 twins share one frozen instance): part of the
 # required CI job `invariants` (ci_checks/run_invariants.sh). The verifier's copy of the frozen instance, the privileged
 # task's tests/instance.{json,npz}, and the copy the task runs from (privileged: environment/, or environment/scorer/
 # where a scorer sidecar holds the trusted copy and the agent's environment/ copy is reduced by design; standard and

@@ -286,13 +286,13 @@ on the same step stands.
 `joint_position` (25: base per-step targets in the robot frame, trunk, arms, grippers; base and grippers switch at the
 row) and `ee_pose` (16, left first, xyzw, cuRobo IK for both end effectors per row, base still); the head camera and two
 wrist cameras (link-mounted, 224×224); OmniGibson `depth_linear`; `/kinematics` on a numpy model of the articulation
-(trunk + arms, cuRobo fallback; base frame unless `base_pose` is given); 121 proprio columns. STANDARD_MODE.md §16.
+(trunk + arms, cuRobo fallback; base frame unless `base_pose` is given); 121 proprio columns. docs/protocol/standard_mode.md §16.
 
 Requests are checked before anything is executed: a null is the default, and a wrong type or an out-of-range value of
 `dt`, `seconds`, `video_fps` (1-30), `cameras`, `note`, `interpolate`, `video`, `depth`, a zero `ee_pose` quaternion or
 a position beyond 1000 m is a 400 and nothing runs. `dt` must be a whole number of 1/30 s control periods.
 
-Crash recovery (STANDARD_MODE.md §13): the adapter `environment/sim/server.py` journals every executed control step
+Crash recovery (docs/protocol/standard_mode.md §13): the adapter `environment/sim/server.py` journals every executed control step
 (`journal.f64`), checkpoints every completed call with the full simulator state hash (`og.sim.dump_state`) and the robot's
 proprio row, and resumes the same episode after compose's `restart: on-failure:6`. Resume class **`approx`**: a hash
 mismatch after the journal replay is recorded (`resume_state_mismatch`) and the episode continues unless a TCP is more
@@ -321,7 +321,7 @@ sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh
 - **Tooling: thin wrappers only.** Joint moves, a straight-line base drive, cuRobo IK moves, gripper commands and the
   robot's cameras. Task-level skills (grasp, place, navigate) are never added to the agent's tooling; the reference
   solutions keep theirs in `solution/rcb_behavior_ref.py`.
-- **World-frame information.** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+- **World-frame information.** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
   `scripts/behavior/ci/advisory-world-frame.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
   Privileged tasks give the privileged state through the tooling.
 
@@ -361,7 +361,7 @@ resumes exactly). The record dir is `RCB_DATA=/out` (`/data` is its dataset). It
 | `/kinematics` | numpy model of the articulation (trunk + arms), cuRobo fallback |
 | proprio columns | 121 |
 | grading replays | none (graded live; a video-only render when the live video is missing) |
-| resume class (STANDARD_MODE §13.1) | `approx` |
+| resume class (docs/protocol/standard_mode.md §13.1) | `approx` |
 
 Measured scene builds (episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
 

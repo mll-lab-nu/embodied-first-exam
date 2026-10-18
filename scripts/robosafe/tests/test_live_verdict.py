@@ -281,8 +281,8 @@ class Live(unittest.TestCase):
         return rcb_realtime, sim, svc
 
     def test_a_sim_error_in_a_call_is_0_not_infra(self):
-        """Paused: a row of the agent's raised a simulator error inside its call. Realtime (owner 2026-10-17, STANDARD_MODE
-        Part 3): a control step after the agent's first command raised it."""
+        """Paused: a row of the agent's raised a simulator error inside its call. Realtime (owner 2026-10-17,
+        docs/protocol/standard_mode.md Part 3): a control step after the agent's first command raised it."""
         if CLOCK == "realtime":
             rcb_realtime, sim, svc = self.rt_service()
             job = rcb_realtime._Job("POST", "/submit", json.dumps({"type": "joint_position", "actions": [[0.99, 0.0]] * 3,

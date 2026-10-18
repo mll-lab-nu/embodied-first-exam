@@ -19,7 +19,7 @@ from the next 30 bits mod 1e9 (the same function as the evaluation pool's batch_
 checkout, sed or cp writes a mtime in that range, so a file already in it is taken as stamped (fast path) unless
 --full; every write of new content sets a current-time mtime, outside the range. --check only counts the files whose
 mtime is not their stamp (exit 1 if any). `stage` copies one task dir (symlinks kept, as `cp -a`) into a new directory
-and stamps the copy with --full: what every repo path that builds a task image runs from (docs/RUNNING.md). Directories
+and stamps the copy with --full: what every repo path that builds a task image runs from (docs/protocol/running.md). Directories
 named .git and jobs are skipped. Standard library only, Python 3.6+.
 """
 import hashlib

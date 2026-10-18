@@ -6,5 +6,5 @@ COPY grade.py instance.json target.png rcb_brush.py rcb_brush_score.py rcb_brush
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests
-# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+# resource limits: the verifier step and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
 COPY rcb_limits.py rcb_limits.json /tests/

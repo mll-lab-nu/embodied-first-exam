@@ -8,5 +8,5 @@ COPY grade.py match_instance.json test.sh /tests/
 RUN chmod 700 /opt/trusted && chmod -R a-w /opt/dev && chmod -R a+rX /opt/dev \
     && chmod +x /tests/test.sh && mkdir -p /logs/verifier && chmod 700 /logs/verifier
 WORKDIR /opt/trusted
-# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+# resource limits: the verifier step and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
 COPY rcb_limits.py rcb_limits.json /tests/

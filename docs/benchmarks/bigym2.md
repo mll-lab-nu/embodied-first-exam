@@ -116,7 +116,7 @@ agent's reset was legitimate), not `reset`. A negative `Content-Length` is refus
 Standard-realtime (the shared 2.3 layer): a gap before `at` is the plan's last row, walking velocity included; the
 agent's requests cannot slow the clock -- bodies are read, decoded and checked off the simulator's thread, waiting
 requests are served once the clock has caught up, the cameras are rendered once per control step
-(`docs/STANDARD_MODE.md`, "What a request can cost the clock") -- and `final.json` / `reward.json` carry the clock's
+(`docs/protocol/standard_mode.md`, "What a request can cost the clock") -- and `final.json` / `reward.json` carry the clock's
 record: `clock_s`, `max_lag_s`, `stalls`, `stalled_s`, `stalled_share`, `held_steps`, `late_steps`, `requests_refused`,
 `request_busy_s`. They are evidence and decide no verdict.
 
@@ -151,7 +151,7 @@ docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/eai-bigym2:$(cat 
 docker run --rm --gpus all --network none -e NVIDIA_DRIVER_CAPABILITIES=all -v "$PWD/scripts/bigym2:/w" -w /w \
   ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) python make_instances.py --check   # instances/ rebuild
 python3 scripts/bigym2/gen_tasks.py check          # tasks/ is what the generator writes (`render` rewrites it)
-harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/RUNNING.md
+harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/protocol/running.md
 ```
 
 ## Measured (RTX 4090, host load ~25 on 32 cores)

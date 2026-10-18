@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for BEHAVIOR-1K v3.9.2 (OmniGibson on Isaac Sim, the 2026 challenge stack; R1Pro; see
-docs/STANDARD_MODE.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface
+docs/protocol/standard_mode.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface
 (rcb_limited.serve): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies and responses: videos / frames /
 depth / proprio as raw blobs, never base64), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
 /out/final.json current. Nothing about objects ever leaves this process.
@@ -29,7 +29,7 @@ Differences from the RoboTwin service, all from the simulator:
   checked first (request_number, request_cameras, request_note, video_fps; dt must be a whole number of control
   periods, it is never rounded), so a wrong type, a null or an out-of-range value never reaches the simulator and never
   ends the episode;
-- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step goes to
+- crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13): every executed control step goes to
   /out/journal.f64, every completed call is checkpointed (rows, state hash, proprio row); after a crash compose restarts
   the container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume
   class `approx`: OmniGibson declares rollouts nondeterministic, so a hash mismatch after the replay is recorded

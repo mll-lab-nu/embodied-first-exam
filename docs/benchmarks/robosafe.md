@@ -26,7 +26,7 @@ tooling; both are held to `release.json` by `scripts/robosafe/check_release.py`.
 | Family / instance | a neutral slug `<track><nn>` per RoboSafeBench family; NN over the family's served members on every robot (and the hidden member's tiers), seed 0, in a fixed hashed order |
 | Oracle | `full` on seed 0: an offline expert, recorded as control rows (RoboSafeBench's scripted reference of each member, compiled into `joint_position` rows at 50 Hz with its questions, reports and exit in place); the agent gets no planner |
 | Seeds | `[metadata.seeds]` default 0, allowed [0], oracle [0] |
-| Agent time budget | 3600 s (each task's `[agent] timeout_sec`, from `scripts/robosafe/gen_tasks.py` `CUTOFF_SEC`); tokens: the runner's default (RUNNING.md) |
+| Agent time budget | 3600 s (each task's `[agent] timeout_sec`, from `scripts/robosafe/gen_tasks.py` `CUTOFF_SEC`); tokens: the runner's default (docs/protocol/running.md) |
 | Base image | `ghcr.io/mll-lab-nu/eai-robosafe:<images/robosafe/VERSION>` |
 
 ## Task
@@ -183,7 +183,7 @@ crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`); `inst
 outside the verdict (saving the trajectory). The agent's result, never infra: a failure at the cutoff, an exit that
 fails, a simulator error raised by the agent's rows (`sim_error`; realtime: by a control step after the agent's first
 command, before it infrastructure), crashes all inside the agent's calls (`sim_crashed_on_call`; realtime: fatal-signal
-crashes after the first command, while kills and OOM stay infrastructure; the layers' rule, STANDARD_MODE Part 3), a verdict that cannot be read off the episode (`live_verdict_error`: a failure, as an episode
+crashes after the first command, while kills and OOM stay infrastructure; the layers' rule, docs/protocol/standard_mode.md Part 3), a verdict that cannot be read off the episode (`live_verdict_error`: a failure, as an episode
 whose judging raised at its end always was). A missing video is never infra.
 
 The bit-exact checks stay offline: `replay.py` (and `rcb_rsb_rt.py replay`) replays a recorded journal in a fresh
@@ -612,7 +612,7 @@ realtime-specific, and an unattended batch takes both kinds of task directory to
 # one task (standard or realtime: the task directory decides)
 harbor run -p tasks/rsb-<slug>-i<NN>-standard -a <agent> -m <model> -o /abs/path/jobs --job-name <run>__<task>
 harbor run -p tasks/rsb-<slug>-i<NN>-standard-realtime -a <agent> -m <model> -o /abs/path/jobs --job-name <run>__<task>
-# batches (docs/RUNNING.md), from the repository root, with the agent's settings (AGENT=codex MODEL=<model>, or
+# batches (docs/protocol/running.md), from the repository root, with the agent's settings (AGENT=codex MODEL=<model>, or
 # claude-code) and JOBS an absolute path: the standard set, then the realtime set as a batch of its own
 B=$(ls tasks | grep '^rsb-' | sed -E 's/-standard(-realtime)?$//' | sort -u)
 GATEWAY=1 MODES=standard scripts/run_agent_batch.sh <batch> $B
@@ -715,7 +715,7 @@ protocol's own rules):
 
 ### Running it on rootless podman (cgroups v1)
 The evidence was taken on a university HPC cluster (rootless podman on cgroups v1) from runner-side copies of the tasks,
-never from `tasks/`: the resource monitor sidecar (`rcb_monitor`, RUNNING.md "Resources") runs with `pid: host`, which rootless
+never from `tasks/`: the resource monitor sidecar (`rcb_monitor`, docs/protocol/running.md "Resources") runs with `pid: host`, which rootless
 podman on cgroups v1 cannot create, so the copies have the monitor service, its seal hook and its record artifact
 removed (everything else byte for byte); the limits are recorded only by default, so no verdict depends on them.
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container.
-#   1. `rcb_limited.py end` (docs/STANDARD_MODE.md §13.3): SIGUSR1 to the service, which ends the episode if the
+#   1. `rcb_limited.py end` (docs/protocol/standard_mode.md §13.3): SIGUSR1 to the service, which ends the episode if the
 #      agent had not (reason "timeout"), writes trajectory.npz + episode.json (the live verdict: DexJoCo's own success
 #      check on the episode the service ran, the final-state hash) and exits. It exits 2 when final.json already holds
 #      the verdict (the service gave up: after crashes, or at the start: too few CPUs, a scene that did not build to the
