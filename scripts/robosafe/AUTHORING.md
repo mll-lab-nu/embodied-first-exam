@@ -36,9 +36,11 @@ the operator's answers, the verdict and the scripted reference all live in RoboS
   `name`); results the API returns must not name the scene's things beyond what the agent's own reference allows.
 - **Shared files.** `shared/standard/rcb_service.py`, `rcb1.py` and `rcb_client.py` are byte-identical to the other
   `eai-standard/2.1` benchmarks'; additions go into `server.py`, never into them.
-- **No twin.** No task has a privileged twin: the standard tasks, and the realtime set's `-standard-realtime` tasks
-  (`gen_realtime.py`; docs/benchmarks/robosafe.md, "Owner review" and "Standard-realtime tasks"); the generator keeps
-  one instance file per task so that a privileged twin could be added.
+- **Twins.** The paused 0.5.4 standard tasks have privileged twins (`gen_privileged.py`; docs/benchmarks/robosafe.md
+  "Privileged tasks"), which share their frozen instance byte for byte; the 0.5.3 tasks and the realtime set's
+  `-standard-realtime` tasks (`gen_realtime.py`; "Owner review" and "Standard-realtime tasks") have none. Nothing in a
+  privileged agent's container may hold a scripted solution: a new strategy name in RoboSafeBench goes into
+  `shared/privileged/scrub.py` `STRATEGIES`.
 
 ## The development stand-in
 

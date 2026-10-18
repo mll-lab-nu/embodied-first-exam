@@ -100,6 +100,8 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   if [ -f "$root/scripts/robosafe/tests/test_interface_guard.py" ]; then run 300 robosafe/tests/test_interface_guard.py; fi
   if [ -f "$root/scripts/robosafe/tests/test_picture_delivery.py" ]; then run 300 robosafe/tests/test_picture_delivery.py; fi
   if [ -f "$root/scripts/robosafe/tests/test_picture_resume.py" ]; then run 300 robosafe/tests/test_picture_resume.py; fi
+  # RoboSafeBench's privileged tasks: the trajectory file's checks and tests/grade.py on stub replays (no simulator)
+  if [ -f "$root/scripts/robosafe/tests/test_privileged.py" ]; then run 300 robosafe/tests/test_privileged.py; fi
   # Panda Dynamic Scenes' graders, privileged and standard (its tasks pull request adds the test)
   if [ -f "$root/scripts/pandadyn/tests/test_grading.py" ]; then run 300 pandadyn/tests/test_grading.py; fi
   # iSpatialGym's frozen instances: goal.json restores upstream's TRO, nothing answer-like in instance.json, the start-only

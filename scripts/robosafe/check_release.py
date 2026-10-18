@@ -33,9 +33,17 @@ IMAGE = {"0.5.3": "ghcr.io/mll-lab-nu/eai-robosafe:0.5.3", "0.5.4": "ghcr.io/mll
 def facts(task: pathlib.Path) -> dict:
     toml = (task / "task.toml").read_text()
     version = re.search(r'^robosafe_version = "([^"]+)"', toml, re.M)
-    images = sorted(set(re.findall(r"^\s*image:\s*(\S+)", (task / "environment" / "docker-compose.yaml").read_text(), re.M)))
+    images = set(re.findall(r"^\s*image:\s*(\S+)", (task / "environment" / "docker-compose.yaml").read_text(), re.M))
+    if privileged(task):              # the simulator is the agent's (and the verifier's) own image (gen_privileged.py)
+        for d in ("environment", "tests"):
+            images |= set(re.findall(r"^FROM\s+(\S+)", (task / d / "Dockerfile").read_text(), re.M))
+    images = sorted(images)
     return {"digest": tc.digest(task), "robosafe_version": version and version.group(1),
             "images": [i for i in images if "eai-robosafe" in i or i.startswith("sha256:")]}
+
+
+def privileged(task: pathlib.Path) -> bool:
+    return task.name.endswith("-privileged")
 
 
 def tasks() -> list:
@@ -80,6 +88,8 @@ def source_dirs(task: pathlib.Path, release: str = "0.5.4") -> list:
     """Where a task's shared files come from, first match wins: the 0.5.3 release's own (realtime clock's first) for a
     0.5.3 task, then scripts/robosafe/shared/ (the realtime clock's own first) and scripts/robosafe/."""
     realtime = task.name.endswith("-realtime")
+    if privileged(task):              # 0.5.4 only: its own tooling and grader, the standard service's rcb_rsb.py
+        return [HERE / "shared/privileged", HERE / "shared/standard", HERE]
     shared = ([HERE / "shared/realtime"] if realtime else []) + [HERE / "shared/standard", HERE / "shared/solution", HERE]
     if release != "0.5.3":
         return shared
@@ -112,14 +122,20 @@ def shared_problems(task: pathlib.Path, release: str = "0.5.4") -> list:
     """A task's service, grader and solution helpers are its release's files (source_of), byte for byte, so that a fix
     there (and its unit tests) is the code the task runs: after editing one, run scripts/robosafe/sync_release.py."""
     realtime = task.name.endswith("-realtime")
-    sim = ["rcb1.py", "rcb_rsb.py", "rcb_service.py", "replay.py", "server.py"]
-    need = ["environment/rcb1.py", "environment/rcb_client.py", "solution/solve.sh", "tests/grade.py"]
-    if release != "0.5.3":                    # 0.5.4's picture delivery and public observation helpers
-        sim += ["candidate_identity.py", "picture_delivery.py"]
-        need += ["solution/public_observation_delivery.py", "solution/public_observation_plan.py"]
-    need += ["environment/sim/" + f for f in sim]
-    need += (["environment/sim/rcb_realtime.py", "environment/sim/rcb_rsb_rt.py", "solution/oracle_rt.py", "tests/grade_rsb.py"]
-             if realtime else ["solution/oracle_replay.py"])
+    if privileged(task):                      # gen_privileged.py: the agent's tooling, the verifier's copies, the oracle
+        tools = ["rcb_rsb.py", "candidate_identity.py", "rcb_rsb_privileged.py"]
+        need = [f"{d}/{f}" for d in ("environment", "tests") for f in tools] + [
+            "environment/scrub.py", "tests/grade.py", "tests/test.sh", "solution/solve.sh", "solution/gen.py",
+            "solution/trajectory.npz"]
+    else:
+        sim = ["rcb1.py", "rcb_rsb.py", "rcb_service.py", "replay.py", "server.py"]
+        need = ["environment/rcb1.py", "environment/rcb_client.py", "solution/solve.sh", "tests/grade.py"]
+        if release != "0.5.3":                # 0.5.4's picture delivery and public observation helpers
+            sim += ["candidate_identity.py", "picture_delivery.py"]
+            need += ["solution/public_observation_delivery.py", "solution/public_observation_plan.py"]
+        need += ["environment/sim/" + f for f in sim]
+        need += (["environment/sim/rcb_realtime.py", "environment/sim/rcb_rsb_rt.py", "solution/oracle_rt.py",
+                  "tests/grade_rsb.py"] if realtime else ["solution/oracle_replay.py"])
     bad = [f"{task.name}/{rel}: missing" for rel in need if not (task / rel).is_file()]
     for rel in tracked(task):
         src = source_of(task, rel, release)
