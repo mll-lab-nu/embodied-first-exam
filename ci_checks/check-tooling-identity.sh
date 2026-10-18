@@ -6,6 +6,9 @@
 #    - the standard agent side environment/rcb_client.py + rcb1.py and the sim service environment/sim/ (server.py,
 #      finalize.sh, run.sh, rcb1.py);
 #    - the graders, tests/grade.py (one version per mode).
+#    A file a task's Dockerfile takes from a files-only image (`COPY --from=<image@digest> /<file> <dest>`, images/<name>/
+#    FILES.json, scripts/files_image.py) counts as a copy at <context>/<basename of dest> with FILES.json's sha256, and
+#    the line must name the image FILES.json pins (the generators' checks hold the sources to FILES.json).
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as scripts/robopaint_strict/ci/advisory-tooling.sh.
 #    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: RoboOlympics, PROTOCOL §4c) are a group of their own.
 # 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo; Panda Dynamic Scenes until 2026-10-17): the
@@ -35,7 +38,7 @@
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 - "${1:-$root/tasks}" "$root/scripts/eai_standard" <<'PY'
-import collections, hashlib, os, re, sys, tomllib
+import collections, hashlib, json, os, re, sys, tomllib
 from pathlib import Path
 tasks, src = sys.argv[1], sys.argv[2]
 sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventions as tc   # the mode registry (§2.16)
@@ -77,6 +80,33 @@ canon = {f: sha(os.path.join(src, f)) for f in set(LAYER.values()) if os.path.is
 V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (scripts/eai_standard/v2_4/); the rest is 2.2's
 canon24 = {f: sha(os.path.join(src, "v2_4" if f in V24 else "", f)) for f in set(LAYER.values())
            if os.path.isfile(os.path.join(src, "v2_4" if f in V24 else "", f))}
+# files-only images (scripts/files_image.py): repository -> (pinned ref, {file: sha256}, images/<name>)
+FILES_IMAGES = {}
+for fj in sorted(Path(images).glob("*/FILES.json")):
+    s = json.load(open(fj))
+    FILES_IMAGES[s["image"].split("@")[0].rsplit(":", 1)[0]] = (s["image"], s["files"], f"images/{fj.parent.name}")
+
+
+def from_files_image(task_dir: str) -> dict:
+    """{<context>/<basename of dest>: sha} of the files the task's Dockerfiles take from a files-only image."""
+    got = {}
+    for ctx in ("environment", "tests"):
+        df = os.path.join(task_dir, ctx, "Dockerfile")
+        if not os.path.isfile(df):
+            continue
+        for ref, f, dest in re.findall(r"(?m)^COPY --from=(\S+) /(\S+) (\S+)\s*$", open(df).read()):
+            repo = ref.split("@")[0].rsplit(":", 1)[0]
+            if repo not in FILES_IMAGES:
+                continue
+            pinned, files, where = FILES_IMAGES[repo]
+            if ref != pinned or f not in files:
+                bad.append(f"{os.path.basename(task_dir)}: {ctx}/Dockerfile takes /{f} from {ref}, not a file of the image "
+                           f"{where}/FILES.json pins ({pinned}): regenerate the task")
+                continue
+            got[f"{ctx}/{os.path.basename(dest)}"] = files[f][:16]
+    return got
+
+
 seen = collections.defaultdict(lambda: collections.defaultdict(dict))   # benchmark -> role -> {sha: first copy}
 dirs = collections.Counter(); bad = []; n_layer = 0
 # the 2.3 realtime layer: one source, copied unchanged
@@ -107,8 +137,10 @@ def sim_service(compose: str) -> str:
     return "\n".join(out)
 
 
-for t in sorted(os.listdir(tasks)):
-    tt = os.path.join(tasks, t, "task.toml")
+# task dirs: tasks/<benchmark folder>/<task>/ (task_conventions.iter_tasks), or a flat tree of task dirs
+TDIR = {p.name: str(p) for p in tc.iter_tasks(tasks)} or {d: os.path.join(tasks, d) for d in os.listdir(tasks)}
+for t in sorted(TDIR):
+    tt = os.path.join(TDIR[t], "task.toml")
     if not os.path.isfile(tt):
         continue
     bench = t.split("-")[0]
@@ -118,7 +150,7 @@ for t in sorted(os.listdir(tasks)):
     if proto == "eai-standard/2.3":
         n_rt += 1
         for rel, f in sorted(RT_LAYER.items()):
-            p = os.path.join(tasks, t, rel)
+            p = os.path.join(TDIR[t], rel)
             if not os.path.isfile(p):
                 bad.append(f"{t}: {rel} missing (eai-standard/2.3 layer, scripts/humanoidbench/shared/realtime/{f})")
             elif sha(p) != rt_canon.get(f):
@@ -127,13 +159,13 @@ for t in sorted(os.listdir(tasks)):
         n_layer += 1
         ver, ref = ("2.4", canon24) if v24 else ("2.2", canon)
         for rel, f in sorted(LAYER.items()):
-            p = os.path.join(tasks, t, rel)
+            p = os.path.join(TDIR[t], rel)
             srcf = f"scripts/eai_standard/{'v2_4/' if v24 and f in V24 else ''}{f}"
             if not os.path.isfile(p):
                 bad.append(f"{t}: {rel} missing (eai-standard/{ver} layer, {srcf})")
             elif sha(p) != ref.get(f) and not (f == "rcb_limited.py" and sha(p) == PREV_LIMITED.get(ver)):
                 bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
-        cf = os.path.join(tasks, t, "environment/docker-compose.yaml")
+        cf = os.path.join(TDIR[t], "environment/docker-compose.yaml")
         blk = sim_service(cf) if os.path.isfile(cf) else ""
         m = re.search(r"^\s*restart:\s*[\"']?on-failure:(\d+)", blk, re.M)
         if not m or int(m.group(1)) < 3:
@@ -142,14 +174,14 @@ for t in sorted(os.listdir(tasks)):
             bad.append(f"{t}: the sim service must run `sh /srv/run.sh` (it exits non-zero when the service crashes)")
     mode = tc.mode_of(Path(t))
     own_fam, module = next((v for k, v in FAMILY.items() if t.startswith(k)), (None, None))
-    fam = "dextoolbench" if os.path.isfile(os.path.join(tasks, t, "environment/sim/server_mj.py")) else own_fam
+    fam = "dextoolbench" if os.path.isfile(os.path.join(TDIR[t], "environment/sim/server_mj.py")) else own_fam
     if fam:
         dirs[own_fam or fam] += 1
         own = t[len("robotwin_2_0_"):-len("-" + mode)] if fam == "robotwin_2_0" else ""
-        for dp, dns, fns in os.walk(os.path.join(tasks, t)):
+        for dp, dns, fns in os.walk(TDIR[t]):
             dns[:] = [d for d in dns if d not in ("results", "__pycache__")]
             for f in fns:
-                rel = os.path.relpath(os.path.join(dp, f), os.path.join(tasks, t)).replace(os.sep, "/")
+                rel = os.path.relpath(os.path.join(dp, f), TDIR[t]).replace(os.sep, "/")
                 if module and f == module:              # the tooling module: one version in every mode of its own benchmark
                     seen[own_fam][module].setdefault(sha(os.path.join(dp, f)), f"{t}/{rel}")
                     continue
@@ -168,13 +200,18 @@ for t in sorted(os.listdir(tasks)):
     if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c; RoboSafeBench 0.5.4): its own sources
         bench += " (exported)"
     dirs[bench] += 1
-    for dp, dns, fns in os.walk(os.path.join(tasks, t)):
+    for dp, dns, fns in os.walk(TDIR[t]):
         dns[:] = [d for d in dns if d not in ("results", "__pycache__")]
         for f in fns:
-            rel = os.path.relpath(os.path.join(dp, f), os.path.join(tasks, t)).replace(os.sep, "/")
+            rel = os.path.relpath(os.path.join(dp, f), TDIR[t]).replace(os.sep, "/")
             role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
             if role:
                 seen[bench][role].setdefault(sha(os.path.join(dp, f)), f"{t}/{rel}")
+    for rel, h in sorted(from_files_image(TDIR[t]).items()):   # copies the image build puts in place
+        f = os.path.basename(rel)
+        role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
+        if role:
+            seen[bench][role].setdefault(h, f"{t}/{rel} (files image)")
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for b, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 if bad:
