@@ -38,7 +38,11 @@ RT_RESET_BUDGET = 10     # standard-realtime: PROTOCOL §4b's default (owner, 20
 # and the slowdown S it gives (PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF), which is 1 for RTF >= 1.5).
 RT_RTF = {"catch": 3.61, "catch-and-shoot": 3.64, "header": 3.92, "juggle-three": 3.89, "paddle-bounce": 3.74,
           "penalty-kick": 3.89, "table-tennis-return": 4.06, "tennis-return": 3.24, "trap-ball": 3.03,
-          "volley-shot": 2.89, "volleyball-bump": 2.69, "volleyball-set": 2.62, "volleyball-spike": 1.83}
+          "volley-shot": 2.89, "volleyball-bump": 2.69, "volleyball-set": 2.62, "volleyball-spike": 1.83,
+          # board 0163, 2026-10-18 (ws-1 under load, 4 CPUs, the frozen instance's start command held, 4 episodes;
+          # tennis-return measured 3.04 and header 3.34 the same way, so these read low rather than high)
+          "juggling-head": 3.55, "long-rope": 1.82, "tennis-return-realgrasp": 2.25}
+RT_SOURCE = {f: "board 0163, 2026-10-18" for f in ("juggling-head", "long-rope", "tennis-return-realgrasp")}
 
 
 def slowdown_of(rtf: float) -> int:
@@ -54,7 +58,7 @@ CUTOFF_SEC = 7200   # the same in both modes (PROTOCOL §2.15); the exported tas
 def agent_timeout() -> int:
     """The agent's time limit (PROTOCOL §2.12), the same in both modes; the templates never state it as a number."""
     return CUTOFF_SEC
-CORE = ("__init__.py", "scene.py", "looks.py", "world.py", "referee.py", "task.py")   # the rfo package in a task (no other family)
+CORE = ("__init__.py", "scene.py", "looks.py", "world.py", "referee.py", "task.py", "realhand.py")   # the rfo package in a task (no other family)
 MODES = ("privileged", "standard")
 CLIENT = dict(
     line.split("=", 1)
@@ -127,13 +131,66 @@ NOTE_REST = """- **`joints` / `lowcmd`** are yours: each motor's torque is `kp (
   failure: "the simulation became unstable"."""
 
 
+# A family's real hands (rfo/realhand.py; t0["robot"]["real_hands"], only where a family has one): Unitree's Dex1-1
+# gripper on that wrist instead of the fist pad and its weld grip.
+HANDS_PAD = "- **The hands** have no working fingers here; each carries a fist pad"
+NOTE_GRIPPER = """- **The @@SIDES@@ @@HANDS@@ @@CARRY@@ a gripper** instead of a fist pad: Unitree's Dex1-1 two-finger parallel gripper
+  (modelled: 0.55 kg; a housing of 78 × 67 × 63 mm on the wrist and two jaws 80 mm long beyond it, with rubber pads;
+  90 mm stroke; the jaws close along the palm's normal). It holds only by contact and friction (no weld, no help):
+  what it holds can slip, turn in the jaws or drop. @@GRIPS@@ from 0 (open, 90 mm between the pads) to 1 (closed),
+  any value between. The servo's setpoint follows it at about 375 mm/s of opening (the full stroke in 0.24 s; the
+  jaws themselves can move briefly up to about 0.45 m/s when a clamp springs open), and a force-limited servo drives
+  the jaws to it: on an object, the clamp force is about 10 N for every mm that the commanded opening
+  (90 mm × (1 − command)) is below the object's width, at most 120 N, so a firm grip on a handle needs a command well
+  past where the jaws touch it and a light one slips; a command that opens takes effect at once (the clamp eases or
+  lets go within a millisecond, then the jaws open). The proprioception reports each gripper's opening, its speed and
+  its clamp force; `holding_<side>` is 1 while both jaws touch the same object. The housing and the jaws collide with
+  the world and with the rest of your own body. Where the model departs from the device: one command (the real one
+  also sets a speed and a force; here the speed is the maximum and the force follows from the commanded opening), no
+  5 N minimum force, and rubber pads (friction 1.0) that at 120 N hold about 240 N of shear, some five times the
+  device's rated 5 kg friction-grasp load.@@H1_NOTE@@"""
+
+
+def gripper_note(t0: dict) -> tuple[str, str]:
+    """(the gripper bullet, the sides that keep the pad) for a task with real hands."""
+    rh = t0["robot"].get("real_hands") or {}
+    sides = [s for s in ("left", "right") if s in rh.get("sides", [])]
+    both = len(sides) == 2
+    note = (NOTE_GRIPPER.replace("@@SIDES@@", " and ".join(sides)).replace("@@HANDS@@", "hands" if both else "hand")
+            .replace("@@CARRY@@", "carry" if both else "carries")
+            .replace("@@GRIPS@@", " and ".join(f"`grip_{s}`" for s in sides)
+                     + (" are the closure commands" if both else " is the closure command"))
+            .replace("@@H1_NOTE@@", " Unitree sells the Dex1-1 for the G1, not the H1-2: here it sits on the wrist "
+                     "where the Inspire hand's palm ends (its fingers removed, the palm's shell kept), which makes "
+                     "that forearm longer than a real installation would." if t0["robot"]["name"] == "unitree_h1"
+                     else ""))
+    return note, [s for s in ("left", "right") if s not in sides]
+
+
+def real_sides(t0: dict) -> list:
+    return list((t0["robot"].get("real_hands") or {}).get("sides", []))
+
+
 def control_notes(t0: dict) -> str:
     r = t0["robot"]
     name = r.get("name", "unitree_g1")
     caps = lambda k: " / ".join(f"{r[k][i]:g}" for i in (0, 12, len(r[k]) - 1))  # noqa: E731 -- legs / waist / arms
     parts = [NOTE_STAND, NOTE_WALK[name]] + ([NOTE_WALKERS] if "walk_falcon" in t0["action_types"] else []) + (
         [NOTE_RUN] if r.get("run_command_range") else [])
-    parts.append(NOTE_REST.replace("@@KP_MAX@@", caps("kp_max")).replace("@@KD_MAX@@", caps("kd_max")))
+    rest = NOTE_REST.replace("@@KP_MAX@@", caps("kp_max")).replace("@@KD_MAX@@", caps("kd_max"))
+    if real_sides(t0):                      # a gripper on one or both hands (rfo/realhand.py)
+        note, pads = gripper_note(t0)
+        i, j = rest.index(HANDS_PAD), rest.index("- **A tool on a hand**")
+        pad = rest[i:j]
+        if pads:                            # the other hand keeps its pad and weld grip
+            o = pads[0]
+            pad = (pad.replace("**The hands** have no working fingers here; each carries",
+                               f"**The {o} hand** has no working fingers here; it carries")
+                   .replace("`grip_left` / `grip_right`", f"`grip_{o}`"))
+            rest = rest[:i] + note + "\n" + pad + rest[j:]
+        else:
+            rest = rest[:i] + note + "\n" + rest[j:]
+    parts.append(rest)
     return "What the platform does and does not do for you:\n\n" + "\n".join(parts)
 
 
@@ -166,6 +223,9 @@ DYNAMIC_FAMILIES = {
     "volleyball-bump": "The ball is launched toward the robot at launch_time_s.",
     "volleyball-set": "The ball is launched toward the robot at launch_time_s.",
     "volleyball-spike": "The set ball is launched at launch_time_s.",
+    "juggling-head": "The feeder lets the ball fall onto the robot's head at feed_time_s.",
+    "long-rope": "Two scripted turners turn the rope from t = 0 at tempo_rev_s.",
+    "tennis-return-realgrasp": "The ball is served toward the robot at serve_time_s with spin.",
 }
 # The agent's egress (PROTOCOL §2, Appendix H.6): open, this benchmark's own choice (owner, 2026-10-11), declared in
 # every generated task.toml as `[metadata] network = "open"`; its `## External material` paragraph is this one.
@@ -221,9 +281,41 @@ def action_table(t0: dict, mode: str) -> str:
     return "\n".join(rows) + (
         f"\n\nVelocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, "
         f"rad/s). Bounds: `walk` |vx| ≤ {walk[0]:g}, |vy| ≤ {walk[1]:g}, |wz| ≤ {walk[2]:g}{walkers(t0)}{runs}. Joint targets are absolute "
-        "angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, "
-        "< 0.5 opens it. " + (
+        "angles (rad). Values outside the bounds are clipped. " + grip_sentence(t0) + (
             start_note(t0, mode)))
+
+
+def grip_sentence(t0: dict) -> str:
+    real = real_sides(t0)
+    if not real:
+        return "`grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. "
+    out = (" and ".join(f"`grip_{s}`" for s in real)
+           + f": {'each' if len(real) > 1 else 'the'} gripper's closure command, 0 (open) to 1 (closed). ")
+    pads = [s for s in ("left", "right") if s not in real]
+    return out + "".join(f"`grip_{s}`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. " for s in pads)
+
+
+def proprio_hands(t0: dict) -> str:
+    """The standard modes' proprioception paragraph: the grippers' fields (nothing for a task without one)."""
+    real = real_sides(t0)
+    if not real:
+        return ""
+    f = ", ".join(f"`jaw_opening_{s}`, `jaw_speed_{s}`, `jaw_force_{s}`" for s in real)
+    return (f" Then, at the end of the row, the gripper{'s' if len(real) > 1 else ''}: {f} (the opening between the "
+            "pads in m, its speed in m/s, + opening, and the clamp force in N, + closing); a gripper's `holding_*` is 1 "
+            "while both its jaws touch the same object.")
+
+
+def state_hands(t0: dict) -> str:
+    """The privileged tooling's s.state() comment: the grippers' entries (nothing for a task without one)."""
+    real = real_sides(t0)
+    if not real:
+        return ""
+    pad = " " * 39 + "# "
+    sides = " and ".join(f'"{s}_palm"' for s in real)
+    centre = "is its jaw centre" if len(real) == 1 else "are their jaw centres"
+    return (f"\n{pad}(the gripper{'s' if len(real) > 1 else ''}' {sides} {centre}; \"real_hands\": each gripper's"
+            f"\n{pad}command, opening, opening speed, clamp force, what it holds, jaw centre and axes)")
 
 
 def start_row(t0: dict) -> list:
@@ -242,11 +334,19 @@ def start_note(t0: dict, mode: str) -> str:
     row = "[" + ", ".join(f"{x:g}" for x in h["row"]) + "]"
     where = ("`s.hold()` returns it" if mode == "privileged" else
              "`spec()[\"start_command\"]` has it, and `get_obs(seconds=...)` keeps the command in force")
-    grips = [side for side, g in zip(("left", "right"), h["row"][-2:]) if g >= 0.5]
+    real = real_sides(t0)
+    grips = [side for side, g in zip(("left", "right"), h["row"][-2:]) if g >= 0.5 and side not in real]
     held = f" The {' and the '.join(grips)} grip{'s are' if len(grips) > 1 else ' is'} closed at the start." if grips else ""
+    closed = []
+    for side, g in zip(("left", "right"), h["row"][-2:]):
+        if side in real and g > 0:
+            what = (r["real_hands"]["start"].get(side) or {}).get("holding")
+            closed.append(side)
+            held += (f" The {side} gripper is closed " + (f"on `{what}` " if what else "") +
+                     f"at the start (closure command {g:g}): opening it lets go.")
     if h["type"] == "stand":
         rest = list(r["rest_upper_rad"])
-        if max(abs(a - b) for a, b in zip(h["row"][:-2], rest)) < 1e-3 and not grips:
+        if max(abs(a - b) for a, b in zip(h["row"][:-2], rest)) < 1e-3 and not grips and not closed:
             return ("At the start the robot stands in `stand` mode with the arms at rest: the `stand` row with the "
                     "table's start angles and both grips open keeps it there.")
         return ("At the start the robot is in `stand` mode, but not with the arms at rest (the venue text says how it "
@@ -309,6 +409,8 @@ def values(fam: str, spec: dict, inst: dict, version: str) -> dict:
         "ROBOT_SHORT": {"unitree_g1": "G1", "unitree_h1": "H1-2"}[rob["name"]],
         "JOINT_TABLE": joint_table(t0),
         "CONTROL_NOTES": control_notes(t0),
+        "PROPRIO_HANDS": proprio_hands(t0),
+        "STATE_HANDS": state_hands(t0),
         "RULEBOOK": rulebook_block(inst),
         "RULEBOOK_ROW": ((inst.get("rulebook") or "none (not a rule-book event)") + (
             "; deviations: " + " · ".join(inst["deviations"]) if inst.get("deviations") else "")).replace("|", "/"),
@@ -410,7 +512,7 @@ def plan(fam: str, spec: dict, version: str) -> dict[str, dict[str, tuple[bytes,
                 S = slowdown_of(RT_RTF[fam])
                 v.update(SLOWDOWN=S, REAL_TIME_NOTE=" (real time)" if S == 1 else "", DYNAMIC_WHY=dyn[fam],
                          RTF_TEXT=(f"RTF {RT_RTF[fam]:g} with the clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 "
-                                   "attempts; ws-1, 4 CPUs, board 0112, 2026-10-14); PROTOCOL §4b: S = 1 when RTF "
+                                   f"attempts; ws-1, 4 CPUs, {RT_SOURCE.get(fam, 'board 0112, 2026-10-14')}); PROTOCOL §4b: S = 1 when RTF "
                                    ">= 3, else ceil(1.5 / RTF)"))
             files = files_of(HERE / ("templates/standard-realtime" if rt else "templates/standard"), v)
             files["environment/rcb_client.py"] = (((SHARED / "realtime") if rt else std).joinpath("rcb_client.py").read_bytes(), 0o644)
