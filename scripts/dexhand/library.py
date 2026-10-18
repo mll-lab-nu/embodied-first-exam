@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Inspect the independently owned DexHand task folders before generation."""
+"""Inspect the independently owned DexHand task folders before generation.
+
+A folder is checked as sources.py stages it (task_library/<family>/ plus its canonical copies in tasks/); the asset
+checksums in assets/manifest.json are those of the packaged runtime copies (sources.runtime_bytes)."""
 
 import argparse
 import hashlib
@@ -11,7 +14,9 @@ import sys
 HERE = Path(__file__).resolve().parent
 LIBRARY = HERE / "task_library"
 sys.path.insert(0, str(HERE / "shared"))
+sys.path.insert(0, str(HERE))
 from checker import Checker  # noqa: E402
+import sources  # noqa: E402
 
 ASSET_SUFFIXES = {".obj", ".stl", ".msh", ".ply", ".png", ".jpg", ".jpeg", ".mtl", ".txt", ".json", ".xml", ".hdr", ".exr"}
 
@@ -29,7 +34,7 @@ def inspect():
             raise ValueError(f"Invalid task registration: {entry}")
         if not isinstance(entry["free_objects"], bool):
             raise ValueError(f"free_objects must be a boolean: {family}")
-        folder = LIBRARY / family
+        folder = sources.folder(LIBRARY / family)
         for filename in ("task.json", "scene.py", "render.json", "README.md", "assets/manifest.json"):
             if not (folder / filename).is_file():
                 raise ValueError(f"Missing task-owned file: {family}/{filename}")
@@ -54,10 +59,10 @@ def inspect():
             path = folder / "assets" / relative
             if not path.is_file() or path.is_symlink():
                 raise ValueError(f"Missing or linked asset: {path}")
-            files[filename] = hashlib.sha256(path.read_bytes()).hexdigest()
+            files[filename] = hashlib.sha256(sources.runtime_bytes(path)).hexdigest()
             if files[filename] != declared_hashes[filename]:
                 raise ValueError(f"Asset checksum differs from its manifest: {family}/{filename}")
-        records.append({"id": family, "module": entry["module"], "folder": str(folder),
+        records.append({"id": family, "module": entry["module"], "folder": str(LIBRARY / family),
                         "runtime_asset_count": len(files), "runtime_asset_sha256": files})
     return records
 

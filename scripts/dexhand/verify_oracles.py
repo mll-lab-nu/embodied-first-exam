@@ -5,6 +5,8 @@ For every family: the packaged solution/trajectory.npz must be byte-identical to
 Sharpa model XML must hash to the validated model, the trajectory must succeed in two fresh replays with identical
 final state hashes equal to the validated positive hash, and the float32 wire form (standard mode) must also succeed.
 The instance hash is reported against the validated one; a difference is listed with its reason (strictness edits).
+It reads task_library/<family>/ as authored: run `python3 scripts/dexhand/sources.py --unpack` first (scene, assets and
+oracle are committed in the generated tasks).
 """
 
 from __future__ import annotations

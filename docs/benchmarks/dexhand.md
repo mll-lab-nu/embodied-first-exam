@@ -205,10 +205,11 @@ forward kinematics.
 ## Essential dexterity families
 
 Six fixed-wrist scenes isolate finger control. Each family owns its folder `scripts/dexhand/task_library/<family>/`
-(`task.json`, `scene.py`, `assets/` with `manifest.json` and credits, `render.json`, `README.md`, the oracle under
-`solution/`, `wuji_reset.json` where declared); `task_library/index.json` registers them, `library.py` validates the
-registration and asset inventory, and `sync_essential_catalog.py` freezes them into `essential_catalog.json`, the
-specification the generator renders (its full entry is each task's `instance.json` and `catalog.json`).
+(`task.json`, `assets/manifest.json` with provenance and credits, `render.json`, `README.md`, authoring `tools/`); its
+`scene.py`, packaged assets, oracle (`solution/`) and `wuji_reset.json` are committed once, in its generated privileged
+task (see "Generator"). `task_library/index.json` registers them, `library.py` validates the registration and asset
+inventory, and `sync_essential_catalog.py` freezes them into `essential_catalog.json`, the specification the generator
+renders (its full entry is each task's `instance.json` and `catalog.json`).
 
 All six wrist targets are locked; the runtime rejects any row that changes them (float32 wire rounding is accepted
 and normalized). Finger targets keep the manufacturer's joint and force limits; Sharpa velocity feedback is
@@ -990,6 +991,14 @@ README layout, test.sh). Never edit a generated task file: edit the family's sou
   asset folders, hands and per-hand widths, robot name, row limit, control rate, instruction and README texts
   (`{{HANDS}}`, `{{MAX_ROWS}}`, `{{CONTROL_HZ}}`, ... placeholders), oracle files, metadata and grader timeouts
   (`replay_sec`, `video_sec` (raised to `replay_sec` if lower: the video replays the episode again), verifier and collect limits; the standard collect hook's `timeout_sec` is `generate.py` `std_collect_s`: 300 s for the end, `replay_sec` + `video_sec` for the video process and 120 s, at most `collect_sec`). The agent's time limit is not a family setting.
+- A family's own files that the generator copies unchanged into its tasks (plugin `runtime.files` and `runtime.dirs`,
+  the reference trajectories, an essential family's `scene.py`, packaged assets and `wuji_reset.json`) are committed
+  once, in the generated task directories; the family folder keeps what the generator interprets (`family.json`,
+  `task.json` where it is not shipped, texts, manifests) and the authoring material. `scripts/dexhand/sources.py`
+  stages each family's source folder from both (its docstring has the mapping); a file put in the family folder wins,
+  which is how a new family or an edit enters. After regenerating, `python3 scripts/dexhand/sources.py --clean` removes
+  the family-folder files that now equal their task copy (`--check` fails while one is left). Authoring tools, family
+  tests and the MuJoCo suites read the runtime from the family folder: run `sources.py --unpack [family ...]` first.
 - Shared sources, copied unchanged into every task (`ci_checks/check-tooling-identity.sh`): `rcb_dexhand.py`,
   `hands.py`, the privileged and standard graders, the standard service, its collect hook and the `eai-standard/2.2`
   layer.
@@ -1003,14 +1012,16 @@ python3 scripts/task_conventions.py --check tasks/dexhand-*
 bash ci_checks/run_all.sh tasks/dexhand-*
 python3 scripts/dexhand/tests/test_grading.py                  # graders on stub replays (standard library only)
 # with images/dexhand/requirements.txt and pytest installed, and DEXHAND_ASSET_DIR / WUJI_ASSET_DIR / TIANJI_ASSET_DIR
-# pointing at the prepared images/dexhand/assets/{hand,wuji_v2_2,tianji}; one process per suite:
+# pointing at the prepared images/dexhand/assets/{hand,wuji_v2_2,tianji}; one process per suite, on unpacked families:
+python3 scripts/dexhand/sources.py --unpack                    # the runtime files into the family folders
 python3 -m pytest scripts/dexhand/tests
 python3 -m pytest scripts/dexhand/families/assemble_hamburger/test_task.py
 for f in paper_half_fold pot_shelf_transfer sweep_dustpan remote_battery_swap coffee_stir jar_lid_open grinder_crank pancake_serve vacuum_bin_reseat drying_rack_unfold picture_hang usb_plug_insert fan_guard_install stool_brace_insert ram_module_install boot_sole_brush paper_staple binder_page_load envelope_letter_insert book_page_turn tray_glass_carry batter_whisk bicycle_pump_stroke; do python3 -m pytest scripts/dexhand/families/$f/tests; done
+python3 scripts/dexhand/sources.py --clean                     # remove them again (after regenerating any edit)
 ```
 
-`scripts/dexhand/verify_oracles.py` re-binds the essential oracles to their recorded evidence; it needs the authors'
-evidence directory, which is not in the repository. The plugin families keep the same kind of tool in their own
+`scripts/dexhand/verify_oracles.py` re-binds the essential oracles to their recorded evidence (on unpacked families);
+it needs the authors' evidence directory, which is not in the repository. The plugin families keep the same kind of tool in their own
 `tools/` folders, with the same caveat.
 
 ## Limits of the models

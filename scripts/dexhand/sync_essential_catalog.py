@@ -10,8 +10,10 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "shared"))
+sys.path.insert(0, str(HERE))
 from checker import Checker
 from essential import MODULES
+import sources
 
 
 def content():
@@ -19,7 +21,7 @@ def content():
     for family in MODULES:
         folder = HERE / "task_library" / family
         value = json.loads((folder / "task.json").read_text())
-        if value["id"] != family or not (folder / "scene.py").is_file():
+        if value["id"] != family or not (sources.folder(folder) / "scene.py").is_file():   # scene.py: tasks/ copy
             raise ValueError(f"Invalid task folder: {folder}")
         tasks.append(value)
     found = [task["id"] for task in tasks]
