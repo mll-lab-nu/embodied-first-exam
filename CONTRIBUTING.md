@@ -32,7 +32,8 @@ It also states the oracle source (PROTOCOL §4), the minimum compute per trial (
 and GPU class, §6), image size, whether the images can be published, and
 the expected size of the pull request.
 A new benchmark's shared-files change adds its label to `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix
--> name) and its row to `ci_checks/ci_scope.py` `UNITS`.
+-> name) and its row to `ci_checks/ci_scope.py` `UNITS`; benchmarks that share a prefix (RoboOlympics-Fun and
+RoboOlympics-Match) list every base in `BENCHMARK_BASES` (`task_conventions.py benchmarks --check`).
 
 ## Authoring a task
 1. Copy the closest existing pair (`tasks/robotwin_2_0_stack_blocks_two-privileged/` and `-standard/`) or generate tasks

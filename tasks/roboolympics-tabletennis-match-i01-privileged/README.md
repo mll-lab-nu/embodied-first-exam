@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Match |
 | Mode | privileged |
 | Twin | `roboolympics-tabletennis-match-i01-standard-realtime` |
 | Simulator / robot | `mujoco` / `franka-panda` |

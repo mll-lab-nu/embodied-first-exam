@@ -6201,168 +6201,168 @@ note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-bowling-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-boxing-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): standard, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-catch-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-crawl-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-fencing-bout-i02"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Match"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): standard, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-free-throw-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-golf-putt-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-header-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-high-bar-swing-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-kick-target-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-long-jump-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-paddle-bounce-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-penalty-kick-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-shuttle-run-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-sprint-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-table-tennis-return-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-tennis-return-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-toes-to-bar-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, standard, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-trap-ball-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-vertical-jump-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-volley-shot-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-volleyball-bump-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-volleyball-serve-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"
 
 [[task]]
 base = "roboolympics-volleyball-set-i00"
-benchmark = "RoboOlympics"
+benchmark = "RoboOlympics-Fun"
 reason = "solved"
 solved_by = "luna"
 note = "solved by luna (codex-gpt6_luna-xhigh): privileged, as of 2026-10-17"

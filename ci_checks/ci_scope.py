@@ -34,7 +34,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-import task_conventions as tc  # noqa: E402  (BENCHMARKS: (task dir prefix, label))
+import task_conventions as tc  # noqa: E402  (BENCHMARKS: (task dir prefix, label); bench_of)
 
 # label -> the benchmark's own path prefixes besides tasks/<prefix>. Default for a label not listed with a key here:
 # none (full suite). `d` = the directory name under scripts/ (and images/, docs/benchmarks/<d>.md).
@@ -64,11 +64,12 @@ UNITS: dict[str, list[str]] = {
     "RoboCasa365": _own("robocasa365"),
     "LIBERO-MAX": _own("libero-max"),
     "RoboARC": _own("roboarc"),
-    "RoboOlympics": _own("roboolympics", "images/olympiad/"),
+    # one generator directory, two benchmarks (board 0160): a change under scripts/roboolympics/ is in both
+    "RoboOlympics-Fun": _own("roboolympics", "images/robofunolympics/"),
+    "RoboOlympics-Match": ["scripts/roboolympics/", "images/olympiad/", "docs/benchmarks/roboolympics-match.md"],   # eai-olympiad: built from RoboOlympics' tree, not here
     "BiGym 2.0": _own("bigym2"),
     "YAMLab": _own("yamlab"),
     "RoboDojo": _own("robodojo"),
-    "RoboFunOlympics": _own("robofunolympics"),
     "Panda Dynamic Scenes": _own("pandadyn"),
     "AM-Bench": _own("ambench"),
     "iSpatialGym": _own("ispatialgym"),
@@ -102,7 +103,7 @@ def changed_paths(diff_from: str | None, base: str) -> list[str]:
 
 
 def label_of_task(name: str) -> str | None:
-    return next((label for prefix, label in tc.BENCHMARKS if name.startswith(prefix)), None)
+    return tc.bench_of(Path(name)) or None   # a shared prefix (RoboOlympics-Fun / -Match): BENCHMARK_BASES decides
 
 
 def owners(path: str) -> set[str]:

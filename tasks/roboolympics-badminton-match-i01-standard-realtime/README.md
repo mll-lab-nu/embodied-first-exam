@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Match |
 | Mode | standard-realtime (`eai-standard-realtime/1.0`) |
 | Twin | `roboolympics-badminton-match-i01-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |

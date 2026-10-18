@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Match |
 | Mode | standard-realtime (`eai-standard-realtime/1.0`) |
 | Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c; its resource-tier twin is `roboolympics-soccer-jointcpu-i01-standard-realtime`) |
 | Simulator / robot | `mujoco` / `booster-t1` |
