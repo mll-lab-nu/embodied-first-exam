@@ -10,8 +10,9 @@ Host side (needs docker and the image ghcr.io/mll-lab-nu/eai-robolab:<images/rob
 finds every RoboLab trial under JOBS_DIR (a Harbor jobs tree), takes its recorded trajectory (privileged:
 artifacts/app/output/trajectory.npz; standard: the sidecar's verifier/trajectory.npz or artifacts/data/trajectory.npz,
 else artifacts/data/journal.f64) and its recorded verdict (verifier/reward.json `success`), and replays each one in a
-FRESH Isaac process (on Isaac only the first replay of a process is exact) with the current task's own tooling copy
-(tasks/robolab-<family>-i00-privileged/tests/rcb_robolab.py and the frozen instance). It reports
+FRESH Isaac process (on Isaac only the first replay of a process is exact) with the current tooling
+(embodied_first_exam/robolab/rcb_robolab.py, the source of the files-only image the privileged tasks take it from) and the
+task's frozen instance (tasks/robolab/robolab-<family>-i00-privileged/tests/instance.json). It reports
   old_verdict  whether RoboLab's upstream term with the one-finger contact (upstream's "gripper" = the left inner finger)
                held at some control step of the recorded rows: the verdict before 2026-10-14;
   new_verdict  the current verdict: the current term (both fingers; on-table where it applies) holds at some step of the
@@ -110,7 +111,7 @@ def worker(tests: str, family: str, traj: str, out_path: str) -> None:
     """In the image, one fresh process: replay the rows with the current tooling, the upstream one-finger term watched at
     every step, then the settle hold."""
     import inspect
-    sys.path.insert(0, tests)
+    sys.path[:0] = ["/tool", tests]      # the tooling's source (mounted at /tool), then the task's tests/ (instance)
     os.environ["RCB_SESSION_LOG"] = ""
     import numpy as np
     from rcb_robolab import Session, ACTION_DIM
@@ -167,6 +168,12 @@ def main() -> int:
     a = ap.parse_args()
     if a.worker:
         worker(*a.worker); return 0
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import files_image
+    bad = files_image.check("robolab-files")   # the tooling source is what the tasks' pinned files image carries
+    if bad:
+        print("[regrade] refusing: " + "; ".join(bad), file=sys.stderr)
+        return 2
     trials = find_trials(a.jobs) + [{"trial": t, "mode": "standard" if "std" in pathlib.Path(t).name else "privileged", "traj": t,
                                      "family_hint": a.family, "recorded_success": None} for t in a.traj]
     print(f"[regrade] this host: {host_info()}. Re-grade a trial on the host class it ran on.", file=sys.stderr)
@@ -176,12 +183,13 @@ def main() -> int:
 
     def run(t: dict) -> dict:
         fam = t["family_hint"]
-        tests = ROOT / "tasks" / f"robolab-{fam.replace('_', '-')}-i00-privileged" / "tests"
+        tests = ROOT / "tasks" / "robolab" / f"robolab-{fam.replace('_', '-')}-i00-privileged" / "tests"
         if not tests.is_dir():
             return dict(t, error=f"no task {tests.parent.name}")
         with tempfile.TemporaryDirectory(prefix="rl_regrade_") as td:
             src = pathlib.Path(t["traj"]); dst = pathlib.Path(td) / f"traj{src.suffix}"; dst.write_bytes(src.read_bytes())
-            vols = ["-v", f"{td}:/w", "-v", f"{tests}:/tests:ro", "-v", f"{pathlib.Path(__file__).resolve()}:/regrade.py:ro"]
+            vols = ["-v", f"{td}:/w", "-v", f"{tests}:/tests:ro", "-v", f"{ROOT / 'embodied_first_exam/robolab'}:/tool:ro",
+                    "-v", f"{pathlib.Path(__file__).resolve()}:/regrade.py:ro"]
             if a.cache_volume:
                 vols += ["-v", f"{a.cache_volume}:/cache"]
             cmd = ["docker", "run", "--rm", "--gpus", "all", "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "-e", "OMNI_KIT_ACCEPT_EULA=YES",

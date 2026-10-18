@@ -25,7 +25,7 @@ v2 = types.ModuleType("imageio.v2"); v2.get_writer = get_writer; v2.imwrite = la
 pkg = types.ModuleType("imageio"); pkg.v2 = v2; sys.modules["imageio"] = pkg; sys.modules["imageio.v2"] = v2
 
 for bench, mod, dim in (("robolab", "rcb_robolab", 8), ("yamlab", "rcb_yamlab", 14)):
-    sys.path.insert(0, os.path.join(ROOT, "scripts", bench, "shared"))
+    sys.path.insert(0, os.path.join(ROOT, *{"robolab": ("embodied_first_exam", "robolab")}.get(bench, ("scripts", bench, "shared"))))
     M = __import__(mod)
     sys.path.pop(0)
     # ---- _load_traj

@@ -51,7 +51,7 @@ UNITS: dict[str, list[str]] = {
     "MetaWorld+": _own("metaworldplus", "images/metaworld/"),
     "RoboWits": _own("robowits"),
     "RoboPaint": ["scripts/robopaint_", "images/robopaint/", "docs/benchmarks/robopaint"],   # strict, caoshu, lettering, brush
-    "RoboLab": _own("robolab"),
+    "RoboLab": _own("robolab", "images/robolab-files/"),
     "BEHAVIOR-1K": _own("behavior"),
     "ManiGuard": _own("maniguard"),
     "MolmoSpaces": _own("molmospaces"),
