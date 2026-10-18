@@ -1376,6 +1376,17 @@ def readme_table(tasks_dir: Path | None = None) -> str:
     return "\n".join(rows)
 
 
+REGISTRY_FILE = Path(__file__).resolve().parents[1] / "registry.json"
+
+
+def registry_json() -> str:
+    """registry.json: a Harbor dataset registry with the dataset `core` (docs/core_set.toml), so that plain Harbor runs
+    it from the repository root: `harbor run --registry-path registry.json -d core ...` (`-i '*-standard'` filters)."""
+    rows = [f'   {{"name": "{t}", "path": "tasks/{t}"}}' for t in sorted(core_set())]
+    return ('[\n {"name": "core", "version": "1.0", "description": "Embodied First Exam core set (docs/core_set.toml)",\n'
+            '  "tasks": [\n' + ",\n".join(rows) + "\n  ]}\n]\n")
+
+
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
     """What is wrong with the core set: no file, no `generated_from` commit, a listed task dir that does not exist, a
     base / benchmark / mode that is not the dir's, an unknown `luna` value or field."""
@@ -1526,6 +1537,13 @@ def main(argv: list[str]) -> int:
         for t in sorted(p for p in root.iterdir() if (p / "task.toml").is_file()):
             print(f"{t.name}\t{bench_of(t)}")
         return 0
+    if argv[:1] == ["registry"]:       # `registry --check` / `--write`: registry.json, Harbor's dataset `core`
+        want = registry_json()
+        if "--write" in argv:
+            REGISTRY_FILE.write_text(want, encoding="utf-8"); return 0
+        if not REGISTRY_FILE.is_file() or REGISTRY_FILE.read_text(encoding="utf-8") != want:
+            print("FAIL registry.json: stale (python3 scripts/task_conventions.py registry --write)"); return 1
+        print("ok registry.json"); return 0
     if argv[:1] == ["readme-table"]:   # `readme-table --check` / `--write`: README.md's task table (readme_table())
         text = README_FILE.read_text(encoding="utf-8")
         m = README_TABLE.search(text)
