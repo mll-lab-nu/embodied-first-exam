@@ -78,6 +78,7 @@ upstream experts and the contents of the base images keep their own licenses.
 ```bibtex
 @misc{embodiedfirstexam2026,
   title        = {Embodied First Exam},
+  author       = {{Embodied First Exam Team}},
   year         = {2026},
   howpublished = {\url{https://embodied-first-exam.ai}},
   note         = {\url{https://github.com/mll-lab-nu/embodied-first-exam}}
