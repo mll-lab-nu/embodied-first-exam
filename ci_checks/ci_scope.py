@@ -75,7 +75,7 @@ UNITS: dict[str, list[str]] = {
     "iSpatialGym": _own("ispatialgym"),
     "IKEA MuJoCo": _own("ikea_mujoco", "images/ikea-mujoco/"),
     "roboEngineer": _own("roboengineer", "scripts/control_transfer/", "scripts/quadrotor_landing/",
-                         "images/control-transfer/", "images/quadrotor-landing/",
+                         "images/control-transfer/", "images/control-transfer-anycar-files/", "images/quadrotor-landing/",
                          "docs/benchmarks/roboengineer", "docs/benchmarks/control-transfer.md",
                          "docs/benchmarks/quadrotor-landing.md"),
 }
