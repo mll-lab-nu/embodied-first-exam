@@ -65,7 +65,7 @@ def trials(roots: list[str]):
         for rw in sorted(pathlib.Path(r).resolve().rglob("verifier/reward.json")):   # absolute: docker -v needs it
             d = rw.parent.parent
             if any(part.startswith("_superseded") for part in d.parts):
-                continue                 # an attempt voided for infrastructure (RUNNING.md): never a result
+                continue                 # an attempt voided for infrastructure (docs/protocol/running.md): never a result
             name = task_name(d) or ""
             m = re.fullmatch(r"behavior-(.+)-i(\d\d)-(privileged|standard)", name)
             if m:

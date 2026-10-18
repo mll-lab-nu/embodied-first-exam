@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Protocol v1.0 conventions for a task directory (docs/PROTOCOL.md), applied in place and idempotently.
+"""Protocol v1.0 conventions for a task directory (docs/protocol/README.md), applied in place and idempotently.
 
 Every generator ends with `normalize(task_dir)`, so a re-generated task equals the committed one. It also migrates a
 pre-v1.0 task (old field names, protocol spelling, README layout); renaming directories is the caller's job.
@@ -11,11 +11,11 @@ What it does:
 - `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-standard-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
   for standard tasks (2.2 / 2.4 and standard-realtime tasks' `eai-standard/2.3` are set by their generators), `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - protocol spelling `rcb-limited/2.x` -> `eai-standard/2.x` and "limited mode" -> "standard mode" in the task's text and
-  services; the client accepts both spellings.
+  services (the client accepts both spellings); the protocol documents' paths are those under docs/protocol/.
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
   `reward.json`.
 - no `results/` directory (results are published on the results site, not in the repository).
-- `[metadata.resources]` (docs/PROTOCOL.md §2.9, minimum compute) and `[metadata.resources.limits]` (§2.10, the most a
+- `[metadata.resources]` (docs/protocol/README.md §2.9, minimum compute) and `[metadata.resources.limits]` (§2.10, the most a
   trial may use) from `scripts/task_resources.toml` when a rule there matches the task; a task no rule matches keeps the
   values its generator or author wrote.
 - `[environment].memory_mb` = `[metadata.resources.caps].main.memory_gb` x 1024 (§2.10: Harbor writes main's kernel
@@ -29,7 +29,7 @@ What it does:
   table): the standard modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, the README's "Agent time budget"
   row and the last section of `instruction.md`, `## Time limit` ("You have N seconds to complete this task. Do not
   cheat ...", then what the cutoff means in the mode).
-- `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
+- `README.md` in the standard layout (docs/protocol/README.md §2.1): title, key table, Task, Difficulty, Reference solution,
   Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
 - last, `DIGEST`: the task's content digest (PROTOCOL §2.8; the digest Harbor publishes it under, `digest()`), one line
   `sha256:<hex>`. Each task carries its own, so pull requests that change different tasks never touch a shared file;
@@ -63,6 +63,9 @@ TEXT_REPLACEMENTS = [  # (old, new), applied to task text files in order
     ("Limited-mode", "Standard-mode"), ("limited-mode", "standard-mode"), ("Limited mode", "Standard mode"),
     ("limited mode", "standard mode"), ("limited twin", "standard twin"), ("unlimited task", "privileged task"),
     ("unlimited oracle", "privileged-mode oracle"), ("unlimited expert", "privileged-mode expert"),
+    *((f"docs/{old}.md", f"docs/protocol/{new}") for old, new in   # the protocol documents' folder
+      (("PROTOCOL", "README.md"), ("STANDARD_MODE", "standard_mode.md"), ("RUNNING", "running.md"), ("LEAKAGE", "leakage.md"),
+       ("rcb/PROTOCOL", "README.md"), ("rcb/STANDARD_MODE_2_2", "standard_mode.md"))),   # (rcb/: RoboARC's released texts)
 ]
 BENCHMARKS = [  # (directory prefix, label)
     ("robotwin_2_0_", "RoboTwin 2.0"), ("dextoolbench_", "DexToolBench"), ("mujoco_playground_", "MuJoCo Playground"),
@@ -277,7 +280,7 @@ def mode_of(task: Path) -> str:
         if task.name.endswith(f"-{mode}"):
             return mode
     raise ValueError(f"{task.name}: task directories end in " + ", ".join(f"-{m}" for m in MODES)
-                     + " (docs/PROTOCOL.md §2.2, the modes of §2.16)")
+                     + " (docs/protocol/README.md §2.2, the modes of §2.16)")
 
 
 def base_of(task: Path) -> str:
@@ -416,17 +419,17 @@ def _toml_value(v) -> str:
 
 
 def resources_block(r: dict) -> str:
-    lines = ["[metadata.resources]", "# minimum compute to run this task (docs/PROTOCOL.md §2.9)"]
+    lines = ["[metadata.resources]", "# minimum compute to run this task (docs/protocol/README.md §2.9)"]
     lines += [f"{k} = {_toml_value(r[k])}" for k in RESOURCE_KEYS if k in r]
     if isinstance(r.get("limits"), dict):
         lines += ["", "[metadata.resources.limits]",
-                  "# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;"
+                  "# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;"
                   "", f"# enforced from protocol v1.2 when {ENFORCE_ENV}=1 (a violation fails the trial), otherwise recorded only"]
         lines += [f"{k} = {r['limits'][k] if LIMIT_KEYS[k] is int else _toml_value(r['limits'][k])}"
                   for k in LIMIT_KEYS if k in r["limits"]]
     if isinstance(r.get("caps"), dict):
         lines += ["", "[metadata.resources.caps]",
-                  "# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)"]
+                  "# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)"]
         lines += [f"{svc} = {{ " + ", ".join(f"{k} = {c[k] if CAP_KEYS[k] is int else _toml_value(c[k])}" for k in CAP_KEYS)
                   + " }" for svc, c in r["caps"].items()]
     return "\n".join(lines) + "\n"
@@ -513,7 +516,7 @@ def render_resources(r: dict, observed: list[str] | tuple = ()) -> list[str]:
         gpu = "GPU: not needed" + (" by the agent phase; the verifier needs one." if float(r.get("verifier_min_gpu_memory_gb", 0)) > 0
                                    else ".")
     return ["## Compute resources",
-            "Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent "
+            "Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent "
             "phase counts every container of the trial at once (the agent's, and in standard modes the simulator "
             "sidecar); the verifier phase runs after it.",
             "", "| | Agent phase | Verifier |", "|---|---|---|",
@@ -521,7 +524,7 @@ def render_resources(r: dict, observed: list[str] | tuple = ()) -> list[str]:
             f"| Memory | {_num(r['min_memory_gb'])} GB | {_num(r['verifier_min_memory_gb'])} GB |",
             f"| GPU memory | {_num(r['min_gpu_memory_gb'])} GB | {_num(r['verifier_min_gpu_memory_gb'])} GB |",
             "", f"- {gpu}", f"- Measured: {r.get('measured', '')}"] + (
-        [f"- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in "
+        [f"- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in "
          f"`instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets "
          f"`{ENFORCE_ENV}=1`), {limits_summary(r['limits'], observed)}."]
         if isinstance(r.get("limits"), dict) else [])
@@ -842,7 +845,7 @@ def normalize_test_sh(task: Path) -> None:
     if cmds and re.match(r"rm\s+-[rRf]+\s+/logs/verifier/\*", cmds[0]):
         return
     i = next((k for k, ln in enumerate(lines) if ln.strip() and not ln.lstrip().startswith("#")), len(lines))
-    lines.insert(i, CLEAR_LOGS + "   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)\n")
+    lines.insert(i, CLEAR_LOGS + "   # verdicts from an earlier run never survive (docs/protocol/README.md §2.6)\n")
     write_if_changed(p, "".join(lines))
 
 
@@ -1060,7 +1063,7 @@ def normalize_seeds(task: Path) -> None:
         if not h.group(1).startswith("metadata.resources"):
             at = m.end() + h.start()
             break
-    block = ("[metadata.seeds]\n# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a "
+    block = ("[metadata.seeds]\n# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a "
              "runner may draw\n# from (a list, { from = A, to = B } or \"any\"), and the ones the reference solution under "
              "solution/ is for\n"
              f"default = {sd['default']}\nallowed = {seeds_text(sd['allowed'])}\noracle = {seeds_text(sd['oracle'])}\n"
@@ -1102,6 +1105,7 @@ def normalize_dynamics(task: Path) -> None:
     line = committed_line(task, "dynamics")
     if line is None:
         return
+    line = replace_words(line)
     s, n = re.subn(r'(?m)^(mode = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
     if n == 1:
         write_if_changed(p, s)
@@ -1138,7 +1142,7 @@ def normalize_slowdown(task: Path) -> None:
     s = re.sub(r'(?m)^slowdown = .*\n', "", p.read_text())
     if rt is not None:
         line = f"slowdown = {slowdown_text(rt[0])}"
-        line += " " * max(1, 34 - len(line)) + ("# standard-realtime: the world runs at 1/S of real speed (docs/PROTOCOL.md "
+        line += " " * max(1, 34 - len(line)) + ("# standard-realtime: the world runs at 1/S of real speed (docs/protocol/README.md "
                                                  f"§4b); {slowdown_var(task)}'s default\n")
         s, n = re.subn(r'(?m)^(dynamics = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
         if n != 1:
@@ -1150,10 +1154,10 @@ def normalize_slowdown(task: Path) -> None:
 
 # ---------------------------------------------------------------------------------------------------------------------
 # PROTOCOL v2.0 §2 (owner, 2026-10-14, board 0124): the settings a task declares, and the effective configuration of a
-# trial, recorded with every result so that results are ranked only within one comparable configuration (RUNNING.md
+# trial, recorded with every result so that results are ranked only within one comparable configuration (docs/protocol/running.md
 # "Results"). Standard library only: scripts/write_task_results.py, scripts/dataset_manifest.py and the scheduler's run
 # policy (batch_eval_live) read these.
-PROTOCOL_VERSION = "2.0"                         # docs/PROTOCOL.md
+PROTOCOL_VERSION = "2.0"                         # docs/protocol/README.md
 NETWORKS = ("allowlist", "open")                 # `[metadata] network` (PROTOCOL §2, Appendix H.6); absent = allowlist
 RESET_DECL_RE = re.compile(r'^\s*RCB_RESET_BUDGET:\s*"?(?:\$\{RCB_RESET_BUDGET:-([0-9]+)\}|([0-9]+))"?\s*(?:#.*)?$', re.M)
 
@@ -1194,7 +1198,7 @@ def slowdown_of(task: Path) -> float | None:
 
 
 def validated_of(task: Path) -> bool:
-    """Whether the task counts as validated (PROTOCOL §2, RUNNING.md "Results"): `[metadata] validated` where the task
+    """Whether the task counts as validated (PROTOCOL §2, docs/protocol/running.md "Results"): `[metadata] validated` where the task
     declares it (e.g. after the human review of §2.7), else `oracle = "full"` (its reference solution scores 1 and `nop`
     0). A marker recorded with each result: validated and unvalidated tasks are ranked together."""
     md = metadata_of(task)
@@ -1203,7 +1207,7 @@ def validated_of(task: Path) -> bool:
     return md.get("oracle") == "full"
 
 
-# The easy set (PROTOCOL §4, RUNNING.md "Results"): task bases kept in the repository and run like any other, but reported
+# The easy set (PROTOCOL §4, docs/protocol/running.md "Results"): task bases kept in the repository and run like any other, but reported
 # apart from the main table and left out of the headline statistics. One central list, docs/easy_set.toml, not a task
 # field: marking a task changes none of its files, so its DIGEST and the results recorded against it stay as they are.
 EASY_SET_FILE = Path(os.environ.get("RCB_EASY_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "easy_set.toml")

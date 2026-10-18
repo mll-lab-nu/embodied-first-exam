@@ -1,22 +1,24 @@
 # Standard-mode wire protocol `eai-standard/2.x` (robot as a service)
 
+Part of the task protocol ([README](README.md)): the wire format of the standard modes.
+
 **Version: `eai-standard/2.4`** is the current version. This document is the interoperability
 specification of every 2.x version a task declares today: what a service answers and a client may send. Minor
 versions only add, so each part holds for the versions after it unless a later part says otherwise, and the shipped
 clients accept every 2.x service. What a task of the standard modes is, and which rules bind it, is in
-[PROTOCOL.md](PROTOCOL.md) (§3 Modes); the binding rules on the trust boundary (no simulator, state or success
+the [README](README.md) (§3 Modes); the binding rules on the trust boundary (no simulator, state or success
 predicate in the agent's reach; the verdict from a trusted record) are stated once, in
-[PROTOCOL.md Appendix H](PROTOCOL.md) (H.3, H.4), and are not repeated here. How a runner handles a trial that failed
-for infrastructure reasons is in [RUNNING.md](RUNNING.md). What a benchmark's own service adds (its robot, action
+its [Appendix H](README.md#appendix-h-invariants-binding) (H.3, H.4), and are not repeated here. How a runner handles a trial that failed
+for infrastructure reasons is in [running.md](running.md). What a benchmark's own service adds (its robot, action
 types, cameras, proprioception columns, resume class, measured start-up times, known issues) is in its
 `docs/benchmarks/<bench>.md`.
 
 | Version | Content | Part | Implementation |
 |---|---|---|---|
 | `eai-standard/2.1` | the base: `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise; the optional reset capability | Part 1 | each benchmark's own service |
-| `eai-standard/2.2` | 2.1 + optional capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer | Part 2 (§1–§18) | [`scripts/eai_standard/`](../scripts/eai_standard/) |
+| `eai-standard/2.2` | 2.1 + optional capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer | Part 2 (§1–§18) | [`scripts/eai_standard/`](../../scripts/eai_standard/) |
 | `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop | Part 3 | `scripts/humanoidbench/shared/realtime/rcb_realtime.py` |
-| `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | [`scripts/eai_standard/v2_4/`](../scripts/eai_standard/v2_4/) |
+| `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | [`scripts/eai_standard/v2_4/`](../../scripts/eai_standard/v2_4/) |
 
 Which version a task serves is its `[metadata] protocol` (= `/spec.protocol`); which benchmarks serve which version is
 in their docs, not listed here.
@@ -125,8 +127,8 @@ must not send a request to the service before the agent runs: connecting to the 
 checkpoint (step count + state hash) per completed call; when the service dies mid-episode, compose restarts it
 (`restart: on-failure:N`) and it resumes the same episode from the journal, the call in flight lost as a whole
 (`spec.on_service_error` tells the agent to check `GET /status` before continuing). This is how the shipped services
-behave by default (details: §13), not a requirement of the protocol: what the protocol says about a trial that failed
-for infrastructure reasons is the runner's single full retry (PROTOCOL Appendix H.5, [RUNNING.md](RUNNING.md)). A
+behave by default (details: §13), not a rule: what the protocol says about a trial that failed
+for infrastructure reasons is the runner's single full retry (PROTOCOL Appendix H.5, [running.md](running.md)). A
 verdict already written is never overwritten. A scene build that hangs is killed by a startup watchdog
 (`RCB_STARTUP_TIMEOUT_S`; each service has its own default, and each task sets the value its build needs, §13.3). A host
 on which the frozen instance does not rebuild to its stored initial state reports `reason = instance_mismatch` with
@@ -174,7 +176,7 @@ N`, `/spec.reset` describes it, and `POST /reset` (RCB1 or JSON `{cameras, video
 episode and starts a new one from the same frozen state, `N` times in all; `/status` and `meta` add `episode`,
 `resets_left` and `control_steps_total`. After a success or once the agent's time is up, `/reset` returns 409, as it does
 when the budget is spent. Only the last episode is graded. With N = 0 (or no declaration) `/reset` is 404. The reset
-budget is part of a result's configuration: results with different budgets are not ranked together (RUNNING.md).
+budget is part of a result's configuration: results with different budgets are not ranked together (running.md).
 
 ## Part 2 — `eai-standard/2.2`: capabilities added to 2.1
 
@@ -182,7 +184,7 @@ budget is part of a result's configuration: results with different budgets are n
 > this part says otherwise, every 2.2 addition is an optional capability, and a request written for 2.0 or 2.1 gets
 > the same answer as before (plus parts and keys an old client ignores).
 
-**One implementation.** The source is [`scripts/eai_standard/`](../scripts/eai_standard/): the service layer
+**One implementation.** The source is [`scripts/eai_standard/`](../../scripts/eai_standard/): the service layer
 `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash recovery), the client
 `rcb_client.py` + `rcb1.py`, the sidecar entrypoint `run.sh`, and the client image: `client.env` (the one client base,
 pinned by digest) and `client-requirements.txt` (exact pins). The generators copy the code unchanged into every 2.2
@@ -362,8 +364,8 @@ frame, and `meta.frames_skipped` counts the frames left out. A service that stat
 
 ### 13. Crash recovery (the shared layer's default behaviour)
 The shared layer (`rcb_limited.Episode`; adapters call it as `toy_server.py` does) resumes a crashed service in the same
-episode. This is an implementation of the reference services, not a protocol requirement (PROTOCOL Appendix H.5 is the
-runner's single full retry of an infrastructure-failed trial; RUNNING.md).
+episode. This is an implementation of the reference services, not a rule (PROTOCOL Appendix H.5 is the
+runner's single full retry of an infrastructure-failed trial; running.md).
 - **Journal and checkpoints.** Every executed control step (the exact row given to the simulator's step) is appended to
   `journal.f64` (float64 rows). After every completed call the journal is flushed and a checkpoint is logged in
   `episode.jsonl`: call count, rows, control steps, the state hash, the robot's proprio row, and the adapter's `persist`
@@ -474,7 +476,7 @@ is 2.2 plus the realtime capability below; every 2.2 addition stays optional, so
 2.3 service. Same endpoints, RCB1 frames and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S
 (`RCB_SLOWDOWN`; each task declares its default, `[metadata] slowdown`), `control_dt`, `wall_s_per_control_step`,
 `max_ahead_steps`. Each task declares its reset budget (Part 1, "Optional reset capability"). S and the reset budget
-are part of a result's configuration (RUNNING.md).
+are part of a result's configuration (running.md).
 - **Clock.** An episode starts paused at its starting state. Its clock starts at its first `/submit` or `/observe`
   with `seconds > 0` (after a reset, and after a crash recovery, the episode is paused again) and runs one control step
   every `control_dt` × S seconds of wall time, whatever the agent does, until the episode ends.
@@ -543,7 +545,7 @@ are part of a result's configuration (RUNNING.md).
 ## Part 4 — `eai-standard/2.4`: the operations capability
 
 Reference implementation:
-[`scripts/eai_standard/v2_4/`](../scripts/eai_standard/v2_4/), with `rcb_limited.py` and `rcb_client.py`. `rcb1.py`,
+[`scripts/eai_standard/v2_4/`](../../scripts/eai_standard/v2_4/), with `rcb_limited.py` and `rcb_client.py`. `rcb1.py`,
 `run.sh`, the client image and the client pins are the 2.2 ones in `scripts/eai_standard/`. In the tables below, MUST
 means "required of a service that reports 2.4" (what a 2.4 client may rely on).
 

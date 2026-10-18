@@ -56,7 +56,7 @@ only what rebuilds the start (object states, robot state, bindings, hinges, gras
 upstream's role prefix (`target_*`, `partner_*`, …). Renaming moves the settled start of 3 of the 12 instances by at
 most 5e-5 (m or rad; alignment_axial, block_design, touching) and none of the others, measured; both twins and the agent
 run the renamed one. What scores it is
-`goal.json` (LEAKAGE §3): every key taken out of upstream's TRO and template_meta (the targets, the goal camera pose, the
+`goal.json` (docs/protocol/leakage.md §3): every key taken out of upstream's TRO and template_meta (the targets, the goal camera pose, the
 variant), lifted by `mk_tasks.py instances` against the real removal, copied only to the scoring side (`environment/sim/`,
 `tests/`), restored there and checked against upstream's TRO by sha256 (a failed restore is a grader error). One success
 rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the policy tolerances × 3, in both.

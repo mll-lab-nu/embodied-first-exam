@@ -28,14 +28,14 @@ simulator = "robosuite"
 robot = "franka-panda"
 family = "libero-max/libero_spatial/receptacle_relocation"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 oracle = "full"
 instance_seed = 195
 expert_time_estimate_hours = 2.0
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 2.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 0.0
@@ -47,7 +47,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "verifier 1.6 GB, mem_guard (docker memory per container, ws-1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -63,12 +63,12 @@ trial_max_memory_gb = 17.0
 measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 9 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 11.0, pids = 8192 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 195
 allowed = [195]
@@ -79,7 +79,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

@@ -110,7 +110,7 @@ the host list from that script).
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec`, the generator's `CUTOFF_SEC` (PROTOCOL §2,
-RUNNING.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
+docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
 own text names no number. Every Python process pays about 2 minutes of Isaac launch and scene build, so an agent's
 iterations cost more than in the other simulators.
 
@@ -174,7 +174,7 @@ iterations cost more than in the other simulators.
   `replay_error`, `gpu_lost` and an `instance_mismatch` found by a replay are not the live episode's; trials re-graded
   later (`regrade_*` in `reward.json`) keep their recorded verdict.
 
-## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
+## Crash recovery (standard mode, docs/protocol/standard_mode.md §13)
 - Resume class `exact`: the resumed service is a fresh process, and replaying the journal is that process's first replay,
   so the state hash at the last checkpoint must match exactly (else the episode ends `resume_failed`, `infra_error`).
 - The journal holds the float32 row handed to `Session.step` for every control step; a checkpoint (state hash = sha1 of
@@ -203,7 +203,7 @@ registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 wit
 - **Tooling: thin wrappers only.** Differential-IK moves, joint moves, gripper, hold, plus the frozen instance, state,
   recording, replay and rendering. Task-level skills (grasp, place, navigate) are never added to the agent's tooling;
   reference solutions keep theirs under `solution/`.
-- **World-frame information.** Standard tasks never say where things are in the world (STANDARD_MODE.md §10,
+- **World-frame information.** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
   `scripts/robolab/ci/advisory-world-frame.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
   give the privileged state through the tooling.
 
@@ -212,7 +212,7 @@ registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 wit
 is a 400) and `ee_pose` (8, closed-loop differential IK, at most 0.25 m/s, fingertip-centre frame); cameras
 `egocentric_mirrored_camera`, `over_shoulder_left_camera` (static) and `wrist_cam` (on the Robotiq base link); Isaac
 `distance_to_image_plane` depth; `/kinematics` from a numpy model of the USD joints (7); 32 proprio columns.
-STANDARD_MODE.md §16.
+docs/protocol/standard_mode.md §16.
 
 Requests are checked completely before the first control step: a field of the wrong type (`dt`, `seconds`,
 `video_fps`, `note`, `cameras`, `interpolate`, `video`, `type`, `depth`), a value out of range, an `ee_pose` position more
@@ -274,7 +274,7 @@ Per-simulator notes:
 | `/kinematics` | numpy model of the USD joints (7) |
 | proprio columns | 32 |
 | grading replays | none (graded by the live episode) |
-| resume class (STANDARD_MODE §13.1) | `exact` |
+| resume class (docs/protocol/standard_mode.md §13.1) | `exact` |
 
 Measured scene builds (episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
 

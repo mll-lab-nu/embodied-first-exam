@@ -34,7 +34,7 @@ instance_seed = 0
 expert_time_estimate_hours = 3.0
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 8.0
 min_memory_gb = 24.0
 min_gpu_memory_gb = 8.0
@@ -47,7 +47,7 @@ verifier_min_gpu_memory_gb = 8.0
 measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replayed camera-free (1.2 GiB) and then filmed through the render worker (4.6 GiB) until 2026-10-17; since then (board 0151) it only films, through the render worker (4.6 GiB)"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -63,12 +63,12 @@ trial_max_memory_gb = 30.0
 measured = "the agent's container holds Python and the client only (as every standard task's); the whole trial adds the sim sidecar (physics + render worker, the rule's measurement): provisional"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 16.0, memory_gb = 32.0, pids = 16384 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -79,7 +79,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

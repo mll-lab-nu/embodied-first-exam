@@ -1,6 +1,6 @@
 """Standard-mode verifier (MyoSuite): reads what the sim service (which the agent could not touch) wrote: /data/final.json,
 /data/trajectory.npz, /data/replay.mp4; with a reset budget, the record is the last episode's. The verdict is the live
-episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): success = the episode the service ran ended in success
+episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): success = the episode the service ran ended in success
 under the task's rule (its hold / track windows included), as the service judged it after the agent's container was
 stopped ("graded_by": "live"); nothing is replayed. Numeric-only reward.json.
 
@@ -85,7 +85,7 @@ write(
         "grader_error": int(mismatch),
         "instance_mismatch": int(mismatch),
         # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
-        # resume (docs/STANDARD_MODE.md §13), the service not ending its episode for the collect hook, a scene that did
+        # resume (docs/protocol/standard_mode.md §13), the service not ending its episode for the collect hook, a scene that did
         # not start at the instance's recorded state, a final.json without a verdict
         "infra_error": int(infra),
         "gave_up": int(bool(d.get("gave_up"))),

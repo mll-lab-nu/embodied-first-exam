@@ -13,5 +13,5 @@ ENV PYTHONPATH=/tests:/opt/topogym
 # the longest trajectory the verifier replays within its timeout (scripts/roboarc/mk_tasks.py row_cap)
 ENV RCB_MAX_STEPS=40000 RCB_VERIFIER_BUDGET_S=45000
 WORKDIR /tests
-# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+# resource limits: the verifier step and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
 COPY rcb_limits.py rcb_limits.json /tests/

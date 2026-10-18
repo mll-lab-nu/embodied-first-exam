@@ -1,7 +1,7 @@
 """Standard-mode verifier (eai-standard/2.2): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict, crash recovery), /data/trajectory.npz, /data/replay.mp4. success = the
 live episode's success: the settle window that ended the episode passed on the service's simulator (final.json
-"graded_by": "live"; nothing is replayed: docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151), and no infrastructure
+"graded_by": "live"; nothing is replayed: docs/protocol/README.md H.4; owner, 2026-10-17, board 0151), and no infrastructure
 failure (infra_error = 1: no record, no live verdict, a give-up the service caused, a frozen instance the host could
 not rebuild, a service that could not record the end of an episode that ended normally). Numeric-only reward.json.
 Source: scripts/robowits/shared/grade_standard.py. RCB_DATA / RCB_VERIFIER_LOG_DIR: test hooks (never set in tasks)."""

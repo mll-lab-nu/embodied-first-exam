@@ -1,4 +1,4 @@
-# Minimum compute per task (docs/PROTOCOL.md §2.9). scripts/task_conventions.py (`normalize`) writes the keys of every
+# Minimum compute per task (docs/protocol/README.md §2.9). scripts/task_conventions.py (`normalize`) writes the keys of every
 # rule whose `match` (a regular expression) finds the task directory name into [metadata.resources] of its task.toml, in
 # file order (a later rule overrides an earlier one), and renders the README's "## Compute resources" from them.
 # Agent phase = every container of the trial at once (standard modes: the agent's container + the sim sidecar);
@@ -1106,7 +1106,7 @@ trial_max_memory_gb = 16.0
 measured = "author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default"
 
 # ---------------------------------------------------------------------------------------------------------------------
-# Resource LIMITS and CAPS (docs/PROTOCOL.md §2.10, v1.1.5; enforced from v1.2). All sizes in GiB.
+# Resource LIMITS and CAPS (docs/protocol/README.md §2.10, v1.1.5; enforced from v1.2). All sizes in GiB.
 # [[limit]] -> [metadata.resources.limits]: the most the agent phase may use. normalize writes it into task.toml and
 #   renders it into instruction.md ("## Resource limits") and the README. scope "trial" (privileged: every container the
 #   agent drives, i.e. all but a benchmark-owned service such as RoboPaint's scorer, scripts/rcb_monitor/inject.py

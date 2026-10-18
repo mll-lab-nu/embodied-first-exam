@@ -1,5 +1,5 @@
 """eai-standard/2.1 sim service for Panda Dynamic Scenes' standard tasks -- the adapter behind the shared standard
-service layer (`python /srv/server.py`: rcb_service.main(build); docs/STANDARD_MODE.md Part 1, docs/benchmarks/pandadyn.md
+service layer (`python /srv/server.py`: rcb_service.main(build); docs/protocol/standard_mode.md Part 1, docs/benchmarks/pandadyn.md
 "Standard mode").
 
 The simulator-specific half only: `PandaDyn` implements rcb_service.Sim (the contract documented in rcb_service.py) for

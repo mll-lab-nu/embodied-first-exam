@@ -16,7 +16,7 @@ robot = "tidybot-plus-plus"
 # KinDER env kinder/SweepIntoDrawer3D-o5-v0
 family = "sweep-into-drawer"
 mode = "privileged"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 # scene = environment/instance.json (KinDER's seed + a digest of the scene it builds); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 4.0
@@ -24,7 +24,7 @@ oracle = "none"
 oracle_evidence = "GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1 (it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example); in standard mode, the graded episode of run `codex-gpt6_1_sol-high` of 2026-10-03 (960 control steps, no reset), which the standard service scored 1 (live, fresh replay, deterministic); human review in PR #8"
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 2.0
 min_memory_gb = 4.0
 min_gpu_memory_gb = 0.0
@@ -36,7 +36,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "GPU 1.2-1.3 GB (oracle 1.2 GB on RTX 4090), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.8 GB, sim 1.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "trial"
 max_gpu_memory_gb = 0.0
@@ -52,11 +52,11 @@ trial_max_memory_gb = 16.0
 measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.7 GiB over 6 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 16.0, memory_gb = 20.0, pids = 8192 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -64,12 +64,12 @@ oracle = []
 
 [verifier]
 timeout_sec = 900.0
-# grade.py runs in its own container, built from tests/Dockerfile (docs/PROTOCOL.md §2.6): the agent's container,
+# grade.py runs in its own container, built from tests/Dockerfile (docs/protocol/README.md §2.6): the agent's container,
 # where it was root, is gone by then, and only /app/output/ crosses over. It replays locally, with no network.
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

@@ -51,7 +51,7 @@ def _canonical(obj) -> bytes:
 
 
 def split_instance(template: dict, meta: dict, tro: dict) -> tuple[dict, dict]:
-    """(instance.json, goal.json) of one upstream instance (LEAKAGE §3: lifted by diffing against the real removal).
+    """(instance.json, goal.json) of one upstream instance (docs/protocol/leakage.md §3: lifted by diffing against the real removal).
     instance.json is the start only, with the scene's objects named without upstream's role prefix (target_*, partner_*,
     ...: renaming moves the settled start of 3 of the 12 by at most 5e-5, measured; every copy is the renamed one) and template.json's sampler path (it names the subtask) dropped;
     goal.json holds every key taken out of upstream's TRO and template_meta, and the restored TRO's sha256."""

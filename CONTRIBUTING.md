@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping build Robot Coding Bench. Tasks follow the contract in [docs/PROTOCOL.md](docs/PROTOCOL.md);
+Thank you for helping build Robot Coding Bench. Tasks follow the contract in [docs/protocol/README.md](docs/protocol/README.md);
 this page explains how a contribution gets from an idea to `main`. Reviewers follow [docs/REVIEWING.md](docs/REVIEWING.md).
 
 ## Kinds of pull requests
@@ -10,7 +10,7 @@ this page explains how a contribution gets from an idea to `main`. Reviewers fol
 | **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
 | **Tasks for an existing benchmark** | the same, without `images/` | — |
 | **Task fix** | the affected task directories and their generator | describe the agent behaviour it closes; include before/after runs |
-| **Shared files / protocol** | `docs/PROTOCOL.md`, `docs/STANDARD_MODE.md`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
+| **Shared files / protocol** | `docs/protocol/`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
 
 One benchmark per pull request. A pull request that adds tasks **and** changes shared files is split before review.
 
@@ -50,13 +50,13 @@ A new benchmark's shared-files change adds its label to `scripts/task_convention
    mode). Your own text never repeats the limit as a duration: say "the time limit (`## Time limit`)", and add what is
    particular to your benchmark (a simulator's start-up cost). Your service's `time_s` / `time_left_s` count from the
    agent's first request to it, never from the service's start, and a resumed service keeps that moment
-   (STANDARD_MODE.md, "The agent's clock": the shared layers do it for you; a test must show it).
+   (docs/protocol/standard_mode.md, "The agent's clock": the shared layers do it for you; a test must show it).
 3. State the minimum compute (PROTOCOL §6): CPU cores, memory and GPU memory of the agent phase and the verifier
    phase, the GPU class and a recommended GPU, derived from measured peaks (oracle or agent trials; `docker stats` /
    cgroup `memory.stat` and `nvidia-smi` while they run). Add a rule to `scripts/task_resources.toml` (or have the
    generator write `[metadata.resources]`); `scripts/task_conventions.py` writes it into `task.toml` and renders the
    README's `## Compute resources`.
-   Add the resource limits and caps too (PROTOCOL §6, RUNNING.md "Resources"): a `[[limit]]` and a `[[cap]]` rule in the same file (scope
+   Add the resource limits and caps too (PROTOCOL §6, docs/protocol/running.md "Resources"): a `[[limit]]` and a `[[cap]]` rule in the same file (scope
    `trial` for privileged tasks, `agent` for standard ones; GPU memory, memory, processes, disk in GiB, the whole trial's
    expected peak, `measured`; docker caps per compose service). `normalize` writes `[metadata.resources.limits]` /
    `.caps` and writes the `## Resource limits` paragraph the agent reads into `instruction.md` (just before the closing
@@ -69,7 +69,7 @@ A new benchmark's shared-files change adds its label to `scripts/task_convention
    `scripts/build_images.sh` / `scripts/push_images.sh`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
    and build instructions.
 5. Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`, …). No adapters, and no gateway that
-   holds credentials or changes requests; the optional usage gateway that only records token usage is allowed (RUNNING.md "Official runs").
+   holds credentials or changes requests; the optional usage gateway that only records token usage is allowed (docs/protocol/running.md "Official runs").
 
 ## Before opening the pull request
 ```bash
@@ -90,7 +90,7 @@ python3 scripts/task_conventions.py tasks/<your tasks>    # after a hand edit: n
 Never build a task image (a `harbor run`, a `docker build` of `environment/` or `tests/`) from a tree you have not
 stamped with `scripts/stamp_mtimes.py`: Docker's BuildKit reuses another build's same-name context file when its size and
 mtime match, and a checkout gives many files one mtime, so a task can silently run or be graded with another task's file
-(issue #258, RUNNING.md "Building task images"). Tools that build images run from a stamped copy
+(issue #258, docs/protocol/running.md "Building task images"). Tools that build images run from a stamped copy
 (`stamp_mtimes.py stage`); a new one does the same.
 
 For a new simulator or family, also replay the oracle (or a positive example) twice in fresh processes and include
@@ -110,7 +110,7 @@ The checklist is in PROTOCOL §4.
    benchmark's tasks, its generator's check and its unit tests (and `check-cutoffs.py` on its tasks); the cheap repo-level checks (resources,
    protocol, ...) always run on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables
    (`task_conventions.py`, `task_resources.toml`, `eai_standard/`,
-   `rcb_monitor/`, ...), `images/monitor/`, `images/VERSION`, `docs/PROTOCOL.md` and the other protocol documents, or a
+   `rcb_monitor/`, ...), `images/monitor/`, `images/VERSION`, the protocol documents (`docs/protocol/`), or a
    path the scope table does not know -- runs the full suite, as does every push to `main`, the nightly run and a manual
    run (`workflow_dispatch`). The CI mutation self-test (`check-ci-selftest.py`) runs with the full suite.
    The checks are in two tiers (PROTOCOL v2.0): the job **`invariants`** (`ci_checks/run_invariants.sh`: the checks
@@ -138,7 +138,7 @@ The checklist is in PROTOCOL §4.
 - To change a time cutoff (the task author's decision; owner involvement only where official results must stay
   comparable), set the new `[agent] timeout_sec` in the tasks concerned (a generated
   benchmark: its generator's constant, then regenerate), in both twins, run `python3 scripts/task_conventions.py` on them
-  and say old -> new and why in the pull request (docs/RUNNING.md "The agent's time"). The task keeps its name and gets
+  and say old -> new and why in the pull request (docs/protocol/running.md "The agent's time"). The task keeps its name and gets
   a new digest; results under the earlier cutoff are ranked separately (PROTOCOL §2, H.8).
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.
 - The agent's egress is the model APIs and the package registries (PyPI, the Debian / Ubuntu apt archives) by default
@@ -148,7 +148,7 @@ The checklist is in PROTOCOL §4.
   what the task itself needs at run time into the image or the task directory (an agent may install packages; a task
   must not depend on it). `normalize` writes the `## External material` paragraph, an honour rule, into
   `instruction.md`. If a distribution on PyPI ships your benchmark's solutions or task sources, add it to the table in
-  [docs/LEAKAGE.md](docs/LEAKAGE.md) ("Packages on PyPI"). Keep provenance (source repository, dataset, demonstration
+  [docs/protocol/leakage.md](docs/protocol/leakage.md) ("Packages on PyPI"). Keep provenance (source repository, dataset, demonstration
   file, expert module) out of every file under `environment/` that the agent reads, and look through a new image for
   recorded episodes and links to them (`ci_checks/check-agent-pointers.py` covers the task's own files only).
 - The agent is root in its container: assume it can modify anything under `/app` and `/opt`. Grading therefore runs in

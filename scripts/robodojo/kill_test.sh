@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Crash-recovery acceptance test for one RoboDojo standard task (docs/STANDARD_MODE.md §13; resume class exact).
+# Crash-recovery acceptance test for one RoboDojo standard task (docs/protocol/standard_mode.md §13; resume class exact).
 # RoboDojo has no oracle, so the test runs a DRIVER (not a solution: 12 joint_position chunks of small arm motions through
 # the task's own client) as Harbor's oracle on a copy of the task, kills -9 the sim service in the middle of the episode
 # (once N calls are checkpointed, while the next call runs), and checks that the service resumed the same episode exactly

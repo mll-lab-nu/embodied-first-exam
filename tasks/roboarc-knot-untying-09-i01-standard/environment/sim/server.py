@@ -1,10 +1,10 @@
-"""eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/STANDARD_MODE.md): the TopoGym
+"""eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/protocol/standard_mode.md): the TopoGym
 adapter of the shared layer rcb_limited.py (scripts/eai_standard/, copied unchanged into every standard task). Adapted from
 robot_coding_bench's RoboWits service. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit
 (RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's own model). Logs every call to
 /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
 
-Crash recovery (rcb_limited.Episode, STANDARD_MODE.md section 13, resume class `approx`: Genesis' GPU contact solver is
+Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md section 13, resume class `approx`: Genesis' GPU contact solver is
 not bit-deterministic): every executed control step is journaled (/data/journal.f64, the exact float32 row given to
 Session.step), every completed call checkpointed (rows, state hash, proprio row). After a crash run.sh exits non-zero,
 compose restarts the container (`restart: on-failure:6`) and this service rebuilds the frozen scene, replays the journal
@@ -301,7 +301,7 @@ SPEC = {
     # that many control steps, /observe watches included
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "10800")),
                "clock": "time_s and elapsed_s count from your first request to the service; time_left_s is wall_clock_s minus "
-                        "that, so it never runs out before the harness's limit does"},   # STANDARD_MODE §5 (the 2.2 layer's key)
+                        "that, so it never runs out before the harness's limit does"},   # docs/protocol/standard_mode.md §5 (the 2.2 layer's key)
     "max_control_steps": int(S.max_steps),
     "episode": ("ends at the first success (the task predicate is evaluated after every /submit and every /observe that watches), "
                 "when the task's own failure predicate fires (reason task_failed), when the wall-clock budget is used up (budget.wall_clock_s, "

@@ -1,10 +1,9 @@
 # Running evaluations
 
-How runs are configured, and what makes a run official. The task contract is [PROTOCOL.md](PROTOCOL.md) (v2.0: its
-Appendix H binds every run); the standard-mode wire protocol is [STANDARD_MODE.md](STANDARD_MODE.md). The sections
-"Official runs" to "Results" below are the runner's rules: `scripts/run_agent_batch.sh` applies them by default, and the
-scheduler (batch_eval_live `run_policy.py`, called from the dispatcher's launch and retry paths) refuses a launch that
-breaks one.
+Part of the task protocol ([README](README.md); its Appendix H binds every run): how runs are configured, and what
+makes a run official. The sections "Official runs" to "Results" below are the runner's rules:
+`scripts/run_agent_batch.sh` applies them by default, and the scheduler (batch_eval_live `run_policy.py`, called from
+the dispatcher's launch and retry paths) refuses a launch that breaks one.
 
 ## Official runs
 A result is official only when its run had all of these:
@@ -20,7 +19,7 @@ A result is official only when its run had all of these:
   fails the trial (`over_token_budget = 1`; the first refusal also writes `budget_stop` into `totals.json`, which the runner
   labels `TokenBudgetExceeded`, not a harness or network error). A batch run with another budget records it in its results' metadata.
 - **The task's own cutoff**, no multiplier (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
-  `override_timeout_sec`), and **nothing added to the instruction** (no prompt template, no extra instruction).
+  `override_timeout_sec`), and **nothing added to the instruction** (no prompt template, no extra instruction, in `AK` or elsewhere).
 - **The runner's seed, the task's network, at most one infrastructure retry** (the next three sections), and the
   effective configuration recorded with the result (Results).
 
@@ -38,9 +37,7 @@ gateway still records its usage). `python3 scripts/set_agent_egress.py network <
 `network` is part of the recorded configuration, so open-network results are never ranked with allowlist ones.
 
 ## Infrastructure failures: one full retry
-PROTOCOL Appendix H.5: infrastructure failures allow at most one full retry with the same instance, seed, and
-configuration, clearing all agent and environment state. If that retry also fails, follow the default failure-handling
-behavior; no further retries. Normal task failures do not qualify.
+The rule is PROTOCOL Appendix H.5; how the runner applies it:
 - An infrastructure failure is what `scripts/write_task_results.py` publishes as "not a result": the verifier's
   `infra_error` / `grader_error`, no `reward.json`, a Harbor exception other than the agent's cutoff, a model-account or
   usage-gateway failure (`scripts/account_failure_check.py`). The agent's own end, its cutoff and its token budget are
@@ -51,7 +48,7 @@ behavior; no further retries. Normal task failures do not qualify.
 - One implementation of the rule, `scripts/retry_policy.py` (`decide`, `check_attempts`), tested by the required CI
   job; batch_eval_live's `run_policy.py` uses it. `write_task_results.py` keeps every attempt of a task x run id in
   `attempts.json` and flags a sequence that breaks the rule (`attempts_over_cap`).
-- In-trial crash recovery (a sidecar that replays its journal and resumes the episode, STANDARD_MODE.md) is the shared
+- In-trial crash recovery (a sidecar that replays its journal and resumes the episode, standard_mode.md) is the shared
   layers' implementation, not a rule; a crash it cannot recover is an infrastructure failure, unless every crash was
   the agent's (below).
 - Standard modes (graded by the live episode, PROTOCOL H.4): an infrastructure failure is one where the live record
@@ -63,7 +60,7 @@ behavior; no further retries. Normal task failures do not qualify.
   unreadable or unfinalized record) is one; a grader never infers it from missing fields. What the agent's commands
   caused stays a result, never an infrastructure failure (a retry would be a free second attempt): crashes all inside
   its calls (`sim_crashed_on_call`), a simulator error its actions raised where the task counts that as the agent's
-  (standard-realtime: a simulator error or crash after the agent's first command, STANDARD_MODE.md Part 3), the cutoff, no actions, a failed settle or hold, and a crash or error while the service
+  (standard-realtime: a simulator error or crash after the agent's first command, standard_mode.md Part 3), the cutoff, no actions, a failed settle or hold, and a crash or error while the service
   runs a settle or hold window on the agent's final state (it counts as one inside the agent's last call). The video is
   never one: a render that fails or runs out of time loses only the video. A resume that continued from a state that
   does not match its checkpoint exactly (`approx` resume class, `resume_state_mismatch = 1`) keeps its live verdict
@@ -80,7 +77,7 @@ the results site) compare trials only within one comparable configuration (`task
 version, mode, cutoff, reset budget, S, network), report success together with cost (tokens, money, turns, wall clock,
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
 unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
-every core task, the flag is shown as a marker and may be used as a filter. The easy set ([`easy_set.toml`](easy_set.toml),
+every core task, the flag is shown as a marker and may be used as a filter. The easy set ([`easy_set.toml`](../easy_set.toml),
 `task_conventions.set_of`) is kept apart: its tasks are run and their results kept and shown, marked, but the main
 table and every headline number (success rates, rankings, totals) count `core` tasks only; the easy set's results are
 shown separately (the batch summary marks them in their configuration's table and leaves them out of its rate; the
@@ -153,7 +150,7 @@ reasoning summaries, tool calls, images and token use with the robot service's l
 - **Standard mode (RoboTwin):** the sim service records `live.mp4` (six views, frames only while physics runs and something moves,
   each stamped with the agent's call and wall/sim time; rendered from the trajectory after the verdict, in the same pass
   as `replay.mp4`, so it costs the agent nothing; `RCB_LIVE=realtime` captures during the episode instead), the exact actions of every call,
-  and a crash-safe trajectory. Details: `docs/STANDARD_MODE.md` (Live recording). Protocol 2.1 also gives the
+  and a crash-safe trajectory. Details: `standard_mode.md` (Live recording). Protocol 2.1 also gives the
   agent measured proprioception (encoders, gripper opening, TCP pose, drive effort) and optional depth noise.
 - **Privileged mode:** the agent owns the simulator, so nothing it produces is evidence. `rcb_traj.Session` still dumps every
   rollout's per-step drive targets to `/app/output/rcb_trace/` (`RCB_AGENT_TRACE_DIR`, capped at 300 files / 400 MB),
@@ -269,9 +266,8 @@ number from the agent's first request to the service (kept through a restart) an
 reports, except that RoboARC's service ends the episode when its count reaches 0 (docs/benchmarks/roboarc.md). At the cutoff Harbor stops the agent (`AgentTimeoutError`), collects the artifacts and runs the verifier, so
 the trial is graded as it stands: a result, not an infrastructure failure, never run again.
 
-**Official runs** pass no multiplier or override (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
-`override_timeout_sec`) and add nothing to the instruction (no prompt template or extra instruction, in `AK` or
-elsewhere), so `## Time limit` is the last thing the agent reads. `--agent-setup-timeout-multiplier` (slow harness
+**Official runs** pass no multiplier and add nothing to the instruction (Official runs above), so `## Time limit` is the
+last thing the agent reads. `--agent-setup-timeout-multiplier` (slow harness
 installs) is fine: set-up is not the agent's time.
 
 **Changing a cutoff** (the author's decision): set the new `[agent] timeout_sec` (or the generator's constant, then
@@ -296,8 +292,8 @@ Every task's `[agent]` allowlist is one list, `HOSTS` in `scripts/set_agent_egre
 registries (PyPI: pypi.org, files.pythonhosted.org; apt: deb.debian.org, security.debian.org, archive.ubuntu.com,
 security.ubuntu.com, snapshot.ubuntu.com). So `pip install` (or `uv pip install` in the images without pip) and
 `apt-get update && apt-get install` work in every agent container, in both modes; GitHub, raw.githubusercontent.com,
-Hugging Face and the general web do not answer (PROTOCOL §5, Appendix H.6: the instruction asks the agent, as an honour rule, not
-to search the web for or download a ready-made solution, and allows it to read whatever is installed in its container; the network keeps the places where solutions are published out of reach). Both installs work with and without the
+Hugging Face and the general web do not answer (PROTOCOL §5, Appendix H.6: the honour rule is the instruction's; the network keeps the
+places where solutions are published out of reach). Both installs work with and without the
 usage gateway (Debian 12 and 13, Ubuntu 22.04 images).
 In the Ubuntu images built on NVIDIA's CUDA base, `apt-get update` warns about NVIDIA's own repository
 (developer.download.nvidia.com is not on the list) and goes on; the Ubuntu archives answer.
@@ -327,7 +323,7 @@ that turns one of them on, and an `AK` that carries its own `config=` (Harbor wo
 already sets them to false, as a scheduler's own may, is accepted. For a bare `harbor run`:
 `--ak config=<the output of scripts/codex_tools_off.py [your config.toml]>`. Claude Code's settings stay the
 caller's (`AGENT_CONFIG`). An API key can still request a search directly; the usage gateway
-refuses such a request and every path that is not a model call (below, docs/LEAKAGE.md).
+refuses such a request and every path that is not a model call (below, leakage.md).
 
 ## Usage gateway (token usage per request, optional)
 Off by default: the agent calls its API directly, as Harbor runs it. With `GATEWAY=1`, `scripts/run_agent_batch.sh` starts `scripts/usage_gateway/gateway.py` on the docker bridge (`GATEWAY_BIND`, 172.17.0.1)

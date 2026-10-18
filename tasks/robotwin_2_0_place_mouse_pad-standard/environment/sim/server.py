@@ -1,9 +1,9 @@
-"""eai-standard/2.1 sim service for RoboTwin 2.0 (see docs/STANDARD_MODE.md).
+"""eai-standard/2.1 sim service for RoboTwin 2.0 (see docs/protocol/standard_mode.md).
 Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe, POST /submit (both RCB1 bodies,
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end grades the live episode: success = RoboTwin's check_success on the
 episode this service ran (it ends at the first call after which the check holds; at the end of the agent's time the
-final state is checked once more), nothing replayed (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151). The verdict
+final state is checked once more), nothing replayed (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151). The verdict
 goes to final.json first ("finalized": true, "graded_by": "live"); then the recorded (T,34) trajectory, which is the
 deliverable, is rendered once for people: the six-view /data/replay.mp4 and /data/live.mp4 (rcb_live.py: call-stamped
 frames only while physics ran, skipped while nothing moved) in one pass ("video_pending": true while it runs; it never

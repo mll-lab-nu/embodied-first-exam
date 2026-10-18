@@ -18,7 +18,7 @@ everything the tasks have in common, `shared/` the one real copy of the tooling 
                                           # behaves differently from the verifier's  (needs mujoco)
     ./gen_tasks.py measure-standard [family ...] # check + time the standard twins' sim service (needs a GPU)
 
-Every task with a [task.standard] table is rendered three times, once per mode (docs/PROTOCOL.md D12):
+Every task with a [task.standard] table is rendered three times, once per mode (docs/protocol/README.md D12):
 `<base>-privileged`, `<base>-standard` and `<base>-standard-realtime` (the standard-realtime mode, §4b: standard mode on a clock that does
 not stop, eai-standard/2.3; templates/realtime/, shared/realtime/).
 
@@ -78,7 +78,7 @@ INLINE_FIELDS = ("one_liner", "task_statement", "scene_note", "obs_layout", "evi
                  "completion_rate", "capability_class")
 
 NO_ORACLE = """None. Requiring one would cap the benchmark at what we can already solve, which systematically
-removes the interesting tasks. What replaces it (docs/PROTOCOL.md §2.7): the floor above (doing nothing cannot pass),
+removes the interesting tasks. What replaces it (docs/protocol/README.md §2.7): the floor above (doing nothing cannot pass),
 the evidence that the task has a solution (`oracle_evidence` in task.toml), and a human reviewer."""
 
 
@@ -106,7 +106,7 @@ def agent_hosts() -> list[str]:
 
 
 def oracle_fields(t: dict, defaults: dict, mode: str) -> dict:
-    """oracle / oracle_evidence (docs/PROTOCOL.md §2.7) and what the README says: an oracle where oracles/<family>/<mode>/
+    """oracle / oracle_evidence (docs/protocol/README.md §2.7) and what the README says: an oracle where oracles/<family>/<mode>/
     has one, else none, with the evidence subset.toml names and the human review."""
     review = f"PR #{defaults['review_pr']}" if defaults.get("review_pr") else "this benchmark's pull request"
     if (ORACLES / t["family"] / mode).is_dir():
@@ -361,7 +361,7 @@ def render(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASKS_DIR) ->
 
 
 # --------------------------------------------------------------------------- standard mode
-# The standard-mode twin (docs/PROTOCOL.md §4, eai-standard/2.1): same instance, same success rule, but the simulator
+# The standard-mode twin (docs/protocol/README.md §4, eai-standard/2.1): same instance, same success rule, but the simulator
 # runs in a `sim` sidecar and the agent only has a client. Rendered for every task with a [task.standard] table; its
 # measured numbers (facts.json "standard") come from `measure-standard`, which needs a GPU.
 STANDARD_TEMPLATES = HERE / "templates" / "standard"
@@ -469,7 +469,7 @@ def render_standard(t: dict, defaults: dict, facts: dict, tasks_dir: Path = TASK
 
 
 # --------------------------------------------------------------------------- standard-realtime mode
-# The standard-realtime task (`<base>-standard-realtime`, mode = "standard-realtime", eai-standard/2.3; docs/PROTOCOL.md §4b): the standard twin's
+# The standard-realtime task (`<base>-standard-realtime`, mode = "standard-realtime", eai-standard/2.3; docs/protocol/README.md §4b): the standard twin's
 # sidecar, client and verifier, except that the service runs the episode on a clock that does not stop
 # (shared/realtime/rcb_realtime.py, which extends rcb_service.py unchanged) and the agent gets the realtime client
 # (`submit(..., at=)`, `cameras=[]`). Same instance, same success rule; reset budget `realtime_reset_budget` (50,

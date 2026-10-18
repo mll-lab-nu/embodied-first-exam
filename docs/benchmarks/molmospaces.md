@@ -80,7 +80,7 @@ rendered on the GPU, 20-120 s, over 500 s on a loaded host) renders `replay.mp4`
 Rendering during the live episode was not chosen: the service renders only what the agent asks for, and a frame every
 control step would add a GPU render to every step of the agent's calls. Crash recovery:
 resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: each task's own `[agent] timeout_sec` (PROTOCOL §2,
-RUNNING.md "The agent's time"), stated by the closing `## Time limit` section of every instruction; no step limit beyond the horizon.
+docs/protocol/running.md "The agent's time"), stated by the closing `## Time limit` section of every instruction; no step limit beyond the horizon.
 
 Tests without a simulator: `scripts/molmospaces/tests/test_ms.py` (run as a script; numpy): both graders, `finalize.sh` with
 stand-in replays and the real `server.py` on the real shared layer with a stub Session.
@@ -117,7 +117,7 @@ the instruction and `/spec` (`max_control_steps`, `episode`) state.
 harbor run -p tasks/molmospaces-pick-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/molmospaces-pick-i00-privileged -a nop      # scores 0
 ```
-Agent, provider and effort settings: docs/RUNNING.md.
+Agent, provider and effort settings: docs/protocol/running.md.
 
 ## Standard-mode service details
 
@@ -140,7 +140,7 @@ Per-simulator notes:
 | `/kinematics` | upstream's `MlSpacesKinematics` on the robot's MuJoCo model (Franka 7, RB-Y1 23 with the base) |
 | proprio columns | 2.2: 29 (Franka), 85 (RB-Y1) |
 | grading replays | none (graded live); one video-only render pass |
-| resume class (STANDARD_MODE.md) | `exact` |
+| resume class (docs/protocol/standard_mode.md) | `exact` |
 
 Measured scene builds (episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
 

@@ -7,7 +7,7 @@ that a verifier checks in a separate sandbox (privileged: by replaying it in a f
 trusted simulator service's record of the live episode). A program decides pass or fail (no
 learned judge) and reports numeric diagnostics (for example DexToolBench's goal progress).
 
-The benchmark contract is [docs/PROTOCOL.md](docs/PROTOCOL.md) (the version is stated there). Contributions follow
+The benchmark contract is the protocol in [docs/protocol/](docs/protocol/README.md) (the version is stated there). Contributions follow
 [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Evaluation modes
@@ -25,7 +25,7 @@ Every task instance is offered in two modes that share the same frozen scene.
 
 Privileged mode measures whether an agent can program a robot when it has full access to the simulator. Standard mode
 measures the same thing under real-robot constraints. The standard-mode wire protocol is specified in
-[docs/STANDARD_MODE.md](docs/STANDARD_MODE.md).
+[docs/protocol/standard_mode.md](docs/protocol/standard_mode.md).
 
 A third mode, **standard-realtime** (`eai-standard/2.3`, PROTOCOL §3), is standard mode on a clock that does not
 stop: once an episode starts, the robot runs in real time and holds its last targets while the agent thinks, so the agent
@@ -131,12 +131,12 @@ harbor view jobs
 - Disk space for the base images (the RoboTwin image is about 22 GB). Public images can be pulled; `BUILD_ONLY` ones are built on the host.
 
 **Running official results:**
-- Use Harbor's native agents through `scripts/run_agent_batch.sh` with `GATEWAY=1`, and with no tool that runs outside the trial's container (docs/RUNNING.md "Official runs"): the harness's web search off (Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch`: the script's default), no account connectors, apps, plugins or image generation. They run at the model provider, so no egress allowlist stops them; the gateway forwards model-API calls only and is, with the package registries, the agent container's only egress.
-- Align reasoning effort and the time budget across agents: every task states its cutoff at the end of its instruction (`## Time limit`), each task sets its own (3600 s by default; PROTOCOL §2, docs/RUNNING.md "The agent's time"). The token budget (10B input tokens, cached input included, and 10B output tokens per trial: in practice no limit) is enforced by the usage gateway (docs/RUNNING.md "Official runs"). Results are ranked only within one comparable configuration (mode, cutoff, reset budget, S, network); validated and unvalidated tasks are ranked together; tasks of the easy set ([docs/easy_set.toml](docs/easy_set.toml)) are kept and run but reported apart, outside the main table (docs/RUNNING.md "Results").
+- Use Harbor's native agents through `scripts/run_agent_batch.sh` with `GATEWAY=1`, and with no tool that runs outside the trial's container (docs/protocol/running.md "Official runs"): the harness's web search off (Codex `--ak web_search=disabled`, Claude Code `--ak disallowed_tools=WebSearch,WebFetch`: the script's default), no account connectors, apps, plugins or image generation. They run at the model provider, so no egress allowlist stops them; the gateway forwards model-API calls only and is, with the package registries, the agent container's only egress.
+- Align reasoning effort and the time budget across agents: every task states its cutoff at the end of its instruction (`## Time limit`), each task sets its own (3600 s by default; PROTOCOL §2, docs/protocol/running.md "The agent's time"). The token budget (10B input tokens, cached input included, and 10B output tokens per trial: in practice no limit) is enforced by the usage gateway (docs/protocol/running.md "Official runs"). Results are ranked only within one comparable configuration (mode, cutoff, reset budget, S, network); validated and unvalidated tasks are ranked together; tasks of the easy set ([docs/easy_set.toml](docs/easy_set.toml)) are kept and run but reported apart, outside the main table (docs/protocol/running.md "Results").
 
 ## Integrity
 
-Eight invariants bind every task and every run ([PROTOCOL Appendix H](docs/PROTOCOL.md#appendix-h-invariants-binding));
+Eight invariants bind every task and every run ([PROTOCOL Appendix H](docs/protocol/README.md#appendix-h-invariants-binding));
 no task setting overrides them, and the required CI job `invariants` fails a pull request that breaks one. Everything
 else in the protocol is a recommended convention, reported by the job `advisories` as a warning.
 
@@ -170,10 +170,10 @@ images/<sim>/          simulator base images (simulator installs only)
 scripts/               task generators, image build/push, the egress allowlist, results and report tools
 ci_checks/             checks run on every pull request: run_invariants.sh (required: PROTOCOL Appendix H) and
                        run_all.sh (both tiers; the advisory ones only warn); scoped by ci_scope.py
-docs/                  PROTOCOL.md (conventions + the binding invariants), STANDARD_MODE.md (standard-mode wire protocol),
-                       TAXONOMY.md (metadata vocabulary), REVIEWING.md (maintainer guide),
-                       RUNNING.md (official runs, seeds, retries, results, batches), LEAKAGE.md (where answer keys survive),
-                       benchmarks/ (per-benchmark notes)
+docs/                  protocol/ (the protocol: README.md conventions + the binding invariants, standard_mode.md
+                       standard-mode wire protocol, running.md official runs, seeds, retries, results, batches,
+                       leakage.md where answer keys survive), TAXONOMY.md (metadata vocabulary),
+                       REVIEWING.md (maintainer guide), benchmarks/ (per-benchmark notes)
 third_party/           upstream sources used by the base images (RoboTwin)
 ```
 
@@ -181,7 +181,7 @@ third_party/           upstream sources used by the base images (RoboTwin)
 
 Agent results are not stored in this repository: per-task results and batch reports are published on the results
 site and the Hugging Face dataset, keyed by run id `<harness>-<model>-<effort>` (for example `codex-gpt6_luna-xhigh`)
-(PROTOCOL §4); each result records its effective configuration (docs/RUNNING.md "Results"). How to run a batch and read agent logs is described in [docs/RUNNING.md](docs/RUNNING.md).
+(PROTOCOL §4); each result records its effective configuration (docs/protocol/running.md "Results"). How to run a batch and read agent logs is described in [docs/protocol/running.md](docs/protocol/running.md).
 
 ## Contributing
 

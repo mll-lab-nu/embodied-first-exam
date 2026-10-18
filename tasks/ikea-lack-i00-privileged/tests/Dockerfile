@@ -10,5 +10,5 @@ COPY grade.py rcb_ikea.py render_video.py video_view.json test.sh runtime_bindin
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests
-# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+# resource limits: the verifier step and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
 COPY rcb_limits.py rcb_limits.json /tests/

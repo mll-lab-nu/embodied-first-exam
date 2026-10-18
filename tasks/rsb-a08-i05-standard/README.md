@@ -44,7 +44,7 @@ operator told by a decline, a question or a report). The video (`replay.mp4`) is
 recorded rows and decides nothing.
 
 ## Compute resources
-Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
 
 | | Agent phase | Verifier |
 |---|---|---|
@@ -54,7 +54,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: not needed.
 - Measured: measured 2026-10-13 on four 32-core CPU nodes of a university HPC cluster (rootless podman on cgroups v1, caps not applied there), oracle and nop trials of every task: /proc PSS and CPU of each container's processes every 5 s; sim sidecar CPU p90 4.74 / max 5.28 cores during finalize (then two replays side by side + the video; from 2026-10-17 the video only, board 0151), oracle and nop sweep, 414 trials, /proc sampling (hence its cap of 6 CPUs), PSS max 2.84 GB; main PSS max 0.74 GB over 805 containers; a whole trial's PSS max 4.75 GB over 1219 trials; the verifier's container under 0.1 GB (the replays run in the sim sidecar)
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 6 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 14 GiB memory. Limits measured: author estimate, with the measurements above: the agent's container held 0.74 GB PSS at most without an agent (oracle, nop) and 0.68 GB in the one agent trial sampled; 6 GiB under its 8 GiB cap leaves room for the harness and the client; whole trial: measured 4.75 GB, 14 GiB with the sim service's 8 GiB cap; processes 512: design default.
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 6 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 14 GiB memory. Limits measured: author estimate, with the measurements above: the agent's container held 0.74 GB PSS at most without an agent (oracle, nop) and 0.68 GB in the one agent trial sampled; 6 GiB under its 8 GiB cap leaves room for the harness and the client; whole trial: measured 4.75 GB, 14 GiB with the sim service's 8 GiB cap; processes 512: design default.
 
 ## Details
 | | |

@@ -1,7 +1,7 @@
 """Standard-mode verifier: reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict), /data/trajectory.npz, /data/replay.mp4. success = the live episode's
 success: RoboTwin's check_success on the episode the service ran, judged by the service after the agent's container
-was stopped (final.json "graded_by": "live"); nothing is replayed (docs/PROTOCOL.md H.4; owner, 2026-10-17, board
+was stopped (final.json "graded_by": "live"); nothing is replayed (docs/protocol/README.md H.4; owner, 2026-10-17, board
 0151). Numeric-only reward.json.
 
 infra_error = 1 means there is no verdict on the agent: final.json is missing or unreadable, the service never wrote

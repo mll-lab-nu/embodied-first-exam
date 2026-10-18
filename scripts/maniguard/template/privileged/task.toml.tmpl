@@ -9,11 +9,11 @@ keywords = ["robotics", "maniguard", "safety", "ltl", "behavior", "omnigibson", 
 
 [metadata]
 author_name = "qineng"
-task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "maniguard"           # ManiGuard on BEHAVIOR-1K v3.7.2 (OmniGibson 3.7.2, Isaac Sim 4.5; PhysX on the CPU)
 robot = "franka-panda-longfinger"
 family = "@@FAMILY@@"
-mode = "privileged"               # privileged state, resets and thin primitives through the tooling (docs/PROTOCOL.md §3)
+mode = "privileged"               # privileged state, resets and thin primitives through the tooling (docs/protocol/README.md §3)
 oracle = "@@ORACLE@@"
 @@ORACLE_EVIDENCE_LINE@@instance_seed = @@INDEX@@                 # = the ManiGuard-Bench task index (@@MG_TASK@@/base); scene = environment/instance/; identity = dataset.toml digest
 expert_time_estimate_hours = 2.0

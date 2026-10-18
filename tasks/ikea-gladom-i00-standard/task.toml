@@ -32,7 +32,7 @@ simulator = "mujoco"              # plain MuJoCo 3.14.0, CPU float64, the scene'
 robot = "franka-panda-bimanual"            # both arms (docs/TAXONOMY.md)
 family = "ikea_gladom"
 mode = "standard"                 # RGB + proprioception only; no part poses, no success predicate, no reset
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2): only the robot and gravity do work; springs, latches and threads are passive
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): only the robot and gravity do work; springs, latches and threads are passive
 protocol = "eai-standard/2.4"           # the shared 2.4 service layer; 2.1 / 2.2 requests are served unchanged
 oracle = "full"
 grasp = "physical (finger friction; no assisted grasp, no welds to a gripper)"
@@ -41,7 +41,7 @@ instance_seed = 0                 # one frozen scene: images/ikea-mujoco scene g
 expert_time_estimate_hours = 10
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 2.0
 min_memory_gb = 3.0
 min_gpu_memory_gb = 1.0
@@ -54,7 +54,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "Harbor standard oracle of svallet on an RTX 4090 host, 2026-10-17 (docker stats and nvidia-smi per process every 20 s): the sim sidecar peaked at 1.8 GiB of memory and 0.8 GiB of GPU memory (the Nyx render process), the agent's container (the client) below 0.1 GiB; the privileged verifier of the same task (two replays and the video replay) at 1.6 GiB; x 1.5 and rounded up"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -70,12 +70,12 @@ trial_max_memory_gb = 16.0
 measured = "the sidecar's measured peaks (1.8 GiB, 0.8 GiB of GPU memory, svallet) with room for the longer scenes and an agent's own client processes; the agent's container runs the client only"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -86,7 +86,7 @@ timeout_sec = 600.0
 environment_mode = "separate"     # tests/Dockerfile: the shared client base; transcribes the sim service's final.json, no network
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

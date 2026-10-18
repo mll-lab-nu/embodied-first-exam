@@ -22,8 +22,8 @@ simulator = "mujoco"
 robot = "foosball-rods"
 family = "foosball_match"
 mode = "standard-realtime"
-dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
-slowdown = 20                     # standard-realtime: the world runs at 1/S of real speed (docs/PROTOCOL.md §4b); RO_SLOWDOWN's default
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+slowdown = 20                     # standard-realtime: the world runs at 1/S of real speed (docs/protocol/README.md §4b); RO_SLOWDOWN's default
 protocol = "eai-standard-realtime/1.0"
 instance_seed = 7
 opponent_level = 3
@@ -40,7 +40,7 @@ oracle = "partial"
 oracle_evidence = "the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, ws-1; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial"
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 8.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 0.0
@@ -52,7 +52,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "RoboOlympics' exported matches (scripts/roboolympics/exported.toml): the values of the matches it measured on the 2.3 adapter (docs/benchmarks/roboolympics.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only, real time needs the cores"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -68,12 +68,12 @@ trial_max_memory_gb = 12.0
 measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 7
 allowed = [7]
@@ -84,7 +84,7 @@ timeout_sec = 1260.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

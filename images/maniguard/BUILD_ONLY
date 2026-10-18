@@ -1,5 +1,5 @@
 BUILD_ONLY: ghcr.io/mll-lab-nu/eai-maniguard:<images/maniguard/VERSION> is never pushed to a
-registry (docs/PROTOCOL.md §2.4, D5). Every evaluation host builds it locally; the ManiGuard tasks reference that tag and
+registry (docs/protocol/README.md §2.4, D5). Every evaluation host builds it locally; the ManiGuard tasks reference that tag and
 Harbor finds it in the local Docker image store.
 
 Why

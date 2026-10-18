@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# INVARIANT hook (docs/PROTOCOL.md Appendix H.2: no answer or pointer to one in the agent's reach), this benchmark's own:
+# INVARIANT hook (docs/protocol/README.md Appendix H.2: no answer or pointer to one in the agent's reach), this benchmark's own:
 # ci_checks/run_invariants.sh runs every scripts/*/ci/invariant-* hook with the task directories in scope; the hook
 # picks its benchmark's tasks (robopaint-*) and runs check_leak.sh on each.
 set -uo pipefail

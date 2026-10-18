@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for iSpatialGym (docs/benchmarks/ispatialgym.md; docs/STANDARD_MODE.md): the benchmark's
+"""eai-standard/2.2 sim service for iSpatialGym (docs/benchmarks/ispatialgym.md; docs/protocol/standard_mode.md): the benchmark's
 adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface (rcb_limited.serve): GET /spec, GET /status,
 POST /observe, POST /submit (RCB1 bodies and responses), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
 /out/final.json current. Nothing about objects, targets or the world frame ever leaves this process.

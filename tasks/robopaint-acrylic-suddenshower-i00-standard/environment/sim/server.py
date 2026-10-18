@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for the RoboPaint brush tasks (ManiSkill 3.0.1 Panda with a brush; the mark is the task's
-brush model in rcb_brush.py; see docs/STANDARD_MODE.md). Owns the scene and the sheets. HTTP surface (rcb_limited.py, the
+brush model in rcb_brush.py; see docs/protocol/standard_mode.md). Owns the scene and the sheets. HTTP surface (rcb_limited.py, the
 services' shared layer): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1 responses: videos / frames / depth /
 proprio as raw blobs, never base64), POST /kinematics (stateless FK / IK of the robot's model). Logs every call to /data/episode.jsonl.
 Nothing about the sheets except camera images ever leaves this process: no score, no record of the strokes, no exact canvas, no brush state,
@@ -12,14 +12,14 @@ Differences from the RoboLab service, all from the task:
   target at the 20 Hz control rate, one IK solve per control step (SAPIEN's Pinocchio CLIK, no collision checking), at most
   0.25 m/s (a faster row is slowed down and reported);
 - painting has no terminal state: the episode ends only when the agent phase ends (the collect hook) or on a simulator error;
-- the verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): when the collect hook ends the episode
+- the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): when the collect hook ends the episode
   (environment/sim/finalize.sh, after the agent's container is stopped) this service commits a stroke still pressed, scores its
   live main sheet with the graders' scorer and rules (rcb_brush_strict.py: the picture rule and the process rules, the same
   Session.score() the privileged verifier's replays use) and writes final.json at once ("graded_by": "live"); nothing is
   replayed to grade it. Then it renders the recorded trajectory once into replay.mp4 ("video_pending" while it runs; it never
   changes the verdict), sets "video_done" and exits; a frozen instance that does not rebuild here is refused at the start
   (instance_mismatch, an infrastructure failure), before the agent is served;
-- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step (the 7 joint targets given to
+- crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13): every executed control step (the 7 joint targets given to
   Session.step) is journaled and every completed call checkpointed with the state hash; after a crash compose restarts the
   container and this service replays the journal in its fresh process and continues the SAME episode. Resume class `exact`
   (PhysX on the CPU and the CPU brush models repeat bit for bit in a fresh process); the last ee_pose tip target is persisted

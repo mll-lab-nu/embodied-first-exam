@@ -77,7 +77,7 @@ succeed in one fresh replay and fail in the next, so a privileged twin, whose on
 chance. In standard mode the trusted service runs the episode and the agent never holds the simulator, so the live
 result is the verdict, as for every standard task. A live success may include some luck of the physics. An episode of
 the six that resumed after a service crash (resume class `approx`) is graded on its live state after the resume;
-`reward.json` reports `resumes` and `resume_state_mismatch` (docs/STANDARD_MODE.md §13.1). Their privileged task names
+`reward.json` reports `resumes` and `resume_state_mismatch` (docs/protocol/standard_mode.md §13.1). Their privileged task names
 are not used.
 Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts rebuild to the recorded hashes and a
 120-action driver trajectory ends in the same state as on the 4090; every graded trial reports `instance_exact`.
@@ -134,7 +134,7 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
   unfinalized `final.json`, the service never ended the episode) or the service gave up with `infra_error`;
   `replay_error`, `gpu_lost` and an `instance_mismatch` found by a replay are not the live episode's.
 
-## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
+## Crash recovery (standard mode, docs/protocol/standard_mode.md §13)
 Resume class `exact` (the resumed service is a fresh process whose journal replay is that process's first run), `approx` for
 the six standard-only tasks graded by the live episode. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test `scripts/robodojo/kill_test.sh`: RoboDojo
 has no oracle, so a driver client (12 joint_position chunks; not a solution) runs as Harbor's oracle on a copy of
@@ -144,7 +144,7 @@ finalized, no infrastructure error. The driver does not solve the task (success 
 
 ## Time budget
 3600 s for every task of both modes: each task's own `[agent] timeout_sec`, the generator's `CUTOFF_SEC` (PROTOCOL §2,
-RUNNING.md "The agent's time"). Every Python process pays ~2.5-4 min of Isaac Sim launch, scene build and RoboDojo's
+docs/protocol/running.md "The agent's time"). Every Python process pays ~2.5-4 min of Isaac Sim launch, scene build and RoboDojo's
 settling (a trial's first start also compiles shaders and materials), and many tasks are long (RoboDojo gives policies
 up to 1900 actions), so an hour holds about a dozen simulator starts at most.
 Every instruction states the cutoff in the closing `## Time limit` section (written by `task_conventions.normalize`

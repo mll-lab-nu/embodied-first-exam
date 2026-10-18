@@ -1,7 +1,7 @@
-"""eai-standard/2.2 sim service for MuJoCo Playground's quadruped tasks (docs/STANDARD_MODE.md): the adapter of the
+"""eai-standard/2.2 sim service for MuJoCo Playground's quadruped tasks (docs/protocol/standard_mode.md): the adapter of the
 shared layer rcb_limited.py; the simulator is rcb_quadruped.Session (plain MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants
-resets (RCB_RESET_BUDGET, the optional reset capability of docs/STANDARD_MODE.md / PROTOCOL §4.5; the quadrupeds'
+resets (RCB_RESET_BUDGET, the optional reset capability of docs/protocol/standard_mode.md / PROTOCOL §4.5; the quadrupeds'
 standard tasks default to 10 in their compose file, owner 2026-10-14). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's: one control step = the instance's control period (Go1, Spot: 1/50 s; Barkour:

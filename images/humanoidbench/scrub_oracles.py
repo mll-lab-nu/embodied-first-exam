@@ -10,7 +10,7 @@ WHAT GOES
   every get_reward()     THE SCORING FORMULA, plus the constants and weights that exist only to
   outside KEEP           parameterise it. Reading `Sit.get_reward()` turns "sit on the chair" into
                          "put qpos[2] in [0.68, 0.72]" -- control becomes inversion of an expression, and
-                         we measured an agent doing exactly that (docs/LEAKAGE.md).
+                         we measured an agent doing exactly that (docs/protocol/leakage.md).
 
   Deleting the methods is enough because upstream's own `Task.get_reward()` returns `(0, {})`: the base
   takes over, every environment still steps, and nothing else changes. `Session` sees the override is
@@ -24,7 +24,7 @@ WHAT GOES
 WHAT STAYS
   `get_terminated` (an agent discovers it in one rollout -- dynamics, not scoring), `get_obs`,
   `success_bar`, and any constant a class body still assigns: `_WALK_SPEED`/`_RUN_SPEED` via `_move_speed`, which
-  only get_reward read -- the move term's bound and margin, an open gap (docs/LEAKAGE.md).
+  only get_reward read -- the move term's bound and margin, an open gap (docs/protocol/leakage.md).
 
 THE FORMULA IS NOT LOST
   scripts/humanoidbench/rewards.json holds it -- built by running THIS script against a copy and diffing,
@@ -37,7 +37,7 @@ TWO PHASES, because `verify` imports the package it checks:
             an earlier one), before pip install.
   `verify`  runs after the install. Fails loudly if anything is left.
 
-See docs/LEAKAGE.md for the general checklist this implements.
+See docs/protocol/leakage.md for the general checklist this implements.
 """
 import ast
 import io
@@ -257,7 +257,7 @@ def drop_dead_globals(path: pathlib.Path, formula_read: set[str], live: set[str]
     robot-specific branch is a Store, so it neither keeps the constant alive nor breaks once the
     module-level line is gone. `_WALK_SPEED` fails the second test as applied here (a class body's
     `_move_speed = _WALK_SPEED` reads it, although only get_reward read `_move_speed`) and stays: the target speed
-    the instruction gives in words, but also the move term's bound and margin (an open gap: docs/LEAKAGE.md).
+    the instruction gives in words, but also the move term's bound and margin (an open gap: docs/protocol/leakage.md).
 
     extract_rewards.py runs this very function against a copy so rewards.json carries whatever it removes,
     and rcb_rewards.restore() puts them back into the module namespace before the methods compile.

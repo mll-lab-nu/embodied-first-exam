@@ -54,7 +54,7 @@ more than 50,000 rows) is `bad_trajectory`; `grader_error = 1` (with `infra_erro
 or ran out of time, a frozen instance this host did not rebuild).
 
 ## Compute resources
-Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
 
 | | Agent phase | Verifier |
 |---|---|---|
@@ -64,7 +64,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: L40S 48GB / L4 24GB / RTX 4090 24GB.
 - Measured: one standard trial: sim anon memory 17.5 GB, start-up CPU bursts to 29 cores, GPU 3.6 GB 15 min in, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); GPU memory and CPU from BEHAVIOR-1K (same OmniGibson / Isaac Sim stack) until more trials are measured; verifier 15.8 GB docker memory, mem_guard (docker memory per container, ws-1, 10-02..10)
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 30 GiB GPU memory, 25 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 30 GiB GPU memory, 25 GiB memory. Limits measured: GPU: 19.4 GiB on a 48 GB card, 18.1 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); no texture budget in its tooling) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 30 GiB GPU memory, 25 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 30 GiB GPU memory, 25 GiB memory. Limits measured: GPU: 19.4 GiB on a 48 GB card, 18.1 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); no texture budget in its tooling) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
 | | |

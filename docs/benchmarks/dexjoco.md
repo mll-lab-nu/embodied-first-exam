@@ -197,4 +197,4 @@ python3 scripts/dexjoco/generate.py && python3 scripts/dexjoco/generate.py --che
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.2`; `max_frames_per_call` = 1000. The service refuses the episode at its start with fewer than 4 CPUs (a give-up answered at once, STANDARD_MODE §13).
+Serves `eai-standard/2.2`; `max_frames_per_call` = 1000. The service refuses the episode at its start with fewer than 4 CPUs (a give-up answered at once, docs/protocol/standard_mode.md §13).

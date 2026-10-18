@@ -24,8 +24,8 @@ simulator = "mujoco"
 robot = "booster-t1"
 family = "soccer_jointmatch"
 mode = "standard-realtime"
-dynamics = "dynamic"              # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
-slowdown = 10                     # standard-realtime: the world runs at 1/S of real speed (docs/PROTOCOL.md §4b); RO_SLOWDOWN's default
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+slowdown = 10                     # standard-realtime: the world runs at 1/S of real speed (docs/protocol/README.md §4b); RO_SLOWDOWN's default
 protocol = "eai-standard-realtime/1.0"
 instance_seed = 101
 opponent_level = 5
@@ -47,7 +47,7 @@ oracle = "partial"
 oracle_evidence = "soccer-2v2-11, level 5 = our joint-level RL team (sports/soccer/rl/joint/v2: an omnidirectional gait trained with PPO at the joint level, about 1e9 steps, and an RL-trained strategy layer). The three frozen GPU-tier programs of GPT-6 Astra from our v5 pilot (developed on soccer-2v2-10 against level 2, unchanged) win 30 % of 90 practice matches against level 5 v2 (40 % against v1; against v1 on further seeds 48/150 = 32 % and 43 % of 150); a mirror match of v1 is even (24/50); scripted levels 2 and 3 never beat it (0/20, 0/40). Our joint-level reference team (the oracle) lost to level 5 v1 0:10 in both tasks on vanilla Harbor 0.23.0 (valid, replay identical, replay.mp4)"
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 16.0
 min_memory_gb = 24.0
 min_gpu_memory_gb = 0.0
@@ -59,7 +59,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "RoboOlympics' joint-level soccer pilot v5 (ws-1/2, 2026-10-15/17, docker stats): the agent's container uses its 6 cores (drills, CPU-parallel rollouts, practice matches), the sim up to its 6 cores (the world, the opponent, the cameras), the practice service up to 4 worlds on its 4 cores; CPU tier: no GPU"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -75,13 +75,13 @@ trial_max_memory_gb = 32.0
 measured = "the v5 pilot's seat caps (6 cores, 16 GB, processes 512: design default); whole trial: + the sim's and the practice service's 8 GB caps; provisional"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 6.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }
 practice = { cpus = 4.0, memory_gb = 8.0, pids = 256 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 101
 allowed = [101]
@@ -92,7 +92,7 @@ timeout_sec = 3960.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

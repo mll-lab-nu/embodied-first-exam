@@ -1,7 +1,7 @@
 """eai-standard/2.1 sim service for the MuJoCo tasks (DexToolBench, MuJoCo Playground): robot as a service.
 
 The sidecar owns the simulator (the task's tooling module, RCB_TOOL = rcb_dtb | rcb_aloha | rcb_panda, with the task's
-frozen instance) and serves the same wire protocol as the RoboTwin limited tasks (docs/STANDARD_MODE.md), so
+frozen instance) and serves the same wire protocol as the RoboTwin limited tasks (docs/protocol/standard_mode.md), so
 the agent uses the same client (rcb_client.py): GET /spec, GET /status, POST /observe, POST /submit, binary RCB1
 responses. What the agent gets: camera RGB (+ depth, with each camera's intrinsics and pose: the viewpoint the image is
 rendered from, recomputed for every response, and per frame for a camera that moves), the robot's own joint
@@ -14,7 +14,7 @@ out (only if RCB_DTB_GOAL_TIMEOUT_S > 0; the standard twins set 0), at RCB_MAX_C
 up; Playground episodes run until the agent phase ends and the final state is graded.
 
 Evidence under /data: episode.jsonl (every call), calls/NNNNNN/ (meta + actions), and at the end trajectory.npz
-((T, N) per control step), final.json and replay.mp4. The verdict is the live episode's (docs/PROTOCOL.md H.4; owner,
+((T, N) per control step), final.json and replay.mp4. The verdict is the live episode's (docs/protocol/README.md H.4; owner,
 2026-10-17, board 0151; graded_by = "live", replays = 0): the task's own rule on the episode this service ran
 (DexToolBench: every goal reached, the goal tracker running every live control step; Playground: the tooling's check() of
 the live final state); nothing is replayed to grade it. The collect hook ends the episode with SIGUSR1. final.json is
@@ -587,7 +587,7 @@ def do_reset(q: dict):
 
 
 def finalize() -> None:
-    """The verdict: the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151). The graded episode (every
+    """The verdict: the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151). The graded episode (every
     control step since the last reset) is saved as the trajectory, and the task's rule is read off the live simulator:
     DexToolBench, every goal reached (the goal tracker ran on every executed control step, as the privileged replay runs
     it); Playground, the tooling's check() of the final state. Nothing is replayed to grade it. final.json is finalized

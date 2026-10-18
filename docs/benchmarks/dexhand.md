@@ -863,7 +863,7 @@ larger stride, recorded as `video_stride` and `recording.playback_speed`) and ma
 slow ones), measured on an archive that holds the first oracle row for the family's whole row limit; `video_sec`,
 `verifier_privileged_sec` and `collect_sec` cover that longest archive with a 1.5x margin.
 
-**Standard** (`eai-standard/2.2`, docs/STANDARD_MODE.md Part 2). The agent gets the shared client (`rcb_client`) and no
+**Standard** (`eai-standard/2.2`, docs/protocol/standard_mode.md Part 2). The agent gets the shared client (`rcb_client`) and no
 simulator code. The `sim` sidecar (`scripts/dexhand/shared/standard/server.py` on the unmodified shared layer
 `scripts/eai_standard/`) serves calibrated RGB and depth, the robot's own joints, efforts and link poses and
 robot-link forward kinematics; object poses, contact forces, checker stages and scene bodies are not served. The
@@ -926,7 +926,7 @@ The standard wall time is the whole trial as measured with the collect hook's fo
 `budget.reset = 20`, DexToolBench's value (PROTOCOL §2): an essential family starts with the object already in the
 hand, every family ends an episode at the first failure (a dropped, slipped or knocked object, a bound exceeded), and
 the agent has no simulator of its own in standard mode, so with one episode the first slip decided the trial. The
-capability is the one of docs/STANDARD_MODE.md ("Optional reset capability"), implemented in the DexHand adapter
+capability is the one of docs/protocol/standard_mode.md ("Optional reset capability"), implemented in the DexHand adapter
 `scripts/dexhand/shared/standard/server.py` the way the MyoSuite 2.2 service implements it (the shared 2.2 layer has
 no reset): `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) calls the family's
 `Session.reset()` and returns the new episode's first frames; 409 after a success, once the budget is spent and after
@@ -1022,4 +1022,4 @@ rigid. In the wave-2 families coffee, batter, air, the liquid in a glass are not
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.2`. Resume class `exact` (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps). Its service implements the optional reset capability (STANDARD_MODE Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.
+Serves `eai-standard/2.2`. Resume class `exact` (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps). Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

@@ -1,6 +1,6 @@
 """DexHand adapter of the shared eai-standard/2.2 layer; physics stays in this process.
 
-The optional reset capability (docs/STANDARD_MODE.md "Optional reset capability", PROTOCOL §4.5) is added here, as the
+The optional reset capability (docs/protocol/standard_mode.md "Optional reset capability", PROTOCOL §4.5) is added here, as the
 MyoSuite 2.2 service adds it (the shared layer has none): with RCB_RESET_BUDGET = N > 0 (DexHand's compose files: 20),
 POST /reset abandons the running episode, or follows one that has ended, and starts a new one from the frozen start
 (Session.reset(): the same state hash as a fresh process); only the last episode is graded. A crash resume replays the

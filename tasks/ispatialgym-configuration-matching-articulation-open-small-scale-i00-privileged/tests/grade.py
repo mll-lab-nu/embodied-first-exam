@@ -1,7 +1,7 @@
 """Privileged-mode verifier (separate sandbox, no network): replays /app/output/trajectory.npz from the frozen instance
 (tests/instance.json, the copy both twins share, with this task's goal.json restored) in two fresh processes (rcb_ispatialgym.py replay). success = both replays
 succeed (upstream's geometric success at some control step; the replay stops there) and end in the same state, from a
-start that rebuilt as frozen. Numeric-only reward.json (docs/PROTOCOL.md Appendix H.1, H.4).
+start that rebuilt as frozen. Numeric-only reward.json (docs/protocol/README.md Appendix H.1, H.4).
 
 bad_trajectory: no readable (T, 23) float array `actions`, a value that is not a finite float32 (the simulator steps
 float32), more rows than the episode's control steps (facts.json max_steps), or a file larger than that many rows: score 0, no infrastructure error.

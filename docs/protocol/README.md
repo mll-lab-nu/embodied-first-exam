@@ -1,5 +1,12 @@
 # Robot Coding Bench — Task Protocol v2.0
 
+The protocol is the four documents in this folder: this README (the conventions a task follows, and the binding
+invariants of Appendix H), [`standard_mode.md`](standard_mode.md) (the `eai-standard/2.x` wire format of the standard
+modes), [`running.md`](running.md) (official-run configuration, seeds, retries, gateway, resource enforcement, results;
+enforced by the runner and scheduler) and [`leakage.md`](leakage.md) (where answer keys survive and how they are
+removed). Metadata values, names and run ids are in [`TAXONOMY.md`](../TAXONOMY.md); each benchmark's own choices in
+`docs/benchmarks/<bench>.md`.
+
 **Recommended conventions, and eight invariants that bind.** Sections 1–7 describe how a task is usually built, so that
 tasks from different benchmarks can be run, compared and reviewed the same way. They recommend; a task or a benchmark
 may choose otherwise and says so where its readers look (its `task.toml`, its README, `docs/benchmarks/<bench>.md`).
@@ -10,11 +17,7 @@ benchmark document can override them, and the required CI job `invariants` fails
 the runner refuses a run that would. The only setting Appendix H leaves to the task's author is the agent's network:
 the allowlist unless the task declares open egress (H.6).
 
-Documents: [`RUNNING.md`](RUNNING.md) (official-run configuration, seeds, retries, gateway, resource enforcement,
-results; enforced by the runner and scheduler), [`STANDARD_MODE.md`](STANDARD_MODE.md) (the `eai-standard/2.x` wire
-format), [`LEAKAGE.md`](LEAKAGE.md) (how answers leak), [`TAXONOMY.md`](TAXONOMY.md) (metadata values, names, run ids),
-`docs/benchmarks/<bench>.md` (each benchmark's own choices). Older tasks cite v1 section numbers (`PROTOCOL.md §2.10`);
-the table at the end maps them.
+Older tasks and code cite v1 section numbers (§2.10); the table at the end maps them.
 
 ## 1. What a task is
 
@@ -25,7 +28,7 @@ verifier decides internally) is the task's own business.
 | Recommended | Notes |
 |---|---|
 | `task.toml`, `instruction.md`, `README.md`, `environment/Dockerfile`, `tests/test.sh` (executable), `tests/Dockerfile`; `solution/solve.sh` when `oracle` is `full` or `partial` | `ci_checks/check-task-structure.sh` |
-| `[task].name = "robot-coding-bench/<folder>"`; `[metadata]` `author_name`, `task_type` (`trajectory` / `policy`), `simulator`, `robot` ([`TAXONOMY.md`](TAXONOMY.md)), `family`, `mode`, `expert_time_estimate_hours`, `oracle` (+ `oracle_evidence`), `protocol` (sidecar modes), the settings of §2 | `check-task-fields.sh`, `check-protocol.py` |
+| `[task].name = "robot-coding-bench/<folder>"`; `[metadata]` `author_name`, `task_type` (`trajectory` / `policy`), `simulator`, `robot` ([`TAXONOMY.md`](../TAXONOMY.md)), `family`, `mode`, `expert_time_estimate_hours`, `oracle` (+ `oracle_evidence`), `protocol` (sidecar modes), the settings of §2 | `check-task-fields.sh`, `check-protocol.py` |
 | The directory name `<base>-<mode>`, `<base>` = `<benchmark>-<family>-i<NN>` or the upstream name; no versions or durations in names | the mode is the whole suffix |
 | All task code in the directory, copied in by its Dockerfiles; base images hold the simulator and its assets; nothing imports repository code at run time | a task's identity is its directory (H.8) |
 | Generated tasks come with their generator (`scripts/<bench>/`), which ends with `scripts/task_conventions.py` `normalize`; re-running it reproduces the committed tasks | `check-generated-tasks.sh` |
@@ -39,7 +42,7 @@ Each task (or its benchmark's generator) chooses these and declares them; CI che
 each other, not that they take a particular value. The defaults are what templates write when a task says nothing.
 Every trial records its **effective configuration** (protocol version, mode, cutoff, reset budget, S, seed, network,
 validated; `scripts/task_conventions.py` `effective_config`), and results are ranked only among trials with the same
-configuration (`config_key`; RUNNING.md "Results").
+configuration (`config_key`; running.md "Results").
 
 | Setting | Declared in | Default |
 |---|---|---|
@@ -80,12 +83,12 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 | Recommended | Notes |
 |---|---|
 | `/logs/verifier/reward.txt` `1` or `0`; `reward.json` numbers only: `success`, `deterministic` (privileged trajectory tasks), `live_success` and `graded_by_live` (standard modes), `infra_error`, `sim_error`, `grader_error`, `progress`, the resource fields, cost fields (`n_actions`, `sim_steps`) | the same names wherever the concept applies |
-| Every graded trial leaves a playable video (`replay.mp4` in `/logs/verifier/` or the sim sidecar's collected directory) and the replayable trajectory it was graded on (privileged: the deliverable; standard: the sidecar's journal or `trajectory.npz`). The one expected exception: a privileged trial whose agent submitted no trajectory, or none that replays (`missing_trajectory`, `bad_trajectory`, no actions). Standard modes: recorded by the sidecar during the live episode where that is cheap (or where the simulator does not replay bit for bit), else rendered from the trajectory in one pass after the verdict (`live.mp4` / `replay.mp4`). The verdict is written before the video is rendered and never depends on it; the video's time bound covers the longest episode the cutoff allows | `check-video.py`; the runner flags a graded trial without a video and renders it from the trajectory (RUNNING.md "Recordings") |
+| Every graded trial leaves a playable video (`replay.mp4` in `/logs/verifier/` or the sim sidecar's collected directory) and the replayable trajectory it was graded on (privileged: the deliverable; standard: the sidecar's journal or `trajectory.npz`). The one expected exception: a privileged trial whose agent submitted no trajectory, or none that replays (`missing_trajectory`, `bad_trajectory`, no actions). Standard modes: recorded by the sidecar during the live episode where that is cheap (or where the simulator does not replay bit for bit), else rendered from the trajectory in one pass after the verdict (`live.mp4` / `replay.mp4`). The verdict is written before the video is rendered and never depends on it; the video's time bound covers the longest episode the cutoff allows | `check-video.py`; the runner flags a graded trial without a video and renders it from the trajectory (running.md "Recordings") |
 | Privileged: success judged on the end state of the replay; ≥ 2 replays with matching final-state hashes (`deterministic`), or one by the task's declared choice. A scene build does not depend on the host (sorted listings, no wall clock); an instance rebuilt with another state hash gives no verdict (`instance_mismatch`, an infrastructure failure). Standard modes: success judged by the sidecar on the live episode, with the task's own rule (a settle or hold window it declares is run on the live simulator); `reward.json` says `graded_by_live = 1`, `replays = 0` | within H.4; `check-live-verdict.py` |
 | An infrastructure failure is `infra_error = 1`: not a result, neither a success nor the agent's 0 (H.5) | `scripts/write_task_results.py` |
 | `nop` scores 0; with `oracle = "full"` the oracle scores 1 on every seed in `seeds.oracle` (`/validate`); a task without an oracle gets a human review (a positive example, the predicate, `nop` 0, determinism; recorded in the PR) | the `validated` marker (§2) |
-| Results report success with cost (tokens, money, turns, wall clock, simulation steps) per mode and per comparable configuration; run id `<harness>-<model>-<effort>`; not committed to the repository | RUNNING.md |
-| The easy set: task bases listed in [`easy_set.toml`](easy_set.toml) (solved through a shortcut, judged too easy by the benchmark owner, solved in every mode by the screening runs, or solved in any mode by the reference run `solved_by`) stay in the repository and are run, but are reported apart from the main table and left out of the headline statistics; each result records `set` (`core` / `easy`) as a marker, never part of the configuration. Listing a task changes none of its files | `task_conventions.py easy-set --check` |
+| Results report success with cost (tokens, money, turns, wall clock, simulation steps) per mode and per comparable configuration; run id `<harness>-<model>-<effort>`; not committed to the repository | running.md |
+| The easy set: task bases listed in [`easy_set.toml`](../easy_set.toml) (solved through a shortcut, judged too easy by the benchmark owner, solved in every mode by the screening runs, or solved in any mode by the reference run `solved_by`) stay in the repository and are run, but are reported apart from the main table and left out of the headline statistics; each result records `set` (`core` / `easy`) as a marker, never part of the configuration. Listing a task changes none of its files | `task_conventions.py easy-set --check` |
 
 ## 5. Instructions and information
 
@@ -93,9 +96,9 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 |---|---|
 | The instruction names the deliverable under `/app/output/` and never mentions `/tests/` | `check-instruction.sh` |
 | It states every convention the agent cannot infer: frames, quaternion order, units, action layout, client usage, the reset budget and S; world-frame quantities are decided per benchmark and consistent within it | benchmark hooks `scripts/<bench>/ci/advisory-*` |
-| It ends with three sections `normalize` renders: `## External material` (the honour rule: install packages and read what is installed, do not fetch a ready-made solution; the open-network paragraph for an open task), `## Resource limits`, `## Time limit` (`You have N seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.`, then what the cutoff means in the mode); no second statement of the limit | `check-cutoffs.py`, `check-resources.py` |
+| It ends with three sections `normalize` renders: `## External material` (the honour rule: install packages and read what is installed, do not fetch a ready-made solution; the open-network paragraph for an open task), `## Resource limits`, `## Time limit` (the cutoff and what it means in the mode: running.md "The agent's time"); no second statement of the limit | `check-cutoffs.py`, `check-resources.py` |
 | Everything a task needs at run time is in its image or directory; nothing tells the agent to download something | |
-| A trial that fetched a solution is flagged and judged case by case by the owner; installing a general-purpose package never is | RUNNING.md |
+| A trial that fetched a solution is flagged and judged case by case by the owner; installing a general-purpose package never is | running.md |
 
 ## 6. Resources
 
@@ -104,7 +107,7 @@ Each task states the smallest allocation it runs on (`[metadata.resources]`: `mi
 use (`[metadata.resources.limits]`, shown in `## Resource limits`), with the docker caps every compose service applies
 (`[metadata.resources.caps]`). Values come from measured peaks with a margin (`scripts/task_resources.toml`, written by
 `normalize`). A monitor sidecar records usage; whether a limit is enforced is the runner's switch (`RCB_LIMITS_ENFORCE`,
-off by default). Derivation, enforcement and the reward fields: RUNNING.md "Resources".
+off by default). Derivation, enforcement and the reward fields: running.md "Resources".
 
 ## 7. Versions
 
@@ -112,7 +115,7 @@ This text is **v2.0**. The wire protocol's versions:
 `eai-standard/2.1` (the base: `/spec`, `/status`, `/observe`, `/submit`, RCB1 frames), 2.2 (depth, kinematics, per-call
 bounds; shared layer `scripts/eai_standard/`), 2.3 (2.2 + realtime), 2.4 (2.3 + operation ids and deadlines; layer
 `scripts/eai_standard/v2_4/`). Minor versions only add; `/spec.protocol` equals `metadata.protocol`. A protocol change is
-an issue, then one pull request updating STANDARD_MODE.md, the reference implementation and an example task.
+an issue, then one pull request updating standard_mode.md, the reference implementation and an example task.
 
 ## Appendix H. Invariants (binding)
 
@@ -144,7 +147,7 @@ frozen instance, installed documentation) contains a solution of the task or a p
 file name, a demonstration or episode id, the name of the upstream expert or policy for this task. Upstream experts,
 recorded demonstrations and policies trained for the task are scrubbed from images; provenance lives in
 `scripts/<bench>/` and the README. *CI:* `check-agent-pointers.py`, each benchmark's `scripts/<bench>/ci/invariant-*`
-hooks; images are reviewed when built ([LEAKAGE.md](LEAKAGE.md)).
+hooks; images are reviewed when built ([leakage.md](leakage.md)).
 
 **H.3 Standard trust boundary** (standard and standard-realtime). The simulator, the scene, the frozen instance, the
 seed and the success predicate run in the `sim` sidecar; the agent's image holds no simulator or simulation code
@@ -174,7 +177,7 @@ sidecar grades against and the one the trial ran from are byte-identical copies.
 **H.5 Infrastructure retry.** Infrastructure failures allow at most one full retry with the same instance, seed, and
 configuration, clearing all agent and environment state. If that retry also fails, follow the default failure-handling
 behavior; no further retries. Normal task failures do not qualify. (At most two runs of a task under one run id; the
-voided attempt is moved aside and never counted. The rule is the runner's: `scripts/retry_policy.py`, RUNNING.md.)
+voided attempt is moved aside and never counted. The rule is the runner's: `scripts/retry_policy.py`, running.md.)
 *CI:* `scripts/tests/test_retry_policy.py`, `scripts/tests/test_runner_results.py`.
 
 **H.6 Egress.** During the agent phase the agent's container, and every service in its network namespace, reaches only
@@ -199,16 +202,16 @@ to a task by its digest; a changed file is a changed task. *CI:* `check-dataset-
 
 | v1 | Now |
 |---|---|
-| §0, D1–D12 | §2 (settings), §3 (modes), §7; D3/D4 §4; D5 §1; D8 §2, H.7; D10/D11 RUNNING.md |
+| §0, D1–D12 | §2 (settings), §3 (modes), §7; D3/D4 §4; D5 §1; D8 §2, H.7; D10/D11 running.md |
 | §1 checklist, §2.1–2.5 | §1, §5 |
 | §2.6 verifier | H.1 (isolation), §4 (fields) |
 | §2.7 solutions, oracle, nop | H.2, §4 |
 | §2.8 identity | H.8, §1 |
-| §2.9, §2.10 resources and limits | §6, RUNNING.md "Resources" |
-| §2.11 external material, network | §5, H.6, RUNNING.md "Network" |
-| §2.12 cutoff | §2, §5, RUNNING.md "The agent's time" |
-| §2.13 seeds | §2, RUNNING.md "Seeds" |
+| §2.9, §2.10 resources and limits | §6, running.md "Resources" |
+| §2.11 external material, network | §5, H.6, running.md "Network" |
+| §2.12 cutoff | §2, §5, running.md "The agent's time" |
+| §2.13 seeds | §2, running.md "Seeds" |
 | §2.14 dynamics, §2.15 modes shipped, §2.16 adding a mode | §2 (TAXONOMY.md "Dynamics"), §3, H.7 |
-| §3 privileged; §4, §4.1–4.9 standard; §4b realtime; §4c exported | §3, H.3, H.4, §4; wire details STANDARD_MODE.md |
-| §4.7 crash recovery | H.5 (retry); in-trial resume is an implementation detail of the shared layers (STANDARD_MODE.md) |
-| §5 results, token budget; §6 versioning; §7 migration | §4, RUNNING.md; §7; the migration is complete (no rule) |
+| §3 privileged; §4, §4.1–4.9 standard; §4b realtime; §4c exported | §3, H.3, H.4, §4; wire details standard_mode.md |
+| §4.7 crash recovery | H.5 (retry); in-trial resume is an implementation detail of the shared layers (standard_mode.md) |
+| §5 results, token budget; §6 versioning; §7 migration | §4, running.md; §7; the migration is complete (no rule) |

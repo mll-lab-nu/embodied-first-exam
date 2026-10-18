@@ -138,7 +138,7 @@ def sanitize(source, destination):
 
 
 def agent_sim_error(final: dict) -> bool:
-    """#282 review (RUNNING.md "Infrastructure failures", as in the standard-realtime twins, board 0151): simulator
+    """#282 review (docs/protocol/running.md "Infrastructure failures", as in the standard-realtime twins, board 0151): simulator
     errors of the control step itself (every errors[] entry where "world_step") after the program's first applied
     command are the program's result (a 0), never infrastructure; any other error of the trusted record stays infra."""
     # (#282 review round 4) the "replay" entry the service adds when its fresh-process replay of the journal fails (it

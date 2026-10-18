@@ -9,19 +9,19 @@ keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "c
 
 [metadata]
 author_name = "qineng"
-task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "robowits"            # RoboWits @ 9cc30ae on Genesis 0.4.7 (CPU physics backend, EGL rendering)
 robot = "marvin-bimanual"
 family = "collect_screws"
 mode = "privileged"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-collect-screws-i00-limi__xxcMFF8 (robowits-lunaxh-limited-0929, standard) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7). Re-graded with the 2026-10-14 grader (AMD hosts ws / ws3; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited robowits-collect-screws-i00__BQiUvZm passes the 2026-10-14 grader, also under Harbor -a oracle with it as the solution (ws3, 2026-10-14, reward 1; nop 0)."
 instance_seed = 0                 # scene = environment/instance.json (entry 0 of RoboWits' eval_dataset_50/10.json + expected state hash); identity = dataset.toml digest
 expert_time_estimate_hours = 1.0
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 2.0
 min_memory_gb = 6.0
 min_gpu_memory_gb = 2.0
@@ -34,7 +34,7 @@ verifier_min_gpu_memory_gb = 2.0
 measured = "GPU 0.5-1.4 GB (physics on the CPU, GPU renders the cameras), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.5 GB, privileged container p90 4.7 GB, verifier 2.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (single-threaded Genesis CPU backend)"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "trial"
 max_gpu_memory_gb = 6.0
@@ -50,12 +50,12 @@ trial_max_memory_gb = 16.0
 measured = "GPU: 1.4 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 5.1 GiB over 10 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
 blenderkit = { cpus = 1.0, memory_gb = 4.0, pids = 4096 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -66,7 +66,7 @@ timeout_sec = 1800.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # the replay needs no download: assets in the image, Genesis' caches seeded from instance.json
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

@@ -56,7 +56,7 @@ RESETS = 3            # the reset budget of both standard modes (PROTOCOL §2; d
 ADAPTER = HERE / "template/realtime/environment/sim/server.py"   # the one rcb_service.Sim adapter of both standard modes
 # The standard copy of the adapter: the same code under this docstring (the realtime twin's docstring describes its clock).
 STD_ADAPTER_DOC = '''"""eai-standard/2.1 sim service for Panda Dynamic Scenes' standard tasks -- the adapter behind the shared standard
-service layer (`python /srv/server.py`: rcb_service.main(build); docs/STANDARD_MODE.md Part 1, docs/benchmarks/pandadyn.md
+service layer (`python /srv/server.py`: rcb_service.main(build); docs/protocol/standard_mode.md Part 1, docs/benchmarks/pandadyn.md
 "Standard mode").
 
 The simulator-specific half only: `PandaDyn` implements rcb_service.Sim (the contract documented in rcb_service.py) for
@@ -156,7 +156,7 @@ def module_of(code: str) -> str:
     return m.group(1)
 
 
-# Standard mode's texts (STANDARD_MODE.md §10 as this benchmark declares it, docs/benchmarks/pandadyn.md, D7): the task's
+# Standard mode's texts (docs/protocol/standard_mode.md §10 as this benchmark declares it, docs/benchmarks/pandadyn.md, D7): the task's
 # goal geometry stays, the privileged tooling's names and the scene's physical parameters go. STD_SUB rewrites the
 # descriptions' wording for standard mode; STD_FORBIDDEN must not survive it.
 STD_SUB = [

@@ -7,7 +7,7 @@ task's success check on the whole trajectory). success = both replays succeed an
 /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders replay.mp4, after the
 verdict is on disk (it never changes it).
 
-Failures that are not the agent's (docs/PROTOCOL.md: infra vs agent failure) carry `grader_error` = 1 and `infra_error`
+Failures that are not the agent's (docs/protocol/README.md: infra vs agent failure) carry `grader_error` = 1 and `infra_error`
 = 1, so they are no verdict on the agent: a replay process that died or timed out, an image that no longer rebuilds the
 frozen start (`instance_mismatch`), and any exception of the verifier itself. A file the agent got wrong is the agent's
 0 (`bad_trajectory`, infra_error 0). Every reward.json carries success, deterministic, grader_error and infra_error.

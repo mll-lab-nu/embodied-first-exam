@@ -11,7 +11,7 @@ passes. A mutation that passes is a blind rule: fix the check, not this list.
     python3 ci_checks/check-ci-selftest.py [--tier invariants|advisory|all]    # default: all. Standard library only.
 
 Two tiers (board 0124). `--tier invariants` (the required CI job `invariants`, ci_checks/run_invariants.sh): the
-mutations of the rules that enforce docs/PROTOCOL.md Appendix H; each must FAIL its check. `--tier advisory` (the job
+mutations of the rules that enforce docs/protocol/README.md Appendix H; each must FAIL its check. `--tier advisory` (the job
 `advisories`): the mutations of the advisory rules; each must still be reported (a finding, not blocking).
 """
 from __future__ import annotations

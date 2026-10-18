@@ -27,14 +27,14 @@ simulator = "robodojo"
 robot = "arx-x5-bimanual"
 family = "make_toast"
 mode = "standard"                  # robot as a service: RGB, depth + proprioception only; no object poses, no success predicate, no reset
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142"
 expert_time_estimate_hours = 3.0
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 8.0
 min_memory_gb = 20.0
 min_gpu_memory_gb = 11.0
@@ -47,7 +47,7 @@ verifier_min_gpu_memory_gb = 11.0
 measured = "heaviest scene (pour_liquid_into_cup_random), a client driving 12 joint_position chunks, then the collect hook's two fresh-process replays (the first filmed): sim sidecar docker peak 16.0 GiB (anon 14.9), GPU 9.5 GiB, up to 16 cores while Isaac starts; agent container under 0.1 GiB; per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10 (the verifier phase then replayed as the privileged verifier does: docker peak 15.7 GiB, GPU 9.6 GiB); since 2026-10-17 (board 0151) the collect hook replays nothing: after the service exits it only encodes the live video on the CPU, so the sidecar's peak is the live service's"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -63,12 +63,12 @@ trial_max_memory_gb = 33.0
 measured = "GPU (sim sidecar): 9.5 GiB on the heaviest scene (sampler, RTX 4090, 10-10) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container max(1.5 x peak, peak + 4, 8) = 8 (a client under 0.1 GiB; no agent-trial sample yet); whole trial: + the sim sidecar's 25 GiB (docker peak 16.0 GiB); processes 512 and disk 20 GiB: design defaults"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 8.0, memory_gb = 16.0, pids = 16384 }
 sim = { cpus = 16.0, memory_gb = 25.0, pids = 16384 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -79,7 +79,7 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

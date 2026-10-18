@@ -1,4 +1,4 @@
-# Privileged mode: the agent and the simulator share this container (docs/PROTOCOL.md §3). eai-ispatialgym, with a layer
+# Privileged mode: the agent and the simulator share this container (docs/protocol/README.md §3). eai-ispatialgym, with a layer
 # that removes what states or solves a task and asserts nothing of it is left (scrub.sh, bind-mounted for the build only),
 # and this task's frozen start (instance.json, the copy the standard twin and the verifier also hold): no goal, no target,
 # no success check here; the verifier has them (tests/).

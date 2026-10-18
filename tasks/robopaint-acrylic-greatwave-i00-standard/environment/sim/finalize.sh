@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once the agent's container is stopped (the `main` hook's kill -9 -1).
-# The verdict is the live episode's (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151); nothing is replayed to grade it.
+# The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151); nothing is replayed to grade it.
 #   1. `rcb_limited.py end --wait-key video_done` (the first half every eai-standard/2.2 hook shares): SIGUSR1 to the service
 #      process that runs now (it may be resuming after a crash: no PID file until it is ready again). The service ends the
 #      episode, commits a stroke still in progress, scores its live main sheet with the graders' rcb_brush_strict.py (the

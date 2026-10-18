@@ -9,11 +9,11 @@ keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "code-as-
 
 [metadata]
 author_name = "qineng"
-task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "robolab"             # NVIDIA RoboLab v0.3.1 on Isaac Lab 2.3.2 / Isaac Sim 5.1 (PhysX on the CPU, RTX rendering)
 robot = "franka-robotiq-2f85"
 family = "@@FAMILY@@"
-mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/PROTOCOL.md §3)
+mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/protocol/README.md §3)
 oracle = "@@ORACLE@@"
 @@ORACLE_EVIDENCE_LINE@@instance_seed = @@SEED@@                 # scene = environment/instance.json (the full scene state after the seeded reset + its hash); identity = dataset.toml digest
 expert_time_estimate_hours = 1.0

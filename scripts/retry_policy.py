@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The infrastructure-retry rule (docs/PROTOCOL.md Appendix H.5; owner, 2026-10-14, board 0124), as one pure function
+"""The infrastructure-retry rule (docs/protocol/README.md Appendix H.5; owner, 2026-10-14, board 0124), as one pure function
 every runner applies and the required CI job `invariants` tests (scripts/tests/test_retry_policy.py):
 
     Infrastructure failures allow at most one full retry with the same instance, seed, and configuration, clearing all
