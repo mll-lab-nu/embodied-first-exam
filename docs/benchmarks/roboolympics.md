@@ -24,13 +24,14 @@ dynamic families are `roboolympics-fun-<family>-i00-standard-realtime`.
 | | |
 |---|---|
 | origin | built here on the simulator of [RoboOlympics](https://github.com/CHIGUI0/roboolympics) (MIT; private): its robot library `bodies/` (the Unitree G1 at revision g1-4 and the Unitree H1-2 at h1-4, the one limit and servo path, the joint-group arbiter, and the G1's optional FALCON and AGILE walking policies) and its athletics running policy, commit `7df999b`, unchanged, in the image. Parts of single families come from RoboOlympics' sports (the athletics start procedure and hurdle, the bowling lane and oil zones, the tennis ball's fitted lift, DeepMind's system-identified table-tennis ball and table and the serve library). The list of sports follows the owner's survey of humanoid sports tasks |
-| simulator | MuJoCo 3.3.7 on the CPU (1 ms physics, 10 ms control), OSMesa rendering, no GPU; sunlight with shadows, a painted sky, procedural materials on the venues' surfaces, patterned balls, and round each venue perimeter boards, stepped grandstands with a seated crowd, a roof, floodlight towers, a scoreboard and a line of trees, merged into one mesh per colour (`shared/rfo/looks.py`, after the venues of RoboOlympics' throws and beach volleyball: looks only, no effect on the physics or the state hash); air at sea-level density (drag and Magnus lift on balls and implements); `simulator = "mujoco"` |
+| simulator | MuJoCo 3.3.7 on the CPU (1 ms physics, 10 ms control), OSMesa rendering, no GPU; sunlight with shadows, a painted sky, procedural materials on the venues' surfaces, patterned balls, and round each venue perimeter boards, stepped grandstands with a seated crowd, a roof, floodlight towers, a scoreboard and a line of trees, merged into one mesh per colour (`embodied_first_exam/roboolympics-fun/rfo/looks.py`, after the venues of RoboOlympics' throws and beach volleyball: looks only, no effect on the physics or the state hash); air at sea-level density (drag and Magnus lift on balls and implements); `simulator = "mujoco"` |
 | robots | `unitree-g1` (1.32 m, 33 kg, 29 joints; three walking policies and a running policy) and `unitree-h1-2` (1.78 m, 67 kg, 27 joints; a walking policy) where the official venue needs an adult-size body; real joint, speed and torque limits, motor torque-speed curves (the H1-2's are estimates), self-collision; fist pads with a switchable grip; in six families no weld at all: bare palms that hold a ball by friction (two), or Unitree Dex1-1 two-finger grippers (four) |
 | actions | views of one sim row per control step: `stand`, `walk`, `joints`, `lowcmd` (Unitree's LowCmd: q, dq, tau, kp, kd per joint), and on the G1 `run`, `run_arms`; every row ends with `grip_left`, `grip_right` |
 | score | the referee's verdict: every stage latched in order, no rule broken, within the time limit; binary. `progress` (stages reached) and the family's metrics (a distance, a speed, a count) are reported beside it |
 | tasks | 60 families × 2 modes: `tasks/roboolympics-fun-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 120 task directories, plus the 16 dynamic families' `-standard-realtime` twins (`eai-standard/2.3`), 136 in all (the tasks RoboOlympics exports itself: [RoboOlympics-Match](roboolympics-match.md)) |
 | image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` (with libglvnd's EGL loader and the NVIDIA EGL manifest, for the realtime twins' GPU rendering) (`images/robofunolympics/`, about 600 MB) |
-| generator | `scripts/roboolympics/gen_tasks.py render` / `check` from `families.json`, `shared/`, `templates/`, `oracles/` and the frozen instances and standard reference rows, whose one committed copy is in the task dirs (`environment/instance.json` of the privileged task, `solution/rows.npz` of the standard task; read back by the generator); a family is one module, `shared/rfo/tasks/<family>.py` (`scripts/roboolympics/AUTHORING.md`, `FAMILIES.md`) |
+| files image | `ghcr.io/mll-lab-nu/eai-roboolympics-fun-files:0.1.0` (files only, public; `images/roboolympics-fun-files/FILES.json` pins it by digest; `scripts/files_image.py`): the tooling `rcb_rfo.py`, the `rfo` package's core (`rfo/*.py` without `rfo/tasks/`), the privileged grader `grade.py` and the standard grader `standard/grade.py`, built from their one source `embodied_first_exam/roboolympics-fun/`. The privileged tasks' `environment/Dockerfile` (to `/opt/tools/`) and `tests/Dockerfile` (to `/tests/`) and the standard and standard-realtime `tests/Dockerfile` (`/tests/grade.py`) take them with `COPY --from`, at the paths a copy in the task had; a task dir holds only the family's `rfo_task.py`, the instance and its own files, and the standard sidecars' `environment/sim/` keep their copies |
+| generator | `scripts/roboolympics/gen_tasks.py render` / `check` from `families.json`, `embodied_first_exam/roboolympics-fun/`, `templates/`, `oracles/` and the frozen instances and standard reference rows, whose one committed copy is in the task dirs (`environment/instance.json` of the privileged task, `solution/rows.npz` of the standard task; read back by the generator); a family is one module, `embodied_first_exam/roboolympics-fun/rfo/tasks/<family>.py` (`scripts/roboolympics/AUTHORING.md`, `FAMILIES.md`) |
 | oracle | full on the families that have a real controller in the official setting, none on the rest (table below), with a referee test and human review |
 | agent budget | 7200 s in both modes (each task's own `[agent] timeout_sec`: the tasks ask the agent to find, download and adapt controllers, or to build one, which an hour does not hold); standard mode: 50 resets, the last attempt graded |
 | network | open (`[metadata] network = "open"`, below) |
@@ -42,7 +43,7 @@ dynamic families are `roboolympics-fun-<family>-i00-standard-realtime`.
 | 60 tasks, one robot each, each with a success check; an oracle where there is one, none otherwise | `oracle = "full"` only where a real controller succeeds in the official setting, `"none"` + human review elsewhere; every family has a referee test with a positive example and negative controls |
 | both modes | every family as `-privileged` and `-standard` on one frozen instance |
 | the agent may go online and download ready-made policies, and is encouraged to look for tools | open egress and the benchmark's own `## External material` paragraph; the action interface takes what public humanoid controllers produce: Unitree's SDK joint order, `lowcmd` rows with per-joint gains and feed-forward torques at 100 Hz |
-| the simulator is RoboOlympics' | the image holds RoboOlympics' robot library and running policy unchanged (`images/robofunolympics/roboolympics/SOURCE.md`, sha256 manifest); the venues, the action layer and the referees are this benchmark's own code, in the task directories |
+| the simulator is RoboOlympics' | the image holds RoboOlympics' robot library and running policy unchanged (`images/robofunolympics/roboolympics/SOURCE.md`, sha256 manifest); the venues, the action layer and the referees are this benchmark's own code (`embodied_first_exam/roboolympics-fun/`; the tasks take it from the files image above, the standard sidecars from their `environment/sim/` copies) |
 | **real settings, not an easy one** (nothing scaled to the G1 so that reference solutions exist) | official rule-book dimensions, equipment masses and ball physics in every family; a family names its rule book and lists each deviation with its reason (RoboOlympics' convention), and a deviation is never "easier"; a success line is the rule book's (a goal, a legal serve, a strike, a cleared bar) or a named human school / club mark, never what a controller reaches |
 | all humanoid; the bigger H1-2 where the G1 cannot reach the official size | `Task.robot`; 25 families on the G1, 35 on the H1-2 |
 | single actions, not matches | one attempt of one skill per episode; a feeder, a server or a keeper is scripted and deterministic |
@@ -153,7 +154,7 @@ paddles and clubs are fixed to a hand.
 Six families hold nothing by a weld. In `dunk-realgrasp` and `dunk-between-legs` nothing is grippable: the ball is
 held by pressing it between the two palm pads (a soft, damped palm contact, friction only) and slips out if the arms
 squeeze too little or accelerate too hard. In `tennis-return-realgrasp`, `tennis-serve-realgrasp`, `badminton-serve`
-and `jump-rope` a hand carries Unitree's Dex1-1 two-finger gripper instead of its pad (`shared/rfo/realhand.py`: 90 mm
+and `jump-rope` a hand carries Unitree's Dex1-1 two-finger gripper instead of its pad (`embodied_first_exam/roboolympics-fun/rfo/realhand.py`: 90 mm
 stroke, up to 120 N, a setpoint opening at 375 mm/s (the jaws briefly reach about 0.45 m/s when a clamp springs open),
 0.55 kg; one degree of freedom, both jaws coupled; the Dex1-1 is sold for the G1, not the H1-2, a deviation where it is
 used on the H1-2; one command without the device's separate speed and force settings, no 5 N minimum force, and pads
@@ -179,7 +180,7 @@ target and set a toss into the hitter's: these six are reference solutions.
 
 ## The referee
 
-Every family judges with the same toolkit (`shared/rfo/referee.py`), from the simulator's state after every physics
+Every family judges with the same toolkit (`embodied_first_exam/roboolympics-fun/rfo/referee.py`), from the simulator's state after every physics
 step:
 
 - **Stages.** The events that must happen, in order (`kick → goal`, `take-off → landing → stand`). A stage whose
@@ -236,7 +237,7 @@ launched, served, thrown or released on the venue's clock, or a keeper driven af
 penalty-kick, table-tennis-return, tennis-return, tennis-return-realgrasp, trap-ball, volley-shot, volleyball-bump,
 volleyball-set, volleyball-spike.
 - **Service.** The standard twin's `server.py` (`rcb_service.Sim` on `rcb_rfo.Episode`), unchanged, started by the
-  shared realtime layer (`shared/realtime/rcb_realtime.py`, `rcb_client.py`: HumanoidBench's, byte for byte;
+  shared realtime layer (`embodied_first_exam/roboolympics-fun/realtime/rcb_realtime.py`, `rcb_client.py`: HumanoidBench's, byte for byte;
   `command: python /srv/rcb_realtime.py`). Same instance, referee, actions, observations and grading (the live
   attempt's referee call); the clock's record goes to `reward.json` and decides nothing.
 - **Rendering on the GPU.** An OSMesa frame of these venues takes about 1.6 s, which on a clock that does not stop is a
@@ -281,7 +282,7 @@ measure. What follows:
 ## Determinism and grading
 
 The world is deterministic on the CPU: the same sim rows from the frozen start give the same state hash (simulator
-state, controllers' memory, grips, the referee's record). Privileged: `tests/grade.py` replays the trajectory in two
+state, controllers' memory, grips, the referee's record). Privileged: `/tests/grade.py` replays the trajectory in two
 fresh processes; `success` = both succeed ∧ the final hashes agree; an unreadable file or a row that is no sim row is
 the agent's 0 (`bad_trajectory`), a replay that does not finish is `grader_error`. Standard and standard-realtime: the
 live episode is the verdict (PROTOCOL H.4). The sidecar journals every executed sim row, the collect
@@ -291,7 +292,7 @@ pass from `trajectory.npz` (`video_source` render). No grading replay runs. The 
 happens and ends the attempt; there is no hold or settle window. The frozen
 start is checked on the live simulator. `server.py`'s build() refuses a world that does not start at the instance's
 `t0.state_sha` (InstanceMismatch), and `start_sha` makes the layer void a graded attempt begun by a reset that did not
-return there; both are `instance_mismatch`, `infra_error 1` (a reset returns to that hash bit-exactly). `tests/grade.py` reads `final.json`. A crash
+return there; both are `instance_mismatch`, `infra_error 1` (a reset returns to that hash bit-exactly). `/tests/grade.py` reads `final.json`. A crash
 resumes the same attempt from the journal (`rcb_service.py`, shared with HumanoidBench, KinDER, VLABench and BiGym 2.0).
 `scripts/roboolympics/tests/test_live_adapter.py` (numpy, no image) tests the adapter's part.
 
@@ -427,6 +428,9 @@ Build the image: `scripts/build_images.sh` (context `images/robofunolympics/`). 
 /rfo/make_oracles.py`, `python3 scripts/roboolympics/gen_tasks.py render`, `cd tasks && harbor add --scan .`, then delete
 the files the two scripts wrote that the task dirs now hold (`scripts/roboolympics/instances/`,
 `scripts/roboolympics/oracles/*/standard_rows.npz`; while they exist the generator reads them instead of the task dirs).
+After a change to a file the files image carries (`images/roboolympics-fun-files/FILES.json`): bump `images/roboolympics-fun-files/VERSION`, `python3 scripts/files_image.py build roboolympics-fun-files`, push, `python3
+scripts/files_image.py pin roboolympics-fun-files <digest>`, then point the tasks' `COPY --from` lines at the new digest
+(`files_image.py check` fails until the image matches the sources).
 
 ## Tasks exported by RoboOlympics (its own service inside the task; PROTOCOL §3)
 

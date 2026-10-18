@@ -65,7 +65,7 @@ UNITS: dict[str, list[str]] = {
     "LIBERO-MAX": _own("libero-max"),
     "RoboARC": _own("roboarc"),
     # one generator directory, two benchmarks (board 0160): a change under scripts/roboolympics/ is in both
-    "RoboOlympics-Fun": _own("roboolympics", "images/robofunolympics/"),
+    "RoboOlympics-Fun": _own("roboolympics", "images/robofunolympics/", "images/roboolympics-fun-files/"),
     "RoboOlympics-Match": ["scripts/roboolympics/", "images/olympiad/", "docs/benchmarks/roboolympics-match.md"],   # eai-olympiad: built from RoboOlympics' tree, not here
     "BiGym 2.0": _own("bigym2"),
     "YAMLab": _own("yamlab"),
