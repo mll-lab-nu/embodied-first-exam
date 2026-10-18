@@ -11,7 +11,7 @@
 #      moving, what BEHAVIOR-1K's tasks already cover on the same robot and scenes). 23 -> 14.
 #   2. Within a task, the first subtask in upstream's index (metadata/instances.jsonl) that is valid here: its instance
 #      loads, holding still for the whole episode does not succeed, and two fresh replays of the same actions end in the
-#      same state (`mk_tasks.py measure`, written to instances/<task>/facts.json).
+#      same state (`mk_tasks.py measure`, the instance's facts.json).
 #   3. Instance 0 of that subtask (the release has one per subtask).
 #   4. Both modes must keep the answer out of the privileged agent's reach while its simulator stays the grader's (the
 #      start instance holds no target, and the same rows give the same states as the scoring side's). Two tasks cannot:

@@ -1,9 +1,10 @@
 # eket closed-loop reference
 
-`eket_ref.npz` is the one reference for both modes of `ikea-eket-i00` (privileged `solution/trajectory.npz`, standard
-`solution/oracle_actions.npz`). Its rows are the EXECUTED targets: `data.ctrl` after `rcb_ikea.Session.applied()`. Every row
-is within the arm joint-speed limits + 1e-9 of the previous row, starting from the keyframe ctrl, so the clamp never
-changes a row on replay. Keys: `ctrl` (70210, 16) float64, `substeps` 4, `timestep` 0.000625, `actuators`.
+The one reference for both modes of `ikea-eket-i00` is kept in the task directories only: the standard
+`tasks/ikea-eket-i00-standard/solution/oracle_actions.npz`, the same file as the privileged `solution/trajectory.npz`.
+Its rows are the EXECUTED targets: `data.ctrl` after `rcb_ikea.Session.applied()`. Every row is within the arm
+joint-speed limits + 1e-9 of the previous row, starting from the keyframe ctrl, so the clamp never changes a row on
+replay. Keys: `ctrl` (70210, 16) float64, `substeps` 4, `timestep` 0.000625, `actuators`.
 
 The physics is the final one: the prism rule, fix 3b dowels, the arm clamp, MuJoCo 3.14.0 with the EPA byte patch, and
 numpy SIMD masking.
@@ -20,7 +21,9 @@ numpy SIMD masking.
 
 Rebuild: `python rec_guide.py runs/guide.npz && python build_ref.py --out runs/b3` (scene dir on `IKEA_SCENES`, the
 shared `rcb_ikea.py` on `PYTHONPATH`, the demo at `EKET_DEMO`, the masking variables set). The result is bit-identical
-to `eket_ref.npz`.
+to that reference. A new build is rendered into both task directories by dropping its `ref.npz` here as
+`eket_ref.npz` (`scripts/ikea_mujoco/mk_tasks.py` and `mk_standard_tasks.py` take it while it exists); delete it after
+that (`oracles/*/*.npz` is git-ignored).
 
 ## Phases (demo rows; the left arm moves the panels, the right arm holds the top)
 | phase | demo rows | gate (eket_ops / success.py) | closed loop |
@@ -60,7 +63,7 @@ ticks. The correction stays in the arm's offset. Once the arm's gripper is open 
 The servo ticks are inserted rows, so the reference is 1304 rows longer than the demo.
 
 ## Verification (2026-10-16)
-- **Reference.** `eket_ref.npz`: sha256 `a55a377945679794cfa50127e88c628e0e38cbffb095b5dbc9194ba0d74336a5`, 70210 rows (175.5 s
+- **Reference.** sha256 `a55a377945679794cfa50127e88c628e0e38cbffb095b5dbc9194ba0d74336a5`, 70210 rows (175.5 s
   of simulated time). 0 rows over the limit + 1e-9; the largest step is 1.000000000000038 x the limit (a clamped step).
   Rebuilt twice from `build_ref.py`, bit-identical.
 - **Fresh replays.** `final_check()` passes. End state `0a38212b16dc6143…`, settled `fe1fe33a3ad667c0…`. The hashes match
