@@ -1,0 +1,221 @@
+{
+  "bank": {
+    "adaptation": [
+      {
+        "duration": 20.0,
+        "episode_seed": 171003,
+        "plant_seed": 11100,
+        "speed": 0.5,
+        "terrain": "flat"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171004,
+        "plant_seed": 11100,
+        "speed": 0.6,
+        "terrain": "slope"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171005,
+        "plant_seed": 11100,
+        "speed": 0.65,
+        "terrain": "rough"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171006,
+        "plant_seed": 11100,
+        "speed": 0.5,
+        "terrain": "steps"
+      }
+    ],
+    "held_out": [
+      {
+        "duration": 20.0,
+        "episode_seed": 171103,
+        "plant_seed": 11100,
+        "speed": 0.5,
+        "terrain": "flat"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171104,
+        "plant_seed": 11100,
+        "speed": 0.6,
+        "terrain": "slope"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171105,
+        "plant_seed": 11100,
+        "speed": 0.65,
+        "terrain": "rough"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171106,
+        "plant_seed": 11100,
+        "speed": 0.5,
+        "terrain": "steps"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171107,
+        "plant_seed": 11100,
+        "speed": 0.6,
+        "terrain": "flat"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171108,
+        "plant_seed": 11100,
+        "speed": 0.65,
+        "terrain": "slope"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171109,
+        "plant_seed": 11100,
+        "speed": 0.5,
+        "terrain": "rough"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171110,
+        "plant_seed": 11100,
+        "speed": 0.6,
+        "terrain": "steps"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171111,
+        "plant_seed": 11100,
+        "speed": 0.65,
+        "terrain": "flat"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171112,
+        "plant_seed": 11100,
+        "speed": 0.5,
+        "terrain": "slope"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171113,
+        "plant_seed": 11100,
+        "speed": 0.6,
+        "terrain": "rough"
+      },
+      {
+        "duration": 20.0,
+        "episode_seed": 171114,
+        "plant_seed": 11100,
+        "speed": 0.65,
+        "terrain": "steps"
+      }
+    ]
+  },
+  "evaluation_requirements": {
+    "device_isolation_verified": true,
+    "gpu_devices": [],
+    "mujoco_version": "3.5.0",
+    "physics": "mujoco-cpu",
+    "policy_inference": "numpy-cpu",
+    "render_backend": "osmesa"
+  },
+  "family": "g1",
+  "index": 1,
+  "name": "g1",
+  "public": {
+    "adaptation_cases": 4,
+    "channels": [
+      "left_hip_pitch_joint",
+      "left_hip_roll_joint",
+      "left_hip_yaw_joint",
+      "left_knee_joint",
+      "left_ankle_pitch_joint",
+      "left_ankle_roll_joint",
+      "right_hip_pitch_joint",
+      "right_hip_roll_joint",
+      "right_hip_yaw_joint",
+      "right_knee_joint",
+      "right_ankle_pitch_joint",
+      "right_ankle_roll_joint",
+      "waist_yaw_joint",
+      "waist_roll_joint",
+      "waist_pitch_joint",
+      "left_shoulder_pitch_joint",
+      "left_shoulder_roll_joint",
+      "left_shoulder_yaw_joint",
+      "left_elbow_joint",
+      "left_wrist_roll_joint",
+      "left_wrist_pitch_joint",
+      "left_wrist_yaw_joint",
+      "right_shoulder_pitch_joint",
+      "right_shoulder_roll_joint",
+      "right_shoulder_yaw_joint",
+      "right_elbow_joint",
+      "right_wrist_roll_joint",
+      "right_wrist_pitch_joint",
+      "right_wrist_yaw_joint"
+    ],
+    "command_channels": [
+      "forward_velocity",
+      "lateral_velocity",
+      "yaw_rate"
+    ],
+    "command_units": [
+      "m/s",
+      "m/s",
+      "rad/s"
+    ],
+    "evaluation_backend": "native MuJoCo CPU",
+    "feedback": "Video frames and noisy measurements only; no deployment scores, contacts, parameters, seeds or true state. Diagnosis is a short observation/change/prediction, not private reasoning.",
+    "goal": "Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5\u20130.65 m/s for 18 s.",
+    "held_out_cases": 12,
+    "image_interval_s": 1.0,
+    "limitations": "Simulation transfer only, not hardware. Fixed 98\u2192512\u2192256\u2192128\u219229 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images.",
+    "max_rounds": 3,
+    "name": "g1",
+    "policy_abi": "numeric fixed MLP NPZ (8 MiB maximum)",
+    "protocol": "eai-policy/1.1",
+    "schema": "control-transfer/1",
+    "score": "100 * walking survival fraction * exp(-speed MAE/commanded speed) * clipped forward-progress fraction. Success requires full 20 s survival, speed MAE<0.25 m/s, forward travel>65% of commanded walking distance, lateral drift<2 m. Standing still scores zero.",
+    "training_backend": "mjlab / MuJoCo Warp GPU",
+    "units": [
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad",
+      "rad"
+    ]
+  },
+  "schema": "control-transfer-instance/2",
+  "transfer_track": "same-plant"
+}

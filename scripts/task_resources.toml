@@ -2905,32 +2905,34 @@ main = { cpus = 6.0, memory_gb = 16.0, pids = 8192 }
 match = "^roboolympics-tabletennis-match-i[0-9]{2}-privileged$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
-# roboEngineer (#329; docs/benchmarks/roboengineer.md): CPU MuJoCo with OSMesa software rendering everywhere (the agent's
-# nominal simulator, the private evaluator sidecar), numeric policies only; no GPU. The sidecar runs the deployments
-# and the held-out evaluation (two fresh processes per case).
+# roboEngineer (#329; docs/benchmarks/roboengineer.md): CPU MuJoCo with OSMesa software rendering in the private
+# evaluator sidecar, numeric policies only; the agent's nominal simulator is CPU MuJoCo too, except G1 (below), whose
+# agent trains on one GPU. The sidecar runs the deployments and, in the verifier phase (its collect hook), the held-out
+# evaluation (two fresh processes per case, four workers) and the video. Memory minimums count the agent's whole docker
+# cap (its limit is recorded, not enforced, unless RCB_LIMITS_ENFORCE=1) + the sidecar's measured peak x 1.2.
 [[rule]]
 match = "^roboengineer-landing-.*-standard$"
-min_cpus = 6.0
+min_cpus = 4.0
 min_memory_gb = 8.0
 min_gpu_memory_gb = 0.0
 gpu_required = false
 gpu_class = "none"
-verifier_min_cpus = 1.0
-verifier_min_memory_gb = 1.0
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "Harbor 0.23 oracle / nop on aws:rcb-cpu3 (2026-10-18; the author: an 8-vCPU / 16-GiB c7i.2xlarge): the sidecar's reference search before the agent ~520 s on its 4 CPUs, finalization + video ~150 s; the verifier only reads JSON (~20 s)"
+measured = "Harbor 0.23 oracle on aws:rcb-cpu3 (2026-10-18, board 0165; docker stats + cgroup memory.peak every 3-6 s): the sidecar holds its 4-CPU cap through the reference search before the agent (~480 s, the agent's container idle) and the finalization (136 s), peak 1.18 GiB; the sidecar 1-2 cores during deployments; the agent's container 0.06 GiB. Minimum = the agent's 6 GB cap (its 4 GiB limit is recorded, not enforced, by default) + the sidecar's peak x 1.2 + the monitor's 0.25 GB; CPU = the sidecar's 4 (never at the same time as the agent's work: the agent waits for its health check, and is stopped before finalization), the agent's 2-core cap + ~2 during deployments; verifier phase = the sidecar's collect hook (4 cores, <= 2.13 GiB x 1.2 + the monitor); the verifier itself only reads JSON (~20 s)"
 
 [[rule]]
 match = "^roboengineer-(neuralfly|anycar|go2)-.*-standard$"
-min_cpus = 6.0
-min_memory_gb = 12.0
+min_cpus = 4.0
+min_memory_gb = 9.0
 min_gpu_memory_gb = 0.0
 gpu_required = false
 gpu_class = "none"
-verifier_min_cpus = 1.0
-verifier_min_memory_gb = 1.0
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "Harbor 0.23 oracle / nop on aws:rcb-cpu3 (2026-10-18): finalization (held-out x2, 4 workers) + video 76-217 s on the sidecar's 4 CPUs; the verifier only reads JSON (~20 s)"
+measured = "Harbor 0.23 oracle on aws:rcb-cpu3 (2026-10-18, board 0165: anycar-tracking, anycar-compact-lap-monaco-6, anycar-tight-drift-park, neuralfly-general-skydio, go2-weave; docker stats + cgroup memory.peak every 3-6 s): sidecar 1.7-1.9 cores during deployments, its 4-CPU cap during finalization (held-out x2, 4 workers, + video: 79-199 s), peak 0.6-2.13 GiB (go2-weave); the agent's container <= 0.23 GiB. Minimum = the agent's 6 GB cap (its 4 GiB limit is recorded, not enforced, by default) + the sidecar's peak x 1.2 + the monitor's 0.25 GB; CPU = the agent's 2-core cap + the sidecar's ~2 during deployments, the sidecar's 4 after the agent is stopped; verifier phase = the sidecar's collect hook (4 cores, <= 2.13 GiB x 1.2 + the monitor); the verifier itself only reads JSON (~20 s)"
 
 [[limit]]
 match = "^roboengineer-.*-standard$"
@@ -2945,9 +2947,37 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 12.0
-measured = "the reference runs (2026-10-18) peaked at 0.04 GiB in the agent's container; 4 GiB (the author's budget) leaves room for an agent's own nominal training; processes / disk: design defaults"
+measured = "the reference runs (2026-10-18, board 0165) peaked at 0.23 GiB in the agent's container; 4 GiB (the author's budget) leaves room for an agent's own nominal training; processes / disk: design defaults"
 
 [[cap]]
 match = "^roboengineer-.*-standard$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 6.0, pids = 8192 }
+
+# roboEngineer G1 (docs/benchmarks/roboengineer-g1.md): the agent trains its blind walking policy with mjlab / MuJoCo
+# Warp on one GPU in its own container (the compose file reserves it for `main`); the sidecar evaluates on the CPU.
+[[rule]]
+match = "^roboengineer-g1-.*-standard$"
+min_cpus = 6.0
+min_memory_gb = 15.0
+min_gpu_memory_gb = 20.0
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "L40S 48GB (all measurements; a 24 GB card fits the memory but trains slower, so fewer iterations fit the cutoff)"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "Harbor 0.23 oracle (the reference: 4096 environments, 12638 s of training and deployments) and smoke trials on aws:rcb-gpu14 / -gpu13 (L40S, 2026-10-18, board 0165; docker stats + cgroup memory.peak + nvidia-smi per container every 3-6 s): the agent's container 16.1 GiB (16492 MiB) of GPU memory, 5.3 GiB memory (5.6 GiB cgroup peak, growing over the 3.5 h run), 1.0-1.6 cores (one Python thread drives the GPU); the public trainer's default 256 environments 1.8 GB, its cap of 1024 4.7 GB; the sidecar 2.2-2.6 cores during deployments (OSMesa), its 4-CPU cap during finalization (12 held-out cases x 2 + video: 419 s), peak 2.06 GiB. Minimum: GPU = 16.1 GiB x 1.15 = 18.5, raised to 20 (headroom for the pool's VRAM reservation); memory = the agent's 12 GB cap + the sidecar's peak x 1.2 + the monitor; CPU = the sidecar's ~2.5 during deployments + the training's 1.6, rounded up to leave the agent's 4-core cap some room; the monitor: <= 0.86 GiB of new files, <= 6 processes"
+
+[[limit]]
+match = "^roboengineer-g1-.*-standard$"
+max_gpu_memory_gb = 20.0
+max_memory_gb = 10.0
+trial_max_gpu_memory_gb = 20.0
+trial_max_memory_gb = 16.0
+measured = "the reference (4096 environments) peaked at 16.1 GiB of GPU memory and 5.6 GiB of memory in the agent's container (board 0165); 20 GiB of GPU memory = the declared minimum (enough for ~4900 environments); 10 GiB of memory leaves room for an agent's own CPU rollouts; trial = the agent's 10 GiB + the sidecar's 6 GB cap (its peak 2.1 GiB); disk 0.86 GiB and 6 processes in the reference, within the design defaults"
+
+[[cap]]
+match = "^roboengineer-g1-.*-standard$"
+main = { cpus = 4.0, memory_gb = 12.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 6.0, pids = 8192 }
