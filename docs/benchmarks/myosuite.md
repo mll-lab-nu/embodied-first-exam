@@ -64,7 +64,9 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 
 ## Task definition
 - **Instance.** One frozen instance per family: the env after `seed(0)` and then `reset(seed=0)`, saved by
-  `rcb_myosuite.py make-instance` (`scripts/myosuite/instances/<family>.npz`): the MuJoCo integration state of the
+  `rcb_myosuite.py make-instance` (committed once, as `tasks/myosuite-<family>-i00-privileged/environment/instance.npz`,
+  which the generator reads back; a new family's is frozen into `scripts/myosuite/instances/<family>.npz`, read from there
+  until its tasks are generated, then deleted): the MuJoCo integration state of the
   robot's MjData, every numeric model array (resets edit the model: goal sites, object sizes), the env's Python state, and
   a state hash over state and model that every load checks. The MyoChallenge envs draw their goal, mass or size inside
   `reset()` before `reset(seed=)` reseeds, so the env is seeded first (without it the "frozen" instance changed between
@@ -300,7 +302,7 @@ only after the whole reference with the on-track share, the final step and the w
   GPU is for the agent's images.
 
 ## Files
-`scripts/myosuite/`: `generate.py`, `make_facts.py`, `instances/`, `oracles/`, `shared/` (README there; `shared/realtime/`
+`scripts/myosuite/`: `generate.py`, `make_facts.py`, `instances/` (the facts JSON files), `oracles/`, `shared/` (README there; `shared/realtime/`
 the standard-realtime twin's service);
 `images/myosuite/` (Dockerfile, VERSION).
 

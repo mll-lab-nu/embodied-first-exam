@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Rewrite the generated tables of docs/benchmarks/roboolympics.md (between the `<!-- families:begin -->` /
-`<!-- evidence:begin -->` markers and their `:end` twins) from families.json, instances/, oracles/*/result.json and
-nop.json. `--check` writes nothing and exits 1 when the document is stale. Python 3 only."""
+`<!-- evidence:begin -->` markers and their `:end` twins) from families.json, the frozen instances
+(instances/<f>-i00.json while it exists, else the committed privileged task's environment/instance.json),
+oracles/*/result.json and nop.json. `--check` writes nothing and exits 1 when the document is stale. Python 3 only."""
 import json
 import pathlib
 import re
@@ -19,7 +20,9 @@ def tables() -> tuple[str, str]:
     nop = json.loads((HERE / "nop.json").read_text())
     fam_rows, rev_rows, n_full, cat_now = [], [], 0, None
     for i, (fam, spec) in enumerate(fams.items(), 1):
-        inst = json.loads((HERE / "instances" / f"{fam}-i00.json").read_text())
+        new = HERE / "instances" / f"{fam}-i00.json"
+        task = HERE.parent.parent / "tasks" / f"roboolympics-{fam}-i00-privileged/environment/instance.json"
+        inst = json.loads((new if new.is_file() else task).read_text())
         full = spec["oracle"] == "full"
         n_full += full
         if inst["category"] != cat_now:

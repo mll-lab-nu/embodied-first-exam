@@ -96,7 +96,8 @@ class InstanceMismatch(unittest.TestCase):
 class NoProvenance(unittest.TestCase):
     def test_no_committed_instance_names_its_demonstration(self):
         for d in sorted((DEXJOCO / "instances").iterdir()):
-            with np.load(d / "instance.npz", allow_pickle=False) as z:
+            inst = DEXJOCO.parents[1] / "tasks" / f"dexjoco-{d.name.replace('_', '-')}-i00-privileged" / "environment"
+            with np.load(inst / "instance.npz", allow_pickle=False) as z:
                 meta = json.loads(str(z["meta"]))
             self.assertEqual(meta, {"dexjoco": "8d23b0f"}, d.name)
 

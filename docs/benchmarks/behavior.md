@@ -30,8 +30,11 @@ supplementary tasks for harder testing (below), which have neither yet.
   official human demonstrations, `"demo"`; `"added"` for a family added after the first 50, and its own `"review_pr"`
   where a later pull request reviews it; `"include"`), the BDDL problems
   `scripts/behavior/bddl/` (BEHAVIOR-1K's `bddl` package, MIT: `/behavior-src/bddl3/bddl/activity_definitions/<task>/problem0.bddl`
-  in the image), the frozen instances `scripts/behavior/instances/` and the reference solutions
-  `scripts/behavior/solutions/`, plus the eai-standard/2.2 layer from `scripts/eai_standard/`. A rerun reproduces the
+  in the image), the frozen instances and the reference solutions (canonical copies in the task dirs:
+  `environment/instance.json` of each privileged task, `solution/oracle_*.py` of the privileged and
+  `solution/oracle_qpos.npy` + `oracle_meta.json` of the standard task; a new family's freshly frozen instance or
+  solution goes into `scripts/behavior/instances/` or `scripts/behavior/solutions/` until its tasks are generated), plus
+  the eai-standard/2.2 layer from `scripts/eai_standard/`. A rerun reproduces the
   committed tasks; `mk_tasks.py --check` regenerates into a temporary tree and diffs. It writes every README in the
   protocol's layout and ends each task with `scripts/task_conventions.py`'s `normalize()`, like every generator.
   `scripts/behavior/goal.py` words each BDDL predicate a goal uses, with OmniGibson's thresholds. Agent results are not

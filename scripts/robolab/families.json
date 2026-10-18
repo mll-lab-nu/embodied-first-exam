@@ -1,5 +1,5 @@
 {
- "_doc": "RoboLab families for scripts/robolab/mk_tasks.py (one entry per RoboLab benchmark task that has tasks here; tasks = true: generated into tasks/ in both modes). Frozen instances: instances/<family>.json; oracle inputs: oracles/<family>/. change_log (optional): README Change Log entries of the family's standard task alone, after those of every task.",
+ "_doc": "RoboLab families for scripts/robolab/mk_tasks.py (one entry per RoboLab benchmark task that has tasks here; tasks = true: generated into tasks/ in both modes). Frozen instances: tasks/robolab-<family>-i00-privileged/environment/instance.json (a new family's: instances/<family>.json until its task dirs are committed); oracle inputs: oracles/<family>/. change_log (optional): README Change Log entries of the family's standard task alone, after those of every task.",
  "families": {
   "apple_and_yogurt_in_bowl": {
    "tasks": true,

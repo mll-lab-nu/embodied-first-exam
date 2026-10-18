@@ -11,18 +11,26 @@ Inputs, all in the repository:
   scripts/maniguard/families.json        per family: the evaluator's settings (grasping mode, upstream horizon) and its class;
                                          per task: rank, include, modes, the human texts (difficulty; the standard goal, rules
                                          and scene in words), the oracle level and its evidence
-  scripts/maniguard/instances/<family>/<task>/   scene_ep1.json + diagnostics.jsonl (ManiGuard-Bench, unchanged, CC BY-NC 4.0:
-                                         instances/NOTICE) and instance.json (our record: pins, sha256, the loaded state's
-                                         hash, written in the image by `rcb_maniguard.py make-instance`)
-  scripts/maniguard/oracles/<family>/<task>/     tasks with a positive example: oracle_trajectory.npz (both modes' solution/;
-                                         the standard oracle streams its rows through the service), oracle_gen.py (privileged)
-                                         and README_oracle.md (where they come from)
+  a task's instance files                scene_ep1.json + diagnostics.jsonl (ManiGuard-Bench, unchanged, CC BY-NC 4.0:
+                                         scripts/maniguard/instances/NOTICE) and instance.json (our record: pins, sha256, the
+                                         loaded state's hash, written in the image by `rcb_maniguard.py make-instance`). The
+                                         canonical copy is the committed privileged task's environment/instance/ (the standard
+                                         twin's environment/sim/instance/ without one); a new instance, which has no task dir
+                                         yet, is made into scripts/maniguard/instances/<family>/<task>/, which is read instead
+                                         while it exists (delete it once the task dirs are generated and committed)
+  scripts/maniguard/oracles/<family>/<task>/README_oracle.md   tasks with a positive example: where the reference
+                                         trajectory comes from (rendered into the README). The trajectory itself
+                                         (oracle_trajectory.npz, both modes' solution/: the standard oracle streams its rows
+                                         through the service) and oracle_gen.py (privileged solution/) are read from the
+                                         committed privileged task's solution/ (the standard twin's for the trajectory without
+                                         one); a new or remade one is put next to README_oracle.md, which is read instead while
+                                         it exists (delete it once the task dirs are regenerated and committed)
   scripts/maniguard/shared/rcb_maniguard.py      the tooling (privileged environment/ + tests/, standard environment/sim/)
   scripts/maniguard/template/<mode>/     every other task file; a *.tmpl file is filled with the task's values (@@KEY@@)
   scripts/eai_standard/                  the eai-standard/2.2 layer, copied unchanged, and the standard client image + pins
   images/maniguard/VERSION               the base image tag
 Every text that is in the task files (the prompt, the goal region and conditions, the LTL specification and its thresholds)
-is rendered from instances/, so the instruction states the rules the verifier checks. Both twins of a task are written to a
+is rendered from the instance files, so the instruction states the rules the verifier checks. Both twins of a task are written to a
 scratch directory, passed through scripts/task_conventions.py's normalize() and then synced into tasks/: a task dir holds
 exactly what the generator writes."""
 from __future__ import annotations
@@ -80,13 +88,35 @@ def fill(text: str, values: dict) -> str:
     return text
 
 
+def instance_dir(key: str) -> pathlib.Path:
+    """Where a task's instance files are read from: scripts/maniguard/instances/<key>/ while it exists (a new instance with no
+    task dir yet), else the canonical copy in the repository's tasks/: the privileged task's environment/instance/, or the
+    standard task's environment/sim/instance/ when there is no privileged twin (the module docstring)."""
+    for d in (HERE / "instances" / key, ROOT / "tasks" / task_dir(key, "privileged") / "environment/instance",
+              ROOT / "tasks" / task_dir(key, "standard") / "environment/sim/instance"):
+        if (d / "instance.json").is_file():
+            return d
+    raise RuntimeError(f"{key}: no instance files (scripts/maniguard/instances/{key}/ or a committed task dir)")
+
+
+def oracle_file(key: str, name: str) -> bytes:
+    """A reference-solution file (oracle_trajectory.npz, oracle_gen.py): scripts/maniguard/oracles/<key>/<name> while it exists
+    (a new or remade one), else the canonical copy in the repository's tasks/: the privileged task's solution/, or the
+    standard task's solution/ (the trajectory only) when the privileged twin has none."""
+    for p in (HERE / "oracles" / key / name, ROOT / "tasks" / task_dir(key, "privileged") / "solution" / name,
+              ROOT / "tasks" / task_dir(key, "standard") / "solution" / name):
+        if p.is_file():
+            return p.read_bytes()
+    raise RuntimeError(f"{key}: no {name} (scripts/maniguard/oracles/{key}/ or a committed task's solution/)")
+
+
 def load_instance(key: str) -> tuple[pathlib.Path, dict, dict, dict]:
-    d = HERE / "instances" / key
+    d = instance_dir(key)
     diag = json.JSONDecoder().raw_decode((d / "diagnostics.jsonl").read_text(encoding="utf-8").lstrip())[0]
     scene = json.loads((d / "scene_ep1.json").read_text(encoding="utf-8"))
     meta = json.loads((d / "instance.json").read_text())
     if meta.get("task") != key:
-        raise RuntimeError(f"{key}: instances/{key}/instance.json is for {meta.get('task')}")
+        raise RuntimeError(f"{key}: {d}/instance.json is for {meta.get('task')}")
     return d, diag, scene, meta
 
 
@@ -352,7 +382,7 @@ def plan_task(key: str, T: dict, fams: dict, version: str) -> dict[str, dict[str
                     files[f"{base}/{f}"] = (b, 0o644)
             if has_solution:
                 for f in ("oracle_trajectory.npz", "oracle_gen.py"):
-                    files[f"solution/{f}"] = ((HERE / "oracles" / key / f).read_bytes(), 0o644)
+                    files[f"solution/{f}"] = (oracle_file(key, f), 0o644)
         else:
             files["environment/sim/rcb_maniguard.py"] = (tool, 0o644)
             for f, b in inst_files.items():
@@ -364,7 +394,7 @@ def plan_task(key: str, T: dict, fams: dict, version: str) -> dict[str, dict[str
             req = CLIENT.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip()
             files["environment/client-requirements.txt"] = ((LAYER / req).read_bytes(), 0o644)
             if has_solution:
-                files["solution/oracle_trajectory.npz"] = ((HERE / "oracles" / key / "oracle_trajectory.npz").read_bytes(), 0o644)
+                files["solution/oracle_trajectory.npz"] = (oracle_file(key, "oracle_trajectory.npz"), 0o644)
         out[task_dir(key, mode)] = files
     return out
 

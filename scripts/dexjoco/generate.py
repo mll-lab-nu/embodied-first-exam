@@ -5,7 +5,13 @@
     python3 scripts/dexjoco/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
 Standard library only (plus scripts/task_conventions.py, which every generator ends with). Inputs:
-  scripts/dexjoco/instances/<family>/{instance.npz, oracle_trajectory.npz, facts.json}   (make_instances.py, in the image)
+  scripts/dexjoco/instances/<family>/facts.json        what the texts quote (make_instances.py, in the image)
+  the frozen instance.npz and oracle_trajectory.npz     their one committed copy is the family's privileged task dir
+                                                        (tasks/dexjoco-<family>-i00-privileged/environment/instance.npz,
+                                                        .../solution/oracle_trajectory.npz); make_instances.py writes a
+                                                        new or rebuilt one to scripts/dexjoco/instances/<family>/, which
+                                                        this then takes instead (delete it there once the tasks are
+                                                        regenerated)
   scripts/dexjoco/shared/          the tooling rcb_dexjoco.py, the privileged grader, the standard adapter and its hooks
   scripts/eai_standard/            the eai-standard/2.2 layer (client, service layer, run.sh, client image and pins)
 The texts are the templates below. docs/benchmarks/dexjoco.md describes the benchmark.
@@ -190,6 +196,16 @@ def check_instance(path: Path) -> None:
                          "§2.7): provenance belongs in facts.json; make_instances.py --strip-meta rewrites it")
 
 
+def frozen(fam: str, name: str) -> Path:
+    """instance.npz or oracle_trajectory.npz of a family: the one make_instances.py just wrote to
+    scripts/dexjoco/instances/<family>/ if there is one, else the committed copy in the family's privileged task dir."""
+    fresh = HERE / "instances" / fam / name
+    if fresh.is_file():
+        return fresh
+    t = ROOT / "tasks" / f"dexjoco-{dash(fam)}-i00-privileged"
+    return t / ("environment" if name == "instance.npz" else "solution") / name
+
+
 def facts(fam: str) -> dict:
     return json.loads((HERE / "instances" / fam / "facts.json").read_text())
 
@@ -205,6 +221,12 @@ def copy(src: Path, dst: Path) -> None:
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src, dst)
     dst.chmod(0o755 if src.suffix == ".sh" else 0o644)
+
+
+def put(data: bytes, dst: Path) -> None:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_bytes(data)
+    dst.chmod(0o644)
 
 
 def robot_words(fam: str) -> str:
@@ -801,8 +823,9 @@ def render(root: Path) -> list[Path]:
     out = []
     for fam in FAMILIES:
         F = facts(fam)
-        inst = HERE / "instances" / fam
-        check_instance(inst / "instance.npz")
+        # read before the task dirs are removed: the committed copies live in them (frozen())
+        check_instance(frozen(fam, "instance.npz"))
+        instance, oracle = (frozen(fam, n).read_bytes() for n in ("instance.npz", "oracle_trajectory.npz"))
         # privileged
         t = root / f"dexjoco-{dash(fam)}-i00-privileged"
         if t.exists():
@@ -816,10 +839,10 @@ def render(root: Path) -> list[Path]:
         write(t / "solution" / "solve.sh", PRIV_SOLVE, executable=True)
         write(t / "solution" / "gen.py", PRIV_ORACLE_GEN)
         for sub in ("environment", "tests"):
-            copy(inst / "instance.npz", t / sub / "instance.npz")
+            put(instance, t / sub / "instance.npz")
             copy(SHARED / "rcb_dexjoco.py", t / sub / "rcb_dexjoco.py")
         copy(SHARED / "grade.py", t / "tests" / "grade.py")
-        copy(inst / "oracle_trajectory.npz", t / "solution" / "oracle_trajectory.npz")
+        put(oracle, t / "solution" / "oracle_trajectory.npz")
         out.append(t)
         # standard
         t = root / f"dexjoco-{dash(fam)}-i00-standard"
@@ -839,14 +862,14 @@ def render(root: Path) -> list[Path]:
         for f in ("server.py", "finalize.sh", "video.py"):
             copy(SHARED / "standard" / f, sim / f)
         copy(SHARED / "rcb_dexjoco.py", sim / "rcb_dexjoco.py")
-        copy(inst / "instance.npz", sim / "instance.npz")
+        put(instance, sim / "instance.npz")
         write(sim / "task_text.txt", task_text(fam))
         write(t / "tests" / "Dockerfile", STD_TESTS_DOCKERFILE)
         write(t / "tests" / "test.sh", STD_TEST_SH, executable=True)
         copy(SHARED / "standard" / "grade.py", t / "tests" / "grade.py")
         write(t / "solution" / "solve.sh", STD_SOLVE, executable=True)
         copy(SHARED / "standard" / "oracle_stream.py", t / "solution" / "oracle_stream.py")
-        copy(inst / "oracle_trajectory.npz", t / "solution" / "oracle_trajectory.npz")
+        put(oracle, t / "solution" / "oracle_trajectory.npz")
         out.append(t)
     for t in out:
         normalize(t)

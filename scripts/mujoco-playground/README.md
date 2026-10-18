@@ -14,7 +14,8 @@ in CI (standard library only); the rest needs MuJoCo 3.3.7 and the asset tree of
    observations and rewards. Go1 joystick needs none: Playground ships its policy (`RCB_PLAYGROUND=<checkout>`).
 3. **Selection and freezing**: `python select_instances.py Go1Getup --cand cand/ --policy runs/go1_getup/policy.pt`
    writes `instances/<Env>.json` (with its t = 0 state hash and the numbers the texts quote), `oracles/<Env>.npy` (the
-   reference rows, float32-exact) and `selection/<Env>.json` (every candidate tried and why it was skipped).
+   reference rows, float32-exact; `generate.py` reads it while it exists, delete it once the tasks are regenerated: the
+   committed copy is the privileged task's `solution/oracle.npy`) and `selection/<Env>.json` (every candidate tried and why it was skipped).
 4. **Tasks**: `python3 generate.py` (and `--check`).
 
 `shared/rcb_quadruped.py` is the one simulator module: the privileged tooling, the verifier's replay CLI and the
