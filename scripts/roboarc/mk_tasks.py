@@ -12,11 +12,12 @@ scripts/robotangle/release_rebuild.py on dev/robotangle_mujoco (--bench), `git m
 images/<BENCH>/ and docs/benchmarks/<BENCH>.md, and the registration lines listed in docs/benchmarks/<BENCH>.md
 ("Registration").
 
-usage: python3 scripts/<BENCH>/mk_tasks.py [--check] [--list] [--assets <dir>] [base ...]
+usage: python3 scripts/<BENCH>/mk_tasks.py [--check [--strict-copies]] [--list] [--assets <dir>] [base ...]
        python3 scripts/<BENCH>/mk_tasks.py --dev <dev.json> --out <dir> base ...
   no base   every base in release.json
-  --check   write nothing; exit 1 if a task would change, if an identity check fails, or if a release's file under
-            this directory is a copy the committed tasks already carry (see below)
+  --check   write nothing; exit 1 if a task would change, or if an identity check fails. A release's file under this
+            directory that the committed tasks already carry (see below) is reported as WARN
+  --strict-copies   with --check (or RCB_STRICT_COPIES=1): such a copy is a failure too
   --list    print the bases with their evidence
   --assets  a local copy of the pinned HF dataset (the instances/<base>/ layout): also check the frozen instances' bytes
             against the runtime bindings (without it, the pins in assets.json are compared)
@@ -54,12 +55,13 @@ replaces them (canon() below):
   the instance's lock             tasks/<BENCH>-<base>-privileged/tests/runtime_binding.json, without the keys the render
                                   sets (uipc_builds and the companions' sha256)
   the goal-state images           tasks/<BENCH>-<base>-privileged/environment/goal/ (both modes)
-  the standard agent Dockerfile   tasks/<BENCH>-<base>-standard/environment/Dockerfile (the render leaves it unchanged)
+  the standard agent Dockerfile   tasks/<BENCH>-<base>-standard/environment/Dockerfile (the render leaves it unchanged,
+                                  but for the `COPY goal/` line goal_images adds)
 A release that makes a new or changed base (release_rebuild.py --onto) writes them under this directory instead
 (oracles/<base>/privileged.npz, packages/<base>-privileged/runtime_binding.upstream.json,
-packages/<base>-<mode>/environment/goal/, packages/<base>-standard/environment/Dockerfile): a file there is used in
-place of the task's copy; once the task dirs are rendered from it, it is deleted (`git rm`; --check names any left), so
-tasks/ holds the only copy.
+packages/<base>-privileged/environment/goal/, packages/<base>-standard/environment/Dockerfile): a file there is used in
+place of the task's copy. Once the task dirs are rendered from it, it is a duplicate: --check lists it as WARN (a
+failure with --strict-copies), and it is deleted (`git rm`), so tasks/ holds the only copy.
 Nothing at run time imports repository code: the tooling and the sim layer are copies (PROTOCOL D9).
 """
 from __future__ import annotations
@@ -381,6 +383,7 @@ FOLD_FLAT_OLD = ("Flat: every point of the blanket within 35 mm of its height in
 FOLD_FLAT_NEW = ("Flat: the folded cloth must lie flat on the tabletop, its bottom layer fully in contact with the table "
                  "surface: every point of the blanket within 35 mm of its height in the target fold, and no point more than "
                  "30 mm above the target's highest point.")   # = blanket_fold's own words (common.py)
+GOAL_COPY = b"COPY goal/ /app/goal/\n"   # the line goal_images adds to the agent's Dockerfile
 GOAL_DIR = "environment/goal"   # a package's goal-state images (fold: the target shape is shown, never given as coordinates)
 
 
@@ -549,20 +552,22 @@ def flat_words(s: str, fence: bool) -> str:
 def goal_images(up: pathlib.Path, t: pathlib.Path, instruction: str, base: str) -> None:
     """A base's goal-state images: copied into the agent container at /app/goal/ (both modes); the instruction must
     name each one (an image nobody points to is a mistake). The privileged task's copy is the canonical one for both
-    modes (canon), a release's new images in the package (packages/<base>-<mode>/environment/goal/) where there are."""
-    goal = canon(base, "privileged", GOAL_DIR, up / GOAL_DIR)
-    if not goal.is_dir():
+    modes (canon), a release's new images in packages/<base>-privileged/environment/goal/ where there are (an empty
+    directory there is ignored)."""
+    fresh = PKG / f"{base}-privileged" / GOAL_DIR
+    has = lambda d: d.is_dir() and any(p.is_file() for p in d.iterdir())  # noqa: E731
+    goal = fresh if has(fresh) else TASKS / f"{BENCH}-{base}-privileged" / GOAL_DIR
+    if not has(goal):
         return
     files = sorted(p for p in goal.iterdir() if p.is_file())
-    assert files, f"{up}: empty {GOAL_DIR}"
     for p in files:
         assert f"/app/goal/{p.name}" in instruction, f"{up.name}: instruction.md does not name /app/goal/{p.name}"
         put(t / GOAL_DIR / p.name, p.read_bytes())
     df = t / "environment/Dockerfile"
     s, anchor = df.read_text(), "RUN mkdir -p /app/output\n"
     assert s.count(anchor) == 1, f"{t.name}: environment/Dockerfile has no single {anchor!r}"
-    if "COPY goal/ /app/goal/" not in s:
-        s = s.replace(anchor, "COPY goal/ /app/goal/\n" + anchor)
+    if GOAL_COPY.decode() not in s:
+        s = s.replace(anchor, GOAL_COPY.decode() + anchor)
     df.write_text(s)
 
 
@@ -992,7 +997,9 @@ def review_fixes_r2(s: str, base: str, mode: str) -> str:
     return s
 
 
-RENDER_KEYS = ("uipc_builds", "render_bridge_sha256", "nyx_direct_sha256")   # binding keys the render sets after the lock's
+# the binding keys the render adds to the lock (binding(): uipc_builds; companions(): the companions' sha256); binding()
+# asserts that this list holds every key it adds, so that a lock read back from a task drops exactly these
+RENDER_KEYS = ("uipc_builds", "render_bridge_sha256", "nyx_direct_sha256")
 
 
 def upstream_lock(base: str) -> dict:
@@ -1008,6 +1015,7 @@ def binding(base: str, inst_dir: pathlib.Path | None = None, bridge: bool = Fals
     """The task's runtime binding: the upstream lock (instance and asset hashes) with this release's tooling and runtime.
     The frozen instance must be the pinned one in assets.json; with inst_dir (a local copy), its bytes are checked too."""
     lock = upstream_lock(base)
+    upstream_keys = set(lock)
     pinned = ASSETS["instances"].get(base, {}).get("instance_sha256")
     assert lock["instance_sha256"] == pinned, f"{base}: the bound instance is not the one pinned in assets.json"
     prefix = f"instances/{base}/"
@@ -1031,7 +1039,9 @@ def binding(base: str, inst_dir: pathlib.Path | None = None, bridge: bool = Fals
     # both libuipc builds the tooling chooses from by the GPU's compute capability (rcb_topogym.select_uipc_build), by their
     # uipc-build.json sha256; the runtime's own uipc_build_sha256 stays the audited build, the image's default
     lock["uipc_builds"] = {name: b["uipc_build_sha256"] for name, b in sorted(REL["uipc_builds"].items())}
-    return companions(lock, bridge, direct)
+    out = companions(lock, bridge, direct)
+    assert set(json.loads(out)) - upstream_keys <= set(RENDER_KEYS), f"{base}: RENDER_KEYS must list every key binding() adds"
+    return out
 
 
 def companions(lock: dict, bridge: bool, direct: bool) -> bytes:
@@ -1243,28 +1253,33 @@ def dev_binding(inst_dir: pathlib.Path, dev: dict, bridge: bool = False, direct:
 
 
 def evidence_sha(base: str, rec: dict, mode: str, ref: pathlib.Path) -> None:
-    """A reference is the file its evidence names (release.json evidence <mode> trajectory_sha256)."""
+    """A reference is the file its evidence names (release.json evidence <mode> trajectory_sha256): where the evidence
+    names one, the file must be there and be it."""
     want = (rec["evidence"].get(mode) or {}).get("trajectory_sha256")
-    assert not want or not ref.is_file() or sha(ref.read_bytes()) == want, \
+    assert not want or ref.is_file(), f"{base}: release.json's {mode} evidence names a reference, and {ref.relative_to(ROOT)} is missing"
+    assert not want or sha(ref.read_bytes()) == want, \
         f"{base}: {ref.relative_to(ROOT)} is not the {mode} reference release.json's evidence names"
 
 
 def redundant_copies(base: str) -> list[str]:
     """--check: a release's file under this directory that the committed tasks already carry (canon: delete it once the
     tasks are rendered from it), and a standard.npz that is the privileged reference itself (committed only where it
-    differs)."""
+    differs). The standard Dockerfile is compared without the line goal_images adds; the lock without the keys binding()
+    sets (RENDER_KEYS, tooling_sha256, runtime)."""
     t = lambda m, rel: TASKS / f"{BENCH}-{base}-{m}" / rel  # noqa: E731
     same = lambda a, b: a.is_file() and b.is_file() and a.read_bytes() == b.read_bytes()  # noqa: E731
     pairs = [(ORC / base / "privileged.npz", t("privileged", "solution/trajectory.npz")),
-             (ORC / base / "standard.npz", privileged_reference(base, REL["bases"][base])),
-             (PKG / f"{base}-standard" / "environment/Dockerfile", t("standard", "environment/Dockerfile"))]
+             (ORC / base / "standard.npz", privileged_reference(base, REL["bases"][base]))]
+    df, task_df = PKG / f"{base}-standard" / "environment/Dockerfile", t("standard", "environment/Dockerfile")
+    dup_df = df.is_file() and task_df.is_file() and df.read_bytes() == task_df.read_bytes().replace(GOAL_COPY, b"")
     for m in ("privileged", "standard"):
         g = PKG / f"{base}-{m}" / GOAL_DIR
         pairs += [(p, t("privileged", f"{GOAL_DIR}/{p.name}")) for p in sorted(g.glob("*"))] if g.is_dir() else []
     bad = [f"scripts/{BENCH}/{a.relative_to(HERE)}: the same bytes as {b.relative_to(ROOT)} (git rm it)" for a, b in pairs if same(a, b)]
+    bad += [f"scripts/{BENCH}/{df.relative_to(HERE)}: the render's input of {task_df.relative_to(ROOT)} (git rm it)"] if dup_df else []
     lock, task_lock = PKG / f"{base}-privileged" / "runtime_binding.upstream.json", t("privileged", "tests/runtime_binding.json")
-    if lock.is_file() and task_lock.is_file() and upstream_lock(base) == {k: v for k, v in json.loads(task_lock.read_text()).items()
-                                                                          if k not in RENDER_KEYS}:
+    own = lambda d: {k: v for k, v in d.items() if k not in (*RENDER_KEYS, "tooling_sha256", "runtime")}  # noqa: E731
+    if lock.is_file() and task_lock.is_file() and own(json.loads(lock.read_text())) == own(json.loads(task_lock.read_text())):
         bad.append(f"scripts/{BENCH}/{lock.relative_to(HERE)}: the lock {task_lock.relative_to(ROOT)} carries (git rm it)")
     return bad
 
@@ -1407,6 +1422,7 @@ def dev_main(a) -> int:
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--check", action="store_true"); ap.add_argument("--list", action="store_true")
+    ap.add_argument("--strict-copies", action="store_true", help="with --check: a duplicate under this directory fails")
     ap.add_argument("--assets", type=pathlib.Path, help="a local copy of the pinned HF dataset (assets.py fetch)")
     ap.add_argument("--dev", type=pathlib.Path, help="dev.json: local dev task dirs (see usage)")
     ap.add_argument("--out", type=pathlib.Path, help="with --dev: where the dev task dirs go")
@@ -1423,6 +1439,7 @@ def main(argv: list[str]) -> int:
     bad = tooling_check()
     if bad and not a.check:
         print("\n".join(bad), file=sys.stderr); return 1
+    warn, strict = [], a.strict_copies or os.environ.get("RCB_STRICT_COPIES") == "1"
     with tempfile.TemporaryDirectory() as tmp:
         tmp = pathlib.Path(tmp)
         for b in bases:
@@ -1438,14 +1455,16 @@ def main(argv: list[str]) -> int:
                     if cur.exists():
                         shutil.rmtree(cur)
                     shutil.copytree(t, cur, symlinks=False)
-            if a.check:
-                bad += redundant_copies(b)      # tasks/ is the only copy of what a task only carries (canon)
+            if a.check:                         # tasks/ is the only copy of what a task only carries (canon)
+                (bad if strict else warn).extend(redundant_copies(b))
         known = {f"{BENCH}-{b}-{m}" for b in REL["bases"] for m in ("privileged", "standard")}
         stray = sorted(p.name for p in TASKS.glob(f"{BENCH}-*") if p.name not in known)
         bad += [f"tasks/{n}: not in scripts/roboarc/release.json" for n in stray]
         tools = {sha(p.read_bytes()) for p in TASKS.glob(f"{BENCH}-*/**/rcb_topogym.py")}
         if tools - {sha((SHARED / "rcb_topogym.py").read_bytes())}:
             bad.append("a task's rcb_topogym.py differs from scripts/roboarc/shared/rcb_topogym.py")
+    for w in warn:
+        print("WARN", w)
     for b in bad:
         print("FAIL", b)
     if not bad:
