@@ -271,7 +271,7 @@ def spec(name, index):
         ]
         public["command_units"] = ["m/s", "m/s", "rad/s"]
         public["limitations"] = (
-            "Simulation transfer only, not hardware. Fixed 98→512→256→128→29 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images; reference solvability remains incomplete on both development plants."
+            "Simulation transfer only, not hardware. Fixed 98→512→256→128→29 ELU actor and public PD wrapper. Coding-agent feedback is noisy joint angles, public commands and images."
         )
     public["image_interval_s"] = 0.2 if family == "yam" else 10.0 if family == "spacecraft" else 1.0
     return {

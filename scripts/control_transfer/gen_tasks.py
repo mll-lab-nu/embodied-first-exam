@@ -58,6 +58,16 @@ EVIDENCE = {
     ("go2-forward-jump", 0): (False, 0, 10, 0.0), ("go2-forward-jump", 1): (False, 0, 10, 24.50),
     ("go2-yaw-jump", 0): (False, 0, 10, 9.80), ("go2-yaw-jump", 1): (False, 0, 10, 14.70),
     ("go2-weave", 0): (False, 0, 10, 0.0), ("go2-weave", 1): (False, 0, 10, 0.0),
+    ("g1", 0): (False, 1, 12, 43.14), ("g1", 1): (False, 4, 12, 82.68),
+}
+# G1 (board 0165): the reference trains on the agent's GPU; its runs are on GPU hosts with the training image
+G1_EVIDENCE_RUN = {
+    0: "Harbor 0.23.0 oracle agent on aws:rcb-gpu14 (L40S), 2026-10-18, images eai-control-transfer:0.2.0-train / 0.2.0, "
+       "an earlier planner of the reference with a fixed first segment (2500 + 1733 + 1155 PPO iterations x 4096 "
+       "environments from scratch; 12638 s of the 14400 s)",
+    1: "Harbor 0.23.0 oracle agent on aws:rcb-gpu13 (L40S), 2026-10-18, images eai-control-transfer:0.2.0-train / 0.2.0 "
+       "(200 + 2466 + 1479 + 986 PPO iterations x 4096 environments from scratch; 12009 s of the 14400 s; round 0 passed "
+       "all four development cases, the later, sealed rounds drifted sideways)",
 }
 
 
@@ -342,7 +352,10 @@ def render(task, name, index):
     else:
         ok, cases, n, score = run
         oracle = "full" if ok else "partial" if cases else "none"
-        reference_note = (f"{EVIDENCE_RUN}: the reference controller (solution/, three feedback rounds) succeeded on "
+        what = ("the reference (trains the public curriculum from scratch on the agent's GPU, three deployments, the "
+                "last sealed)" if family == "g1"
+                else "the reference controller (solution/, three feedback rounds)")
+        reference_note = (f"{G1_EVIDENCE_RUN[index] if family == 'g1' else EVIDENCE_RUN}: {what} succeeded on "
                           f"{cases}/{n} held-out cases, mean engineering score {score:.2f}; nop 0."
                           + ("" if ok else " No full oracle: human review (PROTOCOL §4)."
                              + (" No positive example yet." if not cases else "")))
@@ -448,7 +461,7 @@ oracle_evidence = "{reference_note}"
 instance_seed = {index}
 expert_time_estimate_hours = 4.0
 [verifier]
-timeout_sec = {limits["collect_seconds"] + 360 if bounded_lap else 2100}.0
+timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 [[verifier.collect]]
@@ -465,8 +478,8 @@ network_mode = "allowlist"
 allowed_hosts = {json.dumps(HOSTS)}
 [environment]
 build_timeout_sec = 2400.0
-cpus = {8 if gpu else 2}
-memory_mb = {24576 if gpu else 6144}
+cpus = {4 if gpu else 2}
+memory_mb = {12288 if gpu else 6144}
 [verifier.environment]
 build_timeout_sec = 600.0
 ''',
@@ -478,7 +491,7 @@ build_timeout_sec = 600.0
         else """Use the public nominal model and write fitting/optimization code locally. Submit the documented numeric controller parameters. This track evaluates adaptation within a fixed controller ABI; it does not deploy arbitrary controller Python."""
     )
     if family == "g1":
-        training = "Train the public terrain curriculum with `python -m control_public.g1_training --upstream /opt/control-assets/unitree_rl_mjlab --out /app/output/trained --gpu 0`. You may edit training code. Submit the exported `policy.npz` using `client.artifact(path)`. The fixed actor architecture and PD wrapper are the deployment ABI. Record actual training steps, logs and hardware."
+        training = "Train the public terrain curriculum with `python -m control_public.g1_training --upstream /opt/control-assets/unitree_rl_mjlab --out /app/output/trained --gpu 0`. You may edit training code. Submit the exported `policy.npz` using `client.artifact(path)`. The fixed actor architecture and PD wrapper are the deployment ABI. Record actual training steps, logs and hardware. Your container has one NVIDIA GPU (`cuda:0`); measured on an L40S, the trainer's default 256 environments take about 2 GB of GPU memory and 1.1-1.4 s per PPO iteration, 1024 environments (its cap) about 5 GB and 1.4 s, 4096 environments about 17 GB and 2.0-2.5 s, at about one CPU core."
     if family == "go2":
         training += f" Run `python -m control_public.go2_train --assets /opt/control-assets/go2 --task {name[4:]} --out /app/output/nominal` for local nominal rollouts. The controller ABI and editable training helpers are in `control_public.go2`."
     if family == "anycar":
@@ -628,6 +641,15 @@ Frozen development and held-out banks, data-only deployment, fresh-process state
             + "c.seal(r['round_id'], 'Reference candidate; full success is not assumed.')\n"
         )
         put(task, "solution/reference.py", solve)
+        put(
+            task,
+            "solution/solve.sh",
+            "#!/bin/bash\nset -euo pipefail\ncd /app\npython /solution/reference.py\n",
+            True,
+        )
+    if family == "g1":
+        # the reference trains from scratch on the agent's GPU within the cutoff (docs/benchmarks/roboengineer-g1.md)
+        put(task, "solution/reference.py", (SRC / "g1_reference.py").read_text())
         put(
             task,
             "solution/solve.sh",
