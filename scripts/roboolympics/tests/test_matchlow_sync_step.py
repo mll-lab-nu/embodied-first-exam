@@ -26,7 +26,7 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-TASKS = sorted(ROOT.glob("tasks/roboolympics-*-matchlow-i*-standard-realtime"))
+TASKS = sorted(ROOT.glob("tasks/roboolympics-match-*-matchlow-i*-standard-realtime"))
 WAIT = 0.1
 SLACK = 0.05            # scheduling allowance over the bound (well under the bound itself)
 

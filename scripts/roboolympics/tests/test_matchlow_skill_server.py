@@ -20,7 +20,7 @@ import threading
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
-TASKS = sorted(ROOT.glob("tasks/roboolympics-*-matchlow-i*-standard-realtime"))
+TASKS = sorted(ROOT.glob("tasks/roboolympics-match-*-matchlow-i*-standard-realtime"))
 BAD = [
     [1, 2, 3],                                                           # not an object
     "a string",
