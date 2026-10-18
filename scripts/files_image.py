@@ -6,37 +6,41 @@ file gets from scripts/stamp_mtimes.py).
 
 images/<name>/FILES.json describes one such image:
   {"image": "<registry ref>:<VERSION>@sha256:<digest>",     the pinned image every task names
-   "source": "<repo-relative directory>",                     the files' one source (the build context)
+   "source": "<repo-relative directory>",                     the files' one source
    "files": {"<file in source>": "<sha256>", ...}}            what the image carries, at /<file>
-images/<name>/Dockerfile is `FROM scratch` plus one COPY of those files to /; images/<name>/BUILD_CONTEXT points at the
-source (scripts/build_images.sh), images/<name>/VERSION is the tag.
+images/<name>/Dockerfile is `FROM scratch` + `COPY . /`; its build context is images/<name>/context/ (BUILD_CONTEXT;
+gitignored), staged by `build` (scripts/build_images.sh skips the image while it is missing). An image a benchmark keeps
+private carries images/<name>/BUILD_ONLY (PROTOCOL §1), and hosts pull it with the organization's token.
 
     python3 scripts/files_image.py check [name ...]       the sources still hash to FILES.json (no docker; generators call it)
-    python3 scripts/files_image.py build <name>           build <image>:<VERSION> from a stamped copy of the files (docker)
-    python3 scripts/files_image.py pin <name> <digest>    after the push: put the digest and the files' hashes in FILES.json
-    python3 scripts/files_image.py verify-image <name>    the pinned image carries exactly FILES.json's files (docker)
+    python3 scripts/files_image.py build <name>           stage context/ (stamped copy of the files) and build <image>:<VERSION>
+    python3 scripts/files_image.py pin <name> <digest>    after the push: check the pushed image, then pin it in FILES.json
+    python3 scripts/files_image.py verify-image <name>    the pinned image carries exactly FILES.json's files and modes
 
-A change to a source file therefore needs a new image version (build, push, pin) before the generators render it; the
-generators' check modes fail until then.
+A change to a source file needs a new image version (VERSION, build, push, pin) before the generators render it; their
+check modes fail until then.
 """
 from __future__ import annotations
 
 import hashlib
-import io
 import json
+import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNTIME_FILES = {".dockerenv", "etc/hostname", "etc/hosts", "etc/resolv.conf"}   # what docker adds to every container
+RUNTIME_FILES = {".dockerenv", "etc/hostname", "etc/hosts", "etc/resolv.conf", "etc/mtab"}   # what docker adds to every container
 
 
 def spec(name: str) -> dict:
-    return json.loads((ROOT / "images" / name / "FILES.json").read_text())
+    p = ROOT / "images" / name / "FILES.json"
+    if not p.is_file():
+        raise SystemExit(f"images/{name}/FILES.json: no such files-only image")
+    return json.loads(p.read_text())
 
 
 def image(name: str) -> str:
@@ -55,6 +59,11 @@ def sha256(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
+def _mode(p: Path) -> int:
+    """The mode a checkout gives a file (git keeps only the executable bit; checkouts are made with umask 022)."""
+    return 0o755 if p.stat().st_mode & stat.S_IXUSR else 0o644
+
+
 def check(name: str) -> list[str]:
     s = spec(name)
     src = ROOT / s["source"]
@@ -65,50 +74,84 @@ def check(name: str) -> list[str]:
     return bad
 
 
-def build(name: str) -> str:
+def stage(name: str) -> Path:
+    """images/<name>/context/: the files, each with its checkout mode and its content-derived mtime."""
     sys.path.insert(0, str(ROOT / "scripts"))
     import stamp_mtimes
     s = spec(name)
+    ctx = ROOT / "images" / name / "context"
+    shutil.rmtree(ctx, ignore_errors=True)
+    for f in s["files"]:
+        (ctx / f).parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / s["source"] / f, ctx / f)
+        (ctx / f).chmod(_mode(ROOT / s["source"] / f))
+    stamp_mtimes.stamp_tree(str(ctx), True)
+    return ctx
+
+
+def build(name: str) -> str:
+    s = spec(name)
     tag = s["image"].split("@")[0].rsplit(":", 1)[0] + ":" + (ROOT / "images" / name / "VERSION").read_text().strip()
-    with tempfile.TemporaryDirectory(dir="/data/kangrui/tmp" if Path("/data/kangrui/tmp").is_dir() else None) as td:
-        for f in s["files"]:
-            (Path(td) / f).parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(ROOT / s["source"] / f, Path(td) / f)
-            (Path(td) / f).chmod(0o644)
-        stamp_mtimes.stamp_tree(td, True)
-        subprocess.run(["docker", "build", "--no-cache", "-q", "-t", tag, "-f", str(ROOT / "images" / name / "Dockerfile"), td],
-                       check=True)
+    ctx = stage(name)
+    subprocess.run(["docker", "build", "--no-cache", "-q", "-t", tag, "-f", str(ROOT / "images" / name / "Dockerfile"),
+                    str(ctx)], check=True)
     return tag
 
 
-def pin(name: str, digest: str) -> None:
-    p = ROOT / "images" / name / "FILES.json"
-    s = json.loads(p.read_text())
-    ver = (ROOT / "images" / name / "VERSION").read_text().strip()
-    s["image"] = s["image"].split("@")[0].rsplit(":", 1)[0] + f":{ver}@{digest}"
-    s["files"] = {f: sha256(ROOT / s["source"] / f) for f in sorted(s["files"])}
-    p.write_text(json.dumps(s, indent=1) + "\n")
-
-
-def verify_image(name: str) -> list[str]:
-    s = spec(name)
-    cid = subprocess.run(["docker", "create", s["image"], "/none"], capture_output=True, text=True, check=True).stdout.strip()
+def image_files(ref: str) -> dict[str, tuple[str, int]]:
+    """{path: (sha256, mode)} of the regular files in an image (docker export, streamed); links and other members are
+    reported as such so that a check sees them."""
+    cid = subprocess.run(["docker", "create", ref, "/none"], capture_output=True, text=True, check=True).stdout.strip()
+    got: dict[str, tuple[str, int]] = {}
     try:
-        tar = subprocess.run(["docker", "export", cid], capture_output=True, check=True).stdout
+        p = subprocess.Popen(["docker", "export", cid], stdout=subprocess.PIPE)
+        with tarfile.open(fileobj=p.stdout, mode="r|") as t:
+            for m in t:
+                name = m.name.removeprefix("./").lstrip("/")
+                if name in RUNTIME_FILES or name.startswith(("dev/", "proc/", "sys/")) or m.isdir():
+                    continue
+                if m.isfile():
+                    got[name] = (hashlib.sha256(t.extractfile(m).read()).hexdigest(), m.mode & 0o7777)
+                else:
+                    got[name] = ("not a regular file", m.mode & 0o7777)
+        p.wait()
     finally:
         subprocess.run(["docker", "rm", cid], capture_output=True)
-    got = {}
-    with tarfile.open(fileobj=io.BytesIO(tar)) as t:
-        for m in t.getmembers():
-            if m.isfile() and m.name.removeprefix("./").lstrip("/") not in RUNTIME_FILES and not m.name.removeprefix("./").lstrip("/").startswith("dev/"):
-                got[m.name.removeprefix("./").lstrip("/")] = hashlib.sha256(t.extractfile(m).read()).hexdigest()
-    want = s["files"]
+    return got
+
+
+def verify(name: str, ref: str, files: dict | None = None) -> list[str]:
+    """Problems with the files <ref> carries against FILES.json's (or the given) {file: sha256} and the sources' modes."""
+    s = spec(name)
+    src = ROOT / s["source"]
+    got = image_files(ref)
+    want = {f: (h, _mode(src / f) if (src / f).is_file() else None) for f, h in (files or s["files"]).items()}
     return [f"/{f}: image {got.get(f)} != FILES.json {want.get(f)}" for f in sorted(set(got) | set(want))
             if got.get(f) != want.get(f)]
 
 
+def pin(name: str, digest: str) -> None:
+    """Pin the pushed <image>:<VERSION>@<digest> in FILES.json, with the sources' hashes, once the image is checked to
+    carry exactly those files."""
+    if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+        raise SystemExit(f"pin: {digest!r} is not a digest (sha256:<64 hex>, the part after @ of the pushed RepoDigest)")
+    p = ROOT / "images" / name / "FILES.json"
+    s = json.loads(p.read_text())
+    ver = (ROOT / "images" / name / "VERSION").read_text().strip()
+    ref = s["image"].split("@")[0].rsplit(":", 1)[0] + f":{ver}@{digest}"
+    files = {f: sha256(ROOT / s["source"] / f) for f in sorted(s["files"])}
+    bad = verify(name, ref, files)
+    if bad:
+        raise SystemExit("pin: the pushed image does not carry the sources' files:\n" + "\n".join(bad))
+    p.write_text(json.dumps(dict(s, image=ref, files=files), indent=1) + "\n")
+
+
 def main(argv: list[str]) -> int:
     cmd, args = (argv[0], argv[1:]) if argv else ("check", [])
+    need = {"build": 1, "pin": 2, "verify-image": 1}
+    if cmd in need and len(args) != need[cmd]:
+        print(__doc__)
+        return 2
     if cmd == "check":
         names = args or sorted(p.parent.name for p in (ROOT / "images").glob("*/FILES.json"))
         bad = [e for n in names for e in check(n)]
@@ -122,7 +165,7 @@ def main(argv: list[str]) -> int:
         print(image(args[0]))
         return 0
     if cmd == "verify-image":
-        bad = verify_image(args[0])
+        bad = verify(args[0], image(args[0]))
         print("\n".join(bad) or f"ok {image(args[0])}: {len(spec(args[0])['files'])} files match FILES.json")
         return 1 if bad else 0
     print(__doc__)

@@ -15,7 +15,6 @@ from scripts.quadrotor_landing.gen_tasks import BASE, HOSTS, put, snapshot
 
 # images/control-transfer/VERSION: the nominal stage for the agent, the evaluator stage for the sim sidecar
 IMAGE = "ghcr.io/mll-lab-nu/eai-control-transfer:" + (ROOT / "images/control-transfer/VERSION").read_text().strip()
-sys.path.insert(0, str(ROOT / "scripts"))
 import files_image  # noqa: E402  (files-only images: one copy of a file many tasks would each carry)
 # AnyCar's two track data files (6.6 MB a copy): the agent's image takes them from the files-only image
 # images/control-transfer-anycar-files/ (FILES.json; source scripts/control_transfer/components/anycarbench/) instead of
@@ -706,7 +705,7 @@ def main():
         print(json.dumps(track_ids(), indent=2))
         return
     os.umask(0o022)
-    bad = files_image.check(ANYCAR_FILES)   # the pinned files-only image still carries the sources' bytes
+    bad = files_image.check(ANYCAR_FILES)   # the sources still hash to FILES.json (what the pinned image was built from)
     expected = set()
     for name in TASK_NAMES:
         for i in range(2):

@@ -80,7 +80,8 @@ class CompactPackaging(unittest.TestCase):
             self.assertIn("0 through 30", p["image_sampling"])
             self.assertEqual(p["request_timeout_s"], 1200)
             self.assertIn("CONTROL_DEPLOY_TIMEOUT_S=1200", (task / "environment/Dockerfile").read_text())
-            self.assertTrue((public / "scripts/control_transfer/components/anycarbench/compact_routes.json").is_file())
+            self.assertIn(" /compact_routes.json /app/scripts/control_transfer/components/anycarbench/compact_routes.json\n",
+                          (task / "environment/Dockerfile").read_text())   # from the files-only image (ANYCAR_FROM_IMAGE)
             self.assertFalse(
                 any("trusted" in p.parts or p.name == "anycar_compact_routes.py" for p in public.rglob("*"))
             )

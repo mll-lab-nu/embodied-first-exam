@@ -59,14 +59,17 @@ assert len(names) == 320
                     "__init__.py",
                     "model.py",
                     "tracks.py",
-                    "circuits.json",
                     "route_lengths.json",
-                    "compact_routes.json",
                     "LICENSE.anycar",
                     "LICENSE.f1db",
                     "NOTICE",
                 },
             )
+            # the two track data files come from the files-only image, at the same paths (gen_tasks.ANYCAR_FROM_IMAGE)
+            dockerfile = (task / "environment/Dockerfile").read_text()
+            for prefix in ("", "scripts/control_transfer/components/"):
+                for f in ("circuits.json", "compact_routes.json"):
+                    self.assertIn(f" /{f} /app/{prefix}anycarbench/{f}\n", dockerfile)
             self.assertFalse(any("trusted" in p.parts or p.name.endswith("spec.py") for p in public.rglob("*")))
             public_spec = json.loads((public / "task-spec.json").read_text())
             self.assertEqual(public_spec["track_id"], "zigzag")
