@@ -5,7 +5,7 @@ Twenty-one tasks of DexToolBench (SimToolReal, MIT) in plain MuJoCo 3.3.7, in bo
 hand (29 position-controlled joints, 60 Hz control) must pick a tool up from a table and carry it through a human
 demonstration's goal poses in order; a goal counts when all 8 corners of the tool's grasp box are within 1.5 cm of the
 goal's, and the task passes only when every goal is reached. The scene, tooling (`rcb_dtb.py`) and the oracle rules are
-in the privileged tasks' READMEs. Three demonstrations of the 24 are excluded (the top-level README says why).
+in the privileged tasks' READMEs. Three demonstrations of the 24 are excluded, because the reference policy reaches no goal in this scene: `blue_brush/sweep_right`, `flat_eraser/wipe_c` and `flat_eraser/wipe_smile`.
 
 Generators: `scripts/dtb_mk_task.py` (privileged), `scripts/dtb_mk_oracle.py` (the oracles), `scripts/mj_mk_limited.py`
 (the standard twins, which share `images/mujoco/limited/server_mj.py` with the MuJoCo Playground ALOHA and Panda twins;
