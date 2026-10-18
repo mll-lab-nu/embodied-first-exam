@@ -9,13 +9,21 @@ Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 
 
 Inputs, all in the repository:
   scripts/roboolympics/families.json           per family: the seed, the oracle level, the review evidence
-  scripts/roboolympics/instances/<f>-i00.json  the frozen instance + the texts and numbers the tasks quote
-                                                  (make_instances.py, in the simulator image)
+  tasks/roboolympics-<f>-i00-privileged/environment/instance.json
+                                               the frozen instance + the texts and numbers the tasks quote
+                                                  (make_instances.py, in the simulator image): the committed task dir
+                                                  holds the one copy, which this reads back. make_instances.py writes a
+                                                  new or remade one to scripts/roboolympics/instances/<f>-i00.json, read
+                                                  instead while it exists; delete it there once the tasks are rendered
   scripts/roboolympics/shared/                 the tooling (rcb_rfo.py), the world package (rfo/: the core, and one
                                                   module per family under rfo/tasks/, copied as rfo_task.py), grade.py,
                                                   the sim service (standard/: the adapter server.py on rcb_service.py),
                                                   the clients, the oracle drivers (solution/)
-  scripts/roboolympics/oracles/<family>/       oracle.py (privileged) and standard_rows.npz (make_oracles.py)
+  scripts/roboolympics/oracles/<family>/       oracle.py (privileged) and result.json (make_oracles.py); the standard
+                                                  twin's rows (make_oracles.py) have one committed copy,
+                                                  tasks/roboolympics-<f>-i00-standard/solution/rows.npz, read back like
+                                                  the instance (a new standard_rows.npz next to oracle.py is read instead
+                                                  while it exists; delete it once the tasks are rendered)
   scripts/roboolympics/templates/<mode>/       every other task file; *.tmpl is filled with the instance's values
   scripts/eai_standard/client.env                 the standard agent image and its pip pins
   images/robofunolympics/VERSION                  the base image tag
@@ -480,13 +488,28 @@ def world_files(fam: str, base: str) -> dict[str, tuple[bytes, int]]:
     return out
 
 
+def instance_path(fam: str) -> pathlib.Path:
+    """The family's frozen instance: instances/<f>-i00.json while it exists (written by make_instances.py), else the
+    committed privileged task's environment/instance.json (the canonical copy; its tests/ and the standard twins'
+    environment/sim/ copies are the same bytes)."""
+    new = HERE / "instances" / f"{fam}-i00.json"
+    return new if new.is_file() else ROOT / "tasks" / task_dir(fam, "privileged") / "environment/instance.json"
+
+
+def standard_rows(fam: str) -> bytes:
+    """The standard twins' reference rows: oracles/<f>/standard_rows.npz while it exists (written by make_oracles.py),
+    else the committed standard task's solution/rows.npz (the canonical copy; the realtime twin's is the same bytes)."""
+    new = HERE / "oracles" / fam / "standard_rows.npz"
+    return (new if new.is_file() else ROOT / "tasks" / task_dir(fam, "standard") / "solution/rows.npz").read_bytes()
+
+
 def plan(fam: str, spec: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
     """{task dir name: {relative path: (content, mode)}} for the modes of one family (standard-realtime: dynamic ones)."""
-    path = HERE / "instances" / f"{fam}-i00.json"
+    path = instance_path(fam)
     raw = path.read_bytes()
     inst = json.loads(raw)
     if inst["family"] != fam or inst["seed"] != spec.get("seed", 0):
-        raise RuntimeError(f"{path.name} does not match families.json (family, seed)")
+        raise RuntimeError(f"{path.relative_to(ROOT)} does not match families.json (family, seed)")
     vals = values(fam, spec, inst, version)
     std, sol, orc = SHARED / "standard", SHARED / "solution", HERE / "oracles" / fam
     full = spec["oracle"] == "full"
@@ -529,11 +552,11 @@ def plan(fam: str, spec: dict, version: str) -> dict[str, dict[str, tuple[bytes,
             if full and rt:
                 files["solution/solve.sh"] = ((sol / "solve_realtime.sh").read_bytes(), 0o755)
                 files["solution/oracle_plan.py"] = ((sol / "oracle_plan.py").read_bytes(), 0o644)
-                files["solution/rows.npz"] = ((orc / "standard_rows.npz").read_bytes(), 0o644)
+                files["solution/rows.npz"] = (standard_rows(fam), 0o644)
             elif full:
                 files["solution/solve.sh"] = ((sol / "solve_standard.sh").read_bytes(), 0o755)
                 files["solution/oracle_replay.py"] = ((sol / "oracle_replay.py").read_bytes(), 0o644)
-                files["solution/rows.npz"] = ((orc / "standard_rows.npz").read_bytes(), 0o644)
+                files["solution/rows.npz"] = (standard_rows(fam), 0o644)
         out[task_dir(fam, mode)] = files
     return out
 

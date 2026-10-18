@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Facts of the frozen MyoSuite instances, for the generator: instances/<family>.json from instances/<family>.npz.
+"""Facts of the frozen MyoSuite instances, for the generator: instances/<family>.json from the family's instance.
+
+The instance read is instances/<family>.npz when it exists (a new or rebuilt one), else the committed copy in the
+family's privileged task dir (tasks/myosuite-<family>-i00-privileged/environment/instance.npz); a family with neither
+gets a new one frozen into instances/<family>.npz, which generate.py then copies into the task dirs (delete it there
+once the tasks are regenerated).
 
 Runs INSIDE the MyoSuite base image (it loads each instance and reads MyoSuite's own code and parameters):
   docker run --rm --network none --user $(id -u):$(id -g) -e HOME=/tmp -v $PWD:/repo -w /repo \\
@@ -283,8 +288,16 @@ def scene_cameras(s) -> list:
     return out
 
 
+def instance_path(fam: str) -> Path:
+    """instances/<family>.npz if present, else the committed privileged task's environment/instance.npz if present,
+    else instances/<family>.npz (to be frozen)."""
+    new = HERE / "instances" / f"{fam}.npz"
+    task = HERE.parents[1] / "tasks" / f"myosuite-{fam.replace('_', '-')}-i00-privileged" / "environment/instance.npz"
+    return task if not new.exists() and task.exists() else new
+
+
 def facts(fam: str) -> dict:
-    inst = HERE / "instances" / f"{fam}.npz"
+    inst = instance_path(fam)
     if not inst.exists():                      # a new family: freeze its instance (seed(0), reset(seed=0))
         M.Session(fam).save_instance(inst, {"source": f"{M.TASKS[fam]} after seed(0), reset(seed=0)", "myosuite": "2.12.2"})
     s = M.Session(fam, instance=inst)
@@ -332,7 +345,7 @@ def facts(fam: str) -> dict:
 def check_oracle(fam: str) -> dict:
     A = np.load(HERE / "oracles" / f"{fam}.npy")
     assert np.array_equal(A, A.astype(np.float32).astype(np.float64)), f"{fam}: reference rows are not float32-exact"
-    runs = [M.Session(fam, instance=HERE / "instances" / f"{fam}.npz").replay(A) for _ in range(2)]
+    runs = [M.Session(fam, instance=instance_path(fam)).replay(A) for _ in range(2)]
     assert all(r["success"] for r in runs) and runs[0]["state_sha"] == runs[1]["state_sha"], (fam, runs)
     return {
         "reference_rows": int(len(A)),

@@ -34,7 +34,7 @@ cannot meet RoboOlympics-Match's names either.
 | score | the referee's verdict: every stage latched in order, no rule broken, within the time limit; binary. `progress` (stages reached) and the family's metrics (a distance, a speed, a count) are reported beside it |
 | tasks | 60 families × 2 modes: `tasks/roboolympics-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 120 task directories, plus the 16 dynamic families' `-standard-realtime` twins (`eai-standard/2.3`), 136 in all (the tasks RoboOlympics exports itself: [RoboOlympics-Match](roboolympics-match.md)) |
 | image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` (with libglvnd's EGL loader and the NVIDIA EGL manifest, for the realtime twins' GPU rendering) (`images/robofunolympics/`, about 600 MB) |
-| generator | `scripts/roboolympics/gen_tasks.py render` / `check` from `families.json`, `instances/`, `shared/`, `templates/`, `oracles/`; a family is one module, `shared/rfo/tasks/<family>.py` (`scripts/roboolympics/AUTHORING.md`, `FAMILIES.md`) |
+| generator | `scripts/roboolympics/gen_tasks.py render` / `check` from `families.json`, `shared/`, `templates/`, `oracles/` and the frozen instances and standard reference rows, whose one committed copy is in the task dirs (`environment/instance.json` of the privileged task, `solution/rows.npz` of the standard task; read back by the generator); a family is one module, `shared/rfo/tasks/<family>.py` (`scripts/roboolympics/AUTHORING.md`, `FAMILIES.md`) |
 | oracle | full on the families that have a real controller in the official setting, none on the rest (table below), with a referee test and human review |
 | agent budget | 7200 s in both modes (each task's own `[agent] timeout_sec`: the tasks ask the agent to find, download and adapt controllers, or to build one, which an hour does not hold); standard mode: 50 resets, the last attempt graded |
 | network | open (`[metadata] network = "open"`, below) |
@@ -428,7 +428,9 @@ scripts/roboolympics/tests/run_all.sh                                   # every 
 ```
 Build the image: `scripts/build_images.sh` (context `images/robofunolympics/`). Regenerate after a change to a family:
 `RFO_RW=1 scripts/roboolympics/dev.sh /rfo/make_instances.py`, `RFO_RW=1 scripts/roboolympics/dev.sh
-/rfo/make_oracles.py`, `python3 scripts/roboolympics/gen_tasks.py render`, `cd tasks && harbor add --scan .`.
+/rfo/make_oracles.py`, `python3 scripts/roboolympics/gen_tasks.py render`, `cd tasks && harbor add --scan .`, then delete
+the files the two scripts wrote that the task dirs now hold (`scripts/roboolympics/instances/`,
+`scripts/roboolympics/oracles/*/standard_rows.npz`; while they exist the generator reads them instead of the task dirs).
 
 ## Tasks exported by RoboOlympics (its own service inside the task; PROTOCOL §3)
 

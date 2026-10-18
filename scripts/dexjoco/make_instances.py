@@ -5,6 +5,11 @@ Runs INSIDE the base image (DexJoCo + MuJoCo); writes scripts/dexjoco/instances/
   oracle_trajectory.npz   the human demonstration's own actions, truncated where its episode ends in success
   facts.json              what generate.py needs from the simulator (cameras, start targets, hand limits, the upstream
                           success code, the arm bases, the table height, the oracle's length and margin)
+Only facts.json stays committed there: the committed instance.npz and oracle_trajectory.npz are the ones in the family's
+privileged task dir (tasks/dexjoco-<family>-i00-privileged/environment/instance.npz, .../solution/oracle_trajectory.npz).
+A run without --demo starts from those (copied into scripts/dexjoco/instances/<family>/ when that has none; a copy
+still byte-identical to the committed file is deleted again at the end); generate.py takes the two files from
+scripts/dexjoco/instances/<family>/ while they are there, so delete them there once the tasks are regenerated.
 
   # 1. the demos (public Hugging Face dataset DexJoCo/DexJoCo-Datasets-Raw, replay.zarr only, ~120 KB each)
   python3 scripts/dexjoco/get_demo.py water_plant 1 /tmp/demos
@@ -33,6 +38,7 @@ import argparse
 import inspect
 import json
 import os
+import shutil
 import sys
 import textwrap
 import time
@@ -84,6 +90,26 @@ def build_from_demo(fam: str, demo: str, out: Path) -> None:
         raise SystemExit(f"{fam}: the demo does not succeed from its own initial state: {st}")
     s2.save_trajectory(A[:st["replayed_rows"]], out / "oracle_trajectory.npz", {"source": "demo actions", "demo": FAMILIES[fam][1]})
     # facts() rounds the rows to float32 (and checks they still succeed) if they are not float32-exact
+
+
+def committed_paths(fam: str) -> dict[str, Path]:
+    """The committed instance and oracle of a family (its privileged task dir), by file name."""
+    t = HERE.parents[1] / "tasks" / f"dexjoco-{fam.replace('_', '-')}-i00-privileged"
+    return {"instance.npz": t / "environment/instance.npz", "oracle_trajectory.npz": t / "solution/oracle_trajectory.npz"}
+
+
+def committed(fam: str, out: Path) -> None:
+    """Copy the committed instance and oracle into `out` where `out` has none."""
+    for name, src in committed_paths(fam).items():
+        if not (out / name).is_file():
+            shutil.copyfile(src, out / name)
+
+
+def drop_unchanged(fam: str, out: Path) -> None:
+    """Delete the files in `out` that are byte-identical to the committed ones (only a new or rebuilt file stays there)."""
+    for name, src in committed_paths(fam).items():
+        if (out / name).is_file() and src.is_file() and (out / name).read_bytes() == src.read_bytes():
+            (out / name).unlink()
 
 
 def strip_meta(fam: str, out: Path) -> None:
@@ -194,14 +220,19 @@ def main() -> None:
     for fam in fams:
         out = HERE / "instances" / fam
         out.mkdir(parents=True, exist_ok=True)
-        if a.strip_meta:
-            strip_meta(fam, out)
-            continue
-        if a.demo:
-            build_from_demo(fam, a.demo, out)
-        f = facts(fam, out)
-        (out / "facts.json").write_text(json.dumps(f, indent=1) + "\n")
-        print(json.dumps({k: f[k] for k in ("family", "oracle_rows", "instance_sha", "oracle_state_sha", "steps_per_s")}), flush=True)
+        if not a.demo:
+            committed(fam, out)
+        try:
+            if a.strip_meta:
+                strip_meta(fam, out)
+                continue
+            if a.demo:
+                build_from_demo(fam, a.demo, out)
+            f = facts(fam, out)
+            (out / "facts.json").write_text(json.dumps(f, indent=1) + "\n")
+            print(json.dumps({k: f[k] for k in ("family", "oracle_rows", "instance_sha", "oracle_state_sha", "steps_per_s")}), flush=True)
+        finally:
+            drop_unchanged(fam, out)
 
 
 if __name__ == "__main__":

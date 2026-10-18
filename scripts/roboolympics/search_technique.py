@@ -28,6 +28,14 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "shared"))
 from rcb_rfo import Session  # noqa: E402
 
+
+def instance_path(fam: str) -> pathlib.Path:
+    """The family's frozen instance: instances/<f>-i00.json while it exists (a new or remade one), else the committed
+    privileged task's environment/instance.json (in the image: /tasks, which dev.sh mounts)."""
+    new = HERE / "instances" / f"{fam}-i00.json"
+    return new if new.is_file() else HERE.parent.parent / "tasks" / f"roboolympics-{fam}-i00-privileged/environment/instance.json"
+
+
 LEGS = ("crouch", "shift", "sway", "turn")
 IK_STEPS = 6
 
@@ -375,7 +383,7 @@ class Trial:
     def __init__(self, fam: str):
         self.fam, self.spec = fam, SPECS[fam]()
         self.oracle = load_oracle(fam)
-        self.s = Session(str(HERE / "instances" / f"{fam}-i00.json"))
+        self.s = Session(str(instance_path(fam)))
         w = self.s.world
         self.pose = Pose(w, self.spec.upper)
         self.q0 = w.d.qpos[w.robot.qadr].copy()

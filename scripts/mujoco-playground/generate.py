@@ -6,7 +6,9 @@
     python3 scripts/mujoco-playground/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
 Inputs: instances/<Env>.json (the frozen instance with the numbers the texts quote: make_instances.py, then
-select_instances.py), oracles/<Env>.npy (the reference rows), the templates in templates/, the shared sources in shared/
+select_instances.py), the reference rows (their one committed copy is the privileged task's solution/oracle.npy; a new
+or remade one, which select_instances.py writes to oracles/<Env>.npy, is read instead while it exists: delete it there once
+the tasks are regenerated), the templates in templates/, the shared sources in shared/
 and the eai-standard/2.2 layer with the standard client's base image and pins (scripts/eai_standard/), all copied byte
 for byte. Each task directory is written from scratch and finished with scripts/task_conventions.py (normalize,
 PROTOCOL v1.0.1); a quadruped task directory this does not write is removed. Only the standard library is needed.
@@ -297,10 +299,12 @@ def reset_dir(d: Path) -> None:
     d.mkdir(parents=True)
 
 
-def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644) -> None:
+def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644, data: bytes | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if src is not None:
         shutil.copyfile(src, path)
+    elif data is not None:
+        path.write_bytes(data)
     else:
         path.write_text(text)
     path.chmod(mode)
@@ -571,7 +575,10 @@ def make(env: str, out: Path) -> tuple[Path, ...]:
     v = values(env, inst)
     v["change_log_std"] = "\n".join(f"- {c}" for c in STD_CHANGES + (STD_CHANGES_BARKOUR if "Barkour" in env else []) + STD_CHANGES_R2
                                     + STD_CHANGES_RESETS + STD_CHANGES_LIVE)
-    oracle = HERE / "oracles" / f"{env}.npy"
+    # the reference rows: oracles/<Env>.npy while it exists (a new or remade one), else the committed privileged task's
+    # solution/oracle.npy (the canonical copy; the standard twins' are the same bytes). Read before reset_dir removes it.
+    new = HERE / "oracles" / f"{env}.npy"
+    oracle = (new if new.is_file() else ROOT / "tasks" / f"{v['name']}-privileged" / "solution/oracle.npy").read_bytes()
 
     p = out / f"{v['name']}-privileged"
     reset_dir(p)
@@ -588,7 +595,7 @@ def make(env: str, out: Path) -> tuple[Path, ...]:
     put(p / "tests/instance.json", src=inst_path)
     put(p / "solution/solve.sh", src=SHARED / "solve_privileged.sh", mode=0o755)
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
-    put(p / "solution/oracle.npy", src=oracle)
+    put(p / "solution/oracle.npy", data=oracle)
 
     s = out / f"{v['name']}-standard"
     reset_dir(s)
@@ -613,7 +620,7 @@ def make(env: str, out: Path) -> tuple[Path, ...]:
     put(s / "tests/grade.py", src=SHARED / "standard/grade.py")
     put(s / "solution/solve.sh", src=SHARED / "standard/solve.sh", mode=0o755)
     put(s / "solution/oracle_replay.py", src=SHARED / "standard/oracle_replay.py")
-    put(s / "solution/oracle.npy", src=oracle)
+    put(s / "solution/oracle.npy", data=oracle)
     normalize(p)
     normalize(s)
     if env not in REALTIME:
@@ -640,7 +647,7 @@ def make(env: str, out: Path) -> tuple[Path, ...]:
     put(r / "tests/grade.py", src=RT / "grade.py")
     put(r / "solution/solve.sh", src=RT / "solve.sh", mode=0o755)
     put(r / "solution/oracle_plan.py", src=RT / "oracle_plan.py")
-    put(r / "solution/oracle.npy", src=oracle)
+    put(r / "solution/oracle.npy", data=oracle)
     normalize(r)
     return p, s, r
 

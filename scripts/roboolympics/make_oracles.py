@@ -5,6 +5,10 @@ measured (oracles/<family>/result.json: steps, time, the referee's metrics; the 
 
     RFO_RW=1 scripts/roboolympics/dev.sh /rfo/make_oracles.py [--only a,b]
 
+It runs from the family's instance (instances/<family>-i00.json while it exists, else the committed privileged task's
+environment/instance.json). The committed rows are the standard task's solution/rows.npz; gen_tasks.py reads a
+standard_rows.npz written here instead while it exists: render the tasks, then delete it here.
+
 A controller counts when the referee says success live and a fresh replay of its sim rows succeeds and ends in the same
 state. The table it prints (steps, time, margin metrics) is the families' reference-solution evidence."""
 import argparse
@@ -19,6 +23,13 @@ import numpy as np
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE / "shared"))
 from rcb_rfo import Session  # noqa: E402
+
+
+def instance_path(fam: str) -> pathlib.Path:
+    """The family's frozen instance: instances/<f>-i00.json while it exists (a new or remade one), else the committed
+    privileged task's environment/instance.json (in the image: /tasks, which dev.sh mounts)."""
+    new = HERE / "instances" / f"{fam}-i00.json"
+    return new if new.is_file() else HERE.parent.parent / "tasks" / f"roboolympics-{fam}-i00-privileged/environment/instance.json"
 
 
 def main() -> int:
@@ -38,7 +49,7 @@ def main() -> int:
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         t = time.time()
-        s = Session(str(HERE / "instances" / f"{fam}-i00.json"))
+        s = Session(str(instance_path(fam)))
         mod.solve(s)
         st = s.status()
         rep = s.replay()
