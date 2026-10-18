@@ -244,6 +244,13 @@ def test_core_set():
                        + entry(sorted(cs)[1], extra="x") + entry("../tasks/" + ANY))
         found = tc.check_core_set(path=bad)
         check(len(found) == 5, f"check_core_set: want a missing dir, a wrong mode, a bad luna, an unknown field and a path, got {found}")
+        # an owner pick (pick = "owner") may carry Luna's success; without it, or with another pick, it may not
+        (Path(td) / "pick.toml").write_text(sha + entry(ANY, luna="success", pick="owner"))
+        check(not tc.check_core_set(path=Path(td) / "pick.toml"), f"an owner pick with luna success fails: "
+              f"{tc.check_core_set(path=Path(td) / 'pick.toml')}")
+        (Path(td) / "nopick.toml").write_text(sha + entry(ANY, luna="success") + entry(sorted(cs)[1], pick="luna"))
+        check(len(tc.check_core_set(path=Path(td) / "nopick.toml")) == 2, "luna success without pick = owner, or an unknown "
+              f"pick, passes: {tc.check_core_set(path=Path(td) / 'nopick.toml')}")
         # a new file each (the list is parsed once per mtime)
         (Path(td) / "nosha.toml").write_text(entry(ANY))
         check(any("generated_from" in x for x in tc.check_core_set(path=Path(td) / "nosha.toml")),

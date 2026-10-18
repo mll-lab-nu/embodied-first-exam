@@ -2,16 +2,52 @@
 # -standard, -standard-realtime) is its own task. Left out: the tasks judged easy (solved through a shortcut, judged too
 # easy by the benchmark owner, or solved in every mode by the screening runs) and the dirs the reference run
 # codex-gpt6_luna-xhigh solved (a success in any mode takes out the base; a RoboSafeBench privileged twin takes out only
-# itself). A dir left out stays out. `generated_from` is the commit of main whose task dirs this list classified: a task
-# dir added after it is not classified until the list is regenerated from the eval pool's Luna verdicts.
+# itself). A dir left out stays out. Owner picks (`pick = "owner"`) are listed whatever those rules say. `generated_from`
+# is the commit of main whose task dirs this list classified: a task dir added after it is not classified until the list
+# is regenerated from the eval pool's Luna verdicts.
 #   task       the task dir
 #   base       the task name without its mode suffix
 #   benchmark  the base's label (scripts/task_conventions.py BENCHMARKS)
 #   mode       privileged | standard | standard-realtime
-#   luna       "failed" (Luna's valid verdict) or "no result yet"
+#   luna       "failed" (Luna's valid verdict) or "no result yet"; an owner pick may also be "success"
+#   pick       "owner" on a dir the benchmark owner put in by hand (absent otherwise)
 # Checked by `python3 scripts/task_conventions.py core-set --check`.
 
 generated_from = "f5e97166032b1cd9112215197580cab878d8396f"
+
+# ---- AM-Bench
+
+[[task]]
+task = "ambench-cabinet-pick-place-fahexa-i00-privileged"
+base = "ambench-cabinet-pick-place-fahexa-i00"
+benchmark = "AM-Bench"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "ambench-cabinet-pick-place-fahexa-i00-standard"
+base = "ambench-cabinet-pick-place-fahexa-i00"
+benchmark = "AM-Bench"
+mode = "standard"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "ambench-peg-in-hole-fahexa-i00-privileged"
+base = "ambench-peg-in-hole-fahexa-i00"
+benchmark = "AM-Bench"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "ambench-peg-in-hole-fahexa-i00-standard"
+base = "ambench-peg-in-hole-fahexa-i00"
+benchmark = "AM-Bench"
+mode = "standard"
+luna = "failed"
+pick = "owner"
 
 # ---- BEHAVIOR-1K
 
@@ -2199,6 +2235,40 @@ benchmark = "KinDER"
 mode = "standard"
 luna = "failed"
 
+# ---- LIBERO-MAX
+
+[[task]]
+task = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00-privileged"
+base = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00"
+benchmark = "LIBERO-MAX"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00-standard"
+base = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00"
+benchmark = "LIBERO-MAX"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00-privileged"
+base = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00-standard"
+base = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
 # ---- ManiGuard
 
 [[task]]
@@ -2298,6 +2368,74 @@ base = "maniguard-lid-transport-i12"
 benchmark = "ManiGuard"
 mode = "standard"
 luna = "failed"
+
+# ---- MetaWorld+
+
+[[task]]
+task = "metaworldplus-basketball-i00-privileged"
+base = "metaworldplus-basketball-i00"
+benchmark = "MetaWorld+"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "metaworldplus-basketball-i00-standard"
+base = "metaworldplus-basketball-i00"
+benchmark = "MetaWorld+"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "metaworldplus-button-press-topdown-i00-privileged"
+base = "metaworldplus-button-press-topdown-i00"
+benchmark = "MetaWorld+"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "metaworldplus-button-press-topdown-i00-standard"
+base = "metaworldplus-button-press-topdown-i00"
+benchmark = "MetaWorld+"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+# ---- MolmoSpaces
+
+[[task]]
+task = "molmospaces-navigate-to-i00-privileged"
+base = "molmospaces-navigate-to-i00"
+benchmark = "MolmoSpaces"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "molmospaces-navigate-to-i00-standard"
+base = "molmospaces-navigate-to-i00"
+benchmark = "MolmoSpaces"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "molmospaces-pick-i00-privileged"
+base = "molmospaces-pick-i00"
+benchmark = "MolmoSpaces"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "molmospaces-pick-i00-standard"
+base = "molmospaces-pick-i00"
+benchmark = "MolmoSpaces"
+mode = "standard"
+luna = "success"
+pick = "owner"
 
 # ---- MuJoCo Playground
 
@@ -3490,6 +3628,40 @@ benchmark = "RoboARC"
 mode = "standard"
 luna = "failed"
 
+# ---- RoboCasa
+
+[[task]]
+task = "robocasa-coffee-setup-mug-i00-privileged"
+base = "robocasa-coffee-setup-mug-i00"
+benchmark = "RoboCasa"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "robocasa-coffee-setup-mug-i00-standard"
+base = "robocasa-coffee-setup-mug-i00"
+benchmark = "RoboCasa"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "robocasa-turn-off-sink-faucet-i00-privileged"
+base = "robocasa-turn-off-sink-faucet-i00"
+benchmark = "RoboCasa"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "robocasa-turn-off-sink-faucet-i00-standard"
+base = "robocasa-turn-off-sink-faucet-i00"
+benchmark = "RoboCasa"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
 # ---- RoboCasa-GR1
 
 [[task]]
@@ -3856,13 +4028,15 @@ base = "roboolympics-badminton-serve-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-badminton-serve-i00-standard"
 base = "roboolympics-badminton-serve-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
-luna = "no result yet"
+luna = "success"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-balance-beam-i00-privileged"
@@ -3989,6 +4163,7 @@ base = "roboolympics-dunk-between-legs-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-dunk-between-legs-i00-standard"
@@ -3996,6 +4171,7 @@ base = "roboolympics-dunk-between-legs-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-dunk-i00-privileged"
@@ -4017,13 +4193,15 @@ base = "roboolympics-dunk-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-dunk-realgrasp-i00-standard"
 base = "roboolympics-dunk-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
-luna = "no result yet"
+luna = "failed"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-high-jump-i00-privileged"
@@ -4045,6 +4223,7 @@ base = "roboolympics-hurdles-freestanding-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-hurdles-freestanding-i00-standard"
@@ -4052,6 +4231,7 @@ base = "roboolympics-hurdles-freestanding-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-hurdles-i00-privileged"
@@ -4108,13 +4288,15 @@ base = "roboolympics-juggling-feet-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-juggling-feet-i00-standard"
 base = "roboolympics-juggling-feet-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
-luna = "no result yet"
+luna = "failed"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-juggling-head-i00-privileged"
@@ -4122,20 +4304,23 @@ base = "roboolympics-juggling-head-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-juggling-head-i00-standard"
 base = "roboolympics-juggling-head-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
-luna = "no result yet"
+luna = "failed"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-juggling-head-i00-standard-realtime"
 base = "roboolympics-juggling-head-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard-realtime"
-luna = "no result yet"
+luna = "failed"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-juggling-i00-privileged"
@@ -4157,6 +4342,7 @@ base = "roboolympics-jump-rope-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-jump-rope-i00-standard"
@@ -4164,6 +4350,7 @@ base = "roboolympics-jump-rope-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-layup-i00-privileged"
@@ -4185,20 +4372,23 @@ base = "roboolympics-long-rope-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-long-rope-i00-standard"
 base = "roboolympics-long-rope-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
-luna = "no result yet"
+luna = "failed"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-long-rope-i00-standard-realtime"
 base = "roboolympics-long-rope-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard-realtime"
-luna = "no result yet"
+luna = "failed"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-pitch-target-i00-privileged"
@@ -4289,21 +4479,24 @@ task = "roboolympics-tennis-return-realgrasp-i00-privileged"
 base = "roboolympics-tennis-return-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
-luna = "no result yet"
+luna = "success"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-tennis-return-realgrasp-i00-standard"
 base = "roboolympics-tennis-return-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
-luna = "no result yet"
+luna = "failed"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-tennis-return-realgrasp-i00-standard-realtime"
 base = "roboolympics-tennis-return-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard-realtime"
-luna = "no result yet"
+luna = "failed"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-tennis-serve-i00-privileged"
@@ -4324,7 +4517,8 @@ task = "roboolympics-tennis-serve-realgrasp-i00-privileged"
 base = "roboolympics-tennis-serve-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "privileged"
-luna = "no result yet"
+luna = "success"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-tennis-serve-realgrasp-i00-standard"
@@ -4332,6 +4526,7 @@ base = "roboolympics-tennis-serve-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "no result yet"
+pick = "owner"
 
 [[task]]
 task = "roboolympics-triple-jump-i00-privileged"
@@ -5546,6 +5741,74 @@ base = "robowits-stand-pages-i00"
 benchmark = "RoboWits"
 mode = "standard"
 luna = "failed"
+
+# ---- VLABench
+
+[[task]]
+task = "vlabench-heat-food-i00-privileged"
+base = "vlabench-heat-food-i00"
+benchmark = "VLABench"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "vlabench-heat-food-i00-standard"
+base = "vlabench-heat-food-i00"
+benchmark = "VLABench"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "vlabench-texas-holdem-i00-privileged"
+base = "vlabench-texas-holdem-i00"
+benchmark = "VLABench"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "vlabench-texas-holdem-i00-standard"
+base = "vlabench-texas-holdem-i00"
+benchmark = "VLABench"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+# ---- YAMLab
+
+[[task]]
+task = "yamlab-hang-mug-on-tree-i15-privileged"
+base = "yamlab-hang-mug-on-tree-i15"
+benchmark = "YAMLab"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "yamlab-hang-mug-on-tree-i15-standard"
+base = "yamlab-hang-mug-on-tree-i15"
+benchmark = "YAMLab"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "yamlab-put-pot-on-cooktop-i00-privileged"
+base = "yamlab-put-pot-on-cooktop-i00"
+benchmark = "YAMLab"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "yamlab-put-pot-on-cooktop-i00-standard"
+base = "yamlab-put-pot-on-cooktop-i00"
+benchmark = "YAMLab"
+mode = "standard"
+luna = "failed"
+pick = "owner"
 
 # ---- iSpatialGym
 

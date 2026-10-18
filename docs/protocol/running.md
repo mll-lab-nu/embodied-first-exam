@@ -82,9 +82,9 @@ every core task, the flag is shown as a marker and may be used as a filter. The 
 `core`, else `excluded`). It lists task dirs, each mode its own task: every task dir of main at the list's
 `generated_from` commit minus the tasks judged easy (solved through a shortcut, judged too easy by the benchmark owner, or
 solved in every mode by the screening runs) and minus the dirs the reference run codex-gpt6_luna-xhigh solved (a success
-in any mode takes out the base; a RoboSafeBench privileged twin, reported apart, takes out only itself). A dir left out
-stays out. The list is regenerated from the reference run's verdicts: a task dir added after `generated_from` is run by
-the reference run and enters the list at the next regeneration unless that run solved it (until then `set_of` marks it
+in any mode takes out the base; a RoboSafeBench privileged twin, reported apart, takes out only itself), plus owner
+picks (`pick = "owner"`). A dir left out stays out. The list is regenerated from the reference run's verdicts: a task
+dir added after `generated_from` is run by the reference run and enters the list at the next regeneration unless that run solved it (until then `set_of` marks it
 `excluded`). Task dirs the list left out stay in the repository under their names and are not evaluated by official runs;
 results they already have are kept and shown marked (the batch summary marks them in their configuration's table and leaves them out of its rate). `set` in
 `config.json` is the value when the result was written; a report derives it from `docs/core_set.toml` at the commit it
