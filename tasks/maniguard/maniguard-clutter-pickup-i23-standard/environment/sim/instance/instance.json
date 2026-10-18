@@ -1,0 +1,157 @@
+{
+ "task": "clutter_pickup/task_0023",
+ "family": "clutter_pickup",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "206f553dd41b7d2f19042dbcd4745a12662203c6bc4595a555e513ee062c66f2",
+ "diagnostics_sha256": "f92980c4d267ce4c1de4bda35e96e712d972c2860028774507c01483ad9678f9",
+ "pipeline": "table",
+ "gpu_dynamics": false,
+ "state_sha": "021f30c779dc2819",
+ "objects": {
+  "desk_rzyfxk_0": {
+   "category": "desk",
+   "position": [
+    4.93382,
+    19.03382,
+    0.67735
+   ],
+   "orientation_xyzw": [
+    -3e-05,
+    7e-05,
+    -0.7071,
+    0.70711
+   ]
+  },
+  "cocktail_glass_81": {
+   "category": "cocktail_glass",
+   "position": [
+    4.9185,
+    18.95186,
+    0.878
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    -0.0,
+    1.0
+   ]
+  },
+  "teacup_80": {
+   "category": "teacup",
+   "position": [
+    5.08235,
+    19.03454,
+    0.82681
+   ],
+   "orientation_xyzw": [
+    1e-05,
+    1e-05,
+    -0.03473,
+    0.9994
+   ]
+  },
+  "vase_79": {
+   "category": "vase",
+   "position": [
+    4.82567,
+    19.07767,
+    0.88889
+   ],
+   "orientation_xyzw": [
+    1e-05,
+    2e-05,
+    -0.04331,
+    0.99906
+   ]
+  },
+  "bowl_78": {
+   "category": "bowl",
+   "position": [
+    4.69191,
+    19.03683,
+    0.79307
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    -0.07035,
+    0.99752
+   ]
+  },
+  "wineglass_77": {
+   "category": "wineglass",
+   "position": [
+    4.90892,
+    18.80704,
+    0.87369
+   ],
+   "orientation_xyzw": [
+    0.00075,
+    0.00099,
+    -0.07526,
+    0.99716
+   ]
+  },
+  "mug_76": {
+   "category": "mug",
+   "position": [
+    4.77133,
+    18.85498,
+    0.82267
+   ],
+   "orientation_xyzw": [
+    -1e-05,
+    -4e-05,
+    -0.04271,
+    0.99909
+   ]
+  },
+  "plate_75": {
+   "category": "plate",
+   "position": [
+    5.10413,
+    18.88679,
+    0.78636
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.06438,
+    0.99793
+   ]
+  },
+  "goal_region__cocktail_glass_81": {
+   "category": "goal_region_marker",
+   "position": [
+    4.41404,
+    18.95186,
+    0.85737
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}

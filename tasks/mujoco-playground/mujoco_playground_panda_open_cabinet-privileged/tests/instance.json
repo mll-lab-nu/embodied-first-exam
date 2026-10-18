@@ -1,0 +1,21 @@
+{
+ "benchmark": "MuJoCo Playground",
+ "env": "PandaOpenCabinet",
+ "seed": 60417,
+ "target_pos": [
+  0.20061100789921119,
+  0.0,
+  0.5
+ ],
+ "arm_perturbation": [
+  -0.40149290059168086,
+  0.30644505644864817,
+  0.27722450197865367,
+  -0.470361229014973,
+  -0.4041730495319413,
+  0.9420799181422075,
+  -0.41880158956411684
+ ],
+ "text": "Grasp the green handle and pull it along its slide until it is at the red target sphere.",
+ "state_sha": "320d1032d876"
+}

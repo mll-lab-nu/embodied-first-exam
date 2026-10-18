@@ -1,0 +1,1320 @@
+{
+ "task": "play_tic_tac_toe",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/play_tic_tac_toe_0.json",
+ "layout_sha256": "b5fe280e548e5845d1ff49c9df61afc6eb6a50adaa02f817c18bfa4af83f82cb",
+ "layout": {
+  "Rigid": {
+   "chessman": [
+    {
+     "category": "chessman",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.2,
+      -0.2
+     ],
+     "ylim": [
+      -0.25,
+      -0.25
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "player_piece0",
+     "default_pos": [
+      -0.2,
+      -0.25,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.15,
+      "size": [
+       0.05000000125621582,
+       0.050000004981506155,
+       0.01
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "chessman",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.1,
+      -0.1
+     ],
+     "ylim": [
+      -0.25,
+      -0.25
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "player_piece1",
+     "default_pos": [
+      -0.1,
+      -0.25,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.15,
+      "size": [
+       0.05000000125621582,
+       0.050000004981506155,
+       0.01
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "chessman",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.25,
+      -0.25
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "player_piece2",
+     "default_pos": [
+      0.0,
+      -0.25,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.15,
+      "size": [
+       0.05000000125621582,
+       0.050000004981506155,
+       0.01
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "chessman",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.1,
+      0.1
+     ],
+     "ylim": [
+      -0.25,
+      -0.25
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "player_piece3",
+     "default_pos": [
+      0.1,
+      -0.25,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.15,
+      "size": [
+       0.05000000125621582,
+       0.050000004981506155,
+       0.01
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "chessman",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.2,
+      0.2
+     ],
+     "ylim": [
+      -0.25,
+      -0.25
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "player_piece4",
+     "default_pos": [
+      0.2,
+      -0.25,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.15,
+      "size": [
+       0.05000000125621582,
+       0.050000004981506155,
+       0.01
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "chessman",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.15,
+      -0.15
+     ],
+     "ylim": [
+      0.2,
+      0.2
+     ],
+     "zlim": [
+      0.0,
+      0.0
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "opponent_piece0",
+     "default_pos": [
+      -0.15,
+      0.2,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.15,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "chessman",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.05,
+      -0.05
+     ],
+     "ylim": [
+      0.2,
+      0.2
+     ],
+     "zlim": [
+      0.0,
+      0.0
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "opponent_piece1",
+     "default_pos": [
+      -0.05,
+      0.2,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.15,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "chessman",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      0.05,
+      0.05
+     ],
+     "ylim": [
+      0.2,
+      0.2
+     ],
+     "zlim": [
+      0.0,
+      0.0
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "opponent_piece2",
+     "default_pos": [
+      0.05,
+      0.2,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.15,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "chessman",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      0.15,
+      0.15
+     ],
+     "ylim": [
+      0.2,
+      0.2
+     ],
+     "zlim": [
+      0.0,
+      0.0
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.0,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "opponent_piece3",
+     "default_pos": [
+      0.15,
+      0.2,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.15,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "checkerboard": [
+    {
+     "category": "checkerboard",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.075,
+      -0.075
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "checkerboard",
+     "default_pos": [
+      0.0,
+      -0.075,
+      0.765
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.08,
+      "friction": 0.25,
+      "size": [
+       0.2233600115334982,
+       0.2233600115334982,
+       0.016000000000000004
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "ac65f508b7126ab9",
+ "step_lim": 1100,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Play tic-tac-toe as the first player and fill the board with the opponent.",
+ "labels": [
+  "player_piece0",
+  "player_piece1",
+  "player_piece2",
+  "player_piece3",
+  "player_piece4",
+  "opponent_piece0",
+  "opponent_piece1",
+  "opponent_piece2",
+  "opponent_piece3",
+  "checkerboard",
+  "camera_stand"
+ ],
+ "objects": {
+  "player_piece0": {
+   "position": [
+    -0.2,
+    -0.25,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    3e-05,
+    -1e-05,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.0279,
+     -0.0217,
+     0.01
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.01
+    ],
+    [
+     -0.0217,
+     0.0279,
+     0.01
+    ],
+    [
+     0.0279,
+     0.0217,
+     0.01
+    ],
+    [
+     -0.0279,
+     -0.0217,
+     -0.0
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.0
+    ],
+    [
+     -0.0217,
+     0.0279,
+     -0.0
+    ],
+    [
+     0.0279,
+     0.0217,
+     -0.0
+    ]
+   ]
+  },
+  "player_piece1": {
+   "position": [
+    -0.1,
+    -0.25,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    3e-05,
+    -1e-05,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.0279,
+     -0.0217,
+     0.01
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.01
+    ],
+    [
+     -0.0217,
+     0.0279,
+     0.01
+    ],
+    [
+     0.0279,
+     0.0217,
+     0.01
+    ],
+    [
+     -0.0279,
+     -0.0217,
+     -0.0
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.0
+    ],
+    [
+     -0.0217,
+     0.0279,
+     -0.0
+    ],
+    [
+     0.0279,
+     0.0217,
+     -0.0
+    ]
+   ]
+  },
+  "player_piece2": {
+   "position": [
+    0.0,
+    -0.25,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    2e-05,
+    -1e-05,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.0279,
+     -0.0217,
+     0.01
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.01
+    ],
+    [
+     -0.0217,
+     0.0279,
+     0.01
+    ],
+    [
+     0.0279,
+     0.0217,
+     0.01
+    ],
+    [
+     -0.0279,
+     -0.0217,
+     -0.0
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.0
+    ],
+    [
+     -0.0217,
+     0.0279,
+     -0.0
+    ],
+    [
+     0.0279,
+     0.0217,
+     -0.0
+    ]
+   ]
+  },
+  "player_piece3": {
+   "position": [
+    0.1,
+    -0.25,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    3e-05,
+    -1e-05,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.0279,
+     -0.0217,
+     0.01
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.01
+    ],
+    [
+     -0.0217,
+     0.0279,
+     0.01
+    ],
+    [
+     0.0279,
+     0.0217,
+     0.01
+    ],
+    [
+     -0.0279,
+     -0.0217,
+     -0.0
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.0
+    ],
+    [
+     -0.0217,
+     0.0279,
+     -0.0
+    ],
+    [
+     0.0279,
+     0.0217,
+     -0.0
+    ]
+   ]
+  },
+  "player_piece4": {
+   "position": [
+    0.2,
+    -0.25,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    2e-05,
+    -2e-05,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.0279,
+     -0.0217,
+     0.01
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.01
+    ],
+    [
+     -0.0217,
+     0.0279,
+     0.01
+    ],
+    [
+     0.0279,
+     0.0217,
+     0.01
+    ],
+    [
+     -0.0279,
+     -0.0217,
+     -0.0
+    ],
+    [
+     0.0217,
+     -0.0279,
+     0.0
+    ],
+    [
+     -0.0217,
+     0.0279,
+     -0.0
+    ],
+    [
+     0.0279,
+     0.0217,
+     -0.0
+    ]
+   ]
+  },
+  "opponent_piece0": {
+   "position": [
+    -0.15,
+    0.2,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    -0.0,
+    -0.0,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.025,
+     0.0248,
+     0.01
+    ],
+    [
+     -0.025,
+     -0.0252,
+     0.01
+    ],
+    [
+     0.025,
+     0.0248,
+     0.01
+    ],
+    [
+     0.025,
+     -0.0252,
+     0.01
+    ],
+    [
+     -0.025,
+     0.0248,
+     -0.0
+    ],
+    [
+     -0.025,
+     -0.0252,
+     -0.0
+    ],
+    [
+     0.025,
+     0.0248,
+     -0.0
+    ],
+    [
+     0.025,
+     -0.0252,
+     0.0
+    ]
+   ]
+  },
+  "opponent_piece1": {
+   "position": [
+    -0.05,
+    0.2,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    -0.0,
+    -0.0,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.025,
+     0.0248,
+     0.01
+    ],
+    [
+     -0.025,
+     -0.0252,
+     0.01
+    ],
+    [
+     0.025,
+     0.0248,
+     0.01
+    ],
+    [
+     0.025,
+     -0.0252,
+     0.01
+    ],
+    [
+     -0.025,
+     0.0248,
+     -0.0
+    ],
+    [
+     -0.025,
+     -0.0252,
+     -0.0
+    ],
+    [
+     0.025,
+     0.0248,
+     -0.0
+    ],
+    [
+     0.025,
+     -0.0252,
+     0.0
+    ]
+   ]
+  },
+  "opponent_piece2": {
+   "position": [
+    0.05,
+    0.2,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    -0.0,
+    -0.0,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.025,
+     0.0248,
+     0.01
+    ],
+    [
+     -0.025,
+     -0.0252,
+     0.01
+    ],
+    [
+     0.025,
+     0.0248,
+     0.01
+    ],
+    [
+     0.025,
+     -0.0252,
+     0.01
+    ],
+    [
+     -0.025,
+     0.0248,
+     -0.0
+    ],
+    [
+     -0.025,
+     -0.0252,
+     -0.0
+    ],
+    [
+     0.025,
+     0.0248,
+     -0.0
+    ],
+    [
+     0.025,
+     -0.0252,
+     0.0
+    ]
+   ]
+  },
+  "opponent_piece3": {
+   "position": [
+    0.15,
+    0.2,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    -1e-05,
+    -2e-05,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.025,
+     0.0248,
+     0.01
+    ],
+    [
+     -0.025,
+     -0.0252,
+     0.01
+    ],
+    [
+     0.025,
+     0.0248,
+     0.01
+    ],
+    [
+     0.025,
+     -0.0252,
+     0.01
+    ],
+    [
+     -0.025,
+     0.0248,
+     -0.0
+    ],
+    [
+     -0.025,
+     -0.0252,
+     -0.0
+    ],
+    [
+     0.025,
+     0.0248,
+     -0.0
+    ],
+    [
+     0.025,
+     -0.0252,
+     0.0
+    ]
+   ]
+  },
+  "checkerboard": {
+   "position": [
+    0.0,
+    -0.075,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     0.1117,
+     0.1117,
+     -0.0
+    ],
+    [
+     0.1117,
+     -0.1117,
+     -0.0
+    ],
+    [
+     -0.1117,
+     0.1117,
+     -0.0
+    ],
+    [
+     -0.1117,
+     -0.1117,
+     -0.0
+    ],
+    [
+     0.1117,
+     0.1117,
+     0.016
+    ],
+    [
+     0.1117,
+     -0.1117,
+     0.016
+    ],
+    [
+     -0.1117,
+     0.1117,
+     0.016
+    ],
+    [
+     -0.1117,
+     -0.1117,
+     0.016
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {}
+}

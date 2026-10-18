@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "278db844cfbc63c223f3d45976bbf10df947fdc3a14b1e3616437f53d2177086",
+  "asset_files": {
+    "instance_assets/mujoco/meshes/wire_base_base_0_37c13bd13268a5e2.obj": "37c13bd13268a5e224834f155bef391bde8533bd44eb1f0df0cdbb95a81aa5cb",
+    "instance_assets/mujoco/meshes/wire_base_base_1_6704f1e57143911e.obj": "6704f1e57143911eb9a97ef03064c1040a056d4d4490eb04d758e57deb2f7c6a",
+    "instance_assets/mujoco/meshes/wire_base_base_2_67d99669a36b0949.obj": "67d99669a36b0949fac25c34abcf66dbb205b052193bd653b1f89f79dbad3b27",
+    "instance_assets/mujoco/meshes/wire_base_base_3_7f7d6231f56d2b6f.obj": "7f7d6231f56d2b6fd30318bc2fddad98a869d22d054185b68f511b3fbe2c8fee",
+    "instance_assets/mujoco/meshes/wire_base_base_4_f3bae7a066b93d0c.obj": "f3bae7a066b93d0c630db193b03a0c379b15d51b451611c33dc85a8c2148a29a",
+    "instance_assets/mujoco/meshes/wire_base_base_5_d739bd412956c4c5.obj": "d739bd412956c4c5385836c9f90e1c1d77d16dbf8647a4a54c8349767494176b",
+    "instance_assets/mujoco/meshes/wire_base_terminal__wood_stop__6_prism32_3542d9a6d11ca8ff.obj": "3542d9a6d11ca8fff6babdf476107ed448cacddc04d6b5f94211dcf4a6176e18",
+    "instance_assets/mujoco/scene.json": "1a8068ef1f4339de47436f848f4f8bbd43eef583d8a0596f568a41864e3c4519",
+    "instance_assets/mujoco/scene.xml": "81e42109811c1c7ae5df0afb79925b41447e3e9a6030e6d7fd27d620cbf326be"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "d1eb6f13b637abfdee0d4bb3aaa675b3ff352d6f02a76f856eb9e42b0e8c2d1b",
+    "files": 437
+  },
+  "runtime": {
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "python": "3.11.15",
+    "source": {
+      "sha256": "c9171f7932cebdee016b7ee1e8abd9a1afba7563a32364d91dffe85b14a51565",
+      "files": 443
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.2.0-noinst",
+    "id": "sha256:9d0bd3a6996a9f2ce79759e331e6775a9263e7f1fcc17b52ec543aaed055e6c4",
+    "repo_digests": []
+  },
+  "uipc_builds": {
+    "audited": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1",
+    "sm86": "712470d2166b40058a4b6f304fb4a041bffc45c71ab37c7dec2d33d1a0b34011"
+  },
+  "render_bridge_sha256": "0e04db54feded2929769443e183e2db1e6138eaec62701070fbd462925d8a2b0",
+  "nyx_direct_sha256": "4809c45a7a5cd7725f95f9e49e55a1dc9d184d2b2b59e780aac19cdaf98fac20"
+}

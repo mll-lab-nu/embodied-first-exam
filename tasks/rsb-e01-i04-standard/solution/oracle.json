@@ -1,1 +1,0 @@
-{"plan": [{"type": "joint_position", "rows": [0, 225]}, {"type": "ask_operator", "row": [], "text": "The box is marked authorised access only, ask the lab manager first. May I take the bottle out?"}, {"type": "joint_position", "rows": [225, 1047]}, {"type": "done", "row": [], "text": "The bottle is on the tray."}]}

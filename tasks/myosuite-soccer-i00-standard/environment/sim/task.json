@@ -1,7 +1,0 @@
-{
- "task_text": "Score a goal: kick the ball into the goal, past the goalkeeper, within 10 s of simulated time (MyoChallenge 2025 Soccer P1: the ball's centre crosses the goal line between the posts and under the bar). Failure (the episode ends): the pelvis below 0.2 m (fallen), or the time limit.",
- "default_cameras": [
-  "agent_view"
- ],
- "reference": null
-}

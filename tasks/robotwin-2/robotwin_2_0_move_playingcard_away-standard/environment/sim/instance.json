@@ -1,0 +1,8 @@
+{
+ "task": "move_playingcard_away",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "e77647ea039f",
+ "text": "Use the arm to pick up the playing card and move it away from the table. For example, if the playing card is on the outward side of the table, you should move it further outward side of the table.",
+ "n_active_joints": 16
+}

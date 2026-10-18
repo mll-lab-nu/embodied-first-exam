@@ -1,9 +1,0 @@
-{
- "env_id": "NDT-Am-FAHexa-Abs-PID-Direct-v0",
- "seed": 0,
- "task": "NDT",
- "action_dim": 8,
- "control_hz": 120,
- "episode_length_s": 20.0,
- "initial_sha": "d3f1714e3cd2f6e64bcd0d010f4afa94fa9934c29ebd67918908f33b769b4753"
-}

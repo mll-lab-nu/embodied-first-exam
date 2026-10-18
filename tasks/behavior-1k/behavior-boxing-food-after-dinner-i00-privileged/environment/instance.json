@@ -1,0 +1,155 @@
+{
+ "task": "boxing_food_after_dinner",
+ "challenge_task": "boxing_food_after_dinner",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Box up the leftovers. Two tacos lie on two plates on the kitchen countertop and an empty tupperware is inside a kitchen cabinet; put both tacos into the tupperware, the tupperware into the refrigerator, and both plates into the sink, and leave the refrigerator closed.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "a478341d5e99bd0a",
+ "action_dim": 25,
+ "challenge_max_steps": 10046,
+ "objects": {
+  "cabinet.n.01_1": {
+   "category": "bottom_cabinet_no_top",
+   "position": [
+    5.9014,
+    -2.0513,
+    0.4198
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "plate.n.04_1": {
+   "category": "plate",
+   "position": [
+    5.1981,
+    -1.9386,
+    0.9035
+   ],
+   "orientation_xyzw": [
+    0.0006,
+    0.0001,
+    0.9841,
+    -0.1776
+   ]
+  },
+  "tupperware.n.01_1": {
+   "category": "tupperware",
+   "position": [
+    6.3658,
+    -1.758,
+    0.5636
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    -0.4902,
+    -0.8716
+   ]
+  },
+  "taco.n.02_1": {
+   "category": "taco",
+   "position": [
+    5.2477,
+    -1.8987,
+    0.9352
+   ],
+   "orientation_xyzw": [
+    -0.0018,
+    -0.0009,
+    0.8499,
+    0.527
+   ]
+  },
+  "countertop.n.01_1": {
+   "category": "countertop",
+   "position": [
+    6.0295,
+    -1.9837,
+    0.8695
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.6691,
+    0.7431
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    6.5931,
+    -0.2586,
+    -0.1387
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "plate.n.04_2": {
+   "category": "plate",
+   "position": [
+    7.2477,
+    -1.7815,
+    0.9035
+   ],
+   "orientation_xyzw": [
+    0.0009,
+    0.0008,
+    -0.7559,
+    0.6547
+   ]
+  },
+  "electric_refrigerator.n.01_1": {
+   "category": "fridge",
+   "position": [
+    7.8186,
+    -1.9659,
+    0.9844
+   ],
+   "orientation_xyzw": [
+    0.0007,
+    0.0078,
+    0.6906,
+    0.7232
+   ]
+  },
+  "taco.n.02_2": {
+   "category": "taco",
+   "position": [
+    7.2475,
+    -1.7917,
+    0.9353
+   ],
+   "orientation_xyzw": [
+    0.0009,
+    0.0006,
+    -0.6602,
+    0.7511
+   ]
+  },
+  "sink.n.01_1": {
+   "category": "drop_in_sink",
+   "position": [
+    5.7996,
+    -1.9396,
+    0.8682
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.7062,
+    0.708
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

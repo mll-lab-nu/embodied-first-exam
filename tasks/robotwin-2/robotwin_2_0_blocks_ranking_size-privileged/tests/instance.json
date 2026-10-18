@@ -1,0 +1,8 @@
+{
+ "task": "blocks_ranking_size",
+ "seed": 60417,
+ "embodiment": "aloha-agilex",
+ "state_sha": "f15229130b25",
+ "text": "There are three blocks on the table, the color of the blocks is random, move the blocks to the center of the table, and arrange them from largest to smallest, from left to right.",
+ "n_active_joints": 16
+}

@@ -1,0 +1,54 @@
+{
+ "case": {
+  "case_id": "pro-semantic-goal-t07-i02-illumination_switch-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 2,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/semantic/libero_goal/task_7",
+   "change": {
+    "operation": "set_lighting",
+    "scale": 0.2
+   },
+   "change_family": "OBS",
+   "change_type": "illumination_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1019860916
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-semantic-goal-t07-i02-illumination_switch-d0",
+   "seed": 1019860916,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "flat_stove_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/semantic",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_goal_lan/turn_on_the_stove.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "semantic",
+   "init_reference_bddl_file": "libero_goal_lan/turn_on_the_stove.bddl",
+   "init_states_file": "libero_goal_lan/turn_on_the_stove.pruned_init",
+   "language": "switch on the stove",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 7,
+  "task_name": "turn_on_the_stove",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "55060a97c526374f84b30432476c2f179f64def021daf8260e061f25f18d16b2",
+ "instance_sha": "4fb17ffa0bd5db3aaefe412257367f77d8345a40ca09d2213a3963d93a12722e",
+ "schema": "eai-libero-max-instance/1"
+}

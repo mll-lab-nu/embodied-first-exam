@@ -1,0 +1,767 @@
+{
+ "task": "put_bottles_into_dustbin",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/put_bottles_into_dustbin_0.json",
+ "layout_sha256": "3c2168f460d48dde2d72d55429f1af7e850725b642dfcb8c8d5e31ed2ec25537",
+ "layout": {
+  "Rigid": {
+   "bottle": [
+    {
+     "category": "bottle",
+     "category_idx": 41,
+     "group": null,
+     "xlim": [
+      0.05,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      -30,
+      90
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.02,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bottle0",
+     "default_pos": [
+      0.11593046379227918,
+      -0.24349302397665637,
+      0.8576
+     ],
+     "default_ori": [
+      0.9668075962754984,
+      0.0,
+      0.0,
+      -0.25550552202250554
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.15,
+      "static_friction": 10000.0,
+      "dynamic_friction": 10000.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "bottle",
+     "category_idx": 60,
+     "group": null,
+     "xlim": [
+      0.05,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      -30,
+      90
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.02,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bottle1",
+     "default_pos": [
+      0.435356355761182,
+      -0.04122814738045946,
+      0.86
+     ],
+     "default_ori": [
+      0.8639109881248862,
+      0.0,
+      0.0,
+      0.5036445220560656
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.15,
+      "static_friction": 10000.0,
+      "dynamic_friction": 10000.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "bottle",
+     "category_idx": 25,
+     "group": null,
+     "xlim": [
+      0.05,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      -30,
+      90
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.02,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bottle2",
+     "default_pos": [
+      0.37091577530092856,
+      -0.14557239108037454,
+      0.7968999987239755
+     ],
+     "default_ori": [
+      0.7035727338769286,
+      0.07080642223321608,
+      0.7035527347473902,
+      -0.0706074227326328
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.15,
+      "static_friction": 10000.0,
+      "dynamic_friction": 10000.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "bottle",
+     "category_idx": 22,
+     "group": null,
+     "xlim": [
+      -0.35,
+      0.05
+     ],
+     "ylim": [
+      -0.25,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      -90,
+      30
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.02,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bottle3",
+     "default_pos": [
+      -0.22222430205438,
+      -0.0695965720878458,
+      0.8851
+     ],
+     "default_ori": [
+      0.976817603401208,
+      0.0,
+      0.0,
+      -0.2140732811107457
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 22,
+      "static_friction": 10000.0,
+      "dynamic_friction": 10000.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "dustbin": [
+    {
+     "category": "dustbin",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.63,
+      -0.63
+     ],
+     "ylim": [
+      -0.1,
+      -0.1
+     ],
+     "zlim": [
+      0.35,
+      0.35
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "dustbin",
+     "default_pos": [
+      -0.63,
+      -0.1,
+      0.39999999999999997
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 1.8,
+      "friction": 0.38,
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.09,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "02a7ff62f36b1fc5",
+ "step_lim": 700,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Pick up the bottles and throw them into the dustbin, using handover when needed.",
+ "labels": [
+  "bottle0",
+  "bottle1",
+  "bottle2",
+  "bottle3",
+  "dustbin",
+  "camera_stand"
+ ],
+ "objects": {
+  "bottle0": {
+   "position": [
+    0.11593,
+    -0.24349,
+    0.8576
+   ],
+   "orientation_wxyz": [
+    0.96681,
+    -1e-05,
+    -0.0,
+    -0.25551
+   ],
+   "bbox_corners": [
+    [
+     -0.0332,
+     -0.0172,
+     -0.0926
+    ],
+    [
+     -0.0332,
+     -0.0174,
+     0.0924
+    ],
+    [
+     -0.0174,
+     0.0332,
+     -0.0926
+    ],
+    [
+     -0.0174,
+     0.0331,
+     0.0924
+    ],
+    [
+     0.0172,
+     -0.033,
+     -0.0926
+    ],
+    [
+     0.0172,
+     -0.0331,
+     0.0924
+    ],
+    [
+     0.033,
+     0.0175,
+     -0.0926
+    ],
+    [
+     0.0329,
+     0.0174,
+     0.0924
+    ]
+   ]
+  },
+  "bottle1": {
+   "position": [
+    0.43501,
+    -0.04072,
+    0.85973
+   ],
+   "orientation_wxyz": [
+    0.86391,
+    -0.00322,
+    -0.00022,
+    0.50364
+   ],
+   "bbox_corners": [
+    [
+     -0.0326,
+     -0.021,
+     0.095
+    ],
+    [
+     -0.0326,
+     -0.021,
+     -0.095
+    ],
+    [
+     0.0212,
+     -0.0325,
+     0.095
+    ],
+    [
+     0.0212,
+     -0.0325,
+     -0.095
+    ],
+    [
+     -0.0212,
+     0.0325,
+     0.095
+    ],
+    [
+     -0.0212,
+     0.0325,
+     -0.095
+    ],
+    [
+     0.0326,
+     0.021,
+     0.095
+    ],
+    [
+     0.0326,
+     0.021,
+     -0.095
+    ]
+   ]
+  },
+  "bottle2": {
+   "position": [
+    0.37058,
+    -0.14476,
+    0.7963
+   ],
+   "orientation_wxyz": [
+    0.70819,
+    0.06199,
+    0.69881,
+    -0.07931
+   ],
+   "bbox_corners": [
+    [
+     0.0319,
+     0.0321,
+     0.1019
+    ],
+    [
+     0.0319,
+     0.0321,
+     -0.1021
+    ],
+    [
+     -0.0321,
+     0.0321,
+     0.1019
+    ],
+    [
+     -0.0321,
+     0.0321,
+     -0.1021
+    ],
+    [
+     0.0319,
+     -0.0319,
+     0.1019
+    ],
+    [
+     0.0319,
+     -0.0319,
+     -0.1021
+    ],
+    [
+     -0.0321,
+     -0.0319,
+     0.1019
+    ],
+    [
+     -0.0321,
+     -0.0319,
+     -0.1021
+    ]
+   ]
+  },
+  "bottle3": {
+   "position": [
+    -0.22222,
+    -0.0696,
+    0.88515
+   ],
+   "orientation_wxyz": [
+    0.97682,
+    0.0,
+    0.0,
+    -0.21408
+   ],
+   "bbox_corners": [
+    [
+     0.0367,
+     0.0331,
+     0.1199
+    ],
+    [
+     0.0367,
+     0.0331,
+     -0.1201
+    ],
+    [
+     -0.0331,
+     0.037,
+     0.1199
+    ],
+    [
+     -0.0331,
+     0.037,
+     -0.1201
+    ],
+    [
+     0.0329,
+     -0.0367,
+     0.1199
+    ],
+    [
+     0.0329,
+     -0.0367,
+     -0.1201
+    ],
+    [
+     -0.037,
+     -0.0329,
+     0.1199
+    ],
+    [
+     -0.037,
+     -0.0329,
+     -0.1201
+    ]
+   ]
+  },
+  "dustbin": {
+   "position": [
+    -0.63,
+    -0.1,
+    0.4
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     0.2349,
+     -0.2348,
+     0.325
+    ],
+    [
+     0.2349,
+     -0.2349,
+     -0.325
+    ],
+    [
+     0.2352,
+     0.2352,
+     0.325
+    ],
+    [
+     0.2352,
+     0.2351,
+     -0.325
+    ],
+    [
+     -0.2351,
+     -0.2345,
+     0.325
+    ],
+    [
+     -0.2351,
+     -0.2345,
+     -0.325
+    ],
+    [
+     -0.2348,
+     0.2355,
+     0.325
+    ],
+    [
+     -0.2348,
+     0.2355,
+     -0.325
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {}
+}

@@ -1,3 +1,0 @@
-Hold the tray with one hand and insert the round peg into its socket with the other. Success: the peg touches the socket's bottom for 30 consecutive control steps.
-
-The tray with a round socket and the 8 mm round peg lie on the table in front of the robots.

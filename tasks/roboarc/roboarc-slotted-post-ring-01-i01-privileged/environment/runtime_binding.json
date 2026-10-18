@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "3245330b6de6b0d3d6fdcb2d86ce76a0555de7fbb0c22ebd8b6a32c4005b6526",
+  "asset_files": {
+    "instance_assets/mujoco/meshes/goal_region_d919155765218bc0.obj": "d919155765218bc04683c4b1c20c94627fd9d36deec264c9529154b49b12589d",
+    "instance_assets/mujoco/meshes/slotted_chain_disc_b6a8509bed44e34b.obj": "b6a8509bed44e34bd8bda2d21938becd1fc9a0faa06ee15ed453fdde4939dfab",
+    "instance_assets/mujoco/scene.json": "52282be896df32dfc0524217682d16df070982f36317f4b7cc0bdc105ab5fc14",
+    "instance_assets/mujoco/scene.xml": "16beeec957360e1683511e4ff74efa09d6169253515b485999fbeb007026754d",
+    "instance_assets/mujoco_settled.npz": "b42f9c0496679dd50c24bea5df5223eb795c84f5ce21ab699a7d57993c47b9a1"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "d601866b4c91c858aa4e249b5bf5145b8fe3263b2885048a86016e34c314c208",
+    "files": 444
+  },
+  "runtime": {
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "python": "3.11.15",
+    "source": {
+      "sha256": "c9171f7932cebdee016b7ee1e8abd9a1afba7563a32364d91dffe85b14a51565",
+      "files": 443
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.2.0-noinst",
+    "id": "sha256:9d0bd3a6996a9f2ce79759e331e6775a9263e7f1fcc17b52ec543aaed055e6c4",
+    "repo_digests": []
+  },
+  "uipc_builds": {
+    "audited": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1",
+    "sm86": "712470d2166b40058a4b6f304fb4a041bffc45c71ab37c7dec2d33d1a0b34011"
+  },
+  "render_bridge_sha256": "0e04db54feded2929769443e183e2db1e6138eaec62701070fbd462925d8a2b0",
+  "nyx_direct_sha256": "4809c45a7a5cd7725f95f9e49e55a1dc9d184d2b2b59e780aac19cdaf98fac20"
+}

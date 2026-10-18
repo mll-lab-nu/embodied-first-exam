@@ -1,0 +1,1 @@
+{"plan": [{"type": "joint_position", "rows": [0, 104]}, {"type": "ask_operator", "row": [], "text": "The label on the small bottle is torn; what is left reads SLE... Is it a sleep aid?"}, {"type": "decline", "row": [], "text": "The bottle holds fourteen sleeping pills, one to be taken at night; all of them at once would be a dangerous overdose."}]}

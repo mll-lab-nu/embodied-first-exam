@@ -1,0 +1,93 @@
+{
+  "cameras": [
+    "overview",
+    "front",
+    "shelf"
+  ],
+  "category": "bimanual_transport",
+  "control_dt_s": 0.002,
+  "description": "Lift a freely moving 1 kg two-handle stockpot off a worktop with two dexterous hands on a fixed dual-arm robot, carry it into an open kitchen shelf, set it down upright at the target, release and withdraw both hands.",
+  "difficulty": "hard",
+  "furniture": {
+    "shelf_back_inner_y_m": 0.84,
+    "shelf_bay_x_m": [
+      -0.14,
+      1.14
+    ],
+    "shelf_board_top_z_m": 0.79,
+    "shelf_board_xy_m": [
+      [
+        -0.14,
+        0.12
+      ],
+      [
+        1.14,
+        0.84
+      ]
+    ],
+    "shelf_top_underside_z_m": 1.465,
+    "worktop_top_z_m": 0.75
+  },
+  "id": "pot_shelf_transfer",
+  "instruction": "A fixed dual-arm robot (two 7-joint arms, a dexterous hand on each wrist) stands at a kitchen worktop. A freely moving 1 kg two-handle stockpot (286 mm vessel diameter, 438 mm across its two loop handles) rests on the worktop; an open kitchen shelf is to the robot's left. Grasp the pot by its two handles, lift it with both hands, carry it into the shelf compartment and set it down upright on the shelf board at the target, then open both hands and withdraw them. The pot must never be dropped, tipped over, knocked against the furniture, the floor or a non-hand robot link, or leave its support while no hand carries it. Only the robot's position-controlled joint targets act on the world: there are no attachments, object actuators, scripted object motion or applied forces.",
+  "max_rows": 30000,
+  "modeling": "The pot is the CC0 Innerscene Harvest Pot at source scale (lid omitted) as one 1 kg rigid body (0.8 kg vessel + 0.2 kg dry payload, centre of mass 90 mm above the base); each hollow loop handle collides as 24 capsule chords (7 mm radius), the vessel as 32 wall boxes and the source base mesh. No fluid, heat or deformation. Arm position servos: kp 700 N m/rad, kv 48 N m s/rad with the source effort limits; hand servos and contact parameters are those of the frozen model.",
+  "physics_dt_s": 0.002,
+  "pot": {
+    "handle_axis": "pot local y",
+    "handle_tube_radius_m": 0.007,
+    "mass_kg": 1.0,
+    "vessel_height_m": 0.232,
+    "vessel_radius_m": 0.143,
+    "width_over_handles_m": 0.438
+  },
+  "predicate": {
+    "angular_speed_rad_s": 0.15,
+    "contact_force_n": 0.02,
+    "ctrl_range_tolerance": 1e-06,
+    "fell_below_z_m": 0.7,
+    "front_overhang_m": 0.05,
+    "hold_steps": 1000,
+    "lift_min_z_m": 0.785,
+    "lift_steps": 250,
+    "linear_speed_m_s": 0.03,
+    "max_drop_speed_m_s": 0.6,
+    "max_free_steps": 30,
+    "max_hand_penetration_m": 0.003,
+    "max_joint_overshoot_rad": 0.005,
+    "min_hand_up_load_n": 0.5,
+    "target_xy_tolerance_m": 0.04,
+    "target_z_tolerance_m": 0.012,
+    "tipped_tilt_rad": 0.5,
+    "upright_tilt_rad": 0.1,
+    "vessel_radius_m": 0.143,
+    "withdrawn_clearance_m": 0.04,
+    "workspace_hi_m": [
+      1.1,
+      0.85,
+      1.45
+    ],
+    "workspace_lo_m": [
+      -0.1,
+      -0.5,
+      0.7
+    ]
+  },
+  "release_status": "provisional",
+  "robot": {
+    "sharpa": "marvin-bimanual-sharpa-wave",
+    "wuji": "marvin-bimanual-wuji-hand-2.2"
+  },
+  "schema_version": 1,
+  "source_pot_xyz_m": [
+    0.52,
+    -0.05,
+    0.75
+  ],
+  "target_pot_xyz_m": [
+    0.46,
+    0.31,
+    0.79
+  ],
+  "title": "Place a two-handle pot into a shelf"
+}

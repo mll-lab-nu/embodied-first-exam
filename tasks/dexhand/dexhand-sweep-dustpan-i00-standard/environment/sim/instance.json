@@ -1,0 +1,123 @@
+{
+  "cameras": {
+    "overview": {
+      "azimuth": 205.0,
+      "distance": 2.7,
+      "elevation": -22.0,
+      "fovy": 45.0,
+      "lookat": [
+        0.45,
+        -0.05,
+        0.42
+      ]
+    },
+    "pan": {
+      "azimuth": 235.0,
+      "distance": 0.66,
+      "elevation": -55.0,
+      "fovy": 50.0,
+      "lookat": [
+        0.72,
+        0.13,
+        -0.08
+      ]
+    },
+    "side": {
+      "azimuth": 90.0,
+      "distance": 1.5,
+      "elevation": -12.0,
+      "fovy": 45.0,
+      "lookat": [
+        0.72,
+        -0.05,
+        0.05
+      ]
+    },
+    "work": {
+      "azimuth": 180.0,
+      "distance": 1.05,
+      "elevation": -58.0,
+      "fovy": 50.0,
+      "lookat": [
+        0.74,
+        -0.04,
+        -0.1
+      ]
+    }
+  },
+  "category": "tool_use",
+  "control_hz": 2000,
+  "description": "With a fixed dual-arm robot holding a broom in one hand and a dustpan in the other, sweep all six debris pieces off the floor into the pan with the bristles and lift the loaded pan.",
+  "difficulty": "hard",
+  "external_assets": "assets/external_assets.json",
+  "id": "sweep_dustpan",
+  "instruction": "Sweep all six pieces of debris on the floor into the dustpan and lift the loaded pan. A fixed two-arm robot starts with a broom held in its right hand and a dustpan held in its left hand; the pan's entrance ramp rests on the floor next to six small rigid debris pieces (packaging pieces, bottle caps, a wood chip and a crumpled-paper ball). Push the debris over the ramp with the broom's bristles, then raise the dustpan. Success requires 2000 consecutive physics steps (1.0 s) in which all of these hold: in the dustpan's own frame every collision shape of all six pieces lies over the pan floor (at least 1 mm inside its 460 mm side-to-side width, inside its 262 mm depth, no lower than 1 mm below the top of the floor plate and no higher than 110 mm above the pan origin); all six pieces touch the pan (contact force at least 1 mN); the pan origin is at least 50 mm above the floor; every piece moves slower than 0.03 m/s and rotates slower than 0.8 rad/s; and every piece has been touched by the bristles at some point. The episode ends with that success, or fails immediately and permanently when: a piece leaves the floor work area (world x outside [0.45, 1.00] m, y outside [-0.50, 0.40] m, or its center more than 0.25 m above or 0.01 m below the floor at z = -0.10 m); any part of the robot touches a piece of debris with at least 1 mN (sweep with the broom only); from 1.2 s on, fewer than two collision parts of a tool's own hand press on its handle with at least 0.01 N each, or the handle's grip point has moved more than 25 mm or turned more than 0.25 rad relative to that palm since 1.2 s (dropped or slipping tool); a tool is pressed (more than 0.01 N) by any robot part other than its own hand; the arms, torso or the two hands collide with each other; or the simulation becomes unstable. Five of six pieces, an unlifted pan or a hold shorter than 1 s is not a success. Only the robot's motor targets act; the tools and the debris are free bodies without welds, scripted motion or applied forces. One control row sets every motor target for one 0.5 ms physics step (2000 Hz); an episode has at most 160000 rows (80 s).",
+  "max_rows": 160000,
+  "mechanism": "free pre-held broom with 54 passive elastic bristle bundles, free dustpan with an entrance ramp, six free rigid debris proxies",
+  "modeling": "Fixed Tianji Marvin dual seven-joint arms (public geometry, public estimated inertias, prototype position gains) with two Sharpa Wave hands (the left one a documented mirror of the manufacturer right hand). Tools start pre-held; the broom has 54 passive hinged bristle-bundle capsules; the six debris pieces are rigid shape proxies. No tool pickup, fine dust, paper deformation or measured hardware parameters are claimed.",
+  "physics_dt": 0.0005,
+  "predicate": {
+    "bristle_prefix": "bristle_geom_",
+    "contact_force_floor_n": 0.001,
+    "containment_half_depth_m": 0.131,
+    "containment_margin_m": 0.001,
+    "containment_max_height_m": 0.11,
+    "debris": [
+      "debris_0",
+      "debris_1",
+      "debris_2",
+      "debris_3",
+      "debris_4",
+      "debris_5"
+    ],
+    "floor_geom": "floor",
+    "grip_contact_force_n": 0.01,
+    "max_debris_angular_speed_rad_s": 0.8,
+    "max_debris_speed_m_s": 0.03,
+    "max_grip_drift_m": 0.025,
+    "max_grip_rotation_rad": 0.25,
+    "max_nonholding_tool_force_n": 0.01,
+    "min_grip_contacts": 2,
+    "min_pan_lift_m": 0.05,
+    "pan_body": "dustpan",
+    "pan_floor_geom": "pan_floor",
+    "pan_support_geoms": [
+      "pan_floor",
+      "pan_lip",
+      "pan_back",
+      "pan_side_-1",
+      "pan_side_1"
+    ],
+    "robot_root": "base_link",
+    "settle_s": 1.2,
+    "terminal_hold_steps": 2000,
+    "tools": {
+      "l": {
+        "palm": "l_hand_palm",
+        "shaft": "pan_shaft",
+        "tool": "dustpan"
+      },
+      "r": {
+        "palm": "r_hand_palm",
+        "shaft": "broom_shaft",
+        "tool": "broom"
+      }
+    },
+    "workspace_max_depth_below_floor_m": 0.01,
+    "workspace_max_height_above_floor_m": 0.25,
+    "workspace_x_m": [
+      0.45,
+      1.0
+    ],
+    "workspace_y_m": [
+      -0.5,
+      0.4
+    ]
+  },
+  "release_status": "provisional",
+  "reset": "assets/reset.npz",
+  "robot": "marvin-bimanual-sharpa-wave",
+  "scene_xml": "assets/sweep_sharpa.xml",
+  "schema_version": 1,
+  "title": "Sweep debris into a held dustpan"
+}

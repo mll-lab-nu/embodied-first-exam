@@ -1,8 +1,0 @@
-{
- "task": "adjust_bottle",
- "seed": 60417,
- "embodiment": "aloha-agilex",
- "state_sha": "8c6e19439e17",
- "text": "Pick up the bottle on the table headup with the correct arm.",
- "n_active_joints": 16
-}

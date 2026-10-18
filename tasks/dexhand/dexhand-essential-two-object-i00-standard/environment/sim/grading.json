@@ -1,0 +1,1 @@
+{"collect_timeout_s": 3220, "instance_sha256": {"catalog.json": "b88a812badc29b3a15a04cfa8474795f402bf7e0181cbc3aa14acb3a83f596a8", "instance.json": "6803626c5c1a1b6951584bad7189aec245613fafb2e7075b7348b37d08afe3d1", "wuji_reset.json": "cb89f6ad0924b82336da1f06f2786439ddd093b0c628611b170d9d066b84a4e9"}, "video_timeout_s": 2800}

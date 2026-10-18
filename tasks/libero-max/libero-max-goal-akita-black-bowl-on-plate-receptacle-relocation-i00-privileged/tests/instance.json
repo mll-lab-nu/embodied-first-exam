@@ -1,0 +1,66 @@
+{
+ "case": {
+  "case_id": "pro-position-goal-t08-i00-receptacle_relocation-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 0,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/position/libero_goal/task_8",
+   "change": {
+    "calibration": "deterministic_candidate_requires_preflight",
+    "delta_position_m": [
+     0.08485281,
+     0.08485281,
+     0.0
+    ],
+    "direction_xy": [
+     0.70710678,
+     0.70710678
+    ],
+    "distance_m": 0.12,
+    "object": "plate_1",
+    "operation": "move_object",
+    "support_entity": "main_table"
+   },
+   "change_family": "GEO",
+   "change_type": "receptacle_relocation",
+   "expected_response_mode": "replan",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3450245850
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-position-goal-t08-i00-receptacle_relocation-d1",
+   "seed": 3450245850,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "akita_black_bowl_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/position",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_goal_swap/put_the_bowl_on_the_plate.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "position",
+   "init_reference_bddl_file": "libero_goal_swap/put_the_bowl_on_the_plate.bddl",
+   "init_states_file": "libero_goal_swap/put_the_bowl_on_the_plate.pruned_init",
+   "language": "Put the bowl on the plate",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 8,
+  "task_name": "put_the_bowl_on_the_plate",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "388d46a71a7270ef89d9eb39b564bf2efb6aca4f9b27713efdc6242c6373d295",
+ "instance_sha": "45168e523e9c6de650ab201873a169115962009454d4f3d97daf5fe5fa39b41f",
+ "schema": "eai-libero-max-instance/1"
+}
