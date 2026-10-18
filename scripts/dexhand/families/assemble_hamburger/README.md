@@ -89,6 +89,7 @@ the generator never copies it into agent or verifier environments. It computes r
 targets with physical contact, without driving any object pose or applying external object forces.
 
 ```bash
+python3 scripts/dexhand/sources.py --unpack assemble_hamburger   # runtime, assets and oracle from tasks/ (--clean after regenerating)
 export MUJOCO_GL=egl OPENBLAS_NUM_THREADS=1
 python scripts/dexhand/families/assemble_hamburger/demo.py --out $OUT/hamburger/actions.npz
 python scripts/dexhand/families/assemble_hamburger/replay.py \

@@ -76,6 +76,7 @@ firmer finger targets make it worse) and the pieces' spin in the lifted pan for 
 
 ```bash
 cd robot_coding_bench
+python3 scripts/dexhand/sources.py --unpack sweep_dustpan   # runtime, assets and oracle from tasks/ (--clean after regenerating)
 export PYTHONPATH=scripts/dexhand/families/sweep_dustpan:scripts/dexhand/shared \
   DEXHAND_ASSET_DIR=$PWD/images/dexhand/assets/hand MUJOCO_GL=egl OPENBLAS_NUM_THREADS=1
 python scripts/dexhand/families/sweep_dustpan/tools/build_assets.py           # frozen assets + oracle

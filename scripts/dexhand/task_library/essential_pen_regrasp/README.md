@@ -5,7 +5,8 @@ With the wrist fixed, move the unsupported pen 30 mm along its initial longitudi
 ## Authoring contract
 
 - `task.json`: canonical geometry, initialization, ordered predicates and safety bounds.
-- `scene.py`: task-owned scene and contact-feature entry point.
+- `scene.py`: task-owned scene and contact-feature entry point (committed in the generated privileged task as
+  `environment/<module>.py`, with the packaged assets and `solution/`; `scripts/dexhand/sources.py --unpack` writes them here).
 - `assets/`: object meshes, textures, license records and checksums in `manifest.json`.
 - `render.json`: task camera and presentation profile.
 

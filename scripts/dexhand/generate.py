@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Generate the frozen DexHand task pairs, or compare them with a clean render."""
+"""Generate the frozen DexHand task pairs, or compare them with a clean render.
+
+The files copied unchanged into the tasks (runtime code, assets, reference trajectories) are committed once, in the
+generated task directories under tasks/; the family folders under scripts/dexhand/ keep what the generator interprets
+and the authoring material. sources.py stages each family's source folder from both (a file in the family folder wins:
+that is how a new family or an edit enters) and explains the mapping; --check also fails on a family-folder file that
+duplicates its canonical copy in tasks/ (remove it with `python3 scripts/dexhand/sources.py --clean`).
+"""
 
 from __future__ import annotations
 
@@ -31,7 +38,9 @@ OVERSIZED: set[str] = set()
 # Shared files every plugin family receives next to its own runtime files (one source each, D9).
 PLUGIN_SHARED = ("rcb_dexhand.py", "hands.py")
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(HERE))
 from task_conventions import normalize  # noqa: E402
+import sources  # noqa: E402
 
 IMAGE = "ghcr.io/mll-lab-nu/eai-dexhand:" + (ROOT / "images/dexhand/VERSION").read_text().strip()
 # The published image is pinned by digest once pushed (images/dexhand/DIGEST, written after `docker push`).
@@ -113,6 +122,11 @@ ESSENTIAL_EVIDENCE = (
     "No packaged low-level oracle is provided. Human solvability review and full agent-trial calibration "
     "remain required before scored release."
 )
+
+
+def library(family: str) -> Path:
+    """An essential family's staged source folder: task_library/<family>/ plus its canonical copies in tasks/."""
+    return sources.folder(LIBRARY / family)
 
 
 def daily_folders() -> dict[str, Path]:
@@ -378,7 +392,7 @@ def solution_shape(source: Path) -> tuple[int, int, str, str | None]:
     with np.load(source, allow_pickle=False) as archive:
         actions = archive["actions"]
         if actions.ndim != 2:
-            raise ValueError(f"{source}: actions must be a 2-D array")
+            raise ValueError(f"{sources.origin(source)}: actions must be a 2-D array")
         hand = str(archive["hand"]) if "hand" in archive.files else "sharpa"
         task = str(archive["task"]) if "task" in archive.files else None
         return int(actions.shape[0]), int(actions.shape[1]), hand, task
@@ -463,7 +477,8 @@ def write_solution(task: Path, mode: str, trajectory: Path, hands: dict[str, Pat
     for rows, target in folders:
         for source, name in solution_files(rows):
             if source.stat().st_size >= MAX_FILE_BYTES:
-                OVERSIZED.add(str(source.relative_to(ROOT) if source.is_relative_to(ROOT) else source))
+                source_path = sources.origin(source)
+                OVERSIZED.add(str(source_path.relative_to(ROOT) if source_path.is_relative_to(ROOT) else source_path))
             copy(source, target / name)
         copy(SOLUTION / "solution_parts.py", target / "solution_parts.py")
         copy(SOLUTION / runner, target / runner)
@@ -633,7 +648,7 @@ def solution_rows(source: Path) -> int:
 
 def offered_hands(family: str) -> tuple[list[str], str]:
     """An essential family's hands (task_library/<family>/offered_hands.json, copied into its runtime), else both."""
-    path = LIBRARY / family / "offered_hands.json"
+    path = library(family) / "offered_hands.json"
     if path.is_file():
         value = json.loads(path.read_text())
         return list(value["hands"]), str(value.get("reason", ""))
@@ -661,9 +676,9 @@ def essential_manifest(spec: dict) -> dict | None:
     """The six fixed-wrist families declare hands and the packaged oracle like a plugin family."""
     if not spec["id"].startswith("essential_"):
         return None
-    solution = LIBRARY / spec["id"] / "solution/trajectory.json"
+    solution = library(spec["id"]) / "solution/trajectory.json"
     if not solution.is_file():
-        solution = LIBRARY / spec["id"] / "solution/trajectory.npz"
+        solution = library(spec["id"]) / "solution/trajectory.npz"
     offered = offered_hands(spec["id"])[0]
     manifest = {"hands": offered, "action_dim": {hand: ESSENTIAL_WIDTHS[hand] for hand in offered},
                 "robot": "sharpa-wave-floating",
@@ -719,13 +734,13 @@ def tooling_source(name: str) -> Path:
         return LIBRARY / "index.json"
     for entry in json.loads((LIBRARY / "index.json").read_text())["tasks"]:
         if name == entry["module"] + ".py":
-            return LIBRARY / entry["id"] / "scene.py"
+            return library(entry["id"]) / "scene.py"
     return SHARED / name
 
 
 def copy_object_assets(spec: dict, folder: Path) -> None:
     """Package only declared offline mesh/texture/credit files, never policies."""
-    assets = LIBRARY / spec["id"] / "assets"
+    assets = library(spec["id"]) / "assets"
     manifest = assets / "manifest.json"
     if not manifest.is_file():
         return
@@ -1323,8 +1338,9 @@ def all_specs(only: set[str] | None = None) -> list[tuple[dict, dict | None, Pat
     for folder in daily_folders().values():
         specs.append((json.loads((folder / "task.json").read_text()), None, None))
     for family, folder in sorted(plugins.items()):
-        manifest, spec = load_plugin(folder)
-        specs.append((spec, manifest, folder))
+        staged = sources.folder(folder)   # the family folder plus its canonical copies in tasks/
+        manifest, spec = load_plugin(staged)
+        specs.append((spec, manifest, staged))
     ids = [spec["id"] for spec, _, _ in specs]
     duplicates = sorted({x for x in ids if ids.count(x) > 1})
     if duplicates:
@@ -1416,6 +1432,10 @@ def task_name(family: str, mode: str) -> str:
 
 
 def render(destination: Path, only: set[str] | None = None) -> list[Path]:
+    # Stage every source folder before a task directory is removed: the canonical copies live in tasks/.
+    sources.reset()
+    for entry in json.loads((LIBRARY / "index.json").read_text())["tasks"]:
+        library(entry["id"])
     tasks = []
     for spec, manifest, folder in all_specs(only):
         for mode in ("privileged", "standard"):
@@ -1459,10 +1479,9 @@ def render(destination: Path, only: set[str] | None = None) -> list[Path]:
                     for file in TOOLING:
                         copy(tooling_source(file), runtime / file)
                     copy_object_assets(spec, runtime)
-                    if (LIBRARY / spec["id"] / "wuji_reset.json").is_file():
-                        copy(LIBRARY / spec["id"] / "wuji_reset.json", runtime / "wuji_reset.json")
-                    if (LIBRARY / spec["id"] / "offered_hands.json").is_file():
-                        copy(LIBRARY / spec["id"] / "offered_hands.json", runtime / "offered_hands.json")
+                    for name in ("wuji_reset.json", "offered_hands.json"):
+                        if (library(spec["id"]) / name).is_file():
+                            copy(library(spec["id"]) / name, runtime / name)
                 write(runtime / "catalog.json", json.dumps({"schema_version": 1, "tasks": [spec]}, indent=2) + "\n")
                 write(runtime / "instance.json", json.dumps(spec, indent=2, sort_keys=True) + "\n")
                 write(runtime / "grading.json",
@@ -1620,7 +1639,7 @@ def main() -> int:
         plugins = plugin_folders()
         release = set(release_families()) if RELEASE.is_file() else set()
         for spec, manifest, folder in all_specs(only):
-            source = (folder.relative_to(ROOT) if folder else
+            source = ((FAMILIES / spec["id"]).relative_to(ROOT) if folder else
                       "task_library" if spec["id"].startswith("essential_") else
                       HAMBURGER.relative_to(ROOT) if spec["id"] == "assemble_hamburger" else
                       "daily" if spec["id"] in daily_folders() else "catalog.json")
@@ -1653,6 +1672,11 @@ def main() -> int:
             for name in sorted(OVERSIZED):
                 print(f"FAIL {name}: solution file of 2 MB or more; split it with shared/solution/solution_parts.py")
             bad += sorted(OVERSIZED)
+            duplicated = [path.relative_to(ROOT) for folder in sources.family_folders(sorted(only) if only else None)
+                          for path in sources.duplicates(folder)]
+            for path in duplicated:
+                print(f"FAIL {path}: duplicates its canonical copy in tasks/; run scripts/dexhand/sources.py --clean")
+            bad += duplicated
             print(f"checked {len(tasks)} DexHand task directories: {len(bad)} differences"
                   + (f", {len(missing)} release families missing" if missing else ""))
             return int(bool(bad) or bool(missing))

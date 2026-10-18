@@ -5,6 +5,7 @@ and so does every packaged Wuji solution (task_library/<family>/solution/wuji/tr
 Negative: no-op, truncated oracle, a dropped object (hand slowly opened mid-task: fail-fast), forged archive metadata,
 wrong widths and ambiguous members all score 0; Wuji composes, is deterministic and its no-op fails.
 The rotary-gait oracle (15,620 rows) runs only with DEXHAND_SLOW=1; scripts/dexhand/verify_oracles.py covers it.
+Runs on unpacked families (`python3 scripts/dexhand/sources.py --unpack`), like every MuJoCo suite here.
 """
 
 from __future__ import annotations
