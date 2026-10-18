@@ -15,13 +15,17 @@ The rows stay float64 as recorded: rounded to float32 (what the shipped client's
     python3 scripts/pandadyn/freeze.py ... --only S02,D04 --jobs 6
 Writes scripts/pandadyn/frozen/<code>-i00/{instance.json, oracle_actions.npy} and scripts/pandadyn/instances.json (the
 choice, its provenance and the hashes). Provenance (the rollout's path in the benchmark checkout, its source digest) is
-kept in instances.json only: instance.json, which the agent reads in privileged mode, never names where it came from."""
+kept in instances.json only: instance.json, which the agent reads in privileged mode, never names where it came from.
+A task in mk_tasks.BLAS_PIN (its start depends on the BLAS kernel; S06) is frozen with that OPENBLAS_CORETYPE, as its
+containers run it; the bank recorded its rollout under another kernel, so step 2 is reported for it but not required."""
 from __future__ import annotations
 import argparse, concurrent.futures as cf, hashlib, json, pathlib, shutil, subprocess, sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1].parent
 HERE = ROOT / "scripts/pandadyn"
 IMAGE = f"ghcr.io/mll-lab-nu/eai-pandadyn:{(ROOT / 'images/pandadyn/VERSION').read_text().strip()}"
+sys.path.insert(0, str(HERE))
+from mk_tasks import BLAS_PIN  # noqa: E402  (code -> OPENBLAS_CORETYPE: the tasks' containers set it, so freezing does too)
 
 COMPARE = r'''
 import sys, json, numpy as np
@@ -63,9 +67,10 @@ def make_candidates(bank: pathlib.Path) -> dict:
     return {c: sorted(v, key=lambda x: (x["seed"], x["trial"])) for c, v in sorted(out.items())}
 
 
-def run(work: pathlib.Path, cmd: str, timeout: int = 1800) -> dict:
+def run(work: pathlib.Path, cmd: str, timeout: int = 1800, code: str = "") -> dict:
     tools = HERE / "shared"
-    p = subprocess.run(["docker", "run", "--rm", "--gpus", "all", "--network", "none", "-e", "RCB_SESSION_LOG=", "-v", f"{work}:/w",
+    pin = ["-e", f"OPENBLAS_CORETYPE={BLAS_PIN[code]}"] if code in BLAS_PIN else []
+    p = subprocess.run(["docker", "run", "--rm", "--gpus", "all", "--network", "none", "-e", "RCB_SESSION_LOG=", *pin, "-v", f"{work}:/w",
                         "-v", f"{tools}:/tools:ro", "-w", "/w", IMAGE, "bash", "-c", cmd], capture_output=True, text=True, timeout=timeout)
     last = {}
     for line in p.stdout.splitlines():
@@ -87,17 +92,17 @@ def try_candidate(code: str, c: dict, bank: pathlib.Path, work_root: pathlib.Pat
         shutil.copy(src / f, work / f)
     (work / "compare.py").write_text(COMPARE)
     out = {"code": code, "seed": c["seed"], "trial": c["trial"], "task_source_digest": c["task_source_digest"]}
-    mk = run(work, "python /tools/rcb_pandadyn.py make-instance --trial /w --out /w/instance.json --actions-out /w/oracle_actions.npy")
+    mk = run(work, "python /tools/rcb_pandadyn.py make-instance --trial /w --out /w/instance.json --actions-out /w/oracle_actions.npy", code=code)
     if "initial_sha" not in mk:
         return {**out, "ok": False, "why": f"make-instance: {mk}"}
-    cmp_ = run(work, "python /w/compare.py /w")
+    cmp_ = run(work, "python /w/compare.py /w", code=code)
     out["recorded_state_check"] = cmp_
-    if cmp_.get("max_abs_diff") != 0.0 or not cmp_.get("success"):
+    if code not in BLAS_PIN and (cmp_.get("max_abs_diff") != 0.0 or not cmp_.get("success")):
         return {**out, "ok": False, "why": f"recorded states not reproduced: {cmp_}"}
-    orc = run(work, "python /tools/rcb_pandadyn.py run-actions --instance /w/instance.json --actions /w/oracle_actions.npy --out /w/oracle_traj.npz")
+    orc = run(work, "python /tools/rcb_pandadyn.py run-actions --instance /w/instance.json --actions /w/oracle_actions.npy --out /w/oracle_traj.npz", code=code)
     if not orc.get("success"):
         return {**out, "ok": False, "why": f"oracle run: {orc}"}
-    reps = [run(work, "python /tools/rcb_pandadyn.py replay --instance /w/instance.json --traj /w/oracle_traj.npz") for _ in range(2)]
+    reps = [run(work, "python /tools/rcb_pandadyn.py replay --instance /w/instance.json --traj /w/oracle_traj.npz", code=code) for _ in range(2)]
     shas = [((r.get("replays") or [{}])[0]).get("state_sha") for r in reps]
     ok = all(((r.get("replays") or [{}])[0]).get("success") and r.get("instance_matches") for r in reps) and len(set(shas + [orc["state_sha"]])) == 1
     inst = json.loads((work / "instance.json").read_text())

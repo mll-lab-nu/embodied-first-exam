@@ -4,5 +4,7 @@ FROM ghcr.io/mll-lab-nu/eai-pandadyn:0.1.0
 COPY instance.json /app/instance.json
 COPY rcb_pandadyn.py /opt/tools/rcb_pandadyn.py
 ENV PYTHONPATH=/opt/tools:/opt/pandadyn
+# OPENBLAS_CORETYPE: this task's start depends on the BLAS kernel (docs/benchmarks/pandadyn.md "Determinism")
+ENV OPENBLAS_CORETYPE=Haswell
 RUN mkdir -p /app/output
 WORKDIR /app

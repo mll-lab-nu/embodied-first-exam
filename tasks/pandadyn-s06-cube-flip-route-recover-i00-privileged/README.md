@@ -32,8 +32,10 @@ reaches only the model APIs and the package registries.
 (`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in both
 (every phase complete, no failure) and both end in the same state (`deterministic`), plus `/logs/verifier/replay.mp4`
 (overview camera). Oracle: 1297 control steps (12.97 s simulated), success at the last one; the oracle
-run and two fresh-process replays end in the same state (hash `757b6d87c847ee98`), and the rollout reproduces the physical
-state the benchmark recorded for it after every control step, bit for bit. `nop`: no trajectory, reward 0; a trajectory that
+run and two fresh-process replays end in the same state (hash `e0bc18755f314dab`). The start's arm pose
+depends on the BLAS kernel, so every container that builds the scene pins it (`OPENBLAS_CORETYPE=Haswell`: the same
+start and oracle state on every x86-64 host with AVX2); the bank's rollout was recorded under another kernel, its rows
+succeed here. `nop`: no trajectory, reward 0; a trajectory that
 holds the arm still fails (the benchmark's parked controls never succeeded).
 
 ## Compute resources
@@ -53,7 +55,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | | |
 |---|---|
 | Benchmark source | Panda Dynamic Scenes (the environment package `images/pandadyn/panda_dynamics/`, from `scripts/pandadyn/sync_env.py`); task `PandaMultiStage/S06-CubeFlipRouteRecover-v0` |
-| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` 16626e9f9adb5e78) |
+| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` a6d725da345513d2) |
 | Actions | 8 per control step (10 ms): per arm 7 absolute joint targets (rad) + the total aperture (m); a Ruckig + torque servo per arm |
 | Physics | CPU PhysX at 1000 Hz with enhanced determinism (single thread); SAPIEN renders on the GPU only when a frame is asked for |
 | Image | `images/pandadyn/` (public); needs an NVIDIA GPU with Vulkan for SAPIEN (`environment/docker-compose.yaml`) |

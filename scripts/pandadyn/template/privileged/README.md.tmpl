@@ -32,8 +32,7 @@ reaches only the model APIs and the package registries.
 (`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in both
 (every phase complete, no failure) and both end in the same state (`deterministic`), plus `/logs/verifier/replay.mp4`
 (overview camera). Oracle: @@N_ORACLE@@ control steps (@@ORACLE_SIM_S@@ s simulated), success at the last one; the oracle
-run and two fresh-process replays end in the same state (hash `@@ORACLE_SHA@@`), and the rollout reproduces the physical
-state the benchmark recorded for it after every control step, bit for bit. `nop`: no trajectory, reward 0; a trajectory that
+run and two fresh-process replays end in the same state (hash `@@ORACLE_SHA@@`)@@ROLLOUT_NOTE@@ `nop`: no trajectory, reward 0; a trajectory that
 holds the arm still fails (the benchmark's parked controls never succeeded).
 
 ## Details

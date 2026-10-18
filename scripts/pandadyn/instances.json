@@ -488,6 +488,12 @@
    "seed": 0
   },
   "S06-CubeFlipRouteRecover": {
+   "blas_pin": {
+    "OPENBLAS_CORETYPE": "Haswell",
+    "recorded_state_check": "the bank's rollout reproduced bit for bit under the AVX-512 kernel (the check above, at the first freeze); under the pinned kernel the start differs in the last float32 bit of 4 joints, so the recorded states are not re-checked",
+    "refrozen": "2026-10-17: initial_sha and the oracle's final state under the pinned kernel; the same on a Ryzen 9 7950X (AVX-512) and an EPYC 7R13 (AVX2, aws:rcb-gpu7), the oracle rows (unchanged) succeed in 1297 control steps on both",
+    "why": "the start's arm pose comes from the IK fallback (scipy least_squares), whose last bits follow the OpenBLAS kernel: the start frozen under the AVX-512 kernel (Ryzen 9 7950X, initial_sha 16626e9f9adb5e78, oracle final 757b6d87c847ee98) rebuilt as a6d725da345513d2 on every AVX2 host (AWS EPYC 7R13, SC EPYC 7402, babel EPYC 7763): instance_mismatch (board 0153, 2026-10-17)"
+   },
    "candidates_tried": [
     {
      "ok": true,
@@ -497,8 +503,8 @@
    ],
    "difficulty": "nominal",
    "id": 0,
-   "initial_sha": "16626e9f9adb5e780f6cf857a83bf67045745ea60adbd17efea1b79692ca0461",
-   "oracle_final_sha": "757b6d87c847ee98adf1f7cdc4de86b985540648e3ec2ceaa142ad53d0cc196d",
+   "initial_sha": "a6d725da345513d24f8d40592027f45e7711d6c0f198ebb2385be33dbc2827d1",
+   "oracle_final_sha": "e0bc18755f314dab2cb2cdcc43bba19b41e1abb669e128bf9ed795c10c12224c",
    "oracle_npy_sha256": "9a48716e5bf478ae3a0ec0760824283cf8c4c6e31a49ce67f5afdd821b6f1d28",
    "oracle_rows": 1297,
    "oracle_sim_time_s": 12.97,

@@ -120,6 +120,15 @@ CPU PhysX with `enable_enhanced_determinism`, one simulated scene per process, o
   between two replays of the same rollout (226 rollouts replayed at least twice);
 - a seed reset alone rebuilds the recorded start (`initial_state.pkl` of the bank adds nothing), and rendering, the render
   backend (`render_backend="cpu"`, below) and the cameras do not change the physics (same hashes);
+- across hosts (board 0153, 2026-10-17): S06's arm start comes from the IK fallback (scipy `least_squares`: Pinocchio's
+  IK does not converge there, joint 4 ends on its bound), whose last bits follow the BLAS kernel OpenBLAS picks for the
+  CPU. Frozen under the AVX-512 kernel, its start never rebuilt on the pool's AVX2 hosts (AWS EPYC 7R13, SC EPYC 7402,
+  babel EPYC 7763; 4 joints differ in the last float32 bit: `instance_mismatch`). Its containers now pin the kernel
+  (`OPENBLAS_CORETYPE=Haswell`, `mk_tasks.py` `BLAS_PIN`; re-frozen with it): the start and the oracle's final state are
+  the same on a Ryzen 9 7950X and an EPYC 7R13. The other 24 starts come from Pinocchio's IK and rebuild on both
+  (all 25 checked on aws:rcb-gpu8), and every oracle succeeds on both; 6 oracles (D03, D08, D10, D13, S05, S07) end in
+  another state hash there than the README's (measured here): a trajectory and its grading replay always run on one
+  host, so no verdict depends on it;
 - standard mode: the live episode equals a fresh-process replay of its rows (the video pass records the comparison,
   `video_matches_live`, for information only), and a service killed in the middle of a call resumes the same episode with
   the same state hash (Crash recovery).

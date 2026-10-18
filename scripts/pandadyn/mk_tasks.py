@@ -53,6 +53,15 @@ RESETS = 3            # the reset budget of both standard modes (PROTOCOL §2; d
                       # every reset restores the same frozen start, so 10 resets let an agent tune an open-loop plan on a
                       # deterministic scene (standard-realtime: 10 from 2026-10-14 to 2026-10-17, then 3); standard: none
                       # until 2026-10-17, then 3, the realtime twin's (owner: the two standard modes aligned, board 0153)
+# The tasks whose frozen start depends on the CPU's BLAS kernel (board 0153, 2026-10-17): code -> OPENBLAS_CORETYPE, set in every
+# container that builds the scene (privileged environment/ and tests/, the standard sidecar). S06's arm start comes from the
+# IK fallback (base_env reset -> Kinematics.solve: Pinocchio's IK does not converge from any of its seeds there, joint 4
+# ends on its bound, scipy least_squares solves it), and least_squares' last bits follow the kernel OpenBLAS picks for
+# the CPU: the start frozen on the AVX-512 workstation (Ryzen 9 7950X) never rebuilt on the pool's AVX2 hosts (AWS EPYC
+# 7R13, SC EPYC 7402, babel EPYC 7763: instance_mismatch, an infrastructure failure). With the Haswell kernel pinned the
+# start and the oracle's final state are the same on both CPU kinds (docs/benchmarks/pandadyn.md "Determinism"). The
+# other 24 starts come from Pinocchio's IK and rebuild everywhere; they stay unpinned (their task dirs unchanged).
+BLAS_PIN = {"S06": "Haswell"}
 ADAPTER = HERE / "template/realtime/environment/sim/server.py"   # the one rcb_service.Sim adapter of both standard modes
 # The standard copy of the adapter: the same code under this docstring (the realtime twin's docstring describes its clock).
 STD_ADAPTER_DOC = '''"""eai-standard/2.1 sim service for Panda Dynamic Scenes' standard tasks -- the adapter behind the shared standard
@@ -97,6 +106,29 @@ def std_adapter() -> bytes:
     if src[end - 1] != "\n":
         raise RuntimeError(f"{ADAPTER}: the module docstring's closing quotes must end their line")
     return (STD_ADAPTER_DOC + src[end:]).encode()
+
+
+def pin_blas(code: str, mode: str, rel: str, data: bytes) -> bytes:
+    """`data` with the task's BLAS_PIN (OPENBLAS_CORETYPE) set in the containers that build the scene: privileged
+    environment/ and tests/ (their Dockerfiles), the standard twins' sim sidecar (its compose service). Unchanged for every
+    other file and for the tasks without a pin."""
+    core = BLAS_PIN.get(code)
+    why = 'this task\'s start depends on the BLAS kernel (docs/benchmarks/pandadyn.md "Determinism")'
+    anchors = {("privileged", "environment/Dockerfile"): ("ENV PYTHONPATH=/opt/tools:/opt/pandadyn\n", "ENV OPENBLAS_CORETYPE={core}\n"),
+               ("privileged", "tests/Dockerfile"): ("ENV PYTHONPATH=/tests:/opt/pandadyn\n", "ENV OPENBLAS_CORETYPE={core}\n"),
+               ("standard", "environment/docker-compose.yaml"): ("      PYTHONPATH: /srv:/opt/pandadyn\n",
+                                                                 "      OPENBLAS_CORETYPE: {core}   # {why}\n"),
+               ("standard-realtime", "environment/docker-compose.yaml"): ("      PYTHONPATH: /srv:/opt/pandadyn\n",
+                                                                          "      OPENBLAS_CORETYPE: {core}   # {why}\n")}
+    if core is None or (mode, rel) not in anchors:
+        return data
+    anchor, line = anchors[(mode, rel)]
+    text = data.decode()
+    if text.count(anchor) != 1:
+        raise RuntimeError(f"{code} {mode} {rel}: no single {anchor.strip()!r} line to pin OPENBLAS_CORETYPE after")
+    if rel.endswith("Dockerfile"):
+        line = f"# OPENBLAS_CORETYPE: {why}\n" + line
+    return text.replace(anchor, anchor + line.format(core=core, why=why)).encode()
 
 
 POSITION_IN_TEXT = re.compile(r"\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)")
@@ -262,6 +294,11 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
               "README_GOAL": D["summary"], "PHASE_NAMES": ", ".join(f"`{p['name']}`" for p in phases),
               "DIFFICULTY": D["difficulty_note"], "N_ORACLE": str(R["oracle_rows"]), "ORACLE_SIM_S": num(float(R["oracle_sim_time_s"])),
               "ORACLE_SHA": R["oracle_final_sha"][:16], "ENV_ID": I["env_id"], "INITIAL_SHA_SHORT": I["initial_sha"][:16],
+              "ROLLOUT_NOTE": (", and the rollout reproduces the physical\nstate the benchmark recorded for it after every control step, bit for bit."
+                               if code not in BLAS_PIN else
+                               f". The start's arm pose\ndepends on the BLAS kernel, so every container that builds the scene pins it (`OPENBLAS_CORETYPE={BLAS_PIN[code]}`: the same\n"
+                               "start and oracle state on every x86-64 host with AVX2); the bank's rollout was recorded under another kernel, its rows\n"
+                               "succeed here."),
               "FROZEN": f"{task}-i{i:02d}", "MAX_ROWS": f"{MAX_ROWS:,}", "MODULE_PATH": module.replace(".", "/") + ".py"}
     priv = {"SCENE_PRIVILEGED": D["scene_privileged"], "PARAMS": params, "GOALS": goals_priv, "SUMMARY": D["summary"],
             "ROBOT_SETUP": D["robot_setup"], "SCENE": D["scene"], "PHASES_BLOCK": phases_block(False), "FAILURES_BLOCK": fails_block(False),
@@ -301,7 +338,7 @@ def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple
                 rel = rel[:-5]; data = fill(p.read_text(), {**common, **extra}).encode()
             else:
                 data = p.read_bytes()
-            files[rel] = (data, 0o755 if rel.endswith(".sh") else 0o644)
+            files[rel] = (pin_blas(code, mode, rel, data), 0o755 if rel.endswith(".sh") else 0o644)
         if mode == "privileged":
             for rel in ("environment/rcb_pandadyn.py", "tests/rcb_pandadyn.py"):
                 files[rel] = (tool, 0o644)
