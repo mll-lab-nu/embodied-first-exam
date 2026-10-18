@@ -11,7 +11,7 @@ RoboCasa's [GR1 tabletop tasks](https://github.com/robocasa/robocasa-gr1-tableto
 | metadata | `simulator = "robosuite"`, `robot = "fourier-gr1"`, `family = "robocasa-gr1/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa-gr1:0.1.0` (`images/robocasa-gr1/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| generator | `scripts/robocasa-gr1/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
+| generator | `scripts/robocasa-gr1/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`); each instance and reference is committed once, in its privileged task (`environment/instance.npz`, `solution/oracle.npz`), which `generate.py` reads; `frozen/` keeps `report.json` and `start_state.json` (a fresh import's `frozen/<slug>/` is deleted once its tasks are generated) |
 
 ## Scope
 All 24 GR1 tabletop environments with an official demonstration whose reference PR #4 validated, one

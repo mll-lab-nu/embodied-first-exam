@@ -11,7 +11,7 @@
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa365/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| generator | `scripts/robocasa365/` (`select_instances.py`, `import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
+| generator | `scripts/robocasa365/` (`select_instances.py`, `import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`); each instance and reference is committed once, in its privileged task (`environment/instance.npz`, `solution/oracle.npz`), which `generate.py` reads; `frozen/` keeps `report.json` and `start_state.json` (a fresh import's `frozen/<slug>/` is deleted once its tasks are generated) |
 
 ## Scope and selection rule
 PR #4 accepted 256 RoboCasa365 families with a demonstration-based reference (63 atomic, 193 composite; the 109 others
