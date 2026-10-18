@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A later /submit never replaces a planned row that is not motion (shared/realtime/rcb_rsb_rt.py, RoboSafeBench 0.5.4).
+"""A later /submit never replaces a planned row that is not motion (rcb_rsb_rt.py, RoboSafeBench 0.5.4).
 
 Under the realtime clock a /submit replaces the plan from its `at` on (eai-standard/2.3). Before 0.5.4 that included a
 `report`, `ask_operator`, `stop` or exit row still waiting for its control step: two /submits a few milliseconds apart
@@ -9,8 +9,8 @@ report -> ee_pose); the rest are the edge cases of the rule: rows that are not m
 they were planned for, the new chunk's rows from that step on one control step later per kept row; a kept exit ends
 the episode at its step; motion rows are still replaced.
 
-The service runs in this process on a real frozen instance (instances_rt/c05-i01: d_spill_toward_strip), its clock
-stepped tick by tick as make_rt_instances.py drives it, so nothing depends on the host's speed (no wall clock).
+The service runs in this process on a real frozen instance (tasks/rsb-c05-i01-standard-realtime: d_spill_toward_strip),
+its clock stepped tick by tick, so nothing depends on the host's speed (no wall clock).
 Needs the simulator (RoboSafeBench with the external-clock hooks, MuJoCo, OSMesa): run it in the eai-robosafebench image:
     python scripts/robosafe/tests/test_kept_rows.py [-v]
 RT_MODULE=<path to an rcb_rsb_rt.py> runs the same tests against another copy (e.g. the one before the fix: the
@@ -30,12 +30,15 @@ import unittest
 import numpy as np
 
 HERE = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(HERE))
+import check_release as CR  # noqa: E402
 INSTANCE = os.environ.get("RT_INSTANCE") or "c05-i01"
-SIM = tempfile.mkdtemp(prefix="kept_rows_sim_")      # the task's environment/sim/, as gen_realtime.py assembles it
-for f in ("server.py", "rcb_service.py", "rcb1.py", "rcb_rsb.py", "replay.py", "picture_delivery.py"):
-    shutil.copy(HERE / "shared/standard" / f, SIM)
-shutil.copy(HERE / "shared/realtime/rcb_realtime.py", SIM)
-shutil.copy(os.environ.get("RT_MODULE") or HERE / "shared/realtime/rcb_rsb_rt.py", pathlib.Path(SIM) / "rcb_rsb_rt.py")
+INSTANCE_PATH = CR.TASKS / f"rsb-{INSTANCE}-standard-realtime" / "environment/sim/instance.json"
+SIM = tempfile.mkdtemp(prefix="kept_rows_sim_")      # a 0.5.4 realtime task's environment/sim/ (its service files)
+for p in CR.sim_dir(clock="realtime").glob("*.py"):
+    shutil.copy(p, SIM)
+if os.environ.get("RT_MODULE"):
+    shutil.copy(os.environ["RT_MODULE"], pathlib.Path(SIM) / "rcb_rsb_rt.py")
 sys.path.insert(0, SIM)
 import rcb1  # noqa: E402
 import rcb_realtime  # noqa: E402
@@ -48,13 +51,13 @@ MOTION = ("joint_position", "ee_pose", "delta", "whole_body")     # RoboSafeBenc
 
 def instance() -> dict:
     """The frozen realtime instance, or on a host whose libm rebuilds another start hash than the image's, the same
-    instance with this host's hash (built in a fresh process, as make_rt_instances.py does)."""
+    instance with this host's hash (built in a fresh process)."""
     global _INST
-    inst = json.loads((HERE / "instances_rt" / f"{INSTANCE}.json").read_text())
+    inst = json.loads(INSTANCE_PATH.read_text())
     if _INST is None:
         code = ("import json, sys; sys.path.insert(0, %r); import rcb_rsb_rt, rcb_rsb; "
                 "print(rcb_rsb.Session(json.load(open(sys.argv[1]))).ep.state_hash())" % SIM)
-        _INST = subprocess.run([sys.executable, "-c", code, str(HERE / "instances_rt" / f"{INSTANCE}.json")],
+        _INST = subprocess.run([sys.executable, "-c", code, str(INSTANCE_PATH)],
                                capture_output=True, text=True, check=True).stdout.split()[-1]
         if _INST != inst["state_sha"]:
             print(f"\n    (this host rebuilds another start hash than the image's: {_INST[:12]} for "
@@ -64,7 +67,7 @@ def instance() -> dict:
 
 
 class Rig(unittest.TestCase):
-    """The service in this process (make_rt_instances.Driver): requests dispatched on this thread, ticks run by hand."""
+    """The service in this process: requests dispatched on this thread, ticks run by hand."""
 
     def setUp(self):
         self.data = tempfile.mkdtemp(prefix="kept_rows_")

@@ -16,8 +16,14 @@ standard-realtime task (its realtime instance differs from the paused one, and H
 both): PRIVILEGED_EXCLUDED below.
 
 The reference trajectory of each task (solution/trajectory.npz) is the standard twin's reference episode, streamed live
-through the standard service and converted from its journal (scripts/robosafe/privileged_oracles.py, run in the image);
-`render` copies it from scripts/robosafe/oracles_privileged/<base>.npz and never computes it.
+through the standard service and converted from its journal (scripts/robosafe/privileged_oracles.py, run in the image).
+`render` never computes it: it keeps the committed task's solution/trajectory.npz and the reference's rows, control
+steps and outcome stated in its task.toml; for a new task (or a new reference), `privileged_oracles.py collect` writes
+scripts/robosafe/oracles_privileged/<base>.npz and <base>.json ({"outcome", "rows", "steps"}), which render takes when
+they exist; once the task is rendered and committed, delete them.
+
+The privileged tooling, grader and solution files are taken from the canonical privileged task (check_release.py
+LAYERS["privileged"]); to change one, edit it there and render.
 """
 from __future__ import annotations
 
@@ -34,9 +40,7 @@ import tomllib
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 TASKS = ROOT / "tasks"
-SHARED = HERE / "shared" / "privileged"
-STANDARD_SHARED = HERE / "shared" / "standard"
-ORACLES = HERE / "oracles_privileged"
+ORACLES = HERE / "oracles_privileged"       # a new reference (privileged_oracles.py collect), until it is committed
 IMAGE = "ghcr.io/mll-lab-nu/eai-robosafe:0.5.4"
 CUTOFF_SEC = 3600            # the standard twins' (PROTOCOL H.7: equal cutoffs)
 VERIFIER_TIMEOUT_SEC = 5400  # two concurrent replays (at most REPLAY_TIMEOUT_S) and the replay video after them
@@ -44,7 +48,10 @@ REPLAY_TIMEOUT_S = 3900      # the standard tasks' bound on a replay of the agen
 TOOLING = ("rcb_rsb_privileged.py", "scrub.py")
 SIM_COPIES = ("rcb_rsb.py", "candidate_identity.py")   # byte copies of the standard tasks' environment/sim/ files
 
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path[:0] = [str(HERE), str(ROOT / "scripts")]
+import check_release  # noqa: E402
+
+SHARED_FILES = ("rcb_rsb_privileged.py", "scrub.py", "grade.py", "test.sh", "gen.py", "solve.sh")
 
 
 def release() -> dict:
@@ -371,13 +378,35 @@ WORKDIR /tests
 """
 
 
-def render_task(base: str, out: pathlib.Path) -> None:
+def shared_files() -> dict:
+    """The privileged layer's files (check_release.LAYERS), read before any task directory is rewritten."""
+    return {f: check_release.shared("privileged", f).read_bytes() for f in SHARED_FILES}
+
+
+def reference(base: str) -> tuple[bytes, dict]:
+    """The reference trajectory and its facts: a new one in ORACLES, else the committed task's (the repository's
+    tasks/, never the render's destination)."""
+    if (ORACLES / f"{base}.npz").is_file():
+        return (ORACLES / f"{base}.npz").read_bytes(), json.loads((ORACLES / f"{base}.json").read_text())
+    task = TASKS / f"{base}-privileged"
+    if not (task / "task.toml").is_file() or not (task / "solution" / "trajectory.npz").is_file():
+        raise SystemExit(f"gen_privileged: no reference for {base}: neither {ORACLES.relative_to(ROOT)}/{base}.npz nor a "
+                         f"committed {task.relative_to(ROOT)}; make one with `privileged_oracles.py all` + `collect` "
+                         "(scripts/robosafe/privileged_oracles.py) and render again")
+    evidence = tomllib.loads((task / "task.toml").read_text())["metadata"]["oracle_evidence"]
+    m = re.search(r"; (\d+) rows, (\d+) control steps\), .*? it replays to RoboSafeBench's (\S+) in two", evidence)
+    if not m:
+        raise ValueError(f"{task.name}: task.toml oracle_evidence does not state the reference's rows, steps, outcome")
+    meta = {"rows": int(m.group(1)), "steps": int(m.group(2)), "outcome": m.group(3)}
+    return (task / "solution" / "trajectory.npz").read_bytes(), meta
+
+
+def render_task(base: str, out: pathlib.Path, shared: dict) -> None:
     std = TASKS / f"{base}-standard"
     st = tomllib.loads((std / "task.toml").read_text())
     inst_bytes = (std / "environment" / "sim" / "instance.json").read_bytes()
     instance = json.loads(inst_bytes)
-    oracle_npz = ORACLES / f"{base}.npz"
-    oracle_meta = json.loads((ORACLES / f"{base}.json").read_text())
+    oracle_npz, oracle_meta = reference(base)     # read before `out` (it may be the task itself) is removed
     if out.exists():
         shutil.rmtree(out)
     (out / "environment").mkdir(parents=True)
@@ -387,16 +416,16 @@ def render_task(base: str, out: pathlib.Path) -> None:
         (out / d / "instance.json").write_bytes(inst_bytes)
         for f in SIM_COPIES:
             shutil.copyfile(std / "environment" / "sim" / f, out / d / f)
-        shutil.copyfile(SHARED / "rcb_rsb_privileged.py", out / d / "rcb_rsb_privileged.py")
-    shutil.copyfile(SHARED / "scrub.py", out / "environment" / "scrub.py")
-    shutil.copyfile(SHARED / "grade.py", out / "tests" / "grade.py")
+        (out / d / "rcb_rsb_privileged.py").write_bytes(shared["rcb_rsb_privileged.py"])
+    (out / "environment" / "scrub.py").write_bytes(shared["scrub.py"])
+    (out / "tests" / "grade.py").write_bytes(shared["grade.py"])
     (out / "environment" / "Dockerfile").write_text(ENV_DOCKERFILE)
     (out / "tests" / "Dockerfile").write_text(TESTS_DOCKERFILE)
-    shutil.copyfile(SHARED / "test.sh", out / "tests" / "test.sh")
+    (out / "tests" / "test.sh").write_bytes(shared["test.sh"])
     (out / "tests" / "test.sh").chmod(0o755)
-    shutil.copyfile(oracle_npz, out / "solution" / "trajectory.npz")
-    shutil.copyfile(SHARED / "gen.py", out / "solution" / "gen.py")
-    shutil.copyfile(SHARED / "solve.sh", out / "solution" / "solve.sh")
+    (out / "solution" / "trajectory.npz").write_bytes(oracle_npz)
+    (out / "solution" / "gen.py").write_bytes(shared["gen.py"])
+    (out / "solution" / "solve.sh").write_bytes(shared["solve.sh"])
     (out / "solution" / "solve.sh").chmod(0o755)
     std_instr = (std / "instruction.md").read_text()
     (out / "instruction.md").write_text(instruction(base, std_instr, instance))
@@ -413,9 +442,10 @@ def normalize(paths: list[pathlib.Path]) -> None:
 
 def render(dest: pathlib.Path) -> list[pathlib.Path]:
     out = []
+    shared = shared_files()
     for base in bases():
         p = dest / f"{base}-privileged"
-        render_task(base, p)
+        render_task(base, p, shared)
         out.append(p)
     return out
 

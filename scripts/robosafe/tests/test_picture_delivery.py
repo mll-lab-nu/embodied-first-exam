@@ -17,7 +17,10 @@ from unittest.mock import patch
 import numpy as np
 
 HERE = Path(__file__).resolve().parents[1]
-STD = HERE / "shared/standard"
+sys.path.insert(0, str(HERE))
+sys.dont_write_bytecode = True        # the service is imported from its canonical task dir
+import check_release as CR  # noqa: E402
+STD = CR.sim_dir()
 sys.path.insert(0, str(STD))
 import picture_delivery
 import rcb1
@@ -189,7 +192,7 @@ class PictureDelivery(unittest.TestCase):
         for path in STD.glob("*.py"):
             shutil.copy(path, assembled / path.name)
         for filename in ("rcb_realtime.py", "rcb_rsb_rt.py"):
-            shutil.copy(HERE / "shared/realtime" / filename, assembled / filename)
+            shutil.copy(CR.shared("realtime", filename), assembled / filename)
         sys.path.insert(0, str(assembled))
         spec = importlib.util.spec_from_file_location("delivery_rt", assembled / "rcb_rsb_rt.py")
         rcb_rsb_rt = importlib.util.module_from_spec(spec)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The reference trajectories of RoboSafeBench's privileged tasks (scripts/robosafe/oracles_privileged/<base>.npz).
+"""The reference trajectories of RoboSafeBench's privileged tasks (each task's solution/trajectory.npz).
 
 A privileged task's reference is its standard twin's: RoboSafeBench's native reference of the member, streamed live
 through the standard service (the twin's environment/sim/server.py and solution/oracle_replay.py, exactly as a Harbor
@@ -15,6 +15,9 @@ shows that the scrub changes nothing the verdict reads.
     # on a host with podman and the image, all bases, N at a time, then copy the passing ones into oracles_privileged/:
     python3 scripts/robosafe/privileged_oracles.py all WORK_DIR [--jobs N] [--image IMAGE]
     python3 scripts/robosafe/privileged_oracles.py collect WORK_DIR
+`collect` writes scripts/robosafe/oracles_privileged/<base>.npz and <base>.json, which gen_privileged.py render puts
+into the tasks; after committing the rendered tasks, delete oracles_privileged/ (the tasks hold the references).
+The privileged tooling (rcb_rsb_privileged.py, scrub.py) is the canonical privileged task's (check_release.py LAYERS).
 """
 from __future__ import annotations
 
@@ -31,7 +34,10 @@ import time
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-TOOLS = HERE / "shared" / "privileged"
+sys.path[:0] = [str(HERE), str(ROOT / "scripts")]
+import check_release  # noqa: E402
+
+TOOLS = check_release.shared("privileged", "rcb_rsb_privileged.py").parent   # with scrub.py
 OUT = HERE / "oracles_privileged"
 IMAGE = "ghcr.io/mll-lab-nu/eai-robosafe:0.5.4"
 
