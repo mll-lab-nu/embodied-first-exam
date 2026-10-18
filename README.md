@@ -111,7 +111,7 @@ instance, oracle, budget, image), then Task, Difficulty, Reference solution, Ver
 
 ```bash
 uv tool install harbor==0.23.0
-git submodule update --init --recursive          # third_party/ sources used by the base images
+git submodule update --init                      # third_party/RoboTwin: the RoboTwin image and generators
 images/mujoco/prepare_assets.sh                  # MuJoCo assets (pinned upstream commits)
 scripts/build_images.sh                          # every eai-* base image (the public ones can be pulled instead)
 cp .env.example .env                             # API keys, or a Claude / ChatGPT subscription login
@@ -177,7 +177,7 @@ docs/                  protocol/ (the protocol: README.md conventions + the bind
                        standard-mode wire protocol, running.md official runs, seeds, retries, results, batches,
                        leakage.md where answer keys survive), TAXONOMY.md (metadata vocabulary),
                        REVIEWING.md (maintainer guide), benchmarks/ (per-benchmark notes)
-third_party/           upstream sources used by the base images (RoboTwin)
+third_party/           RoboTwin 2.0 (git submodule): source of eai-robotwin and of scripts/robotwin_mk_task.py
 ```
 
 ## Results

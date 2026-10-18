@@ -162,7 +162,7 @@ the scroll as written, its characters sharing one 210 mm frame so the ligatures 
   --template yong`), then `measure_reference.py` and `mk_tasks.py` as for every pair (on a host without docker, with the
   base image's runtime: `cs_gen_native.py`). Scoring, thresholds and process rules are those of kaishu
   and xingshu.
-- Robot-free checks of the rule on the reference plans (`cs_perturb.py`): one press for the whole sheet, a lift at every region
+- Robot-free checks of the rule on the reference plans: one press for the whole sheet, a lift at every region
   boundary or in the middle of every contact, a missing contact, presses ×0.8 or ×1.2 and the naive plan fail on all six; one
   press per contact fails on five (文 passes with IoU 0.83 and a worst region of 0.81); every contact moved ±0.5 mm relative to
   the others fails on the four works, ±1.5 mm on all six.
@@ -208,7 +208,7 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 - **A new pair**: `lt_exemplar.py` -> `scripts/robopaint_brush_mk_task.py --family lettering --target <slug> --exemplar
   <slug>.exemplar.json` (catalogue and licence record: `scripts/robopaint_templates/lettering/targets.json`; on a host without
   docker but with the image's runtime: `lt_gen_native.py`) -> `measure_reference.py` -> `rules.json` -> `mk_tasks.py`.
-- **Rule study** (`lt_perturb.py`, robot-free: the plan drawn with the pen's ideal mark and scored by the unchanged scorer), all six
+- **Rule study** (robot-free: the plan drawn with the pen's ideal mark and scored by the unchanged scorer), all six
   targets: the reference plan passes; one constant press (per contact or overall), hairlines only, full press, the spread axis
   turned 90°, contacts shifted alternately by ±0.5 mm, one lift more, one contact skipped, one stroke per region and the shades
   filled with hairline passes all fail. The spread axis turned 30° fails the two words but passes the four lines (their shades are
