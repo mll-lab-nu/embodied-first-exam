@@ -19,13 +19,13 @@ Inputs, all in the repository:
                                          while that file exists; delete it once the family's task dirs are committed
   scripts/robolab/oracles/<f>/           families with a reference solution: oracle_<f>.py (privileged) and the standard
                                          oracle's joint targets oracle_qpos.npy + oracle_meta.json, recorded from its run
-  embodied_first_exam/robolab/           the code the tasks share, its one source: rcb_robolab.py (the tooling, one TASKS
+  embodied_first_exam/benchmarks/robolab/           the code the tasks share, its one source: rcb_robolab.py (the tooling, one TASKS
                                          registry for every family: the privileged images take it from the files-only
                                          image images/robolab-files/, below; the standard environment/sim/ holds a copy)
                                          and ref_primitives.py (the reference solutions' task-level skills: solution/ of
                                          oracle families only)
   images/robolab-files/FILES.json        the pinned files-only image eai-robolab-files (scripts/files_image.py), built from
-                                         embodied_first_exam/robolab/rcb_robolab.py: the privileged environment/Dockerfile and
+                                         embodied_first_exam/benchmarks/robolab/rcb_robolab.py: the privileged environment/Dockerfile and
                                          tests/Dockerfile `COPY --from` it to /opt/tools/rcb_robolab.py and
                                          /tests/rcb_robolab.py; --check fails when the source and FILES.json disagree
   scripts/robolab/template/<mode>/       every other task file; a *.tmpl file is filled with the family's values (@@KEY@@)
@@ -44,13 +44,13 @@ import argparse, json, os, pathlib, re, shutil, sys, tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robolab"
 LAYER = ROOT / "scripts/eai_standard"
-SHARED = ROOT / "embodied_first_exam/robolab"   # the code the tasks share (its one source)
+SHARED = ROOT / "embodied_first_exam/benchmarks/robolab"   # the code the tasks share (its one source)
 REGISTRY = "ghcr.io/mll-lab-nu"
 sys.path.insert(0, str(ROOT / "scripts"))
 import files_image  # noqa: E402  (files-only images: one copy of a file many tasks would each carry)
 from task_conventions import task_dir as tc_task_dir  # noqa: E402  (tasks/<benchmark folder>/<task>)
 # rcb_robolab.py (0.13 MB): the privileged agent and verifier images take it from this files-only image (FILES.json; source
-# embodied_first_exam/robolab/) at the paths their Dockerfiles copied it to; the standard sim/ copy stays (bind-mounted at /srv)
+# embodied_first_exam/benchmarks/robolab/) at the paths their Dockerfiles copied it to; the standard sim/ copy stays (bind-mounted at /srv)
 TOOL_FILES = "robolab-files"
 TOOL_FROM_IMAGE = {"environment/rcb_robolab.py": "/opt/tools/rcb_robolab.py", "tests/rcb_robolab.py": "/tests/rcb_robolab.py"}
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
@@ -160,12 +160,12 @@ def review_note(F: dict, mode: str) -> str:
 _TOOL_SRC = (SHARED / "rcb_robolab.py").read_text()
 _SETTLE = re.search(r"(?m)^SETTLE_STEPS = (\d+)", _TOOL_SRC)
 if not _SETTLE:
-    raise RuntimeError("embodied_first_exam/robolab/rcb_robolab.py: SETTLE_STEPS not found")
+    raise RuntimeError("embodied_first_exam/benchmarks/robolab/rcb_robolab.py: SETTLE_STEPS not found")
 SETTLE_STEPS = int(_SETTLE.group(1))
 _ON_TABLE = re.search(r"(?m)^ON_TABLE = \(([^)]*)\)", _TOOL_SRC)
 ON_TABLE = tuple(re.findall(r'"([^"]+)"', _ON_TABLE.group(1))) if _ON_TABLE else ()
 if not ON_TABLE or 'term.params = {**params, "surface": "table"}' not in _TOOL_SRC:
-    raise RuntimeError("embodied_first_exam/robolab/rcb_robolab.py: ON_TABLE or its term replacement not found")
+    raise RuntimeError("embodied_first_exam/benchmarks/robolab/rcb_robolab.py: ON_TABLE or its term replacement not found")
 # RoboLab v0.3.1: WorldState.is_supported_on_surface(obj, surface) defaults, the support test of the on-table term
 SUPPORT_RULE = (": the contact force between the object and the table is at least 0.1 N and points upwards, within 45° "
                 "of vertical. An object held in the air, resting only on other objects, or dropped on the floor does not count")

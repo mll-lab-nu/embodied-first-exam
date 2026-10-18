@@ -25,7 +25,7 @@ they exist; once the task is rendered and committed, delete them.
 The privileged tooling (rcb_rsb_privileged.py, and the standard service's rcb_rsb.py and candidate_identity.py), scrub.py
 and the grader are not in the task: its environment/Dockerfile and tests/Dockerfile take them from the files-only image
 images/robosafe-files/ (`COPY --from=<image@digest>`, check_release.copy_lines). tests/test.sh and the solution files
-are copied from their one copy. All of them are embodied_first_exam/robosafebench/ (check_release.py LAYERS["privileged"],
+are copied from their one copy. All of them are embodied_first_exam/benchmarks/robosafebench/ (check_release.py LAYERS["privileged"],
 and "standard" for rcb_rsb.py / candidate_identity.py). To change one, edit it there (a file of the image also needs a
 new image version: scripts/files_image.py build / push / pin) and render.
 """

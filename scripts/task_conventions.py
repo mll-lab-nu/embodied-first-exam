@@ -278,7 +278,7 @@ WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim servi
 CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
 # The repository's task tree: one folder per benchmark, tasks/<folder>/<task>/ (a task dir's name says its benchmark,
 # bench_of; GitHub lists at most 1000 entries of a folder). The folder of each BENCHMARKS label, the same slug as the
-# benchmark's embodied_first_exam/ folder. Everything that finds a task dir in the repository goes through task_dir() /
+# benchmark's embodied_first_exam/benchmarks/ folder. Everything that finds a task dir in the repository goes through task_dir() /
 # iter_tasks() (and the pool reads this table); `benchmarks --check` holds the tree to it.
 TASKS_DIR = Path(__file__).resolve().parents[1] / "tasks"
 BENCHMARK_DIRS = {

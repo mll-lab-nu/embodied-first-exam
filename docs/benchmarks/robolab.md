@@ -12,7 +12,7 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
   source, the texts of both modes, the oracle level, the cited positives), the frozen instance (one copy, in the committed
   task dir: `tasks/robolab/robolab-<family>-i00-privileged/environment/instance.json`, read back by the generator),
   `oracles/<family>/` (the reference solutions and the standard oracle's recorded joint targets), `template/<mode>/`
-  (every other task file), `embodied_first_exam/robolab/` (the code the tasks share, its one source: the tooling
+  (every other task file), `embodied_first_exam/benchmarks/robolab/` (the code the tasks share, its one source: the tooling
   `rcb_robolab.py`, the oracles' skills `ref_primitives.py`) and `scripts/eai_standard/` (the 2.2 layer and the
   standard client). Both twins of a family are written to a scratch
   directory, passed through `scripts/task_conventions.py`'s `normalize()` and then synced into `tasks/`. Re-running it leaves
@@ -205,7 +205,7 @@ iterations cost more than in the other simulators.
 The privileged tasks carry no copy of the tooling: their `environment/Dockerfile` and `tests/Dockerfile` take
 `rcb_robolab.py` with `COPY --from` from the files-only image `ghcr.io/mll-lab-nu/eai-robolab-files` (`images/robolab-files/`,
 `scripts/files_image.py`; FILES.json pins its digest and the file's sha256; BUILD_ONLY, private like eai-robolab), built
-from its one source `embodied_first_exam/robolab/rcb_robolab.py`. The verifier's image gets its own copy from that image when
+from its one source `embodied_first_exam/benchmarks/robolab/rcb_robolab.py`. The verifier's image gets its own copy from that image when
 it is built; nothing from the agent's container reaches it. The standard tasks keep their copy in `environment/sim/`
 (bind-mounted at `/srv`). `mk_tasks.py` writes the `COPY --from` lines, and `--check` fails when the source and FILES.json
 disagree. After a change to `rcb_robolab.py`: bump `images/robolab-files/VERSION`, `python3 scripts/files_image.py build
@@ -259,7 +259,7 @@ sees it and still ends the episode with a 500.
 trials under the current success term without re-running them. It finds every RoboLab trial in a Harbor jobs tree and
 reads its recorded trajectory (privileged: `artifacts/app/output/trajectory.npz`; standard: the sidecar's
 `trajectory.npz`, or its `journal.f64`) and its recorded verdict. It replays each trajectory once, in a fresh Isaac
-process, with the current tooling (`embodied_first_exam/robolab/rcb_robolab.py`, the files image's source) and the task's
+process, with the current tooling (`embodied_first_exam/benchmarks/robolab/rcb_robolab.py`, the files image's source) and the task's
 frozen instance. At every control step it watches RoboLab's upstream term with the
 one-finger contact (the old verdict) and the current term (the new verdict, settle hold included), and reports where
 each first held.

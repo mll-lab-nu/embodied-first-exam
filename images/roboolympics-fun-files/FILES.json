@@ -1,6 +1,6 @@
 {
  "image": "ghcr.io/mll-lab-nu/eai-roboolympics-fun-files:0.1.0@sha256:49a33342a72b57b56742cc754e427205a30f39dfcd69a99d1d7275c0eae4a619",
- "source": "embodied_first_exam/roboolympics-fun",
+ "source": "embodied_first_exam/benchmarks/roboolympics-fun",
  "files": {
   "grade.py": "45a72043fe35b6de3c201d7b08bc04a18905de504daf43cdd3e7640bd2319730",
   "rcb_rfo.py": "f80baf874060852c1e5ba3360c5e6ba5d2ac8b08483ba09b5c03b64e3f11453c",
