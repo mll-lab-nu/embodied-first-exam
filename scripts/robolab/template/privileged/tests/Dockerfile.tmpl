@@ -3,7 +3,8 @@
 # uploads only the declared artifacts (/app/output/), so a patched success check or a swapped interpreter in
 # the agent container cannot influence the verdict.
 FROM @@IMAGE@@
-COPY grade.py instance.json rcb_robolab.py test.sh /tests/
+COPY grade.py instance.json test.sh /tests/
+@@TOOLING_COPY_TESTS@@
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

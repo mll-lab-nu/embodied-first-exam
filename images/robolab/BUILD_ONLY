@@ -35,15 +35,15 @@ Build (from the repository root)
 
 Check a build
   The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of a reference trajectory
-  must end in its recorded hash. With a task directory at hand:
-    docker run --rm --gpus all --shm-size 8g -v $PWD/tasks/robolab-banana-in-bowl-i00-privileged:/t \
-      ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) bash -c \
-      "cd /tmp && python /t/environment/rcb_robolab.py run-oracle --task banana_in_bowl --instance /t/environment/instance.json \
+  must end in its recorded hash. From the repository root (the tooling's source and a task directory):
+    docker run --rm --gpus all --shm-size 8g -v $PWD/tasks/robolab/robolab-banana-in-bowl-i00-privileged:/t \
+      -v $PWD/embodied_first_exam/robolab:/s:ro ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) bash -c \
+      "cd /tmp && python /s/rcb_robolab.py run-oracle --task banana_in_bowl --instance /t/environment/instance.json \
          --code /t/solution/oracle_banana_in_bowl.py --out /tmp/t.npz && \
-       python /t/environment/rcb_robolab.py replay --task banana_in_bowl --instance /t/environment/instance.json --traj /tmp/t.npz"
+       python /s/rcb_robolab.py replay --task banana_in_bowl --instance /t/environment/instance.json --traj /tmp/t.npz"
   expects instance_exact true (instance sha 7c211bc3fe6d80cd), success true, and the same final state_sha from both
   commands. Compare the two commands, not hosts: the final hash can differ between hosts (two values seen on ours,
-  61afa384566be3a5 and 902e40deb3d42ed0, both successes). Or run `harbor run -p tasks/robolab-banana-in-bowl-i00-privileged -a oracle`.
+  61afa384566be3a5 and 902e40deb3d42ed0, both successes). Or run `harbor run -p tasks/robolab/robolab-banana-in-bowl-i00-privileged -a oracle`.
 
 On a CI machine (maintainers)
   A self-hosted runner with such a GPU builds the image with the command above when images/robolab/ or VERSION changes,

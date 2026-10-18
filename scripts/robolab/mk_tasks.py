@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the RoboLab tasks: tasks/robolab-<family>-i00-privileged and tasks/robolab-<family>-i00-standard (standard
+"""Generate the RoboLab tasks: tasks/robolab/robolab-<family>-i00-privileged and robolab-<family>-i00-standard (standard
 mode, eai-standard/2.2) for every family of scripts/robolab/families.json with "tasks": true (docs/benchmarks/robolab.md).
 
     python3 scripts/robolab/mk_tasks.py                    # (re)write every RoboLab task dir; `git diff tasks/` stays empty
@@ -11,7 +11,7 @@ Inputs, all in the repository:
   scripts/robolab/families.json          per family: RoboLab's task class and file, the goal, the success term's source and
                                          its notes, the texts of both modes, the oracle level and the cited positives
                                          (`tasks: false`: frozen, not generated yet)
-  tasks/robolab-<f>-i00-privileged/environment/instance.json
+  tasks/robolab/robolab-<f>-i00-privileged/environment/instance.json
                                          the frozen instance (RoboLab's canonical seeded reset), made in the image by
                                          `python rcb_robolab.py make-instance --task <f> --seed 0 --out <f>.json`; the
                                          committed task dir holds the one copy, which the generator reads back. A new
@@ -19,9 +19,15 @@ Inputs, all in the repository:
                                          while that file exists; delete it once the family's task dirs are committed
   scripts/robolab/oracles/<f>/           families with a reference solution: oracle_<f>.py (privileged) and the standard
                                          oracle's joint targets oracle_qpos.npy + oracle_meta.json, recorded from its run
-  scripts/robolab/shared/                rcb_robolab.py (the tooling: privileged environment/ + tests/, standard
-                                         environment/sim/; one TASKS registry for every family) and ref_primitives.py
-                                         (the reference solutions' task-level skills: solution/ of oracle families only)
+  embodied_first_exam/robolab/           the code the tasks share, its one source: rcb_robolab.py (the tooling, one TASKS
+                                         registry for every family: the privileged images take it from the files-only
+                                         image images/robolab-files/, below; the standard environment/sim/ holds a copy)
+                                         and ref_primitives.py (the reference solutions' task-level skills: solution/ of
+                                         oracle families only)
+  images/robolab-files/FILES.json        the pinned files-only image eai-robolab-files (scripts/files_image.py), built from
+                                         embodied_first_exam/robolab/rcb_robolab.py: the privileged environment/Dockerfile and
+                                         tests/Dockerfile `COPY --from` it to /opt/tools/rcb_robolab.py and
+                                         /tests/rcb_robolab.py; --check fails when the source and FILES.json disagree
   scripts/robolab/template/<mode>/       every other task file; a *.tmpl file is filled with the family's values (@@KEY@@)
   scripts/eai_standard/                  the eai-standard/2.2 layer, copied unchanged (rcb_client.py, rcb1.py; sim/
                                          rcb_limited.py, rcb1.py, run.sh) and the standard client: client.env (the base
@@ -29,7 +35,8 @@ Inputs, all in the repository:
   images/robolab/VERSION                 the base image tag
 Both twins of a family are written to a scratch directory, passed through scripts/task_conventions.py's normalize()
 (PROTOCOL v1.0 conventions: names, README layout, no results/) and then synced into tasks/: a task dir holds exactly what
-the generator writes, other files are removed. Results are not kept in task dirs (PROTOCOL D3): the cited positives are
+the generator writes, other files are removed. The tooling the privileged images take from the files-only image must be
+a file normalize leaves unchanged (tool_normalized()), so that the image carries what a copy in the task dir would be. Results are not kept in task dirs (PROTOCOL D3): the cited positives are
 named by trial id with their results-site and Hugging Face links."""
 from __future__ import annotations
 import argparse, json, os, pathlib, re, shutil, sys, tempfile
@@ -37,7 +44,15 @@ import argparse, json, os, pathlib, re, shutil, sys, tempfile
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 HERE = ROOT / "scripts/robolab"
 LAYER = ROOT / "scripts/eai_standard"
+SHARED = ROOT / "embodied_first_exam/robolab"   # the code the tasks share (its one source)
 REGISTRY = "ghcr.io/mll-lab-nu"
+sys.path.insert(0, str(ROOT / "scripts"))
+import files_image  # noqa: E402  (files-only images: one copy of a file many tasks would each carry)
+from task_conventions import task_dir as tc_task_dir  # noqa: E402  (tasks/<benchmark folder>/<task>)
+# rcb_robolab.py (0.13 MB): the privileged agent and verifier images take it from this files-only image (FILES.json; source
+# embodied_first_exam/robolab/) at the paths their Dockerfiles copied it to; the standard sim/ copy stays (bind-mounted at /srv)
+TOOL_FILES = "robolab-files"
+TOOL_FROM_IMAGE = {"environment/rcb_robolab.py": "/opt/tools/rcb_robolab.py", "tests/rcb_robolab.py": "/tests/rcb_robolab.py"}
 CLIENT = dict(l.split("=", 1) for l in (LAYER / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 RUN_ID = "codex-gpt6_luna-xhigh"            # the run whose trials are the cited positives (results site, Hugging Face)
 REVIEW_PR = "#3"                           # the pull request with the per-family review (PROTOCOL §2.7): dev/qineng = PR #3
@@ -142,15 +157,15 @@ def review_note(F: dict, mode: str) -> str:
 
 # The texts below state rules the grader applies, read from the grader's own sources so that they cannot drift from it
 # (2026-10-16 instruction audit): the on-table families of the tooling, and the standard collect hook and verifier.
-_TOOL_SRC = (HERE / "shared/rcb_robolab.py").read_text()
+_TOOL_SRC = (SHARED / "rcb_robolab.py").read_text()
 _SETTLE = re.search(r"(?m)^SETTLE_STEPS = (\d+)", _TOOL_SRC)
 if not _SETTLE:
-    raise RuntimeError("shared/rcb_robolab.py: SETTLE_STEPS not found")
+    raise RuntimeError("embodied_first_exam/robolab/rcb_robolab.py: SETTLE_STEPS not found")
 SETTLE_STEPS = int(_SETTLE.group(1))
 _ON_TABLE = re.search(r"(?m)^ON_TABLE = \(([^)]*)\)", _TOOL_SRC)
 ON_TABLE = tuple(re.findall(r'"([^"]+)"', _ON_TABLE.group(1))) if _ON_TABLE else ()
 if not ON_TABLE or 'term.params = {**params, "surface": "table"}' not in _TOOL_SRC:
-    raise RuntimeError("shared/rcb_robolab.py: ON_TABLE or its term replacement not found")
+    raise RuntimeError("embodied_first_exam/robolab/rcb_robolab.py: ON_TABLE or its term replacement not found")
 # RoboLab v0.3.1: WorldState.is_supported_on_surface(obj, surface) defaults, the support test of the on-table term
 SUPPORT_RULE = (": the contact force between the object and the table is at least 0.1 N and points upwards, within 45° "
                 "of vertical. An object held in the air, resting only on other objects, or dropped on the floor does not count")
@@ -287,7 +302,7 @@ def instance_bytes(fam: str) -> bytes:
     new = HERE / "instances" / f"{fam}.json"
     if new.is_file():
         return new.read_bytes()
-    return (ROOT / "tasks" / task_dir(fam, "privileged") / "environment/instance.json").read_bytes()
+    return (tc_task_dir(task_dir(fam, "privileged")) / "environment/instance.json").read_bytes()
 
 
 def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
@@ -301,7 +316,7 @@ def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[by
     for mode in ("privileged", "standard"):
         if oracle_level(F, mode) == "partial" and not oracle_evidence(fam, F, mode):
             raise RuntimeError(f"{fam}: oracle partial ({mode}) needs its oracle_evidence in families.json")
-    tool = (HERE / "shared/rcb_robolab.py").read_bytes()
+    tool = (SHARED / "rcb_robolab.py").read_bytes()
     image = f"{REGISTRY}/eai-robolab:{version}"
     def per_mode(mode: str) -> dict:
         ev = oracle_evidence(fam, F, mode)
@@ -316,7 +331,9 @@ def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[by
     common = {"AGENT_TIMEOUT_S": str(CUTOFF_SEC), "FAMILY": fam, "SLUG": slug(fam), "PRIV": task_dir(fam, "privileged"), "STD": task_dir(fam, "standard"),
               "SEED": str(F["seed"]), "IMAGE": image, "IMAGE_VERSION": version, "ALLOWED_HOSTS": ALLOWED_HOSTS,
               "CLIENT_IMAGE": CLIENT["CLIENT_IMAGE"].strip()}
-    priv = {"GOAL": F["goal"], "GOAL_TOML": toml_str(F["goal"]), "ROBOLAB_TASK": F["robolab_task"], "README_GOAL": F.get("readme_goal", F["goal"]),
+    tool_copy = {k: files_image.copy_line(TOOL_FILES, "rcb_robolab.py", TOOL_FROM_IMAGE[rel])
+                 for k, rel in (("TOOLING_COPY_ENV", "environment/rcb_robolab.py"), ("TOOLING_COPY_TESTS", "tests/rcb_robolab.py"))}
+    priv = {**tool_copy, "GOAL": F["goal"], "GOAL_TOML": toml_str(F["goal"]), "ROBOLAB_TASK": F["robolab_task"], "README_GOAL": F.get("readme_goal", F["goal"]),
             "DIFFICULTY": F["difficulty"], "OBJECTS_BLOCK": objects_block(fam, F), **per_mode("privileged"),
             "CHANGE_LOG_1016": change_log_1016(fam, F, "privileged"),
             "REFERENCE_SOLUTION": reference("privileged", F.get("reference_solution", ""))}
@@ -346,13 +363,11 @@ def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[by
                 data = p.read_bytes()
             files[rel] = (data, 0o755 if rel.endswith(".sh") else 0o644)
         if mode == "privileged":
-            for rel in ("environment/rcb_robolab.py", "tests/rcb_robolab.py"):
-                files[rel] = (tool, 0o644)
             for rel in ("environment/instance.json", "tests/instance.json"):
                 files[rel] = (inst, 0o644)
             if has_solution:
                 files[f"solution/oracle_{fam}.py"] = ((HERE / "oracles" / fam / f"oracle_{fam}.py").read_bytes(), 0o644)
-                files["solution/ref_primitives.py"] = ((HERE / "shared/ref_primitives.py").read_bytes(), 0o644)
+                files["solution/ref_primitives.py"] = ((SHARED / "ref_primitives.py").read_bytes(), 0o644)
         else:
             files["environment/sim/rcb_robolab.py"] = (tool, 0o644)
             files["environment/sim/instance.json"] = (inst, 0o644)
@@ -367,6 +382,21 @@ def plan_family(fam: str, F: dict, version: str) -> dict[str, dict[str, tuple[by
                     files[f"solution/{f}"] = ((HERE / "oracles" / fam / f).read_bytes(), 0o644)
         out[name] = files
     return out
+
+
+def tool_normalized() -> list[str]:
+    """The privileged images' rcb_robolab.py comes from the files-only image, not from a task dir that normalize rewrites:
+    normalize's text rules must leave the source unchanged (as they leave the standard sim/ copy)."""
+    import task_conventions
+    src = ROOT / files_image.spec(TOOL_FILES)["source"] / "rcb_robolab.py"
+    with tempfile.TemporaryDirectory(prefix="robolab_tool_") as td:
+        p = pathlib.Path(td) / src.name
+        shutil.copyfile(src, p)
+        task_conventions.normalize_text_files(pathlib.Path(td))
+        if p.read_bytes() != src.read_bytes():
+            return [f"{src.relative_to(ROOT)}: normalize would rewrite it; the files image carries it unchanged "
+                    "(fix the source, then a new images/robolab-files version)"]
+    return []
 
 
 def normalized(planned: dict[str, dict[str, tuple[bytes, int]]], normalize) -> dict[str, dict[str, tuple[bytes, int]]]:
@@ -424,20 +454,21 @@ def main() -> int:
     if unknown:
         raise SystemExit(f"not generated (unknown, or tasks: false in families.json): {unknown}")
     normalize = normalizer()
-    diffs = []
+    bad_image = files_image.check(TOOL_FILES) + tool_normalized()   # the source = FILES.json (the pinned image), normalized
+    diffs = list(bad_image)
     for fam in todo:
         for name, files in normalized(plan_family(fam, fams[fam], version), normalize).items():
-            diffs += sync(ROOT / "tasks" / name, files, a.check)
+            diffs += sync(tc_task_dir(name), files, a.check)
     if not a.families:                                # task dirs of families that are no longer generated
         made = {task_dir(f, m) for f, F in fams.items() if F["tasks"] for m in ("privileged", "standard")}
-        for t in sorted((ROOT / "tasks").glob("robolab-*")):
+        for t in sorted(tc_task_dir(task_dir(todo[0], "privileged")).parent.glob("robolab-*")):
             if t.is_dir() and t.name not in made:
                 diffs.append(f"stale  {t.name} (not in families.json: remove it, or set tasks: true)")
     for d in diffs:
         print(d)
     n = len(todo) * 2
     print(f"{'checked' if a.check else 'generated'} {n} RoboLab task dirs ({len(todo)} families): {len(diffs)} difference(s)")
-    return 1 if (a.check and diffs) else 0
+    return 1 if bad_image or (a.check and diffs) else 0
 
 
 if __name__ == "__main__":

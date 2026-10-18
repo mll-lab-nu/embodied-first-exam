@@ -6,7 +6,7 @@ FROM @@IMAGE@@
 # Nothing at run time reads it (only that example script does); the agent's image does not keep it.
 RUN rm -rf /opt/robolab/examples/recorded_data
 COPY instance.json /app/instance.json
-COPY rcb_robolab.py /opt/tools/rcb_robolab.py
+@@TOOLING_COPY_ENV@@
 ENV PYTHONPATH=/opt/tools
 RUN mkdir -p /app/output
 WORKDIR /app

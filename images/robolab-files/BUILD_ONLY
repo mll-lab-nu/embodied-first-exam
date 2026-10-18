@@ -1,0 +1,3 @@
+Private, like the RoboLab base image eai-robolab (images/robolab/BUILD_ONLY): RoboLab's tooling module for the images of
+the RoboLab privileged tasks. Pushed by hand to the organization's private package; evaluation hosts pull it with the
+organization's token before they build those tasks.
