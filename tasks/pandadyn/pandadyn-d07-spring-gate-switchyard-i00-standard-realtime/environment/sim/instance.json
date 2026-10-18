@@ -1,0 +1,35 @@
+{
+ "task": "D07-SpringGateSwitchyard",
+ "env_id": "PandaMultiStage/D07-SpringGateSwitchyard-v0",
+ "difficulty": "nominal",
+ "seed": 0,
+ "parameters": {
+  "horizon": 35.0,
+  "object_mass": 0.035,
+  "tool_mass": 0.2,
+  "tool_half": 0.05,
+  "radius": 0.018,
+  "preview": 0.65,
+  "incoming_speed": 0.35,
+  "fixture_speed": 0.04,
+  "restitution": 0.1,
+  "table_friction": 0.015,
+  "tool_friction": 0.3
+ },
+ "physics_hz": 1000,
+ "arms": {
+  "panda-0": "left",
+  "panda-1": "right"
+ },
+ "action_dim": 16,
+ "control_hz": 100,
+ "horizon_s": 35.0,
+ "phases": [
+  "left_gate_open",
+  "right_loop_shot",
+  "gate_reconfiguration",
+  "return_interception",
+  "final_gate_shot"
+ ],
+ "initial_sha": "09fa46e74fcf5ec62d1e9f7cee5d19c14153d5ad03e7821c8e7adca26686d349"
+}

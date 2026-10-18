@@ -1,0 +1,239 @@
+# The RoboOlympics legged humanoid: Unitree G1 (29-DOF, rev 1.0) from MuJoCo Menagerie, walking with Unitree's own
+# pretrained walking policy (unitree_rl_gym, BSD-3-Clause). For the sports where the feet matter (soccer, athletics);
+# the upper-body sports use bodies/wheeled_humanoid. Data only: body.py reads it.
+
+[body]
+name = "unitree_g1"
+title = "legged humanoid (Unitree G1, 29 DOF)"
+revision = "g1-4"                      # bump on any change that alters play (model.xml, policy, limits, controllers;
+                                       # g1-2: walking command at the real joystick limits, motor curves, bodies/servo.py)
+                                       # g1-3: self-collision, [self_collision] (bodies/selfcollision.py, 2026-10-09)
+                                       # g1-4: legs x legs, shin x foot (self-collision); the strike boxes out of it
+model = "model.xml"                    # tools/make_model.py from the Menagerie model (provenance, changes)
+meshes = { standard = "meshes", fine = "meshes_fine", "25k" = "meshes_25k" }   # standard: 63 k faces; fine: the Menagerie meshes (419 k)
+# "25k": the players' level of detail (31 k faces, in git; bodies/lod.py from meshes_fine/,
+# user decision D1 2026-10-08): mount(..., lod="25k") draws the players' images with the real robot's appearance
+license = "BSD-3-Clause (LICENSE: MuJoCo Menagerie unitree_g1, derived from Unitree's g1_description; policy/LICENSE.unitree_rl_gym: the walking policy); MIT (policy/LICENSE.falcon: the optional FALCON walking policy); Apache-2.0 (policy/LICENSE.agile: the optional AGILE walking policy)"
+mass_kg = 33.3                         # the model (datasheet "about 35 kg" with battery)
+height_m = 1.32                        # standing (datasheet 1,320 mm)
+kind = "legged"                        # the base is not a joint: it moves by walking (the policy) or kicking
+
+[dof]                                  # the controlled vector u, in this order
+names = ["walk_vx", "walk_vy", "walk_wz", "waist_pitch", "waist_yaw",
+         "arm_0", "arm_1", "arm_2", "arm_3", "arm_4", "arm_5", "arm_6"]
+# walk_*: the walking policy's velocity command in the robot's body frame (m/s, m/s, rad/s), held until changed;
+# waist_pitch / waist_yaw: the waist (waist_roll holds 0); arm_i: the hand arm's joints (shoulder pitch, roll, yaw,
+# elbow, wrist roll, pitch, yaw). The other arm holds [rest] other_arm. The legs belong to the walking policy (or the
+# kick controller): they are not in u.
+
+[walk]                                 # the walking policy (policy/): Unitree unitree_rl_gym deploy/pre_train/g1/motion.pt
+policy = "policy/motion.pt"            # an LSTM actor (64 units) trained in Isaac Gym on g1_12dof, validated sim-to-sim in
+                                       # MuJoCo by Unitree (deploy/deploy_mujoco); 50 Hz; observation 47 (angular
+                                       # velocity, gravity, command, leg joints, velocities, last action, gait phase)
+sha256 = "cf668f75b90d1abf73d2b87612a6e76bccc61ff7e083b63582d3f6aaa3c1759d"
+weights = "policy/motion.npz"          # its weights as arrays (tools/export_policy.py): the simulator runs it in numpy
+rate_hz = 50
+gait_period_s = 0.8
+default_angles = [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0]
+kp = [100, 100, 100, 150, 40, 40, 100, 100, 100, 150, 40, 40]
+kd = [2, 2, 2, 4, 2, 2, 2, 2, 2, 4, 2, 2]
+action_scale = 0.25
+obs_scales = { ang_vel = 0.25, dof_pos = 1.0, dof_vel = 0.05, cmd = [2.0, 2.0, 0.25] }
+command_max = [1.0, 1.0, 1.0]          # the policy's training range (lin_vel_x, lin_vel_y, ang_vel_yaw); measured in
+                                       # MuJoCo: 0.49 m/s for 0.5, 0.91 m/s for 1.0, 0.30 m/s sideways for 0.4
+command_accel = [2.0, 2.0, 4.0]        # how fast a command may change (per second): our rule, not the policy's
+[walk.planning]                        # a planner's model of walking (the planar copy's base): below the measured
+speed_m_s = 0.6                        # speeds, with the policy's lag of about 0.3 s in the acceleration; the copy's
+accel_m_s2 = 1.5                       # base servo is soft in yaw (base_kp / base_kd: x, y, yaw), like the standing
+yaw_rate_rad_s = 0.8                   # robot, whose pelvis turns against a fast waist or arm swing
+yaw_accel_rad_s2 = 3.0
+base_kp = [3000.0, 3000.0, 200.0]
+base_kd = [150.0, 150.0, 25.0]
+# FALCON (S8; MIT, policy/LICENSE.falcon): an optional walking policy, a sport opts in with rig(..., walker="falcon")
+# (falcon.py), or walker="falcon_legs": FALCON on the legs only (its arm actor not applied and fed back as 0, no wrist
+# residual; falcon.py). Trained in IsaacGym on the 29-DOF G1 with arm motions and forces on the hands. The weights of the
+# released sim2real/models/falcon/g1_29dof.onnx (onnx_sha256), unchanged, with a parity fixture (tools/export_falcon.py).
+[walk.falcon]
+weights = "policy/falcon_g1_29dof.npz"
+onnx_sha256 = "8ac8f51875b878a79d9b5782e702b66572697e204ed262e2002b55631f3105d0"
+rate_hz = 50
+history = 5                            # frames of 115 numbers in the observation (falcon.py)
+default_angles = [-0.1, 0.0, 0.0, 0.3, -0.2, 0.0, -0.1, 0.0, 0.0, 0.3, -0.2, 0.0, 0.0, 0.0, 0.0,
+                  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]   # 29 joints (S8 yaml)
+kp = [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20]    # the legs' PD (S8 yaml JOINT_KP, KD); the waist
+kd = [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1] # and the arms stay on the [controller] servo
+action_scale = 0.25
+action_clip = 100.0
+obs_scales = { ang_vel = 0.25, dof_vel = 0.05, base_height = 2.0 }
+base_height_m = 0.75                   # DESIRED_BASE_HEIGHT (S8 yaml)
+command_max = [1.0, 1.0, 1.0]          # the training range (S8 env config); [limits.walk] clips the command first
+speed_min_m_s = 0.2                    # training: a speed |(vx, vy)| below 0.2 is 0 (S8 env code)
+turn_min_rad_s = 0.2                   # ours: with no speed, a smaller yaw rate is 0 too (the robot stands)
+heading_gain = 0.5                     # training: yaw rate = 0.5 (heading target - heading), clipped (S8 env code)
+heading_error_max_rad = 1.0            # ours: the heading target stays this close to the heading
+wrist_residual_max_rad = 0.05          # ours: the arm actor's residual, added to the wrists' targets only, clipped
+# AGILE (S9; Apache-2.0, policy/LICENSE.agile): another optional walking policy, a sport opts in with
+# rig(..., walker="agile") (agile.py). NVIDIA's velocity-height policy, trained in Isaac Lab on the 29-DOF G1 (legs
+# only; the arms and the waist yaw moved at random while it stood, held at 0 while it walked). The weights and
+# constants of the released LEAPP bundle's ONNX graph (onnx_sha256), unchanged, with the bundle's joint order and a
+# parity fixture (tools/export_agile.py).
+[walk.agile]
+weights = "policy/agile_g1_velocity_height.npz"
+onnx_sha256 = "f9a8dfcb8cb8bb2816b92cf893650c53dea30bb041f4919a85f1cf73acbb29fc"
+rate_hz = 50                           # the bundle's pipeline frequency (S9)
+history = 5                            # frames of each observation term, kept by the graph (agile.py)
+kp = [100, 100, 100, 200, 20, 20, 100, 100, 100, 200, 20, 20]    # the legs' PD: the graph's gain outputs (S9; the
+kd = [2.5, 2.5, 2.5, 5.0, 0.2, 0.1, 2.5, 2.5, 2.5, 5.0, 0.2, 0.1] # export checks them); waist, arms: [controller]
+base_height_m = 0.72                   # the height command: training's walking height (DEFAULT_PELVIS_HEIGHT, S9)
+command_min = [-0.5, -0.5, -1.0]       # the training range (vx, vy, wz; S9); [limits.walk] clips the command first
+command_max = [1.5, 0.5, 1.0]
+command_min_norm = 0.1                 # training: a command (vx, vy, wz) of norm below 0.1 is 0 (S9 min_vel_norm)
+
+[limits.walk]                          # the walking command u[0:3] (bodies/servo.py WalkCommand): vx, vy, wz
+command_max = [0.8, 0.5, 1.57]         # what Unitree's own deployment accepts from the joystick (audit G8, approved)
+command_accel = [2.0, 2.0, 4.0]        # how fast a command may change (per second)
+[limits.walk.source]
+command_max = "S5 (deploy/deploy_real/configs/g1.yaml:42 max_cmd [0.8, 0.5, 1.57]; the policy was trained on +-1, [walk] command_max)"
+command_accel = "ESTIMATE: our rule (the joystick has no published rate limit; 0.4 s from 0 to the forward limit)"
+
+[limits.arm]                           # joints 0..6 of either arm; Unitree g1_29dof_rev_1_0.urdf <limit> (S2)
+speed_rad_s = [37.0, 37.0, 37.0, 37.0, 37.0, 22.0, 22.0]
+torque_nm = [25.0, 25.0, 25.0, 25.0, 25.0, 5.0, 5.0]
+reach_m = 0.45                         # "arm span about 0.45 m" (S1)
+payload_kg = 2.0
+[limits.arm.source]
+speed_rad_s = "S2 (URDF; reachable only near zero torque: the motor curves, S6, cut the torque from 30.9 / 15.3 rad/s)"
+accel_rad_s2 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S7); the motors' torque-speed curves ([motors], S6) bound what the joint can do"
+jerk_rad_s3 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S7); the motors' torque-speed curves ([motors], S6) bound what the joint can do"
+torque_nm = "S2 (URDF effort; with the motor curves of [motors], S6)"
+
+[limits.waist]                         # yaw, roll, pitch (S2)
+speed_rad_s = [32.0, 37.0, 37.0]
+torque_nm = [88.0, 50.0, 50.0]
+range_rad = [[-2.618, 2.618], [-0.52, 0.52], [-0.52, 0.52]]
+[limits.waist.source]
+speed_rad_s = "S2"
+accel_rad_s2 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S7); the motors' torque-speed curves ([motors], S6) bound what the joint can do"
+jerk_rad_s3 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S7); the motors' torque-speed curves ([motors], S6) bound what the joint can do"
+torque_nm = "S2 (with the motor curves, S6)"
+
+[limits.leg]                           # hip pitch, roll, yaw, knee, ankle pitch, roll of either leg (S2; the datasheet
+speed_rad_s = [32.0, 20.0, 32.0, 20.0, 37.0, 37.0]          # gives the knee 90 N m for the 23-DOF base model, S1)
+torque_nm = [88.0, 139.0, 88.0, 139.0, 50.0, 50.0]
+[limits.leg.source]
+speed_rad_s = "S2"
+accel_rad_s2 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S7); the motors' torque-speed curves ([motors], S6) bound what the joint can do"
+jerk_rad_s3 = "NOT PUBLISHED: Unitree publishes no joint acceleration or jerk limit and its SDK passes LowCmd unchanged (S7); the motors' torque-speed curves ([motors], S6) bound what the joint can do"
+torque_nm = "S2 (with the motor curves, S6)"
+
+[controller]                           # waist and arms: as the wheeled humanoid's servo (M qdd_des + PD + bias,
+[controller.kp]                        # clipped at the torques, every 1 ms); legs: the policy's PD (or the kick's)
+waist = [400.0, 400.0, 400.0]
+arm = [300.0, 300.0, 300.0, 300.0, 100.0, 60.0, 60.0]
+[controller.kd]
+waist = [10.0, 10.0, 10.0]
+arm = [6.0, 6.0, 6.0, 6.0, 2.0, 1.0, 1.0]
+[controller.step]
+control_dt_s = 0.01
+physics_dt_s = 0.001
+
+[rest]
+waist = [0.0, 0.0]                     # pitch, yaw
+arm = [0.2, -0.2, 0.0, 1.28, 0.0, 0.0, 0.0]               # the Menagerie stand keyframe's right arm
+other_arm = [0.2, 0.2, 0.0, 1.28, 0.0, 0.0, 0.0]
+
+[kick]                                 # the kick controller (kick.py): stop, shift the weight onto the support foot, wind
+gains_kp = [700, 700, 500, 900, 300, 300]                   # up, swing the foot through a target, recover, walk on;
+gains_kd = [12, 12, 8, 15, 6, 6]                            # leg joints on PD at these gains (motor torques clipped)
+
+[mounts]
+wrist = "the body <side>_mount at the rubber hand of <side>_wrist_yaw_link, +z along the forearm"
+cameras = ["head_left", "head_right"]  # a stereo pair in front of the head, 5 cm apart, 58 degree vertical field of
+                                       # view: the G1's head depth camera (Intel RealSense D435i: 50 mm baseline,
+                                       # 87 x 58 degree depth field of view, S3); its tilt is a mount parameter
+head_pitch_rad = 0.6
+
+# ---------------------------------------------------------------------------------------------------------------------
+# The motors (bodies/servo.py Actuators: every G1 joint's torque goes through its curve) and the low-level plan
+# interface of the optional joint-group arbiter (bodies/control/arbiter.py, from the two-mode pilot of 2026-10-08).
+
+[motors]                               # Unitree actuator torque-speed curves (S6): below X1 rad/s the peak torque is Y1
+                                       # (torque along the motion) or Y2 (against it, braking); from X1 it falls
+                                       # linearly to 0 at X2. The URDF effort (actuator ctrlrange) caps it as well.
+N7520_14p3 = { X1 = 22.63, X2 = 35.52, Y1 = 71.0, Y2 = 83.3 }
+N7520_22p5 = { X1 = 14.5, X2 = 22.7, Y1 = 111.0, Y2 = 131.0 }
+N5020_16 = { X1 = 30.86, X2 = 40.13, Y1 = 24.8, Y2 = 31.9 }
+N5020_16_x2 = { X1 = 30.86, X2 = 40.13, Y1 = 49.6, Y2 = 63.8 }     # ankles, waist roll / pitch: two N5020-16 in a
+W4010_25 = { X1 = 15.3, X2 = 24.76, Y1 = 4.8, Y2 = 8.6 }          # parallel linkage (S6; URDF effort 50 N m)
+[motors.assign]                        # per joint (unitree_rl_lab unitree.py UNITREE_G1_29DOF_CFG, S6)
+hip_pitch = "N7520_14p3"
+hip_roll = "N7520_22p5"
+hip_yaw = "N7520_14p3"
+knee = "N7520_22p5"
+ankle_pitch = "N5020_16_x2"
+ankle_roll = "N5020_16_x2"
+waist_yaw = "N7520_14p3"
+waist_roll = "N5020_16_x2"
+waist_pitch = "N5020_16_x2"
+shoulder_pitch = "N5020_16"
+shoulder_roll = "N5020_16"
+shoulder_yaw = "N5020_16"
+elbow = "N5020_16"
+wrist_roll = "N5020_16"
+wrist_pitch = "W4010_25"
+wrist_yaw = "W4010_25"
+
+[lowlevel]                             # the low-level interface (bodies/control/arbiter.py): plan rows, servo gains
+groups = ["legs", "waist", "arms"]     # Unitree SDK joint order: left leg 6, right leg 6, waist yaw / roll / pitch,
+                                       # left arm 7, right arm 7
+row_dt_s = 0.01                        # one plan row per control step; the PD interpolates between rows at 1 kHz
+max_rows = 300                         # a plan covers at most 3 s
+min_plan_interval_steps = 2            # a new plan at most every 20 ms (50 Hz): the agent's loop runs outside the sim
+kp_max = { legs = 1000.0, waist = 500.0, arms = 400.0 }   # "estimate": the motor drivers accept any gain (LowCmd);
+kd_max = { legs = 20.0, waist = 15.0, arms = 10.0 }       # these caps keep the 1 kHz PD stable in simulation
+[lowlevel.handover]                    # a group handed back to the walking policy (legs) or to the body's hold
+blend_steps = 30                       # legs: targets blended to the policy's stance (0.3 s), at the stand gains
+blend_steps_after_skill = 0            # the kick ends in the stance itself: the policy takes over at once (as kick.py)
+stand_kp = [700, 700, 500, 900, 300, 300]
+stand_kd = [12, 12, 8, 15, 6, 6]
+stable_tilt_rad = 0.10                 # then the policy, re-initialised, takes the legs and holds a zero command until
+stable_omega_rad_s = 2.0               # the robot is confirmed stable: over the last stable_window steps (half a gait
+stable_com_speed_m_s = 0.20            # period) pelvis tilt, angular rate and CoM speed stayed under these (marching in
+stable_window = 40                     # place sways up to 0.07 rad, 1.4 rad/s, 0.13 m/s); the agent's command applies
+timeout_steps = 200                    # from then on; not confirmed in 2 s: logged (stable_timeout), let through
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Self-collision (real limits B0, 2026-10-09: the real arm cannot pass through its own body, so the simulated one
+# cannot either). bodies/selfcollision.py turns this into MuJoCo <pair>s at mount(): parts by body name (without the
+# prefix; a body matching nothing takes its parent's part, one below an arm is that arm's tool), the rules say which
+# parts touch, the exclusions say which pairs do not and why. Automatic exclusions (not listed): geoms of one rigid
+# group (a link, its mount, its tool) and of two rigid groups joined by one joint (the joint's housing).
+# Recorded during play (rig.self_collisions()): events, time in contact, peak force; above warn_force_n a warning.
+# No penalty yet (the sports decide). Check: python -m bodies.selfcollision check <robot> (CI: check-robot-limits).
+[self_collision]
+parts.left_arm = "left_(shoulder_(pitch|roll|yaw)|elbow|wrist_(roll|pitch|yaw))_link"
+parts.right_arm = "right_(shoulder_(pitch|roll|yaw)|elbow|wrist_(roll|pitch|yaw))_link"
+parts.body = "pelvis|waist_(yaw|roll)_link|torso_link"
+parts.left_leg = "left_(hip_(pitch|roll|yaw)|knee|ankle_(pitch|roll))_link"
+parts.right_leg = "right_(hip_(pitch|roll|yaw)|knee|ankle_(pitch|roll))_link"
+rules = { arm_body = true, arm_arm = true, tool_own_arm = true, same_arm = false, leg_leg = true, same_leg = true }
+                                       # leg_leg / same_leg (audit, Changhe 2026-10-10): the walking policy's sidesteps
+                                       # crossed the legs by up to 52 mm; shin x foot of one leg (the ankle between)
+ignore_geoms = "(left|right)_foot_strike"   # the kick's strike boxes (contype 8): sensing volumes, not the shell
+warn_force_n = 20.0                    # a self-collision event above this peak normal force is a warning
+exclude = []                           # none beyond the automatic ones: the Menagerie collision meshes clear each other
+                                       # at the stand pose and in every random legal pose class (check: 0 structural)
+[self_collision.source]
+warn_force_n = "ESTIMATE: no vendor publishes a self-contact threshold for this robot; the Franka's collision threshold (20 N, bodies/franka_panda S4) for every body, so one rule reads the same everywhere"
+
+[sources]
+S1 = "Unitree Robotics, G1 product page, specifications: https://www.unitree.com/g1/ (1,320 mm, about 35 kg, 23 DOF base model / 29-43 DOF EDU, knee 90 N m, arm load about 2 kg, arm span about 0.45 m, depth camera + 3D LiDAR)"
+S2 = "Unitree Robotics, g1_description g1_29dof_rev_1_0.urdf joint <limit> (effort, velocity, lower, upper), as shipped in unitree_rl_gym resources/robots/g1_description (commit 276801e46c5d433564f24658bac64f254b7d2d4b): https://github.com/unitreerobotics/unitree_rl_gym"
+S3 = "Intel RealSense D435i datasheet (stereo baseline 50 mm, depth field of view 87 x 58 degrees): https://www.intelrealsense.com/depth-camera-d435i/"
+S4 = "MuJoCo Menagerie unitree_g1 (BSD-3-Clause), commit f054586a8e90465d49ee5be15335c4a0c7f57caf: https://github.com/google-deepmind/mujoco_menagerie/tree/main/unitree_g1"
+S5 = "Unitree unitree_rl_gym (BSD-3-Clause), deploy/pre_train/g1/motion.pt, deploy/deploy_mujoco/configs/g1.yaml, deploy/deploy_real/configs/g1.yaml, legged_gym/envs/g1/g1_config.py, commit 276801e46c5d433564f24658bac64f254b7d2d4b"
+S6 = "Unitree unitree_rl_lab, source/unitree_rl_lab/unitree_rl_lab/assets/robots/unitree_actuators.py (UnitreeActuator torque-speed curves) and unitree.py (UNITREE_G1_29DOF_CFG joint-to-motor assignment), commit 4960b84732b0c2ec593dccbfe963fda1bcd7b1e3"
+S7 = "Unitree unitree_sdk2 (BSD-3-Clause), commit 63096d0: LowCmd (q, dq, kp, kd, tau per motor) is sent to the motors unchanged: no joint position, velocity or acceleration limiting in the SDK, https://github.com/unitreerobotics/unitree_sdk2"
+S8 = "LeCAR-Lab FALCON (MIT, Copyright (c) 2025 Yuanhang Zhang), commit a967a6d8494f57777cf8d266a644ac8e45833301: sim2real/models/falcon/g1_29dof.onnx (the policy), sim2real/config/g1/g1_29dof_falcon.yaml (gains, default angles, scales, base height), humanoidverse/config/env/decoupled_locomotion_stand_height_waist_wbc_ma_diff_force.yaml and humanoidverse/envs/decoupled_locomotion/decoupled_locomotion_stand_height_waist_wbc_ma.py (command ranges, the 0.2 m/s speed threshold, the heading controller); Y. Zhang et al., FALCON: Learning Force-Adaptive Humanoid Loco-Manipulation, arXiv:2505.06776: https://github.com/LeCAR-Lab/FALCON"
+S9 = "NVIDIA WBC-AGILE (Apache-2.0, Copyright (c) NVIDIA CORPORATION & AFFILIATES), commit 6830cf995714e81c91ce63247e8e016d36e28f14: agile/data/policy/velocity_height_g1/leapp/Velocity-Height-G1-History-v0/ (Velocity-Height-G1-History-v0.onnx: the policy with its observation, history and gains in the graph; .yaml: joint order, quaternion order, 50 Hz, feedback), agile/rl_env/tasks/locomotion_height/g1/velocity_height_env_cfg.py (observation terms, command ranges, 200 Hz physics, random upper-body motion while standing), agile/rl_env/mdp/actions/random_actions.py (the upper body at its default pose while walking), agile/rl_env/mdp/commands/commands_cfg.py (min_vel_norm 0.1), agile/rl_env/assets/robots/unitree_g1.py (DEFAULT_PELVIS_HEIGHT 0.72); H. Zhao et al., AGILE: A Comprehensive Workflow for Humanoid Loco-Manipulation Learning, arXiv:2603.20147: https://github.com/nvidia-isaac/WBC-AGILE"

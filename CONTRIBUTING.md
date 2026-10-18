@@ -7,7 +7,7 @@ this page explains how a contribution gets from an idea to `main`. Reviewers fol
 
 | Kind | What it may change | Before you start |
 |---|---|---|
-| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
+| **New benchmark** | `tasks/<benchmark>/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
 | **Tasks for an existing benchmark** | the same, without `images/` | — |
 | **Task fix** | the affected task directories and their generator | describe the agent behaviour it closes; include before/after runs |
 | **Shared files / protocol** | `docs/protocol/`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
@@ -36,7 +36,7 @@ A new benchmark's shared-files change adds its label to `scripts/task_convention
 RoboOlympics-Match) list every base in `BENCHMARK_BASES` (`task_conventions.py benchmarks --check`).
 
 ## Authoring a task
-1. Copy the closest existing pair (`tasks/robotwin_2_0_stack_blocks_two-privileged/` and `-standard/`) or generate tasks
+1. Copy the closest existing pair (`tasks/robotwin-2/robotwin_2_0_stack_blocks_two-privileged/` and `-standard/`) or generate tasks
    with a script under `scripts/<bench>/`. Name them `<base>-privileged` / `<base>-standard` (and `<base>-standard-realtime` for the standard-realtime mode, PROTOCOL §1, §3) and write
    the README in the standard layout (§1); there is no `results/` directory.
 2. Fill in `task.toml` (PROTOCOL §1, §2: declare its settings, `dynamics` and `network` included), `instruction.md`
@@ -74,19 +74,19 @@ RoboOlympics-Match) list every base in `BENCHMARK_BASES` (`task_conventions.py b
 
 ## Before opening the pull request
 ```bash
-bash ci_checks/run_invariants.sh tasks/<your tasks>   # must pass (the required CI job `invariants`)
-bash ci_checks/run_all.sh tasks/<your tasks>      # both tiers: fix the advisory findings or say why the task departs
+bash ci_checks/run_invariants.sh tasks/<benchmark>/<your tasks>   # must pass (the required CI job `invariants`)
+bash ci_checks/run_all.sh tasks/<benchmark>/<your tasks>      # both tiers: fix the advisory findings or say why the task departs
 bash ci_checks/run_all.sh --changed               # what CI runs on your pull request (scope: ci_checks/ci_scope.py)
-python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the standard layout
-python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (PROTOCOL §6)
-python3 ci_checks/check-cutoffs.py tasks/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, twins equal, cap (PROTOCOL §2)
+python3 scripts/task_conventions.py --check tasks/<benchmark>/<your tasks>     # README, task.toml, test.sh in the standard layout
+python3 ci_checks/check-resources.py tasks/<benchmark>/<your tasks>             # [metadata.resources] + limits + README / instruction (PROTOCOL §6)
+python3 ci_checks/check-cutoffs.py tasks/<benchmark>/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, twins equal, cap (PROTOCOL §2)
 python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
 #   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)
 #   and check that `git diff --exit-code tasks/` is empty
 python3 scripts/stamp_mtimes.py tasks             # before any image build from the checkout (below)
-harbor run -p tasks/<task> -a oracle               # on a sample: >= 2 tasks per mode
-harbor run -p tasks/<task> -a nop                  # must score 0
-python3 scripts/task_conventions.py tasks/<your tasks>    # after a hand edit: normalize, which also refreshes each DIGEST
+harbor run -p tasks/<benchmark>/<task> -a oracle               # on a sample: >= 2 tasks per mode
+harbor run -p tasks/<benchmark>/<task> -a nop                  # must score 0
+python3 scripts/task_conventions.py tasks/<benchmark>/<your tasks>    # after a hand edit: normalize, which also refreshes each DIGEST
 ```
 Never build a task image (a `harbor run`, a `docker build` of `environment/` or `tests/`) from a tree you have not
 stamped with `scripts/stamp_mtimes.py`: Docker's BuildKit reuses another build's same-name context file when its size and
@@ -106,7 +106,7 @@ The checklist is in PROTOCOL §4.
 ## Review and merge
 1. Static checks run on every pull request (`.github/workflows/static-checks.yml`), on what the pull request can
    affect (`ci_checks/ci_scope.py`, from the diff against `main`): when it changes only one benchmark's own paths (its
-   `tasks/<prefix>*`, `scripts/<bench>/`, `images/<bench>/`, `docs/benchmarks/<bench>.md`; plus the benchmarks that
+   `tasks/<benchmark>/`, `scripts/<bench>/`, `images/<bench>/`, `docs/benchmarks/<bench>.md`; plus the benchmarks that
    share code with it), the per-task checks (incl. each task's `DIGEST`) and `task_conventions.py --check` on that
    benchmark's tasks, its generator's check and its unit tests (and `check-cutoffs.py` on its tasks); the cheap repo-level checks (resources,
    protocol, ...) always run on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables

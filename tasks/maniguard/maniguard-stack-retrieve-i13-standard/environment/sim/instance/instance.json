@@ -1,0 +1,115 @@
+{
+ "task": "stack_retrieve/task_0013",
+ "family": "stack_retrieve",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "cd06551d039a74c5f79123d4e3847c1410688d2ba69059ba3f116ba29fca900a",
+ "diagnostics_sha256": "95d66fc344f455f2c4010679333d250eebb4eb02c1938a9d0b018b57b0b54b8e",
+ "pipeline": "stack_same",
+ "gpu_dynamics": false,
+ "state_sha": "803c1af818aa3c63",
+ "objects": {
+  "desk_uqcmzf_0": {
+   "category": "desk",
+   "position": [
+    3.02413,
+    -3.99258,
+    0.6146
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "bowl_42": {
+   "category": "bowl",
+   "position": [
+    3.08423,
+    -3.90452,
+    1.02284
+   ],
+   "orientation_xyzw": [
+    0.0662,
+    -0.11297,
+    -0.00174,
+    0.99139
+   ]
+  },
+  "bowl_43": {
+   "category": "bowl",
+   "position": [
+    3.09058,
+    -3.90026,
+    0.94245
+   ],
+   "orientation_xyzw": [
+    0.03291,
+    -0.04627,
+    0.00289,
+    0.99838
+   ]
+  },
+  "bowl_44": {
+   "category": "bowl",
+   "position": [
+    3.09322,
+    -3.89806,
+    0.86172
+   ],
+   "orientation_xyzw": [
+    0.01581,
+    -0.0156,
+    0.00239,
+    0.99975
+   ]
+  },
+  "bowl_45": {
+   "category": "bowl",
+   "position": [
+    3.09392,
+    -3.89824,
+    0.78078
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    -0.00015,
+    1.0
+   ]
+  },
+  "goal_region__bowl_45": {
+   "category": "goal_region_marker",
+   "position": [
+    3.09392,
+    -4.28812,
+    0.77545
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}

@@ -1,0 +1,113 @@
+{
+ "task": "loading_the_car",
+ "challenge_task": "loading_the_car",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Load the car. The car stands in the garage; in the living room a container stands on the floor and a tennis racket and a digital camera lie on the table. Put the camera into the container, and the container and the tennis racket into the car.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "62f89104f19af9fe",
+ "action_dim": 25,
+ "challenge_max_steps": 28839,
+ "objects": {
+  "car.n.01_1": {
+   "category": "car",
+   "position": [
+    -4.4315,
+    6.8878,
+    0.6678
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "digital_camera.n.01_1": {
+   "category": "digital_camera",
+   "position": [
+    3.5304,
+    5.2822,
+    0.4933
+   ],
+   "orientation_xyzw": [
+    0.001,
+    0.0014,
+    -0.7247,
+    0.6891
+   ]
+  },
+  "table.n.02_1": {
+   "category": "coffee_table",
+   "position": [
+    3.5198,
+    5.2904,
+    0.3646
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.0,
+    1.0
+   ]
+  },
+  "container.n.01_1": {
+   "category": "toy_box",
+   "position": [
+    4.1625,
+    6.0328,
+    0.0522
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.6502,
+    0.7598
+   ]
+  },
+  "floor.n.01_2": {
+   "category": "floors",
+   "position": [
+    3.8669,
+    5.6663,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -5.3695,
+    5.5058,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tennis_racket.n.01_1": {
+   "category": "tennis_racket",
+   "position": [
+    3.4983,
+    4.8396,
+    0.4374
+   ],
+   "orientation_xyzw": [
+    -0.0026,
+    -0.006,
+    0.915,
+    0.4034
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

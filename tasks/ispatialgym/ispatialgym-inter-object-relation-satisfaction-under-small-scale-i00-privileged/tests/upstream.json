@@ -1,0 +1,20 @@
+{
+ "task_family": "inter_object_relation_satisfaction",
+ "task": "inter_object_relation_satisfaction_under_small_scale",
+ "subtask": "inter_object_relation_satisfaction_under_small_scale_teacup_saucer",
+ "instance": 0,
+ "scene": "house_single_floor",
+ "problem": "inter_object_relation_satisfaction-4",
+ "activity": "inter_object_relation_satisfaction",
+ "definition_id": 4,
+ "instance_id": "house_single_floor_task_inter_object_relation_satisfaction_under_small_scale_teacup_saucer_0_0_template",
+ "max_steps": 2214,
+ "demo_length": 1107,
+ "bddl_problem_sha256": "9b16cc6e69cd7a85f9cd0baf1450c9314698f8e6058a2f8755cb3ca25247a981",
+ "files_sha256": {
+  "template": "a0cc97d4f61c4bc56e2a8bb568353ff93cae62f1717c16878266de4b9c78667b",
+  "template_meta": "e57ce8ebd243778b82f824b787233602f48a783f72dbe5aa155df3084a4aefae",
+  "tro_state": "f08edad8a22e08804129f690e2ff019e06703910091dc202f75931cb858725d6",
+  "goal_rgb": "8e3e7b27f36fa5682697450c5ab7bd82ad59b2cbe2561130d67536250ec4b5ce"
+ }
+}

@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "essential_two_object",
+      "title": "Independent walnut rotation and selective release",
+      "category": "multi_object",
+      "description": "Rotate and selectively release walnut A while independently retaining walnut B. Both walnuts use authentic closed-shell scan geometry with non-spherical convex-hull collision and the same material properties.",
+      "instruction": "Keep the wrist fixed. Turn walnut A +90 degrees around palm-local Y, return A to its initial orientation, then release only A into the catch tray. Maintain walnut B at its initial position and orientation throughout. The walnuts, standardized to the same maximum dimension, must never contact one another. Before selective release, keep both objects unsupported by the environment and in load-bearing hand contact. Finally let A settle in the tray while continuing to hold B. If walnut A drops toward the table (center below 0.135 m) or leaves the tray footprint (more than 0.10 m horizontally from the tray center), or walnut B slips, the episode fails immediately.",
+      "scene": "essential_two_object",
+      "mechanism": "two_passive_scanned_walnuts",
+      "parameters": {
+        "initial_wrist": [
+          -0.08,
+          0,
+          0.29,
+          0,
+          0,
+          0
+        ],
+        "radius_m": 0.014,
+        "initial_position_a": [
+          0.025,
+          -0.02,
+          0.35
+        ],
+        "initial_position_b": [
+          -0.014,
+          0.025,
+          0.321
+        ],
+        "deposit_position": [
+          0.025,
+          -0.05,
+          0.15
+        ],
+        "deposit_half_width": 0.11,
+        "initial_fingers": {
+          "right_thumb_CMC_FE": 0.7207039101053058,
+          "right_thumb_CMC_AA": -0.18973913911670495,
+          "right_thumb_MCP_FE": 0.9806799131244058,
+          "right_thumb_MCP_AA": 0.10127948847131926,
+          "right_thumb_IP": 0.8212353295687925,
+          "right_index_MCP_FE": 0.7166597755266415,
+          "right_index_MCP_AA": 0.15453226133591658,
+          "right_index_PIP": 0.8986382476346705,
+          "right_index_DIP": 0.7028236563305357,
+          "right_middle_MCP_FE": 0.7470390050898469,
+          "right_middle_MCP_AA": 0.19773233438593238,
+          "right_middle_PIP": 1.1100925485471025,
+          "right_middle_DIP": 1.3951423686761841,
+          "right_ring_MCP_FE": 1.0315039092277842,
+          "right_ring_MCP_AA": 0.16650389679298097,
+          "right_ring_PIP": 1.5639558294997873,
+          "right_ring_DIP": 1.0626905194774892,
+          "right_pinky_CMC": 0.006228051908279135,
+          "right_pinky_MCP_FE": 0.9013761857757333,
+          "right_pinky_MCP_AA": 0.09550956608061847,
+          "right_pinky_PIP": 1.6285761053352306,
+          "right_pinky_DIP": 1.1081562189907692
+        },
+        "reset_settle_steps": 300,
+        "finger_velocity_gain": -0.9,
+        "rotation_axis": [
+          0,
+          1,
+          0
+        ],
+        "surface_friction": [
+          1.5,
+          0.003,
+          0.0004
+        ],
+        "reset_gravity_compensation": true,
+        "contact_dim": 6,
+        "contact_solref": [
+          0.008,
+          1
+        ],
+        "contact_solimp": [
+          0.95,
+          0.99,
+          0.001
+        ],
+        "locked_wrist": true,
+        "walnut_max_extent_m": 0.028,
+        "collision_max_hull_vertices": 64,
+        "collector_floor_geometry": "heightfield",
+        "collector_heightfield_rows": 9,
+        "collector_contact_solref": [
+          0.024,
+          1.0
+        ],
+        "collector_contact_solimp": [
+          0.925,
+          0.97,
+          0.001
+        ]
+      },
+      "stages": [
+        {
+          "name": "rotate_a_keep_b",
+          "bounds": {
+            "a_quarter_turn_error": [
+              0,
+              0.16
+            ],
+            "a_finger_contacts": [
+              1,
+              5
+            ],
+            "speed": [
+              0,
+              0.25
+            ]
+          },
+          "guards": {
+            "a_hand_contacts": [
+              1,
+              null
+            ],
+            "a_support": [
+              0,
+              0
+            ],
+            "a_position_error": [
+              0,
+              0.035
+            ],
+            "speed": [
+              0,
+              12
+            ]
+          },
+          "hold_steps": 5
+        },
+        {
+          "name": "return_a_keep_b",
+          "bounds": {
+            "a_orientation_error": [
+              0,
+              0.16
+            ],
+            "a_finger_contacts": [
+              1,
+              5
+            ],
+            "speed": [
+              0,
+              0.25
+            ]
+          },
+          "guards": {
+            "a_hand_contacts": [
+              1,
+              null
+            ],
+            "a_support": [
+              0,
+              0
+            ],
+            "a_position_error": [
+              0,
+              0.035
+            ],
+            "speed": [
+              0,
+              12
+            ]
+          },
+          "hold_steps": 5
+        },
+        {
+          "name": "release_a_only",
+          "bounds": {
+            "a_hand_contacts": [
+              0,
+              0
+            ],
+            "deposit_support_a": [
+              1,
+              null
+            ],
+            "a_deposit_distance": [
+              0,
+              0.04
+            ]
+          },
+          "hold_steps": 5,
+          "guards": {
+            "a_linear_speed": [
+              0,
+              2.5
+            ],
+            "a_angular_speed": [
+              0,
+              80
+            ]
+          }
+        }
+      ],
+      "invariants": {
+        "force": [
+          0,
+          80
+        ],
+        "palm_drift": [
+          0,
+          0.003
+        ],
+        "wrist_rotation": [
+          0,
+          0.01
+        ],
+        "ball_pair_contacts": [
+          0,
+          0
+        ],
+        "b_position_error": [
+          0,
+          0.015
+        ],
+        "b_orientation_error": [
+          0,
+          0.2
+        ],
+        "b_support": [
+          0,
+          0
+        ],
+        "b_hand_contacts": [
+          1,
+          null
+        ],
+        "b_finger_contacts": [
+          1,
+          5
+        ],
+        "a_linear_speed": [
+          0,
+          2.5
+        ],
+        "a_angular_speed": [
+          0,
+          80
+        ],
+        "a_height": [
+          0.135,
+          0.6
+        ],
+        "a_deposit_distance": [
+          0,
+          0.1
+        ]
+      },
+      "terminal": {
+        "bounds": {
+          "a_hand_contacts": [
+            0,
+            0
+          ],
+          "deposit_support_a": [
+            1,
+            null
+          ],
+          "a_deposit_distance": [
+            0,
+            0.04
+          ],
+          "b_finger_contacts": [
+            1,
+            5
+          ],
+          "speed": [
+            0,
+            0.06
+          ]
+        },
+        "hold_steps": 25
+      },
+      "difficulty": "hard"
+    }
+  ]
+}

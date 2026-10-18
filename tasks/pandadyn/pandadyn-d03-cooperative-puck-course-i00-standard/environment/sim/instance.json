@@ -1,0 +1,34 @@
+{
+ "task": "D03-CooperativePuckCourse",
+ "env_id": "PandaMultiStage/D03-CooperativePuckCourse-v0",
+ "difficulty": "nominal",
+ "seed": 0,
+ "parameters": {
+  "horizon": 25.0,
+  "object_mass": 0.035,
+  "tool_mass": 0.2,
+  "tool_half": 0.05,
+  "radius": 0.018,
+  "preview": 0.65,
+  "incoming_speed": 0.35,
+  "fixture_speed": 0.04,
+  "restitution": 0.1,
+  "table_friction": 0.015,
+  "tool_friction": 0.3
+ },
+ "physics_hz": 1000,
+ "arms": {
+  "panda-0": "left",
+  "panda-1": "right"
+ },
+ "action_dim": 16,
+ "control_hz": 100,
+ "horizon_s": 25.0,
+ "phases": [
+  "left_first_pass",
+  "right_return_route",
+  "left_diagonal_pass",
+  "right_terminal_shot"
+ ],
+ "initial_sha": "5c3eeb99c4c934269320d3d1bf12731f62a39e322d5dba96d3ba3fec761ec42c"
+}

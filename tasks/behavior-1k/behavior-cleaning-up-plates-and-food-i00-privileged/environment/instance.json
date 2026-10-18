@@ -1,0 +1,155 @@
+{
+ "task": "cleaning_up_plates_and_food",
+ "challenge_task": "cleaning_up_plates_and_food",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Clean up after the meal in the kitchen. On the breakfast table stand two plates, each with a pizza on it, and two bowls. Put both pizzas, each still on its own plate, into the same refrigerator, put both bowls into the same sink, and leave every kitchen refrigerator closed.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "c3f4ffe21c0a754d",
+ "action_dim": 25,
+ "challenge_max_steps": 20544,
+ "objects": {
+  "breakfast_table.n.01_1": {
+   "category": "breakfast_table",
+   "position": [
+    4.2911,
+    1.4382,
+    0.6256
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.0,
+    1.0
+   ]
+  },
+  "plate.n.04_1": {
+   "category": "plate",
+   "position": [
+    3.9738,
+    1.2903,
+    0.6848
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.0839,
+    0.9965
+   ]
+  },
+  "sink.n.01_1": {
+   "category": "drop_in_sink",
+   "position": [
+    8.1091,
+    0.2348,
+    0.8585
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    1.0,
+    0.0
+   ]
+  },
+  "bowl.n.01_2": {
+   "category": "bowl",
+   "position": [
+    4.5477,
+    1.6638,
+    0.7069
+   ],
+   "orientation_xyzw": [
+    0.0001,
+    -0.0001,
+    0.3779,
+    0.9258
+   ]
+  },
+  "bowl.n.01_1": {
+   "category": "bowl",
+   "position": [
+    4.414,
+    1.555,
+    0.7069
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    -0.0002,
+    -0.6279,
+    0.7783
+   ]
+  },
+  "pizza.n.01_1": {
+   "category": "pizza",
+   "position": [
+    3.9748,
+    1.2906,
+    0.7028
+   ],
+   "orientation_xyzw": [
+    -0.001,
+    0.0029,
+    -0.3111,
+    0.9504
+   ]
+  },
+  "pizza.n.01_2": {
+   "category": "pizza",
+   "position": [
+    4.0795,
+    1.7857,
+    0.7021
+   ],
+   "orientation_xyzw": [
+    -0.0002,
+    0.002,
+    0.8928,
+    0.4504
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    4.8314,
+    1.1399,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "plate.n.04_2": {
+   "category": "plate",
+   "position": [
+    4.08,
+    1.7858,
+    0.6848
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.9571,
+    -0.2896
+   ]
+  },
+  "electric_refrigerator.n.01_1": {
+   "category": "fridge",
+   "position": [
+    5.2014,
+    -0.5688,
+    0.956
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.7071,
+    0.7071
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

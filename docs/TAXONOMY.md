@@ -89,7 +89,7 @@ actively. The standard-realtime mode is offered where a benchmark's tasks call f
 - ManiGuard: `<base>` is `maniguard-<family-with-dashes>-i<NN>`, NN = the ManiGuard-Bench task index (base level, e.g.
   `maniguard-jar-transport-i14` = `jar_transport/task_0014`); `[metadata].family` is ManiGuard's family (`jar_transport`).
 - `[task].name = "robot-coding-bench/<folder>"`.
-- No versions or durations in names; a task's version is its digest (`tasks/<task>/DIGEST`).
+- No versions or durations in names; a task's version is its digest (`tasks/<benchmark>/<task>/DIGEST`).
 
 ## Run ids
 `<harness>-<model>-<effort>`, for example `codex-gpt6_luna-xhigh` or `claude_code-claude_fable_5_1-max`.

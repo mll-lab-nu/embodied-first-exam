@@ -1,7 +1,0 @@
-{
- "task_text": "Rotate the pen in the hand until its axis points along the target orientation: the cosine between the pen's axis (bottom to top) and the target's axis above 0.95, with the pen within 0.075 m of its desired position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the pen more than 0.075 m from its desired position (dropped).",
- "default_cameras": [
-  "hand_top"
- ],
- "reference": null
-}

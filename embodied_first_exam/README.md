@@ -4,7 +4,7 @@ One folder per benchmark, `embodied_first_exam/<benchmark>/` (the benchmark's di
 `docs/benchmarks/`, with `-` written `_`). It holds the single source of what many of the benchmark's task dirs would
 otherwise each carry a copy of: the tooling the agent imports (`rcb_<benchmark>.py` and its helpers), the graders, the
 simulator service's adapter and shared assets. What is specific to one task (its frozen instance, reference solution,
-texts, Dockerfiles, compose file) stays in `tasks/<task>/`.
+texts, Dockerfiles, compose file) stays in `tasks/<benchmark>/<task>/`.
 
 A task's build gets these files from a pinned files-only image built from the folder (`scripts/files_image.py`,
 `images/<name>/FILES.json`): its Dockerfiles `COPY --from=<image@digest>` each file to the same container path a copy in

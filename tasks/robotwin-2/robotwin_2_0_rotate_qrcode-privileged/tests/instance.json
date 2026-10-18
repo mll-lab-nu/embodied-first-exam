@@ -1,0 +1,8 @@
+{
+ "task": "rotate_qrcode",
+ "seed": 28831,
+ "embodiment": "aloha-agilex",
+ "state_sha": "47208179bb08",
+ "text": "Use arm to catch the qrcode board on the table, pick it up and rotate to let the qrcode face towards the robot.",
+ "n_active_joints": 16
+}

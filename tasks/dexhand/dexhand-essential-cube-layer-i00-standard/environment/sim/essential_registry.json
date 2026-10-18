@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "tasks": [
+    {
+      "id": "essential_cube_layer",
+      "module": "essential_cube_layer_scene",
+      "free_objects": true
+    },
+    {
+      "id": "essential_held_joystick",
+      "module": "essential_held_joystick_scene",
+      "free_objects": true
+    },
+    {
+      "id": "essential_cube_reorient",
+      "module": "essential_cube_reorient_scene",
+      "free_objects": true
+    },
+    {
+      "id": "essential_pen_regrasp",
+      "module": "essential_pen_regrasp_scene",
+      "free_objects": true
+    },
+    {
+      "id": "essential_rotary_gait",
+      "module": "essential_rotary_gait_scene",
+      "free_objects": false
+    },
+    {
+      "id": "essential_two_object",
+      "module": "essential_two_object_scene",
+      "free_objects": true
+    }
+  ]
+}

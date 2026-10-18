@@ -1,0 +1,168 @@
+{
+  "category": "in_hand",
+  "description": "Reorient a free spherical object with three asymmetric direction markers through two different axes and return.",
+  "difficulty": "hard",
+  "id": "essential_cube_reorient",
+  "instruction": "With the wrist fixed, rotate the free marked sphere +90 degrees around palm-local Y, then +90 degrees around palm-local X from that pose, then return to its exact initial orientation. Maintain hand contact and avoid any external support throughout; stabilize each ordered checkpoint with at least two fingertips.",
+  "invariants": {
+    "force": [
+      0,
+      80
+    ],
+    "object_displacement": [
+      0,
+      0.07
+    ],
+    "object_hand_contacts": [
+      1,
+      null
+    ],
+    "object_height": [
+      0.18,
+      0.6
+    ],
+    "palm_drift": [
+      0,
+      0.003
+    ],
+    "speed": [
+      0,
+      12
+    ],
+    "support": [
+      0,
+      0
+    ],
+    "wrist_rotation": [
+      0,
+      0.01
+    ]
+  },
+  "mechanism": "free_orientation_sphere",
+  "parameters": {
+    "collision_shape": "sphere",
+    "finger_velocity_gain": -0.9,
+    "initial_fingers": {
+      "right_index_DIP": 0.7028236563305357,
+      "right_index_MCP_AA": 0.15453226133591658,
+      "right_index_MCP_FE": 0.7166597755266415,
+      "right_index_PIP": 0.8986382476346705,
+      "right_middle_DIP": 1.3951423686761841,
+      "right_middle_MCP_AA": 0.19773233438593238,
+      "right_middle_MCP_FE": 0.7470390050898469,
+      "right_middle_PIP": 1.1100925485471025,
+      "right_pinky_CMC": 0.015593204482551009,
+      "right_pinky_DIP": 0.0012654762798868218,
+      "right_pinky_MCP_AA": 0.0031639161766404463,
+      "right_pinky_MCP_FE": 0.005307681672771885,
+      "right_pinky_PIP": 0.009277288386248535,
+      "right_ring_DIP": 0.0012648284250247038,
+      "right_ring_MCP_AA": 0.01140079451789127,
+      "right_ring_MCP_FE": 0.0027902412241618,
+      "right_ring_PIP": 0.009275548474810786,
+      "right_thumb_CMC_AA": -0.18973913911670495,
+      "right_thumb_CMC_FE": 0.7207039101053058,
+      "right_thumb_IP": 0.8212353295687925,
+      "right_thumb_MCP_AA": 0.10127948847131926,
+      "right_thumb_MCP_FE": 0.9806799131244058
+    },
+    "initial_position": [
+      0.025,
+      -0.02,
+      0.35
+    ],
+    "initial_quaternion": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "initial_wrist": [
+      -0.08,
+      0,
+      0.29,
+      0,
+      0,
+      0
+    ],
+    "locked_wrist": true,
+    "reset_gravity_compensation": true,
+    "settle_steps": 300,
+    "side_m": 0.028
+  },
+  "scene": "essential_cube_reorient",
+  "stages": [
+    {
+      "bounds": {
+        "contacts": [
+          2,
+          5
+        ],
+        "cube_error_1": [
+          0,
+          0.16
+        ],
+        "speed": [
+          0,
+          0.25
+        ]
+      },
+      "hold_steps": 5,
+      "name": "first_axis_quarter_turn"
+    },
+    {
+      "bounds": {
+        "contacts": [
+          2,
+          5
+        ],
+        "cube_error_2": [
+          0,
+          0.16
+        ],
+        "speed": [
+          0,
+          0.25
+        ]
+      },
+      "hold_steps": 5,
+      "name": "second_axis_quarter_turn"
+    },
+    {
+      "bounds": {
+        "contacts": [
+          2,
+          5
+        ],
+        "cube_error_3": [
+          0,
+          0.16
+        ],
+        "speed": [
+          0,
+          0.25
+        ]
+      },
+      "hold_steps": 5,
+      "name": "return_to_initial"
+    }
+  ],
+  "terminal": {
+    "bounds": {
+      "contacts": [
+        2,
+        5
+      ],
+      "cube_error_3": [
+        0,
+        0.16
+      ],
+      "speed": [
+        0,
+        0.06
+      ]
+    },
+    "hold_steps": 25
+  },
+  "title": "Fixed-wrist multi-axis marked sphere reorientation"
+}

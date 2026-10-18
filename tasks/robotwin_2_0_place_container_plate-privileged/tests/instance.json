@@ -1,8 +1,0 @@
-{
- "task": "place_container_plate",
- "seed": 60417,
- "embodiment": "aloha-agilex",
- "state_sha": "954971f4fed0",
- "text": "Place the container onto the plate.",
- "n_active_joints": 16
-}

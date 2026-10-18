@@ -1,0 +1,36 @@
+{
+ "task": "D04-SharedTrayTransportDischarge",
+ "env_id": "PandaMultiStage/D04-SharedTrayTransportDischarge-v0",
+ "difficulty": "nominal",
+ "seed": 1,
+ "parameters": {
+  "horizon": 25.0,
+  "object_mass": 0.035,
+  "tool_mass": 0.12,
+  "tool_half": 0.035,
+  "radius": 0.018,
+  "preview": 0.65,
+  "incoming_speed": 0.35,
+  "fixture_speed": 0.04,
+  "restitution": 0.1,
+  "table_friction": 0.08,
+  "tool_friction": 0.3,
+  "disturbance_impulse": 0.007
+ },
+ "physics_hz": 1000,
+ "arms": {
+  "panda-0": "left",
+  "panda-1": "right"
+ },
+ "action_dim": 16,
+ "control_hz": 100,
+ "horizon_s": 25.0,
+ "phases": [
+  "shared_support",
+  "transport_turn",
+  "disturbance_recovery",
+  "exit_alignment",
+  "natural_discharge"
+ ],
+ "initial_sha": "6c202dbdc4b8f2a690d195c50253c659e32e5ff3a5c42757f49cfe7b74627096"
+}

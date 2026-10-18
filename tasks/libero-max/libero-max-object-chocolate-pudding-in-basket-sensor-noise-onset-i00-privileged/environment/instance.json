@@ -1,0 +1,56 @@
+{
+ "case": {
+  "case_id": "pro-position-object-t08-i02-sensor_noise_onset-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 2,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/position/libero_object/task_8",
+   "change": {
+    "noise_std": 24.0,
+    "occlusion_fraction": 0.08,
+    "operation": "set_sensor_corruption",
+    "seed": 1832240473
+   },
+   "change_family": "OBS",
+   "change_type": "sensor_noise_onset",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1832240473
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-position-object-t08-i02-sensor_noise_onset-d0",
+   "seed": 1832240473,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "chocolate_pudding_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/position",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_object_swap/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "position",
+   "init_reference_bddl_file": "libero_object_swap/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object_swap/pick_up_the_chocolate_pudding_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the chocolate pudding and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 8,
+  "task_name": "pick_up_the_chocolate_pudding_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "b7e7a8d6380f76d90bc58526fa2cf4f3898e23f6152f90fc12a3312a79568913",
+ "instance_sha": "8e02c9d730ccf63da3e723fd82998e07237159c908489acb038e67bb4f7136e3",
+ "schema": "eai-libero-max-instance/1"
+}

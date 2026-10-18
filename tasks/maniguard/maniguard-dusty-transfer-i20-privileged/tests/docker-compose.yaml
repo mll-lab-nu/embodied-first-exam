@@ -1,0 +1,22 @@
+# The verifier replays in Isaac Sim with the same data mount ($RCB_MANIGUARD_DATA, read-only) and one GPU. Its Kit cache
+# is a TRUSTED volume of this verification only (no fixed name: compose names it after the verifier's project, Harbor's
+# teardown deletes it): Kit keeps generated Python there that it imports at startup, so a cache the agent could write must
+# never reach the grader. The first replay compiles shaders into it, the second reuses it.
+services:
+  main:
+    environment:
+      OMP_NUM_THREADS: "8"
+      MKL_NUM_THREADS: "8"
+    shm_size: "8gb"
+    volumes:
+      - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by scripts/maniguard/prep_data.py (docs/benchmarks/maniguard.md)}:/data:ro
+      - rcb_maniguard_cache_trusted:/cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+volumes:
+  rcb_maniguard_cache_trusted:

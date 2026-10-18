@@ -1,0 +1,35 @@
+{
+ "task": "D10-MovingGraspHandover",
+ "env_id": "PandaMultiStage/D10-MovingGraspHandover-v0",
+ "difficulty": "nominal",
+ "seed": 0,
+ "parameters": {
+  "horizon": 25.0,
+  "object_mass": 0.035,
+  "tool_mass": 0.2,
+  "tool_half": 0.07,
+  "radius": 0.018,
+  "preview": 0.65,
+  "incoming_speed": 0.08,
+  "fixture_speed": 0.035,
+  "restitution": 0.1,
+  "table_friction": 0.08,
+  "tool_friction": 0.3
+ },
+ "physics_hz": 1000,
+ "arms": {
+  "panda-0": "left",
+  "panda-1": "right"
+ },
+ "action_dim": 16,
+ "control_hz": 100,
+ "horizon_s": 25.0,
+ "phases": [
+  "moving_pickup",
+  "moving_presentation",
+  "overlapping_grips",
+  "donor_release",
+  "receiver_slot_delivery"
+ ],
+ "initial_sha": "3bb10643ceecda477777fee083f6d6f7e463b1a17a76ebe4860af8786f76b81c"
+}

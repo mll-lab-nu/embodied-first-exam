@@ -1,0 +1,264 @@
+{
+ "task": "butter_above_raisin",
+ "robolab_task": "ButterAboveRaisinTask",
+ "env_name": "ButterAboveRaisinTask",
+ "seed": 0,
+ "instruction": "Pick up the butter box and place it on top of the raisin box",
+ "text": "Pick up the butter box and place it on top of the raisin box.",
+ "initial_state": {
+  "articulation": {
+   "robot": {
+    "joint_position": [
+     0.0,
+     -0.6283185482025146,
+     0.0,
+     -2.5132741928100586,
+     0.0,
+     1.884955644607544,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "joint_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_pose": [
+     0.0,
+     0.0,
+     0.0,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "deformable_object": {},
+  "gripper": {},
+  "rigid_object": {
+   "butter": {
+    "root_pose": [
+     0.30301183462142944,
+     0.048409316688776016,
+     -0.02287965640425682,
+     0.14209763705730438,
+     0.9237223267555237,
+     -0.3548627197742462,
+     -0.02485467866063118
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "raisin_box": {
+    "root_pose": [
+     0.4008031487464905,
+     0.25123170018196106,
+     0.02150517888367176,
+     0.7115547060966492,
+     -0.0055539244785904884,
+     0.7025997638702393,
+     -0.003549134125933051
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "table": {
+    "root_pose": [
+     0.5471954941749573,
+     -5.750182754127309e-05,
+     -0.3470015823841095,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "state_sha": "f869d756d0c69e65",
+ "action_dim": 8,
+ "control_hz": 15.0,
+ "sim_dt": 0.008333333333333333,
+ "decimation": 8,
+ "physics": {
+  "device": "cpu",
+  "enhanced_determinism": false
+ },
+ "robot_joint_positions": [
+  0.0,
+  -0.628319,
+  0.0,
+  -2.513274,
+  0.0,
+  1.884956,
+  0.0
+ ],
+ "arm_joint_names": [
+  "panda_joint1",
+  "panda_joint2",
+  "panda_joint3",
+  "panda_joint4",
+  "panda_joint5",
+  "panda_joint6",
+  "panda_joint7"
+ ],
+ "objects": {
+  "table": {
+   "position": [
+    0.5472,
+    -6e-05,
+    -0.347
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "bounds": [
+    [
+     0.1972,
+     -0.50006,
+     -0.697
+    ],
+    [
+     0.8972,
+     0.49994,
+     0.003
+    ]
+   ],
+   "size": [
+    0.7,
+    1.0,
+    0.7
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "butter": {
+   "position": [
+    0.30301,
+    0.04841,
+    -0.02288
+   ],
+   "orientation_wxyz": [
+    0.142098,
+    0.923722,
+    -0.354863,
+    -0.024855
+   ],
+   "bounds": [
+    [
+     0.31675,
+     0.01701,
+     0.00266
+    ],
+    [
+     0.42683,
+     0.08465,
+     0.02773
+    ]
+   ],
+   "size": [
+    0.11008,
+    0.06765,
+    0.02507
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "raisin_box": {
+   "position": [
+    0.4008,
+    0.25123,
+    0.02151
+   ],
+   "orientation_wxyz": [
+    0.711555,
+    -0.005554,
+    0.7026,
+    -0.003549
+   ],
+   "bounds": [
+    [
+     0.339,
+     0.15214,
+     0.00102
+    ],
+    [
+     0.46291,
+     0.23888,
+     0.04343
+    ]
+   ],
+   "size": [
+    0.12391,
+    0.08674,
+    0.04241
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "table_top_z": 0.0029984116554260254,
+ "versions": {
+  "robolab": "0.1.0",
+  "isaaclab": "",
+  "isaacsim": "",
+  "torch": "2.7.0+cu128",
+  "robolab_commit": "9db0aaf09d9f"
+ }
+}

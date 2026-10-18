@@ -21,7 +21,7 @@ Older tasks and code cite v1 section numbers (§2.10); the table at the end maps
 
 ## 1. What a task is
 
-A task is a self-contained Harbor task directory under `tasks/`; the benchmark adds as little as possible on top of
+A task is a self-contained Harbor task directory under `tasks/<benchmark>/` (one folder per benchmark); the benchmark adds as little as possible on top of
 Harbor's format. Anything not described here (the simulator, how a scene is defined, the privileged tool API, how a
 verifier decides internally) is the task's own business.
 
@@ -193,7 +193,7 @@ share one frozen instance (byte-identical copies), one success rule and the same
 `build`), and the privileged and standard versions have the same cutoff (`same_cutoff_as` in the mode registry).
 *CI:* `check-twins.py`, `check-instance-copies.sh`.
 
-**H.8 DIGEST.** `tasks/<task>/DIGEST` is the digest Harbor publishes the task under (`sha256:<hex>` over the relative
+**H.8 DIGEST.** `tasks/<benchmark>/<task>/DIGEST` is the digest Harbor publishes the task under (`sha256:<hex>` over the relative
 path and content hash of `task.toml`, `instruction.md`, `README.md` and every file under `environment/`, `tests/`,
 `solution/`), written last by `normalize` and equal to the digest of the task's current files. Results are attributed
 to a task by its digest; a changed file is a changed task. *CI:* `check-dataset-manifest.sh`.

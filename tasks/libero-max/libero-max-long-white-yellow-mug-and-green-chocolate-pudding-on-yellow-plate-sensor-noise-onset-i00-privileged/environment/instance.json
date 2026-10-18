@@ -1,0 +1,56 @@
+{
+ "case": {
+  "case_id": "pro-object-10-t06-i09-sensor_noise_onset-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 9,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/object/libero_10/task_6",
+   "change": {
+    "noise_std": 24.0,
+    "occlusion_fraction": 0.08,
+    "operation": "set_sensor_corruption",
+    "seed": 3933781676
+   },
+   "change_family": "OBS",
+   "change_type": "sensor_noise_onset",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3933781676
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-object-10-t06-i09-sensor_noise_onset-d0",
+   "seed": 3933781676,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "white_yellow_mug_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/object",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_10_object/LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "object",
+   "init_reference_bddl_file": "libero_10_object/LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate.bddl",
+   "init_states_file": "libero_10_object/LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate.pruned_init",
+   "language": "put the white mug on the plate and put the chocolate pudding to the right of the plate",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 6,
+  "task_name": "LIVING_ROOM_SCENE6_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the_plate",
+  "task_suite_name": "libero_10",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "2c1f2b0b0bbafa2dbbbe5276080fb722aa81947d2570dc3cf84b3357570c4a90",
+ "instance_sha": "af1d0d42a33a31f384666fe72206220c881691ec909c62f851d893ccbccb0b41",
+ "schema": "eai-libero-max-instance/1"
+}

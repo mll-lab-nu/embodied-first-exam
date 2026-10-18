@@ -1,0 +1,7 @@
+{
+ "task_text": "Tag the opponent: bring your pelvis within 0.5 m of it (horizontal distance) within 20 s of simulated time (MyoChallenge 2023 ChaseTag P1, task CHASE). Failure (the episode ends): the time limit, leaving the 13 x 13 m arena, or the pelvis below 0.5 m (fallen).",
+ "default_cameras": [
+  "topview"
+ ],
+ "reference": null
+}

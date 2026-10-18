@@ -1,0 +1,9 @@
+{
+ "env_id": "PushSlider-Am-FAHexa-Abs-PID-Direct-v0",
+ "seed": 0,
+ "task": "PushSlider",
+ "action_dim": 8,
+ "control_hz": 120,
+ "episode_length_s": 26.0,
+ "initial_sha": "9bd26bad8cd1cd81a7fcc11043a996206a0550e7e00f2a74253efe1822ced584"
+}
