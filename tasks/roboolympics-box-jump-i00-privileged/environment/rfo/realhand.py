@@ -74,8 +74,8 @@ PAD_SOLREF, PAD_SOLIMP = "0.004 1", "0.99 0.999 0.0005"
 IMPRATIO = 100.0               # a world with a real hand: elliptic friction cones and impratio 100. MuJoCo's friction is
 #                                soft: with the default pyramidal cones a 120 N grasp let a 0.84 N m handle torque turn it
 #                                34 deg in 3 s; elliptic + impratio 10: 0.5 deg/s; 100: 0.05 deg/s
-JAWS = ("a", "b")
-FREEZE_ARMATURE = 1e5          # kg (m^2): the rest of the world's inertia while close_on settles a grasp              # a: the palm side (+x), b: the back (-x)
+JAWS = ("a", "b")              # a: the palm side (+x), b: the back (-x)
+FREEZE_ARMATURE = 1e5          # kg (m^2): the rest of the world's inertia while close_on settles a grasp
 
 
 def _f(v) -> str:

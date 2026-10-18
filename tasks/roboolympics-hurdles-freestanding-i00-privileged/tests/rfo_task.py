@@ -123,7 +123,9 @@ class Task(TaskBase):
         "TR 22.6 ('goes over each hurdle') is judged geometrically at the hurdle's standing pose on its mark, "
         "wherever the hurdle is now: the pelvis must pass above the height of the hurdle's top, each foot (its "
         "ankle joint) above the lower edge of the top bar, all three between the bar's ends, through the plane "
-        "where the top bar stood; a hurdle that has fallen, or has been pushed on or out of the lane, does not "
+        "where the top bar stood, the pelvis in flight (touching nothing but that hurdle's top bar: the rule "
+        "book's clearance is a stride in the air, and a stride over a hurdle that lies on the track, one foot on "
+        "the ground, is not one); a hurdle that has fallen, or has been pushed on or out of the lane, does not "
         "lower or move what is to be gone over; going over it on the hurdle (climbing) is judged by contact: a "
         "hurdle not yet gone over that still stands may not push the robot upwards by more than {support_n} N for "
         "longer than {strike_s} s, and at the instant the pelvis or a foot crosses its plane only the legs may "
@@ -181,7 +183,8 @@ class Task(TaskBase):
              "ankle joints) have crossed the plane of its top bar in its standing pose towards +x, each between "
              "the bar's two ends, the pelvis higher than the hurdle's top ({hurdle_height_m} m above the track) "
              "and each foot higher than the lower edge of its top bar ({hurdle_height_m} m less {bar_height_m} m), "
-             "whether the hurdle still stands there or not; a pelvis or a foot that comes back over the plane has "
+             "whether the hurdle still stands there or not, and in the air: as your pelvis crosses the plane, no part "
+             "of you touches anything but that hurdle's top bar; a pelvis or a foot that comes back over the plane has "
              "not crossed it and must cross it again. The hurdles are gone over in order. A hurdle leaves its "
              "standing pose when a point of its top bar is more than {displaced_m} m from where it stood. Knocking "
              "a hurdle down with your legs is allowed when a leg strikes its top bar during the clearance: while "
@@ -193,7 +196,8 @@ class Task(TaskBase):
              "over. You succeed with a finish within {time_limit_s} s of robot time. A fall does not end the race: "
              "you are down while your pelvis is below {down_z_m} m, you may get up and go on, but {down_limit_s} s "
              "down in a row end it. You fail if your pelvis or a foot crosses the next hurdle's plane beside the "
-             "hurdle, or lower than said above (going under its top); if a part of one of your legs is beside the "
+             "hurdle, or lower than said above (going under its top); if your pelvis crosses it while you touch the "
+             "track or anything else but its top bar (stepping over it); if a part of one of your legs is beside the "
              "next hurdle (beyond the bar's ends, within {beside_m} m of its plane) lower than the hurdle's top; "
              "if a hurdle leaves its standing pose within {touch_window_s} s of being touched by a hand, an arm, "
              "your trunk or your pelvis, that touch being your latest on it or within {blame_recent_s} s before "
@@ -378,6 +382,11 @@ class Task(TaskBase):
                 y, z = float(x[1]), float(x[2])
                 if abs(y) >= half:
                     return ref.fail(f"went beside the {ORD[i]} hurdle", what=k, y=round(y, 3))
+                # a clearance is a flight: as the pelvis crosses, the robot touches nothing but this hurdle's top bar
+                # (a tiptoe step over a hurdle already knocked down is not going over it)
+                if k == "pelvis" and not ref.airborne(self.bar_mask[i]):
+                    return ref.fail(f"went over the {ORD[i]} hurdle without a jump",
+                                    parts=sorted(ref.parts_touching(~ref.robot_mask & ~self.bar_mask[i])))
                 low = H if k == "pelvis" else H - p["bar_height_m"]
                 if ref.touching(ref.robot_mask, self.hurdle_mask[i]) and (ref.touching(
                         self.not_bar[i], ref.robot_mask) or ref.touching(self.not_legs, self.hurdle_mask[i])):

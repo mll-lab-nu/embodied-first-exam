@@ -10,11 +10,12 @@ Owner's decisions (2026-10-11), which replace the v1 design ("an easy setting"):
    `robot = "unitree_h1"` (Unitree H1-2: 1.78 m, 67 kg, 27 joints; a walking policy, no running policy) where the
    official size needs an adult-size body.
 3. **Single actions.** One attempt of one skill (one jump, one throw, one return), not a match.
-4. **Real holding (owner, 2026-10-18).** Ten more families, the existing 50 unchanged; a family that varies an
-   existing one keeps its name with a suffix (`dunk-realgrasp`, `hurdles-freestanding`). Nothing they hold is welded
-   to a hand: a ball is held by pressing it between the bare palms, and a racket, a shuttle or a rope handle by
-   friction in Unitree's Dex1-1 two-finger gripper (`sc.real_hands`, `rfo/realhand.py`), so it can slip, turn in the
-   jaws and drop.
+4. **Real holding.** Ten more families, the existing 50 unchanged; a family that varies an
+   existing one keeps its name with a suffix (`dunk-realgrasp`, `hurdles-freestanding`). Nothing they play with is
+   welded to a hand: a ball is held by pressing it between the bare palms, and a racket, a shuttle or a rope handle
+   by friction in Unitree's Dex1-1 two-finger gripper (`sc.real_hands`, `rfo/realhand.py`), so it can slip, turn in
+   the jaws and drop. (`juggling-feet`'s ball starts in the fist by the old grip, as in `juggling`, until the drop;
+   from then on only the feet may touch it.)
 
 How a family states its realism (RoboOlympics' convention): `rulebook` (name, edition, the articles used) and a list
 of `deviations`, each with the article it departs from, what is different and why. A deviation is allowed when the

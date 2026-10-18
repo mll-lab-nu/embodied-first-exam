@@ -5,9 +5,9 @@ increased slowly, tips it at 3.6-4.0 kgf; held at 3.6 kgf it stands, at 4.0 kgf 
 and the four hurdles stand still for the whole episode (no creep, no jitter). The referee says no to standing still,
 to walking into the first hurdle (the forearms and the trunk push it over), to standing on its top bar (climbing
 it), to pushing it along the track with a foot (bulldozing) or sideways out of the lane before going over it, to a
-hurdle moved by anything else, to knocking it down in the air and going through below its top, to the feet passing
-under the bar, to a foot or a leg beside the hurdle, to leaving the lane and to lying on the track; it says yes to a
-hurdle that a foot knocks down on the way over (the hurdle really falls and lies on the track), also when an arm
+hurdle moved by anything else, to knocking it down in the air and going through below its top, to a step over a
+hurdle already gone (the pelvis crossing with the feet on the track), to the feet passing under the bar, to a foot or
+a leg beside the hurdle, to leaving the lane and to lying on the track; it says yes to a hurdle that a foot knocks down on the way over (the hurdle really falls and lies on the track), also when an arm
 brushed it shortly before.
 
 The positive is an INJECTION, not a solution: at each hurdle the robot is put 1.1 m before it by hand, stands there
@@ -224,6 +224,21 @@ def main():
     assert v["failed"] == "went under the top of the first hurdle" and [e["ev"] for e in w.ref.events][-2:] == \
         ["hurdle_knocked", "fail"], w.ref.events[-3:]
     print("  knocked down in the air, through below the top:", w.ref.events[-1])
+    # a step over a hurdle already gone from its mark, the feet on the track: the first hurdle put 1.5 m on by hand
+    # and taken as a legal knock (injected), then the robot moved over the hurdle's plane by hand, standing on its
+    # feet (its ankles stand behind its pelvis: the pelvis crosses first)
+    w.reset(); hold(w, A, 0.1)
+    qa, _ = w.free["hurdle1"]
+    T.trackers["leg_t"][0] = w.ref.time
+    w.d.qpos[qa] += 1.5; hold(w, A, 0.05)
+    assert T.trackers["moved"] == [0] and verdict(w)["failed"] is None, (T.trackers["moved"], verdict(w))
+    move_robot(w, x=T.planes[0] - 0.1); hold(w, A, 0.3)
+    while not w.done and w.t < 3.0:
+        move_robot(w, x=float(w.pelvis()[0]) + 0.005); hold(w, A, 0.01)
+    v = verdict(w)
+    assert v["failed"] == "went over the first hurdle without a jump" and v["stages"] == [], (v, w.ref.events[-1])
+    assert {"left_foot", "right_foot"} & set(w.ref.events[-1]["parts"]), w.ref.events[-1]
+    print("  stepping over a hurdle already down, feet on the track:", w.ref.events[-1])
     # the pelvis high enough (lifted by hand), the feet under the bar
     w.reset(); hold(w, A, 0.1)
     move_robot(w, x=xs[0] - 0.4, z=1.5); hold(w, A, 0.01); move_robot(w, x=xs[0] + 0.4, z=1.5); hold(w, A, 0.05)

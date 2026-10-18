@@ -102,14 +102,6 @@ def build_court(sc, hx: float, hy: float, p: dict, flip: bool = False) -> dict:
     return dict(x=hx, y=hy, z=p["ring_height_m"], inner_radius=p["ring_inner_diameter_m"] / 2, end_line_x=X(de),
                 free_throw_line_x=X(df), board_face_x=X(bx))
 
-
-def ball_in_hand(w, side: str = "right") -> None:
-    """The ball against the end of the fist, gripped."""
-    m, d = w.m, w.d
-    mujoco.mj_kinematics(m, d)
-    b = w.robot.mount[side]
-    w.put("ball", d.xpos[b] + d.xmat[b].reshape(3, 3) @ np.array([0.0, 0.0, 0.105 + BALL["radius"]]))
-    w.grab(side, "ball", event=False)
 # ---- end of the court block ----
 
 
@@ -438,7 +430,9 @@ class Task(TaskBase):
                 return ref.fail("the ball went through the ring without both hands on it at the entry",
                                 hands=tr["entry_hands"])
             tr["dunked"] = round(ref.time, 4)
-            tr["travel"].stop()
+            bad = tr["travel"].stop()
+            if bad:
+                return ref.fail(bad, steps=tr["travel"].steps)
             ref.stage("dunk")
             return
         if tr["released"] is None and not any(on.values()):
