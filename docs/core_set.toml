@@ -13,7 +13,7 @@
 #   pick       "owner" on a dir the benchmark owner put in by hand (absent otherwise)
 # Checked by `python3 scripts/task_conventions.py core-set --check`.
 
-generated_from = "f5e97166032b1cd9112215197580cab878d8396f"
+generated_from = "0726bda3a32b583238e5d84a1dfb2cb7e98aabbc"
 
 # ---- AM-Bench
 
