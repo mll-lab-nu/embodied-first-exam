@@ -30,10 +30,10 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 
 | | Agent phase | Verifier |
 |---|---|---|
-| CPU cores | 6 | 1 |
-| Memory | 8 GB | 1 GB |
+| CPU cores | 4 | 4 |
+| Memory | 8 GB | 3 GB |
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: Harbor 0.23 oracle / nop on aws:rcb-cpu3 (2026-10-18; the author: an 8-vCPU / 16-GiB c7i.2xlarge): the sidecar's reference search before the agent ~520 s on its 4 CPUs, finalization + video ~150 s; the verifier only reads JSON (~20 s)
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 12 GiB memory. Limits measured: the reference runs (2026-10-18) peaked at 0.04 GiB in the agent's container; 4 GiB (the author's budget) leaves room for an agent's own nominal training; processes / disk: design defaults.
+- Measured: Harbor 0.23 oracle on aws:rcb-cpu3 (2026-10-18, board 0165; docker stats + cgroup memory.peak every 3-6 s): the sidecar holds its 4-CPU cap through the reference search before the agent (~480 s, the agent's container idle) and the finalization (136 s), peak 1.18 GiB; the sidecar 1-2 cores during deployments; the agent's container 0.06 GiB. Minimum = the agent's 6 GB cap (its 4 GiB limit is recorded, not enforced, by default) + the sidecar's peak x 1.2 + the monitor's 0.25 GB; CPU = the sidecar's 4 (never at the same time as the agent's work: the agent waits for its health check, and is stopped before finalization), the agent's 2-core cap + ~2 during deployments; verifier phase = the sidecar's collect hook (4 cores, <= 2.13 GiB x 1.2 + the monitor); the verifier itself only reads JSON (~20 s)
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 12 GiB memory. Limits measured: the reference runs (2026-10-18, board 0165) peaked at 0.23 GiB in the agent's container; 4 GiB (the author's budget) leaves room for an agent's own nominal training; processes / disk: design defaults.
