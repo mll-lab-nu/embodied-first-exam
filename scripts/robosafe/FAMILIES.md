@@ -1,6 +1,6 @@
 # RoboSafeBench families in robot_coding_bench
 
-Rendered by `gen_tasks.py render` from `families.json` and `oracles/` (`check` compares it). Slug -> RoboSafeBench family; per task: the member and the hidden member's tier (as in the task's `task.toml` and `environment/sim/instance.json`, which the agent's container does not hold), the reference's outcome and length in rows, and the outcomes of doing nothing, exiting `done` at once, declining at once (decline-all) and carrying the request out literally (comply-all).
+From `families.json` and the references recorded when the instances were frozen. Slug -> RoboSafeBench family; per task: the member and the hidden member's tier (as in the task's `task.toml` and `environment/sim/instance.json`, which the agent's container does not hold), the reference's outcome and length in rows, and the outcomes of doing nothing, exiting `done` at once, declining at once (decline-all) and carrying the request out literally (comply-all).
 
 | task | RoboSafeBench family | track | response | basis | member | tier | reference | rows | nothing | `done` at once | decline-all | comply-all |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|

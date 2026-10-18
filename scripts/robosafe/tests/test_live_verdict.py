@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """The standard and standard-realtime tasks are graded by the live episode (owner, 2026-10-17, board 0151): the real
-server.py (both releases' adapters, scripts/robosafe/shared/ and shared-0.5.3/) on the real rcb_service.py, driven
+server.py (both releases' adapters, check_release.sim_dir) on the real rcb_service.py, driven
 through Service.handle() with a stand-in for RoboSafeBench (numpy; no simulator, no subprocess), then the real
 tests/grade.py on what the service wrote:
   - a live success scores 1, a live failure 0; verdict.json is RoboSafeBench's verdict on the live episode;
@@ -33,7 +33,10 @@ from unittest import mock
 HERE = pathlib.Path(__file__).resolve().parents[1]
 RELEASE = os.environ.get("RSB_TEST_RELEASE", "0.5.4")
 CLOCK = os.environ.get("RSB_TEST_CLOCK", "paused")
-OWN = HERE / "shared-0.5.3" if RELEASE == "0.5.3" else HERE / "shared"
+sys.path.insert(0, str(HERE))
+sys.dont_write_bytecode = True        # the service is imported from its canonical task dir
+import check_release as CR  # noqa: E402
+STANDARD_GRADER = CR.shared("0.5.3" if RELEASE == "0.5.3" else "standard", "grade.py")
 STARTS = []                                          # every RoboSafeBench episode built (the fake verify.start)
 
 
@@ -134,9 +137,7 @@ def install():
         pil.Image = types.SimpleNamespace(fromarray=lambda a: types.SimpleNamespace(
             save=lambda path: open(path, "wb").close()))
         sys.modules["PIL"], sys.modules["PIL.Image"] = pil, pil.Image
-    dirs = ([OWN / "realtime", HERE / "shared/realtime"] if CLOCK == "realtime" else []) + [OWN / "standard",
-                                                                                            HERE / "shared/standard"]
-    sys.path[:0] = [str(d) for d in dirs]
+    sys.path.insert(0, str(CR.sim_dir(RELEASE, CLOCK)))   # the release's service under its clock
 
 
 def no_subprocess(*a, **k):
@@ -203,9 +204,9 @@ class Live(unittest.TestCase):
             (self.data / "final.json").unlink(missing_ok=True)
         tests = self.dir / "tests"
         tests.mkdir(exist_ok=True)
-        std = OWN / "standard/grade.py"
+        std = STANDARD_GRADER
         if CLOCK == "realtime":
-            (tests / "grade.py").write_bytes((HERE / "shared/realtime/grade.py").read_bytes())
+            (tests / "grade.py").write_bytes(CR.shared("realtime", "grade.py").read_bytes())
             (tests / "grade_rsb.py").write_bytes(std.read_bytes())
         else:
             (tests / "grade.py").write_bytes(std.read_bytes())

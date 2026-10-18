@@ -13,7 +13,10 @@ import subprocess
 import sys
 import tempfile
 
-GRADE = pathlib.Path(__file__).resolve().parents[1] / "shared/standard/grade.py"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.dont_write_bytecode = True        # the shared files are imported from their canonical task dirs
+import check_release as CR  # noqa: E402
+GRADE = CR.shared("standard", "grade.py")
 
 FINAL_OK = {"success": True, "live_success": True, "live_rule": True, "graded_by": "live", "replays": 0,
             "finalized": True, "reason": "success", "n_actions": 85, "control_steps_total": 85, "calls": 3, "rows": 86,

@@ -23,8 +23,10 @@ import numpy as np
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-SHARED = HERE.parent / "shared"
-sys.path[:0] = [str(SHARED / "privileged"), str(SHARED / "standard")]
+sys.path.insert(0, str(HERE.parent))
+sys.dont_write_bytecode = True        # the tooling is imported from its canonical task dirs
+import check_release as CR  # noqa: E402
+sys.path[:0] = [str(CR.shared("privileged", "rcb_rsb_privileged.py").parent), str(CR.sim_dir())]
 import rcb_rsb_privileged as P  # noqa: E402
 
 TASK = ROOT / "tasks" / "rsb-a01-i02-standard"
@@ -172,7 +174,7 @@ def grade(mode: str, with_traj: bool = True) -> tuple[str, dict]:
         d = pathlib.Path(d)
         tests, logs = d / "tests", d / "logs"
         tests.mkdir()
-        shutil.copyfile(SHARED / "privileged" / "grade.py", tests / "grade.py")
+        shutil.copyfile(CR.shared("privileged", "grade.py"), tests / "grade.py")
         (tests / "rcb_rsb_privileged.py").write_text(STUB)
         (tests / "instance.json").write_text("{}")
         traj = d / "trajectory.npz"

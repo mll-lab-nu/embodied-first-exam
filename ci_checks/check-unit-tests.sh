@@ -57,10 +57,8 @@ done
 if [ -f "$root/scripts/robosafe/tests/test_grade.py" ]; then run 300 robosafe/tests/test_grade.py; run 300 robosafe/tests/test_score.py; fi
 # ... and its standard-realtime grader (the realtime tasks' commit adds the test)
 if [ -f "$root/scripts/robosafe/tests/test_grade_rt.py" ]; then run 300 robosafe/tests/test_grade_rt.py; fi
-# Export and admission contracts need only the standard library; keep them in ordinary CI.
-for t in test_054_reporting test_admission_import test_release_export test_realtime_seed_export test_frozen_source_guard test_variant_export test_image_publication test_mechanism_selection; do
-  if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
-done
+# RoboSafeBench 0.5.4's reporting (score.py, the standard grader and service): standard library only
+if [ -f "$root/scripts/robosafe/tests/test_054_reporting.py" ]; then run 300 robosafe/tests/test_054_reporting.py; fi
 # roboEngineer (#329): the Control Transfer verifier on stub sidecar records and the frozen spec / pin checks (standard
 # library; the service and rollout tests need MuJoCo and the evaluator images: docs/benchmarks/roboengineer.md)
 for t in control_transfer/tests/test_verifier_diagnostics.py control_transfer/tests/test_neuralfly_spec.py \
@@ -90,12 +88,10 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
            robodojo/tests/test_privileged_grading.py; do
     run 900 "$t"
   done
-  # Public RT source compilation and actual loopback RCB1/client snapshots; no simulator.
-  for t in test_public_observation_compile test_public_rt_oracle_http test_public_paused_oracle_http test_live_verdict test_tidy_observe_barrier test_quaternions; do
+  # RoboSafeBench: actual loopback RCB1/client snapshots of the public oracles, the live verdict, quaternions; no simulator.
+  for t in test_public_rt_oracle_http test_public_paused_oracle_http test_live_verdict test_quaternions; do
     if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
   done
-  # Existing accepted native records compile through the same converter as legacy references.
-  if [ -f "$root/scripts/robosafe/tests/test_compile_record.py" ]; then run 300 robosafe/tests/test_compile_record.py; fi
   # RoboSafeBench's adapter serves the control interface only (its tasks pull request adds the test)
   if [ -f "$root/scripts/robosafe/tests/test_interface_guard.py" ]; then run 300 robosafe/tests/test_interface_guard.py; fi
   if [ -f "$root/scripts/robosafe/tests/test_picture_delivery.py" ]; then run 300 robosafe/tests/test_picture_delivery.py; fi

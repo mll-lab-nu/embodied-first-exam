@@ -18,8 +18,11 @@ import unittest
 import numpy as np
 
 HERE = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(HERE / "shared/standard"))
-sys.path.append(str(HERE / "shared/realtime"))
+sys.path.insert(0, str(HERE))
+sys.dont_write_bytecode = True        # the services are imported from their canonical task dirs
+import check_release as CR  # noqa: E402
+sys.path.insert(0, str(CR.sim_dir()))
+sys.path.append(str(CR.sim_dir(clock="realtime")))
 import rcb1  # noqa: E402
 import rcb_realtime  # noqa: E402
 import rcb_rsb  # noqa: E402

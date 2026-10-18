@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Every task starts from the state RoboSafeBench admitted: the start hash of the episode a task's service serves equals
-the frozen instance's `state_sha` (instance.json, written by make_instances.py from RoboSafeBench's own start of the key),
+the frozen instance's `state_sha` (instance.json, frozen from RoboSafeBench's own start of the key),
 and equals the hash of RoboSafeBench's own start of the same key (family, member, seed, robot, interface) in the same
 image. A mismatch is a blocker: the admission evidence would not cover what the agent gets.
 
@@ -88,7 +88,7 @@ def inside(tasks: list[str]) -> int:
 
 
 def image(tag: str, tasks: list[str]) -> int:
-    tasks = [str(pathlib.Path(t).resolve()) for t in tasks] or sorted(str(p) for p in (ROOT / "tasks").glob("rsb-*-standard"))   # the realtime tasks: check_double_build_rt.py
+    tasks = [str(pathlib.Path(t).resolve()) for t in tasks] or sorted(str(p) for p in (ROOT / "tasks").glob("rsb-*-standard"))   # the paused tasks (a realtime start adds its clock's plan digest)
     tdir = str(ROOT / "tasks")
     inner = ["/tasks/" + os.path.basename(t) for t in tasks]
     cmd = ["podman", "run", "--rm", "-e", f"JOBS={os.environ.get('JOBS', '6')}", "-v", f"{tdir}:/tasks:ro",

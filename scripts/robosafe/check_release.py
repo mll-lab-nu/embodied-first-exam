@@ -1,19 +1,26 @@
 #!/usr/bin/env python3
 """RoboSafeBench's frozen release in tasks/: every rsb-* task directory is the one recorded in release.json.
 
-From 0.5.4 the served set mixes two frozen releases: the 0.5.4 selection (exported from RoboSafeBench's own release
-tooling, which this repository does not carry, so gen_tasks.py / gen_realtime.py cannot re-render it) and the 0.5.3
-tasks, kept out of the core set (apart from `rsb-c04-i00-standard`). This check stands in for the generators' check mode (ci_checks/check-generated-tasks.sh):
+The served set mixes two frozen releases: the 0.5.4 selection (exported from RoboSafeBench's own release tooling, which
+this repository does not carry) and the 0.5.3 tasks, kept out of the core set (apart from `rsb-c04-i00-standard`); no generator here re-renders them (the
+privileged twins apart: gen_privileged.py). This check stands in for a generator's check mode
+(ci_checks/check-generated-tasks.sh):
     python3 scripts/robosafe/check_release.py check    # standard library only
     python3 scripts/robosafe/check_release.py write    # after a deliberate task change: rewrite release.json
 It checks that the rsb-* directories are exactly release.json's tasks; that each task's DIGEST is its recomputed digest
 (scripts/task_conventions.py) and the recorded one; that its compose image is its release's image (and `robosafe_version` 0.5.4 exactly for the 0.5.4 release);
 that the core set (docs/core_set.toml) lists no task of a base with no 0.5.4 task; and that the files
 kept out of git (scripts/robosafe/assets.json) are the ones images/robosafe/context/robosafe-src.sha256 lists; and that
-each task's service, grader and solution helpers are byte for byte its release's (shared_problems): the 0.5.4 tasks'
-the ones in scripts/robosafe/shared/, the 0.5.3 tasks' those in scripts/robosafe/shared-0.5.3/ (the 0.5.3 adapter,
-grader and oracle drivers, kept since board 0151) and otherwise scripts/robosafe/shared/ (the layer, the clients).
-scripts/robosafe/sync_release.py copies them into the tasks, normalizes them and rewrites release.json.
+each task's service, grader and solution helpers are byte for byte its release's (shared_problems).
+
+The one copy of those shared files is in tasks/: each layer of them (LAYERS) lives in one canonical task (CANON), and
+every other task's copy must equal it. The 0.5.4 layers: `standard` (a paused task: the service, the client, the
+standard grader, the oracle driver and the public observation helpers), `realtime` (the realtime clock's own files) and
+`privileged` (the privileged tooling, grader and solution); the 0.5.3 release's own adapter, grader and oracle drivers:
+`0.5.3` and `0.5.3-realtime` (a 0.5.3 task takes every other file from the 0.5.4 layers). To change a shared file: edit
+it in its canonical task, then run scripts/robosafe/sync_release.py (it copies it into the other standard and realtime
+tasks, normalizes them and rewrites release.json); for a file of the privileged layer, or rcb_rsb.py /
+candidate_identity.py (copied into the privileged twins), also gen_privileged.py render, then check_release.py write.
 """
 import json
 import pathlib
@@ -26,7 +33,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402
 
 RELEASE = HERE / "release.json"
-SHARED_053 = HERE / "shared-0.5.3"        # the 0.5.3 release's own adapter, grader and oracle drivers
+TASKS = ROOT / "tasks"
 IMAGE = {"0.5.3": "ghcr.io/mll-lab-nu/eai-robosafe:0.5.3", "0.5.4": "ghcr.io/mll-lab-nu/eai-robosafe:0.5.4"}
 
 
@@ -80,22 +87,60 @@ def problems() -> list:
     for base, dirs in sorted(by_base.items()):
         if "0.5.4" not in dirs.values():
             bad += [f"{n}: in the core set, but its base has no 0.5.4 task" for n in sorted(dirs) if n in core]
+    canon = canon_problems(want)
+    if canon:                         # without its canonical copies no task's shared files can be checked
+        return bad + canon
     bad += [p for name in sorted(set(have) & set(want)) for p in shared_problems(have[name], want[name]["release"])]
     bad += assets_problems()
     return bad
 
 
-def source_dirs(task: pathlib.Path, release: str = "0.5.4") -> list:
-    """Where a task's shared files come from, first match wins: the 0.5.3 release's own (realtime clock's first) for a
-    0.5.3 task, then scripts/robosafe/shared/ (the realtime clock's own first) and scripts/robosafe/."""
+SIM = "environment/sim/"
+# the canonical task of each layer of shared files (the module docstring)
+CANON = {"standard": TASKS / "rsb-a01-i02-standard", "realtime": TASKS / "rsb-c04-i00-standard-realtime",
+         "privileged": TASKS / "rsb-a01-i02-privileged", "0.5.3": TASKS / "rsb-a01-i00-standard",
+         "0.5.3-realtime": TASKS / "rsb-a05-i00-standard-realtime"}
+# layer -> {file name: its path in the layer's canonical task}
+LAYERS = {
+    "standard": {"server.py": SIM + "server.py", "rcb_service.py": SIM + "rcb_service.py", "rcb1.py": SIM + "rcb1.py",
+                 "rcb_rsb.py": SIM + "rcb_rsb.py", "replay.py": SIM + "replay.py",
+                 "picture_delivery.py": SIM + "picture_delivery.py", "candidate_identity.py": SIM + "candidate_identity.py",
+                 "rcb_client.py": "environment/rcb_client.py", "grade.py": "tests/grade.py",
+                 "oracle_replay.py": "solution/oracle_replay.py", "solve.sh": "solution/solve.sh",
+                 "public_observation_delivery.py": "solution/public_observation_delivery.py",
+                 "public_observation_plan.py": "solution/public_observation_plan.py"},
+    "realtime": {"rcb_realtime.py": SIM + "rcb_realtime.py", "rcb_rsb_rt.py": SIM + "rcb_rsb_rt.py",
+                 "rcb_client.py": "environment/rcb_client.py", "grade.py": "tests/grade.py",
+                 "oracle_rt.py": "solution/oracle_rt.py", "solve.sh": "solution/solve.sh"},
+    "privileged": {"rcb_rsb_privileged.py": "environment/rcb_rsb_privileged.py", "scrub.py": "environment/scrub.py",
+                   "grade.py": "tests/grade.py", "test.sh": "tests/test.sh", "gen.py": "solution/gen.py",
+                   "solve.sh": "solution/solve.sh"},
+    "0.5.3": {"server.py": SIM + "server.py", "rcb_rsb.py": SIM + "rcb_rsb.py", "replay.py": SIM + "replay.py",
+              "grade.py": "tests/grade.py", "oracle_replay.py": "solution/oracle_replay.py"},
+    "0.5.3-realtime": {"rcb_rsb_rt.py": SIM + "rcb_rsb_rt.py", "oracle_rt.py": "solution/oracle_rt.py"},
+}
+
+
+def shared(layer: str, name: str) -> pathlib.Path:
+    """The one copy of a shared file: its layer's canonical task's."""
+    return CANON[layer] / LAYERS[layer][name]
+
+
+def sim_dir(release: str = "0.5.4", clock: str = "paused") -> pathlib.Path:
+    """A canonical task's environment/sim/: the sim service as the tasks of that release and clock run it (the unit
+    tests import it from there)."""
+    layer = ("0.5.3" if release == "0.5.3" else "") + ("-realtime" if clock == "realtime" else "")
+    return CANON[layer.lstrip("-") or "standard"] / SIM
+
+
+def layers(task: pathlib.Path, release: str = "0.5.4") -> list:
+    """Where a task's shared files come from, first match wins."""
     realtime = task.name.endswith("-realtime")
     if privileged(task):              # 0.5.4 only: its own tooling and grader, the standard service's rcb_rsb.py
-        return [HERE / "shared/privileged", HERE / "shared/standard", HERE]
-    shared = ([HERE / "shared/realtime"] if realtime else []) + [HERE / "shared/standard", HERE / "shared/solution", HERE]
-    if release != "0.5.3":
-        return shared
-    return ([SHARED_053 / "realtime"] + shared[:1] if realtime else []) + [SHARED_053 / "standard",
-                                                                          SHARED_053 / "solution"] + shared[realtime:]
+        return ["privileged", "standard"]
+    if release == "0.5.3":
+        return ["0.5.3-realtime", "realtime", "0.5.3", "standard"] if realtime else ["0.5.3", "standard"]
+    return ["realtime", "standard"] if realtime else ["standard"]
 
 
 def source_of(task: pathlib.Path, rel: str, release: str = "0.5.4"):
@@ -103,8 +148,8 @@ def source_of(task: pathlib.Path, rel: str, release: str = "0.5.4"):
     standard grader."""
     name = pathlib.PurePosixPath(rel).name
     if name == "grade_rsb.py":
-        return (SHARED_053 if release == "0.5.3" else HERE / "shared") / "standard/grade.py"
-    return next((d / name for d in source_dirs(task, release) if (d / name).is_file()), None)
+        return shared("0.5.3" if release == "0.5.3" else "standard", "grade.py")
+    return next((shared(layer, name) for layer in layers(task, release) if name in LAYERS[layer]), None)
 
 
 def tracked(task: pathlib.Path) -> list:
@@ -117,6 +162,19 @@ def tracked(task: pathlib.Path) -> list:
             continue
         out.append(rel)
     return out
+
+
+def canon_problems(want: dict) -> list:
+    """Each canonical task is a task of its layer's release and kind, and holds every file of its layer."""
+    bad = []
+    for layer, task in CANON.items():
+        release = "0.5.3" if layer.startswith("0.5.3") else "0.5.4"
+        kind = "-privileged" if layer == "privileged" else "-standard-realtime" if "realtime" in layer else "-standard"
+        if want.get(task.name, {}).get("release") != release or not task.name.endswith(kind):
+            bad.append(f"CANON[{layer!r}] {task.name}: not a {release} {kind[1:]} task of release.json")
+        bad += [f"CANON[{layer!r}] {task.name}/{rel}: missing" for rel in LAYERS[layer].values()
+                if not (task / rel).is_file()]
+    return bad
 
 
 def shared_problems(task: pathlib.Path, release: str = "0.5.4") -> list:
@@ -141,7 +199,7 @@ def shared_problems(task: pathlib.Path, release: str = "0.5.4") -> list:
     for rel in tracked(task):
         src = source_of(task, rel, release)
         if src is None:
-            bad.append(f"{task.name}/{rel}: no source in scripts/robosafe/shared/ or scripts/robosafe/")
+            bad.append(f"{task.name}/{rel}: no source in check_release.LAYERS")
         elif (task / rel).read_bytes() != src.read_bytes():
             bad.append(f"{task.name}/{rel}: differs from {src.relative_to(ROOT)}")
     return bad

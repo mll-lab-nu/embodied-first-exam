@@ -5,7 +5,9 @@ episode is finalized (the live episode's verdict, nothing replayed: board 0151) 
 note in a malformed request, a crash in mid-episode resumed from the journal and the notes.
 
 Needs the simulator (RoboSafeBench importable, MuJoCo); run by hand (docs/benchmarks/robosafe.md):
-    MUJOCO_GL=egl python scripts/robosafe/tests/test_service.py [--dev] [a03-i00 ...]
+    MUJOCO_GL=egl python scripts/robosafe/tests/test_service.py [a03-i00 ...]
+The instance and the reference are the task's (tasks/rsb-<name>-standard: environment/sim/instance.json,
+solution/oracle.json and oracle.npz); the service and the grader are the 0.5.4 release's (check_release.sim_dir).
 """
 from __future__ import annotations
 
@@ -21,13 +23,22 @@ import tempfile
 import numpy as np
 
 HERE = pathlib.Path(__file__).resolve().parents[1]
-STD = HERE / "shared/standard"
+sys.path.insert(0, str(HERE))
+sys.dont_write_bytecode = True        # the service is imported from its canonical task dir
+import check_release as CR  # noqa: E402
+STD = CR.sim_dir()
+GRADE = CR.shared("standard", "grade.py")
+
+
+def instance_path(name: str) -> pathlib.Path:
+    return CR.TASKS / f"rsb-{name}-standard" / "environment/sim/instance.json"
 
 
 def load(name: str):
-    inst = json.loads((HERE / "instances" / f"{name}.json").read_text())
-    orc = json.loads((HERE / "oracles" / f"{name}.json").read_text())
-    npz = HERE / "oracles" / f"{name}.npz"
+    sol = CR.TASKS / f"rsb-{name}-standard" / "solution"
+    inst = json.loads(instance_path(name).read_text())
+    orc = json.loads((sol / "oracle.json").read_text())
+    npz = sol / "oracle.npz"
     arrays = dict(np.load(npz)) if npz.exists() else {}
     rows = []
     for it in orc["plan"]:
@@ -86,8 +97,8 @@ def finish_and_grade(svc, work: pathlib.Path) -> dict:
     svc.poll()
     logs = work / "logs"
     logs.mkdir(exist_ok=True)
-    env = {**os.environ, "RCB_DATA": str(work), "RCB_VERIFIER_LOG_DIR": str(logs)}
-    subprocess.run([sys.executable, str(STD / "grade.py")], env=env, check=True, capture_output=True)
+    env = {**os.environ, "RCB_DATA": str(work), "RCB_VERIFIER_LOG_DIR": str(logs), "PYTHONDONTWRITEBYTECODE": "1"}
+    subprocess.run([sys.executable, str(GRADE)], env=env, check=True, capture_output=True)
     return json.loads((logs / "reward.json").read_text())
 
 
@@ -95,7 +106,7 @@ def case(name: str, rows, expect: int, crash_after: int | None = None) -> dict:
     inst, _ = load(name)
     work = pathlib.Path(tempfile.mkdtemp(prefix=f"rsb-{name}-"))
     ipath = work / "instance.json"
-    shutil.copy(HERE / "instances" / f"{name}.json", ipath)
+    shutil.copy(instance_path(name), ipath)
     data = work / "data"
     data.mkdir()
     svc = service(data, ipath)
@@ -119,10 +130,10 @@ def case(name: str, rows, expect: int, crash_after: int | None = None) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("names", nargs="*", default=["a03-i00", "a03-i01"])
-    ap.add_argument("--dev", action="store_true", help="the development stand-in API")
     a = ap.parse_args()
-    extra = [str(STD)] + ([str(HERE / "dev")] if a.dev else [])
+    extra = [str(STD)]
     sys.path[:0] = extra
+    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"      # the service is imported from a task dir: no __pycache__ there
     os.environ["PYTHONPATH"] = os.pathsep.join(extra + [p for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p])
     bad = 0
     for name in a.names:
@@ -136,7 +147,7 @@ def main() -> int:
     # a note that is not a string is refused before anything runs
     name = a.names[0]
     work = pathlib.Path(tempfile.mkdtemp(prefix="rsb-note-"))
-    shutil.copy(HERE / "instances" / f"{name}.json", work / "instance.json")
+    shutil.copy(instance_path(name), work / "instance.json")
     (work / "data").mkdir()
     svc = service(work / "data", work / "instance.json")
     import rcb1
