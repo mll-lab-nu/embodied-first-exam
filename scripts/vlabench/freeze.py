@@ -1,7 +1,8 @@
 """Verify the VLABench frozen instances and oracles (trusted authoring step; run it through freeze.sh).
 
-For every candidate in tasks.json (frozen/<task>/instance.json and oracle.npy, imported from PR #4, commit ad3c5109), in the
-eai-vlabench image:
+For every candidate in tasks.json (its instance.json and oracle.npy, imported from PR #4, commit ad3c5109: frozen/<task>/
+while a new import is there, else the committed copies in tasks/vlabench-<task>-i00-privileged/, environment/instance.json
+and solution/oracle.npy, which freeze.sh mounts at /tasks), in the eai-vlabench image:
 1. the instance rebuilds: the compiled model's and the initial state's hashes match the instance (vlb_tool.Session);
 2. it is not solved at the start, and reset() is bit-exact (a step, then reset, gives the initial state again);
 3. the oracle (VLABench's expert, recorded as control steps) replayed from the start ends with the task's success,
@@ -21,6 +22,15 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 FROZEN = HERE / "frozen"
+# The repository's tasks/: in the image (freeze.sh runs this file as /work/freeze.py) the read-only mount /tasks.
+TASKS = Path("/tasks") if Path("/tasks").is_dir() else HERE.parents[1] / "tasks"
+CANONICAL = {"instance.json": "environment/instance.json", "oracle.npy": "solution/oracle.npy"}
+
+
+def source(task: str, file: str) -> Path:
+    """frozen/<task>/<file> (a new import), else the committed copy in the task's privileged task (as generate.py)."""
+    f = FROZEN / task / file
+    return f if f.exists() else TASKS / f"vlabench-{task.replace('_', '-')}-i00-privileged" / CANONICAL[file]
 sys.path.insert(0, str(HERE / "shared"))
 
 
@@ -29,7 +39,7 @@ def replay_child(task: str) -> None:
     import numpy as np
     import vlb_tool
 
-    r = vlb_tool.Session(FROZEN / task / "instance.json").replay(np.load(FROZEN / task / "oracle.npy"))
+    r = vlb_tool.Session(source(task, "instance.json")).replay(np.load(source(task, "oracle.npy")))
     print(json.dumps(r), flush=True)
     os._exit(0)
 
@@ -41,14 +51,14 @@ def check_child(task: str) -> None:
 
     rec = {"task": task}
     try:
-        s = vlb_tool.Session(FROZEN / task / "instance.json")  # 1: hashes checked in reset()
+        s = vlb_tool.Session(source(task, "instance.json"))  # 1: hashes checked in reset()
         rec.update(instance_sha=s.instance_sha, seed=s.spec["seed"], instruction=s.instruction, control_dt=s.dt)
         rec["initial_success"] = s.success()
         sha0 = s.state_sha()
         s.step(s.targets)
         s.reset()
         rec["reset_exact"] = s.state_sha() == sha0  # 2
-        actions = np.load(FROZEN / task / "oracle.npy")
+        actions = np.load(source(task, "oracle.npy"))
         r = s.replay(actions)  # 3: raises if the task terminated before the last action
         rec.update(n_actions=len(actions), oracle_success=r["success"], ends_at_success=r["done"],
                    live_state_sha=r["state_sha"])  # fmt: skip

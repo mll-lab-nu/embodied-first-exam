@@ -12,7 +12,7 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda"`, `family = "libero-max/<suite>/<event>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-libero-max:0.1.1` (`images/libero-max/`; `sha256:0e5b5e15aaeb761e4b66772a351f4195392fa638572d47bec5d924305c89aa99`), 3.5 GB, CPU only; x86-64 with AVX-512 (see Host CPUs) |
 | standard client | the shared client base and pins of `scripts/eai_standard/`; `rcb_client.py` and `rcb1.py` are byte copies of main's (HumanoidBench / VLABench); the standard `grade.py` is LIBERO-MAX's own (every path writes the same `reward.json` fields; it grades the live episode); `rcb_service.py` is a byte copy (the shared service's `live_verdict()` carries LIBERO-MAX's event record, `event_fired` / `event_step`, into `final.json`) |
-| generator | `scripts/libero-max/` (`select_cases.py` → `cases.json`, `freeze.sh` → `frozen/`, `generate.py` → `tasks/`, `generate.py --check`) |
+| generator | `scripts/libero-max/` (`select_cases.py` → `cases.json`, `freeze.sh` → `frozen/`, `generate.py` → `tasks/`, `generate.py --check`); `frozen/<case>/` keeps `report.json`; each case's `instance.json` and `oracle.npy` are committed only in its privileged task (`environment/instance.json`, `solution/oracle.npy`; found by the instance's `case.case_id`, not by the task name, whose `-iNN` follows `cases.json`'s order, and checked against the case's `report.json` start hash), which `generate.py` and `rebuild_check.sh` read (a fresh `freeze.sh` run's copies in `frozen/<case>/` while they exist; delete them once the case is generated) |
 
 ## Task definition
 - **Cases.** LIBERO-MAX pairs a Base and a Dynamic rollout that share the policy's executed prefix; a coding agent is
@@ -165,6 +165,7 @@ bash scripts/libero-max/freeze.sh candidates.json frozen-candidates 8       # ~2
 python3 scripts/libero-max/select_cases.py pick candidates.json frozen-candidates scripts/libero-max/cases.json
 bash scripts/libero-max/freeze.sh                                          # the chosen cases -> scripts/libero-max/frozen/
 python3 scripts/libero-max/generate.py && python3 scripts/libero-max/generate.py --check
+rm scripts/libero-max/frozen/*/instance.json scripts/libero-max/frozen/*/oracle.npy   # tasks/ keeps them; report.json stays
 bash scripts/libero-max/rebuild_check.sh 8                                 # per host type: 64/64 rebuild bit-exactly
 cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
 ```

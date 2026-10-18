@@ -7,6 +7,8 @@ Per family, the accepted object pairs of the selection in file order become i00,
 candidate's instance.json (written by `rcb_yamlab.py make-instance` in the image) and oracle_actions.npy (the (T, 14) actions
 of its live oracle run, up to the first success); instances.json records the source demonstration, the assets and the
 hashes of the three runs (live, two fresh-process replays). Needs numpy (reads the live run's trajectory.npz).
+Then run mk_tasks.py (it takes frozen/<family>-iNN/ while it exists) and delete frozen/: the task dirs keep the only
+committed copy.
 
 Only the instances in KEEP are frozen and listed (each with its id NN): the 2026-10-10 prune (owner) kept five of the 25 per
 family, chosen among those GPT-6 Luna's standard run had graded, mixing its successes and failures

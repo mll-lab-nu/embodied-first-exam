@@ -10,8 +10,12 @@ Inputs, all in the repository:
   scripts/yamlab/instances.json          per family: the frozen instances (id NN = task iNN), each with its YAMLab teleoperation
                                          source, its assets and the hashes of its oracle runs (scripts/yamlab/freeze.py writes it
                                          from the selection, scripts/yamlab/select_instances.py)
-  scripts/yamlab/frozen/<family>-iNN/    instance.json (the frozen scene: assets + full state + hash + success thresholds) and
-                                         oracle_actions.npy (the oracle's (T, 14) actions as executed, up to its first success)
+  instance.json, oracle_actions.npy      per instance: the frozen scene (assets + full state + hash + success thresholds);
+                                         the oracle's (T, 14) actions as executed, up to its first success. Read from
+                                         scripts/yamlab/frozen/<family>-iNN/ while it exists (a fresh freeze.py run), else
+                                         from the committed standard task (frozen_files(): tasks/<base>-standard/
+                                         environment/sim/instance.json, solution/oracle_qpos.npy). After a fresh freeze,
+                                         generate and delete frozen/<family>-iNN/: tasks/ keeps the only copy.
   scripts/yamlab/shared/rcb_yamlab.py    the tooling (privileged environment/ + tests/, standard environment/sim/)
   scripts/yamlab/template/<mode>/        every other task file; a *.tmpl file is filled with the instance's values (@@KEY@@)
   scripts/eai_standard/                  the eai-standard/2.2 layer, copied unchanged (rcb_client.py, rcb1.py; sim/
@@ -136,11 +140,20 @@ def success_block(fam: str, P: dict, standard: bool) -> str:
             f"control steps.\n")
 
 
+def frozen_files(fam: str, i: int) -> tuple[pathlib.Path, bytes, bytes]:
+    """(where from, instance.json, oracle rows) of one instance: a fresh freeze.py run's frozen/<fam>-iNN/ while it exists,
+    else the canonical committed copies in its standard task, environment/sim/instance.json and solution/oracle_qpos.npy
+    (every task of the instance carries the same two files)."""
+    fz = HERE / "frozen" / f"{fam}-i{i:02d}"
+    if fz.is_dir():
+        return fz, (fz / "instance.json").read_bytes(), (fz / "oracle_actions.npy").read_bytes()
+    t = ROOT / "tasks" / f"{base(fam, i)}-standard"
+    return t, (t / "environment/sim/instance.json").read_bytes(), (t / "solution/oracle_qpos.npy").read_bytes()
+
+
 def plan_instance(fam: str, i: int, R: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
     F = FAMILIES[fam]
-    fz = HERE / "frozen" / f"{fam}-i{i:02d}"
-    inst_b = (fz / "instance.json").read_bytes(); I = json.loads(inst_b)
-    oracle_b = (fz / "oracle_actions.npy").read_bytes()
+    fz, inst_b, oracle_b = frozen_files(fam, i); I = json.loads(inst_b)
     if I.get("task") != fam or I.get("state_sha") != R["instance_sha"] or I["assets"] != R["assets"]:
         raise RuntimeError(f"{fz}: instance.json does not match instances.json (task, state_sha, assets)")
     if "source" in I or b".hdf5" in inst_b or b"yamlab_datasets" in inst_b:

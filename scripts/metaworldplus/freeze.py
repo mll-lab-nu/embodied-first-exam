@@ -8,7 +8,8 @@ Per environment (envs.py):
 4. verify it: two replays in fresh processes end in the live episode's final state, and that state is a success;
    also note whether the success survives 10 more "hold" steps (informational: the README says so when it does not).
 
-Writes frozen/<env>/instance.npz, frozen/<env>/oracle.npz and frozen/report.json (read by generate.py).
+Writes frozen/<env>/instance.npz, frozen/<env>/oracle.npz and frozen/report.json (read by generate.py). generate.py takes
+frozen/<env>/ while it exists; delete it after generating (the privileged task keeps the committed copy).
 
     bash scripts/metaworldplus/freeze.sh [env ...]
 """

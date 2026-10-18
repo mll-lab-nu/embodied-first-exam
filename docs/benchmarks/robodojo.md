@@ -18,10 +18,14 @@ task (below).
 - `scripts/robodojo/descr/<task>.json`: what the task asks and exactly what its check tests (every predicate, threshold,
   stage and end-of-episode requirement), written from RoboDojo's code (`task/RoboDojo/tasks/<task>.py`, its config,
   `env/reward_manager/`); the instructions quote it. The code is the reference.
-- `scripts/robodojo/frozen/<task>-i00/instance.json`: the evaluation layout verbatim (with its sha256), the state hash after
+- each instance's `instance.json`: the evaluation layout verbatim (with its sha256), the state hash after
   RoboDojo's reset, RoboDojo's language instruction for the layout, and per-task fields from
-  `scripts/robodojo/instance_overrides.json` (`physics`, `determinism`), copied in by `sync_frozen.py` from the determinism
-  test's output (`rcb_robodojo.py make-instance --task T --seed 0 --layout 0 [--physx key=value]`).
+  `scripts/robodojo/instance_overrides.json` (`physics`, `determinism`), written by `sync_frozen.py` from the determinism
+  test's output (`rcb_robodojo.py make-instance --task T --seed 0 --layout 0 [--physx key=value]`) into
+  `scripts/robodojo/frozen/<task>-i00/` when it is new or changed. It is committed only in the tasks: `mk_tasks.py` reads
+  `frozen/<task>-iNN/` while it exists, else the standard task's `environment/sim/instance.json`; `frozen/` is deleted once
+  the tasks are generated. The committed standard tasks are also the list of instances (`mk_tasks.py` `instance_ids()`):
+  to drop an instance, delete its task dirs (`-standard`, and `-privileged` where it has one) by hand.
 - `scripts/robodojo/dimensions.json` (RoboDojo's documentation), `conventions.json`, `template/<mode>/`.
 
 ## Success (RoboDojo's own check)

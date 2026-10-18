@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Freeze every case of cases.json and record its scripted reference (freeze.py), one fresh container per case (one
 # simulator per process), in the eai-libero-max image, without network. Writes frozen/<case_id>/{instance.json,
-# oracle.npy, report.json}. reference.py is mounted for this step only; it is never part of a task.
+# oracle.npy, report.json}. reference.py is mounted for this step only; it is never part of a task. After generate.py,
+# delete frozen/*/instance.json and oracle.npy (the privileged tasks keep the committed copies; report.json stays).
 #   bash scripts/libero-max/freeze.sh [cases.json] [out dir] [parallel]
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"

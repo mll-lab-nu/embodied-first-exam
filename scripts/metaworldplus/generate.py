@@ -4,15 +4,18 @@
     python3 scripts/metaworldplus/generate.py            # all fifty environments (envs.py)
     python3 scripts/metaworldplus/generate.py push reach
 
-Inputs: envs.py (goal texts, seeds), frozen/<env>/{instance,oracle}.npz and frozen/report.json (freeze.sh), the
-shared sources in shared/, the standard-mode service images/metaworld/standard/server_mw.py and the standard client
+Inputs: envs.py (goal texts, seeds), frozen/report.json (freeze.sh), each environment's instance and oracle (frozen():
+a fresh freeze.sh run's frozen/<env>/{instance,oracle}.npz while they exist, else the copies already in its privileged
+task; delete frozen/<env>/ once the environment is generated: tasks/ keeps the only copy), the shared sources in shared/, the standard-mode service images/metaworld/standard/server_mw.py and the standard client
 image and pins of scripts/eai_standard/. Every task directory is rewritten (shared files copied byte for byte) and
 finished with scripts/task_conventions.py `normalize` (PROTOCOL v1.0 conventions: README layout, no results/).
 Re-running reproduces the tasks exactly.
 """
 
 import ast
+import functools
 import hashlib
+import io
 import json
 import shutil
 import sys
@@ -34,6 +37,20 @@ CUTOFF_SEC = {"privileged": 1800, "standard": 1800}
 
 SHARED = HERE / "shared"
 FROZEN = HERE / "frozen"
+# The canonical committed copy of an environment's instance and oracle, in its privileged task (tests/ and the standard
+# twin carry the same files).
+TASKS = ROOT / "tasks"
+CANONICAL = {"instance.npz": "environment/instance.npz", "oracle.npz": "solution/oracle.npz"}
+
+
+@functools.cache
+def frozen(env: str, file: str) -> bytes:
+    """frozen/<env>/<file> (a fresh freeze.sh run), else its canonical copy in tasks/; read once, before make() rewrites
+    the task directory that holds it."""
+    f = FROZEN / env / file
+    if not f.exists():
+        f = TASKS / f"metaworldplus-{env}-i00-privileged" / CANONICAL[file]
+    return f.read_bytes()
 SERVER = ROOT / "images/metaworld/standard/server_mw.py"
 VERSION = (ROOT / "images/metaworld/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-metaworld:{VERSION}"
@@ -144,31 +161,31 @@ def change_log(changes: list, env: str) -> str:
     return "".join(f"- {text}\n" for text, envs in changes if envs is None or env in envs)
 
 
-def _npy(path: Path, key: str) -> tuple[str, bytes]:
-    """One array of a frozen instance (an .npz of plain .npy members), read with the standard library (the generator
-    needs no numpy): its dtype descriptor and its raw bytes (C order)."""
-    with zipfile.ZipFile(path) as z:
+def _npy(path: Path | bytes, key: str) -> tuple[str, bytes]:
+    """One array of a frozen instance (an .npz of plain .npy members: its path or its bytes), read with the standard
+    library (the generator needs no numpy): its dtype descriptor and its raw bytes (C order)."""
+    with zipfile.ZipFile(io.BytesIO(path) if isinstance(path, bytes) else path) as z:
         raw = z.read(f"{key}.npy")
     if raw[:6] != b"\x93NUMPY":
-        raise ValueError(f"{path}: {key} is not an .npy member")
+        raise ValueError(f"instance: {key} is not an .npy member")
     hlen = int.from_bytes(raw[8:10], "little") if raw[6] == 1 else int.from_bytes(raw[8:12], "little")
     off = 10 if raw[6] == 1 else 12
     head = ast.literal_eval(raw[off : off + hlen].decode("latin1"))
     if head["fortran_order"]:
-        raise ValueError(f"{path}: {key} is in Fortran order")
+        raise ValueError(f"instance: {key} is in Fortran order")
     return head["descr"], raw[off + hlen :]
 
 
-def start_shas(instance: Path) -> dict:
+def start_shas(instance: Path | bytes) -> dict:
     """What the standard service checks when the episode begins (server_mw.py _check_start): the instance's SHA-256
     (mw_tool's digest, stored in the file and checked on every load) and the starting state's hash, mw_tool's
     state_sha() of the restored scene = SHA-256 of the instance's MuJoCo integration state (the scene is set to it)."""
     descr, data = _npy(instance, "instance_sha")
     if not descr.startswith("<U"):
-        raise ValueError(f"{instance}: instance_sha is not a string")
+        raise ValueError("instance: instance_sha is not a string")
     descr_i, integ = _npy(instance, "integration")
     if descr_i != "<f8":
-        raise ValueError(f"{instance}: integration is {descr_i}, not float64")
+        raise ValueError(f"instance: integration is {descr_i}, not float64")
     return {"instance": data.decode("utf-32-le").rstrip("\x00"), "start": hashlib.sha256(integ).hexdigest()}
 
 
@@ -512,7 +529,7 @@ RUN chmod +x /tests/test.sh
 def std_compose(env: str) -> str:
     """RCB_INSTANCE_SHA / RCB_START_SHA: the frozen instance's hash and its starting state's, which the service checks
     when the episode begins (start_shas)."""
-    sha = start_shas(FROZEN / env / "instance.npz")
+    sha = start_shas(frozen(env, "instance.npz"))
     return f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only (MuJoCo physics, OSMesa rendering): no GPU reservation.
@@ -542,17 +559,19 @@ def reset_dir(d: Path) -> None:
     d.mkdir(parents=True)
 
 
-def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644) -> None:
+def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644, data: bytes | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if src is not None:
         shutil.copyfile(src, path)
+    elif data is not None:
+        path.write_bytes(data)
     else:
         path.write_text(text)
     path.chmod(mode)
 
 
 def make(env: str, rec: dict) -> None:
-    fz = FROZEN / env
+    inst, oracle = frozen(env, "instance.npz"), frozen(env, "oracle.npz")  # before reset_dir
     p = ROOT / "tasks" / f"metaworldplus-{env}-i00-privileged"
     reset_dir(p)
     put(p / "task.toml", privileged_toml(env, rec))
@@ -560,15 +579,15 @@ def make(env: str, rec: dict) -> None:
     put(p / "README.md", privileged_readme(env, rec))
     put(p / "environment/Dockerfile", PRIV_ENV_DOCKERFILE)
     put(p / "environment/mw_tool.py", src=SHARED / "mw_tool.py")
-    put(p / "environment/instance.npz", src=fz / "instance.npz")
+    put(p / "environment/instance.npz", data=inst)
     put(p / "tests/Dockerfile", PRIV_TESTS_DOCKERFILE)
     put(p / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(p / "tests/grade.py", src=SHARED / "grade_privileged.py")
     put(p / "tests/mw_tool.py", src=SHARED / "mw_tool.py")
-    put(p / "tests/instance.npz", src=fz / "instance.npz")
+    put(p / "tests/instance.npz", data=inst)
     put(p / "solution/solve.sh", src=SHARED / "solve_privileged.sh", mode=0o755)
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
-    put(p / "solution/oracle.npz", src=fz / "oracle.npz")
+    put(p / "solution/oracle.npz", data=oracle)
 
     s = ROOT / "tasks" / f"metaworldplus-{env}-i00-standard"
     reset_dir(s)
@@ -582,13 +601,13 @@ def make(env: str, rec: dict) -> None:
     put(s / "environment/sim/server_mw.py", src=SERVER)
     put(s / "environment/sim/mw_tool.py", src=SHARED / "mw_tool.py")
     put(s / "environment/sim/rcb1.py", src=SHARED / "rcb1.py")
-    put(s / "environment/sim/instance.npz", src=fz / "instance.npz")
+    put(s / "environment/sim/instance.npz", data=inst)
     put(s / "tests/Dockerfile", STD_TESTS_DOCKERFILE)
     put(s / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(s / "tests/grade.py", src=SHARED / "grade_standard.py")
     put(s / "solution/solve.sh", src=SHARED / "solve_standard.sh", mode=0o755)
     put(s / "solution/oracle_replay.py", src=SHARED / "oracle_standard.py")
-    put(s / "solution/oracle.npz", src=fz / "oracle.npz")
+    put(s / "solution/oracle.npz", data=oracle)
     for t in (p, s):  # after both exist: each README's key table names its twin
         normalize(t)
 

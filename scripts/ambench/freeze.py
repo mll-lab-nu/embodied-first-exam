@@ -13,7 +13,9 @@ in scripts/ambench/instances.json.
    oracle_actions.npy.
 2. verify (in the image, no expert mounted): two replays with the grader's own CLI (`rcb_ambench.py replay`), each in a fresh
    process; both must succeed and end in the same state. `--verify-only` runs this step alone on the frozen rows (after a
-   change of the tooling) and updates the hashes in instances.json.
+   change of the tooling) and updates the hashes in instances.json; for an instance already generated it first writes its
+   committed files back into frozen/<task>-iNN/ (mk_tasks.frozen_files: the standard task's copies).
+After a successful freeze, run mk_tasks.py and delete frozen/<task>-iNN/: the task dirs keep the only committed copy.
 The recording process's own episode need not be bit-identical to the replays (the expert reads the state in between); the
 fresh-process replays are what the grader runs, so they decide.
 """
@@ -141,6 +143,11 @@ def main() -> int:
     logs = pathlib.Path(a.logs); logs.mkdir(parents=True, exist_ok=True); fz.mkdir(parents=True, exist_ok=True)
     tools = {str(HERE / "shared"): "/opt/tools:ro", str(pathlib.Path(__file__).resolve().parent): "/freeze:ro"}
     if a.verify_only:
+        if not (fz / "instance.json").exists():   # an instance already generated: its committed files, from tasks/
+            sys.path.insert(0, str(HERE))
+            import mk_tasks
+            _, inst_b, oracle_b = mk_tasks.frozen_files(a.task, a.id)
+            (fz / "instance.json").write_bytes(inst_b); (fz / "oracle_actions.npy").write_bytes(oracle_b)
         rec: dict = {}
         # the frozen rows as a trajectory file (numpy is in the image, not necessarily on the host)
         docker(["python", "-c", "import numpy as np, os, sys; p = '/l/' + sys.argv[1] + '-oracle.npz'; "
