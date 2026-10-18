@@ -6,8 +6,6 @@ simulator), a standard mode (robot as a service) and, for dynamic tasks, a stand
 
 **Website, leaderboard and videos: [embodied-first-exam.ai](https://embodied-first-exam.ai)**
 
-<p align="center"><a href="https://embodied-first-exam.ai"><img src="docs/assets/how-a-question-is-marked.png" alt="How a question is marked: the question (goal in words, frozen scene), any model and harness, the standard or privileged interface, the recorded episode trajectory, and the verifier's 1 / 0" width="100%"></a></p>
-
 ## Quick start
 
 ```bash
