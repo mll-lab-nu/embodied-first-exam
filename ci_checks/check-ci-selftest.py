@@ -11,7 +11,7 @@ passes. A mutation that passes is a blind rule: fix the check, not this list.
     python3 ci_checks/check-ci-selftest.py [--tier invariants|advisory|all]    # default: all. Standard library only.
 
 Two tiers (board 0124). `--tier invariants` (the required CI job `invariants`, ci_checks/run_invariants.sh): the
-mutations of the rules that enforce docs/PROTOCOL.md Appendix H; each must FAIL its check. `--tier advisory` (the job
+mutations of the rules that enforce docs/protocol/README.md Appendix H; each must FAIL its check. `--tier advisory` (the job
 `advisories`): the mutations of the advisory rules; each must still be reported (a finding, not blocking).
 """
 from __future__ import annotations
@@ -174,6 +174,21 @@ MUTATIONS = [
      OPEN, TOML, sub(r'^network = "open".*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
     ("a network declaration that is neither the allowlist nor open",
      OPEN, TOML, sub(r'^network = "open"', 'network = "any"'), ISOLATION, "[metadata] network = 'any'"),
+    # ---- Appendix H.6, the verifier has no network (board 0157): without [verifier] network_mode Harbor leaves the
+    # separate verifier on its environment's baseline, public
+    ("a privileged verifier with the network (no [verifier] network_mode)",
+     PRIV, TOML, sub(r'^(\[verifier\]\n(?:(?!\[).*\n)*?)network_mode = "no-network".*\n', r"\1"), ISOLATION,
+     '[verifier].network_mode must be "no-network"'),
+    ("... a standard task's verifier", STD, TOML, sub(r'^(\[verifier\]\n(?:(?!\[).*\n)*?)network_mode = "no-network".*\n', r"\1"),
+     ISOLATION, '[verifier].network_mode must be "no-network"'),
+    ("... a verifier on the public network", PRIV, TOML, sub(r'^(\[verifier\]\n(?:(?!\[).*\n)*?)network_mode = "no-network"', r'\1network_mode = "public"'),
+     ISOLATION, "[verifier].network_mode must be \"no-network\" (PROTOCOL Appendix H.6: the verifier has no network; scripts/task_conventions.py normalize writes it), not 'public'"),
+    ("... a verifier environment whose baseline is public", PRIV, TOML, sub(r"^\[verifier\.environment\]\n", '[verifier.environment]\nnetwork_mode = "public"\n'),
+     ISOLATION, "[verifier.environment] sets network_mode = 'public'"),
+    ("a verifier service on a network of its own (Harbor's deny-all skips it)",
+     PRIV, TEST_COMPOSE, in_service("main", "    networks: [default]"), ISOLATION, "service main: `networks` is not allowed"),
+    ("... `network_mode: host` in the verifier's compose file",
+     PRIV, TEST_COMPOSE, in_service("main", "    network_mode: host"), ISOLATION, "service main: `network_mode: host` is not allowed"),
     ("the instruction no longer states the external-material rule",
      STD, "instruction.md", sub(r"(?ms)^## External material\n.*?(?=^## )", ""), RESOURCES, "does not state `## External material`"),
     ("the frozen instance the agent reads names where its scene came from",

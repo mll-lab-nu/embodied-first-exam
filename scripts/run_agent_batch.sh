@@ -15,7 +15,7 @@
 #   AGENT_CONFIG a native config file, --ak config=<file>: Codex's config.toml (an Azure provider; retries with
 #                request_max_retries / stream_max_retries) or Claude Code's settings
 #   ENV_FILE     a .env file Harbor loads (--env-file); without it the credentials come from this environment
-#   Credentials, as Harbor's agents read them (docs/RUNNING.md):
+#   Credentials, as Harbor's agents read them (docs/protocol/running.md):
 #     OpenRouter   codex: OPENAI_API_KEY=<openrouter key> OPENAI_BASE_URL=https://openrouter.ai/api/v1
 #                  claude-code: ANTHROPIC_API_KEY=<openrouter key> ANTHROPIC_BASE_URL=https://openrouter.ai/api
 #     ChatGPT login (codex)          CODEX_FORCE_AUTH_JSON=1 (Harbor uploads ~/.codex/auth.json into each trial)
@@ -41,7 +41,7 @@
 #                requires of a runner (docker refuses a larger cap); tasks/ keeps its values (scripts/clamp_cpus.py)
 #   Every job runs from its own copy of its tasks ($JOBS/.tasks/<job>/, removed afterwards), every file's mtime derived
 #   from its content (scripts/stamp_mtimes.py): Docker's BuildKit can otherwise build one task's image with another
-#   task's equal-size, equal-mtime file (issue #258, docs/RUNNING.md "Building task images")
+#   task's equal-size, equal-mtime file (issue #258, docs/protocol/running.md "Building task images")
 #   LOG_MIRROR / MEM_GUARD   1 (default) = start the agent-record mirror / the memory guard below if none runs; 0 = not
 #   GATEWAY      0 (default) = the agent calls its API directly, as Harbor runs it; 1 = route the agent's model API
 #                calls through scripts/usage_gateway/gateway.py, which forwards
@@ -67,7 +67,7 @@
 #                model server) is forwarded too, to exactly that <host>:<port>
 #   GATEWAY_START_WAIT  seconds to wait for the gateway to come up (10); raise it on busy shared nodes
 #   TOKEN_BUDGET_IN / TOKEN_BUDGET_OUT   per-trial token budget the gateway enforces (10000000000 / 10000000000, input
-#                with cached input included; docs/RUNNING.md): past it every further model request is refused and the
+#                with cached input included; docs/protocol/running.md): past it every further model request is refused and the
 #                trial counts as failed; 0 = no limit
 # Runner-side tools (not task code): while trials run, the container rcb-log-mirror copies every trial's agent/ directory
 # append-only into ${JOBS}_mirror/ (scripts/log_mirror.py; root-owned: neither the agent nor the host user can delete it),
@@ -247,7 +247,7 @@ u.build_opener(u.ProxyHandler({})).open(sys.argv[1], timeout=15).read()' "$GW/_g
   # origin there ("workspace backend must use an HTTPS origin"), which this plain-HTTP gateway is not. So chatgpt.com
   # itself stays reachable for such a run (that host alone: not *.chatgpt.com, auth.openai.com or api.openai.com), and
   # with it, directly, every path of that backend: the account's connectors are then off by the harness's configuration
-  # only (docs/RUNNING.md). API-key and Claude Code runs have no such exception.
+  # only (docs/protocol/running.md). API-key and Claude Code runs have no such exception.
   case "$AGENT:${CODEX_FORCE_AUTH_JSON:-}" in codex:1|codex:true|codex:TRUE|codex:yes)
     GATEWAY_ONLY="$GATEWAY_ONLY,chatgpt.com"
     [ "$GATEWAY_EGRESS" = gateway ] && log "ChatGPT login: chatgpt.com stays directly reachable beside the gateway (Codex's workspace lookup needs it over HTTPS)" ;;
@@ -298,7 +298,7 @@ jobs, batch, R = pathlib.Path(sys.argv[1]), sys.argv[2], pathlib.Path(sys.argv[3
 sys.path.insert(0, str(R / "scripts"))
 import task_conventions as tc, write_task_results as wtr  # noqa: E402
 from task_names import canonical  # noqa: E402
-# RUNNING.md "Results" (PROTOCOL v2.0): results are compared only within one configuration (task_conventions.config_key:
+# docs/protocol/running.md "Results" (PROTOCOL v2.0): results are compared only within one configuration (task_conventions.config_key:
 # protocol version, mode, cutoff, reset budget, S, network); validated and unvalidated tasks (task_conventions.validated_of)
 # are ranked together, the unvalidated ones marked; a trial that is not a result (infrastructure, voided) never counts in a
 # success rate. Tasks of the easy set (docs/easy_set.toml, task_conventions.set_of) are listed, marked, and left out of
@@ -342,7 +342,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
                         f"{rw.get('n_actions', '-')} | {wall} | {ar.get('n_input_tokens', '-')} | {ar.get('n_cache_tokens', '-')} | "
                         f"{ar.get('n_output_tokens', '-')} | {gw_cell} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |",
                         status, val, easy))
-print(f"# {batch}\n\nOne table per comparable configuration (RUNNING.md \"Results\"); success rates count results only "
+print(f"# {batch}\n\nOne table per comparable configuration (docs/protocol/running.md \"Results\"); success rates count results only "
       "(a trial that is not a result is voided and never counted). Validated and unvalidated tasks are ranked together; "
       "tasks without a validated oracle (`oracle` not `full` and no `[metadata] validated = true`), and trials of a task "
       "version this checkout does not have, are marked (unvalidated). Tasks of the easy set (docs/easy_set.toml) are "

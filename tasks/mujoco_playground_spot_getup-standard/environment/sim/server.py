@@ -1,7 +1,7 @@
-"""eai-standard/2.2 sim service for MuJoCo Playground's quadruped tasks (docs/STANDARD_MODE.md): the adapter of the
+"""eai-standard/2.2 sim service for MuJoCo Playground's quadruped tasks (docs/protocol/standard_mode.md): the adapter of the
 shared layer rcb_limited.py; the simulator is rcb_quadruped.Session (plain MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants
-resets (RCB_RESET_BUDGET, the optional reset capability of docs/STANDARD_MODE.md / PROTOCOL §4.5; the quadrupeds'
+resets (RCB_RESET_BUDGET, the optional reset capability of docs/protocol/standard_mode.md / PROTOCOL §4.5; the quadrupeds'
 standard tasks default to 10 in their compose file, owner 2026-10-14). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's: one control step = the instance's control period (Go1, Spot: 1/50 s; Barkour:
@@ -14,9 +14,12 @@ the trial.
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
 every executed row is journaled; after a crash the service rebuilds the episode and replays the journal, resetting where
-the committed resets did (their journal rows are checkpointed, `persist`). When the
-episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
-and replays the trajectory in two fresh processes."""
+the committed resets did (their journal rows are checkpointed, `persist`; a resume, not a grading replay). When the
+episode ends the service writes /data/trajectory.npz + /data/episode.json with the live verdict (the task's check, run on
+this simulator when the episode ends); the collect hook (finalize.sh) makes it exit, writes that verdict into final.json
+(nothing is replayed to grade it: owner, 2026-10-17, board 0151) and renders the video from the trajectory. The frozen
+instance is checked when the service builds it: a scene whose start state does not hash to the instance's recorded
+`state_sha` gets no episode (instance_mismatch, an infrastructure failure)."""
 
 import math
 import os
@@ -51,7 +54,19 @@ import mujoco  # noqa: E402
 
 EP = L.Episode(DATA, dim=Q.N, resume="exact", persist=("t_first", "resets", "reset_at"))
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
-S = Q.Session(INSTANCE)
+S = Q.Session(INSTANCE, check_hash=False)   # the start is checked here, as a give-up the agent is told about (below)
+if not S.instance_ok:
+    # The frozen initial state is checked when the episode begins (the verdict is the live episode's, so no later replay
+    # checks it): a scene that did not rebuild to the instance's recorded hash (the image no longer builds it) is no trial
+    # of this task. No episode, no verdict on the agent: final.json instance_mismatch = 1, infra_error = 1. (A resume
+    # rebuilds the same scene: it is refused the same way.)
+    print(f"[playground] the scene starts at {S.state_sha()}, the frozen instance records {S.inst.get('state_sha')}: the "
+          "service does not start an episode", flush=True)
+    if not L.final_verdict(DATA):
+        L._write_json(os.path.join(DATA, "final.json"), {**L._read_json(os.path.join(DATA, "final.json")), "instance_mismatch": 1,
+                                                          "instance_ok": False, "instance_sha": S.inst.get("state_sha"),
+                                                          "start_sha": S.state_sha()})
+    EP.give_up("instance_mismatch", infra=True)
 ROWS: list = []  # every executed row (a resume replays them first): trajectory.npz
 DT = S.control_dt   # one control step of simulated time (Barkour: 10 ms, as Playground steps it)
 CTRL_HZ = 1.0 / DT
@@ -296,7 +311,7 @@ def summary() -> dict:
             "fell_at": chk.get("fell_at"), "worst_lin_err": chk.get("worst_lin_err"), "worst_yaw_err": chk.get("worst_yaw_err"),
             "tilt_deg": chk.get("tilt_deg"), "imu_height": chk.get("imu_height"), "pose_angle_deg": chk.get("pose_angle_deg"),
             "episodes": E["resets"] + 1, "resets": E["resets"], "reset_budget": RESET_BUDGET, "control_steps_total": EP.rows,
-            **EP.final_fields()}
+            "instance_ok": bool(S.instance_ok), **EP.final_fields()}
 
 
 def finish(reason: str) -> None:
@@ -310,7 +325,8 @@ def finish(reason: str) -> None:
     try:
         chk = S.check()
         E["check"] = {k: v for k, v in chk.items() if k != "segments"}
-        E["success"] = bool(chk["success"])
+        # a simulator error ends the episode: the state after it is never judged a success (PROTOCOL §4.6)
+        E["success"] = bool(chk["success"]) and reason != "error"
     except Exception:  # noqa: BLE001
         traceback.print_exc()
     EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
@@ -549,7 +565,8 @@ def do_reset(meta: dict):
 
 
 def end_from_signal() -> None:
-    """The collect hook's SIGUSR1: end the episode (the agent's time is over), dump it, exit so the replays can start."""
+    """The collect hook's SIGUSR1: end the episode (the agent's time is over), dump it, exit so the hook can write the
+    verdict."""
     with LOCK:
         E["exiting"] = True
         if not E["done"]:

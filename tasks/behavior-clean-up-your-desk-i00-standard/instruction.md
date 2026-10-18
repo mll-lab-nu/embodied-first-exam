@@ -2,11 +2,22 @@
 
 You drive an **R1Pro** mobile bimanual robot around a house **as if it were real hardware**: the simulator (BEHAVIOR-1K
 v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. You get one client and one episode.
-**Task:** Clean up the desk in the child's room. A folder, a pencil, two pens, two paperback books and a pencil box lie on the desk; the other folder lies on the chair, the stapler is inside the bookcase, and the open laptop lies on the bed. Put both folders and both paperback books into the bookcase and the pencil and both pens into the pencil box, which stays on the desk; take the stapler out of the bookcase and put it on the desk; and put the laptop on the desk, closed. Success means all of the following hold at the same time: (1) both folders and both paperback books are inside the bookcase; (2) the pencil and both pens are inside the pencil box; (3) the pencil box, the stapler and the laptop are on top of the desk; (4) the laptop is closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. ontop(A, B): A touches B and B is directly below A (and not above it). open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. The service checks the goal and the episode ends the moment it holds.
+**Task:** Clean up the desk in the child's room. A folder, a pencil, two pens, two paperback books and a pencil box lie on the desk; the other folder lies on the chair, the stapler is inside the bookcase, and the open laptop lies on the bed. Put both folders and both paperback books into the bookcase and the pencil and both pens into the pencil box, which stays on the desk; take the stapler out of the bookcase and put it on the desk; and put the laptop on the desk, closed. Success means all of the following hold at the same time: (1) both folders and both paperback books are inside the bookcase; (2) the pencil and both pens are inside the pencil box; (3) the pencil box, the stapler and the laptop are on top of the desk; (4) the laptop is closed. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. ontop(A, B): A touches B and B is directly below A (and not above it). open(A): at least one of A's openable joints (door, drawer, lid) is more than 5% of the way from closed to fully open; closed (not open) means every such joint is within 5% of closed. The service checks the goal; it counts once it has held for 1 s, released and at rest (Rules).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
-  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+  your time is up, on a simulator error or breakdown, or at the runaway guard. Whatever you knock over or push away stays where it ends up.
+- **Success is a settled scene**: the goal has held for 1 s of simulated time in a row (30 control steps) with no goal
+  object in a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal object at
+  rest (slower than 0.05 m/s); then the episode ends (`meta["reason"]` "success"). An object still in the hand, or a
+  goal that holds for one frame, is not success. Open the gripper, move clear and let the robot stand (e.g.
+  `r.get_obs(seconds=2.0)`). The goal objects are every object the goal names, a tool or appliance it names (even
+  inside a `not`) included. When your episode is still running at the end of your time (you stopped early, or your
+  time ran out), the service holds the robot still (your last command, the
+  base at 0) for up to 5 s more on the same simulator, and a goal that settles there counts; the service judges the
+  episode itself, nothing is replayed.
+- A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles; reason
+  "failure: simulator breakdown") ends the episode as a failure.
 - **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
   when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
   time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the

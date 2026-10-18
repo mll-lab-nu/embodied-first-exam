@@ -198,6 +198,107 @@ class NonFiniteIK(unittest.TestCase):
             s.kill(); shutil.rmtree(s.work, ignore_errors=True)
 
 
+class EpisodeEnd(unittest.TestCase):
+    """(2026-10-17, board 0151) The end of the agent's phase: an episode still running gets the success rule's settle
+    window on the live simulator (the service steps it on its request thread once the signal stopped the HTTP loop), and
+    is judged there; a start that is not the frozen one; and a breakdown."""
+
+    def end(self, s: Service) -> dict:
+        s.p.send_signal(signal.SIGUSR1)                      # the collect hook's end (rcb_limited.py end)
+        s.p.wait(timeout=60)
+        return json.loads((s.out / "episode.json").read_text())
+
+    @staticmethod
+    def steps_log(s: Service) -> int:
+        p = Path(s.env["STUB_LOG"])
+        return len(p.read_text().splitlines()) if p.exists() else 0
+
+    def test_a_goal_that_settles_after_the_agent_is_a_live_success(self):
+        s = Service(STUB_GOAL_AT=40, STUB_LOG=str(Path(tempfile.mkdtemp()) / "steps.log"))   # the agent's rows end at 15 steps
+        try:
+            s.wait()
+            self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
+            ep = self.end(s)
+            self.assertTrue(ep["success"]); self.assertTrue(ep["settled_success"]); self.assertEqual(ep["reason"], "success")
+            self.assertEqual(ep["settle_steps"], 25); self.assertEqual(self.steps_log(s), 40)   # held still on the live simulator
+            self.assertEqual((ep["graded_by"], ep["replays"]), ("live", 0)); self.assertEqual(ep["pid"], s.p.pid)
+            ev = [json.loads(l) for l in (s.out / "episode.jsonl").read_text().splitlines()]
+            self.assertTrue([e for e in ev if e.get("ev") == "call_begin" and e.get("path") == "/settle"])   # the window is a call
+            self.assertTrue([e for e in ev if e.get("ev") == "call_end" and e.get("path") == "/settle"])
+            self.assertEqual(len(np.load(s.out / "trajectory.npz")["actions"]), 15)     # the agent's rows only
+            self.assertEqual(ep["n_actions"], 15)
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+    def test_a_window_that_never_closes_is_a_failure(self):
+        s = Service(STUB_LOG=str(Path(tempfile.mkdtemp()) / "steps.log"))
+        try:
+            s.wait()
+            self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
+            ep = self.end(s)
+            self.assertFalse(ep["success"]); self.assertFalse(ep["settled_success"]); self.assertEqual(ep["reason"], "timeout")
+            self.assertEqual(ep["settle_steps"], 150); self.assertEqual(self.steps_log(s), 165)
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+    def test_a_fall_in_the_window_ends_it_as_a_fall(self):
+        s = Service(STUB_FALL_AT=20)
+        try:
+            s.wait()
+            self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
+            ep = self.end(s)
+            self.assertFalse(ep["success"]); self.assertEqual(ep["reason"], "failure: the robot fell over"); self.assertEqual(ep["settle_steps"], 5)
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+    def test_no_window_without_actions_or_after_the_end(self):
+        s = Service(STUB_LOG=str(Path(tempfile.mkdtemp()) / "steps.log"))
+        try:
+            s.wait()
+            ep = self.end(s)                                   # the agent never moved: nothing to settle
+            self.assertFalse(ep["success"]); self.assertEqual(ep["settle_steps"], 0); self.assertEqual(self.steps_log(s), 0)
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+        s = Service(STUB_GOAL_AT=4, STUB_LOG=str(Path(tempfile.mkdtemp()) / "steps.log"))
+        try:
+            s.wait()
+            self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
+            ep = self.end(s)                                   # the episode ended in the call (success): no window
+            self.assertTrue(ep["success"]); self.assertFalse(ep["settled_success"]); self.assertEqual(ep["settle_steps"], 0)
+            self.assertEqual(self.steps_log(s), 4)
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+    def test_a_start_that_is_not_the_frozen_one_gives_up_before_serving(self):
+        s = Service(STUB_INSTANCE_MISMATCH=1)
+        try:
+            t0 = time.time(); fin = {}
+            while time.time() - t0 < 60 and not fin.get("gave_up"):
+                self.assertIsNone(s.p.poll(), "the service must give up and idle, not crash")
+                time.sleep(0.2)
+                try:
+                    fin = s.final()
+                except (OSError, ValueError):
+                    pass
+            self.assertTrue(fin["gave_up"]); self.assertEqual(fin["infra_error"], 1); self.assertTrue(fin["reason"].startswith("instance_mismatch"))
+            ev = [json.loads(l) for l in (s.out / "episode.jsonl").read_text().splitlines()]
+            self.assertFalse([e for e in ev if e.get("ev") == "start"])                    # the episode never started
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+    def test_a_breakdown_ends_the_episode(self):
+        s = Service(STUB_BREAKDOWN_AT=4)
+        try:
+            s.wait()
+            self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
+            st = s.get("/status")
+            self.assertTrue(st["done"]); self.assertTrue(st["reason"].startswith("failure: simulator breakdown"), st)
+            fin = s.final()
+            self.assertTrue(fin["reason"].startswith("failure: simulator breakdown")); self.assertEqual(fin["n_actions"], 4)
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+
 class ResumeEndsEarly(unittest.TestCase):
     """OmniGibson rollouts are not bit-exact: on a resume the replayed episode may end before the logged rows are done."""
 
@@ -236,6 +337,20 @@ class ResumeEndsEarly(unittest.TestCase):
             self.assertTrue(fin["gave_up"]); self.assertTrue(fin["finalized"]); self.assertEqual(fin["infra_error"], 1)
             self.assertFalse(fin["success"]); self.assertTrue(fin["reason"].startswith("resume_failed"), fin["reason"])
             self.assertIsNone(s.p.poll())
+        finally:
+            s.kill(); shutil.rmtree(s.work, ignore_errors=True)
+
+    def test_a_resume_drops_a_lost_calls_episode_record(self):
+        s = Service()
+        s.wait()
+        self.assertEqual(s.post("/submit", submit(actions=[ROW] * 5))[0], 200)
+        s.kill()
+        (s.out / "episode.json").write_text(json.dumps({"success": True, "reason": "success"}))   # from a call the crash lost
+        s = Service(work=s.work)
+        try:
+            s.wait()
+            self.assertFalse(s.get("/status")["done"])
+            self.assertFalse((s.out / "episode.json").exists())   # never taken for this episode's record by finalize.sh
         finally:
             s.kill(); shutil.rmtree(s.work, ignore_errors=True)
 

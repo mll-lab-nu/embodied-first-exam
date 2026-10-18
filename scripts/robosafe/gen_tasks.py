@@ -202,7 +202,7 @@ DYNAMIC_FAMILIES = {
 def dynamics_line(slug: str) -> str:
     """The task's `[metadata] dynamics` line, written as the committed tasks carry it."""
     d = "dynamic" if slug in DYNAMIC_FAMILIES else "static"
-    return f'{f"dynamics = {chr(34)}{d}{chr(34)}":<34}# scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml\n'
+    return f'{f"dynamics = {chr(34)}{d}{chr(34)}":<34}# scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml\n'
 
 
 def values(slug: str, nn: str, fam: dict, inst: dict, orc: dict, version: str, publication=None) -> dict:

@@ -1,16 +1,11 @@
 # RoboARC (MuJoCo release)
 
-RoboARC's topological puzzle families on MuJoCo 3.14.0 physics, run by the simulator package `topogym`. This release
-**replaces** the Genesis release of these puzzles (user decision, 2026-10-13): the previous Genesis tasks
-`<family>-<tier>-i00` (52 bases, image `eai-robotangle:0.2.22`), their generator, their dataset entries and their
-benchmark page are removed from the repository; their results are not comparable with this release's and are not
-carried over. The new image is built FROM that published image (pinned by digest), whose recipe is kept as
-`images/roboarc/Dockerfile.genesis-0.2.22`.
+RoboARC's topological puzzle families on MuJoCo 3.14.0 physics, run by the simulator package `topogym`. The image is
+built FROM the published `eai-robotangle:0.2.22` image (pinned by digest), whose recipe is kept as
+`images/roboarc/Dockerfile.genesis-0.2.22`; results of the earlier Genesis release are not comparable with this one.
 
 - Name: RoboARC (display) / `roboarc` (task prefix, image `eai-roboarc`, `scripts/roboarc/`, `images/roboarc/`, this
-  page; owner, 2026-10-13). Until then the release was prepared under the working names `robotangle-new` and
-  `robotangle`; Harbor records and image tags of those runs keep the names they had. Code identifiers keep the
-  simulator's name: the package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables, the family keys
+  page). Code identifiers keep the simulator's name: the package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables, the family keys
   (`interlocked_claws`), and the development branch dev/robotangle_mujoco with its `scripts/robotangle/` and
   `images/robotangle/`; inside the image, `/opt/robotangle/` (the instances and `stage_instance.py`).
 
@@ -21,11 +16,10 @@ carried over. The new image is built FROM that published image (pinned by digest
 - `<NN>`: two digits, the base's number in its family. A number is never reused: removing a task leaves a gap. The
   difficulty is not in the name: it is `[metadata].difficulty` in task.toml (TAXONOMY).
 - `i01`: the MuJoCo instance (the HF dataset's `instances/<family>-<NN>-i01/`).
-- `scripts/roboarc/roboarc_names.json` maps every base of the working names to its RoboARC name: old base -> new base,
-  family, number, difficulty.
+- `scripts/roboarc/roboarc_names.json` maps every base of the working names (`robotangle-*`) to its RoboARC name: old
+  base -> new base, family, number, difficulty.
 
-Every task is RoboARC's task contract (the same tooling `rcb_topogym.py`, graders, sim service and eai-standard/2.4
-layer as RoboARC; docs/benchmarks/roboarc.md, "Grading and determinism", "Standard mode") with these differences:
+Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and the eai-standard/2.4 layer:
 - physics: MuJoCo 3.14.0, CPU float64 (the blanket families' cloth: a deterministic CUDA step, `blanket_vbd_gpu`);
 - the numpy / OpenBLAS SIMD masking in every container that runs a Session (so every CPU class builds the same frozen
   bytes); `render_bridge.py` and `nyx_direct.py` next to every tooling copy, named in the runtime binding;
@@ -49,52 +43,35 @@ layer as RoboARC; docs/benchmarks/roboarc.md, "Grading and determinism", "Standa
   (`images/roboarc/Dockerfile`, generated from dev/robotangle_mujoco's `Dockerfile.mujoco`; context:
   `scripts/roboarc/fetch_image_context.sh`).
 
-## Time budget (D8)
+## Time budget
 
-10800 s (3 h) wall clock in both modes and every family (user, 2026-10-13; 7200 s from 2026-10-12; each task's `[agent] timeout_sec`), within the default cap: no exception.
-(The Genesis release had 21600 s, then 7200 s from 2026-10-12.) The texts say "the time limit (`## Time limit`)". The standard service's clock
-(`meta["time_left_s"]`, `RCB_WALL_CLOCK_S` follows the table) counts from the agent's first request to the service (PROTOCOL §2.12;
-logged in `episode.jsonl`, kept over a restart), so the instruction has the common closing sentence and no sentence of its own about the
-service's clock (2026-10-13; the Genesis release's "has run since the service first started" is not carried over). The service still ends the
-episode with reason `timeout` when that count reaches 0; counted from the first request, that is never before the harness's cutoff.
-The plan (2026-10-13, moved from PROTOCOL §2.12 on 2026-10-14): that end becomes report-only at RoboARC's next task update.
+10800 s (3 h) wall clock in both modes and every family (each task's `[agent] timeout_sec`), within the default cap.
+The texts say "the time limit (`## Time limit`)". The standard service's clock (`meta["time_left_s"]`, `RCB_WALL_CLOCK_S`
+= the cutoff) counts from the agent's first request to the service (logged in `episode.jsonl`, kept over a restart), so
+the instruction has the common closing sentence. The service still ends the episode with reason `timeout` when that
+count reaches 0, never before the harness's cutoff; open: that end becomes report-only at RoboARC's next task update.
 
-## Grading replays (privileged: the strict goal within the agent's rows, 2026-10-14)
+## Grading replays (privileged: the strict goal within the agent's rows)
 
 The six families with a grading hold (blanket-flatten, knot-untying, lock-picking, orbits, rope-threading, slotted-post-ring;
 `rcb_topogym.REPLAY_TOLERANCES`) replay a trajectory with the instance's own thresholds and, if the episode has not ended after
 the last row, hold the final targets for up to 2 s; during that hold blanket-flatten accepts 92 % coverage and 80 mm/s cloth
 speed (95 % and 30 mm/s in the rows) and knot-untying a rope speed 0.25 mm/s higher. Standard mode grades the live episode
-strictly and lets its replay confirm in the hold.
+strictly, with no grading replay (Standard grading, below).
 
 **The rule.** Privileged success needs both grading replays to succeed AND at least one of them to reach the goal with the
 instance's own thresholds within the trajectory's rows (`tests/grade.py`: `strict_replay_required` 1, `strict_goal_reached`,
-`strict_goal_row`; `success_in_hold_only` 1 marks a trajectory whose replays succeeded only in the hold, not credited). This
-is tooling v16's rule; the packages' texts always stated it, and the instruction now says where `s.replay(actions,
-grading=True)` reports it (`["grading"]["strict_success"]`).
+`strict_goal_row`; `success_in_hold_only` 1 marks a trajectory whose replays succeeded only in the hold, not credited). The
+instruction says where `s.replay(actions, grading=True)` reports it (`["grading"]["strict_success"]`). Why: the MuJoCo
+release replays deterministically on the same host (the cloth step on a deterministic GPU solver, the rest on the CPU), so
+a recording that stops on its own success reaches it within its rows; without the strict goal the hold's relaxed
+thresholds would become the effective goal in privileged mode only.
 
-**Why it changed back.** From 2026-10-05 to 2026-10-14 (R-hold) every privileged replay could confirm within the hold and no
-strict goal was required, because on the Genesis release's non-deterministic GPU physics the replay of a recording that
-stopped on its own success had no margin. Privileged mode has no graded live run, so the hold's relaxed thresholds became
-the effective goal: GPT-6 Luna's two privileged blanket-flatten successes of 2026-10-14 (`…blanket-flatten-01…__gHEcmjR`,
-`…blanket-flatten-06…__WJTFiD9`) never reached 95 % (`strict_goal_reached` 0, `replay_tolerance_needed` 1); one said so
-("this pass uses the benchmark's documented 92% replay threshold"), the other appended two seconds of still rows "for the
-verifier's stated 92%" (failure analysis 2026-10-14, item 12). The MuJoCo release replays deterministically on the same
-host (the cloth step on a deterministic GPU solver, the rest on the CPU), so a recording that stops on its own success
-reaches it within its rows. Requiring the strict goal makes privileged mode ask for what the task text and standard mode
-ask for; stating 92 % as the goal instead would have lowered the goal in privileged mode only.
-
-**Consequences.** Same task names and frozen instances. Every privileged task gets a new digest (`tests/grade.py` is one
-file shared by all 94); the verdicts can change only in the 30 tasks of the six families with a hold, since a replay of the
-other families succeeds only within the rows. The standard twins are unchanged. Of the privileged results on record
-(GPT-6 Luna, 10-14), the two blanket-flatten successes above become failures; every other privileged success had
-`strict_goal_reached` 1.
-
-**Re-grading existing results** (nothing is re-run). `scripts/roboarc/regrade.py JOBS_DIR ... [--replay] --out
+**Re-grading recorded results** (nothing is re-run). `scripts/roboarc/regrade.py JOBS_DIR ... [--replay] --out
 regrade.jsonl` reads every RoboARC privileged trial under the Harbor jobs trees and gives its recorded verdict, the old
 rule's and the new rule's:
 - without `--replay`, from the trial's recorded `verifier/reward.json` alone: the new verdict is the recorded success AND
-  `strict_goal_reached` (the grader before this change recorded it next to the verdict). This is exact: the replays are
+  `strict_goal_reached`. This is exact: the replays are
   deterministic on the host class they ran on, and the rule only adds that condition;
 - with `--replay`, it also replays the recorded `artifacts/app/output/trajectory.npz` with the current task's own
   `tests/grade.py` in the task's verifier image (docker, GPU), the verifier's two replays, and reports both verdicts from that
@@ -102,22 +79,42 @@ rule's and the new rule's:
   under the old rule is `inconclusive` (re-grade it on the host class it ran on).
 
 Only the 94 tasks of the RoboARC 0.1.0 release are re-graded; a trial of any other task (a later RoboARC task, a Genesis
-`robotangle-*` task) is listed as `skipped` with the reason. Standard trials are skipped too: their grading did not change.
+`robotangle-*` task) is listed as `skipped` with the reason. Standard trials are skipped too: they are re-scored from their
+recorded live fields (Standard grading, below).
 
-**Validation.** 2026-10-14, ws (RTX 4090, `eai-roboarc:0.1.0`, Harbor `-a oracle` / `-a nop`, jobs
-`rav1-{oracle,nop}-<task>`) with this version's privileged `tests/`: the privileged oracle scores 1 with
-`strict_goal_reached` 1 on blanket-flatten-01, knot-untying-01, lock-picking-01, orbits-01, rope-threading-01,
-slotted-post-ring-01 (one task of each family with a hold) and interlocked-claws-01 (a family without one), deterministic, no
-infra or grader errors; nop scores 0 on blanket-flatten-01 and slotted-post-ring-01 privileged. The rule change itself, by
-construction (the recorded trials' trajectories are not retrievable): blanket-flatten-01's reference without its last 8 rows
-(a recording that stops 8 control steps before its own success; the replay confirms after 8 steps of hold) is graded 1 by the
-previous `grade.py` (`all_success` 1, `strict_goal_reached` 0) and 0 by this one (`all_success` 1, `success_in_hold_only` 1),
-both deterministic. Without its last 40 rows it fails both (the hold's 2 s do not complete the confirmation).
+**Validation** (Harbor `-a oracle` / `-a nop`, `eai-roboarc:0.1.0`): the privileged oracle scores 1 with
+`strict_goal_reached` 1 on one task of each family with a hold and on interlocked-claws-01, deterministic; nop scores 0.
+blanket-flatten-01's reference without its last 8 rows (a recording that stops 8 control steps before its own success)
+is graded 0 (`all_success` 1, `success_in_hold_only` 1).
+
+## Standard grading: the live episode
+
+`success` = the live success: the task predicate on the live simulator with the instance's own thresholds, confirmation
+window included (`server.py`: after every `submit` and every watching `observe`, and as the episode stands at its end),
+recorded in `episode.json`. No grading replay runs. `finalize.sh` writes `final.json` from `episode.json` first
+(`graded_by` live, `replays` 0, `state_sha` = the live end-state hash, `video_pending` 1), then runs ONE video-only pass
+(`replay.py`: a plain fresh-process replay of the live rows on the sidecar's GPU that renders `replay.mp4` and, for a
+success held for review, the frames around its live review events; record `replay.video.json`). It never changes the
+verdict, and a failed, killed or GPU-less pass loses only the video. `tests/grade.py` transcribes the result. In `final.json`, `live_success` is the live episode's own success and `success` the verdict: false with an infrastructure failure or when the success is held for review (`held_for_review`). A service that dumped its episode but did not exit in time keeps that live verdict (`service_exit_timed_out`, no video). A missing `trajectory.npz` is recorded (`dump_error`) and changes no verdict. Non-finite numbers are written as null.
+- **No hold.** The live episode gets no hold (a hold would loosen the rule: the privileged twin needs a strict success
+  within the agent's rows).
+- **Review, forcing, instability.** The live episode's `review` (deep task contacts: a live success is held for review,
+  `success_pending_review`), `forcing` (evidence) and `simulator_instability` (a breakdown without forcing: infrastructure).
+- **Start state.** `Session(strict=True)` checks the frozen instance against `runtime_binding.json` when the service builds
+  it. A mismatch is `instance_mismatch`, `infra_error 1`, before anything is served. `tests/grade.py` also checks the live
+  startup record (`startup_binding.json`) against its own copy of the binding.
+- **Infrastructure** (H.5): no, unreadable or unfinalized `final.json`, the end timed out, `instance_mismatch`, a give-up
+  after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`, `call_watchdog`), `simulator_instability`
+  in the live episode, a simulator error (reason `error`). The agent's 0: the task's failure predicate,
+  `forced_breakdown`, the wall clock, `step_guard`, `sim_crashed_on_call`. A video-pass error or a GPU lost after the
+  episode never voids a trial.
+- **Re-scoring recorded standard trials.** The verdict is the recorded live fields of `final.json`: the `success` of
+  `episode.json`. A live instance mismatch, `infra_error` or `simulator_instability` voids it, and a live `review` holds
+  it.
 
 ## Safety readings in standard mode (`meta["safety"]`)
 
-Owner decision, 2026-10-10: the standard service keeps publishing `meta["safety"]` in every response, and the protocol
-records it as a declared exception to "no object contact forces". Why: the benchmark's physical-validity policy judges
+The standard service publishes `meta["safety"]` in every response, declared here as allowed by PROTOCOL H.3. Why: the benchmark's physical-validity policy judges
 the agent on these readings -- a success with a deep task contact is held for human review instead of credited, a
 soft body that stays collapsed ends the episode, a simulator breakdown shortly after forcing is the agent's failure --
 so an agent that could not see them would be judged on something it cannot measure. The fields are exactly what
@@ -137,19 +134,18 @@ else of the simulator's contact state is published:
 | `ik_jumps` | the last IK solutions that lay far from the current joints (`ee_pose` actions) | when one occurred |
 
 These are forces, depths, ratios and the names of the parts involved, never a pose: no field says where an object is.
-A change to this list is a change of the declaration and goes through the protocol-change process (PROTOCOL §6).
+A change to this list is a change of the declaration and goes through the protocol-change process (PROTOCOL §7).
 
-User decision 2026-10-13: this release publishes main's declared fields again, with the names of the parts involved (names are allowed in standard mode; only positions / poses in the simulator's world frame, the table height and physics parameters are withheld). The service's `robot_felt` passes exactly these fields (`SAFETY_PUBLISHED`); `scripts/roboarc/tests/test_server_requests.py` checks the list and the names.
+Names of the parts involved are allowed in standard mode; positions / poses in the simulator's world frame, the table
+height and physics parameters are withheld. The service's `robot_felt` passes exactly these fields (`SAFETY_PUBLISHED`); `scripts/roboarc/tests/test_server_requests.py` checks the list and the names.
 
 ## Standard mode, world frame, network
 
-`eai-standard/2.4` (as the Genesis release); no world coordinates in standard texts (D7,
+`eai-standard/2.4`; no world coordinates in standard texts (D7,
 `scripts/roboarc/ci/advisory-world-frame.sh`); agent egress on the allowlist (PROTOCOL Appendix H.6).
 
-Every text the agent sees calls the service's frame the world frame, as main's other services call theirs, and defines it in
-words; it is the robot frame: 
-The agent-facing frame of the standard service is the robot frame (user, 2026-10-13: the table height and the robot base's
-world position are never disclosed): origin at the robot's kinematic root link on its mounting, axes as the simulator's world
+Every text the agent sees calls the service's frame the world frame, as the other services call theirs, and defines it in
+words; it is the robot frame (the table height and the robot base's world position are never disclosed): origin at the robot's kinematic root link on its mounting, axes as the simulator's world
 (+z up). The proprio TCP poses, `ee_pose` targets, `/kinematics` (ik targets, fk poses) and the camera extrinsics (static
 mounts, per-observe calibration, per-frame `extrinsic_cv`) are in it; `robot_spec.base.pose` is the identity; no text and no
 `/spec` field states a world coordinate of the mounting. `joint_position` rows, physics, graders and state hashes do not depend
@@ -165,6 +161,7 @@ or robot base position either.
 (`ci_checks/check-tooling-identity.sh` `MODULE`, `scripts/roboarc/ci/advisory-world-frame.sh`, `check-generated-tasks.sh`,
 `check-unit-tests.sh`); the cutoff is each task's own `[agent] timeout_sec` (the generator's constant).
 
-## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+## Standard-mode service details
 
-Serves `eai-standard/2.4` (STANDARD_MODE Part 4; it was first served by RoboTangle's standard tasks, whose release called it "2.3"). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. Its service ends the episode when `time_left_s` reaches 0 until its next task update; since its MuJoCo release (2026-10-13) the clock counts from the agent's first request like the others.
+Serves `eai-standard/2.4` (docs/protocol/standard_mode.md Part 4). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. Its service ends the episode when `time_left_s` reaches 0 (counted from the agent's first request), until its next task update.
+

@@ -133,7 +133,7 @@ def write(jobs: Path, job: str, out: Path) -> subprocess.CompletedProcess:
 
 
 def test_config_and_attempts():
-    """PROTOCOL v2.0 / RUNNING.md: every result records its effective configuration (config.json); an infrastructure
+    """PROTOCOL v2.0 / docs/protocol/running.md: every result records its effective configuration (config.json); an infrastructure
     failure (not a result) is voided and never counted, one retry replaces it, a voided attempt never replaces a counted
     one, more than 2 attempts of one task x run id are flagged; a trial of another task version is legacy."""
     infra = {"success": 0, "infra_error": 1}
@@ -207,7 +207,9 @@ def test_summary_grouping():
         make_trial(jobs, "bx-privileged-a", "p1", f"{SMALL}-privileged", "2026-10-14T01:00:00Z", {"success": 0})
         make_trial(jobs, "bx-standard-realtime-b", "r1", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 1})
         make_trial(jobs, "bx-standard-realtime-b", "r2", VALIDATED_RT, "2026-10-14T01:00:00Z", {"success": 0})
-        r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True)
+        # an empty easy set: the fixed tasks here may enter the list (board 0155); test_easy_set covers the marking
+        r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True,
+                           env={**os.environ, "RCB_EASY_SET_FILE": str(td / "no_easy_set.toml")})
         check(r.returncode == 0, f"summary failed: {r.stderr[-800:]}")
         out = r.stdout
         check("## Unvalidated" not in out and out.count("\n## protocol 2.0, ") == 3, f"not one table per configuration:\n{out}")
@@ -256,6 +258,19 @@ def test_easy_set():
         twice = Path(td) / "easy_set_twice.toml"
         twice.write_text(f'[[task]]\nbase = "{EASY}"\n[[task]]\nbase = "{EASY}"\n')
         check(any("twice" in x for x in tc.check_easy_set(path=twice)), "a base listed twice is not found")
+        # board 0155: easy_set_add_solved.py appends a `solved_by` entry for a new base, skips a listed one; a
+        # solved_by without reason "solved" or with an unknown run is found
+        sol = Path(td) / "easy_set_solved.toml"
+        sol.write_text(f'[[task]]\nbase = "{EASY}"\nbenchmark = "{es[EASY]["benchmark"]}"\nreason = "owner"\n')
+        (Path(td) / "s.csv").write_text(f"base,modes\n{EASY},privileged\n{CORE},standard;privileged\n")
+        r = subprocess.run([sys.executable, str(ROOT / "scripts" / "easy_set_add_solved.py"), str(Path(td) / "s.csv"),
+                            "--easy-set", str(sol), "--date", "2026-10-17"], capture_output=True, text=True)
+        got = tc.easy_set(sol)
+        check(r.returncode == 0 and set(got) == {EASY, CORE} and got[CORE].get("solved_by") == "luna"
+              and got[CORE]["note"].endswith("): privileged, standard, as of 2026-10-17") and not tc.check_easy_set(path=sol),
+              f"easy_set_add_solved.py: {r.stdout}{r.stderr} -> {got}")
+        sol.write_text(f'[[task]]\nbase = "{EASY}"\nbenchmark = "{es[EASY]["benchmark"]}"\nreason = "owner"\nsolved_by = "x"\n')
+        check(any("solved_by" in x for x in tc.check_easy_set(path=sol)), "a bad solved_by is not found")
         jobs = Path(td) / "jobs"
         make_trial(jobs, "bx-standard-a", "e1", f"{EASY}-standard", "2026-10-14T01:00:00Z", {"success": 1})
         make_trial(jobs, "bx-standard-a", "c1", f"{CORE}-standard", "2026-10-14T02:00:00Z", {"success": 0})

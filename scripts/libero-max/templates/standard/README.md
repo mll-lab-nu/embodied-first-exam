@@ -18,7 +18,7 @@ when it happens and adapt, and finish in one episode without a reset.
 through the client; the episode ends with `reason = "success"` at the last of them.
 
 ## Verification
-Graded by the live episode (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): the sim service ends the episode at
+Graded by the live episode (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): the sim service ends the episode at
 LIBERO's success (or at the {{std_cap}}-step technical cap, when the agent's time is up, or on a simulator error) and,
 once the agent's container is stopped, writes its verdict to `/data/final.json` (`graded_by = "live"`, `replays = 0`,
 the event record `event_fired` / `event_step`); `tests/grade.py` (separate sandbox, no network) grades it:

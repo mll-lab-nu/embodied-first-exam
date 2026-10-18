@@ -14,8 +14,8 @@ contact. The controller runs at 50 Hz, with ten 2 ms physics substeps.
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
 joint positions, velocities, actuator efforts, the hand root pose (`right_hand_C_MC`) and current targets. An episode ends at the first success
 or the first failure (see the task text); after that the service accepts no more actions until a reset (see
-`## Episodes and resets`). The service records every action and watch step, then replays the graded episode with the
-recorded hand in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
+`## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
+(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
 needed.
 
 ```python

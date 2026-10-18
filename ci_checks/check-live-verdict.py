@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""The standard modes are graded by the live episode (docs/PROTOCOL.md H.4; owner, 2026-10-17, board 0151): the sim
+"""The standard modes are graded by the live episode (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): the sim
 sidecar judges the episode it ran and the verifier transcribes its `final.json`; no replay grades it. Advisory: the
 invariant itself (the verdict from a trusted source) is held by check-verifier-isolation.sh; this check reports a
 standard task whose grader still follows the replay rule, and a grader that breaks the infrastructure rule of
-RUNNING.md ("Infrastructure failures"). For every standard / standard-realtime task:
+docs/protocol/running.md ("Infrastructure failures"). For every standard / standard-realtime task:
   - static: its verifier code (tests/*.py) reports `graded_by_live`; task.toml has a `[[verifier.collect]]` hook on `main` (the agent's
     container: `kill -9 -1`, stopping what the agent left running) before the first hook on the sim sidecar, so
     nothing the agent left running moves the robot before the service is signalled (H.4);
@@ -67,7 +67,7 @@ CASES = (
 )
 
 
-# standard-realtime only (STANDARD_MODE Part 3, 2026-10-17): a simulator error after the agent's first command is the
+# standard-realtime only (docs/protocol/standard_mode.md Part 3, 2026-10-17): a simulator error after the agent's first command is the
 # agent's result; one before it is infrastructure (the service records it so)
 RT_CASES = (
     ("standard-realtime: a simulator error after the first command",
@@ -172,7 +172,7 @@ def main(argv: list[str]) -> int:
     errs = check(dirs)
     n = sum(1 for d in dirs if mode_of(d))
     if errs:
-        print(f"FAIL live verdict (PROTOCOL H.4, RUNNING.md \"Infrastructure failures\"; {len(errs)} finding(s)):")
+        print(f"FAIL live verdict (PROTOCOL H.4, docs/protocol/running.md \"Infrastructure failures\"; {len(errs)} finding(s)):")
         for e in errs[:60]:
             print("  -", e)
         if len(errs) > 60:

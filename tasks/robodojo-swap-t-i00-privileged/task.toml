@@ -16,13 +16,13 @@ simulator = "robodojo"            # RoboDojo @ cb2a37d on its Isaac Lab 2.3 fork
 robot = "arx-x5-bimanual"
 family = "swap_T"
 mode = "privileged"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142"
 expert_time_estimate_hours = 2.0
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 8.0
 min_memory_gb = 20.0
 min_gpu_memory_gb = 10.5
@@ -35,7 +35,7 @@ verifier_min_gpu_memory_gb = 11.0
 measured = "heaviest scene (pour_liquid_into_cup_random: GPU PhysX liquid + 15-20 clutter objects), one Isaac Session driven through 300 actions with frames from the three cameras, then the verifier's two fresh-process replays (the second filmed): main container docker peak 16.1 GiB (anon 14.9), GPU 9.0 GiB, CPU at its 8-core cap; verifier docker peak 15.7 GiB, GPU 9.6 GiB, 8 cores; rcb_monitor (peak_memory_gb 15.85, peak_gpu_memory_gb 9.0) + a per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10; determinism runs on all 54 tasks: 4.6-8.4 GB of GPU memory per Isaac process"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "trial"
 max_gpu_memory_gb = 16.0
@@ -51,11 +51,11 @@ trial_max_memory_gb = 32.0
 measured = "GPU: 9.0 GiB per Isaac Session on the heaviest scene (rcb_monitor, pour_liquid_into_cup_random, RTX 4090, 10-10) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 32 GiB, which every past trial ran under (docker peak 16.1 GiB of one Session on the heaviest scene; the agent may run a second Session); processes (peak 6) 512 and disk (peak 0.7 GiB) 20 GiB: design defaults"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 8.0, memory_gb = 39.0, pids = 16384 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -68,7 +68,7 @@ timeout_sec = 7800.0              # ONE fresh-process replay (owner, 2026-10-12;
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

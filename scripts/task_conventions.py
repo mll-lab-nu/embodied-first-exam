@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Protocol v1.0 conventions for a task directory (docs/PROTOCOL.md), applied in place and idempotently.
+"""Protocol v1.0 conventions for a task directory (docs/protocol/README.md), applied in place and idempotently.
 
 Every generator ends with `normalize(task_dir)`, so a re-generated task equals the committed one. It also migrates a
 pre-v1.0 task (old field names, protocol spelling, README layout); renaming directories is the caller's job.
@@ -11,11 +11,11 @@ What it does:
 - `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-standard-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
   for standard tasks (2.2 / 2.4 and standard-realtime tasks' `eai-standard/2.3` are set by their generators), `oracle` (+ `oracle_evidence`) for benchmarks whose oracle level is known from their files.
 - protocol spelling `rcb-limited/2.x` -> `eai-standard/2.x` and "limited mode" -> "standard mode" in the task's text and
-  services; the client accepts both spellings.
+  services (the client accepts both spellings); the protocol documents' paths are those under docs/protocol/.
 - `tests/test.sh` clears `/logs/verifier` first; graders write `success` (1/0) to `reward.txt` and only numbers to
   `reward.json`.
 - no `results/` directory (results are published on the results site, not in the repository).
-- `[metadata.resources]` (docs/PROTOCOL.md §2.9, minimum compute) and `[metadata.resources.limits]` (§2.10, the most a
+- `[metadata.resources]` (docs/protocol/README.md §2.9, minimum compute) and `[metadata.resources.limits]` (§2.10, the most a
   trial may use) from `scripts/task_resources.toml` when a rule there matches the task; a task no rule matches keeps the
   values its generator or author wrote.
 - `[environment].memory_mb` = `[metadata.resources.caps].main.memory_gb` x 1024 (§2.10: Harbor writes main's kernel
@@ -29,7 +29,7 @@ What it does:
   table): the standard modes' `RCB_WALL_CLOCK_S` in `environment/docker-compose.yaml`, the README's "Agent time budget"
   row and the last section of `instruction.md`, `## Time limit` ("You have N seconds to complete this task. Do not
   cheat ...", then what the cutoff means in the mode).
-- `README.md` in the standard layout (docs/PROTOCOL.md §2.1): title, key table, Task, Difficulty, Reference solution,
+- `README.md` in the standard layout (docs/protocol/README.md §2.1): title, key table, Task, Difficulty, Reference solution,
   Verification, Compute resources (rendered from `[metadata.resources]`), and Details for everything else.
 - last, `DIGEST`: the task's content digest (PROTOCOL §2.8; the digest Harbor publishes it under, `digest()`), one line
   `sha256:<hex>`. Each task carries its own, so pull requests that change different tasks never touch a shared file;
@@ -40,6 +40,7 @@ from __future__ import annotations
 import fnmatch
 import functools
 import hashlib
+import os
 import re
 import shutil
 import sys
@@ -62,6 +63,9 @@ TEXT_REPLACEMENTS = [  # (old, new), applied to task text files in order
     ("Limited-mode", "Standard-mode"), ("limited-mode", "standard-mode"), ("Limited mode", "Standard mode"),
     ("limited mode", "standard mode"), ("limited twin", "standard twin"), ("unlimited task", "privileged task"),
     ("unlimited oracle", "privileged-mode oracle"), ("unlimited expert", "privileged-mode expert"),
+    *((f"docs/{old}.md", f"docs/protocol/{new}") for old, new in   # the protocol documents' folder
+      (("PROTOCOL", "README.md"), ("STANDARD_MODE", "standard_mode.md"), ("RUNNING", "running.md"), ("LEAKAGE", "leakage.md"),
+       ("rcb/PROTOCOL", "README.md"), ("rcb/STANDARD_MODE_2_2", "standard_mode.md"))),   # (rcb/: RoboARC's released texts)
 ]
 BENCHMARKS = [  # (directory prefix, label)
     ("robotwin_2_0_", "RoboTwin 2.0"), ("dextoolbench_", "DexToolBench"), ("mujoco_playground_", "MuJoCo Playground"),
@@ -84,6 +88,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("ambench-", "AM-Bench"),
     ("ispatialgym-", "iSpatialGym"),
     ("ikea-", "IKEA MuJoCo"),
+    ("roboengineer-", "roboEngineer"),   # its own multi-round runtime eai-policy/1.x (scripts/roboengineer/exported.toml)
 ]
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
@@ -98,9 +103,13 @@ RO_EXPORTED_TASKS = ("roboolympics-badminton-match-i01-standard-realtime",
                      "roboolympics-fencing-bout-i02-standard",
                      "roboolympics-foosball-match-i01-standard-realtime",
                      "roboolympics-soccer-match-i00-standard-realtime",
+                     "roboolympics-soccer-jointcpu-i01-standard-realtime",
+                     "roboolympics-soccer-jointgpu-i01-standard-realtime",
                      "roboolympics-soccerssl-match-i00-standard-realtime",
                      "roboolympics-soccerssl-match-i01-standard-realtime",
                      "roboolympics-tabletennis-duelrl-i01-standard-realtime",
+                     "roboolympics-badminton-matchlow-i01-standard-realtime",
+                     "roboolympics-tabletennis-matchlow-i01-standard-realtime",
                      "roboolympics-tabletennis-match-i01-standard-realtime",
                      "roboolympics-tabletennis-match-i02-standard-realtime",
                      "roboolympics-tabletennis-match-i03-standard-realtime",
@@ -245,6 +254,14 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
     "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
+# roboEngineer (#329): its own multi-round runtime (scripts/roboengineer/exported.toml) grades a deployed policy, not an
+# episode that stands at the cutoff, and its service reports a deadline, not `time_left_s`
+CUTOFF_NOTE_OWN[("roboEngineer", "standard")] = (
+    "This is wall-clock time from the start of your session; the time you wait for the deployment service counts, "
+    "deployments included. When it is up you are stopped without warning and the evaluator takes the round you sealed "
+    "or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then "
+    "is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs "
+    "out before your time does." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 # RoboOlympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
 # RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode (board 0121 m4)
 CUTOFF_NOTE_TASK = {n: (
@@ -272,7 +289,7 @@ def mode_of(task: Path) -> str:
         if task.name.endswith(f"-{mode}"):
             return mode
     raise ValueError(f"{task.name}: task directories end in " + ", ".join(f"-{m}" for m in MODES)
-                     + " (docs/PROTOCOL.md §2.2, the modes of §2.16)")
+                     + " (docs/protocol/README.md §2.2, the modes of §2.16)")
 
 
 def base_of(task: Path) -> str:
@@ -411,17 +428,17 @@ def _toml_value(v) -> str:
 
 
 def resources_block(r: dict) -> str:
-    lines = ["[metadata.resources]", "# minimum compute to run this task (docs/PROTOCOL.md §2.9)"]
+    lines = ["[metadata.resources]", "# minimum compute to run this task (docs/protocol/README.md §2.9)"]
     lines += [f"{k} = {_toml_value(r[k])}" for k in RESOURCE_KEYS if k in r]
     if isinstance(r.get("limits"), dict):
         lines += ["", "[metadata.resources.limits]",
-                  "# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;"
+                  "# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;"
                   "", f"# enforced from protocol v1.2 when {ENFORCE_ENV}=1 (a violation fails the trial), otherwise recorded only"]
         lines += [f"{k} = {r['limits'][k] if LIMIT_KEYS[k] is int else _toml_value(r['limits'][k])}"
                   for k in LIMIT_KEYS if k in r["limits"]]
     if isinstance(r.get("caps"), dict):
         lines += ["", "[metadata.resources.caps]",
-                  "# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)"]
+                  "# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)"]
         lines += [f"{svc} = {{ " + ", ".join(f"{k} = {c[k] if CAP_KEYS[k] is int else _toml_value(c[k])}" for k in CAP_KEYS)
                   + " }" for svc, c in r["caps"].items()]
     return "\n".join(lines) + "\n"
@@ -447,6 +464,29 @@ def normalize_main_cap(task: Path) -> None:
     else:
         new = body.rstrip("\n") + f"\nmemory_mb = {want}\n" + ("\n" if body.endswith("\n\n") else "")
     write_if_changed(p, s[:m.start(1)] + new + s[m.end(1):])
+
+
+VERIFIER_NETWORK_LINE = 'network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network'
+
+
+def normalize_verifier_network(task: Path) -> None:
+    """`[verifier] network_mode = "no-network"` (PROTOCOL Appendix H.6: the verifier has no network; Harbor 0.23 denies the
+    separate verifier environment all egress while tests/test.sh runs). A task that lacks it gets the line after
+    `environment_mode`; one that sets another policy (or `allowed_hosts`) for its verifier is an error, never rewritten."""
+    p = task / "task.toml"
+    s = p.read_text()
+    ver = tomllib.loads(s).get("verifier") or {}
+    if "allowed_hosts" in ver or ver.get("network_mode", "no-network") != "no-network":
+        raise RuntimeError(f'{task.name}: [verifier] sets a network policy other than network_mode = "no-network" (PROTOCOL H.6)')
+    if ver.get("network_mode") == "no-network":
+        return
+    m = re.search(r"(?ms)^\[verifier\]\n(.*?)(?=^\[|\Z)", s)
+    if not m:
+        raise RuntimeError(f"{task.name}: task.toml has no [verifier] table")
+    body = m.group(1)
+    em = re.search(r"(?m)^environment_mode\s*=.*\n", body)
+    at = m.start(1) + (em.end() if em else 0)
+    write_if_changed(p, s[:at] + VERIFIER_NETWORK_LINE + "\n" + s[at:])
 
 
 def normalize_resources(task: Path) -> None:
@@ -485,7 +525,7 @@ def render_resources(r: dict, observed: list[str] | tuple = ()) -> list[str]:
         gpu = "GPU: not needed" + (" by the agent phase; the verifier needs one." if float(r.get("verifier_min_gpu_memory_gb", 0)) > 0
                                    else ".")
     return ["## Compute resources",
-            "Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent "
+            "Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent "
             "phase counts every container of the trial at once (the agent's, and in standard modes the simulator "
             "sidecar); the verifier phase runs after it.",
             "", "| | Agent phase | Verifier |", "|---|---|---|",
@@ -493,7 +533,7 @@ def render_resources(r: dict, observed: list[str] | tuple = ()) -> list[str]:
             f"| Memory | {_num(r['min_memory_gb'])} GB | {_num(r['verifier_min_memory_gb'])} GB |",
             f"| GPU memory | {_num(r['min_gpu_memory_gb'])} GB | {_num(r['verifier_min_gpu_memory_gb'])} GB |",
             "", f"- {gpu}", f"- Measured: {r.get('measured', '')}"] + (
-        [f"- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in "
+        [f"- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in "
          f"`instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets "
          f"`{ENFORCE_ENV}=1`), {limits_summary(r['limits'], observed)}."]
         if isinstance(r.get("limits"), dict) else [])
@@ -759,6 +799,13 @@ def _shared_sources() -> set[bytes]:
     return shared | rcb_monitor_inject.generated_sources()     # the resource monitor's copies (scripts/rcb_monitor/)
 
 
+def _is_layer_copy(f: Path) -> bool:
+    """A copy of some version of scripts/eai_standard/rcb_limited.py or v2_4/rcb_limited.py (its PROTOCOL line and COMPAT
+    list): board 0151 changed the layer, and the tasks of each benchmark move onto the new bytes only when it regenerates."""
+    t = read_text(f) or ""
+    return bool(re.search(r'(?m)^PROTOCOL = "eai-standard/2\.\d"', t)) and bool(re.search(r"(?m)^COMPAT = \[", t))
+
+
 def normalize_text_files(task: Path) -> None:
     shared = _shared_sources()
     for f in sorted(task.rglob("*")):
@@ -766,6 +813,9 @@ def normalize_text_files(task: Path) -> None:
             continue
         if f.read_bytes() in shared:
             continue
+        if f.name == "rcb_limited.py" and _is_layer_copy(f):
+            continue                    # an earlier version of the shared layer (a benchmark not yet regenerated onto the
+                                        # current one): never rewritten either (its COMPAT list names rcb-limited/2.x on purpose)
         s = read_text(f)
         if s is None:
             continue
@@ -804,7 +854,7 @@ def normalize_test_sh(task: Path) -> None:
     if cmds and re.match(r"rm\s+-[rRf]+\s+/logs/verifier/\*", cmds[0]):
         return
     i = next((k for k, ln in enumerate(lines) if ln.strip() and not ln.lstrip().startswith("#")), len(lines))
-    lines.insert(i, CLEAR_LOGS + "   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)\n")
+    lines.insert(i, CLEAR_LOGS + "   # verdicts from an earlier run never survive (docs/protocol/README.md §2.6)\n")
     write_if_changed(p, "".join(lines))
 
 
@@ -898,6 +948,9 @@ def render_readme(task: Path) -> str:
     secd = {t: b for t, b in sections}
     mode = md.get("mode", mode_of(task))
     twin = base_of(task) + ("-privileged" if mode in SIDECAR_MODES else "-standard")
+    if mode not in SIDECAR_MODES and not task.with_name(twin).is_dir():   # a privileged twin of a realtime task
+        twin = next((base_of(task) + f"-{m}" for m in SIDECAR_MODES if task.with_name(base_of(task) + f"-{m}").is_dir()),
+                    twin)
     seed = md.get("instance_seed")
     sd = seeds_of(md)
     oracle = md.get("oracle", "")
@@ -1019,7 +1072,7 @@ def normalize_seeds(task: Path) -> None:
         if not h.group(1).startswith("metadata.resources"):
             at = m.end() + h.start()
             break
-    block = ("[metadata.seeds]\n# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a "
+    block = ("[metadata.seeds]\n# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a "
              "runner may draw\n# from (a list, { from = A, to = B } or \"any\"), and the ones the reference solution under "
              "solution/ is for\n"
              f"default = {sd['default']}\nallowed = {seeds_text(sd['allowed'])}\noracle = {seeds_text(sd['oracle'])}\n"
@@ -1061,6 +1114,7 @@ def normalize_dynamics(task: Path) -> None:
     line = committed_line(task, "dynamics")
     if line is None:
         return
+    line = replace_words(line)
     s, n = re.subn(r'(?m)^(mode = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
     if n == 1:
         write_if_changed(p, s)
@@ -1097,7 +1151,7 @@ def normalize_slowdown(task: Path) -> None:
     s = re.sub(r'(?m)^slowdown = .*\n', "", p.read_text())
     if rt is not None:
         line = f"slowdown = {slowdown_text(rt[0])}"
-        line += " " * max(1, 34 - len(line)) + ("# standard-realtime: the world runs at 1/S of real speed (docs/PROTOCOL.md "
+        line += " " * max(1, 34 - len(line)) + ("# standard-realtime: the world runs at 1/S of real speed (docs/protocol/README.md "
                                                  f"§4b); {slowdown_var(task)}'s default\n")
         s, n = re.subn(r'(?m)^(dynamics = "[^"]*".*\n)', lambda m: m.group(1) + line, s, count=1)
         if n != 1:
@@ -1109,10 +1163,10 @@ def normalize_slowdown(task: Path) -> None:
 
 # ---------------------------------------------------------------------------------------------------------------------
 # PROTOCOL v2.0 §2 (owner, 2026-10-14, board 0124): the settings a task declares, and the effective configuration of a
-# trial, recorded with every result so that results are ranked only within one comparable configuration (RUNNING.md
+# trial, recorded with every result so that results are ranked only within one comparable configuration (docs/protocol/running.md
 # "Results"). Standard library only: scripts/write_task_results.py, scripts/dataset_manifest.py and the scheduler's run
 # policy (batch_eval_live) read these.
-PROTOCOL_VERSION = "2.0"                         # docs/PROTOCOL.md
+PROTOCOL_VERSION = "2.0"                         # docs/protocol/README.md
 NETWORKS = ("allowlist", "open")                 # `[metadata] network` (PROTOCOL §2, Appendix H.6); absent = allowlist
 RESET_DECL_RE = re.compile(r'^\s*RCB_RESET_BUDGET:\s*"?(?:\$\{RCB_RESET_BUDGET:-([0-9]+)\}|([0-9]+))"?\s*(?:#.*)?$', re.M)
 
@@ -1153,7 +1207,7 @@ def slowdown_of(task: Path) -> float | None:
 
 
 def validated_of(task: Path) -> bool:
-    """Whether the task counts as validated (PROTOCOL §2, RUNNING.md "Results"): `[metadata] validated` where the task
+    """Whether the task counts as validated (PROTOCOL §2, docs/protocol/running.md "Results"): `[metadata] validated` where the task
     declares it (e.g. after the human review of §2.7), else `oracle = "full"` (its reference solution scores 1 and `nop`
     0). A marker recorded with each result: validated and unvalidated tasks are ranked together."""
     md = metadata_of(task)
@@ -1162,21 +1216,26 @@ def validated_of(task: Path) -> bool:
     return md.get("oracle") == "full"
 
 
-# The easy set (PROTOCOL §4, RUNNING.md "Results"): task bases kept in the repository and run like any other, but reported
+# The easy set (PROTOCOL §4, docs/protocol/running.md "Results"): task bases kept in the repository and run like any other, but reported
 # apart from the main table and left out of the headline statistics. One central list, docs/easy_set.toml, not a task
 # field: marking a task changes none of its files, so its DIGEST and the results recorded against it stay as they are.
-EASY_SET_FILE = Path(__file__).resolve().parents[1] / "docs" / "easy_set.toml"
+EASY_SET_FILE = Path(os.environ.get("RCB_EASY_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "easy_set.toml")
+# RCB_EASY_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
 EASY_REASONS = {
     "shortcut": "a success came through a goal looser than the task's text, or a grader shortcut (`note`: the pattern)",
     "owner": "the benchmark owner judges the task too easy or not discriminative",
-    "solved": "the screening runs solved the task in every mode it ships (`note`: which runs)",
+    "solved": "the screening runs solved the task in every mode it ships, or the `solved_by` run in any mode (`note`: "
+              "which runs, which modes)",
 }
+# `solved_by` (optional, reason "solved" only): the reference run that solved the base in ANY mode it ships (owner 10-17,
+# board 0155); `easy-set --solved-by luna` lists them. scripts/easy_set_add_solved.py appends such entries.
+SOLVED_BY = {"luna": "codex-gpt6_luna-xhigh"}
 
 
 def easy_set(path: Path = EASY_SET_FILE) -> dict[str, dict]:
     """docs/easy_set.toml as {base: entry}; empty when the file is absent. Entries: `base` (the task name without its
     mode suffix: every mode the base ships is in the set), `benchmark` (its BENCHMARKS label), `reason` (EASY_REASONS),
-    optional `note`. ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`). Parsed once per
+    optional `note` and `solved_by` (SOLVED_BY). ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`). Parsed once per
     version of the file (its mtime), so a long-running reader sees an edited list."""
     try:
         mtime = path.stat().st_mtime_ns
@@ -1235,9 +1294,11 @@ def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) ->
             bad.append(f"{b}: no task directory {b}-<mode> under tasks/")
         if e.get("benchmark") != bench_of(Path(b)):
             bad.append(f"{b}: benchmark {e.get('benchmark')!r}, its label is {bench_of(Path(b))!r}")
-        unknown = set(e) - {"base", "benchmark", "reason", "note"}
+        unknown = set(e) - {"base", "benchmark", "reason", "note", "solved_by"}
         if unknown:
             bad.append(f"{b}: unknown field(s) {', '.join(sorted(unknown))}")
+        if "solved_by" in e and (e["solved_by"] not in SOLVED_BY or e.get("reason") != "solved"):
+            bad.append(f"{b}: solved_by {e['solved_by']!r} needs reason \"solved\" and one of {', '.join(SOLVED_BY)}")
     return bad
 
 
@@ -1257,10 +1318,23 @@ def effective_config(task: Path, seed: int | None = None, env: dict | None = Non
         except ValueError:
             pass
     dg = read_text(task / DIGEST_FILE)
-    return {"protocol_version": PROTOCOL_VERSION, "mode": mode, "cutoff_s": cutoff_for(task), "reset_budget": resets,
-            "slowdown": S, "seed": seeds_of(md)["default"] if seed is None else int(seed), "network": network_of(task),
-            "validated": validated_of(task), "set": set_of(task), "oracle": md.get("oracle", ""),
-            "service_protocol": md.get("protocol", ""), "digest": (dg or "").strip()}
+    cfg = {"protocol_version": PROTOCOL_VERSION, "mode": mode, "cutoff_s": cutoff_for(task), "reset_budget": resets,
+           "slowdown": S, "seed": seeds_of(md)["default"] if seed is None else int(seed), "network": network_of(task),
+           "validated": validated_of(task), "set": set_of(task), "oracle": md.get("oracle", ""),
+           "service_protocol": md.get("protocol", ""), "digest": (dg or "").strip()}
+    if md.get("verifier_wall_clock"):   # the verifier plays a wall-clock match: its CPUs are part of the configuration
+        cfg["verifier_cpus"] = verifier_cpus_of(task)
+    return cfg
+
+
+def verifier_cpus_of(task: Path) -> float | None:
+    """The verifier's pinned CPUs ([verifier.environment] cpus, = [metadata.resources] verifier_min_cpus) of a task
+    whose verifier plays a live wall-clock match ([metadata] verifier_wall_clock; RoboOlympics' privileged twins)."""
+    try:
+        meta = tomllib.loads((task / "task.toml").read_text())
+        return float(meta["verifier"]["environment"]["cpus"])
+    except (OSError, KeyError, TypeError, ValueError, tomllib.TOMLDecodeError):
+        return None
 
 
 CONFIG_KEYS = ("protocol_version", "mode", "cutoff_s", "reset_budget", "slowdown", "network")
@@ -1269,7 +1343,9 @@ CONFIG_KEYS = ("protocol_version", "mode", "cutoff_s", "reset_budget", "slowdown
 def config_key(cfg: dict) -> tuple:
     """What two results must share to be ranked together (the seed is drawn per trial and is not part of it, nor is the
     `validated` marker). Missing fields of a legacy record are "legacy"."""
-    return tuple(cfg.get(k, "legacy") if cfg.get(k, "legacy") is not None else "-" for k in CONFIG_KEYS)
+    key = tuple(cfg.get(k, "legacy") if cfg.get(k, "legacy") is not None else "-" for k in CONFIG_KEYS)
+    # a verifier that plays a wall-clock match: its pinned CPUs too (only such tasks record them; others are unchanged)
+    return key + ((("verifier_cpus", cfg["verifier_cpus"]),) if cfg.get("verifier_cpus") is not None else ())
 
 
 def config_label(cfg: dict) -> str:
@@ -1290,6 +1366,7 @@ def normalize(task: Path) -> None:
     normalize_resources(task)
     normalize_seeds(task)
     normalize_main_cap(task)
+    normalize_verifier_network(task)
     normalize_text_files(task)
     normalize_instruction(task)
     normalize_test_sh(task)
@@ -1335,6 +1412,12 @@ def main(argv: list[str]) -> int:
         print(modes_table())
         return 0
     if argv[:1] == ["easy-set"]:       # `easy-set --check`: docs/easy_set.toml (PROTOCOL §4); `easy-set`: list its tasks
+        if "--solved-by" in argv:      # `easy-set --solved-by luna`: the bases that run solved (SOLVED_BY)
+            who = argv[argv.index("--solved-by") + 1] if len(argv) > argv.index("--solved-by") + 1 else ""
+            for b, e in sorted(easy_set().items()):
+                if e.get("solved_by") == who:
+                    print(b)
+            return 0
         if "--check" in argv:
             bad = check_easy_set()
             for b in bad:

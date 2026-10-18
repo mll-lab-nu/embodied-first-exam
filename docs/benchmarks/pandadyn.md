@@ -9,9 +9,9 @@ one arm) or `"franka-panda-bimanual"` (D01-D13, two arms). Each arm has its stan
 tool on it (a plate, a cup, a paddle, a scoop, a fork, a receiver, a pusher).
 
 One frozen instance per task (i00), each a privileged task `pandadyn-<code>-<name>-i00-privileged` and its standard twin
-`pandadyn-<code>-<name>-i00-standard` (`eai-standard/2.2`): 50 task directories; the 19 dynamic families (all but D05, D08,
-D11, D12, D13, S06) also have a standard-realtime twin `pandadyn-<code>-<name>-i00-standard-realtime` (`eai-standard/2.3`,
-since 2026-10-14): 69 task directories.
+`pandadyn-<code>-<name>-i00-standard` (`eai-standard/2.1`): 50 task directories; the 19 dynamic families (all but D05, D08,
+D11, D12, D13, S06) also have a standard-realtime twin `pandadyn-<code>-<name>-i00-standard-realtime` (`eai-standard/2.3`): 69
+task directories.
 
 | Code | Task | Arms | Phases | Seed (i00) | Oracle |
 |---|---|---|---|---|---|
@@ -50,7 +50,7 @@ seed reset is exact; `instance.json` holds the task, the resolved parameters, th
 
 The benchmark keeps a bank of verified instances (20 nominal + 10 hard per task), each with a recorded rollout of its
 reference controller and an independent action replay. For each task, `scripts/pandadyn/freeze.py` took the lowest-seed
-nominal instance of the bank (source of 2026-10-13) whose rollout passes here, in `eai-pandadyn`:
+nominal instance of the bank whose rollout passes here, in `eai-pandadyn`:
 1. the instance rebuilt from its parameters and seed;
 2. the rollout replayed here reproduces the physical state it recorded after **every** control step, bit for bit (joint
    positions and velocities of every arm, every object's pose and velocities, every fixture's joint): this image's
@@ -58,7 +58,7 @@ nominal instance of the bank (source of 2026-10-13) whose rollout passes here, i
 3. the rollout's rows succeed through the tooling, and two `replay`s in fresh processes end in the same state hash.
 These rows, float64 as recorded, are the oracle of both twins.
 
-Seeds (PROTOCOL §2.13): every task allows its frozen instance's seed only (`[metadata.seeds]`: default = allowed = oracle =
+Seeds (PROTOCOL §2): every task allows its frozen instance's seed only (`[metadata.seeds]`: default = allowed = oracle =
 the instance's seed, written by `normalize`). The bank holds 19 more verified nominal seeds per task with their reference
 rows, so `allowed` can grow by freezing them under `tests/seeds/<seed>/` (the same three checks); S01's designated channel
 and S08's selected branch are drawn per seed and named in the instruction, so those two need an instruction per seed first.
@@ -89,12 +89,13 @@ its torque and torque-rate limits, measured and in the servo's reference; checke
 workspace, or the task's horizon (25 s of simulated time; 32 s for S12, 35 s for D07). Every instruction lists all of them with their
 numbers.
 
-## Oracle (PROTOCOL §2.7)
+## Oracle (PROTOCOL §4)
 `oracle = "full"`. The reference rows of an instance are the benchmark's recorded rollout of it by its reference
 controller (the benchmark's per-task closed-loop controllers, which read the simulator's true state), verified here
 (Instances). `solution/oracle_actions.npy` (privileged: run through the agent's own tooling,
-`solution/oracle.py`) and `solution/oracle_qpos.npy` (standard: streamed as one-second `joint_position` chunks,
-`hold`, sent as a float64 array part, `solution/oracle_replay.py`) hold the same rows, so both oracles end in the same state. The controllers and the bank are not in the image, not in the
+`solution/oracle.py`) and `solution/oracle_qpos.npy` (standard: after one-second scouting episodes that spend the reset
+budget, streamed in the last episode as one-second `joint_position` chunks, `hold`, float64, `solution/oracle_replay.py`;
+standard-realtime: planned from step 0, `solution/oracle_plan.py`) hold the same rows, so all oracles end in the same state. The controllers and the bank are not in the image, not in the
 repository and not published; only the rows of the 25 frozen instances are, under `solution/`.
 
 `nop`: privileged, no trajectory (reward 0); standard, no control step runs (reward 0). The benchmark's parked controls
@@ -119,17 +120,25 @@ CPU PhysX with `enable_enhanced_determinism`, one simulated scene per process, o
   between two replays of the same rollout (226 rollouts replayed at least twice);
 - a seed reset alone rebuilds the recorded start (`initial_state.pkl` of the bank adds nothing), and rendering, the render
   backend (`render_backend="cpu"`, below) and the cameras do not change the physics (same hashes);
-- standard mode: the live episode equaled its two fresh-process replays (`live_matches_replay`, the oracle trials of
-  2026-10-13, when standard mode was still graded by those replays), and a service killed in the middle of a call resumes
-  the same episode with the same state hash (Crash recovery). Since 2026-10-17 the video pass records the same comparison
-  (`video_matches_live`), for information only.
+- across hosts (board 0153, 2026-10-17): S06's arm start comes from the IK fallback (scipy `least_squares`: Pinocchio's
+  IK does not converge there, joint 4 ends on its bound), whose last bits follow the BLAS kernel OpenBLAS picks for the
+  CPU. Frozen under the AVX-512 kernel, its start never rebuilt on the pool's AVX2 hosts (AWS EPYC 7R13, SC EPYC 7402,
+  babel EPYC 7763; 4 joints differ in the last float32 bit: `instance_mismatch`). Its containers now pin the kernel
+  (`OPENBLAS_CORETYPE=Haswell`, `mk_tasks.py` `BLAS_PIN`; re-frozen with it): the start and the oracle's final state are
+  the same on a Ryzen 9 7950X and an EPYC 7R13. The other 24 starts come from Pinocchio's IK and rebuild on both
+  (all 25 checked on aws:rcb-gpu8), and every oracle succeeds on both; 6 oracles (D03, D08, D10, D13, S05, S07) end in
+  another state hash there than the README's (measured here): a trajectory and its grading replay always run on one
+  host, so no verdict depends on it;
+- standard mode: the live episode equals a fresh-process replay of its rows (the video pass records the comparison,
+  `video_matches_live`, for information only), and a service killed in the middle of a call resumes the same episode with
+  the same state hash (Crash recovery).
 
 The tasks are sensitive to the last bits of the actions: the oracle rows rounded to float32 (a relative change of about
 1e-7) fail on 4 of the 13 instances tried (D04 seed 1, D07, D09, D11: a limit violation or an episode that no longer
 completes), and the benchmark measured that the same rows do not succeed at a 2000 Hz physics step either. Grading
 therefore never accepts an approximate replay; the standard oracle sends its rows as float64 (the service executes the
 rows it receives as float64; the shipped client's `submit` rounds to float32, which costs an agent nothing, since its own
-episode is what is replayed).
+episode is what is graded).
 This sensitivity is not a reproducibility problem: grading always runs the same 1000 Hz physics in the same image, and a
 different CPU that rebuilt the start differently would be caught by the `initial_sha` check (`instance_ok` = 0 / `instance_mismatch`,
 `infra_error`: no verdict), as on a different GPU for the Isaac benchmarks. A hash check on new hardware is recommended
@@ -141,61 +150,61 @@ before official runs there (PROTOCOL §3).
   end in the same state hash (`deterministic`) and both rebuilt the frozen start (`instance_ok`). A replay that gives no
   result or runs out of its time limit (300 s + rows / 10) is `grader_error` = `infra_error` = 1. Then a filmed replay
   (`replay.mp4`, overview camera) that never changes the verdict.
-- **Standard** (`environment/sim/server.py`, `environment/sim/finalize.sh`, then `tests/grade.py`): graded by the live
-  episode, nothing replayed (owner, 2026-10-17, board 0150/0151). `success` = the task's own check as the episode the
-  service ran ended: `Session.success()`, every phase in order with no failure event, no forbidden contact and no
-  safety-limit violation (server.py `finish` / `dump`: `episode.json`). The check is evaluated after every physics step and
+- **Standard and standard-realtime** (one adapter: `environment/sim/server.py`, an `rcb_service.Sim` on
+  `rcb_pandadyn.Session`, on the shared service layer `rcb_service.py`; the realtime twin adds `rcb_realtime.py`'s clock;
+  then `tests/grade.py`, the shared one): graded by the live episode, nothing replayed (PROTOCOL H.4). `success` = the task's own check as the last episode ended (rcb_service's finalize; the
+  adapter's `live_verdict` adds the phase and the end reason and takes nothing away): every phase in order with no
+  failure event, no forbidden contact and no safety-limit violation. The check is evaluated after every physics step and
   the episode ends at the first control step where the task has succeeded or failed, so the live predicate already is the
-  whole rule (no settle or hold window; the replays applied the same predicate to the same rows). The collect hook stops
-  the agent's programs (`kill -9 -1` in its container, after the monitor's seal), ends the episode, lets the service
-  exit, and writes `episode.json` into `final.json` (`graded_by` = `live`, `replays` = 0, `live_success`, `live_sha`),
-  then films the trajectory once in a fresh process (`replay.mp4`, overview camera, 25 fps; `video_pending` while it runs,
-  `video_matches_live` afterwards). The frozen start is checked when the service builds the scene: a start state hash
-  other than the instance's `initial_sha` ends the trial before the agent is served (`instance_mismatch`). Infrastructure
-  (`infra_error` = 1, no verdict on the agent): no, an unreadable or an unfinalized `final.json`, the episode not dumped
-  (`dump_error`: no `episode.json` or no `trajectory.npz`), `instance_mismatch`, a give-up after crashes not all inside the
-  agent's calls (`sim_crashed`, `resume_failed`). The agent's 0: a failure of the task, a timeout, no actions, a
-  simulator error from a call (`sim_error`; never a success, even where the task's check passes on the failed step's
-  state: `server.py` `finish()`, with backstops in `finalize.sh` and `tests/grade.py`), crashes all inside the agent's
-  calls (`sim_crashed_on_call`). A failed or
-  slow video costs only the video. Cost: one scene build and at most the horizon's 3,500 control steps filmed (1-3 min of
-  one GPU slot) instead of three passes (two replays, the first one also filmed) and two scene builds.
-- **Standard-realtime** (the shared layer's `rcb_service.py`, `environment/sim/server.py`): graded by the live episode the
-  same way (see "Standard-realtime" below).
-- Change log: 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; the
-  frozen start checked at the episode's start; video by one filming pass after the verdict (standard: a fresh process in
-  the collect hook; standard-realtime: the service's own Session); the standard collect hooks now stop the agent's
-  programs first. Until then: standard `success = live_success ∧ replay_success ∧ deterministic` (two fresh-process
-  replays, the first filmed; PROTOCOL §4.8 of then), standard-realtime live ∧ one fresh-process replay ∧ the live state.
+  whole rule (no settle or hold window). The collect hooks stop the agent's programs (`kill -9 -1` in its container,
+  after the monitor's seal), then signal the service (SIGUSR1), which writes the verdict into `final.json` (`graded_by`
+  = `live`, `replays` = 0, `live_success`, `episodes`, `resets`) and then films the graded episode's rows in the same
+  process (`replay.mp4`, overview camera, 25 fps; `video_pending` while it runs). The frozen start is checked when the
+  first episode begins and after every reset (`start_sha` = the instance's `initial_sha`; a mismatch is
+  `instance_mismatch`, infrastructure). Infrastructure (`infra_error` = 1, no verdict on the agent): an unreadable or
+  unfinalized `final.json`, `instance_mismatch`, a reset whose scene does not rebuild, a give-up after crashes not all the
+  agent's (`sim_crashed`, `resume_failed`). The agent's 0: a failure of the task, a timeout, no actions, a simulator
+  error from a call (`sim_error`), crashes all inside the agent's calls (`sim_crashed_on_call`). A failed or slow video
+  costs only the video.
 
-## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
-Resume class `exact`: every executed control step is journaled (the float64 row the servo received), every completed call
-checkpointed with the state hash; after a crash the restarted service rebuilds the instance, replays the journal (at most
-3,500 control steps, seconds to a minute) and checks the hash. `scripts/pandadyn/kill_test.sh` runs the oracle with
-Harbor and kills the service with SIGKILL in the middle of a call: on D04 (2026-10-13) the service resumed after 400
-control steps with the same state hash (`exact`, 12.9 s of journal replay, 31.8 s down), the oracle continued, and the
-episode was graded as usual (success, `live_matches_replay`, `resumes` = 1; the grading of then).
+## Crash recovery (both standard modes)
+The shared service layer's (`rcb_service.py`): every executed control step is journaled (`trajectory_live.f64`, the
+float64 row the servo received), every completed call checkpointed with the state hash; after a crash compose restarts the
+service, which rebuilds the instance, replays the journal of the running episode (at most 3,500 control steps, seconds
+to a minute), checks the hash and continues the same episode (never a reset; the realtime twin resumes it paused).
+`scripts/pandadyn/kill_test.sh` runs a standard task's oracle with Harbor and kills the service with SIGKILL in the
+middle of a call; the service resumes the same episode with the same state hash.
 
-## Time budget (D8)
+## Time budget
 3600 s for every task of both modes (each task's `[agent] timeout_sec`; the benchmark's own text names no number). A scene
 builds in 5-15 s and runs ~40-150 control steps per second, so the budget is the agent's own work, not the simulator's.
 
-## Standard mode (eai-standard/2.2)
-`joint_position` only (8 per arm: 7 joint targets + the total aperture, the environment's own action; rows `dt` apart, a
-multiple of 0.01 s, at most 0.5 s; `hold` or `linear`; executed as float64, which the client's `submit` rounds to float32); cameras `overview` and `closeup` (static,
-640×480, RGB and z-depth); `/kinematics` (FK / IK of the arms' own Pinocchio models, the hand TCP, the tool and the hand);
-proprioception per arm: joints and fingers, hand TCP pose, velocities, aperture, motor torques, tool pose, the targets in
-force (`spec["proprio_groups"]`). The simulated clock advances only with the agent's calls (submit rows, observe
-watches): between calls the world is frozen, so the agent can look between control steps at a cost in calls, as on a
-robot whose controller it pauses. The dynamic families also have a standard-realtime twin (below).
+## Standard mode (eai-standard/2.1)
+Standard and standard-realtime differ only in the clock. Both run
+the same adapter (`template/realtime/environment/sim/server.py`; `mk_tasks.py` writes the standard copy with its own
+docstring, the code byte for byte) on the same shared service layer (`rcb_service.py`, copied with `grade.py` and the
+2.1 client from `scripts/humanoidbench/shared/standard/`, as in HumanoidBench, BiGym 2.0 and RoboOlympics), with the same
+reset budget (`RESETS` in `mk_tasks.py`, "Reset budget" below). The static families (D05, D08, D11, D12, D13, S06) have
+only the standard twin and get the same rules.
+- **Action.** `joint_position` only (8 per arm: 7 joint targets + the total aperture, the environment's own action;
+  clipped to the limits and executed as float64, which the client sends): rows `dt` apart, a whole multiple of the 10 ms
+  control step, `hold` or `linear` (from the targets in force), a chunk at most 10 s.
+- **Observation.** Cameras `overview` and `closeup` (static, 640×480, RGB, z-depth on request) with their calibration in
+  `/spec`; proprioception per arm: joints and fingers, hand TCP pose, velocities, aperture, motor torques, tool pose, the
+  targets in force (`spec["proprio_groups"]`); `video_fps` 1-30, at most 3,000 images per call; watches (`observe` with
+  `seconds`) up to 30 s, holding the last targets.
+- **Clock.** The simulated clock advances only with the agent's calls (submit rows, observe watches): between calls the
+  world is frozen, so the agent can look between control steps at a cost in calls, as on a robot whose controller it
+  pauses. The standard-realtime twin runs the same steps on a clock that does not stop (below).
+- **Episode.** The only step bound is the task's own horizon (2,500, 3,200 or 3,500 control steps: 25, 32 or 35 s of
+  simulated time; `/spec` `max_control_steps` is the environment's cap, 4,500), a failure of the task, stated in `/spec`
+  (`episode`), both instructions and the README; resets as in
+  the realtime twin; only the last episode is graded.
 
-The episode's only step bound is the task's own horizon (`max_control_steps` = 2,500, 3,200 or 3,500: 25, 32 or 35 s of
-simulated time), a failure of the task, stated in `/spec` (`episode`), both instructions and the README.
-
-## Standard-realtime (eai-standard/2.3, since 2026-10-14)
-The owner, 2026-10-14 (board 0107 E3, board 0112): the dynamic families (PROTOCOL §2: `[metadata] dynamics`, declared by each task; until 2026-10-14 `scripts/task_dynamics.toml`
-makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as static: nothing in them moves by itself) get a
-`-standard-realtime` twin. Defaults of the standard twins are unchanged (owner E3).
+## Standard-realtime (eai-standard/2.3)
+The dynamic families (`[metadata] dynamics`, declared by each task; D05, D08, D11, D12, D13 and S06 are static: nothing in
+them moves by itself) get a `-standard-realtime` twin, sharing the standard twin's adapter, service layer and reset budget
+("Standard mode" above).
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged (`rcb_realtime.py`,
   `rcb_service.py`, `rcb_client.py`, `grade.py`, copied by `mk_tasks.py` from `scripts/humanoidbench/shared/`), with
   `template/realtime/environment/sim/server.py`, an `rcb_service.Sim` adapter on `rcb_pandadyn.Session`: the standard
@@ -203,8 +212,7 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   (`overview`, `closeup`, RGB and z-depth, with their calibration in `/spec`) and proprioception columns. Not served: the
   2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. Resets: `Session.reset()`, the
   scene rebuilt and reset with the instance's seed (exact, about 1 s); 3 per trial ("Reset budget" below).
-- **Grading.** The live episode (since 2026-10-17, board 0151; until then also a replay of its rows in a fresh process,
-  which had to succeed and end in the live run's state): success = the task's own check as the last episode ended
+- **Grading.** The live episode: success = the task's own check as the last episode ended
   (rcb_service's `_finalize`; the adapter's `live_verdict` adds the phase and the end reason and takes nothing away), with
   the frozen start checked when the first episode begins (`start_sha` = the instance's `initial_sha`). The video is
   rendered after the verdict from the graded episode's rows by the service's own Session (the scene rebuilt) and never
@@ -213,10 +221,10 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   into the episode from step 0, 10 s per chunk, each chunk at its own step (`at`), so every row runs at its recorded
   control step whatever the wall clock does: `oracle = "full"`.
 - **Slowdown S per family.** CPU PhysX at 1000 Hz with two servos in Python runs slower than real time here, so no
-  family runs at S = 1. Measured on ws-1 (32 cores, the service capped at 4 CPUs, board 0112, 2026-10-14): the
+  family runs at S = 1. Measured on ws-1 (32 cores, the service capped at 4 CPUs): the
   realtime service with its clock flat out (`RCB_SLOWDOWN=0.01`, the oracle's first 10 s planned from step 0; host load
   18-80) and the bare physics loop (`Session.step` over the oracle's first 8 s; load 39-47). S = ceil(1.5 / RTF) with
-  the lower of the two (PROTOCOL §4b; a busy pool host is slower still: the same service ran 1.4-1.9 x faster at load
+  the lower of the two (PROTOCOL §2; a busy pool host is slower still: the same service ran 1.4-1.9 x faster at load
   20 than at load 45):
 
 | family | RTF (service, physics) | S | | family | RTF (service, physics) | S |
@@ -232,26 +240,24 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
 | S01 CupRouteDelivery | 1.49, 1.22 | 2 | | S12 MovingBridgePuckRelay | 0.68, – | 3 |
 | S02 PlateCatchTransportRelease | 1.41, 1.24 | 2 | |  | |  |
 
-- **Checked at the task's S** (board 0112, one container at a time, 4 CPUs, GPU for SAPIEN): in every one of the 19 twins,
+- **Checked at the task's S** (one container at a time, 4 CPUs, GPU for SAPIEN): in every one of the 19 twins,
   three aborted attempts (the oracle's first second planned from step 0, then `reset`) and then the oracle planned
-  from step 0 in the fourth episode: live success, fresh-process replay success, the same final state (deterministic),
-  `late_steps` 0; the clock kept time with no stall in 17 of them (largest lag 0.01-0.49 s) and stalled 3 times in D07
+  from step 0 in the fourth episode: live success, the same final state in a fresh-process replay, `late_steps` 0; the clock kept time with no stall in 17 of them (largest lag 0.01-0.49 s) and stalled 3 times in D07
   (2.3 s dropped, largest lag 1.1 s) and once in S08 (0.5 s), at host load 24-71; nop (no request): `timeout`, not a
   success, in all 19. A first oracle run of S04 at S = 2 showed one 0.6 s step (a stall) at step 310: the clock re-anchors
   and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing.
-- **Reset budget: 3** (`RT_RESETS` in `mk_tasks.py`; 10, the mode's default, from 2026-10-14 to 2026-10-17). Every reset
+- **Reset budget: 3**, in both standard modes (`RESETS` in `mk_tasks.py`; below the standard-realtime mode's default of
+  10, the benchmark's choice). Every reset
   restores the same frozen start, and the client lets a program plan up to 10 s ahead (`at`), so the budget is the
   number of times an agent can rerun an open-loop plan on a deterministic scene, watch the outcome and tune it; the
-  clock that does not stop adds little once the plan is fixed. With 10 resets, the first screening runs (six harness /
-  model runs on nine families, one on all 19) succeeded in 14 of 67 standard-realtime trials against 1 of 87 standard
-  ones (no reset); none of the 14 succeeded in its first episode, 10 in episode 6-11, and 44 of the 53 failed trials used
-  the whole budget. Three resets keep one or two scouting episodes and a real attempt, so the twin still differs
-  from the one-shot standard twin. The check above (three aborted attempts, then the oracle in the fourth episode) uses
-  exactly this budget.
+  clock that does not stop adds little once the plan is fixed (with 10 resets, screening successes came in episode 6-11
+  and most failures used the whole budget). Three resets keep one or two scouting episodes and a real attempt. The check above (three aborted
+  attempts, then the oracle in the fourth episode) uses exactly this budget, and so does the standard oracle
+  (`solution/oracle_replay.py`: three one-second scouting episodes, then the oracle's rows).
 
 ## Declarations
 - **Tooling: thin wrappers only** (above). No task-level skill (catch, strike, carry) is in the agent's tooling.
-- **World-frame information (D7).** Both modes give the world conventions (z up, the table top at z = 0, wxyz), the
+- **World-frame information.** Both modes give the world conventions (z up, the table top at z = 0, wxyz), the
   robot (arm bases, tools and their mounts, joint, servo and safety limits) and the task's own goal geometry that is not a
   physical object: waypoints and target points of the phase predicates, in world coordinates; a standard agent could not
   know them otherwise, since nothing in the scene marks them. Standard mode never gives where objects or fixtures are,
@@ -263,14 +269,11 @@ makes the benchmark `dynamic` and lists D05, D08, D11, D12, D13 and S06 as stati
   tooling are reworded: `scripts/pandadyn/sync_env.py`, which refuses a copy with such text); `instance.json` names no
   rollout; the reference rows are under `solution/` only. The benchmark is not published, and nothing of it is on PyPI.
 - **Contact and safety telemetry.** None is published beyond the robot's own proprioception (motor torques, joint and
-  TCP motion), which is what the safety limits are judged on; contact forces stay private (PROTOCOL §4.5).
+  TCP motion), which is what the safety limits are judged on; contact forces stay private (PROTOCOL H.3).
 
-- **Scene motion in the privileged instruction** (2026-10-16, #281). The template's sentence "Things move by themselves
-  from the first control step on: the scene does not wait for the robot." is written for the 19 dynamic families only
-  (`REALTIME` in `mk_tasks.py`); the six static ones (D05, D08, D11, D12, D13, S06) used to carry it too, against their
-  own scene text ("Nothing moves by itself"). Only those six privileged `instruction.md` files and their DIGEST changed;
-  instance, grading and oracle are the same. Results recorded before stand: the scene text was right, and a privileged
-  agent steps the simulator itself and sees that nothing moves.
+- **Scene motion in the privileged instruction.** The template's sentence "Things move by themselves from the first
+  control step on: the scene does not wait for the robot." is written for the 19 dynamic families only (`REALTIME` in
+  `mk_tasks.py`); the six static ones say "Nothing moves by itself".
 
 ## Notes on the tasks' checks
 The instructions describe each check exactly as the task's code implements it (`scripts/pandadyn/descr/`, written from
@@ -293,20 +296,19 @@ diagnostics as unfinished.
 torch 2.14.1 (CPU build), Ruckig 0.12.2 (`requirements.lock`, the versions of the benchmark's own lock file; torch is its
 CPU build, which reproduces the bank's physics bit for bit), and the environment package. Public (every component is
 redistributable). SAPIEN needs a Vulkan device to build a scene and render, so every container that builds one reserves
-an NVIDIA GPU (`gpu_class = "any"`); physics runs on one CPU core. Measured over the 50 oracle trials (rcb_monitor samples every 5 s, RTX 4090 host, 2026-10-13): privileged, the whole trial at most 0.79 GiB of memory and 0.05 GiB of GPU memory; standard, the sim service at most 0.94 GiB and 0.35 GiB (its cameras), the agent's container 0.03 GiB; about one core per container (p90). One filmed scene (`render_video`): 1.2-1.3 GiB RSS, 0.25 GiB of GPU memory. The limits (`scripts/task_resources.toml`) leave room for an agent that runs several scenes at once: privileged 16 GiB and 5 GiB of GPU memory for the trial, standard 8 GiB for the agent's container.
+an NVIDIA GPU (`gpu_class = "any"`); physics runs on one CPU core. Measured over the 50 oracle trials (rcb_monitor samples every 5 s, RTX 4090 host): privileged, the whole trial at most 0.79 GiB of memory and 0.05 GiB of GPU memory; standard, the sim service at most 0.94 GiB and 0.35 GiB (its cameras), the agent's container 0.03 GiB; about one core per container (p90). One filmed scene (`render_video`): 1.2-1.3 GiB RSS, 0.25 GiB of GPU memory. The limits (`scripts/task_resources.toml`) leave room for an agent that runs several scenes at once: privileged 16 GiB and 5 GiB of GPU memory for the trial, standard 8 GiB for the agent's container.
 
 ## Licences
 ManiSkill 3 (and its Panda model): Apache-2.0. SAPIEN: MIT. Ruckig (community version): MIT. PyTorch: BSD-3-Clause.
 The Panda Dynamic Scenes environment package: MLL Lab, released with this repository under its licence.
 
-## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+## Standard-mode service details
 
-Serves `eai-standard/2.2`. Resume class `exact` (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).
+Serves `eai-standard/2.1` with the optional reset capability (3 resets). Resume by journal replay to the logged state hash (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).
 
 ## Easy set
 
-The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
-run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders (for this benchmark mostly from the grading records only: the log review
 was partial). It is **hard** when GPT-6 Luna and every later run that attempted it failed, GPT-6 Astra and Claude Opus
@@ -350,6 +352,6 @@ Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v
 | `pandadyn-s11-cylinder-rescue-route-deliver-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Astra (3), Gemini 3.8 Flash (6) |
 | `pandadyn-s12-moving-bridge-puck-relay-i00` |  | easy: Astra, Opus | hard | easy: Astra (7), Opus (5) |
 
-Standard-realtime cells name each solving run with the resets it used. These trials ran with the earlier budget of 10
-resets; #285 (2026-10-17) lowered it to 3, so a realtime solve that used more than 3 would not count today. The easy-set
-base here, `pandadyn-d04-shared-tray-transport-discharge-i00`, has realtime solves with 1 reset (Astra, Opus).
+Standard-realtime cells name each solving run with the resets it used (the screening allowed 10; a solve that used more
+than 3 would not count under today's budget). The standard cells are from standard twins with no reset, a configuration
+being rerun under today's. The easy-set base here, `pandadyn-d04-shared-tray-transport-discharge-i00`, has realtime solves with 1 reset (Astra, Opus).

@@ -2,11 +2,22 @@
 
 You drive an **R1Pro** mobile bimanual robot around a house **as if it were real hardware**: the simulator (BEHAVIOR-1K
 v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. You get one client and one episode.
-**Task:** Put the two pairs of shoes on the hall tree. Two gym shoes and two sandals lie on the corridor floor; the hall tree stands in an alcove at one end of the corridor: a low open shoe cabinet with a flat top, under a tall back panel with two small shelves. Every shoe must touch the hall tree and not the floor, and the two gym shoes must be next to each other, and so must the two sandals: the gap between the two shoes' axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions (about 6 cm for the gym shoes, 5 cm for the sandals), and nothing lies between them along a horizontal axis (BEHAVIOR's goal for putting_shoes_on_rack). The service checks it and the episode ends the moment it holds.
+**Task:** Put the two pairs of shoes on the hall tree. Two gym shoes and two sandals lie on the corridor floor; the hall tree stands in an alcove at one end of the corridor: a low open shoe cabinet with a flat top, under a tall back panel with two small shelves. Every shoe must touch the hall tree and not the floor, and the two gym shoes must be next to each other, and so must the two sandals: the gap between the two shoes' axis-aligned bounding boxes is at most one sixth of the mean of their summed box dimensions (about 6 cm for the gym shoes, 5 cm for the sandals), and nothing lies between them along a horizontal axis (BEHAVIOR's goal for putting_shoes_on_rack). The service checks the goal; it counts once it has held for 1 s, released and at rest (Rules).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
-  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+  your time is up, on a simulator error or breakdown, or at the runaway guard. Whatever you knock over or push away stays where it ends up.
+- **Success is a settled scene**: the goal has held for 1 s of simulated time in a row (30 control steps) with no goal
+  object in a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal object at
+  rest (slower than 0.05 m/s); then the episode ends (`meta["reason"]` "success"). An object still in the hand, or a
+  goal that holds for one frame, is not success. Open the gripper, move clear and let the robot stand (e.g.
+  `r.get_obs(seconds=2.0)`). The goal objects are every object the goal names, a tool or appliance it names (even
+  inside a `not`) included. When your episode is still running at the end of your time (you stopped early, or your
+  time ran out), the service holds the robot still (your last command, the
+  base at 0) for up to 5 s more on the same simulator, and a goal that settles there counts; the service judges the
+  episode itself, nothing is replayed.
+- A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles; reason
+  "failure: simulator breakdown") ends the episode as a failure.
 - **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
   when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
   time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the

@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for AM-Bench (Isaac Lab / Isaac Sim 5.1, GPU PhysX; the FA-Hexa: a fully actuated hexarotor
-with a 4-joint arm and a two-finger gripper; see docs/STANDARD_MODE.md). Owns the scene. HTTP surface (rcb_limited): GET
+with a 4-joint arm and a two-finger gripper; see docs/protocol/standard_mode.md). Owns the scene. HTTP surface (rcb_limited): GET
 /spec, GET /status, POST /observe, POST /submit, POST /kinematics (RCB1 bodies, RCB1 responses: videos / frames / depth /
 proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl and keeps /data/final.json current. Nothing
 about objects ever leaves this process.
@@ -9,7 +9,7 @@ states this one sends it (measured: rendering inside the physics process makes A
 the live episode is the same computation as a fresh-process replay of its rows (the privileged grader's), and the live
 episode is what is graded (no grading replay since 2026-10-17).
 
-Crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13, resume class `approx`): every executed control step is
+Crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13, resume class `approx`): every executed control step is
 journaled (the 8-value row handed to Session.step), every completed call is checkpointed with the scene's state hash.
 After a crash compose restarts the container (`restart: on-failure:6`, run.sh exits non-zero) and this service, a fresh
 process, rebuilds the frozen scene, replays the journal up to the last checkpoint (the first episode of a fresh process:

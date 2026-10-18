@@ -11,7 +11,7 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
 | tasks | `tasks/libero-max-<suite>-<task>-<event>-iNN-privileged` and `...-standard` |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda"`, `family = "libero-max/<suite>/<event>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-libero-max:0.1.1` (`images/libero-max/`; `sha256:0e5b5e15aaeb761e4b66772a351f4195392fa638572d47bec5d924305c89aa99`), 3.5 GB, CPU only; x86-64 with AVX-512 (see Host CPUs) |
-| standard client | the shared client base and pins of `scripts/eai_standard/`; `rcb_client.py` and `rcb1.py` are byte copies of main's (HumanoidBench / VLABench); the standard `grade.py` started as one and is LIBERO-MAX's own since #110 (every path writes the same `reward.json` fields; since 2026-10-17 it grades the live episode); `rcb_service.py` is a byte copy again since 2026-10-17 (until then it added a 3-line hook for `verify()`'s `extra`; the shared service's `live_verdict()` now carries LIBERO-MAX's event record, `event_fired` / `event_step`, into `final.json`) |
+| standard client | the shared client base and pins of `scripts/eai_standard/`; `rcb_client.py` and `rcb1.py` are byte copies of main's (HumanoidBench / VLABench); the standard `grade.py` is LIBERO-MAX's own (every path writes the same `reward.json` fields; it grades the live episode); `rcb_service.py` is a byte copy (the shared service's `live_verdict()` carries LIBERO-MAX's event record, `event_fired` / `event_step`, into `final.json`) |
 | generator | `scripts/libero-max/` (`select_cases.py` → `cases.json`, `freeze.sh` → `frozen/`, `generate.py` → `tasks/`, `generate.py --check`) |
 
 ## Task definition
@@ -34,28 +34,22 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   no-op steps). The scene is rebuilt from the pinned upstream data in the image by LIBERO-MAX's own code, and the
   rebuilt state is checked against the hash on every load (the standard service checks it when the episode begins and
   records a mismatch as `instance_mismatch`, `infra_error = 1`, before the agent is served).
-- **One simulator per process.** In the spike, 2 of 14 cases (a LIBERO-plus Sensor-Noise variant and a LIBERO-PRO
-  camera_view_angle variant) did not rebuild bit-exactly a second time in the same process. `lmx_tool` therefore
+- **One simulator per process.** Some cases do not rebuild bit-exactly a second time in the same process, so `lmx_tool`
   refuses a second Session in one process (loudly, with the reason), and every verification replay (privileged
   grader) and every video pass (standard service) runs in a fresh process.
 - **Host CPUs.** The start state is bit-exact only with the numeric kernels it was frozen with, because robosuite's OSC
   controller and LIBERO's code run on numpy and scipy. Two parts of the stack choose kernels by CPU at run time:
   - **OpenBLAS.** numpy 1.22.4 and scipy 1.10.1 bundle OpenBLAS 0.3.18, which picks its kernels per CPU: Zen on the
-    reference AMD Ryzen 9 7950X, but its generic Prescott (SSE3) kernels on the AWS hosts' Intel Xeon Platinum 8488C
-    (Sapphire Rapids), a CPU it does not know. With image 0.1.0 none of the 64 instances rebuilt there (the Session
-    refused with a hash mismatch), and 3 references replayed to a failure. Image 0.1.1 sets `OPENBLAS_CORETYPE=Zen`
-    (AVX2 + FMA kernels; a build-time check asserts both libraries use them). Forcing Prescott on the 7950X reproduces the
-    mismatch, and forcing Zen on the 8488C removes it.
+    reference AMD Ryzen 9 7950X, but its generic Prescott (SSE3) kernels on CPUs it does not know (Intel Xeon Platinum
+    8488C), where without the override no instance rebuilds. The image sets `OPENBLAS_CORETYPE=Zen` (AVX2 + FMA kernels; a build-time check
+    asserts both libraries use them).
   - **numpy's own SIMD loops.** numpy dispatches its math loops at run time, and the frozen hashes use its AVX-512
-    loops. Both reference CPUs dispatch the same targets (up to `AVX512_ICL`). With those loops switched off
-    (`NPY_DISABLE_CPU_FEATURES`, standing in for an AVX2-only CPU), 3 of 6 sampled instances differ. A real AVX2-only
-    CPU, an AWS AMD EPYC 7R13 (Zen 3, the rcb-gpu hosts), rebuilt only 10 of the first 24 instances checked with 0.1.1.
-    So run LIBERO-MAX on hosts that dispatch like the two reference CPUs (`AVX512_ICL`: Intel Ice Lake or newer Xeon,
+    loops; an AVX2-only CPU (AMD EPYC 7R13, Zen 3) rebuilds only some instances. The reference CPU (AMD Ryzen 9 7950X) and the verified host CPU (Intel Xeon Platinum 8488C) dispatch the same targets, up to `AVX512_ICL`. So run LIBERO-MAX on hosts that dispatch like them (`AVX512_ICL`: Intel Ice Lake or newer Xeon,
     AMD Zen 4 or newer), and check any other host type with `rebuild_check.sh`.
   - **Exact or nothing.** There is no tolerance. On a host whose kernels differ, every Session refuses, loudly, and the
     error names the kernels in use (`lmx_tool.numerics()`).
-    - Why no tolerance: a state off by rounding grows over a contact-rich episode. With 0.1.0 on the 8488C, 3 of the 64
-      reference trajectories failed even though their events fired at the recorded steps.
+    - Why no tolerance: a state off by rounding grows over a contact-rich episode (references fail even with their
+      events at the recorded steps).
     - Before using a new host type, run `bash scripts/libero-max/rebuild_check.sh [parallel]`: every instance's start
       hash, plus its reference replayed to the recorded final hash, event step and success.
 - **Event.** LIBERO-MAX's frozen change and trigger: the first control step at which the gripper is within the case's
@@ -66,7 +60,7 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
 - **Actions.** LIBERO's native action in both modes, `[dx, dy, dz, drx, dry, drz, grip]` in [-1, 1], one per control
   step (1/20 s): the OSC_POSE controller moves the hand's target by up to 0.05 m and turns it by up to 0.5 rad
   (axis-angle, world frame) per step; grip +1 closes, -1 opens. In standard mode the type is `ee_delta` (action types
-  are benchmark-defined, PROTOCOL §4.4 since #31).
+  are benchmark-defined).
 - **Success and episode end.** LIBERO's success check (the BDDL goal: LIBERO's On / In predicates, and Close /
   TurnOn / TurnOff on a drawer's slide or the stove knob's hinge, with their real thresholds from LIBERO's articulated
   objects, stated per task in both instructions). LIBERO ends the episode the moment it holds (`done`), so the graded
@@ -85,7 +79,7 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   finger positions, joint positions and velocities, last command. The agent is told that the scene may change once
   (what kinds of change), not which change or when. No object poses, no goal, no success signal.
 
-### Notes on single cases (2026-10-14, board 0113)
+### Notes on single cases
 - A move event (`target_relocation`, `receptacle_relocation`) sets one entity's position (`libero_backend._move_object`):
   what rests in or on a moved receptacle stays behind, and an entity that lands on another is pushed apart by the
   physics. Both instructions say so.
@@ -99,18 +93,15 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
   instructions say which bowl is meant.
 
 ## Grading (standard mode)
-Owner, 2026-10-17 (boards 0150 / 0151): the standard mode is graded by the live episode; nothing is replayed to grade it
-(docs/PROTOCOL.md H.4). The privileged mode is unchanged (the verifier's two fresh-process replays).
+The standard mode is graded by the live episode; nothing is replayed to grade it (docs/protocol/README.md H.4). The
+privileged mode: the verifier's two fresh-process replays.
 
 - **Live success.** LIBERO's success check on the episode the sim service ran: `lmx_tool.Session.step` reports it
   (`wrapped.step`'s `done`), `rcb_service` ends the episode there (`reason = "success"`) and `_finalize()` writes
   `success = live_success`, `graded_by = "live"`, `replays = 0`, the live end state (`state_sha`) and LIBERO-MAX's
-  event record of the live episode (`event_fired`, `event_step`; `server.py` `live_verdict()`). The rule is the one the
-  grading replay applied: that replay's only other condition, no action after the success (`invalid`), cannot occur
-  live (the episode ends at the success, every later request is refused), and no settle or hold window was ever part
-  of it. `tests/grade.py`: `success = live_success ∧ graded_by = "live" ∧ ¬infra`.
-- **Removed.** The fresh-process grading replay (`lmx_tool.py --replay` in `verify()`), with `replay_success`,
-  `deterministic`, `replay_event_*` and the hook's `RCB_FAIL_WAIT_S` / `RCB_VIDEO_GRACE_S`.
+  event record of the live episode (`event_fired`, `event_step`; `server.py` `live_verdict()`). The privileged rule's
+  other condition, no action after the success (`invalid`), cannot occur live (the episode ends at the success, every
+  later request is refused); there is no settle or hold window. `tests/grade.py`: `success = live_success ∧ graded_by = "live" ∧ ¬infra`.
 - **Start state.** The frozen instance records the start state's hash (`initial_state_sha`, after LIBERO's 10 warm-up
   steps). The live service builds the scene without refusing (`Session(check=False)`) and `rcb_service` compares the
   state with that hash when the episode begins (`server.py` `start_sha`): a mismatch gives up as `instance_mismatch`
@@ -121,17 +112,14 @@ Owner, 2026-10-17 (boards 0150 / 0151): the standard mode is graded by the live 
   `instance_mismatch`); a finalize that failed on the service's side (`grader_error = 1`). The agent's (0, never infra):
   the time running out, the step cap, a simulator error raised by the agent's actions (`sim_error`), crashes all
   inside its calls (`sim_crashed_on_call`). Video failures are never infra.
-- **Video: one video-only pass after the verdict** (option b of board 0151). Recording live is not cheap here: every
+- **Video: one video-only pass after the verdict.** Recording live is not cheap here: every
   frame is an OSMesa render (about 70 ms at 256×256, 0.24 s on a busy host) inside the agent's calls. So once
   `final.json` is finalized (`video_pending: true`), `server.py` `render_video()` replays `trajectory.npz` once in a
   fresh process with the agentview camera on (`lmx_tool.py --replay ... replay.mp4`; its success is not read) and
   writes `replay.video.json` (the replay's end hash, the live one, `ends_in_live_state`, the stride). A failure, a
   timeout (`RCB_VIDEO_TIMEOUT_S`, 5,400 s) or a crash costs only the video (`video = false`).
-- **Cost.** Before: one grading replay with the video on the way: B + N × s + V, up to 4,920 s for 9,000 steps on a busy
-  host (CPU, the sim sidecar's 4 CPUs; no GPU). Now: the verdict within seconds of the hook's signal, then the same one
-  pass for the video only. The saving is not the replay's compute (the video still needs one pass) but its place on the
-  verdict path: no verdict waits on it, no live success becomes infra because it was slow, and failed episodes no
-  longer need it to be graded. Measured collect phase before (board 0136): about 20 slot-hours over 112 standard trials.
+- **Cost.** The verdict within seconds of the hook's signal, then one pass for the video only (CPU, the sim sidecar's
+  4 CPUs; no GPU): no verdict waits on it.
 
 ### Collect budget
 The video pass of N control steps takes B + N × s + V:
@@ -148,11 +136,6 @@ The video pass of N control steps takes B + N × s + V:
 The hook (`finalize.sh`) signals the service every 30 s until `final.json` is finalized, then waits while
 `video_pending` is true, up to 5,400 s from its start. Only a service that crashed late in the episode needs the wait
 for its verdict: it resumes by replaying its journal (crash recovery, not grading), at most N × s + B.
-
-## Change log
-- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay; video by one
-  video-only replay of the trajectory in a fresh process after the verdict (`replay.video.json`); the start state is
-  checked when the episode begins (`instance_mismatch`).
 
 ## Licence
 LIBERO-MAX (Zhang et al., [*LIBERO-MAX: Do Robot Policies Adapt When the World Changes?*](https://arxiv.org/abs/2609.36518),
@@ -189,19 +172,18 @@ cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
 ## Evidence
 | check | result |
 |---|---|
-| freeze (`freeze.sh`, eai-libero-max:0.1.0), 64 cases | not solved at the start 64/64; reference succeeds at its last step 64/64 (66–409 steps; the event fires 64/64, at step 5–101); two fresh-process replays = live hash and event step 64/64 |
+| freeze (`freeze.sh`), 64 cases | not solved at the start 64/64; reference succeeds at its last step 64/64 (66–409 steps; the event fires 64/64, at step 5–101); two fresh-process replays = live hash and event step 64/64 |
 | same cases frozen twice (the candidate run and the final run, separate containers) | identical initial and final hashes 64/64 |
 | `harbor run -a oracle`, privileged | 64/64 reward 1 (deterministic, event fired, no errors) |
-| `harbor run -a oracle`, standard (one case per event; 5 of the 8 turn a stove knob or close a drawer) | 8/8 reward 1 (live = replay, deterministic) |
+| `harbor run -a oracle`, standard (one case per event; 5 of the 8 turn a stove knob or close a drawer) | 8/8 reward 1 |
 | `harbor run -a nop` | 4/4 privileged and 4/4 standard reward 0 |
-| scripted cheat attempts (patched tooling and success check, forged reward files, `sitecustomize.py`, tampered instance copy; hidden endpoints, wrong action type and `dt`, NaN rows, forged `final.json`), on the first 48-case revision (graders and service unchanged since; the tool only gained `state()["articulations"]`) | privileged 0, standard 0; hidden endpoints 404, malformed submits 400 |
+| scripted cheat attempts (patched tooling and success check, forged reward files, `sitecustomize.py`, tampered instance copy; hidden endpoints, wrong action type and `dt`, NaN rows, forged `final.json`) | privileged 0, standard 0; hidden endpoints 404, malformed submits 400 |
 | `generate.py --check`, `task_conventions.py --check`, `ci_checks/run_all.sh` | clean; no LIBERO-MAX warnings |
-| verdict before video (2026-10-10), stubbed simulator: the real `rcb_service` + `server.py` with a fake replay process; `lmx_tool._ReplayVideo` with the real encoder | encoder open / append / close and render failures, a crash and a hang after the verdict: verdict intact, one replay, `video = false`; verdict on disk before the video is finished; a 1 s budget at 30 ms per frame holds (34 frames, 168 skipped, spread); 9,000 steps → stride 8, 1,126 frames |
+| verdict before video, stubbed simulator: the real `rcb_service` + `server.py` with a fake replay process; `lmx_tool._ReplayVideo` with the real encoder | encoder open / append / close and render failures, a crash and a hang after the verdict: verdict intact, one replay, `video = false`; verdict on disk before the video is finished; a 1 s budget at 30 ms per frame holds (34 frames, 168 skipped, spread); 9,000 steps → stride 8, 1,126 frames |
 | the same, real simulator (visual_theme_switch, 66 steps; a 2-CPU container on a host at load 44): `lmx_tool.py --replay` with a video; and two standard trials without Harbor (service, the reference through the client, `finalize.sh`, `grade.py`), one of them with a broken encoder | replay: final state hash = `report.json`'s, event at the recorded step, 34 frames; both trials reward 1 with that hash, one replay each: verdict on disk 66 s after the hook started and `finalized` (with the video) 3 s later; with the broken encoder verdict after 53 s, `video = false` |
-| live grading (2026-10-17, board 0151), `scripts/libero-max/tests/test_live_grading.py`: the real `rcb_service` + `server.py` with a stub `lmx_tool` (no simulator), the real `finalize.sh` and `grade.py` | live success → 1, failure → 0, no replay before the verdict (the replay entry point fails the test if called), event record from the live episode; video failure, timeout and a replay that diverges leave the verdict unchanged; `instance_mismatch` at the start, a give-up after crashes between calls → infra; crashes all inside calls → 0, not infra; missing / unreadable / unfinalized `final.json` → infra; the hook stops at the verdict, waits for `video_pending`, and stops at its bound |
-| graders (2026-10-10), synthetic | standard: 10 `final.json` cases (missing, unreadable, verdict without `finalized`, ...) write the same 21 fields, `deterministic` among them; privileged: replay exit code 3 → `infra_error = 1`, any other failure → `grader_error = 1` only |
-| `rebuild_check.sh` (start hash; reference replayed to the recorded final hash, event step and success), 64 instances | 0.1.0 on Intel Xeon 8488C (AWS rcb-cpu): 0/64, OpenBLAS Prescott kernels, 3 references fail; 0.1.1 on the 8488C: 64/64; 0.1.1 on AMD 7950X: 64/64 |
-| `rebuild_check.sh`, 0.1.1, AWS AMD EPYC 7R13 (Zen 3, no AVX-512) | 10 of the first 24 instances rebuild: numpy's AVX-512 loops are missing (OpenBLAS runs Zen); not a supported host |
+| live grading, `scripts/libero-max/tests/test_live_grading.py`: the real `rcb_service` + `server.py` with a stub `lmx_tool` (no simulator), the real `finalize.sh` and `grade.py` | live success → 1, failure → 0, no replay before the verdict (the replay entry point fails the test if called), event record from the live episode; video failure, timeout and a replay that diverges leave the verdict unchanged; `instance_mismatch` at the start, a give-up after crashes between calls → infra; crashes all inside calls → 0, not infra; missing / unreadable / unfinalized `final.json` → infra; the hook stops at the verdict, waits for `video_pending`, and stops at its bound |
+| `rebuild_check.sh` (start hash; reference replayed to the recorded final hash, event step and success), 64 instances | Intel Xeon 8488C: 64/64; AMD 7950X: 64/64 |
+| `rebuild_check.sh`, AWS AMD EPYC 7R13 (Zen 3, no AVX-512) | 10 of the first 24 instances rebuild: numpy's AVX-512 loops are missing (OpenBLAS runs Zen); not a supported host |
 | kernel probes on the 7950X, 6 instances (one per 11 in sorted order) | OpenBLAS Prescott forced: 0/6; Haswell forced: 6/6; Zen with numpy's AVX-512 loops off: 3/6 |
 
 Measured on the reference machine (AMD Ryzen 9 7950X): about 20 ms of physics per control step, about 70 ms per
@@ -210,8 +192,7 @@ Busy hosts are several times slower: see Collect budget.
 
 ## Easy set
 
-The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
-run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is

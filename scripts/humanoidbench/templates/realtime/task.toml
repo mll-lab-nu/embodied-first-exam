@@ -1,4 +1,4 @@
-# Standard-realtime task of {{task_dir}} (docs/PROTOCOL.md §4b). Generated from scripts/humanoidbench/templates/realtime/task.toml -- edit
+# Standard-realtime task of {{task_dir}} (docs/protocol/README.md §4b). Generated from scripts/humanoidbench/templates/realtime/task.toml -- edit
 # subset.toml or the template, not this.
 schema_version = "1.3"
 artifacts = [

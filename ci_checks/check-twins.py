@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""INVARIANT (docs/PROTOCOL.md Appendix H.7, comparable twins): part of the required CI job `invariants`
+"""INVARIANT (docs/protocol/README.md Appendix H.7, comparable twins): part of the required CI job `invariants`
 (ci_checks/run_invariants.sh); no task value can turn it off. Where a task's privileged and standard versions both
 exist (the mode registry's `same_cutoff_as` and `twin`, scripts/task_conventions.py MODE_REGISTRY):
   - they have the same cutoff, `[agent] timeout_sec` (owner 2026-10-12);

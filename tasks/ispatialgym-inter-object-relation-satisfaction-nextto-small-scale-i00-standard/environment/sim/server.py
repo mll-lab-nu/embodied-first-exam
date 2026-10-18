@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for iSpatialGym (docs/benchmarks/ispatialgym.md; docs/STANDARD_MODE.md): the benchmark's
+"""eai-standard/2.2 sim service for iSpatialGym (docs/benchmarks/ispatialgym.md; docs/protocol/standard_mode.md): the benchmark's
 adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface (rcb_limited.serve): GET /spec, GET /status,
 POST /observe, POST /submit (RCB1 bodies and responses), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
 /out/final.json current. Nothing about objects, targets or the world frame ever leaves this process.
@@ -130,7 +130,9 @@ def dump() -> None:
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "subtask": S.up["subtask"],
         "protocol": PROTOCOL, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), "start_sha": S.start_sha,
         "success_step": st["success_step"], "symbolic_success": st["symbolic_success"], "geometric_success": st["geometric_success"],
-        "error_metric": st["error_metric"], "graded_by": "live", "replays": 0, **EP.final_fields()})
+        "error_metric": st["error_metric"], "graded_by": "live", "replays": 0,
+        "startup": EP.n_startups, "pid": os.getpid(),   # which service start wrote it (finalize.sh's late-exit check)
+        **EP.final_fields()})
     write_final()
 
 
@@ -411,6 +413,14 @@ if resumed and S.done and not E["done"]:
         E["ready"] = False
     else:
         EP.give_up(f"resume_failed: the replayed episode ended ({S.reason}) before the logged one did", infra=True)
+if resumed and not E["done"]:
+    # the episode goes on: an episode.json from a call the crash lost (it ended there, then was rolled back to the last
+    # checkpoint) is not this episode's record; finalize.sh must never take it for one
+    for f in ("episode.json", "trajectory.npz"):
+        try:
+            os.remove(os.path.join(DATA, f))
+        except OSError:
+            pass
 E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)

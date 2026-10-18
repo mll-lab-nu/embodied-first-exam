@@ -56,7 +56,7 @@ only what rebuilds the start (object states, robot state, bindings, hinges, gras
 upstream's role prefix (`target_*`, `partner_*`, …). Renaming moves the settled start of 3 of the 12 instances by at
 most 5e-5 (m or rad; alignment_axial, block_design, touching) and none of the others, measured; both twins and the agent
 run the renamed one. What scores it is
-`goal.json` (LEAKAGE §3): every key taken out of upstream's TRO and template_meta (the targets, the goal camera pose, the
+`goal.json` (docs/protocol/leakage.md §3): every key taken out of upstream's TRO and template_meta (the targets, the goal camera pose, the
 variant), lifted by `mk_tasks.py instances` against the real removal, copied only to the scoring side (`environment/sim/`,
 `tests/`), restored there and checked against upstream's TRO by sha256 (a failed restore is a grader error). One success
 rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the policy tolerances × 3, in both.
@@ -84,8 +84,6 @@ verifier's, for all 12 tasks.
   `final.json` is that result (`episode.json`, merged by `finalize.sh`). The at-rest window is part of that predicate
   (the last 45 control steps of the live episode), so no hold is added after the agent's container stops; the rule is the
   privileged twin's, which its verifier judges on two fresh replays.
-- **Nothing replays the episode.** Before 2026-10-17 the collect hook replayed the trajectory twice in fresh processes
-  (a scene load of 3-17 min + the episode's steps, each) and required live ∧ both replays ∧ equal end states.
 - **The frozen start** is checked when the sidecar builds the scene, before the agent is served (the start-state hash
   of `facts.json`, else every object pose and robot joint within 2 mm / 0.02 rad); a mismatch gives up as
   `instance_mismatch` (`infra_error = 1`). On a resume the rebuilt start is checked again.
@@ -98,7 +96,8 @@ verifier's, for all 12 tasks.
   (`rcb_ispatialgym.py replay --video`, `replay.mp4`) after the verdict, whose success and hash are not read; the
   collect hook's bound covers it (the end, up to 1 h, + a scene load and the whole step budget + 10 min).
 - **Infrastructure** (`infra_error = 1`): no or unfinalized `final.json`, the service never ended the episode (no
-  `episode.json`; one it dumped before failing to exit in time is still the verdict, `end_timed_out`), a give-up
+  `episode.json`; one the newest service start dumped before failing to exit in time is still the verdict,
+  `end_timed_out`; a resume whose episode goes on deletes one left by a call the crash lost), a give-up
   after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), `instance_mismatch`. A crash inside the
   agent's calls (`sim_crashed_on_call`) and a simulator error raised by its actions (`error`) score 0.
 
@@ -126,8 +125,8 @@ The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `downlo
 
 ## Positive examples (oracle none, PROTOCOL §4)
 Upstream's recorded demonstration of each instance (the eval data's `-demo.hdf5`, `data/demo_0/action`, unchanged), handed
-in as the privileged deliverable and graded by the task's own verifier image (two fresh replays, no network) on an L40S,
-2026-10-17: 12/12 score 1, deterministic, with a replay video; the replay succeeds at upstream's first settled step + 1
+in as the privileged deliverable and graded by the task's own verifier image (two fresh replays, no network) on an L40S:
+12/12 score 1, deterministic, with a replay video; the replay succeeds at upstream's first settled step + 1
 or earlier (the × 3 tolerances), e.g. mental_rotation 130 of 136 rows, block_design 3501 of 4149. One Isaac process of
 the verifier held up to 17 GiB of GPU memory on that card (texture streaming takes what the card has; 3.5-4.6 GiB on an
 RTX 4090 with four processes at once).
@@ -144,13 +143,8 @@ RTX 4090 with four processes at once).
 - **Settle-eval on, not upstream's policy default.** With settle-eval off (`run_isg --mode policy`: the first step the
   goal holds), the privileged adversarial trial scored 1 on mental_rotation without a leak, by a blind sweep of the held
   knife's poses (8 steps each), and a generic 300-row determinism probe succeeded on alignment_vertical at step 61. Upstream's
-  own settle-eval (the same rule held over 45 steps, everything at rest) scores both 0, so both modes use it (2026-10-16).
+  own settle-eval (the same rule held over 45 steps, everything at rest) scores both 0, so both modes use it.
 - **Sim start-up is on the agent's clock**: 3-17 min measured per scene load (a cold Kit cache is the slow one), inside the hour.
 - **GPU memory.** One trial's Isaac process takes 4-7 GiB of GPU memory; three trials beside other work on one 24 GB card
   ran out of it at start-up (an infrastructure failure, `infra_error = 1`). The service exits non-zero on a start-up error so
   that compose restarts it (Isaac's Kit otherwise exits 0).
-
-## Change log
-- 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay (the collect hook's
-  two fresh-process replays are gone); the start state is checked at the live start; video recorded live by the sim
-  service (`live.mp4`), a video-only render only when that is missing.

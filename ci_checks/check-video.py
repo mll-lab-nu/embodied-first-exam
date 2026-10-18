@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Every graded trial leaves a video (docs/PROTOCOL.md §4, board 0136): the task must render one and the runner must be
+"""Every graded trial leaves a video (docs/protocol/README.md §4, board 0136): the task must render one and the runner must be
 able to collect it. Advisory: a video is evidence for people and never the verdict, and a static scan cannot
-tell whether a render finishes in time (the runner flags a graded trial without a video at run time, RUNNING.md
+tell whether a render finishes in time (the runner flags a graded trial without a video at run time, docs/protocol/running.md
 "Recordings"). For every task:
   - privileged: the verifier renders the video, so a file under tests/ names an `.mp4` output;
   - standard / standard-realtime: the task's code (environment/ or tests/) renders one (an `.mp4` output, or the

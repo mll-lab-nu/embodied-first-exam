@@ -9,19 +9,19 @@ keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "code-as-
 
 [metadata]
 author_name = "qineng"
-task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "robolab"             # NVIDIA RoboLab v0.3.1 on Isaac Lab 2.3.2 / Isaac Sim 5.1 (PhysX on the CPU, RTX rendering)
 robot = "franka-robotiq-2f85"
 family = "block_stacking_order_agnostic"
-mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/PROTOCOL.md §3)
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/protocol/README.md §3)
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-block-stacking-order-agn__kqJQMLf (robolab-block-stacking-order-agnostic-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/block_stacking_order_agnostic/unlimited/); robolab-block-stacking-order-agn__S6o3W3Z (robolab-block-stacking-order-agnostic-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-rerun-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/block_stacking_order_agnostic/limited/). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7)."
 instance_seed = 0                 # scene = environment/instance.json (the full scene state after the seeded reset + its hash); identity = dataset.toml digest
 expert_time_estimate_hours = 1.0
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 4.0
 min_memory_gb = 13.0
 min_gpu_memory_gb = 6.5
@@ -34,7 +34,7 @@ verifier_min_gpu_memory_gb = 6.5
 measured = "GPU 4.0-5.5 GB per trial (one simulator), anon memory 7.6-10.3 GB, CPU p90 2.4-8 cores over 7 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); vram_profile peaks 14.5-15.7 GB include agents' extra simulator processes and Isaac's card-sized pools; author: one Isaac simulator per 32 GB of host RAM"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "trial"
 max_gpu_memory_gb = 24.0
@@ -50,11 +50,11 @@ trial_max_memory_gb = 24.0
 measured = "GPU: 15.7 GiB on a 48 GB card, 15.3 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); includes agents' extra simulators) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.4 GiB over 4 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -65,8 +65,9 @@ timeout_sec = 29100.0             # two fresh-process replays at tests/grade.py'
                                   # (replay_timeout(100,000 rows) = 900 s + rows / 7.5 = 14,234 s each) + 600 s; a usual
                                   # trajectory (up to 6,750 rows) keeps the old 1800 s per replay
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

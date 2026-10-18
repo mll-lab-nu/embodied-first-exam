@@ -50,7 +50,7 @@ run 120 account_failure_check.py --selftest   # the runner's lane stop and infra
 # grader's test needs numpy and runs in the second tier
 if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 robodojo/tests/test_standard_grading.py; fi
 # board 0151: RoboOlympics' exported-task live grading and IKEA MuJoCo's standard grader (their pull requests add them)
-for t in roboolympics/tests/test_live_export.py ikea_mujoco/tests/test_standard_grade.py ambench/tests/test_standard_grading.py; do
+for t in roboolympics/tests/test_live_export.py roboolympics/tests/test_matchlow_skill_server.py ikea_mujoco/tests/test_standard_grade.py ambench/tests/test_standard_grading.py; do
   if [ -f "$root/scripts/$t" ]; then run 300 "$t"; fi
 done
 # RoboSafeBench's standard grader (its tasks pull request adds the test)
@@ -60,6 +60,12 @@ if [ -f "$root/scripts/robosafe/tests/test_grade_rt.py" ]; then run 300 robosafe
 # Export and admission contracts need only the standard library; keep them in ordinary CI.
 for t in test_054_reporting test_admission_import test_release_export test_realtime_seed_export test_frozen_source_guard test_variant_export test_image_publication test_mechanism_selection; do
   if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
+done
+# roboEngineer (#329): the Control Transfer verifier on stub sidecar records and the frozen spec / pin checks (standard
+# library; the service and rollout tests need MuJoCo and the evaluator images: docs/benchmarks/roboengineer.md)
+for t in control_transfer/tests/test_verifier_diagnostics.py control_transfer/tests/test_neuralfly_spec.py \
+         control_transfer/tests/test_go2_spec.py quadrotor_landing/tests/test_native.py; do
+  if [ -f "$root/scripts/$t" ]; then run 300 "$t"; fi
 done
 # DexHand's graders, privileged and standard, on stub replays (its tasks pull request adds the test)
 if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/tests/test_grading.py; fi
@@ -102,7 +108,8 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   # board 0151: the live-grading tests of MetaWorld+ and LIBERO-MAX (their pull requests add them)
   for t in metaworldplus/tests/test_live_grading.py libero-max/tests/test_live_grading.py roboarc/tests/test_live_grade.py \
            roboolympics/tests/test_live_adapter.py ispatialgym/tests/test_grading.py robowits/tests/test_live_grading.py \
-           robopaint_strict/tests/test_live_grading.py robodojo/tests/test_server.py robolab/tests/test_live_video.py; do
+           robopaint_strict/tests/test_live_grading.py robodojo/tests/test_server.py robolab/tests/test_live_video.py \
+           roboolympics/tests/test_matchlow_sync_step.py; do
     if [ -f "$root/scripts/$t" ]; then run 900 "$t"; fi
   done
   # LIBERO-MAX keeps its own copy of rcb_service.py (since board 0151 the layer's bytes): the classes of the shared

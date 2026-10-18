@@ -72,6 +72,24 @@ patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14,
            "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py"]   # 2026-10-16, board 0136: the replay video's time limits (RCB_VIDEO_TIMEOUT_S 1800 s, collect / verifier timeouts)
 
 [[tasks]]
+name = "roboolympics-soccer-jointcpu-i01-standard-realtime"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+revision = "soccer-2v2-11"
+source_commits = ["7ae66874c32e"]   # pilots/soccer_joint/export_fexam_pair.py (the joint-level resource-tier pair; v5 pilot rules)
+patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py",   # 2026-10-17 (#328 review): the walking-policy audit
+           "task.toml", "solution/solve.sh"]   # replays the match only after a live win of seat A (board 0151), samples the row in effect at every
+                                               # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
+
+[[tasks]]
+name = "roboolympics-soccer-jointgpu-i01-standard-realtime"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+revision = "soccer-2v2-11"
+source_commits = ["7ae66874c32e"]   # pilots/soccer_joint/export_fexam_pair.py (the joint-level resource-tier pair; v5 pilot rules)
+patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py",   # 2026-10-17 (#328 review): the walking-policy audit
+           "task.toml", "solution/solve.sh"]   # replays the match only after a live win of seat A (board 0151), samples the row in effect at every
+                                               # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
+
+[[tasks]]
 name = "roboolympics-soccerssl-match-i00-standard-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
@@ -152,3 +170,79 @@ patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",
            "environment/sim/core/grading.py", "tests/grade.py", "README.md",
            "environment/sim/core/realtime.py"]   # 2026-10-16, board 0146: a replay video from the players' cameras (badminton declares no spectator camera / scene; as #271)
            # 2026-10-16, board 0146: a duel against a built-in seat: leaving after the start is a valid loss (`abandoned`, core/service.py abandon_single), stated in the instruction with the opponent's true-state reads; test.sh fails closed if fexam_reward.py fails
+
+[[tasks]]
+name = "roboolympics-tabletennis-match-i01-privileged"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/fullsim/generate.py"
+
+[[tasks]]
+name = "roboolympics-tabletennis-match-i02-privileged"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/fullsim/generate.py"
+
+[[tasks]]
+name = "roboolympics-badminton-match-i01-privileged"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/privileged/generate.py"
+
+[[tasks]]
+name = "roboolympics-badminton-match-i02-privileged"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/privileged/generate.py"
+
+[[tasks]]
+name = "roboolympics-soccer-match-i00-privileged"
+source_task = "roboolympics/soccer-match-wallclock-program-standard"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/privileged/generate.py"
+
+[[tasks]]
+name = "roboolympics-soccerssl-match-i00-privileged"
+source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
+source_commits = ["0d7f680cc049"]
+kind = "fullsim-policy"
+generator = "scripts/roboolympics/privileged/generate.py"
+
+[[tasks]]
+name = "roboolympics-tabletennis-matchlow-i01-standard-realtime"
+source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["02c93822a35e"]
+patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml",
+           "task.toml", "environment/sim/core/realtime.py", "README.md",
+           "environment/sim/skilleval/skillhost.py", "environment/skillkit/skillhost.py", "tests/fexam_reward.py",
+           "environment/sim/skilleval/sandbox.py", "environment/skillkit/sandbox.py", "environment/sim/skilleval/inloop.py",
+           "environment/sim/skilleval/tests/test_skilleval.py", "environment/sim/core/http.py", "environment/sim/core/game.py",
+           "environment/game", "environment/sim/core/__init__.py", "environment/sim/sport/plugin.py", "instruction.md"]
+           # 2026-10-17 (owner, board 0151): live grading (scripts/roboolympics/live_grading_export.py)
+           # 2026-10-17 (board 0146, #300 review): RemoteHost reads only typed fields of the agent's own skill server's answers; fexam_reward.py skips malformed call-log rows (scripts/roboolympics/tests/test_matchlow_skill_server.py); to be sent upstream
+           # 2026-10-17 (owner, board 0152 decision 28, option c): no upload host / jail in the sim (RCB_SKILL_REMOTE_ONLY), step() one bounded synchronous call per due control step (RCB_SKILL_INLOOP_TIMING sync), skill_load episode rows, bounded live waits (scripts/roboolympics/tests/test_matchlow_sync_step.py; docs/benchmarks/roboolympics.md)
+           # 2026-10-17 (option c fresh review): one deadline per live call (send included), 128 KiB step answers, step() retries a down server once a second, sync forced for tcp:, applied_tick counts for agent_sim_error (tests/grade.py = core/grading.py), bounded skill_load rows
+
+[[tasks]]
+name = "roboolympics-badminton-matchlow-i01-standard-realtime"
+source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["02c93822a35e"]
+patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml",
+           "task.toml", "environment/sim/core/realtime.py", "README.md",
+           "environment/sim/skilleval/skillhost.py", "environment/skillkit/skillhost.py", "tests/fexam_reward.py",
+           "environment/sim/skilleval/sandbox.py", "environment/skillkit/sandbox.py", "environment/sim/skilleval/inloop.py",
+           "environment/sim/skilleval/tests/test_skilleval.py", "environment/sim/core/http.py", "environment/sim/core/game.py",
+           "environment/game", "environment/sim/core/__init__.py", "environment/sim/sport/plugin.py", "instruction.md"]
+           # 2026-10-17 (owner, board 0151): live grading (scripts/roboolympics/live_grading_export.py)
+           # 2026-10-17 (board 0146, #300 review): RemoteHost reads only typed fields of the agent's own skill server's answers; fexam_reward.py skips malformed call-log rows (scripts/roboolympics/tests/test_matchlow_skill_server.py); to be sent upstream
+           # 2026-10-17 (owner, board 0152 decision 28, option c): no upload host / jail in the sim (RCB_SKILL_REMOTE_ONLY), step() one bounded synchronous call per due control step (RCB_SKILL_INLOOP_TIMING sync), skill_load episode rows, bounded live waits (scripts/roboolympics/tests/test_matchlow_sync_step.py; docs/benchmarks/roboolympics.md)
+           # 2026-10-17 (option c fresh review): one deadline per live call (send included), 128 KiB step answers, step() retries a down server once a second, sync forced for tcp:, applied_tick counts for agent_sim_error (tests/grade.py = core/grading.py), bounded skill_load rows

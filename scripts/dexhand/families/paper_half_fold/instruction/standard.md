@@ -25,8 +25,8 @@ and the controller runs at 50 Hz.
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
 joint positions, velocities, actuator efforts, wrist pose and current targets; paper state is not published. An
 episode ends at the first success or failure, and after at most 1500 controls; a reset starts a new one (see
-`## Episodes and resets`). The service records every action and watch step, then replays the graded episode in two
-fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
+`## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
+(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is needed.
 
 ```python
 from rcb_client import Robot

@@ -3,12 +3,12 @@
 You control a simulated **R1Pro** mobile manipulator (BEHAVIOR-1K v3.9.2: OmniGibson on Isaac Sim, the 2026 BEHAVIOR
 Challenge stack) via Python. **Task:** Switch on the radio receiver that stands on the table in the living room.
 
-**Success**, all at the same time (the episode ends by itself the moment they hold):
+**Success**, all at the same time, held for 1 s with no goal object in a gripper and every goal object at rest (`## Conventions`):
 - the radio receiver (`radio_receiver.n.01_1`) is switched on
 
 The scene is `house_double_floor_lower`; the task objects are BDDL objects (`s.objects()`: `radio_receiver.n.01_1`, `table.n.02_1`; see
 `/behavior-src/bddl3/bddl/activity_definitions/turning_on_radio/problem0.bddl`). The success predicate is the task's BDDL
-goal in that file, evaluated by OmniGibson's object states; the episode ends by itself the moment it holds:
+goal in that file, evaluated by OmniGibson's object states; it counts once it has held for 1 s, released and at rest (`## Conventions`):
 ```lisp
 (:goal
     (and
@@ -25,7 +25,8 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+completed (the success rule under `## Conventions`) by the end of the replay, which holds the robot still for up to
+5 s after your last row, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -48,16 +49,18 @@ s.render_grid(); s.start_video(path); s.stop_video(); s.state_sha(); s.episode_d
 s.robot, s.env, s.get_object(name) # OmniGibson robot / environment / objects (with their object states) for closed-loop control
 s.step(action)                     # one low-level action (25 floats, below) = one control step; s.hold_action() holds the targets
 s.record_start(); ...; actions = s.record_stop()   # (T, 25) actions, one row per control step (30 Hz)
-s.status()                         # {'success': bool, 'fallen': bool, 'q_score': float, 'sim_steps': int, 'resets': int, 'state_sha': str}
-s.replay(actions)                  # resets, replays open-loop, returns status (the first replay in a process is exact)
+s.status()                         # {'success', 'goal', 'goal_objects_held', 'goal_objects_moving', 'fallen', 'breakdown', 'q_score', 'sim_steps', 'state_sha', ...}
+s.settle()                         # hold still up to 5 s (150 control steps), as the grader does after your last row
+s.replay(actions)                  # resets, replays open-loop + settle(), returns status (the first replay in a process is exact)
 s.save_trajectory(actions, "/app/output/trajectory.npz")
 s.render_video(actions, "/app/output/check.mp4")   # tiled robot cameras while replaying (with cameras="tiny": 16x16 tiles, upscaled)
 ```
 The primitives are deliberately thin (joint, base, IK and gripper moves): navigation, grasping, placing and every
 other skill are yours to build from them. OmniGibson itself is installed (`/behavior-src/OmniGibson`) with its own
-libraries.
+libraries; `/behavior-src` and the tooling in `/opt/tools` are mounted read-only (the grader uses its own copies).
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
+The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check; a third
+replay with the challenge cameras only renders the video and never affects the score):
 `python /opt/tools/rcb_behavior.py replay --task turning_on_radio --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions
@@ -74,7 +77,15 @@ The grader replays in two fresh processes; each is exactly this CLI (a fresh pro
   `s.save_trajectory()` writes (an `.npz` with `actions` (T, 25) and `task`): a file the grader cannot read, or with
   the wrong shape, is `bad_trajectory` too. The grader replays it twice at the simulator's own speed, each replay
   within min(28000 s, max(1 h, 20 min + 0.67 s per row)); a replay that runs out of time is reported as a grader error.
-  The episode ends by itself the moment the goal holds. It also ends, as a failure, when the robot has fallen over: its base
+  **Success** (`s.status()["success"]`) is the goal holding for 1 s of simulated time in a row (30 control steps) with no
+  goal object attached to a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal
+  object at rest (slower than 0.05 m/s); the episode ends there. The goal's literals being true for one frame, or with the
+  object still in the hand, is not success: `s.status()["goal"]` is the bare goal, `goal_objects_held` /
+  `goal_objects_moving` say what is missing (`s.goal_objects`: every object the goal names, a tool or appliance it
+  names, even inside a `not`, included). After your last row the grader holds the robot still (your last command, the
+  base at 0) for up to 5 s (`s.settle()`; `s.replay()` and the replay CLI do it too), so you need not record that wait.
+  A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles) ends the
+  episode as a failure (`s.status()["breakdown"]`). The episode also ends, as a failure, when the robot has fallen over: its base
   tilted more than 41.4° from upright (the z of its up axis below 0.75), or more than 3 cm below the floor, for 10 s of
   simulated time in a row (OmniGibson's own Falling rule; `s.status()["fallen"]`, `s.episode_done`). `s.reset()` starts
   again; the grader's replays end at the same step. While the robot moves, the cameras' frames lag the physics by 2

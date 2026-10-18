@@ -3,7 +3,7 @@
 `docker build`, `docker compose ... build`, or the same as a Python argument list) mentions scripts/stamp_mtimes.py:
 it builds from a stamped copy of the task (`stamp_mtimes.py stage`, `stamp_tree`), or says in a comment why it needs
 none (a base image under images/, not a task). Docker's BuildKit can otherwise put another task's equal-size,
-equal-mtime file into the image (docs/RUNNING.md "Building task images").
+equal-mtime file into the image (docs/protocol/running.md "Building task images").
 
 Usage: check-build-stamps.py   (repo-level; scans scripts/, ci_checks/ and .github/workflows/)
 """

@@ -18,18 +18,17 @@ multi-object manipulation, geometric and dynamic constraints.
 | family | challenge | the robot must | positive example |
 |---|---|---|---|
 | dynamo | nonprehensile | drive into a floor square that three chairs block (fixture) | oracle, both modes; Luna, both |
-| sweep-into-drawer | nonprehensile, tool, dynamic | open a drawer, sweep five cubes into it | Luna, privileged (2026-10-04); run `codex-gpt6_1_sol-high`, standard (2026-10-03, no reset) |
-| scoop-pour | nonprehensile, tool, dynamic | move 50 cubes between bins with a scoop | none yet (`i01`, 2026-10-16) |
+| sweep-into-drawer | nonprehensile, tool, dynamic | open a drawer, sweep five cubes into it | Luna, privileged; run `codex-gpt6_1_sol-high`, standard (no reset) |
+| scoop-pour | nonprehensile, tool, dynamic | move 50 cubes between bins with a scoop | none yet (`i01`) |
 | constrained-cupboard | geometric | six identical rods, each into the compartment it is owed | Luna, privileged only |
-| sweep-simple | nonprehensile, tool | fifty cubes into a box marked on the floor, with a wiper | none yet (`i01`, 2026-10-16) |
+| sweep-simple | nonprehensile, tool | fifty cubes into a box marked on the floor, with a wiper | none yet (`i01`) |
 
 Why these (no model's results enter the choice):
 - **Valid:** KinDER's 3D families whose goal a camera can see or a sentence can name (the 2D ones move an abstract
   planar robot with no real counterpart; LimbRepositioning3D's IKFast module cannot be built in our image).
 - **Most task objects (upstream's `oN`):** scoop-pour 50, sweep-simple 50, constrained-cupboard 6, sweep-into-drawer 5;
   every other 3D family has at most 4.
-- **Variant:** both cube families use their o50 variant (author, 2026-10-16; before, scoop-pour o30 and sweep-simple
-  o10); sweep-simple's o50 has three goals, and the one used is upstream's README example (the right side of the
+- **Variant:** both cube families use their o50 variant; sweep-simple's o50 has three goals, and the one used is upstream's README example (the right side of the
   kitchen island). Scoop-pour's o100 is not used: it simulates about 5x slower, and known 30-cube solutions already use
   770 and 845 of the 1000 control steps. Cupboard (o1-o6) and drawer (o5 only) are at their largest.
 - Per-task reasons: `scripts/kinder/subset.toml`.
@@ -39,11 +38,11 @@ site; each scores 1 under today's privileged verifier, and "both" means it also 
 standard client. "privileged only": the trajectory moves the base diagonally by up to 0.14 m a step, which standard
 mode clips to a 0.1 m disc (the largest move that stays in upstream's per-axis bound after the odometry rotation).
 
-### Open: tasks without a positive example in their own mode (PROTOCOL §2.7, §4)
+### Open: tasks without a positive example in their own mode (PROTOCOL §4)
 
-Scoop-pour and sweep-simple (`i01`, o50, 2026-10-16) have no positive example yet in either mode: they are unvalidated
+Scoop-pour and sweep-simple (`i01`, o50) have no positive example yet in either mode: they are unvalidated
 (`[metadata] validated = false`) until a human review records one, and are ranked with the validated tasks (PROTOCOL
-§2). Every other family has one (human review, §2.7: per family, at least one), so its predicate and instance are known
+§2). Every other family has one (human review, PROTOCOL §4: per family, at least one), so its predicate and instance are known
 to be solvable. One standard twin has none of its own yet:
 
 - `kinder-constrained-cupboard-i00-standard`. Its privileged example moves the base by up to 0.14 m a step.
@@ -53,26 +52,22 @@ to be solvable. One standard twin has none of its own yet:
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
 | privileged | the simulator, its full state (`get_state`/`set_state`) and the goal check | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
-| standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | 0 (author, 2026-10-16; the protocol's default; 10 from 2026-10-11) | the last episode, as it ran (live; nothing replayed) |
+| standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | 0 (the protocol's default) | the last episode, as it ran (live; nothing replayed) |
 
-Grading in standard mode, since 2026-10-17 (owner, board 0150/0151): the live episode. The sim sidecar judges the
-episode it runs with KinDER's own goal check (the environment's `terminated`, at every control step; `step()` in
-`scripts/kinder/shared/standard/server.py`) and ends it there; `rcb_service.py` writes that verdict (`graded_by =
-"live"`, `replays = 0`) once the agent's container is stopped, and no grading replay runs. The old replay re-ran the same
-rows from the frozen scene under the same check (`Session.replay`), with no settle or hold of its own, so the live rule
-is exactly as strict; the 16 archived standard trials keep their verdicts. The frozen start is checked on the live
-simulator: `start_sha` is the instance's recorded `scene_sha` (the state hash right after reset; every archived start
-matched), and a KinDER that no longer builds the instance (rcb_kinder's own check) is `instance_mismatch`; both give up
-as infrastructure (`infra_error = 1`) before the agent is served. The video is one render pass over `trajectory.npz`
-after the verdict (`render_video`, the `task_view` camera; MuJoCo EGL or PyBullet on the CPU; median about 90 s a
-trial), which never changes the verdict; the removed replay was a physics re-run of the episode (at most about as long;
-about 0.5 slot-hours over the archive). `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after
-crashes not all inside the agent's calls, a reset whose scene does not rebuild (the agent's reset was legitimate) and
-`instance_mismatch`; a simulator error raised by the agent's call, crashes
-inside its calls, a timeout and a failure are the agent's 0.
+Grading in standard mode: the live episode. The sim sidecar judges the episode it runs with KinDER's own goal check
+(the environment's `terminated`, at every control step; `step()` in `scripts/kinder/shared/standard/server.py`) and
+ends it there; `rcb_service.py` writes that verdict (`graded_by = "live"`, `replays = 0`) once the agent's container is
+stopped. The frozen start is checked on the live simulator: `start_sha` is the instance's recorded `scene_sha` (the
+state hash right after reset), and a KinDER that no longer builds the instance (rcb_kinder's own check) is
+`instance_mismatch`; both give up as infrastructure (`infra_error = 1`) before the agent is served. The video is one
+render pass over `trajectory.npz` after the verdict (`render_video`, the `task_view` camera; MuJoCo EGL or PyBullet on
+the CPU; median about 90 s a trial), which never changes the verdict. `infra_error = 1` only for no or an unfinalized
+`final.json`, a give-up after crashes not all inside the agent's calls, a reset whose scene does not rebuild (the
+agent's reset was legitimate) and `instance_mismatch`; a simulator error raised by the agent's call, crashes inside its
+calls, a timeout and a failure are the agent's 0.
 
-World-frame information (PROTOCOL D7): privileged mode gives KinDER's world state; standard mode gives none -- odometry
-starts at the robot's start pose, and the goal is named by what the cameras see. One exception since 2026-10-16: where
+World-frame information (PROTOCOL §5): privileged mode gives KinDER's world state; standard mode gives none -- odometry
+starts at the robot's start pose, and the goal is named by what the cameras see. One exception: where
 the goal is a translucent region marked on the floor (dynamo's green square, sweep-simple's grey box), faint in the
 robot's cameras, the standard instruction states its centre, size (and the box's height) in the odometry frame at t = 0,
 measured on the frozen instance (`gen_tasks.py measure`, facts.json `goal_region`).
@@ -90,20 +85,16 @@ measured on the frozen instance (`gen_tasks.py measure`, facts.json `goal_region
 harbor run -p tasks/kinder-scoop-pour-i01-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
-Agent, provider and effort settings: docs/RUNNING.md. Agent time cutoff: 1800 s in both modes (author, 2026-10-16;
-3600 s before). Standard tasks grant no reset by default (author, 2026-10-16; the protocol's default): one episode, whose 1000 control steps the practice and the graded attempt share;
+Agent, provider and effort settings: docs/protocol/running.md. Agent time cutoff: 1800 s in both modes. Standard tasks grant no reset by default (the protocol's default): one episode, whose 1000 control steps the practice and the graded attempt share;
 `RCB_RESET_BUDGET=N harbor run ...` runs a configuration with N resets, whose results are reported separately (the shipped instruction describes the default, one episode; for N > 0 regenerate the tasks with `RESET_BUDGET = N`, which renders the reset rules and `r.reset()`). Build the image: `docker build -f images/kinder/Dockerfile -t
 ghcr.io/mll-lab-nu/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
 
 ## Results
 
-Agent results are not kept in this repository (PROTOCOL D3): per-run READMEs (verdict, cost, what happened),
-`reward.json`, the video's last frame and videos are published on the results site, keyed by run id. Standard-mode
-runs with none (the default from 2026-10-16), with 10 (the default 2026-10-11 to 2026-10-16) and with 50 (the
-optional capability before it) are reported separately (PROTOCOL D1), as are runs with the 3600 s cutoff (before 2026-10-16), and runs recorded before
-protocol v1.0 are marked as such.
+Agent results are not kept in this repository: they are published on the results site, keyed by run id. Standard-mode
+runs with another reset budget are reported separately.
 
-## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+## Standard-mode service details
 
 **KinDER and HumanoidBench service (`eai-standard/2.1`).** Same endpoints, RCB1 frames and crash recovery, served by one
 shared service (`scripts/{kinder,humanoidbench}/shared/standard/rcb_service.py`, identical in both) with a per-benchmark

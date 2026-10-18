@@ -162,7 +162,7 @@ CUTOFF = {"privileged": 1800, "standard": 1800, "standard-realtime": 1800}
 STD_COMPOSE = f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and rendering (EGL when a GPU is there, else OSMesa); no GPU reservation.
-# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/protocol/standard_mode.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 services:
   main:
@@ -180,6 +180,8 @@ services:
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "{CUTOFF['standard']}"
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in about a second
+      RCB_COLLECT_BUDGET_S: "1200"   # the collect hook's timeout_sec (task.toml): finalize.sh fits the verdict and the video in
+      RCB_COLLECT_VIDEO_MAX_S: "600"   # the video pass's bound (at most the horizon, ~150 frames: well under a minute)
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
       RCB_RESET_BUDGET: "${{RCB_RESET_BUDGET:-{RESET_BUDGET}}}"   # Playground quadrupeds standard: {RESET_BUDGET} resets (PROTOCOL §4.5); 0: one episode
@@ -547,13 +549,28 @@ STD_CHANGES_RESETS = [
     "rule are unchanged; results recorded before this change ran with one episode and are reported separately.",
 ]
 
+STD_CHANGES_LIVE = [
+    "2026-10-17 (owner, boards 0150 and 0151): **graded by the live episode, no grading replay.** `environment/sim/finalize.sh`, "
+    "`environment/sim/server.py`, the new `environment/sim/video.py`, `tests/grade.py`, `task.toml`, the compose file. Success "
+    "is the task's check on the episode the service ran (`graded_by = \"live\"`, `replays = 0`): `rcb_quadruped.Session.check()` "
+    "on the live simulator when the episode ends, with its holds inside it. The collect hook no longer replays the trajectory "
+    "in two fresh processes (success was live ∧ both replays ∧ the same final state); the rule is the same, since the replays "
+    "ran the same rows through the same check. `replay.mp4` comes from one video-only pass after the verdict. A new collect "
+    "hook on `main` (`kill -9 -1`, before the sim's) stops whatever the agent left running before the episode is ended and "
+    "judged (PROTOCOL H.4). The frozen "
+    "instance is checked when the service builds the scene (its `state_sha`; a mismatch gets no episode, `instance_mismatch`, "
+    "infrastructure; before, the tooling raised and the service restarted until compose gave up). The scene, the instance, "
+    "the pass rule and what the agent sees are unchanged, so the task keeps its name; `reward.json` no longer has "
+    "`replay_success`, `deterministic` and `live_matches_replay`.",
+]
+
 
 def make(env: str, out: Path) -> tuple[Path, ...]:
     inst_path = HERE / "instances" / f"{env}.json"
     inst = json.loads(inst_path.read_text())
     v = values(env, inst)
     v["change_log_std"] = "\n".join(f"- {c}" for c in STD_CHANGES + (STD_CHANGES_BARKOUR if "Barkour" in env else []) + STD_CHANGES_R2
-                                    + STD_CHANGES_RESETS)
+                                    + STD_CHANGES_RESETS + STD_CHANGES_LIVE)
     oracle = HERE / "oracles" / f"{env}.npy"
 
     p = out / f"{v['name']}-privileged"
@@ -588,6 +605,7 @@ def make(env: str, out: Path) -> tuple[Path, ...]:
     put(s / "environment/sim/run.sh", src=LAYER / "run.sh", mode=0o755)
     put(s / "environment/sim/server.py", src=SHARED / "standard/server.py")
     put(s / "environment/sim/finalize.sh", src=SHARED / "standard/finalize.sh", mode=0o755)
+    put(s / "environment/sim/video.py", src=SHARED / "standard/video.py")
     put(s / "environment/sim/rcb_quadruped.py", src=SHARED / "rcb_quadruped.py")
     put(s / "environment/sim/instance.json", src=inst_path)
     put(s / "tests/Dockerfile", STD_TESTS_DOCKERFILE)

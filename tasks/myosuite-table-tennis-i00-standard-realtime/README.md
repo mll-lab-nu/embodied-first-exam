@@ -23,10 +23,10 @@ Same instance and success rule as the standard twin (first-pass rating: hard, ha
 None in the repository. Solvability evidence: a successful episode of the privileged twin (82 rows, GPT-6 Luna xhigh) planned from step 0 through this service at S = 1 succeeded live and in the fresh replay, with no stall (board 0112, 2026-10-14).
 
 ## Verification
-The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with `environment/sim/server.py`, MyoSuite's adapter) judges the episode live and records every control step it ran (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and signals the service, which replays the graded episode in a fresh MyoSuite session and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, the replay succeeds and ends in the same state. The clock's record (`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), reward 0.
+The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with `environment/sim/server.py`, MyoSuite's adapter) judges the episode live and records every control step it ran (`trajectory_live.f64`), after checking at the episode's start that the scene is the frozen instance (its recorded state hash; else `instance_mismatch`, an infrastructure failure); after the agent's time the collect hook stops the agent's programs and signals the service, which writes the live episode's verdict to `final.json` (`graded_by` = `live`; nothing is replayed to grade it) and then renders `replay.mp4` from the trajectory, which decides nothing; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded. The clock's record (`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the episode never starts (its clock starts at the first submit), reward 0.
 
 ## Compute resources
-Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
 
 | | Agent phase | Verifier |
 |---|---|---|
@@ -35,15 +35,15 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 | GPU memory | 1 GB | 1 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any NVIDIA GPU with EGL (RTX 4090 / L4).
-- Measured: as the standard twin (sim 1.2-1.4 GB, docker stats, board 0112); the GPU only renders the cameras over EGL (5 ms a frame; board 0112, 2026-10-14, ws-1); the sim keeps the GPU through the collect hook (fresh replay and video)
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 4 GiB GPU memory, 14 GiB memory. Limits measured: GPU: EGL rendering only, under 1 GiB (board 0112) -> peak + 4; memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
+- Measured: as the standard twin (sim 1.2-1.4 GB, docker stats, board 0112); the GPU only renders the cameras over EGL (5 ms a frame; board 0112, 2026-10-14, ws-1); the sim keeps the GPU through the collect hook (the video render; no replay since 2026-10-17)
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 4 GiB GPU memory, 14 GiB memory. Limits measured: GPU: EGL rendering only, under 1 GiB (board 0112) -> peak + 4; memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): measured RTF 2.1-2.7 (2026-10-14, board 0112, ws-1 (32 cores, load 30-60), the service capped at 4 CPUs: 2.08 with the realtime service's clock flat out (RCB_SLOWDOWN = 0.01, 11 episodes, 13.3 s of robot time), 2.6-2.7 for the bare physics; S = ceil(1.5 / 2.08) = 1. At S = 1 a controller at the control rate with a camera image every 0.25 s ran 11 episodes with no stall (largest lag 0.23 s), and an EGL frame takes 5 ms (an OSMesa one 1.3 s)) |
-| Service | the realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics (`rcb_realtime.py`, `rcb_service.py`, unchanged) with `server.py`, which implements `rcb_service.Sim` on `rcb_myosuite.Session` (the standard twin's scene, action, success rule and replay); cameras `topview`, `default`, `close_up`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480, EGL on the GPU) |
+| Service | the realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics (`rcb_realtime.py`, `rcb_service.py`, unchanged) with `server.py`, which implements `rcb_service.Sim` on `rcb_myosuite.Session` (the standard twin's scene, action and success rule); cameras `topview`, `default`, `close_up`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480, EGL on the GPU) |
 | Resources | 4 CPUs and a GPU for rendering (the physics is on the CPU) |
 | Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §4b): `POST /reset` starts a new episode from the frozen instance, paused; only the last episode is graded, a success ends the trial; results under another budget or slowdown are reported separately |
 
@@ -54,3 +54,11 @@ Generated by `scripts/myosuite/generate.py` from `scripts/myosuite/instances/tab
 ### Change Log
 - 2026-10-14 (owner, board 0112): added. The family's scene is dynamic (PROTOCOL §2.14), so it gets a standard-realtime
   twin with S = 1 and 10 resets.
+- 2026-10-17 (owner, boards 0150 and 0151): graded by the live episode; no grading replay. The service
+  (`environment/sim/rcb_service.py`, the shared layer, and `environment/sim/server.py`, which no longer has a fresh-replay
+  `verify()`) writes the live episode's verdict (`graded_by` = `live`, `replays` = 0) and renders `replay.mp4` from the
+  trajectory after it; it checks at the episode's start that the scene hashes to the frozen instance's recorded state
+  (`start_sha`; else `instance_mismatch`, an infrastructure failure). The collect hook waits 300 s for the verdict (was
+  840 s, which a replay needed), the video until 870 s as before. `tests/grade.py`: success = the live success. The
+  instruction says the episode is graded as it ran. The scene, the instance, the pass rule, the clock and the slowdown
+  are unchanged, so the task keeps its name; a result graded before passed only if the live episode succeeded too.

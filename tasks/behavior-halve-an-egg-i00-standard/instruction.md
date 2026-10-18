@@ -2,11 +2,22 @@
 
 You drive an **R1Pro** mobile bimanual robot around a house **as if it were real hardware**: the simulator (BEHAVIOR-1K
 v3.9.2, the 2026 BEHAVIOR Challenge stack) runs in a service you cannot open. You get one client and one episode.
-**Task:** Halve the egg. A hard-boiled egg is inside the kitchen refrigerator; a chopping board with a carving knife on it and a plate lie on the countertop, and there is a sink in the kitchen. Cut the egg in half, put both halves on the plate and put the carving knife into the sink. Success means all of the following hold at the same time: (1) both egg halves exist (the egg has been cut); (2) both halves are on top of the plate; (3) the carving knife is inside the sink. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. ontop(A, B): A touches B and B is directly below A (and not above it). real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal and the episode ends the moment it holds.
+**Task:** Halve the egg. A hard-boiled egg is inside the kitchen refrigerator; a chopping board with a carving knife on it and a plate lie on the countertop, and there is a sink in the kitchen. Cut the egg in half, put both halves on the plate and put the carving knife into the sink. Success means all of the following hold at the same time: (1) both egg halves exist (the egg has been cut); (2) both halves are on top of the plate; (3) the carving knife is inside the sink. How the simulator judges them: inside(A, B): the centre of A's axis-aligned bounding box lies within B's bounding box and within B's interior (container) volume. ontop(A, B): A touches B and B is directly below A (and not above it). real(A): A exists in the simulation. What the BDDL problem declares future (halves, diced pieces, cooked food, a dish) does not exist at the start: the simulator's transition rules create it. A sliceable object touching the blade of an active slicer (a knife, an axe; after a cut the blade rests for 2 s) is replaced by its two halves, so the whole one is no longer real; a diceable half touching the blade turns into diced pieces (particles); and a recipe's ingredients, heated together in their container or vessel on or in an active heat source, turn into the cooked food or the dish. The service checks the goal; it counts once it has held for 1 s, released and at rest (Rules).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when the robot has fallen over, when
-  your time is up, or on a simulator error. Whatever you knock over or push away stays where it ends up.
+  your time is up, on a simulator error or breakdown, or at the runaway guard. Whatever you knock over or push away stays where it ends up.
+- **Success is a settled scene**: the goal has held for 1 s of simulated time in a row (30 control steps) with no goal
+  object in a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal object at
+  rest (slower than 0.05 m/s); then the episode ends (`meta["reason"]` "success"). An object still in the hand, or a
+  goal that holds for one frame, is not success. Open the gripper, move clear and let the robot stand (e.g.
+  `r.get_obs(seconds=2.0)`). The goal objects are every object the goal names, a tool or appliance it names (even
+  inside a `not`) included. When your episode is still running at the end of your time (you stopped early, or your
+  time ran out), the service holds the robot still (your last command, the
+  base at 0) for up to 5 s more on the same simulator, and a goal that settles there counts; the service judges the
+  episode itself, nothing is replayed.
+- A simulator breakdown (a non-finite or runaway robot or goal-object state, e.g. after the robot tumbles; reason
+  "failure: simulator breakdown") ends the episode as a failure.
 - **A fall ends the episode as a failure** (`meta["reason"]` "failure: the robot fell over"): the robot has fallen over
   when its base has been tilted more than 41.4° from upright, or more than 3 cm below the floor, for 10 s of simulated
   time in a row (OmniGibson's own Falling rule; tilted means the z of the base's up axis is below 0.75, which the

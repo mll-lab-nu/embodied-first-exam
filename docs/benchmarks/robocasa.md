@@ -70,12 +70,12 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items
 4. The protocol is reported as `eai-standard/2.1`, with HumanoidBench's client (accepts both spellings); a simulator
    error (500) ends the episode with `reason = "error"`; a body over 64 MB gets 413; the grader writes numeric fields.
 5. A first collect hook stops every process in the agent's container before the episode is ended (as HumanoidBench).
-6. **Graded by the live episode** (since 2026-10-17, owner, boards 0150 / 0151; `finalize()`). When the episode ends
+6. **Graded by the live episode** (`finalize()`). When the episode ends
    (the collect hook's SIGUSR1 after the agent's container was stopped) the service judges the episode it ran:
    `success = live_success ∧ ¬initial_success ∧ reason ≠ "error"`, where `live_success` is the environment's own
    `_check_success` as the live episode last ran it (after the last executed control step; the check's call pattern,
    twice per step, is the privileged verifier's) and `initial_success` is the check at the scene's start. No settle or
-   hold window: the privileged rule has none, and the replay it replaces ran the same steps and nothing more. An
+   hold window: the privileged rule has none. An
    episode ended by a simulator error is no success (its last state is a partial step's). Nothing is replayed to grade
    it. It writes the trajectory and the verdict together with `"finalized": true` in one atomic write of `final.json`
    (`graded_by = "live"`, `replays = 0`, `live_state_sha` = `state_sha`, `video_source = "render"`). Only then it
@@ -90,45 +90,29 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items
    an unreadable or an unfinalized `final.json`; a give-up after crashes not all inside the agent's calls
    (`sim_crashed`, `resume_failed`); `instance_mismatch` (item 11); `finalize_error`. The agent's own result (0, never
    infra): a crash inside its calls (`sim_crashed_on_call`), a simulator error from its actions (`sim_error`), the
-   timeout. Before 2026-10-17 a fresh `casa_tool.Session` in the same process replayed the trajectory and
-   `success = live ∧ replay ∧ deterministic ∧ ¬initial` (2026-10-10 to 2026-10-17: verdict before video; before
-   2026-10-10 verdict and video in one window).
+   timeout.
 7. **Collect hook** `environment/sim/finalize.sh` (`scripts/robocasa/shared/finalize.sh`; `timeout_sec = 3600`). It
    sends SIGUSR1 (again every 30 s) and waits for the verdict, then for the video, up to 3450 s in all on the clock
    (`RCB_COLLECT_WAIT_S`). The verdict takes a second; the wait is long only for a service that crashed late in the
    episode and resumes it from its journal first (crash recovery replays the journal, at most the episode's physics):
-   a wait cut short there would turn a live result into an infrastructure failure (RoboCasa365's lesson of board 0136,
-   where the pre-2026-10-10 hook gave up on its grading replay). Without any episode (the service never became ready)
+   a wait cut short there would turn a live result into an infrastructure failure. Without any episode (the service never became ready)
    it stops after 600 s. Budget of the video's render pass: one scene build (20–60 s), the episode's physics once more
-   at about 0.035 s per control step (oracle trials, 2026-10-02: replay and video passes together 0.064–0.078 s per
-   step; the live service takes 0.047–0.062 s per step with its cameras) and at most about 300 frames (OSMesa,
+   at about 0.035 s per control step (the live service takes 0.047–0.062 s per step with its cameras) and at most about 300 frames (OSMesa,
    320 x 240), so 3450 s covers about 95,000 control steps, 48,000 on a host twice as slow; the live episode ran the
    same physics plus its cameras within the agent's hour. Cost per trial: about one replay's worth of CPU time
    (0.035 s per step, about 3 minutes for a 5,000-step episode, 30–60 minutes at most for an hour-long one) on the
-   sidecar's CPUs, no GPU; the grading replay it replaces cost the same again (2026-10-02 to 10-17: replay + video
-   pass ≈ 2 × that). The hook's 3600 s is a number of its own, sized for the agent cutoff of 3600 s (the cutoff is
-   each task's own `[agent] timeout_sec`, history in `docs/CUTOFFS.md`, and every instruction states it in its
-   closing `## Time limit` section): lowering the cutoff keeps it safe, raising it means raising `COLLECT_TIMEOUT_S` in
-   the three RoboCasa generators too. Before 2026-10-17 the video waited at most as long again as the verdict took
-   + 120 s; before 2026-10-10 the hook waited 980 s of a 1500 s timeout for verdict and video together, which lost
-   episodes over about 10,000 control steps.
+   sidecar's CPUs, no GPU. The hook's 3600 s is a number of its own, sized for the agent cutoff of 3600 s (the cutoff is
+   each task's own `[agent] timeout_sec`, docs/protocol/README.md §2, docs/protocol/running.md "The agent's time"): lowering the cutoff keeps it
+   safe, raising it means raising `COLLECT_TIMEOUT_S` in the three RoboCasa generators too.
 8. **Request validation.** A request is checked as a whole before any physics (`parse_submit` / `parse_observe`):
    a `dt`, `seconds` or `video_fps` that is not a finite number in range, `cameras` that is not a list of names,
    a `note` that is not a string, actions that are not a `(T, N)` array of finite numbers are a 400 and nothing ran
    (PROTOCOL §4.6); `null` means "not given". Only an error while the simulator executes is a 500 and ends the
    episode. Kept as it was: camera names the robot does not have are ignored, and an unknown `video` value means
-   "last frame only". `dt = 0` used to mean `control_dt` and is now a 400.
-9. Since 2026-10-13 `time_s` and `time_left_s` count from the agent's first request to the service (any endpoint;
-   logged as `first_request` in `episode.jsonl`, which a resume reads back), as in every other benchmark
-   (STANDARD_MODE.md, "The agent's clock"). The rule of 2026-10-10 below started the clock too early: Harbor counts
-   the agent's cutoff around the agent's run only, and the sidecar starts with the environment, before the harness
-   is installed (a median of 79 s earlier over the recorded trials, board 0085), so `time_left_s` reached 0 while the
-   agent still had that time. 2026-10-10 to 2026-10-13:
-   `time_left_s` counts from the first start of the service's process (the first line of `startups.jsonl`). The
-   sidecar starts together with the agent's container, so this is the agent's own clock to within a second or two
-   (oracle trial: 1.1 s after it; earlier when the harness sets the agent up first). Before, it counted from the end
-   of the scene build (27 s later in that trial, more after a failed start) and overstated what was left by that
-   much. `time_s` and `elapsed_s` count from the episode's start (the service ready), as before.
+   "last frame only". `dt = 0` is a 400.
+9. `time_left_s` counts from the agent's first request to the service (any endpoint; logged as `first_request` in
+   `episode.jsonl`, which a resume reads back), as in every other benchmark (docs/protocol/standard_mode.md, "The agent's clock").
+   `time_s` counts from the agent's first request too; `elapsed_s` from the episode's start (the service ready).
 
 Tests: `scripts/robocasa/tests/test_graders.py` (CI `unit-tests`): the grader on forged records and, with numpy, the
 service and its collect hook on a stand-in tool module (live success / failure, a success lost before the end, a
@@ -136,39 +120,22 @@ failed video, a simulator error, crashes inside and between calls, the start che
 `scripts/mujoco-playground/tests/test_standard_2_1_servers.py` (`TestServerCasa`): request handling, the agent's clock,
 the camera pose.
 
-10. **Camera calibration = the rendered viewpoint** (2026-10-13, board 0093; found in board 0086). `cam2world_gl` is
-   `data.cam_xpos` / `data.cam_xmat` of the camera, the pose the renderer draws the mono RGB and depth images from
-   (`cam2world()`, as `server_mj.py` since #135). Until 2026-10-13 it was MuJoCo's left-eye camera `scene.camera[0]`,
-   which sits half the camera's interpupillary distance (`cam_ipd` 0.068 m) to its left: 3.4 cm off, in all three
-   RoboCasa benchmarks. Checked with MuJoCo's own renders of 4 mm marker spheres at known world points (nothing else
-   drawn), every served camera, at the start and after the robot had moved: the marker's projection through the
-   reported calibration was 10.5–10.7 px median (up to 28 px for near points, always to the same side) from where it was
-   drawn, and is now 0.15 px median, at most 0.4 px. The intrinsics (`fx = fy = (H / 2) / tan(fovy / 2)`, principal
-   point at the image centre) were already right: every camera of these models is given by its `fovy` (no
-   `sensorsize`, checked on the RoboCasa, RoboCasa365 and RoboCasa-GR1 models), unlike ALOHA's (#164). **Standard-mode
-   results from before 2026-10-13 used the offset calibration** (a point located from the images came out about
-   3.4 cm to the side; agents missed a microwave button by 3.5 cm) and are not strictly comparable with later ones.
-   The service is copied into each task (`environment/sim/server_casa.py`, mounted into the sidecar): no image rebuild.
-11. **Start-state check** (2026-10-17, board 0151; `_start_mismatch()`). With no replay from the frozen instance, the
+10. **Camera calibration = the rendered viewpoint.** `cam2world_gl` is `data.cam_xpos` / `data.cam_xmat` of the
+   camera, the pose the renderer draws the mono RGB and depth images from (`cam2world()`, as `server_mj.py`), not
+   MuJoCo's left-eye camera `scene.camera[0]` (3.4 cm to the side): a marker's projection through the reported
+   calibration is within 0.4 px of where it is drawn. The intrinsics are `fx = fy = (H / 2) / tan(fovy / 2)`,
+   principal point at the image centre (every camera of these models is given by its `fovy`, no `sensorsize`).
+11. **Start-state check** (`_start_mismatch()`). With no replay from the frozen instance, the
    start is checked when a fresh episode begins, before the port is bound: the instance file's own hash against
    `RCB_INSTANCE_SHA` (frozen/report.json; `casa_tool` also checks the file against its embedded hash on load), the
    start state's hash (`casa_tool.state_hash`: MuJoCo integration state, the model arrays the kitchen rewrites, the
    task's Python state) against `RCB_START_SHA` (`scripts/<benchmark>/frozen/start_state.json`: the hash every
-   archived standard episode of the instance logged at its start, 776 episodes of 102 instances of the three
-   benchmarks, 2026-10-02 to 10-17, every runner host, never two values for one instance; `import_references.py`
-   records it for an instance imported from now on), and the scene must not be solved at the start (no frozen
+   archived standard episode of the instance logged at its start, on every runner host, never two values for one
+   instance; `import_references.py` records it for a newly imported instance), and the scene must not be solved at the start (no frozen
    instance is). A mismatch gives up as `instance_mismatch`, `infra_error = 1`; the agent is never served. Both
    variables are in the task's `environment/docker-compose.yaml` (the sidecar's environment; the agent never sees
    it). Not checked: an instance without an archived episode (RoboCasa365 `PortionInTupperware`) has no start hash,
    only the file's; re-record `start_state.json` whenever the image or `casa_tool` changes how a scene is built.
-
-## Change log
-- 2026-10-17 (owner, boards 0150/0151): standard mode graded by the live episode (items 6, 7, 11); no grading replay;
-  video by one render pass from the trajectory after the verdict; the start checked against the frozen instance at
-  the episode's start. 103 standard task directories of the RoboCasa series regenerated (and RoboCasa365's
-  standard-realtime twin); scene, instances, success check, cutoff and what the agent sees except the instruction's
-  scoring sentence unchanged, so the tasks keep their names. Archived results: re-score with `live_success` (see the
-  board 0151 report).
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries
@@ -181,11 +148,10 @@ uses the registry (only `robocasa/demos`, `robocasa/scripts` and `utils/{env,eva
 ## Image
 `images/robocasa/Dockerfile` pins the base image by digest, every pip package, the RoboCasa commit and every asset
 archive by SHA-256 (`fetch_objects.sh` for the object meshes). It reproduces the content of the image the tasks were
-validated with, which was built in the PR #4 era from the same pins in several steps; that build is the one tagged
-`eai-robocasa:0.1.0` on the authoring machine. **That build predates the §2.7 scrub above (it still has the
-downloader, the links and `.git`): the image must be rebuilt from this Dockerfile before it is pushed or used for
-runs.** The scrub touches no file the simulation loads, so the hashes below should not move. **A clean rebuild from this Dockerfile has not been run yet** (it
-downloads ~12 GB and needs ~50 GB of free disk; the authoring machine had ~30 GB): run it, then `freeze`-check the
+validated with. **Open: the tagged `eai-robocasa:0.1.0` build predates the scrub above (it still has the
+downloader, the links and `.git`); rebuild from this Dockerfile before pushing or running.** The scrub touches no file
+the simulation loads, so the hashes should not move. A clean rebuild downloads ~12 GB and needs ~50 GB of free disk;
+after it, `freeze`-check the
 hashes (`import_references.sh`, which must report the same `instance_sha`, `live_state_sha` for every task), before
 publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0, jianzhang96/robocasa-assets Apache-2.0,
 RoboCasa's own object archives on UT Box (CC-BY-4.0, as RoboCasa licenses its assets on robocasa/robocasa-assets), NVIDIA PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes)
@@ -209,15 +175,12 @@ demonstration's initial state, execute its actions with the native controller, v
 (87–1007 actions) succeeds on its final state without truncation; two replays in fresh processes end in the live
 state's hash and succeed; the success survives 10 more still steps.
 
-Harbor runs on the generated tasks (AMD Ryzen 9 7950X, Docker, no GPU): `-a oracle` 29/29 privileged and 6/6 standard
-score 1; `-a nop` scores 0 on four tasks per mode; on the final task digests (protocol v1.0.1 names and READMEs) oracle
-and nop again on a sample. Scripted cheat attempts and two Codex red-team trials score 0. Agent results are not kept in
-the repository (PROTOCOL D3).
+Harbor runs on the generated tasks: `-a oracle` scores 1 (29/29 privileged, 6/6 standard sampled), `-a nop` 0;
+scripted cheat attempts and Codex red-team trials score 0.
 
 ## Easy set
 
-The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
-run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is

@@ -5,5 +5,8 @@ FROM ghcr.io/mll-lab-nu/eai-behavior:0.1.1
 COPY instance.json /app/instance.json
 COPY rcb_behavior.py r1pro_primitives_eval.yaml /opt/tools/
 ENV PYTHONPATH=/opt/tools
+# sets of strings iterate in the same order in every process (with the tooling's stable object hashes, item 16 of the
+# 2026-10-14 failure analysis: a replay must take the same path as the live run)
+ENV PYTHONHASHSEED=0
 RUN mkdir -p /app/output
 WORKDIR /app

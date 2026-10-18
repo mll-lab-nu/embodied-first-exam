@@ -8,15 +8,13 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
   { source = "/data/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/data/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/data/replay2.log", service = "sim" },
-  { source = "/data/replay3.log", service = "sim" },           # and its third, which renders replay.mp4
+  { source = "/data/video.log", service = "sim" },             # the collect hook's video pass, which renders replay.mp4
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/dexjoco-water-plant-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo water_plant (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-water-plant-i00-privileged. Pick up the spray bottle, point its nozzle at the potted plant and squeeze the trigger. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo water_plant (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as dexjoco-water-plant-i00-privileged. Pick up the spray bottle, point its nozzle at the potted plant and squeeze the trigger. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode and grades it live (no grading replay)."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "standard-mode", "robot-as-a-service", "water_plant"]
 
@@ -27,13 +25,13 @@ simulator = "dexjoco"
 robot = "franka-allegro"
 family = "water_plant"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "full"
 expert_time_estimate_hours = 1.5
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 4.0
 min_memory_gb = 5.0
 min_gpu_memory_gb = 0.0
@@ -45,7 +43,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPUs: 4, visible to each container that runs the simulator (cpuset / affinity, not a quota): OpenBLAS runs no more threads than that and DexJoCo's result differs below 4 (docs/benchmarks/dexjoco.md, Threads); with fewer there is no verdict (too_few_cpus, infra_error)"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -61,12 +59,12 @@ trial_max_memory_gb = 14.0
 measured = "memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.9 GiB, 2 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -77,16 +75,23 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = 7200                # two replays of an episode without a step cap, then the video (finalize.sh: RCB_COLLECT_BUDGET_S)
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write the live verdict into final.json, then the video
+timeout_sec = 5580                # the service's end (<= 900 s) + one video pass of the longest episode (finalize.sh: RCB_COLLECT_BUDGET_S)
 
 [agent]
 timeout_sec = 3600.0

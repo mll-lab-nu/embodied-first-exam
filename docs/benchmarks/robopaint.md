@@ -10,83 +10,59 @@ the oil paintings `i01`, Targets); `[metadata].family = "robopaint_<family>_<tar
 not in this repository: its tooling serves only rcb-limited/2.0.
 
 Every task has **process rules** on top of the picture rule: the exemplar has to be written or painted with strokes, the way a
-person does, not coloured in (Process rules). Results of the earlier version of these tasks, which scored only the final sheet
-against the picture, are not comparable with this one.
+person does, not coloured in (Process rules).
 
 ## Targets
-This version (2026-10-08/09, owner) prunes the families that GPT-6 Astra saturated, adds harder ones and makes the oil paintings
-finer:
-- 楷书 kaishu keeps two works: 永字八法 (21 strokes) and 麟鳳龜龍 (71), new. The 31 single characters and the works 天道酬勤,
-  厚德載物 and 寧靜致遠 are removed: GPT-6 Astra solved all four existing works in both modes.
-- 行书 xingshu keeps eight: 永, 和, 風, 年, 山, 賢 and the works 惠風和暢 and 茂林脩竹. The eight that GPT-6 Astra solved in
-  standard mode are removed: 春, 閒, 人, 天朗氣清, 同, 信, 宇, 之.
-- The ten calligraphy pairs' reference solutions are re-made (below). Their environment/, tests/ and instruction.md are those
-  of the earlier version, so the eight kept xingshu pairs and 永字八法 keep their names.
-- 草书 caoshu is new: two characters and four works (Caoshu).
-- Lettering is redesigned: the ten authored minim words are removed (Astra 10 of 10 in standard mode), and six copies of
-  engraved English round hand are added (Lettering).
-- Oil: the eleven paintings get a pointed brush, new reference solutions and a recalibrated rule (Oil: the pointed brush).
-  Their frozen instances and verifiers changed, so they are new tasks (PROTOCOL §2.8): `robopaint-oil-<painting>-i01`, which
-  replace `-i00`.
-- Acrylic is unchanged.
-- The records below (release validation, Validation, Calibration) are of the 82 targets of their time; they are not
-  recomputed for the 43 of this version.
+- 楷书 kaishu: two works, 永字八法 (21 strokes) and 麟鳳龜龍 (71).
+- 行书 xingshu: eight, 永, 和, 風, 年, 山, 賢 and the works 惠風和暢 and 茂林脩竹.
+- 草书 caoshu: two characters and four works (Caoshu).
+- Lettering: six copies of engraved English round hand (Lettering).
+- Oil: eleven paintings with a pointed brush (Oil: the pointed brush), `robopaint-oil-<painting>-i01`.
+- Acrylic: ten paintings.
 
-**麟鳳龜龍** (the four auspicious creatures of the 禮記) is denser than 寧靜致遠, the hardest of the works it replaces: 71
-strokes against 53, an exemplar of 8036 mm² against 6730 mm², strokes about 4.2 mm wide against 4.7 mm (the exemplar's area per
-stroke length), and 麟 alone has 23 strokes. It is made like the other kaishu targets: Make Me a Hanzi's `graphics.txt` @ bddc96d
+**麟鳳龜龍** (the four auspicious creatures of the 禮記) is the densest work: 71 strokes, an exemplar of 8036 mm², strokes
+about 4.2 mm wide (the exemplar's area per stroke length), and 麟 alone has 23 strokes. It is made like the other kaishu targets: Make Me a Hanzi's `graphics.txt` @ bddc96d
 (Arphic Public License), `scripts/robopaint_brush_mk_task.py --family kaishu --target linfengguilong --entry diagonal`,
 `measure_reference.py`, `mk_tasks.py`.
 
-**The reference writer's entry (`--entry`).** Seven works of 60–71 strokes were tried (鸞翔鳳翥, 麟鳳龜龍, 鐵畫銀鉤, 鶴髮童顏,
-蘭薰桂馥, 翰墨飄香, 歡聲雷動). With the reference writer as it was, every reference solution failed the picture rule on stray
-ink (0.040–0.067; the limit is 0.04), although the robot-free plans had about 0.007 (measured for 鸞翔鳳翥 and 麟鳳龜龍). The
-writer stops above each stroke's start, presses straight down and lifts straight up. At the stop the arm rebounds a fraction of
-a millimetre, and the brush takes the rebound as its direction of travel (in the air θ follows any motion faster than 1 cm/s):
-on about a quarter of the strokes the drag tail met the paper turned against the stroke and swept a disc. Dense works have many
-short, thin strokes, where these discs fall outside the exemplar. With `solution/opt_calli.py --entry diagonal` (recorded in the
+**The reference writer's entry (`--entry`).** The default writer stops above each stroke's start, presses straight down
+and lifts straight up. At the stop the arm rebounds a fraction of a millimetre, and the brush takes the rebound as its
+direction of travel (in the air θ follows any motion faster than 1 cm/s): on about a quarter of the strokes the drag tail
+meets the paper turned against the stroke and sweeps a disc. Dense works have many short, thin strokes, where these discs
+fall outside the exemplar and fail the stray-ink limit. With `solution/opt_calli.py --entry diagonal` (recorded in the
 pair's `plans.json`) the brush enters and leaves the paper on straight 8 mm lines along the stroke, without a stop, in the
-robot-free optimisation and on the robot alike. The stray ink drops to 0.016–0.019: 麟鳳龜龍 and 鐵畫銀鉤 pass; 鸞翔鳳翥 still
-fails, because two strokes of 鸞 stay below 0.80 coverage, already in its robot-free plan. The default is the vertical
-touch-down. With it the new code writes the same plans as the old one, and its robot step on 永字八法's frozen plans gives that
-pair's frozen trajectory bit for bit. Only the solution code under 永字八法's `solution/` changed; its `environment/` and
-`tests/` did not.
+robot-free optimisation and on the robot alike. The default is the vertical touch-down.
 
-**The reference solutions, re-made on 2026-10-09.** The owner's review of the references: a copy should look like its exemplar,
-"like a print". Strokes were missing (賢's two inner horizontals), starts had blobs and ends had needle tails. All ten
-calligraphy pairs now have references from a new planner, `solution/opt_calli.py --profile print` (its `solution/README.md`
-has the method; the earlier per-stroke planner stays its default):
+**The reference solutions.** A copy should look like its exemplar, "like a print". All ten kaishu and xingshu pairs have
+references from `solution/opt_calli.py --profile print` (its `solution/README.md` has the method; the per-stroke planner
+stays its default):
 - the brush enters the paper along the stroke and leaves it back onto its own root (回锋), with a minimum press inside a
   contact, so no disc is swept at a start, no needle is drawn at an end, and no contact splits in two;
 - per contact, several paths through its ink are tried and the best is kept. One of them walks each region's ink branch by
-  branch, so a region whose given centre line covers only part of it is written in full (賢's inner horizontals; 暢's 勿
-  hook, merged with the next stroke, written in one pass);
+  branch, so a region whose given centre line covers only part of it is written in full;
 - control points about every 6 mm, ink more than 1 mm from the exemplar weighted up, regions under 0.92 optimised again;
 - the robot step runs with 3 and 5 passes of iterative learning control and keeps the better result (`plans.json`
-  `ilc_passes`; only 年 took 5).
+  `ilc_passes`).
 
-Only `solution/` changed, with the README's oracle line and Change Log; the instances, pictures, pass rule and process limits
-did not. The limits stay those set on the first references (`rules.json` `reference_path_mm`, `reference_mark_width_mm`); the
-new references' values are in `current_reference`. Their paths are longer and their marks narrower, but they stay far from
-colouring in. An existing pair is re-solved with `scripts/robopaint_brush_mk_task.py --resolve tasks/<pair>-privileged --plans
-<plans.json>` (the robot step and the self-test in the base image, on the frozen instance), then `mk_tasks.py`. The
-reference's verifier metrics, before → after:
+The process limits are set from the first references (`rules.json` `reference_path_mm`, `reference_mark_width_mm`); the
+current references' values are in `current_reference`. An existing pair is re-solved with
+`scripts/robopaint_brush_mk_task.py --resolve tasks/<pair>-privileged --plans <plans.json>` (the robot step and the
+self-test in the base image, on the frozen instance), then `mk_tasks.py`. The references' verifier metrics:
 
 | target | IoU | boundary F | min stroke coverage | stray | `path_mm` | `mark_width_mm` |
 |---|---|---|---|---|---|---|
-| kaishu 永字八法 | 0.891 → 0.940 | 0.941 → 0.988 | 0.860 → 0.931 | 0.0123 → 0.0015 | 1075 → 1270 | 4.47 → 3.71 |
-| kaishu 麟鳳龜龍 | 0.868 → 0.908 | 0.934 → 0.976 | 0.829 → 0.890 | 0.0165 → 0.0040 | 2625 → 2828 | 3.32 → 3.07 |
-| xingshu 永 | 0.903 → 0.942 | 0.857 → 0.941 | 0.827 → 0.913 | 0.0177 → 0.0049 | 483 → 726 | 7.53 → 5.14 |
-| xingshu 和 | 0.916 → 0.957 | 0.832 → 0.958 | 0.935 → 0.957 | 0.0114 → 0.0007 | 616 → 927 | 6.47 → 4.56 |
-| xingshu 風 | 0.929 → 0.938 | 0.905 → 0.931 | 0.956 → 0.948 | 0.0100 → 0.0056 | 714 → 1181 | 8.09 → 5.00 |
-| xingshu 年 | 0.936 → 0.957 | 0.909 → 0.963 | 0.918 → 0.933 | 0.0077 → 0.0021 | 591 → 1013 | 7.34 → 4.59 |
-| xingshu 山 | 0.939 → 0.970 | 0.920 → 0.966 | 0.914 → 0.973 | 0.0068 → 0.0021 | 399 → 608 | 10.21 → 6.75 |
-| xingshu 賢 | 0.888 → 0.934 | 0.862 → 0.938 | 0.809 → 0.944 | 0.0134 → 0.0054 | 875 → 1234 | 6.29 → 4.59 |
-| xingshu 惠風和暢 | 0.875 → 0.917 | 0.902 → 0.969 | 0.903 → 0.926 | 0.0191 → 0.0026 | 2017 → 2483 | 3.85 → 3.04 |
-| xingshu 茂林脩竹 | 0.844 → 0.898 | 0.896 → 0.962 | 0.863 → 0.910 | 0.0215 → 0.0054 | 1051 → 1412 | 3.76 → 2.79 |
+| kaishu 永字八法 | 0.940 | 0.988 | 0.931 | 0.0015 | 1270 | 3.71 |
+| kaishu 麟鳳龜龍 | 0.908 | 0.976 | 0.890 | 0.0040 | 2828 | 3.07 |
+| xingshu 永 | 0.942 | 0.941 | 0.913 | 0.0049 | 726 | 5.14 |
+| xingshu 和 | 0.957 | 0.958 | 0.957 | 0.0007 | 927 | 4.56 |
+| xingshu 風 | 0.938 | 0.931 | 0.948 | 0.0056 | 1181 | 5.00 |
+| xingshu 年 | 0.957 | 0.963 | 0.933 | 0.0021 | 1013 | 4.59 |
+| xingshu 山 | 0.970 | 0.966 | 0.973 | 0.0021 | 608 | 6.75 |
+| xingshu 賢 | 0.934 | 0.938 | 0.944 | 0.0054 | 1234 | 4.59 |
+| xingshu 惠風和暢 | 0.917 | 0.969 | 0.926 | 0.0026 | 2483 | 3.04 |
+| xingshu 茂林脩竹 | 0.898 | 0.962 | 0.910 | 0.0054 | 1412 | 2.79 |
 
-The internal goal was IoU ≥ 0.92, boundary F ≥ 0.90, every region ≥ 0.90 and stray ≤ 0.01; seven of the ten meet it, and
-惠風和暢, 茂林脩竹 and 麟鳳龜龍 miss it on IoU (麟鳳龜龍 also on one region, 0.890). What still limits the copy:
+What still limits the copy:
 - **Spikes behind blunt starts.** The brush's mark is a flat end at the root with a parabolic drag tail behind it, and the
   root trails the handle. While the press grows after a start, the tail reaches 2–5 mm behind the start point, where the
   exemplar has a blunt end.
@@ -141,91 +117,25 @@ The internal goal was IoU ≥ 0.92, boundary F ≥ 0.90, every region ≥ 0.90 a
 
 ## Oracle evidence
 A task is labelled `oracle = "full"` only if a recorded oracle run scored 1 on byte-identical grader, frozen instance,
-tooling and oracle code (lead, 2026-10-01). The oracle runs on record below are of the earlier version of these tasks (the
-picture rule only) and all predate the current files, so every task is `partial`. Its `oracle_evidence` points to these runs
-and to the validation of the process rules (Validation). Human review in PR #3. The new pair kaishu linfengguilong
-(2026-10-08) has no earlier version: its `oracle_evidence` (`rules.json`, `oracle_evidence_pairs`) points to Harbor oracle and
-nop runs on its current files (Validation); it is `partial` like the other pairs. The ten calligraphy pairs' reference
-solutions were re-made on 2026-10-09 (Targets). Their `oracle_evidence` (`oracle_evidence_pairs`) points to Harbor oracle and
-nop runs on their current files (Validation), and the nine pairs that existed before have a README Change Log entry.
-
-**Release validation of the earlier version**, ws3, 2026-09-28, at each family's release commit. Every target ran Harbor's
-oracle and nop in both modes (jobs `<family>-{u,l}-{oracle,nop}-final0928`):
-
-| family | release commit | oracle (both modes) | nop (both modes) | v2 registered scoring | Harbor re-check after v2 (oracle + nop, both modes) |
-|---|---|---|---|---|---|
-| kaishu | 2984b847 | 70 / 70 | 0 / 70 | aaffb039 | tiandaochouqin, yong |
-| xingshu | bfb0246d | 32 / 32 | 0 / 32 | a67040a8 | tianlangqiqing, zhi |
-| lettering (the earlier ten words, replaced 2026-10-09: Lettering) | 91ab5177 | 20 / 20 | 0 / 20 | 0c61185b | minim, nun |
-| acrylic | a1643285 | 20 / 20 | 0 / 20 | 8bc4fc0c | applesoranges, redfuji |
-| oil | 99b07cde | 22 / 22 | 0 / 22 | cc866ac9 (with tooling snapshot 23 and the 8 mm scoring inset) | irises, pearlearring |
-
-**Changed since the release validation**, in every pair:
-- the v2 registered scoring: the success rule in `instance.json` and the scorer `rcb_brush_score.py`. The saved oracle
-  trajectories were re-scored, and all pass.
-- tooling snapshot 23 (ccb213d0, the scorer, for the four non-oil families). Re-scores were bit-identical.
-- the 2.2 inputs (cf95376f) and the rated limits (fe5fb9e6) in `rcb_brush.py`. Both only add tooling queries.
-- for the standard twins, protocol v1.0's crash recovery: `server.py`, `finalize.sh`, `grade.py`, the 2.2 layer, the
-  client and the standard oracle.
-
-**Later runs** (earlier version):
-- After the 2.2 inputs (before the rated limits), ws3, 2026-09-28: kaishu-ai, acrylic-applesoranges and oil-cypresses
-  scored oracle 1 and nop 0 in both modes (jobs `p22-<pair>[-limited]-{oracle,nop}`).
-- kaishu-yong's standard twin, on files identical to 9eb18edf (before crash recovery), ws3 and ws, 2026-09-29: oracle 1,
-  nop 0 (`v22-ws3-oracle-kaishu-yong-0418`, `v22-ws3-nop-kaishu-yong-0419`).
+tooling and oracle code; every RoboPaint task is `partial`. Its `oracle_evidence` (written from `rules.json`) points to the
+runs in Validation: the pairs in `oracle_evidence_pairs` to Harbor `-a oracle` (1) and `-a nop` (0) runs in both modes on
+their current files, the others to the release validation and the process-rule validation. Human review in PR #3.
 
 ## Validation
-2026-10-05, on the built task images (ws3 and an RTX 4090 laptop, the same `eai-robopaint:0.2.0` layers; before the tasks took
-their current names and texts, with the same instances, graders and tooling): each task's `tests/Dockerfile` built into its
-verifier image and run as Harbor runs the separate verifier, `grade.py` called as `test.sh` calls it but without the replay
-video (the video never changes the verdict).
-- Reference solutions (each pair's `solution/oracle_qpos.npy` as the trajectory):
-  - the privileged verifier: 82 of 82 succeed (two fresh replays, deterministic);
-  - the standard path, the sim sidecar's collect hook (`finalize.sh`: two fresh replays with `rcb_brush_strict.py`, then
-    `final.json`) followed by the verifier image: 82 of 82 succeed (deterministic);
-  - Harbor end to end (`-a oracle`, `-a nop`) on both modes of kaishu yong, xingshu zhi, lettering minim, acrylic redfuji and
-    oil cypresses: the oracle succeeds on 10 of 10, nop on 0 of 10;
-  - the privileged scoring service (`RCB_TOOL_MODULE=rcb_brush_strict`) returns the rule metrics to `s.score()` (lettering
-    omnium and oil cypresses: the reference passes, Astra's colouring in fails).
-- Recorded runs of the earlier version, each graded by its pair's verifier image (one replay) against its picture-rule verdict:
-
-  | Population | Runs | Picture rule only | With the process rules | 1→0 | 0→1 |
-  |---|---|---|---|---|---|
-  | GPT-6 Astra | 112 | 109 | 7 | 102 | 0 |
-  | GPT-6 Luna, successes | 53 | 53 | 49 | 4 | 0 |
-  | GPT-6 Luna, failures | 195 | 0 | 0 | 0 | 0 |
-
-  - The picture verdict (`image_success`) equals the earlier one in all 360 runs; no grader errors.
-  - Astra keeps its 7 real lettering runs. Luna's 4 flips are the ones in Calibration: three acrylic serpentine fills and
-    lettering moon.
-  - The 109 Astra runs graded on both hosts agree to the last digit of `final_reward`.
-- Both verifiers on 10 Astra colour-in successes (two per family): the earlier verifier image (picture rule only) passes
-  all 10; this version's fails all 10, with the picture verdict 1.
-- The standard path on 8 recorded standard runs: Luna's four lettering successes (donum, nimium, nun, minimum) and Astra's
-  lettering moon succeed; Astra's colouring in (kaishu yong, lettering donum, acrylic redfuji) fails with the picture verdict 1.
-- 2026-10-07, Harbor end to end on the tasks under their current names and texts (an RTX 4090 laptop, `eai-robopaint:0.2.0`):
-  `-a oracle` scores 1 and `-a nop` 0 on both modes of kaishu yong and oil cypresses (8 runs). `reward.json` carries the rule
-  metrics: kaishu yong `path_mm` 474 of 1430 mm and `mark_width_mm` 6.66 mm, oil cypresses `path_mm` 9377 of 28200 mm.
-- 2026-10-08, ws3 (RTX 4090, `eai-robopaint:0.2.0`, Harbor 0.23.0), on the files of that day (before the references were
-  re-made on 2026-10-09):
-  - kaishu linfengguilong (new): `-a oracle` scores 1 and `-a nop` 0 in both modes. `reward.json`: IoU 0.868, boundary F
-    0.934, minimum stroke coverage 0.829, stray ink 0.017; `path_mm` 2625 of 7880 mm, `mark_width_mm` 3.32 mm (limit 0.99 mm).
-    Two runs of the generator wrote the same reference trajectory bit for bit, and its self-test passed (the scoring
-    service's metrics equal the graders').
-  - xingshu huifenghechang (unchanged), a regression check: `-a oracle` scores 1 and `-a nop` 0 in both modes (`path_mm` 2017
-    of 6060 mm).
-  - 永字八法 under the new planner code with its default (`--entry vertical`): `opt_calli.py` writes the same plans as the old
-    code, the robot step on its frozen `plans.json` gives its frozen `oracle_qpos.npy` bit for bit, and `measure_reference.py`
-    gives its `rules.json` values again (1074.71 mm, 4.4726 mm).
-- 2026-10-09, the ten calligraphy pairs with their re-made references (Targets), on the current files except one sentence of
-  `instruction.md` and `README.md` (the reference's path and mark width), which was restored to main's wording afterwards so
-  that the instructions stay byte-identical to the earlier version; the oracle and nop runs do not read it:
-  - the generator's `--resolve` (the robot step and the self-test) passed on every pair. It ran on the native
-    `eai-robopaint:0.2.0` runtime of a rented host without docker; the image itself (docker on ws3) wrote the same
-    trajectories bit for bit for xingshu he and nian;
-  - the planner, run twice on xingshu he with 3 and with 8 workers, wrote the same plans;
-  - Harbor (ws3, RTX 4090, Harbor 0.23.0): `-a oracle` scores 1 and `-a nop` 0 on both modes of all ten pairs (40 runs, jobs
-    `rpp-{oracle,nop}-{priv,std}-1009`, no errors); the oracle's `reward.json` carries the metrics of the table in Targets.
+- **Release validation** (the picture-rule version, each family at its release commit): Harbor's oracle scored 1 and nop 0
+  on every target in both modes (kaishu 70, xingshu 32, lettering 20 (earlier words), acrylic 20, oil 22). Changed since,
+  in every pair: the registered scoring (the success rule in `instance.json`, `rcb_brush_score.py`; the saved oracle
+  trajectories re-scored all pass, and Harbor oracle + nop re-checked two pairs per family), the scorer's tooling snapshot
+  (re-scores bit-identical), the 2.2 inputs and rated limits in `rcb_brush.py` (tooling queries only), and the standard
+  twins' service, collect hook, grader and client.
+- **Process rules**, on the built task images (`eai-robopaint:0.2.0`, each task's verifier image run as Harbor runs it):
+  every pair's reference trajectory succeeds in the privileged verifier and through the standard path (82 of 82); Harbor
+  oracle 1 and nop 0 on both modes of one pair per family. Re-graded recorded runs of the picture-rule version: the process
+  rules turn 102 of GPT-6 Astra's 109 picture-rule successes (colouring in) and 4 of GPT-6 Luna's 53 (Calibration) into
+  failures and no failure into a success; the picture verdict is unchanged in all 360 runs.
+- **Pairs with their own evidence** (`oracle_evidence_pairs`: the ten calligraphy pairs with re-made references, kaishu
+  linfengguilong among them): Harbor `-a oracle` 1 and `-a nop` 0 in both modes on their current files; the generator's `--resolve`
+  (robot step and self-test) passes and writes the same reference trajectory bit for bit.
 
 ## Caoshu (草书)
 Cursive writes a character in a few long brush contacts: the contact cap is the exemplar's own connected contacts (1.6–3 per
@@ -249,17 +159,14 @@ the scroll as written, its characters sharing one 210 mm frame so the ligatures 
   (`--leash-mm`: with a press floor the optimiser otherwise parked surplus path off the sheet, outside the residual's window).
   The robot execution is the kaishu one (`ref_calli.py`; three ILC passes, more made the tracking worse). Generator:
   `robopaint_brush_mk_task.py --family caoshu` (the first pair took its code from xingshu `yong`: `--template-family xingshu
-  --template yong`), then `measure_reference.py` and `mk_tasks.py` as for every pair; the pairs of 2026-10-09 were generated
-  with the base image's runtime outside docker (`cs_gen_native.py`). Scoring, thresholds and process rules are those of kaishu
+  --template yong`), then `measure_reference.py` and `mk_tasks.py` as for every pair (on a host without docker, with the
+  base image's runtime: `cs_gen_native.py`). Scoring, thresholds and process rules are those of kaishu
   and xingshu.
 - Robot-free checks of the rule on the reference plans (`cs_perturb.py`): one press for the whole sheet, a lift at every region
   boundary or in the middle of every contact, a missing contact, presses ×0.8 or ×1.2 and the naive plan fail on all six; one
   press per contact fails on five (文 passes with IoU 0.83 and a worst region of 0.81); every contact moved ±0.5 mm relative to
   the others fails on the four works, ±1.5 mm on all six.
-- Validation (2026-10-09, `eai-robopaint:0.2.0` runtime; Harbor on ws3, jobs `cs-<target>-<mode>-{oracle,nop}-1009`, on the
-  committed files): the generator's self-test (scoring service = graders), the verifier's `grade.py` on two fresh replays, and
-  Harbor `-a oracle` / `-a nop` in both modes: the oracle scores 1 on 12 of 12 (deterministic, instance exact; standard:
-  live = replay), nop 0 on 12 of 12.
+- The references (the oracle scores 1 and nop 0 in both modes on all six):
 
   | pair | contacts (cap) | regions | IoU | boundary F | min region | stray | `path_mm` / `max_path_mm` | `mark_width_mm` / min |
   |---|---|---|---|---|---|---|---|---|
@@ -270,11 +177,10 @@ the scroll as written, its characters sharing one 210 mm frame so the ligatures 
   | zhongtiangechuifen 中天哥吹分 | 8 | 17 | 0.826 | 0.979 | 0.859 | 0.006 | 525 / 1580 | 1.91 / 0.57 |
   | beiquelindanshui 北闕臨丹水 | 12 | 27 | 0.844 | 0.972 | 0.849 | 0.005 | 891 / 2680 | 1.98 / 0.59 |
 
-## Lettering: 臨摹 of engraved English round hand (redesigned 2026-10-09)
+## Lettering: 臨摹 of engraved English round hand
 The family copies public-domain engraved copybook plates with the pointed pen: George Bickham, *The Universal Penman* (London,
 1741), in the Getty Research Institute's scan on the Internet Archive (`gri_33125008538056`, NOT_IN_COPYRIGHT; the same book is on
-Wikimedia Commons under {{PD-scan}}). It replaced the ten authored minim words (donum ... unpin), which GPT-6 Astra solved 10 of 10
-in standard mode on 2026-10-08; none of them was kept, and the broad nib is no longer used. Six targets, each placed 205 mm wide
+Wikimedia Commons under {{PD-scan}}). Six targets, each placed 205 mm wide
 on the sheet: two flourished headings with all their flourishes, `liberty` ("Liberty.", G. Brooks) and `virtue` ("Virtue.", plate
 12), and four copy lines of the plate COPIES (W. Clark): `aim` ("Aim at improvement in every line."), `business` ("Business makes
 a Man respected."), `commendation` ("Commendation animates the mind.") and `diligence` ("Diligence in youth is commendable.").
@@ -294,7 +200,7 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 - **The cap** = one contact per connected piece of the exemplar's ink (its own pen lifts, no margin): a whole word, a capital with
   its flourishes, an i's dot. A contact's route runs once over every part of its piece and twice where it has to go back.
 - **Rule**: IoU ≥ 0.85, boundary F ≥ 0.80, every region covered ≥ 0.75, stray ≤ 0.04, the cap, the 5 mm registration (the
-  family's rule; the copperplate words' 0.70 was dropped: at 0.70 one constant press per contact passes `commendation`), plus the
+  family's rule; a lower region coverage, 0.70, would let one constant press per contact pass `commendation`), plus the
   process rules.
 - **Reference solution** (`solution/plans.json`: the routes; `solution/ref_lettering.py`): the pen at the spread axis, the press
   from the spread, 5 mm/s (slower at sharp turns), lag feed-forward and eight passes of iterative learning control; the recorded
@@ -317,15 +223,11 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
   | business | 9 | 54 | 0.955 | 0.955 | 9661 | 1240 (312) |
   | commendation | 9 | 52 | 0.957 | 0.933 | 8262 | 1079 (431) |
   | diligence | 11 | 59 | 0.959 | 0.923 | 10262 | 1343 (459) |
-- **Validation** (2026-10-09, on task files byte-identical to the committed ones): Harbor on ws3 (`-a oracle`, `-a nop`, both
-  modes; jobs `lt-<slug>-<mode>-<agent>-1009`): the oracle scores 1 on 12 of 12 (deterministic; standard: live = replay, no infra error), nop 0 on 12 of 12. The generator's self-test (the scoring service's metrics equal the
-  graders'; the agent side's actions equal the reference's) and `tests/grade.py` on the native `eai-robopaint:0.2.0` runtime
-  (reference 1, empty trajectory 0, all six) agree.
+- Harbor: the oracle scores 1 and nop 0 in both modes on all six.
 
 ## Image and host
 - `images/robopaint/` holds ManiSkill 3.0.1, SAPIEN 3.0.3, a patched libmypaint 1.6.1 and Spline-FRIDA.
-  - The image is `ghcr.io/mll-lab-nu/eai-robopaint:<images/robopaint/VERSION>` (0.2.0), public: a copy of
-    the image first published as `rcb-robopaint:0.2.0`.
+  - The image is `ghcr.io/mll-lab-nu/eai-robopaint:<images/robopaint/VERSION>` (0.2.0), public.
   - It is built from the repository root: `docker build -f images/robopaint/Dockerfile .`.
 - Every simulator container needs an NVIDIA GPU: SAPIEN needs a Vulkan device to build the scene and to render. Physics
   and the brush models run on the CPU.
@@ -337,18 +239,15 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
   - They are photographic scans, so lossless re-encoding gets only 5 of the 9 under 2 MB.
   - They stay as frozen (the instance hash covers their pixels). The 2 MB limit is for results.
 
-## Time budget (D8)
-**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; history in [`../CUTOFFS.md`](../CUTOFFS.md)). The text below describes the budget before that, 7200 s, and why it was chosen; results are grouped by budget.
-
-7200 s for every task of both modes, longer than the default 3600 s. The number is each task's own `[agent] timeout_sec`, written by the generator
-(shown in [`../CUTOFFS.md`](../CUTOFFS.md)); `instruction.md` states it once, in its closing `## Time limit` section (PROTOCOL §2.12), and the templates' own text says "the time limit (`## Time limit`)". Why longer than the default:
-- The agent first has to learn the brush's mark from test strokes on the practice sheet: width against press depth, the
-  drag of the tuft, the paint's blending. The privileged mode gives the exact sheet but no brush model.
-- Every stroke on the main sheet is irreversible in standard mode.
-- Works and paintings take tens to thousands of strokes (stroke caps up to 71 for a calligraphy work and 2546 for an oil
+## Time budget
+3600 s for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
+docs/protocol/running.md "The agent's time"); `instruction.md` states it once, in its closing `## Time limit` section, and the
+templates' own text says "the time limit (`## Time limit`)". What the agent has to fit into it:
+- learning the brush's mark from test strokes on the practice sheet: width against press depth, the drag of the tuft, the
+  paint's blending (the privileged mode gives the exact sheet but no brush model);
+- every stroke on the main sheet is irreversible in standard mode;
+- works and paintings take tens to thousands of strokes (stroke caps up to 71 for a calligraphy work and 2546 for an oil
   painting), each at the arm's real speed.
-
-Lettering ran at 5400 s before protocol v1.0 and now has 7200 s like the rest. Results are grouped by budget (see Results).
 
 ## The target is only a picture
 `target.png` (RGB) in both modes. Its source (glyph outlines, pen paths, the exemplar's paint coverage) stays in the
@@ -366,12 +265,10 @@ Success needs the picture rule and the process rules; `final_reward` is the cont
   graders' scorer and rules; that is the verdict (Grading and determinism).
 
 ## Why process rules
-GPT-6 Astra (Codex, effort high; 112 trials of the earlier version, which scored only the final sheet against the picture,
-2026-10-03/04) passed 109 of them, mostly without writing or painting: it set one light press that draws a thin line, kept it
-for the whole episode, and filled the exemplar's area with long back-and-forth or contour-offset paths (colouring in). The picture
-rule alone passed this. GPT-6 Luna's three acrylic successes there were serpentine fills too. The rules measure the strokes
-themselves. They are placed so that colouring in fails while ordinary attempts, good or poor, keep their picture verdict
-(Calibration).
+Scored only against the picture, a sheet passes when the exemplar's area is filled without writing or painting: one light
+press that draws a thin line, kept for the whole episode, along long back-and-forth or contour-offset paths (colouring in),
+or serpentine fills of a painting. The rules measure the strokes themselves. They are placed so that colouring in fails
+while ordinary attempts, good or poor, keep their picture verdict (Calibration).
 
 ## Process rules
 Only inked (painted) strokes on the main sheet count; practice-sheet strokes are free. `path_mm` = the total length of the brush
@@ -380,7 +277,7 @@ Only inked (painted) strokes on the main sheet count; practice-sheet strokes are
 | Families | Rule (each task states its own numbers) |
 |---|---|
 | kaishu, xingshu, caoshu, lettering | **Colouring in fails:** `path_mm` > `max_path_mm` (3 × the reference solution's `path_mm`, rounded up to 10 mm) **and** `mark_width_mm` < `min_mark_width_mm` (0.3 × the reference's, rounded down to 0.01 mm). `mark_width_mm` = the area each stroke inks on its own (its own mark, coverage ≥ 0.5; overlaps between different strokes count again), summed over the strokes, / `path_mm`: the marks' average width. |
-| kaishu, xingshu, caoshu (2026-10-14) | **Strokes are counted as written:** the stroke cap counts the marked pieces of the contacts: a contact is cut where the brush moves more than `stroke_gap_mm` (5 mm) along the main sheet without marking it (its mark narrower than `mark_min_width_mm`, 0.1 mm), and a piece longer than `max_stroke_path_mm` (5 × the reference solution's longest piece, rounded up to 10 mm) counts as ⌈length / `max_stroke_path_mm`⌉ strokes; `n_strokes_counted` ≤ `max_strokes`. **Strokes are sweeps** (the paintings' rule on these pieces): `scribble_share` ≤ 0.10 with the ratio 12 (Counted strokes in calligraphy). |
+| kaishu, xingshu, caoshu | **Strokes are counted as written:** the stroke cap counts the marked pieces of the contacts: a contact is cut where the brush moves more than `stroke_gap_mm` (5 mm) along the main sheet without marking it (its mark narrower than `mark_min_width_mm`, 0.1 mm), and a piece longer than `max_stroke_path_mm` (5 × the reference solution's longest piece, rounded up to 10 mm) counts as ⌈length / `max_stroke_path_mm`⌉ strokes; `n_strokes_counted` ≤ `max_strokes`. **Strokes are sweeps** (the paintings' rule on these pieces): `scribble_share` ≤ 0.10 with the ratio 12 (Counted strokes in calligraphy). |
 | acrylic, oil | **Path budget:** `path_mm` ≤ `max_path_mm` (3 × the reference's, rounded up to 100 mm). **Strokes are sweeps:** `scribble_share` ≤ 0.10, the share of `path_mm` in strokes longer than 2.5 × the diagonal of their bounding box (taken as at least 10 mm): zigzags, back-and-forth fills, spirals, loops (a sweep out and back along one line is about 2). |
 
 The numbers per task: `max_path_mm` 3230–7880 mm (kaishu), 1200–6060 mm (xingshu), 810–2680 mm (caoshu), 3000–7940 mm
@@ -399,16 +296,13 @@ and with the task's numbers.
 
 Where they are applied: `rcb_brush_strict.py` (graders' side only), a `Session` subclass whose `score()` adds the rules, run with
 `rcb_brush.py`'s CLI. The privileged verifier replays with it (`tests/grade.py`), the privileged scoring service imports it
-(`RCB_TOOL_MODULE=rcb_brush_strict`), and the standard sim service scores the live sheet with it (`RCB_TOOL=/srv/rcb_brush_strict.py`;
-until 2026-10-17 the standard collect hook replayed with it). The
-agent's container holds `rcb_brush.py` only. A trajectory of the earlier version is graded by this version's verifier as it is,
-so it can be re-graded one to one (Calibration), but its published result is not comparable.
+(`RCB_TOOL_MODULE=rcb_brush_strict`), and the standard sim service scores the live sheet with it (`RCB_TOOL=/srv/rcb_brush_strict.py`).
+The agent's container holds `rcb_brush.py` only.
 
 ## Calibration
-2026-10-04, ws3: every trajectory was replayed with the graders' tooling of the earlier version (the picture rule) in the base
-image. The populations were the 82 reference solutions; GPT-6 Astra (Codex, high; 112 trials); and GPT-6 Luna (Codex, xhigh;
-batches robopaint-lunaxh-0928b, -rerun-0928, -limited-0929 and its rerun: 248 trajectories). The replays reproduce all 360
-recorded verdicts. Every trial near a threshold was inspected as a path picture.
+The thresholds were set on replays of recorded trajectories (reference solutions, GPT-6 Astra and GPT-6 Luna runs, 360 in
+all, on the pairs of that time) scored with and without the process rules; every trial near a threshold was inspected
+as a path picture.
 
 | Population | Runs | Picture rule only | With the process rules | Flagged by the rules |
 |---|---|---|---|---|
@@ -443,17 +337,13 @@ Margins (a value / its task's limit):
   with a slightly wider nib could pass; the rule chooses leniency on purpose. Likewise the closest painting fill (Astra oil bathers)
   is only 1.43× the sweep limit.
 
-## Counted strokes in calligraphy (2026-10-14)
-The failure analysis of 2026-10-14 (agents' runs of 10-05 to 10-14, item 9 of its "Decisions needed") found that the
-calligraphy families' stroke cap counted contacts, not strokes, and that the colouring-in rule (a long path of thin marks) was
-the only bound on what one contact did:
+## Counted strokes in calligraphy
+A stroke cap that counts contacts, with the colouring-in rule as the only bound on what one contact does, leaves three
+ways round:
 - **Ink-free connectors.** The Wang brush leaves no mark below a press of about 0.25 mm (Width(z) = 1.187 z − 0.03 cm), but the
-  contact stays open. Opus 5.5's privileged caoshu-beiquelindanshui success joined 31 separately written pieces into 10 contacts
-  (cap 12) "at a 0.18 mm press, which makes no mark"; Luna standard kaishu-linfengguilong retraced 69 strokes in 2 contacts
-  this way (it failed for other reasons).
-- **Held contacts.** Astra 5's standard xingshu-yong kept one contact on the paper for ~39 min to retrace and re-pose the arm.
-- **Fills.** GLM's serpentine and dot fills passed the colouring-in numbers (they failed on the picture, and the dot fill on the
-  cap).
+  contact stays open: separately written pieces joined at a press that makes no mark count as one contact.
+- **Held contacts.** One contact kept on the paper to retrace and re-pose the arm.
+- **Fills.** Serpentine and dot fills within the colouring-in numbers.
 
 **The rule** (`rcb_brush_strict.py`; the numbers in every graders' copy of `target.success`, stated in each instruction; the
 agent's own privileged copy of the instance holds no counting numbers):
@@ -471,141 +361,75 @@ agent's own privileged copy of the instance holds no counting numbers):
 - Lettering and the paintings carry none of these keys: their verdicts and `final_reward` are unchanged (checked on the 16
   lettering and acrylic references and on every recorded run below).
 
-**Why these numbers.** On the 16 current references, the 9 earlier references of the kept pairs (10-05) and GPT-6 Luna's 27
-genuine calligraphy runs (0928b / 0929, on the same instances), every contact is exactly one piece (the references' longest
+**Why these numbers.** On the 16 references, earlier references of the same pairs and 27 genuine model calligraphy
+runs on the same instances, every contact is exactly one piece (the references' longest
 non-marking stretch inside a contact is 2.9 mm, a light turn); the longest piece is at most 2.98 × the reference's (Luna's
 privileged xingshu-nian success); the largest scribble ratio is 4.96 (references) and 9.95 (a Luna failure that retraces
-heavily, xingshu-xian standard). The 14 GPT-6 Astra colouring-in runs of 10-03/04 on these instances (already failed by the
-colouring-in rule) are each failed again by a new rule, independently: counted strokes 7–690 against caps 6–21, or a
-scribble share of 0.69–1.0.
+heavily, xingshu-xian standard). Recorded colouring-in runs on these instances are each failed by a new rule too,
+independently: counted strokes 7–690 against caps 6–21, or a scribble share of 0.69–1.0.
 
-**Re-grade of the recorded runs** (eai-robopaint:0.2.0 runtime, the graders' copy, one replay each; 82 trajectories):
-| Population | Runs | Success before → after | Changed |
-|---|---|---|---|
-| current references (calligraphy 16, lettering 6, acrylic 10) | 32 | 32 → 32 | none (`final_reward` equal) |
-| earlier references of the 9 kept calligraphy pairs | 9 | 9 → 9 | none |
-| GPT-6 Luna calligraphy (privileged + standard) | 27 | 3 → 3 | none |
-| GPT-6 Astra colouring in (10-03/04) | 14 | 0 → 0 | none (now 2–3 failing rules each) |
-
-**The loopholes, by construction** (the trajectories of the recorded agent runs are not retrievable from the evaluation
-dashboard: `trajectory.npz`, `journal.f64` and `episode.jsonl` answer 404, and privileged runs keep none; so each loophole was
-built from the pair's reference solution in the base image (a construction script outside the repository) and graded by the
-graders' copy before and after the change):
-
-| Construction (the agents' pattern) | Pair | Before: success / process rules / contacts | After: success / process rules / counted strokes, scribble share |
-|---|---|---|---|
-| Each contact written, then re-written after a move back at a 0.2 mm press (no mark): twice the strokes in the cap's contacts (Opus's connectors) | caoshu wen | 1 / ok / 2 of 2 | 0 / fail / 4 of 2 |
-| same | caoshu nangong | 1 / ok / 5 of 5 | 0 / fail / 10 of 5 |
-| same | kaishu 永字八法 | 1 / ok / 21 of 21 | 0 / fail / 42 of 21 |
-| same | caoshu 北闕臨丹水 | 0 / ok / 14 of 12 (two connectors lifted off) | 0 / fail / 24 of 12 |
-| Consecutive contacts joined at a 0.2 mm press, nothing written twice (no extra strokes) | caoshu 北闕臨丹水 | 1 / ok / 5 of 12 | 1 / ok / 12 of 12 (not penalised) |
-| The longest contact gone over back and forth 6 times without lifting (a held contact) | caoshu 北闕臨丹水 | 0 (picture) / ok / 12 of 12 | 0 / fail / 14 of 12, 0.75 |
-| same, 2 times | xingshu 永 | 0 (picture) / ok / 6 of 6 | 0 / fail / 6 of 6, 0.74 |
-| same, 2 times | caoshu 文 | 0 (picture) / ok / 2 of 2 | 0 (picture) / ok / 2 of 2 (704 of 720 mm: within the margin) |
-| Dot fill of the exemplar in one contact: dabs pressed 2–4 mm deep on a 1.2–2.4 mm grid, joined at a 0.2 mm press (GLM's dots) | xingshu 永, 年; caoshu 文, 北闕臨丹水; kaishu 永字八法 (15 variants) | 0 / fail (colouring in: the joining moves count in `path_mm`) / 1 contact | 0 / fail / 20–249 counted strokes |
-
-The picture verdicts of the held and dotted constructions are their own (a brush dragged back and forth smears); the process
-rules are what the rows show. A dot fill written as separate contacts was already over the cap (GLM's).
+**Constructions.** Each pattern was built from the pair's reference solution in the base image and graded by the
+graders' copy: connectors that re-write every contact, a contact gone over back and forth, and dot fills joined at a
+0.2 mm press fail (counted strokes over the cap, a scribble share of about 0.75, or colouring in); consecutive contacts
+joined at a 0.2 mm press with nothing written twice are not penalised.
 
 **Not caught (accepted).** A contact may still go over its own stroke a few times: up to 5 × the reference's longest piece
 it counts once (Luna's genuine 2.98 × retrace sets that margin), unless its back-and-forth makes it a scribble (ratio > 12).
 
-**Validation (Harbor).** 2026-10-14, Harbor on ws3 (RTX 4090, `eai-robopaint:0.2.0`, Harbor's
-`-a oracle` / `-a nop`, jobs `rpv1-{oracle,nop}-<task>`), with this version's rules and scoring code (`rcb_brush_strict.py`
-and the instances in `tests/`, `environment/scorer/` and `environment/sim/`; the draft then also held a helper for a
-standard-service stroke counter, taken out since with that counter): the 16 calligraphy pairs in both modes, oracle 32 of 32
-success (deterministic; `n_strokes_counted` = the cap's contacts; standard: `live_matches_replay` 1) and nop 0 of 32;
-lettering liberty and acrylic redfuji (graders unchanged in verdict) in both modes, oracle 4 of 4 and nop 0 of 4; no infra or
-grader errors. The standard sim service (`environment/sim/server.py`) is main's, unchanged.
-
 **Re-grading existing results** (nothing is re-run). `scripts/robopaint_strict/regrade.py JOBS_DIR ... [--traj PATH.npz]
 --out regrade.jsonl` replays every recorded RoboPaint trajectory once with the current task's graders' copy (`tests/`:
 `rcb_brush_strict.py` and the frozen instance) in the base image (docker, GPU) and scores the same final state twice: with
-the rules before this change (`old_verdict`: the instance's `target.success` without the counted-stroke and calligraphy sweep
-keys, exactly the earlier grader) and with the current rules (`new_verdict`); the picture rule alone is `image_success`. A
+the rules without counted strokes (`old_verdict`: the instance's `target.success` without the counted-stroke and calligraphy sweep
+keys) and with the current rules (`new_verdict`); the picture rule alone is `image_success`. A
 trajectory recorded on another instance (its `instance_sha`) is not re-graded, and a recorded success the old rule does not
 reproduce is `inconclusive`. Only the 43 pairs on main (the released set, `RELEASED` in the tool) are re-graded: a trial of any
 other RoboPaint task (pruned or earlier targets, later additions) is listed as `skipped`. Lettering and the paintings re-grade
 to their recorded verdicts. Standard re-grades are conservative ("re-graded under 2026-10-14 rules (conservative)"): the agent
-read the earlier instruction.
+read an instruction without these rules.
 
-## Oil: the pointed brush (2026-10-09)
-The oil family was saturated (GPT-6 Astra, high: 11 of 11 in both modes, 2026-10-08) and its paintings looked coarse next to the
-originals. The cause was the brush, and the rule was calibrated on what that brush can do:
-- **The old brush.** `tanda/oil-03-paint` at `radius_log_offset` 0.6 drew no solid mark narrower than about 5 mm. libmypaint
-  scatters the dabs (`offset_by_random` 0.4, `tracking_noise` 0.2) over the brush's base radius at any pressure, so a light press
-  paints a 5 mm band of small dabs, not a line. The reference solutions painted 279–456 strokes of 5–11 mm marks. At the 1 mm
-  judging scale that is about a 17–29 px mosaic of the picture. target.png (1024 px) and the sheet raster (0.22 mm/px) were not
-  the limit: at 1 mm, target.png matches a 3840 px copy of the original to ΔE 0.2–0.4.
-- **The brush now.** The same preset made pointed: `offset_by_random` and `tracking_noise` get a pressure input, so they grow with
-  the pressure as the dab radius does (0 at no pressure, the preset's value from 40 % on). It is frozen as `brush.preset_json` and
-  stays CC0.
+## Oil: the pointed brush
+- **The brush.** `tanda/oil-03-paint` at `radius_log_offset` 0.6, made pointed: libmypaint's `offset_by_random` and
+  `tracking_noise` get a pressure input, so they grow with the pressure as the dab radius does (0 at no pressure, the
+  preset's value from 40 % on). Without it the preset draws no solid mark narrower than about 5 mm (it scatters the dabs
+  over the brush's base radius at any pressure). It is frozen as `brush.preset_json` and stays CC0.
   - Straight strokes at 40 mm/s are about 2 mm wide at a 1.25 mm press, 2.5 mm at 1.5 mm, 3 mm at 2 mm, 4.2 mm at 3 mm, 6 mm at
-    4 mm, 8 mm at 5 mm and 11 mm from 6 mm on. A full press makes the old marks.
-  - With the same ~1650-stroke plan, the old brush scores like the old reference (Starry Night ΔE 7.6, SSIM 0.63). The new brush
-    scores ΔE 5.9, SSIM 0.73.
-- **The reference solutions.** Each is a new stroke program from the layered painter (`program.json` `optimiser`): a ground of
+    4 mm, 8 mm at 5 mm and 11 mm from 6 mm on.
+- **The reference solutions.** Each is a stroke program from the layered painter (`program.json` `optimiser`): a ground of
   rows at a 7 mm press, then 4 layers of curved strokes at 4, 2.5, 1.6 and 1.3 mm presses (marks of about 6, 3.6, 2.6 and 2.1 mm).
   - `solution/ref_oil.py` executes it with the program's `motion`: a 6 mm hover between strokes, quick dips and short holds.
-    Without `motion`, a program moves as before. On the old Starry Night program, `motion` saves 24 % of the control steps (34159
-    to 25872) with the same picture scores.
-  - 1316–1697 strokes and 49.7k–62.0k control steps: 41–52 of the episode's 60 simulated minutes (the 72000-step guard is
-    unchanged).
-- **The rule.** It is the generator's calibration on that execution, with the SSIM margin raised to 0.04 (0.03 before). With
-  0.03, the reference painted 50 % faster misses on one painting (Pearl Earring, SSIM 0.849 against 0.85); with 0.04, no coarse
-  painting passes. The stroke cap is 1.5 × and the path budget 3 × the reference, as before.
+  - 1316–1697 strokes and 49.7k–62.0k control steps: 41–52 of the episode's 60 simulated minutes (the 72000-step guard).
+- **The rule.** It is the generator's calibration on that execution, with an SSIM margin of 0.04 (with 0.03 the reference
+  painted 50 % faster misses on Pearl Earring; with 0.04 no coarse painting passes). The stroke cap is 1.5 × and the path
+  budget 3 × the reference.
 
-| Painting | Reference strokes (old → new) | Reference ΔE / SSIM (old → new) | Rule ΔE / p90 / SSIM / edge (old → new) |
+| Painting | Reference strokes | Reference ΔE / SSIM | Rule ΔE / p90 / SSIM / edge |
 |---|---|---|---|
-| wanderer | 288 → 1333 | 3.66 / 0.843 → 2.73 / 0.913 | 4.1 / 8.5 / 0.81 / 0.64 → 3.1 / 5.5 / 0.87 / 0.78 |
-| temeraire | 299 → 1580 | 4.06 / 0.860 → 3.49 / 0.894 | 4.5 / 8.0 / 0.83 / 0.39 → 3.9 / 6.5 / 0.85 / 0.59 |
-| pearlearring | 300 → 1638 | 5.16 / 0.802 → 3.98 / 0.884 | 5.7 / 12.5 / 0.77 / 0.61 → 4.4 / 8.5 / 0.84 / 0.76 |
-| milkmaid | 300 → 1677 | 6.20 / 0.727 → 4.53 / 0.852 | 6.9 / 14.5 / 0.69 / 0.49 → 5.0 / 9.5 / 0.81 / 0.74 |
-| monalisa | 290 → 1686 | 6.43 / 0.761 → 4.70 / 0.863 | 7.1 / 13.0 / 0.73 / 0.52 → 5.2 / 8.5 / 0.82 / 0.70 |
-| bathers | 304 → 1673 | 6.43 / 0.743 → 4.92 / 0.849 | 7.1 / 13.0 / 0.71 / 0.50 → 5.5 / 9.0 / 0.80 / 0.74 |
-| saintevictoire | 442 → 1691 | 7.60 / 0.651 → 6.24 / 0.741 | 8.4 / 14.0 / 0.62 / 0.29 → 6.9 / 11.5 / 0.70 / 0.47 |
-| starrynight | 456 → 1682 | 7.64 / 0.595 → 5.91 / 0.721 | 8.4 / 15.5 / 0.56 / 0.28 → 6.5 / 11.5 / 0.68 / 0.52 |
-| cypresses | 279 → 1640 | 8.77 / 0.598 → 6.77 / 0.727 | 9.7 / 17.5 / 0.56 / 0.43 → 7.5 / 12.5 / 0.68 / 0.65 |
-| cafeterrace | 295 → 1667 | 9.84 / 0.538 → 7.22 / 0.703 | 10.9 / 20.0 / 0.50 / 0.27 → 8.0 / 13.5 / 0.66 / 0.57 |
-| irises | 437 → 1630 | 12.09 / 0.452 → 9.57 / 0.567 | 13.4 / 23.5 / 0.42 / 0.16 → 10.6 / 17.5 / 0.52 / 0.35 |
+| wanderer | 1333 | 2.73 / 0.913 | 3.1 / 5.5 / 0.87 / 0.78 |
+| temeraire | 1580 | 3.49 / 0.894 | 3.9 / 6.5 / 0.85 / 0.59 |
+| pearlearring | 1638 | 3.98 / 0.884 | 4.4 / 8.5 / 0.84 / 0.76 |
+| milkmaid | 1677 | 4.53 / 0.852 | 5.0 / 9.5 / 0.81 / 0.74 |
+| monalisa | 1686 | 4.70 / 0.863 | 5.2 / 8.5 / 0.82 / 0.70 |
+| bathers | 1673 | 4.92 / 0.849 | 5.5 / 9.0 / 0.80 / 0.74 |
+| saintevictoire | 1691 | 6.24 / 0.741 | 6.9 / 11.5 / 0.70 / 0.47 |
+| starrynight | 1682 | 5.91 / 0.721 | 6.5 / 11.5 / 0.68 / 0.52 |
+| cypresses | 1640 | 6.77 / 0.727 | 7.5 / 12.5 / 0.68 / 0.65 |
+| cafeterrace | 1667 | 7.22 / 0.703 | 8.0 / 13.5 / 0.66 / 0.57 |
+| irises | 1630 | 9.57 / 0.567 | 10.6 / 17.5 / 0.52 / 0.35 |
 
 **Study.** Robot-free, the rule calibrated on the robot reference, all 11 paintings:
 - **Pass:** the reference shifted by 1 or 2 mm (also diagonally), its press × 0.85 and × 1.15, its speed × 0.75 and × 1.5, and
   the same painter with about 1150 strokes on 10 of 11 paintings (Irises fails on edge correlation).
-- **Fail:** the old reference, the same painter with about 800 strokes, the plan without its two finest layers, 10 % or 25 % of
+- **Fail:** a coarse 5 mm-mark painting, the same painter with about 800 strokes, the plan without its two finest layers, 10 % or 25 % of
   the strokes dropped, and the layer order reversed.
-- **Process rules.** An Astra colour-in fill of the earlier version passes the new Starry Night picture rule (ΔE 5.48, SSIM
-  0.722), but its sweep share is 0.37, so the process rules still decide it.
-
-**Generation and validation.** `scripts/robopaint_brush_mk_task.py` was run unchanged, outside docker, in the image's runtime
-copied 1:1 to a host without docker (checked bit-identical against the docker image), then `measure_reference.py` and `mk_tasks.py`:
-- The generator's self-test passed on 11 of 11 pairs (scorer equals graders; the agent's actions equal the reference's).
-- The privileged pipeline (scoring service, `solution/solve.sh`'s replay, `tests/grade.py`) gives oracle 11 of 11: success,
-  deterministic, instance_exact, process rules met, `s.score()` equal to the verifier. nop is 0 of 11.
-- Harbor 0.23 end to end on ws3, 2026-10-09, all 11 pairs in both modes (jobs `hires1009-<painting>-<mode>-<agent>`, 44 trials):
-  - `-a oracle` scores 1 on 22 of 22: deterministic, instance_exact and the process rules met; the standard twins also
-    `live_matches_replay` 11 of 11, `infra_error` 0;
-  - `-a nop` scores 0 on 22 of 22; no grader errors.
-  - The trials ran on files identical to this commit except for text: the task.toml description and the program's text fields in
-    `solution/` (the preset is named "made pointed"). The graders, the frozen instances, the tooling and the oracle trajectories are
-    byte-identical.
-
-**New names (`-i01`).** The frozen instances (the brush preset) and the verifiers (the thresholds) changed, so the eleven pairs are
-new tasks (PROTOCOL §2.8): `robopaint-oil-<painting>-i01` replace `-i00`. The generator keeps each committed pair's instance index
-(`--refresh`, `mk_tasks.py`). The renamed dirs differ from the validated ones above only by `-i00` → `-i01` in `task.toml`, `README.md`
-and the standard twin's `solution/oracle_meta.json` (checked file by file). After the rename:
-- the privileged pipeline on the `eai-robopaint:0.2.0` runtime (scoring service, `solution/solve.sh`'s replay, `tests/grade.py`
-  with two fresh replays) scores 11 of 11 again: success, deterministic, instance_exact, the process rules met, `s.score()` equal
-  to the verifier, and every recorded trajectory equal to `solution/oracle_qpos.npy`;
-- Harbor 0.23 on ws3 (jobs `rpp-pr-{oracle,nop}-{priv,std}-1009`), wanderer and temeraire in both modes: `-a oracle` 4 of 4
-  (deterministic, instance_exact, process rules met; standard: `live_matches_replay`, `infra_error` 0), `-a nop` 0 of 4.
+- **Process rules.** A recorded colour-in fill passes the Starry Night picture rule (ΔE 5.48, SSIM 0.722), but its sweep
+  share is 0.37, so the process rules decide it.
 
 **Standard mode.** The reference's stream through the current 2.2 server:
 - Natively (the image's runtime, an idle 128-thread host): Starry Night's 60797 steps take 598 s, 102 control steps/s with
   `video="none"` (the standard oracle's setting). The client's defaults (every camera, mp4) run at 51 control steps/s.
-- In the Harbor runs above (ws3, 1-min load 75–180): 645–906 s per pair, 67–88 control steps/s.
+- On a loaded host (1-min load 75–180): 645–906 s per pair, 67–88 control steps/s.
 
-One reference execution therefore takes 9–13 % of the 7200 s budget, or about 20 min (17 %) with the client's defaults.
+One reference execution therefore takes 10–15 minutes of the time limit, or about 20 min with the client's defaults.
 
 **Still out of reach.**
 - A copy remains an impressionist one: about a 33–48 px mosaic of the picture at 1 mm.
@@ -614,24 +438,20 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
   The palette is unchanged.
 
 ## Grading and determinism
-- **Standard mode: graded by the live episode** (2026-10-17, owner, board 0150/0151: standard modes graded by the live
-  episode; no grading replay; video by one render pass after the verdict). The collect hook first stops the agent's
-  container (`kill -9 -1`); then `finalize.sh` signals the service, which ends the episode, commits a stroke still pressed
-  and scores its live main sheet with `rcb_brush_strict.py`'s `Session.score()`, the same scorer and rule (picture rule
-  and process rules) the privileged verifier's replays use. `final.json` gets the verdict at once (`graded_by = "live"`,
-  `replays = 0`, `success`, `live_success`, `metrics`, `live_sha`, `success_rule`, `instance_exact`); the trajectory and
-  the live sheets (`canvas_live.png`, `canvas_live_practice.png`) are saved. Then the service renders the recorded
-  trajectory once into `replay.mp4` in the same process (`video_pending`, then `video_done`; a failed render is
-  `video_error`, never a change of the verdict) and exits. Before 2026-10-17 the service exited without a score and the
-  hook replayed the trajectory in two fresh processes (`replay_success` of both, `deterministic`, `live_matches_replay`,
-  `gpu_lost`); the score the service recorded of its live sheet (`final.json` `live`) had the picture rule only, because
-  it imported `rcb_brush.py`. A frozen instance that does not rebuild in the sidecar (`instance_sha` against the
-  instance's own) is refused at the start (`instance_mismatch`, `infra_error = 1`) before the agent is served; before,
-  the service crash-looped and the trial had no `final.json` verdict.
+- **Standard mode: graded by the live episode** (PROTOCOL H.4; no grading replay; video by one render pass after the
+  verdict). The collect hook first stops the agent's container (`kill -9 -1`); then `finalize.sh` signals the service,
+  which ends the episode, commits a stroke still pressed and scores its live main sheet with `rcb_brush_strict.py`'s
+  `Session.score()`, the same scorer and rule (picture rule and process rules) the privileged verifier's replays use.
+  `final.json` gets the verdict at once (`graded_by = "live"`, `replays = 0`, `success`, `live_success`, `metrics`,
+  `live_sha`, `success_rule`, `instance_exact`); the trajectory and the live sheets (`canvas_live.png`,
+  `canvas_live_practice.png`) are saved. Then the service renders the recorded trajectory once into `replay.mp4` in the
+  same process (`video_pending`, then `video_done`; a failed render is `video_error`, never a change of the verdict) and
+  exits. A frozen instance that does not rebuild in the sidecar (`instance_sha` against the instance's own) is refused
+  at the start (`instance_mismatch`, `infra_error = 1`) before the agent is served.
 - Privileged fresh-process replays: the final states of two replays must agree (`deterministic`).
 - The episode has no terminal state. It ends with the agent phase, a simulator error, or the 72000-control-step runaway
   guard.
-- Crash recovery (standard mode, docs/STANDARD_MODE.md §13):
+- Crash recovery (standard mode, docs/protocol/standard_mode.md §13):
   - Resume class `exact`: PhysX on the CPU and the CPU brush models repeat bit for bit in a fresh process, so a resumed
     episode must reach the checkpoint's state hash.
   - The journal rows are the 7 joint targets of each control step.
@@ -643,36 +463,31 @@ One reference execution therefore takes 9–13 % of the 7200 s budget, or about 
 - The collect hook is `rcb_limited.py end --wait-key video_done`. A verdict the service already wrote (its live verdict,
   or a give-up after crashes) is kept. `reward.json` reports `sim_startups`, `resumes`, `resume_state_mismatch`, `gave_up`
   and `infra_error`.
-- No verdict is infrastructure, never the agent's 0 (standard mode, `tests/grade.py`, 2026-10-10; 2026-10-17):
+- No verdict is infrastructure, never the agent's 0 (standard mode, `tests/grade.py`):
   `infra_error = 1` when `final.json` is missing, unreadable, or without a verdict (not `finalized`, or neither the live
   verdict nor a give-up after crashes), after a give-up the service caused (`sim_crashed`, `resume_failed`,
   `instance_mismatch`), and when the service could not score the live sheet after an episode that ended normally
   (`grade_error`, `grader_error = 1`). Crashes inside the agent's own calls (`sim_crashed_on_call`) are the agent's 0;
   `sim_error = 1` marks an episode that a simulator error ended. The hook writes `final.json` whole (temporary file + rename).
-- Malformed requests (standard mode, `environment/sim/server.py`, second review of 2026-10-10): every field of `/submit`
-  and `/observe` is checked before anything is executed (`parse_submit` / `parse_observe`; `note` included, which was
-  read after the chunk had run), and whatever a malformed field raises is a 400 that leaves the episode alive. Before, a
-  non-string `note`, a null `dt` / `seconds` / `video_fps` and a negative or absurd `video_fps` were a 500 that ended the
-  episode (`sim_error = 1`, the agent's 0). Null is the default; `video_fps` is accepted in [0, 1000]. Test:
+- Malformed requests (standard mode, `environment/sim/server.py`): every field of `/submit` and `/observe` is checked
+  before anything is executed (`parse_submit` / `parse_observe`; `note` included), and whatever a malformed field raises
+  is a 400 that leaves the episode alive. Null is the default; `video_fps` is accepted in [0, 1000]. Test:
   `scripts/robopaint_strict/tests/test_server_requests.py` (needs numpy; the checks are taken from `server.py` by `ast`).
-- Instance drift (privileged mode, `tests/grade.py`, second review of 2026-10-10): a frozen instance the verifier does
-  not rebuild (`instance_ok = 0`) is `grader_error = 1` + `infra_error = 1` (it was a plain 0), and `infra_error = 1`
+- Instance drift (privileged mode, `tests/grade.py`): a frozen instance the verifier does not rebuild (`instance_ok = 0`)
+  is `grader_error = 1` + `infra_error = 1`, and `infra_error = 1`
   goes with every `grader_error = 1`.
-- Verifier time (2026-10-10). A trajectory may have 72,000 control steps (`rcb_brush.MAX_STEPS`), and the oil references
+- Verifier time. A trajectory may have 72,000 control steps (`rcb_brush.MAX_STEPS`), and the oil references
   already have 49.7k-62.0k. Two fresh replays at the 67-102 steps/s measured above take 24-36 min plus two scene builds:
-  - privileged: `[verifier] timeout_sec = 3600` (was 1800, which a 62k-step reference at 67 steps/s already exceeded: the
-    trial had no reward); each replay process gets 1650 s (`--replay-timeout-s`), and one that runs past it is
+  - privileged: `[verifier] timeout_sec = 3600`; each replay process gets 1650 s (`--replay-timeout-s`), and one that runs past it is
     `grader_error = 1`. The two replays stay sequential: two sessions at once would not fit the verifier's declared
     minimum (2 CPUs, 3 GB).
-  - standard: the collect hook has 2820 s (5400 s from 2026-10-10 to 10-17, for two replays): up to 1500 s for a
-    service that is resuming to end its episode, then the live score and one render pass (the replay with the video took
-    at most 252 s, median 124 s, over the 236 recorded standard trials, for up to 72,000 control steps).
+  - standard: the collect hook has 2820 s: up to 1500 s for a service that is resuming to end its episode, then the live
+    score and one render pass (a replay with the video takes at most about 250 s for up to 72,000 control steps).
 - Privileged deliverable: a file that is not a readable trajectory (not an npz, pickled or object arrays, no `actions`,
-  a wrong shape, NaN/inf, more than 72,000 rows) is `bad_trajectory = 1` (was `grader_error = 1` for the unreadable
-  ones); every `reward.json` has `deterministic`.
-- The privileged `scorer` service has `restart: on-failure:6` (2026-10-10). It keeps no state a request needs: after a
+  a wrong shape, NaN/inf, more than 72,000 rows) is `bad_trajectory = 1`; every `reward.json` has `deterministic`.
+- The privileged `scorer` service has `restart: on-failure:6`. It keeps no state a request needs: after a
   restart the next `s.score()` replays the posted actions from the reset. Known limit: the scorer is inside the trial's
-  resource scope (PROTOCOL §2.10: in privileged mode every service is; `scripts/task_resources.toml` adds 5 GiB for it
+  resource scope (in privileged mode every service is, docs/protocol/running.md "Resources"; `scripts/task_resources.toml` adds 5 GiB for it
   to the trial's memory limit and caps it at 7 GiB). With `RCB_LIMITS_ENFORCE=1` an out-of-memory kill inside the
   scorer would therefore count against the agent, which cannot enter that container but does decide how many actions
   it posts. Taking it out of the scope is a change to `scripts/rcb_monitor/inject.py` (the service class) and the
@@ -696,8 +511,8 @@ Every copy of the tooling is byte-identical within a family and across the six f
 - **Tooling: thin wrappers only.** The agent gets the robot's low-level actions (joint targets, brush-tip poses), the
   sheets, rendering and replay. No stroke planner or painting skill is added to the agent's tooling; the reference
   solutions keep theirs under `solution/`.
-- **World-frame information (D7).** Standard tasks never say where things are in the world: no sheet heights or centres,
-  no well positions, no pixel-to-world formula (STANDARD_MODE.md §10, `scripts/robopaint_strict/ci/advisory-world-frame.sh`).
+- **World-frame information.** Standard tasks never say where things are in the world: no sheet heights or centres,
+  no well positions, no pixel-to-world formula (docs/protocol/standard_mode.md §10, `scripts/robopaint_strict/ci/advisory-world-frame.sh`).
   - Accepted consequence: the calibrated `canvas_cam` above the main sheet tells roughly where the sheet is.
   - Privileged tasks give the sheets through the tooling.
 
@@ -710,24 +525,7 @@ Every copy of the tooling is byte-identical within a family and across the six f
 | `/kinematics` | SAPIEN's pinocchio model (7 joints) |
 | proprio | 28 columns |
 
-More in STANDARD_MODE.md §16.
-
-## Results
-No task directory holds results (PROTOCOL §5); they are published on the results site
-(<https://embodied-agent-interface-v2-internal.github.io/runs/robopaint/>), with videos and full trials on the HF dataset
-`eai-v2-internal/agent-runs`.
-- This version: no runs yet.
-- 2026-10-14: the calligraphy pairs' process rules count strokes as written (Counted strokes in calligraphy). Runs graded
-  before that date on kaishu, xingshu and caoshu were graded under the contact cap; they are re-graded from their recorded
-  trajectories with `scripts/robopaint_strict/regrade.py`, nothing is re-run. Lettering and the paintings are graded as
-  before.
-- The runs on record are of the earlier version (picture rule only) and are not comparable with this one. Their trajectories
-  re-grade under the process rules (Calibration). `codex-gpt6_luna-xhigh` (Codex CLI 0.157.0, GPT-6 Luna, reasoning xhigh):
-  - they ran on pre-v1.0 versions of the tasks (privileged without a suffix, standard twins `-limited`): batch
-    robopaint-lunaxh-0928b (privileged, and standard on rcb-limited/2.0) and robopaint-lunaxh-limited-0929 (standard on
-    rcb-limited/2.2), 2026-09-28/29;
-  - successes: privileged 49/82, standard 3/82 (2.0) and 1/82 (2.2);
-  - lettering ran with a 5400 s budget, so its results form their own group; every other task ran with 7200 s.
+More in docs/protocol/standard_mode.md §16.
 
 ## Licences
 - ManiSkill and SAPIEN: Apache-2.0.
@@ -735,15 +533,13 @@ No task directory holds results (PROTOCOL §5); they are published on the result
 - libmypaint: ISC (patched). mypaint-brushes: CC0-1.0.
 - The calligraphy exemplars: as stated in each task's `NOTICE-exemplar.md`.
 
-## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+## Standard-mode service details
 
 Resume class `exact` (ManiSkill/SAPIEN, CPU PhysX, CPU brush model); the adapter's `persist` keys include the last tip target.
 
 `max_frames_per_call` = 640, per-frame depth counted as four images.
 
-Grading (since 2026-10-17): the service scores its live main sheet with the graders' rules, writes the verdict, renders the video once and exits; before, it dumped the episode and exited, and the hook replayed it in two fresh processes.
-
-Per-simulator notes (former STANDARD_MODE §16):
+Per-simulator notes:
 
 | | |
 |---|---|
@@ -754,11 +550,11 @@ Per-simulator notes (former STANDARD_MODE §16):
 | cameras | `canvas_cam`, `practice_cam`, `scene_cam`, `side_cam` (static) |
 | depth | SAPIEN depth buffer (geometry only: ink and paint never show) |
 | `/kinematics` | SAPIEN's pinocchio (7) |
-| proprio columns (2.0 → 2.2) | 14 → 28 |
-| grading replays | none (live verdict, since 2026-10-17; before: two fresh processes); one render pass for the video |
-| resume class (STANDARD_MODE §13.1) | `exact` |
+| proprio columns | 28 |
+| grading replays | none (live verdict); one render pass for the video |
+| resume class (docs/protocol/standard_mode.md §13.1) | `exact` |
 
-Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+Measured scene builds (episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
 
 | benchmark | measured | build | note |
 |---|---|---|---|

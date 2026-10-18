@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "robot-coding-bench/dextoolbench_screwdriver_long_screwdriver_spin_vertical-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): DexToolBench (SimToolReal) long_screwdriver / spin_vertical in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the long screwdriver through the 100 demonstrated goal poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; 20 resets (only the last episode graded), no object poses; the sim service records every episode and grades a fresh replay of the last one."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): DexToolBench (SimToolReal) long_screwdriver / spin_vertical in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the long screwdriver through the 100 demonstrated goal poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; 20 resets (only the last episode graded), no object poses; the sim service records every episode and grades the last one live (no grading replay)."
 authors = [{ name = "kangrui" }]
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory", "standard-mode"]
 
@@ -21,7 +21,7 @@ task_type = "trajectory"
 simulator = "mujoco"
 robot = "kuka-iiwa14-sharpa-ha4"
 family = "dextoolbench/screwdriver/long_screwdriver/spin_vertical"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 instance_seed = 0                 # DexToolBench fixes the start pose and goals (from a human demo); no randomization
 expert_time_estimate_hours = 4.0
 mode = "standard"
@@ -30,7 +30,7 @@ oracle = "partial"
 oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 27/100 goals (solution/; README of dextoolbench_screwdriver_long_screwdriver_spin_vertical-privileged)"
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 2.0
 min_memory_gb = 4.0
 min_gpu_memory_gb = 1.5
@@ -43,7 +43,7 @@ verifier_min_gpu_memory_gb = 1.5
 measured = "GPU 0.3-0.9 GB on 24 GB cards, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 0.9 GB, privileged container p90 4.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -59,12 +59,12 @@ trial_max_memory_gb = 14.0
 measured = "GPU: 2.1 GiB on a 48 GB card (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 4.4 GiB over 7 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.9 GiB, 7 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 7.0, pids = 8192 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -75,15 +75,22 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "t0=$(date +%s); left() { echo $(( 840 - $(date +%s) + t0 )); }; while [ ! -f /data/server.pid ] && [ $(left) -gt 660 ]; do sleep 2; done; i=0; while [ $(left) -gt 0 ]; do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; i=$((i+1)); sleep 2; done; if grep -q '\"finalized\": true' /data/final.json 2>/dev/null; then while [ $(( 1680 - $(date +%s) + t0 )) -gt 0 ] && ! grep -q '\"video_done\": true' /data/final.json 2>/dev/null; do sleep 2; done; fi; cat /data/final.json"
+command = "t0=$(date +%s); left() { echo $(( 840 - $(date +%s) + t0 )); }; while [ ! -f /data/server.pid ] && [ $(left) -gt 120 ]; do sleep 2; done; i=0; while [ $(left) -gt 0 ]; do grep -q '\"finalized\": true' /data/final.json 2>/dev/null && break; [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid) 2>/dev/null; i=$((i+1)); sleep 2; done; if grep -q '\"finalized\": true' /data/final.json 2>/dev/null; then while [ $(( 1680 - $(date +%s) + t0 )) -gt 0 ] && ! grep -q '\"video_done\": true' /data/final.json 2>/dev/null; do sleep 2; done; fi; cat /data/final.json"
 timeout_sec = 1710
 
 [agent]

@@ -5,17 +5,17 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/out/trajectory.npz", service = "sim" },
   { source = "/out/journal.f64", service = "sim" },           # crash recovery: every executed control step (float64 rows)
   { source = "/out/startups.jsonl", service = "sim" },        # crash recovery: one line per service start
-  { source = "/out/replay.mp4", service = "sim" },
+  { source = "/out/live.mp4", service = "sim" },             # the video, recorded during the live episode
+  { source = "/out/replay.mp4", service = "sim" },           # ... or rendered by the video-only pass when that one is missing
   { source = "/out/replay.last.png", service = "sim" },
   { source = "/out/server.log", service = "sim" },            # the service's own output (Harbor keeps none)
-  { source = "/out/replay1.log", service = "sim" },           # the collect hook's two fresh-process replays
-  { source = "/out/replay2.log", service = "sim" },
+  { source = "/out/video.log", service = "sim" },             # the video-only pass, when it runs
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/behavior-store-produce-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 store_produce on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Store the produce. Two mangos and two pomegranates are in the wicker basket on the kitchen floor; put all four into one of the two kitchen refrigerators, all into the same one. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and the episode is graded on two fresh replays."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 store_produce on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Store the produce. Two mangos and two pomegranates are in the wicker basket on the kitchen floor; put all four into one of the two kitchen refrigerators, all into the same one. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "standard-mode", "trajectory", "store_produce"]
 
@@ -26,7 +26,7 @@ simulator = "behavior"
 robot = "r1pro"
 family = "store_produce"
 mode = "standard"                  # robot as a service: RGB-D + proprioception, no object poses, no success predicate, no reset
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (317 s on average); demonstration video (316 s): https://www.youtube.com/embed/jppOziwq7xI (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #71 (protocol §2.7)."
@@ -34,7 +34,7 @@ instance_seed = 301
 expert_time_estimate_hours = 4.0
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 6.0
 min_memory_gb = 16.0
 min_gpu_memory_gb = 10.5
@@ -47,7 +47,7 @@ verifier_min_gpu_memory_gb = 10.5
 measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (batch_eval_live vram override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (board 0048, ps); author: 13-16 GB of RAM per Isaac process"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -63,12 +63,12 @@ trial_max_memory_gb = 49.0
 measured = "GPU: 9.0 GiB with RCB_TEXTURE_BUDGET=0.1, now the tasks' default (live sampler (cgroup anon, 13 AWS hosts + ws-1, 10-10); uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container docker peak 2.5 GiB over 1 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 24 GiB cap; whole trial: + the sim service's 41 GiB (docker peak 27.0 GiB, 39 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 8.0, memory_gb = 24.0, pids = 16384 }
 sim = { cpus = 12.0, memory_gb = 50.0, pids = 16384 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 301
 allowed = [301]
@@ -79,18 +79,27 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end the episode (waits through a resume), replay twice in fresh processes, write final.json
-timeout_sec = 37800               # 10.5 h = the episode end (up to 2 h through a resume) + two replays as long as the privileged
-                                  # grader allows (4 h each) + 30 min; measured on an 8-vCPU L40S: 626 s Isaac start, < 3.5 steps/s.
-                                  # finalize.sh's BUDGET_S is this value: it stops a replay 10 min before it and records why
+command = "sh /srv/finalize.sh"   # end the episode (waits through a resume; the settle window on the live simulator), write
+                                  # final.json from the live episode (no replay); a video-only render if the live video is missing
+timeout_sec = 23400               # 6.5 h = the episode end (up to 2 h through a resume) + the video-only render, run only when
+                                  # the live video is missing, after the verdict (a replay of up to 4 h, the privileged
+                                  # grader's cap: PROTOCOL §4) + 30 min; measured on an 8-vCPU L40S: 626 s Isaac start,
+                                  # < 3.5 steps/s. finalize.sh's BUDGET_S is this value: the render stops 5 min before it
 
 [agent]
 timeout_sec = 7200.0             # BEHAVIOR budget (Isaac Sim + scene load, ~10 steps/s), same as the privileged twin (docs/benchmarks/behavior.md)

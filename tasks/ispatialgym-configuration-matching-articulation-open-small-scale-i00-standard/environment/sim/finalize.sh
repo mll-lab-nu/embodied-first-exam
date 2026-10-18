@@ -1,7 +1,7 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container. The verdict is
 # the live episode's (owner 2026-10-17, board 0150/0151): nothing is replayed.
-#   1. end the episode with the shared first half (rcb_limited.py end, docs/STANDARD_MODE.md §13.3): it waits through a
+#   1. end the episode with the shared first half (rcb_limited.py end, docs/protocol/standard_mode.md §13.3): it waits through a
 #      resume, SIGUSR1s the service, and returns 0 once the service has written trajectory.npz + episode.json, closed
 #      the live video (live.mp4) and exited (releasing the GPU); 2 when final.json already holds the verdict (a give-up:
 #      after crashes, or a frozen start that did not rebuild); 1 when the service never ended the episode. With rc 1 an
@@ -23,7 +23,18 @@ python "$SRV/rcb_limited.py" end "$DATA" --timeout "$END_S"; rc=$?
 if [ "$rc" = 2 ]; then
     echo "[finalize] final.json already holds the verdict (a give-up)"; exit 0
 fi
-if [ "$rc" != 0 ] && [ -s "$DATA/episode.json" ]; then
+# a late exit's episode.json counts only when the newest service start wrote it (never a stale one from before a crash)
+if [ "$rc" != 0 ] && [ -s "$DATA/episode.json" ] && python - <<'PY'
+import json, os, sys
+d = os.environ.get("RCB_DATA", "/out")
+try:
+    ep = json.load(open(os.path.join(d, "episode.json")))
+    last = json.loads([x for x in open(os.path.join(d, "startups.jsonl")) if x.strip()][-1])
+    sys.exit(0 if ep.get("pid") is not None and ep.get("pid") == last.get("pid") else 1)
+except Exception:
+    sys.exit(1)
+PY
+then
     echo "[finalize] the service dumped its episode but did not exit in time (rc $rc): final.json from its episode.json"
 elif [ "$rc" != 0 ]; then
     echo "[finalize] the service did not end the episode (rc $rc): recorded as an infrastructure failure"

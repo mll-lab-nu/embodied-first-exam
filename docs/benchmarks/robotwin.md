@@ -1,11 +1,11 @@
 # RoboTwin 2.0
 
-RoboTwin 2.0's standard tasks serve `eai-standard/2.1` (docs/STANDARD_MODE.md Part 1), the service the base protocol
+RoboTwin 2.0's standard tasks serve `eai-standard/2.1` (docs/protocol/standard_mode.md Part 1), the service the base protocol
 was written from. Generators: `scripts/robotwin_mk_task.py` (privileged), `scripts/robotwin_mk_limited.py` (standard,
 inside the eai-robotwin image); shared files checked by `scripts/robotwin_sync_shared.py --check`.
 
 
-## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+## Standard-mode service details
 
 **Actions.**
 - `joint_position` (14 = 6 joints + gripper per arm; rad; gripper 0 closed..1 open): rows are `dt` seconds apart
@@ -21,11 +21,10 @@ inside the eai-robotwin image); shared files checked by `scripts/robotwin_sync_s
 - `/observe` watches at most `max_watch_s` = 30 s.
 
 **`meta.cameras`** carries RoboTwin's per-camera `intrinsic_cv`, `extrinsic_cv`, `cam2world_gl`; the wrist cameras move
-with the arms (`cam2world_gl/<cam>` per returned frame). Until 2026-10-10 the service sent the calibration of its start,
-which was wrong for the wrist cameras once an arm had moved. `/spec` states the agent's clock in
+with the arms (`cam2world_gl/<cam>` per returned frame). `/spec` states the agent's clock in
 `budget.wall_clock_note`.
 
-**Proprioception (82 columns)**, grouped in `spec.proprio_groups`. 2.0's 30 columns are unchanged at 0–29:
+**Proprioception (82 columns)**, grouped in `spec.proprio_groups`:
 
 | columns | group | source |
 |---|---|---|
@@ -46,13 +45,10 @@ More than 2 crashes end the episode: `sim_crashed_on_call` if every crash happen
 (`RCB_STARTUP_TIMEOUT_S`, 300 s). A host on which the frozen instance does not rebuild gets one retry and then
 `reason = instance_mismatch` with `infra_error = 1`.
 
-**Grading** (since 2026-10-17, owner, board 0150/0151: standard mode graded by the live episode; no grading replay;
-video by one render pass after the verdict). `success` is RoboTwin's `check_success` on the episode the sidecar ran:
-it is checked after every call that ran physics, the first success ends the episode, and when the agent's time is up
-(the collect hook's SIGUSR1, after the monitor is sealed and the agent's container is stopped with `kill -9 -1`) the
-final state is checked once more. That is the live part of the old rule `live ∧ replay ∧ deterministic`; the replay's
-predicate was the same check on the final replayed state, with no settle or hold window, so nothing moves from the
-replay to the live episode. `final.json` gets the verdict at once (`graded_by = "live"`, `replays = 0`, `finalized`,
+**Grading** (the live episode, PROTOCOL H.4; no grading replay). `success` is RoboTwin's `check_success` on the
+episode the sidecar ran: it is checked after every call that ran physics, the first success ends the episode, and when
+the agent's time is up (the collect hook's SIGUSR1, after the monitor is sealed and the agent's container is stopped
+with `kill -9 -1`) the final state is checked once more. `final.json` gets the verdict at once (`graded_by = "live"`, `replays = 0`, `finalized`,
 the end state's hash `live_sha`, `video_pending: true`); `trajectory.npz` is saved as the deliverable. The frozen
 instance is checked when the scene is built, before the agent is served: `rcb_traj.Session` compares the initial-state
 hash with `instance.json`'s `state_sha` (a mismatch: one retry, then `instance_mismatch`, `infra_error = 1`). The
@@ -64,10 +60,7 @@ grader (`tests/grade.py`) transcribes it; `infra_error = 1` only for a missing /
 instance, steps the rows once and writes both `replay.mp4` (six views, 320×240 tiles, a frame every
 max(10, rows/600) steps) and `live.mp4` (below); `video_pending` is false when it is done or failed (`video_error`). The
 collect hook waits for it until 2200 s (an episode whose physics filled the whole 1800 s cutoff, plus at most ~2100
-rendered frames); a video not ready by then is lost, the verdict is not. Rendering during the episode
-(`RCB_LIVE=realtime`) was not chosen: it costs the agent ~150 ms of wall clock per frame (a 10 s chunk took 20.6 s
-instead of 5.1 s). Before 2026-10-17 the collect hook ran three passes over the trajectory (the grading replay, then
-`replay.mp4`, then `live.mp4`); now one.
+rendered frames); a video not ready by then is lost, the verdict is not.
 
 **Live recording** (sidecar only; the agent sees none of it):
 - `live.mp4`: the episode as six views (world / observer / head · front / left wrist / right wrist, 213×160 tiles), each

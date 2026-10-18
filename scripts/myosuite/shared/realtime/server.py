@@ -1,12 +1,19 @@
 """eai-standard/2.3 sim service for MyoSuite's standard-realtime tasks -- the adapter behind the shared realtime layer
-(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/PROTOCOL.md §4b,
+(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §4b,
 docs/benchmarks/myosuite.md).
 
 The simulator-specific half only: `MyoSuite` implements rcb_service.Sim (the contract documented in rcb_service.py) for
-one frozen instance, on the benchmark's own tooling module rcb_myosuite.Session -- the same scene, action, success rule
-and replay as the standard twin's eai-standard/2.2 service (environment/sim/server.py of `-standard`). The protocol, the
+one frozen instance, on the benchmark's own tooling module rcb_myosuite.Session -- the same scene, action and success
+rule as the standard twin's eai-standard/2.2 service (environment/sim/server.py of `-standard`). The protocol, the
 clock, the plan, the episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged
 copies of the HumanoidBench sources (ci_checks/check-tooling-identity.sh).
+
+Grading (owner, 2026-10-17, board 0151): the verdict is the live episode's, judged by the layer from step(): the task's
+rule as Session.step applies it to the steps this service ran (table_tennis: MyoChallenge's own success event; any hold
+or track window of a family is part of that rule, so the episode only ends in success once it is complete). There is no
+live_verdict(): nothing is left that a replay applied and the live run did not. Nothing is replayed to grade it; the
+video is rendered from the trajectory after the verdict (render_video). `start_sha` is the frozen instance's recorded
+state hash: the layer refuses a fresh episode whose scene does not start there (instance_mismatch, infrastructure).
 
 What the agent gets is what the standard twin gives, minus the 2.2 additions the realtime layer does not serve
 (`/kinematics`, per-frame camera poses, depth modes): the cameras (RGB, and depth on request from every camera that
@@ -105,6 +112,7 @@ class MyoSuite:
         self.task = str(np.load(instance, allow_pickle=False)["task"])
         self.info = task_info
         self.s = M.Session(self.task, instance=instance)
+        self.start_sha = self.s.instance_sha                       # the frozen instance's recorded start (the layer checks it)
         m = self.m = self.s.model
         self.H, self.W = image_hw
         self.control_dt = float(self.s.dt)
@@ -303,19 +311,11 @@ class MyoSuite:
     def state_sha(self) -> str:
         return self.s.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode from the frozen instance in a fresh MyoSuite session (physics only)."""
-        fresh = M.Session(self.task, instance=self.instance)
-        try:
-            st = fresh.replay(rows)
-            return {"success": bool(st["success"]), "state_sha": st["state_sha"]}
-        finally:
-            fresh.close()
-
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         self.s.save_trajectory(rows, path, meta)
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
+        """The episode's video, after the verdict (it decides nothing): the rows replayed on this service's session."""
         import imageio.v2 as imageio
         cam = self.info["default_cameras"][0]
         self.s.render_video(rows, path, cameras=[cam], every=2, fps=25, size=(240, 320))

@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/eai-ambench:<images/ambench/VERSION> is never pushed to a public registry (docs/PROTOCOL.md §2.4,
+BUILD_ONLY: ghcr.io/mll-lab-nu/eai-ambench:<images/ambench/VERSION> is never pushed to a public registry (docs/protocol/README.md §2.4,
 D5). Every evaluation host builds it locally; the AM-Bench tasks reference that tag and Harbor finds it in the local Docker
 image store.
 

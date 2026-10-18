@@ -1,1 +1,1 @@
-{"collect_timeout_s": 1800, "replay_timeout_s": 600, "verifier_timeout_s": 1800, "video_timeout_s": 600}
+{"collect_timeout_s": 1620, "instance_sha256": {"catalog.json": "495d12a53b63cd255e8da0ec6c2c472e6ca257058dd6655565c791acad16d1f4", "instance.json": "8fb6ef89f9d36e765f6e3a2b4d916252dba5f751394885e402b18d5d17cfe5ea", "task.json": "e30cc067161219ab18ff058f7b47565ed57a9b2db5c78f9a1fbdd6098bab6761"}, "video_timeout_s": 1200}

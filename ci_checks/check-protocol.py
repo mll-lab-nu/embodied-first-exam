@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Task-protocol conformance report (docs/PROTOCOL.md): the protocol version each mode may declare, the `oracle` fields,
+"""Task-protocol conformance report (docs/protocol/README.md): the protocol version each mode may declare, the `oracle` fields,
 no placeholder solve.sh, base images from the one registry, no results/ in the repository, no personal paths. Prints
 one summary line per rule with a count and a few examples; every rule fails the check. Names, modes and the other
 task.toml fields are check-task-fields.sh's; that test.sh clears /logs/verifier first is check-verifier-isolation.sh's.
@@ -31,7 +31,9 @@ def _own_protocols() -> dict[str, dict[str, set[str]]]:
         d = tomllib.loads(man.read_text())
         protos = {m: {p} if isinstance(p, str) else set(p) for m, p in d.get("protocols", {}).items()}
         for t in d.get("tasks", []):
-            out[t["name"]] = protos
+            # a task may name its one protocol (`protocol`): then only that one of its mode's list is accepted for it
+            own = t.get("protocol")
+            out[t["name"]] = {m: ps & {own} for m, ps in protos.items()} if own else protos
     return out
 
 
@@ -146,7 +148,7 @@ def main() -> int:
     if not hits:
         print(f"protocol v1.2-rc: {len(tasks)} task(s) conform")
         return 0
-    print("protocol v1.2-rc: violations (docs/PROTOCOL.md):")
+    print("protocol v1.2-rc: violations (docs/protocol/README.md):")
     for rule, where in sorted(hits.items(), key=lambda kv: -len(kv[1])):
         examples = ", ".join(where[:3]) + (", ..." if len(where) > 3 else "")
         print(f"  FAIL {len(where):4d}  {rule}: {examples}")

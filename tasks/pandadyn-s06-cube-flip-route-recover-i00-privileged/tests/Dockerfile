@@ -6,6 +6,8 @@ FROM ghcr.io/mll-lab-nu/eai-pandadyn:0.1.0
 COPY grade.py instance.json rcb_pandadyn.py test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests:/opt/pandadyn
+# OPENBLAS_CORETYPE: this task's start depends on the BLAS kernel (docs/benchmarks/pandadyn.md "Determinism")
+ENV OPENBLAS_CORETYPE=Haswell
 WORKDIR /tests
-# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+# resource limits: the verifier step and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
 COPY rcb_limits.py rcb_limits.json /tests/

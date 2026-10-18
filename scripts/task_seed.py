@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a task from one of its allowed seeds (docs/PROTOCOL.md §2.13). The runner chooses the seed, never the agent:
+"""Run a task from one of its allowed seeds (docs/protocol/README.md §2.13). The runner chooses the seed, never the agent:
 
     python3 scripts/task_seed.py list tasks/<task>                      # default, allowed, oracle
     python3 scripts/task_seed.py pick tasks/<task> [--rng N]            # a seed drawn uniformly from `allowed`

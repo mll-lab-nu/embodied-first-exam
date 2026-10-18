@@ -9,5 +9,5 @@ ENV PYTHONPATH=/tests
 # grade.py checks before it replays (docs/benchmarks/dexjoco.md, Threads)
 ENV OPENBLAS_NUM_THREADS=4
 WORKDIR /tests
-# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+# resource limits: the verifier step and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
 COPY rcb_limits.py rcb_limits.json /tests/

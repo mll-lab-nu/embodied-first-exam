@@ -10,6 +10,7 @@ simulator, over HTTP; needs numpy, no MuJoCo.
 - One call returns at most max_frames_per_call images; a larger request is a 400 that executes nothing (R3B-M2).
 - The committed facts (instances/<family>/facts.json `scene_cameras`, which the texts are written from) agree with the
   frozen instances' models.
+- test_standard_grading.py (imported below): graded by the live episode, no grading replay (board 0151).
 """
 import json
 import os
@@ -226,6 +227,10 @@ class Facts(unittest.TestCase):
         self.assertEqual({k: v for k, v in seen.items() if v}, {"bimanual_photograph": ["cam_pos_z"]})
         self.assertEqual(len(seen), 11)
 
+
+# The live-episode grading tests (the collect hook, the verifier, the start-state check) run with these: this file is
+# the one ci_checks/check-unit-tests.sh lists.
+from test_standard_grading import Grader, Hook, StartState  # noqa: E402,F401
 
 if __name__ == "__main__":
     unittest.main()

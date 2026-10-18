@@ -8,16 +8,16 @@
 #    - the graders, tests/grade.py (one version per mode).
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as scripts/robopaint_strict/ci/advisory-tooling.sh.
 #    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: RoboOlympics, PROTOCOL §4c) are a group of their own.
-# 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo, Panda Dynamic Scenes): the
+# 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo; Panda Dynamic Scenes until 2026-10-17): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
-#    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/STANDARD_MODE.md), and the sidecar is
+#    run.sh are byte-identical to their source in scripts/eai_standard/ (docs/protocol/standard_mode.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
 #    `restart: on-failure:N` with N >= 3 (PROTOCOL §4.1, §4.7).
 #    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC, IKEA MuJoCo) is held to the same rules, with rcb_limited.py and
-#    rcb_client.py from scripts/eai_standard/v2_4/ (docs/STANDARD_MODE.md) and 2.2's rcb1.py and run.sh.
+#    rcb_client.py from scripts/eai_standard/v2_4/ (docs/protocol/standard_mode.md) and 2.2's rcb1.py and run.sh.
 # 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, BiGym 2.0
 #    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
-#    byte-identical to their one source, scripts/humanoidbench/shared/realtime/ (docs/STANDARD_MODE.md,
+#    byte-identical to their one source, scripts/humanoidbench/shared/realtime/ (docs/protocol/standard_mode.md,
 #    "Standard-realtime mode"), and so is every other copy of that source under scripts/*/shared/realtime/.
 # 4. The benchmarks whose generators have no check mode (review round 3, M6: a hand edit of one task with a refreshed
 #    digest passed every check): DexToolBench and the MuJoCo Playground tasks that serve the same service (ALOHA, Panda;

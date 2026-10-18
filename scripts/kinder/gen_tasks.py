@@ -207,7 +207,7 @@ def goal_text(stmt: str) -> str:
 
 
 def oracle_fields(t: dict, d: dict, mode: str) -> dict:
-    """oracle / oracle_evidence (docs/PROTOCOL.md §2.7) and what the README says about it: an oracle where
+    """oracle / oracle_evidence (docs/protocol/README.md §2.7) and what the README says about it: an oracle where
     oracles/<family>/<mode>/ has one, else none, with the evidence subset.toml names and the human review."""
     review = f"PR #{d['review_pr']}" if d.get("review_pr") else "this benchmark's pull request"
     if (ORACLES / t["family"] / mode).is_dir():
@@ -217,12 +217,12 @@ def oracle_fields(t: dict, d: dict, mode: str) -> dict:
         evidence = "none yet: no positive example is known for this instance (human review pending)"
         return {"oracle_lines": f'oracle = "none"\nvalidated = false\noracle_evidence = {json.dumps(evidence)}',
                 "reference_solution": "None, and no positive example yet: the task is unvalidated (`validated = false`, "
-                                      "docs/PROTOCOL.md §2, §4) until a human review records one.",
+                                      "docs/protocol/README.md §2, §4) until a human review records one.",
                 "oracle_note": "No oracle; no positive example yet (human review pending). `nop` scores 0."}
     evidence = one_line(t["oracle_evidence"]) + f"; human review in {review}"
     return {"oracle_lines": f'oracle = "none"\noracle_evidence = {json.dumps(evidence, ensure_ascii=False)}',
             "reference_solution": "None. Solvability rests on the positive example in `oracle_evidence` (task.toml), "
-                                  "checked by a human reviewer (docs/PROTOCOL.md §2.7).",
+                                  "checked by a human reviewer (docs/protocol/README.md §2.7).",
             "oracle_note": f"No oracle; human review in {review}. `nop` scores 0."}
 
 

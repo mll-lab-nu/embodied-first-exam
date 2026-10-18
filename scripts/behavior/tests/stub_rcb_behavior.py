@@ -1,8 +1,10 @@
 """A stand-in for the BEHAVIOR tooling (rcb_behavior.py) with no simulator: just enough of Session for the standard
 sim service (tasks/behavior-*-standard/environment/sim/server.py) to start and serve, so test_standard_service.py can
 drive the real service code, the real shared layer and real HTTP requests. One "control step" adds the action to a
-25-number state. Knobs (environment): STUB_GOAL_AT (the goal holds from that control step on), STUB_FALL_AT (the episode
-ends there as a fall), STUB_LOG (every executed step is appended there, one line per step)."""
+25-number state. Knobs (environment): STUB_GOAL_AT (the success rule's window closes at that control step: the episode
+ends there as a success), STUB_FALL_AT (the episode ends there as a fall), STUB_BREAKDOWN_AT (the episode ends there as a
+simulator breakdown), STUB_LOG (every executed step is appended there, one line per step), STUB_INSTANCE_MISMATCH=1
+(the frozen start does not rebuild: instance_matches False)."""
 from __future__ import annotations
 
 import hashlib
@@ -13,6 +15,9 @@ import numpy as np
 
 MAX_STEPS = int(os.environ.get("STUB_MAX_STEPS", "200000"))
 FALL_TILT_TOLERANCE, FALL_HEIGHT_M, FALL_HOLD_STEPS, FALL_REASON = 0.75, 0.03, 300, "failure: the robot fell over"
+REST_STEPS, REST_SPEED_M_S, SETTLE_STEPS = 30, 0.05, 150
+BREAKDOWN_REASON = "failure: simulator breakdown"
+MP4_FRAGMENTED = "frag_keyframe+empty_moov+default_base_moof"
 GL2CV = np.diag([1.0, -1.0, -1.0, 1.0])
 CAMS = ("robot_r1:zed_link:Camera:0", "robot_r1:left_realsense_link:Camera:0", "robot_r1:right_realsense_link:Camera:0")
 
@@ -59,11 +64,14 @@ class Session:
     def __init__(self, task, instance=None, cameras="tiny", strict=False):
         self.task, self.spec, self.instance_id, self.action_dim = task, {"text": "stub task"}, 301, 25
         self.robot, self.env = _Robot(), _Env()
-        self.episode_done, self.end_reason = False, None
+        self.episode_done, self.end_reason, self.breakdown = False, None, None
         self.state = np.zeros(25); self._last = np.zeros(25); self._rec = None
         self.goal_at = int(os.environ.get("STUB_GOAL_AT", "0")) or None
         self.fall_at = int(os.environ.get("STUB_FALL_AT", "0")) or None
+        self.breakdown_at = int(os.environ.get("STUB_BREAKDOWN_AT", "0")) or None
         self.log = os.environ.get("STUB_LOG")
+        self.instance_sha = "s0"; self.instance_exact = os.environ.get("STUB_INSTANCE_MISMATCH") != "1"
+        self.instance_matches = self.instance_exact
 
     # ---- what the service builds its /spec from
     def primitives(self): return {}
@@ -110,6 +118,9 @@ class Session:
         if self.log:
             with open(self.log, "a") as f: f.write(json.dumps({"step": self.env.episode_steps}) + "\n")
         n = self.env.episode_steps
+        if self.breakdown_at and n >= self.breakdown_at:
+            self.breakdown = "robot state not finite"; self.end_reason = f"{BREAKDOWN_REASON} (robot state not finite)"
+            self.episode_done = True; return True, False
         if self.goal_at and n >= self.goal_at:
             self.env.task.success = True; self.episode_done = True; return True, False
         if self.fall_at and n >= self.fall_at:
@@ -117,6 +128,15 @@ class Session:
         if n >= MAX_STEPS:
             self.episode_done = True; return False, True
         return False, False
+    @property
+    def succeeded(self): return bool(self.env.task.success)
+    def status(self):
+        return {"success": self.succeeded, "q_score": 1.0 if self.succeeded else 0.0, "goal_first_step": self.goal_at if self.succeeded else None}
+    def settle(self, steps=SETTLE_STEPS):
+        n = 0
+        while n < steps and self.env.episode_steps > 0 and not self.episode_done:
+            self.step(self.hold_action().a); n += 1
+        return n
     def state_sha(self): return hashlib.sha1(np.round(self.state, 6).tobytes()).hexdigest()[:16]
     def record_start(self): self._rec = []
     def record_stop(self):

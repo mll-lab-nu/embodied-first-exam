@@ -1,6 +1,6 @@
 """DexHand adapter of the shared eai-standard/2.2 layer; physics stays in this process.
 
-The optional reset capability (docs/STANDARD_MODE.md "Optional reset capability", PROTOCOL §4.5) is added here, as the
+The optional reset capability (docs/protocol/standard_mode.md "Optional reset capability", PROTOCOL §4.5) is added here, as the
 MyoSuite 2.2 service adds it (the shared layer has none): with RCB_RESET_BUDGET = N > 0 (DexHand's compose files: 20),
 POST /reset abandons the running episode, or follows one that has ended, and starts a new one from the frozen start
 (Session.reset(): the same state hash as a fresh process); only the last episode is graded. A crash resume replays the
@@ -9,6 +9,8 @@ journal and resets where the committed resets did (their journal rows are checkp
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 import os
 from pathlib import Path
@@ -299,6 +301,8 @@ def finish(reason: str) -> None:
     if E["done"]:
         return
     E.update(done=True, reason=reason)
+    if reason == "error":
+        E["success"] = False   # a simulator error ends the episode: the state after it is never judged a success
     if REPLAYING["on"]:
         return
     EP.log({"ev": "end", "reason": reason, "success": bool(E["success"]), "control_steps": clock(),
@@ -509,6 +513,7 @@ def end_episode():
                 "resets": E["resets"],
                 "reset_budget": RESET_BUDGET,
                 "control_steps_total": EP.rows,
+                "start_sha": next((event.get("state_sha") for event in EP.events() if event.get("ev") == "start"), None),
                 **EP.final_fields(),
             },
         )
@@ -545,13 +550,48 @@ def resume_sha() -> str:
     return S.state_sha()
 
 
+def instance_check() -> dict:
+    """The frozen instance, checked when the episode begins (the verdict is the live episode's, so no later replay
+    rebuilds the scene): the scene files' sha256 against the generator's record (grading.json `instance_sha256`).
+    No reference hash of the built starting state is recorded for DexHand; the start event logs the one this service
+    built (`state_sha`), and episode.json repeats it (`start_sha`)."""
+    here = Path(__file__).resolve().parent
+    try:
+        want = json.loads((here / "grading.json").read_text()).get("instance_sha256")
+    except (OSError, ValueError, AttributeError):
+        want = None
+    if not isinstance(want, dict) or not want:
+        return {"instance_ok": False, "instance_error": "grading.json records no instance_sha256"}
+    bad = []
+    for name, sha in sorted(want.items()):
+        try:
+            got = hashlib.sha256((here / name).read_bytes()).hexdigest()
+        except OSError:
+            got = None
+        if got != sha:
+            bad.append(name)
+    return {"instance_ok": not bad, **({"instance_error": "differs from the generator's record: " + ", ".join(bad)}
+                                       if bad else {})}
+
+
+if not any(event.get("ev") == "start" for event in EP.events()):   # a fresh episode, not a resume
+    INSTANCE = instance_check()
+    if not INSTANCE["instance_ok"]:
+        print(f"[dexhand] instance_mismatch: {INSTANCE['instance_error']}; the service does not start an episode",
+              flush=True)
+        if not L.final_verdict(str(DATA)):
+            L._write_json(str(DATA / "final.json"), {"hand": HAND, "instance_mismatch": 1, **INSTANCE})
+        EP.give_up("instance_mismatch", infra=True)   # writes the verdict and answers every request 409 until the end
+else:
+    INSTANCE = {}
+
 RESUMED = EP.begin(
     state=E,
     step=replay_row if RESET_BUDGET else execute,
     state_sha=resume_sha if RESET_BUDGET else S.state_sha,
     proprio=proprio_row,
     spec=SPEC,
-    start_event={"task": TASK, "hand": HAND},
+    start_event={"task": TASK, "hand": HAND, **INSTANCE},
     on_end=end_episode,
 )
 if RESUMED and E["resets"]:  # Episode.begin looks for an "end" of any episode: only the current one's counts

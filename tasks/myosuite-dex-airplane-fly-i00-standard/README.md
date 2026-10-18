@@ -22,10 +22,10 @@ Same instance and success rule as `myosuite-dex-airplane-fly-i00-privileged` (fi
 None. Solvability evidence: no positive example yet (two model attempts failed: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06) and Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high`); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #65.
 
 ## Verification
-The sim service judges the episode live and records every executed control step; the collect hook (`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes and writes `final.json`; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded, both replays succeed, and they end in the same state. No oracle; human review in PR #65. `nop`: the episode times out, reward 0.
+The sim service judges the episode live (the task's rule on the steps it ran: on track over the 99-step reference) and records every executed control step; it checks at the episode's start that the scene is the frozen instance (its recorded state hash; else `instance_mismatch`, an infrastructure failure). The collect hook (`environment/sim/finalize.sh`) ends the service and writes that live verdict to `final.json` (`graded_by` = `live`; nothing is replayed to grade it), then renders `replay.mp4` in one pass over the recorded trajectory, which decides nothing; `tests/grade.py` (separate sandbox, no network) passes iff the live episode succeeded. A missing or unreadable `final.json`, one without a verdict, or a give-up after crashes not all inside the agent's calls is an infrastructure failure (`infra_error = 1`), not the agent's 0. No oracle; human review in PR #65. `nop`: the episode times out, reward 0.
 
 ## Compute resources
-Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
 
 | | Agent phase | Verifier |
 |---|---|---|
@@ -35,14 +35,14 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: not needed.
 - Measured: memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 14 GiB memory. Limits measured: memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 14 GiB memory. Limits measured: memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); cameras `left_cam`, `right_cam`, `center_cam`, `hand_top`, `hand_bottom`, `hand_side_inter`, `hand_side_exter`, `plam_lookat` (640 x 480); forward kinematics of the body's links |
-| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
+| Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); after the agent's phase the collect hook only renders the video (one pass over the graded episode), it replays nothing to grade |
 | Reset budget | 10 (`RCB_RESET_BUDGET`, compose default; PROTOCOL §4.5): `POST /reset` starts a new episode from the frozen instance; only the last episode is graded, a success ends the trial; results under another budget are reported separately |
 
 ### Provenance
@@ -90,3 +90,14 @@ Generated by `scripts/myosuite/generate.py` from `scripts/myosuite/instances/dex
   still had that time. `/spec` says what the clock counts from (`budget.clock`), and the instruction's `## Time limit`
   tells the agent to plan by `time_left_s`. The service never ended an episode on this clock: the scene, the frozen
   instance, the pass rule and the grader are unchanged, so the task keeps its name and earlier results stand.
+- 2026-10-17 (owner, boards 0150 and 0151): graded by the live episode; no grading replay. `environment/sim/finalize.sh`
+  writes the live episode's verdict (the task's rule as the service applied it to the steps it ran, its hold or track
+  window included; `graded_by` = `live`, `replays` = 0) and no longer replays the trajectory in two fresh processes;
+  `replay.mp4` is rendered after the verdict by one pass over the trajectory (`environment/sim/video.py`), which
+  decides nothing. `environment/sim/server.py` checks at the episode's start that the scene hashes to the frozen
+  instance's recorded state (else `instance_mismatch`, an infrastructure failure, before the agent is served; before,
+  the replays checked it). `tests/grade.py`: success = the live success; `reward.json` drops `replay_success`,
+  `deterministic` and `live_matches_replay` and adds `graded_by_live`, `replays`. A collect hook on `main`
+  (`kill -9 -1`) stops whatever the agent left running before the service ends the episode. The scene, the instance,
+  the pass rule and everything the agent sees are unchanged, so the task keeps its name; a result graded before passed
+  only if the live episode succeeded too.

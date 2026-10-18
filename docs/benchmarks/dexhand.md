@@ -47,7 +47,7 @@ nine of the first ten (all but `sweep_dustpan`) and two of the wave-2 families a
 run selects Wuji (see Hands).
 
 `release_status = "provisional"`: a maintainer's solvability review and agent-trial calibration are pending
-(PROTOCOL §2.7). The agent's time limit is each task's own `[agent] timeout_sec` (3600 s in both modes).
+(PROTOCOL §4). The agent's time limit is each task's own `[agent] timeout_sec` (3600 s in both modes).
 
 ## Strict success and failure
 
@@ -60,10 +60,11 @@ Every family follows the same three rules, checked by the trusted runtime from s
 2. **No partial credit.** Success needs every ordered stage and the terminal (released or held) condition for its full
    window of consecutive samples; four of five layers, five of six debris pieces or a placed but still-held pot is a
    failure. Success ends the episode too.
-3. **Replayed, never claimed.** The grader rebuilds the frozen scene with the recorded hand in fresh processes and
-   replays only the motor targets: two privileged replays must succeed with identical final state hashes; in standard
-   mode the service's live episode, two fresh replays of its journal and their hashes must agree. Success flags, object
-   poses, configuration overrides or any other member of an agent's archive are never read.
+3. **Judged by a trusted simulator, never claimed.** Privileged: the grader rebuilds the frozen scene with the
+   recorded hand in fresh processes and replays only the motor targets; two replays must succeed with identical final
+   state hashes. Standard: the sim service's own record of the episode it ran is the verdict (no replay; see
+   "Standard-mode grading by the live episode" below). Success flags, object poses,
+   configuration overrides or any other member of an agent's archive are never read.
 
 ## Hands
 
@@ -178,7 +179,7 @@ into the ignored `images/dexhand/assets/` and checks every file against `asset-m
 directory carries its own runtime copy. No asset, policy or demonstration is downloaded at run time, and the image
 holds no reference trajectory.
 
-**Arm rig (wave 3, 2026-10-15).** `scripts/dexhand/shared/arm_rig.py` (`mount_marvin`) replaces a family's floating
+**Arm rig.** `scripts/dexhand/shared/arm_rig.py` (`mount_marvin`) replaces a family's floating
 wrist stage by the Tianji Marvin stand of `pot_shelf_transfer` / `sweep_dustpan`: the same two seven-joint arms
 (kinematics, inertias, meshes, joint limits, damping, armature, contact excludes, position servos kp 700 / kv 48 with
 force limits 108/108/66/66/18/18/18 N m) with a hand on each flange (robot id `marvin-bimanual-sharpa-wave`;
@@ -192,7 +193,7 @@ without passing through furniture; each family's section names its stand pose. `
 families' `tools/` use it to turn their wrist-stage episodes into arm rows; it is never copied into a task, and every
 packaged oracle replays open loop.
 
-## World-frame facts in instructions (D7)
+## World-frame facts in instructions
 
 DexHand instructions state the frozen static layout of each scene in world coordinates (metres, z up): the locked
 wrist pose of the essential families, table-top height and edge, support, shelf and target positions, an object's
@@ -233,7 +234,7 @@ fingers and no external support.
 3. `repeat_quarter_turn`: `1.4508 <= top_turn <= 1.6908`, `1 <= base_contacts <= 5`, `1 <= mechanism_contacts <= 5`; 5 consecutive controls.
 4. Terminal hold: `1.4508 <= top_turn <= 1.6908`, `1 <= base_contacts <= 5`, `0 <= speed <= 0.12`; 15 consecutive controls.
 
-Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.35` (0.24 before 2026-10-14, see below). Locked wrist targets: `[-0.08, 0, 0.29, 0, 0, 0]`.
+Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.35`. Locked wrist targets: `[-0.08, 0, 0.29, 0, 0, 0]`.
 
 ### `essential_held_joystick` (held Joy-Con thumbstick sequence)
 A free right Joy-Con (80 % scale, about 81 x 29 x 25 mm, three convex shell pieces) with a passive spring-centred
@@ -247,7 +248,7 @@ steady.
 5. `center`: `-0.1 <= joystick_x <= 0.1`, `-0.1 <= joystick_y <= 0.1`, `1 <= base_contacts <= 5`; 5 consecutive controls.
 6. Terminal hold: `-0.08 <= joystick_x <= 0.08`, `-0.08 <= joystick_y <= 0.08`, `1 <= base_contacts <= 5`, `0 <= speed <= 0.12`; 15 consecutive controls.
 
-Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.35` (0.24 before 2026-10-14, see below). Locked wrist targets: `[-0.08, 0, 0.29, 0, 0, 0]`.
+Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <= 20`, `0 <= palm_drift <= 0.006`, `0 <= wrist_rotation <= 0.035`, `support == 0`, `0 <= body_drift <= 0.02`, `0 <= body_rotation <= 0.35`. Locked wrist targets: `[-0.08, 0, 0.29, 0, 0, 0]`.
 
 ### `essential_pen_regrasp` (palm-to-tripod pen regrasp)
 A free 150 mm x 12 mm ballpoint pen (Paper Mate source mesh, fitted capsule shaft and convex tip and tail) resting on
@@ -418,7 +419,7 @@ remaining rows are not executed). The accepted release lets the pot drop about 1
 Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansion scene id is in each heading) turn
 household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
 tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`,
-`vacuum_bin_reseat`), or, since wave 3 (2026-10-15), the Tianji Marvin arms of the arm rig above with a hand on each
+`vacuum_bin_reseat`), or the Tianji Marvin arms of the arm rig above with a hand on each
 flange (`batter_whisk`, `book_page_turn`, `grinder_crank`, `picture_hang` with both arms; `bicycle_pump_stroke`,
 `boot_sole_brush`, `coffee_stir`, `envelope_letter_insert`, `jar_lid_open`, `pancake_serve`, `paper_staple`,
 `remote_battery_swap`, `usb_plug_insert` with the right arm, the left one parked) completes each one with motor targets
@@ -430,9 +431,9 @@ violating physics substep (unless the section says otherwise), ordered stages, n
 terminal window. Each instruction states the exact predicate and every threshold; each family's authoring `README.md`
 lists its modelling choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms), `oracle =
 "full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is packaged as
-`solution/wuji/` (see Hands). Wave 3 (2026-10-15) restored source-scene details (pre-closed or pre-placed parts,
-enlarged parts and widened clearances reverted) in the families whose sections say so, each naming what was restored and
-what remains, with the reason; the other families keep their wave-2 version.
+`solution/wuji/` (see Hands). The families whose sections say "Wave 3" keep the source scene's details (no pre-closed or
+pre-placed parts, enlarged parts or widened clearances), each section naming what was restored and what remains, with
+the reason.
 
 ### TV remote battery replacement (`remote_battery_swap`, T07)
 
@@ -519,7 +520,7 @@ controls (1 s). **Immediate failure**, after every 2 ms substep: tilt above 10 d
 horizontally or lifted more than 2 cm, or below the counter top; the body turned more than 45 degrees about its axis;
 the crank more than 90 degrees net counter-clockwise; an arm, torso or stand link touching anything (`robot_collision`);
 unstable physics; 3,000 controls. Grinding is summarised by the crank angle (no beans or grounds). Oracle: 1,096 Sharpa
-rows on the arms (success at 996); the wave-2 Wuji solution belonged to the wrist stages and is not packaged (Wuji
+rows on the arms (success at 996); no Wuji solution is packaged (Wuji
 selectable, no success).
 
 ### Pancake serving (`pancake_serve`, T16)
@@ -537,8 +538,7 @@ falling out of the hand; pan or plate moved more than 30 mm or tilted more than 
 or outside the workspace; unstable physics; 3,000 controls. Rigid pancake, declared pair frictions (pancake-pan 0.45,
 blade 0.20, plate 0.60). Any robot part touching the pancake fails at once (hand contact means any hand, arm link or the
 stand). Not restored: the other hand holding the pan (one attempt failed; the source's 8-degree tilt and 4 cm lift of
-the pan were not attempted). Oracle: 1,167 Sharpa rows on the arm (success at 1,017); the wave-2 Wuji solution is not
-packaged (Wuji selectable, no success).
+the pan were not attempted). Oracle: 1,167 Sharpa rows on the arm (success at 1,017); no Wuji solution is packaged (Wuji selectable, no success).
 
 ### Vacuum dust-bin reseat (`vacuum_bin_reseat`, T19)
 
@@ -595,7 +595,7 @@ with an unthreaded ring after both rings engaged; a frame held by nothing while 
 torso or stand link touching anything (`robot_collision`); unstable physics; and, at the end of every control, a frame
 held by nothing at all after lift-off (no drop-and-catch window); 3,000 controls. The D-ring hinge's lower stop (0 rad,
 0.005 N m/rad return spring) stands in for the frame back (ring-frame contacts are filtered). Oracle: 869 Sharpa rows on
-the arms (success at 669); the wave-2 Wuji solution belonged to the wrist stages and is not packaged (Wuji selectable,
+the arms (success at 669); no Wuji solution is packaged (Wuji selectable,
 no success).
 
 ### USB plug into a hub port (`usb_plug_insert`, T24)
@@ -634,7 +634,7 @@ than 0.10 rad; the guard back on the worktop, a leg or the floor after it was li
 while falling faster than 0.2 m/s; the guard striking the fan base, stem, neck, motor housing, feet or buttons; its
 centre of mass below the worktop or outside the workspace box; unstable physics; 6,000 controls. Rigid cages and clips;
 the source's 45 mg snap leaf is the elastic detent; the lower clips keep a 1.3 mm deeper lip than the source's so that
-the hung guard cannot tip forward. Wave 3 (2026-10-15): the pre-closed lower clips are gone (realism restored); kept are
+the hung guard cannot tip forward. Wave 3: the pre-closed lower clips are gone (realism restored); kept are
 the raised 22 mm hub cap in place of the source's 6 mm badge (a fingertip resting on the spokes reaches only the badge's
 top corner: every tried lift needed the fingertip capsules 8 mm inside the 0.5 mm spokes) and the floating wrist stage
 (with the fan 0.45 m behind the worktop edge, the Marvin arm reaches neither the clip pushes nor the upright-guard
@@ -697,7 +697,7 @@ touching a clod; the brush touching floor, tray or rack, below the counter top, 
 the world through one compliant pad (fibres do not bend). Not restored (attempted, with evidence in the family README):
 the left hand holding the boot at the source height, and the source clod positions with its 32 hinged tufts; in every
 attempt the fingertip-pinched brush rolled about the thumb-finger axis under the stroke loads and was lost after 3-12
-strokes. Oracle: 1,688 Sharpa rows on the arm (success at 1,538); the wave-2 Wuji solution is not packaged (Wuji
+strokes. Oracle: 1,688 Sharpa rows on the arm (success at 1,538); no Wuji solution is packaged (Wuji
 selectable, no success).
 
 ### Paper stapling (`paper_staple`, T36)
@@ -720,7 +720,7 @@ Wave 3 restored the stapler's source pose and press spring. Not restored, with e
 source's flat start (the 8 mm fingertip capsules meet a 0.5 mm sheet edge above the desk at a slant, press the sheets
 down and ride over them, so the sheets start propped on the anvil mouth) and the paper stop (not part of the real B2,
 but without a counter-face the misaligned stack cannot be squared). The sheets are rigid plates and no staple is formed.
-Oracle: 942 Sharpa rows on the arm (success at 742); the wave-2 Wuji solution is not packaged (on the arm the Wuji
+Oracle: 942 Sharpa rows on the arm (success at 742); no Wuji solution is packaged (on the arm the Wuji
 fingers fold under the 25 N press; Wuji selectable, no success).
 
 ### Ring binder page loading (`binder_page_load`, T37)
@@ -761,7 +761,7 @@ letter pressed through a wall, seam or the lip, or into the envelope by more tha
 physics; 6,000 controls. The folded letter is one rigid card (no paper bending); the flap is never sealed. Modelling
 simplification: the walls are 4 mm apart for the 2 mm rigid card, so the letter enters the closed mouth without parting
 the lip (the source's "part the mouth" step is not required). Oracle: 2,446 Sharpa rows on the arm (success at 2,346);
-the wave-2 Wuji solution is not packaged (Wuji selectable, no success).
+no Wuji solution is packaged (Wuji selectable, no success).
 
 ### Board-book page turn (`book_page_turn`, T39)
 
@@ -778,8 +778,7 @@ board and cover within 5 degrees of its start, no hand contact with the book, fo
 leaf moved more than 30 degrees; a cover moved more than 30 degrees; a book part's centre of mass more than 2 mm below
 the desk top; unstable physics; 3,000 controls. Boards are rigid; no paper bending, tearing or damage is modelled; the
 turning fingertip lifts the leaf by friction on its 1.2 mm fore-edge face, pressing up to 4.5 mm into the soft fingertip
-contact. Oracle: 553 Sharpa rows on the arms (success at 453); the wave-2 Wuji solution belonged to the wrist stage and
-is not packaged (Wuji selectable, no success).
+contact. Oracle: 553 Sharpa rows on the arms (success at 453); no Wuji solution is packaged (Wuji selectable, no success).
 
 ### Tray with two filled glasses (`tray_glass_carry`, T48)
 
@@ -818,8 +817,7 @@ placement, touching neither robot nor counter for more than 5 controls; floor co
 workspace; unstable physics; 4,000 controls. Wave 3 restored the source's start (the whisk was pre-held in a frozen
 grasp) and added the pick-up stage. Not restored: the second hand holding the bowl through the whisking (fingers hooked
 over the 12 cm bowl's rim sit inside the balloon whisk's sweep and are struck by it in every tried variant). Oracle:
-1,916 Sharpa rows on the arms (success at 1,816); the wave-2 Wuji solution belonged to the wrist stage and is not
-packaged (Wuji selectable, no success).
+1,916 Sharpa rows on the arms (success at 1,816); no Wuji solution is packaged (Wuji selectable, no success).
 
 ### Portable bicycle pump (`bicycle_pump_stroke`, T50)
 
@@ -857,18 +855,15 @@ archive as `bad_trajectory` and exits 0; a crashed replay is an infrastructure e
 (`success, deterministic, infra_error, bad_trajectory, missing_trajectory, n_actions, sim_steps, stages_completed,
 hand_wuji`); text diagnostics go to `/logs/verifier/details.json`. After `reward.json` is written, a third fresh
 replay renders the replay video (`/logs/verifier/replay.mp4`, its record in `video.json`) in the verifier's remaining
-time (`timeout_sec` minus 180 s, at most `video_timeout_s`, which is never below the replay timeout); it never changes the verdict (board 0136, 2026-10-16: before, the privileged
-verifier rendered no video at all). The essential families' `replay.py` films every 2nd step, at most 1500 frames
-(`VIDEO_MAX_FRAMES`; a 640x480 OSMesa frame costs ~0.3 s on one core, so a 28k-step episode took over an hour before).
+time (`timeout_sec` minus 180 s, at most `video_timeout_s`, which is never below the replay timeout); it never changes the verdict. The essential families' `replay.py` films every 2nd step, at most 1500 frames
+(`VIDEO_MAX_FRAMES`; a 640x480 OSMesa frame costs ~0.3 s on one core).
 The twenty wave-2 families' own `replay.py` film at most 300 steps (`VIDEO_MAX_FRAMES = 300`; a longer episode at a
 larger stride, recorded as `video_stride` and `recording.playback_speed`) and mark the record `"video": true`, which
 `grade.py` requires. A frame of their scenes costs 0.35-3.6 s on the task's two cores (the Marvin-arm scenes are the
 slow ones), measured on an archive that holds the first oracle row for the family's whole row limit; `video_sec`,
-`verifier_privileged_sec` and `collect_sec` cover that longest archive with a 1.5x margin (2026-10-16: raised for
-batter_whisk, book_page_turn, boot_sole_brush, envelope_letter_insert, grinder_crank, jar_lid_open, pancake_serve,
-picture_hang and usb_plug_insert).
+`verifier_privileged_sec` and `collect_sec` cover that longest archive with a 1.5x margin.
 
-**Standard** (`eai-standard/2.2`, docs/STANDARD_MODE.md Part 2). The agent gets the shared client (`rcb_client`) and no
+**Standard** (`eai-standard/2.2`, docs/protocol/standard_mode.md Part 2). The agent gets the shared client (`rcb_client`) and no
 simulator code. The `sim` sidecar (`scripts/dexhand/shared/standard/server.py` on the unmodified shared layer
 `scripts/eai_standard/`) serves calibrated RGB and depth, the robot's own joints, efforts and link poses and
 robot-link forward kinematics; object poses, contact forces, checker stages and scene bodies are not served. The
@@ -876,11 +871,11 @@ reset budget is 20 (`budget.reset`, `RCB_RESET_BUDGET` in the compose file; see 
 action, watch step and reset is journaled, and a crashed service resumes the same episode from its journal, resetting
 where the committed resets did (resume class `exact`). The control rate is the family's (`spec()["control_hz"]`); the agent's clock
 (`meta["time_left_s"]`) counts from its first request. The collect hook (`finalize.sh` / `finalize.py`) ends the
-episode, replays `/data/trajectory.npz` twice in fresh processes with the recorded hand, seals `final.json` and then
-renders an evidence video (`/data/replay.mp4`) in the collect hook's remaining time (its `timeout_sec` minus 60 s, at most `video_timeout_s` >= the replay timeout;
-before 2026-10-16 a fixed 300 s, which cut episodes of more than ~10k steps); the separate verifier reads only `final.json` and needs live success, both replay successes,
-identical replay hashes and replay hash = live hash. Missing trusted evidence is an infrastructure error; the video
-never decides a verdict.
+episode and seals `final.json` from the service's record of it (`episode.json`: the live success and end-state hash;
+no replay), then renders an evidence video (`/data/replay.mp4`) from `/data/trajectory.npz` in one
+fresh process in the collect hook's remaining time (its `timeout_sec` minus 60 s, at most `video_timeout_s`); the
+separate verifier reads only `final.json` and needs the live success. Missing trusted evidence is an infrastructure
+error; the video never decides a verdict.
 
 **Oracles.** The generator owns the oracle runners (`scripts/dexhand/shared/solution/`): privileged `solve.sh`
 re-saves the family's rows to `/app/output/trajectory.npz`; standard `solve.sh` submits the same rows as float64
@@ -889,87 +884,99 @@ a service restart. Rows above the repository's 2 MB file limit are stored as `tr
 (`shared/solution/solution_parts.py`) and concatenated and sha256-checked before use. A family with a per-hand
 solution gets `solution/<hand>/` and the `*_by_hand.sh` runner (Wuji reference solutions, above).
 
-**Harbor results** (Harbor 0.23, `eai-dexhand:0.2.0` built from this branch, CPU only, `RCB_LIMITS_ENFORCE=0`,
-2026-10-14; rows marked wave 3: the 2026-10-15 integration smoke of the changed families; the pull request lists every
-trial):
+**Harbor results** (Harbor 0.23, `eai-dexhand:0.2.0`, CPU only, `RCB_LIMITS_ENFORCE=0`):
 
 | Family | privileged oracle / nop | standard oracle / nop | standard oracle wall | peak GiB: privileged verifier / standard sim | Wuji |
 |---|---|---|---|---|---|
 | `essential_cube_layer` | 1 / 0 | 1 / 0 | 4 min | 0.39 / 0.61 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
 | `essential_held_joystick` | 1 / 0 | 1 / 0 | 4 min | 0.51 / 0.70 | Wuji oracle 1 in both modes; standard nop 0 |
 | `essential_pen_regrasp` | 1 / 0 | 1 / 0 | 4 min | 0.41 / 0.63 | Wuji oracle 1 in both modes; standard nop 0 |
-| `essential_two_object` | 1 / 0 | 1 / 0 | 4 min | 0.45 / 0.67 | Wuji oracle 1 in both modes; nop 0 and 12 s hold 0, both modes (hold: deterministic, live = replay) |
+| `essential_two_object` | 1 / 0 | 1 / 0 | 4 min | 0.45 / 0.67 | Wuji oracle 1 in both modes; nop 0 and 12 s hold 0, both modes (hold: deterministic) |
 | `essential_rotary_gait` | 1 / 0 | 1 / 0 | 17 min | 0.49 / 0.70 | Wuji oracle 1 in both modes; standard nop 0 |
 | `essential_cube_reorient` | 1 / 0 | 1 / 0 | 2 min | 0.39 / 0.61 | Wuji oracle 1 in both modes; standard nop 0 |
 | `assemble_hamburger` | 1 / 0 | 1 / 0 | 9 min | 0.41 / 0.63 | Wuji oracle 1 in both modes; standard nop 0 |
 | `paper_half_fold` | 1 / 0 | 1 / 0 | 5 min | 0.50 / 0.64 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
-| `sweep_dustpan` | 1 / 0 | 1 / 0 | 38 min | 3.68 / 2.31 | nop 0 and 12 s hold 0, both modes (hold: deterministic, live = replay) |
+| `sweep_dustpan` | 1 / 0 | 1 / 0 | 38 min | 3.68 / 2.31 | nop 0 and 12 s hold 0, both modes (hold: deterministic) |
 | `pot_shelf_transfer` | 1 / 0 | 1 / 0 | 5 min | 3.42 / 2.17 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
-| `remote_battery_swap` | 1 / 0 | 1 / 0 | 9 min | 3.42 / 2.23 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `coffee_stir` | 1 / 0 | 1 / 0 | 9 min | 3.42 / 2.26 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `jar_lid_open` | 1 / 0 | 1 / 0 | 8 min | 3.40 / 2.38 | wave 3 (2026-10-15; standard nop: the family's final trial); Wuji privileged oracle 1 (wave 3, arm) |
-| `grinder_crank` | 1 / 0 | 1 / 0 | 11 min | 3.47 / 2.40 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `pancake_serve` | 1 / 0 | 1 / 0 | 13 min | 3.41 / 2.40 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `vacuum_bin_reseat` | 1 / 0 | 1 / 0 | 10 min | 0.59 / 0.71 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
+| `remote_battery_swap` | 1 / 0 | 1 / 0 | 9 min | 3.42 / 2.23 | no Wuji solution |
+| `coffee_stir` | 1 / 0 | 1 / 0 | 9 min | 3.42 / 2.26 | no Wuji solution |
+| `jar_lid_open` | 1 / 0 | 1 / 0 | 8 min | 3.40 / 2.38 | Wuji privileged oracle 1 (arm) |
+| `grinder_crank` | 1 / 0 | 1 / 0 | 11 min | 3.47 / 2.40 | no Wuji solution |
+| `pancake_serve` | 1 / 0 | 1 / 0 | 13 min | 3.41 / 2.40 | no Wuji solution |
+| `vacuum_bin_reseat` | 1 / 0 | 1 / 0 | 10 min | 0.59 / 0.71 | no Wuji solution |
 | `drying_rack_unfold` | 1 / 0 | 1 / 0 | 3 min | 0.40 / 0.59 | Wuji nop 0 (no Wuji solution) |
-| `picture_hang` | 1 / 0 | 1 / 0 | 7 min | 3.40 / 2.13 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `usb_plug_insert` | 1 / 0 | 1 / 0 | 12 min | 3.44 / 2.65 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `fan_guard_install` | 1 / 0 | 1 / 0 | 6 min | 0.45 / 0.71 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `stool_brace_insert` | 1 / 0 | 1 / 0 | 17 min | 0.45 / 0.65 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `ram_module_install` | 1 / 0 | 1 / 0 | 3 min | 0.40 / 0.58 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `boot_sole_brush` | 1 / 0 | 1 / 0 | 6 min | 3.51 / 2.37 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `paper_staple` | 1 / 0 | 1 / 0 | 6 min | 3.40 / 2.48 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `binder_page_load` | 1 / 0 | 1 / 0 | 6 min | 0.44 / 0.67 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `envelope_letter_insert` | 1 / 0 | 1 / 0 | 19 min | 3.40 / 2.38 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `book_page_turn` | 1 / 0 | 1 / 0 | 5 min | 3.47 / 2.48 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
+| `picture_hang` | 1 / 0 | 1 / 0 | 7 min | 3.40 / 2.13 | no Wuji solution |
+| `usb_plug_insert` | 1 / 0 | 1 / 0 | 12 min | 3.44 / 2.65 | no Wuji solution |
+| `fan_guard_install` | 1 / 0 | 1 / 0 | 6 min | 0.45 / 0.71 | no Wuji solution |
+| `stool_brace_insert` | 1 / 0 | 1 / 0 | 17 min | 0.45 / 0.65 | no Wuji solution |
+| `ram_module_install` | 1 / 0 | 1 / 0 | 3 min | 0.40 / 0.58 | no Wuji solution |
+| `boot_sole_brush` | 1 / 0 | 1 / 0 | 6 min | 3.51 / 2.37 | no Wuji solution |
+| `paper_staple` | 1 / 0 | 1 / 0 | 6 min | 3.40 / 2.48 | no Wuji solution |
+| `binder_page_load` | 1 / 0 | 1 / 0 | 6 min | 0.44 / 0.67 | no Wuji solution |
+| `envelope_letter_insert` | 1 / 0 | 1 / 0 | 19 min | 3.40 / 2.38 | no Wuji solution |
+| `book_page_turn` | 1 / 0 | 1 / 0 | 5 min | 3.47 / 2.48 | no Wuji solution |
 | `tray_glass_carry` | 1 / 0 | 1 / 0 | 3 min | 0.61 / 0.84 | Wuji oracle 1 in both modes; privileged nop 0; standard nop 0 |
-| `batter_whisk` | 1 / 0 | 1 / 0 | 9 min | 3.41 / 2.26 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
-| `bicycle_pump_stroke` | 1 / 0 | 1 / 0 | 10 min | 3.42 / 2.29 | wave 3 (2026-10-15; standard nop: the family's final trial); no Wuji solution |
+| `batter_whisk` | 1 / 0 | 1 / 0 | 9 min | 3.41 / 2.26 | no Wuji solution |
+| `bicycle_pump_stroke` | 1 / 0 | 1 / 0 | 10 min | 3.42 / 2.29 | no Wuji solution |
 
-The standard wall time is the whole trial: the live episode, then the collect hook's two fresh-process replays and the evidence video. sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji oracle: the packaged Wuji solution with `DEXHAND_HAND=wuji` (privileged: Harbor's `--ae DEXHAND_HAND=wuji`; standard: the sim service's hand) scores 1 with `hand_wuji = 1`, deterministic, and in standard mode live = replay (the Sharpa oracles and no-ops of these nine families were re-run with the per-hand `solve.sh`: 1 and 0). Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`). Wave-2 rows: the oracle / nop and Wuji verdicts are the family authors' trials on the final task files (2026-10-14/15, same image and settings); wall time and peaks are this branch's integration smoke (one privileged and one standard Sharpa oracle per family, both 1, every standard live episode = its replays).
+The standard wall time is the whole trial as measured with the collect hook's former grading replays (it is shorter now: the live episode and the evidence video). sweep_dustpan's live oracle episode took 11.7 min of the agent phase (530 calls of at most 250 rows at 2 kHz). Peaks are cgroup `memory.peak` of the verifier container (privileged; two concurrent replays) and of the `sim` sidecar over the whole trial (standard); the agent containers stayed below 0.25 GiB. Wuji oracle: the packaged Wuji solution with `DEXHAND_HAND=wuji` (privileged: Harbor's `--ae DEXHAND_HAND=wuji`; standard: the sim service's hand) scores 1 with `hand_wuji = 1`, deterministic (the Sharpa oracles and no-ops of these nine families were re-run with the per-hand `solve.sh`: 1 and 0). Wuji: `DEXHAND_HAND=wuji` trials (every family's standard no-op; for `essential_two_object` and `sweep_dustpan` also the privileged no-op and a 12 s hold of the Wuji start in both modes) all score 0 with no infrastructure error; the standard trials and the privileged holds report `hand_wuji = 1` (a privileged no-op hands in nothing: `missing_trajectory = 1`). Wave-2 rows: the oracle / nop and Wuji verdicts are the family authors' trials on the final task files (same image and settings); wall time and peaks are an integration smoke (one privileged and one standard Sharpa oracle per family, both 1).
 
-### Standard-mode resets (owner, 2026-10-14, board 0109)
+### Standard-mode resets
 
-`budget.reset = 20`, DexToolBench's value (PROTOCOL §4.5): an essential family starts with the object already in the
+`budget.reset = 20`, DexToolBench's value (PROTOCOL §2): an essential family starts with the object already in the
 hand, every family ends an episode at the first failure (a dropped, slipped or knocked object, a bound exceeded), and
 the agent has no simulator of its own in standard mode, so with one episode the first slip decided the trial. The
-capability is the one of docs/STANDARD_MODE.md ("Optional reset capability"), implemented in the DexHand adapter
+capability is the one of docs/protocol/standard_mode.md ("Optional reset capability"), implemented in the DexHand adapter
 `scripts/dexhand/shared/standard/server.py` the way the MyoSuite 2.2 service implements it (the shared 2.2 layer has
 no reset): `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) calls the family's
 `Session.reset()` and returns the new episode's first frames; 409 after a success, once the budget is spent and after
 the agent's time; `/status` and every meta add `episode`, `resets_left` and `control_steps_total`. Only the last
-episode is graded: `trajectory.npz` holds its rows, the collect hook replays them from the frozen start as before, and
+episode is graded: `trajectory.npz` holds its rows, the service's verdict on that episode is the grade, and
 `reward.json` adds `resets` and `reset_budget`. `Session.reset()` restores the frozen start exactly in all ten families
-(checked 2026-10-14 for both hands where offered: after k rows and a reset, the state hash equals a fresh process's, and
+(checked for both hands where offered: after k rows and a reset, the state hash equals a fresh process's, and
 the same rows then end in the same hash as in a fresh process). `RCB_RESET_BUDGET=0` still runs one episode.
 Results with a different budget are reported separately.
 
-### In-hand cameras of the essential families (2026-10-14, board 0109)
+### Standard-mode grading by the live episode
+
+`success` in `final.json` is the sim service's verdict on the episode it ran (the last one after resets):
+`Session.status()["success"]` after the last executed row, the family's full predicate (every ordered stage, the
+terminal hold, the invariants at every physics substep), evaluated by `execute()` in
+`scripts/dexhand/shared/standard/server.py` and written to `episode.json` by `end_episode()`. `Session.step` also refuses an out-of-range target or a moved locked
+wrist (the service clips to the published ranges first), and a success ends the episode, so no settle or hold window is
+added. The collect hook: `finalize.py` copies the record into `final.json` with `graded_by = "live"`, `replays = 0`, `live_success`, `live_sha`,
+`video_pending`, then the family's `replay.py --video` films the trajectory once (`video.json`, `video.log`;
+`video_source = "render"`); a failed or late video sets `video = false` and changes nothing else. `reward.json` carries
+`graded_by_live`, `replays`, `gave_up`, `instance_mismatch` and `video_rendered`. When a fresh episode begins (not on a crash resume) the service compares the
+sha256 of the frozen instance's files (`instance.json`, `catalog.json` and, where present, `task.json`,
+`wuji_reset.json`, `offered_hands.json`) with the generator's record in `grading.json` (`instance_sha256`); a
+difference ends the trial before the agent is served (`instance_mismatch`, an infrastructure error). There is no
+recorded reference hash of the built starting state (computing one needs a MuJoCo run): the start event logs the state
+hash the service built and `episode.json` repeats it (`start_sha`), so trials of a task can be compared afterwards.
+Infrastructure errors (`infra_error = 1`): no, unreadable or unfinished `final.json`, the service not ending and
+dumping its episode within 300 s, a give-up after crashes not all inside the agent's calls (`sim_crashed`,
+`resume_failed`), `instance_mismatch`, a hand the task does not offer. A crash inside the agent's calls
+(`sim_crashed_on_call`), a simulator error from the agent's actions (`reason = "error"`, `sim_error = 1`), a timeout and
+a failed predicate are the agent's 0. The collect hook runs one replay process (the video's); its `timeout_sec` is the
+end wait plus the video's bound (`std_collect_s`).
+
+### In-hand cameras of the essential families
 
 Standard mode serves no object state, and the in-hand pose decides every essential predicate (joystick, layer, knob,
-sphere and pen angles within 0.1-0.16 rad windows). The object was 40-60 px wide in `overview`, and `palm` (mounted
+sphere and pen angles within 0.1-0.16 rad windows), while the object is 40-60 px wide in `overview` and `palm` (mounted
 behind the wrist) sees the back of the hand. The essential scenes therefore add two cameras mounted on the locked hand
 body like `palm`: `inhand_top` (from above the palm) and `inhand_side` (from the thumb side), both about 0.2 m from the
 grasp region, `fovy` 45, 640 x 480. The standard service returns `overview` and `inhand_top` by default. Calibration:
-the published `intrinsic_cv` / extrinsics project known world points to within the review's tolerance (see the board
-0109 report). The cameras do not change physics or state hashes, so the oracles are unchanged.
+the published `intrinsic_cv` / extrinsics project known world points to within the review's tolerance. The cameras do not change physics or state hashes, so the oracles are unchanged.
 
-### Held-object rotation bound (2026-10-14, board 0109)
+### Held-object rotation bound
 
 `essential_held_joystick` and `essential_cube_layer` share the invariant "keep the held object steady",
-`body_rotation <= 0.24` rad. The Sharpa reference solutions peak at 0.2396 rad (joystick) and 0.218 rad (cube layer),
-so the bound was the joystick reference's own peak (0.0004 rad of margin). The bound is now 0.35 rad (20 degrees) in
-both families; the task's intent is unchanged. Perturbation checks of the references (finger targets +-0.001 rad
-uniform jitter, six seeds; the bound relaxed to measure its peak): the joystick reference's peak rotation within its
-own 415 rows is 0.27-0.29 rad (below 0.35), but the open-loop rows then miss the first checkpoint, so it still fails
-under jitter for reasons the bound does not decide; the Wuji joystick reference succeeds 4/6 (peak 0.07 rad); the cube
-layer reference 1/6 (peak 0.21-0.25 rad; the other five stall at the second or third stage, also with 100 extra held
-controls). `essential_cube_reorient` (the review's "6/6 fail at 0.001
-rad"): its reference ends on the very control that completes the terminal hold, so a perturbed copy runs out of rows
-one to nine controls short; with the last row held for 100 more controls all six jittered copies succeed (no bound is
-approached: contacts >= 1, displacement <= 0.021 m, speed <= 11.7 of 12). Its Wuji reference is fragile at the start
-(four of six jittered copies drop the sphere within 31 controls, the other two never complete the first stage). Open-loop references are not robust controllers;
-with resets and closed-loop observation an agent can retry, which is what the reset budget is for.
+`body_rotation <= 0.35` rad (20 degrees); the Sharpa reference solutions peak at 0.2396 rad (joystick) and 0.218 rad
+(cube layer). Open-loop references are not robust controllers: under +-0.001 rad finger jitter they mostly fail for
+reasons the bound does not decide (a missed checkpoint, a stalled stage, rows running out before the terminal hold;
+`essential_cube_reorient`'s reference ends on the very control that completes its hold). With resets and closed-loop
+observation an agent can retry, which is what the reset budget is for.
 
 ## Generator
 
@@ -982,7 +989,7 @@ README layout, test.sh). Never edit a generated task file: edit the family's sou
   `scripts/dexhand/families/<family>/` with a `family.json` (directory scan, no central list): its runtime files and
   asset folders, hands and per-hand widths, robot name, row limit, control rate, instruction and README texts
   (`{{HANDS}}`, `{{MAX_ROWS}}`, `{{CONTROL_HZ}}`, ... placeholders), oracle files, metadata and grader timeouts
-  (`replay_sec`, `video_sec` (raised to `replay_sec` if lower: the video replays the episode again), verifier and collect limits). The agent's time limit is not a family setting.
+  (`replay_sec`, `video_sec` (raised to `replay_sec` if lower: the video replays the episode again), verifier and collect limits; the standard collect hook's `timeout_sec` is `generate.py` `std_collect_s`: 300 s for the end, `replay_sec` + `video_sec` for the video process and 120 s, at most `collect_sec`). The agent's time limit is not a family setting.
 - Shared sources, copied unchanged into every task (`ci_checks/check-tooling-identity.sh`): `rcb_dexhand.py`,
   `hands.py`, the privileged and standard graders, the standard service, its collect hook and the `eai-standard/2.2`
   layer.
@@ -1013,6 +1020,6 @@ Joy-Con are size-adapted rigid meshes, the walnut scans use convex collision hul
 lettuce are articulated strips, the paper is a reduced shell with uncalibrated material, and the debris pieces are
 rigid. In the wave-2 families coffee, batter, air, the liquid in a glass are not simulated (checker quantities stand for them), threads, staples and latch springs are reduced to the contact geometry or passive joints their sections name, and static props stand in for parts the task does not move. The graders claim only the mechanical outcomes these models represent.
 
-## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+## Standard-mode service details
 
-Serves `eai-standard/2.2`. Resume class `exact` (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps). Its service implements the optional reset capability (STANDARD_MODE Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.
+Serves `eai-standard/2.2`. Resume class `exact` (MuJoCo 3.4.0, CPU physics, one thread; a frozen scene rebuilt from its pinned model files; one control row is one or more fixed physics steps). Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

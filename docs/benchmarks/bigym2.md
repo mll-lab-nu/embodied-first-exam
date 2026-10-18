@@ -8,7 +8,7 @@ run on wheeled bases.
 
 | | |
 |---|---|
-| upstream | [BiGym 2.0](https://github.com/swirl-uk/BiGym2) (Imperial College London, S. James; [arXiv 2610.07594](https://arxiv.org/abs/2610.07594)), `bigym` 1.0.0 at `93ad4b3` (the first release, published 2026-10-08 as `6a6632b`; upstream rewrote its history the next day, the package is unchanged and the image checks its git tree); a fork of [BiGym](https://github.com/NeuracoreAI/bigym) (CoRL 2024) |
+| upstream | [BiGym 2.0](https://github.com/swirl-uk/BiGym2) (Imperial College London, S. James; [arXiv 2610.07594](https://arxiv.org/abs/2610.07594)), `bigym` 1.0.0 at `93ad4b3` (first published as `6a6632b`; upstream rewrote its history, the package is unchanged and the image checks its git tree); a fork of [BiGym](https://github.com/NeuracoreAI/bigym) (CoRL 2024) |
 | licences | code Apache-2.0; G1 model BSD-3; props CC0 / CC BY 4.0; GR00T-WBC weights NVIDIA Open Model License (redistributable): the image can be published |
 | simulator | MuJoCo 3.8.1 (pinned `<3.9`, Newton solver), CPU physics; GR00T-WBC's two ONNX policies on onnxruntime (CPU); EGL rendering; Python 3.12 |
 | robot | Unitree G1 29-DoF with Dex1-1 two-finger grippers (no palm); legs and waist belong to the controller |
@@ -81,58 +81,53 @@ Every instruction states, besides upstream's task sentence and success rule: whe
 (one sentence measured on the frozen scene: distance, direction, height; upstream gives its own agents a demonstration
 video instead, which a task here cannot ship), the action table, and upstream's own notes on the whole-body controller
 (`bigym/loco/agent/templates/api_strict.md`). Standard `spec()` adds the robot's description: joint axes and positions,
-the point between each gripper's pads, camera mounts. Reset budget: 0 in both service modes (author, 2026-10-16; PROTOCOL §2, the protocol's default; standard 10 from
-2026-10-11): one episode, whose horizon the practice and the graded attempt share. (The robot itself does not fall: 15
-adversarial command patterns of 12 s each, no fall.) `RCB_RESET_BUDGET=N` runs a configuration with N resets; standard
-results recorded with 10 resets (2026-10-11 to 2026-10-16) are reported separately.
+the point between each gripper's pads, camera mounts. Reset budget: 0 in both service modes (the benchmark's choice, PROTOCOL §2): one episode, whose horizon the practice
+and the graded attempt share. (The robot itself does not fall: 15 adversarial command patterns of 12 s each, no fall.)
+`RCB_RESET_BUDGET=N` runs a configuration with N resets, reported separately.
 
-Grading in both service modes, since 2026-10-17 (owner, board 0150/0151): the live episode. The sim sidecar judges the
-episode it runs with upstream's `is_success` at every control step (`step()` in `scripts/bigym2/shared/standard/server.py`)
-and the episode ends where upstream ends it; `rcb_service.py` writes that verdict (`graded_by = "live"`, `replays = 0`)
-once the agent's container is stopped, and no grading replay runs. The old replay (`rcb_bigym2.replay`) re-ran the same
-rows from the frozen instance and read the same `is_success` where they ended, with no settle or hold of its own (the 1 s
-hold is upstream's, inside the episode), so the live rule is exactly as strict; over the 122 archived standard and
-standard-realtime trials no verdict changes. The frozen start is checked on the live simulator when the scene is built
-(`instance_check`, as the replay did: the instance's `t0` state bit for bit, or within upstream's tolerance), a scene that
-does not rebuild it is `instance_mismatch`, and `start_sha` (that accepted start) is checked when an episode begins;
-both give up as infrastructure (`infra_error = 1`) before the agent is served (every archived start matched `t0`
-exactly), and the service gives up the same way at once if a reset does not return to `start_sha`. Resets are untested
-for that: BiGym 2.0 grants none by default (no archived trial reset); upstream's reset with the seed and its warm-up is
-deterministic on one host, which `RCB_RESET_BUDGET=N` runs would rely on. The video is one render pass over `trajectory.npz` after the verdict (`render_video`: `rcb_bigym2.replay` with
-the recorder; CPU physics and controller, EGL rendering; about a minute a trial at the median); it never changes the
-verdict. The removed replay was a CPU re-run of the episode with the controller (about as long: roughly 3 slot-hours over
-the archive). `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the
-agent's calls, a reset whose scene does not rebuild and `instance_mismatch`; simulator errors raised by the agent's calls, crashes inside its calls,
-timeouts and failures are the agent's 0. In standard-realtime (owner, 2026-10-17): once the agent's first command has run, a
-simulator error raised by a control step is the agent's 0 (`sim_error = 1`, no `infra_error`), and so is a simulator
-crash inside a control step (a death whose fatal-signal record in `crash.log` -- SIGSEGV, SIGBUS, SIGFPE, SIGILL,
-SIGABRT -- shows the crashing thread in the step; past
-`RCB_MAX_RESUMES` such crashes the trial ends `sim_crashed_on_call`); a crash outside a step (building the scene,
-resuming, resetting, rendering, finalizing), anything before the first command, a failed reset rebuild,
-a kill (SIGKILL, SIGTERM, the OOM killer) and a failed resume are infrastructure. Standard mode keeps its rule: a crash
-is the agent's only inside its call (`fatal_signal` is logged as evidence).
+Grading in both service modes: the live episode. The sim sidecar judges the episode it runs with upstream's
+`is_success` at every control step (`step()` in `scripts/bigym2/shared/standard/server.py`) and the episode ends where
+upstream ends it; `rcb_service.py` writes that verdict (`graded_by = "live"`, `replays = 0`) once the agent's container
+is stopped. The 1 s hold is upstream's, inside the episode; nothing is added after it. The frozen start is checked on
+the live simulator when the scene is built (`instance_check`: the instance's `t0` state bit for bit, or within
+upstream's tolerance); a scene that does not rebuild it is `instance_mismatch`, and `start_sha` (that accepted start)
+is checked when an episode begins; both give up as infrastructure (`infra_error = 1`) before the agent is served, and
+the service gives up the same way at once if a reset does not return to `start_sha` (untested: BiGym 2.0 grants no
+reset by default; upstream's reset with the seed and its warm-up is deterministic on one host, which
+`RCB_RESET_BUDGET=N` runs rely on). The video is one render pass over `trajectory.npz` after the verdict
+(`render_video`: `rcb_bigym2.replay` with the recorder; CPU physics and controller, EGL rendering; about a minute a
+trial at the median); it never changes the verdict. `final.json` is `finalized` the moment the verdict is written,
+before the video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as
+long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict.
+`reward.json` carries `graded_by_live`, `replays` and `sim_error`.
 
-Since 2026-10-10, in both service modes `final.json` is `finalized` the moment the verdict is written, before the video is rendered (`video_pending` while it renders); the collect hook waits for the verdict and then, as long as its timeout allows, for the video, so a slow, hung or killed render costs the video and never the verdict; `reward.json` carried `deterministic` in
-every branch and `sim_error` (since 2026-10-17 `graded_by_live` and `replays` instead of `deterministic`). The realtime plan is unchanged for BiGym 2.0's one action type (a gap before `at` is still
-the plan's last row, walking velocity included); the shared layer stopped combining rows of different action types (a
-RoboOlympics bug).
+`infra_error = 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the agent's calls,
+a reset whose scene does not rebuild and `instance_mismatch`; simulator errors raised by the agent's calls, crashes
+inside its calls, timeouts and failures are the agent's 0. In standard-realtime: once the agent's first command has
+run, a simulator error raised by a control step is the agent's 0 (`sim_error = 1`, no `infra_error`), and so is a
+simulator crash inside a control step (a death whose fatal-signal record in `crash.log` -- SIGSEGV, SIGBUS, SIGFPE,
+SIGILL, SIGABRT -- shows the crashing thread in the step; past `RCB_MAX_RESUMES` such crashes the trial ends
+`sim_crashed_on_call`); a crash outside a step (building the scene, resuming, resetting, rendering, finalizing),
+anything before the first command, a failed reset rebuild, a kill (SIGKILL, SIGTERM, the OOM killer) and a failed
+resume are infrastructure. Standard mode keeps its rule: a crash is the agent's only inside its call (`fatal_signal` is
+logged as evidence). A simulator that fails inside `POST /reset` ends the episode `error` (`infra_error = 1`: the
+agent's reset was legitimate), not `reset`. A negative `Content-Length` is refused unread (400).
 
-Standard-realtime, since 2026-10-10 (review R2 M1, the shared 2.3 layer): the agent's requests cannot slow the clock --
-bodies are read, decoded and checked off the simulator's thread, waiting requests are served once the clock has caught
-up, the cameras are rendered once per control step (`docs/STANDARD_MODE.md`, "What a request can cost the
-clock") -- and `final.json` / `reward.json` carry the clock's record: `clock_s`, `max_lag_s` (now the true maximum),
-`stalls`, `stalled_s`, `stalled_share`, `held_steps`, `late_steps`, `requests_refused`, `request_busy_s`. They are
-evidence and decide no verdict. In both service modes a negative `Content-Length` is refused unread (400), and a
-simulator that fails inside `POST /reset` ends the episode `error` (`infra_error = 1` in both modes since 2026-10-17; the agent's reset was legitimate), not `reset`.
+Standard-realtime (the shared 2.3 layer): a gap before `at` is the plan's last row, walking velocity included; the
+agent's requests cannot slow the clock -- bodies are read, decoded and checked off the simulator's thread, waiting
+requests are served once the clock has caught up, the cameras are rendered once per control step
+(`docs/protocol/standard_mode.md`, "What a request can cost the clock") -- and `final.json` / `reward.json` carry the clock's
+record: `clock_s`, `max_lag_s`, `stalls`, `stalled_s`, `stalled_share`, `held_steps`, `late_steps`, `requests_refused`,
+`request_busy_s`. They are evidence and decide no verdict.
 
-The success check stays visible in privileged mode (PROTOCOL, owner 2026-10-02): it is sparse, and every instruction
+The success check stays visible in privileged mode: it is sparse, and every instruction
 states its thresholds. Upstream's reward shaping for the plate tasks (`event_progress`) is off by default and never
 graded.
 
 ## Where upstream holds answers
 | where | what | handling |
 |---|---|---|
-| `bigym/envs/*.py` (`_success`, `_fail`), `bigym/loco/eval/` | predicates, tolerances, fall check | privileged: kept (PROTOCOL, owner 2026-10-02); standard: sidecar only |
+| `bigym/envs/*.py` (`_success`, `_fail`), `bigym/loco/eval/` | predicates, tolerances, fall check | privileged: kept; standard: sidecar only |
 | HF `SWIRL-Lab/bigym-g1-native60` (public) | 60 successful demonstrations per task with full simulator state | seed 0 is none of them; the dataset is not in the image; the agent reaches the model APIs and the package registries only |
 | HF `SWIRL-Lab/bigym2-agent-rollouts` (public) + the project page | two coding agents' programs (`policy.py`, on the page) and their 5,400 rollouts on seeds 620000–620099, for 9 tasks (5 of ours: reach_target_dual, move_two_plates, dishwasher_close, drawer_top_open, pick_box) | a program that generalises over seeds solves seed 0 too: only the egress rule keeps it out |
 | `tests/fixtures/demo_endpoints.npz` | the final state of one demonstration per task | not shipped: the wheel installs `bigym/` only |
@@ -156,10 +151,10 @@ docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/eai-bigym2:$(cat 
 docker run --rm --gpus all --network none -e NVIDIA_DRIVER_CAPABILITIES=all -v "$PWD/scripts/bigym2:/w" -w /w \
   ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) python make_instances.py --check   # instances/ rebuild
 python3 scripts/bigym2/gen_tasks.py check          # tasks/ is what the generator writes (`render` rewrites it)
-harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/RUNNING.md
+harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/protocol/running.md
 ```
 
-## Measured (2026-10-08, RTX 4090, host load ~25 on 32 cores)
+## Measured (RTX 4090, host load ~25 on 32 cores)
 - Every task builds in ~1 s; a reset (with the controller's 200-step warm-up) takes under 1 s; 5–12 ms per control step
   with three 84×84 cameras (1.7–4× real time). Install: a 0.7 GB environment; the GPU only renders.
 - Holding the start pose for the whole horizon: 0 of 20 succeed, none falls (seed 620000; the ✅ tasks also at seed 0).
@@ -168,7 +163,7 @@ harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna -
   land on the same state as well (the tooling's hash adds the controller's state and the props' poses).
 - The image rebuilds every instance's t = 0 hash offline; no layer of it holds a file of the upstream repository
   outside the package. `nop` scores 0 in all three modes.
-- Other CPUs (2026-10-09, on the 7950X): every instance rebuilds bit for bit with OpenBLAS forced to its Prescott,
+- Other CPUs (on the 7950X): every instance rebuilds bit for bit with OpenBLAS forced to its Prescott,
   Haswell or Sapphire Rapids kernels, with numpy's AVX-512 loops off, and on 2 cores. onnxruntime picks its kernels by
   CPU and has no switch: rounding-level noise (±2e-7 relative) on the controller's outputs moves the t = 0 joints by at
   most 2.2e-7, far inside 5e-4. Not yet checked on an Intel or AVX2-only host (`make_instances.py --check`).

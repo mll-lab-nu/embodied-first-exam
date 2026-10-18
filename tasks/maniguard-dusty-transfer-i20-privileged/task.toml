@@ -9,12 +9,12 @@ keywords = ["robotics", "maniguard", "safety", "ltl", "behavior", "omnigibson", 
 
 [metadata]
 author_name = "qineng"
-task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "maniguard"           # ManiGuard on BEHAVIOR-1K v3.7.2 (OmniGibson 3.7.2, Isaac Sim 4.5; PhysX on the CPU)
 robot = "franka-panda-longfinger"
 family = "dusty_transfer"
-mode = "privileged"               # privileged state, resets and thin primitives through the tooling (docs/PROTOCOL.md §3)
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+mode = "privileged"               # privileged state, resets and thin primitives through the tooling (docs/protocol/README.md §3)
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
 oracle_evidence = "No positive example yet (oracle = \"none\": the 16 ManiGuard tasks added on 2026-10-04 for variety ship without one, user decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 800-839 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-dusty-v1-joint-5cam (revision ac57d863, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this verifier and none is copied into the task. The frozen instance (state sha ed90dd164ff74206) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §2.7)."
 instance_seed = 20                 # = the ManiGuard-Bench task index (dusty_transfer/task_0020/base); scene = environment/instance/; identity = dataset.toml digest
@@ -25,7 +25,7 @@ skill = "long_horizon"
 grasping = "sticky"
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 6.0
 min_memory_gb = 23.0
 min_gpu_memory_gb = 10.5
@@ -38,7 +38,7 @@ verifier_min_gpu_memory_gb = 10.5
 measured = "one standard trial: sim anon memory 17.5 GB, start-up CPU bursts to 29 cores, GPU 3.6 GB 15 min in, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10); GPU memory and CPU from BEHAVIOR-1K (same OmniGibson / Isaac Sim stack) until more trials are measured; verifier 15.8 GB docker memory, mem_guard (docker memory per container, ws-1, 10-02..10)"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "trial"
 max_gpu_memory_gb = 30.0
@@ -54,11 +54,11 @@ trial_max_memory_gb = 25.0
 measured = "GPU: 19.4 GiB on a 48 GB card, 18.1 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); no texture budget in its tooling) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 8.0, memory_gb = 30.0, pids = 16384 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 20
 allowed = [20]
@@ -70,8 +70,9 @@ timeout_sec = 23400.0             # two fresh-process replays, each at most max(
                                   # 0.05-0.09 s): 2 x 10900 s for the 50,000 rows a trajectory may hold, + 1600 s; the grader
                                   # ends a replay that would run past it and writes the reward itself (replay_timed_out)
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

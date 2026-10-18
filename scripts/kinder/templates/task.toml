@@ -16,7 +16,7 @@ robot = "{{robot_id}}"
 # KinDER env {{env_id}}
 family = "{{family}}"
 mode = "privileged"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2): the task's own declaration
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 # scene = environment/instance.json (KinDER's seed + a digest of the scene it builds); identity = the dataset.toml digest
 instance_seed = {{seed}}
 expert_time_estimate_hours = {{expert_hours}}
@@ -24,7 +24,7 @@ expert_time_estimate_hours = {{expert_hours}}
 
 [verifier]
 timeout_sec = {{verifier_timeout}}
-# grade.py runs in its own container, built from tests/Dockerfile (docs/PROTOCOL.md §2.6): the agent's container,
+# grade.py runs in its own container, built from tests/Dockerfile (docs/protocol/README.md §2.6): the agent's container,
 # where it was root, is gone by then, and only /app/output/ crosses over. It replays locally, with no network.
 environment_mode = "separate"
 network_mode = "no-network"

@@ -11,7 +11,7 @@ objects and navigation, on a fixed-base arm and a mobile manipulator.
 | score | upstream's `judge_success()` on the state at the episode's end |
 | tasks | 8 families × 2 modes: `tasks/molmospaces-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
 | image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.5` (`images/molmospaces/`, ~1.8 GB of assets) |
-| oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`: GPT-6.1 Sol's privileged passes, 2026-10-16), human review in PR #276 |
+| oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`: GPT-6.1 Sol's privileged passes), human review in PR #276 |
 
 | family | upstream package | robot, control period | variants | kept episode (i00) | horizon |
 |---|---|---|---|---|---|
@@ -37,11 +37,11 @@ the choice; `keep` in `families.json` records it, `make_instances.py` checks it)
 | families | rule |
 |---|---|
 | pick, pick-and-place(-next-to, -color) | at least 5 other objects within 30 cm of the target |
-| pick-and-place(-color) | the receptacle at least 0.25 m from the target (the packages' median, measured 2026-10-15) |
-| pick, pick-and-place(-next-to, -color) | the target small in the robot's fixed cameras (not on the arm) at t = 0: at most 1200 / 630 / 1100 / 670 pixels (pick / pick-and-place / -next-to / -color) in the best one (EGL, the tasks' renderer), the packages' lower quartiles (every 20th episode, 2026-10-16); it and the receptacle or reference object at least 200 pixels in one, so the goal can be told from the images |
-| open, close | upstream's Hard packages: arm start posture randomised (±0.26 rad per joint, wrist ±90°), base up to ±30° off facing the fixture, 5 randomised cameras; the fixture at least 0.75 m (horizontally) from the robot base (the packages' median, measured 2026-10-15) |
+| pick-and-place(-color) | the receptacle at least 0.25 m from the target (the packages' median) |
+| pick, pick-and-place(-next-to, -color) | the target small in the robot's fixed cameras (not on the arm) at t = 0: at most 1200 / 630 / 1100 / 670 pixels (pick / pick-and-place / -next-to / -color) in the best one (EGL, the tasks' renderer), the packages' lower quartiles; it and the receptacle or reference object at least 200 pixels in one, so the goal can be told from the images |
+| open, close | upstream's Hard packages: arm start posture randomised (±0.26 rad per joint, wrist ±90°), base up to ±30° off facing the fixture, 5 randomised cameras; the fixture at least 0.75 m (horizontally) from the robot base (the packages' median) |
 | open | at most 3 joints count toward upstream's success (every joint of every fixture of the named kind) |
-| open, close | the moving part has to travel at least 6 cm (open) / 14 cm (close) to reach upstream's success threshold (largest geom displacement; the packages' upper quartiles, every 40th episode, 2026-10-16) |
+| open, close | the moving part has to travel at least 6 cm (open) / 14 cm (close) to reach upstream's success threshold (largest geom displacement; the packages' upper quartiles) |
 | navigate-to | the nearest target at least 8 m from the base and out of `head_camera`'s view at t = 0 |
 | open-door | none beyond the package (the handle's distance from the base and its size in `head_camera` hardly vary: 1.30–1.42 m, 26–36 pixels) |
 
@@ -68,7 +68,7 @@ ProcTHOR-10k one misses objects on 0.2.9's scene version).
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
 | privileged | `Session`: full state (`s.state()`, `s.model` / `s.data`), any camera, upstream's kinematics, reward and success code | unlimited | `tests/grade.py`: `trajectory.npz` replayed in two fresh processes; both succeed with equal final hashes |
-| standard | `joint_position` (Franka 8, RB-Y1 25) and `done`; the robot's cameras (not the third-person follower), proprioception, `/kinematics` | none (D1) | the live episode: upstream's `judge_success()` on the state it ends in, in the sim service; nothing replays it (2026-10-17) |
+| standard | `joint_position` (Franka 8, RB-Y1 25) and `done`; the robot's cameras (not the third-person follower), proprioception, `/kinematics` | none (D1) | the live episode: upstream's `judge_success()` on the state it ends in, in the sim service; nothing replays it |
 
 Standard mode's texts name objects and the goal only (D7, `scripts/molmospaces/ci/advisory-world-frame.sh`); the robot's pose and
 camera calibration come from the service, object poses never. The privileged grader checks that each replay starts in the
@@ -79,27 +79,25 @@ rendered on the GPU, 20-120 s, over 500 s on a loaded host) renders `replay.mp4`
 (`video_pending` while it runs); its success and hash are not read, and a failed or late render loses only the video.
 Rendering during the live episode was not chosen: the service renders only what the agent asks for, and a frame every
 control step would add a GPU render to every step of the agent's calls. Crash recovery:
-resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: each task's own `[agent] timeout_sec` (PROTOCOL §2.12, [`../CUTOFFS.md`](../CUTOFFS.md); 3600 s on
-2026-10-11), stated by the closing `## Time limit` section of every instruction; no step limit beyond the horizon.
+resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: each task's own `[agent] timeout_sec` (PROTOCOL §2,
+docs/protocol/running.md "The agent's time"), stated by the closing `## Time limit` section of every instruction; no step limit beyond the horizon.
 
 Tests without a simulator: `scripts/molmospaces/tests/test_ms.py` (run as a script; numpy): both graders, `finalize.sh` with
 stand-in replays and the real `server.py` on the real shared layer with a stub Session.
 
-What is not the agent's failure is flagged, and a reward is always written (2026-10-10). Standard `infra_error = 1`: no
+What is not the agent's failure is flagged, and a reward is always written. Standard `infra_error = 1`: no
 `final.json` (`missing_log`), an unreadable one (also `grader_error`), an unfinished one (`finalized` 0: the collect hook
-did not write its verdict; these three used to be the agent's 0 or no reward at all), a give-up after crashes between
-calls or a failed resume, a service that did not end its episode for the hook (no `episode.json`: one it dumped before
-failing to exit in time is still the live verdict, `end_timed_out`), a frozen start that did not rebuild
+did not write its verdict), a give-up after crashes between
+calls or a failed resume, a service that did not end its episode for the hook (no `episode.json`: one the newest service
+start dumped before failing to exit in time is still the live verdict, `end_timed_out`; a resume whose episode goes on
+deletes one left by a call the crash lost), a frozen start that did not rebuild
 (`instance_mismatch`, found by the service at its start); a give-up after crashes during a call and a simulator error
 raised by the agent's actions stay the agent's failure (reason `error`: the state after the exception is never judged a
 success). `finalize.sh` writes `final.json` whole and renames it into
-place; until 2026-10-17 it replayed the episode twice in fresh processes for the verdict (success = live ∧ replay ∧
-deterministic; `replay_failed`, a replay's `instance_mismatch` were infra). The privileged verifier's two replays share
-its 1800 s (500 s each before 2026-10-16, which a loaded host exceeded). Privileged: a file that cannot be read
-as a trajectory (not an npz, a pickled or non-numeric `actions`) is `bad_trajectory` (was `grader_error`). The service
+place. The privileged verifier's two replays share its 1800 s. Privileged: a file that cannot be read
+as a trajectory (not an npz, a pickled or non-numeric `actions`) is `bad_trajectory`. The service
 checks a request completely before anything moves: a null or wrongly typed `dt`, `seconds`, `cameras`, `note`, `video`,
-`interpolate` or `type` is a 400 (a null `dt` or `seconds` and a non-string `note` used to be a 500 that ended the
-episode). `get_obs(seconds=...)` runs whole control steps (the request rounded to the control period, 66 ms for the
+`interpolate` or `type` is a 400. `get_obs(seconds=...)` runs whole control steps (the request rounded to the control period, 66 ms for the
 Franka tasks) and `meta["seconds"]` is what ran, not what was asked for. The only step limit is upstream's horizon, which
 the instruction and `/spec` (`max_control_steps`, `episode`) state.
 
@@ -119,18 +117,17 @@ the instruction and `/spec` (`max_control_steps`, `episode`) state.
 harbor run -p tasks/molmospaces-pick-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
 harbor run -p tasks/molmospaces-pick-i00-privileged -a nop      # scores 0
 ```
-Agent, provider and effort settings: docs/RUNNING.md. Results are not kept in this repository (PROTOCOL D3): runs, videos and per-run READMEs are on
-the results site.
+Agent, provider and effort settings: docs/protocol/running.md.
 
-## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+## Standard-mode service details
 
 Resume class `exact` (MuJoCo, CPU physics).
 
 Its service states no `max_frames_per_call` yet.
 
-Grading: the service judges the live episode, dumps it and exits; the hook writes `final.json` from it and renders the video once (no grading replay since 2026-10-17).
+Grading: the service judges the live episode, dumps it and exits; the hook writes `final.json` from it and renders the video once.
 
-Per-simulator notes (former STANDARD_MODE §16):
+Per-simulator notes:
 
 | | |
 |---|---|
@@ -141,17 +138,13 @@ Per-simulator notes (former STANDARD_MODE §16):
 | cameras | Franka: wrist and shoulder (moving), three randomised static; RB-Y1: head + two wrist cameras (moving) |
 | depth | MuJoCo depth buffer |
 | `/kinematics` | upstream's `MlSpacesKinematics` on the robot's MuJoCo model (Franka 7, RB-Y1 23 with the base) |
-| proprio columns (2.0 → 2.2) | 2.2 only: 29 (Franka), 85 (RB-Y1) |
-| grading replays | none (graded live, 2026-10-17); one video-only render pass |
-| resume class (STANDARD_MODE §13.1) | `exact` |
+| proprio columns | 2.2: 29 (Franka), 85 (RB-Y1) |
+| grading replays | none (graded live); one video-only render pass |
+| resume class (docs/protocol/standard_mode.md) | `exact` |
 
-Measured scene builds (former STANDARD_MODE §13.4; episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
+Measured scene builds (episode `start` minus the end of Harbor's environment setup, from standard-mode trials on the laptop, RTX 4090 laptop GPU, 32 GB: a lower bound of the build):
 
 | benchmark | measured | build | note |
 |---|---|---|---|
 | MolmoSpaces | 8 families (213 trials), on a lab host (RTX 4090, 32 cores) | episode start 8–52 s after Harbor's environment setup began (median 11 s; navigate-to 33–52 s) | `RCB_STARTUP_TIMEOUT_S` = 300 |
 
-## Change log
-- 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay (the collect hook's
-  two fresh-process replays are gone); the start state is checked at the live start; video by one video-only render
-  pass after the verdict.

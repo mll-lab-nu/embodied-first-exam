@@ -1,7 +1,7 @@
 # @@STD@@
 
 Standard-mode twin of `@@PRIV@@` (the same frozen MolmoSpaces episode): @@GOAL@@ The agent gets only the
-`eai-standard/2.2` client (docs/STANDARD_MODE.md); the simulator runs in the `sim` sidecar
+`eai-standard/2.2` client (docs/protocol/standard_mode.md); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`), which owns the episode, serves cameras, proprioception and upstream's kinematic
 model, and records every executed row. The collect hook (`environment/sim/finalize.sh`) ends the episode, lets the
 service exit and writes `final.json` from the live episode's result (nothing is replayed to grade it), then renders

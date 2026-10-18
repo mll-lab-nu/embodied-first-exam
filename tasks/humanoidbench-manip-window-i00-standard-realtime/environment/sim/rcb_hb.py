@@ -230,7 +230,7 @@ class Session:
         self._ret = 0.0            # accumulated reward since the last reset
         self._steps = 0
         self._last_info: dict[str, Any] = {}
-        self._sim_steps_total = 0  # simulation budget, reported by status() (PROTOCOL.md §5)
+        self._sim_steps_total = 0  # simulation budget, reported by status() (docs/protocol/README.md §5)
         self._resets = 0
 
         self.env.reset(seed=0)     # one reset so the gym wrappers start in a legal state

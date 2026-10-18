@@ -18,14 +18,14 @@ positions, velocities, actuator efforts, hand pose and current targets, and robo
 service does not report the pump pose, the head or lever position, the piston depth, the stroke count, the tire
 pressure or contacts: judge the
 handle and the pump from the images and depth. At the end of an episode the meta reports `done`, `success` and a
-failure category; the graded verdict is the replay's (see the task text).
+failure category; that is the graded verdict (see the task text).
 
 ## Robot service
 The simulator runs in a separate service. You receive camera RGB, optional calibrated depth, and the robot's own
 joint positions, velocities, actuator efforts, wrist pose and current targets. An episode ends at the first success
 or the first failure (see the task text); after that the service accepts no more actions until a reset (see
-`## Episodes and resets`). The service records every action and watch step, then replays the graded episode with the
-recorded hand in two fresh processes. Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
+`## Episodes and resets`). The service records every action and watch step, then judges the graded episode as it ran
+(that is the verdict; nothing is replayed). Leave your controller at `/app/output/gen.py`; no trajectory hand-in is
 needed.
 
 ```python

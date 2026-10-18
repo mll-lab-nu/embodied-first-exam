@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for BEHAVIOR-1K v3.9.2 (OmniGibson on Isaac Sim, the 2026 challenge stack; R1Pro; see
-docs/STANDARD_MODE.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface
+docs/protocol/standard_mode.md): the benchmark's adapter of the shared layer rcb_limited.py. Owns the scene. HTTP surface
 (rcb_limited.serve): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies and responses: videos / frames /
 depth / proprio as raw blobs, never base64), POST /kinematics. Logs every call to /out/episode.jsonl and keeps
 /out/final.json current. Nothing about objects ever leaves this process.
@@ -13,24 +13,34 @@ Differences from the RoboTwin service, all from the simulator:
 - the head and wrist cameras move with the robot: every frame carries the pose it was rendered with (the renderer's
   frames lag the physics by 2 control steps while the robot moves); depth is OmniGibson's depth_linear (z-depth),
   attached before the episode starts; /kinematics is the tooling's stateless FK / IK on the robot's own articulation;
-- the episode is NOT replayed here. On Isaac only the first replay in a process is bit-exact, and a second Isaac
-  simulator in this container would not fit next to the live one. So when the episode ends the service writes
-  /out/trajectory.npz + /out/episode.json (live result and state hash); the collect hook's SIGUSR1 makes it exit, and
-  environment/sim/finalize.sh replays the trajectory in two fresh processes and completes /out/final.json;
-- the episode ends when the BDDL goal holds (success), when the robot has fallen over (the tooling's fall rule,
-  OmniGibson's Falling held for 10 s of simulated time: reason "failure: the robot fell over"), on the collect hook's
-  signal (timeout), on a simulator error, or at the tooling's runaway guard (MAX_STEPS control steps, reason
-  "step_guard"; /spec max_control_steps); /spec "episode" says so;
+- the verdict is the LIVE episode's (owner 2026-10-17, board 0150/0151): nothing replays it. When the episode ends the
+  service writes /out/trajectory.npz + /out/episode.json (live result, end-state hash); the collect hook's SIGUSR1 ends
+  the agent's phase and the service exits; environment/sim/finalize.sh writes /out/final.json from episode.json;
+- the episode ends on the tooling's success rule (2026-10-14: the BDDL goal has held for 1 s of simulated time with no
+  goal object in a gripper and every goal object at rest; when the agent's episode ends first, the service itself
+  holds the robot still for up to 5 s (SETTLE_STEPS) on the live simulator once the collect hook's signal arrives, after
+  the agent's container is stopped, and a goal that settles there counts (`settled_success`); the end signal's thread
+  only stops the HTTP loop: Isaac steps on the request thread, which runs that window), when the robot has fallen
+  over (the tooling's fall rule, OmniGibson's Falling held for 10 s of simulated time: reason "failure: the robot fell
+  over"), on a simulator breakdown (non-finite or runaway robot or goal-object state: reason "failure: simulator
+  breakdown (...)", a failure recorded as `sim_breakdown`), on the collect hook's signal (timeout), on a simulator error, or at the tooling's runaway guard
+  (MAX_STEPS control steps, reason "step_guard"; /spec max_control_steps); /spec "episode" says so;
 - a malformed request is a 400 before anything is executed (PROTOCOL §4.6): every field of /submit and /observe is
   checked first (request_number, request_cameras, request_note, video_fps; dt must be a whole number of control
   periods, it is never rounded), so a wrong type, a null or an out-of-range value never reaches the simulator and never
   ends the episode;
-- crash recovery (rcb_limited.Episode, docs/STANDARD_MODE.md §13): every executed control step goes to
+- crash recovery (rcb_limited.Episode, docs/protocol/standard_mode.md §13): every executed control step goes to
   /out/journal.f64, every completed call is checkpointed (rows, state hash, proprio row); after a crash compose restarts
   the container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume
   class `approx`: OmniGibson declares rollouts nondeterministic, so a hash mismatch after the replay is recorded
   (resume_state_mismatch) and the episode goes on unless a TCP is more than RCB_RESUME_MAX_DEV_M (0.05 m) away from its
-  checkpoint. The verdict always comes from the two fresh replays of the whole recorded trajectory."""
+  checkpoint. The episode then continues from the replayed state and its verdict is the episode it runs;
+- the frozen start is checked when the scene is built, before the agent is served: a start state that is neither the
+  frozen instance's hash nor within its poses' tolerance gives up as `instance_mismatch` (infra_error);
+- the video is recorded live (/out/live.mp4, fragmented MP4: a crash leaves a playable prefix): the robot cameras'
+  frames, which every control step renders anyway for the agent (224 px), tiled, every third control step (10 fps),
+  copied in the control loop and encoded by a thread (LiveVideo); a resume records it anew while it replays the
+  journal. When it is missing or does not play, finalize.sh renders one in a video-only pass after the verdict."""
 from __future__ import annotations
 import json, math, os, sys, threading, time, traceback
 import numpy as np
@@ -73,22 +83,38 @@ def dump() -> None:
     if E.get("dumped"): return
     E["dumped"] = True
     try:
-        acts = S.record_stop(); E["live_sha"] = S.state_sha(); E["n_actions"] = int(len(acts))
+        acts = E["acts"] if E.get("acts") is not None else S.record_stop(); E["n_actions"] = int(len(acts))
         S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"], "reason": E["reason"]})
+        # the settle window ran before this (end_live, on the request thread), never here: dump may run in the end
+        # signal's thread, and Isaac steps only on the thread that serves the requests (a step from there deadlocked)
+        if S.breakdown is not None and E["reason"] != S.end_reason:
+            E["reason"] = S.end_reason
+        E["live_sha"] = S.state_sha()
     except Exception as exc:  # noqa
         traceback.print_exc(); log({"ev": "dump_error", "error": repr(exc)})
     n = int(E.get("episode_control_steps") or 0)
+    st = {}
+    try:
+        st = S.status()                 # reads only (q_score with the object-state caches restored)
+    except Exception as exc:  # noqa: BLE001 -- the diagnostics never decide anything
+        log({"ev": "status_error", "error": repr(exc)[:300]})
     L._write_json(os.path.join(DATA, "episode.json"), {
         "success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
         "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
-        "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+        "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), "sim_breakdown": S.breakdown is not None,
+        "settle_steps": int(E.get("settle_steps") or 0), "settled_success": bool(E.get("settled_success")),
+        "q_score": st.get("q_score"), "goal_first_step": st.get("goal_first_step"), "graded_by": "live", "replays": 0,
+        "startup": EP.n_startups, "pid": os.getpid(),   # which service start wrote it (finalize.sh's late-exit check)
+        **EP.final_fields()})
     write_final()
 
 
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if not E["success"]:
+    if reason == "error":               # a simulator error the agent's actions raised: the state after it is never judged
+        E["success"] = False
+    elif not E["success"]:
         try: E["success"] = check_success()
         except Exception: pass
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
@@ -99,7 +125,10 @@ def finish(reason: str) -> None:
 import rcb_behavior as M  # noqa: E402
 # the robot's own cameras through the tiny-camera wrapper with RCB_CAM_SIZE raised: real images for the agent without
 # paying for full-resolution rendering on every one of several thousand control steps
-S = M.Session(TASK, instance=INSTANCE, cameras=os.environ.get("RCB_CAMERAS", "tiny"), strict=True)
+S = M.Session(TASK, instance=INSTANCE, cameras=os.environ.get("RCB_CAMERAS", "tiny"), strict=False)
+if not S.instance_matches:              # before the agent is served: the episode must start from the frozen instance
+    EP.give_up(f"instance_mismatch: the frozen start state did not rebuild here (state sha {S.instance_sha}; poses differ "
+               "beyond tolerance)", infra=True)
 BLOCKS = {"base": (0, 3), "trunk": (3, 7), "arm_left": (7, 14), "gripper_left": (14, 16), "arm_right": (16, 23), "gripper_right": (23, 25)}
 SWITCH = [0, 1, 2, 14, 15, 23, 24]      # base per-step targets and both grippers: switched at the row, never interpolated
 assert int(S.action_dim) == DIM, (S.action_dim, DIM)
@@ -114,6 +143,112 @@ S.enable_depth(CAMS)                    # z-depth rendered alongside RGB from no
 MOUNT = {c: ("head (moves with the base and trunk)" if "zed" in c else "left wrist" if "left" in c else "right wrist" if "right" in c else "on the robot") for c in CAMS}
 CAMINFO = S.camera_info(CAMS)
 RSPEC = S.robot_spec(); KSPEC = S.kinematics_spec()
+
+
+class _AvWriter:
+    """An H.264 MP4 through PyAV, the library the evaluator's own recorder writes with (rcb_behavior's
+    _fragmented_video_writer: fragmented MP4, yuv420p); opened at the first frame, whose size it takes (even sides)."""
+
+    def __init__(self, path: str, fps: int):
+        self.path, self.fps, self.c, self.st = path, int(fps), None, None
+
+    def append_data(self, rgb) -> None:
+        import av
+        h, w = rgb.shape[0] // 2 * 2, rgb.shape[1] // 2 * 2
+        if self.c is None:
+            self.c = av.open(self.path, mode="w", options={"movflags": M.MP4_FRAGMENTED})
+            self.st = self.c.add_stream("libx264", rate=self.fps)
+            self.st.height, self.st.width, self.st.pix_fmt = h, w, "yuv420p"
+        frame = av.VideoFrame.from_ndarray(np.ascontiguousarray(rgb[:self.st.height, :self.st.width, :3]), format="rgb24")
+        for pkt in self.st.encode(frame):
+            self.c.mux(pkt)
+
+    def close(self) -> None:
+        if self.c is None:
+            return
+        for pkt in self.st.encode():
+            self.c.mux(pkt)
+        self.c.close()
+
+
+class LiveVideo:
+    """The episode's video, recorded while it runs: the robot cameras' frames that every control step renders anyway (the
+    agent's observations, RCB_CAM_SIZE), tiled side by side, every `every`-th control step. The control loop only copies
+    the frames and queues them; a thread encodes them (_AvWriter: libx264, fragmented MP4 as the replay video's: a
+    process that dies leaves a playable prefix). A full queue (the encoder behind) drops the frame and counts it.
+    Nothing here decides anything: a failure loses only the video (PROTOCOL §4)."""
+
+    def __init__(self, path: str, cams, every: int = 3, fps: int = 10, max_queue: int = 64, writer=None):
+        import queue
+        self.cams, self.every, self.n, self.dropped, self.error = list(cams), int(every), 0, 0, None
+        self.bad_frames, self.frame_error = 0, None
+        self._full = queue.Full
+        self.q = queue.Queue(max_queue)
+        self.w = writer if writer is not None else _AvWriter(path, fps)
+        self.t = threading.Thread(target=self._run, daemon=True); self.t.start()
+
+    def offer(self, n: int, frames) -> None:
+        """Control step `n` has just run (0: the start); `frames()` returns {camera: RGB uint8} of its render."""
+        if self.error is not None or n % self.every:
+            return
+        try:
+            f = frames()
+            tile = np.concatenate([np.asarray(f[c], dtype=np.uint8) for c in self.cams], axis=1)
+        except Exception as exc:  # noqa: BLE001 -- one frame lost, counted; the recording goes on
+            self.bad_frames += 1; self.frame_error = self.frame_error or f"frame: {exc!r}"[:300]; return
+        try:
+            self.q.put_nowait(np.ascontiguousarray(tile))
+        except self._full:
+            self.dropped += 1
+
+    def _run(self) -> None:
+        while True:
+            f = self.q.get()
+            if f is None:
+                return
+            if self.error is None:
+                try:
+                    self.w.append_data(f); self.n += 1
+                except Exception as exc:  # noqa: BLE001
+                    self.error = f"encode: {exc!r}"[:300]
+
+    def close(self, timeout: float = 60.0) -> dict:
+        """Drain the queue and finish the file, bounded (2 x timeout + the writer's close on a thread, at most 2 x timeout
+        more), so the service exits well inside the collect hook's wait for it."""
+        try:
+            self.q.put(None, timeout=timeout)
+        except Exception:  # noqa: BLE001
+            pass
+        self.t.join(timeout)
+        if self.t.is_alive():
+            self.error = self.error or f"close: the encoder did not drain in {timeout:.0f} s"
+        else:
+            def _close():
+                try:
+                    self.w.close()
+                except Exception as exc:  # noqa: BLE001
+                    self.error = self.error or f"close: {exc!r}"[:300]
+            c = threading.Thread(target=_close, daemon=True); c.start(); c.join(2 * timeout)
+            if c.is_alive():
+                self.error = self.error or "close: the encoder did not finish in time (a fragmented MP4 still plays)"
+        return {"video_frames": self.n, "video_dropped_frames": self.dropped, "video_bad_frames": self.bad_frames,
+                **({"video_frame_error": self.frame_error} if self.frame_error else {}),
+                **({"video_error": self.error} if self.error else {})}
+
+
+VIDEO = os.path.join(DATA, "live.mp4")  # every start records it anew (a resume replays the episode from the start)
+try:
+    VID = LiveVideo(VIDEO, CAMS)
+except Exception as exc:  # noqa: BLE001 -- never the verdict: no live video (finalize.sh renders one), the episode runs on
+    VID = None; log({"ev": "video_error", "error": repr(exc)[:300]})
+
+
+def video_step() -> None:
+    if VID is not None:
+        VID.offer(int(S.env.episode_steps), lambda: S._frames(CAMS)[0])
+
+
+video_step()                            # the start: a video even of an episode without actions
 
 # joint_position limits: the joints' real limits for trunk and arms; grippers up to upper + 0.02 (the open command: assisted
 # grasping releases only on a command at or above the limit); base entries are per-control-step displacements
@@ -185,11 +320,18 @@ SPEC = {
                                "moves; its extrinsic_cv is the camera pose it was rendered with, so pixels, depth and pose agree; proprio "
                                "is the state at frame_step"},
     "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "14400"))},
-    "episode": ("one episode, no reset: it ends the moment the task's goal holds (success); when the robot has fallen over, i.e. its "
+    "episode": ("one episode, no reset: it ends as a success once the task's goal has held for "
+                f"{M.REST_STEPS / CTRL_HZ:g} s of simulated time in a row ({M.REST_STEPS} control steps) with no goal object in a "
+                f"gripper (assisted grasping lets go when both fingers are commanded open) and every goal object at rest (slower "
+                f"than {M.REST_SPEED_M_S:g} m/s; the goal objects: every object the goal names, a tool or appliance it names (even inside a `not`) included); when your episode is still running at the end of your time (you stopped early, or your time ran out), the service holds "
+                f"the robot still (your last command, the base at 0) for up to {M.SETTLE_STEPS / CTRL_HZ:g} s more on this simulator, and a "
+                "goal that settles there counts as a success; when the robot has fallen over, i.e. its "
                 f"base has been tilted more than {math.degrees(math.acos(M.FALL_TILT_TOLERANCE)):.1f} degrees from upright (the z of its up "
                 f"axis below {M.FALL_TILT_TOLERANCE}: cos(rx) * cos(ry) of base_footprint_rx_joint / _ry_joint) or more than "
                 f"{M.FALL_HEIGHT_M:g} m below the floor for {M.FALL_HOLD_STEPS / CTRL_HZ:g} s of simulated time in a row "
-                f"({M.FALL_HOLD_STEPS} control steps; reason \"{M.FALL_REASON}\"); when your time is up (timeout); on a simulator error (error); "
+                f"({M.FALL_HOLD_STEPS} control steps; reason \"{M.FALL_REASON}\"); on a simulator breakdown (a non-finite or runaway "
+                f"robot or goal-object state: reason \"{M.BREAKDOWN_REASON} (...)\", a failure); "
+                "when your time is up (timeout); on a simulator error (error); "
                 f"or at the runaway guard of {M.MAX_STEPS} control steps ({M.MAX_STEPS / CTRL_HZ / 3600:.2f} h of simulated time; step_guard). "
                 "There is no step budget otherwise"),
     "robot_spec": RSPEC,
@@ -200,7 +342,7 @@ SPEC = {
 
 
 def check_success() -> bool:
-    return bool(S.env.task.success)
+    return S.succeeded                  # the tooling's success rule (goal + release + rest for REST_STEPS), not the bare goal
 
 
 def proprio_row() -> np.ndarray:
@@ -303,8 +445,10 @@ def clip_joint_row(row: np.ndarray, clipped: list, ri: int) -> np.ndarray:
 def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     """One recorded and journaled control step. True when the call must stop: the episode is over (the BDDL goal holding
     also terminates it), or the layer stops the call (max_call_wall_s, the client hung up)."""
-    term, trunc = S.step(a); stop = EP.journal(a); rec.tick()
+    term, trunc = S.step(a); stop = EP.journal(a)
+    # the end first: an error in the recording below then cannot turn a completed rule into reason "error"
     if term or trunc: finish("success" if check_success() else (S.end_reason or "step_guard"))
+    rec.tick(); video_step()
     return E["done"] or stop
 
 
@@ -422,14 +566,79 @@ def status() -> dict:
             "elapsed_s": round(time.time() - E["t0"], 1)}
 
 
+def end_live() -> None:
+    """The agent's phase is over (the collect hook's signal; its container is stopped by now). Lock held, on the request
+    thread (Isaac steps only there). An episode still running ends here: the success rule's settle window runs on the
+    live simulator first -- the robot holds still (hold_action: the last command, the base at 0) for up to SETTLE_STEPS
+    control steps, stopping when the episode ends (the goal settles: success; a fall, a breakdown) -- as the fresh-process
+    replays did before 2026-10-17. Those steps are not journaled (a crash in them resumes the agent's episode and the
+    hook's re-sent signal runs the window again) and are not in trajectory.npz (the agent's rows: a replay of it runs the
+    same window after them)."""
+    if E["done"]:
+        dump(); return
+    E["acts"] = S.record_stop()
+    n = 0
+    cid = EP.call_begin("/settle")      # logged as a call: a crash of the process in the window counts as in the agent's calls
+    try:
+        while n < M.SETTLE_STEPS and E["acts"] is not None and len(E["acts"]) and not S.episode_done:
+            S.step(np.asarray(S.hold_action().cpu(), dtype=np.float64).reshape(-1)); n += 1; video_step()
+    except Exception as exc:  # noqa: BLE001 -- the window could not run on: the episode is judged where it stopped
+        traceback.print_exc(); log({"ev": "settle_error", "after_steps": n, "error": repr(exc)[:300]})
+    finally:
+        EP.call_end(cid, "/settle", settle_steps=n)
+    E["settle_steps"] = n
+    ok = check_success()
+    E["settled_success"] = bool(ok and n > 0)
+    log({"ev": "settle", "steps": n, "success": bool(ok), "end_reason": S.end_reason})
+    finish("success" if ok else (S.end_reason or "timeout"))
+
+
+def close_video() -> None:
+    if VID is not None:
+        v = VID.close()
+        log({"ev": "video", **v})
+        try:
+            ep = L._read_json(os.path.join(DATA, "episode.json"))
+            if ep:
+                ep.update(v); L._write_json(os.path.join(DATA, "episode.json"), ep)
+        except Exception as exc:  # noqa: BLE001 -- never the verdict
+            log({"ev": "video_error", "error": repr(exc)[:300]})
+
+
+HTTPD = {"server": None, "serving": False}
+_bind = L.bind
+
+
+def _bind_and_keep(port, handler):
+    srv = _bind(port, handler)
+    if HTTPD["serving"]:                # the service's own HTTP loop (not a give-up's refusal server)
+        HTTPD["server"] = srv
+    return srv
+
+
+L.bind = _bind_and_keep                 # L.serve() binds through this name: the end signal can stop its loop
+
+
 def _end_from_signal():
+    """The collect hook's SIGUSR1, in a thread of its own: refuse every request from now on and stop the HTTP loop; the
+    request thread then ends the episode (end_live, after L.serve returns below) and the process exits."""
     with LOCK:
-        E["exiting"] = True
+        E["exiting"] = True             # the layer answers 409 from now on
+    t0 = time.time()
+    while HTTPD["server"] is None and time.time() - t0 < 120:   # a resume or a port wait before the loop starts
+        time.sleep(0.5)
+    if HTTPD["server"] is not None:
+        HTTPD["server"].shutdown()      # returns once serve_forever has; the request thread carries on below
+        return
+    # the HTTP loop never started (the port stayed taken): end here, without the settle window (no stepping off the
+    # request thread); the verdict is the episode as it stopped
+    with LOCK:
         if not E["done"]: finish("timeout")
         else: dump()
-        log({"ev": "exit", "reason": "collect hook: episode dumped, releasing the simulator for the fresh-process replays"})
+        close_video()
+        log({"ev": "exit", "reason": "collect hook: episode dumped without the settle window (no HTTP loop)"})
     sys.stdout.flush(); sys.stderr.flush()
-    os._exit(0)          # frees the GPU and the memory: finalize.sh starts the replays once this process is gone
+    os._exit(0)
 
 
 REPLAY = {"skipped": 0}
@@ -443,7 +652,7 @@ def replay_row(row) -> None:
     if S.episode_done:
         REPLAY["skipped"] += 1
     else:
-        S.step(row)
+        S.step(row); video_step()
 
 
 L.check_spec(SPEC)                      # before the episode starts: a bad /spec must not cost a resume
@@ -453,8 +662,8 @@ resumed = EP.begin(state=E, step=replay_row, state_sha=S.state_sha, proprio=prop
                    start_event={"task": TASK, "instance_id": S.instance_id, "cameras": CAMS}, on_end=_end_from_signal)
 if resumed and S.episode_done and not E["done"]:
     # the replayed episode ended although the logged one had not: with the goal holding it is a success like any other
-    # (the two fresh replays of the recorded trajectory still decide); anything else (a fall the live run did not have)
-    # is the resume's divergence, not the agent's: no verdict on the agent (resume_failed, infra_error = 1)
+    # (the resumed live episode is the verdict); anything else (a fall the live run did not have) is the resume's
+    # divergence, not the agent's: no verdict on the agent (resume_failed, infra_error = 1)
     log({"ev": "resume_ended_early", "skipped_rows": REPLAY["skipped"], "end_reason": S.end_reason, "success": check_success()})
     if check_success():
         E["ready"] = True
@@ -462,8 +671,29 @@ if resumed and S.episode_done and not E["done"]:
         E["ready"] = False
     else:
         EP.give_up(f"resume_failed: the replayed episode ended ({S.end_reason or 'step_guard'}) before the logged one did", infra=True)
+if resumed and not E["done"]:
+    # the episode goes on: an episode.json from a call the crash lost (it ended there, then was rolled back to the last
+    # checkpoint) is not this episode's record; finalize.sh must never take it for one
+    for f in ("episode.json", "trajectory.npz"):
+        try:
+            os.remove(os.path.join(DATA, f))
+        except OSError:
+            pass
 E["ready"] = True; write_final()
 open(os.path.join(DATA, "server.pid"), "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes}{', resumed at call ' + str(E['calls']) if resumed else ''})", flush=True)
+HTTPD["serving"] = True
 L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                   on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row))
+# the end signal stopped the loop (_end_from_signal): the agent's phase is over
+with LOCK:
+    try:
+        end_live()
+    except Exception as exc:  # noqa: BLE001 -- the record is still written: the episode as it stopped
+        traceback.print_exc(); log({"ev": "end_error", "error": repr(exc)[:300]})
+        if not E.get("dumped"):
+            E["done"] = True; E["reason"] = E["reason"] or "timeout"; dump()
+    close_video()
+    log({"ev": "exit", "reason": "collect hook: episode ended and dumped, video closed; releasing the simulator"})
+sys.stdout.flush(); sys.stderr.flush()
+os._exit(0)                             # frees the GPU and the memory: finalize.sh writes final.json once this process is gone

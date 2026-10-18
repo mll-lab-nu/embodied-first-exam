@@ -2,7 +2,7 @@
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # `/data` is the licensed BEHAVIOR-1K 3.7.2 data root here (read-only; $RCB_MANIGUARD_DATA is a precondition of every
 # ManiGuard run, docs/benchmarks/maniguard.md), so the service writes its own record to `/out` (the container's own file
-# system: it survives compose's restarts of the same container). Crash recovery (docs/STANDARD_MODE.md §13): run.sh
+# system: it survives compose's restarts of the same container). Crash recovery (docs/protocol/standard_mode.md §13): run.sh
 # exits non-zero when the service crashes and compose restarts the container, which resumes the same episode from its
 # journal. The sidecar is TRUSTED: its Kit cache is a trusted volume of this trial only (no fixed name), never mounted where
 # agent code runs. RCB_STARTUP_TIMEOUT_S: the startup watchdog, at least twice the slowest measured scene build

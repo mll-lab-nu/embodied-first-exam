@@ -45,12 +45,15 @@ MAX_ROWS = int(re.search(r"^MAX_TRAJECTORY_ROWS = ([\d_]+)", (SHARED / "rcb_dexj
 # times slower its verdict. The video stops PRIV_VIDEO_DEADLINE s after the grader started (the verdict is on disk by then).
 PRIV_VERIFIER_TIMEOUT = 3600
 PRIV_VIDEO_DEADLINE = PRIV_VERIFIER_TIMEOUT - 900
-# Standard collect hook (finalize.sh): the recorded episode has no step cap; a replay steps the physics the live episode
-# stepped, without rendering or the agent's thinking time, and the hook runs two of them, then the video. 7200 s lets
-# each replay take 3500 s: more than the service can have spent stepping unless the agent drove it for two thirds of its
-# 5400 s without a pause. Beyond that a replay is stopped and the trial is an infrastructure failure (infra_error = 1),
-# not the agent's 0. finalize.sh reads the budget as RCB_COLLECT_BUDGET_S.
-COLLECT_TIMEOUT = 7200
+# Standard collect hook (finalize.sh): the verdict is the live episode's (owner, 2026-10-17, board 0151), written as soon
+# as the service has ended and dumped it (at most RCB_COLLECT_END_TIMEOUT_S = 900 s; seconds in practice). Then one
+# video-only pass: it steps the physics the live episode stepped (at most the agent's cutoff of wall clock, without the
+# agent's thinking time) and renders at most ~1500 frames (measured 2026-10-17 on the archived standard trials: median
+# 530 s, at most 960 s, physics included). VIDEO_MAX = the cutoff + 900 s covers the longest episode the cutoff allows;
+# the hook's budget is the end wait + VIDEO_MAX + margins. A video that runs out of time is lost, never the verdict.
+# finalize.sh reads them as RCB_COLLECT_BUDGET_S and RCB_COLLECT_VIDEO_MAX_S.
+VIDEO_MAX = CUTOFF["standard"] + 900
+COLLECT_TIMEOUT = 900 + VIDEO_MAX + 180
 # OpenBLAS threads in every container that runs the simulator (the sim sidecar, the privileged agent container and
 # verifier). DexJoCo's controller does its linear algebra in numpy, and OpenBLAS's result depends on how many threads
 # split a product: 1 thread, 2-3 threads and 4 or more give three different final states (two references fail on fewer
@@ -428,10 +431,10 @@ WORKDIR /tests
 def priv_test_sh(fam: str) -> str:
     return f"""#!/bin/bash
 # Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in a fresh process.
-# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, docs/PROTOCOL.md §2.6).
+# Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, docs/protocol/README.md §2.6).
 # Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent
 # left there (a planted reward, a symlink) can count. rm never follows symlinks.
-rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)
+rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/protocol/README.md §2.6)
 mkdir -p /logs/verifier
 python /tests/grade.py --family {fam} --instance /tests/instance.npz --traj /app/output/trajectory.npz --repeat 2 \\
   --video-deadline-s {PRIV_VIDEO_DEADLINE} 2> /logs/verifier/grade.log
@@ -506,6 +509,17 @@ def std_changes(F: dict) -> str:
         "  the privileged twin's, from the one committed instance. Every array of the scene is the same (instance sha\n"
         f"  `{F['instance_sha']}`): the scene, the pass rule and the grader are unchanged, so the task keeps its name and earlier\n"
         "  results stand.")
+    out.append(
+        "- 2026-10-17 (owner, boards 0150 and 0151): **the verdict is the live episode's.** `environment/sim/finalize.sh`,\n"
+        "  `environment/sim/server.py`, the new `environment/sim/video.py`, `tests/grade.py`, `task.toml`. Success is DexJoCo's\n"
+        "  own check on the episode the service ran (`graded_by = \"live\"`, `replays = 0`); the collect hook no longer replays\n"
+        "  the trajectory in two fresh processes (success was live ∧ both replays ∧ the same final state), and renders\n"
+        "  `replay.mp4` in one video-only pass after the verdict. The frozen instance is checked when the episode begins (a\n"
+        "  scene that does not rebuild to its recorded hash: no episode, `instance_mismatch`, infrastructure); before, the\n"
+        "  replays checked it. The episode ends at the first success, so no replay ever judged a state the live check had not.\n"
+        "  The scene, the frozen instance, the pass rule and what the agent sees are unchanged, so the task keeps its name;\n"
+        "  `reward.json` no longer has `replay_success`, `deterministic` and `live_matches_replay`. A collect hook on `main`\n"
+        "  (`kill -9 -1`) stops whatever the agent left running before the service ends the episode.")
     out.append(
         "- 2026-10-13 (owner, boards 0085 and 0087): the sim service's clock (`environment/sim/rcb_limited.py`,\n"
         "  `environment/sim/server.py`, the docstring of `environment/rcb_client.py`). `meta[\"time_s\"]` and\n"
@@ -624,13 +638,16 @@ through the client as `ee_pose` chunks; it uses no privileged information at run
 trajectory is then exactly the privileged reference, and the episode ends with success after {F["oracle_rows"]} control steps.
 
 ## Verification
-The sim service judges the episode live and records every executed control step; the collect hook
-(`environment/sim/finalize.sh`) ends the service, replays the recorded trajectory in two fresh processes
-and writes `final.json`, then renders `replay.mp4` in the time it has left; `tests/grade.py` (separate sandbox, no
-network) passes iff the live check succeeded, both replays succeed, and they end in the same state. A `final.json` that
-is missing, unreadable or without a verdict (the hook did not finish, a replay gave no result) is an infrastructure
-failure (`infra_error = 1`), not the agent's 0. So is a sim sidecar that runs fewer than 4 OpenBLAS threads (fewer than
-4 CPUs visible to it): the service starts no episode (`too_few_cpus`, `grader_error` and `infra_error` = 1).
+The verdict is the live episode's (`graded_by = "live"`, `replays = 0`): the sim service judges the episode it runs with
+DexJoCo's own success check and records every executed control step. The collect hook
+(`environment/sim/finalize.sh`) ends the service, writes that verdict into `final.json` (nothing is replayed to grade
+it), then renders `replay.mp4` from the recorded trajectory in one video-only pass (`environment/sim/video.py`), which
+never changes the verdict. `tests/grade.py` (separate sandbox, no network) passes iff the live episode ended in success.
+The service checks the frozen instance when the episode begins: a scene that does not rebuild to the instance's recorded
+state hash gets no episode (`instance_mismatch`, `grader_error` and `infra_error` = 1). A `final.json` that is missing,
+unreadable or without a verdict (the hook did not finish), a give-up after crashes between the agent's calls, and a sim
+sidecar that runs fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to it: the service starts no episode,
+`too_few_cpus`, `grader_error` and `infra_error` = 1) are infrastructure failures (`infra_error = 1`), not the agent's 0.
 Oracle: success after {F["oracle_rows"]} control steps.
 
 ## Details
@@ -639,7 +656,7 @@ Oracle: success after {F["oracle_rows"]} control steps.
 | Upstream | DexJoCo @ 8d23b0f (brave-eai/dexjoco, MIT) on MuJoCo 3.4.0; CPU physics, OSMesa rendering, no GPU |
 | Instance | the initial state of the human demonstration `{F["demo"]}` (DexJoCo-Datasets-Raw); instance sha `{F["instance_sha"]}` |
 | Service | `environment/sim/server.py` (the adapter) on the shared 2.2 layer `rcb_limited.py` (`scripts/eai_standard/`); action types `ee_pose` and `joint_position`; cameras {", ".join(f"`{c}`" for c in F["cameras"])} (640 x 480); `/kinematics` for the arm links, the hand mount and the tcp; crash recovery class `exact` |
-| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS={BLAS_THREADS}` in the sim sidecar (the service, a resume and the collect hook's replays: the simulation's result depends on the thread count below 4, docs/benchmarks/dexjoco.md). The 4 CPUs must be visible to the sidecar (its cpuset / affinity; a `cpus:` quota does not matter): OpenBLAS runs no more threads than that |
+| Resources | 4 CPUs, 8 GB, no GPU; `OPENBLAS_NUM_THREADS={BLAS_THREADS}` in the sim sidecar (the service, a resume and the video pass: the simulation's result depends on the thread count below 4, docs/benchmarks/dexjoco.md). The 4 CPUs must be visible to the sidecar (its cpuset / affinity; a `cpus:` quota does not matter): OpenBLAS runs no more threads than that. The collect hook replays nothing; its one video pass takes about 9 CPU-minutes per trial (median; at most {VIDEO_MAX} s) |
 
 ### Provenance
 Generated by `scripts/dexjoco/generate.py`, as its privileged twin.
@@ -660,15 +677,13 @@ artifacts = [
   {{ source = "/data/server.log", service = "sim" }},            # the service's own output (Harbor keeps none)
   {{ source = "/data/journal.f64", service = "sim" }},           # crash recovery: every executed control step (float64 rows)
   {{ source = "/data/startups.jsonl", service = "sim" }},        # crash recovery: one line per service start
-  {{ source = "/data/replay1.log", service = "sim" }},           # the collect hook's two fresh-process replays
-  {{ source = "/data/replay2.log", service = "sim" }},
-  {{ source = "/data/replay3.log", service = "sim" }},           # and its third, which renders replay.mp4
+  {{ source = "/data/video.log", service = "sim" }},             # the collect hook's video pass, which renders replay.mp4
   "/app/output/",
 ]
 
 [task]
 name = "robot-coding-bench/dexjoco-{dash(fam)}-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo {fam} ({robot_words(fam)}) on the same frozen instance as dexjoco-{dash(fam)}-i00-privileged. {f["goal"].split(". ")[0]}. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode, replays it in fresh processes and grades it."
+description = "STANDARD MODE (robot as a service, eai-standard/2.2): DexJoCo {fam} ({robot_words(fam)}) on the same frozen instance as dexjoco-{dash(fam)}-i00-privileged. {f["goal"].split(". ")[0]}. The agent only gets a client: calibrated cameras (RGB, optional depth), the robot's joints and tcp poses, tcp-target + hand-joint chunks at 50 Hz, the robot's kinematics; one episode, no reset, no object state; the sim service records the episode and grades it live (no grading replay)."
 authors = [{{ name = "Chi Gui" }}]
 keywords = ["robotics", "dexjoco", "mujoco", "allegro", "dexterous-manipulation", "standard-mode", "robot-as-a-service", "{fam}"]
 
@@ -688,10 +703,17 @@ timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, replay twice in fresh processes, write final.json, video
-timeout_sec = {COLLECT_TIMEOUT}                # two replays of an episode without a step cap, then the video (finalize.sh: RCB_COLLECT_BUDGET_S)
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write the live verdict into final.json, then the video
+timeout_sec = {COLLECT_TIMEOUT}                # the service's end (<= 900 s) + one video pass of the longest episode (finalize.sh: RCB_COLLECT_BUDGET_S)
 
 [agent]
 timeout_sec = {float(CUTOFF["standard"])}
@@ -709,7 +731,7 @@ def std_compose(fam: str) -> str:
     return f"""# Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # CPU only: MuJoCo physics and OSMesa rendering; no GPU reservation.
-# Crash recovery (docs/STANDARD_MODE.md §13): run.sh exits non-zero when the service crashes, compose restarts the
+# Crash recovery (docs/protocol/standard_mode.md §13): run.sh exits non-zero when the service crashes, compose restarts the
 # container (same container, same /data) and the service replays its journal into the same episode, never a reset.
 services:
   main:
@@ -727,8 +749,9 @@ services:
       RCB_TOOL: /srv/rcb_dexjoco.py
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "{CUTOFF["standard"]}"
-      RCB_COLLECT_BUDGET_S: "{COLLECT_TIMEOUT}"   # the collect hook's timeout_sec (task.toml): finalize.sh fits its replays and video in
-      OPENBLAS_NUM_THREADS: "{BLAS_THREADS}"       # the service, a resume and the collect hook's replays: one thread count (the result depends on it below 4; with fewer than 4 CPUs visible the service starts no episode: too_few_cpus)
+      RCB_COLLECT_BUDGET_S: "{COLLECT_TIMEOUT}"   # the collect hook's timeout_sec (task.toml): finalize.sh fits the verdict and the video in
+      RCB_COLLECT_VIDEO_MAX_S: "{VIDEO_MAX}"   # the video pass's bound: the longest episode the cutoff allows, rendered
+      OPENBLAS_NUM_THREADS: "{BLAS_THREADS}"       # the service, a resume and the video pass: one thread count (the result depends on it below 4; with fewer than 4 CPUs visible the service starts no episode: too_few_cpus)
       RCB_STARTUP_TIMEOUT_S: "300"   # the scene builds in a few seconds
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
@@ -757,7 +780,7 @@ STD_TEST_SH = """#!/bin/bash
 # Verifier (separate sandbox): the sim sidecar's artifacts were uploaded to /data by Harbor.
 # Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent
 # left there (a planted reward, a symlink) can count. rm never follows symlinks.
-rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/PROTOCOL.md §2.6)
+rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/protocol/README.md §2.6)
 mkdir -p /logs/verifier
 python /tests/grade.py 2> /logs/verifier/grade.log
 """
@@ -813,7 +836,7 @@ def render(root: Path) -> list[Path]:
         sim = t / "environment" / "sim"
         for f in ("rcb_limited.py", "rcb1.py", "run.sh"):
             copy(LAYER / f, sim / f)
-        for f in ("server.py", "finalize.sh"):
+        for f in ("server.py", "finalize.sh", "video.py"):
             copy(SHARED / "standard" / f, sim / f)
         copy(SHARED / "rcb_dexjoco.py", sim / "rcb_dexjoco.py")
         copy(inst / "instance.npz", sim / "instance.npz")

@@ -4,10 +4,10 @@
 
 Scoring happens here and nowhere else: the task image has upstream's reward functions deleted, and this
 process patches the one this task needs back in (rcb_rewards.py) before it replays anything. It runs in its
-own container, built from tests/Dockerfile (docs/PROTOCOL.md §4): the agent's container is gone by then, and
+own container, built from tests/Dockerfile (docs/protocol/README.md §4): the agent's container is gone by then, and
 only /app/output/ crosses over.
 
-Writes /logs/verifier/reward.txt (1/0), reward.json (the numeric fields of PROTOCOL.md §3 -- Harbor turns
+Writes /logs/verifier/reward.txt (1/0), reward.json (the numeric fields of docs/protocol/README.md §3 -- Harbor turns
 every key into a leaderboard metric, so HumanoidBench's own numbers go to diagnostics.json instead), and a
 human-viewable replay video /logs/verifier/replay.mp4 plus replay.last.png.
 Replays `--repeat` times in this fresh process; success requires every replay to reach the task's

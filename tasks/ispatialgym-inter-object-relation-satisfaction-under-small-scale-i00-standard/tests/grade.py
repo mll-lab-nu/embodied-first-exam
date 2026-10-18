@@ -1,8 +1,8 @@
 """Standard-mode verifier (separate sandbox, no network): reads what the sim service, which the agent could not touch, wrote --
 /out/final.json (the live episode's result and the crash-recovery record) and the evidence next to it. success = the live
 episode's success: upstream's geometric success under settle-eval, judged by the service at every control step the
-episode ran; nothing replays it (owner 2026-10-17, board 0150/0151). Numeric-only reward.json (docs/PROTOCOL.md
-Appendix H.1, H.4; docs/STANDARD_MODE.md).
+episode ran; nothing replays it (owner 2026-10-17, board 0150/0151). Numeric-only reward.json (docs/protocol/README.md
+Appendix H.1, H.4; docs/protocol/standard_mode.md).
 
 infra_error = 1 means no verdict on the agent: final.json is missing, unreadable or not finalized, the service never
 ended the episode, it gave up after crashes that were not all inside the agent's calls (sim_crashed, resume_failed), or

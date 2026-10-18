@@ -29,17 +29,16 @@ RoboDojo's reward manager for the task, unchanged: its `run_reward()` check list
 as RoboDojo's evaluator does), evaluated after every action; stages count in order, at most one per action; a failed
 query ends the episode as a failure. The episode ends at the first action where every stage has passed. No task of the 54
 registers an end-of-episode check: RoboDojo's per-task `step_lim` only ends a policy's episode in its evaluation, so it is
-not applied here (no step caps, PROTOCOL D1); a technical cap ends an episode after 15,000 actions (10 min of simulated
+not applied here (no step caps); a technical cap ends an episode after 15,000 actions (10 min of simulated
 time; reason `step_guard`, standard mode's `spec.max_control_steps`), the most a trajectory may hold. The instructions
 give RoboDojo's limit for reference.
 
-## Oracle (PROTOCOL §2.7)
+## Oracle
 None: RoboDojo releases no expert or planner script, and its training demonstrations (Hugging Face, `data/`) record no
 initial state or layout, so none replays on a frozen layout. Every task is `oracle = "none"` and needs human review
-(CONTRIBUTING.md; the review is in pull request #142). Positive examples from model trials (Codex + GPT-6 Luna, effort xhigh, web search off, 90 min,
-2026-10-10): privileged `general_pickup`, `deposit_coin`, `match_and_pick_from_conveyor`, `stack_blocks_by_language` and
-standard `general_pickup` succeeded (graded by the task's verifier as it was then: two fresh-process replays, identical end states);
-`stack_bowls` and `classify_objects` (privileged) did not. The other tasks are reported separately until they have one.
+(CONTRIBUTING.md; the review is in pull request #142). Model trials gave positive examples (privileged
+`general_pickup`, `deposit_coin`, `match_and_pick_from_conveyor`, `stack_blocks_by_language`; standard
+`general_pickup`); the easy-set table below lists the bases solved by the screening runs.
 
 ## Tooling (`rcb_robodojo.py`)
 `Session(task, instance=...)` builds RoboDojo's own evaluator environment (`src/eval_client/eval_env.py`: one env, the
@@ -59,11 +58,9 @@ Test per task (`make-instance`, then two fresh-process replays of a 120-action t
 - 47 tasks: the three resets and the two replays' end states bit-identical (including the conveyor tasks and the
   support-arm tasks);
 - `fold_clothes` and `fold_clothes_random` passed that test too, but the test's trajectory moves the arms without handling
-  the garment. Once the cloth is handled it does not replay bit for bit (GPU PhysX cloth): in the first model trial that
-  folded it (Codex + GPT-6 Astra, `fold_clothes` standard, 2026-10-10, an L40) the live episode and its two fresh-process
-  replays, all started from the exact frozen state (`5fe7775799792961`), ended in three different states (live
-  `5d9ed2250495a7d8`, replays `ac5893c4ebbff04c` / `b573a2a98e98f457`), and the trial was scored 0 as not deterministic.
-  Both are in the class below since then (their resets are bit-identical, so `instance_exact` stays meaningful for them);
+  the garment. Once the cloth is handled it does not replay bit for bit (GPU PhysX cloth: a live episode and two
+  fresh-process replays from the exact frozen state ended in three different states), so both are in the class below
+  (their resets are bit-identical, so `instance_exact` stays meaningful for them);
 - `make_toast`: 1 of 3 fresh resets differed; with PhysX enhanced determinism (RoboDojo's own sim setting, off by default)
   all agree, so its instance records `"physics": {"enable_enhanced_determinism": true}` and every session, the service and
   the verifier run with it;
@@ -75,155 +72,101 @@ Test per task (`make-instance`, then two fresh-process replays of a 120-action t
 
 **The six tasks whose physics does not replay bit for bit** (`fold_clothes`, `fold_clothes_random`, `make_toast_random`,
 `pour_liquid_into_cup`, `pour_liquid_into_cup_random`, `pour_by_language`; instance.json `"determinism": "verdict"` with
-the reason) are **standard only, graded by the live episode** (since 2026-10-11, PROTOCOL §4.8's live grading for declared
-non-reproducible physics). An open-loop trajectory of them cannot be graded reproducibly: the same file can succeed in one
-fresh replay and fail in the next, so a privileged twin, whose only evidence is replay, would score chance, and the
-replays of a standard episode cannot decide either (the `fold_clothes` trial above succeeded live and was scored 0). In
-standard mode the trusted service ran the episode and the agent never held the simulator, so the live result is the
-verdict: `success = live_success` (`graded_by_live` = 1). The collect hook still replays the episode in a fresh process
-(once since 2026-10-12, twice before) and reports `replay_success`, `state_identical` (the replay ended in the live
-episode's state) and `deterministic` (the replay reached the live episode's verdict); they
-never decide, and a replay that gives no result is recorded (`replay_error`) without voiding the live verdict. The cost:
-these six scores cannot be recomputed from the trajectory, and a live success may include some luck of the physics. Trials
-recorded before 2026-10-11 can be re-scored from their `live_success` without new runs.
-Removed on 2026-10-11 (owner; they had been on main for a day, since #142, and their earlier results are kept apart, not
-ranked): the six privileged task directories `robodojo-fold-clothes-i00-privileged`,
-`robodojo-fold-clothes-random-i00-privileged`, `robodojo-make-toast-random-i00-privileged`,
-`robodojo-pour-by-language-i00-privileged`, `robodojo-pour-liquid-into-cup-i00-privileged` and
-`robodojo-pour-liquid-into-cup-random-i00-privileged`. The names are not reused. An episode of the six that resumed after a
-service crash (resume class `approx`) is graded on its live state after the resume; `reward.json` reports `resumes` and
-`resume_state_mismatch` (PROTOCOL §4.8, docs/STANDARD_MODE.md §13.1).
-Frozen on one RTX 4090 (driver 580.159). Across GPU models (2026-10-10, the evaluation hosts): the frozen layouts rebuild
-to the recorded hashes, and a 120-action driver trajectory ends in the same state as on the 4090, on L40S (drivers
-580.178 and 580.82), L40 (driver 610) and L4 (11 instances checked; every graded trial reports `instance_exact`).
+the reason) are **standard only**. An open-loop trajectory of them cannot be graded reproducibly: the same file can
+succeed in one fresh replay and fail in the next, so a privileged twin, whose only evidence is replay, would score
+chance. In standard mode the trusted service runs the episode and the agent never holds the simulator, so the live
+result is the verdict, as for every standard task. A live success may include some luck of the physics. An episode of
+the six that resumed after a service crash (resume class `approx`) is graded on its live state after the resume;
+`reward.json` reports `resumes` and `resume_state_mismatch` (docs/protocol/standard_mode.md §13.1). Their privileged task names
+are not used.
+Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts rebuild to the recorded hashes and a
+120-action driver trajectory ends in the same state as on the 4090; every graded trial reports `instance_exact`.
 
 ## Grading
-**One replay** (the owner's decision of 2026-10-12, to save grading time: "one successful replay is enough"; PROTOCOL §3
-and §4.8 record the exception). Until then both modes replayed the trajectory in two fresh processes and required both to
-succeed and to end in the same state hash. The second replay was the determinism check; on the 48 tasks that replay bit
-for bit it had never disagreed (below), and it cost 29-48 % (median 44 %) of the replay time of a trial.
-- privileged: `tests/grade.py` replays `/app/output/trajectory.npz` once, in a fresh process (`test.sh`: `--repeat 1`);
-  reward 1 iff that replay succeeds. `no-network`. A file that is not a trajectory of
-  the task (not an npz, pickled or object arrays, another shape, NaN/inf, more than 15,000 rows) is the agent's 0
-  (`bad_trajectory`, `wrong_task`); a replay process that ends without a result or runs out of its time is the verifier's
-  (`grader_error` = `infra_error` = 1, `replay_failed` / `replay_timed_out`: no verdict on the agent). Only the file's
-  `task` and `actions` entries are read (their sizes checked in the archive before anything is decompressed); any other
-  entry is ignored. With one replay there is no second end state: `deterministic` and `state_identical` are written as 1
-  (nothing disagreed) next to `determinism_checked` = 0 and `replays` = 1, which say that nothing was compared; a reader
-  that asks for `success` and `deterministic` keeps working. `replay_success` = `all_success` = the replay's own result.
-  What two replays showed by starting from the same state (`instance_unstable` otherwise) is now shown against the
-  recorded hash: a replay whose process rebuilt the frozen layout to another state than `instance.json` records
-  (`instance_exact` = 0) did not start from the frozen state and gives no verdict, whatever it ended in
-  (`instance_mismatch`, `grader_error` = `infra_error` = 1), as in standard mode. Every graded trial so far rebuilt it
-  exactly, on every host. `grade.py --repeat 2` is still the two-replay check, for a determinism measurement by hand.
-- standard (since 2026-10-17, owner, boards 0150/0151): graded by the **live episode**, with no grading replay, the same
-  rule for every task: `success = live_success`, RoboDojo's check as the service ran it after every action of the episode
-  the agent ran (no end-of-episode hold: RoboDojo has none, and its replay applied none). The service writes
-  `trajectory.npz` (the deliverable) and `episode.json` on the collect hook's signal and exits; `finalize.sh` writes
-  `final.json` from it (`graded_by` "live", `replays` 0) before anything else. `no-network`. A missing, unreadable or
-  unfinalized `final.json`, no `episode.json`, a give-up after crashes between calls and the episode never ending for the
-  hook are `infra_error`; a crash inside the agent's calls and a simulator error raised by them stay its 0. The start
-  state: before it serves, the service compares the rebuilt layout's state hash with `instance.json`'s `state_sha`
-  (`instance_exact`); a mismatch is a give-up as infra (`instance_mismatch`, 409 to every request). The six tasks graded by
-  verdict reset to states that are not bit-identical by design: their hash is recorded (`instance_checked` = 0), not
-  compared; what is checked for them is only that the layout is `instance.json`'s own (the Session loads it from there).
-  Until 2026-10-17: `success = live_success ∧ replay_success` with one fresh-process replay (`finalize.sh` ran it, filmed,
-  inside a 10800 s hook; a replay without a result was `replay_error` / `infra_error`; a replay that rebuilt another
-  start was `instance_mismatch`), and the six graded by verdict were `live_success` already, their replay recorded.
-  Re-scoring such a trial by its live episode: `final.json` `success` (the live result, merged from episode.json);
-  `infra_error` only when the live record is missing (no or unfinalized `final.json`, the service never ended the
-  episode) or the service gave up with `infra_error`; `replay_error`, `gpu_lost` and `instance_mismatch` found by the
-  replay are not the live episode's. In the archive (305 graded standard trials) this changes no verdict: the six trials
-  where the live episode and its replay disagreed are of tasks graded by verdict, already scored live; one trial whose
-  replay ran out of time (`replay_error`, infra) had failed live, and is the agent's 0 under the live rule.
-- The video (standard, since 2026-10-17) comes from the live episode (`live_video.py`, `live.mp4`). Rendering is not free
-  here: the filmed replay ran at 7.1 actions/s against 10.0 unfilmed (median, Time limits below), and RoboDojo's
-  observation renders all three cameras with depth at once. So the service never renders for the video: it keeps
-  `cam_head` (640×480, JPEG in `/data/live_video/`) at the actions whose observation a call of the agent already rendered
-  (its frames at its `video_fps`, 5 per simulated second by default, and the proprioception at each call's end), at most
-  one per 5 actions; only the end state is rendered once more, at the dump. The video's rate is the agent's (at least one
-  frame per call); a resume's journal replay adds none and deletes the frames of the call lost in the crash. The collect hook encodes it after the verdict (CPU, at most
-  600 s); a frame or an encode that fails costs the video only. Privileged: the one replay is the filmed one
-  (`replay.mp4`); a video that cannot be written gives `video_ok` false and the replay stands.
-- What one replay gives up (2026-10-12): a trajectory whose outcome differs between fresh processes is no longer caught by
-  the privileged grader (it scored 0 as not deterministic; now the one replay's result stands). On the 48 tasks graded this way the physics replays bit for bit: in the first 38
-  graded trials of the run that began on 2026-10-11 (36 on these tasks, on AWS and both Slurm clusters) the two replays
-  ended in the same state every time, and so did the live episode and its replay; no verdict changes when they are
-  re-read under this rule (`all_success` / `replay_success` with `state_identical` in the saved `reward.json`), and no
-  trial is rerun.
+- privileged: **one replay**. `tests/grade.py` replays `/app/output/trajectory.npz` once, in a fresh process (`test.sh`:
+  `--repeat 1`); reward 1 iff that replay succeeds. `no-network`. A file that is not a trajectory of the task (not an
+  npz, pickled or object arrays, another shape, NaN/inf, more than 15,000 rows) is the agent's 0 (`bad_trajectory`,
+  `wrong_task`); a replay process that ends without a result or runs out of its time is the verifier's (`grader_error` =
+  `infra_error` = 1, `replay_failed` / `replay_timed_out`: no verdict on the agent). Only the file's `task` and `actions`
+  entries are read (their sizes checked in the archive before anything is decompressed); any other entry is ignored.
+  With one replay there is no second end state: `deterministic` and `state_identical` are written as 1 (nothing
+  disagreed) next to `determinism_checked` = 0 and `replays` = 1, which say that nothing was compared.
+  `replay_success` = `all_success` = the replay's own result. A replay whose process rebuilt the frozen layout to
+  another state than `instance.json` records (`instance_exact` = 0) did not start from the frozen state and gives no
+  verdict (`instance_mismatch`, `grader_error` = `infra_error` = 1). `grade.py --repeat 2` is the two-replay check, for a
+  determinism measurement by hand. What one replay gives up: a trajectory whose outcome differs between fresh
+  processes is not caught; on the 48 privileged tasks the physics replays bit for bit.
+- standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4), the same rule for every task:
+  `success = live_success`, RoboDojo's check as the service ran it after every action of the episode the agent ran (no
+  end-of-episode hold: RoboDojo has none). The service writes `trajectory.npz` (the deliverable) and `episode.json` on
+  the collect hook's signal and exits; `finalize.sh` writes `final.json` from it (`graded_by` "live", `replays` 0)
+  before anything else. `no-network`. A missing, unreadable or unfinalized `final.json`, no `episode.json`, a give-up
+  after crashes between calls and the episode never ending for the hook are `infra_error`; a crash inside the agent's
+  calls and a simulator error raised by them stay its 0. The start state: before it serves, the service compares the
+  rebuilt layout's state hash with `instance.json`'s `state_sha` (`instance_exact`); a mismatch is a give-up as infra
+  (`instance_mismatch`, 409 to every request). The six tasks graded by verdict reset to states that are not
+  bit-identical by design: their hash is recorded (`instance_checked` = 0), not compared; what is checked for them is
+  only that the layout is `instance.json`'s own (the Session loads it from there).
+- The video (standard) comes from the live episode (`live_video.py`, `live.mp4`). Rendering is not free here (a filmed
+  replay runs at about 7 actions/s against 10 unfilmed), and RoboDojo's observation renders all three cameras with
+  depth at once. So the service never renders for the video: it keeps `cam_head` (640×480, JPEG in
+  `/data/live_video/`) at the actions whose observation a call of the agent already rendered (its frames at its
+  `video_fps`, 5 per simulated second by default, and the proprioception at each call's end), at most one per 5
+  actions; only the end state is rendered once more, at the dump. The video's rate is the agent's (at least one frame
+  per call); a resume's journal replay adds none and deletes the frames of the call lost in the crash. The collect hook
+  encodes it after the verdict (CPU, at most 600 s); a frame or an encode that fails costs the video only. Privileged:
+  the one replay is the filmed one (`replay.mp4`); a video that cannot be written gives `video_ok` false and the replay
+  stands.
 - Unit tests with stand-ins for the simulator (CI: check-unit-tests.sh): `scripts/robodojo/tests/test_standard_grading.py`
   runs the collect hook and the standard grader (live success / failure, both kinds of task, crashes between and inside
   calls, an instance mismatch, no episode.json, a failing, crashing or hanging encode; no replay may start);
   `test_server.py` (numpy) the real service on a stub Session (the start check, the live video's frames only at rendered
   actions); `test_privileged_grading.py` the privileged grader (exactly one replay process, the filmed one).
-- Time limits (wall clock only; the verdict rules do not depend on them), for ONE replay since 2026-10-12. Measured in
-  the pool on 2026-10-11/12 (35 graded trials on loaded hosts, trajectories of up to 6,241 actions): 47-427 s from the
-  start of a replay process until the layout is ready (427 s: a cold first start, which every privileged verifier's
-  replay is); the filmed replay at about 4.9-10.8 actions/s (median 7.1), an unfilmed one at 5.6-14.7 (median 10.0;
-  from the file times of the 18 standard trials). A replay's allowance is unchanged, max(1800 s, 1200 s + rows / 2.5):
-  2.8 times the slowest start and twice the time the slowest filmed rate needs, so 7200 s for the 15,000 rows a
-  trajectory may have (the slowest measured start and rate would need 427 + 15,000 / 4.9 = 3490 s). What came down is
-  what was sized for two: `[verifier] timeout_sec` (privileged) 15000 s -> **7800 s** (one replay of 15,000 rows + 600 s
-  for the grader and the resource step); the standard collect hook 18000 s -> **10800 s** (until 2026-10-17; now **3600 s**:
-  the episode end + the video encode, no replay, no GPU after the service exits; the saving is the filmed replay, 339 s
-  at the median and 1290 s at the p90 over the 244 archived one-replay trials) (`finalize.sh`'s
-  `HOOK_BUDGET_S`, equal to `[[verifier.collect]] timeout_sec`: the episode end, up to 2700 s through a resume, one
-  replay of up to 7200 s, 900 s to spare). Inside it the hook's replay now has the same allowance for its length as the
-  privileged one, never more than what is left before the deadline minus 300 s; until 2026-10-12 a replay had its share
-  of the whole remaining budget whatever the episode's length, so a hung Isaac held the hook for about 2.5 h; now it is
-  ended after the allowance (1800 s for an episode of up to 1,500 actions) and run once more if time is left. An episode
-  whose length cannot be read keeps the whole remaining budget. The standard verifier keeps 1200 s (it only reads files). A trial
-  can now take at most 3600 + 7800 = 11400 s (privileged; 18600 before) and 3600 + 10800 + 1200 = 15600 s (standard;
-  22800 before). Typical, from the same trials: the privileged verifier took 3.9-27 min with two replays and the
-  collect hook 6-25 min; the filmed replay of the standard trials alone took 3-15 min.
+- Time limits (wall clock only; the verdict rules do not depend on them). A replay process takes up to ~7 min until the
+  layout is ready (a cold first start, which every privileged verifier's replay is) and runs at about 5-11 actions/s
+  filmed. A replay's allowance is max(1800 s, 1200 s + rows / 2.5), so 7200 s for the 15,000 rows a trajectory may
+  have; `[verifier] timeout_sec` (privileged) is **7800 s** (one replay of 15,000 rows + 600 s for the grader and the
+  resource step). The standard collect hook is **3600 s** (`finalize.sh`'s `HOOK_BUDGET_S`, equal to
+  `[[verifier.collect]] timeout_sec`: the episode end, up to 2700 s through a resume, + the video encode, no replay);
+  the standard verifier keeps 1200 s (it only reads files).
+- **Re-scoring a standard trial recorded while a grading replay still decided**: its live verdict is `final.json`
+  `success` (the live result, merged from `episode.json`); `infra_error` only when the live record is missing (no or
+  unfinalized `final.json`, the service never ended the episode) or the service gave up with `infra_error`;
+  `replay_error`, `gpu_lost` and an `instance_mismatch` found by a replay are not the live episode's.
 
-## Change log
-- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by the sim
-  service during the live episode (`live.mp4`, `cam_head` at the actions the agent's calls rendered). The start-state
-  check moved to the episode's start (`instance_mismatch` = a give-up as infra before serving). Collect hook 10800 s ->
-  3600 s. The `main` kill hook (`kill -9 -1`) runs before the sim's (PROTOCOL H.4). Privileged tasks unchanged. The 54
-  standard task dirs regenerated in place (new DIGESTs; the instruction changes only for the six tasks graded by
-  verdict: the service no longer replays them for the record).
-
-## Crash recovery (standard mode, docs/STANDARD_MODE.md §13)
+## Crash recovery (standard mode, docs/protocol/standard_mode.md §13)
 Resume class `exact` (the resumed service is a fresh process whose journal replay is that process's first run), `approx` for
 the six standard-only tasks graded by the live episode. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test `scripts/robodojo/kill_test.sh`: RoboDojo
 has no oracle, so a driver client (12 joint_position chunks; not a solution) runs as Harbor's oracle on a copy of
 `robodojo-general-pickup-i00-standard`, and the service is killed with SIGKILL inside the 6th call, after 5 checkpoints.
-Result (2026-10-10, RTX 4090): resumed once, exactly (state hash `224d592a77d3c27f` = the checkpoint's; TCP deviation
-2e-7 m), 73 s of downtime, the killed call rolled back and the driver's 11 other chunks ran; finalized, live = both
-fresh-process replays, deterministic, no infrastructure error. The driver does not solve the task (success 0 is expected).
+Expected: one exact resume (the checkpoint's state hash), the killed call rolled back, the driver's other chunks run,
+finalized, no infrastructure error. The driver does not solve the task (success 0 is expected).
 
-## Time budget (D8)
-The number is each task's own `[agent] timeout_sec`, written by the generator ([`../CUTOFFS.md`](../CUTOFFS.md); PROTOCOL
-§2.12): 3600 s (one hour) for every task of both modes on 2026-10-11, the owner's decision of that day (5400 s before,
-from #142 on 2026-10-10; no official result was published with 5400 s, and the trials recorded with it are kept apart).
-The cost that had argued for the longer budget is unchanged and is what an agent has to plan around: every Python process
-pays ~2.5-4 min of Isaac Sim launch, scene build and RoboDojo's settling (a trial's first start also compiles shaders and
-materials), and many tasks are long (RoboDojo gives policies up to 1900 actions), so an hour holds about a dozen simulator
-starts at most.
+## Time budget
+3600 s for every task of both modes: each task's own `[agent] timeout_sec`, the generator's `CUTOFF_SEC` (PROTOCOL §2,
+docs/protocol/running.md "The agent's time"). Every Python process pays ~2.5-4 min of Isaac Sim launch, scene build and RoboDojo's
+settling (a trial's first start also compiles shaders and materials), and many tasks are long (RoboDojo gives policies
+up to 1900 actions), so an hour holds about a dozen simulator starts at most.
 Every instruction states the cutoff in the closing `## Time limit` section (written by `task_conventions.normalize`
-from the table, like `[agent] timeout_sec`, the README row and the standard service's `RCB_WALL_CLOCK_S`, which only
-reports the budget: `spec["budget"]`, `meta["time_left_s"]`; the service never ends an episode on it). RoboDojo's own
-text adds, right after the task's introduction and without a number: privileged, `/app/output/trajectory.npz` must be
-written before the time limit is up and every `Session` start counts; standard, the task must be completed before it and
-the wait for the service counts. `mk_tasks.py` keeps no copy of the number (`agent_timeout()` reads the table for what it
-renders), and `ci_checks/check-cutoffs.py` fails a task whose files disagree with the table or whose instruction states
-the limit a second time. Nothing else is derived from the agent's limit: the verifier and collect-hook
-limits above come from the 15,000-action cap and the replay speed, `RCB_STARTUP_TIMEOUT_S` from the scene build.
+from `[agent] timeout_sec`, like the README row and the standard service's `RCB_WALL_CLOCK_S`, which only reports the
+budget: `spec["budget"]`, `meta["time_left_s"]`; the service never ends an episode on it). RoboDojo's own text adds,
+right after the task's introduction and without a number: privileged, `/app/output/trajectory.npz` must be written
+before the time limit is up and every `Session` start counts; standard, the task must be completed before it and the
+wait for the service counts. Nothing else is derived from the agent's limit: the verifier and collect-hook limits above
+come from the 15,000-action cap and the replay speed, `RCB_STARTUP_TIMEOUT_S` from the scene build.
 
 ## Standard mode (eai-standard/2.2)
 `joint_position` (14: RoboDojo's action, rows `dt` apart, a multiple of 1/25 s) and `ee_pose` (16: both arms' link6 targets
 + gripper commands, solved by the arms' kinematic model and executed as a joint move at most 0.25 m/s); cameras `cam_head`,
 `cam_left_wrist`, `cam_right_wrist` (640×480, z-depth); `/kinematics` (FK/IK of both arms from the X5 URDF; matches the
-simulator's link6 poses); 58 proprio columns. Request checks (PROTOCOL §4.6): every field of a `/submit` or `/observe` is
+simulator's link6 poses); 58 proprio columns. Request checks: every field of a `/submit` or `/observe` is
 read and checked before the first action; a malformed request (a wrong type, a value out of range, an `ee_pose` position
 more than 3 m from the world origin on any axis, a zero quaternion) is a 400 and executes nothing. Cameras are taken once
 each, and one call captures at most 3000 images (cameras × frames, per-frame depth counted again; `/spec`
 `max_frames_per_call`): a `joint_position` chunk or an `/observe` that would exceed it is a 400; an `ee_pose` call, whose
 length is only known once its IK is solved, keeps executing and stops filming (`meta["frames_capped"]`).
 
-## Known issues (board 0086, 2026-10-14)
+## Known issues
 - **Joint limits in `/spec` and `robot_spec()`** are the articulation's soft limits as Isaac Lab reports them (about
   +-10 rad for several joints). Two trials found the arm's joint4 stopping at about +-1.78 rad. Not verified in the
   simulator here, so neither the instructions nor the limits have been changed.
@@ -231,25 +174,25 @@ length is only known once its IK is solved, keeps executing and stops filming (`
   not found", or "All scene Unstable Error"); a fresh process (as the verifier uses) always builds the frozen start.
 - **`pack_objects_into_box(_random)`**: "front sides facing left" is the assets' own axis convention (the checkpoint
   point's -x, the shoe's root +x), which images do not show; every standard run failed it.
-- Fixed in the instructions on 2026-10-14 (text only, RoboDojo's checks unchanged): `sort_nesting_dolls_by_size(_random)`
-  had the size order reversed (the config's comments call index mod 5 = 4 the largest doll; the dolls' measured sizes say
-  it is the smallest); `swap_blocks`' button rests at about 0.79 of its travel, below the 0.9 / 0.95 its stages and press
-  counter need; `hang_mugs(_random)`' orientation conditions use the first functional point of each tag.
+- The instructions state, where RoboDojo's own text misleads (its checks unchanged): `sort_nesting_dolls_by_size(_random)`'s
+  size order (the config's comments call index mod 5 = 4 the largest doll; the dolls' measured sizes say it is the
+  smallest); `swap_blocks`' button rests at about 0.79 of its travel, below the 0.9 / 0.95 its stages and press counter
+  need; `hang_mugs(_random)`' orientation conditions use the first functional point of each tag.
 
 ## Declarations
 - **Tooling: thin wrappers only.** Joint moves, gripper commands, hold, RoboDojo's IK, plus the frozen instance, state,
   recording, replay and rendering. Task-level skills are never added.
-- **World-frame information (D7).** Instructions give the world frame (axes, the arm bases, the table, the head camera) and
+- **World-frame information.** Instructions give the world frame (axes, the arm bases, the table, the head camera) and
   state RoboDojo's check as its code has it, including absolute coordinates where the check uses them (e.g. `make_kong`'s
   target spot); standard tasks never give object poses (privileged tasks give them through the tooling).
 
 ## Compute resources (scripts/task_resources.toml)
 Measured on the heaviest scene (`pour_liquid_into_cup_random`: GPU PhysX liquid and 15-20 clutter objects), RTX 4090,
-2026-10-10, with the trial's monitor and a per-container sampler (docker stats, cgroup anon memory, nvidia-smi every 10 s):
+with the trial's monitor and a per-container sampler (docker stats, cgroup anon memory, nvidia-smi every 10 s):
 one Isaac Session (privileged main container, or the standard sim sidecar) peaks at 16.0-16.1 GiB of memory and 9.0-9.5 GiB
 of GPU memory and uses every core it is given while Isaac starts; a verifier replay (filmed) 15.7 GiB and 9.6 GiB. The
 determinism runs over all 54 tasks used 4.6-8.4 GB of GPU memory per process. Minimum per trial: 8 CPUs, 20 GB, 10.5-11
-GB of GPU memory, an RTX-class GPU. Limits (PROTOCOL §2.10): privileged, the whole trial 16 GiB of GPU memory and 32 GiB of
+GB of GPU memory, an RTX-class GPU. Limits (PROTOCOL §6): privileged, the whole trial 16 GiB of GPU memory and 32 GiB of
 memory (the cap every past trial ran under; an agent may run a second Session); standard, the agent's container 8 GiB.
 Caps: privileged main 8 CPUs / 39 GiB; standard main 8 CPUs / 16 GiB, sim sidecar 16 CPUs / 25 GiB.
 
@@ -264,14 +207,13 @@ their own `*_trusted` cache volumes, scoped to the trial's compose project.
 RoboDojo: MIT. Its assets (Hugging Face `RoboDojo-Benchmark/RoboDojo`): Apache-2.0. Isaac Lab fork: BSD-3-Clause. cuRobo
 fork: NVIDIA's cuRobo licence. Isaac Sim 5.1 and its wheels: NVIDIA proprietary (no redistribution), hence BUILD_ONLY.
 
-## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+## Standard-mode service details
 
 Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six standard-only tasks graded by the live episode (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.
 
 ## Easy set
 
-The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
-run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is

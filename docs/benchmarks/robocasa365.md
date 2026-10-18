@@ -1,14 +1,14 @@
 # RoboCasa365
 
 50 of [RoboCasa365](https://github.com/robocasa/robocasa)'s kitchen tasks (robocasa 1.0.1) with a mobile manipulator
-(Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks; and one standard-realtime twin (since 2026-10-14):
+(Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks; and one standard-realtime twin:
 `tasks/robocasa365-turn-on-toaster-oven-i00-standard-realtime`, the benchmark's one dynamic task.
 
 | | |
 |---|---|
 | upstream | robocasa/robocasa @ `4f8a2980def75a55dff96b990745b83540425f09` (robocasa 1.0.1, MIT), robosuite @ `5ce6643` (1.5.2), MuJoCo 3.3.1 |
 | tasks | `tasks/robocasa365-<task>-i00-privileged` and `tasks/robocasa365-<task>-i00-standard`, 50 each |
-| metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"` (to be added to TAXONOMY), `family = "robocasa365/<Env>"`, `oracle = "full"` |
+| metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa365/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
 | generator | `scripts/robocasa365/` (`select_instances.py`, `import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
@@ -45,7 +45,7 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
 - **Determinism.** CPU physics, bit-exact, with MuJoCo's process-wide mesh cache turned off in `casa_tool`: with the
   cache on, a scene built a second time in one process stepped differently in 14 of 61 candidates here (a mesh served
   from the cache differs in `mesh_polynormal` from a freshly compiled one), which would have broken the agent's own
-  `reset()` (and, until 2026-10-17, the service's verification replay; now its start hash and video pass). With the cache off every build is the cold build a fresh process
+  `reset()` and the service's start hash and video pass. With the cache off every build is the cold build a fresh process
   makes. If the pinned MuJoCo lacks the cache symbols, `casa_tool` raises on import rather than run without it.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ 3000 control steps; the references have 85–2189.
   Standard episodes have no step limit (D1).
@@ -57,15 +57,13 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
 
 ## Standard-mode service
 `images/robocasa365/standard/server_casa.py` and the collect hook `scripts/robocasa365/shared/finalize.sh`, the same
-service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: since 2026-10-17 graded by the live
-episode, nothing replayed, the start checked against the frozen instance, the video one render pass after the
-verdict; the hook's budget; request validation). Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint,
-not MuJoCo's left-eye camera 3.4 cm to its left (`docs/benchmarks/robocasa.md`, service item 10): standard-mode results
-from before used the offset calibration.
+service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: graded by the live episode, nothing
+replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RCB_START_SHA` from
+`scripts/robocasa365/frozen/start_state.json`, a mismatch is infrastructure), the video one render pass after the
+verdict; the hook's budget; request validation; the camera calibration is the rendered viewpoint).
 
-## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
-The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`; until 2026-10-14 `scripts/task_dynamics.toml`) get a
-`-standard-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
+## Standard-realtime (`eai-standard/2.3`)
+The dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-standard-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
 by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
 it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged
@@ -73,43 +71,30 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   copies of `scripts/humanoidbench/shared/`; `ci_checks/check-tooling-identity.sh`), with
   `scripts/robocasa365/shared/realtime/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
   twin's frozen instance, native controller command (`joint_position`, 13 channels, clipped and reported), success
-  check (`_check_success`, twice per control step) and cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU). Since
-  2026-10-17 (board 0151) the verdict is the live episode's (the shared layer's `graded_by = live`): the last
-  episode's success as it ran, and the adapter's `live_verdict()` adds the standard twin's rule that the scene was not
-  solved at that episode's start; nothing is replayed (before: a new `casa_tool.Session` in the same process replayed
-  it, `success = live ∧ replay ∧ deterministic`). `start_sha` (`RCB_START_SHA`, the standard twin's archived start hash,
+  check (`_check_success`, twice per control step) and cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU). The
+  verdict is the live episode's (the shared layer's `graded_by = live`): the last episode's success as it ran, and the
+  adapter's `live_verdict()` adds the standard twin's rule that the scene was not solved at that episode's start;
+  nothing is replayed. `start_sha` (`RCB_START_SHA`, the standard twin's archived start hash,
   the same value) is checked by the layer when the first episode begins and after every reset (`instance_mismatch`,
-  infrastructure). The video is rendered from the trajectory after the verdict (the live session rebuilt, one pass). The robot's cameras move with it:
+  infrastructure). The video is rendered from the trajectory after the verdict (the live session rebuilt, one pass);
+  the collect hook waits up to 840 s for the verdict and 870 s for the video. The robot's cameras move with it:
   their intrinsics are in `/spec`, their current poses in every proprioception row (`cam_<camera>_*`, the standard
   twin's `cam2world_gl`). Not served: the 2.1 service's per-response calibration dictionary.
 - **Episode.** The standard twin grades the state after the last step of an episode as long as the agent's time; on a
-  clock that does not stop that episode, and its replay, would be up to an hour long. Here an episode ends at the first
+  clock that does not stop that episode would be up to an hour long. Here an episode ends at the first
   control step after which the success check holds (the privileged rule applied to the trajectory up to that step),
   after 3000 control steps (150 s of robot time, the privileged deliverable's cap; `RCB_MAX_CONTROL_STEPS`), when the
   agent's time is up, or on a simulator error. **10 resets** (PROTOCOL §4b); a reset rebuilds the scene (15-20 s,
   clock paused). The instruction tells the agent to reset with `cameras=[]`: the shared layer holds image requests back
   four times as long as the last rendering request took, and a reset that renders counts as one, so after a reset with
-  cameras, images came back only about a minute later (measured: a `get_obs` waited 19.5 s, until the episode ended).
-  A shared-layer change would remove this (a reset's time is not a render's); not made here.
-- **Slowdown S = 2.** Real-time factor (ws-1, 32 cores at load 35-45, the service capped at 4 CPUs; board 0112,
-  2026-10-14): 1.29 with the realtime clock flat out (`RCB_SLOWDOWN=0.01`, 3 episodes of 600 control steps), 1.27 for
-  the bare physics holding still (0089: 0.97-1.25 for the standard service); PROTOCOL §4b: S = ceil(1.5 / 1.29) = 2,
-  one control step every 0.1 s of wall time. An OSMesa frame takes about 0.12 s per camera; `server.py` makes the
-  renderer at start and after every reset (a new OSMesa context takes about 2 s: before, the first image of the first
-  episode stalled the clock 2.4 s).
-- **Checked at S = 2** (board 0112): the privileged reference (271 rows) planned from step 0 (`at=0`, then `at=200`)
-  succeeds live at control step 256 and in the fresh replay, deterministic, no stall; nop (no request): `timeout`,
-  not a success; 3 episodes (2 resets with `cameras=[]`, 200-step cap for the test) driven by a controller
-  streaming one row per control step with an image every 0.5 s: no stall, largest lag 0.05 s, an image in 44-65 ms,
-  the graded episode's replay deterministic.
+  cameras, images come back only much later (open: a shared-layer change would remove this).
+- **Slowdown S = 2.** Real-time factor 1.29 with the realtime clock flat out (the service capped at 4 CPUs); PROTOCOL
+  §2: S = ceil(1.5 / 1.29) = 2, one control step every 0.1 s of wall time. An OSMesa frame takes about 0.12 s per
+  camera; `server.py` makes the renderer at start and after every reset, so the first image does not stall the clock.
+- **Checked at S = 2**: the privileged reference planned from step 0 succeeds live; nop: `timeout`, not a success; a
+  controller streaming one row per control step with an image every 0.5 s over 3 episodes: no stall, largest lag
+  0.05 s.
 - **Cutoff** 3600 s, the standard twin's.
-
-## Change log
-- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by one
-  render pass from the trajectory after the verdict; the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
-  `RCB_START_SHA` from `scripts/robocasa365/frozen/start_state.json`) before the agent is served, a mismatch is infrastructure
-  (`docs/benchmarks/robocasa.md`, service items 6, 7 and 11). The standard-realtime twin: the shared layer's live verdict with the adapter's `live_verdict()` and `start_sha`; its collect hook's waits (840 s verdict, 870 s video) unchanged. Scene, instances, success check, cutoff and what
-  the agent sees except the instruction's scoring sentence unchanged, so the tasks keep their names.
 
 ## Egress
 The demonstrations are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image contains no
@@ -118,10 +103,8 @@ demonstration data.
 ## Image
 `images/robocasa365/Dockerfile` pins the base image by digest, every pip package, the robosuite and RoboCasa commits
 and every asset archive by SHA-256 (`fetch_assets.sh`; four archives from RoboCasa's Hugging Face mirror, byte-identical
-to the UT Box ones). It reproduces the content of the image the tasks were validated with (built in the PR #4 era as
-`rcb-robocasa365:0.1.0` from the same pins, tagged `eai-robocasa365:0.1.0` on the authoring machine). **A clean rebuild
-has not been run yet** (~11 GB of downloads, ~55 GB of disk): run it and re-check the hashes with
-`import_references.sh` before publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0; the
+to the UT Box ones). It reproduces the content of the image the tasks were validated with. **Open: a clean rebuild**
+(~11 GB of downloads, ~55 GB of disk) and a re-check of the hashes with `import_references.sh` before publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0; the
 Lightwheel fixtures and objects come from RoboCasa's UT Box links under RoboCasa's asset terms (maintainers to
 confirm publishing, otherwise `BUILD_ONLY`).
 
@@ -138,15 +121,12 @@ bash ci_checks/run_all.sh tasks/robocasa365-*
 `scripts/robocasa365/frozen/report.json`, for all 50: not solved at the start; `reset()` bit-exact; the reference
 succeeds on its final state without truncation; two fresh-process replays end in the live state's hash and succeed.
 
-Harbor runs on the generated tasks (AMD Ryzen 9 7950X, Docker, no GPU): `-a oracle` 50/50 privileged and 6/6 standard
-score 1; `-a nop` scores 0 on four tasks per mode. Scripted cheat attempts score 0 in both modes.
-
-Agent results are not kept in the repository (PROTOCOL D3).
+Harbor runs on the generated tasks: `-a oracle` scores 1 (50/50 privileged, 6/6 standard sampled), `-a nop` 0;
+scripted cheat attempts score 0 in both modes.
 
 ## Easy set
 
-The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
-run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is

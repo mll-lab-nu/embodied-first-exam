@@ -9,7 +9,7 @@ keywords = ["robotics", "robopaint", "maniskill", "sapien", "calligraphy", "chin
 
 [metadata]
 author_name = "qineng"
-task_type = "trajectory"          # trajectory | policy   (see docs/PROTOCOL.md)
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the CPU) + the Wang et al. 2020 dynamic brush (rcb_brush.py, CPU)
 robot = "franka-panda"            # PandaStick with a Chinese brush: rigid handle + 30 mm collision-free tuft, TCP = the tuft's tip
 family = "{{FAMILY}}"

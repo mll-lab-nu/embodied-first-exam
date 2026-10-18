@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for DexJoCo (docs/STANDARD_MODE.md): the adapter of the shared layer rcb_limited.py;
+"""eai-standard/2.2 sim service for DexJoCo (docs/protocol/standard_mode.md): the adapter of the shared layer rcb_limited.py;
 the simulator is rcb_dexjoco.Session (DexJoCo on MuJoCo 3.4, CPU physics, OSMesa rendering).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl.
@@ -16,9 +16,12 @@ camera that rides on a body of the scene (bimanual_photograph's `cam_pos_z`, on 
 images and depth only, its pose would be that object's (SCENE_CAMS). One call returns at most MAX_FRAMES images.
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
-every executed row is journaled; after a crash the service rebuilds the instance and replays the journal. When the
-episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
-and replays the trajectory in two fresh processes."""
+every executed row is journaled; after a crash the service rebuilds the instance and replays the journal (a resume, not
+a grading replay). When the episode ends the service writes /data/trajectory.npz + /data/episode.json with the live
+verdict (DexJoCo's own success check on the episode it ran); the collect hook (finalize.sh) makes it exit, writes that
+verdict into final.json (nothing is replayed to grade it: owner, 2026-10-17, board 0151) and renders the video from the
+trajectory. The frozen instance is checked when the episode begins: a scene that does not rebuild to the instance's
+recorded state hash gets no episode (instance_mismatch, an infrastructure failure)."""
 
 import math
 import os
@@ -73,6 +76,17 @@ if not THREADS["threads_ok"]:
         L._write_json(os.path.join(DATA, "final.json"), {**L._read_json(os.path.join(DATA, "final.json")), "too_few_cpus": 1, **THREADS})
     EP.give_up("too_few_cpus", infra=True)   # writes the verdict (never overwrites one) and idles until the container ends
 S = M.Session(TASK, instance=INSTANCE, image_size=(CAM_H, CAM_W))
+if not S.instance_exact and not any(e.get("ev") == "start" for e in EP.events()):
+    # The frozen initial state is checked when the episode begins (the verdict is the live episode's, so no later replay
+    # checks it): a scene that did not rebuild to the instance's recorded hash (the image no longer builds it) is no
+    # trial of this task. No episode, no verdict on the agent: final.json instance_mismatch = 1, infra_error = 1.
+    print(f"[dexjoco] the scene rebuilt to {S.state_sha()}, the frozen instance records {S.instance_sha}: the service "
+          "does not start an episode", flush=True)
+    if not L.final_verdict(DATA):
+        L._write_json(os.path.join(DATA, "final.json"), {**L._read_json(os.path.join(DATA, "final.json")), "instance_mismatch": 1,
+                                                          "instance_ok": False, "instance_sha": S.instance_sha,
+                                                          "start_sha": S.state_sha(), **THREADS})
+    EP.give_up("instance_mismatch", infra=True)
 MD, D = S.model, S.data
 ARMS = S.arms()
 SFX = {a: (f"_{a}" if BIM else "") for a in ARMS}
@@ -447,7 +461,7 @@ def summary() -> dict:
     return {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
             "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"],
             "task": TASK, "protocol": L.PROTOCOL, "n_actions": len(ROWS), "task_failure": int(str(E["reason"] or "").startswith("failure")),
-            **THREADS, **EP.final_fields()}
+            "instance_ok": bool(S.instance_exact), **THREADS, **EP.final_fields()}
 
 
 def write_final() -> None:
@@ -464,7 +478,8 @@ def finish(reason: str) -> None:
     E["reason"] = reason
     E["t_end"] = time.time()
     E["episode_control_steps"] = ctrl_steps()
-    E["success"] = bool(S.success)
+    # a simulator error ends the episode: the state after it is judged by nothing (PROTOCOL §4.6), never a success
+    E["success"] = bool(S.success) and reason != "error"
     EP.log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"])})
     dump()
 
@@ -720,7 +735,8 @@ def status() -> dict:
 
 
 def end_from_signal() -> None:
-    """The collect hook's SIGUSR1: end the episode (the agent's time is over), dump it, exit so the replays can start."""
+    """The collect hook's SIGUSR1: end the episode (the agent's time is over), dump it, exit so the hook can write the
+    verdict."""
     with LOCK:
         E["exiting"] = True
         if not E["done"]:

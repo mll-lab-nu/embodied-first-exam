@@ -9,54 +9,49 @@ meant to find the ceiling of coding agents, and most of its tasks have no known 
 robot's built-in walking (and, on the G1, running) policy, drive every joint itself, and, unlike in every other
 benchmark here, search for and download public tools and pretrained controllers.
 
-**Name.** Until 2026-10-14 this benchmark was RoboFunOlympics (`robofunolympics-<family>-i00-<mode>`,
-`scripts/robofunolympics/`); the owner renamed it RoboOlympics (board 0107, E7). The tasks, instances, referees and
-oracles are the same; the image keeps its name (`eai-robofunolympics`), as do the internal module names (`rfo/`,
-`rcb_rfo.py`). The earlier RoboOlympics tasks of this repository (three standard-realtime matches on its 2.3 adapter,
-`roboolympics-{tabletennis,badminton,airhockey}-match-i00-standard-realtime`, `scripts/roboolympics/` at the time,
-image `eai-olympiad:0.2.0`) were removed on the same day.
+**Names.** The image keeps the name `eai-robofunolympics`, as do the internal module names (`rfo/`, `rcb_rfo.py`).
 
 **Two parts.** (1) The 50 single-robot sports families above and below, generated here (`scripts/roboolympics/`,
-privileged and standard). (2) Fifteen tasks RoboOlympics exports itself with its own service inside (PROTOCOL §4c):
-matches against a scripted or learned opponent in standard-realtime mode and two turn-based fencing bouts in standard
+privileged and standard). (2) Nineteen tasks RoboOlympics exports itself with its own service inside (PROTOCOL §3):
+matches against a scripted or learned opponent in standard-realtime mode (two of them at the low level: the agent's own
+skill plays, served from its container) and two turn-based fencing bouts in standard
 mode, listed in
 `scripts/roboolympics/exported.toml` and described in "Tasks exported by RoboOlympics" at the end of this page. The two
 parts never share a family name: the families here are dashed English event names (`table-tennis-return`,
 `penalty-kick`), the exported tasks are the sport's RoboOlympics id and a format (`tabletennis-match`,
 `soccerssl-match`); a new family here may not take a `<sport>-match` or
 `<sport>-<x>skill` name, and `gen_tasks.py check` fails a name that is both rendered and exported. The
-standard-realtime twins of part (1)'s dynamic families (board 0112) are `roboolympics-<family>-i00-standard-realtime`
+standard-realtime twins of part (1)'s dynamic families are `roboolympics-<family>-i00-standard-realtime`
 and cannot meet part (2)'s names either.
 
 | | |
 |---|---|
-| origin | built here on the simulator of [RoboOlympics](https://github.com/CHIGUI0/roboolympics) (MIT; private): its robot library `bodies/` (the Unitree G1 at revision g1-4 and the Unitree H1-2 at h1-4, the one limit and servo path, the joint-group arbiter, and, since image 0.2.0, the G1's optional FALCON and AGILE walking policies) and its athletics running policy, commit `7df999b`, unchanged, in the image. Parts of single families come from RoboOlympics' sports (the athletics start procedure and hurdle, the bowling lane and oil zones, the tennis ball's fitted lift, DeepMind's system-identified table-tennis ball and table and the serve library). The list of sports follows the owner's survey of humanoid sports tasks (2026-10-11) |
-| simulator | MuJoCo 3.3.7 on the CPU (1 ms physics, 10 ms control), OSMesa rendering, no GPU; sunlight with shadows, a painted sky, procedural materials on the venues' surfaces, patterned balls, and round each venue perimeter boards, stepped grandstands with a seated crowd, a roof, floodlight towers, a scoreboard and a line of trees, merged into one mesh per colour (`shared/rfo/looks.py`, after the venues of RoboOlympics' throws and beach volleyball: looks only, no effect on the physics or the state hash; owner, 2026-10-12: the first scenes looked like cartoons; 2026-10-13: adopt RoboOlympics' scenery); air at sea-level density (drag and Magnus lift on balls and implements); `simulator = "mujoco"` |
+| origin | built here on the simulator of [RoboOlympics](https://github.com/CHIGUI0/roboolympics) (MIT; private): its robot library `bodies/` (the Unitree G1 at revision g1-4 and the Unitree H1-2 at h1-4, the one limit and servo path, the joint-group arbiter, and the G1's optional FALCON and AGILE walking policies) and its athletics running policy, commit `7df999b`, unchanged, in the image. Parts of single families come from RoboOlympics' sports (the athletics start procedure and hurdle, the bowling lane and oil zones, the tennis ball's fitted lift, DeepMind's system-identified table-tennis ball and table and the serve library). The list of sports follows the owner's survey of humanoid sports tasks |
+| simulator | MuJoCo 3.3.7 on the CPU (1 ms physics, 10 ms control), OSMesa rendering, no GPU; sunlight with shadows, a painted sky, procedural materials on the venues' surfaces, patterned balls, and round each venue perimeter boards, stepped grandstands with a seated crowd, a roof, floodlight towers, a scoreboard and a line of trees, merged into one mesh per colour (`shared/rfo/looks.py`, after the venues of RoboOlympics' throws and beach volleyball: looks only, no effect on the physics or the state hash); air at sea-level density (drag and Magnus lift on balls and implements); `simulator = "mujoco"` |
 | robots | `unitree-g1` (1.32 m, 33 kg, 29 joints; three walking policies and a running policy) and `unitree-h1-2` (1.78 m, 67 kg, 27 joints; a walking policy) where the official venue needs an adult-size body; real joint, speed and torque limits, motor torque-speed curves (the H1-2's are estimates), self-collision; fist pads with a switchable grip |
 | actions | views of one sim row per control step: `stand`, `walk`, `joints`, `lowcmd` (Unitree's LowCmd: q, dq, tau, kp, kd per joint), and on the G1 `run`, `run_arms`; every row ends with `grip_left`, `grip_right` |
 | score | the referee's verdict: every stage latched in order, no rule broken, within the time limit; binary. `progress` (stages reached) and the family's metrics (a distance, a speed, a count) are reported beside it |
-| tasks | 50 families × 2 modes: `tasks/roboolympics-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 100 task directories. No standard-realtime mode yet (owner, 2026-10-11). Plus the 13 dynamic families' `-standard-realtime` twins (`eai-standard/2.3`, since 2026-10-14), 113 in all; and the 17 tasks RoboOlympics exports itself (below) |
-| image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.1.0`, | image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` (0.2.1 = 0.2.0 + libglvnd's EGL loader, the NVIDIA EGL manifest, for the realtime twins' GPU rendering) (`images/robofunolympics/`, about 600 MB) |
+| tasks | 50 families × 2 modes: `tasks/roboolympics-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 100 task directories, plus the 13 dynamic families' `-standard-realtime` twins (`eai-standard/2.3`), 113 in all; and the 17 tasks RoboOlympics exports itself (below) |
+| image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` (with libglvnd's EGL loader and the NVIDIA EGL manifest, for the realtime twins' GPU rendering) (`images/robofunolympics/`, about 600 MB) |
 | generator | `scripts/roboolympics/gen_tasks.py render` / `check` from `families.json`, `instances/`, `shared/`, `templates/`, `oracles/`; a family is one module, `shared/rfo/tasks/<family>.py` (`scripts/roboolympics/AUTHORING.md`, `FAMILIES.md`) |
 | oracle | full on the families that have a real controller in the official setting, none on the rest (table below), with a referee test and human review |
-| agent budget | 7200 s in both modes (each task's own `[agent] timeout_sec`; owner, 2026-10-12; PROTOCOL D8: the tasks ask the agent to find, download and adapt controllers, or to build one, which an hour does not hold; results are grouped by this budget); standard mode: 50 resets, the last attempt graded (owner, 2026-10-12) |
-| network | open (owner, 2026-10-11): PROTOCOL §2.11 exception, below |
+| agent budget | 7200 s in both modes (each task's own `[agent] timeout_sec`: the tasks ask the agent to find, download and adapt controllers, or to build one, which an hour does not hold); standard mode: 50 resets, the last attempt graded |
+| network | open (`[metadata] network = "open"`, below) |
 
-## Owner decisions (2026-10-11) and what they made
+## Design decisions and what they made
 
 | decision | what follows from it |
 |---|---|
-| 50 tasks, one robot each, each with a success check; an oracle where there is one, none otherwise | `oracle = "full"` only where a real controller succeeds in the official setting, `"none"` + human review elsewhere (PROTOCOL D2, §2.7); every family has a referee test with a positive example and negative controls |
+| 50 tasks, one robot each, each with a success check; an oracle where there is one, none otherwise | `oracle = "full"` only where a real controller succeeds in the official setting, `"none"` + human review elsewhere; every family has a referee test with a positive example and negative controls |
 | both modes | every family as `-privileged` and `-standard` on one frozen instance |
-| the agent may go online and download ready-made policies, and is encouraged to look for tools | open egress and the benchmark's own `## External material` paragraph (PROTOCOL §2.11 exception); the action interface takes what public humanoid controllers produce: Unitree's SDK joint order, `lowcmd` rows with per-joint gains and feed-forward torques at 100 Hz |
-| no standard-realtime mode for now | none generated; the adapter is the `rcb_service.Sim` contract, which `rcb_realtime.py` runs unchanged, should the mode be added |
+| the agent may go online and download ready-made policies, and is encouraged to look for tools | open egress and the benchmark's own `## External material` paragraph; the action interface takes what public humanoid controllers produce: Unitree's SDK joint order, `lowcmd` rows with per-joint gains and feed-forward torques at 100 Hz |
 | the simulator is RoboOlympics' | the image holds RoboOlympics' robot library and running policy unchanged (`images/robofunolympics/roboolympics/SOURCE.md`, sha256 manifest); the venues, the action layer and the referees are this benchmark's own code, in the task directories |
-| **real settings, not an easy one** (after the first version, whose venues and success lines were scaled to the G1 so that reference solutions existed) | official rule-book dimensions, equipment masses and ball physics in every family; a family names its rule book and lists each deviation with its reason (RoboOlympics' convention), and a deviation is never "easier"; a success line is the rule book's (a goal, a legal serve, a strike, a cleared bar) or a named human school / club mark, never what a controller reaches |
+| **real settings, not an easy one** (nothing scaled to the G1 so that reference solutions exist) | official rule-book dimensions, equipment masses and ball physics in every family; a family names its rule book and lists each deviation with its reason (RoboOlympics' convention), and a deviation is never "easier"; a success line is the rule book's (a goal, a legal serve, a strike, a cleared bar) or a named human school / club mark, never what a controller reaches |
 | all humanoid; the bigger H1-2 where the G1 cannot reach the official size | `Task.robot`; 20 families on the G1, 30 on the H1-2 |
 | single actions, not matches | one attempt of one skill per episode; a feeder, a server or a keeper is scripted and deterministic |
-| 2026-10-12: standard reset budget 50; agent budget 2 h; the track events are the indoor 50 m and 50 m hurdles (four hurdles), not 100 m and 110 m: "we are not the Olympics in full, we show what a robot can do" | `RESET_BUDGET` and `CUTOFF_SEC` in `gen_tasks.py`; `sprint.py`, `hurdles.py`. Where an official event is long only by repetition, the family takes its shortest official form |
-| 2026-10-13: every task keeps the 2-hour limit; "pre-install frameworks like FALCON and AGILE for the model" (they are released weights, no training needed); "put them all in, the H1 may use them too"; adopt RoboOlympics' scenery ("pingyue's backgrounds are very good") | image 0.2.0 with FALCON's and AGILE's G1 policies (from RoboOlympics' robot library, unchanged, with their licences), the `walk_falcon` / `walk_agile` action types on the G1; on the H1-2 the G1 policies were tried and do not walk it (reported, not offered); the grandstands of `looks.py` rebuilt after RoboOlympics' venues |
-| 2026-10-13: "use pingyue's method" (RoboOlympics' throws: whole-body key poses searched offline by CMA-ES) for reference solutions | `search_technique.py` (offline, not run by CI): reference solutions for `shot-put`, `discus`, `javelin`, `volleyball-serve`, `volleyball-bump` and `volleyball-set` (the last two: arm key poses on the walking policy, the bump after a walk), each open loop on its frozen start |
+| standard reset budget 50; agent budget 2 h; the track events are the indoor 50 m and 50 m hurdles (four hurdles), not 100 m and 110 m: "we are not the Olympics in full, we show what a robot can do" | `RESET_BUDGET` and `CUTOFF_SEC` in `gen_tasks.py`; `sprint.py`, `hurdles.py`. Where an official event is long only by repetition, the family takes its shortest official form |
+| every task keeps the 2-hour limit; "pre-install frameworks like FALCON and AGILE for the model" (they are released weights, no training needed); "put them all in, the H1 may use them too"; adopt RoboOlympics' scenery ("pingyue's backgrounds are very good") | the image holds FALCON's and AGILE's G1 policies (from RoboOlympics' robot library, unchanged, with their licences), the `walk_falcon` / `walk_agile` action types on the G1; on the H1-2 the G1 policies were tried and do not walk it (reported, not offered); the grandstands of `looks.py` rebuilt after RoboOlympics' venues |
+| "use pingyue's method" (RoboOlympics' throws: whole-body key poses searched offline by CMA-ES) for reference solutions | `search_technique.py` (offline, not run by CI): reference solutions for `shot-put`, `discus`, `javelin`, `volleyball-serve`, `volleyball-bump` and `volleyball-set` (the last two: arm key poses on the walking policy, the bump after a walk), each open loop on its frozen start |
 
 <!-- families:begin -->
 ## The 50 families
@@ -158,7 +153,7 @@ releases a 0.62 kg basketball at 7.5 m/s (11 m/s with the elbow fired late), an 
 shoulder, the 7.26 kg shot at 2.6 m/s. Whole-body techniques found offline (key poses searched by CMA-ES in the task's
 own world, RoboOlympics' method: `scripts/roboolympics/search_technique.py`) put the shot at 8.1 m/s, throw the
 discus at 12.9 m/s and the javelin at 15.0 m/s, serve a volleyball at 11.4 m/s, pass a serve into the setter's
-target and set a toss into the hitter's: these six are reference solutions now (2026-10-13).
+target and set a toss into the hitter's: these six are reference solutions.
 
 ## The referee
 
@@ -167,7 +162,7 @@ step:
 
 - **Stages.** The events that must happen, in order (`kick → goal`, `take-off → landing → stand`). A stage whose
   predecessor has not latched is ignored; `success` is the last stage, and it ends the episode at that step. Success
-  "at a step" rather than "at the end of the replay" (PROTOCOL §3) because a sport's success is an event: a goal
+  "at a step" rather than "at the end of the replay" because a sport's success is an event: a goal
   stands whatever the striker does next. Where the sport has an end state it is a stage of its own, held for a time
   (land and stand, catch and hold, a lift held overhead).
 - **Contact events, not contact frames.** A touch is one event from first contact until the parts have been apart for
@@ -191,17 +186,17 @@ reproduce the referee's decisions and not only the physics.
 | mode | the agent gets | attempts | graded |
 |---|---|---|---|
 | privileged | the world in its own container: the simulator and its full state, the referee's live record, this family's rules as code, unlimited resets | unlimited | `trajectory.npz` (sim rows), replayed twice in fresh processes: both must succeed and end in the same state |
-| standard | a client: the robot's two head cameras (depth on the left one), joint encoders, motor torques, two IMUs, grip state, the venue's fixed camera; action chunks | 50 resets | the last attempt as the sidecar's referee called it live (no grading replay since 2026-10-17) |
+| standard | a client: the robot's two head cameras (depth on the left one), joint encoders, motor torques, two IMUs, grip state, the venue's fixed camera; action chunks | 50 resets | the last attempt as the sidecar's referee called it live (no grading replay) |
 | standard-realtime (13 dynamic families) | as standard, on a clock that does not stop (S = 1): `submit` plans rows from step `at` and answers at once | 10 resets | as standard; the clock's record is evidence only |
 
-**World-frame information (PROTOCOL D7).** Privileged tasks give everything through the tooling. Standard tasks give
+**World-frame information.** Privileged tasks give everything through the tooling. Standard tasks give
 the rule book and the venue as an athlete knows it: the equipment's dimensions and where the lines, the goal or the
 hoop are relative to the start (they are fixed by the rules), and roughly where and when a ball will come; never the
 robot's position during an attempt, an object's pose, or the referee's state. When an attempt ends the service gives the
 referee's call (`meta["outcome"]`: `success` or the rule that ended it; `stages_reached` of `stages_total`), as an
 athlete hears it: without it a reset budget teaches nothing.
 
-**Reset budget: 50 (owner, 2026-10-12).** PROTOCOL §4.5's default is 0. A sport is attempts: a
+**Reset budget: 50** (the standard default is 0). A sport is attempts: a
 jump or a throw is over in a second or two, ends at the first foul or fall, and the standard agent has no simulator to
 practise in; HumanoidBench has 50 for the same reason. Only the last attempt is graded and a success ends the trial.
 `RCB_RESET_BUDGET=0` runs one attempt; results state the budget.
@@ -212,56 +207,49 @@ G1 ships with a walking controller), part of the platform like its PD loop. The 
 general helpers unchanged (`bodies/control/kinematics.py`: forward and inverse kinematics; `bodies/trajopt.py`:
 jerk-limited joint trajectories); a privileged agent may import them, the tooling does not wrap them.
 
-## Standard-realtime (`eai-standard/2.3`, since 2026-10-14)
-The owner, 2026-10-14 (board 0107 D5, board 0112): the dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`, the generator's `DYNAMIC_FAMILIES`;
-a ball launched, served, thrown or released on the venue's clock, or a keeper driven after the kick) get a
+## Standard-realtime (`eai-standard/2.3`)
+The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`, the generator's `DYNAMIC_FAMILIES`; a ball
+launched, served, thrown or released on the venue's clock, or a keeper driven after the kick) get a
 `-standard-realtime` twin: catch, catch-and-shoot, header, juggle-three, paddle-bounce, penalty-kick,
 table-tennis-return, tennis-return, trap-ball, volley-shot, volleyball-bump, volleyball-set, volleyball-spike.
 - **Service.** The standard twin's `server.py` (`rcb_service.Sim` on `rcb_rfo.Episode`), unchanged, started by the
   shared realtime layer (`shared/realtime/rcb_realtime.py`, `rcb_client.py`: HumanoidBench's, byte for byte;
   `command: python /srv/rcb_realtime.py`). Same instance, referee, actions, observations and grading (the live
-  attempt's referee call; until 2026-10-17 also a fresh replay ending in the same state); the clock's record goes to
-  `reward.json` and decides nothing.
+  attempt's referee call); the clock's record goes to `reward.json` and decides nothing.
 - **Rendering on the GPU.** An OSMesa frame of these venues takes about 1.6 s, which on a clock that does not stop is a
   stall of its own; the twins render with EGL on the `sim` service's GPU (`MUJOCO_GL=egl`, `graphics` capability).
-  Image 0.2.1 adds `libegl1` and the NVIDIA EGL ICD manifest; everything else in it is 0.2.0's (the standard and
-  privileged tasks move to 0.2.1 with it: the frozen instances rebuild to the same hashes).
 - **Slowdown S = 1, resets 10, cutoff 7200 s** (the standard twin's). RTF of the service with the clock flat out
-  (`RCB_SLOWDOWN=0.01`, physics only, 4 attempts each; ws-1, 4 CPUs, board 0112): catch 3.61, catch-and-shoot
+  (`RCB_SLOWDOWN=0.01`, physics only, 4 attempts each; RTX 4090 host, 4 CPUs): catch 3.61, catch-and-shoot
   3.64, header 3.92, juggle-three 3.89, paddle-bounce 3.74, penalty-kick 3.89, table-tennis-return 4.06,
   tennis-return 3.24, trap-ball 3.03, volley-shot 2.89, volleyball-bump 2.69, volleyball-set 2.62, volleyball-spike
-  1.83 (the host's load moved between 30 and 60 during the batch); PROTOCOL §4b gives S = 1 for every one (S =
-  ceil(1.5 / RTF) is 1 above RTF 1.5).
-- **Checked at S = 1** (board 0112): the three families with a reference solution (paddle-bounce, volleyball-bump,
-  volleyball-set; `solution/oracle_plan.py` plans the privileged reference's rows at the control steps where they ran)
-  succeed live and in the fresh replay, deterministic; every one of the 13 ran 3 attempts (2 resets) with a controller
-  at the control rate and a camera image every 0.25 s with no stall, each graded replay deterministic; nop (no request)
-  ends `timeout`, not a success.
+  1.83; PROTOCOL §2 gives S = 1 for every one (S = ceil(1.5 / RTF) is 1 above RTF 1.5).
+- **Checked at S = 1**: the three families with a reference solution (paddle-bounce, volleyball-bump, volleyball-set;
+  `solution/oracle_plan.py` plans the privileged reference's rows at the control steps where they ran) succeed live;
+  every one of the 13 ran 3 attempts (2 resets) with a controller at the control rate and a camera image every 0.25 s
+  with no stall; nop (no request) ends `timeout`, not a success.
 
-## Network: open (PROTOCOL §2.11 exception; owner, 2026-10-11)
+## Network: open
 
 RoboOlympics' tasks set no `[agent]` network policy, so the agent's egress is Harbor's default: open. The
 instruction says so and encourages the agent to look for existing tools, robot models and pretrained controllers and
 to adapt them; it asks only not to look up a ready-made solution to the task, such as this benchmark's reference
-solutions (an honour rule; reading the benchmark's installed source is allowed since 2026-10-14;
-trials are reviewed). The reasons: a public G1 controller is fair equipment for a sport, as a published walking
+solutions (an honour rule; reading the benchmark's installed source is allowed; trials are reviewed). The reasons: a public G1 controller is fair equipment for a sport, as a published walking
 controller is for a real G1, and whether an agent can find, vet and adapt existing work is part of what these tasks
 measure. What follows:
 
-- Every generated task declares it, `[metadata] network = "open"` (PROTOCOL Appendix H.6: the author's choice; until
-  2026-10-14 three prefix lists held it), and its `## External material` paragraph is the generator's `EXTERNAL`;
+- Every generated task declares it, `[metadata] network = "open"` (PROTOCOL Appendix H.6: the author's choice), and its `## External material` paragraph is the generator's `EXTERNAL`;
   `scripts/run_agent_batch.sh` and the scheduler do not narrow these tasks' copies to the usage gateway (the model API still goes through it).
 - With open egress the gateway is not the only road to a model provider (the provider key is in the agent's
-  container): its token accounting and its budget (PROTOCOL §5) bind only what the harness itself sends, so these runs'
-  usage is reported as harness-reported, and a trial that called a model API directly is flagged in review (moved from
-  PROTOCOL §2.11 on 2026-10-14).
+  container): its token accounting and its budget (docs/protocol/running.md "Official runs") bind only what the harness itself sends,
+  so these runs' usage is reported as harness-reported, and a trial that called a model API directly is flagged in
+  review.
 - Results are not comparable with a closed-network run of the same tasks and are reported as open-network results.
 - Nothing an agent can reach holds a solution: the image holds the robot library and the two built-in policies; the
   reference controllers are under `solution/` only; RoboOlympics' repository and this one are private.
 - Trial artifacts stay private for the same reason: an instance is frozen, so a passing `trajectory.npz` (or a
   standard run's recorded rows) is a complete solution of the privileged task and, streamed through the client, of its
   standard twin. A results site publishes scores, videos and notes, not the rows.
-- The web search tools of the harness stay off in official runs (D11): the agent searches from its own shell.
+- The web search tools of the harness stay off in official runs (docs/protocol/running.md): the agent searches from its own shell.
 - In standard mode the agent may install a simulator and a G1 model of its own to practise in; it still cannot open
   the sidecar, read the instance or the referee.
 
@@ -270,16 +258,15 @@ measure. What follows:
 The world is deterministic on the CPU: the same sim rows from the frozen start give the same state hash (simulator
 state, controllers' memory, grips, the referee's record). Privileged: `tests/grade.py` replays the trajectory in two
 fresh processes; `success` = both succeed ∧ the final hashes agree; an unreadable file or a row that is no sim row is
-the agent's 0 (`bad_trajectory`), a replay that does not finish is `grader_error`. Standard and standard-realtime (owner,
-2026-10-17, board 0150/0151): the live episode is the verdict. The sidecar journals every executed sim row, the collect
+the agent's 0 (`bad_trajectory`), a replay that does not finish is `grader_error`. Standard and standard-realtime: the
+live episode is the verdict (PROTOCOL H.4). The sidecar journals every executed sim row, the collect
 hook ends the episode, and the service writes the verdict from the live attempt (`final.json`: `graded_by` live,
 `replays` 0, `success` = the referee's live call, the referee's record in `referee`) before the video, which is one render
 pass from `trajectory.npz` (`video_source` render). No grading replay runs. The referee latches a success the moment it
-happens and ends the attempt, so the live rule is the replay's: there is no hold or settle window to move. The frozen
+happens and ends the attempt; there is no hold or settle window. The frozen
 start is checked on the live simulator. `server.py`'s build() refuses a world that does not start at the instance's
 `t0.state_sha` (InstanceMismatch), and `start_sha` makes the layer void a graded attempt begun by a reset that did not
-return there; both are `instance_mismatch`, `infra_error 1`. In the archive, 185 of 185 standard trials with resets
-replayed bit-exactly from a fresh world, so a reset returns to that hash. `tests/grade.py` reads `final.json`. A crash
+return there; both are `instance_mismatch`, `infra_error 1` (a reset returns to that hash bit-exactly). `tests/grade.py` reads `final.json`. A crash
 resumes the same attempt from the journal (`rcb_service.py`, shared with HumanoidBench, KinDER, VLABench and BiGym 2.0).
 `scripts/roboolympics/tests/test_live_adapter.py` (numpy, no image) tests the adapter's part.
 
@@ -289,17 +276,14 @@ twins' reference solutions are recorded rows streamed open loop, so they depend 
 
 ## Evidence
 
-Measured on 2026-10-11 on the local host (image `eai-robofunolympics:0.1.0`, built locally). No model has been run.
-
 | check | result |
 |---|---|
 | referee tests (`scripts/roboolympics/tests/run_all.sh`): per family a positive example, negative controls, the do-nothing agent, the same hash on a replay | 50 / 50 pass |
 | do-nothing agent (`nop_table.py` → `nop.json`) | fails in all 50 families |
-| reference solutions (`make_oracles.py`): live success, replay success, the same final hash | `sprint` (50 m in 15.84 s), `paddle-bounce` (20 counted bounces, 14.53 s), `golf-putt` (holed, 17.18 s), `boxing` (16.8 N s, 4.04 s), `high-bar-swing` (one giant swing, 23.62 s), `toes-to-bar` (5 repetitions, 7.78 s); since 2026-10-13 also `shot-put` (8.20 m, 6.08 s), `discus` (15.87 m, 8.48 s), `javelin` (21.58 m, 15.33 s), `volleyball-serve` (in the court, 3.28 s), `volleyball-bump` (0.13 m from the target's centre, 5.81 s), `volleyball-set` (0.28 m from the target's centre, 5.87 s): 12 / 12 |
-| Harbor oracle, separate verifier, the 6 families × 2 modes | 12 / 12 reward 1, deterministic; the six added on 2026-10-13 (image 0.2.0): 12 / 12 reward 1, deterministic |
+| reference solutions (`make_oracles.py`): live success, replay success, the same final hash | `sprint` (50 m in 15.84 s), `paddle-bounce` (20 counted bounces, 14.53 s), `golf-putt` (holed, 17.18 s), `boxing` (16.8 N s, 4.04 s), `high-bar-swing` (one giant swing, 23.62 s), `toes-to-bar` (5 repetitions, 7.78 s), `shot-put` (8.20 m, 6.08 s), `discus` (15.87 m, 8.48 s), `javelin` (21.58 m, 15.33 s), `volleyball-serve` (in the court, 3.28 s), `volleyball-bump` (0.13 m from the target's centre, 5.81 s), `volleyball-set` (0.28 m from the target's centre, 5.87 s): 12 / 12 |
+| Harbor oracle, separate verifier, the 12 families × 2 modes | 24 / 24 reward 1, deterministic |
 | Harbor nop, 8 tasks (`hurdles`, `shot-put` ×2, `tennis-serve`, `penalty-kick`, `balance-board`, `free-throw`, `clean-and-jerk`) | 8 / 8 reward 0 |
 | `gen_tasks.py check`, `task_conventions.py --check tasks/roboolympics-*/`, `check-dataset-manifest.sh` | no difference |
-| full `ci_checks/run_all.sh` (before the review fixes; they touch only this benchmark's families) | all checks passed |
 | independent review, round 1 (two fresh reviewers, 25 families each, looking for a success without the sport) | one exploit demonstrated with actions alone (`juggle-three`: balls carried hand to hand counted as throws) and one shown by injection (`high-jump`: the three plane crossings credited one at a time outside the jump; a rigid bar that carries the robot); weaker points in `long-jump` / `triple-jump` (a cavity under the ground slabs), `hurdles`, `paddle-bounce` (passive rebounds counted), the basketball families (a shuffle without a lift was not travelling), `clean-and-jerk` (overhead by height alone), `juggling`, `pole-vault`, `volleyball-spike`, `boxing` / `kick-target` (the meter's lever arm). All fixed; the reviewers' probes now fail; the tests, instances, oracles and tasks were regenerated |
 | independent review, round 2 (three fresh reviewers at cc6bb8fc5: the framework and the trust boundary; 25 athletics, gymnastics and strength families; 25 ball families; each with probes in the simulator) | no success without the sport and no break of the trust boundary found (hostile rows to ±1e308, forged and oversized trajectory files, the standard sidecar's budget, crash recovery and graded episode all held). Found and fixed: `backflip` rejected a legitimate salto (330 degrees in the air demanded; now 300, measured about a horizontal axis); `triple-jump` let hops shorter than a flight cover the distance between phases (by injection; now the landing foot stays within 0.30 m); `volleyball-serve`'s 0.1 s toss grace did not exist in the referee (real tosses failed); the instructions of 7 families with preset arms named a start row that was not the one in force (`gen_tasks.py` now prints the instance's own row; the standard `/spec` carries `start_command`); smaller: a touch of the own court right after the strike was not seen (`table-tennis-return`, `tennis-return`), `tennis-serve` had no toss speed limit, rules judged but not written (`vertical-jump`, `basketball-dribble`), unlisted deviations, the grip's speed test read the step before, a success could stand in the control step of a physics blow-up, H1-2 instructions carried G1 text, the extra venue cameras were not named. Left as they are and why: `high-jump` at 1.00 m can be stepped over by a 1.78 m robot with a small one-foot hop (a legal scissors; the remedy would be a higher bar), `clean-and-jerk` accepts a wide straddle, `pole-vault`'s hang is judged by grip and plant, the `header` / `volley` strike stage can latch on a graze (the goal still decides), a robot propped on a gripped object counts as airborne (no family found where it helps) |
 
@@ -406,7 +390,7 @@ Build the image: `scripts/build_images.sh` (context `images/robofunolympics/`). 
 `RFO_RW=1 scripts/roboolympics/dev.sh /rfo/make_instances.py`, `RFO_RW=1 scripts/roboolympics/dev.sh
 /rfo/make_oracles.py`, `python3 scripts/roboolympics/gen_tasks.py render`, `cd tasks && harbor add --scan .`.
 
-## Tasks exported by RoboOlympics (its own service inside the task; PROTOCOL §4c)
+## Tasks exported by RoboOlympics (its own service inside the task; PROTOCOL §3)
 
 RoboOlympics exports these tasks itself with `tools/export_fexam.py` (CHIGUI0/roboolympics, private): its own
 generated task, with the simulator service, referee, scripted opponents, observation, the frozen review between points,
@@ -416,7 +400,7 @@ RoboOlympics commit and the sport's frozen revision of each, and the files chang
 `gen_tasks.py` renders none of them, and they are refreshed by re-running the exporter (`python3 tools/export_fexam.py
 --hub <this checkout> <this checkout>/tasks`), then `scripts/task_conventions.py` on them (each keeps its own `[agent] timeout_sec`).
 
-| task | what | instance | oracle (vanilla Harbor 0.23.0, 2026-10-13) |
+| task | what | instance | oracle (vanilla Harbor 0.23.0) |
 |---|---|---|---|
 | `roboolympics-tabletennis-match-i01-standard-realtime` | table tennis vs the scripted opponent, RoboOlympics revision `wallclock-15` (players serve, rail base, real-robot limits; S = 10 since RoboOlympics PR #138) | level 2, seed 22, S = 10 | partial: the camera-only reference player lost 3:5 at S = 10 (it won 6:4 at S = 20; it wins level 2 in 16 of 40 seeds in the screening); nop 0 |
 | `roboolympics-tabletennis-match-i02-standard-realtime` | as above | level 3, seed 12, S = 10 | partial: the reference lost 3:5 (it wins level 3 in 7 of 40); nop 0 |
@@ -425,30 +409,33 @@ RoboOlympics commit and the sport's frozen revision of each, and the files chang
 | `roboolympics-badminton-match-i01-standard-realtime` | singles badminton on a 0.4-scale court (BWF Laws, one game to 11; revision `badminton-wallclock-12`, PR #81): Franka Panda with a racket on a Festo gantry base; the players serve | level 1, seed 7, S = 20; agent budget **14400 s** (a per-task exception: a game to 11 at S = 20 took the reference alone 78 min; at S = 10 the camera-only reference loses level 1, 0 of 20) | partial: the camera-only reference won 12:10 (93 min; an earlier run on the same instance lost 10:12; it wins level 1 in 17 of 20 seeds in the screening); nop 0 |
 | `roboolympics-badminton-match-i02-standard-realtime` | as above | level 2, seed 8, S = 20, 14400 s | partial: the camera-only reference does not win level 2 (a model did: Opus 11:7); same task as i01 but the level |
 | `roboolympics-badminton-match-i04-standard-realtime` | as above, at an export-only top tier: opponent level 5 (level 2 with a 0.22 s reaction, level 3's 2 m/s walk back and level 3's kills, 90 % of its attacks; RoboOlympics PR #181; never an official level) | level 5, seed 1034, S = 20, 14400 s | partial: the camera-only reference lost 1:11 (a valid, replayed match); feasibility with the true shuttle state: the reference's strokes placed short to a random front corner win level 5 in 5 of 40 development seeds (this seed 11:8), and a learned shot-selection policy on the reference's strokes (RoboOlympics PR #187) wins level 5 in 16 of 20 (this seed 11:3); every simple baseline loses; nop 0 |
-| `roboolympics-soccer-match-i00-standard-realtime` | humanoid soccer 2 v 2 (RoboCup Humanoid League rules, revision `soccer-2v2-10`: the T1's real motors): one agent commands both Booster T1 robots of its team (walk velocity, stand, kick) from their head cameras against a scripted team; 2 x 5 min of game time | level 2, seed 7, S = 5 (2 x 5 min = 3000 s of wall time plus the reviews, inside 7200 s) | partial: the camera-only reference lost 1:8 on soccer-2v2-10 (0:2 on soccer-2v2-9; it cannot kick while walking; a model has won level 2, Astra 12:2); nop 0. Image `ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` (public since 2026-10-16) |
+| `roboolympics-soccer-match-i00-standard-realtime` | humanoid soccer 2 v 2 (RoboCup Humanoid League rules, revision `soccer-2v2-10`: the T1's real motors): one agent commands both Booster T1 robots of its team (walk velocity, stand, kick) from their head cameras against a scripted team; 2 x 5 min of game time | level 2, seed 7, S = 5 (2 x 5 min = 3000 s of wall time plus the reviews, inside 7200 s) | partial: the camera-only reference lost 1:8 on soccer-2v2-10 (0:2 on soccer-2v2-9; it cannot kick while walking; a model has won level 2, Astra 12:2); nop 0. Image `ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` (public) |
 | `roboolympics-soccerssl-match-i00-standard-realtime` | wheeled soccer 5 v 5 (RoboCup Small Size League rules, revision `soccer_ssl-1`): one agent commands its five omnidirectional robots (move, kick, dribble) from four overhead cameras against a scripted team; two halves and, if level, a shoot-out (about 1035 s of game time) | level 2, seed 7, S = 10; agent budget **14400 s** (the task's own `[agent] timeout_sec`: the match alone is 2.9 h of wall time at S = 10, and at S = 5 the four cameras cannot be rendered in time) | partial: the camera-only reference lost 2:5 in a full match (valid, replay identical; 2 h 35 min of agent time, over 7200 s); nop 0 |
 | `roboolympics-foosball-match-i01-standard-realtime` | foosball, first to 5 goals or 240 s of play against the scripted rods (revision `foosball-program-v2`, RoboOlympics PR #121: the rod speeds of the KiRo table robot) | level 3 (the hardest level the reference wins; at level 4 it lost 0:5), seed 7, S = 20; agent budget **14400 s** (240 s of play is up to 4800 s of wall time at S = 20, plus the start window and the reviews after each rally) | partial: the camera-only reference won 5:4 in one run and lost 1:5 in another (realtime play varies; it wins level 3 in 21 of 100 seeds in the screening); nop 0 |
 | `roboolympics-tabletennis-duelrl-i01-standard-realtime` | table-tennis duel against a built-in RL opponent: the other robot of the duel world (same robot, limits and execution scatter), driven by a learned policy with a fast-swing planner inside the sim service (RoboOlympics core 0.2.31 built-in seat; the agent cannot reach that seat over HTTP); success = the agent's seat A wins | seed 8, S = 10, 7200 s | partial: the camera-only reference (seat A) won 5:3 (valid, replay identical); evidence: mirror match 68/120, the truth-state reference beats it 15/160 (level 4: 2/40), the camera reference 3/20; GPT-6 Astra (one precheck) lost 1:5; nop 0 |
 | `roboolympics-badminton-duelrl-i01-standard-realtime` | badminton duel against a built-in RL opponent: the duel world's other robot (the same Panda on a gantry base, the same limits and execution scatter) driven by a learned policy inside the sim service (RoboOlympics core 0.2.31 built-in seat, not reachable over HTTP); success = the agent's seat A wins | seed 1001, S = 20, 14400 s | partial: the camera-only reference (seat A) lost 1:11 (valid, replay identical); evidence: mirror match 21/40 for seat A, the RL beats level 3 19/20, the truth-state reference beats it 1/20, our camera reference through the live service 0/20; GPT-6 Astra (one precheck) lost by a missed review (`ready_timeout`) at 5:5; nop 0 |
 | `roboolympics-soccerssl-match-i01-standard-realtime` | wheeled soccer 5 v 5 against an RL team as an export-only match level 4 (a learned policy in the world, like levels 1-3) | level 4, seed 7, S = 10, 14400 s | partial: the camera-only reference lost 7:10 (a valid, replayed match); evidence: the RL team beats level 3 64-11-25 over 100 seeds, the truth-state reference beats it 10/20, every simple baseline 0/15; GPT-6 Astra (one precheck) lost by a missed review (`ready_timeout`) while 0:1 down; nop 0 |
+| `roboolympics-soccer-jointcpu-i01-standard-realtime`, `roboolympics-soccer-jointgpu-i01-standard-realtime` | a resource-tier pair (exported by RoboOlympics `pilots/soccer_joint/export_fexam_pair.py`): humanoid soccer 2 v 2 at the joint level (12 leg joint targets per Booster T1 every 20 ms, no walking policy, revision `soccer-2v2-11`) against level 5, our joint-level RL team (a PPO gait at the joint level and an RL strategy layer), any method, a practice service with full copies of the match world; the two tasks are the same match and differ only in the agent's resources (CPU tier: 6 cores, numpy / SciPy / MuJoCo; GPU tier: + one NVIDIA GPU with mjlab + rsl_rl and the 2 v 2 world on the GPU) | level 5, seed 101, S = 10, 2 h start window, 300 s reviews, 14400 s | partial: the joint-level reference lost 0:10 to level 5 v1 in both tasks (valid, replay identical); feasibility: three frozen GPU-tier GPT-6 Astra programs win 30 % of 90 matches against v2 (40 % against v1); a walking-policy audit in the collect hook; nop 0 |
 | `roboolympics-fencing-bout-i01-standard` | robot epee fencing, one FIE direct-elimination bout (15 touches or 9 min of fencing time; RoboOlympics revision `fencing-7`, a RoboOlympics preview sport): two Unitree G1s (NVIDIA SONIC on legs, waist and free arm) fence phrase by phrase from on guard, each phrase replayed from a table of all 2916 phrases measured in MuJoCo; the agent chooses each phrase's tactical intention (one of nine) against a scripted fencer that reads its choices; turn-based (`eai-standard-turn/1.0`), a chess clock of 60 min per player | level 1, seed 39 | full: the camera-only reference won 15:11 (25 phrases, replay identical; the world is deterministic, so the oracle's result is the one RoboOlympics computes in process; seed chosen by a stated rule, RoboOlympics `tools/fexam/fencing/instances.py`); nop 0 (valid, no-show) |
 | `roboolympics-fencing-bout-i02-standard` | as above | level 2, seed 35 | full: the reference won 15:13 (32 phrases, replay identical); nop 0 |
+| `roboolympics-tabletennis-matchlow-i01-standard-realtime` | table tennis at the **low level** (RoboOlympics' Engineer mode as a match; owner's decision 2026-10-16): the agent implements the robot's `hit` skill itself from the joint interface and the toolkit, serves it from its own container (`game skill serve`; the sim calls it over the shared loopback), and every stroke of the match is played by that skill (the skill in the loop: its compute counts in match time; no execution scatter); success = the agent wins | level 1, seed 22, S = 10, 7200 s | partial: RoboOlympics' toolkit-only reference skill with the camera-only reference strategy lost 0:5 (valid, replay identical; it lost 0:5 on 8 more seeds: its slow serves bounce twice on its own court); feasibility: the platform's own hit packaged as a skill, with the truth-state strategy, wins level 1 in 7 of 8 seeds of RoboOlympics' competition test (this seed 5:1; the reference skill 0 of 4); through the live service (core 0.2.32's upload path) with the camera-only strategy it scored 2:5, 1:5, 2:5; GPT-6 Astra (one precheck) lost 2:3 by a missed review (`ready_timeout`, a valid loss; its own skill, then uploaded to the sim (core 0.2.32), won 2 points); nop 0 |
+| `roboolympics-badminton-matchlow-i01-standard-realtime` | badminton at the **low level**, as the table-tennis one: the agent implements the robot's `act` skill (the racket head's state at contact, optional base position) from the joint interface and the toolkit (bm_kinematics, bm_servo), serves it from its own container (`game skill serve`), and every stroke of the match is played by that skill; success = the agent wins | level 2, seed 8, S = 20, 14400 s | partial: our toolkit-only reference act with the camera-only reference strategy lost 1:11 on this instance (vanilla Harbor 0.23.0, the skill served from the oracle's own container: a valid, replayed match, 30 act calls, none failed); feasibility: our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 4/4 and level 2 2/4 with our toolkit-only reference act (API test 512/519), and in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act; level 2 because models won level 1; nop 0 |
 
-What differs from the 2.x tasks (PROTOCOL §4c, owner 2026-10-14):
+What differs from the 2.x tasks (PROTOCOL §3):
 
 | | the 2.x tasks | exported RoboOlympics tasks | why |
 |---|---|---|---|
-| protocol | `eai-standard/2.x` | `eai-standard-realtime/1.0` (real-time matches; RoboOlympics' own: `game` CLI / HTTP at `localhost:8000/A/...`), `eai-standard-turn/1.0` (turn-based matches, mode `standard`: the same service and `game` CLI; the world waits for the player whose turn it is, and each player has a chess clock of real time that runs on its own turns, reviews included; a player whose clock runs out loses, a valid 0) | the frozen review after every point (at most 300 s, 600 s in soccer: `READY_TIMEOUT_S`; the world stands still, the agent's time runs on; a side that has not sent `ready` by then loses the match, `ready_timeout`, a valid 0: the world does not go on by itself; stated in each instruction and in `game spec` `timing.review_timeout_s` since 2026-10-14, board 0121, `patched` in exported.toml) is part of RoboOlympics' rules, and its results are only comparable under them |
+| protocol | `eai-standard/2.x` | `eai-standard-realtime/1.0` (real-time matches; RoboOlympics' own: `game` CLI / HTTP at `localhost:8000/A/...`), `eai-standard-turn/1.0` (turn-based matches, mode `standard`: the same service and `game` CLI; the world waits for the player whose turn it is, and each player has a chess clock of real time that runs on its own turns, reviews included; a player whose clock runs out loses, a valid 0) | the frozen review after every point (at most 300 s, 600 s in soccer: `READY_TIMEOUT_S`; the world stands still, the agent's time runs on; a side that has not sent `ready` by then loses the match, `ready_timeout`, a valid 0: the world does not go on by itself; stated in each instruction and in `game spec` `timing.review_timeout_s`, `patched` in exported.toml) is part of RoboOlympics' rules, and its results are only comparable under them |
 | crash recovery | journal, resume | none: a sim crash ends the trial with `infra_error = 1` | the match is one continuous live record (its scores and winner); a resumed match would not be the recorded one |
 | slowdown | — | per task, the sport's official slowdown: table tennis 10 (RoboOlympics PR #138), badminton 20, humanoid soccer 5, wheeled soccer 10, foosball 20 (`metadata.slowdown`); turn-based matches have none (`metadata.chess_clock_s`: fencing 3600 s) | results state S, or the chess clock |
-| agent budget | the benchmark's 7200 s | 7200 s; badminton i01 / i02 / i04, the badminton duel, wheeled soccer and foosball 14400 s (those tasks' own `[agent] timeout_sec`, owner 2026-10-14) | a game to 11 at S = 20 took the reference alone 78 to 93 min; a 5 v 5 match is 2.9 h of wall time at S = 10; foosball's 240 s of play is up to 4800 s at S = 20 |
-| network | open (part 1's exception) | the allowlist (model APIs and package registries), as every other benchmark: these tasks declare it, and PROTOCOL §2.11 holds them to it | RoboOlympics' design; the open-egress exception is part 1's |
+| agent budget | the benchmark's 7200 s | 7200 s; badminton i01 / i02 / i04, the badminton duel, wheeled soccer and foosball 14400 s (those tasks' own `[agent] timeout_sec`) | a game to 11 at S = 20 took the reference alone 78 to 93 min; a 5 v 5 match is 2.9 h of wall time at S = 10; foosball's 240 s of play is up to 4800 s at S = 20 |
+| network | open (part 1's exception) | the allowlist (model APIs and package registries), as every other benchmark: these tasks declare it, and PROTOCOL H.6 holds them to it | RoboOlympics' design; the open-egress exception is part 1's |
 | twin | privileged + standard | none (the README's Twin row says why) | no trajectory deliverable |
 | seeds | the instance's | matches: `[metadata.seeds]` default = allowed = the instance's development seed (a turn-based match whose world is deterministic has one outcome per sequence of choices: its oracle is `full` when the reference wins that seed); skill tasks: seed 0 = the fixed development request set | development seeds below 100000: previews; RoboOlympics' official results are produced by RoboOlympics on its hidden six-digit seeds |
-| metering | the usage gateway | the same (the seat is "unmetered" for RoboOlympics: no proxy, no credential in the sim; the D11 proxy's file `metering/think_proxy.py` is in the image's copy but never started) | |
+| metering | the usage gateway | the same (the seat is "unmetered" for RoboOlympics: no proxy, no credential in the sim; the proxy file `metering/think_proxy.py` is in the image's copy but never started) | |
 
-**Graded by the live match (owner, 2026-10-17, board 0150/0151).** The core's fresh-process validity replay
-(`python -m core.episode`, `replay_check.json`) no longer runs. The verdict is the live match as the trusted core recorded
+**Graded by the live match.** The core's fresh-process validity replay (`python -m core.episode`, `replay_check.json`)
+does not run. The verdict is the live match as the trusted core recorded
 it while playing: `scores`, `match_winner`, `reason`, `errors` and the seats' metering in `final.json` (`graded_by` live,
 `replays` 0). `valid_trial` = finalized ∧ complete ∧ no technical error, without the replay term, and success = a valid
 match the agent's seat A won (duelrl: `tests/fexam_reward.py`'s `valid_trial` ∧ `A_won`).
@@ -458,22 +445,64 @@ keeps its upstream behaviour without it. The patch touches `core/service.py` (`f
 drops the replay term, `deterministic` and `replay_scores`) and `core/grading.py` = `tests/grade.py` (a live record needs
 no `replay_check.json`; reward.json gets `graded_by_live 1`, `replays 0`, and loses `deterministic` and the sports' legacy
 `replay_*` fields). The spectator video stays a video-only pass after the verdict. Where its limit was below the old
-replay's 600 s (table tennis, foosball: 300 s) it becomes 600 s, and the hook waits 720 s for it and 600 -> 180 s for
-the verdict, so the hook's timeout is unchanged. **source_sha:** `core/` is hashed into every match's `source_sha` (with the sport's
-directory), so matches played after this change record a new `source_sha` per task. Archived episodes still replay,
-because the replay echoes the header's own `source_sha`, but results keyed by `source_sha` see a new version.
-**Agent-caused simulator errors (STANDARD_MODE Part 3, board 0151).** In a real-time match graded live and finalized, an error of the control step itself (`reason` technical_error, every `errors[]` entry `where` "world_step": `core/realtime.py` records the agent's commands applied and the world's step under that name) after the agent's first applied act (`seats.A.applied` > 0; acts refused 409 / 429 never reached the world) is the agent's 0 (`valid_trial` 1, `agent_sim_error` 1), not a technical failure with a free retry. Before it, in a turn-based match, with an unfinalized record, or for any other technical error (the loop's bookkeeping, rendering, metering, a crashed sim service) it stays infrastructure. A fatal-signal crash of the sim process leaves no final record in these tasks (no crash recovery), so it stays infrastructure. The badminton tasks' `spectator/sport_video.py` compares its replay's end with the live record (`final.json`: `matches_live_record` in video.json). The table tennis and foosball hooks wait 720 s for the video (its limit 600 s + 120 s) and 180 s for the verdict.
+replay's 600 s (table tennis, foosball) it is 600 s, and the hook waits 720 s for it and 180 s for the verdict.
+**source_sha:** `core/` is hashed into every match's `source_sha` (with the sport's directory), so the patch gives
+each task a `source_sha` of its own; archived episodes still replay, because the replay echoes the header's own
+`source_sha`.
+**Agent-caused simulator errors (docs/protocol/standard_mode.md Part 3).** In a real-time match graded live and finalized, an error of the control step itself (`reason` technical_error, every `errors[]` entry `where` "world_step": `core/realtime.py` records the agent's commands applied and the world's step under that name) after the agent's first applied act (`seats.A.applied` > 0; acts refused 409 / 429 never reached the world) is the agent's 0 (`valid_trial` 1, `agent_sim_error` 1), not a technical failure with a free retry. Before it, in a turn-based match, with an unfinalized record, or for any other technical error (the loop's bookkeeping, rendering, metering, a crashed sim service) it stays infrastructure. A fatal-signal crash of the sim process leaves no final record in these tasks (no crash recovery), so it stays infrastructure. The badminton tasks' `spectator/sport_video.py` compares its replay's end with the live record (`final.json`: `matches_live_record` in video.json). The table tennis and foosball hooks wait 720 s for the video (its limit 600 s + 120 s) and 180 s for the verdict.
 `scripts/roboolympics/tests/test_live_export.py` (standard library) tests the patch on every exported task.
 
-**Replay videos of the matches (fixed here, 2026-10-16, board 0136).** The sim service draws the spectator video after the verdict (`core.spectator`, `RCB_VIDEO_TIMEOUT_S`); the grade never depends on it. Humanoid soccer's full match takes about 8-10 min to replay and draw, so its limit is 1800 s (was 300 s, as wheeled soccer) and the collect hook waits as long. Badminton declares no spectator camera or scene, so the core drew nothing: its tasks run `environment/sim/spectator/sport_video.py` from the collect hook instead (the players' two cameras, the sport's own `Views`, at 10 frames per game second; `video.json` says whether that replay ended in the verdict replay's state). `spectator/` is outside the match's `source_sha` (`core/`, `sport/`), so the match, its replay check and the grade are unchanged and earlier results stand; both are `patched` in `exported.toml` (to be sent upstream: a spectator camera in `sports/badminton/sport.toml` would change the sport's `source_sha`). Table tennis (about 100-420 frames) and wheeled soccer (1800 s) rendered every recorded video and are unchanged. Fencing (turn-based) draws one still per phrase, held 1 s, with `core.spectator`; its limit is 900 s (board 0146: never shorter than the verdict replay's 600 s), the collect hook waits as long. The second batch (board 0146): badminton i04 and the badminton duel use the same `sport_video.py` as badminton i01 / i02 (collect 2640 s, verifier 2820 s: 60 s of headroom) (checked on a local duel: 392 frames in 28 s, `matches_verdict_replay` true); foosball (at most 240 s of play, 2400 frames; a 136 s match drew 1360 frames in 47 s), the table-tennis duel and table tennis i03 / i04 draw with `core.spectator` within 300 s; wheeled soccer i01 has 1800 s as i00.
+**Replay videos of the matches.** The sim service draws the spectator video after the verdict (`core.spectator`, `RCB_VIDEO_TIMEOUT_S`); the grade never depends on it. Humanoid soccer's full match takes about 8-10 min to replay and draw, so its limit is 1800 s (as wheeled soccer) and the collect hook waits as long. Badminton declares no spectator camera or scene, so the core drew nothing: its tasks run `environment/sim/spectator/sport_video.py` from the collect hook instead (the players' two cameras, the sport's own `Views`, at 10 frames per game second; `video.json` says whether that replay ended in the verdict replay's state). `spectator/` is outside the match's `source_sha` (`core/`, `sport/`), so the match and the grade do not depend on it; both are `patched` in `exported.toml` (to be sent upstream: a spectator camera in `sports/badminton/sport.toml` would change the sport's `source_sha`). Table tennis (about 100-420 frames) and wheeled soccer (1800 s) rendered every recorded video and are unchanged. Fencing (turn-based) draws one still per phrase, held 1 s, with `core.spectator`; its limit is 900 s, the collect hook waits as long. Badminton i04 and the badminton duel use the same `sport_video.py` as badminton i01 / i02 (collect 2640 s, verifier 2820 s: 60 s of headroom) (checked on a local duel: 392 frames in 28 s, `matches_verdict_replay` true); foosball (at most 240 s of play, 2400 frames; a 136 s match drew 1360 frames in 47 s), the table-tennis duel and table tennis i03 / i04 draw with `core.spectator` within 300 s; wheeled soccer i01 has 1800 s as i00.
 
-**Duels against a built-in seat (board 0146).** In `-duelrl-` tasks seat B is a built-in player inside the service (RO_BUILTIN_SEATS), which never ends a session. RoboOlympics' core forfeited an abandoned match only for a single side, so an agent that left a duel after the start (gave up, ran out of time) ended it `collected`: unfinished, not a valid trial, `infra_error = 1` (a free retry). Both duel tasks patch `core/service.py` `abandon_single` to leave built-in seats out: the HTTP side that leaves loses `abandoned`, a valid 0, as in a match against the scripted opponent; the instruction says so, and it says that the learned opponent reads the simulator's true state (the table-tennis one also plans its own swing, a field only built-in seats may send). `tests/test.sh` writes success 0 with `grader_error = infra_error = 1` (a grader failure: one retry under H.5) if `fexam_reward.py` (which adds the duel's `A_won`) fails, never `grade.py`'s `valid_trial` alone. `patched` in `exported.toml`; to be sent upstream.
+**Duels against a built-in seat.** In `-duelrl-` tasks seat B is a built-in player inside the service (RO_BUILTIN_SEATS), which never ends a session. RoboOlympics' core forfeits an abandoned match only for a single side, so unpatched an agent that left a duel after the start would end it `collected` (not a valid trial, a free retry). Both duel tasks patch `core/service.py` `abandon_single` to leave built-in seats out: the HTTP side that leaves loses `abandoned`, a valid 0, as in a match against the scripted opponent; the instruction says so, and it says that the learned opponent reads the simulator's true state (the table-tennis one also plans its own swing, a field only built-in seats may send). `tests/test.sh` writes success 0 with `grader_error = infra_error = 1` (a grader failure: one retry under H.5) if `fexam_reward.py` (which adds the duel's `A_won`) fails, never `grade.py`'s `valid_trial` alone. `patched` in `exported.toml`; to be sent upstream.
 
-**Skill tasks' verifier (fixed here, 2026-10-14, board 0111; the #180 review's finding).** The verifier runs the
-delivered skill as `nobody` in its own process, in the container that grades it. A skill could leave a detached process
-behind (double fork, `setsid`) that rewrote `/logs/verifier/report.json` or the reward files after the evaluation
-(Harbor makes `/logs/verifier` 777, without the sticky bit), so a skill that hits nothing could be graded a success. Now:
-the evaluator is the subreaper of the skill's tree, and closing a skill kills its session and every process of
+**The low-level match: the skill served from the agent's own container (RoboOlympics core 0.2.34, 2026-10-17).** In RoboOlympics' own low-level matches the player's skill runs in a trusted per-seat container that mounts the agent's `/app/output` volume, adds SETUID / SETGID and sets `network_mode: none`, three breaches of H.1 here. In `roboolympics-tabletennis-matchlow-i01-standard-realtime` and `roboolympics-badminton-matchlow-i01-standard-realtime` there is no such container and no agent code runs in the sim (H.3): the agent starts its own skill server in its own container (`game skill serve /app/output/skill`: skilleval's `skillhost.py serve --tcp 127.0.0.1:8765 --live`, shipped in the agent's image under `/opt/skillkit`; the skill runs from a private copy in its own process, as `nobody` when the container runs as root). The sim and the agent's container share the egress sidecar's network namespace, so the sim calls the server over the loopback (`RCB_SKILL_INLOOP_A = "tcp:127.0.0.1:8765"`): no published port, no volume, no capability, no network of its own. The server reloads the skill whenever its files change (the new version plays from the next call). Each call's answer carries the version (sha256); `inloop_A.jsonl` (an artifact) logs every call and every version change; the episode holds the lowered joint commands, so the fresh-process replay needs no skill. A call without a server, or one that fails or times out, changes nothing (the command in force stays) and is logged: the player's own error, the match stays valid. The skill's compute counts in match time as before. Reward extra fields `skill_*` (versions, calls, failures); success is the match. Live grading (owner 2026-10-17, board 0151): the tasks' compose files set `RO_VERDICT_REPLAY = 0`: the verdict is the sim's live record (`final.json` `verdict_replay` false), no fresh-process grading replay; `tests/grade.py` accepts it and reports `graded_by_live` / `replays`. Patched here (board 0146, the #300 review; `patched` in `exported.toml`, to be sent upstream): the agent controls the server the sim calls, so the sim's `RemoteHost` (`environment/sim/skilleval/skillhost.py`, and the identical copy under `environment/skillkit/`) reads only typed fields of its answers (a version is a string, `functions` a list of strings; an answer that is not a JSON object is a failed call): before, an answer such as `status: [1]` raised inside the control step (a `world_step` technical error: a free retry before the agent's first act) and a list as the version stopped `tests/fexam_reward.py` (no `infra_error` field); `fexam_reward.py` also skips malformed rows of `inloop_A.jsonl`. Test: `scripts/roboolympics/tests/test_matchlow_skill_server.py` (`check-unit-tests.sh`).
+
+**Option c (owner 2026-10-17, board 0152 decision 28; robot_coding_bench's patch, `patched` in `exported.toml`).** The
+agent's skill runs only in the agent's own container, and no agent code can run in the sim's: the in-sim upload host
+(core 0.2.32's `POST /<seat>/skill`, `game skill upload`, `skillhost.UploadHost`) and its jail (seccomp, one CPU, `nobody`)
+are removed from the tasks' copies (the sim's and the agent's kit), and the compose files set `RCB_SKILL_REMOTE_ONLY=1`
+(`skilleval/inloop.py` refuses any skill source but `tcp:`). The skill's `step()` is one **synchronous** call at each due
+control step (`RCB_SKILL_INLOOP_TIMING=sync`): the world waits for its answer at most `step_wait_s` = min(the step time
+limit, one control period S x control_dt) (0.1 s for table tennis at S = 10, 0.2 s for badminton at S = 20; `game spec`)
+and applies it at that step; no answer in time, an error, garbage or a dead server = no command at that step (the
+player's, never infrastructure; the world goes on, its compute counted in match time); a step() is skipped while a
+`hit` / `act` call computes. `hit` / `act` calls run as before, off the world's lock (the world runs on), each waited for
+at most its time limit + 1 s (`skillhost.LIVE_MARGIN_S`; was limit + 40 s). The sim sends the skill the seat's
+whitelisted observation without images (the same `state` its `/status` gives) and the public spec; it reads back one
+command, which the low level's own parser checks (any exception there is the skill's failure, never the control
+step's). The agent may change its skill at any time: its server reloads changed files at each call, and that call plays
+the new version; every version that played is an episode row `skill_load` (information only, never replayed) besides
+`inloop_A.jsonl`. Tests: `scripts/roboolympics/tests/test_matchlow_sync_step.py` (a real skill server from the task's
+kit, slow / hanging / raising / garbage / oversized answers, a dead server, a live reload, the sanctioned state). The
+fresh review's fixes (same day): each call to the agent's server has ONE deadline, its send included (a server that
+withholds its receive window cannot hold the world for a send and then a full answer time), the connection and its
+configure inside the same bound; step()'s answer is capped at 128 KiB (it is parsed on the world's thread); a server
+that was down or not loaded is tried again by step() at most once a second (one bounded call), not only at the next
+unit; the agent's server is always played in timing sync (a `tcp:` host in "wall" or "free" is refused, and the
+default for it is sync); any exception of a live call is the skill's failure (kind `server`, never `host`); a command
+of the seat's own step() counts for the seat (`applied_tick` in final.json's seat stats, core/realtime.py), so a
+`world_step` error after it, before any act, is the agent's 0 in `tests/grade.py` (= `core/grading.py`), not a free
+retry; at most 200 `skill_load` episode rows per seat (the rest counted, `loads_not_written`; all in `inloop_A.jsonl`),
+a live one labelled `reported_by: your skill server`; the server checks for changed files by a stat walk and hashes
+only when a size or mtime changed. Round 2 of the review: a reconnect's configure gets only the time left of the
+call's deadline; a step() command is counted (`tick_submitted`) before it is applied, so one whose application raises
+also makes the error the agent's; a live call that fails unexpectedly closes its connection; stale data waiting on the
+connection before a request drops it (a new connection for that call); the once-a-second retry is armed only by a call
+actually sent. Harbor 0.23.0
+trials (aws:rcb-cpu3, 2026-10-17, this patch): table tennis oracle a valid match lost 0:5 (899 step() calls, each answered
+inside the 0.1 s bound, max 0.074 s, applied at the step asked; 15 hits, none failed; replay.mp4), badminton oracle a
+valid match lost 1:11 (33 act calls, none failed; replay.mp4), nop on both: no_show, valid, success 0, infra_error 0;
+an adversarial probe on table tennis (the reference player's decisions through a skill that sleeps past its limits,
+raises, returns unhashable / NaN / oversized / 500-deep answers): a valid match, success 0, infra_error 0, 656 of 929
+calls failed as the player's, every step() wait at most 0.101 s, POST and GET /A/skill 404, /A/state etc. 404, no sim
+file readable from the agent's container, only port 8000 open on the loopback; the skill was sent the seat's
+whitelisted state (no ball coordinates) and the public spec only.
+
+**Skill tasks' verifier.** The verifier runs the delivered skill as `nobody` in its own process, in the container that
+grades it. A skill must not be able to leave a detached process behind (double fork, `setsid`) that rewrites
+`/logs/verifier/report.json` or the reward files after the evaluation (Harbor makes `/logs/verifier` 777, without the
+sticky bit). So: the evaluator is the subreaper of the skill's tree, and closing a skill kills its session and every process of
 `nobody` below the evaluator until none is left (`skilleval/sandbox.py` `end_sandbox_processes`; it raises, and the
 grade is a `grader_error`, if one survives); the skill runs with `RLIMIT_NPROC` 128; `tests/test.sh` makes
 `/logs/verifier` 755 and writes the report to `/var/lib/skilleval/` (root, 700); `tests/engineer_grade.py` kills any
@@ -483,13 +512,12 @@ report only from a root-owned directory nobody else can write, and writes the re
 --probe --skill <dir with probe.py>`) adds three targets: writing `/logs/verifier`, writing the report's directory,
 and a detached process that must be gone after the skill is closed (`survives_close`), plus `nproc_unlimited`. Measured
 in the verifier image (Harbor's layout: root, no network, `/logs/verifier` 777): a skill that plants a success and
-leaves a process to keep it there got reward 1 from the exported grader and gets 0 now; the reference skill still
-passes; the probe finds no leak. Still possible and harmless: a skill with `memory = "per_case"` can keep files in `/tmp`
+leaves a process to keep it there gets 0; the reference skill passes; the probe finds no leak. Still possible and harmless: a skill with `memory = "per_case"` can keep files in `/tmp`
 between requests (it gets no outcome back, so it learns nothing it was not given).
 
 Images: `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` (public; the image RoboOlympics' frozen revisions were screened on;
 built from RoboOlympics' own tree, not from this repository), for every task but humanoid soccer, which runs on
-`ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` (public since 2026-10-16). CPU only.
+`ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0` (public). CPU only.
 
 ## Licences
 
@@ -498,10 +526,3 @@ G1 model and meshes: MuJoCo Menagerie, BSD-3-Clause. Unitree's walking policy (u
 running policy (C1801SYQ/g1_running): Apache-2.0. FALCON's G1 policy (LeCAR-Lab/FALCON): MIT. WBC-AGILE's G1
 velocity-height policy (nvidia-isaac/WBC-AGILE): Apache-2.0. Every licence file is next to its files in the image
 (`images/robofunolympics/roboolympics/SOURCE.md`); the image can be published.
-
-## Change log
-- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay (the native
-  standard and standard-realtime tasks: `rcb_service.py`'s live finalize, the adapter's start check and live referee
-  record); video by one render pass from the trajectory after the verdict. The exported matches: the core's validity
-  replay is gone (`RO_VERDICT_REPLAY=0`, `live_grading_export.py`); the verdict is the live match's; video by the spectator
-  pass after the verdict; a new `source_sha` (`core/` changed).

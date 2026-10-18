@@ -1,7 +1,7 @@
-"""eai-standard/2.2 sim service for the MyoSuite tasks (docs/STANDARD_MODE.md): the adapter of the shared layer
+"""eai-standard/2.2 sim service for the MyoSuite tasks (docs/protocol/standard_mode.md): the adapter of the shared layer
 rcb_limited.py; the simulator is rcb_myosuite.Session (MyoSuite 2.12.2 on MuJoCo, CPU). HTTP surface: GET /spec,
 GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants resets (RCB_RESET_BUDGET,
-the optional reset capability of docs/STANDARD_MODE.md; MyoSuite's standard tasks default to 10 in their compose
+the optional reset capability of docs/protocol/standard_mode.md; MyoSuite's standard tasks default to 10 in their compose
 file, PROTOCOL §4.5). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's (environment/sim/instance.npz, the privileged twin's). The action is MyoSuite's own:
@@ -15,8 +15,15 @@ its pose would be that body's position (SCENE_CAMS).
 
 Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU repeats bit for bit in a fresh process):
 every executed row is journaled; after a crash the service rebuilds the episode and replays the journal, resetting where
-the committed resets did (their journal rows are checkpointed, `persist`). When the episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
-and replays the trajectory in two fresh processes."""
+the committed resets did (their journal rows are checkpointed, `persist`). When the episode ends the service writes
+/data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit and writes the verdict.
+
+The verdict is the live episode's (owner, 2026-10-17, board 0151): `success` in episode.json is the task's rule as
+Session.step applied it to the steps this service ran (MyoSuite's goal held for the family's hold time, the challenge's
+own success event, or the MyoDex track over the whole reference: the windows are part of the rule, so the episode only
+ends in success once its window is complete). Nothing is replayed to grade it. The frozen initial state is checked when
+the episode begins: a fresh start whose built scene does not hash to the instance's recorded sha gives up as an
+infrastructure failure (`instance_mismatch`) before the agent is served."""
 
 import contextlib
 import json
@@ -539,7 +546,8 @@ def finish(reason: str) -> None:
     E["reason"] = reason
     E["t_end"] = time.time()
     E["episode_control_steps"] = ctrl_steps()
-    E["success"] = bool(S.success)
+    # a simulator error ends the episode: the state after it is judged by nothing (PROTOCOL §4.6), never a success
+    E["success"] = bool(S.success) and reason != "error"
     EP.log(
         {"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "success": bool(E["success"]),
          "episode": E["resets"] + 1, "journal_rows": EP.rows}
@@ -826,7 +834,7 @@ def do_reset(meta: dict):
 
 
 def end_from_signal() -> None:
-    """The collect hook's SIGUSR1: end the episode (the agent's time is over), dump it, exit so the replays can start."""
+    """The collect hook's SIGUSR1: end the episode (the agent's time is over), dump it, exit so the hook can grade it."""
     with LOCK:
         E["exiting"] = True
         if not E["done"]:
@@ -865,6 +873,16 @@ def resume_sha() -> str:
     return S.state_sha()
 
 
+# The frozen initial state, checked at the episode's start (the verdict is the live episode's: no later replay checks it).
+# A fresh start whose scene does not hash to the instance's recorded sha is no trial of this task: an infrastructure
+# failure, before the agent is served. A resume is checked against its own checkpoint by Episode.begin.
+if not any(e.get("ev") == "start" for e in EP.events()) and S.state_sha() != S.instance_sha:
+    if not L.final_verdict(DATA):
+        _fin = os.path.join(DATA, "final.json")
+        L._write_json(_fin, {**L._read_json(_fin), "instance_mismatch": 1, "start_sha": S.state_sha(),
+                             "instance_sha": S.instance_sha})
+    EP.give_up(f"instance_mismatch: the scene started at {S.state_sha()}, the frozen instance records {S.instance_sha}",
+               infra=True)   # writes the verdict (never overwrites one) and answers 409 until the container ends
 RESUMED = EP.begin(
     state=E,
     step=replay_row,
@@ -872,7 +890,7 @@ RESUMED = EP.begin(
     proprio=proprio_row,
     spec=SPEC,
     on_end=end_from_signal,
-    start_event={"task": TASK, "env": S.env_id, "cameras": CAMS},
+    start_event={"task": TASK, "env": S.env_id, "cameras": CAMS, "instance_sha": S.instance_sha},
 )
 if RESUMED and E["resets"]:  # Episode.begin looks for an "end" of any episode: only the current one's counts
     _ends = [e for e in EP.events() if e.get("ev") == "end" and int(e.get("episode") or 1) == E["resets"] + 1

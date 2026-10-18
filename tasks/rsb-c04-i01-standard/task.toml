@@ -28,7 +28,7 @@ simulator = "mujoco"
 robot = "ur5e-robotiq-2f85"
 family = "c04"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 1.0
@@ -52,7 +52,7 @@ robosafebench_interface = "control"
 robosafebench_clock = "paused"
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 4.0
 min_memory_gb = 6.0
 min_gpu_memory_gb = 0.0
@@ -64,7 +64,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "measured 2026-10-13 on four 32-core CPU nodes of a university HPC cluster (rootless podman on cgroups v1, caps not applied there), oracle and nop trials of every task: /proc PSS and CPU of each container's processes every 5 s; sim sidecar CPU p90 4.74 / max 5.28 cores during finalize (then two replays side by side + the video; from 2026-10-17 the video only, board 0151), oracle and nop sweep, 414 trials, /proc sampling (hence its cap of 6 CPUs), PSS max 2.84 GB; main PSS max 0.74 GB over 805 containers; a whole trial's PSS max 4.75 GB over 1219 trials; the verifier's container under 0.1 GB (the replays run in the sim sidecar)"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -80,12 +80,12 @@ trial_max_memory_gb = 14.0
 measured = "author estimate, with the measurements above: the agent's container held 0.74 GB PSS at most without an agent (oracle, nop) and 0.68 GB in the one agent trial sampled; 6 GiB under its 8 GiB cap leaves room for the harness and the client; whole trial: measured 4.75 GB, 14 GiB with the sim service's 8 GiB cap; processes 512: design default"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -96,7 +96,7 @@ timeout_sec = 900.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"

@@ -18,6 +18,8 @@ import importlib.util, json, os, pathlib, subprocess, sys, tomllib
 
 ROOT = pathlib.Path(__file__).resolve().parents[3]
 REG = tomllib.loads((ROOT / "scripts/roboolympics/exported.toml").read_text())
+# the privileged twins (kind "fullsim-policy", #282) are graded by the verifier (a formal match and its replay), not live
+REG["tasks"] = [e for e in REG["tasks"] if e.get("kind") != "fullsim-policy"]
 
 
 def load(path: pathlib.Path):
@@ -72,7 +74,7 @@ def main() -> int:
         bad = g.grade(record(contract, "A", errors=[{"where": "sport", "error": "x"}]), {}, contract, stub)
         if bad.get("success") != 0 or bad.get("technical_failure") != 1:
             errs.append(f"{t.name}: a live technical error: {bad}")
-        # a simulator error of the world's step (STANDARD_MODE Part 3): after the agent's first act the agent's 0 in a
+        # a simulator error of the world's step (docs/protocol/standard_mode.md Part 3): after the agent's first act the agent's 0 in a
         # real-time match; before it, or in a turn-based match, a technical failure (infra)
         realtime = "-standard-realtime" in t.name
         world = dict(reason="technical_error", match_winner=None, errors=[{"where": "world_step", "error": "mujoco: bad qacc"}],

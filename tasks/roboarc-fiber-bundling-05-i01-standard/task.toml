@@ -10,10 +10,10 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
   { source = "/data/journal.f64", service = "sim" },              # crash recovery: every executed control step (float64 rows)
   { source = "/data/startups.jsonl", service = "sim" },           # crash recovery: one line per service start
   { source = "/data/startup_binding.json", service = "sim" },
-  { source = "/data/replay.verdict.json", service = "sim" },
+  { source = "/data/replay.video.json", service = "sim" },          # the video-only pass's record
   { source = "/data/replay.frame_map.jsonl", service = "sim" },
   { source = "/data/replay.recording_manifest.json", service = "sim" },
-  { source = "/data/replay.json", service = "sim" },              # the collect hook's fresh-process replay
+  { source = "/data/replay.json", service = "sim" },              # the collect hook's video-only pass (stdout)
   { source = "/data/replay.log", service = "sim" },
   "/app/output/",
 ]
@@ -31,7 +31,7 @@ simulator = "roboarc"
 robot = "franka-robotiq-2f85"
 family = "fiber_bundling"
 mode = "standard"                  # RGB + proprioception only; no object poses, no success predicate, no reset
-dynamics = "static"               # scene dynamics (docs/PROTOCOL.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.4"
 oracle = "none"
 oracle_evidence = "No oracle; human review in PR #N (PROTOCOL §2.7). No reference solution and no positive example yet: nothing is known to solve this task. Its physics was accepted on the family's acceptance rounds and a smoke stress round on this instance."
@@ -43,7 +43,7 @@ instance_seed = 0
 expert_time_estimate_hours = 3
 
 [metadata.resources]
-# minimum compute to run this task (docs/PROTOCOL.md §2.9)
+# minimum compute to run this task (docs/protocol/README.md §2.9)
 min_cpus = 4.0
 min_memory_gb = 7.0
 min_gpu_memory_gb = 2.0
@@ -56,7 +56,7 @@ verifier_min_gpu_memory_gb = 2.0
 measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending; GPU 2 GB: owner 10-17, board 0150 (batch_eval_live trial peak 1.1 GB on 24 GB cards)"
 
 [metadata.resources.limits]
-# agent-phase limits in GiB (docs/PROTOCOL.md §2.10); scope: trial = every container, agent = the agent's container;
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
 # enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
 scope = "agent"
 max_gpu_memory_gb = 0.0
@@ -72,12 +72,12 @@ trial_max_memory_gb = 16.0
 measured = "partial MuJoCo measurements of 2026-10-13 (rendering off) with the protocol's margin; calibration pending"
 
 [metadata.resources.caps]
-# docker caps per compose service, applied from protocol v1.2 (docs/PROTOCOL.md §2.10)
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
 [metadata.seeds]
-# the instances this task may run from (docs/PROTOCOL.md §2.13): the default, the ones a runner may draw
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
 default = 0
 allowed = [0]
@@ -88,16 +88,23 @@ timeout_sec = 1200.0
 environment_mode = "separate"
 network_mode = "no-network"
 
-# Resource limits (docs/PROTOCOL.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
 [[verifier.collect]]
 service = "rcb_monitor"
 command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
 [[verifier.collect]]
 service = "sim"
-command = "sh /srv/finalize.sh"   # end + dump + exit the service, one fresh-process replay with the video, write final.json
-timeout_sec = 27000              # the end (a resume replay included) <= 1 h, the replay <= the agent's budget
+command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json (the live verdict), then one video-only replay
+timeout_sec = 27000              # the end (a resume replay included) <= 1 h; the video pass after the verdict <= the agent's budget
 
 [agent]
 timeout_sec = 10800.0             # Agent wall-clock budget

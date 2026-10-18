@@ -6,9 +6,8 @@ of STUB_PLAN (comma-separated, one per process, the counter in STUB_STATE):
   mismatch       succeeds, but the rebuilt start differs from the instance's record (instance_matches false)
   die            exits 1 without a result        error   prints a result line without `replays`
   sleep          sleeps past any limit           novideo succeeds; a --video call writes no video
-The standard collect hook's video pass (template/standard/environment/sim/finalize.sh) imports it as a module instead:
-Session / load_trajectory / render_video / render_frame, every Session counted in STUB_SESSIONS; STUB_VIDEO = ok (the
-filmed run ends in state STUB_VIDEO_SHA, default "L"), fail (render_video raises) or sleep (past the pass's limit)."""
+(Until 2026-10-17 the standard collect hook finalize.sh also imported it as a module, STUB_SESSIONS / STUB_VIDEO; the
+standard modes now run the shared service layer, board 0153.)"""
 import json, os, sys, time
 
 MAX_ROWS = 4500

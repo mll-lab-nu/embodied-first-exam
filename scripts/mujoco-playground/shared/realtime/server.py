@@ -1,13 +1,19 @@
 """eai-standard/2.3 sim service for MuJoCo Playground's quadruped standard-realtime tasks -- the adapter behind the shared
-realtime layer (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/PROTOCOL.md §4b,
+realtime layer (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §4b,
 docs/benchmarks/mujoco-playground.md).
 
 The simulator-specific half only: `Quadruped` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling module rcb_quadruped.Session -- the same scene, command schedule,
-pushes, termination rule, success check and replay as the standard twin's eai-standard/2.2 service
+pushes, termination rule and success check as the standard twin's eai-standard/2.2 service
 (environment/sim/server.py of `-standard`). The protocol, the clock, the plan, the episode, crash recovery and the
 finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the HumanoidBench sources
 (ci_checks/check-tooling-identity.sh).
+
+Grading: the live episode's verdict (owner, 2026-10-17, board 0151; nothing is replayed): step() reports the task's
+check on the live simulator after every control step (rcb_quadruped.Session.check(): getup's 25 upright steps and the
+stands' 100-step hold are inside it; a joystick episode passes only at the horizon), which is the rule the replay of the
+recorded episode applied, so no live_verdict() is needed. `start_sha` is the frozen instance's recorded state hash:
+rcb_service refuses a fresh episode that does not start there (instance_mismatch, an infrastructure failure).
 
 What the agent gets is what the standard twin gives, minus the 2.2 additions the realtime layer does not serve
 (`/kinematics`, per-frame camera poses, depth modes, the `done` action): the cameras (RGB and depth), the robot's own
@@ -79,7 +85,8 @@ class Quadruped:
 
     def __init__(self, instance: str):
         self.instance = instance
-        self.s = Q.Session(instance)
+        self.s = Q.Session(instance, check_hash=False)            # the start is checked by the layer (start_sha), as a give-up
+        self.start_sha = str(self.s.inst.get("state_sha") or "")  # the frozen instance's recorded t = 0 state hash
         m = self.m = self.s.model
         self.control_dt = float(self.s.control_dt)
         self.max_control_steps = int(self.s.horizon)
@@ -220,15 +227,11 @@ class Quadruped:
     def state_sha(self) -> str:
         return self.s.state_sha()
 
-    def verify(self, rows: np.ndarray) -> dict:
-        """The recorded episode from the frozen instance in a fresh Session (physics only)."""
-        st = Q.Session(self.instance).replay(rows)
-        return {"success": bool(st["success"]), "state_sha": st["state_sha"]}
-
     def save_trajectory(self, rows: np.ndarray, path: str, meta: dict) -> None:
         self.s.save_trajectory(rows, path, meta)
 
     def render_video(self, rows: np.ndarray, path: str) -> None:
+        """The episode's video, after the verdict: one pass over the rows from the frozen start on this simulator."""
         self.s.render_video(rows, path)
 
 

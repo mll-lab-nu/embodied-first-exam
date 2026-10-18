@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for MolmoSpaces (docs/STANDARD_MODE.md, docs/benchmarks/molmospaces.md): the adapter
+"""eai-standard/2.2 sim service for MolmoSpaces (docs/protocol/standard_mode.md, docs/benchmarks/molmospaces.md): the adapter
 of the shared layer rcb_limited.py; the simulator is rcb_molmospaces.Episode (upstream MolmoSpaces, MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl; nothing about objects ever leaves this process.
@@ -228,7 +228,8 @@ def dump() -> None:
         layout=np.array(S.layout),
         family=INST["family"],
     )
-    L._write_json(os.path.join(DATA, "episode.json"), {**summary(), "live_sha": E["live_sha"]})
+    L._write_json(os.path.join(DATA, "episode.json"), {**summary(), "live_sha": E["live_sha"],
+                                                       "startup": EP.n_startups, "pid": os.getpid()})   # finalize.sh's late-exit check
     write_final()
 
 
@@ -473,7 +474,7 @@ def replay_row(row) -> None:
     ROWS.append(np.asarray(row, dtype=np.float64))
 
 
-EP.begin(
+resumed = EP.begin(
     state=E,
     step=replay_row,
     state_sha=S.state_sha,
@@ -484,6 +485,14 @@ EP.begin(
 )
 if E["done"]:
     dump()  # resumed after the episode had ended: the record is rewritten from the replay
+if resumed and not E["done"]:
+    # the episode goes on: an episode.json from a call the crash lost (it ended there, then was rolled back to the last
+    # checkpoint) is not this episode's record; finalize.sh must never take it for one
+    for f in ("episode.json", "trajectory.npz"):
+        try:
+            os.remove(os.path.join(DATA, f))
+        except OSError:
+            pass
 E["ready"] = True
 write_final()
 open(PID_FILE, "w").write(str(os.getpid()))

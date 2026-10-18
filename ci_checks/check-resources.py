@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute resources (docs/PROTOCOL.md §2.9, protocol v1.1.4): every task.toml has `[metadata.resources]` with the
+"""Compute resources (docs/protocol/README.md §2.9, protocol v1.1.4): every task.toml has `[metadata.resources]` with the
 required keys and sane values, consistent with the task's GPU reservations and `[environment]` caps, and the README's
 `## Compute resources` section shows the same values (it is rendered by scripts/task_conventions.py).
 Resource limits (§2.10, v1.1.5): `[metadata.resources.limits]` with every key, the scope of the task's mode, limits no

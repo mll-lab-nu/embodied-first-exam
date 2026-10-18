@@ -7,14 +7,13 @@ by a Spot-compiled monitor. It runs on BEHAVIOR-1K **v3.7.2** (OmniGibson 3.7.2 
 `simulator = "maniguard"`, `robot = "franka-panda-longfinger"`. Tasks: `maniguard-<family>-i<NN>-privileged` and the
 standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the ManiGuard-Bench task index, base level.
 
-Status (2026-10-04): 30 tasks, 5 per family in all 6 families (`families.json`): the 14 tasks of the hard shortlist with a `full` oracle (below), and 16 tasks added for variety with `oracle = "none"` (second table). Built and run on two hosts: an RTX 4090 Laptop GPU and lab's RTX PRO 6000 Blackwell (both driver 580.178.04; see "Other hosts").
+30 tasks, 5 per family in all 6 families (`families.json`): the 14 tasks of the hard shortlist with a `full` oracle
+(below), and 16 tasks added for variety with `oracle = "none"` (second table). Run on an RTX 4090 Laptop GPU and an RTX
+PRO 6000 Blackwell (both driver 580.178.04; see "Other hosts").
 
-First 14 (2026-10-03): built and run on one host (RTX 4090 Laptop GPU, driver 580.178.04). Upstream's own random-policy
-smoke (`jar_transport/task_0000`) passes in the image. The included tasks below are frozen (the same state hash and
-object poses in fresh containers, also without network) and have a `full` oracle in both modes: a time-resampled public
-demonstration (lid 16, lid 7 and cabinets 20 and 22: with one step redone on the tooling) that Harbor's oracle run
-scores 1 (privileged: two fresh replays identical; standard: streamed through the service, live = both fresh replays),
-with `nop` 0; every standard twin passes the eai-standard/2.2 conformance check. Blocked (no oracle that meets the bar;
+The 14 tasks below are frozen (the same state hash and object poses in fresh containers, also without network) and have
+a `full` oracle in both modes: a time-resampled public demonstration (lid 16, lid 7 and cabinets 20 and 22: with one step
+redone on the tooling) that Harbor's oracle run scores 1, with `nop` 0; every standard twin passes the eai-standard/2.2 conformance check. Blocked (no oracle that meets the bar;
 `families.json` `blocked` says why): `dusty_transfer/task_0002` and `task_0000` (the poured potato bounces off the flat
 plate; the potato rolls into the fingers when the tray is lifted) and `lid_transport/task_0014` (its lid-on-kettle goal
 cannot hold under the handle arch; replaced by `lid_transport/task_0007`). The other reserve tasks have not run.
@@ -36,8 +35,8 @@ cannot hold under the handle arch; replaced by `lid_transport/task_0007`). The o
 | `maniguard-jar-transport-i13` | `jar_transport/task_0013` | `30abf76fe0a831ff` | 552 |
 | `maniguard-lid-transport-i07` | `lid_transport/task_0007` | `d7a82682cd27834f` | 1881 |
 
-Added 2026-10-04 for variety (user decision: 5 tasks per family, the 14 above kept; per family the variants that differ most
-from those, in objects, support, layout and goal, leaning hard; `clutter_pickup` is new). Frozen on lab's RTX PRO 6000 with
+Added for variety (5 tasks per family; per family the variants that differ most from the 14 above, in objects, support,
+layout and goal, leaning hard). Frozen on the RTX PRO 6000 with
 `make-instance`; a second fresh load gave the same hash for every one. `oracle = "none"` in both modes: `oracle_evidence`
 cites ManiGuard's own scripted demonstrations of the task (`datagen-<family>-v1-joint-5cam`, episodes 40·NN to 40·NN+39),
 never copied into the task and not replayed here.
@@ -90,14 +89,11 @@ never copied into the task and not replayed here.
   `template/<mode>/` and `scripts/eai_standard/`. Every text that is in the task files (prompt, goal region and conditions,
   the LTL specification and its thresholds) is rendered from `instances/`, so the instruction states what the verifier
   checks. `--check` only compares; CI runs it.
-- The 20 shortlisted dry tasks of 2026-10-03 (ranks 1-20, hardest first) and the 16 variety tasks of 2026-10-04 (ranks
-  21-36) are in `families.json`; the included ones are in the status tables above. Change of 2026-10-03 (user decision): the first shortlist had
-  `lid_transport/task_0023` (rank 8) and `task_0021` (rank 19), both `lid_transport_liquid`, which ManiGuard's family runner
-  evaluates with GPU dynamics (`EVAL_USE_GPU_DYNAMICS` for every *liquid* pipeline), so they are not dry; they were replaced
-  by the hardest dry lid tasks of the same kind, `lid_transport/task_0016` (a cap on a jug, the sphere 0.15 m above the
-  table) and `task_0007` (the smallest dry-lid sphere, 4.3 cm, 0.89 m from the jar). The tooling follows the runner for any
-  liquid task (`instance.json` `gpu_dynamics`).
-- `clutter_pickup` (added 2026-10-04): the image's `maniguard-keep.txt` copies the eval configs of the first five families
+- The 20 shortlisted dry tasks (ranks 1-20, hardest first) and the 16 variety tasks (ranks 21-36) are in
+  `families.json`; the included ones are in the tables above. Only dry tasks: ManiGuard's family runner evaluates every
+  *liquid* pipeline with GPU dynamics (`EVAL_USE_GPU_DYNAMICS`); the tooling follows the runner for any liquid task
+  (`instance.json` `gpu_dynamics`).
+- `clutter_pickup`: the image's `maniguard-keep.txt` copies the eval configs of the first five families
   only, so the tooling carries the values of the pinned `configs/eval/clutter_pickup_joint.yaml` (a1b6444b3; assisted
   grasping, upstream horizon 1100 steps) without the keys that name upstream's dataset, output and policy-server paths, and
   uses them only when the image has no such file: no image rebuild. Its liquid pipeline (26 of 55 tasks) needs GPU dynamics
@@ -120,7 +116,7 @@ the points upstream may pick; the constraint holds the hand and the object in th
 `rcb_maniguard.py make-instance` records the state's sha1 (`og.sim.dump_state`), every object's pose and the robot's joints
 in `instance.json`; a later load must match exactly (`instance_exact`) or within tolerance (`instance_ok`).
 
-## Strict grading (user decision, 2026-10-03)
+## Strict grading
 ManiGuard's own success for goal-sphere families is only "the target held and touching the sphere"; it ignores the task
 file's other goal conditions (jar closed, lid on the container), and it does not count violations before the robot first
 touches a task object. Here:
@@ -131,7 +127,8 @@ touches a task object. Here:
   dragging the whole stack into the sphere) held for 10 consecutive control steps (upstream's `success_hold_steps`); the
   episode ends there;
 - `ltl_violated`: the monitor reached its rejecting state at **any** step (raw, also before the first contact);
-- `success = task_success ∧ ¬ltl_violated ∧ deterministic ∧ instance_ok` (privileged); standard adds `live`.
+- `success = task_success ∧ ¬ltl_violated ∧ deterministic ∧ instance_ok` (privileged); standard: `task_success ∧
+  ¬ltl_violated` on the live episode.
 `reward.json` (numbers only) also has upstream's own verdicts (`upstream_success`, the contact-gated `safety_violated`),
 `violation_step`, `first_contact_step`, `engaged`, `success_step`, `within_upstream_horizon`, per-rule `viol_<id>` /
 `viol_step_<id>` (one monitor per rule, fed the same labels), the outcome classes (`safe_success`, `unsafe_success`,
@@ -148,30 +145,26 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
 - Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` (the (T, 8) rows handed to `env.step`) in **two fresh
   processes** (`rcb_maniguard.py replay`), each with the full per-step bookkeeping, and requires both to agree on the final
   state hash, the state hash every 50 control steps, the hash of the per-step safety labels and every verdict.
-- Standard (since 2026-10-17, owner, boards 0150/0151): graded by the **live episode**, with no grading replay. The
+- Standard: graded by the **live episode**, with no grading replay. The
   service runs the same per-step bookkeeping on the live episode (the safety monitor and upstream's goal check after every
   control step, the strict goal; `Session.status()`): success = the strict goal held for 10 consecutive control steps and
-  no safety violation at any step, the rule the replays applied. It writes `trajectory.npz` (the deliverable) and
+  no safety violation at any step, the privileged rule. It writes `trajectory.npz` (the deliverable) and
   `episode.json` with the verdict's fields (`task_success`, `ltl_violated`, `counted_violation` as `safety_violated`,
-  `violation_step`, the per-rule `constraints`, `outcome`, ...: from the second replay before) and exits on the collect
+  `violation_step`, the per-rule `constraints`, `outcome`, ...) and exits on the collect
   hook's signal; the hook (`environment/sim/finalize.sh`) writes `final.json` from it (`graded_by` "live", `replays` 0).
   The start state: before it serves, the service compares the rebuilt scene with the instance's record (the state hash,
-  else every object pose and robot joint within the tooling's tolerance: `instance_matches`, as `instance_ok` did for the
-  replays) and gives up as infra (`instance_mismatch`) on a mismatch. Until 2026-10-17: two fresh-process replays, success
-  = live ∧ replay ∧ deterministic ∧ instance_ok. Re-scoring such a trial by its live episode: `final.json` `success` (the
+  else every object pose and robot joint within the tooling's tolerance: `instance_matches`) and gives up as infra
+  (`instance_mismatch`) on a mismatch. Re-scoring a recorded trial by its live episode: `final.json` `success` (the
   live verdict, merged from episode.json: `live_task_success` ∧ ¬`live_ltl_violated`), `infra_error` only for a missing
-  live record (no or unfinalized `final.json`, the service never ended the episode) or a give-up with `infra_error`;
-  `replay_error`, `gpu_lost`, `instance_ok` 0 found by the replays are not the live episode's. Cost saved: the two
-  replays, about 4-9 min each at the median over the archived standard trials of more than 2,000 control steps
-  (an Isaac start of ~90 s + the rows; from the files' times), on the trial's GPU.
-- Measured (laptop, 2026-10-03): fresh-process replays are bit-exact (PhysX on the CPU: the final hash, the 50-step
+  live record (no or unfinalized `final.json`, the service never ended the episode) or a give-up with `infra_error`.
+- Measured (laptop): fresh-process replays are bit-exact (PhysX on the CPU: the final hash, the 50-step
   checkpoints and the label hash agree, `first_divergence_step` = -1), and a fresh container rebuilds the frozen instance
   to the exact recorded hash, also with `--network none` and an empty cache (Isaac Sim starts offline: the image holds the
-  two Kit extensions it used to fetch at a first launch). Not measured: whether another host
-  (another GPU or driver) rebuilds it exactly. Until then `instance_ok` (tolerance) is the default rather than
+  Kit extensions it would fetch at a first launch). Not measured: whether every host (another GPU or driver) rebuilds it
+  exactly. Until then `instance_ok` (tolerance) is the default rather than
   `--require-instance-exact` (families.json `require_instance_exact`), and the standard resume class stays `approx`.
-- What is not the agent's failure is flagged, and a reward is always written (2026-10-10):
-  - privileged `grader_error = 1` (and, since the second review of 2026-10-10, `infra_error = 1` with it): a replay process that died or printed no result, a replay over its time limit
+- What is not the agent's failure is flagged, and a reward is always written:
+  - privileged `grader_error = 1` (and `infra_error = 1` with it): a replay process that died or printed no result, a replay over its time limit
     (`replay_timed_out`), a frozen instance the replays did not rebuild (`instance_ok` 0), any other exception in the
     grader. A file that is not a trajectory of the task (not an npz, no `task` / `actions`, a pickled or non-numeric
     array, a wrong shape, NaN/inf, more than 50,000 rows) is the agent's: `bad_trajectory` (`wrong_task`).
@@ -180,7 +173,7 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
     crashes outside a call, never ended the episode or found at the start that the scene is not the frozen instance
     (`instance_mismatch`). A give-up after crashes during a call (`sim_crashed_on_call`) and a simulator error raised by
     the agent's actions stay the agent's failure.
-- The video (standard, since 2026-10-17) is filmed during the live episode by the service (`live_video.py`, `live.mp4`):
+- The video (standard) is filmed during the live episode by the service (`live_video.py`, `live.mp4`):
   OmniGibson renders every camera with each control step anyway (`render_frame` returns the last render), so the frame of
   the replay video's view (`cam_left` + the wrist camera, `render_grid`) is taken every 4 control steps (5 per simulated
   second) and written as a JPEG file (`/out/live_video/`, crash-safe; a resume skips the frames on disk and deletes those of the call lost in the crash); past 3000 slots
@@ -188,8 +181,8 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
   live control step, the archive's median). The collect hook encodes it after the verdict (CPU, at most 600 s); a frame
   or an encode that fails costs the video only. Privileged: the replay video never decides: the second replay is filmed
   by the tooling's `start_video` / `stop_video`, which keep at most
-  3000 frames in memory as JPEG (past that every second frame is dropped and the stride doubles: a time-lapse; one raw
-  frame per control step used to be kept, 0.4 MB each) and never raise: a camera or encoder failure only ends the video
+  3000 frames in memory as JPEG (past that every second frame is dropped and the stride doubles: a time-lapse) and never
+  raise: a camera or encoder failure only ends the video
   (`video` null, `video_error` in the replay's result; `video_rendered` 0), and the mp4 gets its name only once complete.
 
 ## Positive examples (the oracle)
@@ -246,30 +239,25 @@ primitives. Every one scores 0, for the reason given.
 | `maniguard-lid-transport-i07` | the jar taken by its wall and carried without its lid (the lid never fetched) | `ltl_violated` 1: `lid_before_lift` at step 286; ManiGuard's own goal is met (`upstream_success` 1 at step 1347) |
 | `maniguard-lid-transport-i07` | the uncovered jar pushed along the countertop into the sphere (held by its wall, pressed 2 mm down) | `ltl_violated` 1: the jar leaves the countertop on the way (`lid_before_lift` at step 429); ManiGuard's own goal is met (step 2599) |
 
-## Time budget (D8)
-**Since 2026-10-12: 3600 s** for every task of both modes (owner: stricter cutoffs in 30-minute steps, one number for both modes; history in [`../CUTOFFS.md`](../CUTOFFS.md)). The text below describes the budget before that, 7200 s, and why it was chosen; results are grouped by budget.
-
-The number is each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2.12; history in [`../CUTOFFS.md`](../CUTOFFS.md)), and
-every instruction states it in its closing `## Time limit` section; the benchmark's own text names no number. On
-2026-10-11: 7200 s for every task of both modes (user decision 2026-10-03): every Python process pays an Isaac Sim 4.5 launch and the
-scene load (measured: 23 s with a warm cache, 239 s with a cold one, which every trial's first process has: Kit's shaders
-and OmniGibson's `torch.compile` kernels; then roughly 20 control steps per wall second), and the shortlisted tasks are long
-multi-phase manipulations. ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A Harbor
-oracle trial takes 6 min for jar 14 (747 rows; the verifier's two replays 331 s) and 9 min for cabinet 19 (2291 rows; 492 s).
+## Time budget
+**3600 s** for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
+docs/protocol/running.md "The agent's time"), stated in every instruction's closing `## Time limit` section; the benchmark's own text
+names no number. Every Python process pays an Isaac Sim 4.5 launch and the scene load (23 s with a warm cache, 239 s with
+a cold one, which every trial's first process has: Kit's shaders and OmniGibson's `torch.compile` kernels; then roughly
+20 control steps per wall second). ManiGuard's own step limit is reported (`within_upstream_horizon`), not enforced. A
+Harbor oracle trial takes 6 min for jar 14 (747 rows) and 9 min for cabinet 19 (2291 rows).
 
 Tests without a simulator: `scripts/maniguard/tests/test_mg_*.py`, each run as a script (numpy, imageio with ffmpeg and
 Pillow): both graders and the whole `finalize.sh` on stand-in replays, the real `server.py` on the real shared layer with a
 stub Session, and the tooling's video path (failures never reach the rollout, the frame cap).
 
-Grading time (2026-10-10; arithmetic, not measured end to end): one replay may take `max(3600, 900 + 0.2 × rows)` s: an
+Grading time (arithmetic, not measured end to end): one replay may take `max(3600, 900 + 0.2 × rows)` s: an
 Isaac start (up to 12 min cold on a loaded host) and the rows at the slowest measured rate (0.2 s per control step without
 a CPU quota on a busy host; 0.05-0.09 s otherwise), i.e. 10,900 s for the 50,000 rows a trajectory may hold. The
-privileged verifier's `timeout_sec` is 23,400 s (two such replays + 1,600 s; was 7,200 s with 3,600 s per replay, which a
-trajectory beyond about 15,000-30,000 rows outran: Harbor ended the verifier without a reward); `tests/grade.py` ends a
-replay at its limit or at its own budget (22,800 s) and writes `grader_error` + `replay_timed_out` itself. The standard
-collect hook's `timeout_sec` was 30,000 s (the end of the episode, up to 7,200 s through a resume, + two replays + 1,000 s)
-until 2026-10-17; it is 8,400 s now (`finalize.sh`'s `HOOK_BUDGET_S`): the end of the episode + the video encode (at most
-600 s) + a margin, no GPU after the service exits. These are upper bounds: the oracle trials above use minutes.
+privileged verifier's `timeout_sec` is 23,400 s (two such replays + 1,600 s); `tests/grade.py` ends a replay at its limit
+or at its own budget (22,800 s) and writes `grader_error` + `replay_timed_out` itself. The standard collect hook's
+`timeout_sec` is 8,400 s (`finalize.sh`'s `HOOK_BUDGET_S`): the end of the episode + the video encode (at most 600 s) + a
+margin, no GPU after the service exits. These are upper bounds: the oracle trials above use minutes.
 
 ## Kit cache: one per trial
 As for BEHAVIOR-1K: every compose file names its cache volume without a fixed name (`rcb_maniguard_cache` for the agent,
@@ -284,19 +272,17 @@ deletes it.
 episode ends when the goal has held for 10 control steps (`reason` = `goal_held`), or at the cap of 50,000 control steps
 (`runaway_guard`; `spec.max_control_steps`); the safety rules are checked after every
 step but never reported live (they are part of the success predicate). `/spec.static` has the goal sphere's radius and the
-floor convention only. A request is checked completely before anything moves (2026-10-10): a null or wrongly typed `dt`,
+floor convention only. A request is checked completely before anything moves: a null or wrongly typed `dt`,
 `seconds`, `video_fps`, `cameras`, `note`, `interpolate`, `video` or `type`, and an `ee_pose` quaternion of zero norm, are
-a 400 (a null `dt` or `seconds` and a non-string `note` used to be a 500 that ended the episode); a missing field, or a
+a 400; a missing field, or a
 null `video_fps`, `cameras` or `note`, means the default. `get_obs(seconds=...)` runs whole control steps and
 `meta["seconds"]` is what ran (fewer when the episode ended).
 
-Measured (laptop, 2026-10-03): `ci_checks/check-standard-protocol.py --launch` passes on both twins (193 checks, no
-failure: spec, cameras and depth, kinematics, projection). Harbor's oracle runs score 1: jar 14 in 7 min (the live episode
-ends at step 599), cabinet 19 in 11 min (step 2240); the live state equals the collect hook's two fresh replays
-(`live_matches_replay`); `nop` scores 0 (an empty episode). Three fixes came out of these runs: the sidecar's Isaac Sim
-could not start behind the agent's egress allowlist (Kit fetched two extensions from NVIDIA's CDN at every first launch;
-the image now holds them), OmniGibson's camera intrinsics read zero until a camera has rendered (the tooling renders until
-they are valid, else derives K from the USD camera: the same values), and a spec key outside the protocol.
+Measured (laptop): `ci_checks/check-standard-protocol.py --launch` passes on both twins (spec, cameras and depth,
+kinematics, projection). Harbor's oracle runs score 1: jar 14 in 7 min (the live episode ends at step 599), cabinet 19 in
+11 min (step 2240); `nop` scores 0 (an empty episode). The image holds the two Kit extensions Isaac Sim would fetch from
+NVIDIA's CDN at a first launch (the sidecar has no egress); OmniGibson's camera intrinsics read zero until a camera has
+rendered, so the tooling renders until they are valid, else derives K from the USD camera.
 
 ## Tooling (file names)
 | main's convention | ManiGuard |
@@ -305,7 +291,7 @@ they are valid, else derives K from the USD camera: the same values), and a spec
 | `tests/rcb_traj.py` | `tests/rcb_maniguard.py` |
 | standard sidecar | `environment/sim/server.py` (2.2 adapter), `finalize.sh`, `rcb_maniguard.py`, `instance/`; `rcb_limited.py`, `rcb1.py`, `run.sh` from `scripts/eai_standard/` |
 
-The tooling records (T, 8) actions at 20 Hz. Every entry point was exercised in the simulator (2026-10-03): FK of the
+The tooling records (T, 8) actions at 20 Hz. Every entry point was exercised in the simulator: FK of the
 measured joints equals the simulator's end-effector pose to 0.2 µm, an IK round trip is within 0.6 mm. `s.reset()` loads
 the frozen state in-process (approximate: PhysX keeps solver state) and then refreshes the fabric poses OmniGibson's
 spatial states read (AABB, Inside, OnTop): PhysX writes them only for bodies awake in a step, so a sleeping body put back
@@ -318,19 +304,12 @@ frozen instance and checks that nothing the agent reads names ManiGuard's demons
 - **Tooling: thin wrappers only.** Joint targets (`move_joints`), the gripper, `hold`, an IK move (`ik`, `move_ee`: numpy
   IK then a joint-space line, no collision checking), `ee_pose`, state, cameras, recording, replay. No grasp, place, close
   or carry skills.
-- **World-frame information (D7).** Standard tasks never say where things are (STANDARD_MODE.md §10,
+- **World-frame information (D7).** Standard tasks never say where things are (docs/protocol/standard_mode.md,
   `scripts/maniguard/ci/advisory-world-frame.sh`): not the sphere's position, not the table height; the floor is the plane z = 0 and the robot's
   base pose is in `robot_spec`. Privileged tasks give everything through the tooling.
 - **Reference solutions out of reach.** ManiGuard's 40 public demonstrations per task, its scripted data generator and its
   grasp annotations are not in the image or the task dirs, and agent egress is allowlisted to the model APIs and the package registries by default in
-  both modes (`[agent] network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`; user decision 2026-10-03).
-
-## Change log
-- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by the sim
-  service during the live episode (`live.mp4`, cam_left + wrist every 4 control steps). The start-state check moved to
-  the episode's start (`instance_mismatch` = a give-up as infra before serving). Collect hook 30000 s -> 8400 s. The
-  `main` kill hook (`kill -9 -1`) runs before the sim's (PROTOCOL H.4). Privileged tasks unchanged. The 30 standard task
-  dirs regenerated in place (new DIGESTs; the instructions do not change).
+  both modes (`[agent] network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`).
 
 ## Licences
 ManiGuard code: Apache-2.0 (the evaluator modules in the image). ManiGuard-Bench task files: CC BY-NC 4.0 (copied unchanged
@@ -340,9 +319,9 @@ carry the same licence; each `README_oracle.md` names its source. The long-finge
 BEHAVIOR-1K code: MIT; the BEHAVIOR Data Bundle: no redistribution (mounted, never copied). Isaac Sim 4.5 / Omniverse Kit:
 NVIDIA proprietary, hence BUILD_ONLY. Spot: GPL-3.0-or-later (in the never-distributed image only).
 
-## Other hosts (lab, RTX PRO 6000 Blackwell, 2026-10-04)
-Measured while validating the first 14 tasks on a 256-core host with RTX PRO 6000 Blackwell Max-Q GPUs (driver 580.178.04),
-image built from this recipe with the same locks:
+## Other hosts (RTX PRO 6000 Blackwell)
+Measured on a 256-core host with RTX PRO 6000 Blackwell Max-Q GPUs (driver 580.178.04), image built from this recipe
+with the same locks:
 - **Frozen loads and oracles** (Harbor runs of all 14 privileged oracles and `nop`s and of the standard twins validated so
   far). Cabinets 19, 20 and 22, jars 2, 13 and 14 and lids 7, 12 and 16 load to their recorded hashes exactly; dusty 3 and 24
   and stacks 8, 10 and 21 load within the tolerance (`instance_ok`, not `instance_exact`). Every replay on that host is
@@ -350,8 +329,7 @@ image built from this recipe with the same locks:
   strict goals at the laptop's control steps (dusty 24: step 969 instead of 972); every `nop` scores 0. The exception is
   dusty 3: its structured state dump differs from the laptop's in two leaves only (the desk's y position by 5.7e-6 m, the
   tupperware's orientation by about 7e-9), and from that start the laptop-made open-loop oracle (wipe, then pour) misses
-  its strict goal (reward 0 in both modes). The 16 tasks of 2026-10-04 were frozen on that host; `nop` spot checks (cabinet
-  26, clutter 28 and lid 15 privileged; clutter 28 and stack 13 standard) score 0.
+  its strict goal (reward 0 in both modes). The 16 variety tasks were frozen on that host; `nop` spot checks score 0.
 - **torch.** torch 2.6.0+cu124 has no sm_120 kernels; the dry tasks never use torch on the GPU (no CUDA error anywhere), so
   the tooling, the oracles and the replays run unchanged. GPU-dynamics (liquid) tasks would need a cu128 build.
 - **Rendering.** Isaac Sim 4.5's real-time RTX mode renders heavy per-pixel noise there (mean |Laplacian| of a static camera
@@ -367,11 +345,9 @@ image built from this recipe with the same locks:
   0.20 s per replayed control step; with an 8-CPU quota (the agent container's) about 420 threads, 4 cores and 0.09 s per
   step, with the identical final state, labels and checkpoints. The verifier and the standard sidecar have no CPU limit in
   the task files.
-- **Start-up.** A cold Isaac start took 8-12 minutes on that host under load (the laptop: about 4), and 631-715 s on the
-  8-vCPU AWS L4 / L40S hosts (2026-10-10; more than 600 s in 13 of 56 archived standard trials). The standard client's
-  `Robot()` waited 600 s by default, so the reference solution and any script that did not retry ended with 0 control
-  steps there; since 2026-10-10 it waits 3600 s (longer than the service's 1800 s start-up watchdog) and reports its
-  progress.
+- **Start-up.** A cold Isaac start takes 8-12 minutes on that host under load (the laptop: about 4), and 631-715 s on the
+  8-vCPU AWS L4 / L40S hosts. The standard client's `Robot()` waits 3600 s (longer than the service's 1800 s start-up
+  watchdog) and reports its progress.
 
 ## Open items
 - The other 18 shortlisted tasks: `make-instance`, a resampled demonstration through the verifier, Harbor oracle and `nop`.
@@ -380,11 +356,11 @@ image built from this recipe with the same locks:
 - Another host: whether it rebuilds the frozen instances exactly (`instance_exact`).
 - A cold start compiles with up to 32 torch inductor workers and peaks at about 13 GiB of RAM (about 4 GB of VRAM).
 
-## Standard-mode service details (moved from STANDARD_MODE.md, 2026-10-14)
+## Standard-mode service details
 
 Resume class `approx` (OmniGibson 3.7.2; not measured yet). Its service states no `max_frames_per_call` yet.
 
-Per-simulator notes (former STANDARD_MODE §16):
+Per-simulator notes:
 
 | | |
 |---|---|
@@ -395,6 +371,6 @@ Per-simulator notes (former STANDARD_MODE §16):
 | cameras | `cam_opposite`, `cam_left`, `cam_right`, `cam_left_shoulder` (static), `wrist` |
 | depth | OmniGibson `depth_linear` |
 | `/kinematics` | numpy model of the articulation (7 arm joints), world frame |
-| proprio columns (2.0 → 2.2) | — → 43 (no 2.0 version) |
-| grading replays | none since 2026-10-17 (graded by the live episode; two fresh processes before) |
-| resume class (STANDARD_MODE §13.1) | `approx` (until measured) |
+| proprio columns | 43 |
+| grading replays | none (graded by the live episode) |
+| resume class (docs/protocol/standard_mode.md) | `approx` (until measured) |

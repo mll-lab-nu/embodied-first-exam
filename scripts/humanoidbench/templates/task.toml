@@ -10,7 +10,7 @@ keywords = [{{keywords}}]
 
 [metadata]
 author_name = "pingyue"
-# trajectory | policy (see docs/PROTOCOL.md)
+# trajectory | policy (see docs/protocol/README.md)
 task_type = "trajectory"
 simulator = "humanoidbench"
 robot = "{{robot_slug}}"
@@ -24,7 +24,7 @@ expert_time_estimate_hours = {{expert_hours}}
 
 [verifier]
 timeout_sec = {{verifier_timeout}}
-# grade.py runs in its own container, built from tests/Dockerfile (docs/PROTOCOL.md §2.6): the agent's container,
+# grade.py runs in its own container, built from tests/Dockerfile (docs/protocol/README.md §2.6): the agent's container,
 # where it was root, is gone by then, and only /app/output/ crosses over. It replays locally and the reward
 # formula is live in it, so it gets no network either.
 environment_mode = "separate"

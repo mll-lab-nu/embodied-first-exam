@@ -1,12 +1,12 @@
 # AGENTS.md — map for coding agents working in this repo
 
-Read `README.md`, `docs/PROTOCOL.md` (v2.0: recommended conventions, each task declares its own settings, §2; the eight
-invariants of Appendix H bind and no task value overrides them), `docs/RUNNING.md` (official runs) and `CONTRIBUTING.md` first.
+Read `README.md`, `docs/protocol/README.md` (v2.0: recommended conventions, each task declares its own settings, §2; the eight
+invariants of Appendix H bind and no task value overrides them), `docs/protocol/running.md` (official runs) and `CONTRIBUTING.md` first.
 
-- Terminology (protocol v1.0): **privileged** mode (formerly unlimited) and **standard** mode (formerly limited,
-  wire protocol `eai-standard/2.x`, formerly `rcb-limited/2.x`); v1.1 adds a third mode, **standard-realtime** (standard mode on a
-  clock that does not stop, `eai-standard/2.3`, PROTOCOL §3). Task directories end in `-privileged`, `-standard` or `-standard-realtime`;
-  base images are `ghcr.io/mll-lab-nu/eai-<name>`, one image per benchmark (PROTOCOL §1; formerly `rcb-<sim>`). No `results/` in task dirs.
+- Modes: **privileged**, **standard** (wire protocol `eai-standard/2.x`) and **standard-realtime** (standard mode on a
+  clock that does not stop, `eai-standard/2.3`), PROTOCOL §3. Task directories end in `-privileged`, `-standard` or
+  `-standard-realtime`; base images are `ghcr.io/mll-lab-nu/eai-<name>`, one image per benchmark (PROTOCOL §1). No
+  `results/` in task dirs.
 - Generators under `scripts/` end with `scripts/task_conventions.py` (`normalize`): fields, protocol spelling, test.sh, graders,
   README layout, no `results/`. `python3 scripts/task_conventions.py --check tasks/<task>` reports a task it would change.
 - Tasks are self-contained Harbor task dirs under `tasks/`. Nothing at run time imports repository code outside the task
@@ -20,17 +20,16 @@ invariants of Appendix H bind and no task value overrides them), `docs/RUNNING.m
 - Every task declares its minimum compute (PROTOCOL §6): `[metadata.resources]` in `task.toml`, written by
   `task_conventions.normalize` from the rules in `scripts/task_resources.toml`, and the README's `## Compute resources`
   rendered from it; `ci_checks/check-resources.py` checks both.
-- Every task declares resource limits and docker caps (PROTOCOL §6, RUNNING.md "Resources"): `[metadata.resources.limits]` / `.caps` from
+- Every task declares resource limits and docker caps (PROTOCOL §6, docs/protocol/running.md "Resources"): `[metadata.resources.limits]` / `.caps` from
   the `[[limit]]` / `[[cap]]` rules in the same file; `normalize` writes the `## Resource limits` paragraph of `instruction.md`
-  (just before the closing `## Time limit`), rendered from them (generator-owned: edit the rules, never the paragraph). From v1.2 a task-provided monitor
+  (just before the closing `## Time limit`), rendered from them (generator-owned: edit the rules, never the paragraph). A task-provided monitor
   (`scripts/rcb_monitor/`, copied into every task by `normalize`; `ci_checks/check-monitor.py` runs its tests) and the
   verifier judge them; with `RCB_LIMITS_ENFORCE=1` a violation fails the trial (default 0: recorded only). Declared caps
   are the applied ones: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb`. A CPU cap above the
   host's CPU count is the runner's to clamp (docker refuses it); the values in `scripts/task_resources.toml` stay.
   The same step's `sanitize` line in every `tests/test.sh` removes links and special files from `/app/output` before
   the grader reads the agent's files.
-- The agent's time cutoff (PROTOCOL §2) is each task's own `[agent] timeout_sec` (owner 2026-10-14, as in
-  Terminal-Bench): its author sets it in the pull request; a generator writes its benchmark's number, a constant in its
+- The agent's time cutoff (PROTOCOL §2) is each task's own `[agent] timeout_sec` (as in Terminal-Bench): its author sets it in the pull request; a generator writes its benchmark's number, a constant in its
   own files (`CUTOFF_SEC` / `CUTOFF`). There is no table and no apply script. `normalize` writes from it the standard
   modes' `RCB_WALL_CLOCK_S`, the README row and the last section of every `instruction.md`, `## Time limit` ("You have N
   seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.", then what the
@@ -38,8 +37,8 @@ invariants of Appendix H bind and no task value overrides them), `docs/RUNNING.m
   benchmark's own text says "the time limit (`## Time limit`)", never a duration. `ci_checks/check-cutoffs.py` (per task):
   a whole number of seconds, at most 14400, and the instruction, README and sim service agree (advisory); the twins'
   equal number is an invariant (`ci_checks/check-twins.py`, Appendix H.7). To change a time (the author's decision): set the number (or the generator's constant and
-  regenerate), normalize, and state old -> new in the pull request; `docs/CUTOFFS.md` keeps the history up to 2026-10-14.
-- Every task names its seeds (PROTOCOL §2, RUNNING.md "Seeds"): `[metadata.seeds]` `default` / `allowed` / `oracle` in
+  regenerate), normalize, and state old -> new in the pull request (docs/protocol/running.md "The agent's time").
+- Every task names its seeds (PROTOCOL §2, docs/protocol/running.md "Seeds"): `[metadata.seeds]` `default` / `allowed` / `oracle` in
   `task.toml`, completed by `normalize` (default = `instance_seed`, else 0); `allowed` is a list, `{ from, to }` or "any"
   (the last two only with `build = "runtime"`: the task builds a seed's instance from a file `seed`); committed
   non-default instances under the privileged task's `tests/seeds/<seed>/` (never under `environment/`); reference solutions
@@ -69,7 +68,7 @@ invariants of Appendix H bind and no task value overrides them), `docs/RUNNING.m
 - Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`); no adapters, and no gateway that holds
   credentials or changes requests. The usage gateway (`scripts/usage_gateway/`, `GATEWAY=1` in `run_agent_batch.sh`;
   official runs use it) forwards model-API calls only (`api_paths.json`; anything else at a provider is a 403), records
-  token usage, and is then, with the package registries, the agent container's only egress (docs/RUNNING.md "Official runs"). No tool that runs
+  token usage, and is then, with the package registries, the agent container's only egress (docs/protocol/running.md "Official runs"). No tool that runs
   outside the container in official runs: the harness's web search is off (`run_agent_batch.sh` default
   `WEB_SEARCH=disabled`), as are account connectors, apps and plugins.
 - A task's agent egress is the model APIs and the package registries by default (`[agent] network_mode = "allowlist"`, the
@@ -79,14 +78,14 @@ invariants of Appendix H bind and no task value overrides them), `docs/RUNNING.m
   central table). A task needs no download at run time: bake it into the image or
   the task directory. Nothing an agent can read (image, tooling, instance metadata) names or locates a solution.
   Unattended batches: `scripts/run_agent_batch.sh` (lanes with per-job claims; configured by environment variables,
-  docs/RUNNING.md); its runner-side tools (`log_mirror.py`, `mem_guard.py`, `scan_secrets.py`, `account_failure_check.py`)
+  docs/protocol/running.md); its runner-side tools (`log_mirror.py`, `mem_guard.py`, `scan_secrets.py`, `account_failure_check.py`)
   are not task code.
-- `eai-standard/2.2` (docs/STANDARD_MODE.md Part 2), served by the BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint and
+- `eai-standard/2.2` (docs/protocol/standard_mode.md Part 2), served by the BEHAVIOR-1K, RoboLab, RoboWits, RoboPaint and
   MolmoSpaces standard tasks: its layer (`rcb_limited.py` with in-trial crash recovery, an implementation detail; the protocol's rule is the
   runner's one infrastructure retry, Appendix H.5, `rcb_client.py`, `rcb1.py`, `run.sh`) has one source,
-  `scripts/eai_standard/` (D9), copied unchanged into every 2.2 task (`check-tooling-identity.sh`); each benchmark adds
+  `scripts/eai_standard/`, copied unchanged into every 2.2 task (`check-tooling-identity.sh`); each benchmark adds
   only its adapter `environment/sim/server.py` (`scripts/eai_standard/toy_server.py` is the smallest one).
-- `eai-standard/2.4` (docs/STANDARD_MODE.md Part 4, RoboARC): 2.3 + the operations capability. Its layer is
+- `eai-standard/2.4` (docs/protocol/standard_mode.md Part 4, RoboARC): 2.3 + the operations capability. Its layer is
   `scripts/eai_standard/v2_4/rcb_limited.py` + `rcb_client.py` with 2.2's `rcb1.py` and `run.sh`, copied unchanged
   into every 2.4 task (`check-tooling-identity.sh`).
   `python3 scripts/eai_standard/selftest.py` tests the crash recovery on the CPU in about two minutes.

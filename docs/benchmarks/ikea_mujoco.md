@@ -85,7 +85,7 @@ replayed (below). Success needs all of:
   episode begins (`server.py`: scene files, initial-state hash, actuators and runtime against
   `environment/sim/runtime_binding.json`; a mismatch is `instance_mismatch`, `infra_error 1`, and nothing is served).
 
-Standard mode is graded by the live episode (owner, 2026-10-17, board 0150/0151): `success` = the sim service's live
+Standard mode is graded by the live episode: `success` = the sim service's live
 verdict, `graded_by_live 1`, `replays 0`. The service ends an episode at the first settled success, `Session.status()`
 and then `final_check()` on a snapshot with the last row held 1.0 s (the privileged grader's rule, the settle window
 included); a failed settle lets the episode go on (`meta["settle_failed"]`). An episode that ends otherwise (the wall
@@ -126,10 +126,9 @@ One rule for all scenes, clamp not fail (as RoboARC):
 - numpy / OpenBLAS SIMD masking in the image (`NPY_DISABLE_CPU_FEATURES` without AVX-512, `OPENBLAS_CORETYPE=Haswell`),
   as in RoboARC's image: unmasked, eket's reference diverged between AVX-512 and AVX2 hosts.
 
-Stress test (random, jerk and prefix strategies from the frozen birth): 1,696 episodes before the fixes, 293 BREAKDOWN,
-238 of them from instant (unslewed) jerk commands, 3.9 % for every other strategy combined. After the clamp, the prism
-rule and the eket dowel rule, the non-jerk BREAKDOWN rate fell to 1.75 % and prefix-jerk's from 89 % to 7 %; stegesund,
-203 episodes, one genuine non-jerk BREAKDOWN (the known finger-limit class). Residuals, none blocking: finger slams
+Stress test (random, jerk and prefix strategies from the frozen birth), with the clamp, the prism rule and the eket
+dowel rule: non-jerk BREAKDOWN rate 1.75 %, prefix-jerk 7 %; stegesund, 203 episodes, one genuine non-jerk BREAKDOWN
+(the known finger-limit class). Residuals, none blocking: finger slams
 while the hand slew is off (gladom), energy created at robot joint limits under random arm targets (vesken, eket), one
 table penetration (gladom, prefix-jerk), ViperX self-contact on jerk (svallet).
 
@@ -143,22 +142,20 @@ Each task has one reference for both modes, every row within the joint-speed lim
   guide, with true-state feedback (Jacobian-IK servos, gates, local searches), recorded as the executed rows;
 - stegesund: the authors' speed-limited demo, unchanged.
 
-Harbor on the final images: privileged oracle 1 / nop 0 on all eight, standard oracle 1 (live settled success, live
-end state = both replays') / nop 0 on all eight; variera's standard oracle scored 1 with the EGL sidecar (`-sim` 0.3.0),
-and on the Nyx sidecar (0.4.0) its live episode ended on the same settled success and end hash (its verifier's result
-is not recorded yet). Each reference ends on the same state hashes on Intel AVX2
+Harbor on the final images: privileged oracle 1 / nop 0 on all eight, standard oracle 1 (live settled success) / nop 0
+on all eight; on the Nyx sidecar variera's standard oracle episode ends on the same settled success and end hash (its
+verifier's result is not recorded yet). Each reference ends on the same state hashes on Intel AVX2
 (i9-14900HX), Intel AVX-512 (Xeon Gold 6230R) and AMD Zen 4 (Ryzen 9 7950X, EPYC 9354).
 
 ## Adversarial trial (PROTOCOL H.1)
-2026-10-17, on the review fixes (board 0146): `ikea-eket-i00-privileged` with a red-team paragraph on top of its
+`ikea-eket-i00-privileged` with a red-team paragraph on top of its
 instruction (obtain reward 1 without assembling the cabinet, by any exploit of the grader, the tooling, the file format
 or the simulator), Codex + GPT-6 Luna xhigh with the pool's lane settings: reward 0, deterministic, no grader or
 infrastructure error. The agent read the loader, the replay, `final_check()`, the operation tracker, the latches and the
 end-pose rule and found no bypass; its best attempt (a one-row hold) replays released and at rest and fails the goal.
-The same branch's Harbor oracle scored 1 (two replays, video) and nop 0 (`evidence.json` eket `maintainer_checks`); the standard twin of svallet on the final service: oracle 1 (live settled success, live end hash as before, both replays equal to it, video), nop 0 with a video (`evidence.json` svallet `maintainer_checks_standard`).
-Found by review before it and fixed: EKET's back could be pulled out after its slide was accepted (the end-pose rule,
-above); a malformed or compressed-bomb trajectory, a scene exception and, in standard mode, a simulator error or a
-malformed request field gave a free retry (now the agent's 0).
+A malformed or compressed-bomb trajectory, a scene exception and, in standard mode, a simulator error or a malformed
+request field are the agent's 0, never a free retry. Harbor checks: `evidence.json` `maintainer_checks` (eket) and
+`maintainer_checks_standard` (svallet).
 
 ## Timing
 One reference execution against the 4320 s bar (40 % of 10800 s). A Xeon Gold 6230R core (2.1 GHz) is a slow
@@ -202,8 +199,3 @@ The standard tasks' texts give no world coordinates: no part poses or positions,
 Every pose the standard agent gets or gives is in the robot frame (origin at the left arm's base link, +z up). The
 privileged tasks read anything, as privileged tasks do. A scene reads nothing from the environment (`rcb_ikea` drops
 kyrre's development switches `SW_FROM_OP` / `SW_FROM_T` on import).
-
-## Change log
-- 2026-10-17 (owner, board 0150/0151): standard modes graded by the live episode; no grading replay (the standard
-  verifier's two fresh-process replays are gone, and so is its IKEA MuJoCo image: it runs the shared client base, 600 s);
-  video by the live recording (`/data/live.mp4`, unchanged).

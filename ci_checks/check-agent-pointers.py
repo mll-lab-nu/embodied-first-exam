@@ -20,7 +20,7 @@ A legitimate mention (a licence notice that must name its source) is listed in A
 allowlist is what stops a download; this check keeps the address out of the task. Board 0072: RoboTangle's
 `reference_scene.json` carried `source_url` of the upstream demonstration, and one trial downloaded and replayed it.
 That file was in the simulator image, which this check cannot read: an image's own files are reviewed when the image
-is built (docs/LEAKAGE.md).
+is built (docs/protocol/leakage.md).
 
 Usage: check-agent-pointers.py [task dirs...]   (default: all of tasks/*)
 """
@@ -44,6 +44,10 @@ FILES = re.compile(r"""(?<![\w.-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrec
 ALLOW = [
     (r"^maniguard-", r"^environment/instance/NOTICE$", r"datasets/IDEAS-Lab-Northwestern/ManiGuard-Bench|github\.com/NU-IDEAS-Lab/ManiGuard",
      "CC BY-NC 4.0 attribution the licence requires, of the scene files' dataset (its demonstrations are other datasets, not named)"),
+    (r"^roboengineer-anycar-", r"^environment/public/(?:scripts/control_transfer/components/)?anycarbench/(?:NOTICE|circuits\.json)$",
+     r"^https://github\.com/f1db/f1db/?$",
+     "CC BY 4.0 attribution the licence requires, of F1DB's historical circuit outlines (track geometry the instruction "
+     "gives the agent, not a controller or a demonstration)"),
 ]
 
 

@@ -225,7 +225,8 @@ def main(argv: list[str]) -> int:
     dirs = [pathlib.Path(a) for a in argv if a != "--check"]
     if not dirs:
         reg = tomllib.loads((ROOT / "scripts/roboolympics/exported.toml").read_text())
-        dirs = [ROOT / "tasks" / e["name"] for e in reg["tasks"]]
+        dirs = [ROOT / "tasks" / e["name"] for e in reg["tasks"]
+                if e.get("kind") != "fullsim-policy"]   # the privileged twins (#282): graded by the verifier
     import task_conventions as TC
     bad = []
     for t in dirs:

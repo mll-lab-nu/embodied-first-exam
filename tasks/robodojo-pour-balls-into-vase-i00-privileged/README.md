@@ -35,7 +35,7 @@ trajectory) scores 0. The success description in `instruction.md` was written fr
 (`task/RoboDojo/tasks/pour_balls_into_vase.py`, `env/reward_manager/`); the code is the reference.
 
 ## Compute resources
-Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
 
 | | Agent phase | Verifier |
 |---|---|---|
@@ -45,7 +45,7 @@ Minimum allocation for one trial (docs/PROTOCOL.md §2.9; `[metadata.resources]`
 
 - GPU: required, an RTX-class NVIDIA GPU (ray-tracing cores, for Isaac Sim / Omniverse RTX rendering); recommended: L40S 48GB / L4 24GB / RTX 4090 24GB.
 - Measured: heaviest scene (pour_liquid_into_cup_random: GPU PhysX liquid + 15-20 clutter objects), one Isaac Session driven through 300 actions with frames from the three cameras, then the verifier's two fresh-process replays (the second filmed): main container docker peak 16.1 GiB (anon 14.9), GPU 9.0 GiB, CPU at its 8-core cap; verifier docker peak 15.7 GiB, GPU 9.6 GiB, 8 cores; rcb_monitor (peak_memory_gb 15.85, peak_gpu_memory_gb 9.0) + a per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10; determinism runs on all 54 tasks: 4.6-8.4 GB of GPU memory per Isaac process
-- Limits in the agent phase (docs/PROTOCOL.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 16 GiB GPU memory, 32 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 16 GiB GPU memory, 32 GiB memory. Limits measured: GPU: 9.0 GiB per Isaac Session on the heaviest scene (rcb_monitor, pour_liquid_into_cup_random, RTX 4090, 10-10) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 32 GiB, which every past trial ran under (docker peak 16.1 GiB of one Session on the heaviest scene; the agent may run a second Session); processes (peak 6) 512 and disk (peak 0.7 GiB) 20 GiB: design defaults.
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 16 GiB GPU memory, 32 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 16 GiB GPU memory, 32 GiB memory. Limits measured: GPU: 9.0 GiB per Isaac Session on the heaviest scene (rcb_monitor, pour_liquid_into_cup_random, RTX 4090, 10-10) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 32 GiB, which every past trial ran under (docker peak 16.1 GiB of one Session on the heaviest scene; the agent may run a second Session); processes (peak 6) 512 and disk (peak 0.7 GiB) 20 GiB: design defaults.
 
 ## Details
 

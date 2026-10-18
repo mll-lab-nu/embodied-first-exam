@@ -1003,7 +1003,7 @@ class Session:
         return q_arm.astype(np.float64), float(np.linalg.norm(p - target)), rot_angle(R, rot)
 
     # ---- cameras, depth, robot spec, stateless kinematics (the same data the limited service's /spec and /kinematics
-    # serve, docs/STANDARD_MODE.md rcb-limited/2.2). Nothing here steps physics or changes the simulator state.
+    # serve, docs/protocol/standard_mode.md rcb-limited/2.2). Nothing here steps physics or changes the simulator state.
     def _link_T(self, link) -> np.ndarray:
         p = link.get_pos(); q = link.get_quat()
         T = np.eye(4)

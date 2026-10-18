@@ -8,7 +8,7 @@ RoboCasa's [GR1 tabletop tasks](https://github.com/robocasa/robocasa-gr1-tableto
 |---|---|
 | upstream | robocasa/robocasa-gr1-tabletop-tasks @ `4840e671596f93ca03651524b9f72ffb1aadfeff` (MIT), robosuite @ `51cc017` (1.5.1) with its whole-body mink IK controller (mink 0.0.5), MuJoCo 3.2.6 |
 | tasks | `tasks/robocasa-gr1-<task>-i00-privileged` and `tasks/robocasa-gr1-<task>-i00-standard`, 24 each |
-| metadata | `simulator = "robosuite"`, `robot = "fourier-gr1"` (to be added to TAXONOMY), `family = "robocasa-gr1/<Env>"`, `oracle = "full"` |
+| metadata | `simulator = "robosuite"`, `robot = "fourier-gr1"`, `family = "robocasa-gr1/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa-gr1:0.1.0` (`images/robocasa-gr1/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
 | generator | `scripts/robocasa-gr1/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
@@ -52,20 +52,13 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
   while the IK's posture term may still move the waist and elbows by a few hundredths of a radian.
 
 ## Standard-mode service
-`images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's (PR #22, not merged
-yet): derived from `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect
-hook is `scripts/robocasa-gr1/shared/finalize.sh`; both files are RoboCasa's byte for byte
-(`docs/benchmarks/robocasa.md`: since 2026-10-17 graded by the live episode, nothing replayed, the start checked
-against the frozen instance, the video one render pass after the verdict; the hook's budget; request validation).
-Since 2026-10-13 the calibration's `cam2world_gl` is the rendered viewpoint, not MuJoCo's left-eye camera 3.4 cm to
-its left (`docs/benchmarks/robocasa.md`, service item 10): standard-mode results from before used the offset calibration.
-
-## Change log
-- 2026-10-17 (owner, boards 0150/0151): standard modes graded by the live episode; no grading replay; video by one
-  render pass from the trajectory after the verdict; the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
-  `RCB_START_SHA` from `scripts/robocasa-gr1/frozen/start_state.json`) before the agent is served, a mismatch is infrastructure
-  (`docs/benchmarks/robocasa.md`, service items 6, 7 and 11). Scene, instances, success check, cutoff and what
-  the agent sees except the instruction's scoring sentence unchanged, so the tasks keep their names.
+`images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's: derived from
+`images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect hook is
+`scripts/robocasa-gr1/shared/finalize.sh`; both files are RoboCasa's byte for byte (`docs/benchmarks/robocasa.md`:
+graded by the live episode, nothing replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
+`RCB_START_SHA` from `scripts/robocasa-gr1/frozen/start_state.json`, a mismatch is infrastructure), the video one
+render pass after the verdict; the hook's budget; request validation; the camera calibration is the rendered
+viewpoint).
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries. The image
@@ -74,10 +67,8 @@ contains no demonstration data.
 ## Image
 `images/robocasa-gr1/Dockerfile` pins the base image by digest, every pip package, the GR1 tabletop and robosuite
 commits, robosuite's mink controller file and every asset archive by SHA-256 (`fetch_assets.sh`). It reproduces the
-content of the image the tasks were validated with (built in the PR #4 era as `rcb-robocasa-gr1:0.1.1` from the same
-pins, tagged `eai-robocasa-gr1:0.1.0` on the authoring machine). **A clean rebuild from this Dockerfile has not been run
-yet** (~9 GB of downloads, ~50 GB of disk): run it and re-check the hashes with `import_references.sh` before
-publishing. Licences: code MIT; RoboCasa's own textures, fixtures and object archives (UT Box) CC-BY-4.0; NVIDIA
+content of the image the tasks were validated with. **Open: a clean rebuild from this Dockerfile** (~9 GB of
+downloads, ~50 GB of disk) and a re-check of the hashes with `import_references.sh` before publishing. Licences: code MIT; RoboCasa's own textures, fixtures and object archives (UT Box) CC-BY-4.0; NVIDIA
 PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes) **CC-BY-NC-4.0** (non-commercial; maintainers to
 confirm publishing, otherwise `BUILD_ONLY`).
 
@@ -97,12 +88,9 @@ reference (123–393 actions) succeeds on its final state without truncation; tw
 in the live state's hash and succeed; the success survives 10 more still steps. Same hashes with and without
 MuJoCo's mesh cache.
 
-Agent results are not kept in the repository (PROTOCOL D3).
-
 ## Easy set
 
-The benchmark owner's screening of 2026-10-17 (results dashboard snapshot 2026-10-17T05:59:33Z; ten runs, one trial per
-run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
+The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is

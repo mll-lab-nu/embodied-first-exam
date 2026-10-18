@@ -6,6 +6,7 @@ FROM ghcr.io/mll-lab-nu/eai-behavior:0.1.1
 COPY grade.py instance.json rcb_behavior.py r1pro_primitives_eval.yaml test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
+ENV PYTHONHASHSEED=0
 WORKDIR /tests
-# resource limits: the verifier step and its copy of the limits (docs/PROTOCOL.md §2.10) # rcb-monitor
+# resource limits: the verifier step and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
 COPY rcb_limits.py rcb_limits.json /tests/
