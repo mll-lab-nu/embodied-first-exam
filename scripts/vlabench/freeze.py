@@ -22,7 +22,8 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 FROZEN = HERE / "frozen"
-TASKS = HERE.parents[1] / "tasks"  # the repository's tasks/ (in the image: /tasks, mounted by freeze.sh)
+# The repository's tasks/: in the image (freeze.sh runs this file as /work/freeze.py) the read-only mount /tasks.
+TASKS = Path("/tasks") if Path("/tasks").is_dir() else HERE.parents[1] / "tasks"
 CANONICAL = {"instance.json": "environment/instance.json", "oracle.npy": "solution/oracle.npy"}
 
 

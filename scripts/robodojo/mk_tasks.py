@@ -176,7 +176,7 @@ def dimension_of(task: str, dims: dict) -> str:
 
 def instance_ids(task: str) -> list[int]:
     """The task's instances: frozen/<task>-iNN/ (sync_frozen.py's output, not generated yet) and its committed standard tasks
-    (every instance has one; a standard-only task has no privileged twin)."""
+    (every instance has one; a standard-only task has no privileged twin). To drop an instance, delete its task dirs."""
     ids = {int(p.name[-2:]) for p in (HERE / "frozen").glob(f"{task}-i[0-9][0-9]") if p.is_dir()}
     stem = base(task, 0).removesuffix("-i00")
     ids |= {int(p.name.removesuffix("-standard")[-2:]) for p in (ROOT / "tasks").glob(f"{stem}-i[0-9][0-9]-standard") if p.is_dir()}

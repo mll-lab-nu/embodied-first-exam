@@ -6,7 +6,7 @@
 
 Inputs: cases.json (the chosen LIBERO-MAX cases with their frozen event parameters, select_cases.py), frozen/<case>/
 report.json (freeze.sh), each case's instance.json and oracle.npy (source(): a fresh freeze.sh run's frozen/<case>/ copies
-while they exist, else the ones already in the case's privileged task; delete them from frozen/ once the case is
+while they exist, else the ones in the committed privileged task whose instance.json is that case; delete them from frozen/ once the case is
 generated: tasks/ keeps the only copy), the templates in templates/, the shared sources in shared/ (copied
 byte for byte) and the standard client's base image and pins (scripts/eai_standard/). Each task directory is written
 from scratch and finished with scripts/task_conventions.py (normalize, PROTOCOL v1.0.1); a libero-max-* directory this
@@ -45,17 +45,43 @@ FROZEN = HERE / "frozen"
 CANONICAL = {"instance.json": "environment/instance.json", "oracle.npy": "solution/oracle.npy"}
 
 
-def source(case_id: str, name: str, file: str) -> Path:
-    """Where a case's instance.json / oracle.npy comes from: frozen/<case>/ (a fresh freeze.sh run), else its privileged
-    task tasks/<name>-privileged (name: names_for())."""
+@functools.cache
+def committed() -> dict[str, Path]:
+    """case_id -> its committed privileged task directory, from each one's environment/instance.json (`case.case_id`). Not
+    looked up by task name: the name's -iNN counts repeats of a base name in cases.json order, so it can move to another
+    case when a case is added or removed."""
+    out: dict[str, Path] = {}
+    for f in sorted((ROOT / "tasks").glob("libero-max-*-privileged/environment/instance.json")):
+        cid = json.loads(f.read_text())["case"]["case_id"]
+        if cid in out:
+            raise SystemExit(f"{cid}: two committed privileged tasks, {out[cid].name} and {f.parents[1].name}")
+        out[cid] = f.parents[1]
+    return out
+
+
+def source(case_id: str, file: str) -> Path:
+    """Where a case's instance.json / oracle.npy comes from: frozen/<case>/ (a fresh freeze.sh run), else the committed
+    privileged task whose instance is that case (committed())."""
     f = FROZEN / case_id / file
-    return f if f.exists() else ROOT / "tasks" / f"{name}-privileged" / CANONICAL[file]
+    if f.exists():
+        return f
+    if case_id not in committed():
+        raise SystemExit(f"{case_id}: no frozen/{case_id}/{file} and no committed task of this case (run freeze.sh)")
+    return committed()[case_id] / CANONICAL[file]
 
 
 @functools.cache
-def frozen(case_id: str, name: str, file: str) -> bytes:
-    """source()'s bytes, read once (before make() rewrites the task directory that may hold them)."""
-    return source(case_id, name, file).read_bytes()
+def frozen(case_id: str, file: str) -> bytes:
+    """source()'s bytes, read once: render_all reads every case's files before it writes any task directory. An
+    instance must be its case's and match the start hash freeze.sh recorded (frozen/<case>/report.json)."""
+    f = source(case_id, file)
+    data = f.read_bytes()
+    if file == "instance.json":
+        inst = json.loads(data)
+        rep = json.loads((FROZEN / case_id / "report.json").read_text())
+        if inst["case"]["case_id"] != case_id or inst["initial_state_sha"] != rep["initial_state_sha"]:
+            raise SystemExit(f"{f}: not the instance of {case_id} (case_id / initial_state_sha differ from its report.json)")
+    return data
 VERSION = (ROOT / "images/libero-max/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-libero-max:{VERSION}"
 _EAI = ROOT / "scripts/eai_standard"
@@ -377,7 +403,7 @@ def names_for(cases: list) -> dict:
 def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     fz = FROZEN / case["case_id"]
     rep = json.loads((fz / "report.json").read_text())
-    inst, oracle = frozen(case["case_id"], name, "instance.json"), frozen(case["case_id"], name, "oracle.npy")  # before reset_dir
+    inst, oracle = frozen(case["case_id"], "instance.json"), frozen(case["case_id"], "oracle.npy")  # read by render_all
     ch = case["scenario"]["change"]
     words, detail = event_text(case["scenario"]["change_type"], ch)
     instruction = sentence(rep["language"])
@@ -478,6 +504,8 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
 def render_all(out: Path) -> list[str]:
     cases = json.loads((HERE / "cases.json").read_text())["cases"]
     names = names_for(cases)
+    for c in cases:  # every case's instance and reference, before any task directory is rewritten (frozen() caches them)
+        frozen(c["case_id"], "instance.json"), frozen(c["case_id"], "oracle.npy")
     done = []
     for c in cases:
         rep = json.loads((FROZEN / c["case_id"] / "report.json").read_text())

@@ -24,7 +24,8 @@ task (below).
   test's output (`rcb_robodojo.py make-instance --task T --seed 0 --layout 0 [--physx key=value]`) into
   `scripts/robodojo/frozen/<task>-i00/` when it is new or changed. It is committed only in the tasks: `mk_tasks.py` reads
   `frozen/<task>-iNN/` while it exists, else the standard task's `environment/sim/instance.json`; `frozen/` is deleted once
-  the tasks are generated.
+  the tasks are generated. The committed standard tasks are also the list of instances (`mk_tasks.py` `instance_ids()`):
+  to drop an instance, delete its task dirs (`-standard`, and `-privileged` where it has one) by hand.
 - `scripts/robodojo/dimensions.json` (RoboDojo's documentation), `conventions.json`, `template/<mode>/`.
 
 ## Success (RoboDojo's own check)

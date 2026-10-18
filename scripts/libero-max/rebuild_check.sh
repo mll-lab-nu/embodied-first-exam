@@ -3,6 +3,7 @@
 # final state (run it once per new host type: the frozen hashes depend on the CPU's numeric kernels, see
 # docs/benchmarks/libero-max.md). One fresh container per case, in the eai-libero-max image, without network.
 #   bash scripts/libero-max/rebuild_check.sh [parallel] [out.jsonl]      # exit 1 unless every case matches
+# Needs Python >= 3.11 on the host (it imports generate.py, whose task_conventions uses tomllib).
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"
 root="$(cd "$here/../.." && pwd)"
@@ -16,8 +17,8 @@ import json, sys
 sys.path.insert(0, sys.argv[1])
 import generate as g
 cases = json.loads((g.HERE / "cases.json").read_text())["cases"]
-for cid, name in g.names_for(cases).items():
-    print(cid, *("/repo/" + str(g.source(cid, name, f).relative_to(g.ROOT)) for f in ("instance.json", "oracle.npy")))
+for c in cases:
+    print(c["case_id"], *("/repo/" + str(g.source(c["case_id"], f).relative_to(g.ROOT)) for f in ("instance.json", "oracle.npy")))
 PY
   xargs -P "$jobs" -n 3 docker run --rm --network none -u "$(id -u):$(id -g)" --tmpfs /tmp:exec,mode=1777 -e HOME=/tmp \
     -v "$here:/work:ro" -v "$root:/repo:ro" -w /work -e PYTHONPATH=/work/shared:/opt/libero-max/overlay:/opt/libero-max/src \
