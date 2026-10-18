@@ -42,7 +42,7 @@ Why these (no model's results enter the choice; `scripts/ispatialgym/subset.toml
   fixed fixture reached with the base, what BEHAVIOR-1K's tasks cover on the same robot and houses). 23 → 14.
 - **Valid here.** Within a task, the first subtask in upstream's index (`metadata/instances.jsonl`) whose instance loads,
   does not succeed when the robot holds still for the whole budget, and replays to the same final state in fresh
-  processes (`scripts/ispatialgym/instances/<task>/facts.json`). Every first subtask passed.
+  processes (`facts.json` of the task's instance). Every first subtask passed.
 - **Instance 0** of that subtask (the release has one per subtask); 11 of the 12 are in `house_single_floor`.
 - **Both modes without the answer in reach.** The privileged agent's simulator must load the start and nothing that
   scores it, and the same rows must give it the scoring side's states. Two tasks cannot: attachment (upstream's attach
@@ -122,6 +122,11 @@ The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `downlo
 `download_behavior_1k_assets(accept_license=True)`), the same one BEHAVIOR-1K's tasks mount. Build the image as
 `images/ispatialgym/BUILD_ONLY` says. Regenerate the tasks: `python3 scripts/ispatialgym/mk_tasks.py render`
 (`instances` splits the picked instances of upstream's eval data into `instance.json` and `goal.json`; `measure --task T` writes `facts.json`, on a GPU).
+The frozen instances are kept in the task directories only: the standard twin's `environment/sim/` (`instance.json`,
+`goal.json`, `facts.json`, `upstream.json`) and `environment/goal.png`. `instances` and `measure` write
+`scripts/ispatialgym/instances/<task>/` (git-ignored; `measure` stages the task's instance there from `tasks/`), which
+`render` prefers for that task (it says so); delete it once the task is rendered. `instances` imports the tasks named
+by `--task`, else only those with no standard twin in `tasks/` yet.
 
 ## Positive examples (oracle none, PROTOCOL §4)
 Upstream's recorded demonstration of each instance (the eval data's `-demo.hdf5`, `data/demo_0/action`, unchanged), handed

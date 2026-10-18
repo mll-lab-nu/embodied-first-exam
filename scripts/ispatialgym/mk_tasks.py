@@ -5,10 +5,16 @@
       byte for byte by both twins and the privileged agent) and goal.json (what scores it: only on the scoring side),
       plus goal.png and upstream.json; the BDDL problem is not copied (iSpatialGym's own file, in the image):
       upstream.json records its sha256, which the tooling checks at load
-  python3 scripts/ispatialgym/mk_tasks.py render       write every task directory from templates/, shared/ and instances/
+  python3 scripts/ispatialgym/mk_tasks.py measure --task T   facts.json of one instance, in the image on a GPU
+  python3 scripts/ispatialgym/mk_tasks.py render       write every task directory from templates/, shared/ and the
+                                                       instances
   python3 scripts/ispatialgym/mk_tasks.py --check      render into a temporary tree and diff it with tasks/
-The facts of each instance (instances/<task>/facts.json: start-state hash, step budget, tolerances, the hold episode, two
-fresh replays) are measured in the image on a GPU: shared/rcb_ispatialgym.py freeze (README of this benchmark's doc).
+The frozen instances live in tasks/ only: the standard twin's environment/sim/ holds instance.json, goal.json, facts.json
+and upstream.json, its environment/goal.png the goal image (instance_file). `instances` and `measure` work in
+scripts/ispatialgym/instances/<task>/ (not committed; `measure` first stages a task's instance there from tasks/); a task
+with that directory renders from it, every other task from its tasks/ copy, so after `render` the directory can be
+deleted. The facts of each instance (facts.json: start-state hash, step budget, tolerances, the hold episode, two fresh
+replays) are measured in the image on a GPU: shared/rcb_ispatialgym.py freeze (README of this benchmark's doc).
 """
 from __future__ import annotations
 
@@ -89,12 +95,20 @@ def split_instance(template: dict, meta: dict, tro: dict) -> tuple[dict, dict]:
 
 
 def cmd_instances(a) -> None:
-    """Copy the picked instance of every task out of upstream's eval dataset (instance 0 of its subtask)."""
+    """Copy the picked instance of the chosen tasks out of upstream's eval dataset (instance 0 of its subtask) into
+    instances/<task>/: the tasks named by --task, else every task that has no standard twin in tasks/ yet."""
+    unknown = sorted(set(a.task or ()) - {t["task"] for t in tasks()})
+    if unknown:
+        raise SystemExit(f"not in subset.toml: {unknown}")
     data = Path(a.data) / "ispatialgym-eval-instances"
     index = [json.loads(line) for line in (data / "metadata/instances.jsonl").read_text().splitlines() if line.strip()]
     episodes = {(e["subtask"], e["instance"]): e for e in
                 (json.loads(line) for line in (data / "metadata/episodes.jsonl").read_text().splitlines() if line.strip())}
-    for t in tasks():
+    chosen = [t for t in tasks() if (t["task"] in a.task if a.task else
+                                     not (ROOT / "tasks" / task_dir_name(t)).is_dir())]
+    if not chosen:
+        print("every task already has its instance in tasks/; name one with --task to re-import it")
+    for t in chosen:
         rec = next(r for r in index if r["subtask"] == t["subtask"] and r["instance"] == t["instance"])
         files = {k: data / v for k, v in rec["files"].items()}
         out = HERE / "instances" / t["task"]
@@ -145,13 +159,35 @@ def task_dir_name(t: dict, mode: str = "standard") -> str:
     return f"ispatialgym-{t['task'].replace('_', '-')}-i00-{mode}"
 
 
+INSTANCE_FILES = SCORING + ("goal.png",)
+
+
+def instance_file(task: str, name: str) -> Path:
+    """One file of a task's frozen instance: from scripts/ispatialgym/instances/<task>/ when that directory exists (a
+    fresh `instances` or `measure`), else the canonical copy in tasks/, the standard twin's environment/sim/ (goal.png:
+    its environment/)."""
+    fresh = HERE / "instances" / task
+    if fresh.is_dir():
+        return fresh / name
+    env = ROOT / "tasks" / task_dir_name({"task": task}) / "environment"
+    return env / name if name == "goal.png" else env / "sim" / name
+
+
+def read_instance(task: str) -> dict[str, bytes]:
+    """The instance's files in memory: render() removes the task directories (the canonical copy) before it writes
+    them."""
+    if (HERE / "instances" / task).is_dir():
+        print(f"using fresh instance dir for {task} (scripts/ispatialgym/instances/{task}/)", file=sys.stderr)
+    return {n: instance_file(task, n).read_bytes() for n in INSTANCE_FILES}
+
+
 def _num(v: float) -> str:
     return f"{v:.3g}"
 
 
-def targets_text(task: str, facts: dict) -> str:
+def targets_text(goal: dict, facts: dict) -> str:
     """The measured targets of the instance as the instruction states them: what kind of pose, never which object."""
-    pose_t = json.loads((HERE / "instances" / task / "goal.json").read_text())["tro_ispatialgym"].get("pose_targets") or {}
+    pose_t = goal["tro_ispatialgym"].get("pose_targets") or {}
     lines = []
     for inst, t in sorted(facts["tolerances"]["targets"].items()):
         tol = t["tolerances"]
@@ -176,9 +212,9 @@ def targets_text(task: str, facts: dict) -> str:
 
 
 def render_task(t: dict, out: Path) -> None:
-    inst = HERE / "instances" / t["task"]
-    facts = json.loads((inst / "facts.json").read_text())
-    up = json.loads((inst / "upstream.json").read_text())
+    inst = read_instance(t["task"])
+    facts = json.loads(inst["facts.json"])
+    up = json.loads(inst["upstream.json"])
     tpl = HERE / "templates"
     hold_step_s = facts["hold"]["step_s"]
     loads = [int(x) for x in facts["load_s"]]
@@ -190,7 +226,7 @@ def render_task(t: dict, out: Path) -> None:
          "verifier_s": 2 * max(2400, replay_s) + 600, "replay_timeout_s": max(2400, replay_s),   # grade_privileged.py's formula
          "load_mins": "-".join(dict.fromkeys(str(max(1, round(x / 60))) for x in (min(loads), max(loads)))),   # measured, fresh processes
          "load_max": max(loads), "startup_s": max(2400, -(-2 * max(loads) // 100) * 100),
-         "steps_per_s": f"{1.0 / hold_step_s:.0f}", "targets": targets_text(t["task"], facts),
+         "steps_per_s": f"{1.0 / hold_step_s:.0f}", "targets": targets_text(json.loads(inst["goal.json"]), facts),
          "scene": up["scene"], "description": t["description"], "start_sha": facts["start_sha"],
          "activity": up["activity"], "definition_id": up["definition_id"],
          "image_version": (ROOT / "images/ispatialgym/VERSION").read_text().strip(),
@@ -210,7 +246,7 @@ def render_task(t: dict, out: Path) -> None:
             (d / f).write_text(sub(f))
         (d / "environment").mkdir()
         (d / "environment/docker-compose.yaml").write_text(sub("docker-compose.yaml"))
-        shutil.copy(inst / "goal.png", d / "environment/goal.png")
+        (d / "environment/goal.png").write_bytes(inst["goal.png"])
         if mode == "standard":
             (d / "environment/sim").mkdir()
             shutil.copy(mt / "Dockerfile.environment", d / "environment/Dockerfile")
@@ -225,7 +261,7 @@ def render_task(t: dict, out: Path) -> None:
             for f in ("server.py", "finalize.sh", "rcb_ispatialgym.py"):
                 shutil.copy(HERE / "shared" / f, d / "environment/sim" / f)
             for f in SCORING:
-                shutil.copy(inst / f, d / "environment/sim" / f)
+                (d / "environment/sim" / f).write_bytes(inst[f])
             (d / "environment/sim/task_text.txt").write_text(
                 "Make the scene look like the goal image /app/goal.png, the head camera's view once the task is done; the robot "
                 "itself does not have to match it.\n")
@@ -237,12 +273,12 @@ def render_task(t: dict, out: Path) -> None:
             shutil.copy(HERE / "shared/grade_privileged.py", d / "tests/grade.py")
             shutil.copy(HERE / "shared/rcb_ispatialgym.py", d / "environment/rcb_ispatialgym.py")
             shutil.copy(HERE / "shared/rcb_ispatialgym.py", d / "tests/rcb_ispatialgym.py")
-            shutil.copy(inst / "instance.json", d / "environment/instance.json")
+            (d / "environment/instance.json").write_bytes(inst["instance.json"])
             (d / "environment/scrub").mkdir()
             for f in ("scrub.sh", "neutral_bddl.py"):
                 shutil.copy(HERE / "shared" / f, d / "environment/scrub" / f)
             for f in SCORING:
-                shutil.copy(inst / f, d / "tests" / f)
+                (d / "tests" / f).write_bytes(inst[f])
     for mode in MODES:                      # once both exist: each README's Twin row names the other
         tc.normalize(out / task_dir_name(t, mode))
 
@@ -294,6 +330,12 @@ def cmd_measure(a) -> None:
     determinism probe live, and its replay (the final states must be equal)."""
     out = Path(a.work) / a.task
     out.mkdir(parents=True, exist_ok=True)
+    inst = HERE / "instances" / a.task      # the docker mount: the task's instance, staged from tasks/ if not there
+    if not inst.is_dir():
+        files = read_instance(a.task)
+        inst.mkdir(parents=True)
+        for n, b in files.items():
+            (inst / n).write_bytes(b)
     hold = _last(_docker(a.task, "freeze --instance /srv/instance --hold", out), "FACTS ")
     probe = _last(_docker(a.task, f"freeze --instance /srv/instance --probe {a.probe} --out-traj /out/probe.npz", out), "FACTS ")
     rep = _last(_docker(a.task, "replay --instance /srv/instance --traj /out/probe.npz --video /out/probe.mp4", out))
@@ -321,6 +363,8 @@ def main() -> None:
     s = sub.add_parser("instances")
     s.add_argument("--data", required=True, help="upstream's eval data at subset.toml's upstream_data (the Hugging Face dataset, ispatialgym-eval-instances/)")
     s.add_argument("--bddl", required=True, help="ispatialgym/assets/bddl of iSpatialGym at subset.toml's upstream (only hashed)")
+    s.add_argument("--task", action="append",
+                   help="import this task (repeatable; default: the tasks with no standard twin in tasks/)")
     s = sub.add_parser("measure", help="facts.json of one task (needs the image, a GPU and $RCB_BEHAVIOR_DATA)")
     s.add_argument("--task", required=True)
     s.add_argument("--probe", type=int, default=300, help="rows of the determinism probe")
