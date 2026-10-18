@@ -54,7 +54,12 @@ def check(task: Path) -> tuple[list[str], list[str]]:
         for need in ("    pid: host", "    network_mode: none", "    cap_add: [SYS_PTRACE]", f"    image: {inject.IMAGE}",
                      f"      - {inject.LIMITS_MOUNT}", "      RCB_LIMITS_ENFORCE: ${RCB_LIMITS_ENFORCE:-0}"):
             if need not in blk:
-                (err if "RCB_LIMITS_ENFORCE" in need or "image:" in need else inv).append(f"rcb_monitor service: missing `{need.strip()}`")
+                (err if "RCB_LIMITS_ENFORCE" in need else inv).append(f"rcb_monitor service: missing `{need.strip()}`")
+        # the whole service is the generator's (its code from the pinned image, nothing else mounted, no other command)
+        gen = [inject.monitor_block(gpu, observe) for gpu in (False, True) for observe in (False, True)]
+        if not any(blk + "\n" == "".join(g) for g in gen):
+            inv.append("rcb_monitor service: not the block scripts/rcb_monitor/inject.py writes (another image, mount, "
+                       "command or entrypoint)")
     # every other service mounts its beacon read-only, the right one for the mode
     try:
         lines = text.splitlines(keepends=True)
@@ -90,7 +95,7 @@ def check(task: Path) -> tuple[list[str], list[str]]:
         err.append("tests/test.sh: the sanitize line comes before the verifier-step trap")
     if inject.DOCKER_COPY not in ((task / "tests" / "Dockerfile").read_text()
                                   if (task / "tests" / "Dockerfile").is_file() else ""):
-        err.append(f"tests/Dockerfile: does not COPY rcb_limits.py from {inject.IMAGE} and rcb_limits.json (inject.DOCKER_COPY)")
+        inv.append(f"tests/Dockerfile: does not COPY rcb_limits.py from {inject.IMAGE} and rcb_limits.json (inject.DOCKER_COPY)")
     return inv, err
 
 
@@ -109,7 +114,14 @@ def main(argv):
                   f"what {inject.IMAGE} carries: build and push a new images/monitor/ version, then update IMAGE and CONTENTS "
                   "(scripts/rcb_monitor/inject.py contents; verify-image) and re-run scripts/task_conventions.py on every task")
             bad = 1
-    if tier != "invariants":
+    if tier != "invariants":   # what the pinned image really carries (anonymous registry read; a network failure warns)
+        try:
+            bad_img = inject.registry_contents_problems()
+        except Exception as e:   # noqa: BLE001  (no network on this runner, registry down)
+            bad_img = [f"could not read {inject.IMAGE} from the registry: {e}"]
+        for e in bad_img:
+            print(f"FAIL {inject.IMAGE}: {e}")
+            bad = 1
         for test in ("selftest.py", "test_monitor.py"):      # the violation rule and the verifier step; the monitor's own logic
             r = subprocess.run([sys.executable, str(SRC / test)], capture_output=True, text=True)
             if r.returncode != 0:

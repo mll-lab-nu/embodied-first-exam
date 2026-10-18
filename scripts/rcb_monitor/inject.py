@@ -74,7 +74,7 @@ def _docker_copy_line(ln: str) -> bool:
     layout (`COPY rcb_limits.py rcb_limits.json /tests/`, or another monitor image), so a re-run replaces it."""
     t = ln.strip()
     return t in ("COPY rcb_limits.py rcb_limits.json /tests/", "COPY rcb_limits.json /tests/rcb_limits.json") or \
-        (t.startswith("COPY --from=") and "/eai-monitor:" in t and t.endswith(" /tests/rcb_limits.py"))
+        (t.startswith("COPY --from=") and re.search(r"/eai-monitor[:@]", t) is not None and t.endswith(" /tests/rcb_limits.py"))
 SIDECAR_MODES = ("standard", "standard-realtime")
 # Privileged mode: compose services that are the benchmark's own, not the agent's to drive (it cannot start, stop or
 # size them): recorded, never part of the scope the limits bind. Today RoboPaint's scoring service.
@@ -406,6 +406,30 @@ def contents() -> dict[str, str]:
     return {f: hashlib.sha256((SRC / f).read_bytes()).hexdigest() for f in CODE}
 
 
+def registry_contents_problems(image: str = IMAGE) -> list[str]:
+    """Problems with the CODE files the pinned image's top layer carries against CONTENTS, read from the registry with
+    an anonymous token (the image is public; standard library only, no docker): the check that ties CONTENTS to IMAGE."""
+    import gzip, hashlib, io, json as _json, tarfile, urllib.request
+    ref, digest = image.split("@")
+    repo = ref.split("/", 1)[1].rsplit(":", 1)[0]
+    tok = _json.load(urllib.request.urlopen(f"https://ghcr.io/token?scope=repository:{repo}:pull", timeout=30))["token"]
+
+    def get(path: str, accept: str = "") -> bytes:
+        req = urllib.request.Request(f"https://ghcr.io/v2/{repo}/{path}", headers={"Authorization": f"Bearer {tok}",
+                                                                                  **({"Accept": accept} if accept else {})})
+        return urllib.request.urlopen(req, timeout=120).read()
+    man = _json.loads(get(f"manifests/{digest}", "application/vnd.oci.image.manifest.v1+json,"
+                                                  "application/vnd.docker.distribution.manifest.v2+json"))
+    blob = get(f"blobs/{man['layers'][-1]['digest']}")
+    got = {}
+    with tarfile.open(fileobj=io.BytesIO(gzip.decompress(blob) if blob[:2] == b"\x1f\x8b" else blob)) as t:
+        for m in t.getmembers():
+            name = m.name.removeprefix("./")
+            if m.isfile() and name.startswith(CODE_DIR.lstrip("/") + "/"):
+                got[name.rsplit("/", 1)[1]] = hashlib.sha256(t.extractfile(m).read()).hexdigest()
+    return [f"{CODE_DIR}/{f}: image {got.get(f)} != CONTENTS {CONTENTS.get(f)}" for f in CODE if got.get(f) != CONTENTS.get(f)]
+
+
 def verify_image(image: str = IMAGE) -> list[str]:
     """Problems with the files IMAGE carries at CODE_DIR against CONTENTS (needs docker and the image)."""
     import subprocess
@@ -419,7 +443,18 @@ def verify_image(image: str = IMAGE) -> list[str]:
 
 if __name__ == "__main__":
     import sys
-    if sys.argv[1:2] == ["contents"]:            # the hashes for CONTENTS
+    if sys.argv[1:2] == ["stage-context"]:       # images/monitor/context/: the CODE files with content-derived mtimes
+        sys.path.insert(0, str(SRC.parent))
+        import stamp_mtimes
+        ctx = SRC.parents[1] / "images" / "monitor" / "context"
+        shutil.rmtree(ctx, ignore_errors=True)
+        ctx.mkdir(parents=True)
+        for f in CODE:
+            shutil.copyfile(SRC / f, ctx / f)
+            (ctx / f).chmod(0o644)
+        stamp_mtimes.stamp_tree(str(ctx), True)
+        print(ctx)
+    elif sys.argv[1:2] == ["contents"]:          # the hashes for CONTENTS
         print(json.dumps(contents(), indent=1, sort_keys=True))
     elif sys.argv[1:2] == ["verify-image"]:      # IMAGE (or the given image) carries exactly CONTENTS
         bad = verify_image(*(sys.argv[2:3] or [IMAGE]))

@@ -22,7 +22,7 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   rendered from it; `ci_checks/check-resources.py` checks both.
 - Every task declares resource limits and docker caps (PROTOCOL §6, docs/protocol/running.md "Resources"): `[metadata.resources.limits]` / `.caps` from
   the `[[limit]]` / `[[cap]]` rules in the same file; `normalize` writes the `## Resource limits` paragraph of `instruction.md`
-  (just before the closing `## Time limit`), rendered from them (generator-owned: edit the rules, never the paragraph). A task-provided monitor
+  (just before the closing `## Time limit`), rendered from them (generator-owned: edit the rules, never the paragraph). A monitor sidecar
   (`scripts/rcb_monitor/`, in the pinned `eai-monitor` image; `normalize` wires it into every task, which keeps only its `limits.json`; `ci_checks/check-monitor.py` runs its tests) and the
   verifier judge them; with `RCB_LIMITS_ENFORCE=1` a violation fails the trial (default 0: recorded only). Declared caps
   are the applied ones: `normalize` sets `[environment].memory_mb` from `caps.main.memory_gb`. A CPU cap above the
