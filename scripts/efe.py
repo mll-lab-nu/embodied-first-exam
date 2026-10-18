@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
-"""efe: Embodied First Exam on Harbor. `efe run` picks the task dirs, then runs `harbor run -p tasks -i <task> ...`;
-every argument it does not know (agent, model, -n, -k, --ak, -y, ...) goes to Harbor unchanged. Any other subcommand
-is Harbor's own (`efe view jobs` = `harbor view jobs`). Install from a clone: `uv tool install -e .` (installs Harbor).
+"""Embodied First Exam runs on Harbor. `uv tool install --force -e . --with-executables-from harbor` installs `harbor` (Harbor 0.23.0, plus the
+flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywhere; the tasks are this clone's.
 
-  efe run -a codex -m openai/gpt-6-luna                      # the core set (docs/core_set.toml), every mode
-  efe run --all --standard -a claude-code -m anthropic/claude-fable-5-1
-  efe run --core --privileged --standard-realtime -a codex -m openai/gpt-6-luna -n 8
-  efe run --benchmark "RoboTwin 2.0" -a oracle               # one benchmark (its label, README task table)
-  efe run --task robotwin_2_0_stack_blocks_two-standard -a nop   # one task (repeatable, globs work)
-  efe list --core --standard                                 # the task dirs only (= efe run ... --dry-run)
+  harbor run -a codex -m openai/gpt-6-luna            # the core set (docs/core_set.toml), every mode: the default
+  harbor run --all -a codex -m openai/gpt-6-luna      # every task
+  harbor run --standard -a claude-code -m anthropic/claude-fable-5-1   # --privileged / --standard / --standard-realtime
+  harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # -i / -x filter within the set
+  harbor run -p tasks/<task> -a nop                   # one task: Harbor's own -p, untouched
 
-Set: --core (default) or --all. Modes: --privileged, --standard, --standard-realtime (any of them; none = every mode).
---task NAME picks task dirs by name and ignores the set."""
+Set: --core (default) or --all. Modes: any of --privileged, --standard, --standard-realtime; none = every mode.
+--benchmark <label> keeps one benchmark (its README label). --list prints the task dirs and runs nothing.
+A `harbor run` that names its own tasks (-p, -d, -t, -c) is Harbor's, unchanged; so is every other subcommand."""
 import fnmatch, sys
 from pathlib import Path
 
@@ -21,73 +20,62 @@ import task_conventions as tc  # noqa: E402
 
 MODES = {"--privileged": "privileged", "--privilege": "privileged", "--standard": "standard",
          "--standard-realtime": "standard-realtime", "--standard_realtime": "standard-realtime"}
+SOURCES = ("-p", "--path", "-d", "--dataset", "-t", "--task", "-c", "--config", "--task-git-url")
 
 
-def harbor(args: list[str]) -> int:
-    """Harbor's CLI in this process (the same install as efe's), else the `harbor` on PATH."""
-    try:
-        from harbor.cli.main import app
-    except ImportError:
-        import os, shutil
-        if not shutil.which("harbor"):
-            print("harbor not found: uv tool install -e . (or uv tool install harbor==0.23.0)", file=sys.stderr); return 2
-        os.execvp("harbor", ["harbor", *args])
+def harbor(args: list[str], app=None) -> int:
+    if app is None:
+        from harbor.cli import main as hm
+        app = getattr(hm.app, "__wrapped_app__", hm.app)
     sys.argv = ["harbor", *args]
     return app() or 0
 
 
-def run(argv: list[str], dry: bool = False) -> int:
-    use_all, modes, benches, names, rest = False, set(), [], [], []
+def run(argv: list[str], app=None) -> int:
+    """`harbor run` with the set / mode flags: picks the task dirs, then `harbor run -p <clone>/tasks -i <task> ...`."""
+    if any(a in SOURCES or a.startswith(tuple(s + "=" for s in SOURCES if s.startswith("--"))) for a in argv):
+        if not any(a in MODES or a in ("--core", "--all", "--benchmark", "--list") for a in argv):
+            return harbor(["run", *argv], app)                # the user's own task source: plain Harbor
+    use_all, modes, benches, inc, exc, listing, rest = False, set(), [], [], [], False, []
     it = iter(argv)
     for a in it:
-        if a in ("-h", "--help"):
-            print(__doc__); return 0
-        if a == "--all":
-            use_all = True
-        elif a == "--core":
-            use_all = False
+        if a in ("--all", "--core"):
+            use_all = a == "--all"
         elif a in MODES:
             modes.add(MODES[a])
         elif a == "--benchmark":
             benches.append(next(it, ""))
-        elif a == "--task":
-            names.append(next(it, ""))
-        elif a == "--dry-run":
-            dry = True
+        elif a in ("-i", "--include-task-name"):
+            inc.append(next(it, ""))
+        elif a in ("-x", "--exclude-task-name"):
+            exc.append(next(it, ""))
+        elif a == "--list":
+            listing = True
+        elif a in ("-h", "--help"):
+            print(__doc__); return harbor(["run", "--help"], app)
         else:
             rest.append(a)
     tasks = sorted(p.name for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
-    if names:
-        pick = [t for t in tasks if any(fnmatch.fnmatchcase(t, n) for n in names)]
-    else:
-        pick = tasks if use_all else sorted(set(tc.core_set()) & set(tasks))
-    if modes:
-        pick = [t for t in pick if tc.mode_of(ROOT / "tasks" / t) in modes]
-    if benches:
-        pick = [t for t in pick if tc.bench_of(ROOT / "tasks" / t) in benches]
+    pick = tasks if use_all else sorted(set(tc.core_set()) & set(tasks))
+    pick = [t for t in pick if (not modes or tc.mode_of(ROOT / "tasks" / t) in modes)
+            and (not benches or tc.bench_of(ROOT / "tasks" / t) in benches)
+            and (not inc or any(fnmatch.fnmatchcase(t, p) for p in inc))
+            and not any(fnmatch.fnmatchcase(t, p) for p in exc)]
     if not pick:
         print("no task matches", file=sys.stderr); return 2
-    what = f"--task {' '.join(names)}" if names else ("all" if use_all else "core")
-    print(f"{len(pick)} task(s): {what}" + (f", modes {', '.join(sorted(modes))}" if modes else "")
-          + (f", benchmark {', '.join(benches)}" if benches else ""), file=sys.stderr)
-    cmd = ["run", "-p", str(ROOT / "tasks")] + [x for t in pick for x in ("-i", t)] + rest
-    if dry:
-        print("\n".join(pick))
-        print("harbor run -p tasks " + (f"-i {pick[0]} ... ({len(pick)} -i) " if len(pick) > 1 else f"-i {pick[0]} ")
-              + " ".join(rest), file=sys.stderr)
-        return 0
-    return harbor(cmd)
+    print(f"{len(pick)} task(s) of the {'full' if use_all else 'core'} set"
+          + (f", {', '.join(sorted(modes))}" if modes else ""), file=sys.stderr)
+    if listing:
+        print("\n".join(pick)); return 0
+    return harbor(["run", "-p", str(ROOT / "tasks"), *[x for t in pick for x in ("-i", t)], *rest], app)
 
 
-def main(argv: list[str] | None = None) -> int:
-    argv = sys.argv[1:] if argv is None else argv
+def main() -> int:
+    """The `efe` command: `efe run ...` = `harbor run ...` above, `efe` alone prints this help."""
+    argv = sys.argv[1:]
     if not argv or argv[0] in ("-h", "--help"):
-        print(__doc__); return 0
-    if argv[0] == "run":
-        return run(argv[1:])
-    if argv[0] == "list":
-        return run(argv[1:], dry=True)
-    return harbor(argv)
+        print(__doc__.replace("harbor run", "efe run")); return 0
+    return run(argv[1:]) if argv[0] == "run" else harbor(argv)
 
 
 if __name__ == "__main__":
