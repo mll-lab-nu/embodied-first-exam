@@ -37,7 +37,7 @@ def tables() -> tuple[str, str]:
         fam_rows.append(f"| {i} | `{fam}` | {rob} | {inst['texts']['sentence']} | {book} | {' → '.join(inst['stages'])} | {orc} |")
         rev_rows.append(f"| `{fam}` | {spec['evidence'] if not full else 'the reference controller (Harbor oracle: 1 in both modes)'} "
                         f"| 0: `{nop[fam]['failed']}` at {nop[fam]['time_s']:g} s |")
-    head = (f"## The 50 families\n\n{n_full} with a reference controller (`oracle = \"full\"`), {len(fams) - n_full} without "
+    head = (f"## The {len(fams)} families\n\n{n_full} with a reference controller (`oracle = \"full\"`), {len(fams) - n_full} without "
             "(`oracle = \"none\"`, human review). Every family's rule book, its deviations and every number are in its "
             "task's instruction and README; the stages are the events its referee requires, in order.\n\n"
             "| # | family | robot | task | rule book | stages | oracle (success after) |\n|---|---|---|---|---|---|---|\n")

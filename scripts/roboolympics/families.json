@@ -12,6 +12,12 @@
    "expert_hours": 8.0,
    "evidence": "positive by injection (the H1-2 given 2.0 m/s forward and 5.5 m/s up over each standing 1.067 m hurdle, a real walk to the line); negatives: knocked with a hand, arm or trunk, under the top, beside the hurdle, a leg beside it, left the lane, down. The H1-2's pelvis stands at 1.035 m and walks at 0.7 m/s (50 m alone is 71 s of the 140 s); nothing known lifts it over the bar"
   },
+  "hurdles-freestanding": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 10.0,
+   "evidence": "positive by injection (the H1-2 given 2.0 m/s forward and 5.5 m/s up over each free-standing 1.067 m hurdle, a real walk to the line); a trailing-foot knock-down in the air (lead leg tucked by the robot's own motors) tips the hurdle over, it falls and trips the robot, no fault, also after an arm brushed it 0.34 s before; the hurdle's toppling force measured in physics 3.81 kgf (3.6 kgf stands, 4.0 kgf falls), the hurdles still for 140 s; negatives: knocked with a hand (approaching, and walking back into one gone over), standing on its top bar (climbing: the hurdle carries the robot), shoved along the track or out of the lane by a foot, moved by something else, knocked in the air then a foot under the bar, under the top, beside it, a leg beside it, left the lane, down. As in hurdles nothing known lifts the H1-2 (pelvis 1.035 m) over the bar"
+  },
   "shuttle-run": {
    "seed": 0,
    "oracle": "none",
@@ -54,6 +60,18 @@
    "expert_hours": 6.0,
    "evidence": "positive by injection (the arm raised by the robot's own motors, then 2.8 m/s up: the hand touches the vane 0.30 m above its standing reach, lands and stands); negatives: no touch, lifted without a jump, a step before the take-off, the stand touched, the vane touched without a jump or with another part. A balanced open-loop jump of ours raises the pelvis 0.23 m of the 0.31 m needed; an unbalanced one reaches the vane and falls"
   },
+  "jump-rope": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 12.0,
+   "evidence": "positive by injection on the real rope (its state set turning at 1.5 rev/s, then turned by the robot's own arms through the Dex1 grippers; a 2 m/s take-off by hand): the rope really passes under both airborne feet at 6.8 m/s, 6-8 cm below the soles, one counted jump, the robot lands and stands 1 s; the full 17 with a hand-scripted rope loop and hand take-offs; negatives: a hop with the rope lying, a dropped handle, the rope beside the body, under one foot only, a to-and-fro swing, backwards, at the standing feet, stepping over, a one-footed take-off, several hops per turn (counted once), a hop forward over a still rope (also at y = 8 m with the heading turning in the air), a fall, a last jump that does not end standing. Arm circles alone (288 settings searched) keep the real rope turning for 1-5 turns and give at most 2 jumps with injected take-offs; no G1 controller hops repeatedly"
+  },
+  "long-rope": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 8.0,
+   "evidence": "Reference: a periodic hop from a balanced crouch (joints/lowcmd rows) timed to the rope's angle, closed loop on privileged rope and pelvis state: 10 consecutive jumps, the rope 4-9 cm under the soles, lands at 10.17 s and stands 0.5 s before the still-turning rope comes round (success 10.85 s); 10 of 10 under small perturbations of the rope's phase and tempo and a push at the start; 48 of 50 with its own lead and push gain varied (push gain +3 %: 8 of 10). Also an injected positive (2.0 m/s kicks 0.18 s before each pass). Negatives: standing still, a late or low hop, a squat, leaving the centre zone, lying down, a tipping jump, a bad last landing, no stand after the landing; two hops per turn count once."
+  },
   "pole-vault": {
    "seed": 0,
    "oracle": "none",
@@ -89,6 +107,18 @@
    "oracle": "none",
    "expert_hours": 8.0,
    "evidence": "positive by injection (a real release, then ten real head contacts with the ball sent up again at 2.6 m/s each time); negatives: passive bouncing (one counted touch), nine then the ground, rises too small, a handball, the trunk, carried, a re-grip. Nothing built in stands on one leg"
+  },
+  "juggling-feet": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 10.0,
+   "evidence": "positive by injection (a real release; the pelvis held where it stands and the ball put back over the toe after each touch; ten real strikes by the right foot's own motors, a lowcmd hip/knee stroke lifting the toe at 0.8 m/s, in/out about 3 m/s, contacts 0.011-0.013 s against a 0.05 s carry limit); negatives: a still raised foot (0.54 of the speed back, not counted), soft strikes, below knee height, the shin above the instep, the thigh, the chest, the head, a hand (also a hand during a foot touch inside the release grace), resting on the foot, trapped between the feet, a re-grip, out of the grid, down. On the G1 a falling ball meets the foot clear of the lower leg's collision hull only on the front 2-3 cm of its top; a foot-following strike controller (pelvis held) lost the ball after two touches; nothing built in stands on one leg"
+  },
+  "juggling-head": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 10.0,
+   "evidence": "positive by a REAL controller for the first header (a lowcmd squat timed to the fed ball: in 3.37, out 3.39 m/s, contact 0.011 s) and by injection for ten (the ball really falls on the head, sent up at 3.5 m/s after each contact); negatives: nop (one passive bounce at 0.83 of the speed, then the ground), a still head with the ball kept centred (bounces uncounted, then touched too soon), weak touches, the ball laid on the head (carried: a touch may last 0.05 s, twice a human header's 25 ms), a hand, the chest, a shoulder, nine then the ground, out of the grid, a fall. Head-ball restitution is the ball's hard-surface bounce (the G1's head is a hard shell; no measured live-head value found; a deviation). Nine controller variants (squat bob + waist head positioning, ~8k sims) reach at most 2 headers: 1 cm off the head's top sends the ball sideways at 0.3 m/s"
   },
   "header": {
    "seed": 0,
@@ -144,6 +174,18 @@
    "expert_hours": 10.0,
    "evidence": "positive by injection (a real arm raise, a 4.5 m/s ghost take-off, the gripped ball really taken down through the ring; the landing is injected too); negatives: let go before the dunk, from below, through without a hand on it, a third step, a fall. Standing, the gripped ball reaches 2.37 m; the ring is at 3.05 m"
   },
+  "dunk-realgrasp": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 12.0,
+   "evidence": "positive by injection (a real two-palm squeeze raised overhead in stand mode, a ghost take-off by an acceleration field on the robot only so the ball rides on palm friction (about 2 g), teleport over the ring at the apex, the squeezed ball really taken down through the ring with both palms on it and no rim contact; the landing is injected too); negatives: drop from above, let go over the rim, one hand at the entry, from below, missed after letting go inside, ball on the floor, a third step, hanging on the ring, a fall. nop holds the ball 15 s (about 20 N per palm, holds an extra 3.6 g) and fails by time. Overhead the ball's centre reaches 2.2 m; the ring is at 3.05 m"
+  },
+  "dunk-between-legs": {
+   "seed": 0,
+   "oracle": "none",
+   "expert_hours": 16.0,
+   "evidence": "positive by injection: real two-palm hold and release, real palm touches behind the hip, the ball really bounces through the 0.27 m gap between the H1-2's soles (its own speed through the leg gate 1.3 m/s, no leg touched), real two-palm gather and squeeze, raise overhead and dunk through the real ring with both palms; ball paths, the push, the ghost jump and the landing injected. Negatives: beside the leg, above the knees, the robot rocking over a still ball, slow roll, through and back, gather before the legs, carrying, two touches without the floor, leg touch, ball away, floor while held, second dribble, let go after the gather, travelling before release and after gather, no dribble, shot during the dribble, drop, one hand on the side, from below, miss, hanging, out of bounds, falls. The overhead squeezed ball reaches about 2.2 m; the ring is at 3.05 m"
+  },
   "basketball-dribble": {
    "seed": 0,
    "oracle": "none",
@@ -156,11 +198,29 @@
    "expert_hours": 8.0,
    "evidence": "positive by injection (the real 30 m/s serve, bounce and contact with the strings; the robot moved 2.9 m sideways and the return's velocity set at the contact: 24 m/s at 9 degrees); negatives: two bounces, the own side, outside the court, through the net, a volley, the body, a double hit, carried, a net touch. The serve reaches the baseline at 15 m/s after 1.1 s, 1.5 m from the robot, which moves 1.2 m in that time"
   },
+  "tennis-return-realgrasp": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 10.0,
+   "evidence": "reference solution: walks 0.7 m on the walking policy, backswing while walking, a one-handed backhand at zero command with the free 0.30 kg racket held only by the right Dex1-1 at 120 N (head 7.1 m/s, ball 14.7 in -> 15.1 out, 44 deg; the racket turns 51 deg in the grip and stays); frozen start + 9/10 perturbed starts (4 cm, 0.03 rad) succeed, replay bit-exact. Second positive: a real stand-mode forehand with only the robot's place injected (19.5 m/s out, 12 deg). Negatives: two bounces, racket dropped / thrown / out of the hand in the ball's path, ball on the gripper and on the forearm, volley, double hit, carry, own side, long, wide, net, through the net, line in/out, racket on the net post, body at the net, far side, racket on the waiting ball, a fall. Held-racket impacts measured: e_app 0.47 at 15 m/s, 0.39 at 30; an 8 cm off-axis hit turns the racket 47 deg (15 m/s) / 137 deg (30 m/s) about its handle"
+  },
   "tennis-serve": {
    "seed": 0,
    "oracle": "none",
    "expert_hours": 8.0,
    "evidence": "positive by injection (a real rest and release, a 0.3 m fall onto the level racket, the ball's velocity set at the contact: 20 m/s at 11 degrees, into the diagonal box; the let is played out with a real net cord); negatives: unstruck, no added speed, a ball thrown at the racket (faster than a toss), not at rest, a foot fault, struck before clear, a throw past the net, a double hit, carried, the own side, into the net, outside the box, a second let. The slowest legal serve needs 12 m/s; the H1-2 stays up to a head speed of about 9.6 m/s"
+  },
+  "tennis-serve-realgrasp": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 10.0,
+   "evidence": "Reference: an underarm serve from a technique found offline by CMA-ES over whole-body key poses (LowCmd rows with the legs' gravity support): the left Dex1 gripper opens at rest, the ball falls 0.8 m onto the strings of the free 0.30 kg racket held by friction in the right gripper, 4.2 m/s in, 13.6 m/s out, over the net by 2.8 m into the diagonal box; 10/10 under gain x release variations. Referee test negatives: dropped, racket dropped / slipping out of the jaws, no speed added, thrown or tossed too high, struck out of the hand, struck by the gripper, carried over by hand, caught again, double hit, carried, not at rest, foot faults, long, wrong box, net, post, spare touched before a let, a second let; the let is replayed with the spare taken from its cup by the gripper"
+  },
+  "badminton-serve": {
+   "seed": 0,
+   "oracle": "full",
+   "expert_hours": 10.0,
+   "evidence": "Reference: a forehand low serve as stand rows (CMA-ES over two whole-upper-body key poses; the release timed by a dry run where the strings cross the shuttle's vertical plus a simulated drag fall): the left Dex1 drops the shuttle 0.50 m into the swing of the friction-held racket, hit base first at 0.48 m, 13.9 m/s at 47 deg, lands mid-court in the receiver's right service court; 10/10 with the start shifted 2 cm and with 0.02 rad key-pose noise. Shuttle: terminal 6.795 m/s vs 6.80 measured (Peastrel et al. 1980). Referee test: an injected faster swing; negatives for a shuttle let fall, racket dropped or thrown, racket on the held shuttle, shuttle re-caught or on the gripper, still racket, feint, feathers first, above 1.15 m, thrown shuttle, no speed added, feet off/moved/on the lines, double hit, carry, downward, served shuttle on the robot, into/under/around the net, a post, out, the four lines, unstruck over the net, robot or racket on the net, fall"
   },
   "table-tennis-return": {
    "seed": 0,

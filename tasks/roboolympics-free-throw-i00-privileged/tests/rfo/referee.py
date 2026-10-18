@@ -27,7 +27,8 @@ PART_OF_BODY = {"ankle_roll_link": "foot", "ankle_pitch_link": "shin", "knee_lin
                 "hip_roll_link": "thigh", "hip_yaw_link": "thigh", "shoulder_pitch_link": "upper_arm",
                 "shoulder_roll_link": "upper_arm", "shoulder_yaw_link": "upper_arm", "elbow_link": "forearm",
                 "wrist_roll_link": "forearm", "wrist_pitch_link": "hand", "wrist_yaw_link": "hand", "mount": "hand",
-                "elbow_pitch_link": "forearm", "elbow_roll_link": "forearm"}      # the H1-2's forearm links
+                "elbow_pitch_link": "forearm", "elbow_roll_link": "forearm",      # the H1-2's forearm links
+                "hand_jaw_a": "hand", "hand_jaw_b": "hand"}                       # a real hand's jaws (realhand.py)
 CENTRAL = {"pelvis": "pelvis", "waist_yaw_link": "pelvis", "waist_roll_link": "pelvis", "torso_link": "torso",
            "head_cam": "head"}
 HEAD_Z = 0.30                 # a torso_link geom centred higher than this in the torso frame is the head
@@ -70,7 +71,7 @@ class Referee:
             else:
                 side, rest = bn.split("_", 1)
                 part = f"{side}_{PART_OF_BODY[rest]}"
-                if rest == "mount" and not gname.endswith("_palm_pad"):
+                if rest == "mount" and not gname.endswith("_palm_pad") and not gname.startswith(f"{side}_hand_"):
                     part = f"{side}_tool"           # a task's tool on the hand (a racket, a paddle, a club)
             if part not in names:
                 names[part] = len(names)
@@ -225,6 +226,8 @@ class Referee:
     def held_mask(self) -> np.ndarray:
         out = np.zeros(self.ng, dtype=bool)
         for name in set(v for v in self.w.held.values() if v):
+            if self.w.m.body(name).id == 0:       # never the world body (it would mark every geom)
+                continue
             if name not in self._body_mask:
                 self._body_mask[name] = self.geoms(body=name)
             out |= self._body_mask[name]

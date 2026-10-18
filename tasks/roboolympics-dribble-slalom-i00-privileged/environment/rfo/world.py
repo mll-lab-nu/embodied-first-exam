@@ -44,6 +44,7 @@ from bodies.unitree_g1.agile import Agile  # noqa: E402
 from bodies.unitree_g1.falcon import Falcon  # noqa: E402
 
 from . import looks  # noqa: E402
+from . import realhand  # noqa: E402
 from .referee import Referee  # noqa: E402
 from .scene import Scene  # noqa: E402
 
@@ -190,8 +191,11 @@ class World:
         self.robot = Robot(m, self.robot_name)
         self.L = self.robot.L
         self.runp = RP.RunPolicy()
+        self.real_hands = dict(sc.real_hands)       # side -> "dex1": a gripper holding by friction, no weld (realhand.py)
+        self.robot.real_hands = self.real_hands
         self.grippables = {n: dict(v, body=m.body(n).id) for n, v in sc.grippables.items()}
-        self.welds = {(s, n): m.equality(f"grip_{s}_{n}").id for s in SIDES for n in self.grippables}
+        self.welds = {(s, n): m.equality(f"grip_{s}_{n}").id for s in SIDES if s not in self.real_hands
+                      for n in self.grippables}
         self.free = {}                              # free bodies by name: (qpos adr, dof adr)
         for j in range(m.njnt):
             if m.jnt_type[j] == mujoco.mjtJoint.mjJNT_FREE and m.jnt_bodyid[j] != self.robot.pelvis:
@@ -202,6 +206,7 @@ class World:
         self._eq_data0 = m.eq_data.copy()           # a grip writes its weld's pose into the model: reset restores it
         self.tool_hands = set(sc.hand_tools)        # a hand that carries a tool has no fist to grip with
         self._renderers: dict = {}
+        self.hands = realhand.RealHands(self, self.real_hands) if self.real_hands else None
         self.ref = Referee(self)
         self.reset()
 
@@ -229,10 +234,26 @@ class World:
             ET.SubElement(sens, "gyro", name=f"gyro_{where}", site=s)
             ET.SubElement(sens, "accelerometer", name=f"accelerometer_{where}", site=s)
         tools: list[tuple[str, str]] = []
+        for side, kind in sc.real_hands.items():
+            if side not in SIDES or kind not in realhand.KINDS or side in sc.hand_tools:
+                raise ValueError(f"real_hands[{side!r}] = {kind!r}: a side, one of {realhand.KINDS}, and no hand tool there")
+        grippers: list[str] = []
+        if sc.real_hands:                           # friction that holds: elliptic cones, stiff friction (realhand.py)
+            opt = root.find("option")
+            opt.set("cone", opt.get("cone", "elliptic"))
+            opt.set("impratio", opt.get("impratio", f"{realhand.IMPRATIO:g}"))
         for side in SIDES:                          # the hands: a palm pad (or the task's tool) on each wrist mount
             mount = next(b for b in root.iter("body") if b.get("name") == f"{side}_mount")
-            ET.SubElement(mount, "site", name=f"{side}_palm", pos="0 0 0.045", size="0.008", group="4")
+            real = side in sc.real_hands
+            ET.SubElement(mount, "site", name=f"{side}_palm", pos=f"0 0 {realhand.CENTRE_Z:g}" if real else "0 0 0.045",
+                          size="0.008", group="4")
             frag = sc.hand_tools.get(side)
+            if real:                                # the real hand (realhand.py): no pad, no weld
+                realhand.strip_hand(root, side, self.robot_name)
+                for g in realhand.build(root, mount, side, self.robot_name):
+                    tools.append((side, g))
+                    grippers.append(g)
+                continue
             if frag:
                 for i, el in enumerate(ET.fromstring(f"<x>{frag}</x>")):
                     if el.tag == "geom" and el.get("name") is None:
@@ -257,6 +278,17 @@ class World:
             for body, hull in hulls:
                 if not body.startswith(own):
                     ET.SubElement(contact, "pair", name=f"toolcol_{tool}_{hull}", geom1=tool, geom2=hull, condim="3")
+        for g1 in grippers:                         # a gripper touches the other hand: its gripper, pad or tool
+            side = g1.split("_", 1)[0]
+            other = "right" if side == "left" else "left"
+            if other in sc.real_hands:
+                hand = [g for g in grippers if g.startswith(other + "_")] if side == "left" else []
+            elif other in sc.hand_tools:
+                hand = [t for s_, t in tools if s_ == other]
+            else:
+                hand = [f"{other}_palm_pad"]
+            for g2 in hand:
+                ET.SubElement(contact, "pair", name=f"handcol_{g1}_{g2}", geom1=g1, geom2=g2, condim="3")
         return ET.tostring(root, encoding="unicode")
 
     # ------------------------------------------------------------------ episode
@@ -286,12 +318,18 @@ class World:
         m.eq_data[:] = self._eq_data0
         self.last_raw: np.ndarray | None = None     # the sim row in force (the last one executed)
         self.pins: dict[str, np.ndarray] = {}       # free bodies a task holds in place (a ball on a launcher)
+        if self.hands:
+            self.hands.reset()
         self.task.reset(self)
         d.time = 0.0
         d.act[:] = 0
         d.ctrl[:] = 0
         d.qacc_warmstart[:] = 0
+        if self.hands:
+            self.hands.write_ctrl()
         mujoco.mj_forward(m, d)
+        if self.hands:
+            self.hands.update_held()
         self.ref.reset()
 
     def _hold_legs(self) -> None:
@@ -336,18 +374,30 @@ class World:
             qa, va = self.free[name]
             d.qpos[qa:qa + 7] = pose
             d.qvel[va:va + 6] = 0.0
+        hands = self.hands
+        if hands:                                   # a real hand's grip column is its closure command: kept in [0, 1]
+            raw = raw.copy()                        # (so the row in force, last_raw, holds what ran)
+            for i, s in enumerate(SIDES):
+                if s in self.real_hands:
+                    raw[L.R_GRIP.start + i] = min(max(float(raw[L.R_GRIP.start + i]), 0.0), 1.0)
         self.task.before_step(self)
         self._grips(raw[L.R_GRIP] >= 0.5)
+        if hands:
+            hands.command(raw[L.R_GRIP])            # a real hand: the closure command (realhand.py)
         self._control(raw)
         a.begin_step(d)
         won = self.ref.success
         for j in range(1, SUB + 1):
             a.apply(d, j)
+            if hands:
+                hands.substep()
             mujoco.mj_step(m, d)
             if (d.warning[mujoco.mjtWarning.mjWARN_BADQACC].number or not np.all(np.isfinite(d.qpos))
                     or float(np.abs(d.qvel[self._lin_dofs]).max()) > MAX_SPEED):
                 self.unstable = True                # the physics diverged: the attempt ends here, as a failure
                 break
+            if hands:
+                hands.update_held()
             self.ref.substep()
         self.k += 1
         self.last_raw = raw.copy()
@@ -459,6 +509,8 @@ class World:
             mujoco.mj_comPos(m, d)                  # have placed or launched a prop: the speed test below must
             mujoco.mj_comVel(m, d)                  # not read the step before)
         for i, side in enumerate(SIDES):
+            if side in self.real_hands:             # a real hand never welds (realhand.py drives its jaws)
+                continue
             want = bool(req[i])
             self.grip_req[side] = want
             if not self.grippables:
@@ -470,8 +522,9 @@ class World:
                 self.ref.event("release", hand=side, object=name)
             elif self.held[side] is None and want and side not in self.tool_hands:
                 best = None
+                by_gripper = {self.held[s] for s in self.real_hands}     # held by friction in a gripper: not weldable
                 for name in self.grippables:
-                    if name in self.pins or not self.task.may_grip(self, side, name):
+                    if name in self.pins or name in by_gripper or not self.task.may_grip(self, side, name):
                         continue
                     gap, speed = self._grip_gap(side, name)
                     if gap <= GRIP_REACH and speed <= GRIP_SPEED and (best is None or gap < best[0]):
@@ -481,6 +534,8 @@ class World:
 
     def grab(self, side: str, name: str, event: bool = True) -> None:
         """Weld the object to the hand as they are now (the grip; also how a task puts an object in a hand at t = 0)."""
+        if side in self.real_hands:
+            raise ValueError(f"the {side} hand is a real hand: it holds by friction only (use close_on)")
         m, d = self.m, self.d
         eq = self.welds[(side, name)]
         b1, b2 = self.robot.mount[side], self.grippables[name]["body"]
@@ -499,6 +554,25 @@ class World:
         self.grip_req[side] = True
         if event:
             self.ref.event("grip", hand=side, object=name)
+
+    # ------------------------------------------------------------------ the real hands (realhand.py)
+    def close_on(self, side: str, name: str, closure: float = 1.0, settle_s: float = 0.3) -> dict:
+        """At reset: close a real hand's jaws on the free body `name` placed between them and settle the grasp
+        (realhand.RealHands.close_on); the closure command stays in force."""
+        if side not in self.real_hands:
+            raise ValueError(f"the {side} hand is not a real hand (sc.real_hands[{side!r}] = 'dex1' in build())")
+        return self.hands.close_on(side, name, closure, settle_s)
+
+    def jaw_frame(self, side: str) -> tuple[np.ndarray, np.ndarray]:
+        """(position, rotation) of a real hand's jaw centre: columns x closing axis (towards jaw a, the palm side), y
+        across the jaws, z along the fingers."""
+        return self.hands.jaw_frame(side)
+
+    def grip_cmd(self, side: str) -> float:
+        """The grip value in force on a side: a real hand's closure command, else 1.0 / 0.0 for the weld grip."""
+        if side in self.real_hands:
+            return self.hands.cmd[side]
+        return float(self.grip_req[side])
 
     def holder(self, name: str) -> list[str]:
         """The hands that grip the object."""
@@ -560,7 +634,8 @@ class World:
         return ([f"{j}_pos" for j in J] + [f"{j}_vel" for j in J] + [f"{j}_torque" for j in J] + [f"{j}_target" for j in J]
                 + [f"imu_pelvis_{k}" for k in ("qw", "qx", "qy", "qz", "gx", "gy", "gz", "ax", "ay", "az")]
                 + [f"imu_torso_{k}" for k in ("qw", "qx", "qy", "qz", "gx", "gy", "gz", "ax", "ay", "az")]
-                + ["holding_left", "holding_right", "mode", "cmd_vx", "cmd_vy", "cmd_wz", "time_s"])
+                + ["holding_left", "holding_right", "mode", "cmd_vx", "cmd_vy", "cmd_wz", "time_s"]
+                + (self.hands.layout() if self.hands else []))
 
     def proprio(self) -> np.ndarray:
         d, r, a = self.d, self.robot, self.robot.arb
@@ -569,7 +644,7 @@ class World:
                               sd[s[f"accelerometer_{w}"]:s[f"accelerometer_{w}"] + 3]]
         return np.r_[d.qpos[r.qadr], d.qvel[r.vadr], d.ctrl[a.aid], a.target(), imu("pelvis"), imu("torso"),
                      [float(self.held["left"] is not None), float(self.held["right"] is not None), float(self.mode)],
-                     self.cmd, [self.t]].astype(np.float32)
+                     self.cmd, [self.t], self.hands.proprio() if self.hands else []].astype(np.float32)
 
     def render(self, camera: str, width: int = 480, height: int = 270, depth: bool = False) -> np.ndarray:
         key = (width, height)
@@ -606,6 +681,8 @@ class World:
                     *[self.robot.walkers[k].state() for k in sorted(self.robot.walkers)], self.walk_tgt, self.wrist_ff):
             h.update(np.nan_to_num(np.ascontiguousarray(arr, dtype=np.float64), nan=1e300, posinf=1e301,
                                    neginf=-1e301).tobytes())
+        if self.hands:                              # (only a world with a real hand: the others' hashes stay as they were)
+            h.update(np.ascontiguousarray(self.hands.memory(), dtype=np.float64).tobytes())
         h.update(json.dumps([self.k, self.mode, self.run_k, self.walk_k, self.refused, self.unstable, self.held, self.grip_req, sorted(self.pins), self.ref.digest()],
                             sort_keys=True, default=_jd).encode())
         return h.hexdigest()
@@ -674,6 +751,12 @@ class Actions:
                                         meaning=f"{who} drives the legs from the velocity command (vx forward, vy to "
                                                 "the left, m/s; wz turning left, rad/s; the robot's own frame); you "
                                                 "give the waist and arm joint targets")
+        self.real = dict(getattr(r, "real_hands", {}) or {})     # the sides with a real hand (realhand.py)
+        if self.real:
+            note = "; ".join(f"grip_{s}: the {s} gripper's closure command, 0 (open, 90 mm) to 1 (closed)"
+                             for s in SIDES if s in self.real)
+            for t in self.types.values():
+                t["meaning"] += f" ({note})"
         for t in self.types.values():
             t["dim"] = len(t["layout"])
             assert len(t["bounds"][0]) == t["dim"]
@@ -690,6 +773,9 @@ class Actions:
         raw[L.R_Q] = r.arb.target()
         raw[L.R_KP], raw[L.R_KD] = r.kp0, r.kd0
         raw[L.R_GRIP] = (row[-2:] >= 0.5).astype(float)
+        for i, s in enumerate(SIDES):               # a real hand: the closure command itself, in [0, 1]
+            if s in self.real:
+                raw[L.R_GRIP.start + i] = min(max(float(row[-2 + i]), 0.0), 1.0)
         if typ == "stand":
             raw[R_MODE] = STAND
             raw[L.R_Q][L.UPPER] = row[0:L.NU]
@@ -727,7 +813,7 @@ class Actions:
         mode = {"stand": STAND, "walk": WALK, "run": RUN, "run_arms": RUN_ARMS, "joints": JOINT, "lowcmd": JOINT,
                 "walk_falcon": WALK_FALCON, "walk_agile": WALK_AGILE}[typ]
         same = raw is not None and int(raw[R_MODE]) == mode
-        grip = raw[L.R_GRIP].copy() if raw is not None else np.array([float(world.grip_req[s]) for s in SIDES])
+        grip = raw[L.R_GRIP].copy() if raw is not None else np.array([world.grip_cmd(s) for s in SIDES])
         q = raw[L.R_Q] if same else tgt
         cmd = raw[R_CMD] if same else np.zeros(3)
         if typ == "stand":
