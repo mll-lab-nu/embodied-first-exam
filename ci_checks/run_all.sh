@@ -112,8 +112,7 @@ add python3 ci_checks/check-protocol.py"$pargs"
 add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
 # issue #258: every script or workflow that builds images builds from a stamped copy (scripts/stamp_mtimes.py)
 add python3 ci_checks/check-build-stamps.py
-# PROTOCOL §4: the easy set (docs/easy_set.toml) names existing task bases, with a known reason and their benchmark label
-add python3 scripts/task_conventions.py easy-set --check
+# PROTOCOL §4: the core set (docs/core_set.toml) names existing task dirs, with their base, benchmark label and mode
 add python3 scripts/task_conventions.py core-set --check
 # every task dir has its benchmark label; a task-dir prefix two benchmarks share (roboolympics-) names each base explicitly
 add python3 scripts/task_conventions.py benchmarks --check

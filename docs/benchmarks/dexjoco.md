@@ -32,10 +32,10 @@ from a public human demonstration, in both modes (`scripts/dexjoco/`).
 | bimanual_assembly | bimanual | peg into the tray's socket, touching the bottom 30 steps | 586 |
 | bimanual_photograph | bimanual | camera held 0.4 m in front of the logo, axis within 10 deg, shutter pressed | 260 |
 
-## Easy set
-The families below are in the easy set (`docs/easy_set.toml`, reason `solved`) because the screening runs (GPT-6 Luna,
-Codex xhigh, or GPT-6 Astra, Codex high) solved them in both modes; bases Luna solved in any mode are listed there too
-(`solved_by = "luna"`). They keep their names and are run, but are reported apart from the main table.
+## Screening
+The families below are left out of the core set (`docs/core_set.toml`) because the screening runs (GPT-6 Luna, Codex
+xhigh, or GPT-6 Astra, Codex high) solved them in both modes; every base Luna solved in some mode is left out too. Their
+tasks keep their names.
 
 | family | privileged solved by | standard solved by |
 |---|---|---|

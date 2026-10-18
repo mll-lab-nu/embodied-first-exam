@@ -77,16 +77,19 @@ the results site) compare trials only within one comparable configuration (`task
 version, mode, cutoff, reset budget, S, network), report success together with cost (tokens, money, turns, wall clock,
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
 unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
-every core task, the flag is shown as a marker and may be used as a filter. The easy set ([`easy_set.toml`](../easy_set.toml),
-`task_conventions.set_of`) is kept apart: its tasks are run and their results kept and shown, marked, but the main
-table and every headline number (success rates, rankings, totals) count `core` tasks only; the easy set's results are
-shown separately (the batch summary marks them in their configuration's table and leaves them out of its rate; the
-results site and the pool dashboard, outside this repository, are to list them apart). `set` in `config.json` is the value when the result was written; a
-report derives it from `docs/easy_set.toml` at the commit it publishes, so a task that leaves the list (e.g. after a
-grader fix) counts again without any change to its results. A base listed with `reason = "solved"` was solved in every
-mode by the screening runs its `note` names, or, with `solved_by` (`"luna"`: codex-gpt6_luna-xhigh),
-in any mode by that run (`scripts/easy_set_add_solved.py` appends them): core-set numbers of those runs are filtered
-against them (Luna's core-set success rate is 0 by construction), so report those runs on all tasks alongside.
+every core task, the flag is shown as a marker and may be used as a filter. The main table and every headline number
+(success rates, rankings, totals) count the core set only ([`core_set.toml`](../core_set.toml), `task_conventions.set_of`:
+`core`, else `excluded`). It lists task dirs, each mode its own task: every task dir of main at the list's
+`generated_from` commit minus the tasks judged easy (solved through a shortcut, judged too easy by the benchmark owner, or
+solved in every mode by the screening runs) and minus the dirs the reference run codex-gpt6_luna-xhigh solved (a success
+in any mode takes out the base; a RoboSafeBench privileged twin, reported apart, takes out only itself). A dir left out
+stays out. The list is regenerated from the reference run's verdicts: a task dir added after `generated_from` is run by
+the reference run and enters the list at the next regeneration unless that run solved it. Tasks outside the core set stay
+in the repository under their names and are not evaluated by official runs; results they already have are kept and shown
+marked (the batch summary marks them in their configuration's table and leaves them out of its rate). `set` in
+`config.json` is the value when the result was written; a report derives it from `docs/core_set.toml` at the commit it
+publishes. The reference run's core-set success rate is close to 0 by construction, so report that run on all tasks
+alongside.
 
 A standard-mode result recorded while a grading replay still decided is re-read from its own `final.json` (the live
 episode's success, where that record applied the task's whole rule); the recorded verdict stays beside it, and a trial

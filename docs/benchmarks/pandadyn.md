@@ -306,7 +306,7 @@ The Panda Dynamic Scenes environment package: MLL Lab, released with this reposi
 
 Serves `eai-standard/2.1` with the optional reset capability (3 resets). Resume by journal replay to the logged state hash (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).
 
-## Easy set
+## Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
@@ -314,44 +314,43 @@ for any access to tests, solutions or graders (for this benchmark mostly from th
 was partial). It is **hard** when GPT-6 Luna and every later run that attempted it failed, GPT-6 Astra and Claude Opus
 5.5 among them; a standard directory that only Astra solved is hard as well. It is **unverified** when only Luna
 attempted it and failed (the later runs only take bases Luna solved in no mode), and **pending** without a Luna verdict.
-A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason `solved`): kept under its name and
-reported apart from the main table.
+A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-1 of 25 bases are in the easy set; by directory: 33 easy, 11 hard, 24 unverified, 1 pending.
+By directory: 33 easy, 11 hard, 24 unverified, 1 pending.
 
-| base | easy set | privileged | standard | standard-realtime |
-|---|---|---|---|---|
-| `pandadyn-d01-reciprocal-cup-relay-i00` |  | easy: Astra, Opus, GLM 5.3 Flash | hard | easy: Astra (3), Opus (9) |
-| `pandadyn-d02-strike-catch-merge-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-d03-cooperative-puck-course-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | hard | easy: Astra (10) |
-| `pandadyn-d04-shared-tray-transport-discharge-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Gemini 4 Argon | easy: Astra (1), Opus (1), GLM 5.3 Flash (7) |
-| `pandadyn-d05-moving-ramp-relay-i00` |  | easy: Astra, Opus | hard | — |
-| `pandadyn-d06-moving-bank-relay-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-d07-spring-gate-switchyard-i00` |  | easy: Astra, Opus, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Opus (7) |
-| `pandadyn-d08-pendulum-energy-relay-i00` |  | easy: Luna | unverified | — |
-| `pandadyn-d09-lever-launch-catch-reload-i00` |  | easy: Astra, Opus | hard | hard |
-| `pandadyn-d10-moving-grasp-handover-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-d11-moving-fixture-unlock-i00` |  | easy: Luna | unverified | — |
-| `pandadyn-d12-reciprocal-sliding-transfer-i00` |  | easy: Luna | unverified | — |
-| `pandadyn-d13-supported-cube-flip-relay-i00` |  | easy: Luna | unverified | — |
-| `pandadyn-s01-cup-route-delivery-i00` |  | easy: Astra, Opus | hard | easy: Astra (9) |
-| `pandadyn-s02-plate-catch-transport-release-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s03-clear-gate-hockey-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s04-impact-release-relay-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s05-sliding-receive-align-deliver-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s06-cube-flip-route-recover-i00` |  | pending | hard | — |
-| `pandadyn-s07-conveyor-load-brake-unload-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s08-load-switch-recover-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s09-toss-recatch-delivery-i00` |  | easy: Astra, Opus, Gemini 4 Argon | hard | easy: Astra (7), Opus (10) |
-| `pandadyn-s10-swinging-load-transit-dock-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s11-cylinder-rescue-route-deliver-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Astra (3), Gemini 3.8 Flash (6) |
-| `pandadyn-s12-moving-bridge-puck-relay-i00` |  | easy: Astra, Opus | hard | easy: Astra (7), Opus (5) |
+| base | privileged | standard | standard-realtime |
+|---|---|---|---|
+| `pandadyn-d01-reciprocal-cup-relay-i00` | easy: Astra, Opus, GLM 5.3 Flash | hard | easy: Astra (3), Opus (9) |
+| `pandadyn-d02-strike-catch-merge-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-d03-cooperative-puck-course-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | hard | easy: Astra (10) |
+| `pandadyn-d04-shared-tray-transport-discharge-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Gemini 4 Argon | easy: Astra (1), Opus (1), GLM 5.3 Flash (7) |
+| `pandadyn-d05-moving-ramp-relay-i00` | easy: Astra, Opus | hard | — |
+| `pandadyn-d06-moving-bank-relay-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-d07-spring-gate-switchyard-i00` | easy: Astra, Opus, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Opus (7) |
+| `pandadyn-d08-pendulum-energy-relay-i00` | easy: Luna | unverified | — |
+| `pandadyn-d09-lever-launch-catch-reload-i00` | easy: Astra, Opus | hard | hard |
+| `pandadyn-d10-moving-grasp-handover-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-d11-moving-fixture-unlock-i00` | easy: Luna | unverified | — |
+| `pandadyn-d12-reciprocal-sliding-transfer-i00` | easy: Luna | unverified | — |
+| `pandadyn-d13-supported-cube-flip-relay-i00` | easy: Luna | unverified | — |
+| `pandadyn-s01-cup-route-delivery-i00` | easy: Astra, Opus | hard | easy: Astra (9) |
+| `pandadyn-s02-plate-catch-transport-release-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s03-clear-gate-hockey-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s04-impact-release-relay-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s05-sliding-receive-align-deliver-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s06-cube-flip-route-recover-i00` | pending | hard | — |
+| `pandadyn-s07-conveyor-load-brake-unload-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s08-load-switch-recover-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s09-toss-recatch-delivery-i00` | easy: Astra, Opus, Gemini 4 Argon | hard | easy: Astra (7), Opus (10) |
+| `pandadyn-s10-swinging-load-transit-dock-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s11-cylinder-rescue-route-deliver-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Astra (3), Gemini 3.8 Flash (6) |
+| `pandadyn-s12-moving-bridge-puck-relay-i00` | easy: Astra, Opus | hard | easy: Astra (7), Opus (5) |
 
 Standard-realtime cells name each solving run with the resets it used (the screening allowed 10; a solve that used more
 than 3 would not count under today's budget). The standard cells are from standard twins with no reset, a configuration
-being rerun under today's. The easy-set base here, `pandadyn-d04-shared-tray-transport-discharge-i00`, has realtime solves with 1 reset (Astra, Opus).
+being rerun under today's. `pandadyn-d04-shared-tray-transport-discharge-i00`, easy in every mode and so left out of the core set, has realtime solves with 1 reset (Astra, Opus).

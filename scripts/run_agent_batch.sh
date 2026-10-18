@@ -301,12 +301,12 @@ from task_names import canonical  # noqa: E402
 # docs/protocol/running.md "Results" (PROTOCOL v2.0): results are compared only within one configuration (task_conventions.config_key:
 # protocol version, mode, cutoff, reset budget, S, network); validated and unvalidated tasks (task_conventions.validated_of)
 # are ranked together, the unvalidated ones marked; a trial that is not a result (infrastructure, voided) never counts in a
-# success rate. Tasks of the easy set (docs/easy_set.toml, task_conventions.set_of) are listed, marked, and left out of
-# the headline rate (PROTOCOL §4).
+# success rate. Tasks outside the core set (docs/core_set.toml, task_conventions.set_of) are listed, marked, and left out
+# of the headline rate (PROTOCOL §4).
 HEAD = ("| task | success | result | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |\n"
         "|---|---|---|---|---|---|---|---|---|---|---|---|")
 f = lambda s: dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
-groups = defaultdict(list)          # config key -> [(started, row, status, validated, easy)]
+groups = defaultdict(list)          # config key -> [(started, row, status, validated, not core)]
 labels = {}
 for trial in jobs.glob(f"{batch}-*/*__*"):
     if not trial.is_dir():
@@ -337,26 +337,26 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
                                "infra_error", "resumes") if k in rw}
     res = "not a result (voided" + (f": {why}" if why else "") + ")" if status == "not_a_result" else status
     val = cfg.get("validated") is True
-    easy = (R / "tasks" / task / "task.toml").is_file() and tc.set_of(R / "tasks" / task) == "easy"
-    groups[key].append((r.get("started_at") or "~", f"| {task}{'' if val else ' (unvalidated)'}{' (easy set)' if easy else ''} | {rw.get('success', '-')} | {res} | {json.dumps(keys)} | "
+    out = (R / "tasks" / task / "task.toml").is_file() and tc.set_of(R / "tasks" / task) != "core"
+    groups[key].append((r.get("started_at") or "~", f"| {task}{'' if val else ' (unvalidated)'}{' (not core)' if out else ''} | {rw.get('success', '-')} | {res} | {json.dumps(keys)} | "
                         f"{rw.get('n_actions', '-')} | {wall} | {ar.get('n_input_tokens', '-')} | {ar.get('n_cache_tokens', '-')} | "
                         f"{ar.get('n_output_tokens', '-')} | {gw_cell} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |",
-                        status, val, easy))
+                        status, val, out))
 print(f"# {batch}\n\nOne table per comparable configuration (docs/protocol/running.md \"Results\"); success rates count results only "
       "(a trial that is not a result is voided and never counted). Validated and unvalidated tasks are ranked together; "
       "tasks without a validated oracle (`oracle` not `full` and no `[metadata] validated = true`), and trials of a task "
-      "version this checkout does not have, are marked (unvalidated). Tasks of the easy set (docs/easy_set.toml) are "
-      "marked (easy set) and left out of the success rate (PROTOCOL §4).")
+      "version this checkout does not have, are marked (unvalidated). Tasks outside the core set (docs/core_set.toml) "
+      "are marked (not core) and left out of the success rate (PROTOCOL §4).")
 for k in sorted(groups, key=lambda k: tuple(map(str, k))):
     rows = groups[k]
     counted = [(s, v) for _, _, s, v, e in rows if s in ("success", "fail") and not e]
-    easy_n = sum(1 for _, _, s, _, e in rows if s in ("success", "fail") and e)
+    out_n = sum(1 for _, _, s, _, e in rows if s in ("success", "fail") and e)
     rate = f"{sum(s == 'success' for s, _ in counted)} / {len(counted)}" if counted else "-"
     cv = [s for s, v in counted if v]
     vrate = f" (validated tasks: {sum(s == 'success' for s in cv)} / {len(cv)})" if len(cv) != len(counted) else ""
     print(f"\n## {labels[k]}\n\nSuccess (results only): {rate}{vrate}; "
           f"{sum(s == 'not_a_result' for _, _, s, _, _ in rows)} voided"
-          + (f"; {easy_n} result(s) of easy-set tasks not counted" if easy_n else "") + f".\n\n{HEAD}")
+          + (f"; {out_n} result(s) of tasks outside the core set not counted" if out_n else "") + f".\n\n{HEAD}")
     for _, row, _, _, _ in sorted(rows):
         print(row)
 PY
