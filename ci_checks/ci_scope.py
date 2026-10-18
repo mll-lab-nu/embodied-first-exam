@@ -83,7 +83,7 @@ UNITS: dict[str, list[str]] = {
 # not a benchmark's own path runs the full suite.
 NO_TASK_EFFECT = ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "docs/protocol/running.md",
                   "docs/REVIEWING.md", ".gitignore",
-                  "docs/easy_set.toml", "docs/core_set.toml")   # read by reports only; its own check (run_all.sh) and test (run_invariants.sh) always run
+                  "docs/core_set.toml")   # read by reports only; its own check (run_all.sh) and test (run_invariants.sh) always run
 # tasks/dataset.toml: no longer committed (generated for a release; check-dataset-manifest.sh fails when it is tracked)
 REPO_LEVEL_ONLY = ("tasks/dataset.toml",)
 REF = re.compile(r"\b(scripts|images)/([A-Za-z0-9_.-]+)")

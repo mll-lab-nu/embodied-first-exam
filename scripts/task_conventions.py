@@ -1294,97 +1294,82 @@ def validated_of(task: Path) -> bool:
     return md.get("oracle") == "full"
 
 
-# The easy set (PROTOCOL §4, docs/protocol/running.md "Results"): task bases kept in the repository and run like any other, but reported
-# apart from the main table and left out of the headline statistics. One central list, docs/easy_set.toml, not a task
-# field: marking a task changes none of its files, so its DIGEST and the results recorded against it stay as they are.
-EASY_SET_FILE = Path(os.environ.get("RCB_EASY_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "easy_set.toml")
-# RCB_EASY_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
-EASY_REASONS = {
-    "shortcut": "a success came through a goal looser than the task's text, or a grader shortcut (`note`: the pattern)",
-    "owner": "the benchmark owner judges the task too easy or not discriminative",
-    "solved": "the screening runs solved the task in every mode it ships, or the `solved_by` run in any mode (`note`: "
-              "which runs, which modes)",
-}
-# `solved_by` (optional, reason "solved" only): the reference run that solved the base in ANY mode it ships (owner 10-17,
-# board 0155); `easy-set --solved-by luna` lists them. scripts/easy_set_add_solved.py appends such entries.
-SOLVED_BY = {"luna": "codex-gpt6_luna-xhigh"}
-
-
-def easy_set(path: Path = EASY_SET_FILE) -> dict[str, dict]:
-    """docs/easy_set.toml as {base: entry}; empty when the file is absent. Entries: `base` (the task name without its
-    mode suffix: every mode the base ships is in the set), `benchmark` (its BENCHMARKS label), `reason` (EASY_REASONS),
-    optional `note` and `solved_by` (SOLVED_BY). ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`). Parsed once per
-    version of the file (its mtime), so a long-running reader sees an edited list."""
-    try:
-        mtime = path.stat().st_mtime_ns
-    except FileNotFoundError:
-        return {}
-    return dict(_easy_set(path, mtime))
+# The core set (PROTOCOL §4, docs/protocol/running.md "Results"): the task DIRS (each mode its own task) the headline
+# statistics are computed on, one central list, docs/core_set.toml, not a task field: listing a task changes none of its
+# files, so its DIGEST and the results recorded against it stay as they are. The list is regenerated from the eval pool's
+# verdicts of the reference run; `generated_from` is the commit of main whose task dirs it classified (a dir added after
+# it is not classified yet).
+CORE_SET_FILE = Path(os.environ.get("RCB_CORE_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "core_set.toml")
+# RCB_CORE_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
+CORE_LUNA = ("failed", "no result yet")
+CORE_FIELDS = ("task", "base", "benchmark", "mode", "luna")
 
 
 @functools.lru_cache(maxsize=8)
-def _easy_set(path: Path, mtime: int) -> dict[str, dict]:
+def _core_set(path: Path, mtime: int) -> tuple[str | None, dict[str, dict]]:
+    d = tomllib.loads(path.read_text(encoding="utf-8"))
     out: dict[str, dict] = {}
-    for e in tomllib.loads(path.read_text(encoding="utf-8")).get("task", []):
-        b = e.get("base") if isinstance(e, dict) else None
-        if not isinstance(b, str) or not b:
-            raise ValueError(f"{path.name}: an entry without a base: {e!r}")
-        if b in out:
-            raise ValueError(f"{path.name}: {b} listed twice")
-        out[b] = e
-    return out
-
-
-def set_of(task: Path) -> str:
-    """`easy` when the task's base is in the easy set (docs/easy_set.toml), else `core`. A marker like `validated`,
-    never part of config_key: the headline statistics count `core` tasks only. Recorded with each result as the value
-    when it was written; reports re-derive it from the list at the commit they publish. A malformed list never stops a
-    result from being written (a warning, and `core`): `easy-set --check` reports it."""
-    try:
-        es = easy_set()
-    except (ValueError, OSError) as e:                  # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
-        if str(e) not in _EASY_WARNED:
-            _EASY_WARNED.add(str(e))
-            print(f"WARN {EASY_SET_FILE.name}: {e} (every task counts as core; task_conventions.py easy-set --check)",
-                  file=sys.stderr)
-        return "core"
-    return "easy" if base_of(Path(task)) in es else "core"
-
-
-_EASY_WARNED: set[str] = set()
-
-
-# The core set: the task DIRS (each mode its own task) the headline statistics are computed on, docs/core_set.toml:
-# every task dir minus the easy set and minus the dirs the reference run (SOLVED_BY "luna") solved, regenerated from
-# the eval pool's verdicts. A list, not a task field, like the easy set: listing a task changes none of its files.
-CORE_SET_FILE = Path(__file__).resolve().parents[1] / "docs" / "core_set.toml"
-CORE_LUNA = ("failed", "no result yet")
-
-
-def core_set(path: Path = CORE_SET_FILE) -> dict[str, dict]:
-    """docs/core_set.toml as {task dir: entry}; empty when the file is absent. ValueError on a malformed file."""
-    out: dict[str, dict] = {}
-    if not path.is_file():
-        return out
-    for e in tomllib.loads(path.read_text(encoding="utf-8")).get("task", []):
+    for e in d.get("task", []):
         t = e.get("task") if isinstance(e, dict) else None
         if not isinstance(t, str) or not t:
             raise ValueError(f"{path.name}: an entry without a task: {e!r}")
         if t in out:
             raise ValueError(f"{path.name}: {t} listed twice")
         out[t] = e
-    return out
+    g = d.get("generated_from")
+    return (g if isinstance(g, str) else None), out
+
+
+def core_set(path: Path = CORE_SET_FILE) -> dict[str, dict]:
+    """docs/core_set.toml as {task dir: entry} (CORE_FIELDS); empty when the file is absent. ValueError on a malformed
+    file (ci_checks: `task_conventions.py core-set --check`). Parsed once per version of the file (its mtime), so a
+    long-running reader sees an edited list."""
+    try:
+        mtime = path.stat().st_mtime_ns
+    except FileNotFoundError:
+        return {}
+    return dict(_core_set(path, mtime)[1])
+
+
+def core_set_commit(path: Path = CORE_SET_FILE) -> str | None:
+    """docs/core_set.toml's `generated_from`: the commit of main whose task dirs the list classified."""
+    try:
+        return _core_set(path, path.stat().st_mtime_ns)[0]
+    except FileNotFoundError:
+        return None
+
+
+def set_of(task: Path) -> str:
+    """`core` when the task dir is listed in docs/core_set.toml, else `excluded`. A marker like `validated`, never part
+    of config_key: the headline statistics count `core` tasks only. Recorded with each result as the value when it was
+    written; reports re-derive it from the list at the commit they publish. A malformed list never stops a result from
+    being written (a warning, and `core`): `core-set --check` reports it."""
+    try:
+        cs = core_set()
+    except (ValueError, OSError) as e:                  # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
+        if str(e) not in _CORE_WARNED:
+            _CORE_WARNED.add(str(e))
+            print(f"WARN {CORE_SET_FILE.name}: {e} (every task counts as core; task_conventions.py core-set --check)",
+                  file=sys.stderr)
+        return "core"
+    return "core" if Path(task).name in cs else "excluded"
+
+
+_CORE_WARNED: set[str] = set()
 
 
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
-    """What is wrong with the core set: a task dir that does not exist, a base / benchmark / mode that is not the
-    dir's, a task whose base is in the easy set, an unknown `luna` value or field."""
+    """What is wrong with the core set: no file, no `generated_from` commit, a listed task dir that does not exist, a
+    base / benchmark / mode that is not the dir's, an unknown `luna` value or field."""
     tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
+    if not path.is_file():
+        return [f"{path.name}: no such file"]
     try:
-        cs, es = core_set(path), easy_set()
+        cs, g = core_set(path), core_set_commit(path)
     except (ValueError, OSError) as e:
         return [str(e)]
-    bad = []
+    bad = [] if isinstance(g, str) and re.fullmatch(r"[0-9a-f]{40}", g) else \
+        [f"{path.name}: generated_from {g!r} is not a full commit id"]
     for t, e in cs.items():
         d = tasks_dir / t
         if not (d / "task.toml").is_file():
@@ -1393,39 +1378,11 @@ def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) ->
         for k, want in (("base", base_of(d)), ("benchmark", bench_of(d)), ("mode", mode_of(d))):
             if e.get(k) != want:
                 bad.append(f"{t}: {k} {e.get(k)!r}, the dir's is {want!r}")
-        if base_of(d) in es:
-            bad.append(f"{t}: its base is in docs/easy_set.toml")
         if e.get("luna") not in CORE_LUNA:
             bad.append(f"{t}: luna {e.get('luna')!r} is not one of {', '.join(CORE_LUNA)}")
-        unknown = set(e) - {"task", "base", "benchmark", "mode", "luna"}
+        unknown = set(e) - set(CORE_FIELDS)
         if unknown:
             bad.append(f"{t}: unknown field(s) {', '.join(sorted(unknown))}")
-    return bad
-
-
-def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) -> list[str]:
-    """What is wrong with the easy set: an unknown reason, a base no task directory has, a benchmark label that is not
-    the base's."""
-    tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
-    try:
-        es = easy_set(path)
-    except (ValueError, OSError) as e:
-        return [str(e)]
-    names = {p.name for p in tasks_dir.iterdir() if (p / "task.toml").is_file()}
-    have = {base_of(Path(n)) for n in names}
-    bad = []
-    for b, e in es.items():
-        if not isinstance(e.get("reason"), str) or e["reason"] not in EASY_REASONS:
-            bad.append(f"{b}: reason {e.get('reason')!r} is not one of {', '.join(EASY_REASONS)}")
-        if b not in have:
-            bad.append(f"{b}: no task directory {b}-<mode> under tasks/")
-        if e.get("benchmark") != bench_of(Path(b)):
-            bad.append(f"{b}: benchmark {e.get('benchmark')!r}, its label is {bench_of(Path(b))!r}")
-        unknown = set(e) - {"base", "benchmark", "reason", "note", "solved_by"}
-        if unknown:
-            bad.append(f"{b}: unknown field(s) {', '.join(sorted(unknown))}")
-        if "solved_by" in e and (e["solved_by"] not in SOLVED_BY or e.get("reason") != "solved"):
-            bad.append(f"{b}: solved_by {e['solved_by']!r} needs reason \"solved\" and one of {', '.join(SOLVED_BY)}")
     return bad
 
 
@@ -1551,7 +1508,7 @@ def main(argv: list[str]) -> int:
         for t in sorted(p for p in root.iterdir() if (p / "task.toml").is_file()):
             print(f"{t.name}\t{bench_of(t)}")
         return 0
-    if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml; `core-set`: list its task dirs
+    if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml (PROTOCOL §4); `core-set`: list its task dirs
         if "--check" in argv:
             bad = check_core_set()
             for b in bad:
@@ -1561,24 +1518,6 @@ def main(argv: list[str]) -> int:
             return 1 if bad else 0
         for t in sorted(core_set()):
             print(t)
-        return 0
-    if argv[:1] == ["easy-set"]:       # `easy-set --check`: docs/easy_set.toml (PROTOCOL §4); `easy-set`: list its tasks
-        if "--solved-by" in argv:      # `easy-set --solved-by luna`: the bases that run solved (SOLVED_BY)
-            who = argv[argv.index("--solved-by") + 1] if len(argv) > argv.index("--solved-by") + 1 else ""
-            for b, e in sorted(easy_set().items()):
-                if e.get("solved_by") == who:
-                    print(b)
-            return 0
-        if "--check" in argv:
-            bad = check_easy_set()
-            for b in bad:
-                print(f"FAIL docs/easy_set.toml: {b}")
-            if not bad:
-                print(f"ok docs/easy_set.toml: {len(easy_set())} task bases")
-            return 1 if bad else 0
-        root = Path(__file__).resolve().parents[1] / "tasks"
-        for t in sorted(p for p in root.iterdir() if (p / "task.toml").is_file() and set_of(p) == "easy"):
-            print(t.name)
         return 0
     check = "--check" in argv
     dirs = [Path(a) for a in argv if a != "--check" and (Path(a) / "task.toml").is_file()]

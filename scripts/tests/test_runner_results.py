@@ -207,9 +207,11 @@ def test_summary_grouping():
         make_trial(jobs, "bx-privileged-a", "p1", f"{SMALL}-privileged", "2026-10-14T01:00:00Z", {"success": 0})
         make_trial(jobs, "bx-standard-realtime-b", "r1", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 1})
         make_trial(jobs, "bx-standard-realtime-b", "r2", VALIDATED_RT, "2026-10-14T01:00:00Z", {"success": 0})
-        # an empty easy set: the fixed tasks here may enter the list (board 0155); test_easy_set covers the marking
+        # a core set naming the fixed tasks here (the real list changes over time); test_core_set covers the marking
+        (td / "core_set.toml").write_text("".join(f'[[task]]\ntask = "{t}"\n' for t in
+                                                  (TASK, f"{SMALL}-privileged", UNVALIDATED, VALIDATED_RT)))
         r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True,
-                           env={**os.environ, "RCB_EASY_SET_FILE": str(td / "no_easy_set.toml")})
+                           env={**os.environ, "RCB_CORE_SET_FILE": str(td / "core_set.toml")})
         check(r.returncode == 0, f"summary failed: {r.stderr[-800:]}")
         out = r.stdout
         check("## Unvalidated" not in out and out.count("\n## protocol 2.0, ") == 3, f"not one table per configuration:\n{out}")
@@ -221,71 +223,67 @@ def test_summary_grouping():
         check("not a result (voided" in out, f"the voided trial is not marked:\n{out}")
 
 
-def test_easy_set():
-    """PROTOCOL §4: the easy set (docs/easy_set.toml) is valid, marks every mode of a listed base `easy` (recorded with
-    the result as `set`, never part of config_key), and the batch summary marks its trials and leaves them out of the rate."""
+def test_core_set():
+    """PROTOCOL §4: the core set (docs/core_set.toml) is valid, marks exactly its listed task dirs `core` and every
+    other dir `excluded` (recorded with the result as `set`, never part of config_key), and the batch summary marks the
+    trials outside it and leaves them out of the rate."""
     sys.path.insert(0, str(ROOT / "scripts"))
     import task_conventions as tc
+    check(not tc.check_core_set(), f"docs/core_set.toml: {tc.check_core_set()[:3]}")   # this test is in run_invariants.sh
     names = sorted(p.name for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
-    es = tc.easy_set()                                   # a malformed list fails here (this test is in run_invariants.sh)
-    # a listed base with a privileged and a standard task, and a base outside the list in the same configuration (one
-    # summary table); the list changes over time, so both are looked up
-    pairs = [n[: -len("-privileged")] for n in names if n.endswith("-privileged") and f"{n[: -len('-privileged')]}-standard" in names]
-    key = functools.lru_cache(maxsize=None)(lambda b: tc.config_key(tc.effective_config(ROOT / "tasks" / f"{b}-standard")))
-    EASY = CORE = None
-    for e in (b for b in pairs if b in es):
-        same = sorted((b for b in pairs if b not in es), key=lambda b: b.split("-")[0] != e.split("-")[0])[:200]
-        CORE = next((b for b in same if key(b) == key(e)), None)
-        if CORE:
-            EASY = e
+    cs = tc.core_set()
+    # a listed standard dir and an unlisted one in the same configuration (one summary table); the list changes over
+    # time, so both are looked up
+    key = functools.lru_cache(maxsize=None)(lambda t: tc.config_key(tc.effective_config(ROOT / "tasks" / t)))
+    IN = OUT = None
+    for c in (t for t in names if t.endswith("-standard") and t in cs):
+        same = sorted((t for t in names if t.endswith("-standard") and t not in cs),
+                      key=lambda t: t.split("-")[0] != c.split("-")[0])[:200]
+        OUT = next((t for t in same if key(t) == key(c)), None)
+        if OUT:
+            IN = c
             break
-    if EASY is None:
-        print("note: no easy-set base with a core base of the same configuration; the easy-set test is skipped")
+    if IN is None:
+        print("note: no core standard dir with an excluded one of the same configuration; the core-set test is skipped")
         return
-    for m in ("privileged", "standard"):
-        check(tc.set_of(ROOT / "tasks" / f"{EASY}-{m}") == "easy", f"{EASY}-{m} is not in the easy set")
-        check(tc.set_of(ROOT / "tasks" / f"{CORE}-{m}") == "core", f"{CORE}-{m} is in the easy set")
-    a, b = tc.effective_config(ROOT / "tasks" / f"{EASY}-standard"), tc.effective_config(ROOT / "tasks" / f"{CORE}-standard")
-    check(a.get("set") == "easy" and b.get("set") == "core", f"effective_config set: {a.get('set')}, {b.get('set')}")
-    a["set"] = b["set"]
-    check(tc.config_key(a) == tc.config_key(dict(a, set="easy")), "the set is part of config_key")
+    check(tc.set_of(ROOT / "tasks" / IN) == "core" and tc.set_of(ROOT / "tasks" / OUT) == "excluded",
+          f"set_of: {IN} {tc.set_of(ROOT / 'tasks' / IN)}, {OUT} {tc.set_of(ROOT / 'tasks' / OUT)}")
+    a, b = tc.effective_config(ROOT / "tasks" / IN), tc.effective_config(ROOT / "tasks" / OUT)
+    check(a.get("set") == "core" and b.get("set") == "excluded", f"effective_config set: {a.get('set')}, {b.get('set')}")
+    check(tc.config_key(a) == tc.config_key(dict(a, set="excluded")), "the set is part of config_key")
+    def entry(t, **k):                                   # a valid entry for task dir t, with the fields in k changed
+        d = ROOT / "tasks" / t
+        f = {"task": t, "base": tc.base_of(d), "benchmark": tc.bench_of(d), "mode": tc.mode_of(d), "luna": "failed", **k}
+        return "[[task]]\n" + "".join(f'{n} = "{v}"\n' for n, v in f.items())
     with tempfile.TemporaryDirectory() as td:
-        bad = Path(td) / "easy_set.toml"
-        bad.write_text(f'[[task]]\nbase = "{EASY}"\nbenchmark = "BEHAVIOR"\nreason = "why"\n'
-                       '[[task]]\nbase = "behavior-no-such-task-i00"\nbenchmark = "BEHAVIOR-1K"\nreason = "owner"\n')
-        found = tc.check_easy_set(path=bad)
-        check(len(found) == 3, f"check_easy_set: want a bad reason, a bad label and a missing base, got {found}")
-        twice = Path(td) / "easy_set_twice.toml"
-        twice.write_text(f'[[task]]\nbase = "{EASY}"\n[[task]]\nbase = "{EASY}"\n')
-        check(any("twice" in x for x in tc.check_easy_set(path=twice)), "a base listed twice is not found")
-        # board 0155: easy_set_add_solved.py appends a `solved_by` entry for a new base, skips a listed one; a
-        # solved_by without reason "solved" or with an unknown run is found
-        sol = Path(td) / "easy_set_solved.toml"
-        sol.write_text(f'[[task]]\nbase = "{EASY}"\nbenchmark = "{es[EASY]["benchmark"]}"\nreason = "owner"\n')
-        (Path(td) / "s.csv").write_text(f"base,modes\n{EASY},privileged\n{CORE},standard;privileged\n")
-        r = subprocess.run([sys.executable, str(ROOT / "scripts" / "easy_set_add_solved.py"), str(Path(td) / "s.csv"),
-                            "--easy-set", str(sol), "--date", "2026-10-17"], capture_output=True, text=True)
-        got = tc.easy_set(sol)
-        check(r.returncode == 0 and set(got) == {EASY, CORE} and got[CORE].get("solved_by") == "luna"
-              and got[CORE]["note"].endswith("): privileged, standard, as of 2026-10-17") and not tc.check_easy_set(path=sol),
-              f"easy_set_add_solved.py: {r.stdout}{r.stderr} -> {got}")
-        sol.write_text(f'[[task]]\nbase = "{EASY}"\nbenchmark = "{es[EASY]["benchmark"]}"\nreason = "owner"\nsolved_by = "x"\n')
-        check(any("solved_by" in x for x in tc.check_easy_set(path=sol)), "a bad solved_by is not found")
+        sha = 'generated_from = "' + "0" * 40 + '"\n'
+        bad = Path(td) / "core_set.toml"
+        bad.write_text(sha + entry("behavior-no-such-task-i00-standard") + entry(IN, mode="privileged", luna="solved")
+                       + entry(OUT, extra="x"))
+        found = tc.check_core_set(path=bad)
+        check(len(found) == 4, f"check_core_set: want a missing dir, a wrong mode, a bad luna and an unknown field, got {found}")
+        # a new file each (the list is parsed once per mtime)
+        (Path(td) / "nosha.toml").write_text(entry(IN))
+        check(any("generated_from" in x for x in tc.check_core_set(path=Path(td) / "nosha.toml")),
+              "a list without generated_from passes")
+        (Path(td) / "twice.toml").write_text(sha + entry(IN) + entry(IN))
+        check(any("twice" in x for x in tc.check_core_set(path=Path(td) / "twice.toml")), "a dir listed twice is not found")
+        check(tc.check_core_set(path=Path(td) / "none.toml") != [], "a missing list passes")
         jobs = Path(td) / "jobs"
-        make_trial(jobs, "bx-standard-a", "e1", f"{EASY}-standard", "2026-10-14T01:00:00Z", {"success": 1})
-        make_trial(jobs, "bx-standard-a", "c1", f"{CORE}-standard", "2026-10-14T02:00:00Z", {"success": 0})
+        make_trial(jobs, "bx-standard-a", "e1", OUT, "2026-10-14T01:00:00Z", {"success": 1})
+        make_trial(jobs, "bx-standard-a", "c1", IN, "2026-10-14T02:00:00Z", {"success": 0})
         r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True)
         check(r.returncode == 0, f"summary failed: {r.stderr[-800:]}")
-        check(re.search(rf"\| {EASY}-standard( \(unvalidated\))? \(easy set\) \|", r.stdout) is not None,
-              f"the easy-set trial is not marked:\n{r.stdout}")
-        check(re.search(r"Success \(results only\): 0 / 1( \([^)]*\))?; 0 voided; 1 result\(s\) of easy-set tasks not counted\.",
+        check(re.search(rf"\| {OUT}( \(unvalidated\))? \(not core\) \|", r.stdout) is not None,
+              f"the trial outside the core set is not marked:\n{r.stdout}")
+        check(re.search(r"Success \(results only\): 0 / 1( \([^)]*\))?; 0 voided; 1 result\(s\) of tasks outside the core set not counted\.",
                         r.stdout) is not None,
-              f"the easy-set trial counted in the rate:\n{r.stdout}")
+              f"the trial outside the core set counted in the rate:\n{r.stdout}")
 
 
 def test_benchmarks():
     """Every task dir has its benchmark label, the label results and reports are grouped by (dataset_manifest.py,
-    check_easy_set, the pool): a prefix two benchmarks share (RoboOlympics-Fun / -Match, board 0160) names every base in
+    the pool): a prefix two benchmarks share (RoboOlympics-Fun / -Match, board 0160) names every base in
     BENCHMARK_BASES. The real tree is clean; an unlisted base, a listed base without a task dir and a base in two lists
     are found."""
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -448,7 +446,7 @@ if __name__ == "__main__":
     test_results()
     test_config_and_attempts()
     test_summary_grouping()
-    test_easy_set()
+    test_core_set()
     test_benchmarks()
     test_clamp()
     test_batch_runner()
@@ -456,4 +454,4 @@ if __name__ == "__main__":
     if fails:
         print(f"{len(fails)} failure(s)")
         sys.exit(1)
-    print("ok: write_task_results not-a-result cases, config.json and attempts, the summary per configuration, the easy set, clamp_cpus, run_agent_batch.sh stamped job copies, clamped copies and gateway restart")
+    print("ok: write_task_results not-a-result cases, config.json and attempts, the summary per configuration, the core set, clamp_cpus, run_agent_batch.sh stamped job copies, clamped copies and gateway restart")
