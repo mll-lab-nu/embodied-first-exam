@@ -13,7 +13,7 @@ set it down on the receiving counter and let go.
 | `runtime.py` | `Session` (FAMILY_PLUGIN section 4), incl. `snapshot`/`restore` |
 | `replay.py` | fresh-process replay CLI (section 5), optional `--video` |
 | `task.json` | frozen instance: thresholds, geometry, stage gains, cameras, instruction text |
-| `tools/extract_assets.py` | authoring: froze `assets/` from `scripts/hand_support/tasks/T48/model.xml` and `families/sweep_dustpan/assets/sweep_sharpa.xml` (source sha256 in `assets/manifest.json`) |
+| `tools/extract_assets.py` | authoring: froze `assets/` from `scripts/hand_support/tasks/T48/model.xml` and `families/sweep_dustpan/assets/sweep_sharpa.xml` (after `sources.py --unpack sweep_dustpan`; source sha256 in `assets/manifest.json`) |
 | `tools/controller.py`, `tools/oracle_params.json` | authoring: closed-loop scripted controller that records the oracle rows (per-hand parameters) |
 | `tools/presentation.py`, `tools/studio_render.py` | authoring: export exact MuJoCo poses of a replay and render the Blender studio film (renderer copied from the approved T48 film, `scripts/scene_expansion/tasks/drink_tray/trajectory_r1/studio_render.py`) |
 | `tests/test_tray_glass_carry.py` | authoring tests (positive, float32, slack, nop, truncation, drop, low release, knock, forged members, shadowing member, NaN, widths, hand labels, Wuji stages, state hash independent of texts) |

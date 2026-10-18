@@ -31,11 +31,11 @@
     }
   ],
   "sha256": {
-    "encoder_knob_visual.obj": "735296467b0af0b9a15105bf065088ddb4d8e1773c1fb5e0589837368d2dce69",
-    "encoder_knob_collision_convex.obj": "5e69f044558fc70bee1075db816f6a6ee26a4b42a6edd894fdfd9ece1b6458c4",
+    "encoder_knob_visual.obj": "95102d968cb4934ae3862b91da631218391a5f590f923fc3e16d2fe858039d80",
+    "encoder_knob_collision_convex.obj": "01a6f2d434f1e265d972e4af423ec6f97c30fe65b3d99b8739a69892e38ca98a",
     "CREDITS.txt": "b5013ffb20d857dfb7f9b261c4df2bb5ca211cb87d220d12ff4984fb8b59e70c",
-    "controller_case_visual.obj": "a6cc5dfededad2c08510052503335c62856cfb126367ddcb1a97fedfa7fb2849",
-    "controller_panel_visual.obj": "e6c806bd748dc0081c78cc42c211a1d1478ff8395b5b577fe6f38bad04edb813",
+    "controller_case_visual.obj": "17e0ec72c8210ece4bc28453b4bf3762430b22f6d00bb118c410135eda70d4aa",
+    "controller_panel_visual.obj": "e6bbf655308c2a1a14962c1896c4287bd09756fa5bc68ff83dc3fe3dbd720e57",
     "controller_panel.png": "8df24f580612dfcdd1b4fd98a672f29318359200e9f47b00830882b9fa251899"
   }
 }

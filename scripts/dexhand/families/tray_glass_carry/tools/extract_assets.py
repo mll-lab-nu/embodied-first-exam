@@ -70,7 +70,7 @@ def extract_hands(source: Path, out: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--scene", type=Path, required=True, help="scripts/hand_support/tasks/T48/model.xml")
-    parser.add_argument("--hands", type=Path, required=True, help="families/sweep_dustpan/assets/sweep_sharpa.xml")
+    parser.add_argument("--hands", type=Path, required=True, help="families/sweep_dustpan/assets/sweep_sharpa.xml (after scripts/dexhand/sources.py --unpack sweep_dustpan)")
     args = parser.parse_args()
     assets = HERE / "assets"
     assets.mkdir(exist_ok=True)

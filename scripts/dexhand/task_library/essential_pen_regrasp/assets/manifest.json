@@ -25,12 +25,12 @@
     }
   ],
   "files_sha256": {
-    "pen_body.obj": "e8cea0c3c4ee2d3d0a0bf4e678305a02410fb71f8220fba8e47593380a1213ac",
+    "pen_body.obj": "4da76c64df99c0409c67359a4300b9fce1bcb75ab43fc77ed509819f0248af13",
     "pen_base_color.png": "ff935bc2711712ec0c37702cab5915748009e393c9416b0cb6d9bacc91f352a1",
     "pen_orm.png": "f2d431fde20c7bf04746cb46c0ff6b110dca8052f85382a1b2ee50d16c6bf420",
     "pen_normal.png": "c493bcdfc3bbeb5455d144cd0fef475155b4b92c78cccfdeec4000d06999892d",
     "CREDITS.txt": "dcd105ee095b88adc4d9ab000336dfbc5a10e3ad5c0d53e4ed24921daaca24ba",
-    "pen_tip_collision.obj": "44895800cc5e2c2ecaf93ed39a99a37c8ccb891e07589e3c00929cb9b08e66af",
-    "pen_tail_collision.obj": "a650670e1790f688ea0fdfe2e6aec521a746542dabfabf0b9fa5c8411298a68c"
+    "pen_tip_collision.obj": "69336db0a62aea5257a801fd71d5ae55cf678543d3aa9dd83d9d5163a5c71149",
+    "pen_tail_collision.obj": "9a93e2aea76ac2612c779da26b9edfbb2d8f539079cf7bf828f6f03c4d3e27f0"
   }
 }
