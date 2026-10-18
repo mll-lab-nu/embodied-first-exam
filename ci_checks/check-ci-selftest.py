@@ -53,7 +53,7 @@ DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbenc
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
-OPEN = "roboolympics-sprint-i00-standard"                      # declares open egress, `[metadata] network = "open"` (Appendix H.6)
+OPEN = "roboolympics-fun-sprint-i00-standard"                      # declares open egress, `[metadata] network = "open"` (Appendix H.6)
 RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (scripts/*/ci/invariant-*)
 
 

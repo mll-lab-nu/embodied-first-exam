@@ -1,4 +1,4 @@
-"""Badminton singles (revision badminton-wallclock-12): the twins of roboolympics-badminton-match-i01/i02-standard-realtime
+"""Badminton singles (revision badminton-wallclock-12): the twins of roboolympics-match-badminton-match-i01/i02-standard-realtime
 (First Exam, exported from fexam-export 0d7f680c)."""
 
 SPORT = "badminton"

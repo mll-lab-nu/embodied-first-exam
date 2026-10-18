@@ -16,7 +16,7 @@ simulator). Required and optional attributes: `tools/fullsim/adapter.py`; exampl
 |---|---|
 | `SPORT`, `FORMAT`, `SEATS`, `ACTION_LEVEL`, `LEVELS` | the match (`sports/<SPORT>/plugin.py`) |
 | `SOURCE_TASK` | our generated task whose `environment/sim` is the frozen tree (native export) |
-| `FAMILY`, `INSTANCES` | upstream names `roboolympics-{FAMILY}-{id}-privileged` / `-standard-realtime`; `{id: {level, seed}}` = the twin's `RO_LEVEL` / `RO_SEED` |
+| `FAMILY`, `INSTANCES` | upstream names `roboolympics-match-{FAMILY}-{id}-privileged` / `-standard-realtime`; `{id: {level, seed}}` = the twin's `RO_LEVEL` / `RO_SEED` |
 | `SLOWDOWN`, `CUTOFF_S`, `READY_TIMEOUT_S`, `REPLAY_TIMEOUT_S` | the twin's S, `[agent] timeout_sec`, `READY_TIMEOUT_S`, `RO_REPLAY_TIMEOUT_S` |
 | `MATCH_WALL_S`, `VERIFIER_TIMEOUT_S` | the formal match's wall-clock cutoff (also the program's CPU limit); the verifier's timeout |
 | `EVERY`, `MAX_COMMANDS` | control steps between two views; commands per view (a list; each one `service.act`) |
