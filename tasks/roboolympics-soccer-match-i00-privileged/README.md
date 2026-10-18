@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Match |
 | Mode | privileged |
 | Twin | `roboolympics-soccer-match-i00-standard-realtime` |
 | Simulator / robot | `mujoco` / `booster-t1` |

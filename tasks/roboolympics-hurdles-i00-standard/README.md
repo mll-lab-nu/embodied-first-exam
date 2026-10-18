@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `roboolympics-hurdles-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |

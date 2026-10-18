@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `roboolympics-golf-putt-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Match |
 | Mode | standard (`eai-standard-turn/1.0`) |
 | Twin | — (none: a task RoboOlympics exports with its own service, PROTOCOL §4c; a turn-based match has no trajectory deliverable) |
 | Simulator / robot | `mujoco` / `unitree-g1` |

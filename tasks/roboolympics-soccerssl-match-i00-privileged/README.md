@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Match |
 | Mode | privileged |
 | Twin | `roboolympics-soccerssl-match-i00-standard-realtime` |
 | Simulator / robot | `mujoco` / `ssl-robot` |

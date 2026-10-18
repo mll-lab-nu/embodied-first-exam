@@ -132,7 +132,7 @@ wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/prot
   one), replacing what was planned from there, and answers at once with the robot as it is now. A row whose step has
   already run when the request arrives is dropped (`late_steps`). When the plan runs out, the last target is held
   (zero-order hold): a slow agent's robot keeps its last servo targets, as a position-controlled H1 would. (The layer
-  is shared with BiGym 2.0 and RoboOlympics, whose plans mix action types: rows of different types are never combined.)
+  is shared with BiGym 2.0 and RoboOlympics-Fun, whose plans mix action types: rows of different types are never combined.)
 - **Observations.** `get_obs()` is the robot now; `get_obs(seconds=s)` watches the next s seconds and returns what the
   cameras saw, without touching the plan. `cameras=[]` returns proprioception only (the controller's call).
 - **Grading.** The live episode, as in standard mode (above). The journal (`trajectory_live.f64`) holds the sim row the simulator applied at every control

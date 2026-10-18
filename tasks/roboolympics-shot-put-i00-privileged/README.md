@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Fun |
 | Mode | privileged |
 | Twin | `roboolympics-shot-put-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |

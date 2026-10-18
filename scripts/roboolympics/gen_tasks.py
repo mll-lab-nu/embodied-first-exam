@@ -43,7 +43,7 @@ RT_RTF = {"catch": 3.61, "catch-and-shoot": 3.64, "header": 3.92, "juggle-three"
 
 def slowdown_of(rtf: float) -> int:
     return 1 if rtf >= 3 else max(1, int(-(-1.5 // rtf)))
-BENCHMARK = "RoboOlympics"   # the label of task_conventions.BENCHMARKS
+BENCHMARK = "RoboOlympics-Fun"   # the label of task_conventions.BENCHMARKS (the exported matches: RoboOlympics-Match)
 # The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
 # timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
 # the sim service's wall clock. To change it (an owner decision; the pull request states old -> new), edit it here and
@@ -485,7 +485,7 @@ def sync(task: pathlib.Path, files: dict, check: bool) -> list[str]:
 
 def exported_names() -> set[str]:
     """The task directories RoboOlympics exports itself (exported.toml, written by its tools/export_fexam.py): its own
-    service unchanged inside the task (docs/benchmarks/roboolympics.md, "Tasks exported by RoboOlympics"); not rendered
+    service unchanged inside the task (RoboOlympics-Match: docs/benchmarks/roboolympics-match.md); not rendered
     here. Their names never take a family name of this generator (the sport's id and a format: tabletennis-match,
     badminton-actskill; the families here are dashed event names: table-tennis-return)."""
     p = HERE / "exported.toml"
@@ -530,7 +530,7 @@ def main() -> int:
                       if not (out / n / "task.toml").is_file()]
     for d in diffs:
         print(d)
-    print(f"{'checked' if check else 'generated'} {len(made)} RoboOlympics task dirs ({len(fams)} families): {len(diffs)} difference(s)")
+    print(f"{'checked' if check else 'generated'} {len(made)} RoboOlympics-Fun task dirs ({len(fams)} families): {len(diffs)} difference(s)")
     return 1 if (check and diffs) else 0
 
 

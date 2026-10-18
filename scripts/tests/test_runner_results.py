@@ -283,6 +283,36 @@ def test_easy_set():
               f"the easy-set trial counted in the rate:\n{r.stdout}")
 
 
+def test_benchmarks():
+    """Every task dir has its benchmark label, the label results and reports are grouped by (dataset_manifest.py,
+    check_easy_set, the pool): a prefix two benchmarks share (RoboOlympics-Fun / -Match, board 0160) names every base in
+    BENCHMARK_BASES. The real tree is clean; an unlisted base, a listed base without a task dir and a base in two lists
+    are found."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import task_conventions as tc
+    bad = tc.check_benchmarks()
+    check(not bad, f"benchmark labels: {bad[:5]}")
+    fun, match = tc.BENCHMARK_BASES["RoboOlympics-Fun"], tc.BENCHMARK_BASES["RoboOlympics-Match"]
+    check(tc.bench_of(Path(fun[0])) == "RoboOlympics-Fun" and tc.bench_of(Path(f"{match[0]}-standard-realtime"))
+          == "RoboOlympics-Match" and tc.bench_of(Path("roboolympics-no-such-i00-standard")) == ""
+          and tc.bench_of(Path("robocasa-gr1-x-i00-standard")) == "RoboCasa-GR1", "bench_of on a shared prefix")
+    with tempfile.TemporaryDirectory() as td:
+        for n in (f"{fun[0]}-privileged", f"{match[0]}-standard-realtime", "roboolympics-no-such-i00-standard"):
+            (Path(td) / n).mkdir()
+            (Path(td) / n / "task.toml").write_text("")
+        saved = dict(tc.BENCHMARK_BASES)
+        try:
+            tc.BENCHMARK_BASES["RoboOlympics-Match"] = (match[0], fun[0])
+            found = tc.check_benchmarks(Path(td))
+        finally:
+            tc.BENCHMARK_BASES.clear()
+            tc.BENCHMARK_BASES.update(saved)
+        check(any("no-such" in x and "no benchmark label" in x for x in found), f"an unlisted base: {found[:3]}")
+        check(any(fun[0] in x and "listed for" in x and " and " in x for x in found), f"a base in two lists: {found[:3]}")
+        check(any(fun[1] in x and "no task directory" in x for x in found), f"a listed base without a dir: {found[:3]}")
+    print("ok benchmark labels: every task dir has one; a shared prefix decided by BENCHMARK_BASES")
+
+
 def caps(task: Path) -> list[str]:
     out = re.findall(r"(?m)^cpus\s*=\s*\S+", (task / "task.toml").read_text())
     for f in sorted((task / "environment").glob("*docker-compose.y*ml")):
@@ -419,6 +449,7 @@ if __name__ == "__main__":
     test_config_and_attempts()
     test_summary_grouping()
     test_easy_set()
+    test_benchmarks()
     test_clamp()
     test_batch_runner()
     test_gateway_restart()

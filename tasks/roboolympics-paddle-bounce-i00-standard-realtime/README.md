@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | RoboOlympics |
+| Benchmark | RoboOlympics-Fun |
 | Mode | standard-realtime (`eai-standard/2.3`) |
 | Twin | `roboolympics-paddle-bounce-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
