@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Unit test of the RoboOlympics standard adapter's live grading (scripts/roboolympics/shared/standard/server.py; board
+"""Unit test of the RoboOlympics standard adapter's live grading (embodied_first_exam/roboolympics-fun/standard/server.py; board
 0151: the live referee's call is the verdict, no grading replay), on a stub rcb_rfo.Episode: numpy only, no simulator,
 no image (unlike this directory's referee tests, which run in the simulator image).
   1. build() refuses an image whose world does not start at the frozen instance's state hash: InstanceMismatch, which
@@ -12,7 +12,7 @@ no image (unlike this directory's referee tests, which run in the simulator imag
 import json, os, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SHARED = os.path.join(HERE, "..", "shared")
+SHARED = os.path.join(HERE, "..", "..", "..", "embodied_first_exam", "roboolympics-fun")
 sys.path[:0] = [os.path.join(SHARED, "standard"), SHARED]
 sys.dont_write_bytecode = True
 import rcb_rfo  # noqa: E402

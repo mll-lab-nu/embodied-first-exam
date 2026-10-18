@@ -21,7 +21,8 @@
 # 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, BiGym 2.0
 #    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
 #    byte-identical to their one source, scripts/humanoidbench/shared/realtime/ (docs/protocol/standard_mode.md,
-#    "Standard-realtime mode"), and so is every other copy of that source under scripts/*/shared/realtime/.
+#    "Standard-realtime mode"), and so is every other copy of that source under scripts/*/shared/realtime/ and
+#    embodied_first_exam/*/realtime/.
 # 4. The benchmarks whose generators have no check mode (review round 3, M6: a hand edit of one task with a refreshed
 #    digest passed every check): DexToolBench and the MuJoCo Playground tasks that serve the same service (ALOHA, Panda;
 #    scripts/dtb_mk_task.py, mj_mk_limited.py), MetaWorld+ (scripts/metaworldplus/generate.py) and RoboTwin 2.0
@@ -94,7 +95,13 @@ def from_files_image(task_dir: str) -> dict:
         df = os.path.join(task_dir, ctx, "Dockerfile")
         if not os.path.isfile(df):
             continue
-        for ref, f, dest in re.findall(r"(?m)^COPY --from=(\S+) /(\S+) (\S+)\s*$", open(df).read()):
+        text = open(df).read()
+        for line in text.splitlines():   # a line naming a files-only image in another form would not be compared
+            m = re.search(r"--from=(\S+)", line)
+            if m and m.group(1).split("@")[0].rsplit(":", 1)[0] in FILES_IMAGES and not re.fullmatch(r"COPY --from=\S+ /\S+ \S+\s*", line):
+                bad.append(f"{os.path.basename(task_dir)}: {ctx}/Dockerfile: {line.strip()[:120]!r}: a files-only image is "
+                           "copied as `COPY --from=<image@digest> /<file> <dest>`, one file a line (files_image.copy_line)")
+        for ref, f, dest in re.findall(r"(?m)^COPY --from=(\S+) /(\S+) (\S+)\s*$", text):
             repo = ref.split("@")[0].rsplit(":", 1)[0]
             if repo not in FILES_IMAGES:
                 continue
@@ -115,11 +122,15 @@ RT_LAYER = {"environment/sim/rcb_realtime.py": "rcb_realtime.py", "environment/r
 rt_canon = {f: sha(os.path.join(RT_SRC, f)) for f in set(RT_LAYER.values()) if os.path.isfile(os.path.join(RT_SRC, f))}
 n_rt = 0
 scripts_dir = os.path.dirname(src)
-for b in sorted(os.listdir(scripts_dir)):
+efe_dir = os.path.join(os.path.dirname(scripts_dir), "embodied_first_exam")   # a benchmark's shared task code
+copies = [(f"scripts/{b}/shared/realtime", os.path.join(scripts_dir, b, "shared", "realtime")) for b in sorted(os.listdir(scripts_dir))]
+copies += [(f"embodied_first_exam/{b}/realtime", os.path.join(efe_dir, b, "realtime"))
+           for b in (sorted(os.listdir(efe_dir)) if os.path.isdir(efe_dir) else [])]
+for name, d in copies:
     for f in sorted(rt_canon):
-        p = os.path.join(scripts_dir, b, "shared", "realtime", f)
+        p = os.path.join(d, f)
         if os.path.isfile(p) and sha(p) != rt_canon[f]:
-            bad.append(f"scripts/{b}/shared/realtime/{f} differs from scripts/humanoidbench/shared/realtime/{f} "
+            bad.append(f"{name}/{f} differs from scripts/humanoidbench/shared/realtime/{f} "
                        "(the eai-standard/2.3 layer has one source)")
 
 
