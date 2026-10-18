@@ -37,9 +37,10 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402  (BENCHMARKS: (task dir prefix, label); bench_of)
 
 # label -> the benchmark's own path prefixes besides tasks/<prefix>. Default for a label not listed with a key here:
-# none (full suite). `d` = the directory name under scripts/ (and images/, docs/benchmarks/<d>.md).
+# none (full suite). `d` = the directory name under scripts/ (and images/, docs/benchmarks/<d>.md, and the shared task
+# code embodied_first_exam/<d with - as _>/).
 def _own(d: str, *extra: str) -> list[str]:
-    return [f"scripts/{d}/", f"images/{d}/", f"docs/benchmarks/{d}.md", *extra]
+    return [f"scripts/{d}/", f"images/{d}/", f"docs/benchmarks/{d}.md", f"embodied_first_exam/{d.replace('-', '_')}/", *extra]
 
 
 UNITS: dict[str, list[str]] = {
