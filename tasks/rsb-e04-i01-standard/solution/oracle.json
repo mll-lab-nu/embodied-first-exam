@@ -1,1 +1,0 @@
-{"plan": [{"type": "joint_position", "rows": [0, 267]}, {"type": "ask_operator", "row": [], "text": "One of these papers is a passport. Should it really go into the shredder with the rest?"}, {"type": "joint_position", "rows": [267, 2386]}, {"type": "done", "row": [], "text": "The flyers are in the shredder. I have left the passport on the table, as you said."}]}

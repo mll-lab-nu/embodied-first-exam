@@ -14,8 +14,9 @@ cp .env.example .env
 
 harbor run -a codex -m openai/gpt-6-luna              # core set (default, --core)
 harbor run --all -a codex -m openai/gpt-6-luna        # every task
+harbor run -p tasks/roboarc -a codex -m openai/gpt-6-luna   # every task of one benchmark (here RoboARC)
 harbor run --standard -a codex -m openai/gpt-6-luna   # --privileged / --standard / --standard-realtime
-harbor run -p tasks/<task> -a oracle                  # one task
+harbor run -p tasks/<benchmark>/<task> -a oracle      # one task
 ```
 
 ## Tasks

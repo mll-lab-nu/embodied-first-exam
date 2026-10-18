@@ -1,0 +1,43 @@
+{
+ "task": "clean_a_patio",
+ "challenge_task": "clean_a_patio",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Clean the patio. The garden floor is covered with mud and a broom lies on it; remove every bit of mud from the floor.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "acf77906fceadbc7",
+ "action_dim": 25,
+ "challenge_max_steps": 18106,
+ "objects": {
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    15.1947,
+    9.5491,
+    -0.0806
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "broom.n.01_1": {
+   "category": "broom",
+   "position": [
+    15.4093,
+    8.9399,
+    0.0454
+   ],
+   "orientation_xyzw": [
+    -0.0008,
+    0.001,
+    0.9009,
+    -0.434
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

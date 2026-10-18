@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "instance_sha256": "a687b45ea9e6ae7210f29473e1417a44e963f30144f68e0eefc4478595b21c6e",
+  "asset_files": {
+    "instance_assets/mujoco/meshes/goal_region_e816960d14146c0c.obj": "e816960d14146c0c71a6d7f7fb6dc5f859cd34eb97d04e6a70a21d959415ae71",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_03a6d3b3f0326b46.obj": "03a6d3b3f0326b46f3d443c8a98b71bc7e0bcde7eff04cc99c2756cc0f25cba4",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_0f076a5b2456c594.obj": "0f076a5b2456c594c1854298f67add690f3611e9a8d771d0f21c641b4bb90b23",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_17e6e33edafc4b65.obj": "17e6e33edafc4b65e2cc51d75a38b4db3eb1b236a758edbbf95ab96d39061a9d",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_210810c592bebfaa.obj": "210810c592bebfaad05f5fb2e4099c51dbe81a69ec6150f8d1fac32c87ec468b",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_27f2e022b769caee.obj": "27f2e022b769caeef783d5c3c10937bb7d6c5e85c38b5943a32e3637d38a0d64",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_2b161b3ca6ff1b88.obj": "2b161b3ca6ff1b887a7ee16a8bae0150e105934a0be391f42482dc8d6d06bd50",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_35f30c06dbc5b9b9.obj": "35f30c06dbc5b9b98eaae00ba789cedeed876579c24b3454f4a5895a3e99b7fa",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_4742dd0309272752.obj": "4742dd030927275273f0313eccdda0b151e852875443544dc792dbe3c79ae1e6",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_54876309c4d2d342.obj": "54876309c4d2d342e7f349699f4d9141976f960a7c9e3953c866e6cebd4cf855",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_568886af8584011c.obj": "568886af8584011c4965ad636906889ff7db5b58f01cbbfb6f757a5437c76ed8",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_676fc65c4fae827f.obj": "676fc65c4fae827fb26cc6f355390ca9f20796a2c0473c600ece66d39fa16697",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_6b90d32bda1fdfe3.obj": "6b90d32bda1fdfe3217985e7b6c6bcf5e9b1732896150eb4a627e8fda1cab69c",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_6cf5102fc30e58dc.obj": "6cf5102fc30e58dc1290e69d4d042c08f39565bf29e58aaa3904ebdd22859fc5",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_708a58de7be442d9.obj": "708a58de7be442d9c73b68137208b82c78b072185005964a75a72e5a7df54c8d",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_7dcc12243d35daa8.obj": "7dcc12243d35daa8702568dd5a4c18a7313e78721e146c463e9fe412264a1e5d",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_9d04f1fab243ad75.obj": "9d04f1fab243ad75a3726dd2a06f20f81baa5ed39b9f53234907255ee789cf3e",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_a26787af8afe4a17.obj": "a26787af8afe4a1709377d8279bc9d21a1dfacd8705d078fbd26c2222a6d670e",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_b5ca3f3be561414b.obj": "b5ca3f3be561414b9a7d4bfa11846b049f7f1d7f61bab0c06c0bac4ff279d3b3",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_b67c0ced13d6a07f.obj": "b67c0ced13d6a07f8cb50817825731888d02402d1e08231f322660ac2d01816d",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_b6cbc1f5800b7001.obj": "b6cbc1f5800b7001bcff0b2eeeeadbff1caa558b9fc38917f531dcf29825232e",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_bb5af25ffab27370.obj": "bb5af25ffab273701fc5607b9456c3770de338b2092d10c1f34d7713efc17ee1",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_bd9a599d2162e5f4.obj": "bd9a599d2162e5f44b14d50e309b7a246e19ec50fa4a4ec98652f18d158614f3",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_d1b931b18b64d93c.obj": "d1b931b18b64d93cb222f04a54bae3b1a22ad6de453db65e8d1c5008ddd40831",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_d29029b7c9702ff0.obj": "d29029b7c9702ff04dfbb74e4c25bf7b4dc8f0cea607afc811546262bb61901c",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_d449838857f37411.obj": "d449838857f3741150bcd6f0bb3cb8f844a301bdf22acba771ff4f904c3b3d85",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_df9350a965bdb1c3.obj": "df9350a965bdb1c36a36068e76f24ee12fc75827fdc1d7738fb959a53c42e898",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_e752ebe5a89c7185.obj": "e752ebe5a89c718549eb60aa7b9a47390c3b377e86a9cac365ee598139144211",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_ef5ac733d85ebcc7.obj": "ef5ac733d85ebcc79a7fdfdcd0ed483b60ad4f36833705438220784e84ffd824",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_f2948ac99f4a566f.obj": "f2948ac99f4a566f9a2ef6e5e7b708b4b9936f116c77fdcaad2b7136e83b6ea3",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_f2adb8459877624c.obj": "f2adb8459877624cb6b9a27e22db567c13c3af4531080af218afb84f0ca47c5e",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_f651c6641e92227e.obj": "f651c6641e92227eedd8febdd1f1c20790c68641142c0a167ae4561516ea9a9e",
+    "instance_assets/mujoco/meshes/keyhole_gold_keyhole_gold_prism_f7509d124de1985d.obj": "f7509d124de1985d8c0e7f133c672456943186e1cc51f59087a6d303833b45f1",
+    "instance_assets/mujoco/meshes/keyhole_silver_keyhole_silver_prism_41bdbc6c13fe0ed0.obj": "41bdbc6c13fe0ed069342682bc781f662077cbac796ee36a012ba78504643c02",
+    "instance_assets/mujoco/meshes/keyhole_silver_keyhole_silver_prism_56fdf5f0abc56c8f.obj": "56fdf5f0abc56c8fde76308f265669251aeaa8fbb6972a83c91ff55583396758",
+    "instance_assets/mujoco/meshes/keyhole_silver_keyhole_silver_prism_abe7fe68f6ef241b.obj": "abe7fe68f6ef241b6b9a43e490e9948d3d1c96718b7870fac2e24cbf99db420e",
+    "instance_assets/mujoco/meshes/keyhole_silver_keyhole_silver_prism_dd527f52db06208d.obj": "dd527f52db06208d24c9b01e1d204bcda217cd6dc44ffc725697cf397ee9a345",
+    "instance_assets/mujoco/scene.json": "11b4812aecf55f8e43effa2329755230b33fb6c42de4910264ea20e4ce81e69c",
+    "instance_assets/mujoco/scene.xml": "632560c9248eb422ae82f1677cb0af5bf6962a72ad7c2842b3518b8d20643357"
+  },
+  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "creation_source": {
+    "sha256": "aae08c2e43e74bbcdf3916d72fdcdfe50280f968818f7d3f431fcd003ced13c2",
+    "files": 437
+  },
+  "runtime": {
+    "dependencies": {
+      "genesis-world": "1.2.1",
+      "pyuipc": "0.0.25+topogym.det1.cuda128",
+      "torch": "2.11.0+cu128",
+      "numpy": "2.3.5",
+      "scipy": "1.17.1",
+      "mujoco": "3.14.0",
+      "newton": "1.6.1",
+      "warp-lang": "1.18.0"
+    },
+    "python": "3.11.15",
+    "source": {
+      "sha256": "c9171f7932cebdee016b7ee1e8abd9a1afba7563a32364d91dffe85b14a51565",
+      "files": 443
+    },
+    "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
+  },
+  "image": {
+    "reference": "eai-roboarc:0.2.0-noinst",
+    "id": "sha256:9d0bd3a6996a9f2ce79759e331e6775a9263e7f1fcc17b52ec543aaed055e6c4",
+    "repo_digests": []
+  },
+  "uipc_builds": {
+    "audited": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1",
+    "sm86": "712470d2166b40058a4b6f304fb4a041bffc45c71ab37c7dec2d33d1a0b34011"
+  },
+  "render_bridge_sha256": "0e04db54feded2929769443e183e2db1e6138eaec62701070fbd462925d8a2b0",
+  "nyx_direct_sha256": "4809c45a7a5cd7725f95f9e49e55a1dc9d184d2b2b59e780aac19cdaf98fac20"
+}

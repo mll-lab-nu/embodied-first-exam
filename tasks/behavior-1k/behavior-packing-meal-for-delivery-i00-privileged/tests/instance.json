@@ -1,0 +1,155 @@
+{
+ "task": "packing_meal_for_delivery",
+ "challenge_task": "packing_meal_for_delivery",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Pack three hamburgers for delivery. The three wrapped hamburgers lie on a tray on the kitchen countertop, next to three sacks and a storage container; put each hamburger into its own sack and stand all three sacks on top of the storage container.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "7726c0d9d364e264",
+ "action_dim": 25,
+ "challenge_max_steps": 13289,
+ "objects": {
+  "sack.n.01_3": {
+   "category": "paper_bag",
+   "position": [
+    -9.3704,
+    -2.6851,
+    1.0504
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.9289,
+    0.3704
+   ]
+  },
+  "tray.n.01_1": {
+   "category": "tray",
+   "position": [
+    -9.0481,
+    -3.1221,
+    0.877
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.2521,
+    0.9677
+   ]
+  },
+  "sack.n.01_1": {
+   "category": "paper_bag",
+   "position": [
+    -9.5,
+    -4.7516,
+    1.0504
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.4381,
+    0.8989
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -8.4545,
+    -2.8606,
+    0.0012
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.7071,
+    0.7071
+   ]
+  },
+  "wrapped_hamburger.n.01_2": {
+   "category": "wrapped_hamburger",
+   "position": [
+    -9.0649,
+    -3.1147,
+    0.9007
+   ],
+   "orientation_xyzw": [
+    0.0004,
+    0.0033,
+    -0.232,
+    0.9727
+   ]
+  },
+  "countertop.n.01_1": {
+   "category": "commercial_kitchen_table",
+   "position": [
+    -9.2859,
+    -3.5815,
+    0.5387
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "storage_container.n.01_1": {
+   "category": "storage_box",
+   "position": [
+    -9.1953,
+    -3.8885,
+    0.9416
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    0.9199,
+    -0.3921
+   ]
+  },
+  "wrapped_hamburger.n.01_1": {
+   "category": "wrapped_hamburger",
+   "position": [
+    -8.9381,
+    -3.1697,
+    0.9025
+   ],
+   "orientation_xyzw": [
+    -0.0223,
+    -0.0243,
+    -0.4438,
+    0.8955
+   ]
+  },
+  "wrapped_hamburger.n.01_3": {
+   "category": "wrapped_hamburger",
+   "position": [
+    -9.0598,
+    -3.2356,
+    0.9034
+   ],
+   "orientation_xyzw": [
+    -0.0169,
+    -0.0008,
+    -0.2754,
+    0.9612
+   ]
+  },
+  "sack.n.01_2": {
+   "category": "paper_bag",
+   "position": [
+    -9.3531,
+    -2.9154,
+    1.0504
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    -0.2686,
+    0.9632
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

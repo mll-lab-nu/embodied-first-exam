@@ -1,0 +1,870 @@
+{
+ "task": "make_toast",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/make_toast_0.json",
+ "layout_sha256": "f78afb3f82b6d9ce2399b13a8ce8a1508134565e7e8cd97f8a8532854fbc0b28",
+ "layout": {
+  "Rigid": {
+   "bread": [
+    {
+     "category": "bread",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      -0.02
+     ],
+     "ylim": [
+      -0.007,
+      -0.007
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "bread_shelf/bread_shelf/0",
+     "place_tag": "up",
+     "margin": 0.01,
+     "check_mode": "none",
+     "need_check_stable": true,
+     "label": "bread_0",
+     "default_pos": [
+      -0.3067032294533632,
+      -0.037584972714654316,
+      0.8579999898910523
+     ],
+     "default_ori": [
+      0.7016044010886269,
+      0.08804126517190244,
+      0.7016044010886268,
+      -0.08804126517190242
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.07,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "bread",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      -0.02
+     ],
+     "ylim": [
+      -0.007,
+      -0.007
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "bread_shelf/bread_shelf/1",
+     "place_tag": "up",
+     "margin": 0.01,
+     "check_mode": "none",
+     "need_check_stable": true,
+     "label": "bread_1",
+     "default_pos": [
+      -0.33092810234049774,
+      -0.031407958974710805,
+      0.8579999898910523
+     ],
+     "default_ori": [
+      0.7016044010886269,
+      0.08804126517190244,
+      0.7016044010886268,
+      -0.08804126517190242
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.07,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "bread",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      -0.02
+     ],
+     "ylim": [
+      -0.007,
+      -0.007
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "bread_shelf/bread_shelf/2",
+     "place_tag": "up",
+     "margin": 0.01,
+     "check_mode": "none",
+     "need_check_stable": true,
+     "label": "bread_2",
+     "default_pos": [
+      -0.3551529752276323,
+      -0.0252309452347673,
+      0.8579999898910523
+     ],
+     "default_ori": [
+      0.7016044010886269,
+      0.08804126517190244,
+      0.7016044010886268,
+      -0.08804126517190242
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.07,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "bread",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.02,
+      -0.02
+     ],
+     "ylim": [
+      -0.007,
+      -0.007
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "bread_shelf/bread_shelf/3",
+     "place_tag": "up",
+     "margin": 0.01,
+     "check_mode": "none",
+     "need_check_stable": true,
+     "label": "bread_3",
+     "default_pos": [
+      -0.37840885319928147,
+      -0.01930101204442154,
+      0.8579999898910523
+     ],
+     "default_ori": [
+      0.7016044010886269,
+      0.08804126517190244,
+      0.7016044010886268,
+      -0.08804126517190242
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.07,
+      "friction": 0.45,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "bread_shelf": [
+    {
+     "category": "bread_shelf",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.35,
+      0.0
+     ],
+     "ylim": [
+      -0.2,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 15,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bread_shelf",
+     "default_pos": [
+      -0.3392038889529657,
+      -0.022176963356744,
+      0.8031
+     ],
+     "default_ori": [
+      0.9922184598041742,
+      0.0,
+      0.0,
+      -0.1245091483539763
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.35,
+      "friction": 0.25,
+      "size": [
+       0.1578710897955837,
+       0.08332953630742854,
+       0.07600000000000001
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Articulation": {
+   "toaster": [
+    {
+     "category": "toaster",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      0.04,
+      0.35
+     ],
+     "ylim": [
+      -0.12,
+      -0.03
+     ],
+     "zlim": [
+      0.08,
+      0.08
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      -105,
+      -75
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "toaster",
+     "default_pos": [
+      0.2536647936429697,
+      -0.0769220087627487,
+      0.845
+     ],
+     "default_ori": [
+      0.7527444206144916,
+      0.0,
+      0.0,
+      -0.6583128718426773
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "articulation"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "91ccfebd8d6076b9",
+ "step_lim": 1400,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Pick up two slices of bread, place them into the toaster, and press the lever down.",
+ "labels": [
+  "bread_0",
+  "bread_1",
+  "bread_2",
+  "bread_3",
+  "toaster",
+  "bread_shelf",
+  "camera_stand"
+ ],
+ "objects": {
+  "bread_0": {
+   "position": [
+    -0.30508,
+    -0.0332,
+    0.84131
+   ],
+   "orientation_wxyz": [
+    0.67598,
+    0.06881,
+    0.72302,
+    -0.12468
+   ],
+   "bbox_corners": [
+    [
+     -0.0503,
+     -0.0589,
+     0.0115
+    ],
+    [
+     0.0592,
+     -0.05,
+     0.0117
+    ],
+    [
+     -0.0592,
+     0.0503,
+     0.0113
+    ],
+    [
+     0.0503,
+     0.0592,
+     0.0115
+    ],
+    [
+     -0.0503,
+     -0.0589,
+     -0.0002
+    ],
+    [
+     0.0592,
+     -0.05,
+     -0.0
+    ],
+    [
+     -0.0591,
+     0.0503,
+     -0.0004
+    ],
+    [
+     0.0503,
+     0.0592,
+     -0.0002
+    ]
+   ]
+  },
+  "bread_1": {
+   "position": [
+    -0.33,
+    -0.0286,
+    0.84084
+   ],
+   "orientation_wxyz": [
+    0.68034,
+    0.06694,
+    0.72053,
+    -0.11615
+   ],
+   "bbox_corners": [
+    [
+     -0.0503,
+     -0.0589,
+     0.0115
+    ],
+    [
+     0.0592,
+     -0.05,
+     0.0117
+    ],
+    [
+     -0.0592,
+     0.0503,
+     0.0113
+    ],
+    [
+     0.0503,
+     0.0592,
+     0.0115
+    ],
+    [
+     -0.0503,
+     -0.0589,
+     -0.0002
+    ],
+    [
+     0.0592,
+     -0.05,
+     -0.0
+    ],
+    [
+     -0.0591,
+     0.0503,
+     -0.0004
+    ],
+    [
+     0.0503,
+     0.0592,
+     -0.0002
+    ]
+   ]
+  },
+  "bread_2": {
+   "position": [
+    -0.35532,
+    -0.02157,
+    0.84106
+   ],
+   "orientation_wxyz": [
+    0.69501,
+    0.05665,
+    0.70726,
+    -0.1163
+   ],
+   "bbox_corners": [
+    [
+     -0.0503,
+     -0.0589,
+     0.0115
+    ],
+    [
+     0.0592,
+     -0.05,
+     0.0117
+    ],
+    [
+     -0.0592,
+     0.0503,
+     0.0113
+    ],
+    [
+     0.0503,
+     0.0592,
+     0.0115
+    ],
+    [
+     -0.0503,
+     -0.0589,
+     -0.0002
+    ],
+    [
+     0.0592,
+     -0.05,
+     -0.0
+    ],
+    [
+     -0.0591,
+     0.0503,
+     -0.0004
+    ],
+    [
+     0.0503,
+     0.0592,
+     -0.0002
+    ]
+   ]
+  },
+  "bread_3": {
+   "position": [
+    -0.37931,
+    -0.01581,
+    0.84162
+   ],
+   "orientation_wxyz": [
+    0.6841,
+    0.07443,
+    0.7169,
+    -0.11194
+   ],
+   "bbox_corners": [
+    [
+     -0.0503,
+     -0.0589,
+     0.0115
+    ],
+    [
+     0.0592,
+     -0.05,
+     0.0117
+    ],
+    [
+     -0.0592,
+     0.0503,
+     0.0113
+    ],
+    [
+     0.0503,
+     0.0592,
+     0.0115
+    ],
+    [
+     -0.0503,
+     -0.0589,
+     -0.0002
+    ],
+    [
+     0.0592,
+     -0.05,
+     -0.0
+    ],
+    [
+     -0.0591,
+     0.0503,
+     -0.0004
+    ],
+    [
+     0.0503,
+     0.0592,
+     -0.0002
+    ]
+   ]
+  },
+  "toaster": {
+   "position": [
+    0.25366,
+    -0.07692,
+    0.845
+   ],
+   "orientation_wxyz": [
+    0.75274,
+    0.0,
+    0.0,
+    -0.65831
+   ],
+   "bbox_corners": [
+    [
+     0.1384,
+     0.0691,
+     -0.0759
+    ],
+    [
+     -0.1108,
+     0.0691,
+     -0.0759
+    ],
+    [
+     0.1384,
+     0.0691,
+     0.0751
+    ],
+    [
+     -0.1108,
+     0.0691,
+     0.0751
+    ],
+    [
+     0.1384,
+     -0.0706,
+     -0.0759
+    ],
+    [
+     -0.1108,
+     -0.0706,
+     -0.0759
+    ],
+    [
+     0.1384,
+     -0.0706,
+     0.0751
+    ],
+    [
+     -0.1108,
+     -0.0706,
+     0.0751
+    ]
+   ]
+  },
+  "bread_shelf": {
+   "position": [
+    -0.3392,
+    -0.02218,
+    0.8031
+   ],
+   "orientation_wxyz": [
+    0.99222,
+    0.0,
+    0.0,
+    -0.12451
+   ],
+   "bbox_corners": [
+    [
+     -0.0792,
+     -0.0417,
+     0.0381
+    ],
+    [
+     0.0791,
+     -0.0417,
+     0.0381
+    ],
+    [
+     -0.0792,
+     0.0419,
+     0.0381
+    ],
+    [
+     0.0791,
+     0.0419,
+     0.0381
+    ],
+    [
+     -0.0792,
+     -0.0417,
+     -0.0381
+    ],
+    [
+     0.0791,
+     -0.0417,
+     -0.0381
+    ],
+    [
+     -0.0792,
+     0.0419,
+     -0.0381
+    ],
+    [
+     0.0791,
+     0.0418,
+     -0.0381
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {
+  "enable_enhanced_determinism": true
+ },
+ "physics_why": "without PhysX enhanced determinism, 1 of 3 fresh processes reset to a different state; with it, all agree (scripts/robodojo determinism test)"
+}

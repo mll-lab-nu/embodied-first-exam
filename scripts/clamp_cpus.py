@@ -80,7 +80,7 @@ def main(argv: list[str]) -> int:
         t = Path(a)
         if not (t / "task.toml").is_file():
             sys.exit(f"{a}: not a task directory (no task.toml)")
-        if not needs and t.resolve().parent == repo_tasks:
+        if not needs and repo_tasks in t.resolve().parents:
             sys.exit(f"{a}: a task of the repository itself; clamp a copy (PROTOCOL §2.10: the task's files keep their values)")
         found += clamp(t, n, write=not needs)
     for line in found:

@@ -2,7 +2,7 @@
 """The agent's network egress of tasks: `allowlist` (the model APIs and the package registries; what every task in
 tasks/ has, PROTOCOL §2.11), or, for a run's own copy of a task, `only <hosts>` / `public`.
 
-    scripts/set_agent_egress.py allowlist    [task dirs...]     # default: all tasks/*
+    scripts/set_agent_egress.py allowlist    [task dirs...]     # default: all tasks/*/*
     scripts/set_agent_egress.py only <host>[,<host>]  <task dirs...>   # a run's copy: exactly these hosts
     scripts/set_agent_egress.py package-hosts                   # prints PACKAGE_HOSTS, comma-separated (for the runner)
     scripts/set_agent_egress.py network <task dir>              # prints the task's declared egress: allowlist or open
@@ -78,7 +78,10 @@ if mode != "allowlist":      # a run's or an experiment's copy, never the reposi
     inside = [d for d in dirs if (root / "tasks").resolve() in [d.resolve(), *d.resolve().parents]]
     if not dirs or inside:
         sys.exit(f"`{mode}` takes copies of task directories, outside {root / 'tasks'}" + (f": {inside[0]}" if inside else ""))
-dirs = dirs or sorted(p for p in (root / "tasks").iterdir() if (p / "task.toml").is_file())
+if not dirs:
+    sys.path.insert(0, str(root / "scripts"))
+    import task_conventions as tc
+    dirs = tc.iter_tasks(root / "tasks")
 if mode == "allowlist":
     dirs = [d for d in dirs if network_of(d) != "open"]      # the author's choice of open egress is kept
 done = 0

@@ -1,5 +1,0 @@
-Walnut scan geometry and textures: blenderboom.
-Asset: Walnuts in a wooden bowl.
-License: Creative Commons Attribution 4.0 International (CC-BY-4.0).
-License terms: https://creativecommons.org/licenses/by/4.0/
-Modifications: isolated closed shells, centered and uniformly scaled; convex collision hulls derived from scans.

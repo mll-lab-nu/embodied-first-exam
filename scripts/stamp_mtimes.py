@@ -50,7 +50,8 @@ def sha(p: str) -> bytes:
 
 
 def roots(arg: str):
-    """a tasks dir (children with task.toml) or one task dir"""
+    """one task dir, or a tree of them: a benchmark folder or a job copy (children with task.toml), or the repository's
+    tasks/ (tasks/<benchmark>/<task>/: grandchildren)"""
     if os.path.isfile(os.path.join(arg, "task.toml")):
         yield arg
         return
@@ -58,6 +59,10 @@ def roots(arg: str):
         d = os.path.join(arg, n)
         if os.path.isfile(os.path.join(d, "task.toml")):
             yield d
+        elif os.path.isdir(d) and n not in (".git", "jobs"):
+            for m in sorted(os.listdir(d)):
+                if os.path.isfile(os.path.join(d, m, "task.toml")):
+                    yield os.path.join(d, m)
 
 
 def stamp_tree(t: str, full: bool = False, check: bool = False) -> dict:

@@ -1,0 +1,8 @@
+{
+ "task": "stamp_seal",
+ "seed": 91573,
+ "embodiment": "aloha-agilex",
+ "state_sha": "f652bd80a5c8",
+ "text": "Grab the stamp and stamp onto the specific color mat.",
+ "n_active_joints": 16
+}

@@ -1,0 +1,85 @@
+{
+ "task": "cook_hot_dogs",
+ "challenge_task": "cook_hot_dogs",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Cook the hot dogs. Two hot dogs are inside the kitchen refrigerator and a microwave stands in the kitchen; cook both hot dogs.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "2ba777743886c58e",
+ "action_dim": 25,
+ "challenge_max_steps": 13717,
+ "objects": {
+  "electric_refrigerator.n.01_1": {
+   "category": "fridge",
+   "position": [
+    7.8186,
+    -1.9659,
+    0.9844
+   ],
+   "orientation_xyzw": [
+    0.0007,
+    0.0078,
+    0.6906,
+    0.7232
+   ]
+  },
+  "hotdog.n.02_1": {
+   "category": "hotdog",
+   "position": [
+    7.8047,
+    -1.9228,
+    0.5023
+   ],
+   "orientation_xyzw": [
+    -0.0551,
+    -0.029,
+    0.9949,
+    -0.0789
+   ]
+  },
+  "hotdog.n.02_2": {
+   "category": "hotdog",
+   "position": [
+    7.8842,
+    -1.9034,
+    0.5017
+   ],
+   "orientation_xyzw": [
+    -0.0241,
+    -0.032,
+    0.9647,
+    -0.2602
+   ]
+  },
+  "microwave.n.02_1": {
+   "category": "microwave",
+   "position": [
+    4.213,
+    0.7885,
+    1.0384
+   ],
+   "orientation_xyzw": [
+    -0.0021,
+    0.0025,
+    -0.0138,
+    0.9999
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    6.5931,
+    -0.2586,
+    -0.1387
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

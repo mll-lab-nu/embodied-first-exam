@@ -1,0 +1,66 @@
+{
+ "case": {
+  "case_id": "pro-camera-view-angle-spatial-t09-i06-receptacle_relocation-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 6,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/camera_view_angle/libero_spatial/task_9",
+   "change": {
+    "calibration": "deterministic_candidate_requires_preflight",
+    "delta_position_m": [
+     0.0,
+     -0.12,
+     0.0
+    ],
+    "direction_xy": [
+     0.0,
+     -1.0
+    ],
+    "distance_m": 0.12,
+    "object": "plate_1",
+    "operation": "move_object",
+    "support_entity": "main_table"
+   },
+   "change_family": "GEO",
+   "change_type": "receptacle_relocation",
+   "expected_response_mode": "replan",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3405509027
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-camera-view-angle-spatial-t09-i06-receptacle_relocation-d1",
+   "seed": 3405509027,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "akita_black_bowl_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/camera_view_angle",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "02_camera_view_angle/bddl/libero_spatial/pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "camera_view_angle",
+   "init_reference_bddl_file": "libero_spatial_lan/pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate.bddl",
+   "init_states_file": "libero_spatial/pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate.pruned_init",
+   "language": "Pick the akita black bowl on the wooden cabinet and place it on the plate",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 9,
+  "task_name": "pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate",
+  "task_suite_name": "libero_spatial",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "7a7ae5c831dea9ad4bdfccfdb0e793c14a4e8f1898779bd214a5a7bbd1451afd",
+ "instance_sha": "7ae0d7c0c538bc3374b86648304394e275216a6246f3d9b928c2f4d107112b02",
+ "schema": "eai-libero-max-instance/1"
+}

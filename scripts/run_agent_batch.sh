@@ -147,9 +147,11 @@ mkdir -p "$JOBS/.plan"
 python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
 import json, os, pathlib, sys
 repo, out, batch, run_id, seq, modes, *tasks = sys.argv[1:]
+sys.path.insert(0, f"{repo}/scripts")
+import task_conventions as tc
 name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "standard-realtime": f"{t}-standard-realtime"}.get(m, f"{t}-privileged")
 jobs = [{"job": f"{batch}-{m}-{t}" if seq == "1" else f"{batch}-{m}", "task": name(m, t), "mode": m}
-        for t in tasks for m in modes.split() if (pathlib.Path(repo) / "tasks" / name(m, t)).is_dir()]
+        for t in tasks for m in modes.split() if tc.task_dir(name(m, t), pathlib.Path(repo) / "tasks").is_dir()]
 tmp = pathlib.Path(f"{out}.{os.getpid()}")
 tmp.write_text(json.dumps({"batch": batch, "run_id": run_id, "jobs": jobs}, indent=1))
 tmp.replace(out)
@@ -326,7 +328,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     except Exception:
         wall = ""
     task = canonical((r.get("task_name") or trial.name.split("__")[0]).split("/")[-1])
-    if r and (R / "tasks" / task / "task.toml").is_file():
+    if r and (tc.task_dir(task, R / "tasks") / "task.toml").is_file():
         status, why, _ = wtr.classify(trial, r, rw)
         cfg = wtr.trial_config(trial, task, r)
     else:
@@ -337,7 +339,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
                                "infra_error", "resumes") if k in rw}
     res = "not a result (voided" + (f": {why}" if why else "") + ")" if status == "not_a_result" else status
     val = cfg.get("validated") is True
-    out = (R / "tasks" / task / "task.toml").is_file() and tc.set_of(R / "tasks" / task) != "core"
+    out = (tc.task_dir(task, R / "tasks") / "task.toml").is_file() and tc.set_of(tc.task_dir(task, R / "tasks")) != "core"
     groups[key].append((r.get("started_at") or "~", f"| {task}{'' if val else ' (unvalidated)'}{' (not core)' if out else ''} | {rw.get('success', '-')} | {res} | {json.dumps(keys)} | "
                         f"{rw.get('n_actions', '-')} | {wall} | {ar.get('n_input_tokens', '-')} | {ar.get('n_cache_tokens', '-')} | "
                         f"{ar.get('n_output_tokens', '-')} | {gw_cell} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |",
@@ -371,16 +373,24 @@ stamp_task_dirs() {  # <root>: give every file of the job's task copies a mtime 
   python3 "$R/scripts/stamp_mtimes.py" --full "$1/tasks" >/dev/null
 }
 
+# the repository's task dirs live at tasks/<benchmark folder>/<task> (scripts/task_conventions.py task_dir); a job's own
+# copy is flat, <dir>/tasks/<task>, which `harbor run -p tasks -i <task>` reads (Harbor's local datasets are one level)
+declare -A SRC_DIR=()
+while IFS=$'\t' read -r n _ f; do SRC_DIR[$n]="$R/tasks/$f/$n"; done < <(python3 "$R/scripts/task_conventions.py" benchmarks)
+src_of() {  # <task dir name>: its directory in the repository (no such task: a path that does not exist)
+  printf '%s' "${SRC_DIR[$1]:-$R/tasks/.none/$1}"
+}
+
 gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (PROTOCOL §2.11)
   local dir="$1" a; shift
   rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
   while [ $# -gt 0 ]; do
     a="$1"; shift
     if [ "$a" = -i ] && [ $# -gt 0 ]; then
-      if [ "$(python3 "$R/scripts/set_agent_egress.py" network "$R/tasks/$1")" = open ]; then    # the task declares open egress (`[metadata] network = "open"`, PROTOCOL §2): the copy keeps it
-        cp -a "$R/tasks/$1" "$dir/tasks/$1" || return 1; shift; continue
+      if [ "$(python3 "$R/scripts/set_agent_egress.py" network "$(src_of "$1")")" = open ]; then    # the task declares open egress (`[metadata] network = "open"`, PROTOCOL §2): the copy keeps it
+        cp -a "$(src_of "$1")" "$dir/tasks/$1" || return 1; shift; continue
       fi
-      cp -a "$R/tasks/$1" "$dir/tasks/$1" && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$dir/tasks/$1" >/dev/null || return 1
+      cp -a "$(src_of "$1")" "$dir/tasks/$1" && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$dir/tasks/$1" >/dev/null || return 1
       grep -q "^allowed_hosts = \[\"${GATEWAY_ONLY//,/\", \"}\"\]\$" "$dir/tasks/$1/task.toml" || return 1     # fail closed
       shift
     fi
@@ -392,15 +402,15 @@ plain_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task as it
   rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
   while [ $# -gt 0 ]; do
     a="$1"; shift
-    if [ "$a" = -i ] && [ $# -gt 0 ]; then cp -a "$R/tasks/$1" "$dir/tasks/$1" || return 1; shift; fi
+    if [ "$a" = -i ] && [ $# -gt 0 ]; then cp -a "$(src_of "$1")" "$dir/tasks/$1" || return 1; shift; fi
   done
 }
 
-task_dirs() {  # <root> <harbor -i args...>: the task directories the -i arguments name under <root>/tasks
+task_dirs() {  # <root> <harbor -i args...>: the task directories the -i arguments name: the repository's ($R), or under a job copy's <root>/tasks
   local root="$1" a; shift
   while [ $# -gt 0 ]; do
     a="$1"; shift
-    if [ "$a" = -i ] && [ $# -gt 0 ]; then printf '%s\n' "$root/tasks/$1"; shift; fi
+    if [ "$a" = -i ] && [ $# -gt 0 ]; then if [ "$root" = "$R" ]; then printf '%s\n' "$(src_of "$1")"; else printf '%s\n' "$root/tasks/$1"; fi; shift; fi
   done
 }
 
@@ -449,7 +459,7 @@ if [ "$SEQ" = 1 ]; then
   for t in "${tasks[@]}"; do
     for m in $MODES; do
       job="$batch-$m-$t"
-      if [ ! -d "$R/tasks/$(name "$m" "$t")" ]; then log "skip $job (no task dir $(name "$m" "$t"))"; continue; fi
+      if [ ! -d "$(src_of "$(name "$m" "$t")")" ]; then log "skip $job (no task dir $(name "$m" "$t"))"; continue; fi
       if [ -f "$JOBS/$job/result.json" ]; then log "skip $job (already has result.json)"; continue; fi
       mkdir "$JOBS/.claims/$job" 2>/dev/null || continue   # another lane of this batch took it
       wait_for "$m"
@@ -469,7 +479,7 @@ if [ "$SEQ" = 1 ]; then
 else
   pids=()
   for m in $MODES; do
-    inc=(); for t in "${tasks[@]}"; do [ -d "$R/tasks/$(name "$m" "$t")" ] && inc+=(-i "$(name "$m" "$t")"); done
+    inc=(); for t in "${tasks[@]}"; do [ -d "$(src_of "$(name "$m" "$t")")" ] && inc+=(-i "$(name "$m" "$t")"); done
     [ ${#inc[@]} -eq 0 ] && continue
     n="$N_P"; case "$m" in standard|limited|standard-realtime) n="$N_S" ;; esac   # sidecar modes
     (wait_for "$m"; run_job "$batch-$m" "$n" "${inc[@]}") &

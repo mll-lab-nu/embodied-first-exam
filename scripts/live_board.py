@@ -67,7 +67,9 @@ def task_info(task: str) -> dict:
     """Benchmark (the task name's prefix: robocasa-gr1-..., robotwin_2_0_..., kinder-...) and agent time limit."""
     if task not in _TASKS:
         try:
-            t = tomllib.loads((REPO / "tasks" / task / "task.toml").read_text())
+            sys.path.insert(0, str(REPO / "scripts"))
+            import task_conventions as tc
+            t = tomllib.loads((tc.task_dir(task, REPO / "tasks") / "task.toml").read_text())
         except (OSError, ValueError):
             t = {}
         m = re.match(r"(robocasa-gr1|robocasa365|mujoco_playground|robotwin_2_0|[a-z0-9]+)", task)

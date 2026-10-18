@@ -1,1 +1,0 @@
-{"plan": [{"type": "joint_position", "rows": [0, 183]}, {"type": "ask_operator", "row": [], "text": "Does a small child use the low table? This pack holds coin cells, which are dangerous if swallowed."}, {"type": "joint_position", "rows": [183, 983]}, {"type": "done", "row": [], "text": "As you said, I put the pack of coin cells up on the shelf instead of on the low table."}]}

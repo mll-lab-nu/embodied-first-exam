@@ -171,7 +171,7 @@ mtime derived from its content, so different files never share one (content, mod
 mtimes). `scripts/run_agent_batch.sh`, `/validate`, `scripts/task_seed.py materialize`, the benchmarks' kill tests and
 RoboARC's `regrade.py --replay` build from stamped copies. For a bare `harbor run` or `harbor trial regrade`:
 ```bash
-c=$(python3 scripts/stamp_mtimes.py stage tasks/<task> "$(mktemp -d)") && harbor run -p "$c" -a oracle ...   # a stamped copy
+c=$(python3 scripts/stamp_mtimes.py stage tasks/<benchmark>/<task> "$(mktemp -d)") && harbor run -p "$c" -a oracle ...   # a stamped copy
 python3 scripts/stamp_mtimes.py tasks           # or stamp the checkout in place (again after every pull: --check tells)
 python3 scripts/check_image_files.py <image> <context dir>   # after building an image yourself: it holds the context's files
 ```
@@ -179,8 +179,8 @@ python3 scripts/check_image_files.py <image> <context dir>   # after building an
 ## Running a two-mode batch (privileged + standard)
 ```bash
 python3 scripts/stamp_mtimes.py tasks                   # first ("Building task images" above)
-harbor run -p tasks -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
-harbor run -p tasks -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-std>
+harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
+harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-std>
 harbor trial regrade --help                             # re-run the verifier of a recorded trial (a grader error, a missing video)
 scripts/write_task_results.py exps/jobs <job> <run-id> "<agent label>" --out <dir outside the repository>   # per-task results (README, video, cost)
 ```
@@ -233,8 +233,8 @@ drawn from the allowed list (official batches draw one per trial), let the runne
 write a copy and run that:
 
 ```bash
-python3 scripts/task_seed.py list tasks/<task>                      # {'default': 0, 'allowed': [0, ...], 'oracle': [...]}
-python3 scripts/task_seed.py materialize tasks/<task> --seed draw --out /tmp/run1   # prints the copy and the seed
+python3 scripts/task_seed.py list tasks/<benchmark>/<task>                      # {'default': 0, 'allowed': [0, ...], 'oracle': [...]}
+python3 scripts/task_seed.py materialize tasks/<benchmark>/<task> --seed draw --out /tmp/run1   # prints the copy and the seed
 harbor run -p /tmp/run1/<task> -a <agent> ...
 ```
 
@@ -274,7 +274,7 @@ last thing the agent reads. `--agent-setup-timeout-multiplier` (slow harness
 installs) is fine: set-up is not the agent's time.
 
 **Changing a cutoff** (the author's decision): set the new `[agent] timeout_sec` (or the generator's constant, then
-re-render) in both twins, run `python3 scripts/task_conventions.py tasks/<task> ...` (it rewrites the closing section, the
+re-render) in both twins, run `python3 scripts/task_conventions.py tasks/<benchmark>/<task> ...` (it rewrites the closing section, the
 README row, `RCB_WALL_CLOCK_S` and `DIGEST`), and state old -> new and why in the change (label `cutoff-change`). The task
 changes in place and keeps its name; results under another cutoff are a different configuration (`config_key`). Not
 derived from the cutoff: the token budget, the resource limits, reset budgets, step caps, verifier timeouts. When
@@ -304,11 +304,11 @@ In the Ubuntu images built on NVIDIA's CUDA base, `apt-get update` warns about N
 The list is the one switch.
 - Another host for every task: add it to `HOSTS` (to `PACKAGE_HOSTS` too if a run through the gateway should reach it
   directly), update the generators' copies of the list, `python3 scripts/set_agent_egress.py allowlist`,
-  `cd tasks && harbor add --scan .`.
+  `python3 scripts/task_conventions.py tasks/*/*/` (normalize refreshes each DIGEST).
 - A run with no restriction at all (the agent may reach anything): run a copy of the tasks, since CI keeps the list
   in `tasks/`:
-  `cp -a tasks /some/dir/tasks && python3 scripts/set_agent_egress.py public /some/dir/tasks/*/`, then
-  `harbor run -p /some/dir/tasks ...` (with `scripts/run_agent_batch.sh`: a copy of the repository with that `tasks/`,
+  `cp -a tasks /some/dir/tasks && python3 scripts/set_agent_egress.py public /some/dir/tasks/*/*/`, then
+  `harbor run -p /some/dir/tasks/<benchmark> ...` (with `scripts/run_agent_batch.sh`: a copy of the repository with that `tasks/`,
   and `GATEWAY_EGRESS=task`, or the runner narrows each job's copy again). The instructions' last sentence about the
   network is then no longer true: change `EXTERNAL_TEXT` in `scripts/task_conventions.py` if that becomes the default.
 
