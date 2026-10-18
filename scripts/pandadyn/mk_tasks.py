@@ -12,8 +12,12 @@ Then `cd tasks && harbor add --scan .` when a digest changed. Needs only Python 
 Inputs, all in the repository:
   scripts/pandadyn/instances.json          per task: the frozen instance (id NN = task iNN), its hashes and its provenance
                                            (scripts/pandadyn/freeze.py writes it)
-  scripts/pandadyn/frozen/<task>-iNN/      instance.json (the task, its nominal parameters, its seed, the start's state hash)
-                                           and oracle_actions.npy (the reference rows, one per control step, up to the success)
+  instance.json, oracle_actions.npy        per instance: the task, its nominal parameters, its seed and the start's state
+                                           hash; the reference rows (one per control step, up to the success). Read from
+                                           scripts/pandadyn/frozen/<task>-iNN/ while it exists (a fresh freeze.py run), else
+                                           from the committed standard task (frozen_files(): tasks/<base>-standard/
+                                           environment/sim/instance.json, solution/oracle_qpos.npy). After a fresh freeze,
+                                           generate and delete frozen/<task>-iNN/: tasks/ keeps the only copy.
   scripts/pandadyn/descr/<code>.json       what the task asks and exactly what its check tests, written from the task's code
                                            (scene: what both modes may read; scene_privileged: privileged mode only)
   scripts/pandadyn/shared/rcb_pandadyn.py  the tooling (privileged environment/ + tests/, standard environment/sim/)
@@ -221,15 +225,24 @@ def num(v) -> str:
     return f"{v:g}" if isinstance(v, float) else str(v)
 
 
+def frozen_files(task: str, i: int) -> tuple[pathlib.Path, bytes, bytes]:
+    """(where from, instance.json, oracle rows) of one instance: a fresh freeze.py run's frozen/<task>-iNN/ while it exists,
+    else the canonical committed copies in its standard task, environment/sim/instance.json and solution/oracle_qpos.npy
+    (every task of the instance carries the same two files)."""
+    fz = HERE / "frozen" / f"{task}-i{i:02d}"
+    if fz.is_dir():
+        return fz, (fz / "instance.json").read_bytes(), (fz / "oracle_actions.npy").read_bytes()
+    t = ROOT / "tasks" / f"{base(task, i)}-standard"
+    return t, (t / "environment/sim/instance.json").read_bytes(), (t / "solution/oracle_qpos.npy").read_bytes()
+
+
 def plan_instance(task: str, R: dict, version: str) -> dict[str, dict[str, tuple[bytes, int]]]:
     i = int(R["id"])
     code = task.split("-", 1)[0]
     D = json.loads((HERE / "descr" / f"{code}.json").read_text())
     if D["task"] != task:
         raise RuntimeError(f"descr/{code}.json is for {D['task']}")
-    fz = HERE / "frozen" / f"{task}-i{i:02d}"
-    inst_b = (fz / "instance.json").read_bytes(); I = json.loads(inst_b)
-    oracle_b = (fz / "oracle_actions.npy").read_bytes()
+    fz, inst_b, oracle_b = frozen_files(task, i); I = json.loads(inst_b)
     if I.get("task") != task or I.get("initial_sha") != R["initial_sha"] or int(I["seed"]) != int(R["seed"]):
         raise RuntimeError(f"{fz}: instance.json does not match instances.json (task, seed, initial_sha)")
     if any(k in I for k in ("provenance", "rollout", "trial", "source")) or re.search(rb"witness|artifacts/|trial\.json", inst_b, re.I):

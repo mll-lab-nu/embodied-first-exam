@@ -14,7 +14,8 @@ The rows stay float64 as recorded: rounded to float32 (what the shipped client's
     python3 scripts/pandadyn/freeze.py --bank <panda-dynamic-scenes-25 checkout> --work <scratch dir>
     python3 scripts/pandadyn/freeze.py ... --only S02,D04 --jobs 6
 Writes scripts/pandadyn/frozen/<code>-i00/{instance.json, oracle_actions.npy} and scripts/pandadyn/instances.json (the
-choice, its provenance and the hashes). Provenance (the rollout's path in the benchmark checkout, its source digest) is
+choice, its provenance and the hashes); mk_tasks.py copies frozen/<code>-i00/ into the tasks, then delete it (the
+privileged task keeps the committed copy). Provenance (the rollout's path in the benchmark checkout, its source digest) is
 kept in instances.json only: instance.json, which the agent reads in privileged mode, never names where it came from.
 A task in mk_tasks.BLAS_PIN (its start depends on the BLAS kernel; S06) is frozen with that OPENBLAS_CORETYPE, as its
 containers run it; the bank recorded its rollout under another kernel, so step 2 is reported for it but not required."""
