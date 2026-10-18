@@ -23,15 +23,15 @@ Both preparation steps require fresh output directories. Staged `assets/` are gi
 
 | Target | Contents | Tag |
 |---|---|---|
-| `nominal` | CPU MuJoCo and software rendering; public G1 training dependency subset and nominal Go2 geometry | `eai-control-transfer:0.1.1-nominal` |
-| `train` | Nominal image plus pinned Torch, MuJoCo Warp, mjlab, export dependencies and EGL | `eai-control-transfer:0.1.1-train` |
-| `evaluator` | Nominal runtime plus private force model and complete Go2 integrity manifest | `eai-control-transfer:0.1.1` |
+| `nominal` | CPU MuJoCo and software rendering; public G1 training dependency subset and nominal Go2 geometry | `eai-control-transfer:0.2.0-nominal` |
+| `train` | Nominal image plus pinned Torch (CUDA 12.8), MuJoCo Warp, mjlab, rsl-rl, export dependencies and EGL | `eai-control-transfer:0.2.0-train` |
+| `evaluator` | Nominal runtime plus private force model and complete Go2 integrity manifest | `eai-control-transfer:0.2.0` |
 
 Task code is copied by generated task Dockerfiles; it is not installed into these base images. Agent services use only `nominal` or `train`. The evaluator runs native CPU MuJoCo and numeric NumPy policies with no GPU devices, even when training uses a GPU.
 
 The G1 public subset deliberately excludes non-G1 task configurations: upstream task discovery recursively imports configs, so retaining Go2/H1 configs alongside a G1-only robot initializer breaks training configuration. Reference actors and private evaluation modules are excluded from the nominal assets.
 
-The final CPU targets have native Docker build and boundary checks; the G1 evaluator additionally ran four terrain cases with exact fresh-container replay. The CPU reference families have native Harbor validation. G1's training configuration and staged-assets CPU rollout passed locally, but **the complete training image, CUDA wheel/driver combination and GPU-device isolation remain unverified**. Before admitting GPU results, build `train`, run `python -m pip check`, test `libEGL.so.1` and MuJoCo's EGL import inside that image, and complete a real training/export/deployment trial on a GPU host. The checked-in Torch version does not pin a CUDA wheel index. Do not treat the successful local training run as this container test.
+The final CPU targets have native Docker build and boundary checks; the G1 evaluator additionally ran four terrain cases with exact fresh-container replay. The CPU reference families have native Harbor validation. **`train` (0.2.0-train, board 0165)**: built FROM the 0.2.0-nominal tag (`TRAIN_ONLY=1 bash build.sh` on a host that pulled it; `BUILD_TRAIN=1` after the nominal build), torch 2.11.0+cu128 from the PyTorch CUDA 12.8 index (NVIDIA driver >= 570; the AWS hosts run 580.178.04), `pip check` clean, numpy 2.3.1 / mujoco 3.5.0 unchanged from nominal; full Harbor training / export / deployment trials on two L40S hosts (docs/benchmarks/roboengineer-g1.md). EGL rendering is not used by training and not tested: the task's compose file grants the GPU's compute capability only.
 
 Version 0.1.1 adds checksum-pinned Apache-2.0 Skydio appearance assets. The operator
 preparation command downloads only those pinned public files; runtime images never

@@ -21,7 +21,7 @@ wave-2 floating six-axis wrist stage onto the arm; the scene and the predicate a
 | `solution/trajectory.npz` | Sharpa Wave witness on the arm (1,688 rows of 58 targets; success at control 1,538) |
 | `tools/arm_port.py` | authoring: records the wave-2 floating-hand episode's hand-root poses (`poses`, run on the wave-2 family code) and tracks them with the right arm (`author`, `arm_ik.track`); `replay` re-checks in a fresh process |
 | `tools/author_oracle.py` | wave-2 authoring controller (floating wrist stage; runs only on the wave-2 family code, commit b686803d4) that recorded the episode `arm_port.py` tracks |
-| `tools/author_layout.py`, `tools/probe_*.py` | clod placement by raycast on the sole hulls; geometry probes |
+| `tools/author_layout.py` | clod placement by raycast on the sole hulls |
 | `tests/test_boot_sole_brush.py` | oracle x2 identical + slack, float32, no robot contacts, nop, truncations (stage 1, one row short of the hold), drop then resume, release-in-air-and-catch, hand-clod contact (arm IK), arm folded into the torso (`robot_collision`), forged members, wrong width, NaN / out-of-range rows, prose-independent state hash, Wuji composes + nop + deterministic |
 
 ## Task and predicate

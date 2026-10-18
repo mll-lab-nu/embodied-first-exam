@@ -78,7 +78,7 @@ first-batch scenes are unchanged). The same 203 seeds re-run:
   gives each body one weld partner, so the shelf (host of six welds) has none. Candidate: observer limitation
   (weld-transmitted push), not a physics breakdown.
 - The 10-50 m/s launches (fast s960004 / 074 / 102, one event from checkpoint row 125,027 at 4x; prefix_random
-  s960176 from row 214,332), explained by `diag/forensic.py` (a per-tick replay from the checkpoint; it ends on the
+  s960176 from row 214,332), explained by a per-tick replay from the checkpoint (it ends on the
   episodes' own state hashes):
   - the robot pushes the stand: fast, ticks 974-1072, the left fingers / hand hit half_A (100-250 N, 0.3-0.9 J of
     positive robot contact work per hit, 5.9 J in all; the stand, about 1.0 kg, goes 0 -> 2.3 m/s exactly at the hits);
