@@ -89,7 +89,7 @@ def render_md(rows: list[dict], commit: str) -> str:
         by_bench[r["benchmark"] or "(no benchmark label)"].append(r)
     out = ["# Task list", "",
            f"Generated from `main` at `{commit}` by `scripts/dataset_manifest.py list` (`.github/workflows/task-list.yml`); "
-           "do not edit: every number is the task's own (`task.toml`). "
+           "do not edit: every number is the task's own (`task.toml`), the core set's from `docs/core_set.toml`. "
            f"{len(rows)} task directories. Modes: " + ", ".join(f"{short[m]} = {m}" for m in modes) + ".", "",
            "## Per benchmark", "",
            "| Benchmark | Tasks (" + " / ".join(short[m] for m in modes) + ") | Cutoff (" + " / ".join(short[m] for m in modes)
