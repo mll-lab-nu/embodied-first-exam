@@ -17,7 +17,7 @@ shows that the scrub changes nothing the verdict reads.
     python3 scripts/robosafe/privileged_oracles.py collect WORK_DIR
 `collect` writes scripts/robosafe/oracles_privileged/<base>.npz and <base>.json, which gen_privileged.py render puts
 into the tasks; after committing the rendered tasks, delete oracles_privileged/ (the tasks hold the references).
-The privileged tooling (rcb_rsb_privileged.py, scrub.py) is embodied_first_exam/robosafebench/privileged/ (check_release.py LAYERS,
+The privileged tooling (rcb_rsb_privileged.py, scrub.py) is embodied_first_exam/benchmarks/robosafebench/privileged/ (check_release.py LAYERS,
 the files image's source).
 """
 from __future__ import annotations

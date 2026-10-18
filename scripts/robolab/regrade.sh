@@ -2,7 +2,7 @@
 # Re-grade a finished RoboLab trial with the CURRENT version of its task, in fresh processes (PROTOCOL §2.7, the review's
 # determinism check). Run it on the host the trial ran on: CPU PhysX is bit-exact on one host, not necessarily across hosts.
 #   privileged: the task's own verifier (tests/test.sh: tests/grade.py --repeat 2, two fresh-process replays; the tooling
-#               from embodied_first_exam/robolab/, the files-only image's source) on the trial's /app/output/ -> <out>/reward.json
+#               from embodied_first_exam/benchmarks/robolab/, the files-only image's source) on the trial's /app/output/ -> <out>/reward.json
 #   standard:   the sim tooling's replay CLI twice (two fresh processes) on the episode the service recorded
 #               (artifacts/data/trajectory.npz) -> <out>/regrade.json: both succeed, both end in the same state, and
 #               that state is the recorded live one (live_sha in artifacts/data/final.json)
@@ -22,7 +22,7 @@ if [ "$MODE" = privileged ]; then
   [ -f "$TRIAL/artifacts/app/output/trajectory.npz" ] || { echo "[regrade] no artifacts/app/output/trajectory.npz"; exit 1; }
   # the verifier's files as its image has them: the task's tests/ plus the tooling (from the files-only image's source)
   V="$(mktemp -d)"; trap 'rm -rf "$V"' EXIT; cp -a "$TASK/tests/." "$V/"
-  cp "$REPO/embodied_first_exam/robolab/rcb_robolab.py" "$V/rcb_robolab.py"
+  cp "$REPO/embodied_first_exam/benchmarks/robolab/rcb_robolab.py" "$V/rcb_robolab.py"
   run run --rm --gpus "${RCB_GPUS:-all}" --network "${RCB_NETWORK:-bridge}" --shm-size 8g -e PYTHONPATH=/tests -w /tests -v "$V:/tests:ro" \
     -v "$TRIAL/artifacts/app/output:/app/output:ro" -v "$OUT:/logs/verifier" "$IMG" bash -c "bash /tests/test.sh; chown -R $(id -u):$(id -g) /logs/verifier"
   cat "$OUT/reward.json"; echo

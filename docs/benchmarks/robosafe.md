@@ -790,7 +790,7 @@ here from instances frozen in the image; neither is re-rendered here, apart from
 (`scripts/robosafe/gen_privileged.py render`, checked by `gen_privileged.py check` in the same CI step).
 `check_release.py` also holds every task's service, grader and solution helpers byte for byte to one
 copy each (`check_release.py` `LAYERS`), so the unit tests run the code the tasks run. The benchmark's shared task code
-is `embodied_first_exam/robosafebench/<layer>/` (layers: `standard`, a 0.5.4 paused task's service, client, standard grader,
+is `embodied_first_exam/benchmarks/robosafebench/<layer>/` (layers: `standard`, a 0.5.4 paused task's service, client, standard grader,
 oracle driver and public observation helpers; `realtime`, the realtime clock's own files; `privileged`, the privileged
 tooling, grader, `test.sh` and solution; `0.5.3` and `0.5.3-realtime`, that release's own adapter, grader and oracle
 drivers); the layers other benchmarks share keep their source in `scripts/` (`rcb1.py`: `scripts/eai_standard/`; the
