@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The RoboSafeBench realtime service (shared/realtime/rcb_rsb_rt.py on rcb_realtime.py) over real HTTP, on a real frozen
+"""The RoboSafeBench realtime service (rcb_rsb_rt.py on rcb_realtime.py) over real HTTP, on a real frozen
 instance, under the loads an agent puts on it: what they cost the clock (control steps run against the nominal number,
 stalls), the limits on pictures while the clock runs, and the evidence (final.json, the grader's reward.json). Modelled
 on scripts/humanoidbench/tests/test_realtime_load.py, which tests the layer itself on a toy simulator.
@@ -27,6 +27,8 @@ import unittest
 import numpy as np
 
 HERE = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(HERE))
+import check_release as CR  # noqa: E402
 def _default_instance() -> str:
     """d_hand_enters' hazard member (the realtime set's first family), whatever its slug."""
     fams = json.loads((HERE / "families.json").read_text())["families"]
@@ -38,11 +40,10 @@ def _default_instance() -> str:
 INSTANCE = os.environ.get("RT_INSTANCE") or _default_instance()
 KEEP = float(os.environ.get("RT_KEEP", "0.9"))
 SECONDS = float(os.environ.get("RT_SECONDS", "4"))
-SIM = tempfile.mkdtemp(prefix="rt_load_sim_")           # the task's environment/sim/, as gen_realtime.py assembles it
-for f in ("server.py", "rcb_service.py", "rcb1.py", "rcb_rsb.py", "replay.py", "picture_delivery.py"):
-    shutil.copy(HERE / "shared/standard" / f, SIM)
-for f in ("rcb_realtime.py", "rcb_rsb_rt.py"):
-    shutil.copy(HERE / "shared/realtime" / f, SIM)
+INSTANCE_PATH = CR.TASKS / f"rsb-{INSTANCE}-standard-realtime" / "environment/sim/instance.json"
+SIM = tempfile.mkdtemp(prefix="rt_load_sim_")           # a 0.5.4 realtime task's environment/sim/ (its service files)
+for p in CR.sim_dir(clock="realtime").glob("*.py"):
+    shutil.copy(p, SIM)
 sys.path.insert(0, SIM)
 import rcb1  # noqa: E402
 import rcb_realtime  # noqa: E402
@@ -51,9 +52,9 @@ import rcb_service  # noqa: E402
 
 
 def instance(tmp: str) -> str:
-    """The frozen realtime instance (instances_rt/), or, on a host whose libm rebuilds another start hash than the
-    image's, the same instance with this host's hash (built in a fresh process, as make_rt_instances.py does)."""
-    src = HERE / "instances_rt" / f"{INSTANCE}.json"
+    """The frozen realtime instance (the task's), or, on a host whose libm rebuilds another start hash than the
+    image's, the same instance with this host's hash (built in a fresh process)."""
+    src = INSTANCE_PATH
     inst = json.loads(src.read_text())
     code = ("import json, sys; sys.path.insert(0, %r); import rcb_rsb_rt, rcb_rsb; "
             "print(rcb_rsb.Session(json.load(open(sys.argv[1]))).ep.state_hash())" % SIM)
@@ -255,7 +256,7 @@ class TestGuard(unittest.TestCase):
     def test_skill_or_paused_instance_refused(self):
         """The service refuses, before building anything, an instance that is not the control interface under the
         realtime clock (RoboSafeBench's own default interface is skill: a forgotten key must never run it)."""
-        src = json.loads((HERE / "instances_rt" / f"{INSTANCE}.json").read_text())
+        src = json.loads(INSTANCE_PATH.read_text())
         _, build = rcb_rsb_rt.build_service()
         for change in ({"interface": "skill"}, {"clock": "paused"}):
             with tempfile.TemporaryDirectory() as d:
@@ -304,8 +305,8 @@ class TestEvidence(Rig):
         self.assertTrue(ver["clock_hook"])
         log = tempfile.mkdtemp(dir=self.base)
         tests = tempfile.mkdtemp(dir=self.base)
-        shutil.copy(HERE / "shared/realtime/grade.py", tests)
-        shutil.copy(HERE / "shared/standard/grade.py", os.path.join(tests, "grade_rsb.py"))
+        shutil.copy(CR.shared("realtime", "grade.py"), tests)
+        shutil.copy(CR.shared("standard", "grade.py"), os.path.join(tests, "grade_rsb.py"))
         subprocess.run([sys.executable, os.path.join(tests, "grade.py")], check=True, capture_output=True,
                        env={**os.environ, "RCB_DATA": self.data, "RCB_VERIFIER_LOG_DIR": log})
         reward = json.loads(pathlib.Path(log, "reward.json").read_text())
@@ -318,5 +319,6 @@ if __name__ == "__main__":
     if "--instance" in sys.argv:
         i = sys.argv.index("--instance")
         INSTANCE = sys.argv[i + 1]
+        INSTANCE_PATH = CR.TASKS / f"rsb-{INSTANCE}-standard-realtime" / "environment/sim/instance.json"
         del sys.argv[i:i + 2]
     unittest.main()

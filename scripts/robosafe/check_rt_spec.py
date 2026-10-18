@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""The served /spec of every rendered standard-realtime task (needs the simulator: run it in the release image after
-gen_realtime.py render; check_leaks.py checks the same texts statically).
+"""The served /spec of every rendered standard-realtime task (needs the simulator: run it in the release image;
+check_leaks.py checks the same texts statically).
 
     python scripts/robosafe/check_rt_spec.py [task dirs...]      # default: every tasks/rsb-*-standard-realtime
 

@@ -13,7 +13,9 @@ import subprocess
 import sys
 import tempfile
 
-SHARED = pathlib.Path(__file__).resolve().parents[1] / "shared"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.dont_write_bytecode = True        # the shared files are imported from their canonical task dirs
+import check_release as CR  # noqa: E402
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from test_grade import FINAL_OK, VERDICT, check  # noqa: E402
 
@@ -27,8 +29,8 @@ def grade(final, verdict=None) -> tuple[str, dict]:
         data, logs, tests = pathlib.Path(d, "data"), pathlib.Path(d, "logs"), pathlib.Path(d, "tests")
         data.mkdir()
         tests.mkdir()
-        shutil.copy(SHARED / "realtime/grade.py", tests / "grade.py")
-        shutil.copy(SHARED / "standard/grade.py", tests / "grade_rsb.py")
+        shutil.copy(CR.shared("realtime", "grade.py"), tests / "grade.py")
+        shutil.copy(CR.shared("standard", "grade.py"), tests / "grade_rsb.py")
         if final is not None:
             (data / "final.json").write_text(json.dumps(final))
         if verdict is not None:

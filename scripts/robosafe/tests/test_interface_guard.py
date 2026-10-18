@@ -10,7 +10,10 @@ import tempfile
 import types
 
 HERE = pathlib.Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(HERE / "shared/standard"))
+sys.path.insert(0, str(HERE))
+sys.dont_write_bytecode = True        # the service is imported from its canonical task dir
+import check_release as CR  # noqa: E402
+sys.path.insert(0, str(CR.sim_dir()))
 
 
 class Ep:

@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 """Update RoboSafeBench's frozen task directories in place (standard library only).
 
-The rsb-* tasks are a frozen release (check_release.py, release.json): the 0.5.4 tasks were exported by RoboSafeBench's
-release tooling and the 0.5.3 tasks were rendered by gen_tasks.py / gen_realtime.py from templates that now render
-0.5.4 files, so neither generator can re-render them. A change to every task is made here instead, by a script:
+The rsb-* tasks are a frozen release (check_release.py, release.json) that no generator here re-renders (the privileged
+twins apart: gen_privileged.py). A change to every task is made here instead, by a script:
 
     python3 scripts/robosafe/sync_release.py           # update tasks/rsb-*, normalize them, rewrite release.json
     python3 scripts/robosafe/sync_release.py --check   # write nothing; exit 1 if a task would change
 
 1. Code: every .py file and solution/solve.sh of a task is copied from its release's source (check_release.source_of:
-   scripts/robosafe/shared-0.5.3/ first for a 0.5.3 task, then scripts/robosafe/shared/, the realtime clock's own
-   first, then scripts/robosafe/), so that check_release.py's byte-for-byte check holds.
+   the file's layer's canonical task, check_release.LAYERS), so that check_release.py's byte-for-byte check holds. A
+   change to a shared file is made in the canonical task first.
 2. Text: EDITS, dated changes of task.toml, README.md, instruction.md and tests/Dockerfile (each an exact old -> new
    pair). A file that has the new text is left as it is, one with the old text gets the new, one with neither fails:
-   the edit no longer fits the release and is made by hand in this table, never in the tasks. The same edits are
-   applied to the 0.5.3 templates (every scripts/robosafe/templates/**/<file>.tmpl, the room templates included).
+   the edit no longer fits the release and is made by hand in this table, never in the tasks.
 3. scripts/task_conventions.py normalize on every task that changed (DIGEST), then check_release.py write.
 """
 from __future__ import annotations
@@ -116,12 +114,6 @@ CHANGE_LOG = [_CHANGE_0151]           # README Change Log entries, newest first,
 FILES = sorted({e[0] for e in EDITS + TASK_EDITS})
 
 
-def edit_name(rel: str):
-    """The EDITS file name a task file or template (relative path, .tmpl dropped) is edited as, or None."""
-    rel = rel[:-5] if rel.endswith(".tmpl") else rel
-    return next((n for n in FILES if rel == n or rel.endswith("/" + n)), None)
-
-
 def apply_edits(name: str, text: str, where: str, edits=None) -> str:
     for edit in EDITS if edits is None else edits:
         if edit[0] != name:
@@ -184,23 +176,12 @@ def main(argv: list[str]) -> int:
                     shutil.rmtree(task)
                     shutil.copytree(tmp, task, symlinks=True)
             shutil.rmtree(tmp)
-    for p in sorted((HERE / "templates").rglob("*.tmpl")):
-        trel = p.relative_to(HERE / "templates").as_posix()
-        name = edit_name(trel)
-        if name is None:
-            continue
-        text = p.read_text()
-        new = apply_edits(name, text, f"templates/{trel}")
-        if new != text:
-            changed.append(f"templates/{trel}")
-            if not check:
-                p.write_text(new)
     if check:
         for c in changed:
             print(f"FAIL {c}: not up to date (run scripts/robosafe/sync_release.py)")
-        print(f"checked {len(rel)} RoboSafeBench task dirs and the templates: {len(changed)} out of date")
+        print(f"checked {len(rel)} RoboSafeBench task dirs: {len(changed)} out of date")
         return 1 if changed else 0
-    print(f"updated {len(changed)} of {len(rel)} task dirs and templates")
+    print(f"updated {len(changed)} of {len(rel)} task dirs")
     check_release.write()                 # also after an earlier run that stopped before it
     return 0
 

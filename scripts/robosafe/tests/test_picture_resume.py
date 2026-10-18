@@ -13,7 +13,10 @@ import tempfile
 import types
 import unittest
 
-STANDARD = pathlib.Path(__file__).resolve().parents[1] / "shared/standard"
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+sys.dont_write_bytecode = True        # the shared files are imported from their canonical task dirs
+import check_release as CR  # noqa: E402
+STANDARD = CR.sim_dir()
 sys.path.insert(0, str(STANDARD))
 sys.modules.setdefault("rcb_rsb", types.ModuleType("rcb_rsb"))   # server.py imports it; nothing here uses it
 import server  # noqa: E402
