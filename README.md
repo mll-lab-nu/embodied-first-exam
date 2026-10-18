@@ -13,17 +13,23 @@ git clone --recurse-submodules git@github.com:mll-lab-nu/embodied-first-exam.git
 uv tool install harbor==0.23.0
 cp .env.example .env                             # API keys, or a Claude / ChatGPT subscription login
 
-# one task (its base image is pulled, or built with scripts/build_images.sh)
-harbor run -p tasks -i robotwin_2_0_stack_blocks_two-privileged -a codex -m openai/gpt-6-luna
-harbor run -p tasks -i robotwin_2_0_stack_blocks_two-standard -a claude-code -m anthropic/claude-fable-5-1
+# one line: the core set (docs/core_set.toml), every mode
+scripts/run.py -a codex -m openai/gpt-6-luna
 
-# reference checks: the oracle scores 1, the nop agent scores 0
-harbor run -p tasks -i robotwin_2_0_stack_blocks_two-privileged -a oracle
-harbor run -p tasks -i robotwin_2_0_stack_blocks_two-privileged -a nop
+# --all: every task; --privileged / --standard / --standard-realtime: those modes only (combinable)
+scripts/run.py --all --standard -a claude-code -m anthropic/claude-fable-5-1
+scripts/run.py --core --privileged --standard-realtime -a codex -m openai/gpt-6-luna -n 8
+
+# one task, and the reference checks: the oracle scores 1, the nop agent scores 0
+scripts/run.py --task robotwin_2_0_stack_blocks_two-privileged -a oracle
+scripts/run.py --task robotwin_2_0_stack_blocks_two-privileged -a nop
 harbor view jobs
 ```
 
 Needs Docker, and an NVIDIA GPU with `nvidia-container-toolkit` for the GPU simulators.
+
+`scripts/run.py` only picks the task dirs (`--benchmark <label>` and `--dry-run` too) and runs `harbor run -p tasks -i <task> …`;
+every other argument (`-a`, `-m`, `-n` concurrent trials, `-k` attempts, `--ak`, `-y`) goes to Harbor unchanged.
 
 ## Tasks
 
