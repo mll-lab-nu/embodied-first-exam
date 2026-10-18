@@ -5,20 +5,32 @@
    "digest": "sha256:7a6fb3eef56bc2be8be87acb6ffd101109aa6953e6b936ee24544cad9f97f3b6",
    "release": "0.5.3"
   },
+  "rsb-a01-i01-privileged": {
+   "digest": "sha256:15a16a8fa1a38ee1ac85e55db90ad0fbcdcf20dbf9548407379db78d037ca9f3",
+   "release": "0.5.4"
+  },
   "rsb-a01-i01-standard": {
-   "digest": "sha256:d80f454a8efca25a007df930c5795ddd77fdeac6117bc20d451051001b69b4dc",
+   "digest": "sha256:fdec1b9cf4f72e8984ac63fb5de3ed150f2033b54aea52b7fbfb73621aa53d92",
+   "release": "0.5.4"
+  },
+  "rsb-a01-i02-privileged": {
+   "digest": "sha256:27c27fcfdffc374f051bd98ce050c1c7403159f1823ebf5d12049d04ae3b5c39",
    "release": "0.5.4"
   },
   "rsb-a01-i02-standard": {
-   "digest": "sha256:a0c964e84a2250f149eeced923c6eb244a26cca1545b0f6dfc4421961e3506e9",
+   "digest": "sha256:b5fd7734d7f7c6ee872e25234a03a051b3b2ee6a42cd6b6bb071001ffaa00e42",
    "release": "0.5.4"
   },
   "rsb-a01-i03-standard": {
    "digest": "sha256:2a3f385c7edd91e1789222533153cb709501c92fbe75498ea00ce92d930c5bb9",
    "release": "0.5.3"
   },
+  "rsb-a01-i04-privileged": {
+   "digest": "sha256:9c7fe3224b897d2dcea9321d384839602436d8357aa99607619b4ad6281c8cce",
+   "release": "0.5.4"
+  },
   "rsb-a01-i04-standard": {
-   "digest": "sha256:de43a772de109d085ab7f716530111a02661aba186b40c9db172b77e634f3ecf",
+   "digest": "sha256:50215f99aabf94b83460e9f8289eb5d41d73c1f2a1f1644e1753f4e040a51ba8",
    "release": "0.5.4"
   },
   "rsb-a01-i05-standard": {
@@ -29,12 +41,20 @@
    "digest": "sha256:a940b12845847590776739bf74bb1647ccfc5ca8b329992c346b48c2d79d3534",
    "release": "0.5.3"
   },
+  "rsb-a01-i08-privileged": {
+   "digest": "sha256:910cc331dcd97e7902e78ed6c1ea7d003957d323f18ee0ceb07eaa20b7feb0b2",
+   "release": "0.5.4"
+  },
   "rsb-a01-i08-standard": {
-   "digest": "sha256:40035727467a78052055677dad0532c3ab3aae7042103fd3c1bae0c4307f1f5e",
+   "digest": "sha256:e9324cd64df8b8da2b2029f61e137a4a7b0e4631f945d1f623d3450dbd36968f",
+   "release": "0.5.4"
+  },
+  "rsb-a01-i09-privileged": {
+   "digest": "sha256:137bcbae9c45f59db72af77e4c2a28b7b791e52917e6e18f29f892f97254f059",
    "release": "0.5.4"
   },
   "rsb-a01-i09-standard": {
-   "digest": "sha256:3b1f52f0a1d903b4b04965213fd2a2d5697c75271d8739b2217bb5a3fc075775",
+   "digest": "sha256:90f22f515835e1cdf23b9748e15bac806d38a1ddc7d8c34671d7c85be08ca2a0",
    "release": "0.5.4"
   },
   "rsb-a01-i10-standard": {
@@ -57,8 +77,12 @@
    "digest": "sha256:b5269fdc8b5d81e242c822d7cae423fe8bb83c1a7592928f85c4b5fa97595dd1",
    "release": "0.5.3"
   },
+  "rsb-a02-i03-privileged": {
+   "digest": "sha256:46d89298e1bc5b5d420961374133b50427fd787c7a47c06aeacf08062e2a78b9",
+   "release": "0.5.4"
+  },
   "rsb-a02-i03-standard": {
-   "digest": "sha256:7418df9277175fa4357d415fe588aca838c101af748d71127dcd8716b37f277c",
+   "digest": "sha256:f588b1d59bc2aef2610a7f914e35e0b06f9ed0216f7aeab5a8c314a25e1ce4b4",
    "release": "0.5.4"
   },
   "rsb-a02-i04-standard": {
@@ -125,8 +149,12 @@
    "digest": "sha256:08ce57136ff6399cc3046e37a79ad06a0245080ffa4dde15f92b5645d6b29636",
    "release": "0.5.3"
   },
+  "rsb-a04-i00-privileged": {
+   "digest": "sha256:f790440a7227650fdb17a4869463fbd5c1521ef854f1cd294712faa55a85fcdb",
+   "release": "0.5.4"
+  },
   "rsb-a04-i00-standard": {
-   "digest": "sha256:92eccb7d07bac634a3f7b58bcab8c6130f336c0b950b1364c324d7a356b27d5b",
+   "digest": "sha256:ae3f94a06a5750e646164f41f19dbb5a113565f7b5b9ae812b326eba92f59621",
    "release": "0.5.4"
   },
   "rsb-a04-i01-standard": {
@@ -137,8 +165,12 @@
    "digest": "sha256:071f17060350964af15cc5c3e80f96c70e62489c4e89f9bf5ad0b94c904ff4ac",
    "release": "0.5.3"
   },
+  "rsb-a04-i03-privileged": {
+   "digest": "sha256:ae7911be3a8e871bd08d9a3faeb3d8e1da7d5de609e2d10b518cf845b5a42cf5",
+   "release": "0.5.4"
+  },
   "rsb-a04-i03-standard": {
-   "digest": "sha256:49df9cbed24449e3e25eb17959cf6e9ef805d999e3f21b854f5ab7dd3563a4dd",
+   "digest": "sha256:b51c1b580dfe3e1cb1e3a27fab566bcf5989078f375373b05d2281740fae417a",
    "release": "0.5.4"
   },
   "rsb-a04-i04-standard": {
@@ -237,16 +269,24 @@
    "digest": "sha256:68e40f61cbcb2caba1bedb2e76b08e1704079295109aa956bb2c8d8981e5991e",
    "release": "0.5.3"
   },
+  "rsb-a06-i01-privileged": {
+   "digest": "sha256:6f7882a59b20698333044aee5a87e832f33eb735c3dce5b664d9b66da08d1d8f",
+   "release": "0.5.4"
+  },
   "rsb-a06-i01-standard": {
-   "digest": "sha256:4502e7f37d09e722da9813dca208077229e0e6fd001436414323a4128537fa78",
+   "digest": "sha256:a42b88e260e141de1f4ecfebbd9c845cd8ccc5286025a5606e1006326d81e548",
    "release": "0.5.4"
   },
   "rsb-a06-i02-standard": {
    "digest": "sha256:e88cb87e1850baa05fcb417141d7afd7969daf643ba8299f1da58072fd396844",
    "release": "0.5.3"
   },
+  "rsb-a06-i03-privileged": {
+   "digest": "sha256:f9ff83b7ee6a2cf9223a9d72dd67ad23cf312d1441b3b8d40f68fdfb8965a319",
+   "release": "0.5.4"
+  },
   "rsb-a06-i03-standard": {
-   "digest": "sha256:10b59d6d61c2e6f18fa9a63f6dfe26434359267f86b6047c881d068c3a7c7cd2",
+   "digest": "sha256:cc7711bfa9cf57f95f7a844d6d612181138029b4517e583e7544904f22edec56",
    "release": "0.5.4"
   },
   "rsb-a06-i04-standard": {
@@ -285,8 +325,12 @@
    "digest": "sha256:9dfccccfcda27e591757fc0f761f09957babbcb318ec94890accbb4cac774004",
    "release": "0.5.3"
   },
+  "rsb-a07-i02-privileged": {
+   "digest": "sha256:0372b31effd433d497331a71dea99a288f9d61dcc87ccbb1199f6725c1b2b757",
+   "release": "0.5.4"
+  },
   "rsb-a07-i02-standard": {
-   "digest": "sha256:7133322da39723b1ce4ce6f93b43aac283bed186449f3460a44fe3ab5d613b01",
+   "digest": "sha256:d06526ee409ba5b8dfb46a37d5489ae12754917429807f2238fe4564de25ab6f",
    "release": "0.5.4"
   },
   "rsb-a07-i03-standard": {
@@ -325,8 +369,12 @@
    "digest": "sha256:a611bcd8f21da131c5eec35ebecc5971184d2bf54722c87972487a0d6c19678a",
    "release": "0.5.3"
   },
+  "rsb-a08-i01-privileged": {
+   "digest": "sha256:921f8cb720493dd1ea3a3b25e5af43ad660951de79221f4d1011ee3bfd37ac67",
+   "release": "0.5.4"
+  },
   "rsb-a08-i01-standard": {
-   "digest": "sha256:04e98332ace1bc9fa46a3bcff2d22b5fd7e8ca1205b1030c356aae1937d61b3b",
+   "digest": "sha256:3a4d0743d60916cc04e13341fc4de416d6d653fd0b2b0300e035f83c4f0cf745",
    "release": "0.5.4"
   },
   "rsb-a08-i02-standard": {
@@ -373,8 +421,12 @@
    "digest": "sha256:de3b8eab211379497ec836715d9606ce05ce8650cc64576e70464669fdbf01fc",
    "release": "0.5.3"
   },
+  "rsb-a09-i05-privileged": {
+   "digest": "sha256:7695e640ded07a71dafb67c0dd5130fbb1d2610cc1ce31c8ffb9c204fa37c875",
+   "release": "0.5.4"
+  },
   "rsb-a09-i05-standard": {
-   "digest": "sha256:ca7afa3af0034d439bf1876a53e567de0e8a9daa076b5d7b4b2df3b9f884716c",
+   "digest": "sha256:d9ba082f44ae4b3460be14dd2be680c9175102160dd0e48925f5ac13a645da4a",
    "release": "0.5.4"
   },
   "rsb-a09-i06-standard": {
@@ -741,12 +793,20 @@
    "digest": "sha256:168ecaebb44c3109d869469e6f79333a4796297071279f7c180b6796e2cdb8b4",
    "release": "0.5.3"
   },
+  "rsb-a17-i00-privileged": {
+   "digest": "sha256:f7c5c92fdd4d50d6415fc9ba889c892fc52a9a0280a69b7841f355a55d559efe",
+   "release": "0.5.4"
+  },
   "rsb-a17-i00-standard": {
-   "digest": "sha256:cd7adee62a9fdb4b5b342d600c78ac80cb1fc22f19d27e44f97f9e7e120114d5",
+   "digest": "sha256:7065fef2a5ea8b90b5a74c55a90d7ffa58f900adca149db244f68cd22eb47e23",
+   "release": "0.5.4"
+  },
+  "rsb-a17-i01-privileged": {
+   "digest": "sha256:1c07485654c243d5eba8279a9bbd8ab024719a23ff25c75db516bd68f04aa58f",
    "release": "0.5.4"
   },
   "rsb-a17-i01-standard": {
-   "digest": "sha256:47bc475156243506dfcb2c0ca8d8ed75fc9e37ad3198cea5c4b7f9037f822573",
+   "digest": "sha256:253e99ef4a9fdb42eb0571c0f7ab935817deb76dabad22204d8da1fd0e6eddd0",
    "release": "0.5.4"
   },
   "rsb-a17-i02-standard": {
@@ -1069,8 +1129,12 @@
    "digest": "sha256:3cde70ebb42efe63bd45b82612f8a6c93098392316c8cd16eaceff2ccfcaab14",
    "release": "0.5.3"
   },
+  "rsb-a26-i02-privileged": {
+   "digest": "sha256:75dfae44b2cd132cc1d3429b7f0d6de0509f19148ff770a0130a563bcd1fa36e",
+   "release": "0.5.4"
+  },
   "rsb-a26-i02-standard": {
-   "digest": "sha256:3ffbe3c522a92c20c60b69b2392887e56cff960865e7895c0a088b2377f3c5c7",
+   "digest": "sha256:1a2a206d02bd016a0eb072b85908720fe7e7dffb0f4b9a877347713dfaa9fd46",
    "release": "0.5.4"
   },
   "rsb-a26-i03-standard": {
@@ -1093,52 +1157,84 @@
    "digest": "sha256:c67ce63fabb8c977b7a2c6762614ce10cc810b12ee9fe375ef931810326ac0d8",
    "release": "0.5.3"
   },
+  "rsb-a27-i04-privileged": {
+   "digest": "sha256:c3082f7d6100fcafc4ee5867cfb40ec7c2e2981acb88d4011618a9bba113aaa3",
+   "release": "0.5.4"
+  },
   "rsb-a27-i04-standard": {
-   "digest": "sha256:78736428a61097129d69f330cedb50d7790ac0083e0394600c811b7156a5a3c9",
+   "digest": "sha256:c7ff658214358ebb829da78603b8fab5e4a4c3d9c160adf4f3c2a0223df8287a",
    "release": "0.5.4"
   },
   "rsb-a27-i05-standard": {
    "digest": "sha256:0c8c73497aa71f1d0dbd01ea55c74a3d60eb3435b13432d020c0fe503c4e8651",
    "release": "0.5.3"
   },
+  "rsb-a27-i06-privileged": {
+   "digest": "sha256:c8852ddf6484df90d64d87bd3dcbd12c6b68dab4767af78ae2e7f3adaa876f68",
+   "release": "0.5.4"
+  },
   "rsb-a27-i06-standard": {
-   "digest": "sha256:5eb4325e00d7b24af79388e2a2d817f234c3b6c9cebf0b210850ee214ffb3924",
+   "digest": "sha256:65220cb5f401389d15e6846935fed2c9f867d22865fcefb6518908fcdfd64325",
    "release": "0.5.4"
   },
   "rsb-a27-i07-standard": {
    "digest": "sha256:7acd25fefd1669c6be1a538c8dca2fb580e01ec73cc25623422e3981783fd6ea",
    "release": "0.5.3"
   },
+  "rsb-a28-i00-privileged": {
+   "digest": "sha256:a5c668e8e4c5c4df1557660cefc91ece2a257d4355494d30bd896cfe6fbe26f1",
+   "release": "0.5.4"
+  },
   "rsb-a28-i00-standard": {
-   "digest": "sha256:6bcd9672ee4afe0bcc0e371cc92d0258e501dcd17ebe083d1463284d1600eeb4",
+   "digest": "sha256:61df6d6c9d07b921cc204098e1e847ae6aea062d19635b21fef3a739672e714b",
+   "release": "0.5.4"
+  },
+  "rsb-a28-i01-privileged": {
+   "digest": "sha256:baf8d525c12c2ef9f5871c7b6cfcec518197002b186a3b4724000250495b5f72",
    "release": "0.5.4"
   },
   "rsb-a28-i01-standard": {
-   "digest": "sha256:54c61955dd88fa36c45bd3dd50f7f6ebf5984b391eb7c67e661d6a6c42dd00ec",
+   "digest": "sha256:1e447b4ec6baa5a615b58f0d84f95b47a5eaa65fa1a05c585c729fa5f819976b",
    "release": "0.5.4"
   },
   "rsb-a28-i02-standard": {
    "digest": "sha256:7a1f77184309d1220ea1d5ee5480278afa4a6d4b86264be8c291fc1528b467bd",
    "release": "0.5.3"
   },
+  "rsb-a28-i03-privileged": {
+   "digest": "sha256:e75184a4c4d6cf4a3c3212f0b53cfc45a781816e665a4dfc5e94aae656e2857e",
+   "release": "0.5.4"
+  },
   "rsb-a28-i03-standard": {
-   "digest": "sha256:411f3bfce5758d12aba90b9aa15e020fae629c8e9a937892098ad5f9fc956547",
+   "digest": "sha256:372a0445df4c1f977940e61dd9a973326d34bad4cca78aa38a92e32de9371c00",
+   "release": "0.5.4"
+  },
+  "rsb-a29-i00-privileged": {
+   "digest": "sha256:bb2a7994acaab4ab6c4da2a99922ebf3df1f59e137ce13fc886e6079b3cb057f",
    "release": "0.5.4"
   },
   "rsb-a29-i00-standard": {
-   "digest": "sha256:7ad464cf8139fb9a84688dfd5f3efe0661f4011cc6f4cbcd97e5914faafba3ac",
+   "digest": "sha256:4fce13ce4138b81a537c1597d071e4aef02ec7e2dd7698323405024cf3ae1a08",
+   "release": "0.5.4"
+  },
+  "rsb-a29-i01-privileged": {
+   "digest": "sha256:427d305968b2616a4dcb78d725f4bb4b9c0c8830563ef3b57e75072a4eefd62d",
    "release": "0.5.4"
   },
   "rsb-a29-i01-standard": {
-   "digest": "sha256:da960074749ae8d52987a5d5383c9f6aba215b1d1294bd6c0d432de3f81c4e5b",
+   "digest": "sha256:44326e916d621641f8a277cf17108b8827e48c961e17c1bf2e854d181fadf2f6",
    "release": "0.5.4"
   },
   "rsb-a29-i02-standard": {
    "digest": "sha256:01326dc5118516d3d308f94de0475e87e7f685512d23c72718b2b6e5597cde55",
    "release": "0.5.3"
   },
+  "rsb-a29-i03-privileged": {
+   "digest": "sha256:386d79e8cb74bf9bd0137c2c3419714367d26834594ea944c02fbe6872b26440",
+   "release": "0.5.4"
+  },
   "rsb-a29-i03-standard": {
-   "digest": "sha256:93fa293f1bba78ced28cc8ffb0edbbaf57470d726e3ea10a879038a66d3312d8",
+   "digest": "sha256:3c81b80ff65f2331553ceec705e02a3991b70a0ed97fc6fc90c3e32c77389646",
    "release": "0.5.4"
   },
   "rsb-a30-i00-standard": {
@@ -1161,8 +1257,12 @@
    "digest": "sha256:c5188ca188da6374613293a242d978faaa64289801bf93bc7a055f4c0b66cf41",
    "release": "0.5.3"
   },
+  "rsb-a30-i05-privileged": {
+   "digest": "sha256:cc015801b9d75fd9697511e1746dd73b8c8f6fb7ef8f035c3de7643946322952",
+   "release": "0.5.4"
+  },
   "rsb-a30-i05-standard": {
-   "digest": "sha256:624537137752f314a609286f6daaf1c4338f3e2900369594a0c4d955dc1ef220",
+   "digest": "sha256:4fded16253091e2bb845dd941b30ee1f3cab3380a45f701ee937330a6cb9bc3e",
    "release": "0.5.4"
   },
   "rsb-a30-i06-standard": {
@@ -1197,8 +1297,12 @@
    "digest": "sha256:33ceb74b607aa1dabd070a1e09b1d8bdc20752eec5304761dd8b49220ea83d23",
    "release": "0.5.3"
   },
+  "rsb-a31-i06-privileged": {
+   "digest": "sha256:515e110b9608a62cb5f818b4e296c01f6dc729ca0a9a6fa04c461a44344a72c4",
+   "release": "0.5.4"
+  },
   "rsb-a31-i06-standard": {
-   "digest": "sha256:272914506946c92223daa0a76c71d0d32e12e669215be5e16df112d7c89dcbe1",
+   "digest": "sha256:8cb1f655817db347ec129436e9c423aaf01e8232f21f0b52411e71884ca038e7",
    "release": "0.5.4"
   },
   "rsb-a31-i07-standard": {
@@ -1265,8 +1369,12 @@
    "digest": "sha256:8969386b888c07d42d8c7f16c5e3875c47b29f0c9202731727e971e397301276",
    "release": "0.5.3"
   },
+  "rsb-a33-i01-privileged": {
+   "digest": "sha256:9747ea805be78a492da8bc74cd0fcc8bf26d71fe68252aaf59eaeb99d927fa97",
+   "release": "0.5.4"
+  },
   "rsb-a33-i01-standard": {
-   "digest": "sha256:d4e85eac3af98f5025f68e3258b73e6138f0facd15be48a4f9d919c2a9f8ca3e",
+   "digest": "sha256:9082c92f3b171ac4cfe4c009d084ca50366f0e7dd6bff54120b2aebf67faf00d",
    "release": "0.5.4"
   },
   "rsb-a33-i02-standard": {
@@ -1277,8 +1385,12 @@
    "digest": "sha256:446fc15265938c491eea93a42d162edb5ef7a9046e95ce21bbe921762b11b54a",
    "release": "0.5.3"
   },
+  "rsb-a33-i04-privileged": {
+   "digest": "sha256:f358d83a6ab4131f1625e0830210d647a8fee220925041dc5fc01357e7b63087",
+   "release": "0.5.4"
+  },
   "rsb-a33-i04-standard": {
-   "digest": "sha256:ef3c98bd6ad1ef9d4a9d68ab96d7f7fa00f0531e6e58f2b3763b71a360490300",
+   "digest": "sha256:5e0f2038150a30b171fdd886459eb40a190eadfd16a363d1274ca0f281ea0dc5",
    "release": "0.5.4"
   },
   "rsb-a33-i05-standard": {
@@ -1293,8 +1405,12 @@
    "digest": "sha256:7c34ff5459d485b21ecab74d63ec7d3bdbc5123fdd3ab14b994e9d49f639dabd",
    "release": "0.5.3"
   },
+  "rsb-a34-i02-privileged": {
+   "digest": "sha256:4902cf6356d84d8f6f6cee0456288d72ad2366fd0c8591b2d731c8891588bef5",
+   "release": "0.5.4"
+  },
   "rsb-a34-i02-standard": {
-   "digest": "sha256:0195170f9e337b4085d9315f8b0c8137f57e7d455ea6145ecf9c0c9b1ff4cf27",
+   "digest": "sha256:22f93617175657ca0d732392b5d99ca4c43dcf931faed7db18a7d2031be7adf1",
    "release": "0.5.4"
   },
   "rsb-a34-i03-standard": {
@@ -1305,32 +1421,48 @@
    "digest": "sha256:df1435dc82aa30506af48077cf961c91b7650762af799b9099d5589bbf3a53d6",
    "release": "0.5.3"
   },
+  "rsb-a34-i05-privileged": {
+   "digest": "sha256:41c6b699771b24475ba929d7c1ea3389f671e1552e52e3f8dd327231cbcf2841",
+   "release": "0.5.4"
+  },
   "rsb-a34-i05-standard": {
-   "digest": "sha256:1380d5f59191080cd029c39bd698d271461bb89ebb213fecdb808f4903c05499",
+   "digest": "sha256:bac751a40430f1a4f63381c228295dcc7b260bffe42fb38223506534220a8d0b",
    "release": "0.5.4"
   },
   "rsb-a34-i06-standard": {
    "digest": "sha256:2a9349276dcd48dbe316b58b55048397d917eefbc44b5aa994b3b18c81983101",
    "release": "0.5.3"
   },
+  "rsb-a34-i07-privileged": {
+   "digest": "sha256:0db26a6b3ba7da5a447f8a94b1e3152626381df355323c8e88ab840f217e5b8b",
+   "release": "0.5.4"
+  },
   "rsb-a34-i07-standard": {
-   "digest": "sha256:f5832fc7fcaeb49793dc05e267b11c73d852d6f0c622d42834d6a6a3e128e6ef",
+   "digest": "sha256:93519c88ce273a00f2588c1e8c3d9deeb6cbf63592f3127b2326aaa9de99c726",
    "release": "0.5.4"
   },
   "rsb-a34-i08-standard": {
    "digest": "sha256:facaa74c6f0339b8a69c3cf41473a3be448df666c53ed14b076f1d881678ac4d",
    "release": "0.5.3"
   },
+  "rsb-a34-i09-privileged": {
+   "digest": "sha256:856118782c466e0857e9661c642a638a87adbd7b163f0b40152e179b4e4e31d6",
+   "release": "0.5.4"
+  },
   "rsb-a34-i09-standard": {
-   "digest": "sha256:e332f8a35d1e8580441078add77943fdec0670b9ec970be8705d70d0d3ddf9bb",
+   "digest": "sha256:ceac7e7711f8017633771aade88b0dcfa66c4ad71b6de6302e9dec2a5a3c8871",
    "release": "0.5.4"
   },
   "rsb-a34-i10-standard": {
    "digest": "sha256:e4e001a1b87e7dec607808bdb3934e24a60d9cf9b458cac47329dcc23cc41b17",
    "release": "0.5.3"
   },
+  "rsb-a34-i11-privileged": {
+   "digest": "sha256:288cb905dfe9691d976a0e2ed605066cde8529d521198114ae0bd27885774df5",
+   "release": "0.5.4"
+  },
   "rsb-a34-i11-standard": {
-   "digest": "sha256:47eb52ea8a06f08252111e24bcd13435f5ec331c0450c494d1e55490e0122841",
+   "digest": "sha256:393f2be87bb73b210da3155b33d7a86b188f69f0f8ae57383674e5a0b3386355",
    "release": "0.5.4"
   },
   "rsb-a34-i12-standard": {
@@ -1417,16 +1549,28 @@
    "digest": "sha256:47e73b4fede845d7288190c0f185c22f2b8703a71e3e42f0a2d78770ab2b08b3",
    "release": "0.5.3"
   },
+  "rsb-b06-i00-privileged": {
+   "digest": "sha256:a54657cb7a1be531b671247c28ba2ab12b8eb295170ca2d436d7d743bc4fc294",
+   "release": "0.5.4"
+  },
   "rsb-b06-i00-standard": {
-   "digest": "sha256:1da651dd36eaa88244e98ea5db8b540868824e9c59e40f31c2a57e840dcb852f",
+   "digest": "sha256:401aaca2fa9e08bfebf453748600c25ddef3f237a99780f66bbe0ca27a49aa96",
+   "release": "0.5.4"
+  },
+  "rsb-b06-i01-privileged": {
+   "digest": "sha256:449aa193c24eabc24ad54f691bf9d94d672b5c9f70af57f7750a8afe59e3c71f",
    "release": "0.5.4"
   },
   "rsb-b06-i01-standard": {
-   "digest": "sha256:66705a607bb021898529823a400361efe1cc98f0f163ed01a194936b67869b32",
+   "digest": "sha256:577608ac6b27ae45e92d4476a099ce04daba5c51a5ef492782f3839c9ca9000e",
+   "release": "0.5.4"
+  },
+  "rsb-b06-i02-privileged": {
+   "digest": "sha256:61cc5080d093fe0b6a84a104ba2d192a5d2999b1a603c61f7db1c77cb87ab655",
    "release": "0.5.4"
   },
   "rsb-b06-i02-standard": {
-   "digest": "sha256:efe4f7de8dd2b75b0d7148516216a119f2c785717e284d956e473b7190cfe312",
+   "digest": "sha256:8069f4ce9c4b71c8c945c6a54956cc755e79fc060391b7cd2314b0071f1e5e12",
    "release": "0.5.4"
   },
   "rsb-b06-i03-standard": {
@@ -1453,12 +1597,20 @@
    "digest": "sha256:0faed962b32c4347b5226d9eee25eaacee2c039d1098e6b50e2ed745f326d5be",
    "release": "0.5.3"
   },
+  "rsb-b08-i01-privileged": {
+   "digest": "sha256:85629d3198c3a7c64875239e0bec7154b0e36020e2a153acc1d4c14360cdc577",
+   "release": "0.5.4"
+  },
   "rsb-b08-i01-standard": {
-   "digest": "sha256:ff129ed300d6770f19b748d1789cdb08a6822d3a28739117c668ad80006426fb",
+   "digest": "sha256:e654b9a8e9f395c0e1d6d1fc32a22b072a6814e16750c5ae7ac307382391641a",
+   "release": "0.5.4"
+  },
+  "rsb-b08-i02-privileged": {
+   "digest": "sha256:89ab72da4600dccdd21c1cbd41773e1338746cef5b7e1ed90f92ec24105991e1",
    "release": "0.5.4"
   },
   "rsb-b08-i02-standard": {
-   "digest": "sha256:4bb2cfe1d4e814dc727acf73b3ecd60d559c2397196747aef5510b9587f8c4dc",
+   "digest": "sha256:ed7a4aa883dcbb8a6b271926fc1555bbd6d2901ec06bc5ce13ead5ad64c9036c",
    "release": "0.5.4"
   },
   "rsb-b08-i03-standard": {
@@ -1497,20 +1649,32 @@
    "digest": "sha256:d6ec02002806c95678269936aadf23536bf736f215e6cec322f70582f15f8401",
    "release": "0.5.3"
   },
+  "rsb-b11-i00-privileged": {
+   "digest": "sha256:338df29aa65c49858c96eff166340d28f541d73a94f78a60b71c1e9a07c1871b",
+   "release": "0.5.4"
+  },
   "rsb-b11-i00-standard": {
-   "digest": "sha256:b57674139e83028a57423c48f243f2b4243e1ad9afd55c5a5c3c08a27632e7f3",
+   "digest": "sha256:1f634caec39cbf2b6c74eef40325a9084ae8167223b2dbbbcc27468606f665e6",
+   "release": "0.5.4"
+  },
+  "rsb-b11-i01-privileged": {
+   "digest": "sha256:83cd2749dd04fd4d45537665eb2214cf0b938d516b53117c86248433f0b5c10e",
    "release": "0.5.4"
   },
   "rsb-b11-i01-standard": {
-   "digest": "sha256:f6119e13b9937c7f2eb335efe3db8bf8b5c46db9fb48b1f574022d78b057ca7a",
+   "digest": "sha256:35a7d0823673d2f1be0eb4d57f0b938b7dbd8a0be872a030c3be606ac3d56250",
    "release": "0.5.4"
   },
   "rsb-b11-i02-standard": {
    "digest": "sha256:972a64c2269623d53831a7395b44bc3cf9bf779c5515062ea2db34835ee11c4e",
    "release": "0.5.3"
   },
+  "rsb-b11-i03-privileged": {
+   "digest": "sha256:030ed17826c5205043998495696575a49dbdb0b8e56343be65cd446b56aae9b7",
+   "release": "0.5.4"
+  },
   "rsb-b11-i03-standard": {
-   "digest": "sha256:ac5855f923c5c903e794807a79114d04ad2cd9fb82d63e39f14952c4c8ebf2d8",
+   "digest": "sha256:1572e42b06c458e7c883967b50c730ac9a2f6bf4dcaf5dc7c7eacb828c6350ea",
    "release": "0.5.4"
   },
   "rsb-b12-i00-standard": {
@@ -1529,20 +1693,32 @@
    "digest": "sha256:50e4c4efd9eaebe4a7bc9dee866d5d31438671efcc4fd55673956408a69ca7a5",
    "release": "0.5.3"
   },
+  "rsb-b12-i04-privileged": {
+   "digest": "sha256:d23a78c073d2feb9b63608ee47c083e06c3d16a23732963e54ecf726d8a1cdc4",
+   "release": "0.5.4"
+  },
   "rsb-b12-i04-standard": {
-   "digest": "sha256:04fd09b2a95f5787404ee68ee75ee318380612999d761fc34a37f04a0e79ed4b",
+   "digest": "sha256:a2dc0507c79f58c3678e75588435943effc2f0b43312a525c86058149f0fe345",
    "release": "0.5.4"
   },
   "rsb-b12-i05-standard": {
    "digest": "sha256:f5e91d37b236344c5598c43e128a2d76af3e71b6532747a50e1becaa07e91a4a",
    "release": "0.5.3"
   },
+  "rsb-b12-i06-privileged": {
+   "digest": "sha256:5a4646d85341b96e652cbf37e17e5b0903e2a4d6c1c96f20b6c3321025dcab80",
+   "release": "0.5.4"
+  },
   "rsb-b12-i06-standard": {
-   "digest": "sha256:3ebe496eedf6a48f1aa644ed6ad5e5e9d7217dcdde6444cd02b54a25605edf3c",
+   "digest": "sha256:0a3582a6ff0fc64aa26e9f2ff4bc73c85cc7e11277d5a2905ee430a48e58bf3b",
+   "release": "0.5.4"
+  },
+  "rsb-b12-i07-privileged": {
+   "digest": "sha256:2b250a80ecb654bd9daa903ac134384be7159bccb98d76bc881909a392c3ec1f",
    "release": "0.5.4"
   },
   "rsb-b12-i07-standard": {
-   "digest": "sha256:49b66f7f82e47c114416608638fda5a2ff61ebd5956e8d2b44b9c522e0a7ec42",
+   "digest": "sha256:a702a273b83947094c9723a1f0915c9b233e7e06daf6709a948250f33f09cf68",
    "release": "0.5.4"
   },
   "rsb-c01-i00-standard": {
@@ -1649,12 +1825,20 @@
    "digest": "sha256:baa2b462cc8196653194f4d860c04268408477b0d3f5dec61dbf8dea6273d06d",
    "release": "0.5.4"
   },
+  "rsb-c05-i02-privileged": {
+   "digest": "sha256:7a3dcef4146502f6ecb71190d7393205bf79d043e8b360064e119a8fecb7ad5a",
+   "release": "0.5.4"
+  },
   "rsb-c05-i02-standard": {
-   "digest": "sha256:5d547e8b876c436cbefa9992b1751b57da98659fc4bd9e8005baf758f9820ca5",
+   "digest": "sha256:76360a14ca315260adf32f7fb74c4383ec6f26f9447923379c55c19bb396a203",
+   "release": "0.5.4"
+  },
+  "rsb-c05-i03-privileged": {
+   "digest": "sha256:402d1401052297a93ebf63717f8269583940267583b5c7c3c84e2de292eb633b",
    "release": "0.5.4"
   },
   "rsb-c05-i03-standard": {
-   "digest": "sha256:13e616157b2a5377da91658396f0f6c4842a22261a86322af9cf70804fdee8bf",
+   "digest": "sha256:ad5d8cf23e1e5306e0c760f9bfbd4a8fbea54d3f0fd514011e55f000dcb0171e",
    "release": "0.5.4"
   },
   "rsb-c06-i00-standard": {
@@ -1841,12 +2025,20 @@
    "digest": "sha256:4286d129ef23adfcca0df70bc359fbd8ce235ffb019173613b34de78acf94954",
    "release": "0.5.3"
   },
+  "rsb-c16-i00-privileged": {
+   "digest": "sha256:ee9b91d8aeff4431794a18c0cf74e1ed9f32e956b34378bea3c938726bbde318",
+   "release": "0.5.4"
+  },
   "rsb-c16-i00-standard": {
-   "digest": "sha256:489ffc8ad02111b615e27e55162ea6b5af835ed16633f2a188e0164cbdc30912",
+   "digest": "sha256:4162419220eba2f25e74e3768cca98a16731e9c3649a1c2aa9a70f8e61c5da9c",
+   "release": "0.5.4"
+  },
+  "rsb-c16-i01-privileged": {
+   "digest": "sha256:10f7e788b73a4b51a2bcf9fe26fb2b3d458998e1af9e14e1b85c306c6ad30138",
    "release": "0.5.4"
   },
   "rsb-c16-i01-standard": {
-   "digest": "sha256:850909f7b059981ee52904beae234d3bf27fb9ed69a26d0ab76b08bd5151472f",
+   "digest": "sha256:181018e914e53b5d1fdf849a372d2bda4aba5d88b9fb3841bd082e84498f6b69",
    "release": "0.5.4"
   },
   "rsb-d01-i00-standard": {
@@ -1929,16 +2121,24 @@
    "digest": "sha256:7982fa6600f3e8c3b99111aeeeaddc68467df8be4f36599f9d3ee5a7058bf701",
    "release": "0.5.3"
   },
+  "rsb-d05-i04-privileged": {
+   "digest": "sha256:330c6f04213ea9a11fe2bc9c46abd78edaed4a847d2c10ca67336a30d43186fa",
+   "release": "0.5.4"
+  },
   "rsb-d05-i04-standard": {
-   "digest": "sha256:c77c9ab260353177a01d3fc02968979f18ba07b4b94ec9c1fe15cd2f8569d003",
+   "digest": "sha256:c18585fe209fd83a5f31e79e31ce1fdb9a2ac790bc21d506d170f7db61ff91bf",
    "release": "0.5.4"
   },
   "rsb-d05-i06-standard": {
    "digest": "sha256:4b53c02d2970249b3ddd33e4812ae6d502fb55ca727ddd6a938bd790465e28a6",
    "release": "0.5.3"
   },
+  "rsb-d05-i07-privileged": {
+   "digest": "sha256:15d3f3021433d9cf3b7be276b6db7f429ca576707ccce123261730d1a43ca1d3",
+   "release": "0.5.4"
+  },
   "rsb-d05-i07-standard": {
-   "digest": "sha256:763bc4a01c590b5edd775b7275afb2145b92111662b5c2eb5d7225b5a0bb0cd4",
+   "digest": "sha256:e40d11024350c41742b4038e4353aa52a236303d1db7210167d724b6aaf7d0c7",
    "release": "0.5.4"
   },
   "rsb-d06-i00-standard": {
@@ -1985,8 +2185,12 @@
    "digest": "sha256:f6bc04d9b66f33f6478194c2a3d97da98c802194a158e6e4dc911998877f6218",
    "release": "0.5.3"
   },
+  "rsb-d08-i01-privileged": {
+   "digest": "sha256:f49c2166d86fab0b733424ace325070a1362b3a6eca8c0b970ba66ce595a4a6c",
+   "release": "0.5.4"
+  },
   "rsb-d08-i01-standard": {
-   "digest": "sha256:f148ca80b6ce0f150a7e26700f9d126d81c66deac611c645206a6d12e6c3aa30",
+   "digest": "sha256:c3cbb2a53a9b01aed4097862d4a4718b339a40ef84fa0ead2ebe56fbcbf28a6f",
    "release": "0.5.4"
   },
   "rsb-d08-i02-standard": {
@@ -2013,12 +2217,20 @@
    "digest": "sha256:6d3c0515150939de141ae5b1d450ea7dbee705ac20145acdf3ad64af09c91fcf",
    "release": "0.5.3"
   },
+  "rsb-d12-i02-privileged": {
+   "digest": "sha256:467feebea1744b421b87f0ec6302c390f97b431ef0e96efcfde552ba58a38a46",
+   "release": "0.5.4"
+  },
   "rsb-d12-i02-standard": {
-   "digest": "sha256:cfba200bc2eb6c5d70cb72a32e96799ba0783366b5b76a4c070077b9efcac820",
+   "digest": "sha256:1369d1bb36ed00c9dd992c74f22897203b754a592e85cd26b68975d9b5e5fc31",
+   "release": "0.5.4"
+  },
+  "rsb-d12-i04-privileged": {
+   "digest": "sha256:a9c309cdfb3a18dc9d206c0d0f062240d968e972482c6d42270a57a54d5a0589",
    "release": "0.5.4"
   },
   "rsb-d12-i04-standard": {
-   "digest": "sha256:31cba6095c94050ca913dd45736c778d3edeb4358a55d774e6d7ed6a14854fe4",
+   "digest": "sha256:5a75d214f2d8cf42228b8b6af542e1b2e54cc75cefbd8b75b254159388f4fb8a",
    "release": "0.5.4"
   },
   "rsb-e01-i00-standard": {
@@ -2133,8 +2345,12 @@
    "digest": "sha256:f585077401c6ddd906987264959c735b962913e4ef6e73e3e94559d19d03de90",
    "release": "0.5.3"
   },
+  "rsb-e06-i00-privileged": {
+   "digest": "sha256:5ff1413d74d0ae74ce7e39f8532f3cb45e2d82c7909f8d85f1e8eb614a3d5501",
+   "release": "0.5.4"
+  },
   "rsb-e06-i00-standard": {
-   "digest": "sha256:ce127ce8fdb472cacadd8db98e0a986d21eebf245127c4e49b089b0c2f7e46f4",
+   "digest": "sha256:b8deda3fa19b9eafc3a430b71cb6f8fbb78429446c7ed5e54ef6be41cc418ba5",
    "release": "0.5.4"
   },
   "rsb-e06-i01-standard": {
@@ -2145,8 +2361,12 @@
    "digest": "sha256:688979fa6a687a3b1eb74d50b611501b503268d507fe94ec0d12e8bf406bc7cc",
    "release": "0.5.3"
   },
+  "rsb-e06-i03-privileged": {
+   "digest": "sha256:62682ff885838ffb7292188ab334c405c94400366a39992a558fe70dc06d9d7d",
+   "release": "0.5.4"
+  },
   "rsb-e06-i03-standard": {
-   "digest": "sha256:b81d719c813ec2d34968ece6b44d75667bd5c88717ca41c552ae0188f4d885ae",
+   "digest": "sha256:6345a318a3b824c47f7207e2a6c3ddb3f4356c86fce5be77a6fb815ac95834e1",
    "release": "0.5.4"
   },
   "rsb-e07-i00-standard": {
@@ -2193,76 +2413,148 @@
    "digest": "sha256:432d38e0296e650839f15d66c27468e20e24ef9d32bd28e582d5a4fb88a09e1b",
    "release": "0.5.3"
   },
+  "rsb-f01-i00-privileged": {
+   "digest": "sha256:0fa09adcb98c395d60f644ebfb33ca5dca4b2f9ad71cf6f4da7726d2fde48765",
+   "release": "0.5.4"
+  },
   "rsb-f01-i00-standard": {
-   "digest": "sha256:e44b58d1f859e1254be46cb0b389fba90333009802cf7b53c332ca6676ba014b",
+   "digest": "sha256:a7136fecfc8a5e25feaa5928cd10f26662d97bf0a951b2e3dc5c0a0b56d09bf8",
+   "release": "0.5.4"
+  },
+  "rsb-f02-i00-privileged": {
+   "digest": "sha256:f8d5837c44ab2e52da0a15c4f3aff9064cae4fbb4a944fc9aca2c5e1f4ca0c60",
    "release": "0.5.4"
   },
   "rsb-f02-i00-standard": {
-   "digest": "sha256:266f4b6cb95eba467a9d24003701e95ce947842b14abcf1890c7bede3bc6477c",
+   "digest": "sha256:d246ebdc589c064996442022be726cdbaedd266c9a8cc4d13930cb4ee51538cd",
+   "release": "0.5.4"
+  },
+  "rsb-f02-i01-privileged": {
+   "digest": "sha256:1220616011a1cd6ce2210b4ff26e55f519b33e89f008d9f404cd9e33cfd5988b",
    "release": "0.5.4"
   },
   "rsb-f02-i01-standard": {
-   "digest": "sha256:7658e8b443fc64e2ed06442a8e692a14cf2f7b87aa785eb8a4e639fa834e08d3",
+   "digest": "sha256:ed67004f4fdd450bd285dab869ba7fa91006fc4fc6dee536ad99ed52bacb11d1",
+   "release": "0.5.4"
+  },
+  "rsb-f03-i00-privileged": {
+   "digest": "sha256:53c5e2a3ba0f48a06b4d6768f86133ba750685aa743d1881b653ec6c649e8e34",
    "release": "0.5.4"
   },
   "rsb-f03-i00-standard": {
-   "digest": "sha256:7fcdec9524c7409fec77ee635c8e390b5a56987d2f9deffd6236b2b60093492f",
+   "digest": "sha256:783b9846c668c13ae54b39430678539373faede716f83cbd177bbbadfc456abd",
+   "release": "0.5.4"
+  },
+  "rsb-f03-i01-privileged": {
+   "digest": "sha256:3e81c0ec27bd40b300a8e9fa0bd41d78ef456e23f06589beae39028222aac297",
    "release": "0.5.4"
   },
   "rsb-f03-i01-standard": {
-   "digest": "sha256:d85ce80decb08d828b9e9c81a7968833786f388f2a7f69a11bfe8342bd5a5752",
+   "digest": "sha256:6b16a375776f3e513b58e732fdb8c43c3c129dee091e3bbf7eee2d248daacf60",
+   "release": "0.5.4"
+  },
+  "rsb-f03-i02-privileged": {
+   "digest": "sha256:335c33f0845cf441debfe4c6bef9e85f5aec5f294d17b0fa27449d8d3fe23516",
    "release": "0.5.4"
   },
   "rsb-f03-i02-standard": {
-   "digest": "sha256:20e60980a7d18487d98e5d77bbbe972a8fd4977b6d3a626df6c58e5ab8bb807e",
+   "digest": "sha256:aafc5534915b401d17946259627d5406d68a5ba5112c1a438db517ce07d99827",
+   "release": "0.5.4"
+  },
+  "rsb-f04-i00-privileged": {
+   "digest": "sha256:0d46e71320895986e042cd18800e230d9f6095bed6e56bd9325b118763cc3299",
    "release": "0.5.4"
   },
   "rsb-f04-i00-standard": {
-   "digest": "sha256:05126d63b8493f70449cb65e5fbacea383e6ba036e3afbfad326eeb2b7d909ca",
+   "digest": "sha256:f0a9b90c06027b9703456025eaaf3b0e48e7ae4281d6fd501daaf42719a31757",
+   "release": "0.5.4"
+  },
+  "rsb-f04-i01-privileged": {
+   "digest": "sha256:9f4c4e4ebfb38f58c70b2df0571fd2d7a278e4db3d1a8d69208bffb885990724",
    "release": "0.5.4"
   },
   "rsb-f04-i01-standard": {
-   "digest": "sha256:4bb3261bd30013fd3ade8e2e95f1cf03a1a7b7182ba3552ffdc66c8e24212ce3",
+   "digest": "sha256:181549e91c776ae178382010660358d1858ee781e8db939aee577c43b099545e",
+   "release": "0.5.4"
+  },
+  "rsb-f04-i02-privileged": {
+   "digest": "sha256:0aaf23f4390ba8ac0be343df6c1c61793bbbdbdce570cba2b665a22176695713",
    "release": "0.5.4"
   },
   "rsb-f04-i02-standard": {
-   "digest": "sha256:e5ff6f15c7be5ab4676d6dc33ac9ae0a97dd4a0a41df072a77a7180bee04d00e",
+   "digest": "sha256:678029248aaae0092c47f091bee4fef22d2eac2e42fc8747bb266f0ac8071f0c",
+   "release": "0.5.4"
+  },
+  "rsb-f05-i00-privileged": {
+   "digest": "sha256:6a01e63b20cd3ca52824043a1da863729d8072a0ff12661bfd6fa9a2dcc4e7a5",
    "release": "0.5.4"
   },
   "rsb-f05-i00-standard": {
-   "digest": "sha256:0faae27294ee1bfa9949cf95e601e4203317b3f49475a0942ef9ea12e700a7af",
+   "digest": "sha256:d771e9ffc794e6631d5cb6708ecca348d6aab0d924771f7f12aa5286bb367ff8",
+   "release": "0.5.4"
+  },
+  "rsb-f05-i01-privileged": {
+   "digest": "sha256:2bb7b85ec26d446409cd53dfec5bd9e1d33630ee11bf78267b881007de80f1a6",
    "release": "0.5.4"
   },
   "rsb-f05-i01-standard": {
-   "digest": "sha256:2fda9ea8d4fd985a66cba93ae7ee81acbbdb825f7e58dfbd944ffc3b63a367b1",
+   "digest": "sha256:8315eb628726e8d156097b35931dfbc89bc05f708c24e2fd9f6564d77d97db14",
+   "release": "0.5.4"
+  },
+  "rsb-f06-i00-privileged": {
+   "digest": "sha256:1de32e6abc4659c1ec18fe79ec912fd7c5746d8a6dd47dc343d90231f26e369c",
    "release": "0.5.4"
   },
   "rsb-f06-i00-standard": {
-   "digest": "sha256:cb5df57fb5a8197c03895584533cc3fb55e8735b2a34ffde9434ffbabec830bb",
+   "digest": "sha256:e7ef2d7cdaeabfe580e6f6640d1c810004d1c8a674e87a68773ae0b90ab4f68c",
+   "release": "0.5.4"
+  },
+  "rsb-f06-i01-privileged": {
+   "digest": "sha256:bb3bc89cd6b8eb326768b795b7f38b32d6cc09bf844b0cfc013976e3a3afa967",
    "release": "0.5.4"
   },
   "rsb-f06-i01-standard": {
-   "digest": "sha256:2ebc580e2dabbcce3e17de336c048e9d492e8ee677daf81df58804d6eaad9f29",
+   "digest": "sha256:ace14b5d4f26f223af9b9dd3e7dc6e2417272593fdad9d9b409422bb7bd1f652",
+   "release": "0.5.4"
+  },
+  "rsb-f07-i00-privileged": {
+   "digest": "sha256:0ba6ccd4c923fe8c673cf2413ef151399b39eaacaab588afbe417da83a0e0237",
    "release": "0.5.4"
   },
   "rsb-f07-i00-standard": {
-   "digest": "sha256:4e52531075650ffafa1bdb3325efdbdfdfcd1426d9b4efa8676e6abfb5a5c501",
+   "digest": "sha256:1972e4c4cf778c29da41c1522ebff4fc73609181f4a7cfe31c93b9491c39fa11",
+   "release": "0.5.4"
+  },
+  "rsb-f08-i00-privileged": {
+   "digest": "sha256:6da78aa174d3416a5e87f6f1fb9ad3478f477902608050b4ce2ce4ebc17f60bb",
    "release": "0.5.4"
   },
   "rsb-f08-i00-standard": {
-   "digest": "sha256:f62b908fb4e49af4efde75ee10c96418bd602c7af4fb6ada93863843589cf111",
+   "digest": "sha256:425ba035d54fbd43178a2dba89c9f067bc95af1d4929dea617c9774d52b0c90f",
+   "release": "0.5.4"
+  },
+  "rsb-f09-i00-privileged": {
+   "digest": "sha256:c6ae4efca644f3d1eac158a91b3a64b43dbb7ca4e91c6f28ae51dea5d09cd796",
    "release": "0.5.4"
   },
   "rsb-f09-i00-standard": {
-   "digest": "sha256:af4e3c10d53556252623ab45bc7a6bf644f585436d5828160194b65de83b1d7e",
+   "digest": "sha256:ca3b9931d7589b26b74c6894b0435090db358fec8a29a57d81d25dc32701631f",
+   "release": "0.5.4"
+  },
+  "rsb-f10-i00-privileged": {
+   "digest": "sha256:3f14b8caaa1272279ab124216dd647949d2fdfeeedf1facc2e5f8f510a04067a",
    "release": "0.5.4"
   },
   "rsb-f10-i00-standard": {
-   "digest": "sha256:740e58cdd0eb828a1e736347f0f93e7d89bc8be4c8b860870b13babb975d33b4",
+   "digest": "sha256:7ad4f87e20e4001eb9e4087ee31ed09b80b3e61044d60fe4d83f802185f9636f",
+   "release": "0.5.4"
+  },
+  "rsb-f11-i00-privileged": {
+   "digest": "sha256:918c698426b8649cca6dd9245429ae19c8df8c9c160421dd287585c9c830e8f0",
    "release": "0.5.4"
   },
   "rsb-f11-i00-standard": {
-   "digest": "sha256:de686ac1f6abd2248c962a124eed945edcf1fcc507da9aee38334d7cb12b59f3",
+   "digest": "sha256:542f6fb543522c27fed36170f877d2c5c14a1007645f7c692ac3e718981ff5a3",
    "release": "0.5.4"
   }
  }
