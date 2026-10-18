@@ -389,6 +389,10 @@ def reference(base: str) -> tuple[bytes, dict]:
     if (ORACLES / f"{base}.npz").is_file():
         return (ORACLES / f"{base}.npz").read_bytes(), json.loads((ORACLES / f"{base}.json").read_text())
     task = TASKS / f"{base}-privileged"
+    if not (task / "task.toml").is_file() or not (task / "solution" / "trajectory.npz").is_file():
+        raise SystemExit(f"gen_privileged: no reference for {base}: neither {ORACLES.relative_to(ROOT)}/{base}.npz nor a "
+                         f"committed {task.relative_to(ROOT)}; make one with `privileged_oracles.py all` + `collect` "
+                         "(scripts/robosafe/privileged_oracles.py) and render again")
     evidence = tomllib.loads((task / "task.toml").read_text())["metadata"]["oracle_evidence"]
     m = re.search(r"; (\d+) rows, (\d+) control steps\), .*? it replays to RoboSafeBench's (\S+) in two", evidence)
     if not m:

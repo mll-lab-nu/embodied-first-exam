@@ -18,8 +18,9 @@ every other task's copy must equal it. The 0.5.4 layers: `standard` (a paused ta
 standard grader, the oracle driver and the public observation helpers), `realtime` (the realtime clock's own files) and
 `privileged` (the privileged tooling, grader and solution); the 0.5.3 release's own adapter, grader and oracle drivers:
 `0.5.3` and `0.5.3-realtime` (a 0.5.3 task takes every other file from the 0.5.4 layers). To change a shared file: edit
-it in its canonical task, then run scripts/robosafe/sync_release.py (it copies it into the other tasks, normalizes them
-and rewrites release.json).
+it in its canonical task, then run scripts/robosafe/sync_release.py (it copies it into the other standard and realtime
+tasks, normalizes them and rewrites release.json); for a file of the privileged layer, or rcb_rsb.py /
+candidate_identity.py (copied into the privileged twins), also gen_privileged.py render, then check_release.py write.
 """
 import json
 import pathlib
@@ -86,9 +87,9 @@ def problems() -> list:
     for base, dirs in sorted(by_base.items()):
         if "0.5.4" not in dirs.values():
             bad += [f"{n}: in the core set, but its base has no 0.5.4 task" for n in sorted(dirs) if n in core]
-    bad += canon_problems(want)
-    if bad:
-        return bad
+    canon = canon_problems(want)
+    if canon:                         # without its canonical copies no task's shared files can be checked
+        return bad + canon
     bad += [p for name in sorted(set(have) & set(want)) for p in shared_problems(have[name], want[name]["release"])]
     bad += assets_problems()
     return bad

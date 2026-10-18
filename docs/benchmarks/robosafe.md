@@ -13,8 +13,11 @@ a report on the way.
 Source: two frozen releases (`scripts/robosafe/release.json`, "The served set"): RoboSafeBench 0.5.4 for 84 tasks (in the core set,
 `docs/core_set.toml`, unless Luna solved the base's standard or realtime mode) and 0.5.3 for the other 482 (left out of the core set, apart from `rsb-c04-i00-standard`, whose base's realtime mode is a 0.5.4 task); the commit is in `images/robosafe/source.env`, vendored into the
 image's build context (`images/robosafe/context/`, "Image"). Tasks: `tasks/rsb-<slug>-i<NN>-standard` (and
-`-standard-realtime`, "The realtime set"). Both releases are frozen task directories (no generator here re-renders
-them), held to `release.json` by `scripts/robosafe/check_release.py`.
+`-standard-realtime`, "The realtime set"). Both releases are frozen task directories, held to `release.json` by
+`scripts/robosafe/check_release.py`: the 0.5.4 tasks were exported by RoboSafeBench's release tooling (not carried here)
+and the 0.5.3 tasks rendered in this repository from instances frozen in the image; neither is re-rendered here. The
+privileged twins of the paused 0.5.4 tasks are rendered and checked by `scripts/robosafe/gen_privileged.py`
+("Privileged tasks").
 
 | | |
 |---|---|
@@ -781,15 +784,20 @@ Apache-2.0 or CC BY 4.0; its text and NOTICE ship beside the weights (images/rob
   is one of the 84.
 
 RoboSafeBench's own family-pass score (`scripts/robosafe/score.py`) is over the 84 tasks; the repository's headline statistics count the `rsb-*` dirs listed in `docs/core_set.toml`. `scripts/robosafe/check_release.py check` (in `ci_checks/check-generated-tasks.sh`) holds every `rsb-*` directory to
-`release.json` (its digest and its release's image) and the core set to list no task of a base without a 0.5.4 task. The tasks of both
-releases were exported by RoboSafeBench's release tooling, which this repository does not carry, so nothing here
-re-renders them. `check_release.py` also holds every task's service, grader and solution helpers byte for byte to one
+`release.json` (its digest and its release's image) and the core set to list no task of a base without a 0.5.4 task. The 0.5.4 tasks
+were exported by RoboSafeBench's release tooling, which this repository does not carry, and the 0.5.3 tasks rendered
+here from instances frozen in the image; neither is re-rendered here, apart from the privileged twins
+(`scripts/robosafe/gen_privileged.py render`, checked by `gen_privileged.py check` in the same CI step).
+`check_release.py` also holds every task's service, grader and solution helpers byte for byte to one
 copy each, in a canonical task (`check_release.py` `CANON` and `LAYERS`: a 0.5.4 paused task for the service, client,
 standard grader and oracle driver, a 0.5.4 realtime task for the realtime clock's own files, a privileged task for the
 privileged tooling, and a 0.5.3 paused and a 0.5.3 realtime task for that release's own adapter, grader and oracle
 drivers), so the unit tests run the code the tasks run: edit the file in its canonical task, then run
-`scripts/robosafe/sync_release.py` (it copies the files into the other tasks, applies its text edits, normalizes the
-tasks and runs `check_release.py write`; `--check` writes nothing).
+`scripts/robosafe/sync_release.py` (it copies the files into the other standard and realtime tasks, applies its text
+edits, normalizes the tasks and runs `check_release.py write`; `--check` writes nothing). For a file of the privileged
+layer, or `rcb_rsb.py` / `candidate_identity.py` (the privileged twins carry byte copies of the standard service's),
+also run `scripts/robosafe/gen_privileged.py render` (it does not touch the standard tasks) and then
+`check_release.py write`.
 
 ### Finalize bounds
 The 0.5.4 tasks' collect hook waits up to 4080 s for the verdict and 5280 s for the video (`timeout_sec` 5310): the

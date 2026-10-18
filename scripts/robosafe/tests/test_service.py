@@ -97,7 +97,7 @@ def finish_and_grade(svc, work: pathlib.Path) -> dict:
     svc.poll()
     logs = work / "logs"
     logs.mkdir(exist_ok=True)
-    env = {**os.environ, "RCB_DATA": str(work), "RCB_VERIFIER_LOG_DIR": str(logs)}
+    env = {**os.environ, "RCB_DATA": str(work), "RCB_VERIFIER_LOG_DIR": str(logs), "PYTHONDONTWRITEBYTECODE": "1"}
     subprocess.run([sys.executable, str(GRADE)], env=env, check=True, capture_output=True)
     return json.loads((logs / "reward.json").read_text())
 
@@ -133,6 +133,7 @@ def main() -> int:
     a = ap.parse_args()
     extra = [str(STD)]
     sys.path[:0] = extra
+    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"      # the service is imported from a task dir: no __pycache__ there
     os.environ["PYTHONPATH"] = os.pathsep.join(extra + [p for p in os.environ.get("PYTHONPATH", "").split(os.pathsep) if p])
     bad = 0
     for name in a.names:
