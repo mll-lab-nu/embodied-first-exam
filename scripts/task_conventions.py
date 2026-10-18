@@ -4,9 +4,10 @@
 Every generator ends with `normalize(task_dir)`, so a re-generated task equals the committed one. It also migrates a
 pre-v1.0 task (old field names, protocol spelling, README layout); renaming directories is the caller's job.
 
-    python3 scripts/task_conventions.py tasks/<task> [...]     # normalize these tasks
-    python3 scripts/task_conventions.py --check tasks/<task>   # exit 1 if normalizing would change anything
-    python3 scripts/task_conventions.py benchmarks [--check]   # every task dir's benchmark label (BENCHMARK_BASES)
+    python3 scripts/task_conventions.py tasks/<benchmark>/<task> [...]     # normalize these tasks
+    python3 scripts/task_conventions.py --check tasks/<benchmark>/<task>   # exit 1 if normalizing would change anything
+    python3 scripts/task_conventions.py benchmarks [--check]   # every task dir's benchmark label (BENCHMARK_BASES) and folder
+    python3 scripts/task_conventions.py task-dir <task> ...    # where a task dir lives: tasks/<benchmark folder>/<task>
 
 What it does:
 - `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-standard-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
@@ -1611,6 +1612,10 @@ def snapshot(task: Path) -> dict[str, bytes]:
 def main(argv: list[str]) -> int:
     if argv[:1] == ["modes"]:          # the mode registry for the shell checks (PROTOCOL §2.16)
         print(modes_table())
+        return 0
+    if argv[:1] == ["task-dir"]:       # `task-dir <name>...`: each task dir's path in this tree (task_dir), one per line
+        for n in argv[1:]:
+            print(task_dir(n))
         return 0
     if argv[:1] == ["benchmarks"]:     # `benchmarks --check`: every task dir has its label (BENCHMARK_BASES); `benchmarks`: the labels
         if "--check" in argv:

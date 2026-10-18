@@ -8,10 +8,12 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   `-standard-realtime`; base images are `ghcr.io/mll-lab-nu/eai-<name>`, one image per benchmark (PROTOCOL §1). No
   `results/` in task dirs.
 - Generators under `scripts/` end with `scripts/task_conventions.py` (`normalize`): fields, protocol spelling, test.sh, graders,
-  README layout, no `results/`. `python3 scripts/task_conventions.py --check tasks/<task>` reports a task it would change.
-- Tasks are self-contained Harbor task dirs under `tasks/`. Nothing at run time imports repository code outside the task
-  directory; shared sources are copied in by generators. Reference tasks: `tasks/robotwin_2_0_stack_blocks_two-privileged/` and its
-  standard-mode twin `tasks/robotwin_2_0_stack_blocks_two-standard/`.
+  README layout, no `results/`. `python3 scripts/task_conventions.py --check tasks/<benchmark>/<task>` reports a task it would change.
+- Tasks are self-contained Harbor task dirs, one folder per benchmark: `tasks/<benchmark>/<task>/` (the folders:
+  `scripts/task_conventions.py` `BENCHMARK_DIRS`; find a task dir with `task_dir(name)` / `iter_tasks()`, never by
+  joining `tasks/` and a name). Nothing at run time imports repository code outside the task
+  directory; shared sources are copied in by generators. Reference tasks: `tasks/robotwin-2/robotwin_2_0_stack_blocks_two-privileged/` and its
+  standard-mode twin `tasks/robotwin-2/robotwin_2_0_stack_blocks_two-standard/`.
 - `embodied_first_exam/<benchmark>/`: the single source of the code a benchmark's tasks share (tooling, graders, service
   adapter; `embodied_first_exam/README.md`). Its tasks get it from a files-only image (`scripts/files_image.py`,
   `images/<name>/FILES.json`): the tasks' Dockerfiles `COPY --from=<image@digest>` each file to the path a copy would have
@@ -60,15 +62,15 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   `ci_checks/ci_scope.py` (one benchmark's own paths -> its tasks, generator check and unit tests; shared code -> the full
   suite); pushes to main and the nightly run are the full suite. A new benchmark gets its row in `ci_scope.py` `UNITS`
   (without one, its pull requests run the full suite).
-- `tasks/<task>/DIGEST`: the task's content digest (PROTOCOL Appendix H.8), written last by `normalize` (generators
-  refresh it; after a hand edit: `python3 scripts/task_conventions.py tasks/<task>`);
+- `tasks/<benchmark>/<task>/DIGEST`: the task's content digest (PROTOCOL Appendix H.8), written last by `normalize` (generators
+  refresh it; after a hand edit: `python3 scripts/task_conventions.py tasks/<benchmark>/<task>`);
   `ci_checks/check-dataset-manifest.sh` recomputes it. The release manifest `tasks/dataset.toml` is generated
   (`scripts/dataset_manifest.py write`) and not committed: pull requests no longer conflict on it. The task list
   (`TASKS.md`, `tasks.json`, `dataset.toml`) is generated after every merge to main and pushed to the branch
   `task-list` (`.github/workflows/task-list.yml`; `scripts/dataset_manifest.py list --out DIR` locally).
 - Local docker sandbox has no `[environment].gpus`. RoboTwin and MuJoCo tasks pass a GPU through
   with `environment/docker-compose.yaml` (service `main`, nvidia device reservation; `sim` in standard mode) — copy it
-  from `tasks/robotwin_2_0_stack_blocks_two-privileged/`.
+  from `tasks/robotwin-2/robotwin_2_0_stack_blocks_two-privileged/`.
 - Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`); no adapters, and no gateway that holds
   credentials or changes requests. The usage gateway (`scripts/usage_gateway/`, `GATEWAY=1` in `run_agent_batch.sh`;
   official runs use it) forwards model-API calls only (`api_paths.json`; anything else at a provider is a 403), records

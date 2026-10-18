@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The task list and the release manifest, generated from the tasks; neither is committed to `main`.
 
-Every task carries its own content digest in `tasks/<task>/DIGEST` (written last by scripts/task_conventions.py
+Every task carries its own content digest in `tasks/<benchmark>/<task>/DIGEST` (written last by scripts/task_conventions.py
 `normalize`; ci_checks/check-dataset-manifest.sh recomputes it) and its own metadata in `task.toml` (mode, family,
 oracle, the agent's cutoff `[agent] timeout_sec`, resources, dynamics, and the settings results are grouped by:
 reset budget, slowdown, network; the `validated` marker; and `set`, core or excluded, from docs/core_set.toml). Apart from
@@ -43,7 +43,7 @@ DIGEST = re.compile(r"sha256:[0-9a-f]{64}")
 def render() -> str:
     out = [HEADER]
     bad = []
-    for t in sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file()):
+    for t in tc.iter_tasks():
         f = t / "DIGEST"
         d = f.read_text().strip() if f.is_file() else ""
         if not DIGEST.fullmatch(d):
@@ -51,12 +51,12 @@ def render() -> str:
             continue
         out.append(f'[[tasks]]\nname = "robot-coding-bench/{t.name}"\ndigest = "{d}"\n')
     if bad:
-        raise SystemExit(f"no valid DIGEST in {len(bad)} task(s), e.g. {bad[0]} (python3 scripts/task_conventions.py tasks/<task>)")
+        raise SystemExit(f"no valid DIGEST in {len(bad)} task(s), e.g. {bad[0]} (python3 scripts/task_conventions.py tasks/<benchmark>/<task>)")
     return "\n".join(out)
 
 
 def all_tasks() -> list[Path]:
-    return sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    return tc.iter_tasks()
 
 
 def entry(t: Path) -> dict:
