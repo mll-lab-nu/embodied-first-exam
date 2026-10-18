@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate the RoboSafeBench tasks: tasks/rsb-<slug>-i<NN>-standard (eai-standard/2.1), one per frozen instance
-in scripts/robosafe/instances/ (docs/benchmarks/robosafe.md). No privileged twin (PROTOCOL §2.2 exception requested: a
-privileged agent holding the simulator would read the hazard state); the realtime set's tasks come from gen_realtime.py.
+in scripts/robosafe/instances/ (docs/benchmarks/robosafe.md). No privileged twin for these 0.5.3 tasks (the paused 0.5.4
+tasks' come from gen_privileged.py); the realtime set's tasks come from gen_realtime.py.
 
     python3 scripts/robosafe/gen_tasks.py render     # (re)write every task dir; `git diff tasks/` stays empty
     python3 scripts/robosafe/gen_tasks.py check      # write nothing; exit 1 if a task dir differs

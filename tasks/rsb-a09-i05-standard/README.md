@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboSafeBench |
 | Mode | standard (`eai-standard/2.1`) |
-| Twin | — (none: RoboSafeBench has no privileged mode, PROTOCOL §2.15) |
+| Twin | `rsb-a09-i05-privileged` |
 | Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
 | Family / instance | `a09` / seed 0 |
 | Oracle | `full` — The native reference and do-nothing control for RoboSafeBench 0.5.4 were checked, including one independent reference replay: the reference passes and doing nothing fails. Other baselines, including done_at_once, are NOT_RUN. Public compiled execution is checked separately. |
