@@ -1,0 +1,187 @@
+{
+  "bank": {
+    "adaptation": [
+      {
+        "episode_seed": 10000,
+        "plant_seed": 10100,
+        "stratum": 0
+      },
+      {
+        "episode_seed": 10001,
+        "plant_seed": 10100,
+        "stratum": 1
+      },
+      {
+        "episode_seed": 10002,
+        "plant_seed": 10100,
+        "stratum": 2
+      },
+      {
+        "episode_seed": 10003,
+        "plant_seed": 10100,
+        "stratum": 3
+      },
+      {
+        "episode_seed": 10004,
+        "plant_seed": 10100,
+        "stratum": 4
+      }
+    ],
+    "held_out": [
+      {
+        "episode_seed": 10300,
+        "plant_seed": 10100,
+        "stratum": 0
+      },
+      {
+        "episode_seed": 10301,
+        "plant_seed": 10100,
+        "stratum": 1
+      },
+      {
+        "episode_seed": 10302,
+        "plant_seed": 10100,
+        "stratum": 2
+      },
+      {
+        "episode_seed": 10303,
+        "plant_seed": 10100,
+        "stratum": 3
+      },
+      {
+        "episode_seed": 10304,
+        "plant_seed": 10100,
+        "stratum": 4
+      },
+      {
+        "episode_seed": 10305,
+        "plant_seed": 10100,
+        "stratum": 0
+      },
+      {
+        "episode_seed": 10306,
+        "plant_seed": 10100,
+        "stratum": 1
+      },
+      {
+        "episode_seed": 10307,
+        "plant_seed": 10100,
+        "stratum": 2
+      },
+      {
+        "episode_seed": 10308,
+        "plant_seed": 10100,
+        "stratum": 3
+      },
+      {
+        "episode_seed": 10309,
+        "plant_seed": 10100,
+        "stratum": 4
+      }
+    ]
+  },
+  "evaluation_requirements": {
+    "device_isolation_verified": true,
+    "gpu_devices": [],
+    "mujoco_version": "3.5.0",
+    "physics": "mujoco-cpu",
+    "policy_inference": "numpy-cpu",
+    "render_backend": "osmesa"
+  },
+  "family": "neural-fly",
+  "index": 0,
+  "name": "neural-fly",
+  "private_asset": "/opt/private-fly/forces.npz",
+  "private_asset_sha256": "8e1c148ed034b9f4c541dfaa71b70b48a652f43c7abcc381416040d7901459b9",
+  "public": {
+    "adaptation_cases": 5,
+    "bounds": {
+      "attitude_gain": [
+        20.0,
+        180.0
+      ],
+      "kd": [
+        0.5,
+        12.0
+      ],
+      "ki": [
+        0.0,
+        5.0
+      ],
+      "kp": [
+        0.5,
+        20.0
+      ],
+      "observer_gain": [
+        0.0,
+        15.0
+      ],
+      "rate_gain": [
+        5.0,
+        40.0
+      ]
+    },
+    "channels": {
+      "omega": "body rad/s",
+      "position": "world m",
+      "quaternion": "wxyz body-to-world",
+      "target_acceleration": "world m/s\u00b2",
+      "target_position": "world m",
+      "target_velocity": "world m/s",
+      "velocity": "world m/s"
+    },
+    "default_policy": {
+      "attitude_gain": 80.0,
+      "kd": 4.0,
+      "ki": 0.4,
+      "kp": 6.0,
+      "observer_gain": 0.0,
+      "rate_gain": 16.0,
+      "residual": [
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      ]
+    },
+    "evaluation_backend": "native MuJoCo CPU / NumPy CPU / OSMesa",
+    "feedback": "Noisy telemetry and sampled images only; no scores, contacts, hidden parameters, true state or seeds.",
+    "goal": "Track six timed vertical figure-eight laps: x=1.25 sin(t), y=0, z=1.8+0.75 sin(2t), with randomized phase, horizontal center and initial position offset.",
+    "held_out_cases": 10,
+    "image_interval_s": 1.0,
+    "limitations": "Flight-data quadratic force surrogate and approximate rigid-body/actuator dynamics; not a learned aerodynamics model or flight-stack simulation. Fixed 50-degree command tilt envelope; 2.2 thrust-to-weight limit.",
+    "max_rounds": 3,
+    "name": "neural-fly",
+    "policy_abi": "bounded JSON controller coefficients; optional observer_gain in [0,15], default 0",
+    "protocol": "eai-policy/1.1",
+    "schema": "control-transfer/1",
+    "score": "Crash or escape: 0. Otherwise 100 exp(-max(0,RMSE_m-0.03)/0.25). Success requires the full horizon and RMSE<0.25 m; acquisition is included.",
+    "telemetry_interval_s": 0.1,
+    "training_backend": "nominal MuJoCo CPU"
+  },
+  "schema": "control-transfer-instance/2",
+  "transfer_track": "same-plant"
+}

@@ -88,6 +88,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("ambench-", "AM-Bench"),
     ("ispatialgym-", "iSpatialGym"),
     ("ikea-", "IKEA MuJoCo"),
+    ("roboengineer-", "roboEngineer"),   # its own multi-round runtime eai-policy/1.x (scripts/roboengineer/exported.toml)
 ]
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
@@ -253,6 +254,14 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
     "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
+# roboEngineer (#329): its own multi-round runtime (scripts/roboengineer/exported.toml) grades a deployed policy, not an
+# episode that stands at the cutoff, and its service reports a deadline, not `time_left_s`
+CUTOFF_NOTE_OWN[("roboEngineer", "standard")] = (
+    "This is wall-clock time from the start of your session; the time you wait for the deployment service counts, "
+    "deployments included. When it is up you are stopped without warning and the evaluator takes the round you sealed "
+    "or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then "
+    "is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs "
+    "out before your time does." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 # RoboOlympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
 # RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode (board 0121 m4)
 CUTOFF_NOTE_TASK = {n: (
