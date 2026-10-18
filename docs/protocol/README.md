@@ -133,7 +133,7 @@ verifier, a sidecar) is `*_trusted` and never mounted by the agent's container; 
 file, host path or socket (only a directory the runner names as a whole `${RCB_*}` variable); no service widens its
 container (`privileged`, `cap_add`, `devices`, host namespaces, `volumes_from`, OOM settings), takes files by another road
 (`secrets`, `configs`, `env_file`, `build`, `include`) or sets its own network; sidecars publish no port. The resource
-monitor, the one service exempt from these, has no network, mounts its code read-only, is the only writer of the
+monitor, the one service exempt from these, has no network, runs its code from a pinned image and mounts its limits read-only, is the only writer of the
 beacons (read-only everywhere else) and seals its record in the first sidecar collect hook. Code a verifier runs for
 the agent (a `policy` deliverable) runs as an unprivileged user in its own process, without network, unable to read the
 simulator, the evaluator or the requests, under a process limit; every process it started ends before anything is
