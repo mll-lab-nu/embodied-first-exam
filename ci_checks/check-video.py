@@ -12,6 +12,7 @@ tell whether a render finishes in time (the runner flags a graded trial without 
   - a declared video time bound is not shorter than the verdict replay's in the same file (`video_timeout_s` vs
     `replay_timeout_s` in a JSON/TOML/compose file; privileged, or wherever a task still declares both): the video
     replays the episode again, so a shorter bound loses the video of exactly the long episodes the verdict still grades.
+A build context's files include those its Dockerfile takes from a files-only image (scripts/files_image.py copied()).
 
     python3 ci_checks/check-video.py [task dirs]      # default: every task
 Standard library only.
@@ -25,6 +26,8 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import files_image  # noqa: E402  (a Dockerfile's files from a files-only image count as its context's)
 TEXT = {".py", ".sh", ".yaml", ".yml", ".toml", ".json", ".cfg", ".txt"}
 MAX_BYTES = 1 << 20
 MP4 = re.compile(r"\.mp4\b")
@@ -34,9 +37,10 @@ BOUND = re.compile(r"""["']?(video_timeout_s|replay_timeout_s)["']?\s*[:=]\s*["'
 
 
 def texts(d: Path):
+    """The text files of a build context, and those its Dockerfile takes from a files-only image (at their sources)."""
     if not d.is_dir():
         return
-    for p in sorted(d.rglob("*")):
+    for p in sorted(d.rglob("*")) + sorted(files_image.copied(d / "Dockerfile").values()):
         if p.suffix in TEXT and p.is_file() and not p.is_symlink() and p.stat().st_size <= MAX_BYTES:
             try:
                 yield p, p.read_text(errors="replace")
@@ -84,7 +88,7 @@ def check(task: Path) -> list[str]:
         for k, v in BOUND.findall(s):
             found.setdefault(k, float(v))
         if "video_timeout_s" in found and "replay_timeout_s" in found and found["video_timeout_s"] < found["replay_timeout_s"]:
-            errs.append(f"{task.name}: {p.relative_to(task)} bounds the video at {found['video_timeout_s']:g} s, shorter "
+            errs.append(f"{task.name}: {p.relative_to(task) if p.is_relative_to(task) else p.relative_to(ROOT)} bounds the video at {found['video_timeout_s']:g} s, shorter "
                         f"than the verdict replay's {found['replay_timeout_s']:g} s (long episodes lose their video)")
     return errs
 

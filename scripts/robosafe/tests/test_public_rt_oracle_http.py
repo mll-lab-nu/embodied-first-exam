@@ -22,7 +22,7 @@ from unittest.mock import patch
 import numpy as np
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-sys.dont_write_bytecode = True        # the files are loaded from their canonical task dirs
+sys.dont_write_bytecode = True        # the files are loaded from their one copies (check_release.shared)
 import check_release as CR  # noqa: E402
 sys.path.insert(0,str(CR.shared('standard','public_observation_delivery.py').parent))   # the oracles' own import
 

@@ -6,7 +6,7 @@ note in a malformed request, a crash in mid-episode resumed from the journal and
 
 Needs the simulator (RoboSafeBench importable, MuJoCo); run by hand (docs/benchmarks/robosafe.md):
     MUJOCO_GL=egl python scripts/robosafe/tests/test_service.py [a03-i00 ...]
-The instance and the reference are the task's (tasks/rsb-<name>-standard: environment/sim/instance.json,
+The instance and the reference are the task's (tasks/robosafebench/rsb-<name>-standard: environment/sim/instance.json,
 solution/oracle.json and oracle.npz); the service and the grader are the 0.5.4 release's (check_release.sim_dir).
 """
 from __future__ import annotations
