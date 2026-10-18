@@ -109,8 +109,11 @@ EDITS = [
      "- There is nothing to hand in: the service records the episode and judges it as it ran, on what physically happened\n"
      "  and on how the episode ended."),
 ]
+# 2026-10-17: the paused 0.5.4 tasks' privileged twins (scripts/robosafe/gen_privileged.py) are rendered and checked there,
+# next to their standard twins; their standard twins' Twin row is normalize's. No text edit here.
+TASK_EDITS = []
 CHANGE_LOG = [_CHANGE_0151]           # README Change Log entries, newest first, added under the heading once
-FILES = sorted({e[0] for e in EDITS})
+FILES = sorted({e[0] for e in EDITS + TASK_EDITS})
 
 
 def edit_name(rel: str):
@@ -119,8 +122,8 @@ def edit_name(rel: str):
     return next((n for n in FILES if rel == n or rel.endswith("/" + n)), None)
 
 
-def apply_edits(name: str, text: str, where: str) -> str:
-    for edit in EDITS:
+def apply_edits(name: str, text: str, where: str, edits=None) -> str:
+    for edit in EDITS if edits is None else edits:
         if edit[0] != name:
             continue
         alts = edit[1] if len(edit) == 2 else [(edit[1], edit[2])]
@@ -153,7 +156,7 @@ def update(task: pathlib.Path, release: str) -> None:
     for name in FILES:
         p = task / name
         text = p.read_text()
-        new = apply_edits(name, text, task.name)
+        new = apply_edits(name, text, task.name, EDITS + TASK_EDITS)
         if new != text:
             p.write_text(new)
 
@@ -169,6 +172,8 @@ def main(argv: list[str]) -> int:
     with tempfile.TemporaryDirectory() as td:
         for name, rec in sorted(rel.items()):
             task = ROOT / "tasks" / name
+            if check_release.privileged(task):    # gen_privileged.py renders and checks these, next to their twins
+                continue
             tmp = pathlib.Path(td) / name
             shutil.copytree(task, tmp, symlinks=True)
             update(tmp, rec["release"])
