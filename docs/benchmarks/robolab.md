@@ -10,10 +10,11 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
 - One generator: `python3 scripts/robolab/mk_tasks.py` writes every RoboLab task dir (both modes) from
   `scripts/robolab/`: `families.json` (per family: RoboLab's task class and file, the goal, the success term's
   source, the texts of both modes, the oracle level, the cited positives), the frozen instance (one copy, in the committed
-  task dir: `tasks/robolab-<family>-i00-privileged/environment/instance.json`, read back by the generator),
-  `oracles/<family>/` (the reference solutions and the standard oracle's recorded joint targets), `shared/`
-  (the tooling `rcb_robolab.py`, the oracles' skills `ref_primitives.py`), `template/<mode>/` (every other task file) and
-  `scripts/eai_standard/` (the 2.2 layer and the standard client). Both twins of a family are written to a scratch
+  task dir: `tasks/robolab/robolab-<family>-i00-privileged/environment/instance.json`, read back by the generator),
+  `oracles/<family>/` (the reference solutions and the standard oracle's recorded joint targets), `template/<mode>/`
+  (every other task file), `embodied_first_exam/robolab/` (the code the tasks share, its one source: the tooling
+  `rcb_robolab.py`, the oracles' skills `ref_primitives.py`) and `scripts/eai_standard/` (the 2.2 layer and the
+  standard client). Both twins of a family are written to a scratch
   directory, passed through `scripts/task_conventions.py`'s `normalize()` and then synced into `tasks/`. Re-running it leaves
   `git diff tasks/` empty; `--check` only compares.
 - A family is RoboLab's benchmark task of that name, its success predicate RoboLab's own `success` termination term.
@@ -73,6 +74,9 @@ success from firing before the task is done:
   `images/robolab/BUILD_ONLY` has the licences, the build command
   (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .`),
   the check of a build and how a CI machine builds it.
+- `images/robolab-files/`: `ghcr.io/mll-lab-nu/eai-robolab-files:<VERSION>`, files only (`FROM scratch`): the tooling
+  `rcb_robolab.py` that the privileged agent and verifier images `COPY --from` (Tooling, below); BUILD_ONLY (private),
+  pulled with the organization's token like eai-robolab.
 - Isaac needs an RTX-class GPU even headless (PhysX runs on the CPU). One Isaac simulator at a time per 32 GB of host RAM.
 - Standard mode: the agent container and the verifier use the one digest-pinned client image of every standard task and
   its exact pip pins (`scripts/eai_standard/client.env`, `client-requirements.txt`, copied into `environment/`); only the
@@ -193,13 +197,22 @@ iterations cost more than in the other simulators.
 ## Tooling (file names)
 | main's convention | RoboLab |
 |---|---|
-| `environment/rcb_traj.py` (privileged tooling, `Session`) | `environment/rcb_robolab.py` (`Session`: the frozen scene state, thin primitives, rendering, recording, replay) |
-| `tests/rcb_traj.py` | `tests/rcb_robolab.py` |
+| `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_robolab.py` in the agent's image (`Session`: the frozen scene state, thin primitives, rendering, recording, replay), from the files-only image below |
+| `tests/rcb_traj.py` | `/tests/rcb_robolab.py` in the verifier's image, from the same files-only image |
 | standard sidecar | `environment/sim/server.py` (the 2.2 adapter), `finalize.sh`, `rcb_robolab.py`; `run.sh`, `rcb_limited.py`, `rcb1.py` from `scripts/eai_standard/` |
 | `rcb_client.py`, `rcb1.py` | the same names (`scripts/eai_standard/`) |
 
+The privileged tasks carry no copy of the tooling: their `environment/Dockerfile` and `tests/Dockerfile` take
+`rcb_robolab.py` with `COPY --from` from the files-only image `ghcr.io/mll-lab-nu/eai-robolab-files` (`images/robolab-files/`,
+`scripts/files_image.py`; FILES.json pins its digest and the file's sha256; BUILD_ONLY, private like eai-robolab), built
+from its one source `embodied_first_exam/robolab/rcb_robolab.py`. The verifier's image gets its own copy from that image when
+it is built; nothing from the agent's container reaches it. The standard tasks keep their copy in `environment/sim/`
+(bind-mounted at `/srv`). `mk_tasks.py` writes the `COPY --from` lines, and `--check` fails when the source and FILES.json
+disagree. After a change to `rcb_robolab.py`: bump `images/robolab-files/VERSION`, `python3 scripts/files_image.py build
+robolab-files`, push it, `python3 scripts/files_image.py pin robolab-files <digest>`, then run the generator.
+
 The tooling records (T, 8) actions (7 joint targets + the binary gripper command) at 15 Hz. Every copy of the tooling and
-of the standard sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh`); the tooling's TASKS
+of the standard sidecar files is byte-identical across the benchmark, the files image's included (`check-tooling-identity.sh`); the tooling's TASKS
 registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 without a positive), so adding a family later does not change existing tasks.
 
 ## Declarations
@@ -246,7 +259,8 @@ sees it and still ends the episode with a 500.
 trials under the current success term without re-running them. It finds every RoboLab trial in a Harbor jobs tree and
 reads its recorded trajectory (privileged: `artifacts/app/output/trajectory.npz`; standard: the sidecar's
 `trajectory.npz`, or its `journal.f64`) and its recorded verdict. It replays each trajectory once, in a fresh Isaac
-process, with the current task's own tooling copy. At every control step it watches RoboLab's upstream term with the
+process, with the current tooling (`embodied_first_exam/robolab/rcb_robolab.py`, the files image's source) and the task's
+frozen instance. At every control step it watches RoboLab's upstream term with the
 one-finger contact (the old verdict) and the current term (the new verdict, settle hold included), and reports where
 each first held.
 - **Same host class.** A trial is graded on the host it ran on (Grading and determinism). The tool prints the host's CPU

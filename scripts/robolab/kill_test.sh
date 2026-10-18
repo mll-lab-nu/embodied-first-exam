@@ -4,10 +4,10 @@
 # while the next call runs), and check that the service resumed the same episode exactly, the oracle carried on, the
 # episode was graded as usual (by the live episode, graded_by_live = 1; no replay since 2026-10-17).
 #   usage: scripts/robolab/kill_test.sh [task dir] [jobs dir] [N checkpoints before the kill]
-#   default: tasks/robolab-banana-in-bowl-i00-standard, $PWD/jobs/kill_test, 4
+#   default: tasks/robolab/robolab-banana-in-bowl-i00-standard, $PWD/jobs/kill_test, 4
 # Needs the eai-robolab image on the host (images/robolab/BUILD_ONLY), harbor and docker. One Isaac at a time per 32 GB.
 set -uo pipefail
-TASK="${1:-tasks/robolab-banana-in-bowl-i00-standard}"; JOBS="$(mkdir -p "${2:-$PWD/jobs/kill_test}" && cd "${2:-$PWD/jobs/kill_test}" && pwd)"
+TASK="${1:-tasks/robolab/robolab-banana-in-bowl-i00-standard}"; JOBS="$(mkdir -p "${2:-$PWD/jobs/kill_test}" && cd "${2:-$PWD/jobs/kill_test}" && pwd)"
 TASK="$(python3 "$(dirname "$0")/../stamp_mtimes.py" stage "$TASK" "$(mktemp -d)")" || exit 1   # Harbor builds from a stamped copy (issue #258)
 N="${3:-4}"
 D="docker"; docker ps >/dev/null 2>&1 || D="sg docker -c"

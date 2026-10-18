@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Re-grade a finished RoboLab trial with the CURRENT version of its task, in fresh processes (PROTOCOL §2.7, the review's
 # determinism check). Run it on the host the trial ran on: CPU PhysX is bit-exact on one host, not necessarily across hosts.
-#   privileged: the task's own verifier (tests/test.sh: tests/grade.py --repeat 2, two fresh-process replays) on the
-#               trial's /app/output/ -> <out>/reward.json
+#   privileged: the task's own verifier (tests/test.sh: tests/grade.py --repeat 2, two fresh-process replays; the tooling
+#               from embodied_first_exam/robolab/, the files-only image's source) on the trial's /app/output/ -> <out>/reward.json
 #   standard:   the sim tooling's replay CLI twice (two fresh processes) on the episode the service recorded
 #               (artifacts/data/trajectory.npz) -> <out>/regrade.json: both succeed, both end in the same state, and
 #               that state is the recorded live one (live_sha in artifacts/data/final.json)
@@ -13,11 +13,17 @@ TASK="$(cd "$1" && pwd)"; TRIAL="$(cd "$2" && pwd)"; mkdir -p "$3"; OUT="$(cd "$
 IMG="$(sed -n 's/^FROM //p' "$TASK/tests/Dockerfile" | head -1)"
 case "$(basename "$TASK")" in *-standard) MODE=standard; IMG="$(sed -n 's/^ *image: //p' "$TASK/environment/docker-compose.yaml" | head -1)";; *) MODE=privileged;; esac
 FAM="$(sed -n 's/^family = "\(.*\)"$/\1/p' "$TASK/task.toml" | head -1)"
+REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+# the tooling source must be what the tasks' pinned files image carries (images/robolab-files/FILES.json)
+python3 "$REPO/scripts/files_image.py" check robolab-files >/dev/null || { python3 "$REPO/scripts/files_image.py" check robolab-files; echo "[regrade] refusing: the tooling source differs from the pinned files image"; exit 2; }
 run() { if docker ps >/dev/null 2>&1; then docker "$@"; else sg docker -c "docker $(printf '%q ' "$@")"; fi; }
 echo "[regrade] $MODE $FAM: $(basename "$TRIAL") on $IMG -> $OUT"
 if [ "$MODE" = privileged ]; then
   [ -f "$TRIAL/artifacts/app/output/trajectory.npz" ] || { echo "[regrade] no artifacts/app/output/trajectory.npz"; exit 1; }
-  run run --rm --gpus "${RCB_GPUS:-all}" --network "${RCB_NETWORK:-bridge}" --shm-size 8g -e PYTHONPATH=/tests -w /tests -v "$TASK/tests:/tests:ro" \
+  # the verifier's files as its image has them: the task's tests/ plus the tooling (from the files-only image's source)
+  V="$(mktemp -d)"; trap 'rm -rf "$V"' EXIT; cp -a "$TASK/tests/." "$V/"
+  cp "$REPO/embodied_first_exam/robolab/rcb_robolab.py" "$V/rcb_robolab.py"
+  run run --rm --gpus "${RCB_GPUS:-all}" --network "${RCB_NETWORK:-bridge}" --shm-size 8g -e PYTHONPATH=/tests -w /tests -v "$V:/tests:ro" \
     -v "$TRIAL/artifacts/app/output:/app/output:ro" -v "$OUT:/logs/verifier" "$IMG" bash -c "bash /tests/test.sh; chown -R $(id -u):$(id -g) /logs/verifier"
   cat "$OUT/reward.json"; echo
 else
