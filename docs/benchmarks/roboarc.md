@@ -31,8 +31,15 @@ Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and
 
 - `scripts/roboarc/mk_tasks.py` (`--check` in CI) renders the task dirs from this directory: `release.json`,
   `packages/` (the texts of the RoboARC base each task ports, renamed, with the family's own texts over them),
-  `oracles/`, `assets.json`, `shared/` (the tooling and the graders). Generated tasks end with
-  `scripts/task_conventions.py` normalize.
+  `oracles/` (the standard references re-timed to the joint-speed rule), `assets.json`, `shared/` (the tooling and the
+  graders). Generated tasks end with `scripts/task_conventions.py` normalize.
+- The files a task only carries have one copy, in `tasks/`: the privileged reference
+  (`tasks/roboarc-<base>-privileged/solution/trajectory.npz`, both modes), the instance's lock (that task's
+  `tests/runtime_binding.json`), the goal-state images (its `environment/goal/`) and the standard agent Dockerfile.
+  A release that makes a new or changed base writes them under `scripts/roboarc/` (`oracles/<base>/privileged.npz`,
+  `packages/<base>-privileged/runtime_binding.upstream.json`, `packages/<base>-<mode>/environment/goal/`,
+  `packages/<base>-standard/environment/Dockerfile`); the render uses them in place of the task's copy, and they are
+  deleted once the tasks are rendered (`--check` names any copy left).
 - The release files are written by `scripts/robotangle/release_rebuild.py --onto <main>` on dev/robotangle_mujoco
   (its `mujoco_release.json` names each base: a tier through its family's `numbers`, a new design by its key): image,
   instances made in the image, release files, render, checks, Harbor oracle / nop.

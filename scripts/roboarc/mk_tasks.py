@@ -15,7 +15,8 @@ images/<BENCH>/ and docs/benchmarks/<BENCH>.md, and the registration lines liste
 usage: python3 scripts/<BENCH>/mk_tasks.py [--check] [--list] [--assets <dir>] [base ...]
        python3 scripts/<BENCH>/mk_tasks.py --dev <dev.json> --out <dir> base ...
   no base   every base in release.json
-  --check   write nothing; exit 1 if a task would change, or if an identity check fails
+  --check   write nothing; exit 1 if a task would change, if an identity check fails, or if a release's file under
+            this directory is a copy the committed tasks already carry (see below)
   --list    print the bases with their evidence
   --assets  a local copy of the pinned HF dataset (the instances/<base>/ layout): also check the frozen instances' bytes
             against the runtime bindings (without it, the pins in assets.json are compared)
@@ -38,14 +39,27 @@ Inputs, all in this directory, written by scripts/robotangle/release_rebuild.py 
   shared/        the tooling rcb_topogym.py with render_bridge.py and nyx_direct.py (dev/robotangle_mujoco's), the
                  graders, the sim service adapter (server.py, replay.py, finalize.sh), the standard oracle player
   scripts/eai_standard/v2_4/ + scripts/eai_standard/   the eai-standard/2.4 layer, copied unchanged
-  packages/      per task, the upstream texts (task.toml, README.md, instruction.md, Dockerfiles, compose files, test.sh):
-                 the RoboARC base's texts it ports, renamed, with the family's own texts over them for a changed or
-                 new design; and the instance's lock (runtime_binding.upstream.json)
-  oracles/       the references: privileged.npz, used by both modes; standard.npz only where release.json's standard
-                 evidence has "speed_rule" (the reference re-timed to the standard service's joint-speed rule)
+  packages/      per task, the upstream texts the render rewrites (task.toml, README.md, instruction.md, Dockerfiles,
+                 compose files, test.sh): the RoboARC base's texts it ports, renamed, with the family's own texts over
+                 them for a changed or new design
+  oracles/       standard.npz only where release.json's standard evidence has "speed_rule" (the reference re-timed to
+                 the standard service's joint-speed rule; it differs from the privileged reference)
   assets.json    the frozen instances, not in git: the private HF dataset eai-v2-internal/robotangle-assets (the same
                  dataset as RoboARC's, instances/<base>/), pinned by commit and sha256. The image carries them; a task
                  keeps its runtime_binding.json and stages its instance from the image (/opt/robotangle/stage_instance.py).
+The files a task only carries, never rewritten, have one copy, in the committed task dirs (TASKS), read before a render
+replaces them (canon() below):
+  the privileged reference        tasks/<BENCH>-<base>-privileged/solution/trajectory.npz (used by both modes; its sha256
+                                  is release.json's evidence trajectory_sha256)
+  the instance's lock             tasks/<BENCH>-<base>-privileged/tests/runtime_binding.json, without the keys the render
+                                  sets (uipc_builds and the companions' sha256)
+  the goal-state images           tasks/<BENCH>-<base>-privileged/environment/goal/ (both modes)
+  the standard agent Dockerfile   tasks/<BENCH>-<base>-standard/environment/Dockerfile (the render leaves it unchanged)
+A release that makes a new or changed base (release_rebuild.py --onto) writes them under this directory instead
+(oracles/<base>/privileged.npz, packages/<base>-privileged/runtime_binding.upstream.json,
+packages/<base>-<mode>/environment/goal/, packages/<base>-standard/environment/Dockerfile): a file there is used in
+place of the task's copy; once the task dirs are rendered from it, it is deleted (`git rm`; --check names any left), so
+tasks/ holds the only copy.
 Nothing at run time imports repository code: the tooling and the sim layer are copies (PROTOCOL D9).
 """
 from __future__ import annotations
@@ -58,6 +72,12 @@ TASKS = ROOT / "tasks"
 SHARED, PKG, ORC = HERE / "shared", HERE / "packages", HERE / "oracles"
 sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as TC  # noqa: E402  the protocol's conventions: every generator ends with normalize(task_dir)
+
+
+def canon(base: str, mode: str, rel: str, fresh: pathlib.Path) -> pathlib.Path:
+    """A file a task only carries (the docstring's list): `fresh`, a release's new copy under this directory, where there
+    is one, else the committed task's (the repository's tasks/, never the render's output directory)."""
+    return fresh if fresh.exists() else TASKS / f"{BENCH}-{base}-{mode}" / rel
 
 # The agent's time cutoff per mode (PROTOCOL §2.12): this benchmark's own number, written into every task's `[agent]
 # timeout_sec`, the one source; normalize renders from it the instruction's closing `## Time limit`, the README row and
@@ -526,10 +546,11 @@ def flat_words(s: str, fence: bool) -> str:
     return s.replace(FLAT_OLD, new).replace(FOLD_FLAT_OLD, FOLD_FLAT_NEW)
 
 
-def goal_images(up: pathlib.Path, t: pathlib.Path, instruction: str) -> None:
-    """A package's goal-state images: copied into the agent container at /app/goal/ (both modes); the instruction must
-    name each one (an image nobody points to is a mistake)."""
-    goal = up / GOAL_DIR
+def goal_images(up: pathlib.Path, t: pathlib.Path, instruction: str, base: str) -> None:
+    """A base's goal-state images: copied into the agent container at /app/goal/ (both modes); the instruction must
+    name each one (an image nobody points to is a mistake). The privileged task's copy is the canonical one for both
+    modes (canon), a release's new images in the package (packages/<base>-<mode>/environment/goal/) where there are."""
+    goal = canon(base, "privileged", GOAL_DIR, up / GOAL_DIR)
     if not goal.is_dir():
         return
     files = sorted(p for p in goal.iterdir() if p.is_file())
@@ -576,7 +597,7 @@ def row_cap(base: str) -> int:
     up = PKG / f"{base}-privileged"
     budget = verifier_timeout((up / "task.toml").read_text()) - BUILD_ALLOWANCE_S
     cap = min(MAX_STEPS, int(budget / (3 * base_step(base))) // 1000 * 1000)
-    traj = ORC / base / "privileged.npz"
+    traj = privileged_reference(base, REL["bases"][base])
     if traj.is_file():      # the reference trajectory must fit, with room
         with zipfile.ZipFile(traj) as z, z.open("actions.npy") as f:
             f.read(8); n = int.from_bytes(f.read(2), "little"); header = f.read(n).decode("latin1")
@@ -971,10 +992,22 @@ def review_fixes_r2(s: str, base: str, mode: str) -> str:
     return s
 
 
+RENDER_KEYS = ("uipc_builds", "render_bridge_sha256", "nyx_direct_sha256")   # binding keys the render sets after the lock's
+
+
+def upstream_lock(base: str) -> dict:
+    """The instance's lock (instance and asset hashes, creation source, runtime, image): a release's new
+    packages/<base>-privileged/runtime_binding.upstream.json, else the committed privileged task's tests/runtime_binding.json
+    (the canonical one of the task's four copies) without RENDER_KEYS. binding() sets tooling_sha256 and runtime again."""
+    p = canon(base, "privileged", "tests/runtime_binding.json", PKG / f"{base}-privileged" / "runtime_binding.upstream.json")
+    lock = json.loads(p.read_text())
+    return {k: v for k, v in lock.items() if k not in RENDER_KEYS}
+
+
 def binding(base: str, inst_dir: pathlib.Path | None = None, bridge: bool = False, direct: bool = False) -> bytes:
     """The task's runtime binding: the upstream lock (instance and asset hashes) with this release's tooling and runtime.
     The frozen instance must be the pinned one in assets.json; with inst_dir (a local copy), its bytes are checked too."""
-    lock = json.loads((PKG / f"{base}-privileged" / "runtime_binding.upstream.json").read_text())
+    lock = upstream_lock(base)
     pinned = ASSETS["instances"].get(base, {}).get("instance_sha256")
     assert lock["instance_sha256"] == pinned, f"{base}: the bound instance is not the one pinned in assets.json"
     prefix = f"instances/{base}/"
@@ -1209,14 +1242,51 @@ def dev_binding(inst_dir: pathlib.Path, dev: dict, bridge: bool = False, direct:
     return companions(lock, bridge, direct)
 
 
+def evidence_sha(base: str, rec: dict, mode: str, ref: pathlib.Path) -> None:
+    """A reference is the file its evidence names (release.json evidence <mode> trajectory_sha256)."""
+    want = (rec["evidence"].get(mode) or {}).get("trajectory_sha256")
+    assert not want or not ref.is_file() or sha(ref.read_bytes()) == want, \
+        f"{base}: {ref.relative_to(ROOT)} is not the {mode} reference release.json's evidence names"
+
+
+def redundant_copies(base: str) -> list[str]:
+    """--check: a release's file under this directory that the committed tasks already carry (canon: delete it once the
+    tasks are rendered from it), and a standard.npz that is the privileged reference itself (committed only where it
+    differs)."""
+    t = lambda m, rel: TASKS / f"{BENCH}-{base}-{m}" / rel  # noqa: E731
+    same = lambda a, b: a.is_file() and b.is_file() and a.read_bytes() == b.read_bytes()  # noqa: E731
+    pairs = [(ORC / base / "privileged.npz", t("privileged", "solution/trajectory.npz")),
+             (ORC / base / "standard.npz", privileged_reference(base, REL["bases"][base])),
+             (PKG / f"{base}-standard" / "environment/Dockerfile", t("standard", "environment/Dockerfile"))]
+    for m in ("privileged", "standard"):
+        g = PKG / f"{base}-{m}" / GOAL_DIR
+        pairs += [(p, t("privileged", f"{GOAL_DIR}/{p.name}")) for p in sorted(g.glob("*"))] if g.is_dir() else []
+    bad = [f"scripts/{BENCH}/{a.relative_to(HERE)}: the same bytes as {b.relative_to(ROOT)} (git rm it)" for a, b in pairs if same(a, b)]
+    lock, task_lock = PKG / f"{base}-privileged" / "runtime_binding.upstream.json", t("privileged", "tests/runtime_binding.json")
+    if lock.is_file() and task_lock.is_file() and upstream_lock(base) == {k: v for k, v in json.loads(task_lock.read_text()).items()
+                                                                          if k not in RENDER_KEYS}:
+        bad.append(f"scripts/{BENCH}/{lock.relative_to(HERE)}: the lock {task_lock.relative_to(ROOT)} carries (git rm it)")
+    return bad
+
+
+def privileged_reference(base: str, rec: dict) -> pathlib.Path:
+    """The privileged reference, used by both modes (canon): a release's new oracles/<base>/privileged.npz, else the
+    committed privileged task's solution/trajectory.npz."""
+    ref = canon(base, "privileged", "solution/trajectory.npz", ORC / base / "privileged.npz")
+    evidence_sha(base, rec, "privileged", ref)
+    return ref
+
+
 def standard_reference(base: str, rec: dict) -> pathlib.Path:
     """The standard mode's reference: oracles/<base>/standard.npz where there is one (committed only where it differs
     from the privileged one: re-timed to the joint-speed rule, release.json standard evidence "speed_rule"), else the
     privileged reference itself."""
-    std = ORC / base / "standard.npz"
+    std, priv = ORC / base / "standard.npz", privileged_reference(base, rec)
     assert std.is_file() or not (rec["evidence"].get("standard") or {}).get("speed_rule"), \
         f"{base}: the standard evidence has speed_rule, so oracles/{base}/standard.npz (the re-timed reference) is needed"
-    return std if std.is_file() else ORC / base / "privileged.npz"
+    ref = std if std.is_file() else priv
+    evidence_sha(base, rec, "standard", ref)
+    return ref
 
 
 def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, dev: dict | None = None) -> list[pathlib.Path]:
@@ -1240,12 +1310,16 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
         ins = clock_words(r5_words(frame_words(safety_text(ins) if mode == "standard" else ins, f"{t.name}/instruction.md", mode), mode), mode)
         put(t / "instruction.md", live("instruction.md", audit_words(ins, rec, mode, False)).encode())
         for n in ("environment/Dockerfile", "environment/docker-compose.yaml", "tests/Dockerfile", "tests/docker-compose.yaml"):
-            if (up / n).is_file():
-                assert "RCB_MAX_CALL_WALL_S" not in rd(n) and "RCB_MAX_STEPS" not in rd(n), f"{base} {n}: the texts assume the defaults"
-                text_n = limits_env(n, staged(n, gpu_lines(n, image_lines(rd(n))), base), base, mode)
+            # the standard agent Dockerfile, which the render leaves unchanged, is the committed task's (canon)
+            src = canon(base, mode, n, up / n) if (mode, n) == ("standard", "environment/Dockerfile") else up / n
+            assert src.is_file() or (mode, n) != ("standard", "environment/Dockerfile"), f"{base}: no standard {n}"
+            if src.is_file():
+                raw = src.read_text()
+                assert "RCB_MAX_CALL_WALL_S" not in raw and "RCB_MAX_STEPS" not in raw, f"{base} {n}: the texts assume the defaults"
+                text_n = limits_env(n, staged(n, gpu_lines(n, image_lines(raw)), base), base, mode)
                 text_n = text_n.replace("docs/benchmarks/robotangle.md", f"docs/benchmarks/{BENCH}.md")   # the benchmark's page
                 put(t / n, live(n, family_words(n, mujoco_lines(n, text_n, rec) if mujoco else text_n, rec)).encode())
-        goal_images(up, t, (t / "instruction.md").read_text())
+        goal_images(up, t, (t / "instruction.md").read_text(), base)
         put(t / "tests/test.sh", family_words("tests/test.sh", (up / "tests/test.sh").read_text(), rec).encode(), exe=True)
         lock = binding(base, inst_src, mujoco, direct) if dev is None else dev_binding(inst_src, dev, mujoco, direct)
         tool = (SHARED / "rcb_topogym.py").read_bytes()
@@ -1258,7 +1332,7 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
                 for n, b in extra:
                     put(t / d / n, b)
             put(t / "tests/grade.py", (SHARED / "privileged/grade.py").read_bytes())
-            traj = reference or ORC / base / "privileged.npz"
+            traj = reference or privileged_reference(base, rec)
             if traj.is_file():
                 put(t / "solution/trajectory.npz", traj.read_bytes())
                 put(t / "solution/solve.sh", (
@@ -1364,6 +1438,8 @@ def main(argv: list[str]) -> int:
                     if cur.exists():
                         shutil.rmtree(cur)
                     shutil.copytree(t, cur, symlinks=False)
+            if a.check:
+                bad += redundant_copies(b)      # tasks/ is the only copy of what a task only carries (canon)
         known = {f"{BENCH}-{b}-{m}" for b in REL["bases"] for m in ("privileged", "standard")}
         stray = sorted(p.name for p in TASKS.glob(f"{BENCH}-*") if p.name not in known)
         bad += [f"tasks/{n}: not in scripts/roboarc/release.json" for n in stray]
