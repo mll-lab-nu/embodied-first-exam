@@ -15,6 +15,13 @@ from scripts.quadrotor_landing.gen_tasks import BASE, HOSTS, put, snapshot
 
 # images/control-transfer/VERSION: the nominal stage for the agent, the evaluator stage for the sim sidecar
 IMAGE = "ghcr.io/mll-lab-nu/eai-control-transfer:" + (ROOT / "images/control-transfer/VERSION").read_text().strip()
+sys.path.insert(0, str(ROOT / "scripts"))
+import files_image  # noqa: E402  (files-only images: one copy of a file many tasks would each carry)
+# AnyCar's two track data files (6.6 MB a copy): the agent's image takes them from the files-only image
+# images/control-transfer-anycar-files/ (FILES.json; source scripts/control_transfer/components/anycarbench/) instead of
+# a copy in every public/ tree; same files at the same /app paths. The trusted sim/ copies stay (bind-mounted at /srv).
+ANYCAR_FILES = "control-transfer-anycar-files"
+ANYCAR_FROM_IMAGE = ("circuits.json", "compact_routes.json")
 SKYDIO_IMAGE = IMAGE
 # The Neural Fly force surrogate (calibrate_fly.py, staged by images/control-transfer/prepare_assets.py): the evaluator
 # checks the staged file against this digest (a different fit is a different benchmark definition).
@@ -236,6 +243,8 @@ def copy_package(task, where, private, family, visual_profile=None):
                 ]
                 content = ast.unparse(tree) + "\n"
             for prefix in ("", "scripts/control_transfer/components/"):
+                if not private and package == "anycarbench" and relative in ANYCAR_FROM_IMAGE:
+                    continue   # environment/Dockerfile copies it from the files-only image (anycar_copies)
                 put(task, where + "/" + prefix + package + "/" + relative, content)
     if packages:
         put(
@@ -306,6 +315,14 @@ def copy_package(task, where, private, family, visual_profile=None):
                 where + "/nominal_fly.py",
                 (SRC / "neuralfly_nominal.py").read_text(),
             )
+
+
+def anycar_copies(family):
+    """environment/Dockerfile lines that put ANYCAR_FROM_IMAGE where copy_package would have put the public copies."""
+    if family != "anycar":
+        return ""
+    return "".join(files_image.copy_line(ANYCAR_FILES, f, "/app/" + prefix + "anycarbench/" + f) + "\n"
+                   for prefix in ("", "scripts/control_transfer/components/") for f in ANYCAR_FROM_IMAGE)
 
 
 def render(task, name, index):
@@ -387,7 +404,7 @@ def render(task, name, index):
         f"""FROM {image}-{"train" if gpu else "nominal"}
 WORKDIR /app
 COPY public/ /app/
-ENV PYTHONPATH=/app OPENBLAS_NUM_THREADS=1 MUJOCO_GL=osmesa{f" CONTROL_DEPLOY_TIMEOUT_S={limits['request_seconds']}" if bounded_lap else ""}{" NEURALFLY_VISUAL_STYLE=skydio-x2/1" if skydio else ""}
+{anycar_copies(family)}ENV PYTHONPATH=/app OPENBLAS_NUM_THREADS=1 MUJOCO_GL=osmesa{f" CONTROL_DEPLOY_TIMEOUT_S={limits['request_seconds']}" if bounded_lap else ""}{" NEURALFLY_VISUAL_STYLE=skydio-x2/1" if skydio else ""}
 RUN mkdir -p /app/output
 """,
     )
@@ -689,7 +706,7 @@ def main():
         print(json.dumps(track_ids(), indent=2))
         return
     os.umask(0o022)
-    bad = []
+    bad = files_image.check(ANYCAR_FILES)   # the pinned files-only image still carries the sources' bytes
     expected = set()
     for name in TASK_NAMES:
         for i in range(2):
