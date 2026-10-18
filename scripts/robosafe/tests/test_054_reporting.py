@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(HERE))
-sys.dont_write_bytecode = True        # the shared files are read from their canonical task dirs
+sys.dont_write_bytecode = True        # the shared files are read from their one copies (check_release.shared)
 import check_release as CR  # noqa: E402
 import score  # noqa: E402
 

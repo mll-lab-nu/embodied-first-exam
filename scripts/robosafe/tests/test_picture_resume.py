@@ -14,7 +14,7 @@ import types
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-sys.dont_write_bytecode = True        # the shared files are imported from their canonical task dirs
+sys.dont_write_bytecode = True        # the shared files are imported from their one copies (check_release.shared)
 import check_release as CR  # noqa: E402
 STANDARD = CR.sim_dir()
 sys.path.insert(0, str(STANDARD))

@@ -4,12 +4,15 @@
 The rsb-* tasks are a frozen release (check_release.py, release.json) that no generator here re-renders (the privileged
 twins apart: gen_privileged.py). A change to every task is made here instead, by a script:
 
-    python3 scripts/robosafe/sync_release.py           # update tasks/rsb-*, normalize them, rewrite release.json
+    python3 scripts/robosafe/sync_release.py           # update tasks/robosafebench/rsb-*, normalize them, rewrite release.json
     python3 scripts/robosafe/sync_release.py --check   # write nothing; exit 1 if a task would change
 
 1. Code: every .py file and solution/solve.sh of a task is copied from its release's source (check_release.source_of:
-   the file's layer's canonical task, check_release.LAYERS), so that check_release.py's byte-for-byte check holds. A
-   change to a shared file is made in the canonical task first.
+   the file's one copy, check_release.LAYERS), so that check_release.py's byte-for-byte check holds; the files the
+   files-only image images/robosafe-files/ carries (check_release.FROM_IMAGE) are removed from the task, and its
+   environment/Dockerfile and tests/Dockerfile take them with COPY --from lines of the pinned image instead (each name
+   of a plain `COPY <files> <dir>/` that is one of them becomes its own line, at the same container path). A change to
+   a shared file is made in its one copy first.
 2. Text: EDITS, dated changes of task.toml, README.md, instruction.md and tests/Dockerfile (each an exact old -> new
    pair). A file that has the new text is left as it is, one with the old text gets the new, one with neither fails:
    the edit no longer fits the release and is made by hand in this table, never in the tasks.
@@ -137,8 +140,35 @@ def apply_edits(name: str, text: str, where: str, edits=None) -> str:
     return text
 
 
+def dockerfile(text: str, lines: list) -> str:
+    """The Dockerfile with the files image's files taken from it (lines: their COPY --from lines, copy_line): a plain
+    `COPY <files> <dir>/` loses each name whose <dir>/<name> one of the lines writes, which follows it instead; a COPY
+    --from line of the image already there is re-pinned (the line for its container path)."""
+    by_dest = {line.split()[-1]: line for line in lines}
+    out = []
+    for line in text.splitlines(keepends=True):
+        if check_release.image_lines(line):
+            out.append(by_dest.get(line.split()[-1], line.rstrip("\n")) + "\n")
+            continue
+        m = re.fullmatch(r"COPY((?:\s+[^\s-]\S*)+)\s+(/\S*/)\n?", line)
+        moved = [f for f in m.group(1).split() if m.group(2) + f in by_dest] if m else []
+        if not moved:
+            out.append(line)
+            continue
+        rest = [f for f in m.group(1).split() if f not in moved]
+        out += ([f"COPY {' '.join(rest)} {m.group(2)}\n"] if rest else []) + [by_dest[m.group(2) + f] + "\n" for f in moved]
+    return "".join(out)
+
+
 def update(task: pathlib.Path, release: str) -> None:
     """Steps 1 and 2 on one task directory (in place)."""
+    for rel in check_release.image_copies(task, release):
+        (task / rel).unlink(missing_ok=True)
+    for ctx, lines in check_release.copy_lines(task, release).items():
+        p = task / ctx / "Dockerfile"
+        text = p.read_text()
+        if dockerfile(text, lines) != text:
+            p.write_text(dockerfile(text, lines))
     for rel in check_release.tracked(task):
         src = check_release.source_of(task, rel, release)
         if src is None:
@@ -163,7 +193,7 @@ def main(argv: list[str]) -> int:
     changed = []
     with tempfile.TemporaryDirectory() as td:
         for name, rec in sorted(rel.items()):
-            task = ROOT / "tasks" / name
+            task = check_release.TASKS / name
             if check_release.privileged(task):    # gen_privileged.py renders and checks these, next to their twins
                 continue
             tmp = pathlib.Path(td) / name

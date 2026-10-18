@@ -9,7 +9,7 @@ report -> ee_pose); the rest are the edge cases of the rule: rows that are not m
 they were planned for, the new chunk's rows from that step on one control step later per kept row; a kept exit ends
 the episode at its step; motion rows are still replaced.
 
-The service runs in this process on a real frozen instance (tasks/rsb-c05-i01-standard-realtime: d_spill_toward_strip),
+The service runs in this process on a real frozen instance (tasks/robosafebench/rsb-c05-i01-standard-realtime: d_spill_toward_strip),
 its clock stepped tick by tick, so nothing depends on the host's speed (no wall clock).
 Needs the simulator (RoboSafeBench with the external-clock hooks, MuJoCo, OSMesa): run it in the eai-robosafebench image:
     python scripts/robosafe/tests/test_kept_rows.py [-v]

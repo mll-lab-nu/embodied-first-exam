@@ -147,7 +147,7 @@ def rows_from_jobs(dirs: list[pathlib.Path]) -> list[dict]:
 
 def rows_from_baselines(name: str) -> list[dict]:
     fams = families()
-    tasks = HERE.parents[1] / "tasks"
+    tasks = HERE.parents[1] / "tasks/robosafebench"
     rows = []
     baselines = json.loads((HERE / "baselines.json").read_text())
     for task, f in fams.items():
