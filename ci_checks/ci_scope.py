@@ -79,10 +79,10 @@ UNITS: dict[str, list[str]] = {
                          "docs/benchmarks/roboengineer", "docs/benchmarks/control-transfer.md",
                          "docs/benchmarks/quadrotor-landing.md"),
 }
-# the benchmark's shared task code, embodied_first_exam/<folder>/ (embodied_first_exam/README.md): the folder of its
+# the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md): the folder of its
 # task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)
 for _label, _folder in tc.BENCHMARK_DIRS.items():
-    UNITS.setdefault(_label, []).append(f"embodied_first_exam/{_folder}/")
+    UNITS.setdefault(_label, []).append(f"embodied_first_exam/benchmarks/{_folder}/")
 # changes that no check reads: they need only the repo-level checks (which always run). Everything not listed here and
 # not a benchmark's own path runs the full suite.
 NO_TASK_EFFECT = ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "docs/protocol/running.md",

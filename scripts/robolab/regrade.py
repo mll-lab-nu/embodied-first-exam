@@ -11,7 +11,7 @@ finds every RoboLab trial under JOBS_DIR (a Harbor jobs tree), takes its recorde
 artifacts/app/output/trajectory.npz; standard: the sidecar's verifier/trajectory.npz or artifacts/data/trajectory.npz,
 else artifacts/data/journal.f64) and its recorded verdict (verifier/reward.json `success`), and replays each one in a
 FRESH Isaac process (on Isaac only the first replay of a process is exact) with the current tooling
-(embodied_first_exam/robolab/rcb_robolab.py, the source of the files-only image the privileged tasks take it from) and the
+(embodied_first_exam/benchmarks/robolab/rcb_robolab.py, the source of the files-only image the privileged tasks take it from) and the
 task's frozen instance (tasks/robolab/robolab-<family>-i00-privileged/tests/instance.json). It reports
   old_verdict  whether RoboLab's upstream term with the one-finger contact (upstream's "gripper" = the left inner finger)
                held at some control step of the recorded rows: the verdict before 2026-10-14;
@@ -188,7 +188,7 @@ def main() -> int:
             return dict(t, error=f"no task {tests.parent.name}")
         with tempfile.TemporaryDirectory(prefix="rl_regrade_") as td:
             src = pathlib.Path(t["traj"]); dst = pathlib.Path(td) / f"traj{src.suffix}"; dst.write_bytes(src.read_bytes())
-            vols = ["-v", f"{td}:/w", "-v", f"{tests}:/tests:ro", "-v", f"{ROOT / 'embodied_first_exam/robolab'}:/tool:ro",
+            vols = ["-v", f"{td}:/w", "-v", f"{tests}:/tests:ro", "-v", f"{ROOT / 'embodied_first_exam/benchmarks/robolab'}:/tool:ro",
                     "-v", f"{pathlib.Path(__file__).resolve()}:/regrade.py:ro"]
             if a.cache_volume:
                 vols += ["-v", f"{a.cache_volume}:/cache"]

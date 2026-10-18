@@ -27,7 +27,7 @@ supplementary tasks for harder testing (below), which have neither yet.
   to 15× slower).
 
 ## Tasks and generator
-- Shared task code: `embodied_first_exam/behavior-1k/` is the one source of the tooling and the graders
+- Shared task code: `embodied_first_exam/benchmarks/behavior-1k/` is the one source of the tooling and the graders
   (`rcb_behavior.py`, `r1pro_primitives_eval.yaml`, `privileged/grade.py`, `standard/grade.py`), built into the files
   image `images/behavior-files/`. The task Dockerfiles take them with `COPY --from=<image@digest>`: the privileged agent
   image at `/opt/tools/`, both modes' verifier images at `/tests/` (`grade.py`, and the privileged one's tooling and robot
