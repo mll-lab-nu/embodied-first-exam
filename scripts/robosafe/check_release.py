@@ -3,7 +3,7 @@
 
 From 0.5.4 the served set mixes two frozen releases: the 0.5.4 selection (exported from RoboSafeBench's own release
 tooling, which this repository does not carry, so gen_tasks.py / gen_realtime.py cannot re-render it) and the 0.5.3
-tasks, kept out of the core set. This check stands in for the generators' check mode (ci_checks/check-generated-tasks.sh):
+tasks, kept out of the core set (apart from `rsb-c04-i00-standard`). This check stands in for the generators' check mode (ci_checks/check-generated-tasks.sh):
     python3 scripts/robosafe/check_release.py check    # standard library only
     python3 scripts/robosafe/check_release.py write    # after a deliberate task change: rewrite release.json
 It checks that the rsb-* directories are exactly release.json's tasks; that each task's DIGEST is its recomputed digest
@@ -70,7 +70,10 @@ def problems() -> list:
             bad.append(f"{name}: compose image {f['images']}, expected {IMAGE.get(rec['release'])}")
     # the release's own split: a base with no 0.5.4 task is never in the core set (docs/core_set.toml); a 0.5.4 base
     # may be out of it (solved by the reference run)
-    core = tc.core_set()
+    try:
+        core = tc.core_set()
+    except (ValueError, OSError) as e:
+        return bad + [f"docs/core_set.toml: {e}"]
     by_base = {}
     for name, rec in want.items():
         by_base.setdefault(tc.base_of(pathlib.Path(name)), {})[name] = rec["release"]

@@ -203,7 +203,7 @@ By directory: 38 easy, 1 hard, 19 unverified, 0 pending.
 | `robocasa-coffee-press-button-i00` | easy: Luna | easy: Luna |
 | `robocasa-coffee-serve-mug-i00` | easy: Luna | unverified |
 | `robocasa-coffee-setup-mug-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B | easy: Opus, Sol 6.1 |
-| `robocasa-microwave-thawing-i00` | easy: Astra, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) |
+| `robocasa-microwave-thawing-i00` | easy: Luna, Astra, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) |
 | `robocasa-open-double-door-i00` | easy: Luna | unverified |
 | `robocasa-open-drawer-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
 | `robocasa-open-single-door-i00` | easy: Luna | unverified |

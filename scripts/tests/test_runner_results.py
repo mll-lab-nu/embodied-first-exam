@@ -232,6 +232,29 @@ def test_core_set():
     check(not tc.check_core_set(), f"docs/core_set.toml: {tc.check_core_set()[:3]}")   # this test is in run_invariants.sh
     names = sorted(p.name for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
     cs = tc.core_set()
+    def entry(t, **k):                                   # a valid entry for task dir t, with the fields in k changed
+        d = ROOT / "tasks" / t
+        f = {"task": t, "base": tc.base_of(d), "benchmark": tc.bench_of(d), "mode": tc.mode_of(d), "luna": "failed", **k}
+        return "[[task]]\n" + "".join(f'{n} = "{v}"\n' for n, v in f.items())
+    ANY = sorted(cs)[0]
+    with tempfile.TemporaryDirectory() as td:
+        sha = 'generated_from = "' + "0" * 40 + '"\n'
+        bad = Path(td) / "core_set.toml"
+        bad.write_text(sha + entry("behavior-no-such-task-i00-standard") + entry(ANY, luna="solved", mode="x")
+                       + entry(sorted(cs)[1], extra="x") + entry("../tasks/" + ANY))
+        found = tc.check_core_set(path=bad)
+        check(len(found) == 5, f"check_core_set: want a missing dir, a wrong mode, a bad luna, an unknown field and a path, got {found}")
+        # a new file each (the list is parsed once per mtime)
+        (Path(td) / "nosha.toml").write_text(entry(ANY))
+        check(any("generated_from" in x for x in tc.check_core_set(path=Path(td) / "nosha.toml")),
+              "a list without generated_from passes")
+        (Path(td) / "twice.toml").write_text(sha + entry(ANY) + entry(ANY))
+        check(any("twice" in x for x in tc.check_core_set(path=Path(td) / "twice.toml")), "a dir listed twice is not found")
+        check(tc.check_core_set(path=Path(td) / "none.toml") != [], "a missing list passes")
+        (Path(td) / "badsha.toml").write_text('generated_from = "abc"\n' + entry(ANY))
+        check(any("generated_from" in x for x in tc.check_core_set(path=Path(td) / "badsha.toml")), "a short generated_from passes")
+        (Path(td) / "toplevel.toml").write_text(sha + 'generated_frm = "x"\n' + entry(ANY))
+        check(any("top-level" in x for x in tc.check_core_set(path=Path(td) / "toplevel.toml")), "an unknown top-level key passes")
     # a listed standard dir and an unlisted one in the same configuration (one summary table); the list changes over
     # time, so both are looked up
     key = functools.lru_cache(maxsize=None)(lambda t: tc.config_key(tc.effective_config(ROOT / "tasks" / t)))
@@ -251,24 +274,7 @@ def test_core_set():
     a, b = tc.effective_config(ROOT / "tasks" / IN), tc.effective_config(ROOT / "tasks" / OUT)
     check(a.get("set") == "core" and b.get("set") == "excluded", f"effective_config set: {a.get('set')}, {b.get('set')}")
     check(tc.config_key(a) == tc.config_key(dict(a, set="excluded")), "the set is part of config_key")
-    def entry(t, **k):                                   # a valid entry for task dir t, with the fields in k changed
-        d = ROOT / "tasks" / t
-        f = {"task": t, "base": tc.base_of(d), "benchmark": tc.bench_of(d), "mode": tc.mode_of(d), "luna": "failed", **k}
-        return "[[task]]\n" + "".join(f'{n} = "{v}"\n' for n, v in f.items())
     with tempfile.TemporaryDirectory() as td:
-        sha = 'generated_from = "' + "0" * 40 + '"\n'
-        bad = Path(td) / "core_set.toml"
-        bad.write_text(sha + entry("behavior-no-such-task-i00-standard") + entry(IN, mode="privileged", luna="solved")
-                       + entry(OUT, extra="x"))
-        found = tc.check_core_set(path=bad)
-        check(len(found) == 4, f"check_core_set: want a missing dir, a wrong mode, a bad luna and an unknown field, got {found}")
-        # a new file each (the list is parsed once per mtime)
-        (Path(td) / "nosha.toml").write_text(entry(IN))
-        check(any("generated_from" in x for x in tc.check_core_set(path=Path(td) / "nosha.toml")),
-              "a list without generated_from passes")
-        (Path(td) / "twice.toml").write_text(sha + entry(IN) + entry(IN))
-        check(any("twice" in x for x in tc.check_core_set(path=Path(td) / "twice.toml")), "a dir listed twice is not found")
-        check(tc.check_core_set(path=Path(td) / "none.toml") != [], "a missing list passes")
         jobs = Path(td) / "jobs"
         make_trial(jobs, "bx-standard-a", "e1", OUT, "2026-10-14T01:00:00Z", {"success": 1})
         make_trial(jobs, "bx-standard-a", "c1", IN, "2026-10-14T02:00:00Z", {"success": 0})
