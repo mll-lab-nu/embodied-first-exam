@@ -22,7 +22,7 @@
 #    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
 #    byte-identical to their one source, scripts/humanoidbench/shared/realtime/ (docs/protocol/standard_mode.md,
 #    "Standard-realtime mode"), and so is every other copy of that source under scripts/*/shared/realtime/ and
-#    embodied_first_exam/*/realtime/.
+#    embodied_first_exam/benchmarks/*/realtime/.
 # 4. The benchmarks whose generators have no check mode (review round 3, M6: a hand edit of one task with a refreshed
 #    digest passed every check): DexToolBench and the MuJoCo Playground tasks that serve the same service (ALOHA, Panda;
 #    scripts/dtb_mk_task.py, mj_mk_limited.py), MetaWorld+ (scripts/metaworldplus/generate.py) and RoboTwin 2.0
@@ -122,9 +122,9 @@ RT_LAYER = {"environment/sim/rcb_realtime.py": "rcb_realtime.py", "environment/r
 rt_canon = {f: sha(os.path.join(RT_SRC, f)) for f in set(RT_LAYER.values()) if os.path.isfile(os.path.join(RT_SRC, f))}
 n_rt = 0
 scripts_dir = os.path.dirname(src)
-efe_dir = os.path.join(os.path.dirname(scripts_dir), "embodied_first_exam")   # a benchmark's shared task code
+efe_dir = os.path.join(os.path.dirname(scripts_dir), "embodied_first_exam", "benchmarks")   # a benchmark's shared task code
 copies = [(f"scripts/{b}/shared/realtime", os.path.join(scripts_dir, b, "shared", "realtime")) for b in sorted(os.listdir(scripts_dir))]
-copies += [(f"embodied_first_exam/{b}/realtime", os.path.join(efe_dir, b, "realtime"))
+copies += [(f"embodied_first_exam/benchmarks/{b}/realtime", os.path.join(efe_dir, b, "realtime"))
            for b in (sorted(os.listdir(efe_dir)) if os.path.isdir(efe_dir) else [])]
 for name, d in copies:
     for f in sorted(rt_canon):

@@ -13,12 +13,12 @@ that the core set (docs/core_set.toml) lists no task of a base with no 0.5.4 tas
 kept out of git (scripts/robosafe/assets.json) are the ones images/robosafe/context/robosafe-src.sha256 lists; and that
 each task's service, grader and solution helpers are byte for byte its release's (shared_problems).
 
-Each shared file has one copy (LAYERS, by layer): embodied_first_exam/robosafebench/<layer>/<name>, the benchmark's shared
+Each shared file has one copy (LAYERS, by layer): embodied_first_exam/benchmarks/robosafebench/<layer>/<name>, the benchmark's shared
 task code, or, for a layer other benchmarks share (rcb1.py, the realtime clock and client), its source in scripts/.
 The files outside environment/sim/ that many tasks would each carry (the paused standard client, the graders, the
 privileged tooling and scrub, and the standard service's rcb_rsb.py / candidate_identity.py the privileged images also
 take; IMG) are in the files-only image images/robosafe-files/ (private, like eai-robosafe), built from
-embodied_first_exam/robosafebench/: a task's environment/Dockerfile and tests/Dockerfile take them with
+embodied_first_exam/benchmarks/robosafebench/: a task's environment/Dockerfile and tests/Dockerfile take them with
 `COPY --from=<image@digest>` to the same container paths (FROM_IMAGE), and the task directory holds no copy. Every
 other shared file (the sim service, the oracle drivers and helpers, the privileged test.sh and solution; EFE) is copied
 into the tasks, and each copy must equal its one copy. The 0.5.4 layers: `standard` (a paused task: the service, the
@@ -106,7 +106,7 @@ def problems() -> list:
 
 
 SIM = "environment/sim/"
-SRC = ROOT / "embodied_first_exam" / "robosafebench"   # the one copy of the benchmark's shared task code: <layer>/<name>
+SRC = ROOT / "embodied_first_exam" / "benchmarks" / "robosafebench"   # the one copy of the benchmark's shared task code: <layer>/<name>
 IMG, EFE = "files image", "embodied_first_exam"   # LAYERS: in SRC and in the files image / in SRC, copied into the tasks
 FILES = "robosafe-files"              # images/robosafe-files/FILES.json: the image that carries the IMG files (files_image.py)
 # the canonical task of each layer: a task of that release and kind, whose environment/sim/ the unit tests import
@@ -141,7 +141,7 @@ FROM_IMAGE = {
 
 
 def shared(layer: str, name: str) -> pathlib.Path:
-    """The one copy of a shared file: embodied_first_exam/robosafebench/<layer>/<name> (also the files image's source), or
+    """The one copy of a shared file: embodied_first_exam/benchmarks/robosafebench/<layer>/<name> (also the files image's source), or
     the shared layer's source in scripts/."""
     v = LAYERS[layer][name]
     return SRC / layer / name if v in (IMG, EFE) else ROOT / v
@@ -235,7 +235,7 @@ def canon_problems(want: dict) -> list:
 
 
 def files_problems() -> list:
-    """embodied_first_exam/robosafebench/ is the IMG and EFE files of LAYERS; FILES.json pins the IMG ones
+    """embodied_first_exam/benchmarks/robosafebench/ is the IMG and EFE files of LAYERS; FILES.json pins the IMG ones
     (files_image.check); normalize's text rules leave them as they are (the files image's have no task copy for
     normalize to rewrite)."""
     import shutil
