@@ -37,10 +37,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402  (BENCHMARKS: (task dir prefix, label); bench_of)
 
 # label -> the benchmark's own path prefixes besides tasks/<prefix>. Default for a label not listed with a key here:
-# none (full suite). `d` = the directory name under scripts/ (and images/, docs/benchmarks/<d>.md, and the shared task
-# code embodied_first_exam/<d with - as _>/).
+# none (full suite). `d` = the directory name under scripts/ (and images/, docs/benchmarks/<d>.md).
 def _own(d: str, *extra: str) -> list[str]:
-    return [f"scripts/{d}/", f"images/{d}/", f"docs/benchmarks/{d}.md", f"embodied_first_exam/{d.replace('-', '_')}/", *extra]
+    return [f"scripts/{d}/", f"images/{d}/", f"docs/benchmarks/{d}.md", *extra]
 
 
 UNITS: dict[str, list[str]] = {
@@ -80,6 +79,10 @@ UNITS: dict[str, list[str]] = {
                          "docs/benchmarks/roboengineer", "docs/benchmarks/control-transfer.md",
                          "docs/benchmarks/quadrotor-landing.md"),
 }
+# the benchmark's shared task code, embodied_first_exam/<folder>/ (embodied_first_exam/README.md): the folder of its
+# task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)
+for _label, _folder in tc.BENCHMARK_DIRS.items():
+    UNITS.setdefault(_label, []).append(f"embodied_first_exam/{_folder}/")
 # changes that no check reads: they need only the repo-level checks (which always run). Everything not listed here and
 # not a benchmark's own path runs the full suite.
 NO_TASK_EFFECT = ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "docs/protocol/running.md",

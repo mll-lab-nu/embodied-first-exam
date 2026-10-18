@@ -14,7 +14,7 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   joining `tasks/` and a name). Nothing at run time imports repository code outside the task
   directory; shared sources are copied in by generators. Reference tasks: `tasks/robotwin-2/robotwin_2_0_stack_blocks_two-privileged/` and its
   standard-mode twin `tasks/robotwin-2/robotwin_2_0_stack_blocks_two-standard/`.
-- `embodied_first_exam/<benchmark>/`: the single source of the code a benchmark's tasks share (tooling, graders, service
+- `embodied_first_exam/<benchmark>/` (the same folder name as `tasks/<benchmark>/`): the single source of the code a benchmark's tasks share (tooling, graders, service
   adapter; `embodied_first_exam/README.md`). Its tasks get it from a files-only image (`scripts/files_image.py`,
   `images/<name>/FILES.json`): the tasks' Dockerfiles `COPY --from=<image@digest>` each file to the path a copy would have
   had (the generator's check fails when the sources and FILES.json disagree).
