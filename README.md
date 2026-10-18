@@ -9,7 +9,7 @@ simulator), a standard mode (robot as a service) and, for dynamic tasks, a stand
 ## Quick start
 
 ```bash
-git clone --recurse-submodules git@github.com:mll-lab-nu/embodied-first-eaxm.git && cd embodied-first-eaxm
+git clone --recurse-submodules git@github.com:mll-lab-nu/embodied-first-exam.git && cd embodied-first-exam
 uv tool install harbor==0.23.0
 cp .env.example .env                             # API keys, or a Claude / ChatGPT subscription login
 
@@ -78,9 +78,8 @@ upstream experts and the contents of the base images keep their own licenses.
 ```bibtex
 @misc{embodiedfirstexam2026,
   title        = {Embodied First Exam},
-  author       = {Wang, Kangrui and others},
   year         = {2026},
   howpublished = {\url{https://embodied-first-exam.ai}},
-  note         = {\url{https://github.com/mll-lab-nu/embodied-first-eaxm}}
+  note         = {\url{https://github.com/mll-lab-nu/embodied-first-exam}}
 }
 ```
