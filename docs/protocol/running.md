@@ -84,9 +84,9 @@ every core task, the flag is shown as a marker and may be used as a filter. The 
 solved in every mode by the screening runs) and minus the dirs the reference run codex-gpt6_luna-xhigh solved (a success
 in any mode takes out the base; a RoboSafeBench privileged twin, reported apart, takes out only itself). A dir left out
 stays out. The list is regenerated from the reference run's verdicts: a task dir added after `generated_from` is run by
-the reference run and enters the list at the next regeneration unless that run solved it. Tasks outside the core set stay
-in the repository under their names and are not evaluated by official runs; results they already have are kept and shown
-marked (the batch summary marks them in their configuration's table and leaves them out of its rate). `set` in
+the reference run and enters the list at the next regeneration unless that run solved it (until then `set_of` marks it
+`excluded`). Task dirs the list left out stay in the repository under their names and are not evaluated by official runs;
+results they already have are kept and shown marked (the batch summary marks them in their configuration's table and leaves them out of its rate). `set` in
 `config.json` is the value when the result was written; a report derives it from `docs/core_set.toml` at the commit it
 publishes. The reference run's core-set success rate is close to 0 by construction, so report that run on all tasks
 alongside.
