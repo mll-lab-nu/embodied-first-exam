@@ -3,12 +3,12 @@
 
 From 0.5.4 the served set mixes two frozen releases: the 0.5.4 selection (exported from RoboSafeBench's own release
 tooling, which this repository does not carry, so gen_tasks.py / gen_realtime.py cannot re-render it) and the 0.5.3
-tasks kept as the easy set. This check stands in for the generators' check mode (ci_checks/check-generated-tasks.sh):
+tasks, kept out of the core set. This check stands in for the generators' check mode (ci_checks/check-generated-tasks.sh):
     python3 scripts/robosafe/check_release.py check    # standard library only
     python3 scripts/robosafe/check_release.py write    # after a deliberate task change: rewrite release.json
 It checks that the rsb-* directories are exactly release.json's tasks; that each task's DIGEST is its recomputed digest
 (scripts/task_conventions.py) and the recorded one; that its compose image is its release's image (and `robosafe_version` 0.5.4 exactly for the 0.5.4 release);
-that the easy set (docs/easy_set.toml) holds every base with no 0.5.4 task and no base with one (apart from `solved_by` entries); and that the files
+that the core set (docs/core_set.toml) lists no task of a base with no 0.5.4 task; and that the files
 kept out of git (scripts/robosafe/assets.json) are the ones images/robosafe/context/robosafe-src.sha256 lists; and that
 each task's service, grader and solution helpers are byte for byte its release's (shared_problems): the 0.5.4 tasks'
 the ones in scripts/robosafe/shared/, the 0.5.3 tasks' those in scripts/robosafe/shared-0.5.3/ (the 0.5.3 adapter,
@@ -68,17 +68,15 @@ def problems() -> list:
             bad.append(f"{name}: robosafe_version {f['robosafe_version']!r}, release {rec['release']!r}")
         if f["images"] != [IMAGE.get(rec["release"])]:
             bad.append(f"{name}: compose image {f['images']}, expected {IMAGE.get(rec['release'])}")
-    # the release's own split: 0.5.3 bases easy, 0.5.4 core; a 0.5.4 base may also be easy as solved by a reference run
-    # (`solved_by`, owner 10-17, board 0155), which this check leaves alone
-    es = {b: e for b, e in tc.easy_set().items() if e.get("benchmark") == "RoboSafeBench"}
-    easy = {b for b, e in es.items() if not e.get("solved_by")}
+    # the release's own split: a base with no 0.5.4 task is never in the core set (docs/core_set.toml); a 0.5.4 base
+    # may be out of it (solved by the reference run)
+    core = tc.core_set()
     by_base = {}
     for name, rec in want.items():
-        by_base.setdefault(tc.base_of(pathlib.Path(name)), set()).add(rec["release"])
-    for base, releases in sorted(by_base.items()):
-        if ("0.5.4" in releases) == (base in easy):
-            bad.append(f"{base}: {'in' if base in easy else 'not in'} the easy set, releases {sorted(releases)}")
-    bad += [f"{b}: in the easy set but no rsb-* task has this base" for b in sorted(set(es) - set(by_base))]
+        by_base.setdefault(tc.base_of(pathlib.Path(name)), {})[name] = rec["release"]
+    for base, dirs in sorted(by_base.items()):
+        if "0.5.4" not in dirs.values():
+            bad += [f"{n}: in the core set, but its base has no 0.5.4 task" for n in sorted(dirs) if n in core]
     bad += [p for name in sorted(set(have) & set(want)) for p in shared_problems(have[name], want[name]["release"])]
     bad += assets_problems()
     return bad

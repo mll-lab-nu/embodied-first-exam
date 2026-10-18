@@ -1,13 +1,17 @@
-# The core set: the task dirs the headline statistics are computed on. Every task dir on main, minus the easy set
-# (docs/easy_set.toml) and minus the dirs the reference run codex-gpt6_luna-xhigh solved. Each mode dir (-privileged,
-# -standard, -standard-realtime) is its own task. A Luna success in any mode of a base takes out the whole base,
-# except a RoboSafeBench privileged twin, which takes out only itself (reported apart).
+# The core set: the task dirs the headline statistics are computed on (PROTOCOL §4). Each mode dir (-privileged,
+# -standard, -standard-realtime) is its own task. Left out: the tasks judged easy (solved through a shortcut, judged too
+# easy by the benchmark owner, or solved in every mode by the screening runs) and the dirs the reference run
+# codex-gpt6_luna-xhigh solved (a success in any mode takes out the base; a RoboSafeBench privileged twin takes out only
+# itself). A dir left out stays out. `generated_from` is the commit of main whose task dirs this list classified: a task
+# dir added after it is not classified until the list is regenerated from the eval pool's Luna verdicts.
 #   task       the task dir
 #   base       the task name without its mode suffix
 #   benchmark  the base's label (scripts/task_conventions.py BENCHMARKS)
 #   mode       privileged | standard | standard-realtime
 #   luna       "failed" (Luna's valid verdict) or "no result yet"
-# Regenerated from the eval pool's Luna verdicts; checked by `python3 scripts/task_conventions.py core-set --check`.
+# Checked by `python3 scripts/task_conventions.py core-set --check`.
+
+generated_from = "f5e97166032b1cd9112215197580cab878d8396f"
 
 # ---- BEHAVIOR-1K
 
