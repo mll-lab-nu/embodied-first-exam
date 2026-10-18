@@ -19,6 +19,8 @@ Ends with scripts/task_conventions.normalize, like every generator. Inputs (all 
   evidence.json  per task, the Harbor oracle / nop checks (scripts/robotangle/harbor_check.py style records) and the
                  measured replay wall time, which sets the verifier's timeout
   shared/        rcb_ikea.py (the agent's tooling and the replay), grade.py (the verifier), copied unchanged (PROTOCOL D9)
+  references     kept in tasks/ only: a task's solution/trajectory.npz is its standard twin's solution/oracle_actions.npz
+                 (closed_loop_ref, shared_ref); oracles/<task>/ holds how the closed-loop ones were built
 """
 from __future__ import annotations
 import argparse, filecmp, hashlib, json, pathlib, re, shutil, sys, tempfile
@@ -74,7 +76,8 @@ def task_dir(t: str, mode: str = "privileged") -> pathlib.Path:
 
 
 # Closed-loop references (built phase by phase on the final physics with true-state feedback, recorded as the executed
-# rows; scripts/ikea_mujoco/oracles/<task>/): the task's one reference for both modes. task -> words for the README.
+# rows; the build scripts are in scripts/ikea_mujoco/oracles/<task>/): the task's one reference for both modes, kept in
+# tasks/ only (closed_loop_ref). task -> words for the README.
 CLOSED_LOOP = {
     "eket": ("a closed-loop reference built on the final physics by `scripts/ikea_mujoco/oracles/eket/build_ref.py`: the "
              "demo as the phase guide, each held panel servoed onto the unclamped demo's recorded relative-pose track "
@@ -102,7 +105,7 @@ CLOSED_LOOP = {
 
 
 # A task's one reference for both modes that is not a closed-loop build (e.g. the author's speed-limited demo, unchanged,
-# or a demo time-dilated to the joint-speed limits), kept at scripts/ikea_mujoco/oracles/<task>/<task>.npz. task -> words.
+# or a demo time-dilated to the joint-speed limits), kept in tasks/ only (closed_loop_ref). task -> words.
 OWN_REFS: dict = {
     "stegesund": ("the author's speed-limited demo (`stegesund_vlim`), unchanged (`scripts/ikea_mujoco/oracles/stegesund/`): "
                   "every row is within the joint-speed limits (from the keyframe ctrl; the largest step is the limit itself), "
@@ -115,12 +118,18 @@ def ref_words(t: str):
 
 
 def closed_loop_ref(t: str):
-    """The task's own reference file (CLOSED_LOOP or OWN_REFS), None if it has none."""
+    """The task's own reference file (CLOSED_LOOP or OWN_REFS), None if it has none. A new reference is dropped in as
+    scripts/ikea_mujoco/oracles/<task>/<task>_ref.npz or <task>.npz (wip/oracles/<task>/ for a WIP task) and taken from
+    there while it exists; otherwise the canonical copy is the standard twin's solution/oracle_actions.npz in tasks/ (the
+    privileged solution/trajectory.npz is the same file). Once both twins are rendered the dropped-in file is not kept."""
+    if not ref_words(t):
+        return None
     for d in (HERE / "oracles" / t, HERE / "wip" / "oracles" / t):      # a WIP task's reference lives under wip/oracles/
       for f in (d / f"{t}_ref.npz", d / f"{t}.npz"):
-        if ref_words(t) and f.is_file():
+        if f.is_file():
             return f
-    return None
+    f = task_dir(t, "standard") / "solution/oracle_actions.npz"
+    return f if f.is_file() else None
 
 
 TAILS = {  # task -> what its reference's release tail (scripts/ikea_mujoco/tails/<task>.npy) does; the demo ended holding a part

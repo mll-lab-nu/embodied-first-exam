@@ -51,8 +51,11 @@ Four more scenes are in the image (`/opt/ikea/scenes/`) but are not tasks: no re
   - `standard/`: the sim service (`server.py`, `ikea_rig.py`, `ikea_nyx.py` with RoboARC's `nyx_direct.py`,
     `finalize.sh`), its grader (`grade.py`: transcribes the live episode's `final.json`) and the oracle client,
     `rigs.json` (camera rigs), `std_reference.py`;
-  - `oracles/<task>/`: the closed-loop references and how they were built (eket, ikea365, vesken) and stegesund's
-    reference; `tails/variera.npy`: variera's release tail;
+  - `oracles/<task>/`: how the closed-loop references were built (eket, ikea365, vesken) and stegesund's reference
+    notes; the references themselves are kept in the task directories only (the standard
+    `solution/oracle_actions.npz`, which the privileged `solution/trajectory.npz` is a copy of; a new one dropped in
+    as `oracles/<task>/<task>_ref.npz` or `<task>.npz` is taken while it exists); `tails/variera.npy`: variera's
+    release tail;
   - `provenance.json`: the scenes' upstream provenance, kept out of the image (PROTOCOL Appendix H.2);
   - `tests/test_grade.py`: the privileged grader's crash handling on a stub replay, then `tests/test_standard_grade.py`:
     the standard hook and grader on synthetic `final.json` / `episode.json` (live success, live failure, settle failure,
@@ -138,7 +141,7 @@ Each task has one reference for both modes, every row within the joint-speed lim
 - lack: the authors' demo passed through the clamp;
 - svallet, gladom, variera: the demo time-dilated or centred to the limits (`standard/std_reference.py`); variera's
   demo ended holding the screwdriver, so a 240-row release tail is appended;
-- eket, ikea365, vesken: closed-loop references built on the final physics (`oracles/<task>/`): the demo as the phase
+- eket, ikea365, vesken: closed-loop references built on the final physics (build scripts in `oracles/<task>/`): the demo as the phase
   guide, with true-state feedback (Jacobian-IK servos, gates, local searches), recorded as the executed rows;
 - stegesund: the authors' speed-limited demo, unchanged.
 

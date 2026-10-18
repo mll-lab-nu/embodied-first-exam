@@ -544,7 +544,7 @@ def render(t: str, out: pathlib.Path, refs: pathlib.Path | None) -> None:
             (out / rel).chmod(0o755)
     acts = out / "solution/oracle_actions.npz"
     src = refs / f"{t}.npz" if refs is not None and (refs / f"{t}.npz").is_file() else P.task_dir(t, "standard") / "solution/oracle_actions.npz"
-    if P.closed_loop_ref(t) is not None:     # the task's closed-loop reference (scripts/ikea_mujoco/oracles/<task>/)
+    if P.closed_loop_ref(t) is not None:     # the task's own reference (a dropped-in new one, else this file in tasks/)
         src = P.closed_loop_ref(t)
     if src.is_file() and src.resolve() != acts.resolve():
         shutil.copyfile(src, acts)

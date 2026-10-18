@@ -1,7 +1,7 @@
 # ikea365 closed-loop reference
 
-`ikea365_ref.npz` is the one reference for both modes of `ikea-ikea365-i00` (privileged `solution/trajectory.npz`,
-standard `solution/oracle_actions.npz`). Its rows are the EXECUTED targets: `data.ctrl` after
+The one reference for both modes of `ikea-ikea365-i00` is kept in the task directories only: the standard
+`tasks/ikea-ikea365-i00-standard/solution/oracle_actions.npz`, the same file as the privileged `solution/trajectory.npz`. Its rows are the EXECUTED targets: `data.ctrl` after
 `rcb_ikea.Session.applied()`. Every row is within the arm joint-speed limits + 1e-9 of the previous row, starting from
 the keyframe ctrl, so the clamp never changes a row on replay. Keys: `ctrl` (89126, 16) float64, `substeps` 4,
 `timestep` 0.000625, `actuators`.
@@ -31,7 +31,9 @@ masking.
 
 Rebuild: `I365_GUIDE=runs/scan_old_noclamp.npz python build_ref.py --out runs/r2`. The scene dir goes on
 `IKEA_SCENES`, the shared `rcb_ikea.py` on `PYTHONPATH`, the demo at `I365_DEMO`, and the masking variables must be
-set. The result is bit-identical to `ikea365_ref.npz` (rebuilt twice).
+set. The result is bit-identical to that reference (rebuilt twice). A new build is rendered into both task directories by
+dropping its `ref.npz` here as `ikea365_ref.npz` (`scripts/ikea_mujoco/mk_tasks.py` and `mk_standard_tasks.py` take it
+while it exists) and is not kept.
 
 ## Phases (demo rows; the demo is 85296 rows)
 | stage | demo rows | what | gate (mechanism.py) |
@@ -101,7 +103,7 @@ contact is 0.14 N instead of 0.29 N (the gate is 0.1 N).
 | d7 → reference | w_slow 2.0 | pass; 0.235 N, 0.37 deg (the best margins on both) |
 
 ## Verification (2026-10-16)
-- **Reference.** `ikea365_ref.npz`: sha256 `d32ff622ac43e1143a9fa4e637aaf21de3fb55603d6243d3d6876ce738927449`, 89126
+- **Reference.** sha256 `d32ff622ac43e1143a9fa4e637aaf21de3fb55603d6243d3d6876ce738927449`, 89126
   rows (222.8 s of simulated time). 0 rows over the limit + 1e-9; the largest step is 1.0000000000005 x the limit.
   Rebuilt twice from `build_ref.py`, bit-identical.
 - **Fresh replays.** `final_check()` passes, with 0 slewed ticks. End state `bc2108ab48d7ebd9…`, settled

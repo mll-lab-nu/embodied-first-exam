@@ -1,6 +1,8 @@
 # STEGESUND reference
 
-`stegesund.npz` is the reference of `ikea-stegesund-i00-{privileged,standard}` under the final physics (prism rule,
+The reference of `ikea-stegesund-i00-{privileged,standard}` (kept in the task directories only:
+`tasks/ikea-stegesund-i00-standard/solution/oracle_actions.npz`, the same file as the privileged
+`solution/trajectory.npz`) runs under the final physics (prism rule,
 the arm joint-speed clamp, MuJoCo 3.14.0 with the EPA byte patch, numpy SIMD masking). It is the author's
 speed-limited demo (`stegesund_vlim`, the privileged `solution/trajectory.npz` as sent), unchanged: rung 1 of the
 reference ladder. It is a normal `rcb_ikea` trajectory file (`ctrl`, `substeps` 4, `timestep` 0.000625, `actuators`).
