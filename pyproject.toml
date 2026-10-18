@@ -1,0 +1,17 @@
+[project]
+name = "embodied-first-exam"
+version = "0.1.0"
+description = "Embodied First Exam: robot tasks for coding agents, run with Harbor (`efe run`)"
+requires-python = ">=3.12"
+dependencies = ["harbor==0.23.0"]
+
+[project.scripts]
+efe = "efe:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = { "" = "scripts" }
+py-modules = ["efe"]
