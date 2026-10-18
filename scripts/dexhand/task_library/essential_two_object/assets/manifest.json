@@ -36,11 +36,11 @@
     }
   ],
   "sha256": {
-    "walnut_a_visual.obj": "c70be93905ca00f63c3f58fc4d3ff48f4c3419542a82f5bcf5c00eff7acfbc4a",
-    "walnut_a_collision.obj": "a7c0cb3c2f463a2b61f2ac50948ac186fe20429f4510649bcdfb3fe8f1b96b52",
+    "walnut_a_visual.obj": "5386c35e28e13c95d6a2b3e6658e1a761b1374d150a1e6a26f240ceaa0995961",
+    "walnut_a_collision.obj": "b611115da5356ebd19fb25418ced4480fb19924734dcb1ebe4f5cfc54e7c01cf",
     "walnut_a_basecolor.png": "e8a180e920457799a9e64b802bdfa51691b9aaf8a3669bbc4c1d7b2cc0d0bf99",
-    "walnut_b_visual.obj": "58a881a807a8f7fd5030ffc920c119df19902140e9defcd168e3992fb70403bb",
-    "walnut_b_collision.obj": "0e23f7451da3cc994e427cf521eb060b0d6f9a1b4e216c7af0e595f9350c828c",
+    "walnut_b_visual.obj": "e730175ab006c4a90202796714fcebbc3e21a7e422ff4ac111e039649fabb9d0",
+    "walnut_b_collision.obj": "09c26529135fa3219004f56de1700ac613500a6e159a9340a71f2e0e6b9f3582",
     "walnut_b_basecolor.png": "b2633b9f992c1b6acbd3b882568b3e7b5b37efcb678e8942263f59339ee2ee8e",
     "CREDITS.txt": "ed797eb945267aa7923da00592af14b04ddc48ead811c9fcad27df40ea8f43c6",
     "walnut_a_normal.png": "0c140eeded3b03fdf3d448bbc688775011a20be0565a01da3bbb0a64fa9e069a",

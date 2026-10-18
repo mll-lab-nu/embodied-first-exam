@@ -18,11 +18,17 @@ Every task folder contains the same entry points:
 | File | Ownership and purpose |
 |---|---|
 | `task.json` | Frozen initialization, ordered goals, native safety bounds and contact holds |
-| `scene.py` | That task's physical scene, reset and feature extraction |
-| `assets/manifest.json` | Provenance and an explicit `runtime_files` list |
-| `assets/` | Licensed object meshes, collision hulls, textures and attribution |
+| `scene.py` | That task's physical scene, reset and feature extraction (committed in the generated task: below) |
+| `assets/manifest.json` | Provenance, an explicit `runtime_files` list and their SHA-256 |
+| `assets/` | Licensed object meshes, collision hulls, textures and attribution; the `runtime_files` are committed in the generated task |
 | `render.json` | Camera, presentation material overrides and framing |
 | `README.md` | Task explanation and documented modeling approximations |
+
+`scene.py`, the packaged `runtime_files`, `solution/` and `wuji_reset.json` are copied unchanged into the tasks, so
+their one committed copy is in the family's generated privileged task (`environment/<module>.py`,
+`environment/object_assets/<family>/`, `solution/`, `environment/wuji_reset.json`). `../sources.py` stages a folder
+with them for the generator, `library.py` and `sync_essential_catalog.py`; `../sources.py --unpack <family>` writes
+them into this folder for authoring tools and tests, and `--clean` removes them again once regenerated.
 
 Shared hand mechanics, grading and replay remain in `../shared/`. The runtime selects the registered task-owned scene;
 the generator copies scene modules and declared object assets into self-contained Harbor directories. The generated
@@ -33,10 +39,10 @@ shared runtime code does not need a task-specific branch. Authors can edit separ
 
 Meshes and textures must have a redistribution license and a SHA-256 manifest. Keep downloaded upstream references and
 training/checkpoint code outside this library. Generated copies must contain every asset needed offline.
-Asset checksums describe the original authoring files. During runtime packaging, the generator removes only trimesh's
-automatic code-URL banner from the first OBJ comment line; vertices, faces, normals, UVs and separate artist credits
-remain byte-identical. This keeps converter metadata out of distributed agent files without changing frozen assets
-or the geometry used for a film.
+Asset checksums describe the packaged runtime files. During runtime packaging, the generator removes only trimesh's
+automatic code-URL banner from the first OBJ comment line (`../sources.py` `runtime_bytes`; checksums are taken after
+it); vertices, faces, normals, UVs and separate artist credits remain byte-identical. This keeps converter metadata out
+of distributed agent files without changing frozen assets or the geometry used for a film.
 
 Use `python3 scripts/dexhand/sync_essential_catalog.py --check` to verify the frozen catalog and
 `python3 scripts/dexhand/generate.py --check` to verify generated task copies.
