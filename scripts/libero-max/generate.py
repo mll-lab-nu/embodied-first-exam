@@ -5,7 +5,9 @@
     python3 scripts/libero-max/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
 Inputs: cases.json (the chosen LIBERO-MAX cases with their frozen event parameters, select_cases.py), frozen/<case>/
-{instance.json, oracle.npy, report.json} (freeze.sh), the templates in templates/, the shared sources in shared/ (copied
+report.json (freeze.sh), each case's instance.json and oracle.npy (source(): a fresh freeze.sh run's frozen/<case>/ copies
+while they exist, else the ones already in the case's privileged task; delete them from frozen/ once the case is
+generated: tasks/ keeps the only copy), the templates in templates/, the shared sources in shared/ (copied
 byte for byte) and the standard client's base image and pins (scripts/eai_standard/). Each task directory is written
 from scratch and finished with scripts/task_conventions.py (normalize, PROTOCOL v1.0.1); a libero-max-* directory this
 does not write is removed. Re-running reproduces the tasks exactly.
@@ -15,6 +17,7 @@ they can be replaced by independently drawn ones without touching this generator
 """
 
 import filecmp
+import functools
 import json
 import re
 import shutil
@@ -37,6 +40,22 @@ TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
 TEMPLATES = HERE / "templates"
 FROZEN = HERE / "frozen"
+# The canonical committed copy of a case's instance and reference, in its privileged task (the standard twin and tests/
+# carry the same files).
+CANONICAL = {"instance.json": "environment/instance.json", "oracle.npy": "solution/oracle.npy"}
+
+
+def source(case_id: str, name: str, file: str) -> Path:
+    """Where a case's instance.json / oracle.npy comes from: frozen/<case>/ (a fresh freeze.sh run), else its privileged
+    task tasks/<name>-privileged (name: names_for())."""
+    f = FROZEN / case_id / file
+    return f if f.exists() else ROOT / "tasks" / f"{name}-privileged" / CANONICAL[file]
+
+
+@functools.cache
+def frozen(case_id: str, name: str, file: str) -> bytes:
+    """source()'s bytes, read once (before make() rewrites the task directory that may hold them)."""
+    return source(case_id, name, file).read_bytes()
 VERSION = (ROOT / "images/libero-max/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-libero-max:{VERSION}"
 _EAI = ROOT / "scripts/eai_standard"
@@ -310,10 +329,12 @@ def reset_dir(d: Path) -> None:
     d.mkdir(parents=True)
 
 
-def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644) -> None:
+def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644, data: bytes | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if src is not None:
         shutil.copyfile(src, path)
+    elif data is not None:
+        path.write_bytes(data)
     else:
         path.write_text(text)
     path.chmod(mode)
@@ -356,6 +377,7 @@ def names_for(cases: list) -> dict:
 def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     fz = FROZEN / case["case_id"]
     rep = json.loads((fz / "report.json").read_text())
+    inst, oracle = frozen(case["case_id"], name, "instance.json"), frozen(case["case_id"], name, "oracle.npy")  # before reset_dir
     ch = case["scenario"]["change"]
     words, detail = event_text(case["scenario"]["change_type"], ch)
     instruction = sentence(rep["language"])
@@ -419,15 +441,15 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     put(p / "README.md", render("README.md", {**values, "change_log_extra": priv_log}))
     put(p / "environment/Dockerfile", PRIV_ENV_DOCKERFILE)
     put(p / "environment/lmx_tool.py", src=SHARED / "lmx_tool.py")
-    put(p / "environment/instance.json", src=fz / "instance.json")
+    put(p / "environment/instance.json", data=inst)
     put(p / "tests/Dockerfile", PRIV_TESTS_DOCKERFILE)
     put(p / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(p / "tests/grade.py", src=SHARED / "grade.py")
     put(p / "tests/lmx_tool.py", src=SHARED / "lmx_tool.py")
-    put(p / "tests/instance.json", src=fz / "instance.json")
+    put(p / "tests/instance.json", data=inst)
     put(p / "solution/solve.sh", src=SHARED / "solve_privileged.sh", mode=0o755)
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
-    put(p / "solution/oracle.npy", src=fz / "oracle.npy")
+    put(p / "solution/oracle.npy", data=oracle)
 
     s = out / f"{name}-standard"
     reset_dir(s)
@@ -441,13 +463,13 @@ def make(case: dict, name: str, out: Path) -> tuple[Path, Path]:
     for f in ("server.py", "rcb_service.py", "rcb1.py", "finalize.sh"):
         put(s / "environment/sim" / f, src=SHARED / "standard" / f)
     put(s / "environment/sim/lmx_tool.py", src=SHARED / "lmx_tool.py")
-    put(s / "environment/sim/instance.json", src=fz / "instance.json")
+    put(s / "environment/sim/instance.json", data=inst)
     put(s / "tests/Dockerfile", STD_TESTS_DOCKERFILE)
     put(s / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(s / "tests/grade.py", src=SHARED / "standard/grade.py")
     put(s / "solution/solve.sh", src=SHARED / "standard/solve.sh", mode=0o755)
     put(s / "solution/oracle_replay.py", src=SHARED / "standard/oracle_replay.py")
-    put(s / "solution/oracle.npy", src=fz / "oracle.npy")
+    put(s / "solution/oracle.npy", data=oracle)
     normalize(p)
     normalize(s)
     return p, s

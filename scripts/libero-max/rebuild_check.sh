@@ -9,10 +9,19 @@ root="$(cd "$here/../.." && pwd)"
 jobs="${1:-4}"
 out="$(realpath -m "${2:-rebuild_check.jsonl}")"
 image="ghcr.io/mll-lab-nu/eai-libero-max:$(cat "$root/images/libero-max/VERSION")"
-ls "$here/frozen" |
-  xargs -P "$jobs" -I{} docker run --rm --network none -u "$(id -u):$(id -g)" --tmpfs /tmp:exec,mode=1777 -e HOME=/tmp \
-    -v "$here:/work:ro" -w /work -e PYTHONPATH=/work/shared:/opt/libero-max/overlay:/opt/libero-max/src \
-    "$image" sh -c 'python rebuild_check.py frozen/{} 2>/dev/null | grep "^{" || echo "{\"case_id\": \"{}\", \"error\": true}"' >"$out"
+# Per case: its id and the instance / reference generate.py uses (frozen/<case>/ after a fresh freeze.sh, else the
+# committed privileged task's copies), as paths under the repository mounted at /repo.
+python3 - "$here" <<'PY' |
+import json, sys
+sys.path.insert(0, sys.argv[1])
+import generate as g
+cases = json.loads((g.HERE / "cases.json").read_text())["cases"]
+for cid, name in g.names_for(cases).items():
+    print(cid, *("/repo/" + str(g.source(cid, name, f).relative_to(g.ROOT)) for f in ("instance.json", "oracle.npy")))
+PY
+  xargs -P "$jobs" -n 3 docker run --rm --network none -u "$(id -u):$(id -g)" --tmpfs /tmp:exec,mode=1777 -e HOME=/tmp \
+    -v "$here:/work:ro" -v "$root:/repo:ro" -w /work -e PYTHONPATH=/work/shared:/opt/libero-max/overlay:/opt/libero-max/src \
+    "$image" sh -c 'python rebuild_check.py "frozen/$1" "$2" "$3" 2>/dev/null | grep "^{" || echo "{\"case_id\": \"$1\", \"error\": true}"' sh >"$out"
 python3 - "$out" <<'PY'
 import collections, json, sys
 rs = [json.loads(l) for l in open(sys.argv[1])]
