@@ -41,8 +41,8 @@ Inputs, all in this directory, written by scripts/robotangle/release_rebuild.py 
   packages/      per task, the upstream texts (task.toml, README.md, instruction.md, Dockerfiles, compose files, test.sh):
                  the RoboARC base's texts it ports, renamed, with the family's own texts over them for a changed or
                  new design; and the instance's lock (runtime_binding.upstream.json)
-  oracles/       the references (privileged.npz; standard.npz is the same file, or, where release.json's standard evidence
-                 has "speed_rule", the reference re-timed to the standard service's joint-speed rule)
+  oracles/       the references: privileged.npz, used by both modes; standard.npz only where release.json's standard
+                 evidence has "speed_rule" (the reference re-timed to the standard service's joint-speed rule)
   assets.json    the frozen instances, not in git: the private HF dataset eai-v2-internal/robotangle-assets (the same
                  dataset as RoboARC's, instances/<base>/), pinned by commit and sha256. The image carries them; a task
                  keeps its runtime_binding.json and stages its instance from the image (/opt/robotangle/stage_instance.py).
@@ -1209,6 +1209,16 @@ def dev_binding(inst_dir: pathlib.Path, dev: dict, bridge: bool = False, direct:
     return companions(lock, bridge, direct)
 
 
+def standard_reference(base: str, rec: dict) -> pathlib.Path:
+    """The standard mode's reference: oracles/<base>/standard.npz where there is one (committed only where it differs
+    from the privileged one: re-timed to the joint-speed rule, release.json standard evidence "speed_rule"), else the
+    privileged reference itself."""
+    std = ORC / base / "standard.npz"
+    assert std.is_file() or not (rec["evidence"].get("standard") or {}).get("speed_rule"), \
+        f"{base}: the standard evidence has speed_rule, so oracles/{base}/standard.npz (the re-timed reference) is needed"
+    return std if std.is_file() else ORC / base / "privileged.npz"
+
+
 def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, dev: dict | None = None) -> list[pathlib.Path]:
     rec = REL["bases"][base]
     dirs = []
@@ -1266,7 +1276,7 @@ def render(base: str, out: pathlib.Path, inst_src: pathlib.Path | None = None, d
                 put(t / "environment/sim" / n, b)
             put(t / "tests/grade.py", (SHARED / "standard/grade.py").read_bytes())
             put(t / "tests/runtime_binding.json", lock)
-            traj = reference or ORC / base / "standard.npz"
+            traj = reference or standard_reference(base, rec)
             if traj.is_file():
                 with zipfile.ZipFile(traj) as z:
                     put(t / "solution/oracle_qpos.npy", z.read("actions.npy"))
