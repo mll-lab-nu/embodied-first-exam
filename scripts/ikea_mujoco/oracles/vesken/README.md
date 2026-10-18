@@ -1,6 +1,8 @@
 # VESKEN closed-loop reference
 
-`vesken.npz` is the reference of `ikea-vesken-i00-{privileged,standard}` under the final physics (prism rule, eket's
+The reference of `ikea-vesken-i00-{privileged,standard}` (kept in the task directories only:
+`tasks/ikea-vesken-i00-standard/solution/oracle_actions.npz`, the same file as the privileged
+`solution/trajectory.npz`) runs under the final physics (prism rule, eket's
 fix 3b, the arm joint-speed clamp, MuJoCo 3.14.0 with the EPA byte patch, numpy SIMD masking). It is a normal
 `rcb_ikea` trajectory file (`ctrl`, `substeps` 4, `timestep` 0.000625, `actuators`). Its numbers:
 
@@ -112,3 +114,6 @@ All commands run with `PYTHONPATH=<rcb_ikea dir>:<scene dir>`, `IKEA_SCENES` set
    - `search.py --dir ck`, then `finish.py ck/op22.pkl out.npz`; or
    - `rebuild.py demo ref params.json out.npz`, which reruns the kept parameters op by op and gives the same rows.
 3. Check with `verify.py out.npz` in a fresh process: rows over the limit, then `final_check()`.
+4. Render the new reference (`out.npz`, not the demo `refs/vesken.npz` the tools read) into both task directories by
+   copying it to this directory as `scripts/ikea_mujoco/oracles/vesken/vesken.npz` (`scripts/ikea_mujoco/mk_tasks.py`
+   and `mk_standard_tasks.py` take it while it exists); delete it after that (`oracles/*/*.npz` is git-ignored).
