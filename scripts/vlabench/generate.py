@@ -5,8 +5,9 @@
     python3 scripts/vlabench/generate.py select_fruit
     python3 scripts/vlabench/generate.py --check    # exit 1 if tasks/ differs from what this would write
 
-Inputs: tasks.json (candidates, dropped, instruction restatements, oracle sources), frozen/<task>/{instance.json,
-oracle.npy}, imported from PR #4 (commit ad3c5109), and frozen/report.json (freeze.sh), the
+Inputs: tasks.json (candidates, dropped, instruction restatements, oracle sources), each task's instance.json and
+oracle.npy (imported from PR #4, commit ad3c5109; frozen(): frozen/<task>/ while a new import is there, else the copies in
+the task's privileged task in tasks/; delete frozen/<task>/ once the task is generated), frozen/report.json (freeze.sh), the
 templates in templates/, the shared sources in shared/ (copied byte for byte) and the standard client's base image and
 pins (scripts/eai_standard/client.env, client-requirements.txt). Each task directory is written from scratch and
 finished with scripts/task_conventions.py (normalize, PROTOCOL v1.0.1); a vlabench-* directory this does not write is
@@ -14,6 +15,7 @@ removed. Re-running reproduces the tasks exactly.
 """
 
 import filecmp
+import functools
 import json
 import shutil
 import sys
@@ -35,6 +37,19 @@ TASKS_DIR = ROOT / "tasks"
 SHARED = HERE / "shared"
 TEMPLATES = HERE / "templates"
 FROZEN = HERE / "frozen"
+# The canonical committed copy of a task's instance and reference, in its privileged task (tests/ and the standard twin
+# carry the same files); freeze.py reads the same paths.
+CANONICAL = {"instance.json": "environment/instance.json", "oracle.npy": "solution/oracle.npy"}
+
+
+@functools.cache
+def frozen(task: str, file: str) -> bytes:
+    """frozen/<task>/<file> (a new import), else the committed copy in tasks/; read once, before make() rewrites the
+    task directory that holds it."""
+    f = FROZEN / task / file
+    if not f.exists():
+        f = ROOT / "tasks" / f"vlabench-{task.replace('_', '-')}-i00-privileged" / CANONICAL[file]
+    return f.read_bytes()
 VERSION = (ROOT / "images/vlabench/VERSION").read_text().strip()
 IMAGE = f"ghcr.io/mll-lab-nu/eai-vlabench:{VERSION}"
 # Standard-mode client image (agent container and verifier): the one digest-pinned base and the exact pip pins of
@@ -150,18 +165,20 @@ def reset_dir(d: Path) -> None:
     d.mkdir(parents=True)
 
 
-def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644) -> None:
+def put(path: Path, text: str | None = None, src: Path | None = None, mode: int = 0o644, data: bytes | None = None) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if src is not None:
         shutil.copyfile(src, path)
+    elif data is not None:
+        path.write_bytes(data)
     else:
         path.write_text(text)
     path.chmod(mode)
 
 
-def robot_base(instance: Path) -> str:
+def robot_base(instance: bytes) -> str:
     """The robot's base position in the frozen episode, e.g. "(0, -0.4, 0.78)"."""
-    spec = json.loads(instance.read_text())
+    spec = json.loads(instance)
     pos = spec["episode"].get("robot", {}).get("position", ROBOT_BASE)
     return "(" + ", ".join(f"{float(v):g}" for v in pos) + ")"
 
@@ -169,7 +186,7 @@ def robot_base(instance: Path) -> str:
 def make(task: str, rec: dict, source: str, restated: dict, out: Path) -> tuple[Path, Path]:
     """restated: tasks.json's `instructions` entry for the task ({} if none): `text` (what the task states instead of
     VLABench's instruction, which stays in the instance) and `why`; `kind` overrides instruction_kind()."""
-    fz = FROZEN / task
+    inst, oracle = frozen(task, "instance.json"), frozen(task, "oracle.npy")
     dash = task.replace("_", "-")
     instruction = restated.get("text", rec["instruction"])
     note = row = ""
@@ -193,7 +210,7 @@ def make(task: str, rec: dict, source: str, restated: dict, out: Path) -> tuple[
         "instruction_kind": restated.get("kind", instruction_kind(task)),
         "instruction_note": note,
         "instruction_row": row,
-        "robot_base": robot_base(fz / "instance.json"),
+        "robot_base": robot_base(inst),
         "seed": rec["seed"],
         "image": IMAGE,
         "author": AUTHOR,
@@ -217,15 +234,15 @@ def make(task: str, rec: dict, source: str, restated: dict, out: Path) -> tuple[
     put(p / "README.md", render("README.md", values))
     put(p / "environment/Dockerfile", PRIV_ENV_DOCKERFILE)
     put(p / "environment/vlb_tool.py", src=SHARED / "vlb_tool.py")
-    put(p / "environment/instance.json", src=fz / "instance.json")
+    put(p / "environment/instance.json", data=inst)
     put(p / "tests/Dockerfile", PRIV_TESTS_DOCKERFILE)
     put(p / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(p / "tests/grade.py", src=SHARED / "grade.py")
     put(p / "tests/vlb_tool.py", src=SHARED / "vlb_tool.py")
-    put(p / "tests/instance.json", src=fz / "instance.json")
+    put(p / "tests/instance.json", data=inst)
     put(p / "solution/solve.sh", src=SHARED / "solve_privileged.sh", mode=0o755)
     put(p / "solution/oracle_replay.py", src=SHARED / "oracle_privileged.py")
-    put(p / "solution/oracle.npy", src=fz / "oracle.npy")
+    put(p / "solution/oracle.npy", data=oracle)
 
     s = out / f"vlabench-{dash}-i00-standard"
     reset_dir(s)
@@ -239,13 +256,13 @@ def make(task: str, rec: dict, source: str, restated: dict, out: Path) -> tuple[
     for f in ("server.py", "rcb_service.py", "rcb1.py"):
         put(s / "environment/sim" / f, src=SHARED / "standard" / f)
     put(s / "environment/sim/vlb_tool.py", src=SHARED / "vlb_tool.py")
-    put(s / "environment/sim/instance.json", src=fz / "instance.json")
+    put(s / "environment/sim/instance.json", data=inst)
     put(s / "tests/Dockerfile", STD_TESTS_DOCKERFILE)
     put(s / "tests/test.sh", src=SHARED / "test.sh", mode=0o755)
     put(s / "tests/grade.py", src=SHARED / "standard/grade.py")
     put(s / "solution/solve.sh", src=SHARED / "standard/solve.sh", mode=0o755)
     put(s / "solution/oracle_replay.py", src=SHARED / "standard/oracle_replay.py")
-    put(s / "solution/oracle.npy", src=fz / "oracle.npy")
+    put(s / "solution/oracle.npy", data=oracle)
     normalize(p)
     normalize(s)
     return p, s
