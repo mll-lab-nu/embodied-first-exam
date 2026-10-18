@@ -314,6 +314,22 @@ CUTOFF_NOTE_TASK = {n: (
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
+# The repository's task tree: one folder per benchmark, tasks/<folder>/<task>/ (a task dir's name says its benchmark,
+# bench_of; GitHub lists at most 1000 entries of a folder). The folder of each BENCHMARKS label, the same slug as the
+# benchmark's embodied_first_exam/ folder. Everything that finds a task dir in the repository goes through task_dir() /
+# iter_tasks() (and the pool reads this table); `benchmarks --check` holds the tree to it.
+TASKS_DIR = Path(__file__).resolve().parents[1] / "tasks"
+BENCHMARK_DIRS = {
+    "RoboTwin 2.0": "robotwin-2", "DexToolBench": "dextoolbench", "MuJoCo Playground": "mujoco-playground",
+    "KinDER": "kinder", "HumanoidBench": "humanoidbench", "MetaWorld+": "metaworldplus", "RoboWits": "robowits",
+    "RoboPaint": "robopaint", "RoboLab": "robolab", "BEHAVIOR-1K": "behavior-1k", "ManiGuard": "maniguard",
+    "MolmoSpaces": "molmospaces", "MyoSuite": "myosuite", "DexJoCo": "dexjoco", "DexHand": "dexhand",
+    "VLABench": "vlabench", "RoboCasa-GR1": "robocasa-gr1", "RoboCasa": "robocasa", "RoboCasa365": "robocasa365",
+    "LIBERO-MAX": "libero-max", "RoboARC": "roboarc", "BiGym 2.0": "bigym2", "YAMLab": "yamlab", "RoboDojo": "robodojo",
+    "RoboOlympics-Fun": "roboolympics-fun", "RoboOlympics-Match": "roboolympics-match", "RoboSafeBench": "robosafebench",
+    "Panda Dynamic Scenes": "pandadyn", "AM-Bench": "ambench", "iSpatialGym": "ispatialgym", "IKEA MuJoCo": "ikea-mujoco",
+    "roboEngineer": "roboengineer",
+}
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -368,15 +384,85 @@ def bench_of(task: Path) -> str:
     return next((label for label in labels if base in BENCHMARK_BASES.get(label, ())), "")
 
 
+def bench_dir(task: "Path | str") -> str:
+    """The folder under tasks/ of the task's benchmark (BENCHMARK_DIRS; a task dir or a base), "" for a name no label
+    claims."""
+    return BENCHMARK_DIRS.get(bench_of(Path(task)), "")
+
+
+def task_dir(name: "Path | str", tasks_dir: "Path | str | None" = None) -> Path:
+    """The task dir of that name in the repository's tree, tasks/<benchmark folder>/<name> (tasks_dir: another tree of
+    the same layout, e.g. a deploy checkout). It need not exist. A name no benchmark claims: tasks/<name>, which
+    `benchmarks --check` rejects."""
+    tasks_dir = Path(tasks_dir) if tasks_dir else TASKS_DIR
+    name = Path(name).name
+    folder = bench_dir(name)
+    return tasks_dir / folder / name if folder else tasks_dir / name
+
+
+def task_relpath(name: "Path | str") -> str:
+    """task_dir() relative to the repository root, as git names it: `tasks/<benchmark folder>/<name>`."""
+    return task_dir(name, Path("tasks")).as_posix()
+
+
+def bench_root(bench: str, tasks_dir: "Path | str | None" = None) -> Path:
+    """The folder of a benchmark (a BENCHMARKS label or its BENCHMARK_DIRS folder) under tasks/: what its generators
+    write into and glob."""
+    folder = BENCHMARK_DIRS.get(bench, bench)
+    if folder not in BENCHMARK_DIRS.values():
+        raise KeyError(f"{bench!r}: not a BENCHMARKS label or benchmark folder (scripts/task_conventions.py BENCHMARK_DIRS)")
+    return (Path(tasks_dir) if tasks_dir else TASKS_DIR) / folder
+
+
+def iter_tasks(tasks_dir: "Path | str | None" = None) -> list[Path]:
+    """Every task dir of the tree (tasks/<folder>/<task>/ with a task.toml), sorted by name."""
+    tasks_dir = Path(tasks_dir) if tasks_dir else TASKS_DIR
+    return sorted((p.parent for p in tasks_dir.glob("*/*/task.toml")), key=lambda p: p.name)
+
+
+TASKS_TOP_FILES = ("README.md", "dataset.toml")   # tasks/ holds the benchmark folders and these (dataset.toml: generated)
+FOLDER_MAX = 1000                                 # GitHub's web UI lists at most this many entries of a folder
+
+
+def check_layout(tasks_dir: Path | None = None) -> list[str]:
+    """What is wrong with the tree's layout (`benchmarks --check`): a BENCHMARKS label without its folder (or a folder
+    without its label, or two labels on one folder), anything at the top of tasks/ besides the benchmark folders and
+    TASKS_TOP_FILES, a task dir in another benchmark's folder or nested deeper, a folder over FOLDER_MAX entries."""
+    tasks_dir = tasks_dir or TASKS_DIR
+    labels = {label for _, label in BENCHMARKS}
+    bad = [f"BENCHMARKS label {b!r}: no folder in BENCHMARK_DIRS" for b in sorted(labels - set(BENCHMARK_DIRS))]
+    bad += [f"BENCHMARK_DIRS {b!r}: not a BENCHMARKS label" for b in sorted(set(BENCHMARK_DIRS) - labels)]
+    folders = collections.Counter(BENCHMARK_DIRS.values())
+    bad += [f"BENCHMARK_DIRS: folder {f!r} given to {k} labels" for f, k in folders.items() if k > 1]
+    bad += [f"BENCHMARK_DIRS: folder {f!r} is not a lowercase slug" for f in folders if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", f)]
+    for p in sorted(tasks_dir.iterdir()):
+        if p.name in TASKS_TOP_FILES and p.is_file():
+            continue
+        if not p.is_dir() or p.name not in folders:
+            bad.append(f"tasks/{p.name}: not a benchmark folder (scripts/task_conventions.py BENCHMARK_DIRS)"
+                       + (" -- a task dir belongs in tasks/<benchmark folder>/" if (p / "task.toml").exists() else ""))
+            continue
+        entries = sorted(p.iterdir())
+        if len(entries) > FOLDER_MAX:
+            bad.append(f"tasks/{p.name}: {len(entries)} entries, over {FOLDER_MAX} (GitHub lists no more)")
+        for t in entries:
+            if not (t / "task.toml").is_file():
+                bad.append(f"tasks/{p.name}/{t.name}: not a task dir")
+            elif bench_dir(t.name) != p.name:
+                bad.append(f"tasks/{p.name}/{t.name}: belongs in tasks/{bench_dir(t.name) or '<no benchmark>'}/")
+    return bad
+
+
 def check_benchmarks(tasks_dir: Path | None = None) -> list[str]:
-    """What is wrong with the benchmark labels (`benchmarks --check`): a task dir no label claims, a base listed for a
-    shared prefix that has no task dir, a base in two lists, a listed base outside its label's prefix, a prefix shared
-    by labels without a list."""
-    tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
-    names = sorted(p.name for p in tasks_dir.iterdir() if (p / "task.toml").is_file())
+    """What is wrong with the benchmark labels and the tree (`benchmarks --check`): check_layout(), a task dir no label
+    claims, a base listed for a shared prefix that has no task dir, a base in two lists, a listed base outside its
+    label's prefix, a prefix shared by labels without a list."""
+    tasks_dir = tasks_dir or TASKS_DIR
+    names = sorted(p.name for p in iter_tasks(tasks_dir))
     have = {base_of(Path(n)) for n in names}
-    bad = [f"{n}: no benchmark label (scripts/task_conventions.py BENCHMARKS / BENCHMARK_BASES)" for n in names
-           if not bench_of(Path(n))]
+    bad = check_layout(tasks_dir)
+    bad += [f"{n}: no benchmark label (scripts/task_conventions.py BENCHMARKS / BENCHMARK_BASES)" for n in names
+            if not bench_of(Path(n))]
     seen: dict[str, str] = {}
     for label, bases in BENCHMARK_BASES.items():
         prefixes = [p for p, lab in BENCHMARKS if lab == label]
@@ -741,11 +827,11 @@ def bench_has_mode(bench: str, mode: str) -> bool:
     """Whether the benchmark (a BENCHMARKS label) ships tasks of the mode: a task directory of it under the repository's
     tasks/ (PROTOCOL §2.15). Read from the repository, not from the directory a task is rendered in."""
     prefixes = tuple(p for p, label in BENCHMARKS if label == bench)
-    tasks = Path(__file__).resolve().parents[1] / "tasks"
-    if not tasks.is_dir():  # Source-only generation has no committed task tree.
+    if not TASKS_DIR.is_dir() or bench not in BENCHMARK_DIRS:  # Source-only generation has no committed task tree.
         return False
+    folder = bench_root(bench)
     return any(d.name.startswith(prefixes) and mode_of(d) == mode and bench_of(d) == bench
-               for d in tasks.iterdir() if (d / "task.toml").is_file()) if prefixes else False
+               for d in folder.iterdir() if (d / "task.toml").is_file()) if prefixes and folder.is_dir() else False
 
 
 def no_twin_reason(task: Path) -> str | None:
@@ -757,7 +843,7 @@ def no_twin_reason(task: Path) -> str | None:
     twin = MODE_REGISTRY[mode_of(task)]["twin"]
     if twin is None:
         return None
-    committed = Path(__file__).resolve().parents[1] / "tasks" / task.name / "README.md"
+    committed = task_dir(task.name) / "README.md"
     for f in (task / "README.md", committed):
         m = re.search(r"(?m)^\| Twin \| (— \(none:[^\n]*?\)) \|\s*$", read_text(f) or "")
         if m:
@@ -1163,18 +1249,18 @@ def normalize_seeds(task: Path) -> None:
 
 def committed_line(task: Path, key: str) -> str | None:
     """The `key = ...` line of the committed task of the same name (a generator renders a task into a scratch directory,
-    or over the task in tasks/: what the task declared is kept): the repository's tasks/<name>/task.toml when that is
+    or over the task in tasks/: what the task declared is kept): the repository's task dir's task.toml when that is
     another file and has the line, else the version committed at HEAD. None when neither has it."""
     rx = re.compile(rf"(?m)^{re.escape(key)} = .*\n")
     root = Path(__file__).resolve().parents[1]
-    p = root / "tasks" / task.name / "task.toml"
+    p = task_dir(task.name) / "task.toml"
     if p.is_file() and p.resolve() != (task / "task.toml").resolve():
         m = rx.search(read_text(p) or "")
         if m:
             return m.group(0)
     try:
         import subprocess
-        r = subprocess.run(["git", "-C", str(root), "show", f"HEAD:tasks/{task.name}/task.toml"], capture_output=True,
+        r = subprocess.run(["git", "-C", str(root), "show", f"HEAD:{task_relpath(task.name)}/task.toml"], capture_output=True,
                            text=True, timeout=30)
         m = rx.search(r.stdout) if r.returncode == 0 else None
     except (OSError, subprocess.SubprocessError):
@@ -1369,10 +1455,10 @@ README_TABLE = re.compile(r"(<!-- task-table: generated by `python3 scripts/task
 
 def readme_table(tasks_dir: Path | None = None) -> str:
     """The README's task table: per benchmark label, its core-set task dirs (docs/core_set.toml) and all its task dirs."""
-    tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
-    dirs = [p for p in tasks_dir.iterdir() if (p / "task.toml").is_file()]
+    tasks_dir = tasks_dir or TASKS_DIR
+    dirs = iter_tasks(tasks_dir)
     every = collections.Counter(bench_of(p) for p in dirs)
-    core = collections.Counter(bench_of(tasks_dir / t) for t in core_set() if (tasks_dir / t / "task.toml").is_file())
+    core = collections.Counter(bench_of(Path(t)) for t in core_set() if (task_dir(t, tasks_dir) / "task.toml").is_file())
     rows = ["| Benchmark | Core tasks | All tasks |", "|---|---:|---:|"]
     rows += [f"| {b} | {core.get(b, 0)} | {every[b]} |" for b in sorted(every, key=str.lower)]
     rows.append(f"| **Total** | **{sum(core.values())}** | **{sum(every.values())}** |")
@@ -1383,7 +1469,7 @@ def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) ->
     """What is wrong with the core set: no file, no `generated_from` commit, an unknown top-level key, a listed task dir
     that is not a plain name or does not exist, a base / benchmark / mode that is not the dir's, an unknown `luna` or
     `pick` value (`luna = "success"` only with `pick = "owner"`) or field."""
-    tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
+    tasks_dir = tasks_dir or TASKS_DIR
     if not path.is_file():
         return [f"{path.name}: no such file"]
     try:
@@ -1396,7 +1482,7 @@ def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) ->
     if unknown:
         bad.append(f"{path.name}: unknown top-level key(s) {', '.join(sorted(unknown))}")
     for t, e in cs.items():
-        d = tasks_dir / t
+        d = task_dir(t, tasks_dir)
         if t != Path(t).name:
             bad.append(f"{t}: not a task dir name")
             continue
@@ -1527,17 +1613,16 @@ def main(argv: list[str]) -> int:
         print(modes_table())
         return 0
     if argv[:1] == ["benchmarks"]:     # `benchmarks --check`: every task dir has its label (BENCHMARK_BASES); `benchmarks`: the labels
-        root = Path(__file__).resolve().parents[1] / "tasks"
         if "--check" in argv:
-            bad = check_benchmarks(root)
+            bad = check_benchmarks(TASKS_DIR)
             for b in bad:
                 print(f"FAIL benchmark labels: {b}")
             if not bad:
-                n = sum(1 for p in root.iterdir() if (p / "task.toml").is_file())
-                print(f"ok benchmark labels: {n} task dirs, each with its label")
+                n = len(iter_tasks())
+                print(f"ok benchmark labels: {n} task dirs, each with its label, in its benchmark's folder")
             return 1 if bad else 0
-        for t in sorted(p for p in root.iterdir() if (p / "task.toml").is_file()):
-            print(f"{t.name}\t{bench_of(t)}")
+        for t in iter_tasks():
+            print(f"{t.name}\t{bench_of(t)}\t{t.parent.name}")
         return 0
     if argv[:1] == ["readme-table"]:   # `readme-table --check` / `--write`: README.md's task table (readme_table())
         text = README_FILE.read_text(encoding="utf-8")
