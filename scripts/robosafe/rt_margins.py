@@ -8,7 +8,7 @@ onset the reference's stop and its margin to the literal execution's first harm 
 Per trial, from what the sim service recorded (Harbor's artifacts/data/): the onset (verdict.json, the attempt's onset
 window), the reference's stop (the first control step from which its own rows stood still for 0.5 s, from the journal
 trajectory_live.f64, the steps the service held between requests left out (ticks.f64); or the exit), and the first harm of the literal execution under the realtime clock
-(oracles_rt/<task>.json, played without latency). World tick k of the episode is the instance's start_tick + k + 1.
+(oracles_rt/<slug>-<NN>.json, played without latency; the instance is the task's environment/sim/instance.json). World tick k of the episode is the instance's start_tick + k + 1.
 Needs numpy.
 """
 from __future__ import annotations
@@ -72,7 +72,7 @@ def main() -> int:
         ver_p = data / "verdict.json"
         if margin and ver_p.exists() and (data / "trajectory_live.f64").exists():
             ver = json.loads(ver_p.read_text())
-            inst = json.loads((HERE / "instances_rt" / f"{name}.json").read_text())
+            inst = json.loads((HERE.parents[1] / "tasks" / task / "environment/sim/instance.json").read_text())
             width = max(int(v["dim"]) for v in inst["control"]["action_types"].values())
             rows = np.fromfile(data / "trajectory_live.f64", dtype=np.float64).reshape(-1, width + 4)
             ticks = np.fromfile(data / "ticks.f64", dtype=np.float64).reshape(-1, 2) if (data / "ticks.f64").exists() else None

@@ -2,8 +2,8 @@
 
 Synthetic tiny RGB and a synchronous integer-step queue exercise transport and
 plan order only, never native rendering, physical credit or a realtime clock.
-Install in scripts/robosafe/tests or set ROBOSAFE_PAUSED_TEST_SOURCE to that
-source directory. Requires import-safe oracle_replay.run_reference.
+The client, the wire format, the oracle driver and the observation plan are the
+0.5.4 standard tasks' (check_release.LAYERS). Requires import-safe oracle_replay.run_reference.
 """
 from contextlib import contextmanager
 import copy
@@ -21,8 +21,10 @@ from unittest.mock import patch
 
 import numpy as np
 
-SOURCE = Path(os.environ.get('ROBOSAFE_PAUSED_TEST_SOURCE',Path(__file__).resolve().parents[1]))
-sys.path.insert(0,str(SOURCE))
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+sys.dont_write_bytecode = True        # the files are loaded from their canonical task dirs
+import check_release as CR  # noqa: E402
+sys.path.insert(0,str(CR.shared('standard','public_observation_delivery.py').parent))   # the oracles' own import
 
 
 def load_module(name,filename):
@@ -31,12 +33,12 @@ def load_module(name,filename):
     return module
 
 
-WIRE = load_module('rsb_paused_test_wire',SOURCE/'shared/standard/rcb1.py')
+WIRE = load_module('rsb_paused_test_wire',CR.shared('standard','rcb1.py'))
 with patch.dict(sys.modules,{'rcb1':WIRE}):
-    CLIENT = load_module('rsb_paused_test_client',SOURCE/'shared/standard/rcb_client.py')
-O = load_module('rsb_paused_test_plan',SOURCE/'public_observation_plan.py')
+    CLIENT = load_module('rsb_paused_test_client',CR.shared('standard','rcb_client.py'))
+O = load_module('rsb_paused_test_plan',CR.shared('standard','public_observation_plan.py'))
 with patch.dict(sys.modules,{'rcb_client':CLIENT,'public_observation_plan':O}):
-    ORACLE = load_module('rsb_paused_test_oracle',SOURCE/'shared/solution/oracle_replay.py')
+    ORACLE = load_module('rsb_paused_test_oracle',CR.shared('standard','oracle_replay.py'))
 
 HTTP_POLICY = {'cameras':'all_public','initial_observe':True,'video':'none','interpolate':'hold'}
 ALL_PUBLIC = ['front','top','wrist']

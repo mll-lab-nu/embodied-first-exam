@@ -1,7 +1,7 @@
 """Actual RCB1/client HTTP tests with synthetic tiny RGB; no simulator/model.
 
-Install under scripts/robosafe/tests, or set ROBOSAFE_ORACLE_TEST_SOURCE to that
-scripts/robosafe directory when loading this external draft. Tiny2x3 camera
+The client, the wire format, the oracle driver and the observation plan are the
+0.5.4 realtime tasks' (check_release.LAYERS). Tiny2x3 camera
 contracts exercise byte transport only; they establish no native/task images,
 real RT deadline, native evidence credit, or physical task success.
 """
@@ -21,8 +21,10 @@ from unittest.mock import patch
 
 import numpy as np
 
-SOURCE = Path(os.environ.get('ROBOSAFE_ORACLE_TEST_SOURCE', Path(__file__).resolve().parents[1]))
-sys.path.insert(0,str(SOURCE))
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+sys.dont_write_bytecode = True        # the files are loaded from their canonical task dirs
+import check_release as CR  # noqa: E402
+sys.path.insert(0,str(CR.shared('standard','public_observation_delivery.py').parent))   # the oracles' own import
 
 
 def load_module(name, filename):
@@ -32,12 +34,12 @@ def load_module(name, filename):
     return module
 
 
-WIRE = load_module('rsb_oracle_test_wire', SOURCE/'shared/standard/rcb1.py')
+WIRE = load_module('rsb_oracle_test_wire', CR.shared('standard','rcb1.py'))
 with patch.dict(sys.modules, {'rcb1':WIRE}):
-    CLIENT = load_module('rsb_oracle_test_rt_client', SOURCE/'shared/realtime/rcb_client.py')
-OBS = load_module('rsb_oracle_test_observation_plan', SOURCE/'public_observation_plan.py')
+    CLIENT = load_module('rsb_oracle_test_rt_client', CR.shared('realtime','rcb_client.py'))
+OBS = load_module('rsb_oracle_test_observation_plan', CR.shared('standard','public_observation_plan.py'))
 with patch.dict(sys.modules, {'rcb_client':CLIENT, 'public_observation_plan':OBS}):
-    ORACLE = load_module('rsb_oracle_test_rt_oracle', SOURCE/'shared/realtime/oracle_rt.py')
+    ORACLE = load_module('rsb_oracle_test_rt_oracle', CR.shared('realtime','oracle_rt.py'))
 
 
 class ToyHTTP:

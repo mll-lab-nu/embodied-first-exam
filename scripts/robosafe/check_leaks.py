@@ -78,7 +78,10 @@ def live(tasks: list[pathlib.Path]) -> list[str]:
     of one hold row, a malformed /submit (400), an unknown endpoint (404)."""
     import tempfile
     import numpy as np
-    sys.path.insert(0, str(ROOT / "scripts/robosafe/shared/standard"))
+    sys.dont_write_bytecode = True   # the service is imported from a task dir: no __pycache__ there
+    sys.path.insert(0, str(ROOT / "scripts/robosafe"))
+    import check_release      # the standard service's one copy: its canonical task's environment/sim/
+    sys.path.insert(0, str(check_release.shared("standard", "server.py").parent))
     import rcb1
     import rcb_service
     import server
