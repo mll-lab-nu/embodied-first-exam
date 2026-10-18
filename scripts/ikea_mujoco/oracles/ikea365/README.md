@@ -28,7 +28,6 @@ masking.
   - The reference is a continuous build.
 - `check_ref.py REF.npz`: a fresh-process check. It counts rows over the limit, then replays open-loop through
   `rcb_ikea` (the grader's path) and runs `final_check()`.
-- `std_agent/controller.py`: the standard agent's first version (phases A-E, unchanged), which this controller builds on.
 
 Rebuild: `I365_GUIDE=runs/scan_old_noclamp.npz python build_ref.py --out runs/r2`. The scene dir goes on
 `IKEA_SCENES`, the shared `rcb_ikea.py` on `PYTHONPATH`, the demo at `I365_DEMO`, and the masking variables must be
