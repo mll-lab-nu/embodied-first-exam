@@ -17,8 +17,8 @@
         # solution from --solution-dir (--template-family / --template)
     python scripts/robopaint_brush_mk_task.py --family acrylic --painting <name> --template redfuji   # a program entry (programs_json/)
     python scripts/robopaint_brush_mk_task.py --family oil --painting <name> --reference-png <picture.png> --difficulty extreme
-    python scripts/robopaint_brush_mk_task.py --refresh [tasks/robopaint/robopaint-<family>-<target>-i<NN> ...] --out-root <dir>   # rebuild committed pairs
-    python scripts/robopaint_brush_mk_task.py --resolve tasks/robopaint/robopaint-<kaishu|xingshu>-<target>-i<NN>-privileged --plans plans.json
+    python scripts/robopaint_brush_mk_task.py --refresh [tasks/robopaint-<family>-<target>-i<NN> ...] --out-root <dir>   # rebuild committed pairs
+    python scripts/robopaint_brush_mk_task.py --resolve tasks/robopaint-<kaishu|xingshu>-<target>-i<NN>-privileged --plans plans.json
         # re-solve a committed calligraphy pair: new robot-free plans (solution/opt_calli.py --profile print) written on the robot;
         # only the reference solution changes (resolve()), then scripts/robopaint_strict/mk_tasks.py
 
@@ -29,7 +29,7 @@ identical within a family,
 scripts/robopaint_strict/ci/advisory-tooling.sh). A painting's program is read from the template's solution/programs_json/, where a pair's
 own entry is its current program: a painting pair is remade with itself as the template.
 
--> tasks/robopaint/robopaint-<family>-<target>-i00-privileged/ and ...-i00-standard/ (mode standard, eai-standard/2.2), family
+-> tasks/robopaint-<family>-<target>-i00-privileged/ and ...-i00-standard/ (mode standard, eai-standard/2.2), family
 robopaint_<family>_<target>; every task ends with scripts/task_conventions.py's normalize (the repository's conventions). A pair
 whose frozen instance or verifier changes after publication is a new task (PROTOCOL §2.8): the next instance index (-i01, ...);
 --refresh keeps each committed pair's own index.
@@ -44,13 +44,9 @@ the eai-standard/2.2 layer, the base image of images/robopaint/VERSION and the r
 reference plan and its records. It writes into --out-root, which must not be tasks/ (the texts lack the process rules); to regenerate
 the committed tasks run scripts/robopaint_strict/mk_tasks.py.
 
-Files: the code of the template pair (tasks/robopaint/robopaint-<family>-<template>-i<NN>*, or --template-root) is copied (sidecars and
-solution code stay byte-identical within a family; the wiring of the process rules' module rcb_brush_strict.py comes with them);
-the shared tooling and graders (rcb_brush.py, rcb_brush_score.py, rcb_brush_strict.py, grade.py) have one source,
-embodied_first_exam/robopaint/: the task's Dockerfiles take them from the pinned files-only image images/robopaint-files/
-(FILES.json, scripts/files_image.py) with COPY --from to the same container paths (FROM_IMAGE), and the bind-mounted sidecar
-dirs (environment/scorer/, environment/sim/) get copies of rcb_brush.py and rcb_brush_score.py from that source (SIDECAR_COPIES;
-rcb_brush_strict.py: scripts/robopaint_strict/mk_tasks.py); the standard twin's client and service layer come from
+Files: the code of the template pair (tasks/robopaint-<family>-<template>-i<NN>*, or --template-root) is copied (tooling, graders,
+sidecars and solution code stay byte-identical within a family; the wiring of the process rules' module rcb_brush_strict.py comes
+with them); the standard twin's client and service layer come from
 scripts/eai_standard/ (byte-identical everywhere); the texts are rendered from scripts/robopaint_templates/<family>/
 ({u,l}_{instruction.md,README.md,task.toml} with {{PLACEHOLDERS}}, values from the frozen files: derive_values); the frozen files
 are made inside the base image (docker, GPU):
@@ -79,20 +75,6 @@ FAMILIES = {"kaishu": {"medium": "calligraphy", "template": "yongzibafa"}, "lett
 SCRIPT_FAMILIES = ("kaishu", "xingshu", "caoshu")      # Chinese calligraphy: exemplar files + per-contact plans; difficulty from the target
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",
          "environment/sim/rcb1.py": "rcb1.py", "environment/sim/run.sh": "run.sh"}   # standard twin <- scripts/eai_standard/
-sys.path.insert(0, str(ROOT / "scripts"))
-import files_image  # noqa: E402  (files-only images: one copy of a file many tasks would each carry)
-sys.path.pop(0)
-FILES = "robopaint-files"                                      # images/robopaint-files/FILES.json
-SHARED = ROOT / files_image.spec(FILES)["source"]              # embodied_first_exam/robopaint/: the tooling's and the graders' one source
-# task file -> the file of the files-only image the task's Dockerfile COPYs --from to the same container path (no copy in tasks/)
-FROM_IMAGE = {"privileged": {"environment/rcb_brush.py": "rcb_brush.py", "tests/rcb_brush.py": "rcb_brush.py",
-                             "tests/rcb_brush_score.py": "rcb_brush_score.py", "tests/rcb_brush_strict.py": "rcb_brush_strict.py",
-                             "tests/grade.py": "privileged/grade.py"},
-              "standard": {"tests/grade.py": "standard/grade.py"}}
-# the sidecars' copies (their dirs are bind-mounted at /srv, not built), from SHARED
-SIDECAR_COPIES = {"privileged": {"environment/scorer/rcb_brush.py": "rcb_brush.py", "environment/scorer/rcb_brush_score.py": "rcb_brush_score.py"},
-                  "standard": {"environment/sim/rcb_brush.py": "rcb_brush.py", "environment/sim/rcb_brush_score.py": "rcb_brush_score.py"}}
-FILES_COPY_RE = re.compile(r"^COPY --from=\S+/eai-robopaint-files[:@]\S+ /(\S+) (\S+)$")
 _CLIENT = dict(l.split("=", 1) for l in (ROOT / "scripts" / "eai_standard" / "client.env").read_text().splitlines() if "=" in l and not l.startswith("#"))
 CLIENT_IMAGE = _CLIENT["CLIENT_IMAGE"].strip()                 # the one client base of every standard task (PROTOCOL §2.4)
 CLIENT_PINS = [x for x in (l.split("#", 1)[0].strip() for l in (ROOT / "scripts" / "eai_standard" / _CLIENT["CLIENT_REQUIREMENTS"].strip())
@@ -676,38 +658,6 @@ def set_client(d: Path) -> None:
             f.write_text(s2)
 
 
-def set_files(d: Path, mode: str) -> None:
-    """The files of FROM_IMAGE come from the pinned files-only image: in the Dockerfiles, a plain COPY of one of them becomes a
-    COPY --from=<image@digest> to the same container path (a line that already copies from the image names the pinned image),
-    and the task dir holds no copy; the sidecars' copies (SIDECAR_COPIES) are written from SHARED."""
-    for ctx in ("environment", "tests"):
-        want = {rel.split("/", 1)[1]: f for rel, f in FROM_IMAGE[mode].items() if rel.startswith(ctx + "/")}
-        df = d / ctx / "Dockerfile"
-        if not want or not df.is_file():
-            continue
-        out = []
-        for line in df.read_text().split("\n"):
-            m = FILES_COPY_RE.match(line)
-            if m:
-                out.append(files_image.copy_line(FILES, m.group(1), m.group(2)))
-                continue
-            parts = line.split()
-            if len(parts) >= 3 and parts[0] == "COPY" and not parts[1].startswith("--") and any(x in want for x in parts[1:-1]):
-                srcs, dest = parts[1:-1], parts[-1]
-                keep = [x for x in srcs if x not in want]
-                if keep:
-                    out.append(" ".join(["COPY", *keep, dest]))
-                out += [files_image.copy_line(FILES, want[x], dest + x if dest.endswith("/") else dest) for x in srcs if x in want]
-                continue
-            out.append(line)
-        df.write_text("\n".join(out))
-        for name in want:
-            (d / ctx / name).unlink(missing_ok=True)
-    for rel, f in SIDECAR_COPIES[mode].items():
-        if (d / rel).parent.is_dir():
-            shutil.copyfile(SHARED / f, d / rel)
-
-
 def npy_rows(path: Path) -> int:
     """The number of rows of a .npy array (the shape in its header): --refresh needs only the standard library, no numpy."""
     with open(path, "rb") as f:
@@ -721,9 +671,8 @@ def npy_rows(path: Path) -> int:
 def assemble(family: str, slug: str, tpl: str, template_root: Path, out_root: Path, frozen_u: dict, frozen_l: dict, stats: str,
              difficulty: str | None, keep_programs: bool, tpl_family: str | None = None, solution_dir: Path | None = None,
              idx: str = "00") -> tuple[Path, Path]:
-    """Write the pair robopaint-<family>-<slug>-i<idx>-privileged / -standard under out_root: the template pair's code (sidecars,
-    solution code: byte-identical within a family), the shared tooling and graders from the files-only image (set_files), the
-    eai-standard/2.2 layer from scripts/eai_standard/
+    """Write the pair robopaint-<family>-<slug>-i<idx>-privileged / -standard under out_root: the template pair's code (tooling,
+    graders, sidecars, solution code: byte-identical within a family), the eai-standard/2.2 layer from scripts/eai_standard/
     (byte-identical everywhere), the base image IMAGE, the pair's frozen files, the texts rendered from
     scripts/robopaint_templates/, and last the repository's conventions (scripts/task_conventions.py normalize)."""
     name = f"robopaint-{family}-{slug}-i{idx}"; fam = f"robopaint_{family}_{slug.replace('-', '_')}"
@@ -748,7 +697,6 @@ def assemble(family: str, slug: str, tpl: str, template_root: Path, out_root: Pa
                 if s2 != s:
                     f.write_text(s2)
         set_image(d)
-    set_files(dst_u, "privileged"); set_files(dst_l, "standard")
     if solution_dir is not None:                                   # a family's new reference solution (--solution-dir)
         for f in sorted((dst_u / "solution").iterdir()):
             if f.is_file() and not is_frozen(f"solution/{f.name}"):
@@ -829,9 +777,8 @@ def resolve(pair: Path, plans_path: str, a) -> int:
     if len(pl["plans"]) != cap:
         sys.exit(f"--plans: {len(pl['plans'])} plans for a cap of {cap} contacts")
     work = Path(tempfile.mkdtemp(prefix="mkbrush_resolve_"))
-    for f in ("rcb_brush.py", "rcb_brush_score.py"):
-        shutil.copy(SHARED / f, work / f)
-    shutil.copy(du / "environment" / "scorer" / "rcb_scorer.py", work / "rcb_scorer.py")
+    for f in ("rcb_brush.py", "rcb_brush_score.py", "rcb_scorer.py"):
+        shutil.copy(du / "environment" / "scorer" / f, work / f)
     for f in ("opt_calli.py", "ref_calli.py", "plan_oracle.py", "oracle_paint.py"):
         shutil.copy(tu / "solution" / f, work / f)
     shutil.copy(plans_path, work / "plans.json")
@@ -896,17 +843,17 @@ def main() -> int:
     ap.add_argument("--template-family", help="the template pair's family (default: --family; another family's pair for a family's first pair)")
     ap.add_argument("--solution-dir", help="replace the template pair's solution code with the files of this directory (a family's new "
                                            "reference solution; the frozen solution files stay the pair's own)")
-    ap.add_argument("--refresh", nargs="*", metavar="PAIR", help="rebuild committed pairs (tasks/robopaint/robopaint-<family>-<target>-i<NN>-privileged) "
+    ap.add_argument("--refresh", nargs="*", metavar="PAIR", help="rebuild committed pairs (tasks/robopaint-<family>-<target>-i<NN>-privileged) "
                     "from their frozen files into --out-root (not tasks/: scripts/robopaint_strict/mk_tasks.py regenerates the committed "
                     "tasks); no directory = every brush-family pair under --out-root")
-    ap.add_argument("--resolve", metavar="PAIR", help="kaishu / xingshu: re-solve this committed pair (tasks/robopaint/robopaint-<family>-<target>-"
+    ap.add_argument("--resolve", metavar="PAIR", help="kaishu / xingshu: re-solve this committed pair (tasks/robopaint-<family>-<target>-"
                     "i<NN>-privileged) with --plans: only its reference solution changes (resolve())")
-    ap.add_argument("--template-root", default=str(ROOT / "tasks" / "robopaint")); ap.add_argument("--out-root", default=str(ROOT / "tasks" / "robopaint"))
+    ap.add_argument("--template-root", default=str(ROOT / "tasks")); ap.add_argument("--out-root", default=str(ROOT / "tasks"))
     ap.add_argument("--templates-dir", default=str(TEMPLATES_DEFAULT)); ap.add_argument("--image", default=IMAGE); ap.add_argument("--force", action="store_true")
     a = ap.parse_args()
     TPL["dir"] = Path(a.templates_dir)
     if a.refresh is not None:
-        if Path(a.out_root).resolve() == (ROOT / "tasks" / "robopaint").resolve():
+        if Path(a.out_root).resolve() == (ROOT / "tasks").resolve():
             sys.exit("--refresh writes pairs without the process rules: regenerate tasks/ with scripts/robopaint_strict/mk_tasks.py "
                      "(or give --out-root another directory)")
         dirs = [Path(d.rstrip("/")) for d in a.refresh] or sorted(p for p in Path(a.out_root).iterdir() if p.is_dir() and re.fullmatch(
@@ -934,9 +881,8 @@ def main() -> int:
     if (dst_u.exists() or dst_l.exists()) and not a.force:
         sys.exit(f"{dst_u} exists (use --force to overwrite)")
     work = Path(tempfile.mkdtemp(prefix="mkbrush_"))
-    for f in ("rcb_brush.py", "rcb_brush_score.py"):
-        shutil.copy(SHARED / f, work / f)
-    shutil.copy(a._src_u / "environment" / "scorer" / "rcb_scorer.py", work / "rcb_scorer.py")
+    for f in ("rcb_brush.py", "rcb_brush_score.py", "rcb_scorer.py"):
+        shutil.copy(a._src_u / "environment" / "scorer" / f, work / f)
     for f in h["sol_files"]:
         shutil.copy(Path(a.solution_dir) / f if a.solution_dir else a._src_u / "solution" / f, work / f)
     if "plans" in h:                                                 # lettering: the exemplar's writing routes (one per contact)

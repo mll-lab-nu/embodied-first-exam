@@ -7,7 +7,7 @@ the repository root:
         python scripts/robopaint_strict/measure_reference.py [robopaint-<family>-<target>-i<NN> ...] > reference.jsonl
 
 Per pair, in a fresh process: replay solution/oracle_qpos.npy from the graders' copy of the instance (tests/) with
-rcb_brush_strict's Session (embodied_first_exam/robopaint/) and print one JSON line: path_mm (the brush tip's path pressed on the main sheet with ink or paint),
+rcb_brush_strict's Session and print one JSON line: path_mm (the brush tip's path pressed on the main sheet with ink or paint),
 mark_width_mm (calligraphy and lettering: the strokes' own mark area / path_mm), longest_stroke_mm, scribble_max, the strokes and
 the picture rule's verdict. rules.json takes path_mm as reference_path_mm and mark_width_mm as reference_mark_width_mm.
 For a family whose rule counts strokes (rules.json families: stroke_gap_mm, mark_min_width_mm; the calligraphy families), the
@@ -21,8 +21,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 CHILD = r"""
 import json, sys
 import numpy as np
-tests, here, oracle, fam, tools = sys.argv[1:6]
-sys.path[:0] = [tools]
+tests, here, oracle, fam = sys.argv[1:5]
+sys.path[:0] = [tests, here]
 import rcb_brush_strict as S
 F = json.load(open(here + "/rules.json"))["families"][fam]
 s = S.Session(instance=tests + "/instance.json", render=False)
@@ -38,11 +38,11 @@ print(json.dumps({k: st.get(k) for k in keys}))
 def main() -> int:
     pairs = sys.argv[1:] or sorted(
         p.name[: -len("-privileged")]
-        for p in (ROOT / "tasks" / "robopaint").glob("robopaint-*-i[0-9][0-9]-privileged")
+        for p in (ROOT / "tasks").glob("robopaint-*-i[0-9][0-9]-privileged")
         if re.match(r"^robopaint-(kaishu|xingshu|caoshu|lettering|acrylic|oil)-", p.name)
     )
     for base in pairs:
-        t = ROOT / "tasks" / "robopaint" / f"{base}-privileged"
+        t = ROOT / "tasks" / f"{base}-privileged"
         p = subprocess.run(
             [
                 sys.executable,
@@ -52,7 +52,6 @@ def main() -> int:
                 str(ROOT / "scripts" / "robopaint_strict"),
                 str(t / "solution" / "oracle_qpos.npy"),
                 base.split("-")[1],
-                str(ROOT / "embodied_first_exam" / "robopaint"),
             ],
             capture_output=True,
             text=True,

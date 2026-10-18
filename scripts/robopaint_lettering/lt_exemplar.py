@@ -758,7 +758,7 @@ def qa_overlay(out, slug, src, meta, s_mm, ox, oy, cov, pieces, routes) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--spec", required=True); ap.add_argument("--slug", required=True); ap.add_argument("--source-dir", required=True)
-    ap.add_argument("--tools", required=True, help="a directory holding rcb_brush.py and rcb_brush_score.py (embodied_first_exam/robopaint/)")
+    ap.add_argument("--tools", required=True, help="a directory holding rcb_brush.py and rcb_brush_score.py (a task's tests/)")
     ap.add_argument("--out", required=True)
     a = ap.parse_args()
     spec = json.load(open(a.spec))
