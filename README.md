@@ -1,8 +1,7 @@
 # Embodied First Exam
 
 **Can a coding agent program a robot?** Robot-manipulation tasks for coding agents (Claude Code, Codex, …) in the
-[Harbor](https://github.com/harbor-framework/harbor) task format, each in a privileged mode (the agent holds the
-simulator), a standard mode (robot as a service) and, for dynamic tasks, a standard-realtime mode.
+[Harbor](https://github.com/harbor-framework/harbor) task format.
 
 **Website, leaderboard and videos: [embodied-first-exam.ai](https://embodied-first-exam.ai)**
 
