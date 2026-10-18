@@ -77,3 +77,8 @@ rendered frames); a video not ready by then is lost, the verdict is not.
   `live_segments.jsonl` is enough to render the video offline; `startups.jsonl` has one line per service start.
 - The verifier copies `live.mp4` and `live_timeline.jsonl` next to `replay.mp4` (which stays the authoritative video)
   and reports `live_video`, `live_frames`, `sim_startups`, `infra_error`.
+
+## Excluded tasks
+
+47 of RoboTwin's 50 tasks. `click_bell` is left out because its success is a transient contact that a replay does not
+reproduce; `click_alarmclock` and `put_object_cabinet` because the upstream expert failed on every seed we swept.
