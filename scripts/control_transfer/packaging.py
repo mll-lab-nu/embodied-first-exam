@@ -35,6 +35,7 @@ TASK_NAMES = {
     "go2-forward-jump": "go2-forward-jump",
     "go2-weave": "go2-weave",
     "go2-yaw-jump": "go2-yaw-jump",
+    "g1": "g1-terrain-walk",
 }
 LANDING_NAME = "landing-random-pad"
 

@@ -48,8 +48,8 @@ def rollout(
 ):
     if not np.isfinite(duration) or not 3 <= duration <= 120 or not np.isfinite(speed) or not 0 < speed <= 1:
         raise ValueError("Invalid operator episode specification")
-    if hasattr(os, "sched_getaffinity"):
-        os.sched_setaffinity(0, sorted(os.sched_getaffinity(0))[:4])
+    # no CPU pinning: the container's CPU quota bounds it, and pinning to the first four host CPUs put every
+    # trial on a host on the same cores (board 0165); the thread counts above / below bound the parallelism
     verify()
     actor = Policy(policy)
     terrain_config = terrain_parameters(terrain, episode_seed)

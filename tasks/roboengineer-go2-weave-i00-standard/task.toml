@@ -24,15 +24,15 @@ expert_time_estimate_hours = 4.0
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)
-min_cpus = 6.0
-min_memory_gb = 12.0
+min_cpus = 4.0
+min_memory_gb = 9.0
 min_gpu_memory_gb = 0.0
 gpu_required = false
 gpu_class = "none"
-verifier_min_cpus = 1.0
-verifier_min_memory_gb = 1.0
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "Harbor 0.23 oracle / nop on aws:rcb-cpu3 (2026-10-18): finalization (held-out x2, 4 workers) + video 76-217 s on the sidecar's 4 CPUs; the verifier only reads JSON (~20 s)"
+measured = "Harbor 0.23 oracle on aws:rcb-cpu3 (2026-10-18, board 0165: anycar-tracking, anycar-compact-lap-monaco-6, anycar-tight-drift-park, neuralfly-general-skydio, go2-weave; docker stats + cgroup memory.peak every 3-6 s): sidecar 1.7-1.9 cores during deployments, its 4-CPU cap during finalization (held-out x2, 4 workers, + video: 79-199 s), peak 0.6-2.13 GiB (go2-weave); the agent's container <= 0.23 GiB. Minimum = the agent's 6 GB cap (its 4 GiB limit is recorded, not enforced, by default) + the sidecar's peak x 1.2 + the monitor's 0.25 GB; CPU = the agent's 2-core cap + the sidecar's ~2 during deployments, the sidecar's 4 after the agent is stopped; verifier phase = the sidecar's collect hook (4 cores, <= 2.13 GiB x 1.2 + the monitor); the verifier itself only reads JSON (~20 s)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -48,7 +48,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 12.0
-measured = "the reference runs (2026-10-18) peaked at 0.04 GiB in the agent's container; 4 GiB (the author's budget) leaves room for an agent's own nominal training; processes / disk: design defaults"
+measured = "the reference runs (2026-10-18, board 0165) peaked at 0.23 GiB in the agent's container; 4 GiB (the author's budget) leaves room for an agent's own nominal training; processes / disk: design defaults"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
@@ -63,7 +63,7 @@ allowed = [0]
 oracle = []
 
 [verifier]
-timeout_sec = 2100.0
+timeout_sec = 600.0
 environment_mode = "separate"
 network_mode = "no-network"
 # Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
