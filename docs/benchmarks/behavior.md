@@ -11,6 +11,9 @@ supplementary tasks for harder testing (below), which have neither yet.
   is the official `stanfordvl/behavior:3.9.2` **by digest** plus a snapshot-pinned ffmpeg layer. It contains NVIDIA
   Isaac Sim and Omniverse Kit (no redistribution) and a 13.7 GB layer above ghcr.io's per-layer limit: **BUILD_ONLY**,
   never pushed. `images/behavior/BUILD_ONLY` has the build command, the licences and the data it needs.
+- **The files image** `ghcr.io/mll-lab-nu/eai-behavior-files` (`images/behavior-files/FILES.json` pins it by digest;
+  BUILD_ONLY: the organization's private package, pulled with its token before a host builds BEHAVIOR tasks): the
+  tooling and the graders (Tasks and generator), which the agent and verifier Dockerfiles take with `COPY --from`.
 - **The licensed dataset**, `RCB_BEHAVIOR_DATA`: the host directory with the BEHAVIOR Data Bundle
   (`omnigibson-robot-assets/`, `behavior-1k-assets/`, `2026-challenge-task-instances/`, `omnigibson.key`), downloaded after
   accepting its licence, which forbids redistribution. It is never in an image: every compose service that runs the
@@ -24,6 +27,14 @@ supplementary tasks for harder testing (below), which have neither yet.
   to 15× slower).
 
 ## Tasks and generator
+- Shared task code: `embodied_first_exam/behavior-1k/` is the one source of the tooling and the graders
+  (`rcb_behavior.py`, `r1pro_primitives_eval.yaml`, `privileged/grade.py`, `standard/grade.py`), built into the files
+  image `images/behavior-files/`. The task Dockerfiles take them with `COPY --from=<image@digest>`: the privileged agent
+  image at `/opt/tools/`, both modes' verifier images at `/tests/` (`grade.py`, and the privileged one's tooling and robot
+  config); only the standard sidecar's tree `environment/sim/` (bind-mounted at `/srv`) carries copies of the tooling.
+  A changed file needs a new image version (`VERSION`, `python3 scripts/files_image.py build behavior-files`, push, `pin`
+  the digest) and the new digest in every task's `COPY --from` lines; `files_image.py check` holds the source to
+  FILES.json.
 - `scripts/behavior/mk_tasks.py` generates every task from the template twins `tasks/behavior-picking-up-trash-i00-privileged`
   and `-standard` (maintained by hand), `scripts/behavior/families.json` (the texts of each family: goal, success conditions,
   difficulty, the standard goal in words; the oracle level and its evidence: the cited positive, or the challenge's
@@ -311,14 +322,14 @@ downtime on the agent's wall clock). Artifacts: `final.json`, `episode.jsonl`, `
 ## Tooling (file names)
 | main's convention | BEHAVIOR-1K |
 |---|---|
-| `environment/rcb_traj.py` (privileged tooling, `Session`) | `environment/rcb_behavior.py` (`Session`: the frozen instance, thin primitives, the robot's cameras, recording, replay) |
-| `tests/rcb_traj.py` | `tests/rcb_behavior.py` |
+| `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_behavior.py` (`Session`: the frozen instance, thin primitives, the robot's cameras, recording, replay), from the files image |
+| `tests/rcb_traj.py` | `/tests/rcb_behavior.py`, from the files image |
 | standard sidecar | `environment/sim/server.py` (2.2 adapter), `finalize.sh`, `rcb_behavior.py`, the robot config; `rcb_limited.py`, `rcb1.py`, `run.sh` from `scripts/eai_standard/` |
 | reference tooling | `solution/rcb_behavior_ref.py` (frozen; the oracle agent only) |
 | `rcb_client.py`, `rcb1.py` | the same names (`scripts/eai_standard/`); the agent container and the verifier are FROM the shared digest-pinned client image (`scripts/eai_standard/client.env`), the agent's pip pins are `environment/client-requirements.txt` |
 
 The tooling records 25-D actions (base + trunk + arms + grippers) at 30 Hz. Every copy of the tooling and of the standard
-sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh`).
+sidecar files is byte-identical across the benchmark, the files image's included (`check-tooling-identity.sh`).
 
 ## Declarations
 - **Tooling: thin wrappers only.** Joint moves, a straight-line base drive, cuRobo IK moves, gripper commands and the

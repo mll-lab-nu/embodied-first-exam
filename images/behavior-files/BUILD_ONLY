@@ -1,0 +1,3 @@
+Private, like eai-behavior (images/behavior/BUILD_ONLY): the BEHAVIOR-1K tasks' tooling and graders, which their agent and
+verifier images take with COPY --from. Pushed by hand to the organization's private package; evaluation hosts pull it with
+the organization's token before they build BEHAVIOR tasks.
