@@ -12,7 +12,7 @@ a report on the way.
 
 Source: two frozen releases (`scripts/robosafe/release.json`, "The served set"): RoboSafeBench 0.5.4 for 84 tasks (in the core set,
 `docs/core_set.toml`, unless Luna solved the base's standard or realtime mode) and 0.5.3 for the other 482 (left out of the core set, apart from `rsb-c04-i00-standard`, whose base's realtime mode is a 0.5.4 task); the commit is in `images/robosafe/source.env`, vendored into the
-image's build context (`images/robosafe/context/`, "Image"). Tasks: `tasks/rsb-<slug>-i<NN>-standard` (and
+image's build context (`images/robosafe/context/`, "Image"). Tasks: `tasks/robosafebench/rsb-<slug>-i<NN>-standard` (and
 `-standard-realtime`, "The realtime set"). Both releases are frozen task directories, held to `release.json` by
 `scripts/robosafe/check_release.py`: the 0.5.4 tasks were exported by RoboSafeBench's release tooling (not carried here)
 and the 0.5.3 tasks rendered in this repository from instances frozen in the image; neither is re-rendered here. The
@@ -272,7 +272,7 @@ run natively ("Source, image and task identity").
 
 ## Standard-realtime tasks
 
-The world does not wait (PROTOCOL §3): `tasks/rsb-<slug>-i<NN>-standard-realtime`, one per task of the realtime set,
+The world does not wait (PROTOCOL §3): `tasks/robosafebench/rsb-<slug>-i<NN>-standard-realtime`, one per task of the realtime set,
 the same request, scene, seed and reference as its standard task, under RoboSafeBench's realtime clock; the instances were frozen in the image.
 
 | | |
@@ -610,8 +610,8 @@ realtime-specific, and an unattended batch takes both kinds of task directory to
 
 ```bash
 # one task (standard or realtime: the task directory decides)
-harbor run -p tasks/rsb-<slug>-i<NN>-standard -a <agent> -m <model> -o /abs/path/jobs --job-name <run>__<task>
-harbor run -p tasks/rsb-<slug>-i<NN>-standard-realtime -a <agent> -m <model> -o /abs/path/jobs --job-name <run>__<task>
+harbor run -p tasks/robosafebench/rsb-<slug>-i<NN>-standard -a <agent> -m <model> -o /abs/path/jobs --job-name <run>__<task>
+harbor run -p tasks/robosafebench/rsb-<slug>-i<NN>-standard-realtime -a <agent> -m <model> -o /abs/path/jobs --job-name <run>__<task>
 # batches (docs/protocol/running.md), from the repository root, with the agent's settings (AGENT=codex MODEL=<model>, or
 # claude-code) and JOBS an absolute path: the standard set, then the realtime set as a batch of its own
 B=$(ls tasks | grep '^rsb-' | sed -E 's/-standard(-realtime)?$//' | sort -u)
@@ -789,15 +789,28 @@ were exported by RoboSafeBench's release tooling, which this repository does not
 here from instances frozen in the image; neither is re-rendered here, apart from the privileged twins
 (`scripts/robosafe/gen_privileged.py render`, checked by `gen_privileged.py check` in the same CI step).
 `check_release.py` also holds every task's service, grader and solution helpers byte for byte to one
-copy each, in a canonical task (`check_release.py` `CANON` and `LAYERS`: a 0.5.4 paused task for the service, client,
-standard grader and oracle driver, a 0.5.4 realtime task for the realtime clock's own files, a privileged task for the
-privileged tooling, and a 0.5.3 paused and a 0.5.3 realtime task for that release's own adapter, grader and oracle
-drivers), so the unit tests run the code the tasks run: edit the file in its canonical task, then run
-`scripts/robosafe/sync_release.py` (it copies the files into the other standard and realtime tasks, applies its text
-edits, normalizes the tasks and runs `check_release.py write`; `--check` writes nothing). For a file of the privileged
-layer, or `rcb_rsb.py` / `candidate_identity.py` (the privileged twins carry byte copies of the standard service's),
-also run `scripts/robosafe/gen_privileged.py render` (it does not touch the standard tasks) and then
-`check_release.py write`.
+copy each (`check_release.py` `LAYERS`), so the unit tests run the code the tasks run. The benchmark's shared task code
+is `embodied_first_exam/robosafebench/<layer>/` (layers: `standard`, a 0.5.4 paused task's service, client, standard grader,
+oracle driver and public observation helpers; `realtime`, the realtime clock's own files; `privileged`, the privileged
+tooling, grader, `test.sh` and solution; `0.5.3` and `0.5.3-realtime`, that release's own adapter, grader and oracle
+drivers); the layers other benchmarks share keep their source in `scripts/` (`rcb1.py`: `scripts/eai_standard/`; the
+realtime clock and client: `scripts/humanoidbench/shared/realtime/`). The files outside `environment/sim/` that many
+tasks share are not in the task directories: the paused standard client (`rcb_client.py`), the graders
+(`tests/grade.py`, the realtime tasks' `tests/grade_rsb.py`), the privileged tooling (`rcb_rsb_privileged.py`, and the
+standard service's `rcb_rsb.py` and `candidate_identity.py`) and `scrub.py`. They are built into the files-only image
+`images/robosafe-files/` (`ghcr.io/mll-lab-nu/eai-robosafe-files`, private like `eai-robosafe`: `BUILD_ONLY`;
+`scripts/files_image.py`), and each task's `environment/Dockerfile` and `tests/Dockerfile` take them with
+`COPY --from=<image@digest>` to the same container paths (`check_release.py` `FROM_IMAGE`; `/opt/tools/`, `/tests/`,
+the privileged image's `/tmp/scrub.py`). `images/robosafe-files/FILES.json` pins the image and its files' sha256, and
+`check_release.py check` holds the sources to it and every task's `COPY --from` lines to the pinned image. The other
+shared files (the sim service in `environment/sim/`, the solution files, the privileged `tests/test.sh`) are copied
+into the tasks, and every copy must equal its source. The unit tests import the sim service from a canonical task of
+each layer (`check_release.py` `CANON`, `sim_dir`). To change a shared file, edit its source (a file of the image also
+needs a new image version: `images/robosafe-files/VERSION`, `scripts/files_image.py build robosafe-files`, push,
+`pin`), then run `scripts/robosafe/sync_release.py` (it copies the files into the standard and realtime tasks, writes
+their Dockerfiles' `COPY --from` lines, applies its text edits, normalizes the tasks and runs `check_release.py write`;
+`--check` writes nothing). For a file of the privileged layer, or `rcb_rsb.py` / `candidate_identity.py`, also run
+`scripts/robosafe/gen_privileged.py render` (it does not touch the standard tasks) and then `check_release.py write`.
 
 ### Finalize bounds
 The 0.5.4 tasks' collect hook waits up to 4080 s for the verdict and 5280 s for the video (`timeout_sec` 5310): the
@@ -884,7 +897,8 @@ instance (clock, `stop`, cap, timing) differs from the paused one, and H.7 makes
 
 **The agent's container.** `environment/Dockerfile`: `eai-robosafe:0.5.4` with `scrub.py` run before the agent starts,
 the frozen instance at `/app/instance.json` and the tooling in `/opt/tools/` (`rcb_rsb_privileged.py`, and `rcb_rsb.py`
-and `candidate_identity.py`, the standard service's own files byte for byte). `scrub.py` removes RoboSafeBench's scripted
+and `candidate_identity.py`, the standard service's own files byte for byte; the tooling and `scrub.py` from the
+files-only image `eai-robosafe-files`, "The served set"). `scrub.py` removes RoboSafeBench's scripted
 solutions (H.2; docs/protocol/leakage.md): in the families and prototypes every function named `reference`, `comply`,
 `negatives`, `alternatives`, their `_control` and `_pose` versions, `control_scripts`, `label_control_scripts` and
 `_reference_rung` (and `benign_negatives`) keeps its signature and raises, and so does every function there that only

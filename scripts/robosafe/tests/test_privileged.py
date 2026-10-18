@@ -24,12 +24,12 @@ import numpy as np
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE.parent))
-sys.dont_write_bytecode = True        # the tooling is imported from its canonical task dirs
+sys.dont_write_bytecode = True        # the tooling is imported from its one copy (check_release.shared)
 import check_release as CR  # noqa: E402
 sys.path[:0] = [str(CR.shared("privileged", "rcb_rsb_privileged.py").parent), str(CR.sim_dir())]
 import rcb_rsb_privileged as P  # noqa: E402
 
-TASK = ROOT / "tasks" / "rsb-a01-i02-standard"
+TASK = CR.TASKS / "rsb-a01-i02-standard"
 
 
 def check(name: str, cond: bool) -> int:

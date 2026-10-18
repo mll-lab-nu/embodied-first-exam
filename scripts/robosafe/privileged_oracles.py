@@ -11,13 +11,14 @@ only when the live episode passed and all three replays pass with its outcome an
 shows that the scrub changes nothing the verdict reads.
 
     # inside the eai-robosafe image (the twin's sim service needs requests, installed when missing):
-    python3 scripts/robosafe/privileged_oracles.py one tasks/<base>-standard OUT_DIR
+    python3 scripts/robosafe/privileged_oracles.py one tasks/robosafebench/<base>-standard OUT_DIR
     # on a host with podman and the image, all bases, N at a time, then copy the passing ones into oracles_privileged/:
     python3 scripts/robosafe/privileged_oracles.py all WORK_DIR [--jobs N] [--image IMAGE]
     python3 scripts/robosafe/privileged_oracles.py collect WORK_DIR
 `collect` writes scripts/robosafe/oracles_privileged/<base>.npz and <base>.json, which gen_privileged.py render puts
 into the tasks; after committing the rendered tasks, delete oracles_privileged/ (the tasks hold the references).
-The privileged tooling (rcb_rsb_privileged.py, scrub.py) is the canonical privileged task's (check_release.py LAYERS).
+The privileged tooling (rcb_rsb_privileged.py, scrub.py) is embodied_first_exam/robosafebench/privileged/ (check_release.py LAYERS,
+the files image's source).
 """
 from __future__ import annotations
 
@@ -36,6 +37,7 @@ HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path[:0] = [str(HERE), str(ROOT / "scripts")]
 import check_release  # noqa: E402
+import files_image  # noqa: E402
 
 TOOLS = check_release.shared("privileged", "rcb_rsb_privileged.py").parent   # with scrub.py
 OUT = HERE / "oracles_privileged"
@@ -66,7 +68,14 @@ def run_live(task: pathlib.Path, out: pathlib.Path) -> None:
         app = pathlib.Path("/app/output")
         shutil.rmtree(app, ignore_errors=True)
         app.mkdir(parents=True)
-        cenv = {**os.environ, "PYTHONPATH": str(task / "environment")}
+        client = out / "client"       # the agent image's /opt/tools: the task's rcb1.py, the files image's rcb_client.py
+        client.mkdir()
+        for f in (task / "environment").glob("*.py"):
+            shutil.copyfile(f, client / f.name)
+        for dest, src in files_image.copied(task / "environment" / "Dockerfile").items():
+            if dest.startswith("/opt/tools/"):
+                shutil.copyfile(src, client / pathlib.PurePosixPath(dest).name)
+        cenv = {**os.environ, "PYTHONPATH": str(client)}
         with (out / "oracle.log").open("w") as log:
             subprocess.run([sys.executable, str(sol / "oracle_replay.py")], env=cenv, stdout=log, stderr=log,
                            cwd="/app", timeout=3300, check=False)
@@ -155,7 +164,7 @@ def run_all(work: pathlib.Path, jobs: int, image: str) -> int:
         if (out / "RESULT.json").exists() and json.loads((out / "RESULT.json").read_text()).get("ok"):
             return base, json.loads((out / "RESULT.json").read_text())
         subprocess.run(["podman", "run", "--rm", "-v", f"{ROOT}:{ROOT}:ro", "-v", f"{work}:{work}", image, "python",
-                        str(HERE / "privileged_oracles.py"), "one", str(ROOT / "tasks" / f"{base}-standard"), str(out)],
+                        str(HERE / "privileged_oracles.py"), "one", str(check_release.TASKS / f"{base}-standard"), str(out)],
                        stdout=(work / f"{base}.log").open("w"), stderr=subprocess.STDOUT, check=False)
         r = out / "RESULT.json"
         return base, json.loads(r.read_text()) if r.exists() else {"ok": False}

@@ -23,7 +23,9 @@ docs/protocol/running.md ("Infrastructure failures"). For every standard / stand
     The records are the shared layers' common fields; a benchmark whose grader needs more of its own (e.g. a verdict
     file next to final.json) may fail the success case, which is then a finding to read, not a rule. A grader that does
     not read RCB_DATA / RCB_VERIFIER_LOG_DIR, or a task without tests/grade.py, is checked statically only (the summary
-    says how many). One run per distinct content of tests/*.py + tests/*.json.
+    says how many). One run per distinct content of tests/*.py + tests/*.json. The verifier's files include those
+    tests/Dockerfile takes from a files-only image into /tests/ (scripts/files_image.py copied): read at their source,
+    and the grader run from a copy of the assembled /tests/.
 
     python3 ci_checks/check-live-verdict.py [task dirs]      # default: every task
 """
@@ -33,6 +35,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -40,6 +43,8 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import files_image  # noqa: E402  (the verifier's files from a files-only image count as its tests/)
 STATIC_ONLY: list[str] = []                         # standard tasks whose grader could not be run here
 LIVE_OK = {"finalized": True, "graded_by": "live", "replays": 0, "success": True, "live_success": True, "done": True,
            "reason": "success", "n_actions": 10, "control_steps": 10, "video": True}
@@ -86,8 +91,25 @@ def mode_of(task: Path) -> str:
     return ""
 
 
-def run_grader(grader: Path, record: dict | None) -> tuple[int | None, dict, str]:
+def verifier_files(task: Path) -> dict[str, Path]:
+    """{name: file} of the verifier's /tests/: tests/'s files and those tests/Dockerfile takes from a files-only image."""
+    tests = task / "tests"
+    out = {p.name: p for p in sorted(tests.iterdir()) if p.is_file()} if tests.is_dir() else {}
+    for dest, src in files_image.copied(tests / "Dockerfile").items():
+        name = dest.removeprefix("/tests/")
+        if name != dest and "/" not in name:
+            out[name] = src
+    return out
+
+
+def run_grader(grader: Path, record: dict | None, files: dict[str, Path] | None = None) -> tuple[int | None, dict, str]:
+    """grader on a synthetic record; with `files` (the verifier's /tests/ assembled from several places), from a copy of them."""
     with tempfile.TemporaryDirectory(prefix="rcb-live-") as tmp:
+        if files:
+            Path(tmp, "tests").mkdir()
+            for name, f in files.items():
+                shutil.copyfile(f, Path(tmp, "tests", name))
+            grader = Path(tmp, "tests", grader.name)
         data, log = Path(tmp, "data"), Path(tmp, "log")
         data.mkdir()
         log.mkdir()
@@ -119,7 +141,8 @@ def check(tasks: list[Path]) -> list[str]:
     for task in tasks:
         if not mode_of(task):
             continue
-        src = "\n".join(p.read_text(errors="replace") for p in sorted((task / "tests").glob("*.py")) if p.is_file())
+        files = verifier_files(task)
+        src = "\n".join(p.read_text(errors="replace") for n, p in sorted(files.items()) if n.endswith(".py"))
         if not src:
             continue
         if "graded_by_live" not in src:
@@ -136,22 +159,23 @@ def check(tasks: list[Path]) -> list[str]:
         if first_sim is not None and (kill is None or kill > first_sim):
             errs.append(f"{task.name}: no collect hook stops the agent's processes (`main`: kill -9 -1) before the sim "
                         "sidecar is signalled (PROTOCOL H.4)")
-        grader = task / "tests" / "grade.py"
-        if not grader.is_file():
+        grader = files.get("grade.py")
+        if grader is None:
             STATIC_ONLY.append(task.name)
             continue
         text = grader.read_text(errors="replace")
-        alltext = "\n".join(p.read_text(errors="replace") for p in (task / "tests").glob("*.py") if p.is_file())
+        alltext = src
         if "RCB_DATA" not in alltext or "RCB_VERIFIER_LOG_DIR" not in alltext:   # a grader may read them in a module
             STATIC_ONLY.append(task.name)
             continue
-        h = hashlib.sha256(b"".join(p.name.encode() + p.read_bytes() for p in sorted((task / "tests").iterdir())
-                                    if p.is_file() and p.suffix in (".py", ".json"))).hexdigest()
+        h = hashlib.sha256(b"".join(n.encode() + p.read_bytes() for n, p in sorted(files.items())
+                                    if Path(n).suffix in (".py", ".json"))).hexdigest()
         if h in seen:
             continue
         seen[h] = task.name
+        staged = files if any(p.parent != task / "tests" for p in files.values()) else None   # not all in tests/
         for name, record, want_reward, want_infra in CASES + (RT_CASES if mode_of(task) == "standard-realtime" else ()):
-            reward, rw, tail = run_grader(grader, record)
+            reward, rw, tail = run_grader(grader, record, staged)
             if reward is None:
                 errs.append(f"{task.name}: tests/grade.py on {name}: no reward.txt ({tail.strip()[-160:]})")
                 continue

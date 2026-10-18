@@ -58,7 +58,7 @@ def records(dirs: list[str]) -> int:
             else:                                    # before 2026-10-17: the two grading replays' starts
                 rp = v.get("replays") or {}
                 ss, fz = rp.get("start_sha") or [], rp.get("frozen_start_sha")
-            inst = ROOT / "tasks" / t / "environment/sim/instance.json"
+            inst = ROOT / "tasks/robosafebench" / t / "environment/sim/instance.json"
             want = json.loads(inst.read_text())["state_sha"] if inst.exists() else fz
             n += 1
             if not (len(ss) == 2 and ss[0] == ss[1] == fz == want):
@@ -88,8 +88,8 @@ def inside(tasks: list[str]) -> int:
 
 
 def image(tag: str, tasks: list[str]) -> int:
-    tasks = [str(pathlib.Path(t).resolve()) for t in tasks] or sorted(str(p) for p in (ROOT / "tasks").glob("rsb-*-standard"))   # the paused tasks (a realtime start adds its clock's plan digest)
-    tdir = str(ROOT / "tasks")
+    tasks = [str(pathlib.Path(t).resolve()) for t in tasks] or sorted(str(p) for p in (ROOT / "tasks/robosafebench").glob("rsb-*-standard"))   # the paused tasks (a realtime start adds its clock's plan digest)
+    tdir = str(ROOT / "tasks/robosafebench")
     inner = ["/tasks/" + os.path.basename(t) for t in tasks]
     cmd = ["podman", "run", "--rm", "-e", f"JOBS={os.environ.get('JOBS', '6')}", "-v", f"{tdir}:/tasks:ro",
            "-v", f"{pathlib.Path(__file__).resolve()}:/chk/check_start_hash.py:ro", "-w", "/tmp", tag,

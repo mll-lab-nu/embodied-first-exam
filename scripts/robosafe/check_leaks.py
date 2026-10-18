@@ -26,6 +26,9 @@ import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "scripts"))
+import files_image  # noqa: E402
+
 WORDS = re.compile(r"robo\s*safe|maniguard|\bsafe(?:ty|ly)?\b|\bunsafe\b|hazard", re.I)
 ALLOW = [
     re.compile(r"\bsafe = name\.replace|\{safe\}\."),                        # rcb1.py: a file name made safe
@@ -45,14 +48,15 @@ def hits(text: str, where: str) -> list[str]:
 
 
 def agent_files(task: pathlib.Path) -> list[pathlib.Path]:
-    """instruction.md and every file environment/Dockerfile COPYs (relative to environment/)."""
+    """instruction.md and every file environment/Dockerfile COPYs (relative to environment/, or from the files-only
+    image: its source, scripts/files_image.py copied)."""
     files = [task / "instruction.md"]
     for line in (task / "environment/Dockerfile").read_text().splitlines():
         m = re.match(r"\s*(COPY|ADD)\s+(.*)", line, re.I)
         if m and "--from" not in m.group(2):
             for src in m.group(2).split()[:-1]:
                 files.append(task / "environment" / src)
-    return files
+    return files + sorted(files_image.copied(task / "environment/Dockerfile").values())
 
 
 def task_text_of(t: pathlib.Path) -> str | None:
@@ -80,8 +84,8 @@ def live(tasks: list[pathlib.Path]) -> list[str]:
     import numpy as np
     sys.dont_write_bytecode = True   # the service is imported from a task dir: no __pycache__ there
     sys.path.insert(0, str(ROOT / "scripts/robosafe"))
-    import check_release      # the standard service's one copy: its canonical task's environment/sim/
-    sys.path.insert(0, str(check_release.shared("standard", "server.py").parent))
+    import check_release      # the standard service as the tasks run it: its canonical task's environment/sim/
+    sys.path.insert(0, str(check_release.sim_dir()))
     import rcb1
     import rcb_service
     import server
@@ -113,7 +117,7 @@ def live(tasks: list[pathlib.Path]) -> list[str]:
 
 def main() -> int:
     args = [a for a in sys.argv[1:] if a != "--live"]
-    tasks = [pathlib.Path(a).resolve() for a in args] or sorted((ROOT / "tasks").glob("rsb-*"))
+    tasks = [pathlib.Path(a).resolve() for a in args] or sorted((ROOT / "tasks/robosafebench").glob("rsb-*"))
     bad = static(tasks)
     if "--live" in sys.argv:              # the standard tasks' service (the realtime tasks' /spec: check_rt_spec.py)
         bad += live([t for t in tasks if t.name.endswith("-standard")])

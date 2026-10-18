@@ -55,6 +55,22 @@ def copy_line(name: str, file: str, dest: str) -> str:
     return f"COPY --from={s['image']} /{file} {dest}"
 
 
+COPY_FROM = re.compile(r"^COPY --from=(\S+) /(\S+) (\S+)[ \t]*$", re.M)
+
+
+def copied(dockerfile: Path) -> dict[str, Path]:
+    """{container path: its source in this repository} of every file a Dockerfile takes from a files-only image
+    (`COPY --from=<a FILES.json image> /<file> <dest>`, copy_line): what a check that reads a build context's files reads
+    for those (the generators' checks tie the sources to the pinned image)."""
+    pinned = {}
+    for f in (ROOT / "images").glob("*/FILES.json"):
+        s = json.loads(f.read_text())
+        pinned[s["image"]] = s
+    text = dockerfile.read_text() if dockerfile.is_file() else ""
+    return {dest: ROOT / pinned[ref]["source"] / f for ref, f, dest in COPY_FROM.findall(text)
+            if ref in pinned and f in pinned[ref]["files"]}
+
+
 def sha256(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 

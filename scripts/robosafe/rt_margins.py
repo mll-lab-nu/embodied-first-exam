@@ -72,7 +72,7 @@ def main() -> int:
         ver_p = data / "verdict.json"
         if margin and ver_p.exists() and (data / "trajectory_live.f64").exists():
             ver = json.loads(ver_p.read_text())
-            inst = json.loads((HERE.parents[1] / "tasks" / task / "environment/sim/instance.json").read_text())
+            inst = json.loads((HERE.parents[1] / "tasks/robosafebench" / task / "environment/sim/instance.json").read_text())
             width = max(int(v["dim"]) for v in inst["control"]["action_types"].values())
             rows = np.fromfile(data / "trajectory_live.f64", dtype=np.float64).reshape(-1, width + 4)
             ticks = np.fromfile(data / "ticks.f64", dtype=np.float64).reshape(-1, 2) if (data / "ticks.f64").exists() else None
