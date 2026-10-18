@@ -89,6 +89,7 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 | `nop` scores 0; with `oracle = "full"` the oracle scores 1 on every seed in `seeds.oracle` (`/validate`); a task without an oracle gets a human review (a positive example, the predicate, `nop` 0, determinism; recorded in the PR) | the `validated` marker (§2) |
 | Results report success with cost (tokens, money, turns, wall clock, simulation steps) per mode and per comparable configuration; run id `<harness>-<model>-<effort>`; not committed to the repository | running.md |
 | The easy set: task bases listed in [`easy_set.toml`](../easy_set.toml) (solved through a shortcut, judged too easy by the benchmark owner, solved in every mode by the screening runs, or solved in any mode by the reference run `solved_by`) stay in the repository and are run, but are reported apart from the main table and left out of the headline statistics; each result records `set` (`core` / `easy`) as a marker, never part of the configuration. Listing a task changes none of its files | `task_conventions.py easy-set --check` |
+| The core set: the task dirs listed in [`core_set.toml`](../core_set.toml), each mode dir its own task: every task dir minus the easy set and minus the dirs the reference run solved (a success in any mode takes out the base; a RoboSafeBench privileged twin takes out only itself). The headline statistics are computed on it; it is regenerated from the reference run's verdicts | `task_conventions.py core-set --check` |
 
 ## 5. Instructions and information
 
