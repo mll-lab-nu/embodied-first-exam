@@ -63,7 +63,7 @@ UNITS: dict[str, list[str]] = {
     "RoboCasa": _own("robocasa"),
     "RoboCasa365": _own("robocasa365"),
     "LIBERO-MAX": _own("libero-max"),
-    "RoboARC": _own("roboarc"),
+    "RoboARC": _own("roboarc", "images/roboarc-files/"),
     # one generator directory, two benchmarks (board 0160): a change under scripts/roboolympics/ is in both
     "RoboOlympics-Fun": _own("roboolympics", "images/robofunolympics/", "images/roboolympics-fun-files/"),
     "RoboOlympics-Match": ["scripts/roboolympics/", "images/olympiad/", "docs/benchmarks/roboolympics-match.md"],   # eai-olympiad: built from RoboOlympics' tree, not here
@@ -73,7 +73,7 @@ UNITS: dict[str, list[str]] = {
     "Panda Dynamic Scenes": _own("pandadyn"),
     "AM-Bench": _own("ambench"),
     "iSpatialGym": _own("ispatialgym"),
-    "IKEA MuJoCo": _own("ikea_mujoco", "images/ikea-mujoco/"),
+    "IKEA MuJoCo": _own("ikea_mujoco", "images/ikea-mujoco/", "embodied_first_exam/benchmarks/roboarc/nyx_direct.py"),   # its standard tasks copy it
     "roboEngineer": _own("roboengineer", "scripts/control_transfer/", "scripts/quadrotor_landing/",
                          "images/control-transfer/", "images/control-transfer-anycar-files/", "images/quadrotor-landing/",
                          "docs/benchmarks/roboengineer", "docs/benchmarks/control-transfer.md",

@@ -49,7 +49,7 @@ Four more scenes are in the image (`/opt/ikea/scenes/`) but are not tasks: no re
   - `shared/`: `rcb_ikea.py` (the tooling and the replay), `grade.py` (the verifier), `render_video.py` (the replay
     video);
   - `standard/`: the sim service (`server.py`, `ikea_rig.py`, `ikea_nyx.py`, `finalize.sh`; `ikea_nyx.py` drives
-    RoboARC's `nyx_direct.py`, which the tasks get from `scripts/roboarc/shared/`), its grader (`grade.py`:
+    RoboARC's `nyx_direct.py`, which the tasks get from `embodied_first_exam/benchmarks/roboarc/`), its grader (`grade.py`:
     transcribes the live episode's `final.json`) and the oracle client, `rigs.json` (camera rigs), `std_reference.py`;
   - `oracles/<task>/`: how the closed-loop references were built (eket, ikea365, vesken) and stegesund's reference
     notes; the references themselves are kept in the task directories only (the standard

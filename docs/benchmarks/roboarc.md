@@ -23,6 +23,10 @@ Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and
 - physics: MuJoCo 3.14.0, CPU float64 (the blanket families' cloth: a deterministic CUDA step, `blanket_vbd_gpu`);
 - the numpy / OpenBLAS SIMD masking in every container that runs a Session (so every CPU class builds the same frozen
   bytes); `render_bridge.py` and `nyx_direct.py` next to every tooling copy, named in the runtime binding;
+- the privileged images (agent `/opt/tools/`, verifier `/tests/`) take `rcb_topogym.py`, `render_bridge.py` and
+  `nyx_direct.py` from the files-only image `ghcr.io/mll-lab-nu/eai-roboarc-files` (`images/roboarc-files/`, built
+  from `embodied_first_exam/benchmarks/roboarc/`; `FILES.json` pins its digest and the files' sha256) with
+  `COPY --from=<image@digest>`: the privileged task dirs carry no copy. The standard sim service keeps its copies in `environment/sim/` (bind-mounted);
 - the texts state what the tooling grades: the contact-review values come from `CONTACT_RULE`, and the grasping rule is
   `Session.grasp_rules()` of the instance (the weld's slip force over 20 ms, 60 N ALOHA / 65 N Robotiq, and the
   Robotiq's release after 0.2 s without finger contact).
@@ -33,6 +37,11 @@ Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and
   `packages/` (the texts of the RoboARC base each task ports, renamed, with the family's own texts over them),
   `oracles/` (the standard references re-timed to the joint-speed rule), `assets.json`, `shared/` (the tooling and the
   graders). Generated tasks end with `scripts/task_conventions.py` normalize.
+- The shared task code (the tooling, the graders, the sim service, the standard oracle player) has one source,
+  `embodied_first_exam/benchmarks/roboarc/`. A change to a file of `images/roboarc-files/FILES.json` needs a new image
+  version: `images/roboarc-files/VERSION`, `python3 scripts/files_image.py build roboarc-files`, push,
+  `files_image.py pin roboarc-files <digest>`, then the tasks' `COPY --from` lines name the new digest; until then
+  `scripts/files_image.py check` fails.
 - The files a task only carries have one copy, in `tasks/`: the privileged reference
   (`tasks/roboarc-<base>-privileged/solution/trajectory.npz`, both modes), the instance's lock (that task's
   `tests/runtime_binding.json`), the goal-state images (its `environment/goal/`) and the standard agent Dockerfile.
@@ -164,7 +173,7 @@ or robot base position either.
 ## Registration (the lines a rename changes)
 
 `BENCH` in `scripts/roboarc/mk_tasks.py` and `--bench` of dev/robotangle_mujoco's `scripts/robotangle/release_rebuild.py`;
-`git mv` of `scripts/roboarc/`, `images/roboarc/` and this page; then the registration lines: `scripts/task_conventions.py`
+`git mv` of `scripts/roboarc/`, `images/roboarc/`, `images/roboarc-files/` (a new image name: build, push, pin) and this page; then the registration lines: `scripts/task_conventions.py`
 (`BENCHMARKS`), `scripts/task_resources.toml`
 (the `^roboarc-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix or generator
 (`ci_checks/check-tooling-identity.sh` `MODULE`, `scripts/roboarc/ci/advisory-world-frame.sh`, `check-generated-tasks.sh`,
