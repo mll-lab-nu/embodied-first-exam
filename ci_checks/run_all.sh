@@ -45,13 +45,13 @@ if [ "${1:-}" = "--changed" ]; then
   scope="$RCB_SCOPE"
   echo "scope: $RCB_SCOPE ($RCB_SCOPE_REASON)${RCB_SCOPE_BENCHES:+ -- benchmarks: $RCB_SCOPE_BENCHES}"
   case "$scope" in
-    full) tasks=(tasks/*/) ;;
+    full) tasks=(tasks/*/*/) ;;
     benchmarks) read -ra tasks <<<"$RCB_SCOPE_TASKS"; read -ra only <<<"$RCB_SCOPE_PATHS" ;;
     none) tasks=() ;;
     *) echo "FAIL ci_checks/ci_scope.py: unknown scope $scope"; exit 1 ;;
   esac
 else
-  tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=(tasks/*/) || explicit=1
+  tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=(tasks/*/*/) || explicit=1
 fi
 real=(); for t in "${tasks[@]}"; do t="${t%/}"; [ -f "$t/task.toml" ] && real+=("$t"); done; tasks=("${real[@]}")
 echo "per-task checks on ${#tasks[@]} task(s)"
@@ -75,12 +75,14 @@ for ((i = 0; i < ${#tasks[@]}; i += chunk)); do
 done
 # per-task Python checks over the tasks in scope: the given ones, else all (a scoped run: its benchmarks' tasks)
 targs=""; if [ $explicit -eq 1 ] || [ "$scope" = benchmarks ]; then for t in "${tasks[@]}"; do targs+=" $(q "$t")"; done; fi
-# the benchmarks' own advisory hooks: every ci_checks/benchmarks/*/advisory-*, given the tasks in scope
+# the benchmarks' own advisory hooks: every ci_checks/benchmarks/*/advisory-*, given the tasks in scope as arguments, through
+# xargs from a list file (every task's path in one command line is longer than a single argument may be, 128 KiB)
 if [ ${#tasks[@]} -gt 0 ]; then
-  hparts=""; for t in "${tasks[@]}"; do hparts+=" $(q "$t")"; done
+  hlist="$(mktemp)"; trap 'rm -f "$hlist"' EXIT
+  printf '%s\n' "${tasks[@]}" > "$hlist"
   for h in ci_checks/benchmarks/*/advisory-*; do
     [ -f "$h" ] || continue
-    case "$h" in *.py) add python3 "$(q "$h")$hparts" ;; *) add bash "$(q "$h")$hparts" ;; esac
+    case "$h" in *.py) add xargs python3 "$(q "$h") < $(q "$hlist")" ;; *) add xargs bash "$(q "$h") < $(q "$hlist")" ;; esac
   done
 fi
 # repo-level, cheap: always on everything, or on the given task dirs as before
@@ -111,7 +113,7 @@ add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
 add python3 ci_checks/check-build-stamps.py
 # PROTOCOL §4: the core set (docs/core_set.toml) names existing task dirs, with their base, benchmark label and mode
 add python3 scripts/task_conventions.py core-set --check
-# every task dir has its benchmark label (its BENCHMARKS prefix)
+# every task dir has its benchmark label and sits in its benchmark's folder, tasks/<folder>/<task>/ (BENCHMARK_DIRS)
 add python3 scripts/task_conventions.py benchmarks --check
 
 t0=$SECONDS

@@ -7,7 +7,7 @@
 # standard or standard-realtime task shares its privileged twin's copy where the twin exists; without a twin (a benchmark
 # may ship any subset of the modes; the README's Twin row says why, an advisory check reads it) it carries its own, and
 # its sim copy and its tests/ copy, where both exist, are byte-identical.
-# Usage: check-instance-copies.sh tasks/<task-dir>
+# Usage: check-instance-copies.sh tasks/<benchmark>/<task-dir>
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"; rc=0
 root="$(cd "$(dirname "$0")/.." && pwd)"

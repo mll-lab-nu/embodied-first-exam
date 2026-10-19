@@ -47,8 +47,8 @@ Prepare nominal robot assets with `python -m images/control-transfer/stage_nomin
 The task directories are the deliverable; the tooling that built them is kept outside this repository.
 
 ```bash
-RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer-anycar-tracking-i00-standard -a oracle -e docker
-RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer-anycar-tracking-i00-standard -a nop -e docker
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer/roboengineer-anycar-tracking-i00-standard -a oracle -e docker
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer/roboengineer-anycar-tracking-i00-standard -a nop -e docker
 ```
 
 The supplied reference candidates are scripted engineering baselines, not LLM scores. Fixed-eight Neural Fly, ellipse AnyCar and Go2 attitude declare full scripted references after both native instance banks and no-submission controls passed. General-eight Neural Fly, G1 and the other Go2 objectives remain `oracle=none` and require human review. See the [integration validation record](roboengineer-validation.md). Family documents identify source pins, model assumptions, exact score semantics, training initialization and reference failures. Neural Fly uses a heavily clipped flight-data quadratic surrogate rather than the paper's DAIML controller or a calibrated digital twin; AnyCar uses rigid Coulomb contacts rather than deformable soil; G1 and Go2 results are simulation transfer, not hardware tests.

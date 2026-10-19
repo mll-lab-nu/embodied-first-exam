@@ -45,6 +45,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import files_image  # noqa: E402  (the verifier's files from a files-only image count as its tests/)
+import task_conventions as tc  # noqa: E402  (iter_tasks: the task tree)
 STATIC_ONLY: list[str] = []                         # standard tasks whose grader could not be run here
 LIVE_OK = {"finalized": True, "graded_by": "live", "replays": 0, "success": True, "live_success": True, "done": True,
            "reason": "success", "n_actions": 10, "control_steps": 10, "video": True}
@@ -197,7 +198,7 @@ def check(tasks: list[Path]) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
-    dirs = [Path(a) for a in argv] or sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    dirs = [Path(a) for a in argv] or tc.iter_tasks()
     errs = check(dirs)
     n = sum(1 for d in dirs if mode_of(d))
     if errs:

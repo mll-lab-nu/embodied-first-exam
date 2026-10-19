@@ -28,6 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import files_image  # noqa: E402  (a Dockerfile's files from a files-only image count as its context's)
+import task_conventions as tc  # noqa: E402  (iter_tasks: the task tree)
 TEXT = {".py", ".sh", ".yaml", ".yml", ".toml", ".json", ".cfg", ".txt"}
 MAX_BYTES = 1 << 20
 MP4 = re.compile(r"\.mp4\b")
@@ -98,7 +99,7 @@ def check(task: Path) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
-    dirs = [Path(a) for a in argv] or sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    dirs = [Path(a) for a in argv] or tc.iter_tasks()
     errs = [e for t in dirs for e in check(t)]
     if errs:
         print(f"FAIL videos (PROTOCOL §4: every graded trial leaves a video; {len(errs)} finding(s)):")

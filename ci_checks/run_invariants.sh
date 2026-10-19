@@ -5,7 +5,7 @@
 # instead of failing, ci_checks/parallel.py --expect requires exactly the scheduled commands to complete with exit 0, every
 # command must print its `INVARIANT-PASS <id>` line, the per-task checks must have covered every task in scope, and the
 # list of named checks must have its expected length (a check removed from the list fails the job).
-#   run_invariants.sh [task dirs]       the given tasks (default: all of tasks/*)
+#   run_invariants.sh [task dirs]       the given tasks (default: every task dir, tasks/*/*)
 #   run_invariants.sh --changed [REV]   a pull request's scope (ci_checks/ci_scope.py), as run_all.sh --changed
 # What enforces what (Appendix H):
 #   H.1 verifier isolation      check-verifier-isolation.sh (per task), check-monitor.py --tier invariants,
@@ -37,13 +37,13 @@ if [ "${1:-}" = "--changed" ]; then
   scope="$RCB_SCOPE"
   echo "scope: $RCB_SCOPE ($RCB_SCOPE_REASON)${RCB_SCOPE_BENCHES:+ -- benchmarks: $RCB_SCOPE_BENCHES}"
   case "$scope" in
-    full|none) tasks=(tasks/*/) ;;     # nothing task-related changed: still every task (the invariants are cheap)
+    full|none) tasks=(tasks/*/*/) ;;     # nothing task-related changed: still every task (the invariants are cheap)
     benchmarks) read -ra tasks <<<"$RCB_SCOPE_TASKS" ;;
     *) echo "FAIL ci_checks/ci_scope.py: unknown scope $scope"; exit 1 ;;
   esac
   [ "$scope" = none ] && scope=full-tasks
 elif [ $# -gt 0 ]; then tasks=("$@"); explicit=1
-else tasks=(tasks/*/)
+else tasks=(tasks/*/*/)
 fi
 real=(); for t in "${tasks[@]}"; do t="${t%/}"; [ -f "$t/task.toml" ] && real+=("$t"); done
 tasks=(${real[@]+"${real[@]}"})
@@ -67,14 +67,16 @@ if [ "$scope" = full ] && [ $explicit -eq 0 ]; then
 fi
 [ "${#ids[@]}" -eq "$EXPECTED_NAMED" ] || { echo "FAIL run_invariants.sh: ${#ids[@]} named checks, $EXPECTED_NAMED expected"; exit 1; }
 # the benchmarks' own invariant hooks (H.1 / H.2: leak checks, a skill sandbox's test): every ci_checks/benchmarks/*/invariant-*,
-# given the tasks in scope
+# given the tasks in scope as arguments, through xargs from a list file (every task's path in one command line is
+# longer than a single argument may be, 128 KiB)
+list="$(mktemp)"; log=""; trap 'rm -f "$list" ${log:+"$log"}' EXIT
+printf '%s\n' "${tasks[@]}" > "$list"
 hooks=()
 for h in ci_checks/benchmarks/*/invariant-*; do
   [ -f "$h" ] || continue
   hooks+=("$h")
   case "$h" in *.py) run="python3 $(q "$h")" ;; *) run="bash $(q "$h")" ;; esac
-  part=""; for t in "${tasks[@]}"; do part+=" $(q "$t")"; done
-  add "hook:$h" "$run$part"
+  add "hook:$h" "xargs $run < $(q "$list")"
 done
 # the per-task checks, in chunks; each prints `INVARIANT-PASS per-task <n>` (not an id of its own: their sum is checked)
 chunk=24; nchunks=0
@@ -86,7 +88,7 @@ total=$(( ${#ids[@]} + nchunks ))
 echo "invariants: ${#ids[@]} named check(s) and hook(s) (${#hooks[@]} benchmark hook(s)), $nchunks per-task chunk(s) over $ntasks task(s)"
 
 t0=$SECONDS
-log="$(mktemp)"; trap 'rm -f "$log"' EXIT
+log="$(mktemp)"
 rc=0; printf %s "$cmds" | python3 ci_checks/parallel.py --expect "$total" | tee "$log" || rc=$?
 [ $rc -eq 0 ] || { echo "FAIL run_invariants.sh: a check failed or the run was incomplete (parallel.py exit $rc)"; exit 1; }
 missing=()
