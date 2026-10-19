@@ -456,7 +456,7 @@ a batch has been measured (`scripts/task_resources.toml`).
 
 ```bash
 harbor run -p tasks/roboolympics-fun/roboolympics-fun-sprint-i00-privileged -a oracle        # or -a nop: scores 0
-harbor run -p tasks/roboolympics-fun/roboolympics-fun-penalty-kick-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/roboolympics-fun/roboolympics-fun-penalty-kick-i00-standard -a codex -m openai/gpt-6-astra --env-file .env
 ```
 Build the image: `scripts/build_images.sh` (context `images/robofunolympics/`).
 After a change to a file the files image carries (`images/roboolympics-fun-files/FILES.json`): bump `images/roboolympics-fun-files/VERSION`, `python3 scripts/files_image.py build roboolympics-fun-files`, push, `python3

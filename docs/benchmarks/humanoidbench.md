@@ -209,9 +209,9 @@ its model-API key in its container, so it could call a search-enabled model thro
 ## Run
 
 ```bash
-harbor run -p tasks/humanoidbench/humanoidbench-loco-hurdle-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/humanoidbench/humanoidbench-loco-hurdle-i00-standard -a codex -m openai/gpt-6-astra --env-file .env
 harbor run -p tasks/humanoidbench/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
-harbor run -p tasks/humanoidbench/humanoidbench-loco-walk-i00-standard-realtime -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/humanoidbench/humanoidbench-loco-walk-i00-standard-realtime -a codex -m openai/gpt-6-astra --env-file .env
 harbor run -p tasks/humanoidbench/humanoidbench-loco-sit-simple-i00-standard-realtime -a oracle   # streams the same 999 rows
 ```
 Agent, provider and effort settings: docs/protocol/running.md. Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them

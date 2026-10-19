@@ -148,7 +148,7 @@ These notes stay in this page: no task file the agent sees mentions them.
 ## Build and run
 ```bash
 docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/efe:bigym2-$(cat images/bigym2/VERSION) .
-harbor run -p tasks/bigym2/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/protocol/running.md
+harbor run -p tasks/bigym2/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-astra --env-file .env   # agent settings: docs/protocol/running.md
 ```
 The frozen instances live in the task dirs only (`tasks/bigym2/bigym2-<family>-i00-privileged/environment/instance.json`).
 The task directories are the deliverable; the tooling that built them is kept outside this repository.
