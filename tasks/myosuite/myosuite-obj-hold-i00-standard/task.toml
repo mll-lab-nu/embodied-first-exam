@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/myosuite-obj-hold-i00-standard"
+name = "embodied-first-exam/myosuite-obj-hold-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite obj_hold (MyoHand, 39 muscles) on the same frozen instance as myosuite-obj-hold-i00-privileged: Hold the object at the goal: its centre within 0.010 m of the goal site for 50 consecutive control steps (1.0 s). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "obj_hold", "standard-mode"]
@@ -41,7 +41,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only; CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

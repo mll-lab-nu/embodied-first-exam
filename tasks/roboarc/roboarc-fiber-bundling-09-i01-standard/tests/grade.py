@@ -1,7 +1,7 @@
 """Standard-mode verifier (eai-standard/2.4): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict, finalized by environment/sim/finalize.sh, and the crash-recovery fields),
 /data/startup_binding.json (the frozen instance the live episode was built from), /data/trajectory.npz (the deliverable),
-/data/replay.mp4 (the video). Adapted from robot_coding_bench's RoboWits standard grader.
+/data/replay.mp4 (the video). Adapted from Embodied First Exam's RoboWits standard grader.
 
 The live episode is the verdict (owner 2026-10-17, board 0150/0151): success = the live success (the task predicate on the
 live simulator with the instance's own thresholds, including its confirmation window) and no infrastructure failure.

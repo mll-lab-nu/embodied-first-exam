@@ -10,7 +10,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboolympics-match-fencing-bout-i02-standard"
+name = "embodied-first-exam/roboolympics-match-fencing-bout-i02-standard"
 description = "STANDARD (RoboOlympics / Embodied Agent Olympics, our own service): robot epee fencing, one bout against the scripted opponent at level 2, program play (eai-standard-turn/1.0: the world waits for the player whose turn it is; the player's chess clock of 60 minutes of real time runs on its own turns, reviews included, and a player whose clock runs out loses). Camera images and the player's own state only. Frozen development instance (seed and level fixed, not an official seed). two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-body policy on the legs, waist and free arm, the point skill on the sword arm) holding real epees fence one FIE direct-elimination bout (15 touches or 9 minutes of fencing time, no draws; unwillingness to fight, FIE t.124) phrase by phrase: every phrase starts on guard 1.95 m apart, both fencers choose one of nine tactical intentions (lunge, low lunge, point in line, reactive line, stop-hit, counter-attack, delayed lunge, retreat, draw), each starts after a random 0-50 ms, and the phrase is played out as it was measured in MuJoCo (2916 phrases: every pair of intentions and delays); format bout: you against a scripted fencer that reads your choices (levels 1-2, `game spec` opponent), format duel: two players choosing at the same time. Exported from RoboOlympics task fencing-bout-wallclock-program-standard by tools/export_fexam.py."
 authors = [{ name = "RoboOlympics (CHIGUI0)" }]
 keywords = ["robotics", "roboolympics", "sports", "fencing", "mujoco", "standard-mode", "vision", "turn-based"]
@@ -49,7 +49,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "vanilla Harbor 0.23.0 on ws-3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: RoboOlympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only"
+measured = "vanilla Harbor 0.23.0 on 4090-ws3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: RoboOlympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

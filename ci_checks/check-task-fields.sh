@@ -6,7 +6,7 @@ import sys, tomllib, pathlib
 t = pathlib.Path(sys.argv[1]); d = tomllib.load(open(t / "task.toml", "rb")); rc = 0
 def fail(m):
     global rc; print(f"FAIL {t}: {m}"); rc = 1
-if d.get("task", {}).get("name") != f"robot-coding-bench/{t.name}": fail("[task].name must be robot-coding-bench/<folder>")
+if d.get("task", {}).get("name") != f"embodied-first-exam/{t.name}": fail("[task].name must be embodied-first-exam/<folder>")
 m = d.get("metadata", {})
 for k in ["author_name", "task_type", "simulator", "robot", "family", "expert_time_estimate_hours"]:
     if k not in m: fail(f"[metadata].{k} missing")

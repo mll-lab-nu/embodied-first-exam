@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/ambench-open-door-fahexa-i00-standard"
+name = "embodied-first-exam/ambench-open-door-fahexa-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): AM-Bench OpenDoor-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on the same frozen instance as the privileged task. Task: A free-standing door stands ahead of the hovering aerial manipulator: an oak door panel in a metal frame, hinged on its left edge (as seen from the robot), with a metal lever handle near its right edge on the robot-facing side. Open the door: swing the panel on its hinge, away from the robot, by more than 20 degrees from closed. The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "ambench", "aerial-manipulation", "isaac-lab", "isaac-sim", "hexarotor", "standard-mode", "trajectory"]

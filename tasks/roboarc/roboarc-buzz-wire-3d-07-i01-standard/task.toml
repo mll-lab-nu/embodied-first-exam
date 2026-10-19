@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboarc-buzz-wire-3d-07-i01-standard"
+name = "embodied-first-exam/roboarc-buzz-wire-3d-07-i01-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC buzz_wire_3d on the same frozen instance as the privileged task. Guide the metal loop along the entire wire from start to finish without touching the wire, then release the tool on the finish support. Black rubber sleeves on the wire are insulated: the ring may rest on them. The final bend and the post at the finish are insulated as well. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "Jianwen Lyu" }]
 keywords = ["robotics", "roboarc", "mujoco", "panda_robotiq", "standard-mode", "trajectory", "buzz_wire_3d"]

@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/mujoco_playground_spot_joystick_gait_tracking-standard"
+name = "embodied-first-exam/mujoco_playground_spot_joystick_gait_tracking-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): MuJoCo Playground SpotJoystickGaitTracking (Boston Dynamics Spot) on the same frozen instance as mujoco_playground_spot_joystick_gait_tracking-privileged: Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode with the commanded gait (the feet's swing pattern, frequency and height) without falling over. The agent only gets a client: four cameras that follow the robot (RGB, optional depth), the robot's joints and IMU, joint position chunks at 50 Hz, the feet's kinematics; 10 resets (only the last episode is graded), no world state; the sim service records the episode and grades it live (no grading replay)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "mujoco", "mujoco-playground", "boston-dynamics-spot", "quadruped", "locomotion", "joystick", "code-as-policy", "trajectory", "standard-mode"]
@@ -42,7 +42,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 2.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "GPU 1.0-1.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.6 GB, sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU p90 1.9 cores, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10)"
+measured = "GPU 1.0-1.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.6 GB, sim 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU p90 1.9 cores, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + 4090-ws1, 10-10)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -58,7 +58,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 13.0
-measured = "memory: agent container docker peak 2.5 GiB over 4 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 8 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "memory: agent container docker peak 2.5 GiB over 4 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 8 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

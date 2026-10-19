@@ -30,7 +30,7 @@ verifier decides internally) is the task's own business.
 | Recommended | Notes |
 |---|---|
 | `task.toml`, `instruction.md`, `README.md`, `environment/Dockerfile`, `tests/test.sh` (executable), `tests/Dockerfile`; `solution/solve.sh` when `oracle` is `full` or `partial` | `ci_checks/check-task-structure.sh` |
-| `[task].name = "robot-coding-bench/<folder>"`; `[metadata]` `author_name`, `task_type` (`trajectory` / `policy`), `simulator`, `robot` ([`TAXONOMY.md`](../TAXONOMY.md)), `family`, `mode`, `expert_time_estimate_hours`, `oracle` (+ `oracle_evidence`), `protocol` (sidecar modes), the settings of §2 | `check-task-fields.sh`, `check-protocol.py` |
+| `[task].name = "embodied-first-exam/<folder>"`; `[metadata]` `author_name`, `task_type` (`trajectory` / `policy`), `simulator`, `robot` ([`TAXONOMY.md`](../TAXONOMY.md)), `family`, `mode`, `expert_time_estimate_hours`, `oracle` (+ `oracle_evidence`), `protocol` (sidecar modes), the settings of §2 | `check-task-fields.sh`, `check-protocol.py` |
 | The directory name `<base>-<mode>`, `<base>` = `<benchmark>-<family>-i<NN>` or the upstream name; no versions or durations in names | the mode is the whole suffix |
 | All task code in the directory, or in a pinned image its Dockerfiles take it from (the benchmark's base image; a files-only image built from `embodied_first_exam/benchmarks/<benchmark>/`, `COPY --from=<image@digest>`); base images hold the simulator and its assets; nothing imports repository code at run time | a task's identity is its directory (H.8) |
 | Every task is in the normal form `scripts/task_conventions.py` `normalize` writes (README layout, rendered sections, `DIGEST`) | `task_conventions.py --check` |
