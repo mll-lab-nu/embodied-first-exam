@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contribute a benchmark suite
+    url: https://www.embodied-first-exam.ai/contribute/
+    about: What a suite needs, and how a proposal becomes a pull request.
+  - name: Security problem
+    url: https://github.com/mll-lab-nu/embodied-first-exam/security/policy
+    about: Do not open a public issue; see SECURITY.md.

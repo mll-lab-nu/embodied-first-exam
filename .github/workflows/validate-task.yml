@@ -19,6 +19,11 @@ on:
         description: "a pull request number: validate its changed tasks at its head commit"
         required: false
         default: ""
+# Public repository: the job checks out and builds a pull request's tasks on a self-hosted GPU runner, so it runs only on a
+# maintainer's request (the `if:` below; issue_comment always runs this file from main, never the pull request's copy),
+# the token reaches only the two steps that call the API (never the steps that run the pull request's code), and the
+# checkouts keep no credentials. The runner with the label `docker` belongs in an org runner group limited to this
+# workflow on main ("selected workflows"), so a workflow a pull request adds cannot reach it.
 permissions:
   contents: read
   pull-requests: write
@@ -37,10 +42,11 @@ jobs:
       TASKS: ${{ inputs.tasks }}
       PR: ${{ github.event.issue.number || inputs.pr }}
       HARBOR_VERSION: "0.23.0"
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: The pull request's head and changed tasks
         if: env.PR != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -eu
           api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
@@ -57,10 +63,10 @@ jobs:
           [ -n "$TASKS" ] || echo "TASKS=$dirs" >> "$GITHUB_ENV"
           echo "pull request #$PR at $sha; changed task dirs: ${dirs:-none}"
       - uses: actions/checkout@v4
-        with: { ref: "${{ env.HEAD_SHA || github.sha }}" }
+        with: { ref: "${{ env.HEAD_SHA || github.sha }}", persist-credentials: false }
       # the stamp tool from this workflow's own commit (a pull request's head may predate it, issue #258)
       - uses: actions/checkout@v4
-        with: { ref: "${{ github.sha }}", path: _rcb_tooling, sparse-checkout: scripts/stamp_mtimes.py, sparse-checkout-cone-mode: false }
+        with: { ref: "${{ github.sha }}", path: _rcb_tooling, persist-credentials: false, sparse-checkout: scripts/stamp_mtimes.py, sparse-checkout-cone-mode: false }
       - uses: astral-sh/setup-uv@v5
       - run: uv tool install "harbor==$HARBOR_VERSION"
       - name: Resolve task list
@@ -103,6 +109,8 @@ jobs:
       - name: Answer on the pull request
         if: always() && env.PR != ''
         continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -eu
           {
