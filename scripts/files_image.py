@@ -17,6 +17,10 @@ private carries images/<name>/BUILD_ONLY (PROTOCOL §1), and hosts pull it with 
     python3 scripts/files_image.py pin <name> <digest>    after the push: check the pushed image, then pin it in FILES.json
     python3 scripts/files_image.py verify-image <name>    the pinned image carries exactly FILES.json's files and modes
 
+CI checks that read a task's files see a build context as its image holds it: copied() gives the sources of the files its
+Dockerfile copies from a pinned files-only image; copied_from() also returns the COPY --from lines of a files-only image it
+cannot resolve (a check reports them).
+
 A change to a source file needs a new image version (VERSION, build, push, pin) before the generators render it; their
 check modes fail until then.
 """
@@ -55,20 +59,61 @@ def copy_line(name: str, file: str, dest: str) -> str:
     return f"COPY --from={s['image']} /{file} {dest}"
 
 
-COPY_FROM = re.compile(r"^COPY --from=(\S+) /(\S+) (\S+)[ \t]*$", re.M)
+def _repo(ref: str) -> str:
+    """The repository of an image reference (no tag, no digest)."""
+    name = ref.split("@", 1)[0]
+    return name.rsplit(":", 1)[0] if ":" in name.rsplit("/", 1)[-1] else name
+
+
+def copied_from(dockerfile: Path) -> tuple[dict[str, Path], list[str]]:
+    """({container path: source file in this repository}, problems) of the Dockerfile's COPY --from lines that name a
+    files-only image (a repository of images/*/FILES.json, or any *-files repository). A line resolves when it names the
+    pinned image@digest, carries no other flag, and copies one file or one directory of the image (`/<dir>/`: every file
+    of FILES.json under it, to <dest>/<path below it>); anything else is a problem, never silently skipped."""
+    if not dockerfile.is_file():
+        return {}, []
+    specs = {p.parent.name: spec(p.parent.name) for p in sorted((ROOT / "images").glob("*/FILES.json"))}
+    by_repo = {_repo(s["image"]): n for n, s in specs.items()}
+    out: dict[str, Path] = {}
+    bad: list[str] = []
+    text = re.sub(r"\\\n", " ", dockerfile.read_text(errors="replace"))      # line continuations
+    for line in text.splitlines():
+        words = line.split()
+        if len(words) < 2 or words[0].upper() != "COPY" or not any(w.startswith("--from=") for w in words[1:]):
+            continue
+        flags = [w for w in words[1:] if w.startswith("--")]
+        args = [w for w in words[1:] if not w.startswith("--")]
+        ref = next(w for w in flags if w.startswith("--from="))[len("--from="):]
+        name = by_repo.get(_repo(ref))
+        if name is None:
+            if _repo(ref).endswith("-files"):
+                bad.append(f"{dockerfile}: {line.strip()}: a files-only image without images/*/FILES.json")
+            continue                                                  # another stage or image (e.g. the monitor's)
+        s = specs[name]
+        if ref != s["image"]:
+            bad.append(f"{dockerfile}: {line.strip()}: not the pinned {s['image']} (images/{name}/FILES.json)")
+            continue
+        if len(flags) != 1 or len(args) != 2 or not args[0].startswith("/") or not args[1].startswith("/"):
+            bad.append(f"{dockerfile}: {line.strip()}: a files-only image line is `COPY --from=<image> /<file or dir> /<dest>`")
+            continue
+        src, dest = args[0].strip("/"), args[1]
+        if src in s["files"]:
+            out[dest + src.rsplit("/", 1)[-1] if dest.endswith("/") else dest] = ROOT / s["source"] / src
+            continue
+        under = sorted(f for f in s["files"] if not src or f.startswith(src + "/"))
+        if not under:
+            bad.append(f"{dockerfile}: {line.strip()}: images/{name}/FILES.json has no /{src}")
+        for f in under:
+            out[dest.rstrip("/") + "/" + f[len(src):].lstrip("/")] = ROOT / s["source"] / f
+    return out, bad
 
 
 def copied(dockerfile: Path) -> dict[str, Path]:
-    """{container path: its source in this repository} of every file a Dockerfile takes from a files-only image
-    (`COPY --from=<a FILES.json image> /<file> <dest>`, copy_line): what a check that reads a build context's files reads
-    for those (the generators' checks tie the sources to the pinned image)."""
-    pinned = {}
-    for f in (ROOT / "images").glob("*/FILES.json"):
-        s = json.loads(f.read_text())
-        pinned[s["image"]] = s
-    text = dockerfile.read_text() if dockerfile.is_file() else ""
-    return {dest: ROOT / pinned[ref]["source"] / f for ref, f, dest in COPY_FROM.findall(text)
-            if ref in pinned and f in pinned[ref]["files"]}
+    """{container path: its source in this repository} of every file a Dockerfile takes from a files-only image: what a
+    check that reads a build context's files reads for those. copied_from() also returns the lines it cannot resolve."""
+    return copied_from(dockerfile)[0]
+
+
 
 
 def sha256(p: Path) -> str:

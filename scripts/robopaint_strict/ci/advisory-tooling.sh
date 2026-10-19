@@ -1,20 +1,26 @@
 #!/usr/bin/env bash
 # RoboPaint tooling convention (integrator, 2026-09-28; across families since 05:35): every copy of the shared tooling is
-# byte-identical within one family (tasks/robopaint-<family>-*) AND across all families of the brush stack (kaishu, xingshu,
+# byte-identical within one family (tasks/robopaint/robopaint-<family>-*) AND across all families of the brush stack (kaishu, xingshu,
 # caoshu, lettering, acrylic, oil): rcb_brush.py / rcb_brush_score.py,
 # rcb_scorer.py, environment/rcb_client.py and the standard sim service environment/sim/server.py. A tooling change is rolled out
 # to every family of the stack at once, each with its own re-validation (new rule features are opt-in per task through the
 # instance's success rule, so an unchanged rule scores exactly as before). The process rules' module rcb_brush_strict.py (graders'
-# side: tests/, environment/scorer/ or environment/sim/) is one more shared file.
+# side) is one more shared file. rcb_brush.py, rcb_brush_score.py, rcb_brush_strict.py and grade.py have one source,
+# embodied_first_exam/benchmarks/robopaint/: the task images take them from the pinned files-only image (images/robopaint-files/; the
+# generator's check ties the sources to FILES.json), and the copies left in task dirs (the bind-mounted sidecars
+# environment/scorer/ and environment/sim/) must be byte-identical to that source.
 # ADVISORY hook of RoboPaint (moved from ci_checks/check-robopaint-tooling.sh, board 0124): ci_checks/run_all.sh runs every
 # scripts/*/ci/advisory-* hook with the task directories in scope; this one checks the tasks directory they are in.
 # Usage: advisory-tooling.sh [task dirs]   (default: the repository's tasks/)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/../../.." && pwd)"
-tdir="$root/tasks"; [ $# -gt 0 ] && tdir="$(cd "$(dirname "${1%/}")" && pwd)"
-python3 - "$tdir" <<'PY'
+tdir="$root/tasks/robopaint"; [ $# -gt 0 ] && tdir="$(cd "$(dirname "${1%/}")" && pwd)"
+python3 - "$tdir" "$root" <<'PY'
 import collections, hashlib, os, sys
-tasks = sys.argv[1]
+tasks, root = sys.argv[1:3]
+shared = os.path.join(root, "embodied_first_exam", "benchmarks", "robopaint")
+SRC = {f: hashlib.sha256(open(os.path.join(shared, f), "rb").read()).hexdigest()[:16] for f in os.listdir(shared)
+       if os.path.isfile(os.path.join(shared, f))}   # the one source of the shared tooling
 NAMES = {"rcb_brush.py", "rcb_brush_score.py", "rcb_scorer.py", "rcb_client.py", "rcb_brush_strict.py"}
 seen = collections.defaultdict(lambda: collections.defaultdict(dict))   # family -> role -> {sha: first task}
 for t in sorted(os.listdir(tasks)):
@@ -29,7 +35,9 @@ for t in sorted(os.listdir(tasks)):
             if role:
                 h = hashlib.sha256(open(os.path.join(dp, f), "rb").read()).hexdigest()[:16]
                 seen[fam][role].setdefault(h, f"{t}/{rel}")
-bad = [f"robopaint-{fam}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
+bad = [f"{p}: {h} != embodied_first_exam/benchmarks/robopaint/{role} ({SRC[role]})" for fam, roles in sorted(seen.items())
+       for role, v in sorted(roles.items()) if role in SRC for h, p in sorted(v.items()) if h != SRC[role]]
+bad += [f"robopaint-{fam}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
        for fam, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 # across families of one stack (brush: rcb_brush.py): one version of every shared file (lead, 2026-09-28 05:35)
 stacks = collections.defaultdict(list)
