@@ -273,6 +273,11 @@ that has `write:packages`). A new image is a new tag of `efe`, which is public, 
 change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
 public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
 a private package for org members.
+A files-only image (`images/<name>/FILES.json`) is no docker build: `scripts/files_image.py build <name>` writes it byte
+for byte from the repository, so it has the digest the task Dockerfiles pin (`COPY --from=<tag>@sha256:…`), and loads it;
+`files_image.py push` pushes those same bytes (`docker push` would recompress the layer). A private one built locally
+serves the tasks unchanged on Docker's containerd image store (Docker Engine 29's and Docker Desktop's default); the
+classic store resolves a digest only for a pulled image.
 
 ## What an agent's container reaches
 Every task's `[agent]` allowlist is one list, `HOSTS` in `scripts/set_agent_egress.py`: the model APIs and the package

@@ -26,15 +26,13 @@ the verifier's replays must fit its time limit).
 
 ## Build the images locally
 
-The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
-Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+The images are private (`ghcr.io/mll-lab-nu/efe-private`: the IKEA part meshes are not public). Build them from the repository root with the tags the tasks name, then run the tasks unchanged. The files image (`scripts/files_image.py build`) is written byte for byte from the repository, so it has the very digest the task Dockerfiles pin (`COPY --from=<tag>@sha256:…`), and the tasks build from it as they are; that needs Docker's containerd image store (the default of Docker Engine 29 and Docker Desktop), as the classic store resolves a digest only for a pulled image. The base image's build needs those meshes: they are available on request from the maintainers.
 
 ```bash
-images/ikea-mujoco/fetch_image_context.sh   # needs read access to the private mesh dataset (ask the maintainers)
+images/ikea-mujoco/fetch_image_context.sh   # needs read access to the private mesh dataset (available on request from the maintainers)
 docker build -f images/ikea-mujoco/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-$(cat images/ikea-mujoco/VERSION) images/ikea-mujoco/context
 docker build -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-$(cat images/ikea-mujoco/sim/VERSION) images/ikea-mujoco/sim
 python3 scripts/files_image.py build ikea-mujoco-files
-grep -rlE 'efe-private:[^@ ]+@sha256' tasks/ikea-mujoco | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
 ```
 
 ## Work in progress (not tasks)
