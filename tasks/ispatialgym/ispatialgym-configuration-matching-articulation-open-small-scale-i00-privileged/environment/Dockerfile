@@ -5,7 +5,7 @@
 FROM ghcr.io/mll-lab-nu/efe-ispatialgym:0.2.0
 COPY instance.json /app/instance.json
 COPY goal.png /app/goal.png
-COPY rcb_ispatialgym.py /opt/tools/
+COPY --from=ghcr.io/mll-lab-nu/efe-ispatialgym-files:0.1.0@sha256:d7698c93db51cd166c0523be6ca01fe662a54016be37e8b0897efc939b6963cc /privileged/environment/rcb_ispatialgym.py /opt/tools/rcb_ispatialgym.py
 RUN --mount=type=bind,source=scrub,target=/tmp/scrub sh /tmp/scrub/scrub.sh \
       /opt/ispatialgym/ispatialgym/assets/bddl/activity_definitions/configuration_matching/problem6.bddl && mkdir -p /app/output
 ENV PYTHONPATH=/opt/tools OMNIGIBSON_HEADLESS=1
