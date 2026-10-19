@@ -34,7 +34,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 def run(cmd: str) -> tuple[str, int, str, float]:
     t0 = time.monotonic()
-    p = subprocess.run(["bash", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
+    try:
+        p = subprocess.run(["bash", "-c", cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, errors="replace")
+    except OSError as e:   # e.g. E2BIG, a command line longer than one argument may be: this command fails, not the pool
+        return cmd, 126, f"could not start: {e}\n", time.monotonic() - t0
     return cmd, p.returncode, p.stdout, time.monotonic() - t0
 
 

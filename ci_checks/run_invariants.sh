@@ -50,6 +50,7 @@ tasks=(${real[@]+"${real[@]}"})
 ntasks=${#tasks[@]}
 [ "$ntasks" -gt 0 ] || { echo "FAIL run_invariants.sh: no task in scope"; exit 1; }
 targs=""; if [ $explicit -eq 1 ] || [ "$scope" = benchmarks ]; then for t in "${tasks[@]}"; do targs+=" $(q "$t")"; done; fi
+[ ${#targs} -le 100000 ] || targs=""   # longer than one `bash -c` argument may be (128 KiB): the checks' default, every task (a superset)
 
 cmds=""; ids=()
 add() { ids+=("$1"); shift; cmds+="{ $*; } && echo INVARIANT-PASS ${ids[-1]}"$'\n'; }
