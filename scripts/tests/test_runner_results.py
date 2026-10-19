@@ -210,8 +210,11 @@ def test_summary_grouping():
         make_trial(jobs, "bx-standard-realtime-b", "r1", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 1})
         make_trial(jobs, "bx-standard-realtime-b", "r2", VALIDATED_RT, "2026-10-14T01:00:00Z", {"success": 0})
         # a core set naming the fixed tasks here (the real list changes over time); test_core_set covers the marking
-        (td / "core_set.toml").write_text("".join(f'[[task]]\ntask = "{t}"\n' for t in
-                                                  (TASK, f"{SMALL}-privileged", UNVALIDATED, VALIDATED_RT)))
+        sys.path.insert(0, str(ROOT / "scripts"))
+        import task_conventions as tc
+        (td / "core_set.toml").write_text("".join(
+            f'[[task]]\ntask = "{tc.base_of(Path(t))}"\ndefault_mode = "{tc.mode_of(Path(t))}"\n' for t in
+            (TASK, f"{SMALL}-privileged", UNVALIDATED, VALIDATED_RT)))
         r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True,
                            env={**os.environ, "RCB_CORE_SET_FILE": str(td / "core_set.toml")})
         check(r.returncode == 0, f"summary failed: {r.stderr[-800:]}")
@@ -226,50 +229,38 @@ def test_summary_grouping():
 
 
 def test_core_set():
-    """PROTOCOL §4: the core set (docs/core_set.toml) is valid, marks exactly its listed task dirs `core` and every
-    other dir `excluded` (recorded with the result as `set`, never part of config_key), and the batch summary marks the
-    trials outside it and leaves them out of the rate."""
+    """PROTOCOL §4: the core set (docs/core_set.toml: task + default_mode) is valid, marks every mode dir of its listed
+    tasks `core` and every other dir `excluded` (recorded with the result as `set`, never part of config_key), and the
+    batch summary marks the trials outside it and leaves them out of the rate."""
     sys.path.insert(0, str(ROOT / "scripts"))
     import task_conventions as tc
     check(not tc.check_core_set(), f"docs/core_set.toml: {tc.check_core_set()[:3]}")   # this test is in run_invariants.sh
     names = [p.name for p in tc.iter_tasks()]
     cs = tc.core_set()
-    def entry(t, **k):                                   # a valid entry for task dir t, with the fields in k changed
-        d = tc.task_dir(t)
-        f = {"task": t, "base": tc.base_of(d), "benchmark": tc.bench_of(d), "mode": tc.mode_of(d), "luna": "failed", **k}
+    def entry(t, **k):                                   # a valid entry for task t, with the fields in k changed
+        f = {"task": t, "default_mode": cs.get(t, "standard"), **k}
         return "[[task]]\n" + "".join(f'{n} = "{v}"\n' for n, v in f.items())
-    ANY = sorted(cs)[0]
+    ANY, ANY2 = sorted(cs)[:2]
     with tempfile.TemporaryDirectory() as td:
-        sha = 'generated_from = "' + "0" * 40 + '"\n'
         bad = Path(td) / "core_set.toml"
-        bad.write_text(sha + entry("behavior-no-such-task-i00-standard") + entry(ANY, luna="solved", mode="x")
-                       + entry(sorted(cs)[1], extra="x") + entry("../tasks/" + ANY))
+        bad.write_text(entry("behavior-no-such-task-i00") + entry(ANY, default_mode="x") + entry(ANY2, luna="failed")
+                       + entry("../tasks/" + ANY) + entry(f"{ANY}-{cs[ANY]}"))
         found = tc.check_core_set(path=bad)
-        check(len(found) == 5, f"check_core_set: want a missing dir, a wrong mode, a bad luna, an unknown field and a path, got {found}")
-        # an owner pick (pick = "owner") may carry Luna's success; without it, or with another pick, it may not
-        (Path(td) / "pick.toml").write_text(sha + entry(ANY, luna="success", pick="owner"))
-        check(not tc.check_core_set(path=Path(td) / "pick.toml"), f"an owner pick with luna success fails: "
-              f"{tc.check_core_set(path=Path(td) / 'pick.toml')}")
-        (Path(td) / "nopick.toml").write_text(sha + entry(ANY, luna="success") + entry(sorted(cs)[1], pick="luna"))
-        check(len(tc.check_core_set(path=Path(td) / "nopick.toml")) == 2, "luna success without pick = owner, or an unknown "
-              f"pick, passes: {tc.check_core_set(path=Path(td) / 'nopick.toml')}")
-        # a new file each (the list is parsed once per mtime)
-        (Path(td) / "nosha.toml").write_text(entry(ANY))
-        check(any("generated_from" in x for x in tc.check_core_set(path=Path(td) / "nosha.toml")),
-              "a list without generated_from passes")
-        (Path(td) / "twice.toml").write_text(sha + entry(ANY) + entry(ANY))
-        check(any("twice" in x for x in tc.check_core_set(path=Path(td) / "twice.toml")), "a dir listed twice is not found")
+        check(len(found) == 5, f"check_core_set: want a missing dir, a wrong mode, an unknown field, a path and a dir name, got {found}")
+        (Path(td) / "twice.toml").write_text(entry(ANY) + entry(ANY))
+        check(any("twice" in x for x in tc.check_core_set(path=Path(td) / "twice.toml")), "a task listed twice is not found")
         check(tc.check_core_set(path=Path(td) / "none.toml") != [], "a missing list passes")
-        (Path(td) / "badsha.toml").write_text('generated_from = "abc"\n' + entry(ANY))
-        check(any("generated_from" in x for x in tc.check_core_set(path=Path(td) / "badsha.toml")), "a short generated_from passes")
-        (Path(td) / "toplevel.toml").write_text(sha + 'generated_frm = "x"\n' + entry(ANY))
+        (Path(td) / "toplevel.toml").write_text('generated_from = "x"\n' + entry(ANY))
         check(any("top-level" in x for x in tc.check_core_set(path=Path(td) / "toplevel.toml")), "an unknown top-level key passes")
+    core = set(tc.core_tasks())
+    check(len(core) == len(cs) and all(tc.mode_of(Path(d)) == cs[tc.base_of(Path(d))] for d in core),
+          "core_tasks(): not one default-mode dir per core task")
     # a listed standard dir and an unlisted one in the same configuration (one summary table); the list changes over
     # time, so both are looked up
     key = functools.lru_cache(maxsize=None)(lambda t: tc.config_key(tc.effective_config(tc.task_dir(t))))
     IN = OUT = None
-    for c in (t for t in names if t.endswith("-standard") and t in cs):
-        same = sorted((t for t in names if t.endswith("-standard") and t not in cs),
+    for c in (t for t in names if t.endswith("-standard") and tc.base_of(Path(t)) in cs):
+        same = sorted((t for t in names if t.endswith("-standard") and tc.base_of(Path(t)) not in cs),
                       key=lambda t: t.split("-")[0] != c.split("-")[0])[:200]
         OUT = next((t for t in same if key(t) == key(c)), None)
         if OUT:

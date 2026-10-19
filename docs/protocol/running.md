@@ -78,20 +78,12 @@ version, mode, cutoff, reset budget, S, network), report success together with c
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
 unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
 every core task, the flag is shown as a marker and may be used as a filter. The main table and every headline number
-(success rates, rankings, totals) count core only: one dir per task of [`core_set.toml`](../core_set.toml), its mode
-the first listed of standard-realtime > standard > privileged (`task_conventions.core_tasks()`); core-privileged /
-core-standard / core-standard-realtime are the list's dirs of that mode, core-all every listed dir (`set_of`: `core` when listed, else
-`excluded`). The list names task dirs, each mode its own task: every task dir of main at the list's
-`generated_from` commit minus the tasks judged easy (solved through a shortcut, judged too easy by the benchmark owner, or
-solved in every mode by the screening runs) and minus the dirs the reference run codex-gpt6_luna-xhigh solved (a success
-in any mode takes out the base; a RoboSafeBench privileged twin, reported apart, takes out only itself), plus owner
-picks (`pick = "owner"`). A dir left out stays out. The list is regenerated from the reference run's verdicts: a task
-dir added after `generated_from` is run by the reference run and enters the list at the next regeneration unless that run solved it (until then `set_of` marks it
-`excluded`). Task dirs the list left out stay in the repository under their names and are not evaluated by official runs;
-results they already have are kept and shown marked (the batch summary marks them in their configuration's table and leaves them out of its rate). `set` in
-`config.json` is the value when the result was written; a report derives it from `docs/core_set.toml` at the commit it
-publishes. The reference run's core-set success rate is close to 0 by construction, so report that run on all tasks
-alongside.
+(success rates, rankings, totals) count core only: the tasks of [`core_set.toml`](../core_set.toml), each in its
+`default_mode` (`task_conventions.core_tasks()`); a run of the core tasks in another mode is reported apart (`set_of`:
+`core` for every mode of a listed task, else `excluded`). Task dirs the list leaves out stay in the repository under
+their names and are not evaluated by official runs; results they already have are kept and shown marked (the batch
+summary marks them in their configuration's table and leaves them out of its rate). `set` in `config.json` is the
+value when the result was written; a report derives it from `docs/core_set.toml` at the commit it publishes.
 
 A standard-mode result recorded while a grading replay still decided is re-read from its own `final.json` (the live
 episode's success, where that record applied the task's whole rule); the recorded verdict stays beside it, and a trial
