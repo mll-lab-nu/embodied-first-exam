@@ -78,11 +78,11 @@ success from firing before the task is done:
   the check of a build and how a CI machine builds it.
 - `images/robolab-files/`: `ghcr.io/mll-lab-nu/efe-private:robolab-files-<VERSION>`, files only (`FROM scratch`): the tooling
   `rcb_robolab.py` that the privileged agent and verifier images `COPY --from` (Tooling, below); BUILD_ONLY (private),
-  pulled with the organization's token like eai-robolab.
+  pulled with the organization's token like `efe-private:robolab-<version>`.
 - Isaac needs an RTX-class GPU even headless (PhysX runs on the CPU). One Isaac simulator at a time per 32 GB of host RAM.
 - Standard mode: the agent container and the verifier use the one digest-pinned client image of every standard task and
   its exact pip pins (`embodied_first_exam/standard/client.env`, `client-requirements.txt`, copied into `environment/`); only the
-  `sim` sidecar uses eai-robolab.
+  `sim` sidecar uses `ghcr.io/mll-lab-nu/efe-private:robolab-<images/robolab/VERSION>`.
 - Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount their own `*_trusted` cache
   volumes, never the agent's; every cache volume is scoped to the trial's compose project (no fixed name).
 
@@ -196,7 +196,7 @@ iterations cost more than in the other simulators.
 
 The privileged tasks carry no copy of the tooling: their `environment/Dockerfile` and `tests/Dockerfile` take
 `rcb_robolab.py` with `COPY --from` from the files-only image `ghcr.io/mll-lab-nu/efe-private:robolab-files-<version>` (`images/robolab-files/`,
-`scripts/files_image.py`; FILES.json pins its digest and the file's sha256; BUILD_ONLY, private like eai-robolab), built
+`scripts/files_image.py`; FILES.json pins its digest and the file's sha256; BUILD_ONLY, private like `efe-private:robolab-<version>`), built
 from its one source `embodied_first_exam/benchmarks/robolab/rcb_robolab.py`. The verifier's image gets its own copy from that image when
 it is built; nothing from the agent's container reaches it. The standard tasks keep their copy in `environment/sim/`
 (bind-mounted at `/srv`). After a change to `rcb_robolab.py`: bump `images/robolab-files/VERSION`, `python3 scripts/files_image.py build

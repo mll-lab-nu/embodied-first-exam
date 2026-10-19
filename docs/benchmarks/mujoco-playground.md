@@ -85,7 +85,7 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
   the rows through the client) records exactly the privileged reference.
 - Policies only make the references: no image contains one, and the agent's egress is the model APIs and the package
   registries only (Playground's policies are public). The four manipulation pairs (scripted references of our own) are
-  on the same allowlist; nothing in their containers needs the network at run time (`eai-mujoco` holds the Playground
+  on the same allowlist; nothing in their containers needs the network at run time (the `ghcr.io/mll-lab-nu/efe:mujoco-<version>` image holds the Playground
   and Menagerie files the tooling loads, `/opt/rcb_mj`). The PyPI packages `playground` and `envpool` carry
   Playground's task sources (the honour rule, PROTOCOL §5).
 

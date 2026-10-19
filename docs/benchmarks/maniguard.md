@@ -77,7 +77,7 @@ grep -rlE 'efe-private:[^@ ]+@sha256' tasks/maniguard | xargs sed -i -E 's#(efe-
   own `setup.sh --new-env --omnigibson --bddl` does (Python 3.10, torch 2.6.0+cu124, the 26 Isaac Sim 4.5.0.0 wheels,
   sha256-checked), Spot 2.16 from conda-forge, PyAV from PyPI (conda-forge's ffmpeg brings a Vulkan loader and libglvnd
   that crash Isaac's renderer), g++ for OmniGibson's `torch.compile`, and ManiGuard's evaluator at `a1b6444b3` (its import
-  closure only). It is NOT eai-behavior (BEHAVIOR-1K 3.9.2 / Isaac Sim 5.1): ManiGuard's frozen scenes are 3.7.2
+  closure only). It is NOT `efe-private:behavior-<version>` (BEHAVIOR-1K 3.9.2 / Isaac Sim 5.1): ManiGuard's frozen scenes are 3.7.2
   snapshots and its runtime patches target 3.7.2.
 - **The data root** `RCB_MANIGUARD_DATA`: a host directory with the BEHAVIOR-1K 3.7.2 data, mounted read-only at `/data`
   by every service that runs the simulator (`${RCB_MANIGUARD_DATA:?…}`, so compose refuses to start without it):

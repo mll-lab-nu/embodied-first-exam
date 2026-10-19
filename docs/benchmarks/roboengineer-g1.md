@@ -10,7 +10,7 @@ Shipped as `roboengineer-g1-terrain-walk-i00-standard` / `-i01-standard` (spec
 family `g1`), the same runtime, cutoff (14400 s) and verdict as the other roboEngineer tasks
 ([roboengineer.md](roboengineer.md)).
 
-- **The agent's GPU**: the agent's image is `eai-control-transfer:0.2.0-train` (nominal + the pinned training stack,
+- **The agent's GPU**: the agent's image is `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0-train` (nominal + the pinned training stack,
   BUILD_ONLY like the others); `environment/docker-compose.yaml` reserves one NVIDIA device for `main` only; the
   `sim` sidecar gets none (`NVIDIA_VISIBLE_DEVICES=void`, `CUDA_VISIBLE_DEVICES=""`) and evaluates in CPU MuJoCo 3.5.0
   with NumPy inference and OSMesa, as before. `[metadata.resources]`: `gpu_required = true`, `min_gpu_memory_gb =

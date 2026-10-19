@@ -3,10 +3,10 @@
 # efe-private:<name>-<version> when images/<name>/BUILD_ONLY marks it private: one public and one private package, a
 # new image is a new tag (no package visibility to set). The version is
 # images/<name>/VERSION if present, else images/VERSION. images/<name>/.build-context-self builds with the
-# image directory as context (eai-mujoco COPYs its asset tree rcb_mj/, see prepare_assets.sh); images/<name>/BUILD_CONTEXT names
+# image directory as context (images/mujoco/ COPYs its asset tree rcb_mj/, see prepare_assets.sh); images/<name>/BUILD_CONTEXT names
 # a context directory a script prepares (skipped while it is missing); else the repo root. A subdirectory
 # images/<name>/<sub>/ with its own Dockerfile and VERSION is a second image, <pkg>:<name>-<sub>-<its version>, built after
-# <name> with itself as context (e.g. images/ikea-mujoco/sim/, the standard tasks' sidecar image FROM eai-ikea-mujoco).
+# <name> with itself as context (e.g. images/ikea-mujoco/sim/, the standard tasks' sidecar image FROM efe-private:ikea-mujoco-<version>).
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT"
 REG="${RCB_IMAGE_REGISTRY:-ghcr.io/mll-lab-nu}"

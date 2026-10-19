@@ -50,7 +50,7 @@ seed reset is exact; `instance.json` holds the task, the resolved parameters, th
 
 The benchmark keeps a bank of verified instances (20 nominal + 10 hard per task), each with a recorded rollout of its
 reference controller and an independent action replay. For each task, the frozen instance is the lowest-seed
-nominal instance of the bank whose rollout passes here, in `eai-pandadyn`:
+nominal instance of the bank whose rollout passes here, in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`:
 1. the instance rebuilt from its parameters and seed;
 2. the rollout replayed here reproduces the physical state it recorded after **every** control step, bit for bit (joint
    positions and velocities of every arm, every object's pose and velocities, every fixture's joint): this image's
@@ -109,7 +109,7 @@ repository and not published; only the rows of the 25 frozen instances are, unde
 `run-actions` are the freezing steps. Thin wrappers only: joint targets, kinematics and state; catching, striking,
 carrying and timing are the agent's (Declarations).
 
-## Determinism (measured on one host: AMD Ryzen 9 7950X, RTX 4090, driver 580.159.03; eai-pandadyn:0.1.0)
+## Determinism (measured on one host: AMD Ryzen 9 7950X, RTX 4090, driver 580.159.03; efe:pandadyn-0.1.0)
 CPU PhysX with `enable_enhanced_determinism`, one simulated scene per process, one thread for every numeric library
 (`OMP_NUM_THREADS=1`, set in the image), the scene rebuilt on every reset. Measured:
 - all 25 frozen instances: the benchmark's recorded rollout, replayed here, reproduces the physical state it recorded after
