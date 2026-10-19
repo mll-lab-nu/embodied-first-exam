@@ -1423,6 +1423,8 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
               f"{d}@all {m}"),
         block(f"# one benchmark, here RoboARC ({arc} task dirs)", f"{d}@all -p tasks/roboarc {m}"),
         block("# one task", f"{d}@all -p tasks/<benchmark>/<task> -a oracle"),
+        "Some benchmarks' images are not public: build them first as the benchmark's README in `tasks/<benchmark>/` "
+        "describes (e.g. [tasks/ambench](tasks/ambench)).", "",
         "### 3. Or use a subscription instead of an API key", "",
         block("# ChatGPT: log in once", "codex login", f"CODEX_FORCE_AUTH_JSON=1 {d} {m}"),
         block("# Claude: put the token it prints in .env as CLAUDE_CODE_OAUTH_TOKEN", "claude setup-token",
