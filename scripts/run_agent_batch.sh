@@ -368,7 +368,7 @@ stamp_task_dirs() {  # <root>: give every file of the job's task copies a mtime 
 
 # the repository's task dirs live at tasks/<benchmark folder>/<task> (scripts/task_conventions.py task_dir); a job's own
 # copy is flat, <dir>/tasks/<task>, which `harbor run -p tasks -i <task>` reads (Harbor's local datasets are one level).
-# Found by a glob, not by task_conventions: a runner host's python3 may predate tomllib (babel nodes: 3.9).
+# Found by a glob, not by task_conventions: a runner host's python3 may predate tomllib (some Slurm nodes: 3.9).
 src_of() {  # <task dir name>: its directory in the repository (no such task: a path that does not exist)
   local d; for d in "$R"/tasks/*/"$1"; do [ -f "$d/task.toml" ] && { printf '%s' "$d"; return 0; }; done
   printf '%s' "$R/tasks/.none/$1"
