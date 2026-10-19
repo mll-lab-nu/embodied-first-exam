@@ -1,0 +1,338 @@
+{
+ "title": "跨 Benchmark 分析",
+ "agent_order": [
+  "GPT-6 Astra",
+  "Gemini 4 Argon",
+  "Opus 5.5",
+  "GPT-6 Luna",
+  "GPT-6.1 Sol",
+  "GPT-6 Sol",
+  "GLM-5.3 Flash",
+  "DeepSeek V4.1 Flash",
+  "Gemini 3.8 Flash",
+  "Qwen3.8 27B"
+ ],
+ "home": [
+  {
+   "block": "能力与做法",
+   "from": "1.1",
+   "fig": "common|scope=all|fmt=pct|labels=kn"
+  },
+  {
+   "block": "怎么失败",
+   "from": "4.1",
+   "fig": "reason|by=agent|min=20",
+   "say": "各家分析过的失败里，事前想错或事后没挽回的是最大的一类（Astra {{q:reason|agent=GPT-6 Astra|field=level2|value=before,after}}，Argon {{q:reason|agent=Gemini 4 Argon|field=level2|value=before,after}}，Opus {{q:reason|agent=Opus 5.5|field=level2|value=before,after}}）；高层错误为主的占比，Argon {{q:reason|agent=Gemini 4 Argon|field=level2|value=high}} 最高；纯低层失误的占比，Astra {{q:reason|agent=GPT-6 Astra|field=level2|value=low}} 最高。"
+  },
+  {
+   "block": "怎么改",
+   "from": "5.1",
+   "fig": "fixrank|top=4",
+   "say": "分析过的 {{q:fix|field=fix|value=time-plan|show=n}} 个失败里，最该补的一步是按时钟规划的 {{q:fix|field=fix|value=time-plan|show=k}} 个，其次是换方法 {{q:fix|field=fix|value=pivot|show=k}} 个、选对抓法 {{q:fix|field=fix|value=grasp-choice|show=k}} 个；这三项合计 {{q:fix|fix=time-plan,pivot,grasp-choice|field=would_pass|value=likely,maybe|show=n}} 个失败里，分析认为补上就可能翻盘的 {{q:fix|fix=time-plan,pivot,grasp-choice|field=would_pass|value=likely,maybe|show=k}} 个。"
+  },
+  {
+   "block": "读结果前要知道",
+   "audience": "internal",
+   "from": "7.1",
+   "fig": "excluded|by=agent"
+  }
+ ],
+ "topics": [
+  {
+   "id": "outcomes",
+   "name": "主要发现",
+   "sections": [
+    "总览",
+    "模式",
+    "任务",
+    "做法"
+   ],
+   "question": "在六家都评过分的同一批任务上：agent 现在能做成多少，谁做成得最多？三家做成的任务有多少重合？从 privileged 到 standard 再到 realtime 掉了多少？哪些任务类型和机器人形态容易、哪些谁都做不成？agent 用什么做法控制机器人？"
+  },
+  {
+   "id": "paradigms",
+   "name": "解题方式",
+   "sections": [
+    "总览",
+    "做法与成败",
+    "技术与感知",
+    "工具",
+    "交付"
+   ],
+   "question": "agent 怎么驱动机器人：写程序控制（Code to Control：开环、闭环、搜索参数）、自己逐段控制（Direct Control），还是先训练模型（Train Model to Control）？用了哪些技术、感知方式和工具，哪种做法更常成功？"
+  },
+  {
+   "id": "styles",
+   "name": "做事方式",
+   "sections": [
+    "试错与规划",
+    "时间的用法",
+    "验证与汇报"
+   ],
+   "question": "agent 怎么试错和规划，怎么看时钟、分配时间和决定何时停下，结束前怎么验证和汇报？"
+  },
+  {
+   "id": "failures",
+   "name": "失败模式",
+   "sections": [
+    "总览",
+    "低层：动作",
+    "低层：感知与时间",
+    "关键点与进展",
+    "高层：背后的错误"
+   ],
+   "question": "失败的直接原因是什么，背后有没有理解、规划或自查上的错误？进展卡在哪一步，什么时候不可挽回？"
+  },
+  {
+   "id": "improve",
+   "name": "改进方向",
+   "sections": [
+    "总览",
+    "agent 侧",
+    "harness 侧",
+    "更长远的方向"
+   ],
+   "question": "按失败原因看，coding agent、harness 和 benchmark 各该改什么？各能换回多少失败？"
+  },
+  {
+   "id": "compare",
+   "name": "三家对比",
+   "sections": [
+    "成功率",
+    "失败原因",
+    "时间怎么用",
+    "做事方式",
+    "工具",
+    "同一任务的成对例子"
+   ],
+   "question": "GPT-6 Astra、Gemini 4 Argon、Opus 5.5 放在一起比：成功率、失败原因、时间怎么用、做事方式和工具各差在哪？同一任务上一家做成、一家没做成时，差在哪一步？"
+  },
+  {
+   "id": "validity",
+   "name": "有效性",
+   "sections": [
+    "基础设施中断",
+    "评分口径",
+    "任务与指令",
+    "违规与钻空子"
+   ],
+   "question": "哪些结果受评分口径、任务指令或基础设施影响？agent 有没有作弊或钻空子？",
+   "audience": "internal"
+  }
+ ],
+ "categories": [
+  {
+   "id": "tabletop",
+   "name": "桌面操作",
+   "benches": [
+    "libero-max",
+    "metaworldplus",
+    "robotwin_2_0",
+    "vlabench",
+    "robolab",
+    "robodojo",
+    "yamlab",
+    "ikea"
+   ]
+  },
+  {
+   "id": "household",
+   "name": "家居与移动操作",
+   "benches": [
+    "behavior",
+    "robocasa",
+    "robocasa365",
+    "robocasa-gr1",
+    "molmospaces",
+    "bigym2"
+   ]
+  },
+  {
+   "id": "dexterous",
+   "name": "灵巧、工具与书写",
+   "benches": [
+    "dexhand",
+    "dexjoco",
+    "dextoolbench",
+    "myosuite",
+    "robopaint"
+   ]
+  },
+  {
+   "id": "dynamic",
+   "name": "动态与全身",
+   "benches": [
+    "humanoidbench",
+    "mujoco_playground",
+    "pandadyn",
+    "roboolympics-fun",
+    "ambench",
+    "roboengineer",
+    "roboolympics-match"
+   ]
+  },
+  {
+   "id": "reasoning",
+   "name": "物理推理与解谜",
+   "benches": [
+    "roboarc",
+    "robowits",
+    "kinder",
+    "ispatialgym"
+   ]
+  },
+  {
+   "id": "safety",
+   "name": "安全与约束",
+   "benches": [
+    "maniguard"
+   ]
+  }
+ ],
+ "benches": {
+  "libero-max": {
+   "name": "LIBERO-Max",
+   "desc": "LIBERO 桌面操作任务"
+  },
+  "metaworldplus": {
+   "name": "Meta-World+",
+   "desc": "Sawyer 臂的 Meta-World 操作任务"
+  },
+  "robotwin_2_0": {
+   "name": "RoboTwin 2.0",
+   "desc": "ALOHA-AgileX 双臂操作（SAPIEN + CuRobo）"
+  },
+  "vlabench": {
+   "name": "VLABench",
+   "desc": "语言条件的桌面操作"
+  },
+  "robolab": {
+   "name": "RoboLab",
+   "desc": "NVIDIA RoboLab 语言目标桌面任务（Isaac Lab，DROID 关节动作）"
+  },
+  "robodojo": {
+   "name": "RoboDojo",
+   "desc": "通用操作策略基准的仿真部分（Isaac Lab）"
+  },
+  "yamlab": {
+   "name": "YAMLab",
+   "desc": "两台 I2RT YAM 臂的双臂操作（Isaac Lab）"
+  },
+  "behavior": {
+   "name": "BEHAVIOR-1K",
+   "desc": "R1Pro 移动双臂机器人在整屋场景做家务（OmniGibson）"
+  },
+  "robocasa": {
+   "name": "RoboCasa",
+   "desc": "厨房移动操作"
+  },
+  "robocasa365": {
+   "name": "RoboCasa365",
+   "desc": "RoboCasa 的 365 类厨房任务"
+  },
+  "robocasa-gr1": {
+   "name": "RoboCasa GR1",
+   "desc": "Fourier GR1 人形在厨房操作"
+  },
+  "molmospaces": {
+   "name": "MolmoSpaces",
+   "desc": "大规模室内场景的取放与开合"
+  },
+  "bigym2": {
+   "name": "BiGym2",
+   "desc": "人形双臂家务（MuJoCo）"
+  },
+  "dexhand": {
+   "name": "DexHand",
+   "desc": "灵巧手操作"
+  },
+  "dexjoco": {
+   "name": "DexJoCo",
+   "desc": "Franka + 16 自由度 Allegro 手的灵巧操作"
+  },
+  "dextoolbench": {
+   "name": "DexToolBench",
+   "desc": "灵巧手使用工具（锤、铲、刷、螺丝刀）"
+  },
+  "myosuite": {
+   "name": "MyoSuite",
+   "desc": "肌骨模型手的控制"
+  },
+  "robopaint": {
+   "name": "RoboPaint",
+   "desc": "机械臂书法与绘画"
+  },
+  "humanoidbench": {
+   "name": "HumanoidBench",
+   "desc": "Unitree H1 人形的全身运动与操作"
+  },
+  "mujoco_playground": {
+   "name": "MuJoCo Playground",
+   "desc": "四足、人形与操作的控制任务"
+  },
+  "pandadyn": {
+   "name": "Panda Dynamic",
+   "desc": "Franka 的连续多阶段动态操作（ManiSkill 3）"
+  },
+  "ambench": {
+   "name": "AM-Bench",
+   "desc": "空中机械臂（六旋翼 + 机械臂）"
+  },
+  "roboarc": {
+   "name": "RoboARC",
+   "desc": "拓扑解谜（如 buzz wire、套环）"
+  },
+  "robowits": {
+   "name": "RoboWits",
+   "desc": "双臂 Marvin 的物理推理谜题（Genesis）"
+  },
+  "kinder": {
+   "name": "KinDER",
+   "desc": "工具使用、非抓取多物体操作、几何与动力学约束"
+  },
+  "rsb": {
+   "name": "RoboSafeBench",
+   "desc": "替人操作机器人：执行无害请求、拒绝会造成伤害的请求"
+  },
+  "ese": {
+   "name": "Embodied Safety Exam",
+   "desc": "替人操作机器人：执行无害请求、拒绝会造成伤害的请求"
+  },
+  "maniguard": {
+   "name": "ManiGuard",
+   "desc": "带 LTLf 安全约束的桌面操作"
+  },
+  "roboolympics-fun": {
+   "name": "RoboOlympics 单项",
+   "desc": "G1 人形的单人项目（跳跃、投掷、体操、举重、球类技巧等 50 项）"
+  },
+  "roboolympics-match": {
+   "name": "RoboOlympics 对抗赛",
+   "desc": "双方对抗比赛（羽毛球、乒乓球、击剑、足球、桌上足球）"
+  },
+  "roboengineer": {
+   "name": "RoboEngineer",
+   "desc": "车、四足和无人机的动态控制（赛道、漂移、跳跃、抗风飞行）"
+  },
+  "ikea": {
+   "name": "IKEA 组装",
+   "desc": "两台 Franka 臂按顺序组装 IKEA 家具（MuJoCo）"
+  },
+  "ispatialgym": {
+   "name": "iSpatialGym",
+   "desc": "空间推理：对齐、物体间关系、心理旋转、相机重定位"
+  }
+ },
+ "sets": {
+  "note": "Task sets (user 10-18 night; tools/queries.py SETS, build.py --set / --both). core = tools/data/core_set.toml. Both leave RoboSafeBench (rsb) out for now. The text is written on core.",
+  "core": {
+   "name": "核心集",
+   "desc": "核心任务集：embodied-first-exam 的 docs/core_set.toml 列出的任务（每种模式各算一个任务；去掉了太容易、有捷径和参考运行已做成的任务，benchmark 方指定的任务保留）。正文的文字和数字都按核心集写成。核心集的分析不含 GPT-6 Luna（全部任务版仍含）。"
+  },
+  "all": {
+   "name": "全部任务",
+   "desc": "核心集加上其余全部任务。数字按全部任务重算，文字仍是按核心集写的。"
+  },
+  "left_out": "成功数含 RoboSafeBench；抽样分析还不含它（10-18 决定）。"
+ }
+}

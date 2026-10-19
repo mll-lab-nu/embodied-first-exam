@@ -1,0 +1,644 @@
+/* Layout: lab-notebook report. Fixed index rail on the left, one reading column on the right; tables carry the numbers. */
+:root {
+  --bg: #eef1f5; --surface: #ffffff; --sunk: #f1f3f7; --ink: #121821; --ink-2: #414c5c; --muted: #637083;
+  --line: #dbe0e8; --accent: #1f5fbf; --accent-soft: #e6eefb; --panel: #f7f8fb;
+  --ok-soft: #e1f2e7; --bad-soft: #fbe5e0; --shadow: 0 1px 2px rgba(16, 24, 40, .05);
+  --mp: #5a49c9; --mp-soft: #ecebfb; --ms: #0e6b66; --ms-soft: #e1efed; --mr: #9a5b00; --mr-soft: #fbf0dc;
+  --a1: #f7d27c;
+  /* chart category colours (--cat1…--cat8, --c0 and their aliases) come from tools/palette.py css(), added by build.py */
+  --p1: #dff3e6; --p2: #b4e2c4; --p3: #7fca9c; --p4: #3fa86a; --p5: #1f7a48;
+  --w1: #fde4d8; --w2: #f9bfa3; --w3: #f2906b; --w4: #e05a3c; --w5: #b3261e;
+  --q1: #cde2fb; --q2: #9ec5f4; --q3: #6da7ec; --q4: #3987e5; --q5: #1c5cab; --q-ink-hi: #ffffff;
+  --warn: #b26a00; --warn-soft: #fbf0dc; --bad: #b3301f; --good: #15703b;
+  --f-body: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Source Han Sans SC", system-ui, sans-serif;
+  --f-display: var(--f-body);
+  /* one type scale */
+  --fs1: 11.5px; --fs2: 13px; --fs3: 14.5px; --fs4: 16px; --fs5: 18px; --fs6: 26px; --measure: 40em; --side: 288px;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 6px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1116; --surface: #161a21; --sunk: #1f242c; --ink: #e5e9ef; --ink-2: #b1bac7; --muted: #8590a0;
+  --line: #2a313b; --accent: #82aaf0; --accent-soft: #1b2639; --panel: #12161c;
+  --ok-soft: #15301f; --bad-soft: #3a1d17; --shadow: none;
+  --mp: #a99ef0; --mp-soft: #26233f; --ms: #5cbcb4; --ms-soft: #1d3331; --mr: #e3a33b; --mr-soft: #33281a;
+  --a1: #7a5d1c;
+  --p1: #16301f; --p2: #1d5233; --p3: #2a7a4b; --p4: #48a86f; --p5: #8fd3a8;
+  --w1: #3a1d16; --w2: #6a2c1f; --w3: #a3402b; --w4: #e0603f; --w5: #f5a087;
+  --q1: #16304f; --q2: #184f95; --q3: #256abf; --q4: #5598e7; --q5: #9ec5f4; --q-ink-hi: #0b0f0e;
+  --warn: #e3a33b; --warn-soft: #33281a; --bad: #e66767; --good: #4cc27a;
+  color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1116; --surface: #161a21; --sunk: #1f242c; --ink: #e5e9ef; --ink-2: #b1bac7; --muted: #8590a0;
+  --line: #2a313b; --accent: #82aaf0; --accent-soft: #1b2639; --panel: #12161c;
+  --ok-soft: #15301f; --bad-soft: #3a1d17; --shadow: none;
+  --mp: #a99ef0; --mp-soft: #26233f; --ms: #5cbcb4; --ms-soft: #1d3331; --mr: #e3a33b; --mr-soft: #33281a;
+  --a1: #7a5d1c;
+  --p1: #16301f; --p2: #1d5233; --p3: #2a7a4b; --p4: #48a86f; --p5: #8fd3a8;
+  --w1: #3a1d16; --w2: #6a2c1f; --w3: #a3402b; --w4: #e0603f; --w5: #f5a087;
+  --q1: #16304f; --q2: #184f95; --q3: #256abf; --q4: #5598e7; --q5: #9ec5f4; --q-ink-hi: #0b0f0e;
+  --warn: #e3a33b; --warn-soft: #33281a; --bad: #e66767; --good: #4cc27a;
+  color-scheme: dark }
+
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font: 15px/1.7 var(--f-body); margin: 0 }
+a { color: var(--accent); text-decoration: none } a:hover { text-decoration: underline }
+a:focus-visible, button:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh }
+aside { position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; height: 100vh; overflow-y: auto;
+  border-right: 1px solid var(--line); padding-block: 22px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: 14px; font-size: 13.5px }
+.brand { font: 700 17px/1.3 var(--f-display); margin: 0 0 4px }
+.brand-sub { color: var(--muted); font-size: 12px; margin: 0 0 16px }
+.navsec { margin: 14px 0 4px; color: var(--muted); font-size: 11.5px; letter-spacing: .08em }
+aside a { display: block; color: var(--ink-2); padding: 2px 8px; border-radius: 4px; line-height: 1.5 }
+aside a.on { background: var(--accent-soft); color: var(--accent); font-weight: 500 }
+aside .cat { color: var(--muted); font-size: 12px; padding: 6px 8px 0 }
+aside .sub a { padding-left: 18px }
+main { padding-block: 28px 80px; padding-left: max(16px, min(5vw, 56px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); min-width: 0 }
+.col { max-width: 920px }
+.crumb { color: var(--muted); font-size: 12.5px; margin-bottom: 6px }
+h1 { font: 700 28px/1.3 var(--f-display); margin: 0 0 8px; text-wrap: balance }
+h2 { font: 700 19px/1.4 var(--f-display); margin: 34px 0 10px; text-wrap: balance }
+h3 { font-size: 15px; margin: 22px 0 6px }
+.lead { color: var(--ink-2); font-size: 16px; margin: 0 0 18px; max-width: 46em }
+.meta { color: var(--muted); font-size: 12.5px; font-family: var(--f-mono) }
+p, li { max-width: 46em }
+.prose table, table.t { border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums }
+.prose th, .prose td, table.t th, table.t td { border-bottom: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top }
+table.t th, .prose th { color: var(--muted); font-weight: 500; font-size: 12px; letter-spacing: .04em }
+.scroll { overflow-x: auto; max-width: 100% }
+.num { font-family: var(--f-mono); text-align: right }
+.pill { display: inline-block; font-size: 11.5px; line-height: 1.6; padding: 0 7px; border-radius: 999px; background: var(--sunk); color: var(--ink-2); white-space: nowrap }
+.pill.warn { background: var(--warn-soft); color: var(--warn) } .pill.acc { background: var(--accent-soft); color: var(--accent) }
+.pill.ok { color: var(--good) } .pill.no { color: var(--bad) }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 }
+.finding { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 26px; scroll-margin-top: 16px }
+.prose { min-width: 0 } .prose p { margin: 8px 0 }
+.prose table { display: block; overflow-x: auto; max-width: 100% }
+.prose code, .mono { font-family: var(--f-mono); font-size: .9em }
+.fig { margin: 18px 0 14px; overflow-x: auto } .figcap { font-size: 13px; font-weight: 500; color: var(--ink); margin: 0 0 2px }
+.empty { color: var(--muted); border: 1px dashed var(--line); border-radius: var(--r); padding: 18px; margin: 12px 0 }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; margin: 12px 0 }
+.card { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; color: var(--ink); min-width: 0 }
+.card:hover { border-color: var(--accent); text-decoration: none }
+.card .thumb { aspect-ratio: 16 / 9; background: var(--sunk); object-fit: cover; width: 100%; max-width: 100% }
+.card .body { padding: 9px 11px 11px; display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.card .ttl { font-size: 13.5px; line-height: 1.5 }
+.idx { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px 22px; margin: 10px 0 }
+.idx a.item { display: block; padding: 8px 0; border-bottom: 1px solid var(--line); color: var(--ink) }
+.idx a.item span { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.5 }
+.idx a.item span.pill { display: inline-block; color: var(--ink-2); margin-left: 4px }
+.bar { display: flex; height: 10px; border-radius: 3px; overflow: hidden; gap: 2px; background: var(--surface); min-width: 120px }
+.bar i { display: block; height: 100% }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--ink-2); margin: 6px 0 }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px }
+.rate { display: grid; grid-template-columns: 62px 54px; gap: 6px; align-items: center; font-family: var(--f-mono); font-size: 12.5px }
+.rate .mini { height: 6px; background: var(--sunk); border-radius: 3px; overflow: hidden } .rate .mini i { display: block; height: 100%; background: var(--ok); border-radius: 3px }
+.media { margin: 14px 0; background: var(--sunk); border-radius: var(--r); overflow: hidden }
+.media video, .media img { display: block; width: 100%; max-width: 100%; max-height: 520px; object-fit: contain; background: #000 }
+.kv { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 4px 14px; font-size: 14px; margin: 8px 0 }
+.kv dt { color: var(--muted) } .kv dd { margin: 0; min-width: 0 }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 4px }
+select { font: inherit; font-size: 13px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink) }
+.note { color: var(--muted); font-size: 12.5px; margin: 6px 0 }
+.note-block ul { padding-left: 1.1em; margin: 8px 0 } .note-block li { margin: 4px 0 } .facts { margin: 4px 0 12px }
+.navtoggle { display: none }
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr) }
+  aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px }
+  aside .tree { display: none } aside.open .tree { display: block }
+  .navtoggle { display: inline-block; font: inherit; font-size: 13px; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; padding: 3px 10px; margin-top: 4px }
+  h1 { font-size: 23px }
+  .kv { grid-template-columns: minmax(0, 1fr) } .kv dt { margin-top: 6px }
+}
+/* Charts (built by tools/charts.py): label column, track, count column; tips on hover. */
+.chart { margin: 12px 0 4px; font-size: 12.5px }
+.crow { display: grid; grid-template-columns: minmax(84px, 190px) minmax(0, 1fr) 58px; gap: 10px; align-items: center; margin: 5px 0 }
+.cl { color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.cv { color: var(--muted); font-family: var(--f-mono); font-size: 11.5px; text-align: right }
+.track { display: flex; gap: 2px; height: 14px; background: var(--sunk); border-radius: 3px; overflow: hidden }
+.seg { display: block; height: 100%; min-width: 2px }
+.htrack { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 2px; height: 34px; align-items: end; border-bottom: 1px solid var(--line) }
+.hb { display: flex; flex-direction: column-reverse; height: 100%; justify-content: flex-start } .hb i { display: block; width: 100%; border-top: 1px solid var(--surface) }
+.hb:hover, .seg:hover, .pin:hover { filter: brightness(1.12) }
+.ltrack { position: relative; height: 18px; border-bottom: 1px solid var(--line) }
+.band { position: absolute; top: 5px; height: 8px; background: var(--q2); border-radius: 4px; opacity: .8 }
+.pin { position: absolute; top: 2px; width: 9px; height: 14px; margin-left: -4.5px; border-radius: 3px; border: 2px solid var(--surface) }
+.bandkey { background: var(--q2) !important; width: 18px !important; height: 8px !important; border-radius: 4px !important }
+.axis .ticks { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px }
+details.more { margin: 2px 0 10px; font-size: 12.5px } details.more summary { color: var(--muted); cursor: pointer; width: max-content }
+table.heat tr:first-child th { white-space: nowrap; vertical-align: bottom }
+table.heat td.hc { text-align: center; font-family: var(--f-mono); font-size: 12px; min-width: 52px }
+table.heat th[scope=row] { color: var(--ink-2); font-weight: 400; white-space: nowrap }
+table.heat td.num { white-space: nowrap; min-width: 2.6em }
+.hc.p1 { background: var(--p1) } .hc.p2 { background: var(--p2) } .hc.p3 { background: var(--p3) } .hc.p4 { background: var(--p4); color: var(--q-ink-hi) } .hc.p5 { background: var(--p5); color: var(--q-ink-hi) }
+.hc.w1 { background: var(--w1) } .hc.w2 { background: var(--w2) } .hc.w3 { background: var(--w3) } .hc.w4 { background: var(--w4); color: var(--q-ink-hi) } .hc.w5 { background: var(--w5); color: var(--q-ink-hi) }
+.hc.q0 { color: var(--muted) } .hc.q1 { background: var(--q1) } .hc.q2 { background: var(--q2) } .hc.q3 { background: var(--q3) }
+.hc.q4 { background: var(--q4); color: var(--q-ink-hi) } .hc.q5 { background: var(--q5); color: var(--q-ink-hi) }
+#tip { position: fixed; z-index: 10; max-width: 340px; background: var(--ink); color: var(--bg); font-size: 12.5px; line-height: 1.5;
+  padding: 6px 9px; border-radius: 5px; pointer-events: none; box-shadow: 0 2px 10px rgba(0,0,0,.18) }
+/* Phase bars (one divider set per row), glossary legends and absolute-count bars. */
+.phrow { margin: 4px 0 } .phwrap { position: relative; display: block; padding-top: 15px }
+.gline { position: absolute; top: 11px; bottom: -3px; width: 0; border-left: 2px solid var(--ink); margin-left: -1px }
+.gpct { position: absolute; top: 0; font: 10.5px/13px var(--f-mono); color: var(--ink-2); text-align: center; white-space: nowrap; overflow: hidden }
+.plegs { display: grid; gap: 2px 0; margin-bottom: 6px } .pleg { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; align-items: baseline; font-size: 12px }
+.pleg b { font-weight: 500; color: var(--ink) } .pleg .legend { margin: 2px 0 }
+dl.legend.defs { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 3px 18px; margin: 6px 0 8px; font-size: 12px }
+dl.legend.defs > div { display: flex; gap: 6px; align-items: baseline; min-width: 0 } dl.legend.defs dt { white-space: nowrap; color: var(--ink); font-weight: 500 }
+dl.legend.defs dd { margin: 0; color: var(--muted); min-width: 0 } dl.legend.defs dt i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px }
+.ctrack { display: flex; gap: 2px; height: 14px }
+.figsay { font-size: 14px; margin: 2px 0 4px; color: var(--ink) }
+.qv { border-bottom: 1px dotted var(--muted); cursor: help }
+/* Bar strip of a bars placeholder (build.bars_block): a muted caption line, then one line of items
+   label · short bar filled to k/n · "p%（k/n）", wrapping only when the line is too narrow (phones).
+   One accent for the bars; text in text tokens; items under 20 italic with the charts' 样本少 tag.
+   The strip may use the whole text column (the claim's own p and li keep the measure). The counts "（k/n）" (.qbn) are
+   a size smaller and their full-width brackets lose their outer blank half, so five groups fit one line from about
+   1280 px; on phones the labels get one width, so the stacked bars line up. */
+.claim:has(> .qbars) { max-width: none }
+.qbars { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 7px; margin: 0 0 10px; font-size: 11px; line-height: 1.5; min-width: 0 }
+.qbars .qbcap { flex: 0 0 100%; max-width: none; margin: 0; font-size: var(--fs1); color: var(--muted) }
+.qbrow { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; cursor: help }
+.qbl { color: var(--ink-2) } .qball .qbl { color: var(--ink); font-weight: 500 }
+.qbrow.small .qbl { font-style: italic }
+.qbt { flex: none; width: 44px; height: 8px; background: var(--sunk); border-radius: 2px; overflow: hidden } .qbf { display: block; height: 100%; background: var(--accent) }
+.qbv { color: var(--muted); font-size: 10.5px } .qbn { margin: 0 -.35em; font-size: 9.5px; letter-spacing: -.02em } .qbv .few { display: inline; margin-left: 2px; font-size: 9.5px }
+@media (max-width: 560px) { .qbl { min-width: 7.5em } }
+.pill.key { background: var(--ink); color: var(--bg); font-weight: 500 }
+.card.key { border-color: var(--ink-2); box-shadow: inset 0 3px 0 var(--ink) }
+/* Child findings (§4.2.1 …): an indented block inside the parent. */
+.subs { margin: 14px 0 6px; border-left: 3px solid var(--line); padding-left: 16px; display: grid; gap: 14px; min-width: 0 }
+.subsh { margin: 0; font-size: 12px; color: var(--muted); letter-spacing: .04em }
+.sub { min-width: 0 } .shead { display: flex; gap: 8px; align-items: baseline } .stitle { margin: 0; font: 600 15px/1.5 var(--f-display) }
+.sub .prose ul { padding-left: 1.15em; margin: 4px 0 } .sub .prose li { margin: 3px 0 } .sub .prose ul ul { margin: 2px 0 }
+.card .why { font-size: 12px; color: var(--accent); font-weight: 500 }
+.grid.sm { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin: 8px 0 2px } .grid.sm .ttl { font-size: 12.5px }
+.crow.small .cl, tr.small th { font-style: italic } .few { display: block; font: 10px/1.3 var(--f-body); font-style: normal; color: var(--muted); white-space: nowrap; text-decoration: none } .cv.deflab { border-bottom: 0; text-decoration: underline dotted var(--muted); text-underline-offset: 3px } .chead .ticks { font-size: 10.5px } .chead .cv { font-family: var(--f-body); font-size: 11px; white-space: nowrap }
+.searchbox { margin: 8px 0 4px } .searchbox input { width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink) }
+ul.sres { list-style: none; padding: 0 } ul.sres li { margin: 8px 0; padding-bottom: 6px; border-bottom: 1px solid var(--line) } ul.sres li .note { margin: 2px 0 0 } mark { background: var(--a1); color: var(--ink); padding: 0 1px }
+/*CAUSE_CSS*/
+/* Findings: claim, then labelled evidence rows; cases cited as small numbers. */
+.claim p { font-size: 15.5px } .claim ul { padding-left: 1.15em; margin: 6px 0 } .claim li { font-size: 15.5px; margin: 4px 0 }
+.parts { display: grid; gap: 8px; margin: 10px 0 }
+.part { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 12px; border-top: 1px dashed var(--line); padding-top: 8px }
+.pl { color: var(--muted); font-size: 12.5px; letter-spacing: .04em; padding-top: 2px } .pl small { display: block; font-size: 11px }
+.part, .pb, .pl, .claim, .issue, .finding { min-width: 0 } .fig { max-width: 100% }
+.prose, .issue, .note-block, #main .col { overflow-wrap: anywhere }
+.pb > :first-child { margin-top: 0 } .pb > :last-child { margin-bottom: 0 } .pb ul { padding-left: 1.1em; margin: 0 } .pb li { margin: 3px 0 }
+a.cref { font: 500 10.5px/1 var(--f-mono); vertical-align: super; padding: 0 1px; margin: 0 1px }
+a.cref::before { content: "[" } a.cref::after { content: "]" }
+a.fid, .fidtag { font-family: var(--f-mono); font-size: .92em }
+.toc { margin: 8px 0 18px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r) }
+.toc ul { list-style: none; padding: 0; margin: 0 }
+.toc li, ul.flist li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px; margin: 3px 0; max-width: none }
+ul.flist { list-style: none; padding: 0 } ul.flist .pill { margin-left: 6px }
+.finding h3.ftitle { font: 700 17px/1.45 var(--f-display); margin: 6px 0 8px; text-wrap: balance }
+h2.sec { border-bottom: 2px solid var(--ink); padding-bottom: 4px; margin-top: 40px }
+.card .num-badge { font: 500 11px var(--f-mono); color: var(--muted) }
+/* Case page: timeline steps and activity strip. */
+ol.steps { list-style: none; padding: 0; margin: 8px 0 } ol.steps li { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; padding: 4px 0; border-bottom: 1px solid var(--line); max-width: none }
+ol.steps .t { font-family: var(--f-mono); font-size: 12px; color: var(--muted); padding-top: 2px }
+.act { position: relative; margin: 26px 0 2px }
+.act .cols { display: grid; grid-template-columns: repeat(60, minmax(0, 1fr)); gap: 1px; height: 44px; align-items: end; border-bottom: 1px solid var(--line) }
+.act .col { display: flex; flex-direction: column-reverse; height: 100% } .act .col i { display: block; width: 100% }
+.act .lim { position: absolute; top: 0; bottom: 0; border-left: 1px dashed var(--muted) }
+.act .mk { position: absolute; top: -2px; bottom: 0; border-left: 2px solid var(--ink) }
+.act .mkn { position: absolute; top: -16px; left: -7px; min-width: 14px; height: 14px; padding: 0 3px; box-sizing: border-box; border-radius: 7px; background: var(--ink); color: var(--bg); font: 500 9.5px/14px var(--f-mono); text-align: center; white-space: nowrap }
+ol.mklist { list-style: none; display: flex; flex-wrap: wrap; gap: 2px 16px; padding: 0; margin: 6px 0 0; font-size: 12.5px; color: var(--ink-2) }
+ol.mklist b { display: inline-block; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); color: var(--bg); font: 500 9.5px/14px var(--f-mono); text-align: center; margin-right: 3px }
+.act .clk { position: absolute; bottom: -6px; width: 2px; height: 5px; background: var(--ink-2); margin-left: -1px }
+.act-ax { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; margin-top: 18px }
+/* Mode identity: the same tint wherever a mode is named (pills, table headers, chart rows). */
+.pill.mode { font-weight: 500 } .m-priv { background: var(--mp-soft) !important; color: var(--mp) !important } .m-std { background: var(--ms-soft) !important; color: var(--ms) !important } .m-rt { background: var(--mr-soft) !important; color: var(--mr) !important }
+.cl.m-priv, .cl.m-std, .cl.m-rt { background: none !important; font-weight: 500 }
+/* Tables: clear column separation. */
+.prose th, .prose td, table.t th, table.t td { padding: 7px 14px }
+table.t th + th, table.t td + td, table.t th + td, .prose th + th, .prose td + td { border-left: 1px solid var(--line) }
+table.t tr.total th, table.t tr.total td { border-top: 2px solid var(--ink-2); font-weight: 500 }
+table.results td.hc { text-align: center; line-height: 1.25; min-width: 58px } .nowrap { white-space: nowrap } .profile td, .profile th { white-space: nowrap } table.results th[scope=row] { white-space: nowrap } table.results td.hc b { display: block; font: 500 13px var(--f-mono) } table.results td.hc small { font: 10.5px var(--f-mono); opacity: .8 }
+th.sort { cursor: pointer; white-space: nowrap } th.sort:hover { color: var(--accent) }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden } .seg button { font: inherit; font-size: 13px; padding: 4px 11px; border: 0; background: var(--surface); color: var(--ink-2); cursor: pointer } .seg button + button { border-left: 1px solid var(--line) } .seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 500 }
+/* Range chart (median + IQR, log axis). */
+.rblock { margin: 8px 0 12px } .rtitle { margin: 0 0 2px; font-size: 12.5px; color: var(--ink-2); font-weight: 500 }
+.rtrack { position: relative; height: 14px; border-bottom: 1px solid var(--line) } .rbar { position: absolute; top: 4px; height: 6px; background: var(--q2); border-radius: 3px } .rdot { position: absolute; top: 1px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; background: var(--ink); border: 2px solid var(--surface) }
+.lticks { position: relative; height: 14px; color: var(--muted); font-size: 11px } .lticks span { position: absolute; transform: translateX(-50%) }
+details.examples-box > summary { font-size: 13.5px; color: var(--accent); margin: 8px 0 }
+img.mini { width: 72px; height: 42px; object-fit: cover; border-radius: 4px; display: block } table.examples td { vertical-align: middle } table.examples td:nth-child(5) { min-width: 260px }
+.btrack { height: 12px; background: var(--sunk); border-radius: 3px; overflow: hidden } .bfill { display: block; height: 100% }
+.deflab { cursor: help; border-bottom: 1px dotted var(--muted) }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: 0 }
+/* Issues register. */
+.issues { display: grid; gap: 10px; margin: 10px 0 } .issue { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: var(--r); padding: 9px 13px; scroll-margin-top: 16px } .issue p { margin: 4px 0 } .ih { display: flex; flex-wrap: wrap; gap: 6px; align-items: center } .fidtag { font: 500 12.5px var(--f-mono); color: var(--warn); margin-right: 2px }
+@media (max-width: 860px) { .crow { grid-template-columns: 76px minmax(0, 1fr) 36px } .part { grid-template-columns: minmax(0, 1fr); gap: 2px } ol.steps li { grid-template-columns: 74px minmax(0, 1fr) } }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important } }
+
+/* ===== Style B 工作台: cool-grey canvas, white cards, sans headings, dense panels. ===== */
+body { font: var(--fs3)/1.7 var(--f-body) }
+p, li, .lead, .claim, .figsay { max-width: var(--measure) }
+h1 { font: 700 var(--fs6)/1.3 var(--f-body); margin: 0 }
+h2 { font: 700 var(--fs5)/1.4 var(--f-body) } h3 { font-size: var(--fs4) }
+.lead { font-size: var(--fs4); color: var(--ink-2) }
+.meta { font-size: var(--fs1) } .note { font-size: var(--fs2) } .pill { font-size: var(--fs1); border-radius: 4px }
+.term { border-bottom: 1px dashed var(--accent); cursor: help } .term:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px }
+
+/* Shell: white index rail (sticky) on the grey canvas. */
+.shell { grid-template-columns: var(--side) minmax(0, 1fr) }
+aside { background: var(--surface); border-right: 1px solid var(--line); padding: 16px 12px 24px max(14px, env(safe-area-inset-left, 0px)); font-size: var(--fs2); display: flex; flex-direction: column; gap: 2px }
+.topbar { display: flex; align-items: center; gap: 10px }
+.brand { font: 700 15px/1.3 var(--f-body); color: var(--ink); margin: 0 } .brand:hover { text-decoration: none }
+.brand-sub { font-size: var(--fs1); color: var(--muted); margin: 0 0 8px }
+.here { display: none }
+.tree { display: flex; flex-direction: column; gap: 1px }
+.navsec { margin: 12px 0 3px; color: var(--muted); font-size: var(--fs1); font-weight: 500; letter-spacing: .06em }
+details.navgrp > summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; padding-right: 6px } details.navgrp > summary::-webkit-details-marker { display: none }
+details.navgrp > summary::after { content: "▸"; color: var(--muted) } details.navgrp[open] > summary::after { content: "▾" }
+aside a { padding: 3px 8px; border-radius: 5px; color: var(--ink-2) } aside a:hover { background: var(--sunk); text-decoration: none }
+aside a.on { background: var(--accent-soft); color: var(--accent); font-weight: 500 }
+.searchbox { margin: 4px 0 6px } .searchbox input { border-radius: 6px; background: var(--sunk); border-color: var(--line); font-size: var(--fs2); padding: 6px 9px }
+.ptoc { display: flex; flex-direction: column; gap: 1px; padding: 6px; margin: 0 0 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px }
+.ptoc .navsec { margin: 0 0 4px 2px; color: var(--ink); font-size: var(--fs2); font-weight: 700; letter-spacing: 0 }
+.pts { margin: 8px 0 2px 6px; font-size: var(--fs1); color: var(--muted); font-weight: 500 }
+.ptoc a.pt { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 4px; padding: 3px 5px; line-height: 1.45; font-size: 12px }
+.pt b { font: 500 11px/1.65 var(--f-mono); color: var(--muted) }
+.ptoc a.pt.on { background: var(--accent); color: #fff } .ptoc a.pt.on b { color: rgba(255, 255, 255, .8) }
+.ptk { display: none; padding-left: 8px } .ptg.open .ptk { display: block } .ptoc .ptk a.pt { font-size: 12px; grid-template-columns: 46px minmax(0, 1fr) }
+
+main { padding: 22px max(16px, env(safe-area-inset-right, 0px)) 96px max(16px, min(3vw, 32px)) }
+.col { max-width: 1040px; display: flex; flex-direction: column }
+.crumb { font-size: var(--fs1); color: var(--muted); margin: 0 0 4px; font-weight: 500 } .col > h1 + .lead { margin: 6px 0 0 }
+h2.sec { display: flex; align-items: center; gap: 10px; font: 700 var(--fs2)/1.4 var(--f-body); color: var(--ink-2); letter-spacing: .06em; border: 0; padding: 0; margin: 28px 0 0 }
+h2.sec::after { content: ""; flex: 1; height: 1px; background: var(--line) }
+
+/* Finding card: title, conclusion and main chart panel open; evidence rows fold. */
+.finding { display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 16px 20px 14px; margin-top: 12px; scroll-margin-top: 12px }
+.fhead { display: flex; align-items: center; gap: 6px } .fhead .fid { font: 500 var(--fs1)/1.6 var(--f-mono); color: var(--ink-2); background: var(--sunk); border-radius: 4px; padding: 0 6px }
+.finding h3.ftitle { font: 700 var(--fs5)/1.45 var(--f-body); margin: 0 }
+.fvis, .svis { display: flex; flex-direction: column; gap: 12px }
+.claim > ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px } .claim li { font-size: var(--fs3); margin: 0 }
+.claim strong { font-weight: 700; color: var(--ink); background: var(--accent-soft); padding: 0 2px; border-radius: 2px }
+.prose p { margin: 0 }
+/* chart panel: takeaway as headline, caption tag, chart (build.py writes them in this order) */
+.fig { margin: 0; display: flex; flex-direction: column; gap: 3px }
+.fig.mainfig, .sfig { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 10px; background: var(--surface) }
+.figsay { font-size: var(--fs3); font-weight: 700; line-height: 1.55; color: var(--ink); margin: 0 }
+.figcap { font-size: var(--fs1); font-weight: 500; color: var(--muted); margin: 0 }
+.howto { font-size: var(--fs1); color: var(--ink-2); margin: 0; line-height: 1.5 } .howto b { font-weight: 500; color: var(--muted); margin-right: 6px }
+.crow.wide { grid-template-columns: minmax(84px, 190px) minmax(0, 1fr) 84px }
+@media (max-width: 860px) { .crow.wide { grid-template-columns: 76px minmax(0, 1fr) 70px } }
+@media (min-width: 1240px) { .sfig .crow.wide { grid-template-columns: minmax(80px, 118px) minmax(0, 1fr) 78px } }
+.chart { margin: 6px 0 0; font-size: 12px } .crow { margin: 3px 0 } .track { height: 12px }
+.fig .note { font-size: var(--fs1) } details.more { font-size: var(--fs1) }
+.parts { display: flex; flex-direction: column; margin: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden }
+details.part { display: block; border: 0; padding: 0 } details.part + details.part { border-top: 1px solid var(--line) }
+details.part > summary { display: flex; align-items: center; gap: 10px; padding: 6px 12px; cursor: pointer; list-style: none; background: var(--panel) }
+details.part > summary::-webkit-details-marker { display: none }
+details.part > summary::before { content: "▸"; color: var(--muted); font-size: 11px; width: 10px } details.part[open] > summary::before { content: "▾" }
+details.part > summary:hover { background: var(--accent-soft) }
+details.part .pl { font-size: var(--fs2); font-weight: 700; color: var(--ink); padding: 0; letter-spacing: 0 } .pl small { display: inline; margin-left: 6px; font-size: var(--fs1); font-weight: 400; color: var(--muted) }
+.pn { margin-left: auto; font: var(--fs1) var(--f-mono); color: var(--muted) }
+details.part > .pb { padding: 10px 14px 12px; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid var(--line) }
+.pb > ul { display: flex; flex-direction: column; gap: 4px } .pb li { margin: 0 }
+/* child sections: compact bordered panels */
+.subs { border: 0; padding: 0; margin: 0; gap: 8px }
+.subsh { font-size: var(--fs1); color: var(--muted); font-weight: 500; margin: 0 }
+section.sub { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; padding: 10px 14px; scroll-margin-top: 12px }
+.shead { gap: 8px; align-items: baseline } .shead .fid { font: 500 var(--fs1) var(--f-mono); color: var(--muted); white-space: nowrap }
+.stitle { font: 700 var(--fs4)/1.45 var(--f-body) }
+section.sub .parts, section.sub > details.part { border: 1px solid var(--line); border-radius: 6px; overflow: hidden }
+.fcases { display: flex; flex-direction: column; gap: 6px }
+/* 上一节 / 下一节 */
+.pnav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px }
+.pnav a { display: flex; flex-direction: column; gap: 0; padding: 6px 10px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); color: var(--ink-2); min-width: 0 }
+.pnav a:hover { text-decoration: none; border-color: var(--accent); color: var(--accent) }
+.pnav small { font-size: var(--fs1); color: var(--muted) } .pnav span { font-size: var(--fs2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.pn-next { text-align: right; grid-column: 2 } .pnav .pn-prev { grid-column: 1 } .pnav > span:empty { display: none }
+
+/* Case cards: one 16:9 thumbnail, outcome pill, one-line label, video mark. */
+.grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 0 }
+.grid.sm { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; gap: 0 }
+.card:hover { border-color: var(--accent); text-decoration: none }
+.thumbw { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; min-height: 0; background: var(--sunk); border-bottom: 1px solid var(--line) }
+.card .thumb { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; object-fit: cover; display: block }
+.card .thumb.ph { display: grid; place-items: center; color: var(--muted); font-size: var(--fs1) }
+.vmark { position: absolute; right: 6px; top: 6px; background: rgba(10, 14, 20, .72); color: #fff; font-size: 10.5px; line-height: 1; padding: 4px 6px; border-radius: 4px }
+.card .body { padding: 7px 9px 9px; gap: 3px; display: flex; flex-direction: column; min-width: 0 }
+.ctop { display: flex; gap: 5px; align-items: center }
+.pill.out { font-weight: 700 } .pill.out.ok { background: var(--ok-soft); color: var(--good) } .pill.out.no { background: var(--bad-soft); color: var(--bad) }
+.card .why { font-size: var(--fs1); color: var(--ink); font-weight: 700; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
+.card .ttl, .grid.sm .ttl { font-size: 12.5px; line-height: 1.5; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden }
+.cmeta { display: flex; gap: 6px; align-items: center; font-size: var(--fs1); color: var(--muted); min-width: 0 } .cmeta > span:first-child { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.card.key { border-color: var(--ink-2); box-shadow: inset 0 3px 0 var(--ink) }
+.card .num-badge { margin-left: auto }
+/* A card is a box with two links (thumbnail, text) and the trial name between them, so the name can be selected. */
+.card > a { color: inherit } .card > a:hover { text-decoration: none } .card > a.body { flex: 1 }
+/* Trial name "run id · host · trial name" (app.trialRef): under each video or thumbnail and the case page title. */
+.tref { display: block; margin: 2px 0 8px; font: 11px/1.45 var(--f-mono); color: var(--muted); overflow-wrap: anywhere; user-select: text; -webkit-user-select: text }
+.media + .tref { margin-top: -8px } .card .tref { margin: 0; padding: 6px 9px 0; font-size: 10px }
+/* Video strip above a finding's case cards (app.videoStrip): up to 3 players with claim, trial name and link;
+   3 across, one per row on phones. A fixed 16:9 box (letterboxed) so rows line up and nothing jumps on play. */
+.vstrip { display: flex; flex-direction: column; gap: 6px; min-width: 0 }
+.vgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; min-width: 0 }
+.vcase { margin: 0; min-width: 0; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden }
+.vcase video { display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; object-fit: contain; background: var(--sunk) }
+.vcase figcaption { display: flex; flex-direction: column; gap: 2px; padding: 6px 9px 8px; min-width: 0 }
+.vcase .why { font-size: var(--fs1); color: var(--ink); font-weight: 700; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.vcase .tref { margin: 0; font-size: 10px }
+.vcase .vlink { font-size: var(--fs1); align-self: flex-start }
+@media (max-width: 600px) { .vgrid { grid-template-columns: minmax(0, 1fr) } }
+
+/* Home: header strip, 2 × 2 summary cards (bullets + one chart panel), top findings table. */
+.mast { display: flex; flex-direction: column; gap: 4px; padding: 4px 0 12px }
+.summary { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px }
+@media (min-width: 1240px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)) } .sfig .crow { grid-template-columns: minmax(80px, 118px) minmax(0, 1fr) 52px } }
+.sblock { display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 14px 16px 14px; min-width: 0 }
+.shd { display: flex; align-items: center; gap: 8px } .shd h2 { margin: 0; font-size: var(--fs4) }
+.sn { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: #fff; font: 700 12px/1 var(--f-mono) }
+.sbody > ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px } .sbody li { margin: 0; font-size: var(--fs2) } .sbody p { margin: 0; font-size: var(--fs2) }
+.sfig { margin: 0; display: flex; flex-direction: column; gap: 6px; background: var(--panel) }
+.sfig .fig { gap: 3px } .sfig .figsay { font-size: var(--fs2) } .src { font-size: var(--fs1); color: var(--muted) }
+.sfig dl.legend.defs { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); font-size: 11.5px }
+.hsec { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px } .hsec h2 { margin: 0; font-size: var(--fs4) }
+ol.toplist { list-style: none; padding: 0; margin: 0 }
+ol.toplist li { max-width: none } ol.toplist li + li { border-top: 1px solid var(--line) }
+ol.toplist a { display: grid; grid-template-columns: 50px minmax(0, 1fr) auto; gap: 2px 10px; align-items: baseline; padding: 6px 4px; color: var(--ink); border-radius: 4px }
+ol.toplist a:hover { text-decoration: none; background: var(--accent-soft) }
+ol.toplist .fid { font: 500 var(--fs2) var(--f-mono); color: var(--accent) } ol.toplist .tt { font-size: var(--fs2) } ol.toplist .pill { justify-self: end }
+.idx { gap: 0 20px; margin: 0 } .idx a.item { padding: 7px 0; font-size: var(--fs2) }
+details.hmore { margin-top: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 16px } details.hmore > summary { cursor: pointer; color: var(--ink-2); font-size: var(--fs2) }
+details.hmore[open] { padding-bottom: 12px } details.hmore[open] > summary { margin-bottom: 8px }
+
+/* Other pages keep their content on the canvas; tables and issues sit on white. */
+table.t, .prose table { background: var(--surface) } .toc { border-radius: 8px }
+
+/* Entity pages (agent, benchmark): one-line contents row, numbered section headings, chart cards, nested bullets.
+   Sizes: page title > section heading (21px) > chart title (16px) > body (14.5px) ≥ takeaways ≥ sub-bullets (13px). */
+nav.secrow { display: flex; flex-wrap: wrap; gap: 6px; margin: 16px 0 0; font-size: var(--fs2) }
+nav.secrow a { display: inline-flex; align-items: baseline; gap: 5px; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink-2); text-decoration: none; white-space: nowrap }
+nav.secrow a:hover { border-color: var(--accent); color: var(--accent) }
+nav.secrow b { font: 700 var(--fs1) var(--f-mono); color: var(--accent) }
+section.esec { margin-top: 40px; padding-top: 16px; border-top: 2px solid var(--line); scroll-margin-top: 16px }
+h2.esec-h { display: flex; align-items: center; gap: 10px; font: 700 21px/1.35 var(--f-body); color: var(--ink); margin: 0 0 12px }
+h2.esec-h .num { display: inline-grid; place-items: center; min-width: 28px; height: 28px; padding: 0 6px; box-sizing: border-box; border-radius: 6px; background: var(--accent); color: var(--surface); font: 700 15px/1 var(--f-mono) }
+.esec > .note:last-child { margin-top: 12px }
+.esec table.t th:first-child, .esec table.t td:first-child { white-space: nowrap; overflow-wrap: normal }   /* names never break per character; the table scrolls */
+.fig.efig { margin: 14px 0 0; border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px 10px; background: var(--surface) }
+h3.ctitle { font: 700 var(--fs4)/1.45 var(--f-body); color: var(--ink); margin: 0 }
+.ebody > ul, ul.takeaways { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px }
+ul.takeaways { margin: 4px 0 6px; gap: 6px }
+.ebody li, ul.takeaways li { margin: 0; font-size: var(--fs3); font-weight: 400; line-height: 1.65; max-width: var(--measure) }
+.ebody li::marker, ul.takeaways li::marker { color: var(--muted) }
+.ebody li ul, ul.takeaways li ul { margin: 3px 0 0; padding-left: 1.1em; list-style: "– "; display: flex; flex-direction: column; gap: 2px }
+.ebody li li, ul.takeaways li li { font-size: var(--fs2); color: var(--ink-2); line-height: 1.6 }
+.ebody strong { font-size: inherit; font-weight: 700 }
+.exsrc { font-size: var(--fs1); color: var(--muted); overflow-wrap: anywhere }
+.esum { margin-top: 14px }
+@media (max-width: 860px) { h2.esec-h { font-size: 19px } section.esec { margin-top: 30px; scroll-margin-top: 56px } .fig.efig { padding: 10px 10px 8px } }
+
+/* Phone: the rail becomes a bar at the top with a 目录 menu. */
+.cv { white-space: nowrap }
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr) }
+  aside { position: sticky; top: 0; z-index: 20; height: auto; max-height: none; overflow: visible; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px 16px; gap: 0 }
+  .brand { flex: none } .brand-sub { display: none }
+  .here { display: block; flex: 1; min-width: 0; font: 500 var(--fs1) var(--f-mono); color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+  .navtoggle { display: inline-block; margin: 0 0 0 auto; border-radius: 6px; font-size: var(--fs2); padding: 3px 12px; background: var(--sunk) }
+  aside .tree { display: none } aside.open .tree { display: flex; max-height: calc(100dvh - 52px); overflow-y: auto; padding: 8px 0 12px }
+  main { padding: 14px 16px 80px }
+  h1 { font-size: 22px }
+  .finding { padding: 14px 14px 12px; scroll-margin-top: 56px } section.sub { scroll-margin-top: 56px; padding: 10px 10px }
+  .fig.mainfig, .sfig { padding: 10px 10px 8px }
+  details.part > .pb { padding: 8px 10px 10px }
+  .crow { grid-template-columns: 100px minmax(0, 1fr) 52px; gap: 8px }
+  .grid, .grid.sm { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px }
+  ol.toplist a { grid-template-columns: 44px minmax(0, 1fr) } ol.toplist .pill { grid-column: 2; justify-self: start }
+}
+
+.chead .cv { white-space: normal; line-height: 1.25 }
+/* audience-switch */
+.swbar { position: absolute; top: 10px; right: 16px; z-index: 20; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: calc(100% - 32px) }
+.audsw { font-size: 12px; line-height: 1.5; padding: 2px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); text-decoration: none; white-space: nowrap }
+.audsw b { color: var(--ink); font-weight: 600 }
+.audsw:hover { border-color: var(--ink-2); color: var(--ink) }
+@media (max-width: 860px) { .swbar { top: 56px } body:has(.swbar) main { padding-top: 46px } body:has(aside.open) .swbar { display: none } }   /* below the phone bar */
+.setnote { margin: 0 0 18px; padding: 10px 14px; border: 1px solid var(--line); border-left: 3px solid var(--n4, var(--line)); border-radius: 8px; background: var(--surface) }
+.setnote p { margin: 0 0 6px } .setnote .setflags { margin: 6px 0 0; padding-left: 18px } .setnote .setflags ul { color: var(--muted); font-size: 13px }
+/* end */
+/* progress charts: second number under a row's count; small-multiple line charts (charts.lines); case staircase */
+.cside { display: block; font: 10px/1.3 var(--f-body); color: var(--muted); white-space: nowrap }
+.lpanels { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px 22px }
+.lpanel { min-width: 0 } .lpanel .rtitle { margin: 4px 0 6px }
+.lplot { position: relative; height: 132px; margin: 0 66px 0 34px }
+.lbox { position: absolute; inset: 0 } .lbox svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible }
+.lbox path { fill: none; stroke-width: 2px; stroke-linejoin: round; stroke-linecap: round }
+.lgrid { position: absolute; left: 0; right: 0; border-top: 1px solid var(--line) }
+.lyt { position: absolute; left: -34px; width: 28px; text-align: right; transform: translateY(-50%); color: var(--muted); font-size: 10.5px; font-family: var(--f-mono) }
+.ldot { position: absolute; left: 100%; width: 8px; height: 8px; margin: -6px 0 0 -6px; border-radius: 50%; border: 2px solid var(--surface); pointer-events: none }
+.llab { position: absolute; left: calc(100% + 8px); transform: translateY(-50%); white-space: nowrap; color: var(--ink-2); font-size: 11px }
+.lhit { position: absolute; top: 0; bottom: 0 } .lhit i { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--ink-2); display: none }
+.lhit:hover i { display: block }
+.lax { display: flex; justify-content: space-between; margin: 4px 66px 0 34px; color: var(--muted); font-size: 10.5px }
+.legend i.lkey { width: 14px; height: 2px; border-radius: 1px; vertical-align: 3px }
+.stair { position: relative; margin: 24px 0 0 }                    /* same x axis as the activity strip above */
+.syl { position: absolute; left: -15px; top: 0; width: 12px; height: 96px } .syl span { position: absolute; right: 0; transform: translateY(-50%); color: var(--muted); font: 10.5px var(--f-mono); cursor: help }
+.sbox { position: relative; height: 96px; border-bottom: 1px solid var(--line) }
+.sbox svg { position: absolute; inset: 0; width: 100%; height: 100% }
+.sarea { fill: var(--lv3); opacity: .12; stroke: none } .sline { fill: none; stroke: var(--lv5); stroke-width: 2px; stroke-linejoin: round }
+.sdot { position: absolute; width: 9px; height: 9px; margin: -6.5px 0 0 -6.5px; border-radius: 50%; border: 2px solid var(--surface) }
+.sdot::after { content: ""; position: absolute; inset: -8px }
+.scrit { position: absolute; top: 0; bottom: 0; border-left: 2px solid; margin-left: -1px }
+.scrit::after { content: ""; position: absolute; top: 0; bottom: 0; left: -8px; width: 16px }
+.scritn { position: absolute; top: -17px; left: -2px; padding: 0 5px; border-radius: 7px; background: var(--ink); color: var(--bg); font: 500 10px/15px var(--f-body); white-space: nowrap }
+.stair-ax { margin: 4px 0 0 }
+ol.slist { list-style: none; padding: 0; margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); display: grid; gap: 3px }
+ol.slist li { display: grid; grid-template-columns: 16px 48px minmax(0, 1fr); gap: 6px; align-items: baseline }
+ol.slist i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px } ol.slist li.scl i { width: 3px; height: 13px; border-radius: 1px; margin-left: 3px }
+.scrit.r .scritn { left: auto; right: -2px }
+/* end type at the end of the staircase line: pill above the line end (below it at levels 4–5; left-aligned near the start) */
+.send { position: absolute; width: 0; height: 0 }
+.sendn { position: absolute; right: -4px; bottom: 6px; display: inline-flex; align-items: center; gap: 4px; padding: 0 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink-2); font: 500 10px/15px var(--f-body); white-space: nowrap }
+.sendn i { width: 7px; height: 7px; border-radius: 50% }
+.send.lo .sendn { bottom: auto; top: 6px } .send.l .sendn { right: auto; left: -4px }
+ol.slist li.sel i { border-radius: 2px }
+
+/* filters on narrow screens: a select never grows past its row (long cause names) */
+.filters { display: flex; flex-wrap: wrap; gap: 6px } .filters select { max-width: 100%; min-width: 0 }
+
+/* swimset: one block per task, blocks side by side (two across on desktop, one on phones) */
+.swgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 255px), 1fr)); gap: 4px 16px } .swgrid > .rblock { min-width: 0 } .swgrid .crow { grid-template-columns: 92px minmax(0, 1fr) 54px; font-size: 11px } .swgrid .rtitle { font-size: 12.5px }
+/* Importance tags (meta/ratings.json): 「重点」 accent, 「次要」 quiet; the 只看重点 toggle on topic pages. */
+.rtag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 4px; font-size: var(--fs1); font-weight: 600; line-height: 1.6; vertical-align: middle; white-space: nowrap; font-family: var(--f-body) }
+.rtag.hi { background: var(--accent-soft); color: var(--accent) } .rtag.mid { color: var(--muted); border: 1px solid var(--line); font-weight: 500 }
+.onlyhi { display: inline-flex; gap: 6px; align-items: center; font-size: var(--fs2); color: var(--ink-2); margin: 2px 0 10px; cursor: pointer }
+#main [hidden], #nav [hidden] { display: none !important }
+/* fig:overlap (UpSet-style): three agent dots per row, then one column per mode with a thin bar and the count. */
+table.upset th.uh { font-size: var(--fs1); font-weight: 500; color: var(--ink-2); max-width: 64px; white-space: normal; text-align: center }
+table.upset th.um { text-align: left; white-space: nowrap } table.upset th.um small { font-weight: 400; color: var(--muted); margin-left: 2px }
+table.upset td.ud { text-align: center; padding-left: 4px; padding-right: 4px }
+table.upset .udot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; border: 1.5px solid var(--muted); vertical-align: middle }
+table.upset .udot.on { background: var(--ink); border-color: var(--ink) }
+table.upset td.ub { white-space: nowrap } table.upset td.ub b { font: 500 var(--fs2) var(--f-mono); margin-left: 6px }
+table.upset .ubt { display: inline-block; width: 72px; height: 7px; border-radius: 4px; background: var(--sunk); vertical-align: middle; overflow: hidden }
+table.upset .ubf { display: block; height: 100%; border-radius: 4px }
+table.upset th.ul { font-weight: 500; white-space: nowrap }
+/* fig:venn: area-proportional circles per mode, three across (stacked on phones). Translucent agent-colour fills blend
+   (multiply on light, screen on dark), so an overlap reads as the mixed colour; thin crisp outlines; region numbers in
+   small pills and a colour dot before each set label (app.js vennDress); hover a region: a stronger fill + the tip. */
+.venn .vpanels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 18px 20px; margin: 12px 0 6px }
+.venn .vpanel { min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px }
+.venn .vpanel .rtitle { align-self: stretch; text-align: center; font-weight: 700; color: var(--ink); margin: 0 }
+.rtitle small { font-weight: 400; color: var(--muted); margin-left: 1px }
+.venn .vpanel .rtitle small { font-size: var(--fs2); margin-left: 6px }
+.venn svg { width: 100%; max-width: 320px; height: auto; display: block; overflow: visible }
+.venn .vfills, .venn .vlines { pointer-events: none } .venn .vfills { isolation: isolate }
+.venn .vc { fill-opacity: .24; mix-blend-mode: multiply }
+.venn .vo { fill: none; stroke-width: 1.1; stroke-opacity: .95; vector-effect: non-scaling-stroke }
+.venn .vshape { fill: var(--ink); fill-opacity: 0; transition: fill-opacity .12s }
+.venn .vreg { cursor: pointer; outline: none }
+.venn .vreg:hover .vshape { fill-opacity: .10 } .venn .vreg:focus-visible .vshape, .venn .vreg.on .vshape { fill-opacity: .18 }
+.venn .vpill { fill: #fff; fill-opacity: .94; stroke: rgba(15, 23, 42, .14); stroke-width: .8; transition: stroke .12s }
+.venn .vpill.vout { fill-opacity: 1 }
+.venn .vreg:hover .vpill { stroke: var(--ink-2) } .venn .vreg:focus-visible .vpill, .venn .vreg.on .vpill { stroke: var(--accent); stroke-width: 1.4 }
+.venn .vnum { font: 700 12px var(--f-mono); fill: #1b1f27; text-anchor: middle; dominant-baseline: central }
+.venn .vreg:focus-visible .vnum, .venn .vreg.on .vnum { fill: var(--accent) }
+.venn .vlead { stroke: var(--muted); stroke-width: .9; stroke-linecap: round } .venn .vdot { fill: var(--muted) }
+.venn .vlab { font: 400 11px var(--f-mono); fill: var(--muted); dominant-baseline: central }
+.venn .vname { font: 600 11.5px var(--f-body); fill: var(--ink) }
+.venn .vnone { font: 400 var(--fs2) var(--f-body); color: var(--muted); background: var(--sunk); border: 1px solid transparent;
+  border-radius: 999px; padding: 2px 12px; cursor: pointer; margin-top: 2px; transition: border-color .12s }
+.venn .vnone b { font: 600 var(--fs2) var(--f-mono); color: var(--ink-2); margin-left: 3px }
+.venn .vnone:hover { border-color: var(--line) } .venn .vnone:focus-visible, .venn .vnone.on { outline: 2px solid var(--accent); outline-offset: 1px }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .venn .vc { fill-opacity: .34; mix-blend-mode: screen }
+  :root:not([data-theme="light"]) .venn .vpill { fill: #1d222b; stroke: rgba(255, 255, 255, .16) }
+  :root:not([data-theme="light"]) .venn .vnum { fill: #eef1f6 } }
+:root[data-theme="dark"] .venn .vc { fill-opacity: .34; mix-blend-mode: screen }
+:root[data-theme="dark"] .venn .vpill { fill: #1d222b; stroke: rgba(255, 255, 255, .16) }
+:root[data-theme="dark"] .venn .vnum { fill: #eef1f6 }
+@media (max-width: 640px) { .venn svg { max-width: 300px } }
+.venn .vlist { border-top: 1px solid var(--line); margin-top: 8px; padding-top: 6px } .venn .vlh { font-weight: 600; margin: 2px 0 6px }
+.venn .vtasks dt { font-weight: 600; margin-top: 6px } .venn .vtasks dd { margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 4px 12px }
+.venn .vt { font-size: var(--fs2); white-space: nowrap }
+/* fig:waffle (waffle.py): one 10 x 10 panel per mode, one square = about 1 % of that mode's evaluation items; the chart
+   sets --wf-astra / --wf-argon / --wf-opus to the agents' usual colours. Two agents: a diagonal split of their colours.
+   The three panels sit side by side (stacked on phones). A click on a square lists its group's tasks under the panels
+   and dims the other squares of that panel (app.js wafShow). */
+.waffle { --wf-none: #d5dae3; --wf-all3: #4a505c; --wq: 15px; --wgap: 3px }
+.waffle .wq { display: inline-block; flex: none; width: var(--wq); height: var(--wq); border-radius: 3px; background: var(--wf-none) }
+.waffle .g-astra { background: var(--wf-astra) } .waffle .g-argon { background: var(--wf-argon) } .waffle .g-opus { background: var(--wf-opus) }
+.waffle .g-all3 { background: var(--wf-all3) }   /* user 10-19: three agents solved = soft charcoal (dark theme: a light neutral) */
+.waffle .g-astra-argon { background: linear-gradient(135deg, var(--wf-astra) 50%, var(--wf-argon) 50%) }
+.waffle .g-astra-opus { background: linear-gradient(135deg, var(--wf-astra) 50%, var(--wf-opus) 50%) }
+.waffle .g-argon-opus { background: linear-gradient(135deg, var(--wf-argon) 50%, var(--wf-opus) 50%) }
+.waffle .wkey { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: var(--fs2); color: var(--ink-2); margin: 6px 0 4px }
+.waffle .wkey span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap } .waffle .wkey .wq { --wq: 12px }
+.waffle .wpanels { display: flex; flex-wrap: wrap; gap: 16px 40px; margin: 12px 0 4px }
+.waffle .wpanel { width: calc(10 * var(--wq) + 9 * var(--wgap)); flex: none }
+.waffle .wpanel .rtitle { font-size: var(--fs3); font-weight: 700; color: var(--ink); margin: 0 0 6px; font-variant-numeric: tabular-nums }
+.waffle .wbar { display: grid; grid-template-columns: 42px minmax(0, 1fr) 28px; align-items: center; gap: 6px; font-size: var(--fs2); line-height: 1.45 }
+.waffle .wbar .wn { color: var(--ink-2); white-space: nowrap } .waffle .wbar b { font-weight: 600; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums }
+.waffle .wtr { height: 6px; border-radius: 3px; background: var(--wf-none); overflow: hidden } .waffle .wtr i { display: block; height: 100% }
+.waffle .wgrid { display: grid; grid-template-columns: repeat(10, var(--wq)); grid-auto-rows: var(--wq); gap: var(--wgap); margin-top: 8px }
+.waffle .wgrp { display: contents } .waffle .wgrid .wq { cursor: pointer }
+.waffle .wgrid .wq:hover { outline: 2px solid var(--ink); outline-offset: 1px }
+.waffle .wpanel.sel .wgrp:not(.hit) .wq { opacity: .2 }
+.waffle .wlist:not(:empty) { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 6px } .waffle .wlh { font-weight: 600; margin: 2px 0 4px }
+.waffle .wtasks { margin: 0 } .waffle .wtasks dt { font-weight: 600; margin-top: 4px; font-size: var(--fs2) }
+.waffle .wtasks dd { margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 2px 14px } .waffle .wt { font-size: var(--fs2) }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .waffle { --wf-none: #2c323c; --wf-all3: #c4c9d2 } }
+:root[data-theme="dark"] .waffle { --wf-none: #2c323c; --wf-all3: #c4c9d2 }
+@media (max-width: 640px) { .waffle .wpanels { flex-direction: column } }
+/* Panels side by side, one per mode (charts.panels, fig:trio); they stack at phone width. */
+.mpanels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 8px 28px; margin: 8px 0 2px }
+.mpanel { min-width: 0 } .mpanel > .rtitle { margin: 2px 0 4px } .mpanel > .chart { margin-top: 0 }
+details.more > .rtitle { margin: 8px 0 2px }
+/* fig:trio: per row three thin bars, one per agent (agent colours), each with its k/n. */
+.trio .trow { display: grid; grid-template-columns: minmax(64px, 7em) minmax(0, 1fr); gap: 10px; align-items: center; padding: 4px 0;
+  border-bottom: 1px solid var(--line) }
+.trio .trow:last-child { border-bottom: 0 }
+.trio .tbars { display: grid; gap: 1px; min-width: 0 }
+.trio .tb { display: grid; grid-template-columns: minmax(0, 1fr) 4.4em; gap: 8px; align-items: center }
+.trio .tbt { height: 5px; background: var(--sunk); border-radius: 3px; overflow: hidden }
+.trio .tbf { display: block; height: 100%; border-radius: 3px }
+.trio .tv { font: 10.5px/1.25 var(--f-mono); color: var(--muted); text-align: right; white-space: nowrap }
+.trio .tb:hover .tbf { filter: brightness(1.12) }
+/* === figs v25 (fmt=pct, fig:trio look) — appended by the figs agent; keep at the end === */
+.chart.pct .track { height: 16px }
+.seg .sv { display: block; overflow: hidden; white-space: nowrap; text-align: center; font: 600 10px/16px var(--f-mono); color: #fff; text-shadow: 0 0 2px rgba(0, 0, 0, .55) }
+.trio .mpanels { gap: 10px 32px }
+.trio .ttitle { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 2px 0 8px; padding: 4px 9px; border-radius: 5px; font-size: var(--fs3); font-weight: 600 }
+.trio .ttitle small { font-size: var(--fs1); font-weight: 400; opacity: .85 }
+.trio .trow { border-bottom: 0; padding: 0; margin: 0 0 13px }
+.trio .trow:last-child { margin-bottom: 2px }
+.trio .trow > .cl { align-self: start; padding-top: 1px; color: var(--ink); font-weight: 500 }
+.trio .tbars { gap: 3px }
+.trio .tbt { height: 7px; border-radius: 4px }
+.trio .tbf { border-radius: 4px }
+.trio .tv { color: var(--muted); font-size: 10.5px }
+.trio .tbnone .tbf { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .5) 0 2px, transparent 2px 4px) !important }
+.trio .tbnone .tv { font-style: italic }
+.legend i.hatch { background-image: repeating-linear-gradient(135deg, rgba(255, 255, 255, .5) 0 2px, transparent 2px 4px) !important }
+/* === end figs v25 === */
+/* === figs v27 (fig:dots; no value labels on coloured bars) — appended by the figs agent; keep at the end === */
+.dots .drows { margin: 0 }
+.dots .drow { display: grid; gap: 10px; align-items: center; height: 27px; padding: 0 4px; border-radius: 3px }
+.dots .drow.alt { background: color-mix(in srgb, var(--ink) 3.5%, transparent) }
+.dots .drow > .cl { color: var(--ink); font-weight: 500; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.dots .dtrack { position: relative; height: 100%; margin: 0 7px }
+.dots .dg { position: absolute; top: 0; bottom: 0; width: 1px; margin-left: -.5px; background: var(--line) }
+.dots .drange { position: absolute; top: 50%; height: 2px; margin-top: -1px; background: color-mix(in srgb, var(--muted) 45%, transparent); border-radius: 1px }
+.dots .dd, .dlegend .dd { position: absolute; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--surface) }
+/* 三家都没做成: its own narrow column at the right of each row (a small grey bar and its value), header row on top */
+.dots { --dn-w: 6.6em }
+.dots .dn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px; align-items: center; min-width: 0 }
+.dots .dnt, .dlegend .dnt { display: block; height: 6px; background: var(--sunk); border-radius: 3px; overflow: hidden }
+.dots .dnf, .dlegend .dnf { display: block; height: 100%; background: var(--c0); border-radius: 3px }
+.dots .dnv { font: 10.5px/1.2 var(--f-mono); color: var(--muted); text-align: right; white-space: nowrap }
+.dots .dhead { height: 16px; background: none } .dots .dnh { font-size: 10.5px; color: var(--muted); white-space: nowrap; text-align: right }
+.dots .dd:hover { z-index: 2; filter: brightness(1.12) } .dots .dn:hover .dnf { filter: brightness(1.12) }
+.dots .daxis { height: 18px; background: none }
+.dots .daxis .dtrack span { position: absolute; top: 2px; transform: translateX(-50%); font: 10.5px/1.2 var(--f-mono); color: var(--muted); white-space: nowrap }
+.dlegend span { display: inline-flex; align-items: center }
+.dlegend .dd { position: static; margin: 0 5px 0 0; box-shadow: none; vertical-align: 0 }
+.dlegend .dnkey { display: inline-block; width: 18px; margin: 0 5px 0 0 }
+@media (max-width: 520px) { .dots { --dn-w: 5.6em } .dots .drow { font-size: 11px; gap: 6px; padding: 0 2px } .dots .drow > .cl { font-size: 11px } }
+/* === end figs v27 === */
+/* Compact charts (user 10-19, fig:common / fig:modes: charts.bars / stack cls=" compact"): thin bars, tight rows;
+   .nocount drops the empty value / count column (fig:modes says its one n in the 怎么读 line). fig:overlap|by=bench
+   (.trio.tcompact): thinner bars, tight rows, mode titles without the item count. */
+.chart.compact .crow { margin: 1px 0; line-height: 1.3 } .chart.compact .rblock { margin: 4px 0 8px }
+.chart.compact .btrack, .chart.compact .track, .chart.compact.pct .track { height: 9px; border-radius: 2px }
+.chart.compact .chead { margin-bottom: 2px } .chart.compact .legend { margin-bottom: 4px }
+.chart.nocount .crow, .chart.nocount .crow.wide { grid-template-columns: minmax(84px, 190px) minmax(0, 1fr) }
+@media (min-width: 1240px) { .sfig .chart.nocount .crow { grid-template-columns: minmax(80px, 118px) minmax(0, 1fr) } }
+@media (max-width: 860px) { .chart.nocount .crow { grid-template-columns: 76px minmax(0, 1fr) } }
+.trio.tcompact .trow { margin: 0 0 2px; align-items: center } .trio.tcompact .trow > .cl { align-self: center; padding-top: 0 } .trio.tcompact .tbt { height: 6px } .trio.tcompact .ttitle { margin-bottom: 6px }
+
+/* v30: case strip groups (〔组名〕 labels) */
+.vstrip .vgroup { margin: 14px 0 6px; font-size: 13px; font-weight: 600; color: var(--ink-2) }
+/* === v32 fig:dots|by=bench|reasons=1: taller rows, a muted reason line under each benchmark name === */
+.dots.dreason .drow:not(.dhead):not(.daxis) { height: 38px }
+.dots.dreason .drow > .cl { display: flex; flex-direction: column; justify-content: center; line-height: 1.25; min-width: 0 }
+.dots .dl1, .dots .dsub { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.dots .dsub { font-size: 10.5px; font-weight: 400; color: var(--muted) }
+@media (max-width: 520px) { .dots.dreason .drow:not(.dhead):not(.daxis) { height: 36px } .dots .dsub { font-size: 10px } }
+/* === end v32 === */
+
+/* v33 (user 10-19): fig:dots|by=bench — the benchmark's short tag sits on the name line as a small pill, rows stay compact */
+.dots.dreason .drow:not(.dhead):not(.daxis) { height: 28px }
+.dots.dreason .drow > .cl { flex-direction: row; align-items: center; gap: 6px; flex-wrap: nowrap }
+.dots.dreason .dl1 { flex: 0 1 auto }
+.dots.dreason .dsub { flex: 0 1 auto; padding: 0 6px; border-radius: 8px; background: var(--sunk); line-height: 17px; font-size: 10.5px }
+@media (max-width: 520px) { .dots.dreason .drow:not(.dhead):not(.daxis) { height: 28px } }
+/* v34: by=bench dot plots — a fixed, wider label column so name + tag fit; the name never shrinks, the tag does */
+.dots.dreason .drow { grid-template-columns: minmax(0, 16em) minmax(0, 1fr) var(--dn-w) !important }
+.dots.dreason .dl1 { flex: 0 0 auto }
+.dots.dreason .dsub { flex: 0 1 auto; min-width: 0 }
+@media (max-width: 520px) { .dots.dreason .drow { grid-template-columns: minmax(0, 12em) minmax(0, 1fr) var(--dn-w) !important } }
+
+/* v41: bullets written under a figure's 图意 line, inside its card */
+.fig .fignote { margin: 4px 0 8px }
+.fig .fignote ul { margin: 0; padding-left: 1.3em }
+.fig .fignote li { margin: 2px 0 }
+/* v42: a claim that holds its figures in place (2+ charts) is full width; its text keeps the measure */
+.claim:has(> .fig.mainfig) { max-width: none }

@@ -1,0 +1,95 @@
+{
+ "_comment": "Short reasons shown under a benchmark's name in fig:dots|by=bench (main findings §1.3 hard, §1.4 easy); taken from the 难在哪 line of notes/bench/<id>.md (user 10-19).",
+ "myosuite": {
+  "hard": "肌肉驱动，偏离参考动作就判负",
+  "tag": "肌骨手"
+ },
+ "behavior": {
+  "hard": "整屋长程家务：走位、开门、搬多件",
+  "tag": "长程家务"
+ },
+ "humanoidbench": {
+  "hard": "人形要一直保持平衡，一倒难救",
+  "tag": "人形全身控制"
+ },
+ "dextoolbench": {
+  "hard": "灵巧手握工具，按几十个位姿挥动",
+  "tag": "灵巧手+用工具"
+ },
+ "ikea": {
+  "hard": "两臂毫米级对准装家具，要拧螺丝",
+  "tag": "双臂精密装配"
+ },
+ "robodojo": {
+  "hard": "双臂长序列：空中交接、绕开机壳",
+  "tag": "双臂长序列"
+ },
+ "pandadyn": {
+  "hard": "双臂接抛击球，一碰就判负",
+  "easy": "有状态时开局前就能算好轨迹",
+  "tag": "动态操作"
+ },
+ "robopaint": {
+  "hard": "墨擦不掉，只看图难对准笔画",
+  "easy": "有状态时可在本地复刻笔刷反复试",
+  "tag": "书画笔画"
+ },
+ "maniguard": {
+  "hard": "每步守安全规则，只有一局",
+  "easy": "单臂搬运，规则明确，可先核对",
+  "tag": "桌面操作+安全约束"
+ },
+ "mujoco_playground": {
+  "hard": "四足跟踪指令，只看图难调步态",
+  "easy": "有状态时可反复调步态参数",
+  "tag": "四足/人形控制"
+ },
+ "bigym2": {
+  "hard": "只有一局，不能 reset",
+  "easy": "有状态、可 reset，能反复试",
+  "tag": "人形双臂家务"
+ },
+ "robocasa365": {
+  "hard": "物体比夹爪宽，掉地就够不着",
+  "easy": "有状态时物体位置精确",
+  "tag": "厨房多步"
+ },
+ "dexhand": {
+  "hard": "灵巧手精细操作，接触一丢就败",
+  "easy": "有状态时可离线搜手指轨迹",
+  "tag": "灵巧手精细操作"
+ },
+ "roboarc": {
+  "hard": "布料和导线，只看图难估形状",
+  "easy": "有状态时可反复试铺布、穿环",
+  "tag": "精细操作+推理"
+ },
+ "rsb": {
+  "easy": "多靠判断该做还是该拒，不靠精细控制",
+  "tag": "安全判断"
+ },
+ "roboengineer": {
+  "hard": "只交控制器参数，开发局只有 3 局",
+  "tag": "控制器调参"
+ },
+ "roboolympics-fun": {
+  "hard": "体育动作，要控制全身",
+  "tag": "人形体育动作"
+ },
+ "robolab": {
+  "hard": "多物体摆放，一碰倒就难救",
+  "tag": "桌面+语言目标"
+ },
+ "robowits": {
+  "hard": "看清物体再操作，只有一局",
+  "tag": "双臂+物理推理"
+ },
+ "ispatialgym": {
+  "hard": "要先推理空间关系再动手",
+  "tag": "移动双臂+空间推理"
+ },
+ "ese": {
+  "easy": "多靠判断该做还是该拒，不靠精细控制",
+  "tag": "安全判断"
+ }
+}

@@ -1,0 +1,6113 @@
+# The core set: the task dirs the headline statistics are computed on (PROTOCOL §4). Each mode dir (-privileged,
+# -standard, -standard-realtime) is its own task. Left out: the tasks judged easy (solved through a shortcut, judged too
+# easy by the benchmark owner, or solved in every mode by the screening runs) and the dirs the reference run
+# codex-gpt6_luna-xhigh solved (a success in any mode takes out the base; a RoboSafeBench privileged twin takes out only
+# itself). A dir left out stays out. Owner picks (`pick = "owner"`) are listed whatever those rules say. `generated_from`
+# is the commit of main whose task dirs this list classified: a task dir added after it is not classified until the list
+# is regenerated from the eval pool's Luna verdicts.
+#   task       the task dir
+#   base       the task name without its mode suffix
+#   benchmark  the base's label (scripts/task_conventions.py BENCHMARKS)
+#   mode       privileged | standard | standard-realtime
+#   luna       "failed" (Luna's valid verdict) or "no result yet"; an owner pick may also be "success"
+#   pick       "owner" on a dir the benchmark owner put in by hand (absent otherwise)
+# Checked by `python3 scripts/task_conventions.py core-set --check`.
+
+generated_from = "0726bda3a32b583238e5d84a1dfb2cb7e98aabbc"
+
+# ---- AM-Bench
+
+[[task]]
+task = "ambench-cabinet-pick-place-fahexa-i00-privileged"
+base = "ambench-cabinet-pick-place-fahexa-i00"
+benchmark = "AM-Bench"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "ambench-cabinet-pick-place-fahexa-i00-standard"
+base = "ambench-cabinet-pick-place-fahexa-i00"
+benchmark = "AM-Bench"
+mode = "standard"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "ambench-peg-in-hole-fahexa-i00-privileged"
+base = "ambench-peg-in-hole-fahexa-i00"
+benchmark = "AM-Bench"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "ambench-peg-in-hole-fahexa-i00-standard"
+base = "ambench-peg-in-hole-fahexa-i00"
+benchmark = "AM-Bench"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+# ---- BEHAVIOR-1K
+
+[[task]]
+task = "behavior-assembling-gift-baskets-i00-privileged"
+base = "behavior-assembling-gift-baskets-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-assembling-gift-baskets-i00-standard"
+base = "behavior-assembling-gift-baskets-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-boxing-books-up-for-storage-i00-privileged"
+base = "behavior-boxing-books-up-for-storage-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-boxing-books-up-for-storage-i00-standard"
+base = "behavior-boxing-books-up-for-storage-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-boxing-food-after-dinner-i00-privileged"
+base = "behavior-boxing-food-after-dinner-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-boxing-food-after-dinner-i00-standard"
+base = "behavior-boxing-food-after-dinner-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-bringing-in-wood-i00-privileged"
+base = "behavior-bringing-in-wood-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-bringing-in-wood-i00-standard"
+base = "behavior-bringing-in-wood-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-bringing-paper-to-recycling-i00-privileged"
+base = "behavior-bringing-paper-to-recycling-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-bringing-paper-to-recycling-i00-standard"
+base = "behavior-bringing-paper-to-recycling-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-bringing-water-i00-privileged"
+base = "behavior-bringing-water-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-bringing-water-i00-standard"
+base = "behavior-bringing-water-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-can-meat-i00-privileged"
+base = "behavior-can-meat-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-can-meat-i00-standard"
+base = "behavior-can-meat-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-canning-food-i00-privileged"
+base = "behavior-canning-food-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-canning-food-i00-standard"
+base = "behavior-canning-food-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-carrying-in-groceries-i00-privileged"
+base = "behavior-carrying-in-groceries-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-carrying-in-groceries-i00-standard"
+base = "behavior-carrying-in-groceries-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-carrying-out-garden-furniture-i00-privileged"
+base = "behavior-carrying-out-garden-furniture-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-carrying-out-garden-furniture-i00-standard"
+base = "behavior-carrying-out-garden-furniture-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-chopping-wood-i00-privileged"
+base = "behavior-chopping-wood-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "no result yet"
+
+[[task]]
+task = "behavior-chopping-wood-i00-standard"
+base = "behavior-chopping-wood-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "no result yet"
+
+[[task]]
+task = "behavior-clean-a-patio-i00-privileged"
+base = "behavior-clean-a-patio-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-clean-a-patio-i00-standard"
+base = "behavior-clean-a-patio-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-clean-a-trumpet-i00-privileged"
+base = "behavior-clean-a-trumpet-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-clean-a-trumpet-i00-standard"
+base = "behavior-clean-a-trumpet-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-clean-boxing-gloves-i00-privileged"
+base = "behavior-clean-boxing-gloves-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-clean-boxing-gloves-i00-standard"
+base = "behavior-clean-boxing-gloves-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-clean-up-your-desk-i00-privileged"
+base = "behavior-clean-up-your-desk-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-clean-up-your-desk-i00-standard"
+base = "behavior-clean-up-your-desk-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-clean-your-rusty-garden-tools-i00-privileged"
+base = "behavior-clean-your-rusty-garden-tools-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-clean-your-rusty-garden-tools-i00-standard"
+base = "behavior-clean-your-rusty-garden-tools-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-cleaning-up-branches-and-twigs-i00-privileged"
+base = "behavior-cleaning-up-branches-and-twigs-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-cleaning-up-branches-and-twigs-i00-standard"
+base = "behavior-cleaning-up-branches-and-twigs-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-cleaning-up-plates-and-food-i00-privileged"
+base = "behavior-cleaning-up-plates-and-food-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-cleaning-up-plates-and-food-i00-standard"
+base = "behavior-cleaning-up-plates-and-food-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-clearing-food-from-table-into-fridge-i00-privileged"
+base = "behavior-clearing-food-from-table-into-fridge-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-clearing-food-from-table-into-fridge-i00-standard"
+base = "behavior-clearing-food-from-table-into-fridge-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-collecting-aluminum-cans-i00-privileged"
+base = "behavior-collecting-aluminum-cans-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-collecting-aluminum-cans-i00-standard"
+base = "behavior-collecting-aluminum-cans-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-collecting-childrens-toys-i00-privileged"
+base = "behavior-collecting-childrens-toys-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-collecting-childrens-toys-i00-standard"
+base = "behavior-collecting-childrens-toys-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "no result yet"
+
+[[task]]
+task = "behavior-cook-a-brisket-i00-privileged"
+base = "behavior-cook-a-brisket-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-a-brisket-i00-standard"
+base = "behavior-cook-a-brisket-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-a-frozen-pie-i00-privileged"
+base = "behavior-cook-a-frozen-pie-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-a-frozen-pie-i00-standard"
+base = "behavior-cook-a-frozen-pie-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-bacon-i00-privileged"
+base = "behavior-cook-bacon-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-bacon-i00-standard"
+base = "behavior-cook-bacon-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-broccolini-i00-privileged"
+base = "behavior-cook-broccolini-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-broccolini-i00-standard"
+base = "behavior-cook-broccolini-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-brussels-sprouts-i00-privileged"
+base = "behavior-cook-brussels-sprouts-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-brussels-sprouts-i00-standard"
+base = "behavior-cook-brussels-sprouts-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-cabbage-i00-privileged"
+base = "behavior-cook-cabbage-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-cabbage-i00-standard"
+base = "behavior-cook-cabbage-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-hot-dogs-i00-privileged"
+base = "behavior-cook-hot-dogs-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-cook-hot-dogs-i00-standard"
+base = "behavior-cook-hot-dogs-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-dispose-of-batteries-i00-privileged"
+base = "behavior-dispose-of-batteries-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-dispose-of-batteries-i00-standard"
+base = "behavior-dispose-of-batteries-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-freeze-fruit-i00-privileged"
+base = "behavior-freeze-fruit-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-freeze-fruit-i00-standard"
+base = "behavior-freeze-fruit-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-freeze-pies-i00-privileged"
+base = "behavior-freeze-pies-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-freeze-pies-i00-standard"
+base = "behavior-freeze-pies-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-halve-an-egg-i00-privileged"
+base = "behavior-halve-an-egg-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-halve-an-egg-i00-standard"
+base = "behavior-halve-an-egg-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-installing-a-fax-machine-i00-privileged"
+base = "behavior-installing-a-fax-machine-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-installing-a-fax-machine-i00-standard"
+base = "behavior-installing-a-fax-machine-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-laying-tile-floors-i00-privileged"
+base = "behavior-laying-tile-floors-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-laying-tile-floors-i00-standard"
+base = "behavior-laying-tile-floors-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-loading-the-car-i00-privileged"
+base = "behavior-loading-the-car-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-loading-the-car-i00-standard"
+base = "behavior-loading-the-car-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-make-gift-bags-for-baby-showers-i00-privileged"
+base = "behavior-make-gift-bags-for-baby-showers-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-make-gift-bags-for-baby-showers-i00-standard"
+base = "behavior-make-gift-bags-for-baby-showers-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-make-pizza-i00-privileged"
+base = "behavior-make-pizza-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-make-pizza-i00-standard"
+base = "behavior-make-pizza-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-make-rose-centerpieces-i00-privileged"
+base = "behavior-make-rose-centerpieces-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-make-rose-centerpieces-i00-standard"
+base = "behavior-make-rose-centerpieces-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-organizing-art-supplies-i00-privileged"
+base = "behavior-organizing-art-supplies-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-organizing-art-supplies-i00-standard"
+base = "behavior-organizing-art-supplies-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-organizing-school-stuff-i00-privileged"
+base = "behavior-organizing-school-stuff-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-organizing-school-stuff-i00-standard"
+base = "behavior-organizing-school-stuff-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-outfit-a-basic-toolbox-i00-privileged"
+base = "behavior-outfit-a-basic-toolbox-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-outfit-a-basic-toolbox-i00-standard"
+base = "behavior-outfit-a-basic-toolbox-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-packing-meal-for-delivery-i00-privileged"
+base = "behavior-packing-meal-for-delivery-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-packing-meal-for-delivery-i00-standard"
+base = "behavior-packing-meal-for-delivery-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-polishing-shoes-i00-privileged"
+base = "behavior-polishing-shoes-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-polishing-shoes-i00-standard"
+base = "behavior-polishing-shoes-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-preparing-lunch-box-i00-privileged"
+base = "behavior-preparing-lunch-box-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-preparing-lunch-box-i00-standard"
+base = "behavior-preparing-lunch-box-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-put-together-a-basic-pruning-kit-i00-privileged"
+base = "behavior-put-together-a-basic-pruning-kit-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-put-together-a-basic-pruning-kit-i00-standard"
+base = "behavior-put-together-a-basic-pruning-kit-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-putting-away-toys-i00-privileged"
+base = "behavior-putting-away-toys-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-putting-away-toys-i00-standard"
+base = "behavior-putting-away-toys-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-putting-dirty-dishes-in-sink-i00-privileged"
+base = "behavior-putting-dirty-dishes-in-sink-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-putting-dirty-dishes-in-sink-i00-standard"
+base = "behavior-putting-dirty-dishes-in-sink-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-putting-dishes-away-after-cleaning-i00-privileged"
+base = "behavior-putting-dishes-away-after-cleaning-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-putting-dishes-away-after-cleaning-i00-standard"
+base = "behavior-putting-dishes-away-after-cleaning-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-putting-up-Christmas-decorations-inside-i00-privileged"
+base = "behavior-putting-up-Christmas-decorations-inside-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-putting-up-Christmas-decorations-inside-i00-standard"
+base = "behavior-putting-up-Christmas-decorations-inside-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-re-shelving-library-books-i00-privileged"
+base = "behavior-re-shelving-library-books-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-re-shelving-library-books-i00-standard"
+base = "behavior-re-shelving-library-books-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-rearrange-your-room-i00-privileged"
+base = "behavior-rearrange-your-room-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-rearrange-your-room-i00-standard"
+base = "behavior-rearrange-your-room-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-rearranging-kitchen-furniture-i00-privileged"
+base = "behavior-rearranging-kitchen-furniture-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-rearranging-kitchen-furniture-i00-standard"
+base = "behavior-rearranging-kitchen-furniture-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-setting-the-fire-i00-privileged"
+base = "behavior-setting-the-fire-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-setting-the-fire-i00-standard"
+base = "behavior-setting-the-fire-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-setting-the-table-i00-privileged"
+base = "behavior-setting-the-table-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-setting-the-table-i00-standard"
+base = "behavior-setting-the-table-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-setup-a-bar-for-a-cocktail-party-i00-privileged"
+base = "behavior-setup-a-bar-for-a-cocktail-party-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-setup-a-bar-for-a-cocktail-party-i00-standard"
+base = "behavior-setup-a-bar-for-a-cocktail-party-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-slicing-vegetables-i00-privileged"
+base = "behavior-slicing-vegetables-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-slicing-vegetables-i00-standard"
+base = "behavior-slicing-vegetables-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-sorting-books-on-shelf-i00-privileged"
+base = "behavior-sorting-books-on-shelf-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-sorting-books-on-shelf-i00-standard"
+base = "behavior-sorting-books-on-shelf-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-sorting-bottles-cans-and-paper-i00-privileged"
+base = "behavior-sorting-bottles-cans-and-paper-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-sorting-bottles-cans-and-paper-i00-standard"
+base = "behavior-sorting-bottles-cans-and-paper-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-sorting-household-items-i00-privileged"
+base = "behavior-sorting-household-items-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-sorting-household-items-i00-standard"
+base = "behavior-sorting-household-items-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-sorting-vegetables-i00-privileged"
+base = "behavior-sorting-vegetables-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-sorting-vegetables-i00-standard"
+base = "behavior-sorting-vegetables-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-store-batteries-i00-privileged"
+base = "behavior-store-batteries-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-store-batteries-i00-standard"
+base = "behavior-store-batteries-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-store-produce-i00-privileged"
+base = "behavior-store-produce-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-store-produce-i00-standard"
+base = "behavior-store-produce-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-storing-food-i00-privileged"
+base = "behavior-storing-food-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-storing-food-i00-standard"
+base = "behavior-storing-food-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-sweeping-garage-i00-privileged"
+base = "behavior-sweeping-garage-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-sweeping-garage-i00-standard"
+base = "behavior-sweeping-garage-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-thawing-frozen-food-i00-privileged"
+base = "behavior-thawing-frozen-food-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-thawing-frozen-food-i00-standard"
+base = "behavior-thawing-frozen-food-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-tidying-living-room-i00-privileged"
+base = "behavior-tidying-living-room-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-tidying-living-room-i00-standard"
+base = "behavior-tidying-living-room-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-turning-out-all-lights-before-sleep-i00-privileged"
+base = "behavior-turning-out-all-lights-before-sleep-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-turning-out-all-lights-before-sleep-i00-standard"
+base = "behavior-turning-out-all-lights-before-sleep-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-unloading-the-car-i00-privileged"
+base = "behavior-unloading-the-car-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-unloading-the-car-i00-standard"
+base = "behavior-unloading-the-car-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-vacuuming-floors-i00-privileged"
+base = "behavior-vacuuming-floors-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-vacuuming-floors-i00-standard"
+base = "behavior-vacuuming-floors-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-wash-a-baseball-cap-i00-privileged"
+base = "behavior-wash-a-baseball-cap-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-wash-a-baseball-cap-i00-standard"
+base = "behavior-wash-a-baseball-cap-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "behavior-wash-dog-toys-i00-privileged"
+base = "behavior-wash-dog-toys-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "behavior-wash-dog-toys-i00-standard"
+base = "behavior-wash-dog-toys-i00"
+benchmark = "BEHAVIOR-1K"
+mode = "standard"
+luna = "failed"
+
+# ---- BiGym 2.0
+
+[[task]]
+task = "bigym2-dishwasher-close-i00-privileged"
+base = "bigym2-dishwasher-close-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-dishwasher-close-i00-standard"
+base = "bigym2-dishwasher-close-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-dishwasher-close-i00-standard-realtime"
+base = "bigym2-dishwasher-close-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "bigym2-dishwasher-load-plates-i00-privileged"
+base = "bigym2-dishwasher-load-plates-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-dishwasher-load-plates-i00-standard"
+base = "bigym2-dishwasher-load-plates-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-dishwasher-load-plates-i00-standard-realtime"
+base = "bigym2-dishwasher-load-plates-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "bigym2-flip-cutlery-i00-privileged"
+base = "bigym2-flip-cutlery-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-flip-cutlery-i00-standard"
+base = "bigym2-flip-cutlery-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-flip-cutlery-i00-standard-realtime"
+base = "bigym2-flip-cutlery-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "bigym2-move-two-plates-i00-privileged"
+base = "bigym2-move-two-plates-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-move-two-plates-i00-standard"
+base = "bigym2-move-two-plates-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-move-two-plates-i00-standard-realtime"
+base = "bigym2-move-two-plates-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "bigym2-pick-box-i00-privileged"
+base = "bigym2-pick-box-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-pick-box-i00-standard"
+base = "bigym2-pick-box-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-pick-box-i00-standard-realtime"
+base = "bigym2-pick-box-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "bigym2-put-cups-i00-privileged"
+base = "bigym2-put-cups-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-put-cups-i00-standard"
+base = "bigym2-put-cups-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-put-cups-i00-standard-realtime"
+base = "bigym2-put-cups-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "bigym2-sandwich-remove-i00-privileged"
+base = "bigym2-sandwich-remove-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-sandwich-remove-i00-standard"
+base = "bigym2-sandwich-remove-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-sandwich-remove-i00-standard-realtime"
+base = "bigym2-sandwich-remove-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "bigym2-saucepan-to-hob-i00-privileged"
+base = "bigym2-saucepan-to-hob-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-saucepan-to-hob-i00-standard"
+base = "bigym2-saucepan-to-hob-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-saucepan-to-hob-i00-standard-realtime"
+base = "bigym2-saucepan-to-hob-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "bigym2-stack-blocks-i00-privileged"
+base = "bigym2-stack-blocks-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-stack-blocks-i00-standard"
+base = "bigym2-stack-blocks-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-stack-blocks-i00-standard-realtime"
+base = "bigym2-stack-blocks-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "bigym2-wall-cupboard-open-i00-privileged"
+base = "bigym2-wall-cupboard-open-i00"
+benchmark = "BiGym 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "bigym2-wall-cupboard-open-i00-standard"
+base = "bigym2-wall-cupboard-open-i00"
+benchmark = "BiGym 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "bigym2-wall-cupboard-open-i00-standard-realtime"
+base = "bigym2-wall-cupboard-open-i00"
+benchmark = "BiGym 2.0"
+mode = "standard-realtime"
+luna = "failed"
+
+# ---- DexHand
+
+[[task]]
+task = "dexhand-assemble-hamburger-i00-privileged"
+base = "dexhand-assemble-hamburger-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-assemble-hamburger-i00-standard"
+base = "dexhand-assemble-hamburger-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-batter-whisk-i00-privileged"
+base = "dexhand-batter-whisk-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-batter-whisk-i00-standard"
+base = "dexhand-batter-whisk-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-bicycle-pump-stroke-i00-privileged"
+base = "dexhand-bicycle-pump-stroke-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-bicycle-pump-stroke-i00-standard"
+base = "dexhand-bicycle-pump-stroke-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-binder-page-load-i00-privileged"
+base = "dexhand-binder-page-load-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-binder-page-load-i00-standard"
+base = "dexhand-binder-page-load-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-book-page-turn-i00-privileged"
+base = "dexhand-book-page-turn-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-book-page-turn-i00-standard"
+base = "dexhand-book-page-turn-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-boot-sole-brush-i00-privileged"
+base = "dexhand-boot-sole-brush-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-boot-sole-brush-i00-standard"
+base = "dexhand-boot-sole-brush-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-drying-rack-unfold-i00-privileged"
+base = "dexhand-drying-rack-unfold-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-drying-rack-unfold-i00-standard"
+base = "dexhand-drying-rack-unfold-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-envelope-letter-insert-i00-privileged"
+base = "dexhand-envelope-letter-insert-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-envelope-letter-insert-i00-standard"
+base = "dexhand-envelope-letter-insert-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-essential-cube-reorient-i00-privileged"
+base = "dexhand-essential-cube-reorient-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-essential-cube-reorient-i00-standard"
+base = "dexhand-essential-cube-reorient-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-essential-pen-regrasp-i00-privileged"
+base = "dexhand-essential-pen-regrasp-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-essential-pen-regrasp-i00-standard"
+base = "dexhand-essential-pen-regrasp-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-essential-rotary-gait-i00-privileged"
+base = "dexhand-essential-rotary-gait-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-essential-rotary-gait-i00-standard"
+base = "dexhand-essential-rotary-gait-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-essential-two-object-i00-privileged"
+base = "dexhand-essential-two-object-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-essential-two-object-i00-standard"
+base = "dexhand-essential-two-object-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-fan-guard-install-i00-privileged"
+base = "dexhand-fan-guard-install-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-fan-guard-install-i00-standard"
+base = "dexhand-fan-guard-install-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-grinder-crank-i00-privileged"
+base = "dexhand-grinder-crank-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-grinder-crank-i00-standard"
+base = "dexhand-grinder-crank-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-jar-lid-open-i00-privileged"
+base = "dexhand-jar-lid-open-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-jar-lid-open-i00-standard"
+base = "dexhand-jar-lid-open-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-pancake-serve-i00-privileged"
+base = "dexhand-pancake-serve-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-pancake-serve-i00-standard"
+base = "dexhand-pancake-serve-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-picture-hang-i00-privileged"
+base = "dexhand-picture-hang-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-picture-hang-i00-standard"
+base = "dexhand-picture-hang-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-ram-module-install-i00-privileged"
+base = "dexhand-ram-module-install-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-ram-module-install-i00-standard"
+base = "dexhand-ram-module-install-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-remote-battery-swap-i00-privileged"
+base = "dexhand-remote-battery-swap-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-remote-battery-swap-i00-standard"
+base = "dexhand-remote-battery-swap-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-stool-brace-insert-i00-privileged"
+base = "dexhand-stool-brace-insert-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-stool-brace-insert-i00-standard"
+base = "dexhand-stool-brace-insert-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-sweep-dustpan-i00-privileged"
+base = "dexhand-sweep-dustpan-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-sweep-dustpan-i00-standard"
+base = "dexhand-sweep-dustpan-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-usb-plug-insert-i00-privileged"
+base = "dexhand-usb-plug-insert-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-usb-plug-insert-i00-standard"
+base = "dexhand-usb-plug-insert-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexhand-vacuum-bin-reseat-i00-privileged"
+base = "dexhand-vacuum-bin-reseat-i00"
+benchmark = "DexHand"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexhand-vacuum-bin-reseat-i00-standard"
+base = "dexhand-vacuum-bin-reseat-i00"
+benchmark = "DexHand"
+mode = "standard"
+luna = "failed"
+
+# ---- DexJoCo
+
+[[task]]
+task = "dexjoco-bimanual-photograph-i00-privileged"
+base = "dexjoco-bimanual-photograph-i00"
+benchmark = "DexJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexjoco-bimanual-photograph-i00-standard"
+base = "dexjoco-bimanual-photograph-i00"
+benchmark = "DexJoCo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dexjoco-fold-glasses-i00-privileged"
+base = "dexjoco-fold-glasses-i00"
+benchmark = "DexJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dexjoco-fold-glasses-i00-standard"
+base = "dexjoco-fold-glasses-i00"
+benchmark = "DexJoCo"
+mode = "standard"
+luna = "failed"
+
+# ---- DexToolBench
+
+[[task]]
+task = "dextoolbench_brush_blue_brush_sweep_forward-privileged"
+base = "dextoolbench_brush_blue_brush_sweep_forward"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_brush_blue_brush_sweep_forward-standard"
+base = "dextoolbench_brush_blue_brush_sweep_forward"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_brush_red_brush_sweep_forward-privileged"
+base = "dextoolbench_brush_red_brush_sweep_forward"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_brush_red_brush_sweep_forward-standard"
+base = "dextoolbench_brush_red_brush_sweep_forward"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_brush_red_brush_sweep_right-privileged"
+base = "dextoolbench_brush_red_brush_sweep_right"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_brush_red_brush_sweep_right-standard"
+base = "dextoolbench_brush_red_brush_sweep_right"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_eraser_handle_eraser_wipe_c-privileged"
+base = "dextoolbench_eraser_handle_eraser_wipe_c"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_eraser_handle_eraser_wipe_c-standard"
+base = "dextoolbench_eraser_handle_eraser_wipe_c"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_hammer_claw_hammer_swing_down-privileged"
+base = "dextoolbench_hammer_claw_hammer_swing_down"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_hammer_claw_hammer_swing_down-standard"
+base = "dextoolbench_hammer_claw_hammer_swing_down"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_hammer_claw_hammer_swing_side-privileged"
+base = "dextoolbench_hammer_claw_hammer_swing_side"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_hammer_claw_hammer_swing_side-standard"
+base = "dextoolbench_hammer_claw_hammer_swing_side"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_hammer_mallet_hammer_swing_down-privileged"
+base = "dextoolbench_hammer_mallet_hammer_swing_down"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_hammer_mallet_hammer_swing_down-standard"
+base = "dextoolbench_hammer_mallet_hammer_swing_down"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_hammer_mallet_hammer_swing_side-privileged"
+base = "dextoolbench_hammer_mallet_hammer_swing_side"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_hammer_mallet_hammer_swing_side-standard"
+base = "dextoolbench_hammer_mallet_hammer_swing_side"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_marker_sharpie_marker_draw_smile-privileged"
+base = "dextoolbench_marker_sharpie_marker_draw_smile"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_marker_sharpie_marker_draw_smile-standard"
+base = "dextoolbench_marker_sharpie_marker_draw_smile"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_marker_sharpie_marker_write_c-privileged"
+base = "dextoolbench_marker_sharpie_marker_write_c"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_marker_sharpie_marker_write_c-standard"
+base = "dextoolbench_marker_sharpie_marker_write_c"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_marker_staples_marker_draw_smile-privileged"
+base = "dextoolbench_marker_staples_marker_draw_smile"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_marker_staples_marker_draw_smile-standard"
+base = "dextoolbench_marker_staples_marker_draw_smile"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_marker_staples_marker_write_c-privileged"
+base = "dextoolbench_marker_staples_marker_write_c"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_marker_staples_marker_write_c-standard"
+base = "dextoolbench_marker_staples_marker_write_c"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_screwdriver_long_screwdriver_spin_horizontal-privileged"
+base = "dextoolbench_screwdriver_long_screwdriver_spin_horizontal"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_screwdriver_long_screwdriver_spin_horizontal-standard"
+base = "dextoolbench_screwdriver_long_screwdriver_spin_horizontal"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_screwdriver_long_screwdriver_spin_vertical-privileged"
+base = "dextoolbench_screwdriver_long_screwdriver_spin_vertical"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_screwdriver_long_screwdriver_spin_vertical-standard"
+base = "dextoolbench_screwdriver_long_screwdriver_spin_vertical"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_screwdriver_short_screwdriver_spin_horizontal-privileged"
+base = "dextoolbench_screwdriver_short_screwdriver_spin_horizontal"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_screwdriver_short_screwdriver_spin_horizontal-standard"
+base = "dextoolbench_screwdriver_short_screwdriver_spin_horizontal"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_screwdriver_short_screwdriver_spin_vertical-privileged"
+base = "dextoolbench_screwdriver_short_screwdriver_spin_vertical"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_screwdriver_short_screwdriver_spin_vertical-standard"
+base = "dextoolbench_screwdriver_short_screwdriver_spin_vertical"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_spatula_flat_spatula_flip_over-privileged"
+base = "dextoolbench_spatula_flat_spatula_flip_over"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_spatula_flat_spatula_flip_over-standard"
+base = "dextoolbench_spatula_flat_spatula_flip_over"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_spatula_flat_spatula_serve_plate-privileged"
+base = "dextoolbench_spatula_flat_spatula_serve_plate"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_spatula_flat_spatula_serve_plate-standard"
+base = "dextoolbench_spatula_flat_spatula_serve_plate"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_spatula_spoon_spatula_flip_over-privileged"
+base = "dextoolbench_spatula_spoon_spatula_flip_over"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_spatula_spoon_spatula_flip_over-standard"
+base = "dextoolbench_spatula_spoon_spatula_flip_over"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_spatula_spoon_spatula_serve_plate-privileged"
+base = "dextoolbench_spatula_spoon_spatula_serve_plate"
+benchmark = "DexToolBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "dextoolbench_spatula_spoon_spatula_serve_plate-standard"
+base = "dextoolbench_spatula_spoon_spatula_serve_plate"
+benchmark = "DexToolBench"
+mode = "standard"
+luna = "failed"
+
+# ---- HumanoidBench
+
+[[task]]
+task = "humanoidbench-loco-balance-hard-i00-privileged"
+base = "humanoidbench-loco-balance-hard-i00"
+benchmark = "HumanoidBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-loco-balance-hard-i00-standard"
+base = "humanoidbench-loco-balance-hard-i00"
+benchmark = "HumanoidBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-loco-balance-hard-i00-standard-realtime"
+base = "humanoidbench-loco-balance-hard-i00"
+benchmark = "HumanoidBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-loco-hurdle-i00-privileged"
+base = "humanoidbench-loco-hurdle-i00"
+benchmark = "HumanoidBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-loco-hurdle-i00-standard"
+base = "humanoidbench-loco-hurdle-i00"
+benchmark = "HumanoidBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-loco-hurdle-i00-standard-realtime"
+base = "humanoidbench-loco-hurdle-i00"
+benchmark = "HumanoidBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-bookshelf-simple-i00-privileged"
+base = "humanoidbench-manip-bookshelf-simple-i00"
+benchmark = "HumanoidBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-bookshelf-simple-i00-standard"
+base = "humanoidbench-manip-bookshelf-simple-i00"
+benchmark = "HumanoidBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-bookshelf-simple-i00-standard-realtime"
+base = "humanoidbench-manip-bookshelf-simple-i00"
+benchmark = "HumanoidBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-cube-i00-privileged"
+base = "humanoidbench-manip-cube-i00"
+benchmark = "HumanoidBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-cube-i00-standard"
+base = "humanoidbench-manip-cube-i00"
+benchmark = "HumanoidBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-cube-i00-standard-realtime"
+base = "humanoidbench-manip-cube-i00"
+benchmark = "HumanoidBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-door-i00-privileged"
+base = "humanoidbench-manip-door-i00"
+benchmark = "HumanoidBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-door-i00-standard"
+base = "humanoidbench-manip-door-i00"
+benchmark = "HumanoidBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-door-i00-standard-realtime"
+base = "humanoidbench-manip-door-i00"
+benchmark = "HumanoidBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-powerlift-i00-privileged"
+base = "humanoidbench-manip-powerlift-i00"
+benchmark = "HumanoidBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-powerlift-i00-standard"
+base = "humanoidbench-manip-powerlift-i00"
+benchmark = "HumanoidBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-powerlift-i00-standard-realtime"
+base = "humanoidbench-manip-powerlift-i00"
+benchmark = "HumanoidBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-room-i00-privileged"
+base = "humanoidbench-manip-room-i00"
+benchmark = "HumanoidBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-room-i00-standard"
+base = "humanoidbench-manip-room-i00"
+benchmark = "HumanoidBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-room-i00-standard-realtime"
+base = "humanoidbench-manip-room-i00"
+benchmark = "HumanoidBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-window-i00-privileged"
+base = "humanoidbench-manip-window-i00"
+benchmark = "HumanoidBench"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-window-i00-standard"
+base = "humanoidbench-manip-window-i00"
+benchmark = "HumanoidBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "humanoidbench-manip-window-i00-standard-realtime"
+base = "humanoidbench-manip-window-i00"
+benchmark = "HumanoidBench"
+mode = "standard-realtime"
+luna = "failed"
+
+# ---- IKEA MuJoCo
+
+[[task]]
+task = "ikea-eket-i00-privileged"
+base = "ikea-eket-i00"
+benchmark = "IKEA MuJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ikea-eket-i00-standard"
+base = "ikea-eket-i00"
+benchmark = "IKEA MuJoCo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ikea-gladom-i00-privileged"
+base = "ikea-gladom-i00"
+benchmark = "IKEA MuJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ikea-gladom-i00-standard"
+base = "ikea-gladom-i00"
+benchmark = "IKEA MuJoCo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ikea-ikea365-i00-privileged"
+base = "ikea-ikea365-i00"
+benchmark = "IKEA MuJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ikea-ikea365-i00-standard"
+base = "ikea-ikea365-i00"
+benchmark = "IKEA MuJoCo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ikea-lack-i00-privileged"
+base = "ikea-lack-i00"
+benchmark = "IKEA MuJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ikea-lack-i00-standard"
+base = "ikea-lack-i00"
+benchmark = "IKEA MuJoCo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ikea-stegesund-i00-privileged"
+base = "ikea-stegesund-i00"
+benchmark = "IKEA MuJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ikea-stegesund-i00-standard"
+base = "ikea-stegesund-i00"
+benchmark = "IKEA MuJoCo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ikea-svallet-i00-privileged"
+base = "ikea-svallet-i00"
+benchmark = "IKEA MuJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ikea-svallet-i00-standard"
+base = "ikea-svallet-i00"
+benchmark = "IKEA MuJoCo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ikea-variera-i00-privileged"
+base = "ikea-variera-i00"
+benchmark = "IKEA MuJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ikea-variera-i00-standard"
+base = "ikea-variera-i00"
+benchmark = "IKEA MuJoCo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ikea-vesken-i00-privileged"
+base = "ikea-vesken-i00"
+benchmark = "IKEA MuJoCo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ikea-vesken-i00-standard"
+base = "ikea-vesken-i00"
+benchmark = "IKEA MuJoCo"
+mode = "standard"
+luna = "failed"
+
+# ---- KinDER
+
+[[task]]
+task = "kinder-constrained-cupboard-i00-privileged"
+base = "kinder-constrained-cupboard-i00"
+benchmark = "KinDER"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "kinder-constrained-cupboard-i00-standard"
+base = "kinder-constrained-cupboard-i00"
+benchmark = "KinDER"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "kinder-scoop-pour-i01-privileged"
+base = "kinder-scoop-pour-i01"
+benchmark = "KinDER"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "kinder-scoop-pour-i01-standard"
+base = "kinder-scoop-pour-i01"
+benchmark = "KinDER"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "kinder-sweep-into-drawer-i00-privileged"
+base = "kinder-sweep-into-drawer-i00"
+benchmark = "KinDER"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "kinder-sweep-into-drawer-i00-standard"
+base = "kinder-sweep-into-drawer-i00"
+benchmark = "KinDER"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "kinder-sweep-simple-i01-privileged"
+base = "kinder-sweep-simple-i01"
+benchmark = "KinDER"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "kinder-sweep-simple-i01-standard"
+base = "kinder-sweep-simple-i01"
+benchmark = "KinDER"
+mode = "standard"
+luna = "failed"
+
+# ---- LIBERO-MAX
+
+[[task]]
+task = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00-privileged"
+base = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00"
+benchmark = "LIBERO-MAX"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00-standard"
+base = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00"
+benchmark = "LIBERO-MAX"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00-privileged"
+base = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00-standard"
+base = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00"
+benchmark = "LIBERO-MAX"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+# ---- ManiGuard
+
+[[task]]
+task = "maniguard-cabinet-pickup-i22-privileged"
+base = "maniguard-cabinet-pickup-i22"
+benchmark = "ManiGuard"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "maniguard-cabinet-pickup-i22-standard"
+base = "maniguard-cabinet-pickup-i22"
+benchmark = "ManiGuard"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "maniguard-cabinet-pickup-i26-privileged"
+base = "maniguard-cabinet-pickup-i26"
+benchmark = "ManiGuard"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "maniguard-cabinet-pickup-i26-standard"
+base = "maniguard-cabinet-pickup-i26"
+benchmark = "ManiGuard"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "maniguard-dusty-transfer-i03-privileged"
+base = "maniguard-dusty-transfer-i03"
+benchmark = "ManiGuard"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "maniguard-dusty-transfer-i03-standard"
+base = "maniguard-dusty-transfer-i03"
+benchmark = "ManiGuard"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "maniguard-dusty-transfer-i16-privileged"
+base = "maniguard-dusty-transfer-i16"
+benchmark = "ManiGuard"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "maniguard-dusty-transfer-i16-standard"
+base = "maniguard-dusty-transfer-i16"
+benchmark = "ManiGuard"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "maniguard-jar-transport-i13-privileged"
+base = "maniguard-jar-transport-i13"
+benchmark = "ManiGuard"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "maniguard-jar-transport-i13-standard"
+base = "maniguard-jar-transport-i13"
+benchmark = "ManiGuard"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "maniguard-jar-transport-i25-privileged"
+base = "maniguard-jar-transport-i25"
+benchmark = "ManiGuard"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "maniguard-jar-transport-i25-standard"
+base = "maniguard-jar-transport-i25"
+benchmark = "ManiGuard"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "maniguard-lid-transport-i12-privileged"
+base = "maniguard-lid-transport-i12"
+benchmark = "ManiGuard"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "maniguard-lid-transport-i12-standard"
+base = "maniguard-lid-transport-i12"
+benchmark = "ManiGuard"
+mode = "standard"
+luna = "failed"
+
+# ---- MetaWorld+
+
+[[task]]
+task = "metaworldplus-basketball-i00-privileged"
+base = "metaworldplus-basketball-i00"
+benchmark = "MetaWorld+"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "metaworldplus-basketball-i00-standard"
+base = "metaworldplus-basketball-i00"
+benchmark = "MetaWorld+"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "metaworldplus-button-press-topdown-i00-privileged"
+base = "metaworldplus-button-press-topdown-i00"
+benchmark = "MetaWorld+"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "metaworldplus-button-press-topdown-i00-standard"
+base = "metaworldplus-button-press-topdown-i00"
+benchmark = "MetaWorld+"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+# ---- MolmoSpaces
+
+[[task]]
+task = "molmospaces-navigate-to-i00-privileged"
+base = "molmospaces-navigate-to-i00"
+benchmark = "MolmoSpaces"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "molmospaces-navigate-to-i00-standard"
+base = "molmospaces-navigate-to-i00"
+benchmark = "MolmoSpaces"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "molmospaces-pick-i00-privileged"
+base = "molmospaces-pick-i00"
+benchmark = "MolmoSpaces"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "molmospaces-pick-i00-standard"
+base = "molmospaces-pick-i00"
+benchmark = "MolmoSpaces"
+mode = "standard"
+luna = "success"
+pick = "owner"
+
+# ---- MuJoCo Playground
+
+[[task]]
+task = "mujoco_playground_aloha_single_peg_insertion-privileged"
+base = "mujoco_playground_aloha_single_peg_insertion"
+benchmark = "MuJoCo Playground"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_aloha_single_peg_insertion-standard"
+base = "mujoco_playground_aloha_single_peg_insertion"
+benchmark = "MuJoCo Playground"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_barkour_joystick-privileged"
+base = "mujoco_playground_barkour_joystick"
+benchmark = "MuJoCo Playground"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_barkour_joystick-standard"
+base = "mujoco_playground_barkour_joystick"
+benchmark = "MuJoCo Playground"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_barkour_joystick-standard-realtime"
+base = "mujoco_playground_barkour_joystick"
+benchmark = "MuJoCo Playground"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_go1_handstand-privileged"
+base = "mujoco_playground_go1_handstand"
+benchmark = "MuJoCo Playground"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_go1_handstand-standard"
+base = "mujoco_playground_go1_handstand"
+benchmark = "MuJoCo Playground"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_go1_joystick_flat_terrain-privileged"
+base = "mujoco_playground_go1_joystick_flat_terrain"
+benchmark = "MuJoCo Playground"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_go1_joystick_flat_terrain-standard"
+base = "mujoco_playground_go1_joystick_flat_terrain"
+benchmark = "MuJoCo Playground"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_go1_joystick_rough_terrain-privileged"
+base = "mujoco_playground_go1_joystick_rough_terrain"
+benchmark = "MuJoCo Playground"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_go1_joystick_rough_terrain-standard"
+base = "mujoco_playground_go1_joystick_rough_terrain"
+benchmark = "MuJoCo Playground"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_spot_flat_terrain_joystick-privileged"
+base = "mujoco_playground_spot_flat_terrain_joystick"
+benchmark = "MuJoCo Playground"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_spot_flat_terrain_joystick-standard"
+base = "mujoco_playground_spot_flat_terrain_joystick"
+benchmark = "MuJoCo Playground"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_spot_joystick_gait_tracking-privileged"
+base = "mujoco_playground_spot_joystick_gait_tracking"
+benchmark = "MuJoCo Playground"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "mujoco_playground_spot_joystick_gait_tracking-standard"
+base = "mujoco_playground_spot_joystick_gait_tracking"
+benchmark = "MuJoCo Playground"
+mode = "standard"
+luna = "failed"
+
+# ---- MyoSuite
+
+[[task]]
+task = "myosuite-baoding-i00-privileged"
+base = "myosuite-baoding-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-baoding-i00-standard"
+base = "myosuite-baoding-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-bimanual-i00-privileged"
+base = "myosuite-bimanual-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-bimanual-i00-standard"
+base = "myosuite-bimanual-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-chase-tag-i00-privileged"
+base = "myosuite-chase-tag-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-chase-tag-i00-standard"
+base = "myosuite-chase-tag-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-airplane-fly-i00-privileged"
+base = "myosuite-dex-airplane-fly-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-airplane-fly-i00-standard"
+base = "myosuite-dex-airplane-fly-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-apple-lift-i00-privileged"
+base = "myosuite-dex-apple-lift-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-apple-lift-i00-standard"
+base = "myosuite-dex-apple-lift-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-bunny-inspect-i00-privileged"
+base = "myosuite-dex-bunny-inspect-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-bunny-inspect-i00-standard"
+base = "myosuite-dex-bunny-inspect-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-cup-pour-i00-privileged"
+base = "myosuite-dex-cup-pour-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-cup-pour-i00-standard"
+base = "myosuite-dex-cup-pour-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-cylinder-pass-i00-privileged"
+base = "myosuite-dex-cylinder-pass-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-cylinder-pass-i00-standard"
+base = "myosuite-dex-cylinder-pass-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-hammer-use-i00-privileged"
+base = "myosuite-dex-hammer-use-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-dex-hammer-use-i00-standard"
+base = "myosuite-dex-hammer-use-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-die-reorient-i00-privileged"
+base = "myosuite-die-reorient-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-die-reorient-i00-standard"
+base = "myosuite-die-reorient-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-obj-reorient-i00-privileged"
+base = "myosuite-obj-reorient-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-obj-reorient-i00-standard"
+base = "myosuite-obj-reorient-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-osl-run-i00-privileged"
+base = "myosuite-osl-run-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-osl-run-i00-standard"
+base = "myosuite-osl-run-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "myosuite-soccer-i00-privileged"
+base = "myosuite-soccer-i00"
+benchmark = "MyoSuite"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "myosuite-soccer-i00-standard"
+base = "myosuite-soccer-i00"
+benchmark = "MyoSuite"
+mode = "standard"
+luna = "failed"
+
+# ---- Panda Dynamic Scenes
+
+[[task]]
+task = "pandadyn-d01-reciprocal-cup-relay-i00-privileged"
+base = "pandadyn-d01-reciprocal-cup-relay-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d01-reciprocal-cup-relay-i00-standard"
+base = "pandadyn-d01-reciprocal-cup-relay-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d01-reciprocal-cup-relay-i00-standard-realtime"
+base = "pandadyn-d01-reciprocal-cup-relay-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d03-cooperative-puck-course-i00-privileged"
+base = "pandadyn-d03-cooperative-puck-course-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d03-cooperative-puck-course-i00-standard"
+base = "pandadyn-d03-cooperative-puck-course-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d03-cooperative-puck-course-i00-standard-realtime"
+base = "pandadyn-d03-cooperative-puck-course-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d05-moving-ramp-relay-i00-privileged"
+base = "pandadyn-d05-moving-ramp-relay-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d05-moving-ramp-relay-i00-standard"
+base = "pandadyn-d05-moving-ramp-relay-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d07-spring-gate-switchyard-i00-privileged"
+base = "pandadyn-d07-spring-gate-switchyard-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d07-spring-gate-switchyard-i00-standard"
+base = "pandadyn-d07-spring-gate-switchyard-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d07-spring-gate-switchyard-i00-standard-realtime"
+base = "pandadyn-d07-spring-gate-switchyard-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d09-lever-launch-catch-reload-i00-privileged"
+base = "pandadyn-d09-lever-launch-catch-reload-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d09-lever-launch-catch-reload-i00-standard"
+base = "pandadyn-d09-lever-launch-catch-reload-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-d09-lever-launch-catch-reload-i00-standard-realtime"
+base = "pandadyn-d09-lever-launch-catch-reload-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s01-cup-route-delivery-i00-privileged"
+base = "pandadyn-s01-cup-route-delivery-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s01-cup-route-delivery-i00-standard"
+base = "pandadyn-s01-cup-route-delivery-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s01-cup-route-delivery-i00-standard-realtime"
+base = "pandadyn-s01-cup-route-delivery-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s06-cube-flip-route-recover-i00-privileged"
+base = "pandadyn-s06-cube-flip-route-recover-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s06-cube-flip-route-recover-i00-standard"
+base = "pandadyn-s06-cube-flip-route-recover-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s09-toss-recatch-delivery-i00-privileged"
+base = "pandadyn-s09-toss-recatch-delivery-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s09-toss-recatch-delivery-i00-standard"
+base = "pandadyn-s09-toss-recatch-delivery-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s09-toss-recatch-delivery-i00-standard-realtime"
+base = "pandadyn-s09-toss-recatch-delivery-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s11-cylinder-rescue-route-deliver-i00-privileged"
+base = "pandadyn-s11-cylinder-rescue-route-deliver-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s11-cylinder-rescue-route-deliver-i00-standard"
+base = "pandadyn-s11-cylinder-rescue-route-deliver-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s11-cylinder-rescue-route-deliver-i00-standard-realtime"
+base = "pandadyn-s11-cylinder-rescue-route-deliver-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s12-moving-bridge-puck-relay-i00-privileged"
+base = "pandadyn-s12-moving-bridge-puck-relay-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s12-moving-bridge-puck-relay-i00-standard"
+base = "pandadyn-s12-moving-bridge-puck-relay-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "pandadyn-s12-moving-bridge-puck-relay-i00-standard-realtime"
+base = "pandadyn-s12-moving-bridge-puck-relay-i00"
+benchmark = "Panda Dynamic Scenes"
+mode = "standard-realtime"
+luna = "failed"
+
+# ---- RoboARC
+
+[[task]]
+task = "roboarc-blanket-flatten-02-i01-privileged"
+base = "roboarc-blanket-flatten-02-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-flatten-02-i01-standard"
+base = "roboarc-blanket-flatten-02-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-flatten-03-i01-privileged"
+base = "roboarc-blanket-flatten-03-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-flatten-03-i01-standard"
+base = "roboarc-blanket-flatten-03-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-flatten-04-i01-privileged"
+base = "roboarc-blanket-flatten-04-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-flatten-04-i01-standard"
+base = "roboarc-blanket-flatten-04-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-flatten-07-i01-privileged"
+base = "roboarc-blanket-flatten-07-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-flatten-07-i01-standard"
+base = "roboarc-blanket-flatten-07-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-flatten-08-i01-privileged"
+base = "roboarc-blanket-flatten-08-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-flatten-08-i01-standard"
+base = "roboarc-blanket-flatten-08-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-fold-01-i01-privileged"
+base = "roboarc-blanket-fold-01-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-fold-01-i01-standard"
+base = "roboarc-blanket-fold-01-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-fold-03-i01-privileged"
+base = "roboarc-blanket-fold-03-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-fold-03-i01-standard"
+base = "roboarc-blanket-fold-03-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-fold-04-i01-privileged"
+base = "roboarc-blanket-fold-04-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-fold-04-i01-standard"
+base = "roboarc-blanket-fold-04-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-fold-05-i01-privileged"
+base = "roboarc-blanket-fold-05-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-blanket-fold-05-i01-standard"
+base = "roboarc-blanket-fold-05-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-01-i01-privileged"
+base = "roboarc-buzz-wire-3d-01-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-01-i01-standard"
+base = "roboarc-buzz-wire-3d-01-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-02-i01-privileged"
+base = "roboarc-buzz-wire-3d-02-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-02-i01-standard"
+base = "roboarc-buzz-wire-3d-02-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-04-i01-privileged"
+base = "roboarc-buzz-wire-3d-04-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-04-i01-standard"
+base = "roboarc-buzz-wire-3d-04-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-06-i01-privileged"
+base = "roboarc-buzz-wire-3d-06-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-06-i01-standard"
+base = "roboarc-buzz-wire-3d-06-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-07-i01-privileged"
+base = "roboarc-buzz-wire-3d-07-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-07-i01-standard"
+base = "roboarc-buzz-wire-3d-07-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-09-i01-privileged"
+base = "roboarc-buzz-wire-3d-09-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-09-i01-standard"
+base = "roboarc-buzz-wire-3d-09-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-10-i01-privileged"
+base = "roboarc-buzz-wire-3d-10-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-10-i01-standard"
+base = "roboarc-buzz-wire-3d-10-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-coil-04-i01-privileged"
+base = "roboarc-cast-coil-04-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-coil-04-i01-standard"
+base = "roboarc-cast-coil-04-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-coil-06-i01-privileged"
+base = "roboarc-cast-coil-06-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-coil-06-i01-standard"
+base = "roboarc-cast-coil-06-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-coil-07-i01-privileged"
+base = "roboarc-cast-coil-07-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-coil-07-i01-standard"
+base = "roboarc-cast-coil-07-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-coil-08-i01-privileged"
+base = "roboarc-cast-coil-08-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-coil-08-i01-standard"
+base = "roboarc-cast-coil-08-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-keyhole-03-i01-privileged"
+base = "roboarc-cast-keyhole-03-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-keyhole-03-i01-standard"
+base = "roboarc-cast-keyhole-03-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-keyhole-04-i01-privileged"
+base = "roboarc-cast-keyhole-04-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-keyhole-04-i01-standard"
+base = "roboarc-cast-keyhole-04-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-keyhole-05-i01-privileged"
+base = "roboarc-cast-keyhole-05-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-cast-keyhole-05-i01-standard"
+base = "roboarc-cast-keyhole-05-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-04-i01-privileged"
+base = "roboarc-fiber-bundling-04-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-04-i01-standard"
+base = "roboarc-fiber-bundling-04-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-06-i01-privileged"
+base = "roboarc-fiber-bundling-06-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-06-i01-standard"
+base = "roboarc-fiber-bundling-06-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-07-i01-privileged"
+base = "roboarc-fiber-bundling-07-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-07-i01-standard"
+base = "roboarc-fiber-bundling-07-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-09-i01-privileged"
+base = "roboarc-fiber-bundling-09-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-09-i01-standard"
+base = "roboarc-fiber-bundling-09-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-10-i01-privileged"
+base = "roboarc-fiber-bundling-10-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-fiber-bundling-10-i01-standard"
+base = "roboarc-fiber-bundling-10-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-hedgehog-in-cage-05-i01-privileged"
+base = "roboarc-hedgehog-in-cage-05-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-hedgehog-in-cage-05-i01-standard"
+base = "roboarc-hedgehog-in-cage-05-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-hedgehog-in-cage-06-i01-privileged"
+base = "roboarc-hedgehog-in-cage-06-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-hedgehog-in-cage-06-i01-standard"
+base = "roboarc-hedgehog-in-cage-06-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-hedgehog-in-cage-07-i01-privileged"
+base = "roboarc-hedgehog-in-cage-07-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-hedgehog-in-cage-07-i01-standard"
+base = "roboarc-hedgehog-in-cage-07-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-horseshoe-ring-02-i01-privileged"
+base = "roboarc-horseshoe-ring-02-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-horseshoe-ring-02-i01-standard"
+base = "roboarc-horseshoe-ring-02-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-horseshoe-ring-03-i01-privileged"
+base = "roboarc-horseshoe-ring-03-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-horseshoe-ring-03-i01-standard"
+base = "roboarc-horseshoe-ring-03-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-interlocked-claws-05-i01-privileged"
+base = "roboarc-interlocked-claws-05-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-interlocked-claws-05-i01-standard"
+base = "roboarc-interlocked-claws-05-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-interlocked-claws-09-i01-privileged"
+base = "roboarc-interlocked-claws-09-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-interlocked-claws-09-i01-standard"
+base = "roboarc-interlocked-claws-09-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-interlocked-claws-11-i01-privileged"
+base = "roboarc-interlocked-claws-11-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-interlocked-claws-11-i01-standard"
+base = "roboarc-interlocked-claws-11-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-interlocked-claws-12-i01-privileged"
+base = "roboarc-interlocked-claws-12-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-interlocked-claws-12-i01-standard"
+base = "roboarc-interlocked-claws-12-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-knot-untying-06-i01-privileged"
+base = "roboarc-knot-untying-06-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-knot-untying-06-i01-standard"
+base = "roboarc-knot-untying-06-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-knot-untying-09-i01-privileged"
+base = "roboarc-knot-untying-09-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-knot-untying-09-i01-standard"
+base = "roboarc-knot-untying-09-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-lock-picking-04-i01-privileged"
+base = "roboarc-lock-picking-04-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-lock-picking-04-i01-standard"
+base = "roboarc-lock-picking-04-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-lock-picking-05-i01-privileged"
+base = "roboarc-lock-picking-05-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-lock-picking-05-i01-standard"
+base = "roboarc-lock-picking-05-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-03-i01-privileged"
+base = "roboarc-rope-threading-03-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-03-i01-standard"
+base = "roboarc-rope-threading-03-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-04-i01-privileged"
+base = "roboarc-rope-threading-04-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-04-i01-standard"
+base = "roboarc-rope-threading-04-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-05-i01-privileged"
+base = "roboarc-rope-threading-05-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-05-i01-standard"
+base = "roboarc-rope-threading-05-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-06-i01-privileged"
+base = "roboarc-rope-threading-06-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-06-i01-standard"
+base = "roboarc-rope-threading-06-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-07-i01-privileged"
+base = "roboarc-rope-threading-07-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-07-i01-standard"
+base = "roboarc-rope-threading-07-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-08-i01-privileged"
+base = "roboarc-rope-threading-08-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-rope-threading-08-i01-standard"
+base = "roboarc-rope-threading-08-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-slotted-post-ring-03-i01-privileged"
+base = "roboarc-slotted-post-ring-03-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-slotted-post-ring-03-i01-standard"
+base = "roboarc-slotted-post-ring-03-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-slotted-post-ring-04-i01-privileged"
+base = "roboarc-slotted-post-ring-04-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-slotted-post-ring-04-i01-standard"
+base = "roboarc-slotted-post-ring-04-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboarc-slotted-post-ring-05-i01-privileged"
+base = "roboarc-slotted-post-ring-05-i01"
+benchmark = "RoboARC"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "roboarc-slotted-post-ring-05-i01-standard"
+base = "roboarc-slotted-post-ring-05-i01"
+benchmark = "RoboARC"
+mode = "standard"
+luna = "failed"
+
+# ---- RoboCasa
+
+[[task]]
+task = "robocasa-coffee-setup-mug-i00-privileged"
+base = "robocasa-coffee-setup-mug-i00"
+benchmark = "RoboCasa"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "robocasa-coffee-setup-mug-i00-standard"
+base = "robocasa-coffee-setup-mug-i00"
+benchmark = "RoboCasa"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "robocasa-turn-off-sink-faucet-i00-privileged"
+base = "robocasa-turn-off-sink-faucet-i00"
+benchmark = "RoboCasa"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "robocasa-turn-off-sink-faucet-i00-standard"
+base = "robocasa-turn-off-sink-faucet-i00"
+benchmark = "RoboCasa"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+# ---- RoboCasa-GR1
+
+[[task]]
+task = "robocasa-gr1-potato-to-microwave-close-i00-privileged"
+base = "robocasa-gr1-potato-to-microwave-close-i00"
+benchmark = "RoboCasa-GR1"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robocasa-gr1-potato-to-microwave-close-i00-standard"
+base = "robocasa-gr1-potato-to-microwave-close-i00"
+benchmark = "RoboCasa-GR1"
+mode = "standard"
+luna = "failed"
+
+# ---- RoboCasa365
+
+[[task]]
+task = "robocasa365-assemble-cooking-array-i00-privileged"
+base = "robocasa365-assemble-cooking-array-i00"
+benchmark = "RoboCasa365"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robocasa365-assemble-cooking-array-i00-standard"
+base = "robocasa365-assemble-cooking-array-i00"
+benchmark = "RoboCasa365"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robocasa365-cereal-and-bowl-i00-privileged"
+base = "robocasa365-cereal-and-bowl-i00"
+benchmark = "RoboCasa365"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robocasa365-cereal-and-bowl-i00-standard"
+base = "robocasa365-cereal-and-bowl-i00"
+benchmark = "RoboCasa365"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robocasa365-display-meat-variety-i00-privileged"
+base = "robocasa365-display-meat-variety-i00"
+benchmark = "RoboCasa365"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robocasa365-display-meat-variety-i00-standard"
+base = "robocasa365-display-meat-variety-i00"
+benchmark = "RoboCasa365"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robocasa365-microwave-defrost-meat-i00-privileged"
+base = "robocasa365-microwave-defrost-meat-i00"
+benchmark = "RoboCasa365"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robocasa365-microwave-defrost-meat-i00-standard"
+base = "robocasa365-microwave-defrost-meat-i00"
+benchmark = "RoboCasa365"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robocasa365-searing-meat-i00-privileged"
+base = "robocasa365-searing-meat-i00"
+benchmark = "RoboCasa365"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robocasa365-searing-meat-i00-standard"
+base = "robocasa365-searing-meat-i00"
+benchmark = "RoboCasa365"
+mode = "standard"
+luna = "failed"
+
+# ---- RoboDojo
+
+[[task]]
+task = "robodojo-fill-egg-holder-i00-privileged"
+base = "robodojo-fill-egg-holder-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-fill-egg-holder-i00-standard"
+base = "robodojo-fill-egg-holder-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-hang-mugs-i00-privileged"
+base = "robodojo-hang-mugs-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-hang-mugs-i00-standard"
+base = "robodojo-hang-mugs-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-hang-mugs-random-i00-privileged"
+base = "robodojo-hang-mugs-random-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-hang-mugs-random-i00-standard"
+base = "robodojo-hang-mugs-random-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-insert-key-i00-privileged"
+base = "robodojo-insert-key-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-insert-key-i00-standard"
+base = "robodojo-insert-key-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-make-kong-i00-privileged"
+base = "robodojo-make-kong-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-make-kong-i00-standard"
+base = "robodojo-make-kong-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-make-toast-i00-privileged"
+base = "robodojo-make-toast-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-make-toast-i00-standard"
+base = "robodojo-make-toast-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-pack-objects-into-box-i00-privileged"
+base = "robodojo-pack-objects-into-box-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-pack-objects-into-box-i00-standard"
+base = "robodojo-pack-objects-into-box-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-store-laptop-and-headphones-i00-privileged"
+base = "robodojo-store-laptop-and-headphones-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-store-laptop-and-headphones-i00-standard"
+base = "robodojo-store-laptop-and-headphones-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-store-laptop-and-headphones-random-i00-privileged"
+base = "robodojo-store-laptop-and-headphones-random-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-store-laptop-and-headphones-random-i00-standard"
+base = "robodojo-store-laptop-and-headphones-random-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-store-tools-in-toolbox-i00-privileged"
+base = "robodojo-store-tools-in-toolbox-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-store-tools-in-toolbox-i00-standard"
+base = "robodojo-store-tools-in-toolbox-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-swap-blocks-i00-privileged"
+base = "robodojo-swap-blocks-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-swap-blocks-i00-standard"
+base = "robodojo-swap-blocks-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robodojo-sweep-blocks-random-i00-privileged"
+base = "robodojo-sweep-blocks-random-i00"
+benchmark = "RoboDojo"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robodojo-sweep-blocks-random-i00-standard"
+base = "robodojo-sweep-blocks-random-i00"
+benchmark = "RoboDojo"
+mode = "standard"
+luna = "failed"
+
+# ---- RoboLab
+
+[[task]]
+task = "robolab-bbq-sauce-in-bin-i00-privileged"
+base = "robolab-bbq-sauce-in-bin-i00"
+benchmark = "RoboLab"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robolab-bbq-sauce-in-bin-i00-standard"
+base = "robolab-bbq-sauce-in-bin-i00"
+benchmark = "RoboLab"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robolab-food-packing3-cans-i00-privileged"
+base = "robolab-food-packing3-cans-i00"
+benchmark = "RoboLab"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robolab-food-packing3-cans-i00-standard"
+base = "robolab-food-packing3-cans-i00"
+benchmark = "RoboLab"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robolab-put-two-mugs-on-shelf-i00-privileged"
+base = "robolab-put-two-mugs-on-shelf-i00"
+benchmark = "RoboLab"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robolab-put-two-mugs-on-shelf-i00-standard"
+base = "robolab-put-two-mugs-on-shelf-i00"
+benchmark = "RoboLab"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robolab-red-dishes-in-bin-i00-privileged"
+base = "robolab-red-dishes-in-bin-i00"
+benchmark = "RoboLab"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robolab-red-dishes-in-bin-i00-standard"
+base = "robolab-red-dishes-in-bin-i00"
+benchmark = "RoboLab"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robolab-utensils-in-mug-i00-privileged"
+base = "robolab-utensils-in-mug-i00"
+benchmark = "RoboLab"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robolab-utensils-in-mug-i00-standard"
+base = "robolab-utensils-in-mug-i00"
+benchmark = "RoboLab"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robolab-white-mug-in-center-of-table-i00-privileged"
+base = "robolab-white-mug-in-center-of-table-i00"
+benchmark = "RoboLab"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robolab-white-mug-in-center-of-table-i00-standard"
+base = "robolab-white-mug-in-center-of-table-i00"
+benchmark = "RoboLab"
+mode = "standard"
+luna = "failed"
+
+# ---- RoboOlympics-Fun
+
+[[task]]
+task = "roboolympics-fun-backflip-i00-privileged"
+base = "roboolympics-fun-backflip-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-backflip-i00-standard"
+base = "roboolympics-fun-backflip-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-badminton-serve-i00-privileged"
+base = "roboolympics-fun-badminton-serve-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-badminton-serve-i00-standard"
+base = "roboolympics-fun-badminton-serve-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-balance-beam-i00-privileged"
+base = "roboolympics-fun-balance-beam-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-balance-beam-i00-standard"
+base = "roboolympics-fun-balance-beam-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-balance-board-i00-privileged"
+base = "roboolympics-fun-balance-board-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-balance-board-i00-standard"
+base = "roboolympics-fun-balance-board-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-basketball-dribble-i00-privileged"
+base = "roboolympics-fun-basketball-dribble-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-basketball-dribble-i00-standard"
+base = "roboolympics-fun-basketball-dribble-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-box-jump-i00-privileged"
+base = "roboolympics-fun-box-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-box-jump-i00-standard"
+base = "roboolympics-fun-box-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-i00-privileged"
+base = "roboolympics-fun-catch-and-shoot-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-i00-standard"
+base = "roboolympics-fun-catch-and-shoot-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-i00-standard-realtime"
+base = "roboolympics-fun-catch-and-shoot-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-clean-and-jerk-i00-privileged"
+base = "roboolympics-fun-clean-and-jerk-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-clean-and-jerk-i00-standard"
+base = "roboolympics-fun-clean-and-jerk-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-discus-i00-privileged"
+base = "roboolympics-fun-discus-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-discus-i00-standard"
+base = "roboolympics-fun-discus-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dribble-slalom-i00-privileged"
+base = "roboolympics-fun-dribble-slalom-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dribble-slalom-i00-standard"
+base = "roboolympics-fun-dribble-slalom-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dunk-between-legs-i00-privileged"
+base = "roboolympics-fun-dunk-between-legs-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dunk-between-legs-i00-standard"
+base = "roboolympics-fun-dunk-between-legs-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dunk-i00-privileged"
+base = "roboolympics-fun-dunk-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dunk-i00-standard"
+base = "roboolympics-fun-dunk-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dunk-realgrasp-i00-privileged"
+base = "roboolympics-fun-dunk-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-dunk-realgrasp-i00-standard"
+base = "roboolympics-fun-dunk-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-high-jump-i00-privileged"
+base = "roboolympics-fun-high-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-high-jump-i00-standard"
+base = "roboolympics-fun-high-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-hurdles-freestanding-i00-privileged"
+base = "roboolympics-fun-hurdles-freestanding-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-hurdles-freestanding-i00-standard"
+base = "roboolympics-fun-hurdles-freestanding-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-hurdles-i00-privileged"
+base = "roboolympics-fun-hurdles-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-hurdles-i00-standard"
+base = "roboolympics-fun-hurdles-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-javelin-i00-privileged"
+base = "roboolympics-fun-javelin-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-javelin-i00-standard"
+base = "roboolympics-fun-javelin-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-i00-privileged"
+base = "roboolympics-fun-juggle-three-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-i00-standard"
+base = "roboolympics-fun-juggle-three-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-i00-standard-realtime"
+base = "roboolympics-fun-juggle-three-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-feet-i00-privileged"
+base = "roboolympics-fun-juggling-feet-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-feet-i00-standard"
+base = "roboolympics-fun-juggling-feet-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-head-i00-privileged"
+base = "roboolympics-fun-juggling-head-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-head-i00-standard"
+base = "roboolympics-fun-juggling-head-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-head-i00-standard-realtime"
+base = "roboolympics-fun-juggling-head-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-i00-privileged"
+base = "roboolympics-fun-juggling-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-i00-standard"
+base = "roboolympics-fun-juggling-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-jump-rope-i00-privileged"
+base = "roboolympics-fun-jump-rope-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-jump-rope-i00-standard"
+base = "roboolympics-fun-jump-rope-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-layup-i00-privileged"
+base = "roboolympics-fun-layup-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-layup-i00-standard"
+base = "roboolympics-fun-layup-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-long-rope-i00-privileged"
+base = "roboolympics-fun-long-rope-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-long-rope-i00-standard"
+base = "roboolympics-fun-long-rope-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-long-rope-i00-standard-realtime"
+base = "roboolympics-fun-long-rope-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-pitch-target-i00-privileged"
+base = "roboolympics-fun-pitch-target-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-pitch-target-i00-standard"
+base = "roboolympics-fun-pitch-target-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-pole-vault-i00-privileged"
+base = "roboolympics-fun-pole-vault-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-pole-vault-i00-standard"
+base = "roboolympics-fun-pole-vault-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-shot-put-i00-privileged"
+base = "roboolympics-fun-shot-put-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-shot-put-i00-standard"
+base = "roboolympics-fun-shot-put-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-slalom-i00-privileged"
+base = "roboolympics-fun-slalom-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-slalom-i00-standard"
+base = "roboolympics-fun-slalom-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-standing-long-jump-i00-privileged"
+base = "roboolympics-fun-standing-long-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-standing-long-jump-i00-standard"
+base = "roboolympics-fun-standing-long-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-steeplechase-i00-privileged"
+base = "roboolympics-fun-steeplechase-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-steeplechase-i00-standard"
+base = "roboolympics-fun-steeplechase-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-tennis-return-realgrasp-i00-privileged"
+base = "roboolympics-fun-tennis-return-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-tennis-return-realgrasp-i00-standard"
+base = "roboolympics-fun-tennis-return-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-tennis-return-realgrasp-i00-standard-realtime"
+base = "roboolympics-fun-tennis-return-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-tennis-serve-i00-privileged"
+base = "roboolympics-fun-tennis-serve-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-tennis-serve-i00-standard"
+base = "roboolympics-fun-tennis-serve-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-tennis-serve-realgrasp-i00-privileged"
+base = "roboolympics-fun-tennis-serve-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-tennis-serve-realgrasp-i00-standard"
+base = "roboolympics-fun-tennis-serve-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-triple-jump-i00-privileged"
+base = "roboolympics-fun-triple-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-triple-jump-i00-standard"
+base = "roboolympics-fun-triple-jump-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-vault-i00-privileged"
+base = "roboolympics-fun-vault-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-vault-i00-standard"
+base = "roboolympics-fun-vault-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-volleyball-spike-i00-privileged"
+base = "roboolympics-fun-volleyball-spike-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-volleyball-spike-i00-standard"
+base = "roboolympics-fun-volleyball-spike-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-volleyball-spike-i00-standard-realtime"
+base = "roboolympics-fun-volleyball-spike-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-wall-ball-i00-privileged"
+base = "roboolympics-fun-wall-ball-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-wall-ball-i00-standard"
+base = "roboolympics-fun-wall-ball-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+# ---- RoboOlympics-Match
+
+[[task]]
+task = "roboolympics-match-badminton-duelrl-i01-standard-realtime"
+base = "roboolympics-match-badminton-duelrl-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-badminton-match-i01-privileged"
+base = "roboolympics-match-badminton-match-i01"
+benchmark = "RoboOlympics-Match"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-badminton-match-i01-standard-realtime"
+base = "roboolympics-match-badminton-match-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-badminton-match-i02-privileged"
+base = "roboolympics-match-badminton-match-i02"
+benchmark = "RoboOlympics-Match"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-badminton-match-i02-standard-realtime"
+base = "roboolympics-match-badminton-match-i02"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-badminton-match-i04-standard-realtime"
+base = "roboolympics-match-badminton-match-i04"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-badminton-matchlow-i01-standard-realtime"
+base = "roboolympics-match-badminton-matchlow-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-fencing-bout-i01-standard"
+base = "roboolympics-match-fencing-bout-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-foosball-match-i01-standard-realtime"
+base = "roboolympics-match-foosball-match-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-soccer-jointcpu-i01-standard-realtime"
+base = "roboolympics-match-soccer-jointcpu-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-soccer-jointgpu-i01-standard-realtime"
+base = "roboolympics-match-soccer-jointgpu-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-soccer-match-i00-privileged"
+base = "roboolympics-match-soccer-match-i00"
+benchmark = "RoboOlympics-Match"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-soccer-match-i00-standard-realtime"
+base = "roboolympics-match-soccer-match-i00"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-soccerssl-match-i00-privileged"
+base = "roboolympics-match-soccerssl-match-i00"
+benchmark = "RoboOlympics-Match"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-soccerssl-match-i00-standard-realtime"
+base = "roboolympics-match-soccerssl-match-i00"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-soccerssl-match-i01-standard-realtime"
+base = "roboolympics-match-soccerssl-match-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-tabletennis-duelrl-i01-standard-realtime"
+base = "roboolympics-match-tabletennis-duelrl-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i01-privileged"
+base = "roboolympics-match-tabletennis-match-i01"
+benchmark = "RoboOlympics-Match"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i01-standard-realtime"
+base = "roboolympics-match-tabletennis-match-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i02-privileged"
+base = "roboolympics-match-tabletennis-match-i02"
+benchmark = "RoboOlympics-Match"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i02-standard-realtime"
+base = "roboolympics-match-tabletennis-match-i02"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i03-standard-realtime"
+base = "roboolympics-match-tabletennis-match-i03"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i04-standard-realtime"
+base = "roboolympics-match-tabletennis-match-i04"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-match-tabletennis-matchlow-i01-standard-realtime"
+base = "roboolympics-match-tabletennis-matchlow-i01"
+benchmark = "RoboOlympics-Match"
+mode = "standard-realtime"
+luna = "failed"
+pick = "owner"
+
+# ---- RoboPaint
+
+[[task]]
+task = "robopaint-acrylic-applesoranges-i00-privileged"
+base = "robopaint-acrylic-applesoranges-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-applesoranges-i00-standard"
+base = "robopaint-acrylic-applesoranges-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-bedroom-i00-privileged"
+base = "robopaint-acrylic-bedroom-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-bedroom-i00-standard"
+base = "robopaint-acrylic-bedroom-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-bluehorses-i00-privileged"
+base = "robopaint-acrylic-bluehorses-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-bluehorses-i00-standard"
+base = "robopaint-acrylic-bluehorses-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-greatwave-i00-privileged"
+base = "robopaint-acrylic-greatwave-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-greatwave-i00-standard"
+base = "robopaint-acrylic-greatwave-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-kajikazawa-i00-privileged"
+base = "robopaint-acrylic-kajikazawa-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-kajikazawa-i00-standard"
+base = "robopaint-acrylic-kajikazawa-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-plumpark-i00-privileged"
+base = "robopaint-acrylic-plumpark-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-plumpark-i00-standard"
+base = "robopaint-acrylic-plumpark-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-redfuji-i00-privileged"
+base = "robopaint-acrylic-redfuji-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-redfuji-i00-standard"
+base = "robopaint-acrylic-redfuji-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-suddenshower-i00-privileged"
+base = "robopaint-acrylic-suddenshower-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-suddenshower-i00-standard"
+base = "robopaint-acrylic-suddenshower-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-sunflowers-i00-privileged"
+base = "robopaint-acrylic-sunflowers-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-sunflowers-i00-standard"
+base = "robopaint-acrylic-sunflowers-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-vision-i00-privileged"
+base = "robopaint-acrylic-vision-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-acrylic-vision-i00-standard"
+base = "robopaint-acrylic-vision-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-caoshu-beiquelindanshui-i00-privileged"
+base = "robopaint-caoshu-beiquelindanshui-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-caoshu-beiquelindanshui-i00-standard"
+base = "robopaint-caoshu-beiquelindanshui-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-caoshu-siwushaonian-i00-privileged"
+base = "robopaint-caoshu-siwushaonian-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-caoshu-siwushaonian-i00-standard"
+base = "robopaint-caoshu-siwushaonian-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-caoshu-zhen-i00-privileged"
+base = "robopaint-caoshu-zhen-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-caoshu-zhen-i00-standard"
+base = "robopaint-caoshu-zhen-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-kaishu-linfengguilong-i00-privileged"
+base = "robopaint-kaishu-linfengguilong-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-kaishu-linfengguilong-i00-standard"
+base = "robopaint-kaishu-linfengguilong-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-oil-monalisa-i01-privileged"
+base = "robopaint-oil-monalisa-i01"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-oil-monalisa-i01-standard"
+base = "robopaint-oil-monalisa-i01"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-oil-starrynight-i01-privileged"
+base = "robopaint-oil-starrynight-i01"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-oil-starrynight-i01-standard"
+base = "robopaint-oil-starrynight-i01"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-feng-i00-privileged"
+base = "robopaint-xingshu-feng-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-feng-i00-standard"
+base = "robopaint-xingshu-feng-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-he-i00-privileged"
+base = "robopaint-xingshu-he-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-he-i00-standard"
+base = "robopaint-xingshu-he-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-huifenghechang-i00-privileged"
+base = "robopaint-xingshu-huifenghechang-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-huifenghechang-i00-standard"
+base = "robopaint-xingshu-huifenghechang-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-maolinxiuzhu-i00-privileged"
+base = "robopaint-xingshu-maolinxiuzhu-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-maolinxiuzhu-i00-standard"
+base = "robopaint-xingshu-maolinxiuzhu-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-xian-i00-privileged"
+base = "robopaint-xingshu-xian-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-xian-i00-standard"
+base = "robopaint-xingshu-xian-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-yong-i00-privileged"
+base = "robopaint-xingshu-yong-i00"
+benchmark = "RoboPaint"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robopaint-xingshu-yong-i00-standard"
+base = "robopaint-xingshu-yong-i00"
+benchmark = "RoboPaint"
+mode = "standard"
+luna = "failed"
+
+# ---- RoboSafeBench
+
+[[task]]
+task = "rsb-a01-i01-standard"
+base = "rsb-a01-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a01-i02-standard"
+base = "rsb-a01-i02"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a01-i04-standard"
+base = "rsb-a01-i04"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a01-i08-standard"
+base = "rsb-a01-i08"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a01-i09-standard"
+base = "rsb-a01-i09"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a02-i03-standard"
+base = "rsb-a02-i03"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a04-i00-standard"
+base = "rsb-a04-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a04-i03-standard"
+base = "rsb-a04-i03"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a06-i01-standard"
+base = "rsb-a06-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a06-i03-standard"
+base = "rsb-a06-i03"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a07-i02-standard"
+base = "rsb-a07-i02"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a08-i01-standard"
+base = "rsb-a08-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a09-i05-standard"
+base = "rsb-a09-i05"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a17-i00-standard"
+base = "rsb-a17-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a17-i01-standard"
+base = "rsb-a17-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a26-i02-standard"
+base = "rsb-a26-i02"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a27-i06-standard"
+base = "rsb-a27-i06"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a28-i00-standard"
+base = "rsb-a28-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a28-i01-standard"
+base = "rsb-a28-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a28-i03-standard"
+base = "rsb-a28-i03"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a29-i00-standard"
+base = "rsb-a29-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a29-i01-standard"
+base = "rsb-a29-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a29-i03-standard"
+base = "rsb-a29-i03"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a30-i05-standard"
+base = "rsb-a30-i05"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a33-i01-standard"
+base = "rsb-a33-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a33-i04-standard"
+base = "rsb-a33-i04"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a34-i07-standard"
+base = "rsb-a34-i07"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a34-i09-standard"
+base = "rsb-a34-i09"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-a34-i11-standard"
+base = "rsb-a34-i11"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b06-i00-standard"
+base = "rsb-b06-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b06-i01-standard"
+base = "rsb-b06-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b06-i02-standard"
+base = "rsb-b06-i02"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b08-i01-standard"
+base = "rsb-b08-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b08-i02-standard"
+base = "rsb-b08-i02"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b11-i00-standard"
+base = "rsb-b11-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b11-i01-standard"
+base = "rsb-b11-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b11-i03-standard"
+base = "rsb-b11-i03"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b12-i04-standard"
+base = "rsb-b12-i04"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b12-i06-standard"
+base = "rsb-b12-i06"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-b12-i07-standard"
+base = "rsb-b12-i07"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-c02-i00-standard"
+base = "rsb-c02-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-c02-i00-standard-realtime"
+base = "rsb-c02-i00"
+benchmark = "RoboSafeBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "rsb-c02-i01-standard"
+base = "rsb-c02-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-c02-i01-standard-realtime"
+base = "rsb-c02-i01"
+benchmark = "RoboSafeBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "rsb-c04-i00-standard"
+base = "rsb-c04-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-c04-i00-standard-realtime"
+base = "rsb-c04-i00"
+benchmark = "RoboSafeBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "rsb-c04-i01-standard"
+base = "rsb-c04-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-c04-i01-standard-realtime"
+base = "rsb-c04-i01"
+benchmark = "RoboSafeBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "rsb-c05-i01-standard"
+base = "rsb-c05-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-c05-i01-standard-realtime"
+base = "rsb-c05-i01"
+benchmark = "RoboSafeBench"
+mode = "standard-realtime"
+luna = "failed"
+
+[[task]]
+task = "rsb-c05-i02-standard"
+base = "rsb-c05-i02"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-c16-i00-standard"
+base = "rsb-c16-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-c16-i01-standard"
+base = "rsb-c16-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-d05-i04-standard"
+base = "rsb-d05-i04"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-d05-i07-standard"
+base = "rsb-d05-i07"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-d08-i01-standard"
+base = "rsb-d08-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-d12-i02-standard"
+base = "rsb-d12-i02"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-d12-i04-standard"
+base = "rsb-d12-i04"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-e06-i00-standard"
+base = "rsb-e06-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-e06-i03-standard"
+base = "rsb-e06-i03"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f01-i00-standard"
+base = "rsb-f01-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f02-i00-standard"
+base = "rsb-f02-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f02-i01-standard"
+base = "rsb-f02-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f03-i00-standard"
+base = "rsb-f03-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f03-i01-standard"
+base = "rsb-f03-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f03-i02-standard"
+base = "rsb-f03-i02"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f04-i01-standard"
+base = "rsb-f04-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f04-i02-standard"
+base = "rsb-f04-i02"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f05-i00-standard"
+base = "rsb-f05-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f05-i01-standard"
+base = "rsb-f05-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f06-i00-standard"
+base = "rsb-f06-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f06-i01-standard"
+base = "rsb-f06-i01"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f07-i00-standard"
+base = "rsb-f07-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f08-i00-standard"
+base = "rsb-f08-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f09-i00-standard"
+base = "rsb-f09-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f10-i00-standard"
+base = "rsb-f10-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "rsb-f11-i00-standard"
+base = "rsb-f11-i00"
+benchmark = "RoboSafeBench"
+mode = "standard"
+luna = "failed"
+
+# ---- RoboTwin 2.0
+
+[[task]]
+task = "robotwin_2_0_hanging_mug-privileged"
+base = "robotwin_2_0_hanging_mug"
+benchmark = "RoboTwin 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robotwin_2_0_hanging_mug-standard"
+base = "robotwin_2_0_hanging_mug"
+benchmark = "RoboTwin 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robotwin_2_0_place_bread_skillet-privileged"
+base = "robotwin_2_0_place_bread_skillet"
+benchmark = "RoboTwin 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robotwin_2_0_place_bread_skillet-standard"
+base = "robotwin_2_0_place_bread_skillet"
+benchmark = "RoboTwin 2.0"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robotwin_2_0_put_bottles_dustbin-privileged"
+base = "robotwin_2_0_put_bottles_dustbin"
+benchmark = "RoboTwin 2.0"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robotwin_2_0_put_bottles_dustbin-standard"
+base = "robotwin_2_0_put_bottles_dustbin"
+benchmark = "RoboTwin 2.0"
+mode = "standard"
+luna = "failed"
+
+# ---- RoboWits
+
+[[task]]
+task = "robowits-ball-into-bottle-i00-privileged"
+base = "robowits-ball-into-bottle-i00"
+benchmark = "RoboWits"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robowits-ball-into-bottle-i00-standard"
+base = "robowits-ball-into-bottle-i00"
+benchmark = "RoboWits"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robowits-cover-with-lid-i00-privileged"
+base = "robowits-cover-with-lid-i00"
+benchmark = "RoboWits"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robowits-cover-with-lid-i00-standard"
+base = "robowits-cover-with-lid-i00"
+benchmark = "RoboWits"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robowits-retrieve-cube-i00-privileged"
+base = "robowits-retrieve-cube-i00"
+benchmark = "RoboWits"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robowits-retrieve-cube-i00-standard"
+base = "robowits-retrieve-cube-i00"
+benchmark = "RoboWits"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robowits-stack-bowls-i00-privileged"
+base = "robowits-stack-bowls-i00"
+benchmark = "RoboWits"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robowits-stack-bowls-i00-standard"
+base = "robowits-stack-bowls-i00"
+benchmark = "RoboWits"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "robowits-stand-bulb-i00-privileged"
+base = "robowits-stand-bulb-i00"
+benchmark = "RoboWits"
+mode = "privileged"
+luna = "no result yet"
+
+[[task]]
+task = "robowits-stand-bulb-i00-standard"
+base = "robowits-stand-bulb-i00"
+benchmark = "RoboWits"
+mode = "standard"
+luna = "no result yet"
+
+[[task]]
+task = "robowits-stand-pages-i00-privileged"
+base = "robowits-stand-pages-i00"
+benchmark = "RoboWits"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "robowits-stand-pages-i00-standard"
+base = "robowits-stand-pages-i00"
+benchmark = "RoboWits"
+mode = "standard"
+luna = "failed"
+
+# ---- VLABench
+
+[[task]]
+task = "vlabench-heat-food-i00-privileged"
+base = "vlabench-heat-food-i00"
+benchmark = "VLABench"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "vlabench-heat-food-i00-standard"
+base = "vlabench-heat-food-i00"
+benchmark = "VLABench"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "vlabench-texas-holdem-i00-privileged"
+base = "vlabench-texas-holdem-i00"
+benchmark = "VLABench"
+mode = "privileged"
+luna = "success"
+pick = "owner"
+
+[[task]]
+task = "vlabench-texas-holdem-i00-standard"
+base = "vlabench-texas-holdem-i00"
+benchmark = "VLABench"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+# ---- YAMLab
+
+[[task]]
+task = "yamlab-hang-mug-on-tree-i15-privileged"
+base = "yamlab-hang-mug-on-tree-i15"
+benchmark = "YAMLab"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "yamlab-hang-mug-on-tree-i15-standard"
+base = "yamlab-hang-mug-on-tree-i15"
+benchmark = "YAMLab"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "yamlab-put-pot-on-cooktop-i00-privileged"
+base = "yamlab-put-pot-on-cooktop-i00"
+benchmark = "YAMLab"
+mode = "privileged"
+luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "yamlab-put-pot-on-cooktop-i00-standard"
+base = "yamlab-put-pot-on-cooktop-i00"
+benchmark = "YAMLab"
+mode = "standard"
+luna = "failed"
+pick = "owner"
+
+# ---- iSpatialGym
+
+[[task]]
+task = "ispatialgym-alignment-axial-i00-privileged"
+base = "ispatialgym-alignment-axial-i00"
+benchmark = "iSpatialGym"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-alignment-axial-i00-standard"
+base = "ispatialgym-alignment-axial-i00"
+benchmark = "iSpatialGym"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-camera-relocalization-obstructed-i00-privileged"
+base = "ispatialgym-camera-relocalization-obstructed-i00"
+benchmark = "iSpatialGym"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-camera-relocalization-obstructed-i00-standard"
+base = "ispatialgym-camera-relocalization-obstructed-i00"
+benchmark = "iSpatialGym"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-configuration-matching-articulation-open-small-scale-i00-privileged"
+base = "ispatialgym-configuration-matching-articulation-open-small-scale-i00"
+benchmark = "iSpatialGym"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-configuration-matching-articulation-open-small-scale-i00-standard"
+base = "ispatialgym-configuration-matching-articulation-open-small-scale-i00"
+benchmark = "iSpatialGym"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-configuration-matching-block-design-i00-privileged"
+base = "ispatialgym-configuration-matching-block-design-i00"
+benchmark = "iSpatialGym"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-configuration-matching-block-design-i00-standard"
+base = "ispatialgym-configuration-matching-block-design-i00"
+benchmark = "iSpatialGym"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-inter-object-relation-satisfaction-nextto-small-scale-i00-privileged"
+base = "ispatialgym-inter-object-relation-satisfaction-nextto-small-scale-i00"
+benchmark = "iSpatialGym"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-inter-object-relation-satisfaction-nextto-small-scale-i00-standard"
+base = "ispatialgym-inter-object-relation-satisfaction-nextto-small-scale-i00"
+benchmark = "iSpatialGym"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-inter-object-relation-satisfaction-ontop-small-scale-i00-privileged"
+base = "ispatialgym-inter-object-relation-satisfaction-ontop-small-scale-i00"
+benchmark = "iSpatialGym"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-inter-object-relation-satisfaction-ontop-small-scale-i00-standard"
+base = "ispatialgym-inter-object-relation-satisfaction-ontop-small-scale-i00"
+benchmark = "iSpatialGym"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-inter-object-relation-satisfaction-touching-small-scale-i00-privileged"
+base = "ispatialgym-inter-object-relation-satisfaction-touching-small-scale-i00"
+benchmark = "iSpatialGym"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-inter-object-relation-satisfaction-touching-small-scale-i00-standard"
+base = "ispatialgym-inter-object-relation-satisfaction-touching-small-scale-i00"
+benchmark = "iSpatialGym"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-mental-rotation-i00-privileged"
+base = "ispatialgym-mental-rotation-i00"
+benchmark = "iSpatialGym"
+mode = "privileged"
+luna = "failed"
+
+[[task]]
+task = "ispatialgym-mental-rotation-i00-standard"
+base = "ispatialgym-mental-rotation-i00"
+benchmark = "iSpatialGym"
+mode = "standard"
+luna = "failed"
+
+# ---- roboEngineer
+
+[[task]]
+task = "roboengineer-anycar-drift-park-i00-standard"
+base = "roboengineer-anycar-drift-park-i00"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-anycar-drift-park-i01-standard"
+base = "roboengineer-anycar-drift-park-i01"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-anycar-tight-drift-park-i00-standard"
+base = "roboengineer-anycar-tight-drift-park-i00"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-anycar-tight-drift-park-i01-standard"
+base = "roboengineer-anycar-tight-drift-park-i01"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-g1-terrain-walk-i00-standard"
+base = "roboengineer-g1-terrain-walk-i00"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-g1-terrain-walk-i01-standard"
+base = "roboengineer-g1-terrain-walk-i01"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-go2-forward-jump-i00-standard"
+base = "roboengineer-go2-forward-jump-i00"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-go2-forward-jump-i01-standard"
+base = "roboengineer-go2-forward-jump-i01"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-go2-weave-i00-standard"
+base = "roboengineer-go2-weave-i00"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-go2-weave-i01-standard"
+base = "roboengineer-go2-weave-i01"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-go2-yaw-jump-i00-standard"
+base = "roboengineer-go2-yaw-jump-i00"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-go2-yaw-jump-i01-standard"
+base = "roboengineer-go2-yaw-jump-i01"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-landing-random-pad-i00-standard"
+base = "roboengineer-landing-random-pad-i00"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-neuralfly-general-i01-standard"
+base = "roboengineer-neuralfly-general-i01"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"
+
+[[task]]
+task = "roboengineer-neuralfly-general-skydio-i01-standard"
+base = "roboengineer-neuralfly-general-skydio-i01"
+benchmark = "roboEngineer"
+mode = "standard"
+luna = "failed"

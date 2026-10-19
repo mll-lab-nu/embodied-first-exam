@@ -1,0 +1,19 @@
+# Only code, prompts and the configuration the tools read are versioned here (this repo is public).
+# Data, reviews, the report text, working notes and meeting notes stay local.
+/annot/
+/data/
+/findings/
+/notes/
+/refs/
+/retired/
+/reviews/
+/ledger.csv
+/meta/*
+!/meta/prompts/
+!/meta/DESIGN.md
+!/meta/codebook.json
+!/meta/site.json
+!/meta/bench_reasons.json
+/tools/cands.tsv
+/tools/viz/fonts/
+__pycache__/
