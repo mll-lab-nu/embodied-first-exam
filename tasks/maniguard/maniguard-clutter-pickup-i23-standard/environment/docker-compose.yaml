@@ -1,12 +1,12 @@
 # Standard mode: the simulator runs in the `sim` sidecar (agent cannot open it); the agent only reaches port 8000.
 # No `expose`/`ports` on sim: under Harbor's egress control it shares main's network namespace (localhost:8000).
 # `/data` is the licensed BEHAVIOR-1K 3.7.2 data root here (read-only; $RCB_MANIGUARD_DATA is a precondition of every
-# ManiGuard run, docs/benchmarks/maniguard.md), so the service writes its own record to `/out` (the container's own file
+# ManiGuard run, tasks/maniguard/README.md), so the service writes its own record to `/out` (the container's own file
 # system: it survives compose's restarts of the same container). Crash recovery (docs/protocol/standard_mode.md §13): run.sh
 # exits non-zero when the service crashes and compose restarts the container, which resumes the same episode from its
 # journal. The sidecar is TRUSTED: its Kit cache is a trusted volume of this trial only (no fixed name), never mounted where
 # agent code runs. RCB_STARTUP_TIMEOUT_S: the startup watchdog, at least twice the slowest measured scene build
-# (docs/benchmarks/maniguard.md; provisional until measured).
+# (tasks/maniguard/README.md; provisional until measured).
 services:
   main:
     pids_limit: 16384   # rcb-monitor
@@ -21,7 +21,7 @@ services:
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro
-      - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by scripts/maniguard/prep_data.py (docs/benchmarks/maniguard.md)}:/data:ro
+      - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by scripts/maniguard/prep_data.py (tasks/maniguard/README.md)}:/data:ro
       - rcb_maniguard_cache_trusted:/cache
     working_dir: /tmp
     command: sh /srv/run.sh

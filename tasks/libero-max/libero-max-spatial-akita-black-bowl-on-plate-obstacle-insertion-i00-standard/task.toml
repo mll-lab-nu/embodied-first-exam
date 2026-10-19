@@ -96,7 +96,7 @@ timeout_sec = 30
 # grade it; board 0151). Then one video-only replay of the trajectory in a fresh process, which can neither change nor
 # cost the verdict; for a long episode on a busy host it takes over an hour: the hook waits up to 5400 s in
 # all (9000 steps at 0.5 s + 180 s to build the scene + 240 s of frames = 4920 s); timeout_sec = 180 s for the
-# service's PID file + 5400 s + 120 s (docs/benchmarks/libero-max.md, "Grading (standard mode)").
+# service's PID file + 5400 s + 120 s (tasks/libero-max/README.md, "Grading (standard mode)").
 [[verifier.collect]]
 service = "sim"
 command = "sh /srv/finalize.sh"

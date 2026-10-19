@@ -187,7 +187,7 @@ gpu_class = "none"
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPUs: 4, visible to each container that runs the simulator (cpuset / affinity, not a quota): OpenBLAS runs no more threads than that and DexJoCo's result differs below 4 (docs/benchmarks/dexjoco.md, Threads); with fewer there is no verdict (too_few_cpus, infra_error)"
+measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPUs: 4, visible to each container that runs the simulator (cpuset / affinity, not a quota): OpenBLAS runs no more threads than that and DexJoCo's result differs below 4 (tasks/dexjoco/README.md, Threads); with fewer there is no verdict (too_few_cpus, infra_error)"
 
 # dexjoco, standard: 11 task(s)
 [[rule]]
@@ -200,7 +200,7 @@ gpu_class = "none"
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPUs: 4, visible to each container that runs the simulator (cpuset / affinity, not a quota): OpenBLAS runs no more threads than that and DexJoCo's result differs below 4 (docs/benchmarks/dexjoco.md, Threads); with fewer there is no verdict (too_few_cpus, infra_error)"
+measured = "memory: sim 1.9 GB, privileged container 2.1 GB, verifier 2.1 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPUs: 4, visible to each container that runs the simulator (cpuset / affinity, not a quota): OpenBLAS runs no more threads than that and DexJoCo's result differs below 4 (tasks/dexjoco/README.md, Threads); with fewer there is no verdict (too_few_cpus, infra_error)"
 
 # dextoolbench, privileged: 21 task(s)
 [[rule]]
@@ -918,7 +918,7 @@ gpu_class = "none"
 verifier_min_cpus = 7.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "RoboOlympics' exported matches (scripts/roboolympics/exported.toml): the values of the matches it measured on the 2.3 adapter (docs/benchmarks/roboolympics.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only, real time needs the cores"
+measured = "RoboOlympics' exported matches (scripts/roboolympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/roboolympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only, real time needs the cores"
 
 # roboolympics, exported turn-based matches (standard, eai-standard-turn/1.0): 2 task(s)
 [[rule]]
@@ -2871,7 +2871,7 @@ main = { cpus = 6.0, memory_gb = 16.0, pids = 8192 }
 match = "^roboolympics-match-tabletennis-match-i[0-9]{2}-privileged$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
-# roboEngineer (#329; docs/benchmarks/roboengineer.md): CPU MuJoCo with OSMesa software rendering in the private
+# roboEngineer (#329; tasks/roboengineer/README.md): CPU MuJoCo with OSMesa software rendering in the private
 # evaluator sidecar, numeric policies only; the agent's nominal simulator is CPU MuJoCo too, except G1 (below), whose
 # agent trains on one GPU. The sidecar runs the deployments and, in the verifier phase (its collect hook), the held-out
 # evaluation (two fresh processes per case, four workers) and the video. Memory minimums count the agent's whole docker
@@ -2920,7 +2920,7 @@ match = "^roboengineer-.*-standard$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 6.0, pids = 8192 }
 
-# roboEngineer G1 (docs/benchmarks/roboengineer-g1.md): the agent trains its blind walking policy with mjlab / MuJoCo
+# roboEngineer G1 (tasks/roboengineer/g1.md): the agent trains its blind walking policy with mjlab / MuJoCo
 # Warp on one GPU in its own container (the compose file reserves it for `main`); the sidecar evaluates on the CPU.
 [[rule]]
 match = "^roboengineer-g1-.*-standard$"

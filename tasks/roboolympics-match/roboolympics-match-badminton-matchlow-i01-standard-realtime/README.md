@@ -34,7 +34,7 @@ The skill in the loop (owner 2026-10-17, board 0152 decision 28, option c): the 
 container (`game skill serve`); no agent code runs in the sim (`RCB_SKILL_REMOTE_ONLY=1`, no upload endpoint). step() is
 one synchronous call per due control step, waited for at most one control period and applied at that step; a skill or
 server that is slow, failing or down only costs the agent its own commands (never a technical failure); every version
-of the skill that played is a `skill_load` row of the episode (docs/benchmarks/roboolympics.md).
+of the skill that played is a `skill_load` row of the episode (tasks/roboolympics-fun/README.md).
 An error of the simulator's control step after the seat's first command (an act, or a command of its skill's
 step(), counted before it is applied) is the agent's result (`agent_sim_error`), before it a technical failure.
 
@@ -48,7 +48,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: RoboOlympics' exported matches (scripts/roboolympics/exported.toml): the values of the matches it measured on the 2.3 adapter (docs/benchmarks/roboolympics.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only, real time needs the cores
+- Measured: RoboOlympics' exported matches (scripts/roboolympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/roboolympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only, real time needs the cores
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 12 GiB memory. Limits measured: memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details

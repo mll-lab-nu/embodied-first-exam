@@ -25,7 +25,7 @@ services:
       RCB_INSTANCE: /srv/instance.json
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "3600"
-      RCB_STARTUP_TIMEOUT_S: "900"   # >= 2 x the slowest measured scene build (docs/benchmarks/robowits.md)
+      RCB_STARTUP_TIMEOUT_S: "900"   # >= 2 x the slowest measured scene build (tasks/robowits/README.md)
       PYTHONPATH: /srv
       QD_OFFLINE_CACHE: "0"
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log

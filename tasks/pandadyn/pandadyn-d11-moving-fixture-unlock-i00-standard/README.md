@@ -65,7 +65,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request |
 | Images | the `sim` sidecar runs eai-pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`scripts/eai_standard/client.env`) |
 | Crash recovery | the shared service layer's: every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode |
-| Generator | `scripts/pandadyn/mk_tasks.py` (`RESETS`, `template/standard/`, the adapter `template/realtime/environment/sim/server.py`, `scripts/humanoidbench/shared/standard/`); docs/benchmarks/pandadyn.md |
+| Generator | `scripts/pandadyn/mk_tasks.py` (`RESETS`, `template/standard/`, the adapter `template/realtime/environment/sim/server.py`, `scripts/humanoidbench/shared/standard/`); tasks/pandadyn/README.md |
 
 ### Change Log
 - 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay (until then: two

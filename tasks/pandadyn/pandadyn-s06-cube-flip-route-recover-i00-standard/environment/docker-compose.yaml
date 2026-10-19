@@ -31,9 +31,9 @@ services:
       RCB_WALL_CLOCK_S: "3600"   # = task.toml [agent] timeout_sec (reported only: spec budget, meta time_left_s)
       RCB_STARTUP_TIMEOUT_S: "600"
       PYTHONPATH: /srv:/opt/pandadyn
-      OPENBLAS_CORETYPE: Haswell   # this task's start depends on the BLAS kernel (docs/benchmarks/pandadyn.md "Determinism")
+      OPENBLAS_CORETYPE: Haswell   # this task's start depends on the BLAS kernel (tasks/pandadyn/README.md "Determinism")
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-3}"        # 3 resets, as in the standard-realtime twins (docs/benchmarks/pandadyn.md, "Reset budget"); 0: one episode
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-3}"        # 3 resets, as in the standard-realtime twins (tasks/pandadyn/README.md, "Reset budget"); 0: one episode
     deploy:
       resources:
         reservations:

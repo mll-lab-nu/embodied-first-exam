@@ -64,14 +64,14 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request, rendered by SAPIEN on the sidecar's GPU |
 | Images | the `sim` sidecar runs eai-pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`scripts/eai_standard/client.env`) |
 | Crash recovery | the shared realtime layer's: a checkpoint every second of robot time, `restart: on-failure:6`, the service resumes the same episode, paused |
-| Generator | `scripts/pandadyn/mk_tasks.py` (`REALTIME`, `template/realtime/`, `scripts/humanoidbench/shared/{realtime,standard}/`); docs/benchmarks/pandadyn.md |
+| Generator | `scripts/pandadyn/mk_tasks.py` (`REALTIME`, `template/realtime/`, `scripts/humanoidbench/shared/{realtime,standard}/`); tasks/pandadyn/README.md |
 
 ### Change Log
 - 2026-10-14 (owner, board 0112): added. The family's scene is dynamic (PROTOCOL §2.14), so it gets a standard-realtime
   twin with S = 6 and 10 resets.
 - 2026-10-17: reset budget 10 -> 3. Every reset restores the same frozen start, so the budget is the number of
   times an agent can rerun and tune a plan on a deterministic scene; with 10, realtime trials succeeded far more often
-  than standard ones (no reset), mostly on a late episode (docs/benchmarks/pandadyn.md, "Reset budget"). Instance,
+  than standard ones (no reset), mostly on a late episode (tasks/pandadyn/README.md, "Reset budget"). Instance,
   scene, success check and S are unchanged; results under 10 resets are ranked separately.
 - 2026-10-17 (owner, board 0150/0151): graded by the live episode; no grading replay (until then: one fresh-process
   replay, success = live ∧ replay ∧ deterministic); the frozen start is checked when the first episode begins; the video

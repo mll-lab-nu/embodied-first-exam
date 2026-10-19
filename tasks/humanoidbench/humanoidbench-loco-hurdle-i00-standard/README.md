@@ -62,16 +62,16 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | mode / sensors | standard: head-camera RGB + joint angles and velocities (HumanoidBench's own `image` and `proprio` sensors), a pelvis IMU and a camera fixed in the room; no root pose, no hurdle or wall positions, no reward; 50 resets (a new episode from the frozen start each; only the last episode is graded) |
 | action space | HumanoidBench's own: 19 normalised position targets, 50 Hz, sent in chunks |
-| knobs (compose env) | `RCB_RESET_BUDGET` (50: HumanoidBench's standard configuration, docs/benchmarks/humanoidbench.md), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are the standard configuration; a run that changes one (`RCB_RESET_BUDGET=0 harbor run ...`: one episode, no reset) is reported separately, and `episode.jsonl` records the `/spec` it ran under |
+| knobs (compose env) | `RCB_RESET_BUDGET` (50: HumanoidBench's standard configuration, tasks/humanoidbench/README.md), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are the standard configuration; a run that changes one (`RCB_RESET_BUDGET=0 harbor run ...`: one episode, no reset) is reported separately, and `episode.jsonl` records the `/spec` it ran under |
 | agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
-| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics). |
+| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). |
 
 ### Change Log
 - 2026-10-07: `RCB_RESET_BUDGET`'s default 0 -> 50 (owner decision; PROTOCOL §4.5,
-  docs/benchmarks/humanoidbench.md). The scene, instance, pass rule and verifier are unchanged, so the task
+  tasks/humanoidbench/README.md). The scene, instance, pass rule and verifier are unchanged, so the task
   keeps its name; runs recorded before this date had no reset and are reported separately.
 - 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6
-  (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its
+  (tasks/humanoidbench/README.md, Physics). The pass rule and verifier are unchanged, so the task keeps its
   name; results recorded on 0.1.6 are other physics and are reported separately.
 - 2026-10-10: the sim service marks `final.json` `finalized` the moment the verdict is written, before the
   replay video is rendered (`video_pending` while it renders), and the collect hook's waits run on the clock,

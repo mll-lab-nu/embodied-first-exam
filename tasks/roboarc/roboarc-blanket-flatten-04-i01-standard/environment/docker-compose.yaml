@@ -36,7 +36,7 @@ services:
       RCB_INSTANCE: /tmp/robotangle-instance/instance.json
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "10800"
-      RCB_STARTUP_TIMEOUT_S: "1800"  # >= 2 x the slowest measured scene build (docs/benchmarks/roboarc.md)
+      RCB_STARTUP_TIMEOUT_S: "1800"  # >= 2 x the slowest measured scene build (tasks/roboarc/README.md)
       PYTHONPATH: /srv:/opt/topogym
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
       NVIDIA_DRIVER_CAPABILITIES: all

@@ -74,7 +74,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | | |
 |---|---|
 | Capability class | C5 · whole-body power and momentum (see `scripts/humanoidbench/subset.toml`) |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics). Also fixed here: **dumbbell mass**: upstream's plates have density="500" on geoms whose class sets mass="0", so it never applied and the dumbbell weighed 104 kg; it is 53.7 kg (`images/humanoidbench/upstream-fixes.patch`). |
+| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). Also fixed here: **dumbbell mass**: upstream's plates have density="500" on geoms whose class sets mass="0", so it never applied and the dumbbell weighed 104 kg; it is 53.7 kg (`images/humanoidbench/upstream-fixes.patch`). |
 
 ### GPU
 Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
@@ -91,5 +91,5 @@ Everything in this directory except the instance (`environment/instance.npz` and
 `gen_tasks.py instance powerlift` (seed 0, sha `9bc0690a75d6`).
 
 ### Change Log
-- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6, and this task's own fix (*Physics vs upstream*) (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
+- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6, and this task's own fix (*Physics vs upstream*) (tasks/humanoidbench/README.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
 - 2026-10-10: `reward.json` carries `deterministic` in every branch (0 where no replay ran; PROTOCOL §2.6). The verdict is unchanged.
