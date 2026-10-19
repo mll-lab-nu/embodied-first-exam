@@ -1,6 +1,6 @@
-# eai-humanoidbench: HumanoidBench (MuJoCo / dm_control / Unitree H1) environment. Infrastructure only —
+# humanoidbench: HumanoidBench (MuJoCo / dm_control / Unitree H1) environment. Infrastructure only —
 # contains no benchmark code; tasks `FROM` it and COPY their own tooling. Tag = images/humanoidbench/VERSION.
-# Unlike rcb-robosuite / rcb-libero this image has no CUDA base: HumanoidBench needs neither curobo nor a
+# Unlike the robosuite / libero images, this image has no CUDA base: HumanoidBench needs neither curobo nor a
 # GPU. MuJoCo physics is CPU-only, so a GPU can only ever accelerate offscreen rendering — osmesa does it
 # on the CPU at ~130 ms/frame (256x256), egl on the GPU at ~0.4 ms. Both backends are installed and
 # rcb_hb.py picks one per run, so the same image works with and without a GPU.

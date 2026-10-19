@@ -1,4 +1,4 @@
-eai-robowits - contents, licenses, and the BlenderKit models it leaves out
+robowits - contents, licenses, and the BlenderKit models it leaves out
 
 The image (images/robowits/Dockerfile) contains:
   - RoboWits @ 9cc30ae (github.com/UMass-Embodied-AGI/RoboWits): MIT, as declared in its pyproject.toml (the repository

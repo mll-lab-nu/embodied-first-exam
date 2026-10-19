@@ -1,4 +1,4 @@
-# eai-behavior: BEHAVIOR-1K v3.9.2 (OmniGibson 3.9.2 + Isaac Sim 5.1.0 + cuRobo), the version pinned by the 2026
+# behavior: BEHAVIOR-1K v3.9.2 (OmniGibson 3.9.2 + Isaac Sim 5.1.0 + cuRobo), the version pinned by the 2026
 # BEHAVIOR Challenge. Built on the official image; infrastructure only, contains no benchmark code.
 #
 # It also contains NO dataset: the BEHAVIOR Data Bundle license forbids redistributing the encrypted assets or the

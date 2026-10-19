@@ -1,4 +1,4 @@
-# eai-robodojo: RoboDojo's simulation benchmark (github.com/RoboDojo-Benchmark/RoboDojo @ cb2a37d, MIT) on Isaac Sim
+# robodojo: RoboDojo's simulation benchmark (github.com/RoboDojo-Benchmark/RoboDojo @ cb2a37d, MIT) on Isaac Sim
 # 5.1.0 + RoboDojo's Isaac Lab fork (2.3, @ afca7b0) + its cuRobo fork (@ d17b54c), torch 2.7.0+cu128, following
 # RoboDojo's scripts/install.sh step by step. The benchmark assets (Robots, Object, Material, Room, Background, Sensor,
 # Traj, Eval_Layout; Apache-2.0, Hugging Face dataset RoboDojo-Benchmark/RoboDojo at a pinned revision, ~41 GB) are baked

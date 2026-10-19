@@ -1,4 +1,4 @@
-# eai-robowits: RoboWits (gs_gym) + Genesis v0.4.7 installed from RoboWits' OWN uv.lock (every version = the reference
+# robowits: RoboWits (gs_gym) + Genesis v0.4.7 installed from RoboWits' OWN uv.lock (every version = the reference
 # environment: torch 2.10.0+cu129, trimesh 4.11.1, pin 3.8.0, pin-pink 4.0.0, numpy 2.2.6, ...), minus the LeRobot/transformers
 # training stack. Infrastructure only, no benchmark code. Only the Apache-2.0 HuggingFace asset bundle is baked in; the BlenderKit
 # models are fetched by each user with their own key and mounted at /opt/robowits/assets/blender_kit (NOTICE here).

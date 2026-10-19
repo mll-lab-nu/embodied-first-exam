@@ -5,7 +5,7 @@
 #     images/topogym/prune.py, images/robotangle/vbd-requirements.txt, images/robotangle/warp_precompile.py;
 #   - instances/: every task's frozen MuJoCo instance, from the private HF dataset at the revision pinned in
 #     images/roboarc/assets.json (every file's sha256 is checked).
-# The image builds FROM the published eai-robotangle 0.2.22 (images/roboarc/), which it extends.
+# The image builds FROM the published efe:robotangle-0.2.22 (images/roboarc/), which it extends.
 # Needs read access to eai-v2-internal/robotangle-assets: `hf auth login`, or HF_TOKEN in the environment (never printed),
 # and the release commit in this clone (`git fetch origin dev/robotangle_mujoco`).
 # usage: images/roboarc/fetch_image_context.sh [<download dir>]   (default: $RCB_ROBOTANGLE_ASSETS or ~/.cache/robotangle-assets)

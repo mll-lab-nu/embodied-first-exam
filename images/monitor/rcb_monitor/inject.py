@@ -131,7 +131,7 @@ def limits_json(task: Path, cfg: dict, gpu: bool) -> dict | None:
     # gpu: NVML must work (a fatal record otherwise) when the limits count GPU memory
     out.update(tick_sec=TICK, disk_tick_sec=DISK_TICK, gpu=bool(gpu and float(out.get("max_gpu_memory_gb") or 0) > 0))
     # the agent's time limit (PROTOCOL §2.12, the task's own `[agent] timeout_sec`): the monitor shows the agent its
-    # clock in /run/rcb-limits/usage.json (elapsed_s, time_left_s, deadline_utc; robot_coding_bench #231)
+    # clock in /run/rcb-limits/usage.json (elapsed_s, time_left_s, deadline_utc; #231)
     timeout = (cfg.get("agent") or {}).get("timeout_sec")
     if isinstance(timeout, (int, float)) and timeout > 0:
         out["agent_timeout_sec"] = int(timeout)

@@ -220,14 +220,14 @@ CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text 
 _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
 # owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
 # high and stopped early; every agent gets the same way to know it (a command, not a guess).
-# robot_coding_bench #231 (10-15): a sentence asking for `date` was not enough (agents still guessed); the resource
+# #231 (10-15): a sentence asking for `date` was not enough (agents still guessed); the resource
 # monitor now shows the clock itself (images/monitor/rcb_monitor/monitor.py clock(): from the trial environment's start, so it
 # never overstates the time left; `monitor.py beacon` keeps it on runners that cannot run the monitor).
 _CUTOFF_CLOCK = (" Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few "
                  "seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a "
                  "little before your session started, so it never gives you more time than you have: read it (or run "
                  "`date`) before you decide that time is short, never guess.")
-# robot_coding_bench #237 (10-15): agents that keep a simulator open as an interactive REPL sent each command with
+# #237 (10-15): agents that keep a simulator open as an interactive REPL sent each command with
 # Codex's write_stdin(yield_time_ms=30000); Codex 0.160.1 returns from a write to a still-running process only when the
 # yield is over (196 of 196 such calls in one Luna RoboARC trial took 30.0 s; ~98 min of a 3 h budget), and has no
 # config knob to cap it (background_terminal_max_timeout caps only empty polls). Harness-neutral advice, same text for
