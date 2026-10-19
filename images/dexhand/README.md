@@ -28,4 +28,4 @@ The published image is `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0`. After a `docker p
 public archives (`tianji/source-manifest.json`) when no verified copy exists; the conversion must reproduce
 `tianji-asset-manifest.json` byte for byte. Local simulator runs outside the image set `DEXHAND_ASSET_DIR`,
 `WUJI_ASSET_DIR` and `TIANJI_ASSET_DIR` to the prepared `images/dexhand/assets/{hand,wuji_v2_2,tianji}` and
-`MUJOCO_GL=egl` (or `osmesa`). Benchmark notes: [docs/benchmarks/dexhand.md](../../docs/benchmarks/dexhand.md).
+`MUJOCO_GL=egl` (or `osmesa`). Benchmark notes: [tasks/dexhand/README.md](../../tasks/dexhand/README.md).

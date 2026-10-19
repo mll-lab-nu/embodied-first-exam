@@ -7,11 +7,11 @@ invariants of Appendix H), [`standard_mode.md`](standard_mode.md) (the `eai-stan
 modes), [`running.md`](running.md) (official-run configuration, seeds, retries, gateway, resource enforcement, results;
 enforced by the runner and scheduler) and [`leakage.md`](leakage.md) (where answer keys survive and how they are
 removed). Metadata values, names and run ids are in [`TAXONOMY.md`](../TAXONOMY.md); each benchmark's own choices in
-`docs/benchmarks/<bench>.md`.
+`tasks/<benchmark>/README.md`.
 
 **Recommended conventions, and eight invariants that bind.** Sections 1–7 describe how a task is usually built, so that
 tasks from different benchmarks can be run, compared and reviewed the same way. They recommend; a task or a benchmark
-may choose otherwise and says so where its readers look (its `task.toml`, its README, `docs/benchmarks/<bench>.md`).
+may choose otherwise and says so where its readers look (its `task.toml`, its README, `tasks/<benchmark>/README.md`).
 CI reports a departure from them as an advisory warning, never as a failure. **Appendix H is not a recommendation.** Its
 eight invariants keep results honest (no reward without solving the task, one verdict for one deliverable, results
 compared only with comparable results). They hold for every task and every run, no task value, declaration or
@@ -44,7 +44,7 @@ goes into the repository (generators, oracle searches, instance freezers, releas
 benchmark's image (`images/<name>/`), so the tasks get it from the image; else into
 `embodied_first_exam/benchmarks/<benchmark>/` (the same folder name as `tasks/<benchmark>/`), from which a files-only
 image is built (`scripts/files_image.py`, `images/<name>/FILES.json`) that the tasks' Dockerfiles copy from. A benchmark's
-own choices are documented in `docs/benchmarks/<benchmark>.md`.
+own choices are documented in `tasks/<benchmark>/README.md`.
 
 ## 2. Task-declared settings
 
@@ -156,7 +156,7 @@ Nothing the agent's container can read (the task's `environment/` files, the tas
 frozen instance, installed documentation) contains a solution of the task or a pointer to one: a URL, a dataset or
 file name, a demonstration or episode id, the name of the upstream expert or policy for this task. Upstream experts,
 recorded demonstrations and policies trained for the task are scrubbed from images; provenance lives in
-the README and `docs/benchmarks/<bench>.md`. *CI:* `check-agent-pointers.py`, each benchmark's `ci_checks/benchmarks/<bench>/invariant-*`
+the README and `tasks/<benchmark>/README.md`. *CI:* `check-agent-pointers.py`, each benchmark's `ci_checks/benchmarks/<bench>/invariant-*`
 hooks; images are reviewed when built ([leakage.md](leakage.md)).
 
 **H.3 Standard trust boundary** (standard and standard-realtime). The simulator, the scene, the frozen instance, the

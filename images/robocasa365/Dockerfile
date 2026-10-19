@@ -10,7 +10,7 @@
 #   docker build -t ghcr.io/mll-lab-nu/efe:robocasa365-$(cat VERSION) .
 # About 27 GB, ~11 GB downloaded. Licences: RoboCasa code MIT; RoboCasa's assets CC-BY-4.0 as RoboCasa states
 # (robocasa/robocasa-assets: textures, generative textures, objaverse and AI-generated objects; the Lightwheel fixtures
-# and objects from RoboCasa's UT Box links). Public, like the RoboCasa images (docs/benchmarks/robocasa365.md, Image).
+# and objects from RoboCasa's UT Box links). Public, like the RoboCasa images (tasks/robocasa365/README.md, Image).
 FROM docker.io/library/python:3.11.13-slim-bookworm@sha256:86adf8dbadc3d6e82ee5dd2c74bec2e1c2467cdad47886280501df722372d2e1
 ENV PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 RUN apt-get update && apt-get install -y --no-install-recommends libosmesa6 libgl1 libglib2.0-0 ffmpeg git curl gcc libc6-dev && rm -rf /var/lib/apt/lists/*
