@@ -2,8 +2,12 @@
   "credits": "credits.json",
   "files": {
     "credits.json": {
-      "bytes": 25140,
-      "sha256": "d0b6973a7c61a7564f946e73b4e7e94a8a8505f432b675b17a2dc13585e987f9"
+      "bytes": 25196,
+      "sha256": "22ff7ba12077aa71035cce2d29807f5ce3e29fcb1636cf155f7b3b9095c6370b"
+    },
+    "ese_colors.json": {
+      "bytes": 2841,
+      "sha256": "39267620a26e620c9dfc3fdc8013dfb3801417ce300c1fad3c32cd1e44323251"
     },
     "licenses/CC-BY-4.0.txt": {
       "bytes": 18657,
@@ -62,8 +66,8 @@
       "sha256": "ab388132a4d1b2353bea37caeaf44fa2551fda5a0614111c8668a3e18da78cef"
     },
     "matlib/matlib.json": {
-      "bytes": 10864,
-      "sha256": "465c29b4e5a6bc2a34926e8dd25c95ed1697ba453cbf662a31aa0cdaa2528fd6"
+      "bytes": 10920,
+      "sha256": "9a0651287afd25f3eadce849e4cdabd0bf1e1aba7768aeb8d75b62a66641203e"
     },
     "matlib/painted.png": {
       "bytes": 130166,
@@ -131,7 +135,7 @@
     },
     "packs/apple/pack.json": {
       "bytes": 2036,
-      "sha256": "54d50e19494db49822949a2ddd88ddad972c12d5b3bf131bdf09e23bfe15b910"
+      "sha256": "79955ca61949e20748188874b52c5737b36535dd6646addd5d850483a6ae671c"
     },
     "packs/bowl/default_0.obj": {
       "bytes": 903980,
@@ -143,7 +147,7 @@
     },
     "packs/bowl/pack.json": {
       "bytes": 1909,
-      "sha256": "755980a42e017ec89c9e44d14e92ffaa5e6e1198f8d05b95e6f204c2c31ae16d"
+      "sha256": "0bdee78983b27671ae849ea4f09a114a3db0e75200535eb93c34b3c968c9ffb9"
     },
     "packs/bread_loaf/default_0.obj": {
       "bytes": 1016826,
@@ -155,7 +159,7 @@
     },
     "packs/bread_loaf/pack.json": {
       "bytes": 1957,
-      "sha256": "0718f848cf4ff10849403e04a180ddcad27ca64829695325d70ff0b8489196ff"
+      "sha256": "d295aa4f75283f50ab07fefa3aaad4ae1bfafa38fbb546c3a9a91f00231ede92"
     },
     "packs/cat/lying_0.obj": {
       "bytes": 1347393,
@@ -167,7 +171,7 @@
     },
     "packs/cat/pack.json": {
       "bytes": 4120,
-      "sha256": "6168460dfaae4f3620dead6c01f2d9a13bf0f427dba95101265a263debc99337"
+      "sha256": "8b0f0be782f7be1e63051f1feba4f11a350778bceb2ec1f7c6fec58ccec88aaa"
     },
     "packs/cat/standing_0.obj": {
       "bytes": 724822,
@@ -187,7 +191,7 @@
     },
     "packs/chair/pack.json": {
       "bytes": 1988,
-      "sha256": "fce554a0f1ae655917aa5d27e3776c669f3e93493205e940dbfd673cc48f8168"
+      "sha256": "7b52f5bfc9b61e2245da8a80d42f8f74a14182ee267da08be44a557a49d01fc9"
     },
     "packs/cutting_board/default_0.obj": {
       "bytes": 331557,
@@ -199,7 +203,7 @@
     },
     "packs/cutting_board/pack.json": {
       "bytes": 2053,
-      "sha256": "269a1477d62ea6df606ba359d39b886b840e9c105e10e70fab3458b4db031acd"
+      "sha256": "e52f902461f8d3ef38bad926c53cfb2d6e7519711c7850fab889c7762f6ad4d2"
     },
     "packs/dining_table/default_0.obj": {
       "bytes": 126525,
@@ -211,7 +215,7 @@
     },
     "packs/dining_table/pack.json": {
       "bytes": 1965,
-      "sha256": "4b601ee712b93b318df970af098fa4ad6edae9d5039d8ae6bfb49fc0df5c2eeb"
+      "sha256": "db99ce12746bebf47207638adfa068eb9e6b883b2d5533b067833583922225f0"
     },
     "packs/dog/lying_0.obj": {
       "bytes": 2038669,
@@ -223,7 +227,7 @@
     },
     "packs/dog/pack.json": {
       "bytes": 3369,
-      "sha256": "c1143b550ee91c577d0342466acd9f368102ead807b337eeb3b382bf08b01f1c"
+      "sha256": "2afff27890d6c3286d749e8b2185d90f9a08c0f8f1e61fb63413fbf8940099e0"
     },
     "packs/dog/standing_0.obj": {
       "bytes": 1900736,
@@ -243,7 +247,7 @@
     },
     "packs/dog_bowl/pack.json": {
       "bytes": 1989,
-      "sha256": "152036fee6d61edc11b2be92bfecb15c6e298691c8cabf6a2704bf24f3743ed8"
+      "sha256": "ace088925bfa72840cd74290a19430ce104e88243d1091559515044b4cc07201"
     },
     "packs/eyeglasses/default_0.obj": {
       "bytes": 1035405,
@@ -267,7 +271,7 @@
     },
     "packs/eyeglasses/pack.json": {
       "bytes": 2829,
-      "sha256": "497a01f2df1995fa7d9ae21b0af201e8160163867e3f910f0203dab6f0acffa5"
+      "sha256": "44febc66adc27209455c0d0e288975baa4ca9edbdfa2d273c5d527e423e3c599"
     },
     "packs/flower_pot/default_0.obj": {
       "bytes": 499680,
@@ -279,7 +283,7 @@
     },
     "packs/flower_pot/pack.json": {
       "bytes": 1809,
-      "sha256": "b1f06e8069722e613d07f987968101850206ba206236243dd891baae2960dda9"
+      "sha256": "c6407a6392352231ea2a4d4c6fa6e123aec03c30db52e1bdf63bebd1bf2bd885"
     },
     "packs/hand/hd_L_0.obj": {
       "bytes": 959810,
@@ -515,7 +519,7 @@
     },
     "packs/knife/pack.json": {
       "bytes": 3824,
-      "sha256": "230463ed2c56990be88edbb7f5631aa960b4895204d28a98578d1a329d842eb8"
+      "sha256": "37b96ea173c47dcf007524cb5a2d77deee904c2192fbd8a17e4ee681d4caadb7"
     },
     "packs/knife/standing_0.obj": {
       "bytes": 946348,
@@ -535,7 +539,7 @@
     },
     "packs/low_table/pack.json": {
       "bytes": 2032,
-      "sha256": "a477f1d66e858e8830343e4452bd5693b88bccbcfb53cb5d55c82f53eefd5e48"
+      "sha256": "80a7312a7eda9ea98a190386dccb6607bc23b45defa3168b7f204710621efe50"
     },
     "packs/melon/default_0.obj": {
       "bytes": 1025979,
@@ -547,7 +551,7 @@
     },
     "packs/melon/pack.json": {
       "bytes": 1911,
-      "sha256": "bb00f56fd9b4910bd8a7e0a590d93c7ac2badf6c05e2e0302dc262bbb08b341d"
+      "sha256": "525f8024fcf935a51d43294f4bd1d0c6c74e41f48ce4c3629a53e3cff740fdb8"
     },
     "packs/mug/default_0.obj": {
       "bytes": 955339,
@@ -559,7 +563,7 @@
     },
     "packs/mug/pack.json": {
       "bytes": 2000,
-      "sha256": "bc09fe747d395b16555bc8698e4cb0c03e1134dc65e0a51074c6f241ec07304d"
+      "sha256": "314119a1c112b2d4d1408e9ff95dab621ee63a80dff9a71b010fbf3224c21af5"
     },
     "packs/person/a1_lying_0.obj": {
       "bytes": 251087,
@@ -2303,7 +2307,7 @@
     },
     "packs/person_down/pack.json": {
       "bytes": 77041,
-      "sha256": "90732b9d3d61a02651b95b78c2cb00e6facab88678dc8425c04ab0d5367f01ff"
+      "sha256": "78c8ac4c2c9d608818220f6abeae2e35e3491cbcfff8b2a9e66298005ddb39cf"
     },
     "packs/plate/default_0.obj": {
       "bytes": 313053,
@@ -2315,7 +2319,7 @@
     },
     "packs/plate/pack.json": {
       "bytes": 1988,
-      "sha256": "d270bd0009ba49b3a1e5a8f2439940289bc23bb89c5de6d12a690f883df607dd"
+      "sha256": "7327e8c1c9effd9c1d07d7611d533b0c9d78589ca170088910f6d6a203631a5c"
     },
     "packs/saucer/default_0.obj": {
       "bytes": 212999,
@@ -2327,7 +2331,7 @@
     },
     "packs/saucer/pack.json": {
       "bytes": 1936,
-      "sha256": "47e5dda629208652464f5aae74596f4cdea8036606bd84862be0b55c518d141d"
+      "sha256": "6c22c6c5a947c5e2da1d97a8bfd779666e339ed8bb241de4f6ccb4dedcffe8eb"
     },
     "packs/screwdriver/default_0.obj": {
       "bytes": 290882,
@@ -2339,7 +2343,7 @@
     },
     "packs/screwdriver/pack.json": {
       "bytes": 3286,
-      "sha256": "10a1a68036149b8bea50d789268761700f56a3671e77d69f148efe8da48941ce"
+      "sha256": "73be5615c831bd2ec0686e71d66ec5bea18eb3801575700eb3f92832eda1838b"
     },
     "packs/screwdriver/standing_0.obj": {
       "bytes": 290854,
@@ -2375,7 +2379,7 @@
     },
     "packs/sofa/pack.json": {
       "bytes": 2640,
-      "sha256": "a709f12a79a7536e2f9c5f5a2ae736ca03af5e596b09f965d8081a4a093b3278"
+      "sha256": "550b21ec5b88940ba1cfd1ac30768d82a1a1e53ddb47db00b8f947a0e73db977"
     },
     "packs/toddler/pack.json": {
       "bytes": 30565,
@@ -2679,31 +2683,31 @@
     },
     "packs/tote/pack.json": {
       "bytes": 1956,
-      "sha256": "24f0d206ecc264dcf02286634bbf7883b96eeec3aa88a02f966d7661eebfcf67"
+      "sha256": "87257adc355ca0a7ae021de9cbf8c509f9866f22b72004e108f34b7937818817"
     },
     "plan.json": {
       "bytes": 11849,
-      "sha256": "be075dae991305a0bb5925c2a7b320142d225a8f4abf6400255eb36dfb882f99"
+      "sha256": "0e2b93ea9935e9b37150d789d0e24c5a3ad15812914384e705530cc2d62694e5"
     },
     "provenance/AUTHORED_HAND_RESOLUTION.md": {
-      "bytes": 1551,
-      "sha256": "1bed5e881abaf54832190f78262feeaeb900166bb1b6f3bb940221b2b440d67a"
+      "bytes": 1547,
+      "sha256": "b0f89c6bbc1ad09c2034c1341df81fed89a6c8411e4d6dddb600d8ceffddaa0f"
     },
     "provenance/AUTHORED_HUMAN_MAPS.md": {
-      "bytes": 2136,
-      "sha256": "f00ce7ec56ea70334e3a0e6914d9a38083b9d28f051522488b337dc9c539d919"
+      "bytes": 2132,
+      "sha256": "b3bb0d05b68f22ac38e43d8b671ee17bab19598f9685ca80959387504c5975ad"
     },
     "provenance/DOG_HEADING.md": {
       "bytes": 2170,
       "sha256": "ec6ccc7e19f6c0231f2a039477e0bbc3b6bc264f4aab255730556d2361f32c1e"
     },
     "provenance/PROVENANCE.v2.json": {
-      "bytes": 160672,
-      "sha256": "aa1af222d21304dbae859f4ab77b9daceb445e395e4f94195961816063f06b4b"
+      "bytes": 160742,
+      "sha256": "27a65b0e8c9ef21e8000b2fef06e2979b373f7a9817cf10b8a3e809160e668e3"
     },
     "provenance/asset_registry_supplement.json": {
       "bytes": 3592,
-      "sha256": "4ce963bc74f2174cdc2cc01a18f1f442362f0a0691bf8c6aea9af6e7a4a7de39"
+      "sha256": "52d7e8a64d4e97d0fe918df2c956f2c9029843c75038a6bc9356b76657fb9b22"
     },
     "provenance/compound_fixes.json": {
       "bytes": 400,
@@ -2715,11 +2719,11 @@
     },
     "provenance/fallen_pose_derivation.json": {
       "bytes": 3479,
-      "sha256": "dcf79807a939f6cfe1a923472f416d163fab4574452dbbe5bab81ceb744c5d2f"
+      "sha256": "e60d55807964b8b78b01d67f84e0b7a1fe875adb08708b23ec88c5176c8d7e88"
     },
     "provenance/final_catalog_config.json": {
-      "bytes": 31468,
-      "sha256": "d52bb7dfe7f159daea71ff80c9a49d3de9a73672b0e12a0b4ce7d28382341a3c"
+      "bytes": 31461,
+      "sha256": "783cdd13d7eb17f8107d61b2dade2977f6346396ae7d11b4d041f6447c17dcd2"
     },
     "provenance/final_review_notes.json": {
       "bytes": 4384,
@@ -2727,7 +2731,7 @@
     },
     "provenance/final_summary.json": {
       "bytes": 2707,
-      "sha256": "57e134ed9a112a8f781f81cc16c188eeb3652f103bd48ff3db9645e0e1baf55f"
+      "sha256": "90a7482944508af1740113e6a7956ad4c75bbb45d438250a5a99bb106ba70b64"
     },
     "provenance/hand_rebuild_validation.json": {
       "bytes": 4584,
@@ -2739,15 +2743,11 @@
     },
     "provenance/registration_validation.json": {
       "bytes": 412,
-      "sha256": "87b8631fa9ce1cd1f6827ff69699019b69cea4dd22ff3db8af5e5a76ff320d1e"
+      "sha256": "a01e18cfbd510578641e7be1cf778eb08462c8230f46b8142513b0ff6ebca89b"
     },
     "provenance/workflow_validation.json": {
       "bytes": 3814,
       "sha256": "94b737830f5c31f150691fef5b573f618b16ddc772651ce85b21c73d24157107"
-    },
-    "rsb_colors.json": {
-      "bytes": 2841,
-      "sha256": "39267620a26e620c9dfc3fdc8013dfb3801417ce300c1fad3c32cd1e44323251"
     }
   },
   "local_derivations": {

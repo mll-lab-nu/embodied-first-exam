@@ -5,7 +5,7 @@ Third-party content includes seven robot models from
 a third arm with its own gripper that is used as a pair; three for the room: a mobile manipulator, a humanoid and a
 quadruped with an arm) and one open font, DejaVu Sans (two files), used to print the text on generated labels.
 The default realism profile also installs the reviewed prop meshes and surface textures under
-`robosafebench/assets/data/realism_v3`. Its per-pack source URLs, authors, CC0/CC BY 4.0 declarations, modification
+`embodied_safety_exam/assets/data/realism_v3`. Its per-pack source URLs, authors, CC0/CC BY 4.0 declarations, modification
 notices and exact checksums are carried in that directory's manifests and attribution files. These are inherited
 source declarations from the reviewed asset pipeline, rather than a new license certification. Code-generated
 prints and native collision geometry remain authored here.
@@ -55,9 +55,9 @@ and `robotiq_2f85/`; `tidybot.xml` does not use the 2F-85's coupling (`base_moun
 No `RobotSpec` names these three models yet: `docs/MOTION.md` 10.4 says what is in the files and what a spec needs
 (`python scripts/describe_robot_models.py` reads them; `tests/sim/test_room_models.py` loads them).
 
-`robosafebench/sim/world.py` loads an arm's and the gripper's MJCF files as they are and combines them in memory (gripper
+`embodied_safety_exam/sim/world.py` loads an arm's and the gripper's MJCF files as they are and combines them in memory (gripper
 attached to the arm's `attachment_site`, gravity compensation switched on for the robot's bodies, a force-torque sensor
-added at the flange); `robosafebench/sim/robots.py` says which files make which robot (`ur5e_2f85`, `fr3_2f85`,
+added at the flange); `embodied_safety_exam/sim/robots.py` says which files make which robot (`ur5e_2f85`, `fr3_2f85`,
 `yam_bimanual`). No change is written back to these files. For `yam_bimanual` the file `yam.xml` is loaded twice (one
 arm each, names prefixed `left/` and `right/`); it holds the arm and its gripper in one model, and what it lacks is
 added in memory: names for the two box shapes that are the finger pads, a site at the pinch point between them, the
@@ -154,7 +154,7 @@ for the FR3, Apache-2.0 section 4 also asks that modified files carry a notice o
 Copy the same files from a newer upstream commit, replace the commit hash and date above, re-read the `LICENSE` files
 and correct this page if they changed, then run `pytest tests/sim` (the determinism and skill tests exercise the
 UR5e and the gripper, `tests/sim/test_sim_robots.py` the FR3, `tests/sim/test_sim_two_arms.py` the YAM pair) and
-`python -m robosafebench.sim eval --robot <type>`; for the room models, `pytest tests/sim/test_room_models.py` and
+`python -m embodied_safety_exam.sim eval --robot <type>`; for the room models, `pytest tests/sim/test_room_models.py` and
 `python scripts/describe_robot_models.py --planar`, and compare its tables with `docs/MOTION.md` 10.4.
 
 ## Font for printed labels
@@ -165,7 +165,7 @@ UR5e and the gripper, `tests/sim/test_sim_robots.py` the FR3, `tests/sim/test_si
 | Font | DejaVu Sans 2.37 (`https://dejavu-fonts.github.io/`) |
 | Taken from | the Debian package `fonts-dejavu-core` 2.37-8 installed on the build machine (`/usr/share/fonts/truetype/dejavu/`), byte-for-byte, on 2026-10-10 |
 | SHA-256 | `DejaVuSans-Bold.ttf` `5c1247acef7f2b8522a31742c76d6adcb5569bacc0be7ceaa4dc39dd252ce895`, `DejaVuSans.ttf` `ae7b7855e115a5966d8b1b3f80f254ccc117ec86f9965e202ee2940453837280` |
-| Used by | `robosafebench/assets/labels.py`, which rasterises label text with Pillow when an asset is built. The font files are not copied into generated assets; only the rendered text is |
+| Used by | `embodied_safety_exam/assets/labels.py`, which rasterises label text with Pillow when an asset is built. The font files are not copied into generated assets; only the rendered text is |
 
 Licence (`fonts/LICENSE`): the Bitstream Vera Fonts licence (a permissive licence: the fonts may be used, copied, merged,
 distributed and sold as part of a larger package, not sold by themselves, and modified only under another name), with

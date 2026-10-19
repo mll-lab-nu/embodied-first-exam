@@ -90,7 +90,7 @@ def _candidate_error(rec, candidate_identity, allow_legacy_checks, historical_na
         if rec.get("candidate_identity") != candidate_identity or rec.get("commit") != candidate_identity["source_commit"]:
             return "admission record differs from the expected source/image/digest/visual identity"
         bundled = Path(__file__).resolve().parent.parent / "assets/data/third_party"
-        if ("ROBOSAFE_THIRD_PARTY" in os.environ or os.environ.get("ESE_THIRD_PARTY")
+        if (os.environ.get("ESE_THIRD_PARTY")
                 or third_party_dir().resolve() != bundled):
             return "runtime native assets differ from the candidate's installed package data"
         if visual_provenance() != candidate_identity["visual_assets"]:

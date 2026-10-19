@@ -703,7 +703,7 @@ Embodied Safety Exam's double-build check (`tools/double_build_check.py`). The r
 Menagerie are taken from Menagerie's public repository at a pinned commit and checked file by file
 (`context/menagerie.sha256`). `fetch_context.sh --check <clone>` compares the snapshot with an Embodied Safety Exam clone.
 The 0.5.4 image's `realism_v3` asset pack's textures and meshes (627 `.png` / `.obj` files, about 390 MB) are not in git:
-they are in the public Hugging Face dataset `MLL-Lab/robosafe-assets` (every asset CC0 1.0 or CC BY 4.0, credits in
+they are in the public Hugging Face dataset `MLL-Lab/embodied-safety-exam-assets` (every asset CC0 1.0 or CC BY 4.0, credits in
 the pack's `credits.json`), pinned by commit and by every file's sha256 in `images/ese/assets.json`, the way
 other benchmarks fetch large upstream assets at build time. The vendored third-party G1 meshes and GR00T whole-body-control
 policies (`assets/third_party/bigym2/`: 39 `.STL` / `.onnx` files, 23 MB; their `LICENSE` / `NOTICE` files stay in git) are
@@ -771,30 +771,30 @@ tasks), the video wait the video's run. A trial that needs less ends as soon as 
 verdict and video are in.
 
 ### Names in the simulator
-From image `efe:ese-0.5.5` the simulator is built from Embodied Safety Exam commit `e2c431f`
-(`images/ese/SOURCE.md`):
-- the package is `embodied_safety_exam`; environment variables are `ESE_*` (setting a `ROBOSAFE_*` or `ROBOSAFEBENCH_*`
-  variable is an error, except the guard `ROBOSAFE_THIRD_PARTY`); format strings are `ese-x/1`; frozen fields are
-  `ese_*` (`candidate_identity.frozen_fields` also reads the earlier `robosafebench_*` names); the audit's
-  benchmark-name list holds both names;
+From image `efe:ese-0.5.6` the simulator is built from Embodied Safety Exam 0.5.6 (commit `64de8bc`,
+`images/ese/SOURCE.md`), where the rename from RoboSafeBench is complete:
+- the package is `embodied_safety_exam`; environment variables are `ESE_*`; format strings are `ese-x/1`; frozen
+  fields are `ese_*`; the asset data's keys (`ese_bbox`, `ese_colors.json`, ...), credits and provenance and the
+  MJCF classes (`ese_visual`, ...) carry the new name; the audit's benchmark-name list holds both names, to catch the
+  old one;
 - the task side: `rcb_ese.py`, `rcb_ese_rt.py`, class `SafetyExam`, metadata `ese_*`, schemas `ese.public-*`, and
   reward.json's `ese_calls` / `ese_pass`;
 - the files-only image `ese-files-0.3.0` carries the `standard` and `realtime` layers.
 
-The asset provenance records keep the names they were made under, and the Hugging Face dataset is
-`MLL-Lab/robosafe-assets`. Results recorded under the earlier task prefix `rsb-` compare with the `ese-` tasks: on all
-76 tasks the reference and doing nothing give the same outcome, marks, start and final state hashes, recorded actions
-and reward on every standard task, and the same outcome, start hash and reward on the realtime tasks.
+The Hugging Face dataset of the asset binaries is `MLL-Lab/embodied-safety-exam-assets` (formerly
+`MLL-Lab/robosafe-assets`, which redirects). Results recorded under the earlier task prefix `rsb-` compare with the
+`ese-` tasks: on all 76 tasks the reference and doing nothing give the same outcome, marks, start and final state
+hashes, recorded actions and reward on every standard task, and the same outcome, start hash and reward on the
+realtime tasks.
 
 ### Source, image and task identity
-The image is built from Embodied Safety Exam at the commit in `images/ese/source.env` (its package version string is
-`0.5.4.dev1`; the EFE release is 0.5.4), with the `realism_v3` asset profile, after the metadata projection in
-`images/ese/PUBLIC_SOURCE_PROJECTION.json` (`images/ese/SOURCE.md`): 56 source locators in 20 asset JSON
-files are replaced by public identifiers, which changes the asset manifest's SHA-256 and nothing that is rendered or
-simulated. Each task's `environment/sim/instance.json` carries a `candidate_identity` (source digest and the
+The image is built from Embodied Safety Exam at the commit in `images/ese/source.env` (release 0.5.6; the tasks are
+its 0.5.4 tasks, whose scenes, rules and start states 0.5.6 keeps), with the `realism_v3` asset profile, from the
+source as committed (`images/ese/SOURCE.md`; the provenance records carry public `historical-source://` identifiers,
+not the author's paths). Each task's `environment/sim/instance.json` carries a `candidate_identity` (source digest and the
 visual identity: profile, revision, asset-manifest SHA-256, physics catalogue version), also in `task.toml` and the
 README; the sim sidecar refuses to start an episode in an image whose installed assets differ
-(`candidate_identity.assert_runtime`). The compose files name `ghcr.io/mll-lab-nu/efe:ese-0.5.5` ("Rename").
+(`candidate_identity.assert_runtime`). The compose files name `ghcr.io/mll-lab-nu/efe:ese-0.5.6`.
 
 The reference solutions stream Embodied Safety Exam's native reference as control rows over the task's
 own HTTP client (`solution/oracle_replay.py`); on the fixed arms the plans ask for their pictures through the agent's

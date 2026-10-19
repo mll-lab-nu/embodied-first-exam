@@ -12,12 +12,12 @@ services:
     cpus: 6   # rcb-monitor
     mem_limit: 8192m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe:ese-0.5.5
+    image: ghcr.io/mll-lab-nu/efe:ese-0.5.6
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro
     working_dir: /tmp
-    command: env -u ROBOSAFE_THIRD_PARTY python /srv/server.py
+    command: python /srv/server.py
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json

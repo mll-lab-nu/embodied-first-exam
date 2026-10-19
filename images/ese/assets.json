@@ -635,9 +635,9 @@
    "name": "realism_v3",
    "prefix": "realism_v3/",
    "private": false,
-   "repo": "MLL-Lab/robosafe-assets",
+   "repo": "MLL-Lab/embodied-safety-exam-assets",
    "repo_type": "dataset",
-   "revision": "4ac7d8a80680ca2436c29d73d9e574ff38931675",
+   "revision": "412d2f05f2121afc4b90277dde87be91c15860fc",
    "suffixes": [
     ".png",
     ".obj"

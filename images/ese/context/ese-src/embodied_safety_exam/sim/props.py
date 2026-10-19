@@ -520,7 +520,7 @@ def _asset_files(asset_id: str) -> tuple[str, dict]:
     from embodied_safety_exam import assets as _assets        # only when a scene asks for a generated asset
 
     if _ASSET_DIR is None:
-        _ASSET_DIR = tempfile.mkdtemp(prefix="rsb_sim_assets_")
+        _ASSET_DIR = tempfile.mkdtemp(prefix="ese_sim_assets_")
         atexit.register(shutil.rmtree, _ASSET_DIR, True)
     out = Path(_ASSET_DIR) / asset_id
     if asset_id in _assets.labware_ids():
