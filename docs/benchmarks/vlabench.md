@@ -15,13 +15,10 @@ on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 
 ## Build the images locally
 
-The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
-Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+The simulator image is private (`ghcr.io/mll-lab-nu/efe-private`: VLABench's asset set carries no licence that allows redistributing it): build it from the repository root with the tag the tasks name, then run the tasks unchanged. The files image `ghcr.io/mll-lab-nu/efe:vlabench-files-<version>` is public: the task builds pull it by the digest they pin.
 
 ```bash
 docker build -f images/vlabench/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION) .
-python3 scripts/files_image.py build vlabench-files
-grep -rlE 'efe-private:[^@ ]+@sha256' tasks/vlabench | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
 ```
 
 ## Scope

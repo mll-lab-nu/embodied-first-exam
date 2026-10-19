@@ -7,12 +7,15 @@
 # a context directory a script prepares (skipped while it is missing); else the repo root. A subdirectory
 # images/<name>/<sub>/ with its own Dockerfile and VERSION is a second image, <pkg>:<name>-<sub>-<its version>, built after
 # <name> with itself as context (e.g. images/ikea-mujoco/sim/, the standard tasks' sidecar image FROM efe-private:ikea-mujoco-<version>).
+# A files-only image (images/<name>/FILES.json) is no docker build: scripts/files_image.py build writes it, the same
+# digest as the pinned one.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT"
 REG="${RCB_IMAGE_REGISTRY:-ghcr.io/mll-lab-nu}"
 D=docker; docker ps >/dev/null 2>&1 || D="sg docker -c"
 for dir in images/*/; do
   name="$(basename "$dir")"; P=efe; [ -f "$dir/BUILD_ONLY" ] && P=efe-private
+  if [ -f "$dir/FILES.json" ]; then echo "+ python3 scripts/files_image.py build $name"; python3 scripts/files_image.py build "$name"; continue; fi
   VER="$(cat "$dir/VERSION" 2>/dev/null || cat images/VERSION)"; CTX=.; [ -f "$dir/.build-context-self" ] && CTX="$dir"
   if [ -f "$dir/BUILD_CONTEXT" ]; then   # a context prepared by a script (e.g. images/roboarc/)
     CTX="$dir$(cat "$dir/BUILD_CONTEXT")"; [ -d "$CTX" ] || { echo "skip $name: $CTX missing (prepared by a script: see the docs in $dir)"; continue; }

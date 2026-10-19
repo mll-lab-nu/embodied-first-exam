@@ -29,14 +29,12 @@ not re-rendered here. There is no privileged mode ("Owner review").
 
 ## Build the images locally
 
-The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
-Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+The images are private (`ghcr.io/mll-lab-nu/efe-private`: the Embodied Safety Exam source is not released yet). Build them from the repository root with the tags the tasks name, then run the tasks unchanged. The files image (`scripts/files_image.py build`) is written byte for byte from the repository, so it has the very digest the task Dockerfiles pin (`COPY --from=<tag>@sha256:…`), and the tasks build from it as they are; that needs Docker's containerd image store (the default of Docker Engine 29 and Docker Desktop), as the classic store resolves a digest only for a pulled image.
 
 ```bash
 python3 images/ese/assets.py fetch
 docker build -f images/ese/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ese-$(cat images/ese/VERSION) images/ese/context
 python3 scripts/files_image.py build ese-files
-grep -rlE 'efe-private:[^@ ]+@sha256' tasks/embodied-safety-exam | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
 ```
 
 ## Task
@@ -786,7 +784,7 @@ From image `efe-private:ese-0.5.5` the simulator is built from Embodied Safety E
   benchmark-name list holds both names;
 - the task side: `rcb_ese.py`, `rcb_ese_rt.py`, class `SafetyExam`, metadata `ese_*`, schemas `ese.public-*`, and
   reward.json's `ese_calls` / `ese_pass`;
-- the files-only image `ese-files-0.2.0` carries the `standard` and `realtime` layers.
+- the files-only image `ese-files-0.3.0` carries the `standard` and `realtime` layers.
 
 The asset provenance records keep the names they were made under, and the Hugging Face dataset is
 `MLL-Lab/robosafe-assets`. Results recorded under the earlier task prefix `rsb-` compare with the `ese-` tasks: on all
