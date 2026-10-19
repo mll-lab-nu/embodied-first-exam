@@ -1,4 +1,4 @@
-# ese: the Embodied Safety Exam simulator (docs/benchmarks/embodied-safety-exam.md): its MuJoCo 3.8.1 worlds (a work table with a
+# ese: the Embodied Safety Exam simulator (tasks/embodied-safety-exam/README.md): its MuJoCo 3.8.1 worlds (a work table with a
 # robot, generated props with printed labels, people and animals as plain figures), the hazard state layer that turns
 # physical states into harm and violation events, the task families' scenes, rules, operator answers and verdicts,
 # and the episode's control interface. CPU physics (bit-exact replay) and OSMesa rendering: no GPU. Used only as the

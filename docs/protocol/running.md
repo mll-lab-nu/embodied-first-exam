@@ -251,7 +251,7 @@ timeout=...)`): after the environment has been built and started and the harness
 own. A standard-mode `sim` service starts with the environment; what it has not finished starting by then is waited out
 inside the agent's time. The service's own clock (`/spec.budget.wall_clock_s`, `meta.time_left_s`) counts the same
 number from the agent's first request to the service (kept through a restart) and never runs out before Harbor's; it only
-reports, except that RoboARC's service ends the episode when its count reaches 0 (docs/benchmarks/roboarc.md). At the cutoff Harbor stops the agent (`AgentTimeoutError`), collects the artifacts and runs the verifier, so
+reports, except that RoboARC's service ends the episode when its count reaches 0 (tasks/roboarc/README.md). At the cutoff Harbor stops the agent (`AgentTimeoutError`), collects the artifacts and runs the verifier, so
 the trial is graded as it stands: a result, not an infrastructure failure, never run again.
 
 **Official runs** pass no multiplier and add nothing to the instruction (Official runs above), so `## Time limit` is the
@@ -263,7 +263,7 @@ README row, `RCB_WALL_CLOCK_S` and `DIGEST`), and state old -> new and why in th
 changes in place and keeps its name; results under another cutoff are a different configuration (`config_key`). Not
 derived from the cutoff: the token budget, the resource limits, reset budgets, step caps, verifier timeouts. When
 raising one, look at collect-hook and verifier budgets sized for an episode as long as the agent's time (RoboCasa,
-RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K: their `docs/benchmarks/`
+RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K: their `tasks/<benchmark>/README.md`
 pages) and, for RoboOlympics-Match's exported matches, a match's wall time at its slowdown plus the reviews between points.
 
 ## Base images

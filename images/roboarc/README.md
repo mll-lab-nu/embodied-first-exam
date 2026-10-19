@@ -35,14 +35,14 @@ it. Maintainers push it with `scripts/push_images.sh` after validating a build.
   them, as in `images/robopaint/`. `VK_ICD_FILENAMES` names the image's ICD file: a toolkit in CDI mode also mounts the
   host's `/etc/vulkan/icd.d/nvidia_icd.json`, which would list the GPU twice.
 - `count: 1` is host GPU 0 unless the runner pins GPUs; IPC sims (knot_untying, rope_threading) run alone on a 24 GB GPU
-  (`docs/benchmarks/roboarc.md`, Image).
-- GPU architecture (`docs/benchmarks/roboarc.md`, Image, has the table):
+  (`tasks/roboarc/README.md`, Image).
+- GPU architecture (`tasks/roboarc/README.md`, Image, has the table):
   - knot_untying and rope_threading run libuipc: the audited wheel on compute capability 8.9 and 12.x, the sm_86 build on
     any other GPU (native on 8.6, e.g. RTX A6000; untested elsewhere). 7.5 (T4, RTX 20xx) can run neither;
   - GPUs without RT cores (e.g. A100, H100) cannot run Nyx, so they run no RoboARC task;
   - the driver must include its graphics (GL/Vulkan) user-space libraries.
 - blanket_flatten: on a GPU other than the one its frozen PBD states were prepared on (an RTX PRO 6000 Blackwell), the task
-  generates the birth state from the recipe frozen in the instance (`docs/benchmarks/roboarc.md`, GPU portability).
+  generates the birth state from the recipe frozen in the instance (`tasks/roboarc/README.md`, GPU portability).
 - Build:
   - about 25 GB of free disk: the 11.3 GB image plus BuildKit cache;
   - BuildKit with the default `docker` driver;

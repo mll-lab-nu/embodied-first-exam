@@ -17,7 +17,7 @@ What the builder accepts (decided by the user before a first build)
   so no Anaconda terms of service apply (setup.sh's --accept-conda-tos is not needed).
 
 Data (never in the image): $RCB_MANIGUARD_DATA, a host directory with the BEHAVIOR-1K 3.7.2 data root, mounted read-only at
-/data by every task (images/maniguard/prep_data.py builds it, docs/benchmarks/maniguard.md):
+/data by every task (images/maniguard/prep_data.py builds it, tasks/maniguard/README.md):
   behavior-1k-assets/        behavior-1k-assets-3.7.2rc1 (BEHAVIOR Data Bundle: the full set, or the members the
                              selected ManiGuard tasks load; no redistribution)
   omnigibson-robot-assets/   the robot assets BEHAVIOR-1K 3.7.2 downloads (omnigibson-robot-assets.zip, 2025-09-02), plus

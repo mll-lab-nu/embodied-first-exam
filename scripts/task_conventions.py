@@ -399,13 +399,15 @@ def iter_tasks(tasks_dir: "Path | str | None" = None) -> list[Path]:
 
 
 TASKS_TOP_FILES = ("README.md", "dataset.toml")   # tasks/ holds the benchmark folders and these (dataset.toml: generated)
+BENCH_DOC_SUFFIXES = (".md", ".png")              # a benchmark folder's own pages (README.md, <topic>.md) and their figures
 FOLDER_MAX = 1000                                 # GitHub's web UI lists at most this many entries of a folder
 
 
 def check_layout(tasks_dir: Path | None = None) -> list[str]:
     """What is wrong with the tree's layout (`benchmarks --check`): a BENCHMARKS label without its folder (or a folder
     without its label, or two labels on one folder), anything at the top of tasks/ besides the benchmark folders and
-    TASKS_TOP_FILES, a task dir in another benchmark's folder or nested deeper, a folder over FOLDER_MAX entries."""
+    TASKS_TOP_FILES, anything in a benchmark folder besides task dirs and its pages (BENCH_DOC_SUFFIXES), a task dir in
+    another benchmark's folder or nested deeper, a folder over FOLDER_MAX entries."""
     tasks_dir = tasks_dir or TASKS_DIR
     labels = {label for _, label in BENCHMARKS}
     bad = [f"BENCHMARKS label {b!r}: no folder in BENCHMARK_DIRS" for b in sorted(labels - set(BENCHMARK_DIRS))]
@@ -424,6 +426,8 @@ def check_layout(tasks_dir: Path | None = None) -> list[str]:
         if len(entries) > FOLDER_MAX:
             bad.append(f"tasks/{p.name}: {len(entries)} entries, over {FOLDER_MAX} (GitHub lists no more)")
         for t in entries:
+            if t.is_file() and t.suffix in BENCH_DOC_SUFFIXES:
+                continue                     # the benchmark's pages, not task dirs
             if not (t / "task.toml").is_file():
                 bad.append(f"tasks/{p.name}/{t.name}: not a task dir")
             elif bench_dir(t.name) != p.name:

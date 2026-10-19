@@ -2227,5 +2227,21 @@
     "vesken_mechanism.py": "add141360c4403b450e7372f0b124ba66c4af87b1e9e7401783d146dad61bca0"
    }
   }
+ },
+ "upstream": {
+  "assets/aloha/": {
+   "LICENSE": "aloha/LICENSE",
+   "commit": "62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35",
+   "license": "BSD-3-Clause",
+   "path": "aloha/assets/",
+   "repo": "google-deepmind/mujoco_menagerie"
+  },
+  "assets/panda/": {
+   "LICENSE": "franka_emika_panda/LICENSE",
+   "commit": "62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35",
+   "license": "Apache-2.0",
+   "path": "franka_emika_panda/assets/",
+   "repo": "google-deepmind/mujoco_menagerie"
+  }
  }
 }

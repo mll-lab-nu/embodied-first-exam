@@ -11,7 +11,7 @@ predicate in the agent's reach; the verdict from a trusted record) are stated on
 its [Appendix H](README.md#appendix-h-invariants-binding) (H.3, H.4), and are not repeated here. How a runner handles a trial that failed
 for infrastructure reasons is in [running.md](running.md). What a benchmark's own service adds (its robot, action
 types, cameras, proprioception columns, resume class, measured start-up times, known issues) is in its
-`docs/benchmarks/<bench>.md`.
+`tasks/<benchmark>/README.md`.
 
 | Version | Content | Part | Implementation |
 |---|---|---|---|
@@ -150,7 +150,7 @@ missing, unreadable or not finalized, or the service reported `sim_crashed`, `re
 ### Live recording (optional, sidecar only; the agent sees none of it)
 `live.mp4`, `live_timeline.jsonl`, `live_segments.jsonl`, `trajectory_live.f64`, `startups.jsonl`: rendered from the
 recorded trajectory by default, frames stamped with the call, never affecting the verdict. The reference recording is RoboTwin's
-(docs/benchmarks/robotwin.md).
+(tasks/robotwin-2/README.md).
 
 ### Proprioception (2.1)
 A benchmark's 2.0 columns stay where they were; 2.1 appends what a real robot reports (measured joint positions and
@@ -165,7 +165,7 @@ physics.
 ### Per-benchmark 2.1 services
 The MuJoCo service (`images/mujoco/limited/server_mj.py`: DexToolBench, MuJoCo Playground manipulation),
 the shared KinDER / HumanoidBench service (`rcb_service.py`), the MetaWorld+ and RoboCasa services serve the same
-endpoints and frames with their own action layouts, control rates and cameras: docs/benchmarks/dextoolbench.md,
+endpoints and frames with their own action layouts, control rates and cameras: tasks/dextoolbench/README.md,
 mujoco-playground.md, kinder.md, humanoidbench.md, metaworldplus.md, robocasa.md.
 
 ### Optional reset capability
