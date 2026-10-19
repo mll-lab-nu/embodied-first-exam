@@ -309,14 +309,14 @@ def test_benchmarks():
     import task_conventions as tc
     bad = tc.check_benchmarks()
     check(not bad, f"benchmark labels: {bad[:5]}")
-    check(tc.bench_of(Path("roboolympics-fun-sprint-i00")) == "RoboOlympics-Fun"
-          and tc.bench_of(Path("roboolympics-match-tabletennis-match-i01-standard-realtime")) == "RoboOlympics-Match"
+    check(tc.bench_of(Path("embodied-olympics-fun-sprint-i00")) == "Embodied Olympics - Fun"
+          and tc.bench_of(Path("embodied-olympics-match-tabletennis-match-i01-standard-realtime")) == "Embodied Olympics - Match"
           and tc.bench_of(Path("roboolympics-sprint-i00-standard")) == ""
           and tc.bench_of(Path("robocasa-gr1-x-i00-standard")) == "RoboCasa-GR1", "bench_of: the first matching prefix")
     with tempfile.TemporaryDirectory() as td:
-        for n in ("roboolympics-fun-sprint-i00-privileged", "no-such-bench-i00-standard"):
-            (Path(td) / "roboolympics-fun" / n).mkdir(parents=True)
-            (Path(td) / "roboolympics-fun" / n / "task.toml").write_text("")
+        for n in ("embodied-olympics-fun-sprint-i00-privileged", "no-such-bench-i00-standard"):
+            (Path(td) / "embodied-olympics-fun" / n).mkdir(parents=True)
+            (Path(td) / "embodied-olympics-fun" / n / "task.toml").write_text("")
         found = tc.check_benchmarks(Path(td))
         check(not any("sprint" in x for x in found) and any("no-such-bench" in x and "no benchmark label" in x for x in found),
               f"an unclaimed name: {found[:3]}")

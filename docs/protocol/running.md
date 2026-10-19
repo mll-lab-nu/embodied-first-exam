@@ -264,7 +264,7 @@ changes in place and keeps its name; results under another cutoff are a differen
 derived from the cutoff: the token budget, the resource limits, reset budgets, step caps, verifier timeouts. When
 raising one, look at collect-hook and verifier budgets sized for an episode as long as the agent's time (RoboCasa,
 RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K: their `tasks/<benchmark>/README.md`
-pages) and, for RoboOlympics-Match's exported matches, a match's wall time at its slowdown plus the reviews between points.
+pages) and, for Embodied Olympics - Match's exported matches, a match's wall time at its slowdown plus the reviews between points.
 
 ## Base images
 Every base image is a tag of one of two packages (PROTOCOL §1): `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (public), or `ghcr.io/mll-lab-nu/efe-private:<name>-<VERSION>` for an image with `images/<name>/BUILD_ONLY` (org members only): `scripts/build_images.sh`

@@ -64,8 +64,8 @@ UNITS: dict[str, list[str]] = {
     "RoboCasa365": _own("robocasa365"),
     "LIBERO-MAX": _own("libero-max"),
     "RoboARC": _own("roboarc", "images/roboarc-files/"),
-    "RoboOlympics-Fun": _own("robofunolympics", "images/roboolympics-fun-files/"),
-    "RoboOlympics-Match": ["images/olympiad/", "images/roboolympics-match-files/"],   # the olympiad image: built from RoboOlympics' tree, not here
+    "Embodied Olympics - Fun": _own("embodied-olympics-fun", "images/embodied-olympics-fun-files/"),
+    "Embodied Olympics - Match": ["images/olympiad/", "images/embodied-olympics-match-files/"],   # the olympiad image: built from Embodied Olympics' tree, not here
     "BiGym 2.0": _own("bigym2"),
     "YAMLab": _own("yamlab"),
     "RoboDojo": _own("robodojo"),

@@ -252,7 +252,7 @@ that score 0; an apple_lift trajectory that leaves the apple on the table scores
 ## Standard-realtime (`eai-standard/2.3`)
 The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-standard-realtime` twin. In MyoSuite that is **table_tennis** only (the ball is served at 5.6 m/s at reset;
 every other family's objects start at rest, and chase_tag's opponent stands still in its frozen instance).
-- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics-Fun, unchanged
+- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and Embodied Olympics - Fun, unchanged
   (`rcb_realtime.py` and `rcb_client.py` from `embodied_first_exam/standard/realtime/`; `rcb_service.py` and `grade.py`,
   byte-identical to HumanoidBench's realtime tasks' copies; `ci_checks/check-tooling-identity.sh`), with the twin's
   `environment/sim/server.py`, which
