@@ -2,3 +2,6 @@
 # `python3 images/ese/assets.py fetch` (pinned in images/ese/assets.json).
 context/ese-src/embodied_safety_exam/assets/data/realism_v3/**/*.png
 context/ese-src/embodied_safety_exam/assets/data/realism_v3/**/*.obj
+# The vendored third-party G1 meshes and GR00T-WBC policies: not in git, fetched the same way (pack third_party).
+context/ese-src/assets/third_party/bigym2/**/*.STL
+context/ese-src/assets/third_party/bigym2/**/*.onnx
