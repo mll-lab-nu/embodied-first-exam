@@ -9,7 +9,7 @@
 | Family / instance | `dunk_between_legs` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_dunk_between_legs.py: positive by injection: real two-palm hold and release, real palm touches behind the hip, the ball really bounces through the 0.27 m gap between the H1-2's soles (its own speed through the leg gate 1.3 m/s, no leg touched), real two-palm gather and squeeze, raise overhead and dunk through the real ring with both palms; ball paths, the push, the ghost jump and the landing injected. Negatives: beside the leg, above the knees, the robot rocking over a still ball, slow roll, through and back, gather before the legs, carrying, two touches without the floor, leg touch, ball away, floor while held, second dribble, let go after the gather, travelling before release and after gather, no dribble, shot during the dribble, drop, one hand on the side, from below, miss, hanging, out of bounds, falls. The overhead squeezed ball reaches about 2.2 m; the ring is at 3.05 m; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
 
 ## Task
 From the top of the key, with the basketball pressed between your two palms, dribble it, make one of its bounces pass between your legs, gather it in both hands, and with at most two steps dunk it: force it down through the ring from above with your hands on it, then land on your feet. (RoboOlympics `dunk-between-legs`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

@@ -9,7 +9,7 @@
 | Family / instance | `pen_twirl` / seed 0 |
 | Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-pen-twirl-i00__UtTYzQE` (513 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoHandPenTwirlFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Rotate the pen in the hand until its axis points along the target orientation: the cosine between the pen's axis (bottom to top) and the target's axis above 0.95, with the pen within 0.075 m of its desired position, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the pen more than 0.075 m from its desired position (dropped).

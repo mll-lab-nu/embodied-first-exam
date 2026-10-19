@@ -9,7 +9,7 @@
 | Family / instance | `relocate` / seed 0 |
 | Oracle | `none` — the privileged twin's positive example (Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2`, 231 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoChallengeRelocateP1-v0` (MyoArm, 63 muscles) on the same frozen instance as `myosuite-relocate-i00-privileged`: Pick up the object from the table and put it in the target receptacle: the object's position within 0.1 m of the target (rotation is ignored) for 100 consecutive control steps (1.0 s). Failure (the episode ends): the palm more than 0.5 m from the object.

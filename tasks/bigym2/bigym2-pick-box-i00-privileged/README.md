@@ -9,7 +9,7 @@
 | Family / instance | `pick-box` / seed 0 |
 | Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-bigym2:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-bigym2:0.1.1` |
 
 ## Task
 Pick the cardboard box up from the side table and gently set it down on the kitchen counter. (BiGym 2.0 `pick_box`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)

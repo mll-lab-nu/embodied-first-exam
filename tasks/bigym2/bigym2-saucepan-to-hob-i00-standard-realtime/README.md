@@ -10,7 +10,7 @@
 | Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 0 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/eai-bigym2:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-bigym2:0.1.1` |
 
 ## Task
 Take the saucepan out of the cabinet and gently set it on the hob. (BiGym 2.0 `saucepan_to_hob`; the robot as a service on a clock that does not stop: its three onboard cameras and

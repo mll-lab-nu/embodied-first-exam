@@ -9,7 +9,7 @@
 | Family / instance | `libero-max/libero_object/sensor_noise_onset` / seed 195 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-libero-max:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-libero-max:0.1.1` |
 
 ## Task
 LIBERO-MAX case `pro-position-object-t02-i06-sensor_noise_onset-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the salad dressing and place it in the basket."**, on

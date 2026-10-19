@@ -289,7 +289,7 @@ No task is satisfied without completing every phase in order; the benchmark's ow
 diagnostics as unfinished.
 
 ## Image and host
-`images/pandadyn/` → `ghcr.io/mll-lab-nu/eai-pandadyn:0.1.0` (~2.4 GB): Python 3.11.16, ManiSkill 3.0.1, SAPIEN 3.0.3,
+`images/pandadyn/` → `ghcr.io/mll-lab-nu/efe-pandadyn:0.1.0` (~2.4 GB): Python 3.11.16, ManiSkill 3.0.1, SAPIEN 3.0.3,
 torch 2.14.1 (CPU build), Ruckig 0.12.2 (`requirements.lock`, the versions of the benchmark's own lock file; torch is its
 CPU build, which reproduces the bank's physics bit for bit), and the environment package. Public (every component is
 redistributable). SAPIEN needs a Vulkan device to build a scene and render, so every container that builds one reserves

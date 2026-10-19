@@ -9,7 +9,7 @@
 | Family / instance | `mujoco_playground/BarkourJoystick` / seed 2 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.3` |
+| Base image | `ghcr.io/mll-lab-nu/efe-mujoco:0.1.3` |
 
 ## Task
 MuJoCo Playground `BarkourJoystick` (Google Barkour vB), rebuilt in plain MuJoCo from Playground's scene files: Make Google's Barkour quadruped follow the joystick command schedule for the whole 10 s episode, through random pushes, without falling over.

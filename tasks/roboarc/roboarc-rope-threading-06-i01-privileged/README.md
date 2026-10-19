@@ -9,7 +9,7 @@
 | Family / instance | `rope_threading` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 10800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-roboarc:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-roboarc:0.2.0` |
 
 ## Task
 RoboARC rope_threading (ALOHA 2, MuJoCo): produce one replayable trajectory. Thread the rope through the cyan grommet in the wall (G1) then green ring (A) then purple grommet in the wall (G2) then amber ring (B) then red grommet in the wall (G3), in that order along the rope from material start to material end. Frozen scene instance (variation rope_threading_rd_easy, seed 0).
@@ -79,7 +79,7 @@ Thread the rope through the cyan grommet in the wall (G1) then green ring (A) th
 ### Provenance
 - Frozen instance: a MuJoCo instance (`simulator.physics_engine` "mujoco", its scene frozen under `instance_assets/mujoco/`), built by TopoGym source `a018f53a` (MuJoCo instance made before this image was built (TopoGym source a018f53a; its bytes are bound into the release image eai-roboarc:0.2.0, scripts/robotangle/release_rebuild.py --instances)); bound to this release's runtime (source `c9171f79`, tooling `d8692e15`).
 - Frozen instance files (`instance.json`, `instance_assets/`): not in this directory. They are in the private HF dataset `eai-v2-internal/robotangle-assets` at `cb43201c2832`, under `instances/rope-threading-06-i01/` (scripts/roboarc/assets.json pins each file's sha256). The image carries them, and `/opt/robotangle/stage_instance.py` copies this task's instance next to its `runtime_binding.json`, which names the instance's canonical sha256 and every asset's sha256. The tooling checks them again at every session start.
-- Release: dev/robotangle_mujoco `7947eaa7b`, image `ghcr.io/mll-lab-nu/eai-roboarc:0.2.0` (images/roboarc/).
+- Release: dev/robotangle_mujoco `7947eaa7b`, image `ghcr.io/mll-lab-nu/efe-roboarc:0.2.0` (images/roboarc/).
 - Name: RoboARC is the published name of this benchmark (2026-10-13). Code identifiers keep the simulator's name: the simulator package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables.
 
 ### Change Log

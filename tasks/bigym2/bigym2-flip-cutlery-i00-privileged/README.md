@@ -9,7 +9,7 @@
 | Family / instance | `flip-cutlery` / seed 0 |
 | Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-flip-cutlery-i00-privileg__GQkcmXU (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-bigym2:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-bigym2:0.1.1` |
 
 ## Task
 Take the spoon from the mug, flip it, and place it back. (BiGym 2.0 `flip_cutlery`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)

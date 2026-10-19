@@ -11,7 +11,7 @@ from a public human demonstration, in both modes.
 | robots | `franka-allegro` (6 tasks), `franka-allegro-bimanual` (5 tasks, two arms side by side) |
 | score | binary: DexJoCo's own success check (its episode ends at the first success or task failure); `water_plant` adds an aiming condition (below) |
 | tasks | 11 families × 2 modes: `tasks/dexjoco-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
-| image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
+| image | `ghcr.io/mll-lab-nu/efe-dexjoco:0.1.2` (`images/dexjoco/`: DexJoCo @ 8d23b0f and its pinned dependency closure; no demonstrations, no policies) |
 | oracle | full, both modes: the demonstration's own actions |
 | agent time budget | 3600 s for every task, one number for both modes; each task's own `[agent] timeout_sec`, stated in every instruction's closing `## Time limit` section (PROTOCOL §2) |
 | egress | allowlisted to the model APIs and the package registries in both modes: the reference demonstrations are public (PROTOCOL H.2) |

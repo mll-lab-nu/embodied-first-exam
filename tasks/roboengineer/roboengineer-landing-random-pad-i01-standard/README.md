@@ -9,7 +9,7 @@
 | Family / instance | `roboengineer/landing-random-pad` / seed 1 |
 | Oracle | `full` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-quadrotor-landing:0.1.0: six safe held-out landings of six, mean score 82.89; nop 0. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-quadrotor-landing:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-quadrotor-landing:0.1.0` |
 
 ## Task
 **roboEngineer → Drone → Neural Landing.** See the [collection roadmap](../../docs/benchmarks/roboengineer.md).

@@ -46,7 +46,7 @@ PUBLIC_EDITS = {"soccer.py": [
     ('COACH_LEVELS["reference"] = dict(COACH_LEVELS["ref"], style="chase", step=True)\n',
      "# (the privileged twin's public copy: the reference level is left out, H.2)\n"),
 ]}
-IMAGE = "ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0@sha256:b6fbfae73399a7daee9c623eb34cfe18de63b458349b5a2b9d122c00e9f1602b"
+IMAGE = "ghcr.io/mll-lab-nu/efe-olympiad-soccer:0.1.0@sha256:b6fbfae73399a7daee9c623eb34cfe18de63b458349b5a2b9d122c00e9f1602b"
 RESOURCES = {"min_cpus": 6.0, "min_memory_gb": 8.0, "verifier_min_cpus": 6.0, "verifier_min_memory_gb": 8.0,
              "cpus": 6, "memory_mb": 10240}
 ROBOT = "booster-t1"
@@ -118,7 +118,7 @@ def truth(match) -> dict:
 
 
 def unavailable():
-    """The soccer simulator needs its image (ghcr.io/mll-lab-nu/eai-olympiad-soccer): PyTorch for the T1 walking policy
+    """The soccer simulator needs its image (ghcr.io/mll-lab-nu/efe-olympiad-soccer): PyTorch for the T1 walking policy
     and the T1 model at $RCB_T1_ASSETS. Hosts without them (the repository's CI) skip it in the generic tests."""
     import importlib.util
     import os

@@ -9,7 +9,7 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
 | tasks | 10 × 3 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (the standard-realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
-| image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0` (`images/humanoidbench/`) |
+| image | `ghcr.io/mll-lab-nu/efe-humanoidbench:0.2.0` (`images/humanoidbench/`) |
 | oracle | `sit_simple` (the fixture): full, all three modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml) |
 
 ## Tasks: upstream's 32, ours ✅ (9 scored + the `sit_simple` fixture)
@@ -216,7 +216,7 @@ harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard-realtime -a oracl
 ```
 Agent, provider and effort settings: docs/protocol/running.md. Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
 with none (one episode), whose results are reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t
-ghcr.io/mll-lab-nu/eai-humanoidbench:$(cat images/humanoidbench/VERSION) .` (from the
+ghcr.io/mll-lab-nu/efe-humanoidbench:$(cat images/humanoidbench/VERSION) .` (from the
 repository root).
 
 ## Results

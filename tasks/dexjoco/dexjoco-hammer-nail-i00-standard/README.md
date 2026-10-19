@@ -9,7 +9,7 @@
 | Family / instance | `hammer_nail` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe-dexjoco:0.1.2` |
 
 ## Task
 DexJoCo `hammer_nail` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-hammer-nail-i00-privileged`: Pick up the hammer and drive the nail into the wooden block by striking its head. A strike counts only if the hammer face was moving down faster than 0.02 m/s just before it touched the nail; each counted strike drives the nail 8 mm x min(3, speed / 0.02) deeper (at most 7.26 cm). Success: the nail is at least 4 cm deep.

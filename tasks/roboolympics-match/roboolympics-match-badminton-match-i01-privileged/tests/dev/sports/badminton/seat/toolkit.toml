@@ -110,4 +110,4 @@ threshold = 0.05                             # its API-test success rate must st
 [versions]
 mujoco = "3.3.7"
 numpy = "2.2.6"                              # the simulator image's; the seat installs numpy with mujoco
-image = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0"
+image = "ghcr.io/mll-lab-nu/efe-olympiad:0.1.0"

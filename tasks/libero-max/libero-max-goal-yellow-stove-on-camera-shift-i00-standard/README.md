@@ -9,7 +9,7 @@
 | Family / instance | `libero-max/libero_goal/camera_shift` / seed 195 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-libero-max:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-libero-max:0.1.1` |
 
 ## Task
 LIBERO-MAX case `pro-object-goal-t07-i04-camera_shift-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Turn on the stove."**, on

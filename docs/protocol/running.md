@@ -273,7 +273,7 @@ RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHA
 pages) and, for RoboOlympics' exported matches, a match's wall time at its slowdown plus the reviews between points.
 
 ## Base images
-Every base image is `ghcr.io/mll-lab-nu/eai-<name>:<images/<name>/VERSION>` (PROTOCOL §1): `scripts/build_images.sh`
+Every base image is `ghcr.io/mll-lab-nu/efe-<name>:<images/<name>/VERSION>` (PROTOCOL §1): `scripts/build_images.sh`
 builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token
 that has `write:packages`). New packages in the org start private; an org admin makes them public in the package
 settings (the API cannot). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never

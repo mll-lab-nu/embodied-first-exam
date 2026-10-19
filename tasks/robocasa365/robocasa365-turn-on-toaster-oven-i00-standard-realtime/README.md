@@ -10,7 +10,7 @@
 | Oracle | `none` — the privileged reference planned from step 0 through this service at S = 2 succeeds live and in the fresh replay, deterministic, no stall (board 0112, 2026-10-14); human review in PR #205 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 2 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robocasa365:0.1.0` |
 
 ## Task
 Standard-realtime mode (`eai-standard/2.3`, slowdown S = 2) of `robocasa365-turn-on-toaster-oven-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar on a clock that does not stop (the shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics with `environment/sim/server.py`, this benchmark's adapter on `casa_tool`). The scene is dynamic (scripts/task_dynamics.toml): the timer knob, once set, turns back by itself (1/3000 of its range per simulated second). The agent sees the robot's cameras (RGB-D; intrinsics, and each camera's pose in every proprioception row), its own joints and end effector, and the instruction; 10 resets, only the last episode graded.

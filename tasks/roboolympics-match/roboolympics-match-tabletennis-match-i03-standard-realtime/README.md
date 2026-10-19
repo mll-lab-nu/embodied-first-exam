@@ -10,7 +10,7 @@
 | Oracle | `partial` — export-only top tier (sim/match.py TIERS top, 2026-10-16: level 4's serves, the strongest returns the real-limited arm makes, level 2's defence): our truth-state reference beat it in 12 of 40 seeds, our camera-only reference in 7 of 18 (D = 5), both on this seed (5:0 camera, 6:4 truth); every simple baseline lost all its matches; the live oracle run is in the export report |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 10 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/eai-olympiad:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-olympiad:0.1.0` |
 
 ## Task
 Table tennis against the scripted opponent (level 4, export-only tier top), program play: robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players.

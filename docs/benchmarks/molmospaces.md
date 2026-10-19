@@ -10,7 +10,7 @@ objects and navigation, on a fixed-base arm and a mobile manipulator.
 | robots | `franka-robotiq-2f85` (Franka FR3 + Robotiq 2F-85 on a fixed base, the DROID setup); `rainbow-rby1` (RB-Y1: holonomic base, 6-joint torso, two 7-joint arms) |
 | score | upstream's `judge_success()` on the state at the episode's end |
 | tasks | 8 families × 2 modes: `tasks/molmospaces-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
-| image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.5` (`images/molmospaces/`, ~1.8 GB of assets) |
+| image | `ghcr.io/mll-lab-nu/efe-molmospaces:0.2.5` (`images/molmospaces/`, ~1.8 GB of assets) |
 | oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`: GPT-6.1 Sol's privileged passes), human review in PR #276 |
 
 | family | upstream package | robot, control period | variants | kept episode (i00) | horizon |

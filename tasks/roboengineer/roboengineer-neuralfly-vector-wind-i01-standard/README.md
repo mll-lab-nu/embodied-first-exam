@@ -9,7 +9,7 @@
 | Family / instance | `roboengineer/neuralfly-vector-wind` / seed 1 |
 | Oracle | `full` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-control-transfer:0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 88.41; nop 0. |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-control-transfer:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-control-transfer:0.2.0` |
 
 ## Task
 Track six timed laps of a randomized figure eight: vertical, horizontal or inclined plane; yaw in [-pi,pi]; both traversal directions; half extents 0.9-1.5 m and 0.45-0.85 m; angular rate 0.8-1.1 rad/s; randomized phase, center and initial offset. Follow the provided world-frame position, velocity and acceleration commands.

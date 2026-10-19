@@ -9,7 +9,7 @@
 | Family / instance | `die_reorient` / seed 0 |
 | Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-die-reorient-i00__EtyJ3X7` (225 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoChallengeDieReorientP1-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Rotate the die in the hand to the target pose: its position within 0.025 m of the target and the norm of its Euler-angle error below 0.262 rad, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the die more than 0.2 m from the target (dropped).
