@@ -2512,9 +2512,9 @@ match = "^roboolympics-fun-.*-standard$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
-# cell, standard (RoboSafeBench): CPU-only MuJoCo with OSMesa rendering in the sim sidecar
+# cell, standard (Embodied Safety Exam): CPU-only MuJoCo with OSMesa rendering in the sim sidecar
 [[rule]]
-match = "^rsb-.*-standard$"
+match = "^ese-.*-standard$"
 min_cpus = 4.0
 min_memory_gb = 6.0
 min_gpu_memory_gb = 0.0
@@ -2526,7 +2526,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "measured 2026-10-13 on four 32-core CPU nodes of a university HPC cluster (rootless podman on cgroups v1, caps not applied there), oracle and nop trials of every task: /proc PSS and CPU of each container's processes every 5 s; sim sidecar CPU p90 4.74 / max 5.28 cores during finalize (then two replays side by side + the video; from 2026-10-17 the video only, board 0151), oracle and nop sweep, 414 trials, /proc sampling (hence its cap of 6 CPUs), PSS max 2.84 GB; main PSS max 0.74 GB over 805 containers; a whole trial's PSS max 4.75 GB over 1219 trials; the verifier's container under 0.1 GB (the replays run in the sim sidecar)"
 
 [[limit]]
-match = "^rsb-.*-standard$"
+match = "^ese-.*-standard$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 6.0
@@ -2543,16 +2543,16 @@ measured = "author estimate, with the measurements above: the agent's container 
 [[cap]]
 # sim: p90 4.74 / max 5.28 cores during finalize (two replays + video), oracle and nop sweep, 414 trials, /proc sampling;
 # from 2026-10-17 (board 0151) the finalize renders the video only (one process); the 6-CPU cap is kept, not re-measured
-match = "^rsb-.*-standard$"
+match = "^ese-.*-standard$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 
-# cell, standard-realtime (RoboSafeBench): the standard tasks' simulator, finalize and client; the realtime clock adds a
+# cell, standard-realtime (Embodied Safety Exam): the standard tasks' simulator, finalize and client; the realtime clock adds a
 # simulator that runs whether or not the agent calls (about 4 ms of physics per 20 ms control step, one core, measured in
-# eai-robosafe on a university HPC cluster node, 2026-10-14) and the pictures it renders on the CPU. Until the sweep has measured these tasks,
+# ese on a university HPC cluster node, 2026-10-14) and the pictures it renders on the CPU. Until the sweep has measured these tasks,
 # the standard tasks' values.
 [[rule]]
-match = "^rsb-.*-standard-realtime$"
+match = "^ese-.*-standard-realtime$"
 min_cpus = 4.0
 min_memory_gb = 6.0
 min_gpu_memory_gb = 0.0
@@ -2561,10 +2561,10 @@ gpu_class = "none"
 verifier_min_cpus = 1.0
 verifier_min_memory_gb = 1.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "the standard tasks' measurements (a university HPC cluster, 2026-10-13: sim sidecar CPU p90 4.74 / max 5.28 cores during finalize, PSS max 2.84 GB; main PSS max 0.74 GB; a whole trial's PSS max 4.75 GB), the same simulator and finalize; the realtime clock keeps about a fifth of one core busy while it runs (4 ms of physics per 20 ms step, eai-robosafe on a university HPC cluster node, 2026-10-14)"
+measured = "the standard tasks' measurements (a university HPC cluster, 2026-10-13: sim sidecar CPU p90 4.74 / max 5.28 cores during finalize, PSS max 2.84 GB; main PSS max 0.74 GB; a whole trial's PSS max 4.75 GB), the same simulator and finalize; the realtime clock keeps about a fifth of one core busy while it runs (4 ms of physics per 20 ms step, ese on a university HPC cluster node, 2026-10-14)"
 
 [[limit]]
-match = "^rsb-.*-standard-realtime$"
+match = "^ese-.*-standard-realtime$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 6.0
@@ -2581,15 +2581,15 @@ measured = "author estimate, the standard tasks' (the same client and harness in
 [[cap]]
 # as the standard tasks (measured with the finalize's two replays side by side and the video; from 2026-10-17 the video
 # only, board 0151; the cap is kept, not re-measured)
-match = "^rsb-.*-standard-realtime$"
+match = "^ese-.*-standard-realtime$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
-# rsb, privileged (RoboSafeBench, 2026-10-18): the standard tasks' simulator in the agent's own container. One episode of
+# rsb, privileged (Embodied Safety Exam, 2026-10-18): the standard tasks' simulator in the agent's own container. One episode of
 # it is the standard sim sidecar's (PSS max 2.84 GB measured, 2026-10-13); an agent keeps one or two episodes open and
 # runs the verifier's replay (`check()`, a fresh process) beside them; the verifier runs two replays at once. Author
 # estimate until a sweep measures these tasks: the standard tasks' 4 CPUs, memory for about four episodes.
 [[rule]]
-match = "^rsb-.*-privileged$"
+match = "^ese-.*-privileged$"
 min_cpus = 4.0
 min_memory_gb = 8.0
 min_gpu_memory_gb = 0.0
@@ -2598,10 +2598,10 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 6.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "author estimate from the standard tasks' measurements (a university HPC cluster, 2026-10-13: one RoboSafeBench episode in the sim sidecar PSS max 2.84 GB, its finalize CPU p90 4.74 cores with two replays side by side): an agent with one or two episodes open and a check replay; the verifier's two replays at once (about 2 x 2.8 GB)"
+measured = "author estimate from the standard tasks' measurements (a university HPC cluster, 2026-10-13: one Embodied Safety Exam episode in the sim sidecar PSS max 2.84 GB, its finalize CPU p90 4.74 cores with two replays side by side): an agent with one or two episodes open and a check replay; the verifier's two replays at once (about 2 x 2.8 GB)"
 
 [[limit]]
-match = "^rsb-.*-privileged$"
+match = "^ese-.*-privileged$"
 scope = "trial"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 13.0
@@ -2613,10 +2613,10 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 13.0
-measured = "author estimate: about four RoboSafeBench episodes (2.84 GB PSS each, the standard sim sidecar's maximum) next to the agent's harness, under the 16 GiB cap; processes 512 and disk 10 GiB: design defaults"
+measured = "author estimate: about four Embodied Safety Exam episodes (2.84 GB PSS each, the standard sim sidecar's maximum) next to the agent's harness, under the 16 GiB cap; processes 512 and disk 10 GiB: design defaults"
 
 [[cap]]
-match = "^rsb-.*-privileged$"
+match = "^ese-.*-privileged$"
 main = { cpus = 6.0, memory_gb = 16.0, pids = 8192 }
 
 [[cap]]

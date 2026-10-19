@@ -88,7 +88,7 @@ BENCHMARKS = [  # (directory prefix, label)
     ("robodojo-", "RoboDojo"),
     ("roboolympics-fun-", "RoboOlympics-Fun"),      # the single-humanoid sports families
     ("roboolympics-match-", "RoboOlympics-Match"),  # the matches RoboOlympics exports with its own service, and their twins
-    ("rsb-", "RoboSafeBench"),    # formerly `cell-` (renamed in 0.5.4, the authors); an agent can read its task name
+    ("ese-", "Embodied Safety Exam"),
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
     ("ispatialgym-", "iSpatialGym"),
@@ -289,7 +289,7 @@ BENCHMARK_DIRS = {
     "MolmoSpaces": "molmospaces", "MyoSuite": "myosuite", "DexJoCo": "dexjoco", "DexHand": "dexhand",
     "VLABench": "vlabench", "RoboCasa-GR1": "robocasa-gr1", "RoboCasa": "robocasa", "RoboCasa365": "robocasa365",
     "LIBERO-MAX": "libero-max", "RoboARC": "roboarc", "BiGym 2.0": "bigym2", "YAMLab": "yamlab", "RoboDojo": "robodojo",
-    "RoboOlympics-Fun": "roboolympics-fun", "RoboOlympics-Match": "roboolympics-match", "RoboSafeBench": "robosafebench",
+    "RoboOlympics-Fun": "roboolympics-fun", "RoboOlympics-Match": "roboolympics-match", "Embodied Safety Exam": "embodied-safety-exam",
     "Panda Dynamic Scenes": "pandadyn", "AM-Bench": "ambench", "iSpatialGym": "ispatialgym", "IKEA MuJoCo": "ikea-mujoco",
     "roboEngineer": "roboengineer",
 }
@@ -1321,91 +1321,72 @@ def validated_of(task: Path) -> bool:
     return md.get("oracle") == "full"
 
 
-# The core set (PROTOCOL §4, docs/protocol/running.md "Results"): the task DIRS (each mode its own task) the headline
-# statistics are computed on, one central list, docs/core_set.toml, not a task field: listing a task changes none of its
-# files, so its DIGEST and the results recorded against it stay as they are. The list is regenerated from the eval pool's
-# verdicts of the reference run; `generated_from` is the commit of main whose task dirs it classified (a dir added after
-# it is not classified yet).
+# The core set (PROTOCOL §4, docs/protocol/running.md "Results"): the tasks the headline statistics are computed on, one
+# central list, docs/core_set.toml, not a task field: listing a task changes none of its files, so its DIGEST and the
+# results recorded against it stay as they are. One entry per task: `task` (the task dir name without its mode suffix,
+# base_of()) and `default_mode`, the mode `harbor run --core` runs; another mode of the same tasks can be forced.
 CORE_SET_FILE = Path(os.environ.get("RCB_CORE_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "core_set.toml")
 # RCB_CORE_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
-CORE_LUNA = ("failed", "no result yet")
-CORE_FIELDS = ("task", "base", "benchmark", "mode", "luna", "pick")
-# `pick = "owner"`: a dir the benchmark owner put in by hand. The regeneration keeps it whatever the reference run's
-# verdict, so its `luna` may also be "success".
-CORE_PICKS = ("owner",)
+CORE_FIELDS = ("task", "default_mode")
+CORE_MODES = ("privileged", "standard", "standard-realtime")
 
 
 @functools.lru_cache(maxsize=8)
-def _core_set(path: Path, mtime: int) -> tuple[str | None, dict[str, dict]]:
+def _core_set(path: Path, mtime: int) -> dict[str, str]:
     d = tomllib.loads(path.read_text(encoding="utf-8"))
-    out: dict[str, dict] = {}
+    out: dict[str, str] = {}
     for e in d.get("task", []):
         t = e.get("task") if isinstance(e, dict) else None
         if not isinstance(t, str) or not t:
             raise ValueError(f"{path.name}: an entry without a task: {e!r}")
         if t in out:
             raise ValueError(f"{path.name}: {t} listed twice")
-        out[t] = e
-    g = d.get("generated_from")
-    return (g if isinstance(g, str) else None), out
+        out[t] = str(e.get("default_mode") or "")
+    return out
 
 
-def core_set(path: Path = CORE_SET_FILE) -> dict[str, dict]:
-    """docs/core_set.toml as {task dir: entry} (CORE_FIELDS); empty when the file is absent. ValueError on a malformed
-    file (ci_checks: `task_conventions.py core-set --check`). Parsed once per version of the file (its mtime), so a
+def core_set(path: Path = CORE_SET_FILE) -> dict[str, str]:
+    """docs/core_set.toml as {task: default mode}; empty when the file is absent. ValueError on a malformed file
+    (ci_checks: `task_conventions.py core-set --check`). Parsed once per version of the file (its mtime), so a
     long-running reader sees an edited list."""
     try:
         mtime = path.stat().st_mtime_ns
     except FileNotFoundError:
         return {}
-    return {t: dict(e) for t, e in _core_set(path, mtime)[1].items()}
+    return dict(_core_set(path, mtime))
 
 
-def core_set_commit(path: Path = CORE_SET_FILE) -> str | None:
-    """docs/core_set.toml's `generated_from`: the commit of main whose task dirs the list classified."""
-    try:
-        return _core_set(path, path.stat().st_mtime_ns)[0]
-    except FileNotFoundError:
-        return None
-
-
-# core: per task (base) of docs/core_set.toml, its listed dir of the first mode in CORE_PRIORITY. The default set and
-# the one the headline (leaderboard) numbers are computed on. Derived from the list, never stored, so it cannot drift.
-# core-<mode> (core-privileged / core-standard / core-standard-realtime): the list's dirs of that mode; core-all: every
-# dir the list names (their union).
-CORE_PRIORITY = ("standard-realtime", "standard", "privileged")
-
-
-def core_tasks(modes: "set[str] | None" = None, every_mode: bool = False, path: Path = CORE_SET_FILE) -> list[str]:
-    """No modes: core, one dir per base of docs/core_set.toml, its mode the first of CORE_PRIORITY that is listed;
-    every_mode: core-all, every listed dir. With modes: core-<mode> for each, docs/core_set.toml's dirs of those modes."""
-    cs = core_set(path)
-    mode = {t: e.get("mode") or mode_of(Path(t)) for t, e in cs.items()}
-    if modes or every_mode:
-        return sorted(t for t in cs if not modes or mode[t] in modes)
-    best: dict[str, tuple[int, str]] = {}
-    for t, e in cs.items():
-        rank = CORE_PRIORITY.index(mode[t]) if mode[t] in CORE_PRIORITY else len(CORE_PRIORITY)
-        b = e.get("base") or base_of(Path(t))
-        if b not in best or rank < best[b][0]:
-            best[b] = (rank, t)
-    return sorted(t for _, t in best.values())
+def core_tasks(modes: "set[str] | None" = None, path: Path = CORE_SET_FILE, tasks_dir: Path | None = None,
+               missing: "dict[str, list[str]] | None" = None) -> list[str]:
+    """The task dirs of the core tasks: no modes, each task's default_mode dir; with modes, each task's dir of each of
+    those modes that exists (a task without that mode is skipped and added to missing[mode] when given)."""
+    out = []
+    for t, dm in core_set(path).items():
+        for m in sorted(modes) if modes else [dm]:
+            d = f"{t}-{m}"
+            if modes and not (task_dir(d, tasks_dir) / "task.toml").is_file():
+                if missing is not None:
+                    missing.setdefault(m, []).append(t)
+                continue
+            out.append(d)
+    return sorted(out)
 
 
 def set_of(task: Path) -> str:
-    """`core` when the task dir is listed in docs/core_set.toml, else `excluded`. A marker like `validated`, never part
-    of config_key: the headline statistics count `core` tasks only. Recorded with each result as the value when it was
-    written; reports re-derive it from the list at the commit they publish. A malformed list never stops a result from
-    being written: a missing or malformed list gives a warning and `core`; `core-set --check` reports it."""
+    """`core` when the task dir is a mode of a task listed in docs/core_set.toml, else `excluded`. A marker like
+    `validated`, never part of config_key: the headline statistics count `core` tasks only. Recorded with each result
+    as the value when it was written; reports re-derive it from the list at the commit they publish. A malformed list
+    never stops a result from being written: a missing or malformed list gives a warning and `core`; `core-set --check`
+    reports it."""
     try:
-        cs = _core_set(CORE_SET_FILE, CORE_SET_FILE.stat().st_mtime_ns)[1]
+        cs = _core_set(CORE_SET_FILE, CORE_SET_FILE.stat().st_mtime_ns)
     except (ValueError, OSError) as e:                  # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
         if str(e) not in _CORE_WARNED:
             _CORE_WARNED.add(str(e))
             print(f"WARN {CORE_SET_FILE.name}: {e} (every task counts as core; task_conventions.py core-set --check)",
                   file=sys.stderr)
         return "core"
-    return "core" if Path(task).name in cs else "excluded"
+    return "core" if base_of(Path(task)) in cs else "excluded"
 
 
 _CORE_WARNED: set[str] = set()
@@ -1417,53 +1398,46 @@ README_TABLE = re.compile(r"(<!-- task-table: generated by `python3 scripts/task
 
 
 def readme_table(tasks_dir: Path | None = None) -> str:
-    """The README's task table: per benchmark label, its core / core-all task dirs (core_tasks()) and all its task dirs."""
+    """The README's task table: per benchmark label, its core tasks (core_tasks()) and all its task dirs."""
     tasks_dir = tasks_dir or TASKS_DIR
     dirs = iter_tasks(tasks_dir)
     every = collections.Counter(bench_of(p) for p in dirs)
-    core, call = (collections.Counter(bench_of(Path(t)) for t in core_tasks(every_mode=e)
-                                      if (task_dir(t, tasks_dir) / "task.toml").is_file()) for e in (False, True))
-    rows = ["| Benchmark | Core | Core-all | All |", "|---|---:|---:|---:|"]
-    rows += [f"| {b} | {core.get(b, 0)} | {call.get(b, 0)} | {every[b]} |" for b in sorted(every, key=str.lower)]
-    rows.append(f"| **Total** | **{sum(core.values())}** | **{sum(call.values())}** | **{sum(every.values())}** |")
+    core = collections.Counter(bench_of(Path(t)) for t in core_tasks(tasks_dir=tasks_dir)
+                               if (task_dir(t, tasks_dir) / "task.toml").is_file())
+    rows = ["| Benchmark | Core | All |", "|---|---:|---:|"]
+    rows += [f"| {b} | {core.get(b, 0)} | {every[b]} |" for b in sorted(every, key=str.lower)]
+    rows.append(f"| **Total** | **{sum(core.values())}** | **{sum(every.values())}** |")
     return "\n".join(rows)
 
 
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
-    """What is wrong with the core set: no file, no `generated_from` commit, an unknown top-level key, a listed task dir
-    that is not a plain name or does not exist, a base / benchmark / mode that is not the dir's, an unknown `luna` or
-    `pick` value (`luna = "success"` only with `pick = "owner"`) or field."""
+    """What is wrong with the core set: no file, an unknown top-level key or field, a task that is not a plain task name
+    without a mode suffix, a default_mode that is not a mode, or no task dir of the task in its default_mode."""
     tasks_dir = tasks_dir or TASKS_DIR
     if not path.is_file():
         return [f"{path.name}: no such file"]
     try:
-        cs, g = core_set(path), core_set_commit(path)
+        cs = core_set(path)
+        raw = tomllib.loads(path.read_text(encoding="utf-8"))
     except (ValueError, OSError) as e:
         return [str(e)]
-    bad = [] if isinstance(g, str) and re.fullmatch(r"[0-9a-f]{40}", g) else \
-        [f"{path.name}: generated_from {g!r} is not a full commit id"]
-    unknown = set(tomllib.loads(path.read_text(encoding="utf-8"))) - {"generated_from", "task"}
+    bad = []
+    unknown = set(raw) - {"task"}
     if unknown:
         bad.append(f"{path.name}: unknown top-level key(s) {', '.join(sorted(unknown))}")
-    for t, e in cs.items():
-        d = task_dir(t, tasks_dir)
-        if t != Path(t).name:
-            bad.append(f"{t}: not a task dir name")
+    for e in raw.get("task", []):
+        u = set(e) - set(CORE_FIELDS)
+        if u:
+            bad.append(f"{e.get('task')}: unknown field(s) {', '.join(sorted(u))}")
+    for t, dm in cs.items():
+        if t != Path(t).name or base_of(Path(t)) != t:
+            bad.append(f"{t}: not a task name (a task dir name without its mode suffix)")
             continue
-        if not (d / "task.toml").is_file():
-            bad.append(f"{t}: no task directory under tasks/")
+        if dm not in CORE_MODES:
+            bad.append(f"{t}: default_mode {dm!r} is not one of {', '.join(CORE_MODES)}")
             continue
-        for k, want in (("base", base_of(d)), ("benchmark", bench_of(d)), ("mode", mode_of(d))):
-            if e.get(k) != want:
-                bad.append(f"{t}: {k} {e.get(k)!r}, the dir's is {want!r}")
-        if "pick" in e and e["pick"] not in CORE_PICKS:
-            bad.append(f"{t}: pick {e['pick']!r} is not one of {', '.join(CORE_PICKS)}")
-        if e.get("luna") not in CORE_LUNA and not (e.get("pick") == "owner" and e.get("luna") == "success"):
-            bad.append(f"{t}: luna {e.get('luna')!r} is not one of {', '.join(CORE_LUNA)}"
-                       + (" (\"success\" only with pick = \"owner\")" if e.get("luna") == "success" else ""))
-        unknown = set(e) - set(CORE_FIELDS)
-        if unknown:
-            bad.append(f"{t}: unknown field(s) {', '.join(sorted(unknown))}")
+        if not (task_dir(f"{t}-{dm}", tasks_dir) / "task.toml").is_file():
+            bad.append(f"{t}: no task directory {t}-{dm} under tasks/")
     return bad
 
 
@@ -1603,16 +1577,15 @@ def main(argv: list[str]) -> int:
         if m.group(2) != want:
             print("FAIL README.md: the task table is stale (python3 scripts/task_conventions.py readme-table --write)"); return 1
         print("ok README.md task table"); return 0
-    if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml (PROTOCOL §4); `core-set [--all-modes]
-        if "--check" in argv:            # [--<mode>...]`: list core's task dirs, core-all's, or core-<mode>'s (core_tasks())
+    if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml (PROTOCOL §4); `core-set [--<mode>...]`:
+        if "--check" in argv:            # list the core tasks' default-mode dirs, or their dirs of those modes (core_tasks())
             bad = check_core_set()
             for b in bad:
                 print(f"FAIL docs/core_set.toml: {b}")
             if not bad:
-                print(f"ok docs/core_set.toml: core {len(core_tasks())}, core-all {len(core_tasks(every_mode=True))}, "
-                      + ", ".join(f"core-{m} {len(core_tasks({m}))}" for m in reversed(CORE_PRIORITY)))
+                print(f"ok docs/core_set.toml: {len(core_set())} core tasks")
             return 1 if bad else 0
-        for t in core_tasks({a[2:] for a in argv[1:] if a[2:] in CORE_PRIORITY}, "--all-modes" in argv):
+        for t in core_tasks({a[2:] for a in argv[1:] if a[2:] in CORE_MODES}):
             print(t)
         return 0
     check = "--check" in argv
