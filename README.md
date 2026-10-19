@@ -86,6 +86,10 @@ upstream experts and the contents of the base images keep their own licenses.
 
 ## Citation
 
+Kangrui Wang\*§, Changhe Chen\*§, Qineng Wang\*§, Pingyue Zhang\*§, Chi Gui\*§, Feishi Wang§, Canyu Chen§, Wenli Xiao§, Xiaoyu Huang§, Tonghe Zhang§, Linjie (Lindsey) Li§, Yiyou Sun, Mingkai Deng, Jinyu Hou, Xiangyi Li, Eric P. Xing, Huaxiu Yao, Zhiwen Fan, Yuejiang Liu, Jiajun Wu, Yuke Zhu, Guanya Shi†, Ruohan Zhang†, Manling Li†
+
+<sub>\* Equal contribution · § Core contributor · † Equal advising</sub>
+
 ```bibtex
 @misc{embodiedfirstexam2026,
   title        = {Embodied First Exam},
