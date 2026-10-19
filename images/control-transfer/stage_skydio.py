@@ -7,7 +7,7 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from scripts.control_transfer.neuralfly_visual import COMMIT, FILES, PROFILE, load_assets
+from images/control-transfer/neuralfly_visual.py import COMMIT, FILES, PROFILE, load_assets
 
 
 def stage(source, destination):

@@ -116,7 +116,7 @@ LONG_KEYS = r"(type|source|target|read_only|bind|volume|tmpfs|consistency)"
 def compose_services(compose: pathlib.Path):
     """({service: {"keys": {key: inline value}, "mounts": [(kind, source, rest)]}}, [what could not be read]).
     kind: "volume" (a named volume) or "bind"; rest: target and mode of the short form (`/cache:ro`), or "ro" / "" for
-    the long form. Indentation-based (2 spaces a level, as scripts/rcb_monitor/inject.py writes and requires), no YAML
+    the long form. Indentation-based (2 spaces a level, as images/monitor/rcb_monitor/inject.py writes and requires), no YAML
     dependency; whatever it does not understand inside `services:` is reported, never skipped."""
     out, bad = {}, []
     svc, in_services, in_vols, item, top, first = None, False, False, None, None, False

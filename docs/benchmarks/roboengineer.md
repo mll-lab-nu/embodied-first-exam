@@ -33,16 +33,16 @@ service: [control-transfer.md](control-transfer.md); the wire interface: [roboen
 
 Not shipped from #329: the four full-lap
 circuit packages (they need up to 32631 s of agent time, above the 14400 s cap), the circuit-sector variants and the
-Linearbot / spacecraft / YAM prototypes (source only). `scripts/roboengineer/exported.toml` maps every task to its
+Linearbot / spacecraft / YAM prototypes (source only). `ci_checks/benchmarks/roboengineer/exported.toml` maps every task to its
 package name in #329.
 
 ## Mode, runtime and grading
 
 - **Standard mode with the benchmark's own runtime** (PROTOCOL §3): `eai-policy/1.0` (Neural Landing) and
-  `eai-policy/1.1` (the others), listed in `scripts/roboengineer/exported.toml`; results are reported apart from the
+  `eai-policy/1.1` (the others), listed in `ci_checks/benchmarks/roboengineer/exported.toml`; results are reported apart from the
   `eai-standard/2.x` tasks. Appendix H applies unchanged. The private evaluator runs in the `sim` sidecar (port 8000
   on localhost, no published port); the agent's container holds the public nominal model and the controller ABI only
-  (environment/public/, an explicit allowlist checked by `scripts/roboengineer/ci/invariant-boundary.py`, plus AnyCar's two track data files from the files-only image).
+  (environment/public/, an explicit allowlist checked by `ci_checks/benchmarks/roboengineer/invariant-boundary.py`, plus AnyCar's two track data files from the files-only image).
 - **No privileged twin**: the hidden plant is the task; a privileged agent would read it.
 - **Deliverable**: numeric policies only (bounded JSON coefficients; G1: the fixed-shape NPZ actor's weights). No
   agent code runs in the evaluator.
@@ -83,15 +83,15 @@ All are `BUILD_ONLY` (licence-restricted evaluator assets; see the marker files)
 
 Build (any Linux host with Docker and network access to github.com and PyPI): run the preparation in a
 `python:3.12` container (numpy 2.3.1, mujoco 3.5.0, scipy 1.17.0, CPU torch for the landing checkpoint conversion):
-`python -m scripts.control_transfer.prepare_assets --workspace <ws with sim2realbench/vendor/unitree_rl_mjlab @1425b15f>
---go2-source <menagerie @0059d433> --out <nominal> --private-go2-out <go2>`, `python -m scripts.control_transfer.neuralfly_visual --out <skydio>`,
-`python -m scripts.control_transfer.calibrate_fly --source <aerorobotics/neural-fly @0ed50246> --out <fly>`,
+`python -m images/control-transfer/stage_nominal_assets.py --workspace <ws with sim2realbench/vendor/unitree_rl_mjlab @1425b15f>
+--go2-source <menagerie @0059d433> --out <nominal> --private-go2-out <go2>`, `python -m images/control-transfer/neuralfly_visual.py --out <skydio>`,
+the Neural Fly force fit `<fly>` (from aerorobotics/neural-fly @0ed50246; its fitting tool is kept outside this repository),
 `python images/control-transfer/prepare_assets.py --assets <nominal> --fly <fly> --go2 <go2> --skydio <skydio>`,
 `bash images/quadrotor-landing/prepare_assets.sh`; then `BUILD_TRAIN=1 bash images/control-transfer/build.sh` (a host that
 pulled the nominal image builds the training image alone with `TRAIN_ONLY=1`: its stage starts FROM the nominal tag) and
 `docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/eai-quadrotor-landing:0.1.0 .`. The force
 fit reproduces the documented validation RMSE (0.8749 / 0.5893 / 1.6956 N); its digest is pinned in
-`scripts/control_transfer/gen_tasks.py` `FLY_ASSET_SHA256` (= `trusted/fly.py` `ASSET_SHA256`); the landing residual
+each Neural Fly task's `environment/sim/scripts/control_transfer/trusted/fly.py` `ASSET_SHA256`; the landing residual
 conversion is byte-reproducible (`bebb6c7f…`).
 
 ## Resources
@@ -122,18 +122,12 @@ docker stats, cgroup `memory.peak` and per-container `nvidia-smi` every 3-6 s). 
   agent's container; caps `main` 4 CPUs / 12 GB, `sim` 4 CPUs / 6 GB. Hosts: a GPU host that holds the three
   control-transfer images (`-train`, `-nominal` is its base, the evaluator) and lists the `roboengineer` bench.
 
-## Generators and checks
+## Checks
 
-- `python3 -m scripts.quadrotor_landing.gen_tasks render|check`, `python3 -m scripts.control_transfer.gen_tasks
-  render|check` (standard library only; both end with `scripts/task_conventions.py` normalize; CI:
-  `ci_checks/check-generated-tasks.sh`).
-- `scripts/roboengineer/ci/invariant-boundary.py` (the required job `invariants`): the agent's copy is exactly the
-  generators' public allowlist, the agent's Dockerfile copies nothing else, one frozen instance in sidecar and verifier.
-- Unit tests: the standard-library ones run in CI (`ci_checks/check-unit-tests.sh`); the service, rollout and
-  packaging tests need MuJoCo and the assets: run them in the images,
-  `docker run --rm -v $PWD:/r -w /r -e MUJOCO_GL=osmesa ghcr.io/mll-lab-nu/eai-control-transfer:0.2.0 python -m unittest discover -s scripts/control_transfer/tests -p 'test_*.py'`
-  and the same with `eai-quadrotor-landing:0.1.0`, `-e LANDING_TEST_RESIDUAL=/opt/landing/residual.npz` and
-  `scripts/quadrotor_landing/tests` (2026-10-18: 155 + 28 pass, one full-lap test skipped).
+The task directories are the deliverable; the tooling that built them is kept outside this repository.
+
+- `ci_checks/benchmarks/roboengineer/invariant-boundary.py` (the required job `invariants`): the agent's copy is exactly the
+  public allowlist, the agent's Dockerfile copies nothing else, one frozen instance in sidecar and verifier.
 
 ## Validation (2026-10-18, Harbor 0.23.0 on aws:rcb-cpu3, the images above)
 

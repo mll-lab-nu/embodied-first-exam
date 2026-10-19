@@ -1109,14 +1109,14 @@ measured = "author estimate: no trials yet; the agent's container 8 GiB under it
 # Resource LIMITS and CAPS (docs/protocol/README.md §2.10, v1.1.5; enforced from v1.2). All sizes in GiB.
 # [[limit]] -> [metadata.resources.limits]: the most the agent phase may use. normalize writes it into task.toml and
 #   renders it into instruction.md ("## Resource limits") and the README. scope "trial" (privileged: every container the
-#   agent drives, i.e. all but a benchmark-owned service such as RoboPaint's scorer, scripts/rcb_monitor/inject.py
+#   agent drives, i.e. all but a benchmark-owned service such as RoboPaint's scorer, images/monitor/rcb_monitor/inject.py
 #   BENCHMARK_SERVICES) or "agent" (standard modes: the agent's container only; the sim sidecar is the benchmark's and
 #   never counts).
 #   From v1.2 the task's monitor measures it and, with RCB_LIMITS_ENFORCE=1, a sustained violation (sustain_sec above a
 #   limit within any window_sec) or an out-of-memory kill fails the trial; with 0 (the default) it is only recorded.
 # [[cap]] -> [metadata.resources.caps]: docker caps per compose service (cpus, memory_gb, pids), applied by v1.2 and
 #   the caps docker really applies: normalize sets [environment].memory_mb = main.memory_gb x 1024 (Harbor writes main's
-#   memory and CPU caps from [environment]), scripts/rcb_monitor/inject.py writes the other values into the compose file
+#   memory and CPU caps from [environment]), images/monitor/rcb_monitor/inject.py writes the other values into the compose file
 #   unless a service sets one itself, and then the value here must be that one (ci_checks/check-resources.py compares).
 #   Memory caps sit above the limits (limit <= cap / 1.2 and <= cap - 2) so that the monitor sees a violation before the
 #   kernel's OOM killer; pids (threads) >= 8 x max_processes for the services the limits bind.

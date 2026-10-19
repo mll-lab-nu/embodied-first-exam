@@ -18,7 +18,7 @@ renders. The only copy we distribute is an ENCRYPTED bundle for research use, be
 
 To run those families:
   1a. Fetch the models with your own BlenderKit API key: put BLENDERKIT_API_KEY=<key> into ../.env (next to the repo)
-     and run `scripts/robowits/fetch_blenderkit.sh <dir>`.
+     and run `images/robowits/fetch_blenderkit.sh <dir>`.
      - It follows RoboWits' own recipe: assets/download_blenderkit_asset.py and the Blender conversion.
      - It adds two fixes our tasks need (blenderkit/Dockerfile):
        - pinch_card's retired "bank card" model is replaced by the "Apple Card" model, scaled;
@@ -27,7 +27,7 @@ To run those families:
        upstream since then may not rebuild a frozen scene exactly: the verifier then reports instance_exact = 0.
   1b. Or use our encrypted bundle, the same files as blenderkit.sha256 lists, Fernet-encrypted: request access at
      https://huggingface.co/datasets/eai-v2-internal/robowits-blenderkit-encrypted (log in and accept its research
-     terms), run `hf auth login`, then `scripts/robowits/fetch_blenderkit_encrypted.sh <dir>` (it checks every file
+     terms), run `hf auth login`, then `images/robowits/fetch_blenderkit_encrypted.sh <dir>` (it checks every file
      against blenderkit_encrypted.sha256).
      - The tooling (rcb_robowits.py) sees the key in the folder and decrypts only the models the task's family loads,
        at scene build, into a private tmpfs directory that it deletes as soon as the scene is built.

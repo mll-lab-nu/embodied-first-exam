@@ -6,7 +6,7 @@ usage: python /opt/robotangle/stage_instance.py <base> <dest> [--binding <runtim
 
 The image (images/roboarc/Dockerfile) carries every task's frozen instance, instance.json + instance_assets/, under
 /opt/robotangle/instances/<base>/. The files come from the private Hugging Face dataset eai-v2-internal/robotangle-assets
-at the revision pinned in scripts/roboarc/assets.json, and the image build checks each file's sha256 there. A task
+at the revision pinned in images/roboarc/assets.json, and the image build checks each file's sha256 there. A task
 directory holds only runtime_binding.json, which names the instance's canonical sha256 and the sha256 of every asset.
 This script:
   - copies the instance into <dest>, next to <dest>/runtime_binding.json (--binding copies that file there first);

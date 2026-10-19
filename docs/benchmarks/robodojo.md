@@ -13,20 +13,15 @@ each a privileged task `robodojo-<task>-i00-privileged` and its standard twin `r
 standard only, graded by the live episode. 48 privileged + 54 standard = 102 task directories. `oracle = "none"` for every
 task (below).
 
-## Tasks and generator
-`scripts/robodojo/mk_tasks.py [--check]` writes the 102 directories from:
-- `scripts/robodojo/descr/<task>.json`: what the task asks and exactly what its check tests (every predicate, threshold,
-  stage and end-of-episode requirement), written from RoboDojo's code (`task/RoboDojo/tasks/<task>.py`, its config,
-  `env/reward_manager/`); the instructions quote it. The code is the reference.
-- each instance's `instance.json`: the evaluation layout verbatim (with its sha256), the state hash after
-  RoboDojo's reset, RoboDojo's language instruction for the layout, and per-task fields from
-  `scripts/robodojo/instance_overrides.json` (`physics`, `determinism`), written by `sync_frozen.py` from the determinism
-  test's output (`rcb_robodojo.py make-instance --task T --seed 0 --layout 0 [--physx key=value]`) into
-  `scripts/robodojo/frozen/<task>-i00/` when it is new or changed. It is committed only in the tasks: `mk_tasks.py` reads
-  `frozen/<task>-iNN/` while it exists, else the standard task's `environment/sim/instance.json`; `frozen/` is deleted once
-  the tasks are generated. The committed standard tasks are also the list of instances (`mk_tasks.py` `instance_ids()`):
-  to drop an instance, delete its task dirs (`-standard`, and `-privileged` where it has one) by hand.
-- `scripts/robodojo/dimensions.json` (RoboDojo's documentation), `conventions.json`, `template/<mode>/`.
+## Tasks
+The task directories are the deliverable; the tooling that built them is kept outside this repository. Each task carries:
+- in its instruction, what the task asks and exactly what its check tests (every predicate, threshold, stage and
+  end-of-episode requirement), written from RoboDojo's code (`task/RoboDojo/tasks/<task>.py`, its config,
+  `env/reward_manager/`). The code is the reference.
+- its instance's `instance.json` (`environment/sim/instance.json`): the evaluation layout verbatim (with its sha256),
+  the state hash after RoboDojo's reset, RoboDojo's language instruction for the layout, and per-task fields
+  (`physics`, `determinism`) from the determinism test's output (`rcb_robodojo.py make-instance --task T --seed 0
+  --layout 0 [--physx key=value]`). The committed standard tasks are the list of instances.
 
 ## Success (RoboDojo's own check)
 RoboDojo's reward manager for the task, unchanged: its `run_reward()` check list (registered at the start of every episode,
@@ -121,11 +116,6 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
   encodes it after the verdict (CPU, at most 600 s); a frame or an encode that fails costs the video only. Privileged:
   the one replay is the filmed one (`replay.mp4`); a video that cannot be written gives `video_ok` false and the replay
   stands.
-- Unit tests with stand-ins for the simulator (CI: check-unit-tests.sh): `scripts/robodojo/tests/test_standard_grading.py`
-  runs the collect hook and the standard grader (live success / failure, both kinds of task, crashes between and inside
-  calls, an instance mismatch, no episode.json, a failing, crashing or hanging encode; no replay may start);
-  `test_server.py` (numpy) the real service on a stub Session (the start check, the live video's frames only at rendered
-  actions); `test_privileged_grading.py` the privileged grader (exactly one replay process, the filmed one).
 - Time limits (wall clock only; the verdict rules do not depend on them). A replay process takes up to ~7 min until the
   layout is ready (a cold first start, which every privileged verifier's replay is) and runs at about 5-11 actions/s
   filmed. A replay's allowance is max(1800 s, 1200 s + rows / 2.5), so 7200 s for the 15,000 rows a trajectory may
@@ -140,14 +130,14 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
 
 ## Crash recovery (standard mode, docs/protocol/standard_mode.md §13)
 Resume class `exact` (the resumed service is a fresh process whose journal replay is that process's first run), `approx` for
-the six standard-only tasks graded by the live episode. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test `scripts/robodojo/kill_test.sh`: RoboDojo
+the six standard-only tasks graded by the live episode. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test: RoboDojo
 has no oracle, so a driver client (12 joint_position chunks; not a solution) runs as Harbor's oracle on a copy of
 `robodojo-general-pickup-i00-standard`, and the service is killed with SIGKILL inside the 6th call, after 5 checkpoints.
 Expected: one exact resume (the checkpoint's state hash), the killed call rolled back, the driver's other chunks run,
 finalized, no infrastructure error. The driver does not solve the task (success 0 is expected).
 
 ## Time budget
-3600 s for every task of both modes: each task's own `[agent] timeout_sec`, the generator's `CUTOFF_SEC` (PROTOCOL §2,
+3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
 docs/protocol/running.md "The agent's time"). Every Python process pays ~2.5-4 min of Isaac Sim launch, scene build and RoboDojo's
 settling (a trial's first start also compiles shaders and materials), and many tasks are long (RoboDojo gives policies
 up to 1900 actions), so an hour holds about a dozen simulator starts at most.

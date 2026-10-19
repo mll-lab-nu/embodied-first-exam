@@ -7,7 +7,7 @@
 #   docker build -t ghcr.io/mll-lab-nu/eai-molmospaces:$(cat VERSION) .
 # Not included (PROTOCOL §2.7): upstream's scripted experts (molmo_spaces/policy/solvers: stubs only) and every grasp file.
 # Licences: code Apache-2.0; scenes and AI2-THOR objects CC BY 4.0; Objaverse objects ODC-BY 1.0 and each its creator's
-# CC BY / BY-SA / CC0 (scripts/molmospaces/make_instances.py selects no episode with a non-commercial one).
+# CC BY / BY-SA / CC0 (no instance uses an episode with a non-commercial one).
 FROM docker.io/library/python:3.11.13-slim-bookworm@sha256:86adf8dbadc3d6e82ee5dd2c74bec2e1c2467cdad47886280501df722372d2e1 AS base
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \
     MUJOCO_GL=egl PYOPENGL_PLATFORM=egl NVIDIA_DRIVER_CAPABILITIES=all \

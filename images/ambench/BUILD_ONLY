@@ -22,8 +22,7 @@ What is left out on purpose
   AM-Bench's scripted experts (source/ambench/ambench/policies/scripted/: they solve the tasks; the task registrations'
   pointer to them is blanked), its policy-learning package (ambench_learn), its scripts, documentation and git history.
   The build fails if anything left in /opt/ambench/source still names them. The reference solutions live in the task
-  directories' solution/ only (recorded by scripts/ambench/freeze.py with the expert mounted from a checkout outside the
-  image).
+  directories' solution/ only (recorded with the expert mounted from a checkout outside the image).
 
 Data
   The web assets the scenes would otherwise load from NVIDIA's asset bucket at run time are baked in under /opt/isaac-assets,

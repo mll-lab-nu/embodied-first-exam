@@ -22,7 +22,7 @@ sudo docker build -t ghcr.io/mll-lab-nu/eai-dexhand:$(cat images/dexhand/VERSION
 ```
 
 The published image is `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0`. After a `docker push` of a new version, write its digest
-(`sha256:...`) to `DIGEST`; `scripts/dexhand/generate.py` then pins every task's `FROM` and standard `sim.image` to it.
+(`sha256:...`) to `DIGEST`; every task's `FROM` and standard `sim.image` are pinned to it.
 
 `prepare_assets.py` reuses files that already match their manifest and rebuilds the Tianji meshes from the pinned
 public archives (`tianji/source-manifest.json`) when no verified copy exists; the conversion must reproduce

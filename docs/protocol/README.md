@@ -31,10 +31,16 @@ verifier decides internally) is the task's own business.
 | `[task].name = "robot-coding-bench/<folder>"`; `[metadata]` `author_name`, `task_type` (`trajectory` / `policy`), `simulator`, `robot` ([`TAXONOMY.md`](../TAXONOMY.md)), `family`, `mode`, `expert_time_estimate_hours`, `oracle` (+ `oracle_evidence`), `protocol` (sidecar modes), the settings of §2 | `check-task-fields.sh`, `check-protocol.py` |
 | The directory name `<base>-<mode>`, `<base>` = `<benchmark>-<family>-i<NN>` or the upstream name; no versions or durations in names | the mode is the whole suffix |
 | All task code in the directory, copied in by its Dockerfiles; base images hold the simulator and its assets; nothing imports repository code at run time | a task's identity is its directory (H.8) |
-| Generated tasks come with their generator (`scripts/<bench>/`), which ends with `scripts/task_conventions.py` `normalize`; re-running it reproduces the committed tasks | `check-generated-tasks.sh` |
+| Every task is in the normal form `scripts/task_conventions.py` `normalize` writes (README layout, rendered sections, `DIGEST`) | `task_conventions.py --check` |
 | Base images `ghcr.io/mll-lab-nu/eai-<name>:<images/<name>/VERSION>`, public unless `images/<name>/BUILD_ONLY`; every `FROM` / `image:` pinned to a tag or digest | `check-dockerfile.sh` |
 | README in the standard layout (`# <dir>`, key table, Task, Difficulty, Reference solution, Verification, Compute resources, Details); no `results/` | rendered by `normalize` |
 | A change to a published task, its scene included, is made in place: same name, a new DIGEST, a README Change Log entry | H.8 |
+
+**What a contribution delivers.** The deliverable is the tasks only: task directories under `tasks/<benchmark>/`. No
+task-generation code goes into the repository (generators, oracle searches, instance freezers, release builders stay
+with their authors). What several tasks of a benchmark share may go in `embodied_first_exam/benchmarks/<benchmark>/`;
+the recommended place is the benchmark's image (its `images/<name>/` Dockerfile and build), so the tasks get it from the
+image.
 
 ## 2. Task-declared settings
 
@@ -75,7 +81,7 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
   an episode starts the robot runs at 1/S of real speed whatever the agent does, holds its last targets while the agent
   thinks, and is driven by a program in the agent's own container.
 - A benchmark with its own runtime may export tasks that keep it (`metadata.protocol` = its own, listed in
-  `scripts/<bench>/exported.toml`); they are plain Harbor tasks, Appendix H applies to them unchanged, and their results
+  `ci_checks/benchmarks/<bench>/exported.toml`); they are plain Harbor tasks, Appendix H applies to them unchanged, and their results
   are reported apart.
 
 ## 4. Grading and results
@@ -95,7 +101,7 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 | Recommended | Notes |
 |---|---|
 | The instruction names the deliverable under `/app/output/` and never mentions `/tests/` | `check-instruction.sh` |
-| It states every convention the agent cannot infer: frames, quaternion order, units, action layout, client usage, the reset budget and S; world-frame quantities are decided per benchmark and consistent within it | benchmark hooks `scripts/<bench>/ci/advisory-*` |
+| It states every convention the agent cannot infer: frames, quaternion order, units, action layout, client usage, the reset budget and S; world-frame quantities are decided per benchmark and consistent within it | benchmark hooks `ci_checks/benchmarks/<bench>/advisory-*` |
 | It ends with three sections `normalize` renders: `## External material` (the honour rule: install packages and read what is installed, do not fetch a ready-made solution; the open-network paragraph for an open task), `## Resource limits`, `## Time limit` (the cutoff and what it means in the mode: running.md "The agent's time"); no second statement of the limit | `check-cutoffs.py`, `check-resources.py` |
 | Everything a task needs at run time is in its image or directory; nothing tells the agent to download something | |
 | A trial that fetched a solution is flagged and judged case by case by the owner; installing a general-purpose package never is | running.md |
@@ -113,8 +119,8 @@ off by default). Derivation, enforcement and the reward fields: running.md "Reso
 
 This text is **v2.0**. The wire protocol's versions:
 `eai-standard/2.1` (the base: `/spec`, `/status`, `/observe`, `/submit`, RCB1 frames), 2.2 (depth, kinematics, per-call
-bounds; shared layer `scripts/eai_standard/`), 2.3 (2.2 + realtime), 2.4 (2.3 + operation ids and deadlines; layer
-`scripts/eai_standard/v2_4/`). Minor versions only add; `/spec.protocol` equals `metadata.protocol`. A protocol change is
+bounds; shared layer `embodied_first_exam/standard/`), 2.3 (2.2 + realtime), 2.4 (2.3 + operation ids and deadlines; layer
+`embodied_first_exam/standard/v2_4/`). Minor versions only add; `/spec.protocol` equals `metadata.protocol`. A protocol change is
 an issue, then one pull request updating standard_mode.md, the reference implementation and an example task.
 
 ## Appendix H. Invariants (binding)
@@ -146,7 +152,7 @@ Nothing the agent's container can read (the task's `environment/` files, the tas
 frozen instance, installed documentation) contains a solution of the task or a pointer to one: a URL, a dataset or
 file name, a demonstration or episode id, the name of the upstream expert or policy for this task. Upstream experts,
 recorded demonstrations and policies trained for the task are scrubbed from images; provenance lives in
-`scripts/<bench>/` and the README. *CI:* `check-agent-pointers.py`, each benchmark's `scripts/<bench>/ci/invariant-*`
+the README and `docs/benchmarks/<bench>.md`. *CI:* `check-agent-pointers.py`, each benchmark's `ci_checks/benchmarks/<bench>/invariant-*`
 hooks; images are reviewed when built ([leakage.md](leakage.md)).
 
 **H.3 Standard trust boundary** (standard and standard-realtime). The simulator, the scene, the frozen instance, the

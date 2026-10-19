@@ -2,7 +2,7 @@
 """The checks check something: mutation self-test of the rules that guard the trust boundary and the resource caps.
 
 A rule that reads compose files or task.toml by pattern can go blind without anyone noticing: the trailing comment that
-scripts/rcb_monitor/inject.py writes after `volumes:` once hid every volume of the agent's container from
+images/monitor/rcb_monitor/inject.py writes after `volumes:` once hid every volume of the agent's container from
 check-verifier-isolation.sh, and all checks stayed green on a task whose agent container mounted the simulator's trusted
 volume (review of 2026-10-10, M5). This script copies a few real tasks into a temporary directory, breaks each copy in one
 way a rule exists for, and requires that the rule's check fails with the rule's message -- and that the unbroken copy
@@ -39,7 +39,7 @@ MONITOR = [sys.executable, str(ROOT / "ci_checks/check-monitor.py"), "--tier", "
 DIGESTS = ["bash", str(ROOT / "ci_checks/check-dataset-manifest.sh")]
 DOCKERFILE = ["bash", str(ROOT / "ci_checks/check-dockerfile.sh")]
 FIELDS = ["bash", str(ROOT / "ci_checks/check-task-fields.sh")]
-RP_LEAK = ["bash", str(ROOT / "scripts/robopaint_strict/ci/invariant-leak.sh")]
+RP_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/robopaint/invariant-leak.sh")]
 # the checks that enforce Appendix H (run_invariants.sh); every other check here is advisory
 INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK)
 WITH_NEIGHBOURS = (IDENTITY, TWINS)   # run on the broken copy among (links to) every other task
@@ -55,7 +55,7 @@ MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-b
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
 OPEN = "roboolympics-fun-sprint-i00-standard"                      # declares open egress, `[metadata] network = "open"` (Appendix H.6)
 FUN_P = "roboolympics-fun-sprint-i00-privileged"                   # its tooling and grader from a files-only image (COPY --from)
-RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (scripts/*/ci/invariant-*)
+RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (ci_checks/benchmarks/*/invariant-*)
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -362,11 +362,11 @@ MUTATIONS = [
      "missing `network_mode: none`"),
     ("the monitor sidecar runs another image", STD, COMPOSE,
      sub(r"^    image: ghcr.io/mll-lab-nu/eai-monitor:\S+", "    image: python:3.12-slim"), MONITOR,
-     "not the block scripts/rcb_monitor/inject.py writes"),
+     "not the block images/monitor/rcb_monitor/inject.py writes"),
     ("the monitor sidecar mounts code over the image's", STD, COMPOSE,
      sub(r"^(      - \./rcb_monitor/limits\.json:/opt/rcb_monitor/limits\.json:ro\n)",
          r"\1      - ./rcb_monitor/monitor.py:/opt/rcb_monitor/monitor.py:ro\n"), MONITOR,
-     "not the block scripts/rcb_monitor/inject.py writes"),
+     "not the block images/monitor/rcb_monitor/inject.py writes"),
     ("the verifier image no longer takes rcb_limits.py from the monitor image", STD, "tests/Dockerfile",
      sub(r"^COPY --from=\S+ /opt/rcb_monitor/rcb_limits\.py /tests/rcb_limits\.py\n", ""), MONITOR,
      "does not COPY rcb_limits.py from"),

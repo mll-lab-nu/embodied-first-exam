@@ -70,10 +70,10 @@ actively. The standard-realtime mode is offered where a benchmark's tasks call f
 - RoboARC: `<base>` is `roboarc-<family-with-dashes>-<NN>-i<NN>` (e.g. `roboarc-cast-coil-06-i01`): `<NN>` after the
   family is the task's two-digit number within its family (never reused; a removed task leaves a gap), `i01` the MuJoCo
   instance; `[metadata].family` is the family (`cast_coil`),
-  `difficulty` the owner's rating (`scripts/roboarc/roboarc_names.json`).
+  `difficulty` the owner's rating.
 - RoboOlympics-Fun: `<base>` is
   `roboolympics-fun-<family-with-dashes>-i<NN>` (`[metadata].family` = the family with underscores, e.g. `penalty_kick`);
-  every family in privileged and standard mode. RoboOlympics-Match, the tasks RoboOlympics exports (PROTOCOL §3, `scripts/roboolympics/exported.toml`): `<base>` is
+  every family in privileged and standard mode. RoboOlympics-Match, the tasks RoboOlympics exports (PROTOCOL §3, `ci_checks/benchmarks/roboolympics-match/exported.toml`): `<base>` is
   `roboolympics-match-<sport>-<format>-i<NN>` with the sport's RoboOlympics id (`tabletennis`, `badminton`, `soccer`,
   `soccerssl`, `fencing`) and its format (`match`, `bout`; `matchlow`: the low level, the agent's own uploaded skill plays the match); real-time
   matches in standard-realtime mode only, turn-based matches (`eai-standard-turn/1.0`) in standard mode only; never a family name of the generated families.
@@ -83,7 +83,7 @@ actively. The standard-realtime mode is offered where a benchmark's tasks call f
   some of them; no privileged twin): the slug is `<track><nn>` (`a03`), neutral because
   a RoboSafeBench family id names its hazard and a task's name can be read from inside the agent's container;
   `[metadata].family` is the slug, `robosafe_family` RoboSafeBench's id; NN runs over the family's members (and the
-  hidden member's tiers) in a fixed hashed order (`scripts/robosafe/families.json`).
+  hidden member's tiers) in a fixed hashed order.
 - ManiGuard: `<base>` is `maniguard-<family-with-dashes>-i<NN>`, NN = the ManiGuard-Bench task index (base level, e.g.
   `maniguard-jar-transport-i14` = `jar_transport/task_0014`); `[metadata].family` is ManiGuard's family (`jar_transport`).
 - `[task].name = "robot-coding-bench/<folder>"`.

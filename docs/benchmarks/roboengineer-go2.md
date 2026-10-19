@@ -1,6 +1,6 @@
 # roboEngineer: Unitree Go2 tasks
 
-> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `scripts/roboengineer/exported.toml`).
+> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 This family ports four SPI-Active-inspired objectives to **native CPU MuJoCo**, with NumPy controller inference and **OSMesa software rendering**. It is a new simulator port and benchmark definition, not reproduction of the paper's physical experiments or released trained policies. No upstream Go2 checkpoint is assumed.
 
@@ -73,7 +73,6 @@ python -m scripts.control_transfer.components.quadrupedbench.assets --out /path/
 export GO2_ASSET_DIR=/path/to/control-assets/go2
 export MUJOCO_GL=osmesa LIBGL_ALWAYS_SOFTWARE=1 CUDA_VISIBLE_DEVICES=''
 export OPENBLAS_NUM_THREADS=1 LP_NUM_THREADS=4
-python -m unittest scripts.control_transfer.tests.test_go2_contract -v
 python -m scripts.control_transfer.control_public.go2_train --assets "$GO2_ASSET_DIR" --task attitude --out /tmp/go2-nominal
 python -m scripts.control_transfer.components.quadrupedbench.simulation --policy /path/to/policy.json --case /path/to/private-case.json --out /tmp/go2-evaluation
 ```
@@ -82,20 +81,13 @@ Native Harbor packaging, service admission/egress and final verifier isolation a
 
 ## Reference readiness and validation limits
 
-`components/quadrupedbench/reference.py` exports operator-only analytic reference artifacts. The pinned SPI-Active Git tree contains no `.pt`, `.pth`, `.onnx`, `.jit` or `.ckpt` policy files; its downstream recipes describe training rather than shipping a portable expert. No GPU training or RL convergence is claimed here.
+The analytic reference artifacts are operator-only (each task's `solution/reference.py` deploys the frozen one). The pinned SPI-Active Git tree contains no `.pt`, `.pth`, `.onnx`, `.jit` or `.ckpt` policy files; its downstream recipes describe training rather than shipping a portable expert. No GPU training or RL convergence is claimed here.
 
 Local native CPU validation covers ten held-out cases per task, each replayed in a fresh process with identical state and noisy-feedback hashes, plus one physically unpowered no-op per task and one decoded software-rendered video per task. The actual OpenGL renderer is checked for software rasterization. Boundary tests additionally reject nonfinite/oversized/malformed artifacts and reject ground-spinning, walking-to-target, and hop-then-ground-motion substitutes for jumping.
 
 **Reference readiness is task-specific:** attitude tracking has a positive analytic reference; weave and both jump controllers remain partial candidates and must not be labeled `oracle = "full"` or released as established-solvable tasks. The weave candidate still collides with poles and can miss the finish gate. Forward-jump trials achieve flight but undershoot first-touch displacement and fail stable landing. Yaw-jump trials achieve airborne rotation but retain contact, final-heading, drift or settling failures. The next step is task-specific trajectory optimization or learned control with the same observation boundary, followed by a new frozen held-out evaluation; success thresholds must not be relaxed to fit these candidates.
 
 These local checks validate the family physics, data interface and replay behavior. Completed native service integration and bounded container-boundary probes are documented in the acceptance section below. Reference solvability for the three partial tasks and actual coding-agent evaluations remain outstanding. Integration evidence and full per-case media are retained outside Git by the orchestrator.
-
-To reproduce the full family validation:
-
-```bash
-python -m scripts.control_transfer.components.quadrupedbench.reference --out /tmp/go2-reference
-python -m scripts.control_transfer.components.quadrupedbench.validate_cpu --policies /tmp/go2-reference --out /tmp/go2-validation
-```
 
 Archived MuJoCo 3.8.0 schema-v2 local validation (instance 0, same-plant bank) used the unchanged frozen references: attitude 10/10 successes, mean score 91.06475; weave 0/10, mean 0; forward jump 0/10, mean 0; yaw jump 0/10, mean 9.8. All 40 fresh-process replays matched state, feedback and metrics; four no-op scores were zero and four OSMesa videos fully decoded. These results supersede the legacy seed-bank evidence for acceptance, but do not establish shared Harbor isolation or solvability of the three partial families.
 
@@ -113,13 +105,13 @@ Required-runtime acceptance was repeated on MuJoCo **3.5.0**, same frozen polici
 
 `trusted/go2_spec.py` provides `make_spec` without importing NumPy, MuJoCo or the numeric controller. The existing `trusted/go2.py` import remains compatible and loads physics only inside `rollout`. Public `control_public/go2_data.py` contains the shared pure-data constants, default artifact and JSON validator; include it in the public training allowlist alongside the existing three Go2 public modules. Keep `trusted/go2_spec.py` private because it generates seed banks.
 
-Run `python -S -m unittest scripts.control_transfer.tests.test_go2_spec -v` in the static job. It generates all four specs through both import paths and verifies the absence of numerical/physics modules. Specs, default artifacts and task criteria remain identical to the pre-refactor version. Root may normalize the returned instance schema.
+Specs, default artifacts and task criteria remain identical to the pre-refactor version. Root may normalize the returned instance schema.
 
 ## Exact integration runtime and reference-search limits
 
 The exact committed evaluator at `118116389` was validated using the orchestrator's specified MuJoCo3.5.0/OSMesa environment. All40 state/feedback/metric records matched the preceding3.5 run;15 tests,40 fresh-process replays,4 zero-score no-ops and4 decoded videos passed. No compatibility, physics, policy or success-predicate changes were needed. Older3.8 evidence is archived and is not current acceptance evidence.
 
-`components/quadrupedbench/search_reference.py` is an operator-only bounded search: at most60 candidates and1200 seconds, one process, with each candidate evaluated on the same3 adaptation cases. Its private adaptation metric objective ranks reference candidates; it does not alter official scores or represent coding-agent feedback. It never reads held-out cases. Search outputs are development artifacts until a frozen candidate demonstrates the unchanged official success gates.
+The operator-only reference search is bounded: at most60 candidates and1200 seconds, one process, with each candidate evaluated on the same3 adaptation cases. Its private adaptation metric objective ranks reference candidates; it does not alter official scores or represent coding-agent feedback. It never reads held-out cases. Search outputs are development artifacts until a frozen candidate demonstrates the unchanged official success gates.
 
 The current `go2-controller/1` ABI is restricted: the gait/jump state machine and transition times are hard-coded; trajectory offsets have17 knots (0.375 s spacing for6-second jumps); learned feedback is a12x6 linear matrix on roll/pitch error and angular rate, with the third input fixed at zero. The learned offset cannot consume joint history, infer contact/flight phase, or condition a general policy on changing commands. The frozen wrapper does use noisy joints for Jacobian/PD calculations, and includes fixed yaw correction, but this does not provide arbitrary trainable state feedback. Published learned locomotion policies cannot be imported directly through this ABI. These are expressiveness limits, not a proof that the task predicates are physically impossible. A future ABI supporting a bounded numeric MLP/history-based policy with fixed CPU inference would permit more capable controllers without exposing privileged state; this iteration does not change the ABI or predicates.
 

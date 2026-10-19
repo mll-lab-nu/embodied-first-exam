@@ -3,16 +3,16 @@
 the monitor sidecar that check-verifier-isolation.sh exempts is held to its own isolation (no network, its code from
 the pinned image and its limits read-only, the beacons read-only in every other service, its seal the first sidecar collect hook), and tests/test.sh
 sanitizes /app/output before anything reads the agent's files, and the monitor image every task pins carries this
-repository's monitor code (scripts/rcb_monitor/inject.py CONTENTS = the sha256 of scripts/rcb_monitor/{monitor,rcb_limits,
+repository's monitor code (images/monitor/rcb_monitor/inject.py CONTENTS = the sha256 of images/monitor/rcb_monitor/{monitor,rcb_limits,
 selftest}.py). ADVISORY (`--tier advisory`): the task's two copies of the limits, no copy of the code in the task, the
 verifier step's trap and COPY lines, and the monitor's own tests. Default: both.
 
 PROTOCOL v1 §2.10 (v1.2): every task with `[metadata.resources.limits]` runs the resource monitor sidecar and the verifier
-step, wired exactly as scripts/rcb_monitor/inject.py writes them (task_conventions.py --check catches any drift from the
+step, wired exactly as images/monitor/rcb_monitor/inject.py writes them (task_conventions.py --check catches any drift from the
 generator; this check catches a task the generator never ran on, and hand edits that break the safety properties).
 
     python3 ci_checks/check-monitor.py [--tier invariants|advisory|all] [task dirs]   # default: every task, both tiers
-                                                        # (advisory: also runs scripts/rcb_monitor/selftest.py and test_monitor.py)
+                                                        # (advisory: also runs images/monitor/rcb_monitor/selftest.py and test_monitor.py)
 """
 import re
 import subprocess
@@ -22,9 +22,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "images/monitor"))
 from rcb_monitor import inject  # noqa: E402
 
-SRC = ROOT / "scripts" / "rcb_monitor"
+SRC = ROOT / "images" / "monitor" / "rcb_monitor"
 
 
 def check(task: Path) -> tuple[list[str], list[str]]:
@@ -58,7 +59,7 @@ def check(task: Path) -> tuple[list[str], list[str]]:
         # the whole service is the generator's (its code from the pinned image, nothing else mounted, no other command)
         gen = [inject.monitor_block(gpu, observe) for gpu in (False, True) for observe in (False, True)]
         if not any(blk + "\n" == "".join(g) for g in gen):
-            inv.append("rcb_monitor service: not the block scripts/rcb_monitor/inject.py writes (another image, mount, "
+            inv.append("rcb_monitor service: not the block images/monitor/rcb_monitor/inject.py writes (another image, mount, "
                        "command or entrypoint)")
     # every other service mounts its beacon read-only, the right one for the mode
     try:
@@ -110,9 +111,9 @@ def main(argv):
     if tier != "advisory":   # the image every task pins carries this repository's monitor code (inject.CONTENTS)
         drift = {f: h for f, h in inject.contents().items() if inject.CONTENTS.get(f) != h}
         if drift or set(inject.CONTENTS) != set(inject.CODE):
-            print(f"FAIL scripts/rcb_monitor: {', '.join(sorted(drift)) or 'CONTENTS'} differ from inject.CONTENTS, i.e. from "
+            print(f"FAIL images/monitor/rcb_monitor: {', '.join(sorted(drift)) or 'CONTENTS'} differ from inject.CONTENTS, i.e. from "
                   f"what {inject.IMAGE} carries: build and push a new images/monitor/ version, then update IMAGE and CONTENTS "
-                  "(scripts/rcb_monitor/inject.py contents; verify-image) and re-run scripts/task_conventions.py on every task")
+                  "(images/monitor/rcb_monitor/inject.py contents; verify-image) and re-run scripts/task_conventions.py on every task")
             bad = 1
     if tier != "invariants":   # what the pinned image really carries (anonymous registry read; a network failure warns)
         try:
@@ -125,7 +126,7 @@ def main(argv):
         for test in ("selftest.py", "test_monitor.py"):      # the violation rule and the verifier step; the monitor's own logic
             r = subprocess.run([sys.executable, str(SRC / test)], capture_output=True, text=True)
             if r.returncode != 0:
-                print(f"FAIL scripts/rcb_monitor/{test}:\n" + r.stdout + r.stderr)
+                print(f"FAIL images/monitor/rcb_monitor/{test}:\n" + r.stdout + r.stderr)
                 bad = 1
     for d in dirs:
         inv, adv = check(d)
