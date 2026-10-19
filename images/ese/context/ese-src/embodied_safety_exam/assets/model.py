@@ -19,10 +19,10 @@ IDENTITY = (1.0, 0.0, 0.0, 0.0)
 # Shared default classes; every file the generator writes declares the same ones.
 DEFAULTS = (
     '  <default>\n'
-    '    <default class="rsb_visual"><geom contype="0" conaffinity="0" group="2" density="0"/></default>\n'
-    '    <default class="rsb_solid"><geom group="2" condim="4" friction="0.9 0.005 0.0002" solref="0.005 1" solimp="0.9 0.999 0.0005 0.5 2"/></default>\n'
-    '    <default class="rsb_collision"><geom group="3" rgba="0.9 0.3 0.2 0.35" condim="4" friction="0.9 0.005 0.0002" solref="0.005 1" solimp="0.9 0.999 0.0005 0.5 2"/></default>\n'
-    '    <default class="rsb_site"><site group="4" size="0.0015" rgba="0.1 0.8 0.3 1"/></default>\n'
+    '    <default class="ese_visual"><geom contype="0" conaffinity="0" group="2" density="0"/></default>\n'
+    '    <default class="ese_solid"><geom group="2" condim="4" friction="0.9 0.005 0.0002" solref="0.005 1" solimp="0.9 0.999 0.0005 0.5 2"/></default>\n'
+    '    <default class="ese_collision"><geom group="3" rgba="0.9 0.3 0.2 0.35" condim="4" friction="0.9 0.005 0.0002" solref="0.005 1" solimp="0.9 0.999 0.0005 0.5 2"/></default>\n'
+    '    <default class="ese_site"><site group="4" size="0.0015" rgba="0.1 0.8 0.3 1"/></default>\n'
     '  </default>\n'
 )
 
@@ -355,7 +355,7 @@ def _geom(asset: Asset, g: Geom, prefix: str, overrides: dict | None = None) -> 
     a: list[tuple[str, str | None]] = []
     if g.name:
         a.append(("name", prefix + g.name))
-    a.append(("class", {"visual": "rsb_visual", "collision": "rsb_collision", "solid": "rsb_solid"}[g.role]))
+    a.append(("class", {"visual": "ese_visual", "collision": "ese_collision", "solid": "ese_solid"}[g.role]))
     a.append(("type", g.type))
     if g.type == "box":
         a.append(("size", vec([s / 2.0 for s in g.size], MM)))
@@ -437,7 +437,7 @@ def body_element(asset: Asset, prefix: str = "", name: str | None = None, pos: S
         lines += [f"{ind}  {_joint(j, prefix)}" for j in b.joints]
         lines += [f"{ind}  {_geom(asset, g, prefix, overrides)}" for g in b.geoms]
         for s in b.sites:
-            sa: list[tuple[str, str | None]] = [("name", prefix + s.name), ("class", "rsb_site")] + _pose(s.pos, s.quat)
+            sa: list[tuple[str, str | None]] = [("name", prefix + s.name), ("class", "ese_site")] + _pose(s.pos, s.quat)
             if s.size_mm is not None:
                 sa.append(("size", num(s.size_mm * MM)))
             lines.append(f"{ind}  <site{_attrs(sa)}/>")

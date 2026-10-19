@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Prepare the build context of ese, images/ese/context/ (images/ese/BUILD_CONTEXT):
-#   context/ese-src/               Embodied Safety Exam at the commit pinned in source.env, with the exact public metadata
-#                                  projection in PUBLIC_SOURCE_PROJECTION.json replayed before checksumming: the
+#   context/ese-src/               Embodied Safety Exam at the commit pinned in source.env, as committed there: the
 #                                  package `embodied_safety_exam/`, pyproject.toml, README.md, LICENSE, LICENSE-assets and
 #                                  assets/third_party/ without the MuJoCo Menagerie robot models (their README and the
 #                                  DejaVu font stay)
@@ -42,16 +41,15 @@ cp -a "$TMP/all/." "$OUT/ese-src/"
 python3 - "$OUT/ese-src/README.md" <<'PY'
 import sys
 p = sys.argv[1]; s = open(p).read()
-old = ("Status: under construction. `STATUS.md` says what exists today; `docs/CONTRACTS.md` holds the interfaces;\n"
-       "`docs/DESIGN.md` the design.\n")
-new = ("This copy is a pinned snapshot of the simulator package for Embodied First Exam's image `efe-private:ese`; for\n"
-       "the contracts that matter there, see `docs/benchmarks/embodied-safety-exam.md` in Embodied First Exam.\n")
+old = ("`docs/CONTRACTS.md` holds the interfaces, `docs/DESIGN.md` the design;\n"
+       "`STATUS.md` is the development log up to 0.5.4.\n")
+new = ("This copy is a pinned snapshot of the simulator package for Embodied First Exam's image `efe:ese`; for the\n"
+       "contracts that matter there, see `tasks/embodied-safety-exam/README.md` in Embodied First Exam.\n")
 if old not in s:
     sys.exit("README.md changed upstream: update the rewrite in fetch_context.sh")
 open(p, "w").write(s.replace(old, new))
 PY
 cp "$HERE/requirements.txt" "$OUT/requirements.txt"
-python3 "$HERE/public_source_projection.py" "$OUT/ese-src" "$HERE/PUBLIC_SOURCE_PROJECTION.json"
 printf '%s\n' "$full" > "$OUT/ese-commit"
 printf 'MENAGERIE_REPO=%s\nMENAGERIE_COMMIT=%s\n' "$MENAGERIE_REPO" "$MENAGERIE_COMMIT" > "$OUT/menagerie.env"
 ( cd "$OUT/ese-src" && find . -type f -print0 | LC_ALL=C sort -z | xargs -0 sha256sum ) > "$OUT/ese-src.sha256"   # names may hold spaces (0.5.2: the G1 licence)

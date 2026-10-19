@@ -571,7 +571,7 @@ class World:
         sc = self.scene
         root = third_party_dir() / "mujoco_menagerie"
         s = mujoco.MjSpec()
-        s.modelname = "robosafe_bench"
+        s.modelname = "ese"
         s.option.timestep = self.physics_dt
         s.option.integrator = mujoco.mjtIntegrator.mjINT_IMPLICITFAST
         s.option.cone = mujoco.mjtCone.mjCONE_ELLIPTIC

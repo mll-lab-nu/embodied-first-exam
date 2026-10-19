@@ -4,7 +4,7 @@
   "remedy": "Explicit checksum supplement; frozen pack manifests and every OBJ/PNG remain unchanged.",
   "packs": {
     "hand": {
-      "pack_sha256": "4f0c6f99e6e75aebe7f2cb5d86000155d5838fbed77a50a9af6f5ef0f0fe4169",
+      "pack_sha256": "557420d44501d7b133b769c14ac3eeaa201aece4c57613d699639598020fd3a4",
       "source_pack": "historical-source://asset-build/runtime/pilot/out/v2/packs/hand/pack.json",
       "source_pack_sha256": "43a9d6a72b371da5a6599807304b785bf343fdfc71c0c8eff342f674d687a460",
       "files": {

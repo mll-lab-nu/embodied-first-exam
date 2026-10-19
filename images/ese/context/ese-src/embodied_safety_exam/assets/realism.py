@@ -37,7 +37,7 @@ P = SimpleNamespace(**_CONFIG)
 PACKS = str(DATA / "packs")
 MATLIB_DIR = str(DATA / "matlib")
 MATLIB = json.loads((DATA / "matlib" / "matlib.json").read_text())
-COL = json.loads((DATA / "rsb_colors.json").read_text())
+COL = json.loads((DATA / "ese_colors.json").read_text())
 PROFILE = "realism_v3"
 SOURCE_COMMIT = "b5bf3128ffb2435129ea2a85e46206e081f388f1"
 
@@ -176,7 +176,7 @@ class _Doc:
         mattr["rgba"] = " ".join(f"{v:.4f}" for v in rgba)
         mattr.update(mat or {"specular": "0.15", "shininess": "0.25"})
         ET.SubElement(self.asset, "material", mattr)
-        attrs = {"name": name, "class": "rsb_visual", "type": "mesh", "mesh": name, "material": name,
+        attrs = {"name": name, "class": "ese_visual", "type": "mesh", "mesh": name, "material": name,
                  "pos": " ".join(f"{v:.6f}" for v in pos), "quat": " ".join(f"{v:.8f}" for v in quat)}
         body.insert(index, ET.Element("geom", attrs))
 
@@ -194,7 +194,7 @@ def _material_only(doc, kind, meta, plan):
     finish, geom_mat = plan.get("finish", P.DEFAULT_FINISH), plan.get("geom_mat", {})
     changed = 0
     for g in doc.root.iter("geom"):
-        if g.get("class") not in ("rsb_visual", "rsb_solid") or _protected(doc, g, meta, set()):
+        if g.get("class") not in ("ese_visual", "ese_solid") or _protected(doc, g, meta, set()):
             continue
         name, mat = g.get("name", ""), g.get("material")
         lib = next((v for k, v in geom_mat.items() if name.startswith(k)), None)
@@ -202,7 +202,7 @@ def _material_only(doc, kind, meta, plan):
         if lib is None and kind == "cardboard_box" and mat == "gloss":
             lib = "plastic"
         if lib is None:
-            lib = P.BY_RSB_MATERIAL.get(mat, finish) if mat not in ("matte", "satin", "gloss", None) else finish
+            lib = P.BY_ESE_MATERIAL.get(mat, finish) if mat not in ("matte", "satin", "gloss", None) else finish
         if lib is None:
             continue
         rgba = _rgba(g)
@@ -282,17 +282,17 @@ def realize(kind, prop, out_suffix="_real"):
         for parent in doc.root.iter():
             for g in list(parent.findall("geom")):
                 cls, name = g.get("class"), g.get("name", "")
-                if cls not in ("rsb_visual", "rsb_solid"):
+                if cls not in ("ese_visual", "ese_solid"):
                     continue
                 if hide_only is not None:
                     if name not in hide_only:
                         continue
                 elif _protected(doc, g, meta, keep):
                     continue
-                if cls == "rsb_visual":
+                if cls == "ese_visual":
                     parent.remove(g)
                 else:
-                    g.set("class", "rsb_collision")
+                    g.set("class", "ese_collision")
         # where the mesh goes
         if pk["align"] == "points":
             support = var.get("support_fit") if kind == "person_down" else None
@@ -319,7 +319,7 @@ def realize(kind, prop, out_suffix="_real"):
             scale, pos, quat = [s, s, s], [0, 0, 0], [1, 0, 0, 0]
         else:
             lo, hi = np.asarray(meta["bbox"][0]), np.asarray(meta["bbox"][1])
-            rlo, rhi = np.asarray(var["rsb_bbox"][0]), np.asarray(var["rsb_bbox"][1])
+            rlo, rhi = np.asarray(var["ese_bbox"][0]), np.asarray(var["ese_bbox"][1])
             ratio = (hi - lo) / np.maximum(rhi - rlo, 1e-9)
             fit = var.get("fit") or "max"
             if fit in ("xyz", "xy_z"):
