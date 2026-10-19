@@ -8,8 +8,8 @@ import hashlib
 import json
 import re
 
-SCHEMA = 'rsb.public-control-plan/2'
-NATIVE_SCHEMA = 'robosafebench.public-observation-boundaries/1'
+SCHEMA = 'ese.public-control-plan/2'
+NATIVE_SCHEMA = 'embodied_safety_exam.public-observation-boundaries/1'
 POLICY = {'version':'native-boundaries/0.5.4-v1', 'initial_observe':False,
           'submit_cameras':[], 'seconds':0, 'video':'none', 'include_depth':False,
           'max_cameras_per_batch':2, 'cost':'public_spec.timing_picture_costs'}

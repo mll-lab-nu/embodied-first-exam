@@ -10,7 +10,7 @@ from pathlib import Path
 import shutil
 
 ROOT = Path("assets/third_party")
-PACKAGE = Path("robosafebench/assets/data/third_party")
+PACKAGE = Path("embodied_safety_exam/assets/data/third_party")
 
 
 def sha(path):
