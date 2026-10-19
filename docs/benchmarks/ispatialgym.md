@@ -114,9 +114,9 @@ verifier's, for all 12 tasks.
 ## Run
 ```bash
 export RCB_BEHAVIOR_DATA=/path/to/behavior-data   # omnigibson-robot-assets/, behavior-1k-assets/ (3.9.0), omnigibson.key; mounted at /bdata
-harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-standard -a codex -m openai/gpt-6-astra --env-file .env
 harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-standard -a nop      # scores 0
-harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-privileged -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-privileged -a codex -m openai/gpt-6-astra --env-file .env
 ```
 The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `download_omnigibson_robot_assets()`,
 `download_behavior_1k_assets(accept_license=True)`), the same one BEHAVIOR-1K's tasks mount. Build the image as
