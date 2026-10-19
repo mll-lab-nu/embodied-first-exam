@@ -78,8 +78,10 @@ version, mode, cutoff, reset budget, S, network), report success together with c
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
 unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
 every core task, the flag is shown as a marker and may be used as a filter. The main table and every headline number
-(success rates, rankings, totals) count the core set only ([`core_set.toml`](../core_set.toml), `task_conventions.set_of`:
-`core`, else `excluded`). It lists task dirs, each mode its own task: every task dir of main at the list's
+(success rates, rankings, totals) count core only: one dir per task of [`core_set.toml`](../core_set.toml), its mode
+the first listed of standard-realtime > standard > privileged (`task_conventions.core_tasks()`); core-privileged /
+core-standard / core-standard-realtime are the list's dirs of that mode (`set_of`: `core` when listed, else
+`excluded`). The list names task dirs, each mode its own task: every task dir of main at the list's
 `generated_from` commit minus the tasks judged easy (solved through a shortcut, judged too easy by the benchmark owner, or
 solved in every mode by the screening runs) and minus the dirs the reference run codex-gpt6_luna-xhigh solved (a success
 in any mode takes out the base; a RoboSafeBench privileged twin, reported apart, takes out only itself), plus owner

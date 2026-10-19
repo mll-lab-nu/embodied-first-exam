@@ -2,7 +2,8 @@
 """Embodied First Exam runs on Harbor. `uv tool install --force -e . --with-executables-from harbor` installs `harbor` (Harbor 0.23.0, plus the
 flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywhere; the tasks are this clone's.
 
-  harbor run -a codex -m openai/gpt-6-luna            # the core set (docs/core_set.toml), every mode: the default
+  harbor run -a codex -m openai/gpt-6-luna            # core (one mode per task): the default
+  harbor run --core --privileged -a codex -m openai/gpt-6-luna   # core-privileged (also --standard, --standard-realtime)
   harbor run --all -a codex -m openai/gpt-6-luna      # every task
   harbor run --standard -a claude-code -m anthropic/claude-fable-5-1   # --privileged / --standard / --standard-realtime
   harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # -i / -x filter within the set
@@ -10,7 +11,9 @@ flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywh
   harbor run -p tasks/<benchmark>/<task> -a nop       # one task: Harbor's own -p, untouched
   harbor run -p tasks/<benchmark> -a nop              # every task of one benchmark: Harbor's own -p, untouched
 
-Set: --core (default) or --all. Modes: any of --privileged, --standard, --standard-realtime; none = every mode.
+Set: --core (default) or --all. core = one task dir per task of docs/core_set.toml, its mode the first listed of
+standard-realtime > standard > privileged; with mode flags, core-<mode> = the list's dirs of those modes. Modes: any of
+--privileged, --standard, --standard-realtime; none = every mode (with --all) or one per task (core).
 --benchmark <name> keeps a benchmark: its README label or its folder under tasks/ (repeatable). With any of these flags,
 -p <dir> (a task dir, a benchmark folder or tasks/) narrows the set to the task dirs under it, and -c <file> is layered
 after the wrapper's job config. --list prints the task
@@ -110,7 +113,7 @@ def run(argv: list[str], app=None) -> int:
         else:
             rest.append(a)
     tasks = [t.name for t in tc.iter_tasks()]
-    pick = tasks if use_all else sorted(set(tc.core_set()) & set(tasks))
+    pick = tasks if use_all else sorted(set(tc.core_tasks(modes)) & set(tasks))
     scope = under(paths)
     pick = [t for t in pick if (scope is None or t in scope)
             and (not modes or tc.mode_of(Path(t)) in modes)
@@ -119,8 +122,7 @@ def run(argv: list[str], app=None) -> int:
             and not any(fnmatch.fnmatchcase(t, p) for p in exc)]
     if not pick:
         print("no task matches", file=sys.stderr); return 2
-    print(f"{len(pick)} task(s) of the {'full' if use_all else 'core'} set"
-          + (f", {', '.join(sorted(modes))}" if modes else "")
+    print(f"{len(pick)} task(s) of " + ("all" if use_all else "core") + (f", {', '.join(sorted(modes))}" if modes else "")
           + (f", {', '.join(sorted(set(benches)))}" if benches else ""), file=sys.stderr)
     if listing:
         print("\n".join(pick)); return 0
