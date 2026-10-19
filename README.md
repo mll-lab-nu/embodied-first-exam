@@ -1,9 +1,14 @@
 # Embodied First Exam
 
-**Can a coding agent program a robot?** Robot-manipulation tasks for coding agents (Claude Code, Codex, …) in the
-[Harbor](https://github.com/harbor-framework/harbor) task format.
+<p>
+  <a href="https://www.embodied-first-exam.ai"><img src="docs/assets/badge-website.svg" alt="Website: embodied-first-exam.ai" height="36"></a>
+  <a href="https://discord.gg/TvscHrhDt"><img src="docs/assets/badge-discord.svg" alt="Discord" height="36"></a>
+</p>
 
-**Website, leaderboard and videos: [embodied-first-exam.ai](https://embodied-first-exam.ai)**
+Code agents have passed many exams in the digital world.<br>
+**What is their first exam to enter the physical world?**
+
+Robot tasks for code agents (Claude Code, Codex, …) in the [Harbor](https://github.com/harbor-framework/harbor) task format.
 
 ## Quick start
 
@@ -58,6 +63,10 @@ harbor run -p tasks/<benchmark>/<task> -a oracle                 # one task
 | YAMLab | 2 | 20 |
 | **Total** | **449** | **2128** |
 <!-- /task-table -->
+
+## Contribute
+
+See [embodied-first-exam.ai/contribute](https://www.embodied-first-exam.ai/contribute/).
 
 ## License
 
