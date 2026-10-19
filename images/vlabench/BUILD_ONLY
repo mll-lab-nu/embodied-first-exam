@@ -1,0 +1,1 @@
+Private (ghcr.io/mll-lab-nu/efe-private:vlabench-<VERSION>): the tasks reference the efe-private tag and docs/benchmarks/vlabench.md says the images are not public.

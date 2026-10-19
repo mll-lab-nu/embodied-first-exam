@@ -157,7 +157,7 @@ This page cites the paper and links the repository; when the repository adds a l
 ## Rebuilding
 ```bash
 docker build -t ghcr.io/mll-lab-nu/efe:libero-max-$(cat images/libero-max/VERSION) -f images/libero-max/Dockerfile .
-cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
+bash ci_checks/run_all.sh
 ```
 
 ## Evidence

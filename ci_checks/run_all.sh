@@ -75,6 +75,7 @@ for ((i = 0; i < ${#tasks[@]}; i += chunk)); do
 done
 # per-task Python checks over the tasks in scope: the given ones, else all (a scoped run: its benchmarks' tasks)
 targs=""; if [ $explicit -eq 1 ] || [ "$scope" = benchmarks ]; then for t in "${tasks[@]}"; do targs+=" $(q "$t")"; done; fi
+[ ${#targs} -le 100000 ] || targs=""   # longer than one `bash -c` argument may be (128 KiB): the checks' default, every task (a superset)
 # the benchmarks' own advisory hooks: every ci_checks/benchmarks/*/advisory-*, given the tasks in scope as arguments, through
 # xargs from a list file (every task's path in one command line is longer than a single argument may be, 128 KiB)
 if [ ${#tasks[@]} -gt 0 ]; then
