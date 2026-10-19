@@ -30,7 +30,7 @@ What is staged per scene: `scene.py`, `scene.xml`, `task.json`, `layout.json`, `
 scene's own Python modules (not `_*.py` scripts) and `assets/`; then `assets.json` (its `note` and `tasks`, the pins the
 image carries at `/opt/ikea/assets.json`) and `bytepatch_libmujoco.py`. `stage_context.py` refuses any file whose sha256
 differs from the pins and any scene text that points at upstream material (PROTOCOL Appendix H.2); the scenes' upstream
-provenance is kept out of the image, in `images/ikea-mujoco/provenance.json`.
+provenance is kept outside this repository.
 
 ## Build (from the repository root)
 
