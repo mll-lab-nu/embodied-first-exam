@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | Embodied Safety Exam |
 | Mode | standard (`eai-standard/2.1`) |
-| Twin | `ese-c16-i00-privileged` |
+| Twin | — (none: Embodied Safety Exam has no privileged mode, PROTOCOL §2.15) |
 | Simulator / robot | `mujoco` / `ur5e-robotiq-2f85` |
 | Family / instance | `c16` / seed 0 |
 | Oracle | `full` — The native reference and do-nothing control for Embodied Safety Exam 0.5.4 were checked, including one independent reference replay: the reference passes and doing nothing fails. Other baselines, including done_at_once, are NOT_RUN. Public compiled execution is checked separately. |
@@ -69,6 +69,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 Source `2c6360ccca8132bdfdf2f18bf0f16112d04b1b0a`; image `sha256:a0686dad783e89f42741c3d506950771162f0b9cc9ae306d6b7acd98eb14b552`; tracked source digest `67f3af7ec75c4566e44b7c98492d7afbb9e42ad6a7d63fcfef5c6c79f24bb0a2`; visual profile `realism_v3`, revision `realism_v3-b5bf312-dog-fallen-power-detail-v2`, manifest SHA256 `2e030c8f77c301bee3ed2733f4bcc4f3e1e6b4a7502dcf5816883e1c7c705913`.
 
 ### Change Log
+- 2026-10-19 (Embodied Safety Exam): its privileged twin was removed: the benchmark is now standard mode only (76 tasks, 50 in core; docs/benchmarks/embodied-safety-exam.md).
 - 2026-10-17 (owner, board 0150/0151): graded by the live episode. The sim service judges the episode it ran with Embodied Safety Exam's verdict and writes `verdict.json` from it; the two fresh-process grading replays no longer run (`reward.json`: `graded_by_live` 1 and `replays` 0 in place of `replay_success`, `deterministic` and `replays_agree`). The scene is checked against the frozen instance's start hash when the episode begins (`instance_mismatch`, an infrastructure failure). The video is still one run of the recorded rows after the verdict. The pass rule is Embodied Safety Exam's, unchanged: on all 1715 recorded trials of this benchmark the live verdict and the replays' agreed, so recorded verdicts keep their value.
 - 2026-10-17 (Embodied Safety Exam 0.5.4, PR #296): new task. `[metadata] dynamics` is `dynamic` (the child runs up and reaches out; it was exported as `static`). Its replays' and video's bounds follow the agent's budget: REPLAY_TIMEOUT_S 3900, the sim collect hook's verdict wait 4080 s and video wait 5280 s (`timeout_sec` 5310).
 - 2026-10-16 (board 0136): the sim collect hook waits for the replay video until 1680 s after the episode ends (was 870 s; `timeout_sec` 900 -> 1710). The video replays the graded episode once more after the verdict, and episodes of more than ~17,000 control steps lost it. Video only: the verdict, its 840 s bound, the physics and the pass rule are unchanged, so results from before this date stay valid.

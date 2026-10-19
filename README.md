@@ -29,7 +29,7 @@ harbor run -p tasks/<benchmark>/<task> -a oracle                 # one task
 | DexHand | 23 | 60 |
 | DexJoCo | 2 | 22 |
 | DexToolBench | 20 | 42 |
-| Embodied Safety Exam | 51 | 144 |
+| Embodied Safety Exam | 50 | 76 |
 | HumanoidBench | 8 | 30 |
 | IKEA MuJoCo | 8 | 16 |
 | iSpatialGym | 8 | 24 |
@@ -55,7 +55,7 @@ harbor run -p tasks/<benchmark>/<task> -a oracle                 # one task
 | RoboWits | 6 | 30 |
 | VLABench | 2 | 72 |
 | YAMLab | 2 | 20 |
-| **Total** | **450** | **2196** |
+| **Total** | **449** | **2128** |
 <!-- /task-table -->
 
 ## License
