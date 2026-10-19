@@ -2,7 +2,7 @@ schema_version = "1.3"
 artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
 
 [task]
-name = "robot-coding-bench/ikea-variera-i00-privileged"
+name = "embodied-first-exam/ikea-variera-i00-privileged"
 description = "IKEA MuJoCo VARIERA shelf insert (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Assemble the VARIERA shelf insert: place the two side frames, lower the shelf onto them, and drive the four screws through the shelf holes into the frames' receivers until they seat. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
 authors = [{ name = "Xiaoyu" }]
 keywords = ["robotics", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "code-as-policy", "trajectory"]

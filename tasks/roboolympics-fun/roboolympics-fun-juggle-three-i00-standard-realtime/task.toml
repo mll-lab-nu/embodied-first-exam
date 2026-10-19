@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboolympics-fun-juggle-three-i00-standard-realtime"
+name = "embodied-first-exam/roboolympics-fun-juggle-three-i00-standard-realtime"
 description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 1): RoboOlympics juggle-three on the same frozen instance as roboolympics-fun-juggle-three-i00-privileged. Juggle three balls in a cascade: throw each ball from one hand in an arc to the other, the hands in turn, until 10 catches have been made in a row. Once an attempt starts the venue does not wait; the agent drives the robot from a program of its own through the client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 10 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records every executed control step and grades the last attempt live with the family's referee (no grading replay)."
 authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "roboolympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-realtime-mode", "trajectory", "juggle-three"]
@@ -50,7 +50,7 @@ recommended_gpu = "any NVIDIA GPU with EGL (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "as the standard twin; the GPU renders the cameras over EGL (board 0112, 2026-10-14): author estimate (mll-4090-1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
+measured = "as the standard twin; the GPU renders the cameras over EGL (board 0112, 2026-10-14): author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

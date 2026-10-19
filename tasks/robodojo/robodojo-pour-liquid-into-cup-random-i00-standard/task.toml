@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robodojo-pour-liquid-into-cup-random-i00-standard"
+name = "embodied-first-exam/robodojo-pour-liquid-into-cup-random-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo pour_liquid_into_cup_random (Generalization (randomised variant: other models, clutter)) on RoboDojo's frozen layout (arx_x5/0/pour_liquid_into_cup_random_0.json); standard only, no privileged twin. Task: Pick up the bottle and pour its liquid into the cup, then stand the bottle upright again. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode and grades it as it happened live (the physics does not replay bit for bit)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]

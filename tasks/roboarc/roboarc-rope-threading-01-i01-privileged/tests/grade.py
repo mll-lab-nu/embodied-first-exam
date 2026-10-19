@@ -1,12 +1,12 @@
 """Verifier entry point: replay /app/output/trajectory.npz from the frozen instance and write Harbor rewards.
-Adapted from robot_coding_bench's RoboWits grader (fa59c1a6: tasks/robowits-stack-cubes-i00/tests/grade.py).
+Adapted from Embodied First Exam's RoboWits grader (fa59c1a6: tasks/robowits-stack-cubes-i00/tests/grade.py).
 
     python /tests/grade.py --family cube_pick_place --instance /tests/instance.json --traj /app/output/trajectory.npz
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
 human-viewable replay video /logs/verifier/replay.mp4 (all cameras tiled) plus replay.last.png, rendered during the last of
 the `--repeat` (2) replays in this fresh process: two passes in all, no separate video replay. TopoGym's physics runs on
-the GPU, whose contact solver is not bit-exact (the rule of robot_coding_bench's GPU backend): every replay must complete
+the GPU, whose contact solver is not bit-exact (the rule of Embodied First Exam's GPU backend): every replay must complete
 the task. Initial state and runtime binding must match exactly; final-state determinism is reported separately.
 The replays are grading replays (rcb_topogym.Session.replay(grading=True), tooling v16): for the GPU families the rows run
 with the instance's own thresholds and, if the episode has not ended after the last row, the final targets are held for up

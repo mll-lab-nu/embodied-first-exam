@@ -68,7 +68,7 @@ def get_reward_dict(self, obs_dict):
     # print(rwd_dict['dense'], obj_com_err,rwd_dict['done'],rwd_dict['sparse'])
     return rwd_dict
 ```
-MyoDex's `solved` is always 0, so Robot Coding Bench judges the tracking itself: the episode lasts 86 control steps (the reference) and succeeds as stated above; `done` (MyoDex's termination) ends it early as a failure. `s.status()['info']` reports the current errors (`track_pos_err`, `track_rot_err`) and the count of on-track steps (`track_ok`).
+MyoDex's `solved` is always 0, so Embodied First Exam judges the tracking itself: the episode lasts 86 control steps (the reference) and succeeds as stated above; `done` (MyoDex's termination) ends it early as a failure. `s.status()['info']` reports the current errors (`track_pos_err`, `track_rot_err`) and the count of on-track steps (`track_ok`).
 
 The reference motion (the goal) is MyoDex's `s.base.ref` and, per control step, the observation's `targ_obj_com` / `targ_obj_rot`; `curr_obj_com` / `curr_obj_rot` are the object's.
 

@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/molmospaces-pick-and-place-i00-standard"
+name = "embodied-first-exam/molmospaces-pick-and-place-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): MolmoSpaces pick-and-place on the same frozen episode as molmospaces-pick-and-place-i00-privileged. Pick up the purple bottle with white cap and place it in or on the clear ashtray with notches. The agent only gets a client: camera images (RGB, depth) and proprioception, joint-position chunks, upstream's kinematic model, done. No reset, no object state; the sim service records the episode and grades it with upstream's success check."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "molmospaces", "mujoco", "franka-robotiq-2f85", "standard-mode", "trajectory", "pick-and-place"]

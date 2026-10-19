@@ -1054,7 +1054,7 @@ class BadmintonSport:
         if cfg.action_level == "low":
             out.update(low_spec(m.robot(seat).s))
             lay = inloop_layer() if (os.environ.get("RCB_SKILL_INLOOP_A") or os.environ.get("RCB_SKILL_INLOOP")) else None
-            if lay is not None and lay.loops:     # robot_coding_bench (option c): what every skill call's spec has
+            if lay is not None and lay.loops:     # Embodied First Exam (option c): what every skill call's spec has
                 out["timing_skill"] = next(iter(lay.loops.values())).host_spec_timing()
             out["robot_model"] = {"file": "/opt/robot/robot_only.xml", "robot_only_xml": robot_model_xml(),
                                   "note": "the base, pedestal, arm and racket cut out of the simulator's scene (MJCF; "
@@ -1238,7 +1238,7 @@ def inloop_layer():
         from skilleval.inloop import InLoop, InLoopLayer, timing_spec
         lo = _decl()["modes"]["low"]
         tl = {k: float(v) for k, v in (lo["deliverable"].get("time_limits_s") or {}).items()}
-        # robot_coding_bench (board 0152 decision 28, option c): RCB_SKILL_INLOOP_TIMING (the task: sync): step() one
+        # Embodied First Exam (board 0152 decision 28, option c): RCB_SKILL_INLOOP_TIMING (the task: sync): step() one
         # bounded synchronous call per due control step, act calls off the world's lock (their compute counts)
         srcs = [os.environ.get(f"RCB_SKILL_INLOOP_{s}") or (os.environ.get("RCB_SKILL_INLOOP") if s == "A" else None)
                 for s in SEATS2]

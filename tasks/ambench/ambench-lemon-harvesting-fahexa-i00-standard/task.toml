@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/ambench-lemon-harvesting-fahexa-i00-standard"
+name = "embodied-first-exam/ambench-lemon-harvesting-fahexa-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): AM-Bench LemonHarvesting-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on the same frozen instance as the privileged task. Task: One lemon and six limes are fixed to the front face of a wall in front of the hovering aerial manipulator, and a grey storage tote sits on a small table against the wall to the robot's left. Harvest the lemon: free it from the wall and get it into the tote. Success needs the lemon's reference point (the base of the fruit) inside the tote's nominal box while the gripper is fully open. The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "ambench", "aerial-manipulation", "isaac-lab", "isaac-sim", "hexarotor", "standard-mode", "trajectory"]
