@@ -1,10 +1,10 @@
 # RoboARC (MuJoCo release)
 
 RoboARC's topological puzzle families on MuJoCo 3.14.0 physics, run by the simulator package `topogym`. The image is
-built FROM the published `eai-robotangle:0.2.22` image (pinned by digest), whose recipe is kept as
+built FROM the published `ghcr.io/mll-lab-nu/efe:robotangle-0.2.22` image (pinned by digest), whose recipe is kept as
 `images/roboarc/Dockerfile.genesis-0.2.22`; results of the earlier Genesis release are not comparable with this one.
 
-- Name: RoboARC (display) / `roboarc` (task prefix, image `eai-roboarc`, `images/roboarc/`, this
+- Name: RoboARC (display) / `roboarc` (task prefix, image `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>`, `images/roboarc/`, this
   page). Code identifiers keep the simulator's name: the package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables, the family keys
   (`interlocked_claws`), and the development branch dev/robotangle_mujoco with its `scripts/robotangle/` and
   `images/robotangle/`; inside the image, `/opt/robotangle/` (the instances and `stage_instance.py`).
@@ -47,7 +47,7 @@ Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and
 - Large files: the frozen instances are in the private HF dataset `eai-v2-internal/robotangle-assets` (shared with the
   Genesis release), under `instances/<base>/`, pinned file by file in `images/roboarc/assets.json`.
 - Image: `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>`, built FROM the published
-  `eai-robotangle:0.2.22` with the release commit's simulator source and the frozen MuJoCo instances
+  `efe:robotangle-0.2.22` with the release commit's simulator source and the frozen MuJoCo instances
   (`images/roboarc/Dockerfile`, generated from dev/robotangle_mujoco's `Dockerfile.mujoco`; context:
   `images/roboarc/fetch_image_context.sh`).
 
@@ -75,7 +75,7 @@ release replays deterministically on the same host (the cloth step on a determin
 a recording that stops on its own success reaches it within its rows; without the strict goal the hold's relaxed
 thresholds would become the effective goal in privileged mode only.
 
-**Validation** (Harbor `-a oracle` / `-a nop`, `eai-roboarc:0.1.0`): the privileged oracle scores 1 with
+**Validation** (Harbor `-a oracle` / `-a nop`, roboarc image 0.1.0, the version before the current `efe:roboarc-0.2.0`): the privileged oracle scores 1 with
 `strict_goal_reached` 1 on one task of each family with a hold and on interlocked-claws-01, deterministic; nop scores 0.
 blanket-flatten-01's reference without its last 8 rows (a recording that stops 8 control steps before its own success)
 is graded 0 (`all_success` 1, `success_in_hold_only` 1).

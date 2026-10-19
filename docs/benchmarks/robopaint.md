@@ -105,7 +105,7 @@ their current files, the others to the release validation and the process-rule v
   trajectories re-scored all pass, and Harbor oracle + nop re-checked two pairs per family), the scorer's tooling snapshot
   (re-scores bit-identical), the 2.2 inputs and rated limits in `rcb_brush.py` (tooling queries only), and the standard
   twins' service, collect hook, grader and client.
-- **Process rules**, on the built task images (`eai-robopaint:0.2.0`, each task's verifier image run as Harbor runs it):
+- **Process rules**, on the built task images (`ghcr.io/mll-lab-nu/efe:robopaint-0.2.0`, each task's verifier image run as Harbor runs it):
   every pair's reference trajectory succeeds in the privileged verifier and through the standard path (82 of 82); Harbor
   oracle 1 and nop 0 on both modes of one pair per family. Re-graded recorded runs of the picture-rule version: the process
   rules turn 102 of GPT-6 Astra's 109 picture-rule successes (colouring in) and 4 of GPT-6 Luna's 53 (Calibration) into
