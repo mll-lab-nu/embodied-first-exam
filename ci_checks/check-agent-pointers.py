@@ -32,6 +32,7 @@ import ast, pathlib, re, sys, zipfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402  (iter_tasks: the task tree)
+import files_image  # noqa: E402  (copied_from: a Dockerfile's files from a files-only image)
 SIDECAR_DIRS = {"sim", "scorer", "rcb_monitor"}          # other containers' files under environment/
 MAX_BYTES = 8 << 20                                        # larger files are assets (meshes, arrays), not text
 HOSTS = re.compile(
@@ -49,25 +50,20 @@ FILES = re.compile(r"""(?<![\w.-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrec
 ALLOW = [
     (r"^maniguard-", r"^environment/instance/NOTICE$", r"datasets/IDEAS-Lab-Northwestern/ManiGuard-Bench|github\.com/NU-IDEAS-Lab/ManiGuard",
      "CC BY-NC 4.0 attribution the licence requires, of the scene files' dataset (its demonstrations are other datasets, not named)"),
-    (r"^roboengineer-anycar-", r"^(?:environment/public/(?:scripts/control_transfer/components/)?anycarbench/(?:NOTICE|circuits\.json)|files:control-transfer-anycar-files/circuits\.json)$",
+    (r"^roboengineer-anycar-", r"^(?:environment/public/(?:scripts/control_transfer/components/)?anycarbench/(?:NOTICE|circuits\.json)|files:control-transfer-anycar-files/circuits\.json|files:roboengineer-files/standard/environment/public/anycarbench/NOTICE)$",
      r"^https://github\.com/f1db/f1db/?$",
      "CC BY 4.0 attribution the licence requires, of F1DB's historical circuit outlines (track geometry the instruction "
      "gives the agent, not a controller or a demonstration)"),
 ]
 
 
-def files_images() -> dict:
-    """{pinned image ref: (name, source dir, files)} of the files-only images (images/<name>/FILES.json)."""
-    import json
-    out = {}
-    for f in sorted((ROOT / "images").glob("*/FILES.json")):
-        s = json.loads(f.read_text())
-        out[s["image"]] = (f.parent.name, ROOT / s["source"], s["files"])
-    return out
+SOURCES = {ROOT / files_image.spec(f.parent.name)["source"]: f.parent.name for f in sorted((ROOT / "images").glob("*/FILES.json"))}
 
 
-FILES_IMAGES = files_images()
-COPY_FROM = re.compile(r"^COPY\s+--from=(\S+)\s+/(\S+)\s+\S+\s*$", re.M)
+def files_name(src: pathlib.Path) -> str:
+    """How a file from a files-only image is reported: `files:<image name>/<file>`."""
+    d = next(d for d in SOURCES if d in src.parents)
+    return f"files:{SOURCES[d]}/{src.relative_to(d).as_posix()}"
 
 
 def agent_files(task: pathlib.Path):
@@ -80,12 +76,8 @@ def agent_files(task: pathlib.Path):
         rel = p.relative_to(env).parts
         if p.is_file() and not p.is_symlink() and rel[0] not in SIDECAR_DIRS and "__pycache__" not in rel:
             yield p, p.relative_to(task).as_posix()
-    df = env / "Dockerfile"
-    for ref, file in COPY_FROM.findall(df.read_text()) if df.is_file() else []:
-        if ref in FILES_IMAGES:   # a file from a files-only image: its one source in the repository
-            name, src, files = FILES_IMAGES[ref]
-            if file in files:
-                yield src / file, f"files:{name}/{file}"
+    for src in sorted(set(files_image.copied(env / "Dockerfile").values())):   # from a files-only image: its one source
+        yield src, files_name(src)
 
 
 def npy_text(f) -> str | None:
@@ -146,6 +138,9 @@ def main(argv):
     tasks = [pathlib.Path(a) for a in argv] or tc.iter_tasks()
     bad = 0
     for t in tasks:
+        for problem in files_image.copied_from(t / "environment/Dockerfile")[1]:   # fail closed: a file this check cannot read
+            print(f"FAIL {t.name}: {problem} (the agent's files from a files-only image cannot be scanned)")
+            bad += 1
         for rel, line, kind, hit in findings(t):
             print(f"FAIL {t.name}: {rel}:{line}: {kind} `{hit}` locates upstream material in a file the agent reads (PROTOCOL §2.7)")
             bad += 1

@@ -2,7 +2,7 @@
 """Write per-task agent results for the results site (not into the repository, PROTOCOL D3): <out>/<task>/<run id>/README.md
 (+ replay.mp4, replay.last.png, config.json, attempts.json). One folder per agent+model; the privileged and standard twins
 each get their own.
-usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir> [--analysis <a Python file with ANALYSIS = {family: {"U": text, "L": text}}>]
+usage: write_task_results.py <jobs_dir> <job_name> <run-id> "<agent label>" --out <dir>
 
 config.json (docs/protocol/running.md "Results", PROTOCOL v2.0): the trial's effective configuration (scripts/task_conventions.py
 effective_config: protocol version, mode, cutoff, reset budget, slowdown S, seed, network, validated flag, digest), its
@@ -12,8 +12,8 @@ attempts.json: every trial of this task x run id seen so far. docs/protocol/runn
 (not a result) allows at most one full retry with the same instance, seed and configuration; the voided attempt is never
 counted, an agent's own failure is never retried, and more than 2 attempts of one task x run id is flagged
 (`attempts_over_cap`)."""
-import json, pathlib, shutil, sys, re, glob, datetime as dt, ast
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent)); from task_names import base, canonical, mode as mode_of  # noqa: E402
+import json, pathlib, shutil, sys, glob, datetime as dt
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import account_failure_check  # noqa: E402
 import task_conventions as tc  # noqa: E402
 import retry_policy as rp  # noqa: E402
@@ -72,10 +72,6 @@ def load_json(p):
         return d if isinstance(d, dict) else {}
     except (OSError, ValueError):
         return {}
-
-
-def load_reward(trial):
-    return load_json(trial / "verifier/reward.json")
 
 
 def classify(trial, r, rw):
@@ -155,22 +151,17 @@ def main(argv):
     if "--out" not in argv: sys.exit("--out <dir> is required: results are published on the results site, not committed (PROTOCOL D3)")
     out_root = pathlib.Path(argv[argv.index("--out") + 1]).resolve()
     if out_root == ROOT or ROOT in out_root.parents: sys.exit("--out must be outside the repository (PROTOCOL D3)")
-    analysis = {}
-    if "--analysis" in argv:
-        src = pathlib.Path(argv[argv.index("--analysis") + 1]).read_text()
-        m = re.search(r"ANALYSIS = (\{.*?\n\})\n", src, re.S)
-        if m: analysis = ast.literal_eval(m.group(1))
     n = 0
     trials = []
     for trial in (jobs / job).glob("*__*"):
         if (trial / "result.json").exists():
             trials.append((trial, json.load(open(trial / "result.json"))))
     for trial, r in sorted(trials, key=lambda tr: (started(tr[1]), tr[0].name)):
-        task = canonical(r["task_name"].split("/")[-1])   # also pre-v1.0 jobs
+        task = tc.canonical_name(r["task_name"].split("/")[-1])   # also pre-v1.0 jobs
         tdir = tc.task_dir(task, ROOT / "tasks")
         if not tdir.is_dir(): continue
-        rw = load_reward(trial)
-        ar = r.get("agent_result") or {}; mode = mode_of(task); limited = mode != "privileged"; fam = base(task).replace("robotwin_2_0_", "")
+        rw = load_json(trial / "verifier/reward.json")
+        ar = r.get("agent_result") or {}; mode = tc.mode_of(tdir); limited = mode != "privileged"
         out = out_root / task / slug; out.mkdir(parents=True, exist_ok=True)
         status, why, over = classify(trial, r, rw)
         led = record_attempt(out, trial, r, status)
@@ -191,7 +182,6 @@ def main(argv):
         for f in ("replay.mp4", "replay.last.png"):
             if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)
         ok = status == "success"
-        an = analysis.get(fam, {}).get("L" if limited else "U", "")
         lines = [f"# {label} — {task}\n",
                  f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{ {'standard': 'standard (robot as a service)', 'standard-realtime': 'standard-realtime (robot as a service, time does not stop)'}.get(mode, 'privileged')}**.\n",
                  "| | |", "|---|---|",
@@ -209,8 +199,6 @@ def main(argv):
             lines.append(f"Debugging footprint (self-reported by the agent's tooling log): {rw.get('agent_sessions')} sessions, {rw.get('agent_resets')} resets, {rw.get('agent_sim_steps')} physics steps.\n")
         if (out / "replay.mp4").exists():
             lines += ["## Replay (verifier's six-camera video)\n", f"![last frame](replay.last.png)\n", "[replay.mp4](replay.mp4) — top: world / observer / head; bottom: front / left wrist / right wrist.\n"]
-        if an:
-            lines += ["## Analysis\n", an + "\n"]
         msgs = last_msgs(trial)
         if msgs:
             lines += ["## Agent's last messages\n"] + [f"- {m[:600]}" for m in msgs] + [""]
