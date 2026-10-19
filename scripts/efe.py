@@ -7,12 +7,14 @@ flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywh
   harbor run --all -a codex -m openai/gpt-6-luna      # every task dir
   harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # mode flags and -i / -x filter within the set
   harbor run --benchmark roboarc -a codex -m openai/gpt-6-luna   # one benchmark's core tasks
+  harbor run -d embodied-first-exam@core -a codex -m openai/gpt-6-luna   # the same sets as a dataset: @core, @all
   harbor run -p tasks/<benchmark>/<task> -a nop       # one task: Harbor's own -p, untouched
   harbor run -p tasks/<benchmark> -a nop              # every task of one benchmark: Harbor's own -p, untouched
 
 Set: --core (default) or --all. core = the tasks of docs/core_set.toml, each in its default_mode; with mode flags, each
 core task in those modes (a task without that mode is skipped, and counted). all = every task dir; mode flags filter it.
 Modes: any of --privileged, --standard, --standard-realtime.
+-d embodied-first-exam[@core|@all] (also `efe`) is --core / --all (no version: core); any other -d is Harbor's.
 --benchmark <name> keeps a benchmark: its README label or its folder under tasks/ (repeatable). With any of these flags,
 -p <dir> (a task dir, a benchmark folder or tasks/) narrows the set to the task dirs under it, and -c <file> is layered
 after the wrapper's job config. --list prints the task
@@ -28,6 +30,7 @@ import task_conventions as tc  # noqa: E402
 
 MODES = {"--privileged": "privileged", "--privilege": "privileged", "--standard": "standard",
          "--standard-realtime": "standard-realtime", "--standard_realtime": "standard-realtime"}
+DATASET = ("embodied-first-exam", "efe")
 SOURCES = ("-p", "--path", "-d", "--dataset", "-t", "--task", "-c", "--config", "--task-git-url")
 
 
@@ -72,9 +75,28 @@ def config_file(pick: list[str]) -> str:
     return path
 
 
+def dataset_sets(argv: list[str]) -> list[str] | None:
+    """argv with -d embodied-first-exam[@core|@all] turned into --core / --all; None: an unknown version."""
+    out, it = [], iter(argv)
+    for a in it:
+        v = a.split("=", 1)[1] if a.startswith("--dataset=") else next(it, "") if a in ("-d", "--dataset") else None
+        name, _, ver = (v or "").partition("@")
+        if v is None or name not in DATASET:
+            out += [a] if v is None or a.startswith("--dataset=") else [a, v]
+        elif ver in ("", "core", "all"):
+            out.append("--" + (ver or "core"))
+        else:
+            print(f"-d {v}: the versions are {name}@core and {name}@all", file=sys.stderr)
+            return None
+    return out
+
+
 def run(argv: list[str], app=None) -> int:
     """`harbor run` with the set / mode / benchmark flags: picks the task dirs, then `harbor run -c <job config> ...`
     (config_file: one dataset per benchmark folder)."""
+    argv = dataset_sets(argv)
+    if argv is None:
+        return 2
     ours = ("--core", "--all", "--benchmark", "--list")
     if any(a in SOURCES or a.startswith(tuple(s + "=" for s in SOURCES if s.startswith("--"))) for a in argv):
         if not any(a in MODES or a in ours or a.startswith("--benchmark=") for a in argv):
