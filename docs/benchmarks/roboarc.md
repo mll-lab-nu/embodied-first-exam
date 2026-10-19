@@ -1,8 +1,8 @@
 # RoboARC (MuJoCo release)
 
 RoboARC's topological puzzle families on MuJoCo 3.14.0 physics, run by the simulator package `topogym`. The image is
-built FROM the published `ghcr.io/mll-lab-nu/efe:robotangle-0.2.22` image (pinned by digest), whose recipe is kept as
-`images/roboarc/Dockerfile.genesis-0.2.22`; results of the earlier Genesis release are not comparable with this one.
+built FROM the published `ghcr.io/mll-lab-nu/efe:robotangle-0.2.22` image (pinned by digest); results of the earlier
+Genesis release are not comparable with this one.
 
 - Name: RoboARC (display) / `roboarc` (task prefix, image `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>`, `images/roboarc/`, this
   page). Code identifiers keep the simulator's name: the package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables, the family keys
