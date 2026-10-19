@@ -1,0 +1,110 @@
+# KinDER
+
+Physical reasoning for robot planning and control, kept apart from perception and language: tool use, non-prehensile
+multi-object manipulation, geometric and dynamic constraints.
+
+## Quick start
+```bash
+harbor run -d embodied-first-exam@all -p tasks/kinder -a codex -m openai/gpt-6-astra
+```
+Every image is public: Harbor pulls it.
+
+| | |
+|---|---|
+| upstream | [KinDER](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden) (RSS 2026, [arXiv 2604.25788](https://arxiv.org/abs/2604.25788)), MIT, pinned at `5b2dbac` |
+| simulator | MuJoCo 3.3 (Dynamic3D) in KinDER's MimicLabs lab, CPU physics |
+| robot | TidyBot++: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper; delta actions (MuJoCo: 10 Hz) |
+| score | pass = KinDER's own goal check within the episode (1000 control steps) |
+| tasks | 5 families × 2 modes: `tasks/kinder/kinder-<family>-i00-privileged` (scoop-pour, sweep-simple: `-i01-`) and `-standard` (`eai-standard/2.1`) |
+| image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` (`images/kinder/`, 4.6 GB with the lab scenes) |
+| oracle | `dynamo` (the fixture): full, both modes; the other four: none, human review (positive examples below; scoop-pour and sweep-simple: none yet, unvalidated) |
+
+## Tasks (one variant each, seed 0)
+
+| family | challenge | the robot must | positive example |
+|---|---|---|---|
+| dynamo | nonprehensile | drive into a floor square that three chairs block (fixture) | oracle, both modes; Luna, both |
+| sweep-into-drawer | nonprehensile, tool, dynamic | open a drawer, sweep five cubes into it | Luna, privileged; run `codex-gpt6_1_sol-high`, standard (no reset) |
+| scoop-pour | nonprehensile, tool, dynamic | move 50 cubes between bins with a scoop | none yet (`i01`) |
+| constrained-cupboard | geometric | six identical rods, each into the compartment it is owed | Luna, privileged only |
+| sweep-simple | nonprehensile, tool | fifty cubes into a box marked on the floor, with a wiper | none yet (`i01`) |
+
+Why these (no model's results enter the choice):
+- **Valid:** KinDER's 3D families whose goal a camera can see or a sentence can name (the 2D ones move an abstract
+  planar robot with no real counterpart; LimbRepositioning3D's IKFast module cannot be built in our image).
+- **Most task objects (upstream's `oN`):** scoop-pour 50, sweep-simple 50, constrained-cupboard 6, sweep-into-drawer 5;
+  every other 3D family has at most 4.
+- **Variant:** both cube families use their o50 variant; sweep-simple's o50 has three goals, and the one used is upstream's README example (the right side of the
+  kitchen island). Scoop-pour's o100 is not used: it simulates about 5x slower, and known 30-cube solutions already use
+  770 and 845 of the 1000 control steps. Cupboard (o1-o6) and drawer (o5 only) are at their largest.
+
+Positive examples are runs published on the results
+site; each scores 1 under today's privileged verifier, and "both" means it also passes when sent through the
+standard client. "privileged only": the trajectory moves the base diagonally by up to 0.14 m a step, which standard
+mode clips to a 0.1 m disc (the largest move that stays in upstream's per-axis bound after the odometry rotation).
+
+### Open: tasks without a positive example in their own mode (PROTOCOL §4)
+
+Scoop-pour and sweep-simple (`i01`, o50) have no positive example yet in either mode: they are unvalidated
+(`[metadata] validated = false`) until a human review records one, and are ranked with the validated tasks (PROTOCOL
+§2). Every other family has one (human review, PROTOCOL §4: per family, at least one), so its predicate and instance are known
+to be solvable. One standard twin has none of its own yet:
+
+- `kinder-constrained-cupboard-i00-standard`. Its privileged example moves the base by up to 0.14 m a step.
+
+## Modes
+
+| mode | the agent gets | resets | graded |
+|---|---|---|---|
+| privileged | the simulator, its full state (`get_state`/`set_state`) and the goal check | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
+| standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | 0 (the protocol's default) | the last episode, as it ran (live; nothing replayed) |
+
+Grading in standard mode: the live episode. The sim sidecar judges the episode it runs with KinDER's own goal check
+(the environment's `terminated`, at every control step; `step()` in each standard task's `environment/sim/server.py`) and
+ends it there; `rcb_service.py` writes that verdict (`graded_by = "live"`, `replays = 0`) once the agent's container is
+stopped. The frozen start is checked on the live simulator: `start_sha` is the instance's recorded `scene_sha` (the
+state hash right after reset), and a KinDER that no longer builds the instance (rcb_kinder's own check) is
+`instance_mismatch`; both give up as infrastructure (`infra_error = 1`) before the agent is served. The video is one
+render pass over `trajectory.npz` after the verdict (`render_video`, the `task_view` camera; MuJoCo EGL or PyBullet on
+the CPU; median about 90 s a trial), which never changes the verdict. `infra_error = 1` only for no or an unfinalized
+`final.json`, a give-up after crashes not all inside the agent's calls, a reset whose scene does not rebuild (the
+agent's reset was legitimate) and `instance_mismatch`; a simulator error raised by the agent's call, crashes inside its
+calls, a timeout and a failure are the agent's 0.
+
+World-frame information (PROTOCOL §5): privileged mode gives KinDER's world state; standard mode gives none -- odometry
+starts at the robot's start pose, and the goal is named by what the cameras see. One exception: where
+the goal is a translucent region marked on the floor (dynamo's green square, sweep-simple's grey box), faint in the
+robot's cameras, the standard instruction states its centre, size (and the box's height) in the odometry frame at t = 0,
+measured on the frozen instance.
+
+| standard mode: given (a real TidyBot++ has it) | not given |
+|---|---|
+| the task sentence: goal and success condition; dynamo's and sweep-simple's marked goal region at t = 0 (odometry frame) | any object's position; the other goals' positions |
+| `robot_base` RGB, `robot_wrist` RGB-D (the Gen3's RealSense D410), 480×640 | world coordinates; a room camera (`RCB_OBS_ROOM_CAMERA=1`, never overhead) is a knob, off |
+| base odometry (pose, velocity), arm joint angles and velocities, finger position | the goal check before the episode ends (`success` / `failed` only) |
+| `spec()`: action layout and bounds, arm joint axes, positions, limits and torques, the grasp point, camera fields of view and poses, control rate, episode length, budget | masses, friction, the simulator |
+
+## Run
+
+```bash
+harbor run -p tasks/kinder/kinder-scoop-pour-i01-standard -a codex -m openai/gpt-6-astra --env-file .env
+harbor run -p tasks/kinder/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
+```
+Agent, provider and effort settings: docs/protocol/running.md. Agent time cutoff: 1800 s in both modes. Standard tasks grant no reset by default (the protocol's default): one episode, whose 1000 control steps the practice and the graded attempt share;
+`RCB_RESET_BUDGET=N harbor run ...` runs a configuration with N resets, whose results are reported separately (the shipped instruction describes the default, one episode). Build the image: `docker build -f images/kinder/Dockerfile -t
+ghcr.io/mll-lab-nu/efe:kinder-$(cat images/kinder/VERSION) .` (from the repository root).
+
+## Results
+
+Agent results are not kept in this repository: they are published on the results site, keyed by run id. Standard-mode
+runs with another reset budget are reported separately.
+
+## Standard-mode service details
+
+**KinDER and HumanoidBench service (`eai-standard/2.1`).** Same endpoints, RCB1 frames and crash recovery, served by one
+shared service (`rcb_service.py` in each standard task's `environment/sim/`, identical in both) with a per-benchmark
+simulator adapter (`server.py`). Actions are delta or joint-position rows at the task's control rate (KinDER 10 Hz,
+PyBullet tasks kinematic: a refused move comes back `blocked` and stops the chunk; HumanoidBench 50 Hz); the step
+counters are `rows` and `control_steps`. No world coordinates are given (odometry and camera poses are in the robot's
+starting frame). A request body over 64 MB gets 413 before it is decoded. The service implements the optional reset
+capability (`RCB_RESET_BUDGET`).

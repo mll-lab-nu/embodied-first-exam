@@ -43,7 +43,7 @@ Host
   (Isaac's initialisation fails when the GPU runs out of memory: start fewer at once on a shared GPU). Physics runs on the
   GPU, so the recorded state hashes are those of this GPU model; another GPU model may need its own reference run (Check a
   build). Camera rendering makes GPU PhysX timing-dependent: only camera-free runs reproduce the hashes
-  (docs/benchmarks/ambench.md, Determinism).
+  (tasks/ambench/README.md, Determinism).
 
 Build (from the repository root)
   docker build -f images/ambench/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ambench-$(cat images/ambench/VERSION) .

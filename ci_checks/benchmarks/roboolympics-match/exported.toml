@@ -1,5 +1,5 @@
 # RoboOlympics tasks exported by RoboOlympics' own exporter (CHIGUI0/roboolympics tools/export_fexam.py; private, MIT):
-# its simulator service runs unchanged inside each task (PROTOCOL §4c; docs/benchmarks/roboolympics-match.md:
+# its simulator service runs unchanged inside each task (PROTOCOL §4c; tasks/roboolympics-match/README.md:
 # the benchmark RoboOlympics-Match). They are not rendered by gen_tasks.py, which skips the directories listed here (and fails one that
 # is missing); written by `python3 tools/export_fexam.py --hub <this checkout> <this checkout>/tasks` in RoboOlympics,
 # then `python3 scripts/task_conventions.py` on them (seeds, resources, README; the cutoff is each task's own `[agent]
@@ -221,7 +221,7 @@ patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py",
            "environment/game", "environment/sim/core/__init__.py", "environment/sim/sport/plugin.py", "instruction.md"]
            # 2026-10-17 (owner, board 0151): live grading
            # 2026-10-17 (board 0146, #300 review): RemoteHost reads only typed fields of the agent's own skill server's answers; fexam_reward.py skips malformed call-log rows; to be sent upstream
-           # 2026-10-17 (owner, board 0152 decision 28, option c): no upload host / jail in the sim (RCB_SKILL_REMOTE_ONLY), step() one bounded synchronous call per due control step (RCB_SKILL_INLOOP_TIMING sync), skill_load episode rows, bounded live waits (docs/benchmarks/roboolympics-match.md)
+           # 2026-10-17 (owner, board 0152 decision 28, option c): no upload host / jail in the sim (RCB_SKILL_REMOTE_ONLY), step() one bounded synchronous call per due control step (RCB_SKILL_INLOOP_TIMING sync), skill_load episode rows, bounded live waits (tasks/roboolympics-match/README.md)
            # 2026-10-17 (option c fresh review): one deadline per live call (send included), 128 KiB step answers, step() retries a down server once a second, sync forced for tcp:, applied_tick counts for agent_sim_error (tests/grade.py = core/grading.py), bounded skill_load rows
 
 [[tasks]]
@@ -237,5 +237,5 @@ patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py",
            "environment/game", "environment/sim/core/__init__.py", "environment/sim/sport/plugin.py", "instruction.md"]
            # 2026-10-17 (owner, board 0151): live grading
            # 2026-10-17 (board 0146, #300 review): RemoteHost reads only typed fields of the agent's own skill server's answers; fexam_reward.py skips malformed call-log rows; to be sent upstream
-           # 2026-10-17 (owner, board 0152 decision 28, option c): no upload host / jail in the sim (RCB_SKILL_REMOTE_ONLY), step() one bounded synchronous call per due control step (RCB_SKILL_INLOOP_TIMING sync), skill_load episode rows, bounded live waits (docs/benchmarks/roboolympics-match.md)
+           # 2026-10-17 (owner, board 0152 decision 28, option c): no upload host / jail in the sim (RCB_SKILL_REMOTE_ONLY), step() one bounded synchronous call per due control step (RCB_SKILL_INLOOP_TIMING sync), skill_load episode rows, bounded live waits (tasks/roboolympics-match/README.md)
            # 2026-10-17 (option c fresh review): one deadline per live call (send included), 128 KiB step answers, step() retries a down server once a second, sync forced for tcp:, applied_tick counts for agent_sim_error (tests/grade.py = core/grading.py), bounded skill_load rows

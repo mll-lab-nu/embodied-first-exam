@@ -8,7 +8,7 @@ Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md); report s
 
 | Kind | What it may change | Before you start |
 |---|---|---|
-| **New benchmark** | `tasks/<benchmark>/<its tasks>`, `images/<sim>/`, `docs/benchmarks/<bench>.md` (and, if needed, `embodied_first_exam/benchmarks/<benchmark>/`, `ci_checks/benchmarks/<benchmark>/`) | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
+| **New benchmark** | `tasks/<benchmark>/<its tasks>`, `images/<sim>/`, `tasks/<benchmark>/README.md` (and, if needed, `embodied_first_exam/benchmarks/<benchmark>/`, `ci_checks/benchmarks/<benchmark>/`) | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
 | **Tasks for an existing benchmark** | the same, without `images/` | — |
 | **Task fix** | the affected task directories | describe the agent behaviour it closes; include before/after runs |
 | **Shared files / protocol** | `docs/protocol/`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
@@ -110,7 +110,7 @@ The checklist is in PROTOCOL §4.
 ## Review and merge
 1. Static checks run on every pull request (`.github/workflows/static-checks.yml`), on what the pull request can
    affect (`ci_checks/ci_scope.py`, from the diff against `main`): when it changes only one benchmark's own paths (its
-   `tasks/<benchmark>/`, `images/<bench>/`, `docs/benchmarks/<bench>.md`, `ci_checks/benchmarks/<benchmark>/`; plus the benchmarks that
+   `tasks/<benchmark>/`, `images/<bench>/`, `tasks/<benchmark>/README.md`, `ci_checks/benchmarks/<benchmark>/`; plus the benchmarks that
    share code with it), the per-task checks (incl. each task's `DIGEST`) and `task_conventions.py --check` on that
    benchmark's tasks (and `check-cutoffs.py` on its tasks); the cheap repo-level checks (resources,
    protocol, ...) always run on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables
