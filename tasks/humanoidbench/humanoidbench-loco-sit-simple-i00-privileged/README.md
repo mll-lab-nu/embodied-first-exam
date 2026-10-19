@@ -40,7 +40,7 @@ environment steps.
 
 🚩 That run also read `Sit.get_reward()` and quoted its bounds back at us, which is the measurement
 that led to the reward function being removed from the image entirely
-(`images/humanoidbench/scrub_oracles.py`, `docs/benchmarks/humanoidbench.md`). The 979.03 is
+(`images/humanoidbench/scrub_oracles.py`, `tasks/humanoidbench/README.md`). The 979.03 is
 therefore a number from the old, reward-visible setup and is not reproducible as-is.
 
 So this instance is **easier than it looks**, and honestly so: `sit_simple` rewards a static seated
@@ -110,7 +110,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | | |
 |---|---|
 | Capability class | fixture (C3 · quasi-static stabilisation, too easy to score) (see `scripts/humanoidbench/subset.toml`) |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics). |
+| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). |
 
 ### GPU
 Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
@@ -127,5 +127,5 @@ Everything in this directory except the instance (`environment/instance.npz` and
 `gen_tasks.py instance sit_simple` (seed 0, sha `ef2c205ae550`).
 
 ### Change Log
-- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6 (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
+- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6 (tasks/humanoidbench/README.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
 - 2026-10-10: `reward.json` carries `deterministic` in every branch (0 where no replay ran; PROTOCOL §2.6). The verdict is unchanged.

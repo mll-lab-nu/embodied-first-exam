@@ -7,12 +7,12 @@
 | Twin | `robopaint-caoshu-zhongtiangechuifen-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_caoshu_zhongtiangechuifen` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets; a new family, generated on 2026-10-09 with the current tooling): the same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 525 and mark_width_mm 1.91, against the colouring-in limits 1580 mm and 0.57 mm. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Caoshu). |
+| Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets; a new family, generated on 2026-10-09 with the current tooling): the same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 525 and mark_width_mm 1.91, against the colouring-in limits 1580 mm and 0.57 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Caoshu). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
-**Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
+**Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 1580 mm (3 × the reference
 solution's 525 mm) made of marks narrower than 0.57 mm on average (`mark_width_mm`: each stroke's own
 inked area / `path_mm`; 0.3 × the reference's 1.91 mm). The cap counts strokes as written: a contact is cut where the brush moves more than 5 mm without a mark

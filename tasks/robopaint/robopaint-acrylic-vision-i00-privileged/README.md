@@ -7,12 +7,12 @@
 | Twin | `robopaint-acrylic-vision-i00-standard` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_acrylic_vision` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 10746 of the 32300 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
+| Oracle | `partial` — Reference solution in solution/, unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: tasks/robopaint/README.md, Oracle evidence). Under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, ws3, 2026-10-05): path_mm 10746 of the 32300 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: tasks/robopaint/README.md (Validation). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
-**Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
+**Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: the brush tip's path while it presses on the main sheet with paint (`path_mm`) is at most 32300 mm (3 ×
 the reference solution's 10746 mm), and at most 10 % of it lies in strokes longer than
 2.5 × the diagonal of their bounding box (zigzags, back-and-forth fills, spirals, loops). They are part of the frozen instance (the rules added to its `target.success`); the graders'
@@ -43,7 +43,7 @@ A file that is not a readable trajectory (not an npz, no `actions`, a wrong shap
 `bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
 or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
 The verifier has 3600 s: two replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured
-67-102 steps/s (docs/benchmarks/robopaint.md).
+67-102 steps/s (tasks/robopaint/README.md).
 
 ## Compute resources
 Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.

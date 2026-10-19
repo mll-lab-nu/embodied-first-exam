@@ -61,7 +61,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Cameras | `ee_camera` (on the end effector), `base_camera` (on the airframe, looking forward), 384×384 RGB, z-depth on request; drawn by a render-only Isaac process from the physics state |
 | Images | the `sim` sidecar runs eai-ambench (BUILD_ONLY, `images/ambench/BUILD_ONLY`); the agent container and the verifier run the shared client image with its pip pins (`scripts/eai_standard/client.env`) |
 | Crash recovery | resume class `approx` (GPU PhysX replays the journal to the checkpointed state almost always; a rare race can leave the last bits different, so a resume's deviation is recorded, `resume_state_mismatch`, and the episode continues; the live state after it is graded): every control step journaled, a checkpoint with the state hash after every call; `restart: on-failure:6`, the service resumes the same episode (docs/protocol/standard_mode.md §13) |
-| Generator | `scripts/ambench/mk_tasks.py` (`scripts/ambench/instances.json`, `frozen/`, `template/standard/`, `shared/`, `scripts/eai_standard/`); docs/benchmarks/ambench.md |
+| Generator | `scripts/ambench/mk_tasks.py` (`scripts/ambench/instances.json`, `frozen/`, `template/standard/`, `shared/`, `scripts/eai_standard/`); tasks/ambench/README.md |
 
 ### Change Log
 - 2026-10-17 (owner, boards 0150/0151; in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8): standard modes graded by the live
@@ -77,4 +77,4 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   whatever the agent left running in its container before the service ends the episode (PROTOCOL H.4). reward.json:
   `graded_by_live` = 1, `replays` = 0, no `replay_success` / `deterministic`. The scene, the frozen instance, AM-Bench's
   success check, the agent's interface and the time limit are unchanged; a trial recorded before this date is re-scored by
-  its live episode (docs/benchmarks/ambench.md, Grading).
+  its live episode (tasks/ambench/README.md, Grading).

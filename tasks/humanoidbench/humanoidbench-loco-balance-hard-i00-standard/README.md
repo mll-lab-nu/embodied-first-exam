@@ -63,16 +63,16 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | mode / sensors | standard: head-camera RGB + joint angles and velocities (HumanoidBench's own `image` and `proprio` sensors), a pelvis IMU and a camera fixed in the room; no root pose, no board or roller pose, no reward; 50 resets (a new episode from the frozen start each; only the last episode is graded) |
 | action space | HumanoidBench's own: 19 normalised position targets, 50 Hz, sent in chunks |
-| knobs (compose env) | `RCB_RESET_BUDGET` (50: HumanoidBench's standard configuration, docs/benchmarks/humanoidbench.md), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are the standard configuration; a run that changes one (`RCB_RESET_BUDGET=0 harbor run ...`: one episode, no reset) is reported separately, and `episode.jsonl` records the `/spec` it ran under |
+| knobs (compose env) | `RCB_RESET_BUDGET` (50: HumanoidBench's standard configuration, tasks/humanoidbench/README.md), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are the standard configuration; a run that changes one (`RCB_RESET_BUDGET=0 harbor run ...`: one episode, no reset) is reported separately, and `episode.jsonl` records the `/spec` it ran under |
 | agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
-| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics). Also fixed here: **box feet**: a mesh foot on a box gets one contact point, which on 3.1.6 reported wrong depths (a robot with every joint locked slid off a stair tread) and on 3.3.7 never comes to rest; each foot is four boxes that follow the mesh's hull, the sole exactly (`images/humanoidbench/box_feet.py`). |
+| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). Also fixed here: **box feet**: a mesh foot on a box gets one contact point, which on 3.1.6 reported wrong depths (a robot with every joint locked slid off a stair tread) and on 3.3.7 never comes to rest; each foot is four boxes that follow the mesh's hull, the sole exactly (`images/humanoidbench/box_feet.py`). |
 
 ### Change Log
 - 2026-10-07: `RCB_RESET_BUDGET`'s default 0 -> 50 (owner decision; PROTOCOL §4.5,
-  docs/benchmarks/humanoidbench.md). The scene, instance, pass rule and verifier are unchanged, so the task
+  tasks/humanoidbench/README.md). The scene, instance, pass rule and verifier are unchanged, so the task
   keeps its name; runs recorded before this date had no reset and are reported separately.
 - 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6, and this task's own fix
-  (*Physics vs upstream*) (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are
+  (*Physics vs upstream*) (tasks/humanoidbench/README.md, Physics). The pass rule and verifier are
   unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported
   separately.
 - 2026-10-10: the sim service marks `final.json` `finalized` the moment the verdict is written, before the

@@ -38,7 +38,7 @@ finalized verdict. Nothing is replayed to grade it. The frozen start is checked 
 does not start at the instance's recorded state hash is `instance_mismatch` (`infra_error = 1`), before the agent is
 served. After the verdict the collect hook replays `trajectory.npz` once in a fresh process for `replay.mp4` (and
 `replay.video.json`: whether that replay ended in the live state); it can neither change nor cost the verdict
-(`docs/benchmarks/libero-max.md`, "Grading (standard mode)").
+(`tasks/libero-max/README.md`, "Grading (standard mode)").
 
 ## Compute resources
 Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
