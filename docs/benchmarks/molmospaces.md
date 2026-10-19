@@ -110,7 +110,7 @@ the instruction and `/spec` (`max_control_steps`, `episode`) state.
 ## Run
 
 ```bash
-harbor run -p tasks/molmospaces/molmospaces-pick-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/molmospaces/molmospaces-pick-i00-standard -a codex -m openai/gpt-6-astra --env-file .env
 harbor run -p tasks/molmospaces/molmospaces-pick-i00-privileged -a nop      # scores 0
 ```
 Agent, provider and effort settings: docs/protocol/running.md.
