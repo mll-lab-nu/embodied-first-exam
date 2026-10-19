@@ -175,6 +175,20 @@ def test_config_and_attempts():
         cfg = json.loads((out / f"{SMALL}-standard" / "codex-x-high" / "config.json").read_text())
         check(cfg.get("cutoff_s") == "legacy" and cfg.get("digest_match") is False and cfg.get("mode") == "standard"
               and cfg.get("result") == "fail", f"legacy trial: {cfg}")
+        jobs3, out3 = td / "jobs3", td / "out3"   # apart from the attempts above
+        # Harbor 0.23: result.json's task_checksum is a dirhash (never DIGEST); lock.json's task.digest is DIGEST
+        tl = make_trial(jobs3, "f", "k1", TASK, "2026-10-14T05:00:00Z", {"success": 0}, {"task_checksum": "1" * 64})
+        (tl / "lock.json").write_text(json.dumps({"task": {"name": TASK, "digest": "sha256:" + dg}}))
+        write(jobs3, "f", out3)
+        cfg = json.loads((out3 / TASK / "codex-x-high" / "config.json").read_text())
+        check(cfg.get("digest_match") is True and cfg.get("cutoff_s") != "legacy", f"lock.json digest = DIGEST, still legacy: {cfg}")
+        # a trial of the runner's changed copy (run_agent_batch.sh records <job>.copies.json): this version, not legacy
+        tl = make_trial(jobs3, "g", "k2", TASK, "2026-10-14T06:00:00Z", {"success": 0}, {"task_checksum": "1" * 64})
+        (tl / "lock.json").write_text(json.dumps({"task": {"name": TASK, "digest": "sha256:" + "2" * 64}}))
+        (jobs3 / "g.copies.json").write_text(json.dumps({TASK: {"copy": "sha256:" + "2" * 64, "source": "sha256:" + dg}}))
+        write(jobs3, "g", out3)
+        cfg = json.loads((out3 / TASK / "codex-x-high" / "config.json").read_text())
+        check(cfg.get("digest_match") is True and cfg.get("cutoff_s") != "legacy", f"a runner copy's trial is legacy: {cfg}")
         # a legacy result.json without a checksum: derived from task.toml as it is
         make_trial(jobs, "e", "l2", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 0})
         write(jobs, "e", out)

@@ -436,6 +436,18 @@ run_job() {  # <job> <concurrency> <harbor -i args...>
       || { log "FAILED $job: could not clamp its CPU caps to the host's $HOST_CPUS ($root); not started"; rm -rf "$root"; return 1; }
   fi
   stamp_task_dirs "$root" || { log "FAILED $job: could not stamp its task copy (scripts/stamp_mtimes.py, $root); not started"; rm -rf "$root"; return 1; }
+  # the copies' digests next to the job (scripts/write_task_results.py): a trial of a copy the runner changed (egress, CPU caps)
+  # is a trial of the task's current DIGEST, not of another version
+  mapfile -t dirs < <(task_dirs "$root" "$@")
+  python3 - "$JOBS/$job.copies.json" "$R" "${dirs[@]}" <<'PY' || log "WARN $job: could not record its task copies' digests"
+import json, pathlib, sys
+sys.path.insert(0, sys.argv[2] + "/scripts"); import task_conventions as tc  # noqa: E402
+out = {}
+for d in map(pathlib.Path, sys.argv[3:]):
+    src = tc.task_dir(d.name, pathlib.Path(sys.argv[2]) / "tasks") / "DIGEST"
+    out[d.name] = {"copy": tc.digest(d), "source": src.read_text().strip() if src.is_file() else ""}
+pathlib.Path(sys.argv[1]).write_text(json.dumps(out, indent=1) + "\n")
+PY
   log "start $job: $* (concurrency $n, attempts $K)"
   (cd "$root" && harbor run -p tasks "$@" "${AGENT_ARGS[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
   log "done $job (harbor rc=$?)"
