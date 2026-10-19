@@ -1,4 +1,4 @@
-<h1 align="center">Embodied First Exam</h1>
+<h1 align="center"><a href="https://www.embodied-first-exam.ai"><img src="docs/assets/logo.svg" alt="" height="44" align="top"></a>&nbsp;Embodied First Exam</h1>
 
 <p align="center"><a href="https://www.embodied-first-exam.ai"><img src="docs/assets/badge-website.svg" alt="Website: embodied-first-exam.ai" height="36"></a>&nbsp;<a href="https://discord.gg/TvscHrhDt"><img src="docs/assets/badge-discord.svg" alt="Discord" height="36"></a></p>
 
