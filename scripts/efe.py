@@ -2,12 +2,12 @@
 """Embodied First Exam runs on Harbor. `uv tool install --force -e . --with-executables-from harbor` installs `harbor` (Harbor 0.23.0, plus the
 flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywhere; the tasks are this clone's.
 
-  harbor run -a codex -m openai/gpt-6-luna            # core: each core task in its default mode (the default)
-  harbor run --core --privileged -a codex -m openai/gpt-6-luna   # the core tasks in another mode (also --standard, --standard-realtime)
-  harbor run --all -a codex -m openai/gpt-6-luna      # every task dir
+  harbor run -a codex -m openai/gpt-6-astra            # core: each core task in its default mode (the default)
+  harbor run --core --privileged -a codex -m openai/gpt-6-astra   # the core tasks in another mode (also --standard, --standard-realtime)
+  harbor run --all -a codex -m openai/gpt-6-astra      # every task dir
   harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # mode flags and -i / -x filter within the set
-  harbor run --benchmark roboarc -a codex -m openai/gpt-6-luna   # one benchmark's core tasks
-  harbor run -d embodied-first-exam@core -a codex -m openai/gpt-6-luna   # the same sets as a dataset: @core, @all
+  harbor run --benchmark roboarc -a codex -m openai/gpt-6-astra   # one benchmark's core tasks
+  harbor run -d embodied-first-exam@core -a codex -m openai/gpt-6-astra   # the same sets as a dataset: @core, @all
   harbor run -p tasks/<benchmark>/<task> -a nop       # one task: Harbor's own -p, untouched
   harbor run -p tasks/<benchmark> -a nop              # every task of one benchmark: Harbor's own -p, untouched
 
@@ -75,6 +75,14 @@ def config_file(pick: list[str]) -> str:
     return path
 
 
+def load_env() -> None:
+    """The clone's .env (cp .env.example .env) into the environment: its non-empty keys the shell does not set."""
+    from dotenv import dotenv_values
+    for k, v in dotenv_values(ROOT / ".env").items() if (ROOT / ".env").is_file() else ():
+        if v and not v.startswith("#") and k not in os.environ:   # `KEY=   # note`: dotenv reads the note as the value
+            os.environ[k] = v
+
+
 def dataset_sets(argv: list[str]) -> list[str] | None:
     """argv with -d embodied-first-exam[@core|@all] turned into --core / --all; None: an unknown version."""
     out, it = [], iter(argv)
@@ -97,6 +105,7 @@ def run(argv: list[str], app=None) -> int:
     argv = dataset_sets(argv)
     if argv is None:
         return 2
+    load_env()
     ours = ("--core", "--all", "--benchmark", "--list")
     if any(a in SOURCES or a.startswith(tuple(s + "=" for s in SOURCES if s.startswith("--"))) for a in argv):
         if not any(a in MODES or a in ours or a.startswith("--benchmark=") for a in argv):

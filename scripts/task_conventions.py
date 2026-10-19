@@ -1405,16 +1405,20 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
     priv = len(core_tasks({"privileged"}, tasks_dir=tasks_dir))
     bases = len({re.sub(r"-(standard-realtime|standard|privileged)$", "", p.name) for p in dirs})
     arc = sum(1 for p in dirs if p.parent.name == "roboarc")
-    m = "-a codex -m openai/gpt-6-luna"
+    m = "-a codex -m openai/gpt-6-astra"
     rows = [("git clone --recurse-submodules git@github.com:mll-lab-nu/embodied-first-exam.git && cd embodied-first-exam", ""),
             ("uv tool install --force -e . --with-executables-from harbor", "harbor 0.23.0 with the flags below"),
-            ("cp .env.example .env", ""), ("", ""),
+            ("cp .env.example .env", "API keys"), ("", ""),
             (f"harbor run -d embodied-first-exam {m}", f"core: {core} tasks, each in its default mode"),
             (f"harbor run -d embodied-first-exam --privileged {m}", f"core in another mode: {priv} privileged (also --standard / --standard-realtime)"),
             (f"harbor run -d embodied-first-exam@all {m}", f"all: {len(dirs)} task dirs ({bases} tasks x their modes)"),
             (f"harbor run -d embodied-first-exam@all -p tasks/roboarc {m}", f"one benchmark: RoboARC, {arc} task dirs"),
-            ("harbor run -d embodied-first-exam@all -p tasks/<benchmark>/<task> -a oracle", "one task")]
-    w = max(len(c) for c, note in rows if note) + 2
+            ("harbor run -d embodied-first-exam@all -p tasks/<benchmark>/<task> -a oracle", "one task"), ("", ""),
+            ("codex login", "or a ChatGPT subscription instead of the API key"),
+            (f"CODEX_FORCE_AUTH_JSON=1 harbor run -d embodied-first-exam {m}", ""),
+            ("claude setup-token", "or a Claude subscription: its token as CLAUDE_CODE_OAUTH_TOKEN in .env"),
+            ("CLAUDE_FORCE_OAUTH=1 harbor run -d embodied-first-exam -a claude-code -m anthropic/claude-opus-5-5", "")]
+    w = max(len(c) for c, note in rows if note and c.startswith("harbor")) + 2
     return "".join((c.ljust(w) + "# " + note if note else c).rstrip() + "\n" for c, note in rows)
 
 
