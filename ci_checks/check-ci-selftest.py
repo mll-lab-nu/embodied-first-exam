@@ -60,6 +60,11 @@ FUN_P = "roboolympics-fun-sprint-i00-privileged"                   # its tooling
 RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (ci_checks/benchmarks/*/invariant-*)
 
 
+def check_name(cmd: list[str]) -> str:
+    """The check a command runs (its script's name; MONITOR's last word is its tier)."""
+    return next(Path(c).name for c in cmd if c.endswith((".py", ".sh")))
+
+
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
     def f(s: str) -> str:
         out, n = re.subn(pattern, repl, s, count=count, flags=flags)
@@ -316,16 +321,16 @@ MUTATIONS = [
     ("DexToolBench: one task's grader edited", DTB, "tests/grade.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of standard tests/grade.py"),
     ("... its service", DTB, "environment/sim/server_mj.py", append("# drift\n"), IDENTITY, "environment/sim/server_mj.py differs from images/mujoco/limited/server_mj.py"),
     ("... its client (from the standard client image, another digest)", DTB, "environment/Dockerfile",
-     sub(r"(efe:standard-files-\S+@sha256:)[0-9a-f]{64}( /rcb1\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY, "not a file of the image"),
+     sub(r"(efe:standard-files-\S+@sha256:)[0-9a-f]{64}( /rcb1\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY, "not the pinned"),
     ("... its tooling module (from the files image, another digest)", DTB_P, TEST_DF,
      sub(r"(efe:dextoolbench-files-\S+@sha256:)[0-9a-f]{64}( /privileged/environment/rcb_dtb\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
-     "not a file of the image"),
+     "not the pinned"),
     ("... tests/test.sh without the resource step", DTB_P, TEST_SH, NO_TRAP, IDENTITY, "dextoolbench: 2 versions of privileged tests/test.sh"),
     ("MuJoCo Playground (ALOHA): the same service edited", MJ, "environment/sim/server_mj.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of standard environment/sim/server_mj.py"),
     ("MetaWorld+: one task's service edited", MWP, "environment/sim/server_mw.py", append("# drift\n"), IDENTITY, "environment/sim/server_mw.py differs from images/metaworld/standard/server_mw.py"),
     ("... its grader (from the files image, another digest)", MWP_P, TEST_DF,
      sub(r"(efe:metaworldplus-files-\S+@sha256:)[0-9a-f]{64}( /privileged/environment/mw_tool\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
-     "not a file of the image"),
+     "not the pinned"),
     ("... its tooling module", MWP, "environment/sim/mw_tool.py", append("# drift\n"), IDENTITY, "metaworldplus: 2 versions of mw_tool.py"),
     ("... tests/test.sh without the resource step", MWP, TEST_SH, NO_TRAP, IDENTITY, "metaworldplus: 2 versions of standard tests/test.sh"),
     ("RoboTwin: a privileged task's tests/test.sh without the resource step", TWIN_P, TEST_SH, NO_TRAP, IDENTITY, "robotwin_2_0: 2 versions of privileged tests/test.sh"),
@@ -333,7 +338,7 @@ MUTATIONS = [
     # ---- files from a files-only image (images/<name>/FILES.json) count as copies of their benchmark's shared files
     ("RoboOlympics-Fun: a verifier takes its grader from an image other than the pinned files image", FUN_P, TEST_DF,
      sub(r"(efe:roboolympics-fun-files-\S+@sha256:)[0-9a-f]{64}( /grade\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
-     "not a file of the image"),
+     "not the pinned"),
     ("... a standard sidecar's tooling edited (compared with the files image's)", OPEN, "environment/sim/rcb_rfo.py",
      append("# drift\n"), IDENTITY, "roboolympics: 2 versions of rcb_rfo.py"),
     # ---- caps and minimums (PROTOCOL §2.10)
@@ -475,7 +480,7 @@ def main(argv: list[str]) -> int:
             for cmd in sorted({id(m[4]): m[4] for m in sel if m[1] == name and m[4] not in WITH_NEIGHBOURS and m[4] is not DIGESTS}.values()):
                 rc, out = run(cmd, clean[name])
                 if rc != 0:
-                    print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {Path(cmd[-1]).name}:\n{out[-800:]}")
+                    print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {check_name(cmd)}:\n{out[-800:]}")
                     bad += 1
         for k, (what, name, rel, mutate, cmd, expect) in enumerate(sel):
             t = Path(tmp) / f"m{k}" / name                      # the directory keeps the task's name (its mode is in it)
@@ -502,7 +507,7 @@ def main(argv: list[str]) -> int:
                 rc, out = run(cmd, t)
             if rc == 0 or expect not in out:
                 bad += 1
-                print(f"FAIL check-ci-selftest [{what}]: {Path(cmd[-1]).name} "
+                print(f"FAIL check-ci-selftest [{what}]: {check_name(cmd)} "
                       + ("PASSED the broken task: the rule is blind" if rc == 0 else f"failed, but not with `{expect}`:\n{out[-600:]}"))
         if tier != "advisory":
             bad += twin_cutoffs(Path(tmp))

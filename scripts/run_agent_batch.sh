@@ -291,13 +291,12 @@ finish_job() {  # <job>: the raw logs compacted; no key in any saved file (+reda
 }
 
 summary() {  # one table per comparable configuration over every job of this batch, rewritten after each job (atomically: lanes share it)
-  python3 - "$JOBS" "$batch" "$R" > "$JOBS/$batch.summary.md.$$" <<'PY'
-import json, pathlib, sys, datetime as dt
+  if python3 - "$JOBS" "$batch" "$R" > "$JOBS/$batch.summary.md.$$" <<'PY'
+import json, pathlib, sys
 from collections import defaultdict
 jobs, batch, R = pathlib.Path(sys.argv[1]), sys.argv[2], pathlib.Path(sys.argv[3])
 sys.path.insert(0, str(R / "scripts"))
 import task_conventions as tc, write_task_results as wtr  # noqa: E402
-from task_names import canonical  # noqa: E402
 # docs/protocol/running.md "Results" (PROTOCOL v2.0): results are compared only within one configuration (task_conventions.config_key:
 # protocol version, mode, cutoff, reset budget, S, network); validated and unvalidated tasks (task_conventions.validated_of)
 # are ranked together, the unvalidated ones marked; a trial that is not a result (infrastructure, voided) never counts in a
@@ -305,32 +304,27 @@ from task_names import canonical  # noqa: E402
 # of the headline rate (PROTOCOL §4).
 HEAD = ("| task | success | result | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |\n"
         "|---|---|---|---|---|---|---|---|---|---|---|---|")
-f = lambda s: dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
 groups = defaultdict(list)          # config key -> [(started, row, status, validated, not core)]
 labels = {}
 for trial in jobs.glob(f"{batch}-*/*__*"):
     if not trial.is_dir():
         continue
-    r = json.loads((trial / "result.json").read_text()) if (trial / "result.json").exists() else {}
-    rw = json.loads((trial / "verifier/reward.json").read_text()) if (trial / "verifier/reward.json").exists() else {}
+    r, rw = wtr.load_json(trial / "result.json"), wtr.load_json(trial / "verifier/reward.json")   # {}: not (yet) readable
     ar = r.get("agent_result") or {}; ex = (r.get("exception_info") or {}).get("exception_type") or ""
     ae = r.get("agent_execution") or {}
-    gw = json.loads((trial / "gateway/totals.json").read_text()) if (trial / "gateway/totals.json").exists() else {}
+    gw = wtr.load_json(trial / "gateway/totals.json")
     gw_cell = (f"{gw['input']} / {gw['output']}" + (" OVER BUDGET" if gw.get("over_token_budget") else "")) if gw else "-"
     # requests the gateway refused because they were not model-API calls (PROTOCOL §2.11): attempts, for a look; they
     # do not void the trial, and the harness's own start-up probes are not among them
     left = sum(gw.get(k, 0) for k in ("refused_paths", "refused_server_tools", "refused_bodies", "refused_hosts"))
     gw_cell += f" REFUSED {left}" if left else ""
-    try:
-        wall = round((f(ae["finished_at"]) - f(ae["started_at"])).total_seconds())
-    except Exception:
-        wall = ""
-    task = canonical((r.get("task_name") or trial.name.split("__")[0]).split("/")[-1])
+    wall = "" if wtr.span(ae) is None else wtr.span(ae)
+    task = tc.canonical_name((r.get("task_name") or trial.name.split("__")[0]).split("/")[-1])
     if r and (tc.task_dir(task, R / "tasks") / "task.toml").is_file():
         status, why, _ = wtr.classify(trial, r, rw)
         cfg = wtr.trial_config(trial, task, r)
     else:
-        status, why, cfg = ("not_a_result", "no result.json", {}) if not r else ("legacy", None, {"mode": task.rsplit("-", 1)[-1]})
+        status, why, cfg = ("not_a_result", "no result.json", {}) if not r else ("legacy", None, {"mode": tc.mode_of(pathlib.Path(task))})
     key = tc.config_key(cfg)
     labels[key] = tc.config_label(cfg)
     keys = {k: rw[k] for k in ("deterministic", "live_success", "replay_success", "instance_ok", "missing_trajectory", "grader_error",
@@ -360,7 +354,8 @@ for k in sorted(groups, key=lambda k: tuple(map(str, k))):
     for _, row, _, _, _ in sorted(rows):
         print(row)
 PY
-  mv -f "$JOBS/$batch.summary.md.$$" "$JOBS/$batch.summary.md"
+  then mv -f "$JOBS/$batch.summary.md.$$" "$JOBS/$batch.summary.md"
+  else rm -f "$JOBS/$batch.summary.md.$$"; log "summary: not rewritten (the summary script failed)"; fi
 }
 
 stamp_task_dirs() {  # <root>: give every file of the job's task copies a mtime derived from its content (scripts/stamp_mtimes.py)

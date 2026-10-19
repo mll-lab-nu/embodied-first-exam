@@ -25,8 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402
 
-# RCB_RESET_BUDGET's default: overridable (`"${RCB_RESET_BUDGET:-N}"`) or fixed (`"N"`)
-RESET_DECL = re.compile(r'^\s*RCB_RESET_BUDGET:\s*"?(?:\$\{RCB_RESET_BUDGET:-([0-9]+)\}|([0-9]+))"?\s*(?:#.*)?$', re.M)
+RESET_DECL = tc.RESET_DECL_RE   # RCB_RESET_BUDGET's default: overridable (`"${RCB_RESET_BUDGET:-N}"`) or fixed (`"N"`)
 RESET_ANY = re.compile(r'^\s*RCB_RESET_BUDGET:', re.M)
 STATED = re.compile(r"\b(\d+)\*{0,2}\s+resets?\b", re.I)            # "10 resets", "**50 resets**"
 POINTER = re.compile(r"""\[["']budget["']\]\s*\[["']reset["']\]""")    # spec()["budget"]["reset"]

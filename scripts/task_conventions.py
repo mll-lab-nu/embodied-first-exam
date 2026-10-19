@@ -153,12 +153,8 @@ HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / insta
                "Real time", "Base image"}
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
              "task type / mode"}
-CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
 # PROTOCOL §2.9: the minimum compute a task needs, `[metadata.resources]` in task.toml (same list: ci_checks/check-resources.py)
 RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
-# PROTOCOL §2 (v1 §2.14): scene dynamics, `[metadata] dynamics` in task.toml, the task's own declaration (board 0124:
-# no central table)
-DYNAMICS = ("static", "dynamic")
 # PROTOCOL §4b: a standard-realtime task states its slowdown S, `[metadata] slowdown` in task.toml, written from its sim
 # service's `RCB_SLOWDOWN` default (environment/docker-compose.yaml); its reset budget is the `RCB_RESET_BUDGET` default
 # there (same rules: ci_checks/check-realtime.py)
@@ -250,14 +246,7 @@ CUTOFF_NOTE = {
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
 assert set(CUTOFF_NOTE) == set(MODE_REGISTRY), "every mode of MODE_REGISTRY needs its CUTOFF_NOTE (PROTOCOL §2.12)"
-# A benchmark whose service does not count from the agent's first request keeps the earlier, weaker sentence, and its own
-# text says what its service counts (PROTOCOL §2.12). None today: RoboARC's service counts from the first request
-# since its MuJoCo release (2026-10-13).
-_CUTOFF_NOTE_OWN_CLOCK = (
-    "This is wall-clock time from the start of your session; the time you wait for the simulator service "
-    "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
-    "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
-    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
+# A benchmark whose service counts the limit its own way has a note of its own (PROTOCOL §2.12).
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
 # roboEngineer (#329): its own multi-round runtime (ci_checks/benchmarks/roboengineer/exported.toml) grades a deployed policy, not an
 # episode that stands at the cutoff, and its service reports a deadline, not `time_left_s`
@@ -276,7 +265,7 @@ CUTOFF_NOTE_TASK = {n: (
     for n in RO_EXPORTED_TASKS}
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
-CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
+CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted (ci_checks/check-cutoffs.py)
 # The repository's task tree: one folder per benchmark, tasks/<folder>/<task>/ (a task dir's name says its benchmark,
 # bench_of; GitHub lists at most 1000 entries of a folder). The folder of each BENCHMARKS label, the same slug as the
 # benchmark's embodied_first_exam/benchmarks/ folder. Everything that finds a task dir in the repository goes through task_dir() /
@@ -305,20 +294,51 @@ def replace_words(s: str) -> str:
 
 # PROTOCOL D12 / §2.16: each mode of MODE_REGISTRY is the whole suffix of its task directories. A mode is recognised by
 # its complete suffix only, longest first: `-standard-realtime` is never `-standard` (it does not end in it).
+MODES_LONGEST_FIRST = tuple(sorted(MODES, key=len, reverse=True))
+
+
+def mode_suffix(name: str) -> str | None:
+    """The mode a task dir name ends in (its whole suffix, longest first), None for a name that ends in none."""
+    return next((m for m in MODES_LONGEST_FIRST if name.endswith(f"-{m}")), None)
+
+
 def mode_of(task: Path) -> str:
-    for mode in sorted(MODES, key=len, reverse=True):   # longest suffix first
-        if task.name.endswith(f"-{mode}"):
-            return mode
-    raise ValueError(f"{task.name}: task directories end in " + ", ".join(f"-{m}" for m in MODES)
-                     + " (docs/protocol/README.md §2.2, the modes of §2.16)")
+    mode = mode_suffix(task.name)
+    if mode is None:
+        raise ValueError(f"{task.name}: task directories end in " + ", ".join(f"-{m}" for m in MODES)
+                         + " (docs/protocol/README.md §2.2, the modes of §2.16)")
+    return mode
 
 
 def base_of(task: Path) -> str:
     """The name without its mode suffix (`-privileged`, `-standard`, `-standard-realtime`, ...; PROTOCOL §2.2)."""
-    for mode in sorted(MODES, key=len, reverse=True):
-        if task.name.endswith(f"-{mode}"):
-            return task.name[: -len(mode) - 1]
-    return task.name
+    mode = mode_suffix(task.name)
+    return task.name[: -len(mode) - 1] if mode else task.name
+
+
+def canonical_name(name: str) -> str:
+    """The task dir name of a task name from any protocol version (the runner's results of old jobs): before protocol
+    v1.0 a privileged task had no suffix and a standard one ended in `-limited`."""
+    if mode_suffix(name):
+        return name
+    if name.endswith("-limited"):
+        return name[: -len("-limited")] + "-standard"
+    return name + "-privileged"
+
+
+def cutoff_pairs(task: Path) -> list[tuple[Path, Path]]:
+    """(task, its twin) for every mode pair the registry ties together (`same_cutoff_as`), in either direction, where the
+    twin exists; sorted so that a pair reached from both sides is the same tuple."""
+    mode, base = mode_of(task), base_of(task)
+    out = []
+    for m, d in MODE_REGISTRY.items():
+        o = d["same_cutoff_as"]
+        if not o or mode not in (m, o):
+            continue
+        other = task.with_name(f"{base}-{o if mode == m else m}")
+        if (other / "task.toml").is_file():
+            out.append(tuple(sorted((task, other))))
+    return out
 
 
 def twin_of(task: Path) -> Path | None:
@@ -332,7 +352,7 @@ def modes_table() -> str:
     """One line per mode, longest name first, for the shell checks (`python3 scripts/task_conventions.py modes`):
     `<mode> <sidecar 0|1> <twin mode or ->`."""
     return "\n".join(f"{m} {int(MODE_REGISTRY[m]['sidecar'])} {MODE_REGISTRY[m]['twin'] or '-'}"
-                     for m in sorted(MODES, key=len, reverse=True))
+                     for m in MODES_LONGEST_FIRST)
 
 
 def bench_of(task: Path) -> str:
@@ -421,6 +441,14 @@ def check_benchmarks(tasks_dir: Path | None = None) -> list[str]:
     seen = collections.Counter(p for p, _ in BENCHMARKS)
     bad += [f"prefix {p!r} is listed {k} times in BENCHMARKS" for p, k in seen.items() if k > 1]
     return bad
+
+
+def task_toml(task: Path) -> dict:
+    """The task's task.toml, parsed; {} when it is missing or unreadable."""
+    try:
+        return tomllib.loads((task / "task.toml").read_text())
+    except (OSError, ValueError):            # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
+        return {}
 
 
 def read_text(p: Path) -> str | None:
@@ -730,33 +758,17 @@ def render_external(task: "Path | str" = "") -> str:
         text = external_paragraph(read_text(task / "instruction.md") or "") or EXTERNAL_TEXT_OPEN
     # owner 2026-10-14: the words above are the baseline every task carries; a task may add STRICTER requirements of
     # its own on top (never looser), as `[metadata.honour] stricter = "..."` in its task.toml, rendered after them
-    stricter = ""
-    if isinstance(task, Path):
-        try:
-            stricter = ((tomllib.loads((task / "task.toml").read_text()).get("metadata") or {}).get("honour") or {}).get("stricter", "")
-        except (OSError, ValueError):
-            stricter = ""
+    stricter = ((metadata_of(task).get("honour") or {}).get("stricter", "")) if isinstance(task, Path) else ""
     if stricter:
         text = text.rstrip() + "\n\nAdditional rules for this task (stricter than the above): " + str(stricter).strip()
     return EXTERNAL_HEADING + "\n" + text + "\n"
-
-
-def family_of(task: Path) -> str:
-    """A task's family: `[metadata] family` in its task.toml."""
-    try:
-        return str(tomllib.loads((task / "task.toml").read_text()).get("metadata", {}).get("family", ""))
-    except (OSError, tomllib.TOMLDecodeError):
-        return ""
 
 
 def cutoff_for(task: Path) -> int | None:
     """The agent's time cutoff of a task in seconds: its own `[agent] timeout_sec` (PROTOCOL §2.12), the one source of the
     number. None when task.toml has none, or one that is not a whole positive number of seconds (ci_checks/check-cutoffs.py
     fails such a task; normalize then writes nothing from it)."""
-    try:
-        v = tomllib.loads((task / "task.toml").read_text()).get("agent", {}).get("timeout_sec")
-    except (OSError, tomllib.TOMLDecodeError):
-        return None
+    v = task_toml(task).get("agent", {}).get("timeout_sec")
     if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0 or float(v) != int(v):
         return None
     return int(v)
@@ -815,18 +827,6 @@ def _set_number(old: str, sec: int) -> str:
     return f"{sec}.0" if "." in old else str(sec)
 
 
-def set_agent_timeout(toml: str, sec: int, name: str = "") -> str:
-    """A task.toml text whose `[agent] timeout_sec` is `sec` (the literal's form kept: `3600.0` stays a float), for a
-    generator that renders a task.toml written for another number (its benchmark's constant wins; PROTOCOL §2.12)."""
-    def in_agent(m: re.Match) -> str:
-        return re.sub(r"(?m)^(timeout_sec\s*=\s*)([0-9][0-9_.]*)", lambda t: t.group(1) + _set_number(t.group(2), sec),
-                      m.group(0), count=1)
-    out = re.sub(r"(?ms)^\[agent\][ \t]*(?:#[^\n]*)?\n.*?(?=^\[|\Z)", in_agent, toml, count=1)
-    if float(tomllib.loads(out).get("agent", {}).get("timeout_sec", -1)) != sec:
-        raise RuntimeError(f"{name}: task.toml has no `[agent] timeout_sec` line to set to {sec}")
-    return out
-
-
 def normalize_cutoff(task: Path) -> None:
     """In the standard modes, the sim service's `RCB_WALL_CLOCK_S` (what its `/spec` budget and `meta["time_left_s"]`
     report) is the task's own cutoff, `[agent] timeout_sec` (PROTOCOL §2.12). A task without a usable number is left as
@@ -876,7 +876,8 @@ def normalize_instruction(task: Path) -> None:
     in task.toml) and, last, `## Time limit` rendered from the task's `[agent] timeout_sec` (§2.12; left out when it has
     no usable number): the last thing the agent reads."""
     p = task / "instruction.md"
-    md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
+    toml = tomllib.loads((task / "task.toml").read_text())
+    md = toml.get("metadata", {})
     lim = (md.get("resources") or {}).get("limits")
     if not p.is_file():
         return
@@ -888,8 +889,7 @@ def normalize_instruction(task: Path) -> None:
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
     s = s.rstrip() + "\n\n" + render_external(task)
     if isinstance(lim, dict):
-        env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
-        s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
+        s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), toml.get("environment", {}).get("cpus"))
     if sec is not None:
         s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task), task.name)
     write_if_changed(p, s)
@@ -1272,15 +1272,11 @@ def normalize_slowdown(task: Path) -> None:
 # "Results"). Standard library only: scripts/write_task_results.py, scripts/dataset_manifest.py and the scheduler's run
 # policy (batch_eval_live) read these.
 PROTOCOL_VERSION = "2.0"                         # docs/protocol/README.md
-NETWORKS = ("allowlist", "open")                 # `[metadata] network` (PROTOCOL §2, Appendix H.6); absent = allowlist
 RESET_DECL_RE = re.compile(r'^\s*RCB_RESET_BUDGET:\s*"?(?:\$\{RCB_RESET_BUDGET:-([0-9]+)\}|([0-9]+))"?\s*(?:#.*)?$', re.M)
 
 
 def metadata_of(task: Path) -> dict:
-    try:
-        return tomllib.loads((task / "task.toml").read_text()).get("metadata", {}) or {}
-    except (OSError, tomllib.TOMLDecodeError):
-        return {}
+    return task_toml(task).get("metadata", {}) or {}
 
 
 def network_of(task: Path) -> str:
@@ -1328,7 +1324,6 @@ def validated_of(task: Path) -> bool:
 CORE_SET_FILE = Path(os.environ.get("RCB_CORE_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "core_set.toml")
 # RCB_CORE_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
 CORE_FIELDS = ("task", "default_mode")
-CORE_MODES = ("privileged", "standard", "standard-realtime")
 
 
 @functools.lru_cache(maxsize=8)
@@ -1404,7 +1399,7 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
     dirs = iter_tasks(tasks_dir)
     core = len(core_tasks(tasks_dir=tasks_dir))
     priv = len(core_tasks({"privileged"}, tasks_dir=tasks_dir))
-    bases = len({re.sub(r"-(standard-realtime|standard|privileged)$", "", p.name) for p in dirs})
+    bases = len({base_of(p) for p in dirs})
     benches = len({p.parent.name for p in dirs})
     arc = sum(1 for p in dirs if p.parent.name == "roboarc")
     m = "-a codex -m openai/gpt-6-astra"
@@ -1458,8 +1453,8 @@ def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) ->
         if t != Path(t).name or base_of(Path(t)) != t:
             bad.append(f"{t}: not a task name (a task dir name without its mode suffix)")
             continue
-        if dm not in CORE_MODES:
-            bad.append(f"{t}: default_mode {dm!r} is not one of {', '.join(CORE_MODES)}")
+        if dm not in MODES:
+            bad.append(f"{t}: default_mode {dm!r} is not one of {', '.join(MODES)}")
             continue
         if not (task_dir(f"{t}-{dm}", tasks_dir) / "task.toml").is_file():
             bad.append(f"{t}: no task directory {t}-{dm} under tasks/")
@@ -1495,9 +1490,8 @@ def verifier_cpus_of(task: Path) -> float | None:
     """The verifier's pinned CPUs ([verifier.environment] cpus, = [metadata.resources] verifier_min_cpus) of a task
     whose verifier plays a live wall-clock match ([metadata] verifier_wall_clock; RoboOlympics' privileged twins)."""
     try:
-        meta = tomllib.loads((task / "task.toml").read_text())
-        return float(meta["verifier"]["environment"]["cpus"])
-    except (OSError, KeyError, TypeError, ValueError, tomllib.TOMLDecodeError):
+        return float(task_toml(task)["verifier"]["environment"]["cpus"])
+    except (KeyError, TypeError, ValueError):
         return None
 
 
@@ -1610,7 +1604,7 @@ def main(argv: list[str]) -> int:
             if not bad:
                 print(f"ok docs/core_set.toml: {len(core_set())} core tasks")
             return 1 if bad else 0
-        for t in core_tasks({a[2:] for a in argv[1:] if a[2:] in CORE_MODES}):
+        for t in core_tasks({a[2:] for a in argv[1:] if a[2:] in MODES}):
             print(t)
         return 0
     check = "--check" in argv
