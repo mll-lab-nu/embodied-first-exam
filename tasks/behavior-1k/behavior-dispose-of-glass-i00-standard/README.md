@@ -7,7 +7,7 @@
 | Twin | `behavior-dispose-of-glass-i00-privileged` |
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `dispose_of_glass` / seed 301 |
-| Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-dispose-of-glass-i00__GAuQ2wP (behavior-lunaxh-t8-0927, the privileged twin behavior-dispose-of-glass-i00-privileged on the same frozen instance and BDDL goal) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 912567fa; grader verdict and frozen instance unchanged since); agent log https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/dispose_of_glass/unlimited/, verifier replay https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/dispose_of_glass/unlimited/replay.mp4; not re-run on this version (static validation only). Human review per family (protocol §2.7). |
+| Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-dispose-of-glass-i00__GAuQ2wP (behavior-lunaxh-t8-0927, the privileged twin behavior-dispose-of-glass-i00-privileged on the same frozen instance and BDDL goal) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 912567fa; grader verdict and frozen instance unchanged since); not re-run on this version (static validation only). Human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
 

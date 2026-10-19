@@ -1,6 +1,6 @@
 # ikea-mujoco
 
-`ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-<images/ikea-mujoco/VERSION>`: MuJoCo 3.14.0 (the PyPI wheel with the EPA
+`ghcr.io/mll-lab-nu/efe:ikea-mujoco-<images/ikea-mujoco/VERSION>`: MuJoCo 3.14.0 (the PyPI wheel with the EPA
 horizon-overflow fix byte-patched in, `mujoco-3.14.0-epa/` here; CPU, float64; numpy 2.5.4, Python 3.12) and the IKEA
 furniture scenes of the IKEA MuJoCo tasks (`tasks/ikea-mujoco/ikea-<task>-i00-{privileged,standard}`;
 tasks/ikea-mujoco/README.md). Each scene is
@@ -13,7 +13,7 @@ The image carries twelve scenes. Eight are tasks (lack, svallet, gladom, variera
 burvik, kyrre, stenerik and uppsta are in the image but are not tasks (work in progress: no reference passes every gate
 yet; tasks/ikea-mujoco/README.md). Keeping them in the image keeps the image the one the tasks were validated on.
 
-`sim/` is the standard tasks' sidecar image, `ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-<images/ikea-mujoco/sim/VERSION>`:
+`sim/` is the standard tasks' sidecar image, `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-<images/ikea-mujoco/sim/VERSION>`:
 this image unchanged as the physics process, plus Nyx (RoboARC's renderer) in its own venv `/opt/nyx`
 (`sim/nyx-requirements.txt`: RoboARC's exact versions and wheel hashes), the Vulkan loader and NVIDIA ICD / EGL vendor
 files, imageio + ffmpeg, Pillow and PyOpenGL.
@@ -26,7 +26,7 @@ scene) are not; `images/ikea-mujoco/assets.json` pins the sha256 of every file (
   BSD-3-Clause) at the commit in `upstream`, downloaded anonymously from GitHub;
 - `assets/parts/` (1,250 files, the furniture parts: parameterized reconstructions drawn from the IKEA assembly manuals,
   not IKEA CAD): the Hugging Face dataset `repo` at `revision` (layout `<path_prefix><task>/assets/parts/<file>`),
-  at present the private `eai-v2-internal/ikea-mujoco-assets`. Every task's `tests/runtime_binding.json` repeats its scene's pins, which
+  the public `MLL-Lab/embodied-first-exam-public` (`ikea-mujoco/`, CC BY 4.0), downloaded anonymously. Every task's `tests/runtime_binding.json` repeats its scene's pins, which
 the grader checks in the verifier image (`instance_exact`) together with the initial-state hash (`instance_ok`).
 
 What is staged per scene: `scene.py`, `scene.xml`, `task.json`, `layout.json`, `sw_cutover.json` (where present), the
@@ -39,10 +39,10 @@ provenance is kept outside this repository.
 
 ```bash
 images/ikea-mujoco/fetch_image_context.sh          # robot meshes from Menagerie, part meshes from the pinned dataset revision
-                                                    # (private: `hf auth login` or HF_TOKEN), checked, staged with the scene
+                                                    # (public, no login), checked, staged with the scene
                                                     # code into images/ikea-mujoco/context/
-docker build -f images/ikea-mujoco/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-$(cat images/ikea-mujoco/VERSION) images/ikea-mujoco/context
-docker build -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-$(cat images/ikea-mujoco/sim/VERSION) images/ikea-mujoco/sim
+docker build -f images/ikea-mujoco/Dockerfile -t ghcr.io/mll-lab-nu/efe:ikea-mujoco-$(cat images/ikea-mujoco/VERSION) images/ikea-mujoco/context
+docker build -t ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-$(cat images/ikea-mujoco/sim/VERSION) images/ikea-mujoco/sim
 ```
 
 `scripts/build_images.sh` does the same once the context is staged (`BUILD_CONTEXT`; `sim/` is built after the base as
@@ -60,7 +60,7 @@ task), upload the meshes as a new dataset revision and pin it, and re-render the
 
 ## Registry
 
-`ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-<VERSION>` and `ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-<sim/VERSION>` (the benchmark
-registry rule, `ghcr.io/mll-lab-nu/efe-private:<name>-<version>` for a BUILD_ONLY image). The tasks name the tags; `images/ikea-mujoco/bindings.json` holds the
+`ghcr.io/mll-lab-nu/efe:ikea-mujoco-<VERSION>` and `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-<sim/VERSION>` (public, the benchmark
+registry rule `ghcr.io/mll-lab-nu/efe:<name>-<version>`). The tasks name the tags; `images/ikea-mujoco/bindings.json` holds the
 base image's id (`sha256:ed950d079b63…` for 0.3.0), which every task's `tests/runtime_binding.json` repeats. The build
 context's source of record is the dataset revision in `images/ikea-mujoco/assets.json`.
