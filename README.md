@@ -79,10 +79,6 @@ CLAUDE_FORCE_OAUTH=1 harbor run -d embodied-first-exam \
 
 See [embodied-first-exam.ai/contribute](https://www.embodied-first-exam.ai/contribute/) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Authors
-
-Kangrui Wang\*§, Changhe Chen\*§, Qineng Wang\*§, Pingyue Zhang\*§, Chi Gui\*§, Feishi Wang§, Canyu Chen§, Wenli Xiao§, Xiaoyu Huang§, Tonghe Zhang§, Linjie (Lindsey) Li§, Yiyou Sun, Mingkai Deng, Jinyu Hou, Xiangyi Li, Eric P. Xing, Huaxiu Yao, Zhiwen Fan, Yuejiang Liu, Jiajun Wu, Yuke Zhu, Guanya Shi†, Ruohan Zhang†, Manling Li†
-
 ## License
 
 [MIT](LICENSE) for the code in this repository. Third-party simulators, assets, reference solutions derived from
