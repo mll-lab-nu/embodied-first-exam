@@ -13,6 +13,17 @@ on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 | standard client | the shared client base and exact pins of `embodied_first_exam/standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
 | instances | the instances and references, imported from PR #4 @ ad3c510, committed only in the privileged tasks (`environment/instance.json`, `solution/oracle.npy`). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
+## Build the images locally
+
+The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
+Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+
+```bash
+docker build -f images/vlabench/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION) .
+python3 scripts/files_image.py build vlabench-files
+grep -rlE 'efe-private:[^@ ]+@sha256' tasks/vlabench | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+```
+
 ## Scope
 VLABench @ cf588fe has 96 native tasks that PR #4 surveyed. A task is in when it has a reference solution that this
 benchmark re-verifies on its frozen instance and whose instruction identifies the task:
