@@ -67,9 +67,9 @@ Private verifier diagnostics identify the rejection stage, exact bytes read, exp
 Prepare the pinned nominal and private assets using `images/control-transfer/stage_nominal_assets.py` and `images/control-transfer/prepare_assets.py`; the public G1 source subset must contain only the G1 dependency closure. The training image declares EGL and pins the tested W&B version, but its full CUDA wheel/driver combination still requires a GPU-container test. Private weights, model manifests, policies and held-out banks must not enter the nominal image.
 
 ```bash
-bash ci_checks/run_all.sh tasks/control-transfer-*/
-RCB_LIMITS_ENFORCE=1 harbor run -p tasks/control-transfer-anycar-i00-standard -a oracle -e docker
-RCB_LIMITS_ENFORCE=1 harbor run -p tasks/control-transfer-anycar-i00-standard -a nop -e docker
+bash ci_checks/run_all.sh tasks/roboengineer/roboengineer-*/
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer/roboengineer-anycar-tracking-i00-standard -a oracle -e docker
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer/roboengineer-anycar-tracking-i00-standard -a nop -e docker
 ```
 
 Repeat native oracle/no-op checks for both instances of each admitted family. An infrastructure verdict must be resolved separately from a controller failure. Changes to task inputs require updated task copies and Harbor manifest digests. Benchmarks with incomplete references require the repository's human review; successful integration does not remove that gate. All new tasks still need actual coding-agent evaluations before model comparisons are reported.
