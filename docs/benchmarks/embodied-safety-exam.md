@@ -792,29 +792,21 @@ of the live episode: one capture per camera per picture the agent was sent, 0.1-
 tasks), the video wait the video's run. The 0.5.3 tasks keep 840 / 1680 s. A trial that needs less ends as soon as its
 verdict and video are in.
 
-### Rename (Embodied Safety Exam)
-RoboSafeBench became the Embodied Safety Exam in #387 (prefix `rsb-` -> `ese-`, folders and image tags renamed on the
-same image digests). From image `efe-private:ese-0.5.5` the rename also goes into the simulator: the image is built from
-RoboSafeBench 2c6360c renamed (Embodied Safety Exam commit `e2c431f`, branch `ese-rename-054` of the source
-repository; `images/ese/SOURCE.md`):
-- the package `robosafebench` is `embodied_safety_exam`; environment variables `ROBOSAFEBENCH_*` are `ESE_*` (the legacy
-  guard `ROBOSAFE_THIRD_PARTY` is kept, and setting any `ROBOSAFE_*` or `ROBOSAFEBENCH_*` variable is an error); format
-  strings `robosafebench-x/1` are `ese-x/1`; frozen fields `robosafebench_*` are `ese_*` (`candidate_identity.frozen_fields`
-  still reads the old names); the audit's benchmark-name list holds the new and the former names;
-- the task side: `rcb_rsb.py` -> `rcb_ese.py`, `rcb_rsb_rt.py` -> `rcb_ese_rt.py`, class `RoboSafe` -> `SafetyExam`,
-  metadata `robosafe_family` / `robosafe_version` / `robosafe_clock` / `robosafebench_*` -> `ese_*`, schemas
-  `rsb.public-*` -> `ese.public-*`, and reward.json's `rsb_calls` / `rsb_pass` -> `ese_calls` / `ese_pass` (same values);
-- the files-only image `ese-files-0.2.0` carries the `standard` and `realtime` layers only (the `privileged`, `0.5.3`
-  and `0.5.3-realtime` layers are gone with their tasks).
+### Names in the simulator
+From image `efe-private:ese-0.5.5` the simulator is built from Embodied Safety Exam commit `e2c431f`
+(`images/ese/SOURCE.md`):
+- the package is `embodied_safety_exam`; environment variables are `ESE_*` (setting a `ROBOSAFE_*` or `ROBOSAFEBENCH_*`
+  variable is an error, except the guard `ROBOSAFE_THIRD_PARTY`); format strings are `ese-x/1`; frozen fields are
+  `ese_*` (`candidate_identity.frozen_fields` also reads the earlier `robosafebench_*` names); the audit's
+  benchmark-name list holds both names;
+- the task side: `rcb_ese.py`, `rcb_ese_rt.py`, class `SafetyExam`, metadata `ese_*`, schemas `ese.public-*`, and
+  reward.json's `ese_calls` / `ese_pass`;
+- the files-only image `ese-files-0.2.0` carries the `standard` and `realtime` layers.
 
-Unchanged: scenes, physics, rules, operator answers, verdicts and the asset bytes (the asset provenance records keep
-the names they were made under; the Hugging Face dataset keeps its name `MLL-Lab/robosafe-assets`). Checked on all 76
-tasks without containers (the sim service as a local process, the package built as the image builds it): the reference
-and doing nothing under the old code (RoboSafeBench 2c6360c, the `rsb-` tasks) and the new (e2c431f, the `ese-` tasks)
-give the same outcome, marks, start and final state hashes, recorded actions and reward on every standard task, and on
-the realtime tasks the same outcome, start hash and reward (their rows vary with the wall clock on both sides; offline
-replays of every recorded realtime episode under both codes reproduce its final hash and outcome). The package's own
-test suite gives the same results on both commits.
+The asset provenance records keep the names they were made under, and the Hugging Face dataset is
+`MLL-Lab/robosafe-assets`. Results recorded under the earlier task prefix `rsb-` compare with the `ese-` tasks: on all
+76 tasks the reference and doing nothing give the same outcome, marks, start and final state hashes, recorded actions
+and reward on every standard task, and the same outcome, start hash and reward on the realtime tasks.
 
 ### What changed in 0.5.4
 The 0.5.4 tasks differ from the 0.5.3 ones in:

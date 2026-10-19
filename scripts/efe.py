@@ -18,7 +18,8 @@ Modes: any of --privileged, --standard, --standard-realtime.
 --benchmark <name> keeps a benchmark: its README label or its folder under tasks/ (repeatable). With any of these flags,
 -p <dir> (a task dir, a benchmark folder or tasks/) narrows the set to the task dirs under it, -l <n> keeps the first n of
 them, and -c <file> is layered after the wrapper's job config. --list prints the task dirs and runs nothing. The tasks
-are handed to Harbor as one dataset per benchmark folder (Harbor's local datasets are not searched recursively). A
+are stamped in place (scripts/stamp_mtimes.py) and handed to Harbor as one dataset per benchmark folder (Harbor's
+local datasets are not searched recursively). A
 `harbor run` that names its own tasks (-p, -d, -t, -c) and none of these flags is Harbor's, unchanged; so is every other
 subcommand."""
 import fnmatch, json, os, sys, tempfile
@@ -49,17 +50,37 @@ def bench_label(name: str) -> str | None:
 
 
 def under(paths: list[str]) -> set[str] | None:
-    """The task dir names under the -p paths (a task dir, a benchmark folder, tasks/); None: no -p given."""
+    """The task dir names under the -p paths (a task dir, a benchmark folder, tasks/; a relative path that is not one
+    here is taken in this clone, so `-p tasks/<benchmark>` works from anywhere); None: no -p given. SystemExit(2): a path
+    that is neither."""
     if not paths:
         return None
     out: set[str] = set()
     for a in paths:
-        d = Path(a).expanduser().resolve()
+        d = Path(a).expanduser()
+        if not d.is_dir() and not d.is_absolute() and (ROOT / d).is_dir():
+            d = ROOT / d
+        if not d.is_dir():
+            print(f"-p {a}: no such directory (here or in {ROOT})", file=sys.stderr)
+            raise SystemExit(2)
+        d = d.resolve()
         if (d / "task.toml").is_file():
             out.add(d.name)
         else:
             out |= {t.parent.name for pat in ("*/task.toml", "*/*/task.toml") for t in d.glob(pat)}
     return out
+
+
+def stamp(pick: list[str]) -> bool:
+    """Give the picked task dirs' files their content-derived mtimes in place before Harbor builds any image from them
+    (scripts/stamp_mtimes.py, issue #258: a checkout's shared mtimes let BuildKit put another task's file in an image).
+    Files already stamped are skipped. False: a file could not be stamped."""
+    import stamp_mtimes
+    err = sum(stamp_mtimes.stamp_tree(str(tc.task_dir(t)))["err"] for t in pick)
+    if err:
+        print(f"stamp_mtimes: {err} file(s) could not be stamped; no image is built from an unstamped task "
+              "(docs/protocol/running.md, Building task images)", file=sys.stderr)
+    return not err
 
 
 def config_file(pick: list[str]) -> str:
@@ -166,6 +187,8 @@ def run(argv: list[str], app=None) -> int:
           + (f", {', '.join(sorted(set(benches)))}" if benches else ""), file=sys.stderr)
     if listing:
         print("\n".join(pick)); return 0
+    if not stamp(pick):
+        return 2
     cfg = config_file(pick)
     try:
         return harbor(["run", "-c", cfg, *rest], app)
