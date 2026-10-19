@@ -275,7 +275,7 @@ volleyball-set, volleyball-spike.
 
 ## Network: open
 
-RoboOlympics' tasks set no `[agent]` network policy, so the agent's egress is Harbor's default: open. The
+RoboOlympics-Fun's tasks set no `[agent]` network policy, so the agent's egress is Harbor's default: open. The
 instruction says so and encourages the agent to look for existing tools, robot models and pretrained controllers and
 to adapt them; it asks only not to look up a ready-made solution to the task, such as this benchmark's reference
 solutions (an honour rule; reading the benchmark's installed source is allowed; trials are reviewed). The reasons: a public G1 controller is fair equipment for a sport, as a published walking
