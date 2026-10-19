@@ -8,7 +8,6 @@ COPY --from=ghcr.io/mll-lab-nu/efe-roboolympics-match-files:0.1.0@sha256:a66af6a
 COPY --from=ghcr.io/mll-lab-nu/efe-roboolympics-match-files:0.1.0@sha256:a66af6a80dec19c3c27fc8099c1fe9f64449344eefcb27b9b68bb05e53a9b3da /shared/tests/seeds.py /tests/seeds.py
 COPY fexam_reward.py /tests/fexam_reward.py
 RUN chmod +x /tests/test.sh
-COPY --from=ghcr.io/mll-lab-nu/efe-monitor:0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 # resource limits: the verifier step (from the monitor image) and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe-monitor:0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json
