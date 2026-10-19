@@ -69,7 +69,8 @@ def copied_from(dockerfile: Path) -> tuple[dict[str, Path], list[str]]:
     """({container path: source file in this repository}, problems) of the Dockerfile's COPY --from lines that name a
     files-only image (a repository of images/*/FILES.json, or any *-files repository). A line resolves when it names the
     pinned image@digest, carries no other flag, and copies one file or one directory of the image (`/<dir>/`: every file
-    of FILES.json under it, to <dest>/<path below it>); anything else is a problem, never silently skipped."""
+    of FILES.json under it, to <dest>/<path below it>), or several files into one directory (`/<a> /<b> <dir>/`: each
+    keeps its basename); anything else is a problem, never silently skipped."""
     if not dockerfile.is_file():
         return {}, []
     specs = {p.parent.name: spec(p.parent.name) for p in sorted((ROOT / "images").glob("*/FILES.json"))}
@@ -93,18 +94,25 @@ def copied_from(dockerfile: Path) -> tuple[dict[str, Path], list[str]]:
         if ref != s["image"]:
             bad.append(f"{dockerfile}: {line.strip()}: not the pinned {s['image']} (images/{name}/FILES.json)")
             continue
-        if len(flags) != 1 or len(args) != 2 or not args[0].startswith("/") or not args[1].startswith("/"):
-            bad.append(f"{dockerfile}: {line.strip()}: a files-only image line is `COPY --from=<image> /<file or dir> /<dest>`")
+        if len(flags) != 1 or len(args) < 2 or not all(a.startswith("/") for a in args) \
+                or (len(args) > 2 and not args[-1].endswith("/")):
+            bad.append(f"{dockerfile}: {line.strip()}: a files-only image line is `COPY --from=<image> /<file or dir> /<dest>` "
+                       "or `COPY --from=<image> /<file>... /<dest dir>/`")
             continue
-        src, dest = args[0].strip("/"), args[1]
-        if src in s["files"]:
-            out[dest + src.rsplit("/", 1)[-1] if dest.endswith("/") else dest] = ROOT / s["source"] / src
-            continue
-        under = sorted(f for f in s["files"] if not src or f.startswith(src + "/"))
-        if not under:
-            bad.append(f"{dockerfile}: {line.strip()}: images/{name}/FILES.json has no /{src}")
-        for f in under:
-            out[dest.rstrip("/") + "/" + f[len(src):].lstrip("/")] = ROOT / s["source"] / f
+        dest = args[-1]
+        for a in args[:-1]:
+            src = a.strip("/")
+            if src in s["files"]:
+                out[dest + src.rsplit("/", 1)[-1] if dest.endswith("/") else dest] = ROOT / s["source"] / src
+                continue
+            if len(args) > 2:
+                bad.append(f"{dockerfile}: {line.strip()}: images/{name}/FILES.json has no file /{src}")
+                continue
+            under = sorted(f for f in s["files"] if not src or f.startswith(src + "/"))
+            if not under:
+                bad.append(f"{dockerfile}: {line.strip()}: images/{name}/FILES.json has no /{src}")
+            for f in under:
+                out[dest.rstrip("/") + "/" + f[len(src):].lstrip("/")] = ROOT / s["source"] / f
     return out, bad
 
 

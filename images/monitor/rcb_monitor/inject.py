@@ -74,7 +74,7 @@ def _docker_copy_line(ln: str) -> bool:
     layout (`COPY rcb_limits.py rcb_limits.json /tests/`, or another monitor image), so a re-run replaces it."""
     t = ln.strip()
     return t in ("COPY rcb_limits.py rcb_limits.json /tests/", "COPY rcb_limits.json /tests/rcb_limits.json") or \
-        (t.startswith("COPY --from=") and re.search(r"/eai-monitor[:@]", t) is not None and t.endswith(" /tests/rcb_limits.py"))
+        (t.startswith("COPY --from=") and t.endswith(f" {CODE_DIR}/rcb_limits.py /tests/rcb_limits.py"))   # any monitor image name
 SIDECAR_MODES = ("standard", "standard-realtime")
 # Privileged mode: compose services that are the benchmark's own, not the agent's to drive (it cannot start, stop or
 # size them): recorded, never part of the scope the limits bind. Today RoboPaint's scoring service.
