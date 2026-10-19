@@ -7,7 +7,7 @@
 | Twin | `robolab-blocks-in-bin-i00-standard` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `blocks_in_bin` / seed 0 |
-| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-blocks-in-bin-i00__QNeJQ9b (robolab-blocks-in-bin-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/blocks_in_bin/unlimited/); robolab-blocks-in-bin-i00-limite__iBaJYXh (robolab-blocks-in-bin-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/blocks_in_bin/limited/). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7). |
+| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-blocks-in-bin-i00__QNeJQ9b (robolab-blocks-in-bin-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3); robolab-blocks-in-bin-i00-limite__iBaJYXh (robolab-blocks-in-bin-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.1.2` |
 
@@ -19,8 +19,8 @@ RoboLab labels this task "complex" (4 subtasks; attributes: sorting); its succes
 
 ## Reference solution
 None: RoboLab ships no expert or planner, and no reference solution has been written for this family (`oracle = "none"`). Positive examples, model trials the separate verifier scored 1:
-- `robolab-blocks-in-bin-i00__QNeJQ9b` (privileged mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`, host ws3): [trial log](https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/blocks_in_bin/unlimited/), [replay video](https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/blocks_in_bin/unlimited/replay.mp4)
-- `robolab-blocks-in-bin-i00-limite__iBaJYXh` (standard mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`, host lab): [trial log](https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/blocks_in_bin/limited/), [replay video](https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/blocks_in_bin/limited/replay.mp4)
+- `robolab-blocks-in-bin-i00__QNeJQ9b` (privileged mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`, host ws3)
+- `robolab-blocks-in-bin-i00-limite__iBaJYXh` (standard mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`, host lab)
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff RoboLab's

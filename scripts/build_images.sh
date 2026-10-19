@@ -6,7 +6,7 @@
 # image directory as context (images/mujoco/ COPYs its asset tree rcb_mj/, see prepare_assets.sh); images/<name>/BUILD_CONTEXT names
 # a context directory a script prepares (skipped while it is missing); else the repo root. A subdirectory
 # images/<name>/<sub>/ with its own Dockerfile and VERSION is a second image, <pkg>:<name>-<sub>-<its version>, built after
-# <name> with itself as context (e.g. images/ikea-mujoco/sim/, the standard tasks' sidecar image FROM efe-private:ikea-mujoco-<version>).
+# <name> with itself as context (e.g. images/ikea-mujoco/sim/, the standard tasks' sidecar image FROM efe:ikea-mujoco-<version>).
 # A files-only image (images/<name>/FILES.json) is no docker build: scripts/files_image.py build writes it, the same
 # digest as the pinned one.
 set -euo pipefail
