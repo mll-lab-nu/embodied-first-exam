@@ -4,7 +4,7 @@
 name = "fixture_images"
 protocol = "turn"
 revision = "fixture-images-1"
-image = "ghcr.io/mll-lab-nu/efe-olympiad:0.1.0"
+image = "ghcr.io/mll-lab-nu/efe:olympiad-0.1.0"
 status = "sport"
 
 [observation]
