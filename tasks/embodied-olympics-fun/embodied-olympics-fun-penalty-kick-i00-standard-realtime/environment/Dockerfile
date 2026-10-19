@@ -1,4 +1,4 @@
-# Standard-realtime mode: the agent container has no simulator, no referee and no EmbodiedOlympics code -- only Python and the realtime client (eai-standard/2.3).
+# Standard-realtime mode: the agent container has no simulator, no referee and no Embodied Olympics code -- only Python and the realtime client (eai-standard/2.3).
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY client-requirements.txt /tmp/
 RUN pip install --no-cache-dir -r /tmp/client-requirements.txt

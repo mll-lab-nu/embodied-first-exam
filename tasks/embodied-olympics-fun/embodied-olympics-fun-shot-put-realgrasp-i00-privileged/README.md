@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-shot-put-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Put the shot that rests on your open right palm at your neck, from the shoulder with that hand alone, so that it lands inside the sector at least 6.0 m from the circle, then leave the circle from its rear half and stand. (EmbodiedOlympics `shot-put-realgrasp`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Put the shot that rests on your open right palm at your neck, from the shoulder with that hand alone, so that it lands inside the sector at least 6.0 m from the circle, then leave the circle from its rear half and stand. (Embodied Olympics `shot-put-realgrasp`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The shot weighs 7.26 kg and rests on a flat palm without fingers: every move of the trunk or the arm that tilts the palm or accelerates the hand sideways rolls it off, and the H1-2's arm motors (40 N m at the shoulder, 18 N m at the elbow, soft servos) only just carry it, so the legs and the trunk have to drive the put while the palm stays under and behind the shot, inside a circle two steps wide. 6.0 m needs a release near 7 m/s at about 40 degrees.

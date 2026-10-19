@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-juggle-three-realgrasp-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): EmbodiedOlympics juggle-three-realgrasp on the same frozen instance as embodied-olympics-fun-juggle-three-realgrasp-i00-privileged. Juggle three balls in a cascade: throw each ball from one gripper in an arc to the other, the hands in turn, catching each between the jaws, until 10 catches have been made in a row. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 50 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics juggle-three-realgrasp on the same frozen instance as embodied-olympics-fun-juggle-three-realgrasp-i00-privileged. Juggle three balls in a cascade: throw each ball from one gripper in an arc to the other, the hands in turn, catching each between the jaws, until 10 catches have been made in a row. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 50 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "juggle-three-realgrasp"]
 
@@ -106,7 +106,7 @@ timeout_sec = 900
 
 [agent]
 timeout_sec = 7200.0
-# Egress: open (Harbor's default), as `[metadata] network` declares. EmbodiedOlympics lets the agent search for and download
+# Egress: open (Harbor's default), as `[metadata] network` declares. Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
 

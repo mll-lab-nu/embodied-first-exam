@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-long-rope-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Jump the long rope: standing in the middle of a rope turned by two turners, jump it 10 times in a row, the rope passing under both your feet while you are in the air, without the rope ever touching you. (EmbodiedOlympics `long-rope`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Jump the long rope: standing in the middle of a rope turned by two turners, jump it 10 times in a row, the rope passing under both your feet while you are in the air, without the rope ever touching you. (Embodied Olympics `long-rope`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Neither built-in gait can jump: the robot must hop again and again, in time with a rope it has to watch, with its feet off the ground at the very moment the rope passes and back on balance before the next turn. Each landing must be absorbed while the next take-off is already being prepared, and any drift out of the middle or a toe left behind catches the rope. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | track-and-jumps |
 | Rule book | The Asian Jump Rope Union's AC2026 Asian Long Rope Championship Rules (AJRU, IJRU's continental body): event #2 '8 Jumpers' (two turners turn one long rope, the jumpers jump it together; the rope must pass under the feet of the jumpers to score 1 point) with the turners 3.6 m apart, the distance event #1 'Figure 8' sets (event #2 sets none); the common rules (the rope remains still until the start signal; leaving the event area is a space violation); and the IJRU Judging Manual (show freestyle, long rope): a long rope is at least 6.0 m long; deviations: 8 Jumpers: one jumper (the robot) instead of eight, and a count of consecutive jumps, 10 in a row with no miss, instead of the jumps in 1 minute; the count is the benchmark's qualifying mark, a round number (school long-rope practice counts runs of consecutive jumps; no rule book sets this one) · the turners are scripted, not athletes: each holds the rope 1.4 m from its end, the rest wound round the hand, so that the free rope between the hands (3.2 m) just brushes the floor under the jumper (as turners shorten a long rope to the jumpers); each moves the hand on a vertical circle of 0.4 m radius whose centre is 1.0 m high and 0.4 m in front of the turner, at a steady 1.0 revolutions per second; they never adapt to the jumper, and they do not stop when the rope is caught (the rope's ends beyond the hands are not modelled) · the start: the rope is already turning at the start (t = 0), not still until a signal; its lowest part has just passed under the robot, going backwards · the end: the event has none (the clock stops the round); here the robot must land on its feet after the last jump and stand still for 0.5 s, all before the still-turning rope comes round again (a longer stand would need the turners to stop the rope, and a stopping rope swings on into the jumper) · a miss is any touch of the rope on the robot (the rules only score the passes); a jump is a pass of the rope under both feet while nothing of the robot touches the ground, and the robot must stay in the middle of the rope (the centre zone) instead of the event's space rule · the rope: a 0.01 m cotton rope of 0.06 kg/m (a typical 10 mm braided cotton rope) modelled as a chain of 40 short capsules joined end to end by stiff point constraints (free to bend and twist: a cord has almost no bending stiffness), in still air with its drag; no wind |
 | Stages | jump 1 → jump 2 → jump 3 → jump 4 → jump 5 → jump 6 → jump 7 → jump 8 → jump 9 → jump 10 → landing → stand |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 2000 control steps (20 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

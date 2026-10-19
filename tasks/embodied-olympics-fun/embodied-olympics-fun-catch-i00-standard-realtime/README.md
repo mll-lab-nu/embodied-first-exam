@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard-realtime (`eai-standard/2.3`) |
 | Twin | `embodied-olympics-fun-catch-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -13,7 +13,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Catch the fly ball: grip the baseball with a hand before it touches the ground or your body, and keep hold of it. (EmbodiedOlympics `catch`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Catch the fly ball: grip the baseball with a hand before it touches the ground or your body, and keep hold of it. (Embodied Olympics `catch`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The ball is in the air for three seconds and comes down at about 17 m/s more than a metre away: the body has to walk there at 0.6 m/s and put a palm on the ball's line to within a few centimetres, facing it, with the grip closing in the few milliseconds in which the ball is against the palm. The scene is dynamic (`scripts/task_dynamics.toml`: A launcher 40 m away fires the baseball at t = 1 s (21 m/s).), and in standard-realtime mode time does not stop: once an attempt's clock starts the venue's timed events happen whatever the agent does, so it has to plan or stream the robot's rows from a program of its own, with no simulator and no state, and 10 resets (only the last attempt is graded).

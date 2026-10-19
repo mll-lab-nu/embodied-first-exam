@@ -1,6 +1,6 @@
 # embodied-olympics discus-realgrasp — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** Throw the discus that your right gripper holds by its rim from inside the circle so that it lands inside the sector at least 15.0 m from the circle, then leave the circle from its rear half and stand.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

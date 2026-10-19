@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-hurdles-freestanding-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Run the 50 m hurdles over four free-standing hurdles: go over each one in your lane, never beside it, under its top, or after pushing it away, and bring your torso to the finish line. (EmbodiedOlympics `hurdles-freestanding`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Run the 50 m hurdles over four free-standing hurdles: go over each one in your lane, never beside it, under its top, or after pushing it away, and bring your torso to the finish line. (Embodied Olympics `hurdles-freestanding`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 A hurdle's top is higher than the robot's hip joints: each of the four has to be jumped with the whole pelvis above 1.067 m and each foot lifted a metre, on a body of 67 kg whose only built-in gait walks at 0.7 m/s and drifts in heading. The hurdles are loose: a clipped bar tips one into the landing, where it lies as an obstacle, and walking up to one shoves it away, which is a failure.

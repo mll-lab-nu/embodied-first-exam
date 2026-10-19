@@ -1,7 +1,7 @@
-# EmbodiedOlympics tasks exported by EmbodiedOlympics' own exporter (CHIGUI0/roboolympics tools/export_fexam.py; private, MIT):
+# Embodied Olympics tasks exported by Embodied Olympics' own exporter (CHIGUI0/roboolympics tools/export_fexam.py; private, MIT):
 # its simulator service runs unchanged inside each task (PROTOCOL §4c; tasks/embodied-olympics-match/README.md:
-# the benchmark EmbodiedOlympics-Match). They are not rendered by gen_tasks.py, which skips the directories listed here (and fails one that
-# is missing); written by `python3 tools/export_fexam.py --hub <this checkout> <this checkout>/tasks` in EmbodiedOlympics,
+# the benchmark Embodied Olympics - Match). They are not rendered by gen_tasks.py, which skips the directories listed here (and fails one that
+# is missing); written by `python3 tools/export_fexam.py --hub <this checkout> <this checkout>/tasks` in Embodied Olympics,
 # then `python3 scripts/task_conventions.py` on them (seeds, resources, README; the cutoff is each task's own `[agent]
 # timeout_sec`, which a re-export must keep: 7200 s, 14400 s for soccerssl-match-i00 / i01, badminton-match-i01 / i02 /
 # i04, badminton-duelrl-i01 and foosball-match-i01).
@@ -13,9 +13,9 @@
 # The protocol each mode of these tasks serves (PROTOCOL §4c): ci_checks/check-protocol.py accepts it for the
 # directories listed below only.
 [protocols]
-standard-realtime = "eai-standard-realtime/1.0"   # the real-time matches: EmbodiedOlympics' own service and referee
+standard-realtime = "eai-standard-realtime/1.0"   # the real-time matches: Embodied Olympics' own service and referee
 standard = ["eai-standard-turn/1.0"]              # the turn-based matches: the world waits for the player whose turn it
-                                                  # is, a chess clock per player (EmbodiedOlympics' own service and referee)
+                                                  # is, a chess clock per player (Embodied Olympics' own service and referee)
 
 [[tasks]]
 name = "embodied-olympics-match-badminton-match-i01-standard-realtime"

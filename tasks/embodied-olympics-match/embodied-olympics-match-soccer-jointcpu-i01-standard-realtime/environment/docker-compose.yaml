@@ -1,4 +1,4 @@
-# Exported by EmbodiedOlympics pilots/soccer_joint/export_fexam_pair.py (do not edit). Three containers share the
+# Exported by Embodied Olympics pilots/soccer_joint/export_fexam_pair.py (do not edit). Three containers share the
 # egress sidecar's network namespace (keep [agent] network_mode = "allowlist"): main (the agent, the prebuilt
 # seat image with the joint-level toolkit; CPU only)
 # reaches the match service (`sim`, core/launch.py, eai-standard-realtime/1.0) at localhost:8000 and its

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-free-throw-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Shoot a free throw: from behind the free-throw line, throw the basketball in your right hand so that it enters the basket from above. (EmbodiedOlympics `free-throw`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Shoot a free throw: from behind the free-throw line, throw the basketball in your right hand so that it enters the basket from above. (Embodied Olympics `free-throw`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 From a hand about a metre above the floor the 0.62 kg ball needs to leave at about 8 m/s on a steep arc to reach a ring 3.05 m high and more than 4 m away, with a margin of a few centimetres in air that slows it, and within five seconds. A straight-arm swing at the shoulder's speed limit gives less than that, and the body only stands by an open-loop stance.

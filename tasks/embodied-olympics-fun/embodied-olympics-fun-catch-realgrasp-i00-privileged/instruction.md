@@ -1,6 +1,6 @@
 # embodied-olympics catch-realgrasp — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** Catch the fly ball: close the jaws of one of your grippers on the baseball before it touches the ground or your body, and keep it there.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

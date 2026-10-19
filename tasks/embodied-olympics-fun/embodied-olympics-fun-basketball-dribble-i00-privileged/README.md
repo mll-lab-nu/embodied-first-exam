@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-basketball-dribble-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Dribble the basketball in your right hand from the end line across the centre line, 14 m up the court, without a dribbling or a travelling violation. (EmbodiedOlympics `basketball-dribble`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Dribble the basketball in your right hand from the end line across the centre line, 14 m up the court, without a dribbling or a travelling violation. (Embodied Olympics `basketball-dribble`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The ball keeps 85 % of its speed in a bounce, so every touch has to push it down and forward again to where the hand will be, with a rigid palm 8 cm wide, for 14 m, on a body whose walking gait covers about 0.7 m/s, drifts in heading, and is disturbed by every push of the arm. The built-in walking gait steps on the spot even at a zero command, so while the ball is in your hand its steps are counted like any others.

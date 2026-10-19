@@ -1,4 +1,4 @@
-# Exported by EmbodiedOlympics tools/export_fexam.py (do not edit). The `sim` sidecar runs our simulator service
+# Exported by Embodied Olympics tools/export_fexam.py (do not edit). The `sim` sidecar runs our simulator service
 # unchanged (core/launch.py: the match service, eai-standard-turn/1.0); the agent's container (main)
 # reaches it at localhost:8000: under Harbor's egress control both share the egress sidecar's network
 # namespace (keep [agent] network_mode = "allowlist"). The seat is unmetered: no metering proxy and no

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-javelin-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Throw the javelin held by its cord in your right gripper over the shoulder from behind the arc so that its head strikes the ground first, inside the sector, at least 20.0 m from the arc, then leave the runway behind the arc and stand. (EmbodiedOlympics `javelin-realgrasp`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Throw the javelin held by its cord in your right gripper over the shoulder from behind the arc so that its head strikes the ground first, inside the sector, at least 20.0 m from the arc, then leave the runway behind the arc and stand. (Embodied Olympics `javelin-realgrasp`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 20.0 m asks for a release at about 14 m/s near 35 to 40 degrees with the javelin pointing along its flight, or it will not come down head first; the H1-2 has no running policy and its arm motors give 40 N m at the shoulder. Nothing holds the 2.65 m javelin but two jaws 34 mm wide on its cord: a whip of the arm turns it in them, and the jaws must let go of it at the right moment, above the shoulder, on a body that has to stay on its feet behind the arc.

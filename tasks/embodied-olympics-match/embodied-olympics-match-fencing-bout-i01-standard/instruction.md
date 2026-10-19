@@ -1,7 +1,7 @@
 # Robot epee fencing: program play (bout)
 
 You play robot epee fencing against a scripted opponent (you are seat `A`). Two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-body policy on the legs, waist and free arm, the point skill on the sword arm) holding real epees fence one FIE direct-elimination bout (15 touches or 9 minutes of fencing time, no draws; unwillingness to fight, FIE t.124) phrase by phrase: every phrase starts on guard 1.95 m apart, both fencers choose one of nine tactical intentions (lunge, low lunge, point in line, reactive line, stop-hit, counter-attack, delayed lunge, retreat, draw), each starts after a random 0-50 ms, and the phrase is played out as it was measured in MuJoCo (2916 phrases: every pair of intentions and delays); format bout: you against a scripted fencer that reads your choices (levels 1-2, `game spec` opponent), format duel: two players choosing at the same time.
-This is EmbodiedOlympics task `fencing-bout-wallclock-program-standard` (revision `fencing-7+core-0.2`), one frozen instance: the scripted opponent at level 1; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
+This is Embodied Olympics task `fencing-bout-wallclock-program-standard` (revision `fencing-7+core-0.2`), one frozen instance: the scripted opponent at level 1; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
 
 ## Time
 Nothing moves while you think: the world waits for the player whose turn it is. Each player has a chess clock of 60 minutes of real time, running only on its own turn (thinking, tool calls, your programs and your reviews all count). **If your clock runs out, you lose.**

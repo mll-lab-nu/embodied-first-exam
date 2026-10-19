@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Match |
+| Benchmark | Embodied Olympics - Match |
 | Mode | standard (`eai-standard-turn/1.0`) |
-| Twin | — (none: a task EmbodiedOlympics exports with its own service, PROTOCOL §4c; a turn-based match has no trajectory deliverable) |
+| Twin | — (none: a task Embodied Olympics exports with its own service, PROTOCOL §4c; a turn-based match has no trajectory deliverable) |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `fencing_bout` / seed 39 |
 | Oracle | `full` — in process (fencing-7): the oracle beats level 1 on this seed 15:11; over 40 player seeds the reference wins this instance 62.5 %, the equilibrium mix 47.5 % (fresh-seed means 61.5 %, 53.5 %); none of the nine constant intentions nor a random player wins it; live on vanilla Harbor 0.23.0 (2026-10-15, the exported task) the oracle won 15:11 in 25 phrases, replay identical (the world is deterministic) |
@@ -16,7 +16,7 @@ Robot epee fencing against the scripted opponent (level 1), program play: two Un
 
 ## Difficulty
 Frozen development instance: seed 39, level 1, chess clock 3600 s per player. Not one of
-the sport's official (hidden) seeds, so results here are previews, not official EmbodiedOlympics results.
+the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
 
 ## Reference solution
 `solution/`: our camera-only reference player through the same HTTP interface. in process (fencing-7): the oracle beats level 1 on this seed 15:11; over 40 player seeds the reference wins this instance 62.5 %, the equilibrium mix 47.5 % (fresh-seed means 61.5 %, 53.5 %); none of the nine constant intentions nor a random player wins it; live on vanilla Harbor 0.23.0 (2026-10-15, the exported task) the oracle won 15:11 in 25 phrases, replay identical (the world is deterministic).
@@ -40,12 +40,12 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: vanilla Harbor 0.23.0 on 4090-ws3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: EmbodiedOlympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 12 GiB memory. Limits measured: design defaults of EmbodiedOlympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB.
+- Measured: vanilla Harbor 0.23.0 on 4090-ws3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: Embodied Olympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 12 GiB memory. Limits measured: design defaults of Embodied Olympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB.
 
 ## Details
 
 ### Notes
-Source: EmbodiedOlympics task `fencing-bout-wallclock-program-standard`, revision `fencing-7+core-0.2`. The rules, the referee, the scripted
+Source: Embodied Olympics task `fencing-bout-wallclock-program-standard`, revision `fencing-7+core-0.2`. The rules, the referee, the scripted
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.

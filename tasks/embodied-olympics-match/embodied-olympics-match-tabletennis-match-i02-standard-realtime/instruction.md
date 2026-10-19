@@ -1,7 +1,7 @@
 # Table tennis: program play (match)
 
 You play table tennis against a scripted opponent (you are seat `A`). Robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players.
-This is EmbodiedOlympics task `tabletennis-match-wallclock-program-standard` (revision `wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2`), one frozen instance: the scripted opponent at level 3, the world slowed S = 10 times; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
+This is Embodied Olympics task `tabletennis-match-wallclock-program-standard` (revision `wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2`), one frozen instance: the scripted opponent at level 3, the world slowed S = 10 times; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
 
 ## Time
 The world runs in real time at 1/S of real speed (S = `timing.slowdown` in `game spec`); your thinking costs game time. At the end of every unit the world freezes for the reviews.

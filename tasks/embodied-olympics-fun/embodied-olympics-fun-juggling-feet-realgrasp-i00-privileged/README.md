@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-juggling-feet-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Juggle the football with your feet: drop it from between your palms and keep it in the air for ten foot touches in a row, each one sending the ball up above your knees, without it touching the ground or any other part of you. (EmbodiedOlympics `juggling-feet-realgrasp`: one Unitree G1 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Juggle the football with your feet: drop it from between your palms and keep it in the air for ten foot touches in a row, each one sending the ball up above your knees, without it touching the ground or any other part of you. (Embodied Olympics `juggling-feet-realgrasp`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Each touch is an upward strike of a foot, timed to a falling 0.43 kg ball and aimed so that the ball comes down on a foot again, ten times in a row, and the robot's thick lower leg leaves only the front few centimetres of the foot where a falling ball meets the foot and not the shin, a spot where a few millimetres decide whether the ball goes up, forward or back onto the leg. To bring a foot under the ball the robot has to stand on the other leg, which neither built-in gait does, and a ball that merely bounces off a still foot loses most of its height and wanders off.

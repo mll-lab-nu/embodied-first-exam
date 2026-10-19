@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-dunk-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Dunk the basketball with both hands: holding it pressed between your two palms, jump, force it down through the ring from above with both hands on it, and land on your feet. (EmbodiedOlympics `dunk-realgrasp`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Dunk the basketball with both hands: holding it pressed between your two palms, jump, force it down through the ring from above with both hands on it, and land on your feet. (Embodied Olympics `dunk-realgrasp`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 With both arms up and the ball pressed between the palms its centre is about 2.2 m above the floor; the ring is at 3.05 m, so the whole 67 kg body has to rise about a metre while the arms keep squeezing the ball through the jump's accelerations, and the hands, wrists and forearms have to go into a ring only 0.21 m wider than the ball, then the robot has to come down on its feet. The robot has a walking gait and nothing that jumps or lands; the built-in walking gait steps on the spot even at a zero command, so while the ball is in your hands its steps are counted like any others.

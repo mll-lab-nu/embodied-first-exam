@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Match |
+| Benchmark | Embodied Olympics - Match |
 | Mode | standard-realtime (`eai-standard-realtime/1.0`) |
-| Twin | — (none: a task EmbodiedOlympics exports with its own service, PROTOCOL §4c; its resource-tier twin is `embodied-olympics-match-soccer-jointcpu-i01-standard-realtime`) |
+| Twin | — (none: a task Embodied Olympics exports with its own service, PROTOCOL §4c; its resource-tier twin is `embodied-olympics-match-soccer-jointcpu-i01-standard-realtime`) |
 | Simulator / robot | `mujoco` / `booster-t1` |
 | Family / instance | `soccer_jointmatch` / seed 101 |
 | Oracle | `partial` — soccer-2v2-11, level 5 = our joint-level RL team (sports/soccer/rl/joint/v2: an omnidirectional gait trained with PPO at the joint level, about 1e9 steps, and an RL-trained strategy layer). The three frozen GPU-tier programs of GPT-6 Astra from our v5 pilot (developed on soccer-2v2-10 against level 2, unchanged) win 30 % of 90 practice matches against level 5 v2 (40 % against v1; against v1 on further seeds 48/150 = 32 % and 43 % of 150); a mirror match of v1 is even (24/50); scripted levels 2 and 3 never beat it (0/20, 0/40). Our joint-level reference team (the oracle) lost to level 5 v1 0:10 in both tasks on vanilla Harbor 0.23.0 (valid, replay identical, replay.mp4) |
@@ -20,7 +20,7 @@ optimisation or learning. A practice service runs full copies of the match world
 
 ## Difficulty
 Frozen development instance: seed 101, a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours; a learned strategy layer decides what each robot does), S = 10. Not one of the sport's official
-(hidden) seeds, so results here are previews, not official EmbodiedOlympics results.
+(hidden) seeds, so results here are previews, not official Embodied Olympics results.
 
 ## Reference solution
 `solution/`: our joint-level reference team (capture-point walking, `joint_oracle.py` on `team.py`, `walker.py`, `dcm.py`)
@@ -45,7 +45,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 10 GB | 0 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: RTX 4090 24GB / L4 24GB / L40S 48GB.
-- Measured: EmbodiedOlympics' joint-level soccer pilot v5 (4090-ws1, 2026-10-15/16, nvidia-smi every 30 s): the agents trained with rsl_rl on the GPU worlds at 3-10 GB of GPU memory (one RTX 4090); the sim and the practice service as the CPU tier
+- Measured: Embodied Olympics' joint-level soccer pilot v5 (4090-ws1, 2026-10-15/16, nvidia-smi every 30 s): the agents trained with rsl_rl on the GPU worlds at 3-10 GB of GPU memory (one RTX 4090); the sim and the practice service as the CPU tier
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: 12 GiB GPU memory, 13 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 12 GiB GPU memory, 32 GiB memory. Limits measured: the v5 pilot's seat caps (6 cores, 16 GB, processes 512: design default); whole trial: + the sim's and the practice service's 8 GB caps; provisional.
 
 ## Details
@@ -62,7 +62,7 @@ the scripted levels compiled) and a single-T1 GPU environment. The pair measures
 worth to an agent that builds a robot controller.
 
 ### Notes
-Source: EmbodiedOlympics joint-level soccer pilot v5 (`pilots/soccer_joint/make_v5_tasks.py` on task `soccer-match-wallclock-program-lowlevel-standard`), physics revision
+Source: Embodied Olympics joint-level soccer pilot v5 (`pilots/soccer_joint/make_v5_tasks.py` on task `soccer-match-wallclock-program-lowlevel-standard`), physics revision
 `soccer-2v2-11` (near-rigid foot-turf contact). The rules, the referee, the opponent, the observation, the reviews and
 the grader are ours, unchanged; the seat is unmetered (Harbor records the model's usage), the instance is frozen, and the
 session is the hub's 4 h (v5 had 9 h with 30 min reviews). The agent image is the v5 seat image, prebuilt

@@ -1,7 +1,7 @@
 # Foosball: program play (match)
 
 You play foosball against a scripted opponent (you are seat `A`). Table football on a physical table: you drive the four motorised rods of one team (goalkeeper rod with 3 figures, 2-rod 2, 5-rod 5, 3-rod 3) by slide and angle targets that the motors follow along a speed- and acceleration-limited path, and see the table only through an overhead camera; one game to 5 goals under the ITSF rules (opening sequence, possession time limits per rod, no spinning); in the `match` format the other team is a scripted computer team, in the `duel` format another player.
-This is EmbodiedOlympics task `foosball-match-wallclock-program-standard` (revision `foosball-program-v2+core-0.2`), one frozen instance: the scripted opponent at level 3, the world slowed S = 20 times; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
+This is Embodied Olympics task `foosball-match-wallclock-program-standard` (revision `foosball-program-v2+core-0.2`), one frozen instance: the scripted opponent at level 3, the world slowed S = 20 times; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
 
 ## Time
 The world runs in real time at 1/S of real speed (S = `timing.slowdown` in `game spec`); your thinking costs game time. At the end of every unit the world freezes for the reviews.

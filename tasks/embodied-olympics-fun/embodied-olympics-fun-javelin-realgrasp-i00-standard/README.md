@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-javelin-realgrasp-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Throw the javelin held by its cord in your right gripper over the shoulder from behind the arc so that its head strikes the ground first, inside the sector, at least 20.0 m from the arc, then leave the runway behind the arc and stand. (EmbodiedOlympics `javelin-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Throw the javelin held by its cord in your right gripper over the shoulder from behind the arc so that its head strikes the ground first, inside the sector, at least 20.0 m from the arc, then leave the runway behind the arc and stand. (Embodied Olympics `javelin-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 20.0 m asks for a release at about 14 m/s near 35 to 40 degrees with the javelin pointing along its flight, or it will not come down head first; the H1-2 has no running policy and its arm motors give 40 N m at the shoulder. Nothing holds the 2.65 m javelin but two jaws 34 mm wide on its cord: a whip of the arm turns it in them, and the jaws must let go of it at the right moment, above the shoulder, on a body that has to stay on its feet behind the arc. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | throwing-catching-striking |
 | Rule book | World Athletics Competition and Technical Rules 2024: TR 32.9 (the javelin runway and its arc), TR 32.12 (the sector), TR 32.14, 32.16, 32.17 and 32.20 (throwing events: failures, the landing, leaving the runway, the measurement), TR 38.1 (the throw), TR 38.3-38.6 (the men's javelin, its grip); deviations: TR 38.1(a) ("the javelin shall be held at the grip with one hand"): the hand is a two-jaw gripper, Unitree's Dex1-1 (90 mm stroke, 80 mm jaws, at most 120 N of clamp, opening at most 375 mm/s; Unitree sells it for the G1, the H2 and the R1, not the H1-2: here it sits on the H1-2's right wrist where the palm ends); the cord lies across its jaws and is held by their friction only. Held means both jaws touching the cord; the hold may break for at most 0.02 s (contacts flicker); the release is the end of the hold, the last moment both jaws touched the cord. "Over the shoulder or upper part of the throwing arm" is judged at the release: the javelin's centre of gravity must then be at least 0.0 m higher than the throwing shoulder's joint. · TR 38.1(a) (one hand): before the release the javelin may not touch your left arm or hand (it may rest against the rest of you: the rule book forbids only the second hand). · TR 38.1(c): "turned completely around" is judged as the chest's heading more than 135.0 degrees away from the throwing direction at any time before the release. · TR 38.3-38.6: the javelin is one rigid body (no bending or vibration) whose head does not stick in the ground; the mark is the point where the head first touches the ground; the cord grip is a smooth band 0.16 m long and 0.029 m across (no pattern: the pads' rubber gives the friction). · Flight: quasi-steady aerodynamics (MuJoCo's ellipsoid fluid model with coefficients of the order of the published wind-tunnel data, the centre of pressure 0.25 m behind the centre of gravity), still air, no wind. The model's drag does not grow with the angle of attack as a real javelin's does: a javelin released nose-high flies up to a fifth farther here than it would. · TR 32.15 (interrupting a trial, laying the implement down): not modelled; the first release is the throw, and the javelin may not be gripped again. · TR 32.14 names no fall: here a fall ends the trial as a failure, as in every task of this benchmark; the trial ends when the robot has left the runway correctly and stands. · TR 25.17 (one minute for a trial): the whole trial, leaving the runway included, has 60 s. · The qualifying mark of 20.0 m is this benchmark's (a boys' school standard for the 800 g javelin); the rule book only measures. |
 | Stages | release → landing → exit |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 6000 control steps (60 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

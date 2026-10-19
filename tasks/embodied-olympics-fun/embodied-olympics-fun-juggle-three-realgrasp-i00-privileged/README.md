@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-juggle-three-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Juggle three balls in a cascade: throw each ball from one gripper in an arc to the other, the hands in turn, catching each between the jaws, until 10 catches have been made in a row. (EmbodiedOlympics `juggle-three-realgrasp`: one Unitree G1 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Juggle three balls in a cascade: throw each ball from one gripper in an arc to the other, the hands in turn, catching each between the jaws, until 10 catches have been made in a row. (Embodied Olympics `juggle-three-realgrasp`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Each throw has to come down between jaws that leave 10 mm on each side of the ball, 0.4 m away, about 0.6 s later, the jaws must close on it within a few hundredths of a second before it bounces off, and the catching gripper must have thrown its own ball before: three balls, two hands, never two in one. A throw is the gripper opening while the arm moves, and errors add up from throw to throw, because a ball is thrown from wherever it was caught.

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-sprint-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Run the 50 m: wait for the starter's gun, then sprint down your lane until your torso reaches the finish line. (EmbodiedOlympics `sprint`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Run the 50 m: wait for the starter's gun, then sprint down your lane until your torso reaches the finish line. (Embodied Olympics `sprint`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The gun has to be seen, not guessed: moving early disqualifies and waiting costs time. Then 50 m in a 1.22 m lane: the walking gait covers 20 m in the time, the running gait has to be held straight for a quarter of a minute at a speed close to where it falls. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | track-and-jumps |
 | Rule book | World Athletics Competition and Technical Rules, 2024 edition: TR 16 (the start: 16.5 the line, 16.6-16.8 false starts), TR 17.3 (lanes), TR 18.2 and TR 19 (the finish, timing); the distance is the 50 m of indoor athletics; deviations: the distance: 50.0 m, the short sprint of indoor athletics, on an outdoor straight; not the 100 m · TR 16.3-16.4 (starting blocks, crouch start): a standing start without blocks, the feet 0.02 m behind the start line; a robot of this build has no crouch start · TR 16.6-16.8 (start information system): the start movement is measured on the robot instead of the blocks: the pelvis more than 0.05 m from its place at "set", or a foot reaching the start line; a false start disqualifies at once, there is no recall · TR 16 (the starter's voice and gun): the robot has no hearing; the commands are shown by a start lamp beside the lane (red, yellow at "set", green at the gun) · TR 17.3 (lanes): the lane is judged by the pelvis: its centre more than half a lane width from the lane's centre line disqualifies at once; feet on the lines are not judged · TR 17 (a fallen athlete): a robot whose pelvis is below 0.4 m is down; it may get up and run on, but 10.0 s down in a row end the race (did not finish) · TR 19 (photo finish): the time is the instant the leading point of the torso link's collision mesh reaches the plane of the finish line's near edge, interpolated between 1 ms physics steps · TR 14 (the track): a flat straight of three 1.22 m lanes, the robot alone in the middle one; no wind · a race has no time to beat; here the run counts only if it finishes within 30.0 s of robot time after the gun (this benchmark's qualifying time: a mean of about 1.7 m/s, beyond the walking gait) |
 | Stages | start → finish |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 3420 control steps (34.2 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |
