@@ -14,4 +14,4 @@ In scope:
   (`scripts/usage_gateway/`), the base images under `images/` and the GitHub workflows.
 
 A task an agent can solve by a shortcut that does not break isolation (a weak success predicate, a leaked hint) is
-a task bug: report it in a normal issue or pull request (CONTRIBUTING.md, "Task fix").
+a task bug: report it in a normal issue (collaborators may open a pull request; CONTRIBUTING.md, "Task fix").
