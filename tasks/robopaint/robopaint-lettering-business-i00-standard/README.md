@@ -7,7 +7,7 @@
 | Twin | `robopaint-lettering-business-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_lettering_business` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets; the lettering family redesigned on 2026-10-09, generated with the current tooling on the native eai-robopaint:0.2.0 runtime): the same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 1240 and mark_width_mm 0.37, against the colouring-in limits 3730 mm and 0.10 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Lettering). |
+| Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets; the lettering family redesigned on 2026-10-09, generated with the current tooling on the native efe:robopaint-0.2.0 runtime): the same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 1240 and mark_width_mm 0.37, against the colouring-in limits 3730 mm and 0.10 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Lettering). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 

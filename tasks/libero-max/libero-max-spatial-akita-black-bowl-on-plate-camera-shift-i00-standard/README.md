@@ -61,7 +61,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); the collect hook: the verdict at once, then one video pass (up to 5,400 s for the longest episode on a busy host) |
 
 ### Change Log
-- 2026-10-08: image `eai-libero-max:0.1.1` (`OPENBLAS_CORETYPE=Zen`); the instance, its start-state hash, the reference
+- 2026-10-08: image `efe:libero-max-0.1.1` (`OPENBLAS_CORETYPE=Zen`); the instance, its start-state hash, the reference
   solution and the pass rule are unchanged, so the task keeps its name. With 0.1.0 the start state did not rebuild on
   Intel Xeon 8488C hosts (the Session refused with a hash mismatch): the OpenBLAS 0.3.18 bundled with numpy and scipy
   does not know that CPU and fell back to its generic Prescott kernels, while the instances were frozen with its Zen

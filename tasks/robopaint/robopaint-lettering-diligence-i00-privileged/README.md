@@ -7,7 +7,7 @@
 | Twin | `robopaint-lettering-diligence-i00-standard` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_lettering_diligence` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/ (the lettering family redesigned on 2026-10-09: 臨摹 of engraved round hand; generated with the current tooling on the native eai-robopaint:0.2.0 runtime): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1343 and mark_width_mm 0.36, against the colouring-in limits 4040 mm and 0.10 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Lettering). |
+| Oracle | `partial` — Reference solution in solution/ (the lettering family redesigned on 2026-10-09: 臨摹 of engraved round hand; generated with the current tooling on the native efe:robopaint-0.2.0 runtime): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1343 and mark_width_mm 0.36, against the colouring-in limits 4040 mm and 0.10 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Lettering). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 

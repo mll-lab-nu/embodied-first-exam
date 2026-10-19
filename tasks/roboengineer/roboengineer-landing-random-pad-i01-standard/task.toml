@@ -20,7 +20,7 @@ mode = "standard"
 dynamics = "static"
 protocol = "eai-policy/1.0"
 oracle = "full"
-oracle_evidence = "Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-quadrotor-landing:0.1.0: six safe held-out landings of six, mean score 82.89; nop 0."
+oracle_evidence = "Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image efe-private:quadrotor-landing-0.1.0: six safe held-out landings of six, mean score 82.89; nop 0."
 instance_seed = 1
 expert_time_estimate_hours = 2.0
 

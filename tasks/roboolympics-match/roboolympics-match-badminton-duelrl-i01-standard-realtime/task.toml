@@ -99,7 +99,7 @@ timeout_sec = 30
 
 # Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay,
 # board 0151). Badminton declares no spectator camera or scene (core/spectator.py renders nothing): the replay
-# video is drawn with the players' cameras by spectator/sport_video.py (robot_coding_bench, board 0136), after the verdict.
+# video is drawn with the players' cameras by spectator/sport_video.py (Embodied First Exam, board 0136), after the verdict.
 [[verifier.collect]]
 service = "sim"
 command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_SPORT_VIDEO = x1 ] && timeout ${RCB_VIDEO_TIMEOUT_S:-1800} python3 /srv/spectator/sport_video.py /srv/sport/plugin.py /data > /dev/null 2>&1; cat /data/final.json | head -c 2000"

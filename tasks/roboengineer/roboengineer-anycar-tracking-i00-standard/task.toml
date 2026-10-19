@@ -18,7 +18,7 @@ mode = "standard"
 dynamics = "static"
 protocol = "eai-policy/1.1"
 oracle = "full"
-oracle_evidence = "Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-control-transfer:0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 73.21; nop 0."
+oracle_evidence = "Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image efe-private:control-transfer-0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 73.21; nop 0."
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 

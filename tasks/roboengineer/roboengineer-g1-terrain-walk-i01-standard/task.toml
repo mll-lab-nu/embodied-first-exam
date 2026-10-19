@@ -18,7 +18,7 @@ mode = "standard"
 dynamics = "static"
 protocol = "eai-policy/1.1"
 oracle = "partial"
-oracle_evidence = "Harbor 0.23.0 oracle agent on aws:rcb-gpu13 (L40S), 2026-10-18, images eai-control-transfer:0.2.0-train / 0.2.0 (200 + 2466 + 1479 + 986 PPO iterations x 4096 environments from scratch; 12009 s of the 14400 s; round 0 passed all four development cases, the later, sealed rounds drifted sideways): the reference (trains the public curriculum from scratch on the agent's GPU, three deployments, the last sealed) succeeded on 4/12 held-out cases, mean engineering score 82.68; nop 0. No full oracle: human review (PROTOCOL §4)."
+oracle_evidence = "Harbor 0.23.0 oracle agent on aws:rcb-gpu13 (L40S), 2026-10-18, images efe-private:control-transfer-0.2.0-train / 0.2.0 (200 + 2466 + 1479 + 986 PPO iterations x 4096 environments from scratch; 12009 s of the 14400 s; round 0 passed all four development cases, the later, sealed rounds drifted sideways): the reference (trains the public curriculum from scratch on the agent's GPU, three deployments, the last sealed) succeeded on 4/12 held-out cases, mean engineering score 82.68; nop 0. No full oracle: human review (PROTOCOL §4)."
 instance_seed = 1
 expert_time_estimate_hours = 4.0
 

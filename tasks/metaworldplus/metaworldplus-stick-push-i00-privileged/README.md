@@ -49,7 +49,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 ## Details
 | | |
 |---|---|
-| source | [Meta-World](https://github.com/Farama-Foundation/Metaworld) @ 59fc34d (MIT) on MuJoCo 3.3.0; image `eai-metaworld:0.1.0` |
+| source | [Meta-World](https://github.com/Farama-Foundation/Metaworld) @ 59fc34d (MIT) on MuJoCo 3.3.0; image `efe:metaworld-0.1.0` |
 | instance | Meta-World's reset randomization with seed 0; MuJoCo state, model arrays, env caches and RNG frozen in `instance.npz` (SHA-256 `30d72c6ed5b2…`, checked on load) |
 | deliverable | `(T, 4)` native actions `[dx, dy, dz, grip]`, 1 ≤ T ≤ 500 (Meta-World's `max_path_length`) |
 | success | Meta-World's own check (`evaluate_state`) on the state after the last action. The thermos (the point 9 cm in +y from its handle) is within 12 cm of the target point AND the stick is still held and lifted: both finger pads press on the stick, the gripper is not fully shut, and the stick is more than 1 cm above the height it started at. A thermos that is at the target after the stick has been let go does not count. |
