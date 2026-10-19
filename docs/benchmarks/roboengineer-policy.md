@@ -1,6 +1,6 @@
 # roboEngineer: the multi-round policy interface (`eai-policy/1.0`, `/1.1`)
 
-roboEngineer's own runtime (PROTOCOL §3: a benchmark with its own runtime, `scripts/roboengineer/exported.toml`;
+roboEngineer's own runtime (PROTOCOL §3: a benchmark with its own runtime, `ci_checks/benchmarks/roboengineer/exported.toml`;
 Appendix H applies unchanged; results reported apart from `eai-standard/2.x`). The benchmark page is
 [roboengineer.md](roboengineer.md). Changes in #329's review (2026-10-18): the collect hooks stop the agent's processes
 first (`kill -9 -1`), a deployment still running at the cutoff is stopped and not graded (Control Transfer), the

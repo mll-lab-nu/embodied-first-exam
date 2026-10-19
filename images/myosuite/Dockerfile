@@ -4,7 +4,7 @@
 # OSMesa rendering). Tag = images/myosuite/VERSION. Build from the repo root: scripts/build_images.sh (or
 #   docker build -f images/myosuite/Dockerfile -t ghcr.io/mll-lab-nu/eai-myosuite:$(cat images/myosuite/VERSION) .)
 # Same stack as the image the frozen instances were made with (rcb-myosuite:0.1.1); every pip package is pinned (the
-# closure of the install line), so a rebuild reproduces the instances' state hashes (scripts/myosuite/README.md).
+# closure of the install line), so a rebuild reproduces the instances' state hashes.
 # 0.1.1: numpy 2.3.5 instead of 2.4.6. MyoSuite 2.12.2's Bimanual, Soccer and ChaseTag envs call float() on 1-element
 # arrays, which numpy 2.4 rejects; every instance hash and every reference / positive-example replay of the first ten
 # families is bit-identical under both versions.

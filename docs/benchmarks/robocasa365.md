@@ -11,15 +11,15 @@
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa365/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| generator | `scripts/robocasa365/` (`select_instances.py`, `import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`); each instance and reference is committed once, in its privileged task (`environment/instance.npz`, `solution/oracle.npz`), which `generate.py` reads; `frozen/` keeps `report.json` and `start_state.json` (a fresh import's `frozen/<slug>/` is deleted once its tasks are generated) |
+| sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 
 ## Scope and selection rule
 PR #4 accepted 256 RoboCasa365 families with a demonstration-based reference (63 atomic, 193 composite; the 109 others
 have no official demonstration at the pinned commit or no validated reference). This benchmark takes 50 of them
-(`select_instances.py`, deterministic): the slots are shared between atomic and composite tasks in proportion to their
+(deterministically): the slots are shared between atomic and composite tasks in proportion to their
 sizes (12 atomic, 38 composite; the group is the module the environment class lives in); within a group, families are
 taken in the order of the SHA-256 of their environment name, skipping any whose reference does not verify with this
-benchmark's tooling (`import_references.py`), until the group's slots are filled. One candidate was skipped:
+benchmark's tooling, until the group's slots are filled. One candidate was skipped:
 `OrganizeMugsByHandle` (its reference does not reach success when replayed with MuJoCo's mesh cache off (every build cold); PR #4 had accepted it with the cache on).
 
 - Atomic (12): PickPlaceSinkToCounter, PickPlaceCabinetToCounter, CloseDrawer, TurnOnMicrowave, CloseOven, TurnOnStove, TurnOnToasterOven, OpenDishwasher, TurnOffMicrowave, PackDessert, TurnOnSinkFaucet, CloseStandMixerHead.
@@ -56,10 +56,10 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
   are hidden.
 
 ## Standard-mode service
-`images/robocasa365/standard/server_casa.py` and the collect hook `scripts/robocasa365/shared/finalize.sh`, the same
+`images/robocasa365/standard/server_casa.py` and the collect hook `environment/sim/finalize.sh`, the same
 service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: graded by the live episode, nothing
-replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RCB_START_SHA` from
-`scripts/robocasa365/frozen/start_state.json`, a mismatch is infrastructure), the video one render pass after the
+replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RCB_START_SHA` in
+each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one render pass after the
 verdict; the hook's budget; request validation; the camera calibration is the rendered viewpoint).
 
 ## Standard-realtime (`eai-standard/2.3`)
@@ -67,9 +67,9 @@ The dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-stan
 by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
 it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics-Fun, unchanged
-  (`scripts/robocasa365/shared/realtime/rcb_realtime.py`, `rcb_service.py`, `rcb_client.py`, `grade.py`: byte-identical
-  copies of `scripts/humanoidbench/shared/`; `ci_checks/check-tooling-identity.sh`), with
-  `scripts/robocasa365/shared/realtime/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
+  (the task's `environment/sim/rcb_realtime.py`, `rcb_service.py`, `environment/rcb_client.py`, `tests/grade.py`: byte-identical
+  copies of the HumanoidBench realtime tasks' files; `ci_checks/check-tooling-identity.sh`), with
+  `environment/sim/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
   twin's frozen instance, native controller command (`joint_position`, 13 channels, clipped and reported), success
   check (`_check_success`, twice per control step) and cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU). The
   verdict is the live episode's (the shared layer's `graded_by = live`): the last episode's success as it ran, and the
@@ -104,21 +104,12 @@ demonstration data.
 `images/robocasa365/Dockerfile` pins the base image by digest, every pip package, the robosuite and RoboCasa commits
 and every asset archive by SHA-256 (`fetch_assets.sh`; four archives from RoboCasa's Hugging Face mirror, byte-identical
 to the UT Box ones). It reproduces the content of the image the tasks were validated with. **Open: a clean rebuild**
-(~11 GB of downloads, ~55 GB of disk) and a re-check of the hashes with `import_references.sh` before publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0; the
+(~11 GB of downloads, ~55 GB of disk) and a re-check of the hashes before publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0; the
 Lightwheel fixtures and objects come from RoboCasa's UT Box links under RoboCasa's asset terms (maintainers to
 confirm publishing, otherwise `BUILD_ONLY`).
 
-## Rebuilding the tasks
-```bash
-docker build -t ghcr.io/mll-lab-nu/eai-robocasa365:$(cat images/robocasa365/VERSION) images/robocasa365
-bash scripts/robocasa365/import_references.sh <PR #4 checkout>
-python3 scripts/robocasa365/generate.py      # ends with scripts/task_conventions.py normalize; re-running reproduces the tasks
-cd tasks && harbor add --scan . && cd ..
-bash ci_checks/run_all.sh tasks/robocasa365-*
-```
-
 ## Evidence
-`scripts/robocasa365/frozen/report.json`, for all 50: not solved at the start; `reset()` bit-exact; the reference
+For all 50: not solved at the start; `reset()` bit-exact; the reference
 succeeds on its final state without truncation; two fresh-process replays end in the live state's hash and succeed.
 
 Harbor runs on the generated tasks: `-a oracle` scores 1 (50/50 privileged, 6/6 standard sampled), `-a nop` 0;

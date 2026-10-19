@@ -12,7 +12,7 @@ images/<name>/Dockerfile is `FROM scratch` + `COPY . /`; its build context is im
 gitignored), staged by `build` (scripts/build_images.sh skips the image while it is missing). An image a benchmark keeps
 private carries images/<name>/BUILD_ONLY (PROTOCOL §1), and hosts pull it with the organization's token.
 
-    python3 scripts/files_image.py check [name ...]       the sources still hash to FILES.json (no docker; generators call it)
+    python3 scripts/files_image.py check [name ...]       the sources still hash to FILES.json (no docker)
     python3 scripts/files_image.py build <name>           stage context/ (stamped copy of the files) and build <image>:<VERSION>
     python3 scripts/files_image.py pin <name> <digest>    after the push: check the pushed image, then pin it in FILES.json
     python3 scripts/files_image.py verify-image <name>    the pinned image carries exactly FILES.json's files and modes

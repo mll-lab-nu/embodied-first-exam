@@ -27,7 +27,7 @@ WHAT STAYS
   only get_reward read -- the move term's bound and margin, an open gap (docs/protocol/leakage.md).
 
 THE FORMULA IS NOT LOST
-  scripts/humanoidbench/rewards.json holds it -- built by running THIS script against a copy and diffing,
+  images/humanoidbench/rewards.json holds it -- built by running THIS script against a copy and diffing,
   so the two sides cannot drift. gen_tasks.py ships one family's entry in that task's tests/, which the
   verifier's own container is built from, and grade.py patches it back before scoring. The verifier
   therefore runs upstream's exact code and our numbers stay comparable with the paper.

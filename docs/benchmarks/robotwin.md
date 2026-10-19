@@ -1,8 +1,7 @@
 # RoboTwin 2.0
 
 RoboTwin 2.0's standard tasks serve `eai-standard/2.1` (docs/protocol/standard_mode.md Part 1), the service the base protocol
-was written from. Generators: `scripts/robotwin_mk_task.py` (privileged), `scripts/robotwin_mk_limited.py` (standard,
-inside the eai-robotwin image); shared files checked by `scripts/robotwin_sync_shared.py --check`.
+was written from. The task directories are the deliverable; the tooling that built them is kept outside this repository.
 
 
 ## Standard-mode service details

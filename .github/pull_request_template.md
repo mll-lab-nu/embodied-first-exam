@@ -12,13 +12,13 @@
 - Mode(s): privileged / standard / standard-realtime — protocol (standard: `eai-standard/2.1`/`2.2`/`2.4`; standard-realtime: `eai-standard/2.3`): `eai-standard/2.__`
 - Oracle: full / partial / none — evidence: ___
 - Base image(s): `eai-<sim>:<ver>` (published / BUILD_ONLY)
-- Agent time cutoff: ___ s per mode, `[agent] timeout_sec` in each task's task.toml (generated tasks: the generator's constant); default 3600, reason if other; at most 14400; the same for a task's privileged and standard versions (PROTOCOL §2.12). A change of an existing task's cutoff: old -> new, decided by ___
+- Agent time cutoff: ___ s per mode, `[agent] timeout_sec` in each task's task.toml; default 3600, reason if other; at most 14400; the same for a task's privileged and standard versions (PROTOCOL §2.12). A change of an existing task's cutoff: old -> new, decided by ___
 - Compute resources (minimum, PROTOCOL §2.9): agent phase ___ CPU / ___ GB / ___ GB GPU memory (GPU class ___, recommended ___); verifier ___ / ___ / ___; measured from ___
 - Resource limits (PROTOCOL §2.10, GiB): scope ___; ___ GPU memory / ___ memory / ___ processes / ___ disk; whole trial's expected peak ___ GPU / ___ memory; caps per service ___; measured from ___
 
 ## Checklist
 - [ ] `bash ci_checks/run_all.sh <tasks>` passes
-- [ ] Generated tasks: re-running the generator leaves `git diff tasks/` empty
+- [ ] Tasks only: no task-generation code (generators, oracle searches, instance freezers); shared code in the image or `embodied_first_exam/benchmarks/<benchmark>/` (PROTOCOL §1)
 - [ ] Oracle and `nop` on a sample (≥ 2 tasks per mode), table below
 - [ ] New simulator or family: two fresh replays give the same state hash
 - [ ] Oracle `partial`/`none`: per-family table of positive examples (PROTOCOL §2.7)

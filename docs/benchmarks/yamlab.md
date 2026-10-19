@@ -14,20 +14,16 @@ The instances keep the ids they were frozen with: `put_pot_on_cooktop` i00, i03,
 i13, i15, i20, i21.
 
 ## Instances
-25 instances per family were frozen (Tasks and generator), and five per family are kept: the 25 differ only in the
+25 instances per family were frozen (Tasks), and five per family are kept: the 25 differ only in the
 object pair and one of 9 (pot) or 3 (mug) placements and so repeat each other. The kept five mix solved and failed
-instances and spread over the placement schedule. `scripts/yamlab/instances.json` lists the kept instances with their
-ids and, under `pruned`, the removed ids; `freeze.py`'s `KEEP` applies the same cut.
+instances and spread over the placement schedule.
 
-## Tasks and generator
-- `python3 scripts/yamlab/mk_tasks.py` writes every YAMLab task dir (both modes) from `scripts/yamlab/` and the instance files the tasks already hold:
-  `instances.json` (per family, the frozen instances in order with their source demonstration, assets and oracle hashes),
-  each instance's `instance.json` and `oracle_actions.npy` (committed only in the tasks: `mk_tasks.py` reads the standard
-  task's `environment/sim/instance.json` and `solution/oracle_qpos.npy`, or `frozen/<family>-iNN/` while a fresh
-  `freeze.py` run's output is there; delete it once the tasks are generated), `shared/rcb_yamlab.py` (the tooling), `template/<mode>/`
-  and `scripts/eai_standard/` (the 2.2 layer and the standard client). Re-running it leaves `git diff tasks/` empty;
-  `--check` only compares.
-- Selection (`scripts/yamlab/select_instances.py`, in the image, on a GPU host) and freezing (`scripts/yamlab/freeze.py`):
+## Tasks
+- Every YAMLab task dir carries the tooling (`rcb_yamlab.py`), its instance's `instance.json` and its reference
+  (privileged: `solution/oracle_actions.npy`; standard: `solution/oracle_qpos.npy`), and the standard twin the 2.2 layer
+  and the standard client of `embodied_first_exam/standard/`. The task directories are the deliverable; the tooling that
+  built them is kept outside this repository.
+- Selection and freezing (in the image, on a GPU host):
   YAMLab's dataset `yamlab/yamlab_datasets` @ fc6be97 has 40 teleoperation files per task, one object pair each
   (`putpot_007.hdf5` = `Pot/pot_007` + `Cooktop/cooktop_007`), with 9 (PutPotOnCooktop) or 3 (HangMugOnTree) human
   demonstrations recorded on YAMLab's fixed placement schedule: demo j is schedule entry j (PutPotOnCooktop: the pot at
@@ -41,7 +37,7 @@ ids and, under `pruned`, the removed ids; `freeze.py`'s `KEEP` applies the same 
   3. two `replay` runs, each in its own fresh process (the second one also films the replay), succeed and end in the
      live run's state hash.
   The first accepted demo of a file is that pair's instance; the first 25 accepted pairs per family became i00..i24, of
-  which five per family are kept. `instances.json` lists the rejected candidates with their reason.
+  which five per family are kept.
 - The tasks carry the frozen instance in `environment/` and `tests/` (privileged) and `environment/sim/` (standard).
 
 ## Success (YAMLab's own, evaluation thresholds)
@@ -143,13 +139,13 @@ the simulator to 2e-7 m), and thin primitives: `move_ee` (both arms together, Is
 Resume class `exact`: the resumed service is a fresh process whose journal replay is that process's first run, so the
 state hash at the last checkpoint must match exactly (else `resume_failed`, `infra_error`). `RCB_STARTUP_TIMEOUT_S = 1800`
 (the compose file's value; see Time budget).
-Acceptance test `scripts/yamlab/kill_test.sh` (Harbor oracle on a standard task, the service killed with SIGKILL in the
+Acceptance test (Harbor oracle on a standard task, the service killed with SIGKILL in the
 middle of a call): the container restarts, the fresh service replays the journaled steps, matches the checkpoint's state
 hash exactly, resumes the same episode, the oracle continues from the reported step, and the episode is graded as usual
 (`resumes = 1`, `sim_startups = 2`, no infra error).
 
 ## Time budget
-3600 s for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
+3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
 docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
 own text names no number. Every Python process pays ~1.5-2.5 min of Isaac Sim launch and scene build (more on a loaded
 host). A trial's first Isaac start in a container compiles the shaders into the trial's fresh Kit cache (up to ~10 min on
@@ -160,7 +156,6 @@ Verifier-side limits. Privileged: each fresh-process replay has max(1800 s, 1200
 Isaac start is the cold one; 20 control steps/s is a third of the slow nominal rate) and `[verifier] timeout_sec = 13000`
 fits two replays of the longest accepted trajectory (100,000 rows: 6200 s each) plus 600 s. Standard:
 `[[verifier.collect]] timeout_sec = 3600` (the episode end + the video encode, at most 600 s on the CPU, + a margin).
-The tests of these rules run without a simulator and cover YAMLab with RoboLab: `scripts/robolab/tests/test_*.py`.
 
 The tooling's runaway guard ends an episode after 100,000 control steps (`step_guard`, 55.6 min of simulated time). It
 is stated in `/spec` (`max_control_steps`, `episode`), in both instructions and in the README (a technical cap, not a
@@ -180,13 +175,12 @@ the world origin on any axis or a zero quaternion are 400s that execute nothing.
   flags, recording, replay and rendering. Task-level skills (grasp, lift, handover, place, hang) are never added to the
   agent's tooling.
 - **World-frame information (D7).** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
-  `scripts/yamlab/ci/advisory-world-frame.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
+  `ci_checks/benchmarks/yamlab/advisory-world-frame.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
   privileged state through the tooling and the world heights of the success check in the instruction.
 
 - **Pointers to the reference solution.** The reference solution of an instance is the YAMLab teleoperation
   demonstration it was frozen from, replayed (Evidence), and that dataset is public. The agent's egress is the model
-  APIs and the package registries only, so it cannot be fetched. The instance file an agent reads names no recording
-  (`mk_tasks.py` refuses one with a `source` entry; the provenance is in `scripts/yamlab/instances.json` only). What still locates it for someone outside the trial: the
+  APIs and the package registries only, so it cannot be fetched. The instance file an agent reads names no recording. What still locates it for someone outside the trial: the
   instance id `iNN` in the task name is the index of the dataset's recording file, the privileged instruction names the
   object asset with the same number, and the image's `/opt/yamlab` (its README and `scripts/download_data.py`) names the
   dataset. Renaming the instances would change every task's identity; it is left as it is.
