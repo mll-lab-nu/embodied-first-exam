@@ -9,7 +9,7 @@ meant to find the ceiling of coding agents, and most of its tasks have no known 
 robot's built-in walking (and, on the G1, running) policy, drive every joint itself, and, unlike in every other
 benchmark here, search for and download public tools and pretrained controllers.
 
-**Names.** The image keeps the name `eai-robofunolympics`, as do the internal module names (`rfo/`, `rcb_rfo.py`).
+**Names.** The image keeps the name `robofunolympics` (`ghcr.io/mll-lab-nu/efe:robofunolympics-<images/robofunolympics/VERSION>`), as do the internal module names (`rfo/`, `rcb_rfo.py`).
 
 **Two benchmarks** (owner, 2026-10-18, board 0160). This page is **RoboOlympics-Fun**: the 79 single-robot sports
 families above and below, built here (privileged, standard, and

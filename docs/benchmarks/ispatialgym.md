@@ -79,7 +79,7 @@ rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the
 | not given | object poses, the world frame, resets, the goal check | the goal, any target, any success check; motion primitives or planners |
 | deliverable, grading | the episode the sidecar records, graded live: the sidecar's success at the episode's end, nothing replayed (Grading) | `/app/output/trajectory.npz` (≤ the step budget); two fresh replays in the verifier, both succeed and agree |
 
-The privileged agent's image is eai-ispatialgym with a layer that removes, and the build then asserts gone: every BDDL
+The privileged agent's image is `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` with a layer that removes, and the build then asserts gone: every BDDL
 problem (goals), the docs (they preview the reference demonstrations; the fork's link the authors' pages), tests,
 configs and README, the eval data's repository id and folder names and the project URLs (they locate the
 demonstrations) and bytecode; upstream's public release ships no scripted expert, planner, sampler or task spec, and the

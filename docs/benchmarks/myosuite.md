@@ -164,7 +164,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   model trials (human review, PROTOCOL §2.7, table below).
 
 ## Integrity
-- The baselines are removed from the image in the same layer that installs MyoSuite (no layer of `eai-myosuite` holds
+- The baselines are removed from the image in the same layer that installs MyoSuite (no layer of `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` holds
   them), and no task image has a solution.
 - **Agent egress is the model APIs and the package registries, in both modes** (PROTOCOL H.6). The PyPI wheel
   ships the baselines (the reference solutions of three families), and an agent can pip-install `myosuite==2.12.2` in
@@ -190,7 +190,7 @@ today's privileged verifier in **two fresh Harbor trials** (each trial replays i
 standard twin the same rows, rounded to float32 as the client sends them, were streamed through the client in two fresh
 trials (live check, both replays, determinism). Every evidence run used task directories whose `environment/`, `tests/`
 and `task.toml` are those committed (a `solution/` added to a scratch copy). `nop` was run once per task directory
-(`eai-myosuite:0.1.1`):
+(`ghcr.io/mll-lab-nu/efe:myosuite-0.1.1`):
 
 | family | positive example (model, trial, rows) | privileged: 2 fresh trials | standard: 2 fresh trials (float32 rows via the client) | nop (priv / std) | predicate |
 |---|---|---|---|---|---|
@@ -226,7 +226,7 @@ Negative controls besides `nop`: `make_facts.py` checks that the relaxed body (e
 steps) succeeds in no family; the float32-rounded baoding, chase_tag and osl_run trajectories are wrong trajectories
 that score 0; an apple_lift trajectory that leaves the apple on the table scores 0.
 
-## Verification (eai-myosuite:0.1.1)
+## Verification (efe:myosuite-0.1.1)
 | family | oracle, privileged | oracle, standard | final state (both modes, every replay) | nop, all 44 directories |
 |---|---|---|---|---|
 | `key_turn` | 1 (72 rows) | 1 | `79c522457ad23180` | 0 |
@@ -258,7 +258,7 @@ every other family's objects start at rest, and chase_tag's opponent stands stil
 - **Rendering on the GPU.** On a clock that does not stop, a render is time the simulator thread cannot step, and an
   OSMesa frame of this scene takes 1.3 s (1373 visual geoms, 207k mesh vertices; 640 x 480 or 320 x 240 alike) against
   5 ms with EGL on an RTX 4090. The twin therefore reserves a GPU for its `sim` service (`graphics` capability); the image
-  (`eai-myosuite:0.1.1`, unchanged) has no NVIDIA EGL ICD manifest and sets `MUJOCO_GL=osmesa`, so `server.py` writes the
+  (`ghcr.io/mll-lab-nu/efe:myosuite-0.1.1`, unchanged) has no NVIDIA EGL ICD manifest and sets `MUJOCO_GL=osmesa`, so `server.py` writes the
   manifest to `/tmp`, probes EGL in a throwaway process and falls back to OSMesa where it fails (`RCB_GL` forces one;
   `/spec` `gl_backend` says which).
 - **Slowdown S = 1, resets 10.** Real-time factor of the service (capped at 4 CPUs): 2.08 with the realtime clock flat
