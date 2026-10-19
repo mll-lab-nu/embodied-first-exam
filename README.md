@@ -14,7 +14,7 @@
 
 ## News
 
-- 🔥 **2026-10-19**: First release of Embodied First Exam.
+- 🔥 **2026-10-19**: Embodied First Exam is released!
 
 ## Quick start
 
@@ -89,7 +89,7 @@ upstream experts and the contents of the base images keep their own licenses.
 ```bibtex
 @misc{embodiedfirstexam2026,
   title        = {Embodied First Exam},
-  author       = {Embodied First Exam Team},
+  author       = {Kangrui Wang*§ and Changhe Chen*§ and Qineng Wang*§ and Pingyue Zhang*§ and Chi Gui*§ and Feishi Wang§ and Canyu Chen§ and Wenli Xiao§ and Xiaoyu Huang§ and Tonghe Zhang§ and Linjie Li§ and Yiyou Sun and Mingkai Deng and Jinyu Hou and Xiangyi Li and Eric P. Xing and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Jiajun Wu and Yuke Zhu and Guanya Shi† and Ruohan Zhang† and Manling Li†},
   year         = {2026},
   url          = {https://github.com/mll-lab-nu/embodied-first-exam}
 }
