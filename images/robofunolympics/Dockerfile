@@ -1,4 +1,4 @@
-# robofunolympics: the RoboOlympics simulator for the RoboFunOlympics tasks (docs/benchmarks/robofunolympics.md):
+# robofunolympics: the RoboOlympics simulator for the RoboFunOlympics tasks (tasks/roboolympics-fun/README.md):
 # MuJoCo 3.3.7 on CPU (bit-exact replay) with OSMesa rendering (EGL on a GPU for the standard-realtime twins, since 0.2.1), and RoboOlympics' robot library with its
 # Unitree G1 (PROTOCOL §2.1: a base image holds the simulator and its assets) at /opt/roboolympics:
 #   bodies/              the robot library (model, meshes, real limits, the one servo path, the joint-group arbiter,

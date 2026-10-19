@@ -29,8 +29,7 @@ Host
 
 Build (from the repository root)
   docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .
-  (scripts/build_images.sh builds every images/<sim>/ with its own naming; until it names images efe-private:<sim>-<version>, use the
-  command above.) The build context is the repository root: the Dockerfile copies images/robolab/uv.lock, which pins
+  The build context is the repository root: the Dockerfile copies images/robolab/uv.lock, which pins
   every Python package (torch 2.7.0+cu128, numpy 1.26.0, isaacsim 5.1.0.0, isaaclab 2.3.2.post1).
 
 Check a build

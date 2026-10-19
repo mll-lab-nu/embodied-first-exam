@@ -1,4 +1,4 @@
-"""Prepare pinned nominal G1/Go2 sources; reference policies are separate operator artifacts."""
+"""Prepare pinned nominal G1/Go2 sources (public upstream checkouts; fetch_assets.sh clones them)."""
 
 import argparse
 import hashlib
@@ -8,6 +8,30 @@ import subprocess
 from pathlib import Path
 
 UNITREE_PIN = "1425b15f73bd4095f0df53709d7c389c3eb9e790"
+
+
+GO2_PIN = "0059d4335f8156206f63a35662313385f7ad6d74"   # MuJoCo Menagerie (BSD-3-Clause unitree_go2)
+
+
+def prepare_go2(destination, checkout):
+    """The evaluator's Go2 tree: Menagerie unitree_go2 at GO2_PIN plus asset-manifest.json (the same layout and
+    manifest as the tasks' quadrupedbench/assets.py prepare(), which verify() checks at start)."""
+    destination, checkout = Path(destination), Path(checkout)
+    if destination.exists():
+        raise FileExistsError("Asset destination already exists")
+    actual = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
+    if actual != GO2_PIN:
+        raise ValueError("Pinned source commit mismatch")
+    subprocess.run(["git", "-C", str(checkout), "diff", "--exit-code", GO2_PIN, "--", "unitree_go2"], check=True,
+                   capture_output=True)
+    shutil.copytree(checkout / "unitree_go2", destination)
+    sha = {
+        str(p.relative_to(destination)): hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in sorted(destination.rglob("*"))
+        if p.is_file() and p.name != "asset-manifest.json"
+    }
+    (destination / "asset-manifest.json").write_text(
+        json.dumps({"commit": GO2_PIN, "sha256": sha}, sort_keys=True, indent=2) + "\n")
 
 
 def prepare(workspace, out, go2_source=None, private_go2_out=None):
@@ -50,8 +74,6 @@ def prepare(workspace, out, go2_source=None, private_go2_out=None):
         )
     for source in unitree.glob("LICENSE*"):
         shutil.copy2(source, nominal / source.name)
-    from .components.quadrupedbench.assets import prepare as prepare_go2
-
     private_go2 = Path(private_go2_out) if private_go2_out else out.parent / (out.name + "-private-go2")
     prepare_go2(private_go2, checkout=go2_source)
     public_go2 = out / "go2"

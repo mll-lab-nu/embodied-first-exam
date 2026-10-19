@@ -22,7 +22,7 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   had.
 - `images/<sim>/Dockerfile`: simulator base images, tagged from `images/<sim>/VERSION` if present else
   `images/VERSION`; `scripts/build_images.sh`. MuJoCo tasks (`dextoolbench_*`, `mujoco_playground_*`) use `images/mujoco/`
-  (run `prepare_assets.sh` first); notes in `docs/benchmarks/`.
+  (run `prepare_assets.sh` first); notes in `tasks/<benchmark>/README.md`.
 - Every task declares its minimum compute (PROTOCOL §6): `[metadata.resources]` in `task.toml`, written by
   `task_conventions.normalize` from the rules in `scripts/task_resources.toml`, and the README's `## Compute resources`
   rendered from it; `ci_checks/check-resources.py` checks both.
@@ -93,4 +93,4 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   into every 2.4 task (`check-tooling-identity.sh`).
   `python3 embodied_first_exam/standard/selftest.py` tests the crash recovery on the CPU in about two minutes.
 - Benchmark-level rules (templates, budgets, tooling file names, the world-frame and tooling declarations):
-  `docs/benchmarks/<bench>.md`.
+  `tasks/<benchmark>/README.md`.
