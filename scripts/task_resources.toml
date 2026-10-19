@@ -2584,40 +2584,6 @@ measured = "author estimate, the standard tasks' (the same client and harness in
 match = "^ese-.*-standard-realtime$"
 main = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
-# rsb, privileged (Embodied Safety Exam, 2026-10-18): the standard tasks' simulator in the agent's own container. One episode of
-# it is the standard sim sidecar's (PSS max 2.84 GB measured, 2026-10-13); an agent keeps one or two episodes open and
-# runs the verifier's replay (`check()`, a fresh process) beside them; the verifier runs two replays at once. Author
-# estimate until a sweep measures these tasks: the standard tasks' 4 CPUs, memory for about four episodes.
-[[rule]]
-match = "^ese-.*-privileged$"
-min_cpus = 4.0
-min_memory_gb = 8.0
-min_gpu_memory_gb = 0.0
-gpu_required = false
-gpu_class = "none"
-verifier_min_cpus = 2.0
-verifier_min_memory_gb = 6.0
-verifier_min_gpu_memory_gb = 0.0
-measured = "author estimate from the standard tasks' measurements (a university HPC cluster, 2026-10-13: one Embodied Safety Exam episode in the sim sidecar PSS max 2.84 GB, its finalize CPU p90 4.74 cores with two replays side by side): an agent with one or two episodes open and a check replay; the verifier's two replays at once (about 2 x 2.8 GB)"
-
-[[limit]]
-match = "^ese-.*-privileged$"
-scope = "trial"
-max_gpu_memory_gb = 0.0
-max_memory_gb = 13.0
-max_processes = 512
-max_disk_gb = 10.0
-disk_paths = ["/app", "/tmp", "/root"]
-disk_exclude = []
-sustain_sec = 60.0
-window_sec = 120.0
-trial_max_gpu_memory_gb = 0.0
-trial_max_memory_gb = 13.0
-measured = "author estimate: about four Embodied Safety Exam episodes (2.84 GB PSS each, the standard sim sidecar's maximum) next to the agent's harness, under the 16 GiB cap; processes 512 and disk 10 GiB: design defaults"
-
-[[cap]]
-match = "^ese-.*-privileged$"
-main = { cpus = 6.0, memory_gb = 16.0, pids = 8192 }
 
 [[cap]]
 match = "^roboolympics-match-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl|matchlow)-i[0-9]{2}-standard-realtime$"
