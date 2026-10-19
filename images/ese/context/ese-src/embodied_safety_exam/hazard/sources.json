@@ -2180,7 +2180,7 @@
       "access": "not_opened",
       "licence_tier": "cite_only",
       "threshold": "",
-      "notes": "Neither document opened (paywalled). That ISO/TS 15066:2016 is folded into ISO 10218-2:2025 is reported by vendor and association pages read in the literature check of 2026-10-13 (robosafe_bench/collision_lit/FINDINGS.md, Q2); the families' 0.25 m/s comes from the rows above, not from this one."
+      "notes": "Neither document opened (paywalled). That ISO/TS 15066:2016 is folded into ISO 10218-2:2025 is reported by vendor and association pages read in the literature check of 2026-10-13 (historical-source://collision_lit/FINDINGS.md, Q2); the families' 0.25 m/s comes from the rows above, not from this one."
     },
     {
       "key": "mech.stop_on_intrusion",

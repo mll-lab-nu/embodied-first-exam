@@ -1,9 +1,9 @@
 {
-  "duplicate_bytes_omitted": 190189625,
+  "duplicate_bytes_omitted": 190189660,
   "files": {
     "README.md": {
-      "bytes": 16130,
-      "sha256": "e05c6a0f7a3479d9e373b62917236ec456be8bb229663e9bf028e636f48aeb8d"
+      "bytes": 16165,
+      "sha256": "a30463139e5ec33ec57c668bc9d4e9c9911191d98637260a359e7227b94fbf39"
     },
     "bigym2/LICENSE": {
       "bytes": 11357,
@@ -1132,5 +1132,5 @@
   },
   "package": "embodied_safety_exam/assets/data/third_party",
   "root": "assets/third_party",
-  "schema": "rsb.third-party-context/1"
+  "schema": "ese.third-party-context/1"
 }

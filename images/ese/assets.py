@@ -2,8 +2,9 @@
 """Embodied Safety Exam's large files, kept out of git (images/ese/.gitignore) in Hugging Face datasets, pinned in
 images/ese/assets.json by commit and by the sha256 of every file. One entry ("pack") per dataset folder:
   realism_v3       the realism_v3 asset pack's binary textures and meshes (`.png`, `.obj`) under
-                   context/ese-src/embodied_safety_exam/assets/data/realism_v3/, from MLL-Lab/robosafe-assets (public;
-                   CC0 1.0 / CC BY 4.0 assets, credits in its realism_v3/credits.json)
+                   context/ese-src/embodied_safety_exam/assets/data/realism_v3/, from
+                   MLL-Lab/embodied-safety-exam-assets (public; CC0 1.0 / CC BY 4.0 assets, credits in its
+                   realism_v3/credits.json)
   third_party      the vendored third-party G1 meshes and GR00T whole-body-control weights (`.STL`, `.onnx`) under
                    context/ese-src/assets/third_party/bigym2/, from the embodied-safety-exam/ folder of the dataset
                    named in assets.json (their LICENSE / NOTICE files stay in git next to them)
@@ -12,7 +13,7 @@ The packs' JSON metadata, credits and licences stay in git. Build the image only
 
 usage:
   python3 images/ese/assets.py fetch [<dir>]       download the pinned revisions into <dir> (default:
-                                                         $RCB_ESE_ASSETS or ~/.cache/robosafe-assets), check every
+                                                         $RCB_ESE_ASSETS or ~/.cache/ese-assets), check every
                                                          sha256 and copy the files into the build context
   python3 images/ese/assets.py stage <dir>         check an existing copy and copy it into the build context
   python3 images/ese/assets.py check [<dir>]       check a copy (default: the build context itself)
@@ -158,7 +159,7 @@ def pin_from(pin: dict, d: pathlib.Path, rev: str) -> dict:
 
 def main() -> None:
     a = sys.argv[1:]
-    default = pathlib.Path(os.environ.get("RCB_ESE_ASSETS") or pathlib.Path.home() / ".cache" / "robosafe-assets")
+    default = pathlib.Path(os.environ.get("RCB_ESE_ASSETS") or pathlib.Path.home() / ".cache" / "ese-assets")
     if not a or a[0] not in ("fetch", "stage", "check", "pin", "export"):
         sys.exit(__doc__)
     packs = load()

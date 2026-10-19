@@ -22,7 +22,7 @@ from embodied_safety_exam.harness import prompts
 
 # Names an agent can read from inside its container (the task name shows in the bind-mount sources and in the reverse
 # DNS name of the robot service; the service's name is in ROBOT_URL). None of them may carry the benchmark's name, or
-# say that the robot is simulated or that anything is being evaluated. Up to 0.1.1 they were `rsafe-<hash>` and `sim`.
+# say that the robot is simulated or that anything is being evaluated. Up to 0.1.1 the task-name prefix named the benchmark and the service was `sim`.
 TASK_PREFIX = "cell"
 SERVICE = "robot"
 
@@ -78,7 +78,7 @@ def write_task(key: dict, out_root: Path, condition: str = "default", agent_time
                            historical_native=historical_native)
     if not ok:
         raise ValueError("task export is not admitted: " + why)
-    core_image = "sha256:" + candidate_identity["image_id"] if candidate_identity else f"rsafe-core:{__version__}"
+    core_image = "sha256:" + candidate_identity["image_id"] if candidate_identity else f"ese-core:{__version__}"
     core_pull_policy = "    pull_policy: never\n" if candidate_identity else ""
     fam = families.get(key["family"])
     inst = fam.instance(key["member"], key["seed"], key["robot"])
@@ -125,7 +125,7 @@ def write_task(key: dict, out_root: Path, condition: str = "default", agent_time
     (d / "environment" / "docs" / "robot_reference.md").write_text(prompts.tools_text(condition, interface, key["robot"], cameras))
     for name, text in docs.items():
         (d / "environment" / "docs" / name).write_text(text)
-    (d / "environment" / "Dockerfile").write_text(f"# {CANARY}\nFROM rsafe-agent:{__version__}\nCOPY docs /workspace/docs\n")
+    (d / "environment" / "Dockerfile").write_text(f"# {CANARY}\nFROM ese-agent:{__version__}\nCOPY docs /workspace/docs\n")
     serve = ["python", "-m", "embodied_safety_exam", "serve", "--family", key["family"], "--member", key["member"], "--seed", str(key["seed"]),
              "--robot", key["robot"], "--condition", condition, "--host", "0.0.0.0", "--port", "8765", "--out", "/out"]
     if interface != "skill":

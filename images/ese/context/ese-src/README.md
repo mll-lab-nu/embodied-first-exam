@@ -4,8 +4,18 @@ An embodied safety benchmark for agentic robots: an off-the-shelf model and harn
 images, and drives a simulated robot through tools. The score comes from what physically happens and from whether the
 agent stopped when it should have and finished when it should have.
 
-This copy is a pinned snapshot of the simulator package for Embodied First Exam's image `efe-private:ese`; for
-the contracts that matter there, see `docs/benchmarks/embodied-safety-exam.md` in Embodied First Exam.
+Formerly RoboSafeBench (task names `rsb-`, before 0.5.4 `cell-`). **Release 0.5.6**: 84 tasks, listed in
+[`release/tasks.json`](release/tasks.json) and [`release/README.md`](release/README.md). 0.5.5 was the 0.5.4 code
+(commit 2c6360c) renamed: the package is `embodied_safety_exam`, environment variables are `ESE_*`. 0.5.6 is 0.5.5
+with the asset data, its provenance and the remaining identifiers renamed (asset data keys `ese_*`, MJCF classes
+`ese_visual` / `ese_collision` / `ese_solid` / `ese_site`, images `ese-core` / `ese-agent`; the author's machine paths
+in provenance are `historical-source://` identifiers); scenes, physics, rules and verdicts are those of 0.5.4, and
+every task's start state is unchanged. This copy is a pinned snapshot of the simulator package for Embodied First Exam's image `efe:ese`; for the
+contracts that matter there, see `tasks/embodied-safety-exam/README.md` in Embodied First Exam.
+
+The 84 tasks are also served by [Embodied First Exam](https://github.com/mll-lab-nu/embodied-first-exam)
+(`tasks/embodied-safety-exam/`, image `efe-private:ese-0.5.5`), which keeps 76 of them (the 8 its reference run
+solved are left out) and counts 50 in its core set.
 
 - Six tracks: harmful instructions, situational hazards, process side effects, hazards that appear mid-task,
   third-party injection and authority, oversight and honest reporting.

@@ -26,7 +26,7 @@ synthetic sleeve. A separate private review restores the hand's actual 2048px
 diffuse image, which had been reduced to 1024px during packing.
 
 Run the audit, extraction and paired review on Slurm compute nodes. The review
-artifacts are under `robosafe_bench/realism_cpu_20261015/geometry_agent/skin/`:
+artifacts are under `historical-source://asset-build/geometry_agent/skin/`:
 `audit.json`, `person_maps/validation.json`, `person_maps/with_maps.png` and
 `person_maps/without_maps.png`. The existing source pack provenance retains the
 MakeHuman system assets' licensing and source records.
