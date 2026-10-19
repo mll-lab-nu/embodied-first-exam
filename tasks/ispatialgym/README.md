@@ -155,7 +155,9 @@ The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `downlo
 `download_behavior_1k_assets(accept_license=True)`), the same one BEHAVIOR-1K's tasks mount. Build the image as
 `images/ispatialgym/BUILD_ONLY` says. The task directories are the deliverable; the tooling that built them is kept
 outside this repository. The frozen instances are kept in the task directories only: the standard twin's
-`environment/sim/` (`instance.json`, `goal.json`, `facts.json`, `upstream.json`) and `environment/goal.png`.
+`environment/sim/` (`instance.json`, `goal.json`, `facts.json`, `upstream.json`). The goal images (upstream's, unchanged,
+MIT) are in the public Hugging Face dataset `MLL-Lab/embodied-first-exam-public` (`ispatialgym/`), pinned in
+`images/ispatialgym-goals-files/FILES.json`; the tasks copy each to `/app/goal.png` from that files-only image.
 
 ## Positive examples (oracle none, PROTOCOL §4)
 Upstream's recorded demonstration of each instance (the eval data's `-demo.hdf5`, `data/demo_0/action`, unchanged), handed
