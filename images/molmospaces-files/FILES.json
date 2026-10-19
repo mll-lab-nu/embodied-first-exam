@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-molmospaces-files:0.1.0@sha256:75e95b38326e03705b89d95bdfb2dafcaf2b9105e9e52d4ac2d65bc3f568a93d",
+ "image": "ghcr.io/mll-lab-nu/efe:molmospaces-files-0.1.0@sha256:75e95b38326e03705b89d95bdfb2dafcaf2b9105e9e52d4ac2d65bc3f568a93d",
  "source": "embodied_first_exam/benchmarks/molmospaces",
  "files": {
   "privileged/environment/rcb_molmospaces.py": "221d6d0ca0a8ae701428e45150c5ba0f09c8f030768da16cffa33617001231b7",

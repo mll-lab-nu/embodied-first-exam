@@ -9,7 +9,7 @@
 | Family / instance | `open` |
 | Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-i00-privileged__bVqNR4u (run codex-gpt6_1_sol-high, batch molmo-harder-sol, 2026-10-16, image 0.2.4, the same instance); human review in PR #276 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-molmospaces:0.2.5` |
+| Base image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` |
 
 ## Task
 Standard-mode twin of `molmospaces-open-i00-privileged` (the same frozen MolmoSpaces episode): Open the dishwasher. The agent gets only the

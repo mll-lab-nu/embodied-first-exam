@@ -10,7 +10,7 @@
 | Oracle | `full` — Reference: raised fists driven up through the falling toss on the walking policy, from a technique found offline by CMA-ES (RoboOlympics' method, search_technique.py): 6.6 m/s in, 6.95 m/s out upward, up to 4.02 m, down 0.28 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S (board 0112). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robofunolympics-0.2.1` |
 
 ## Task
 Set the pass: with one overhead contact of your hands, send the volleyball that comes down above you at least a metre above the net and into the outside hitter's target along the net. (RoboOlympics `volleyball-set`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

@@ -9,7 +9,7 @@
 | Family / instance | `pick_bucket` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-dexjoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
 DexJoCo `pick_bucket` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-pick-bucket-i00-privileged`: Put the boxed food into the bucket, then lift the bucket. Success: the boxed food's centre is inside the bounding box of the bucket's eight reference corners AND the bucket's bottom is at least 0.15 m above where it started, at the same control step.

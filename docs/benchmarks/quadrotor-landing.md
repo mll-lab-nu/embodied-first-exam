@@ -106,7 +106,7 @@ On a host with Docker, Compose and Buildx installed, and NumPy and PyTorch avail
 
 ```bash
 bash images/quadrotor-landing/prepare_assets.sh
-docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/efe-quadrotor-landing:0.1.0 .
+docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0 .
 # Use the native Harbor runner described in docs/RUNNING.md for oracle and nop on both instances.
 # Keep run artifacts outside tasks/ and outside a repository-level results/ directory.
 ```

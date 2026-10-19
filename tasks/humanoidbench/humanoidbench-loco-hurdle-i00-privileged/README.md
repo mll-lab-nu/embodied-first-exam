@@ -9,7 +9,7 @@
 | Family / instance | `hurdle` / seed 0 |
 | Oracle | `none` — no rollout of this instance; published RL passes the bar (FastTD3 887 / 700); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-humanoidbench:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
 HumanoidBench hurdle: produce one replayable trajectory that runs the Unitree H1 down a walled track past a line of hurdles, frozen scene instance 00.

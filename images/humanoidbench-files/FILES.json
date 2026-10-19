@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-humanoidbench-files:0.1.0@sha256:8b54d142cb362fcfde398a8f5085146405afa693688bbcb4aa8563c4c01e10df",
+ "image": "ghcr.io/mll-lab-nu/efe:humanoidbench-files-0.1.0@sha256:8b54d142cb362fcfde398a8f5085146405afa693688bbcb4aa8563c4c01e10df",
  "source": "embodied_first_exam/benchmarks/humanoidbench",
  "files": {
   "privileged/environment/rcb_hb.py": "52d982c6ff29d8d1f8bc80739c98283ffebec6963dae8549fae36048a4c91405",

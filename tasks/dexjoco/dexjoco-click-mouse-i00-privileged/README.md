@@ -9,7 +9,7 @@
 | Family / instance | `click_mouse` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-dexjoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
 DexJoCo `click_mouse` (a Franka Panda arm with a 16-DoF Allegro hand): Put the computer mouse on the magenta mousepad and click its button. Success: the mouse is on the pad (its centre within the pad's 0.15 m radius horizontally and within 0.05 m of the pad's height), the button has been pressed while the mouse was on the pad (button joint more than 0.001 rad past its rest angle), which turns the monitor blue, and the mouse then stays on the pad for 10 consecutive control steps. A click while the mouse is off the pad does nothing.

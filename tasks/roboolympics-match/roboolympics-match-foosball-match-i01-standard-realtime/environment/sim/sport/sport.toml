@@ -14,7 +14,7 @@ summary = "table football on a physical table: you drive the four motorised rods
 protocol = "realtime"
 revision = "foosball-program-v2+core-0.2"   # plugin.REVISION; foos.REVISION = foosball-program-v2 (v1: legacy)
 physics = "mujoco (CPU, 1 kHz rigid bodies: a rolling, bouncing ball and 2 x 4 rods driven by force- and torque-limited motors)"
-image = "ghcr.io/mll-lab-nu/efe-olympiad:0.1.0"
+image = "ghcr.io/mll-lab-nu/efe:olympiad-0.1.0"
 status = "sport"
 publish = true
 category = "robotics-sports-arena"

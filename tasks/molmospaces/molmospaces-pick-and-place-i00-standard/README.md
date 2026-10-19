@@ -9,7 +9,7 @@
 | Family / instance | `pick-and-place` |
 | Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1: molmospaces-pick-and-place-i00-p__w3GRFg3 (run codex-gpt6_1_sol-high, batch molmo-v2-sol, 2026-10-16; its verifier's replays ran out of time on a loaded host (the earlier 500 s limit), so it was graded 1 offline with the verifier's replay tool: two fresh replays in the task's image, no time limit, both successes with equal final hashes); human review in PR #276 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-molmospaces:0.2.5` |
+| Base image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` |
 
 ## Task
 Standard-mode twin of `molmospaces-pick-and-place-i00-privileged` (the same frozen MolmoSpaces episode): Pick up the purple bottle with white cap and place it in or on the clear ashtray with notches. The agent gets only the

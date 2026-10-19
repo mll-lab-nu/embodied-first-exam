@@ -5,7 +5,7 @@
 > digest. The recipe of that base image is kept as `Dockerfile.genesis-0.2.22`; everything below this note describes
 > it (the simulator source, libuipc builds and instance staging the MuJoCo image inherits).
 
-`ghcr.io/mll-lab-nu/efe-roboarc:<images/roboarc/VERSION>` is a public image: RoboARC's simulator (the pruned
+`ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>` is a public image: RoboARC's simulator (the pruned
 `topogym` package of the release commit), Genesis 1.2.1, libuipc (the audited determinism-patched wheel, plus an sm_86 build
 of the same recipe), PyTorch, Nyx and every task's frozen instance. The tasks `FROM` it, and the standard `sim` service runs
 it. Maintainers push it with `scripts/push_images.sh` after validating a build.
@@ -52,14 +52,14 @@ it. Maintainers push it with `scripts/push_images.sh` after validating a build.
 
 ## Build (from the repository root)
 
-0.2.22 was published as a delta of the published 0.2.21: `FROM ghcr.io/mll-lab-nu/efe-robotangle:0.2.21@sha256:4fd681598e07a7a29201b8f30ccbee9944baaa856a5b05b045e48522c138f7ab` plus one `COPY` layer with the eight IPC instances'
+0.2.22 was published as a delta of the published 0.2.21: `FROM ghcr.io/mll-lab-nu/efe:robotangle-0.2.21@sha256:4fd681598e07a7a29201b8f30ccbee9944baaa856a5b05b045e48522c138f7ab` plus one `COPY` layer with the eight IPC instances'
 `instance_assets/frozen_assets/rope_volume.npz` (mode 0644). Its files are those of a full build from the pinned dataset
 revision, and a host that has 0.2.21 pulls only that layer (13 MB). A full build with the commands below gives the same
 files in other layers.
 
 ```bash
 images/roboarc/fetch_image_context.sh [<download dir>]     # images/roboarc/context/ from the pinned dataset, checked
-docker build -f images/roboarc/Dockerfile -t ghcr.io/mll-lab-nu/efe-roboarc:$(cat images/roboarc/VERSION) images/roboarc/context
+docker build -f images/roboarc/Dockerfile -t ghcr.io/mll-lab-nu/efe:roboarc-$(cat images/roboarc/VERSION) images/roboarc/context
 ```
 
 `scripts/build_images.sh` builds it from `images/roboarc/BUILD_CONTEXT` once the context exists, and skips it otherwise.
@@ -73,7 +73,7 @@ their instances from the image.
 The image must install exactly the runtime every task is bound to:
 
 ```bash
-docker run --rm ghcr.io/mll-lab-nu/efe-roboarc:$(cat images/roboarc/VERSION) python -c 'import json; from topogym.simulator.frozen_binding import installed_runtime; print(json.dumps(installed_runtime(), sort_keys=True))' > /tmp/roboarc_runtime.json
+docker run --rm ghcr.io/mll-lab-nu/efe:roboarc-$(cat images/roboarc/VERSION) python -c 'import json; from topogym.simulator.frozen_binding import installed_runtime; print(json.dumps(installed_runtime(), sort_keys=True))' > /tmp/roboarc_runtime.json
 python3 -c 'import json, sys; sys.exit(0 if json.load(open("/tmp/roboarc_runtime.json")) == json.load(open("images/roboarc/release.json"))["runtime"] else "image differs from the tasks runtime binding: do not run")'
 ```
 
@@ -82,7 +82,7 @@ libuipc builds must be the ones `images/roboarc/release.json` `uipc_builds` name
 both wheels against their build records:
 
 ```bash
-docker run --rm ghcr.io/mll-lab-nu/efe-roboarc:$(cat images/roboarc/VERSION) sh -c 'sha256sum /opt/uipc-build.json /opt/uipc_sm86/uipc-build.json; cat /opt/uipc-check.json'
+docker run --rm ghcr.io/mll-lab-nu/efe:roboarc-$(cat images/roboarc/VERSION) sh -c 'sha256sum /opt/uipc-build.json /opt/uipc_sm86/uipc-build.json; cat /opt/uipc-check.json'
 ```
 
 ## The libuipc builds

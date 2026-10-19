@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-pandadyn-files:0.1.0@sha256:3f575ac291b2c8dd4f91cfbeb9e3ab44b69ca3d67541929a02493294bc249707",
+ "image": "ghcr.io/mll-lab-nu/efe:pandadyn-files-0.1.0@sha256:3f575ac291b2c8dd4f91cfbeb9e3ab44b69ca3d67541929a02493294bc249707",
  "source": "embodied_first_exam/benchmarks/pandadyn",
  "files": {
   "privileged/environment/rcb_pandadyn.py": "69dd3863863a85574be96bdbd170865bee563427b6cfa4e68baa7577576f1813",

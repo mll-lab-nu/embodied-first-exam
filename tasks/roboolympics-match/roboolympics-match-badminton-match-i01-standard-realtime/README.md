@@ -10,7 +10,7 @@
 | Oracle | `partial` — screening round 16 (2026-10-13, revision 12, S = 20): our camera-only reference player beat level 1 in 17 of 20 seeds; on this instance at S = 20 it lost 10:12 (vanilla Harbor 0.23.0, 2026-10-13: a valid, replayed match, 78 min) |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 20 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe-olympiad:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:olympiad-0.1.0` |
 
 ## Task
 Robot badminton against the scripted opponent (level 1), program play: robot singles badminton on a small court (the BWF court's lengths x 0.4, the net at its BWF height 1.524 m) in real time (slowed down): a Franka Panda arm held to the real Panda's limits, with a racket, on an x-y gantry of ball-screw axes (2 m/s, 15 m/s^2), a point-mass shuttle with the real shuttle's high quadratic drag (terminal speed 6.8 m/s) and no bounce, a racket contact law of gain 4 (shuttles leave the racket at up to about 10 m/s); rally scoring, one game to 11 points; the players' robots serve (the rally winner serves next): the server tosses the shuttle (from rest or rising up to 0.5 m) at a point it chooses and hits it underhand, below 1.15 m, into the diagonal service court; format match-wallclock: you against a scripted computer opponent (levels 1-3, `game spec` match.opponent_level), format duel-wallclock: two players.

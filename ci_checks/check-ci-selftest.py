@@ -309,7 +309,7 @@ MUTATIONS = [
     ("the kernel's OOM killer switched off for a container", STD, COMPOSE, in_service("sim", "    oom_kill_disable: true"), ISOLATION, "`oom_kill_disable` is not allowed"),
     # ---- pinned images in every stage and file; the verifier's log directory emptied, not a look-alike of it
     ("a second, unpinned stage in the verifier's Dockerfile", STD, TEST_DF, append("FROM python:latest\nCOPY --from=0 /tests /tests\n"), DOCKERFILE, "must be a pinned registry image"),
-    ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/efe-behavior):\S+", r"\1:${TAG:-latest}"), DOCKERFILE, "must be pinned"),
+    ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/efe-private:behavior)-\S+", r"\1-${TAG:-latest}"), DOCKERFILE, "must be pinned"),
     ("tests/test.sh removes only a look-alike of the verifier's logs",
      STD, TEST_SH, sub(r"^rm -rf /logs/verifier/\*", "rm -rf /logs/verifier/*.bak"), ISOLATION, "must empty /logs/verifier"),
     # ---- review round 3, M6: benchmarks without a generator check mode (one task hand-edited, its digest refreshed)
@@ -327,7 +327,7 @@ MUTATIONS = [
     ("... its grader", TWIN_P, "tests/grade.py", append("# drift\n"), IDENTITY, "robotwin_2_0: 2 versions of privileged tests/grade.py"),
     # ---- files from a files-only image (images/<name>/FILES.json) count as copies of their benchmark's shared files
     ("RoboOlympics-Fun: a verifier takes its grader from an image other than the pinned files image", FUN_P, TEST_DF,
-     sub(r"(eai-roboolympics-fun-files:\S+@sha256:)[0-9a-f]{64}( /grade\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
+     sub(r"(efe:roboolympics-fun-files-\S+@sha256:)[0-9a-f]{64}( /grade\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
      "not a file of the pinned"),
     ("... a standard sidecar's tooling edited (compared with the files image's)", OPEN, "environment/sim/rcb_rfo.py",
      append("# drift\n"), IDENTITY, "roboolympics: 2 versions of rcb_rfo.py"),
@@ -363,7 +363,7 @@ MUTATIONS = [
     ("the monitor sidecar gets a network", STD, COMPOSE, sub(r"^    network_mode: none\n", ""), MONITOR,
      "missing `network_mode: none`"),
     ("the monitor sidecar runs another image", STD, COMPOSE,
-     sub(r"^    image: ghcr.io/mll-lab-nu/efe-monitor:\S+", "    image: python:3.12-slim"), MONITOR,
+     sub(r"^    image: ghcr.io/mll-lab-nu/efe:monitor-\S+", "    image: python:3.12-slim"), MONITOR,
      "not the block images/monitor/rcb_monitor/inject.py writes"),
     ("the monitor sidecar mounts code over the image's", STD, COMPOSE,
      sub(r"^(      - \./rcb_monitor/limits\.json:/opt/rcb_monitor/limits\.json:ro\n)",

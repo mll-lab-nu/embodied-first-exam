@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-libero-max-files:0.1.0@sha256:0f62fc62ebfa96cc1ac3e56edd27d8259f73622a1ee74bdcdcf37ab69e5b8371",
+ "image": "ghcr.io/mll-lab-nu/efe:libero-max-files-0.1.0@sha256:0f62fc62ebfa96cc1ac3e56edd27d8259f73622a1ee74bdcdcf37ab69e5b8371",
  "source": "embodied_first_exam/benchmarks/libero-max",
  "files": {
   "privileged/environment/lmx_tool.py": "4209d8c52596622e9220fa09c0d3b0317574b9e60823e479b14340e35dff5f7b",

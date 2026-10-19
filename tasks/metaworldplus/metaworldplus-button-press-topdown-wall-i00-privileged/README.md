@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/button-press-topdown-wall` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
 A Sawyer arm at a table, Meta-World's `button-press-topdown-wall-v3` (reward v2) on one frozen instance: Reach past the wall and press the button downward. The agent writes a

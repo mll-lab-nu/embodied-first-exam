@@ -9,7 +9,7 @@
 | Family / instance | `roboengineer/go2-attitude` / seed 1 |
 | Oracle | `full` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-control-transfer:0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 91.24; nop 0. |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-control-transfer:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
 Track public roll/pitch sinusoids after a 1 s acquisition interval while maintaining ground support.
