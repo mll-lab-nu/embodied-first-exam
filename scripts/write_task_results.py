@@ -96,7 +96,8 @@ def trial_config(trial, task, r):
     """The trial's effective configuration (task_conventions.effective_config) with how its seed is known. The seed: the
     runner's copy of the task the trial ran from (scripts/task_seed.py materialize writes the chosen seed as its
     `[metadata.seeds] default`), else the task's default seed (`seed_source = "default"`). Run-time overrides: the trial's
-    recorded environment. A trial of another version of the task (its `task_checksum` is not the task's DIGEST now) keeps
+    recorded environment. A trial of another version of the task (the digest in its lock.json is not the task's DIGEST now, nor that of the
+    runner's copy of it, <jobs>/<job>.copies.json) keeps
     only what its name says; the rest is "legacy"."""
     tdir = tc.task_dir(task, ROOT / "tasks")
     hc = load_json(trial / "config.json")
@@ -115,9 +116,15 @@ def trial_config(trial, task, r):
                 pass
     cfg = tc.effective_config(tdir, seed=seed, env=env)
     cfg["seed_source"] = source
-    want = (r.get("task_checksum") or "").removeprefix("sha256:")
+    # the task's content digest as Harbor recorded it: <trial>/lock.json `task.digest` (Harbor's packager digest = DIGEST);
+    # result.json's `task_checksum` is a dirhash of the whole directory, another algorithm, never equal to DIGEST
+    want = (((load_json(trial / "lock.json").get("task") or {}).get("digest")) or r.get("task_checksum") or "").removeprefix("sha256:")
     have = cfg.get("digest", "").removeprefix("sha256:")
     cfg["digest_match"] = (want == have) if want and have else None
+    if cfg["digest_match"] is False:   # the runner's own copy (run_agent_batch.sh: egress narrowed, CPU caps clamped) of this version
+        cp = load_json(trial.parent.parent / f"{trial.parent.name}.copies.json").get(task) or {}
+        if cp.get("copy", "").removeprefix("sha256:") == want and cp.get("source", "").removeprefix("sha256:") == have:
+            cfg["digest_match"] = True
     if cfg["digest_match"] is False and source == "default":   # another version of the task: only the name is known
         for k in ("cutoff_s", "reset_budget", "slowdown", "seed", "network", "validated", "oracle", "service_protocol"):
             cfg[k] = "legacy"
