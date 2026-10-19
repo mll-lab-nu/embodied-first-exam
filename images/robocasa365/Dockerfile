@@ -1,4 +1,4 @@
-# eai-robocasa365: RoboCasa365 (robocasa/robocasa @ 4f8a298, robocasa 1.0.1; robosuite @ 5ce6643 = 1.5.2, MuJoCo 3.3.1)
+# robocasa365: RoboCasa365 (robocasa/robocasa @ 4f8a298, robocasa 1.0.1; robosuite @ 5ce6643 = 1.5.2, MuJoCo 3.3.1)
 # with the kitchen fixtures, textures and object meshes its tasks load. CPU physics (bit-exact replay) and CPU rendering
 # (OSMesa): no GPU. One image for the RoboCasa365 privileged tasks' environment and verifier and the standard tasks'
 # `sim` service. Infrastructure only: no benchmark code and no demonstrations (those are the reference solutions; they

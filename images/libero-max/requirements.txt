@@ -1,4 +1,4 @@
-# eai-libero-max runtime pins (as in the evidence build). torch: CPU wheel from download.pytorch.org (see Dockerfile).
+# libero-max runtime pins (as in the evidence build). torch: CPU wheel from download.pytorch.org (see Dockerfile).
 numpy==1.22.4
 mujoco==3.2.6
 robosuite==1.4.0

@@ -1,4 +1,4 @@
-# eai-kinder: KinDER (Princeton PRPL, RSS 2026; MIT) at a pinned commit. Infrastructure only -- no task code; tasks
+# kinder: KinDER (Princeton PRPL, RSS 2026; MIT) at a pinned commit. Infrastructure only -- no task code; tasks
 # `FROM` it and COPY their own tooling. Tag = images/kinder/VERSION. Build from the repo root (docs/benchmarks/kinder.md).
 # Physics is CPU (MuJoCo for the Dynamic3D tasks). A GPU only speeds up images: egl ~ms a frame, osmesa on the CPU far
 # slower. Both are installed and the tooling picks one per run, so the same image works with and without a GPU.

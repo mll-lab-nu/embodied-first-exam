@@ -1,4 +1,4 @@
-# eai-yamlab: YAMLab (github.com/ARISE-Initiative/yamlab @ ec0455d, MIT) on Isaac Sim 5.1.0 + Isaac Lab @ f4aa17f (the
+# yamlab: YAMLab (github.com/ARISE-Initiative/yamlab @ ec0455d, MIT) on Isaac Sim 5.1.0 + Isaac Lab @ f4aa17f (the
 # commit YAMLab's install.sh pins), torch 2.7.0+cu128, LeRobot (YAMLab's fork, Apache-2.0) for its recorder imports.
 # Every Python package is pinned in images/yamlab/requirements.lock (pip freeze of the reference build). The task assets
 # (YAMLab's object USDs for PutPotOnCooktop and HangMugOnTree, MIT, from the Hugging Face dataset yamlab/yamlab_datasets

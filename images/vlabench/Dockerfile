@@ -1,4 +1,4 @@
-# eai-vlabench: VLABench (OpenMOSS/VLABench @ cf588fe) on MuJoCo 3.2.2 / dm_control 1.0.22 with its pinned assets
+# vlabench: VLABench (OpenMOSS/VLABench @ cf588fe) on MuJoCo 3.2.2 / dm_control 1.0.22 with its pinned assets
 # (lerobot/vlabench-assets @ 08d7a44, ~12 GB); CPU physics (bit-exact replay) and CPU rendering (OSMesa): no GPU.
 # One image for the VLABench privileged tasks' environment and verifier and the standard tasks' `sim` service.
 # Deliberately NOT included: VLABench's reference solutions (strip_experts.py, last layers).

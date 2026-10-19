@@ -1,4 +1,4 @@
-# eai-myosuite: MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0: musculoskeletal models of the human hand and arm (MyoHand:
+# myosuite: MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0: musculoskeletal models of the human hand and arm (MyoHand:
 # 39 muscles; MyoArm: 34 or 63 muscles), with the model files (simhive) that ship in the wheel. Infrastructure only:
 # the upstream package, no benchmark code; tasks `FROM` it and COPY their own tooling. CPU only (MuJoCo physics,
 # OSMesa rendering). Tag = images/myosuite/VERSION. Build from the repo root: scripts/build_images.sh (or

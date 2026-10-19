@@ -1,4 +1,4 @@
-# eai-ikea-mujoco
+# ikea-mujoco
 
 `ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-<images/ikea-mujoco/VERSION>`: MuJoCo 3.14.0 (the PyPI wheel with the EPA
 horizon-overflow fix byte-patched in, `mujoco-3.14.0-epa/` here; CPU, float64; numpy 2.5.4, Python 3.12) and the IKEA

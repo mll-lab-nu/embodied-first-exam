@@ -1,4 +1,4 @@
-# eai-pandadyn: ManiSkill 3.0.1 (SAPIEN 3.0.3, CPU PhysX) + Ruckig 0.12.2 + the Panda Dynamic Scenes environment package
+# pandadyn: ManiSkill 3.0.1 (SAPIEN 3.0.3, CPU PhysX) + Ruckig 0.12.2 + the Panda Dynamic Scenes environment package
 # (images/pandadyn/panda_dynamics/: its scenes, tasks, success predicates and the Panda's torque servo; written by
 # images/pandadyn/sync_env.py, which leaves out everything that is not simulation code). No reference solution, recorded
 # rollout or controller is in this image: tasks `FROM` it and COPY their own tooling (rcb_pandadyn.py).

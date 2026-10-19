@@ -1,4 +1,4 @@
-# eai-robolab: NVIDIA RoboLab v0.3.1 (Isaac Lab 2.3.2.post1 / Isaac Sim 5.1.0, the `isaac51` extra) installed from OUR lockfile
+# robolab: NVIDIA RoboLab v0.3.1 (Isaac Lab 2.3.2.post1 / Isaac Sim 5.1.0, the `isaac51` extra) installed from OUR lockfile
 # (images/robolab/uv.lock, generated with `uv lock` from RoboLab's pyproject at v0.3.1: every version = the reference environment,
 # torch 2.7.0+cu128, numpy 1.26.0, isaacsim 5.1.0.0). Infrastructure only, no benchmark code. RoboLab's asset library (~6 GB of USD
 # objects/scenes/backgrounds, Apache-2.0 like the code, distributed through the repo's git LFS) IS baked in, as RoboLab's own
