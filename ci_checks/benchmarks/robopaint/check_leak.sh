@@ -4,7 +4,8 @@
 #  1. environment/ (the agent image's build context) holds only whitelisted files; sidecar dirs (sim/, scorer/) are mounted into
 #     their own services by docker-compose.yaml and never COPYed by the Dockerfile;
 #  2. every Dockerfile COPY/ADD source is whitelisted (no wildcards, no sidecar paths); a COPY --from names the pinned
-#     files-only image (images/robopaint-files/FILES.json) and one of its whitelisted agent-side files;
+#     files-only image (images/robopaint-files/FILES.json) and one of its whitelisted agent-side files, or the pinned
+#     pictures image (images/robopaint-pictures-files/FILES.json) and this task's own /<task>/target.png to /app/target.png;
 #  3. environment/instance.json (the agent's copy) has only scene / rule keys: no truth, no target geometry, masks or counts;
 #  4. the agent-visible tooling (environment/rcb_brush.py, and its source in embodied_first_exam/benchmarks/robopaint/ when the
 #     Dockerfile takes it from the files-only image: that source must hash to FILES.json) carries no grader code (target
@@ -20,6 +21,10 @@ python3 - "$t" "$root" <<'PY'
 import hashlib, json, os, re, sys
 t, root = sys.argv[1:3]; name = os.path.basename(t); env = os.path.join(t, "environment"); bad = []
 FILES = json.load(open(os.path.join(root, "images", "robopaint-files", "FILES.json")))   # the files-only image (scripts/files_image.py)
+STD = json.load(open(os.path.join(root, "images", "standard-files", "FILES.json")))       # the standard client (rcb_client.py, rcb1.py)
+IMAGES = {"--from=" + d["image"]: d for d in (FILES, STD)}
+PICS = json.load(open(os.path.join(root, "images", "robopaint-pictures-files", "FILES.json")))   # the exemplar pictures
+stem = re.sub(r"-(privileged|standard)$", "", name.removeprefix("robopaint-"))
 ALLOWED = {"Dockerfile", "docker-compose.yaml", "instance.json", "target.png", "rcb_brush.py", "rcb_client.py", "rcb1.py",
            "client-requirements.txt", "NOTICE-exemplar.md", "ARPHICPL.TXT"}
 SIDECARS = {"sim", "scorer"}
@@ -37,16 +42,26 @@ tooling = {}   # agent-side tooling file -> where its bytes are (the task dir, o
 for m in re.finditer(r"^\s*(COPY|ADD)\s+(.+)$", df, re.M):
     parts = [x for x in m.group(2).split() if not x.startswith("--")]
     frm = [x for x in m.group(2).split() if x.startswith("--from")]
-    if frm:   # only the pinned files-only image, only a whitelisted agent-side file of it
-        f = parts[0].lstrip("/") if len(parts) == 2 else ""
-        if m.group(1) != "COPY" or frm != ["--from=" + FILES["image"]] or f not in FILES["files"] or "/" in f or f not in ALLOWED:
-            bad.append(f"Dockerfile: COPY --from of {' '.join(parts)}: only an allowed agent-side file of the pinned {FILES['image']}")
+    if frm and frm[0] == "--from=" + PICS["image"]:   # the pictures image: this task's own target.png, nothing else
+        if m.group(1) != "COPY" or len(frm) != 1 or parts != [f"/{stem}/target.png", "/app/target.png"] \
+                or f"{stem}/target.png" not in PICS["files"]:
+            bad.append(f"Dockerfile: COPY --from of {' '.join(parts)}: only /{stem}/target.png of the pinned {PICS['image']}"
+                       " to /app/target.png")
+        continue
+    if frm:   # only a pinned files-only image (robopaint-files, or standard-files' client), only whitelisted agent-side files of it
+        img = IMAGES.get(frm[0]) if len(frm) == 1 else None
+        srcs = [x.lstrip("/") for x in parts[:-1]]
+        if (m.group(1) != "COPY" or img is None or not srcs
+                or any(f not in img["files"] or "/" in f or f not in ALLOWED for f in srcs)):
+            bad.append(f"Dockerfile: COPY --from of {' '.join(parts)}: only an allowed agent-side file of the pinned {FILES['image']}"
+                       f" (or of {STD['image']})")
         else:
-            src = os.path.join(root, FILES["source"], f)
-            # the source is what the pinned image carries (the hook stands alone: no generator check needed)
-            if not os.path.isfile(src) or hashlib.sha256(open(src, "rb").read()).hexdigest() != FILES["files"][f]:
-                bad.append(f"{os.path.relpath(src, root)}: not the file images/robopaint-files/FILES.json pins (sha256)")
-            tooling[f] = src
+            for f in srcs:
+                src = os.path.join(root, img["source"], f)
+                # the source is what the pinned image carries (the hook stands alone: no generator check needed)
+                if not os.path.isfile(src) or hashlib.sha256(open(src, "rb").read()).hexdigest() != img["files"][f]:
+                    bad.append(f"{os.path.relpath(src, root)}: not the file its images/*-files/FILES.json pins (sha256)")
+                tooling[f] = src
         continue
     for src in parts[:-1]:
         if src not in ALLOWED or any(c in src for c in "*?[") or "/" in src:

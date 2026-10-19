@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-files-0.1.0@sha256:bf7494f261723da1ef81fb4a6314a8daba4a5a2a5373ce787652ada708314af0",
+ "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.2.0@sha256:ef781f64782ba358796690541cee410d3fa50f1d33af9e39247011a668b35065",
  "source": "embodied_first_exam/benchmarks/ikea-mujoco",
  "files": {
   "privileged/environment/rcb_ikea.py": "8a18f209c9074b7efe688c896adc2d5fcb4efd23acc947bd0d80e01d17a28a1b",

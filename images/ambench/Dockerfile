@@ -1,4 +1,4 @@
-# eai-ambench: AM-Bench (github.com/ambench/ambench @ 60bf5b7, Apache-2.0; aerial manipulation on Isaac Lab) on Isaac Sim 5.1.0 +
+# ambench: AM-Bench (github.com/ambench/ambench @ 60bf5b7, Apache-2.0; aerial manipulation on Isaac Lab) on Isaac Sim 5.1.0 +
 # Isaac Lab @ f4aa17f, torch 2.7.0+cu128, with AM-Bench's own controller dependencies at the commits its superproject pins
 # (Pyroki @ 2eafc99 with JAX 0.4.28 on the CPU, acados @ fa0af20 built with qpOASES). What is left out on purpose: AM-Bench's
 # scripted experts (source/ambench/ambench/policies/scripted/, the reference solutions; the task registrations' pointer to them is

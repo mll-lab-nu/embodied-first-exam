@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robodojo-stack-bowls-i00-standard"
+name = "embodied-first-exam/robodojo-stack-bowls-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboDojo stack_bowls (Generalization) on the same frozen layout as the privileged task (arx_x5/0/stack_bowls_0.json). Task: Nest/stack the three identical bowls into one stack, then return the arm(s) to the start pose. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "standard-mode", "trajectory"]

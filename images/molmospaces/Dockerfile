@@ -1,7 +1,7 @@
-# eai-molmospaces: MolmoSpaces (Ai2; molmo-spaces 0.2.9, Apache-2.0) on MuJoCo 3.5.0 -- CPU physics, EGL rendering on a
+# molmospaces: MolmoSpaces (Ai2; molmo-spaces 0.2.9, Apache-2.0) on MuJoCo 3.5.0 -- CPU physics, EGL rendering on a
 # GPU (OSMesa without one) -- with the upstream assets of the frozen MolmoSpaces instances and nothing else. One image for
 # the privileged tasks' environment and verifier and the standard tasks' `sim` service (PROTOCOL D5); tasks COPY their
-# own tooling and instance. docs/benchmarks/molmospaces.md.
+# own tooling and instance. tasks/molmospaces/README.md.
 # Build: run images/molmospaces/prepare_assets.sh first (it builds the `base` stage, installs and prunes the assets in a
 # container of it, and stages them in images/molmospaces/build/), then scripts/build_images.sh, or in this directory:
 #   docker build -t ghcr.io/mll-lab-nu/efe:molmospaces-$(cat VERSION) .

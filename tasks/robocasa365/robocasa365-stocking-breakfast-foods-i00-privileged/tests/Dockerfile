@@ -1,8 +1,8 @@
 # Separate verifier sandbox: the same image with the verifier's own copies of the tooling and the frozen instance;
 # only the declared artifacts (/app/output/) arrive from the agent.
-FROM ghcr.io/mll-lab-nu/efe-private:robocasa365-0.1.0
+FROM ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0
 COPY test.sh instance.npz /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe-private:robocasa365-files-0.1.0@sha256:0ffcb0133d9ee33c7b6ed86c91077fadea6d953e93142f754221d84d0a67e2bf /privileged/environment/casa_tool.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:robocasa365-files-0.2.0@sha256:ce29eb9aba5f242b18f3c9cc5b53c8d2e4767feeef88e8c992841722b22095d9 /privileged/environment/casa_tool.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

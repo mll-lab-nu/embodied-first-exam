@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboarc-blanket-flatten-08-i01-standard"
+name = "embodied-first-exam/roboarc-blanket-flatten-08-i01-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC blanket_flatten on the same frozen instance as the privileged task. Unfold and spread the blanket flat on the table without overlaps or excessive stretching, then release it and withdraw. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "Jianwen Lyu" }]
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "standard-mode", "trajectory", "blanket_flatten"]

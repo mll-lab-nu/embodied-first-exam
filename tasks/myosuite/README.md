@@ -1,0 +1,317 @@
+# MyoSuite
+
+Twenty-two [MyoSuite](https://github.com/MyoHub/myosuite) tasks (2.12.2, Apache-2.0) on MuJoCo 3.6.0, CPU only, in both
+modes: 44 task directories, `tasks/myosuite/myosuite-<family>-i00-{privileged,standard}`, and one standard-realtime twin
+(`tasks/myosuite/myosuite-table-tennis-i00-standard-realtime`: table_tennis is the benchmark's one dynamic family). The robot is a musculoskeletal model of a
+human body: the MyoHand (forearm and hand, 39 muscles), the MyoArm (34 or 63 muscles), MyoSuite's torso-and-arm table
+tennis player, the MyoArm next to a prosthetic MPL arm, and the MyoLegs (with or without a prosthetic leg). The main
+command is **one excitation per muscle** (a few families add non-muscle actuators: a positioned wrist, a sliding pelvis,
+the prosthesis's motors): there is no joint-level controller, so every motion, grasp and
+in-hand manipulation has to be built from muscle commands.
+
+## Quick start
+```bash
+harbor run -d embodied-first-exam@all -p tasks/myosuite -a codex -m openai/gpt-6-astra
+```
+Every image is public: Harbor pulls it.
+
+## Tasks
+| family | MyoSuite env | limb (muscles) | control step | hold for success | oracle |
+|---|---|---|---|---|---|
+| `key_turn` | `myoHandKeyTurnFixed-v0` | MyoHand (39) | 20 ms | 1 s | full |
+| `obj_hold` | `myoHandObjHoldFixed-v0` | MyoHand (39) | 20 ms | 1 s | full |
+| `arm_reach` | `myoArmReachFixed-v0` | MyoArm (34) | 20 ms | 1 s | full |
+| `hand_reach` | `myoHandReachFixed-v0` | MyoHand (39) | 20 ms | 1 s | none |
+| `hand_pose` | `myoHandPoseFixed-v0` | MyoHand (39) | 20 ms | 1 s | none |
+| `pen_twirl` | `myoHandPenTwirlFixed-v0` | MyoHand (39) | 10 ms | 1 s | none |
+| `die_reorient` | `myoChallengeDieReorientP1-v0` | MyoHand (39) | 10 ms | 1 s | none |
+| `obj_reorient` | `myoHandReorient8-v0` | MyoHand (39) | 10 ms | 1 s | none |
+| `baoding` | `myoChallengeBaodingP1-v1` | MyoHand (39) | 25 ms | 5 s (one orbit) | none |
+| `relocate` | `myoChallengeRelocateP1-v0` | MyoArm (63) | 10 ms | 1 s | none |
+| `sarc_key_turn` | `myoSarcHandKeyTurnFixed-v0` | MyoHand (39, half force) | 20 ms | 1 s | none |
+| `table_tennis` | `myoChallengeTableTennisP1-v0` | MyoArm with torso (273 + 2 pelvis slides) | 10 ms | event | none |
+| `bimanual` | `myoChallengeBimanual-v0` | MyoArm (63) + MPL arm (17 motors) | 10 ms | event + contact check | none |
+| `soccer` | `myoChallengeSoccerP1-v0` | MyoLegs (290) | 10 ms | event | none |
+| `chase_tag` | `myoChallengeChaseTagP1-v0` | MyoLegs (80) | 10 ms | event | none |
+| `osl_run` | `myoChallengeOslRunFixed-v0` | MyoLeg (54) + OSL prosthesis | 5 ms | event | none |
+| `dex_apple_lift` | `MyoHandAppleLift-v0` | MyoHand (39) + 6-DoF wrist | 20 ms | track (57 steps) | none |
+| `dex_cylinder_pass` | `MyoHandCylindersmallPass-v0` | MyoHand + wrist | 20 ms | track (86) | none |
+| `dex_bunny_inspect` | `MyoHandStanfordbunnyInspect-v0` | MyoHand + wrist | 20 ms | track (99, with orientation) | none |
+| `dex_hammer_use` | `MyoHandHammerUse-v0` | MyoHand + wrist | 20 ms | track (99, with orientation) | none |
+| `dex_cup_pour` | `MyoHandCupPour-v0` | MyoHand + wrist | 20 ms | track (81, with orientation) | none |
+| `dex_airplane_fly` | `MyoHandAirplaneFly-v0` | MyoHand + wrist | 20 ms | track (99, with orientation) | none |
+
+## Selection of set 3
+MyoSuite 2.12.2 registers 398 env ids, most of them variants (50 MyoDex objects x Fixed/Random/motions, the basic tasks x
+Fatigue/Sarcopenia/Reafferentation, the challenges x P1/P2/eval). Set 3 adds one task per distinct capability, frozen
+like the first ten (seed(0), reset(seed=0)) and checked for determinism (three replays in one process and one in a fresh
+process give the same final state) before it was built:
+
+| category | family | why this one |
+|---|---|---|
+| muscle condition | `sarc_key_turn` | the same key turn with every muscle at half force (MyoSuite's sarcopenia): "same task, weaker body"; key_turn's reference fails on it (the key stops short), so it is a real change. Sarcopenia is stateless; fatigue (a stateful Python model) and reafferentation (a tendon transfer) were left out |
+| MyoChallenge 2025 | `table_tennis` | dynamic interception with a held tool and a whole torso: a served ball returned onto the opponent's half (P1; P0 is a fixed-serve warm-up of the same task) |
+| MyoChallenge 2024 | `bimanual` | two arms, two kinds of actuation: the MyoHand grasps, hands over to a motorized prosthesis, which places the object; the challenge's own contact-history check makes the hand-over mandatory |
+| MyoChallenge 2025 | `soccer` | whole-body locomotion with 290 muscles towards a ball and a kick past a goalkeeper (P1: fixed start, goalkeeper policy drawn once) |
+| MyoChallenge 2023 | `chase_tag` | locomotion towards an opponent (P1: CHASE; the opponent's policy is drawn once and frozen: the frozen instance drew `stationary`, so it stands still, and the task texts say so) |
+| MyoChallenge 2024 | `osl_run` | running with a powered knee-ankle prosthesis whose own controller drives it (Fixed: the flat track) |
+| MyoDex (object motions) | `dex_apple_lift` | lift (round object; position only) |
+| | `dex_cylinder_pass` | pass: raise and present a small cylinder for a hand-over (position only) |
+| | `dex_bunny_inspect` | inspect: an irregular object lifted and turned (orientation counts) |
+| | `dex_hammer_use` | tool use: a hammer swing (orientation counts) |
+| | `dex_cup_pour` | pour: a cup tilted (orientation counts) |
+| | `dex_airplane_fly` | a large irregular object flown through the air (orientation counts) |
+
+Left out, and why: MyoDex's `Fixed` / `Random` repositioning envs (their reference starts 0.57 m from the object while
+MyoDex's termination fires beyond 0.25 m: the episode ends at the first step, whatever the action); the other MyoDex
+motions (near-duplicates of the six skills above); the challenges' P2 / eval variants (the same tasks with wider
+randomization, which a frozen instance does not keep); leg walking / standing and torso posing (covered by the three
+locomotion challenges and by hand_pose); elbow and finger pose / reach (near-duplicates of hand_pose / hand_reach).
+
+## Task definition
+- **Instance.** One frozen instance per family: the env after `seed(0)` and then `reset(seed=0)`, saved by
+  `rcb_myosuite.py make-instance` (committed as `tasks/myosuite/myosuite-<family>-i00-privileged/environment/instance.npz`): the MuJoCo integration state of the
+  robot's MjData, every numeric model array (resets edit the model: goal sites, object sizes), the env's Python state, and
+  a state hash over state and model that every load checks. The MyoChallenge envs draw their goal, mass or size inside
+  `reset()` before `reset(seed=)` reseeds, so the env is seeded first (without it the "frozen" instance changed between
+  builds).
+- **Success, first ten families and sarc_key_turn (`hold`)** is MyoSuite's own: its `solved` flag (from each env's `get_reward_dict`) has to hold for **1 s** of
+  consecutive control steps (**5 s for baoding**: one full orbit of the moving targets), and MyoSuite's `done` ends the
+  episode as a failure (object dropped, fingertips off the key, ...). The episode ends at the first success; MyoSuite's
+  step budget (50-200 steps) is lifted, so the wall clock is the only budget. The holds stop an agent from passing by
+  sweeping through the goal (or, in baoding, by parking the balls where the moving targets sweep past).
+  Baoding's targets are a precomputed trajectory of 1000 points (`baoding_v1.create_goal_trajectory`), so its episode
+  ends as a failure after 1000 control steps (25 s) if it has not succeeded.
+- **Success, MyoChallenge (`event`)**: the challenge's own `solved` is the success event and ends the episode (goal scored,
+  opponent tagged, ball returned onto the opponent's half, object placed, track finished); its own failure conditions
+  and time limits apply (soccer 10 s, chase_tag 20 s, bimanual 10 s, table_tennis 3 s; osl_run has none, so the gym step
+  limit being lifted leaves it unlimited). Deviations from the official evaluation: bimanual's evaluation counts a path
+  when `solved` holds for more than 5 steps and its contact check passes, but the env ends the episode one step after the
+  first `solved`; we count the first `solved` with the contact check. osl_run's official score is the distance reached
+  within its 1000-step horizon (5 s); we require finishing the 29 m track, without a time limit. The prosthesis is the
+  right leg (`osl_knee_angle_r`, `osl_ankle_angle_r`).
+- **Success, MyoDex (`track`)**: MyoDex defines a dense reward only (`solved` is always 0). We count a success when the
+  whole reference motion is reproduced: the object's displacement since the start within 3 cm of the reference's
+  displacement since its start (and, for the four families where orientation is the point of the skill, its rotation
+  since the start within 0.5 rad of the reference's) at >= 90 % of the control steps and at the last one, the displacement
+  error never above 5 cm, and no MyoDex termination (object or wrist more than 0.25 m off). The thresholds are ours.
+  Relative motion and the 5 cm cap stop an object kept on the table from passing (apple_lift's reference rises only
+  6.8 cm).
+- **Texts (D7).** The privileged instruction quotes MyoSuite's reward code; the standard instruction states the goal and
+  its thresholds in words (distances, angles, hold time), including MyoSuite's own failure thresholds, of which baoding's
+  is a height in the world frame ("a ball's height below 1.25 m"). No object or goal position is given in either mode.
+- **Budget: 3600 s**, uniform within the benchmark and both modes. The number lives in each task's own
+  `[agent] timeout_sec` (PROTOCOL §2, docs/protocol/running.md "The agent's time"), and every instruction
+  states it in its closing `## Time limit` section.
+
+## Modes
+- **Privileged:** `rcb_myosuite.Session` in the agent's container: reset, the task's observation dict, MuJoCo model and
+  data, actuator descriptions and moment arms, rendering, recording and self-replay. Deliverable
+  `/app/output/trajectory.npz`, `(T, nu)` actuator commands, one row per control step. `tests/grade.py` checks the
+  file (readable, `(T, nu)` for this instance's `nu`, at most 1,000,000 rows, finite: otherwise `bad_trajectory`, the
+  agent's 0) before it replays it; a replay process that then gives no result (out of time, killed, not started) is
+  `replay_failed` with `grader_error = 1` and `infra_error = 1`, never the agent's 0, and every `reward.json` carries
+  `infra_error`.
+- **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` and the adapter
+  `environment/sim/server.py`, the same file in all 22 families:
+  - action type `muscle` (all-muscle bodies) or `actuators` (with the non-muscle ones: MyoDex's 6-DoF wrist positioning,
+    table tennis's pelvis slides, the MPL prosthesis's motors; osl_run's prosthesis columns are ignored, its own
+    controller drives it); nothing is clipped by the service; each non-muscle actuator's command is in `/spec`;
+  - every camera of the scene, 640 x 480, depth on request, with its mount: static, fixed to a body (the hand close-ups
+    `hand_top` / `hand_side_inter` sit on the forearm and turn with pronation), or a MuJoCo tracking camera;
+  - **scene cameras give images only.** A camera whose body (or target
+    body) is not the agent's own -- a mocap body, or a body behind a joint that is not one of the body's (`scene_camera`
+    in `server.py`, decided from the model, not by name; `make_facts.py` records the same list as `scene_cameras`) --
+    has no published mount, no `extrinsic_cv` / `cam2world_gl` (null in `meta["cameras"]`, NaN rows per frame) and its
+    body is not a `/kinematics` link: its pose is that body's position plus a constant, which PROTOCOL H.3 forbids.
+    In the 22 families that is `opponent_view` (chase_tag, a `trackcom` camera on the mocap body `opponent`) and
+    `goalkeeper_view` (soccer, on `goalkeeper`). Not covered, left as it is: `side_view` / `front_view` are `trackcom` cameras on the world body, so their
+    position is the whole model's centre of mass plus a constant, and a scene body's motion moves them by its share of
+    the model's mass (measured: every non-agent body moved 0.1 m, the key turned 0.1 rad: 87 mm in bimanual, whose `start` / `goal` marker bodies weigh
+    154 kg each; 1.8 mm obj_reorient, 1.2 mm relocate, 0.1-0.3 mm baoding / die_reorient / obj_hold / pen_twirl,
+    5e-5 mm key_turn / sarc_key_turn; none in the other families). Decoding a position from it needs the model's masses
+    and the camera's offset, which a standard agent does not have; withholding these poses too would take the
+    calibrated third-person view from nine families (bimanual's default camera), an owner decision;
+  - proprioception = the body's own joints (`q_`, `qd_`, `effort_`) and muscles (`act_`, `len_`), plus the pelvis pose and
+    velocity of the free-standing bodies (`root_pose`, `root_vel`); never the key, pen, die, balls, objects, opponent or
+    goalkeeper; MyoDex's reference motion (the goal, relative to the object's start) is in `/spec` `reference_motion`;
+  - `/kinematics` = the fingertip sites and the camera mounts (world frame; the root's frame for free-standing bodies) and
+    fingertip-position IK; crash recovery with resume class `exact` (MuJoCo on the CPU is bit-exact in a fresh process).
+  The episode ends at success, at the task's failure or when the time is up; the verdict is the live episode's (see
+  "Grading"). A malformed request field (a null or non-numeric `dt` / `seconds`, `cameras` that is not a list of names,
+  a `note` that is not text) is a 400 before anything runs, an absent or null `dt` / `seconds` is the default, and
+  the verifier books a missing, unreadable or never-finalized `final.json` as `infra_error = 1`;
+  `finalize.sh` writes `final.json` atomically. One call returns at most 1000 images (cameras x frames, per-frame depth
+  counted again; `/spec` `max_frames_per_call`), checked before anything runs (400): every frame is held until the
+  response is sent (2.7 GB per 1000 640 x 480 RGB frames, under the sidecar's 8 GiB cap). The default camera at 10 fps needs 302 images for the longest watch. One gap is left in the shared 2.2 layer (`embodied_first_exam/standard/
+  rcb_limited.py`, not MyoSuite's): JSON `actions` holding an object is a TypeError there, still a 500.
+- **Reset budget: 10** (PROTOCOL §2: the task's own budget). MyoSuite's own termination ends most standard episodes
+  within one or two seconds of simulated time, so a single episode would be one blind attempt at muscle-level control.
+  The compose file sets `RCB_RESET_BUDGET` to 10 (`RCB_RESET_BUDGET=0` runs a single episode). The shared 2.2
+  layer has no reset, so the adapter adds `POST /reset` itself (`environment/sim/server.py`, the semantics of
+  [`docs/protocol/standard_mode.md`](../../docs/protocol/standard_mode.md) "Optional reset capability"): it abandons the running
+  episode, or follows one that has ended, and restores the frozen instance (`Session.reset()`, the privileged mode's
+  reset); only the last episode is graded (its rows are `trajectory.npz`), a success ends the trial (409 after it), the
+  wall clock never restarts; `/status`, every `meta` and `final.json` count `episode`, `resets_left`,
+  `control_steps_total`, and `reward.json` adds `episodes`, `resets`, `reset_budget` and `sim_steps_total`. Crash
+  recovery replays the whole journal and resets at the journal rows where the committed resets happened (they are
+  checkpointed), so a resume after a reset is exact. The 2.2 client has no `reset()`: the instruction calls
+  `r._post("/reset", {...}, [], 900)`. Checked against a live key_turn service: resets, a `kill -9` of the service
+  mid-episode (resumed exact), the oracle's success graded on the last episode only, 409 on a further reset.
+
+## Reference solutions and oracle levels
+- **full (key_turn, obj_hold, arm_reach):** MyoSuite's own NPG baseline policies (`myosuite/agents/baslines_NPG/`, in
+  the wheel) rolled out from the frozen instance and cut at the first success (72, 57 and 128 rows); rounded to float32
+  (the standard client's dtype; the rounded rows still succeed), so both modes execute the same rows. The privileged
+  oracle hands them in; the standard oracle streams them through the client.
+- **none (the other nineteen):** no reference was validated. The wheel has NPG baselines for pen_twirl, hand_pose and
+  hand_reach too, but the pilot found none that succeeds from the frozen instance under the 1 s hold (they predate
+  MyoSuite's current models); the MyoChallenge and Reorient8 envs have no NPG baseline. Solvability rests on successful
+  model trials (human review, PROTOCOL §2.7, table below).
+
+## Integrity
+- The baselines are removed from the image in the same layer that installs MyoSuite (no layer of `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` holds
+  them), and no task image has a solution.
+- **Agent egress is the model APIs and the package registries, in both modes** (PROTOCOL H.6). The PyPI wheel
+  ships the baselines (the reference solutions of three families), and an agent can pip-install `myosuite==2.12.2` in
+  its client container and rebuild the simulator locally to plan offline: the instruction's honour rule asks the agent not to fetch a
+  solution, nothing blocks it, and a trial that installs `myosuite`, `myo-sim` or `robohive` is one to look at.
+  GitHub and Hugging Face stay unreachable.
+- Set 3 traps: MyoSuite 2.12.2's Bimanual, Soccer and ChaseTag envs call `float()` on one-element arrays, which numpy 2.4
+  rejects (image 0.1.1 pins numpy 2.3.5; every earlier hash is unchanged); the opponent and the goalkeeper are mocap bodies
+  that MyoSuite moves in `base.mj_data` only (the robot's own data keeps them at the origin: without saving them, the
+  frozen ChaseTag instance put the opponent on top of the agent and every action "won" at step 1); the OSL controller,
+  the opponent policies and MyoDex's reference cursor are Python objects, and the env's random generator is not reset
+  by `reset(seed=0)`, so a second episode differed from the first until the session restored all of them.
+- The robot wrapper trap: MyoSuite steps the physics in its robot wrapper's own MjData (`base.robot.mj_data`);
+  `base.mj_data` is a mirror. Snapshots and the state hash use the robot's data, and a restore writes it back to every
+  copy; without that, mid-episode restores silently diverged. The mirror is refreshed from `qpos`, `qvel` and `act`
+  only and then `mj_forward`ed with `ctrl = 0`, so its `qfrc_actuator` is the force of a zero command: the standard
+  service's `effort_<joint>` proprioception therefore reads the robot's data, not the mirror.
+
+## Human review (oracle = none): family → positive example → nop → predicate
+Positive examples are successful model trials on the privileged tasks (the same frozen instances): Claude Code + Claude
+Opus 5.5 (run `claude_code-claude_opus_5_5-default`) and Codex + GPT-6 Luna (run `codex-gpt6_luna-high`). Each trajectory was handed in unchanged to
+today's privileged verifier in **two fresh Harbor trials** (each trial replays it in two fresh processes); for the
+standard twin the same rows, rounded to float32 as the client sends them, were streamed through the client in two fresh
+trials (live check, both replays, determinism). Every evidence run used task directories whose `environment/`, `tests/`
+and `task.toml` are those committed (a `solution/` added to a scratch copy). `nop` was run once per task directory
+(`ghcr.io/mll-lab-nu/efe:myosuite-0.1.1`):
+
+| family | positive example (model, trial, rows) | privileged: 2 fresh trials | standard: 2 fresh trials (float32 rows via the client) | nop (priv / std) | predicate |
+|---|---|---|---|---|---|
+| `hand_reach` | GPT-6 Luna (09-29), `myosuite-hand-reach-i00__w2ryUU7`, 70 | 1, 1; both replays `dc3d08eda6c0bfb8` in both | 1, 1; live = both replays = `43292686d77c9498` in both | 0 / 0 | norm of the stacked 5 fingertip-to-target errors < 0.0625 m, held 1 s; failure above 0.22 m |
+| `hand_pose` | GPT-6 Luna (09-29), `myosuite-hand-pose-i00__fC7US9G`, 360 | 1, 1; both replays `617ede1f1b1ebdee` in both | 1, 1; live = both replays = `6c892657ff45cf27` in both | 0 / 0 | norm of the 23 joint-angle errors < 0.7 rad, held 1 s; failure above 2π |
+| `pen_twirl` | Opus 5.5 (09-28), `myosuite-pen-twirl-i00__UtTYzQE`, 513 | 1, 1; both replays `97125d1d96f5b738` in both | 1, 1; live = both replays = `6cdf4f573db401ea` in both | 0 / 0 | pen-axis cosine > 0.95, pen within 0.075 m, held 1 s; failure: dropped |
+| `die_reorient` | Opus 5.5 (09-28), `myosuite-die-reorient-i00__EtyJ3X7`, 225 | 1, 1; both replays `383ec6bddc2d007f` in both | 1, 1; live = both replays = `4b3ba016b1018c9a` in both | 0 / 0 | die within 0.025 m and Euler error < 0.262 rad, held 1 s; failure: > 0.2 m away |
+| `obj_reorient` | GPT-6 Luna (09-29), `myosuite-obj-reorient-i00__5dLP3ah`, 305 | 1, 1; both replays `9226f3b1f277448e` in both | 1, 1; live = both replays = `9bb64f1cb5ab6046` in both | 0 / 0 | orientation cosine > 0.95, object within 0.075 m, held 1 s; failure: dropped |
+| `baoding` | Opus 5.5 (09-28), `myosuite-baoding-i00__J6BJVtG`, 215 | 1, 1; both replays `1a84408eaae929ce` in both | **no positive example** (float32 rows drop a ball at step 206) | 0 / 0 | both balls within 0.015 m of their moving targets for one 5 s orbit; failure: a ball below 1.25 m |
+| `relocate` | GPT-6 Luna (09-29), `myosuite-relocate-i00__PjqTvZ2`, 231 | 1, 1; both replays `0f680b3b9ccbe677` in both | 1, 1; live = both replays = `0f680b3b9ccbe677` in both | 0 / 0 | object within 0.1 m of the receptacle target, held 1 s; failure: palm > 0.5 m from it |
+| `sarc_key_turn` | Opus 5.5 (10-06), `myosuite-sarc-key-turn-i00-privi__iVBaqTS`, 230 | 1, 1; both replays `0437c813be6d75b1` in both | 1, 1; live = both replays = `c0157d7c30ea10c6` in both | 0 / 0 | key angle > π, held 1 s, with every muscle at half force; failure: fingertips > 0.1 m from the key |
+| `table_tennis` | Opus 5.5 (10-06), `myosuite-table-tennis-i00-privil__kdQdy89`, 111 | 1, 1; both replays `ac960852646d4d4b` in both | 1, 1; live = both replays = `7c8ca29eaa611612` in both | 0 / 0 | MyoChallenge's contact test: serve bounce, one paddle hit, then the opponent's half; within 3 s |
+| `bimanual` | **none yet** (GPT-6 Luna (full 90 min) and Opus 5.5 (44 min) failed) | — | — | 0 / 0 | object on the pillar after touching only it for 10 steps, with MyoChallenge's contact check (MyoHand >= 100 steps, prosthesis >= 100 steps, never table/floor); within 10 s |
+| `soccer` | Opus 5.5 (10-06), `myosuite-soccer-i00-privileged__DuXNvn4`, 308 | 1, 1; both replays `b03e38d574d1597b` in both | 1, 1; live = both replays = `75947363577b251e` in both | 0 / 0 | ball over the goal line between posts and bar within 10 s; failure: pelvis below 0.2 m |
+| `chase_tag` | Opus 5.5 (10-06), `myosuite-chase-tag-i00-privilege__6GUXvYA`, 329 | 1, 1; both replays `cfad84ac43c8c3fd` in both | **no positive example** (float32 rows no longer reach the opponent) | 0 / 0 | pelvis within 0.5 m of the opponent within 20 s; failure: out of the arena, pelvis below 0.5 m |
+| `osl_run` | Opus 5.5 (10-06), `myosuite-osl-run-i00-privileged__cWgLuKv`, 6714 | 1, 1; both replays `601d16cdfd322a5e` in both | **no positive example** (float32 rows fall at step 629) | 0 / 0 | 29 m down the track (MyoChallenge's win condition), no time limit; failure: fall, > 1 m off the centre line, 2 m backwards |
+| `dex_apple_lift` | Opus 5.5 (10-06), `myosuite-dex-apple-lift-i00-priv__j5qaRCZ`, 57 | 1, 1; both replays `3e208e14be8f3563` in both | 1, 1; live = both replays = `794c8c2bed582d10` in both | 0 / 0 | displacement error <= 3 cm at >= 90 % of 57 steps and the last, never > 5 cm |
+| `dex_cylinder_pass` | **none yet** (GPT-6 Luna and Opus 5.5 failed) | — | — | 0 / 0 | displacement error <= 3 cm at >= 90 % of 86 steps and the last, never > 5 cm |
+| `dex_bunny_inspect` | **none yet** (Opus 5.5 and GPT-6 Luna failed) | — | — | 0 / 0 | as apple_lift over 99 steps, plus rotation since the start within 0.5 rad of the reference's |
+| `dex_hammer_use` | **none yet** (GPT-6 Luna and Opus 5.5 failed) | — | — | 0 / 0 | as bunny_inspect, 99 steps |
+| `dex_cup_pour` | **none yet** (Opus 5.5 and GPT-6 Luna failed) | — | — | 0 / 0 | as bunny_inspect, 81 steps |
+| `dex_airplane_fly` | **none yet** (Opus 5.5 and GPT-6 Luna failed) | — | — | 0 / 0 | as bunny_inspect, 99 steps |
+
+**No positive example:** both modes of bimanual, dex_cylinder_pass,
+dex_bunny_inspect, dex_hammer_use, dex_cup_pour and dex_airplane_fly; the standard twins of
+baoding, chase_tag and osl_run (their privileged trajectories are chaotic: rounded to the client's float32 they fail).
+A likely cause for MyoDex: in MyoSuite 2.12.2 the six wrist-positioning actuators are 175 N/m and 150 N m/rad position
+servos that move an 82 kg subtree (the whole body model sits on the slide joints), so the vertical slide rests on its
+lower limit and the reference's lifts must come from rotations; both models reported this. MyoDex's own policies were
+trained on these envs, so the tasks are not known to be impossible, but no trajectory here reaches them yet.
+
+Negative controls besides `nop`: `make_facts.py` checks that the relaxed body (every command at -1 for 400 control
+steps) succeeds in no family; the float32-rounded baoding, chase_tag and osl_run trajectories are wrong trajectories
+that score 0; an apple_lift trajectory that leaves the apple on the table scores 0.
+
+## Verification (efe:myosuite-0.1.1)
+| family | oracle, privileged | oracle, standard | final state (both modes, every replay) | nop, all 44 directories |
+|---|---|---|---|---|
+| `key_turn` | 1 (72 rows) | 1 | `79c522457ad23180` | 0 |
+| `obj_hold` | 1 (57 rows) | 1 | `bd82ac6dff499fd2` | 0 |
+| `arm_reach` | 1 (128 rows) | 1 | `8d7d8bc7109dd7e5` | 0 |
+
+- `bash ci_checks/run_all.sh tasks/myosuite/myosuite-*`: every check of these tasks passes.
+- `python3 scripts/task_conventions.py --check tasks/myosuite/myosuite-*/`: clean.
+- Crash recovery (docs/protocol/standard_mode.md): the key_turn service killed (`kill -9`) after the first 30 rows of the
+  oracle stream; the service resumed the same episode (`resumes` 1, exact hash) and the oracle succeeded.
+- `ci_checks/check-standard-protocol.py` against a live hand_reach service: every /spec, /status, /observe and 404
+  check passes; its live part assumes a `joint_position` action type, which a
+  muscle-driven body does not have.
+- Determinism of set 3 before building: three replays in one process and one in a fresh process gave the same final
+  state for random action sequences in every family.
+
+## Standard-realtime (`eai-standard/2.3`)
+The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-standard-realtime` twin. In MyoSuite that is **table_tennis** only (the ball is served at 5.6 m/s at reset;
+every other family's objects start at rest, and chase_tag's opponent stands still in its frozen instance).
+- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and Embodied Olympics - Fun, unchanged
+  (`rcb_realtime.py` and `rcb_client.py` from `embodied_first_exam/standard/realtime/`; `rcb_service.py` and `grade.py`,
+  byte-identical to HumanoidBench's realtime tasks' copies; `ci_checks/check-tooling-identity.sh`), with the twin's
+  `environment/sim/server.py`, which
+  implements `rcb_service.Sim` on `rcb_myosuite.Session`: the standard twin's frozen instance, action (`actuators`: 273
+  muscles and the two pelvis slides, nothing clipped), success rule (the challenge's own event), proprioception
+  (`q_`, `qd_`, `act_`, `len_`, `effort_`) and cameras (images and depth; no pose of a camera that rides on a body of
+  the scene). Not served: the 2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. The
+  grade is the live episode's (see "Grading"); the clock's record is evidence only.
+- **Rendering on the GPU.** On a clock that does not stop, a render is time the simulator thread cannot step, and an
+  OSMesa frame of this scene takes 1.3 s (1373 visual geoms, 207k mesh vertices; 640 x 480 or 320 x 240 alike) against
+  5 ms with EGL on an RTX 4090. The twin therefore reserves a GPU for its `sim` service (`graphics` capability); the image
+  (`ghcr.io/mll-lab-nu/efe:myosuite-0.1.1`, unchanged) has no NVIDIA EGL ICD manifest and sets `MUJOCO_GL=osmesa`, so `server.py` writes the
+  manifest to `/tmp`, probes EGL in a throwaway process and falls back to OSMesa where it fails (`RCB_GL` forces one;
+  `/spec` `gl_backend` says which).
+- **Slowdown S = 1, resets 10.** Real-time factor of the service (capped at 4 CPUs): 2.08 with the realtime clock flat
+  out; PROTOCOL §2's S = ceil(1.5 / 2.08) = 1. At S = 1 a
+  controller at the control rate (`cameras=[]`) with a camera image every 0.25 s ran 11 episodes (10 resets) with no
+  stall and a largest lag of 0.23 s. An episode that does nothing ends after 121 control steps (1.21 s): the serve
+  passes. The reset budget is the mode's default, 10; a reset takes about 1 s (MyoSuite's env reset).
+- **Checked at S = 1**: a successful privileged episode (82 rows) planned from step 0 in one `submit(..., at=0)`
+  succeeds live (no stall), and streamed one row per call too; nop (no request) ends `timeout`, not graded a success.
+  The cutoff is the standard twin's (3600 s).
+
+## Grading (standard and standard-realtime)
+The verdict is the live episode's (PROTOCOL H.4): `success` = the last episode
+the sim service ran ended in success under the task's rule, as `Session.step` applied it to the steps it executed. The
+rule's windows are part of that predicate, so nothing is left for a replay to add: `hold` families end in success only
+once the goal has held `hold_steps` control steps in a row (1 s; 5 s of orbit for baoding), `track` families (MyoDex)
+only after the whole reference with the on-track share, the final step and the worst error checked, `event` families
+(MyoChallenge) at the challenge's own success event (bimanual: with its contact-history check).
+- **Standard** (`environment/sim/`): the service writes `episode.json` (the live success, `live_sha`) when the episode
+  ends; `finalize.sh` (the collect hook) ends the service and writes `final.json` with `graded_by` = `live`,
+  `replays` = 0, `live_success`, `success`, `state_sha` = `live_sha`, `finalized` = true; then it renders `replay.mp4`
+  in ONE pass over `trajectory.npz` from the frozen instance in a fresh process (`video.py`: the hand close-ups or the
+  default camera, 320 x 240, at most ~1500 frames), with `video_pending` = true while it runs. The render checks
+  nothing and decides nothing; a render that fails or runs out of the hook's time (`RCB_COLLECT_BUDGET_S` = 1800 s,
+  less the end of the episode, less a minute) loses only the video (`video` = false), never infra and never a 0.
+  `tests/grade.py`: pass iff `graded_by` = `live`, `success`, and no infrastructure flag.
+- **Standard-realtime** (the twin's `environment/sim/`): the shared layer writes the same fields from the adapter's step() and
+  renders the video from the trajectory after the verdict; `server.py` has no `verify()` and no `live_verdict()` (no
+  extra window to apply). The collect hook waits 300 s for the verdict and for the video until 870 s.
+- **Start state.** At a fresh episode's start the service compares the built scene's state hash with the frozen
+  instance's recorded one (`instance.npz` `sha`: standard `server.py` before `Episode.begin`, realtime the layer with
+  the adapter's `start_sha`); a mismatch gives up before the agent is served (`instance_mismatch`, `infra_error` = 1,
+  `grader_error` = 1). A resume is checked against its own checkpoint.
+- **Infrastructure** (`infra_error` = 1, at most one full retry, H.5): no, an unreadable or an unfinalized `final.json`;
+  the service not ending its episode for the hook; a give-up after crashes not all inside the agent's calls
+  (`sim_crashed`) or a failed resume (`resume_failed`); `instance_mismatch`. The agent's 0, never infra: a crash inside
+  its calls (`sim_crashed_on_call`), a simulator error from its actions (`reason` = `error`), a timeout, a failure. The
+  video is never infra.
+- **Cost.** The hook steps the graded episode's physics once (the render pass). All CPU (OSMesa); the realtime twin's
+  GPU is for the agent's images.
+
+## Files
+Each task directory carries its tooling (`rcb_myosuite.py`), its frozen instance (`instance.npz`) and, where the family
+has one, its reference solution (`solution/`); the standard-realtime twin's service is its `environment/sim/server.py`.
+`images/myosuite/` (Dockerfile, VERSION). The task directories are the deliverable; the tooling that built them is kept
+outside this repository.
+
+## Standard-mode service details
+
+Serves `eai-standard/2.2` (MuJoCo on the CPU, resume class `exact`); `max_frames_per_call` = 1000. Its service implements the optional reset capability (docs/protocol/standard_mode.md Part 1); the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`.

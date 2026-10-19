@@ -2,7 +2,7 @@
 # needs nothing but python (no simulator: nothing is replayed, board 0151).
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-files-0.1.0@sha256:bf7494f261723da1ef81fb4a6314a8daba4a5a2a5373ce787652ada708314af0 /standard/tests/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.2.0@sha256:ef781f64782ba358796690541cee410d3fa50f1d33af9e39247011a668b35065 /standard/tests/grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh && mkdir -p /logs/verifier
 WORKDIR /tests
 # resource limits: the verifier step (from the monitor image) and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor

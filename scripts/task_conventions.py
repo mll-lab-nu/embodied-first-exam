@@ -86,8 +86,8 @@ BENCHMARKS = [  # (directory prefix, label)
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
-    ("roboolympics-fun-", "RoboOlympics-Fun"),      # the single-humanoid sports families
-    ("roboolympics-match-", "RoboOlympics-Match"),  # the matches RoboOlympics exports with its own service, and their twins
+    ("embodied-olympics-fun-", "Embodied Olympics - Fun"),      # the single-humanoid sports families
+    ("embodied-olympics-match-", "Embodied Olympics - Match"),  # the matches Embodied Olympics exports with its own service, and their twins
     ("ese-", "Embodied Safety Exam"),
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
@@ -98,27 +98,27 @@ BENCHMARKS = [  # (directory prefix, label)
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
-# RoboOlympics' exported tasks (PROTOCOL v1 §4c; ci_checks/benchmarks/roboolympics-match/exported.toml) have a cutoff note of their own
+# Embodied Olympics' exported tasks (PROTOCOL v1 §4c; ci_checks/benchmarks/embodied-olympics-match/exported.toml) have a cutoff note of their own
 # (CUTOFF_NOTE_TASK below):
-RO_EXPORTED_TASKS = ("roboolympics-match-badminton-match-i01-standard-realtime",
-                     "roboolympics-match-badminton-duelrl-i01-standard-realtime",
-                     "roboolympics-match-badminton-match-i02-standard-realtime",
-                     "roboolympics-match-badminton-match-i04-standard-realtime",
-                     "roboolympics-match-fencing-bout-i01-standard",
-                     "roboolympics-match-fencing-bout-i02-standard",
-                     "roboolympics-match-foosball-match-i01-standard-realtime",
-                     "roboolympics-match-soccer-match-i00-standard-realtime",
-                     "roboolympics-match-soccer-jointcpu-i01-standard-realtime",
-                     "roboolympics-match-soccer-jointgpu-i01-standard-realtime",
-                     "roboolympics-match-soccerssl-match-i00-standard-realtime",
-                     "roboolympics-match-soccerssl-match-i01-standard-realtime",
-                     "roboolympics-match-tabletennis-duelrl-i01-standard-realtime",
-                     "roboolympics-match-badminton-matchlow-i01-standard-realtime",
-                     "roboolympics-match-tabletennis-matchlow-i01-standard-realtime",
-                     "roboolympics-match-tabletennis-match-i01-standard-realtime",
-                     "roboolympics-match-tabletennis-match-i02-standard-realtime",
-                     "roboolympics-match-tabletennis-match-i03-standard-realtime",
-                     "roboolympics-match-tabletennis-match-i04-standard-realtime")
+RO_EXPORTED_TASKS = ("embodied-olympics-match-badminton-match-i01-standard-realtime",
+                     "embodied-olympics-match-badminton-duelrl-i01-standard-realtime",
+                     "embodied-olympics-match-badminton-match-i02-standard-realtime",
+                     "embodied-olympics-match-badminton-match-i04-standard-realtime",
+                     "embodied-olympics-match-fencing-bout-i01-standard",
+                     "embodied-olympics-match-fencing-bout-i02-standard",
+                     "embodied-olympics-match-foosball-match-i01-standard-realtime",
+                     "embodied-olympics-match-soccer-match-i00-standard-realtime",
+                     "embodied-olympics-match-soccer-jointcpu-i01-standard-realtime",
+                     "embodied-olympics-match-soccer-jointgpu-i01-standard-realtime",
+                     "embodied-olympics-match-soccerssl-match-i00-standard-realtime",
+                     "embodied-olympics-match-soccerssl-match-i01-standard-realtime",
+                     "embodied-olympics-match-tabletennis-duelrl-i01-standard-realtime",
+                     "embodied-olympics-match-badminton-matchlow-i01-standard-realtime",
+                     "embodied-olympics-match-tabletennis-matchlow-i01-standard-realtime",
+                     "embodied-olympics-match-tabletennis-match-i01-standard-realtime",
+                     "embodied-olympics-match-tabletennis-match-i02-standard-realtime",
+                     "embodied-olympics-match-tabletennis-match-i03-standard-realtime",
+                     "embodied-olympics-match-tabletennis-match-i04-standard-realtime")
 # PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
@@ -153,18 +153,14 @@ HEADER_KEYS = {"Benchmark", "Mode", "Twin", "Simulator / robot", "Family / insta
                "Real time", "Base image"}
 DROP_ROWS = {"simulator / robot", "family / instance", "base image", "agent budget", "task type / tier", "tier / mode",
              "task type / mode"}
-CORE = ["Task", "Difficulty", "Reference solution", "Verification"]
 # PROTOCOL §2.9: the minimum compute a task needs, `[metadata.resources]` in task.toml (same list: ci_checks/check-resources.py)
 RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
-# PROTOCOL §2 (v1 §2.14): scene dynamics, `[metadata] dynamics` in task.toml, the task's own declaration (board 0124:
-# no central table)
-DYNAMICS = ("static", "dynamic")
 # PROTOCOL §4b: a standard-realtime task states its slowdown S, `[metadata] slowdown` in task.toml, written from its sim
 # service's `RCB_SLOWDOWN` default (environment/docker-compose.yaml); its reset budget is the `RCB_RESET_BUDGET` default
 # there (same rules: ci_checks/check-realtime.py)
 SLOWDOWN_RE = re.compile(r'RCB_SLOWDOWN:\s*"?\$\{RCB_SLOWDOWN:-([0-9.]+)\}"?')
 RESET_RE = re.compile(r'RCB_RESET_BUDGET:\s*"?\$\{RCB_RESET_BUDGET:-([0-9]+)\}"?')
-# a task a benchmark exports with its own service (PROTOCOL §4c) sets S its own way: RoboOlympics `RO_SLOWDOWN: "10"`
+# a task a benchmark exports with its own service (PROTOCOL §4c) sets S its own way: Embodied Olympics `RO_SLOWDOWN: "10"`
 OWN_SLOWDOWN_RE = re.compile(r'^\s*RO_SLOWDOWN:\s*"?([0-9.]+)"?\s*$', re.M)
 RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
     "min_cpus": float, "min_memory_gb": float, "min_gpu_memory_gb": float, "gpu_required": bool, "gpu_class": str,
@@ -220,14 +216,14 @@ CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text 
 _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
 # owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
 # high and stopped early; every agent gets the same way to know it (a command, not a guess).
-# robot_coding_bench #231 (10-15): a sentence asking for `date` was not enough (agents still guessed); the resource
+# #231 (10-15): a sentence asking for `date` was not enough (agents still guessed); the resource
 # monitor now shows the clock itself (images/monitor/rcb_monitor/monitor.py clock(): from the trial environment's start, so it
 # never overstates the time left; `monitor.py beacon` keeps it on runners that cannot run the monitor).
 _CUTOFF_CLOCK = (" Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few "
                  "seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a "
                  "little before your session started, so it never gives you more time than you have: read it (or run "
                  "`date`) before you decide that time is short, never guess.")
-# robot_coding_bench #237 (10-15): agents that keep a simulator open as an interactive REPL sent each command with
+# #237 (10-15): agents that keep a simulator open as an interactive REPL sent each command with
 # Codex's write_stdin(yield_time_ms=30000); Codex 0.160.1 returns from a write to a still-running process only when the
 # yield is over (196 of 196 such calls in one Luna RoboARC trial took 30.0 s; ~98 min of a 3 h budget), and has no
 # config knob to cap it (background_terminal_max_timeout caps only empty polls). Harness-neutral advice, same text for
@@ -250,14 +246,7 @@ CUTOFF_NOTE = {
 }
 CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
 assert set(CUTOFF_NOTE) == set(MODE_REGISTRY), "every mode of MODE_REGISTRY needs its CUTOFF_NOTE (PROTOCOL §2.12)"
-# A benchmark whose service does not count from the agent's first request keeps the earlier, weaker sentence, and its own
-# text says what its service counts (PROTOCOL §2.12). None today: RoboARC's service counts from the first request
-# since its MuJoCo release (2026-10-13).
-_CUTOFF_NOTE_OWN_CLOCK = (
-    "This is wall-clock time from the start of your session; the time you wait for the simulator service "
-    "counts. When it is up you are stopped without warning and the episode is graded as it stands at that "
-    "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
-    "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
+# A benchmark whose service counts the limit its own way has a note of its own (PROTOCOL §2.12).
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
 # roboEngineer (#329): its own multi-round runtime (ci_checks/benchmarks/roboengineer/exported.toml) grades a deployed policy, not an
 # episode that stands at the cutoff, and its service reports a deadline, not `time_left_s`
@@ -267,7 +256,7 @@ CUTOFF_NOTE_OWN[("roboEngineer", "standard")] = (
     "or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then "
     "is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs "
     "out before your time does." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
-# RoboOlympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
+# Embodied Olympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
 # RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode (board 0121 m4)
 CUTOFF_NOTE_TASK = {n: (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When "
@@ -276,7 +265,7 @@ CUTOFF_NOTE_TASK = {n: (
     for n in RO_EXPORTED_TASKS}
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
-CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
+CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted (ci_checks/check-cutoffs.py)
 # The repository's task tree: one folder per benchmark, tasks/<folder>/<task>/ (a task dir's name says its benchmark,
 # bench_of; GitHub lists at most 1000 entries of a folder). The folder of each BENCHMARKS label, the same slug as the
 # benchmark's embodied_first_exam/benchmarks/ folder. Everything that finds a task dir in the repository goes through task_dir() /
@@ -289,7 +278,7 @@ BENCHMARK_DIRS = {
     "MolmoSpaces": "molmospaces", "MyoSuite": "myosuite", "DexJoCo": "dexjoco", "DexHand": "dexhand",
     "VLABench": "vlabench", "RoboCasa-GR1": "robocasa-gr1", "RoboCasa": "robocasa", "RoboCasa365": "robocasa365",
     "LIBERO-MAX": "libero-max", "RoboARC": "roboarc", "BiGym 2.0": "bigym2", "YAMLab": "yamlab", "RoboDojo": "robodojo",
-    "RoboOlympics-Fun": "roboolympics-fun", "RoboOlympics-Match": "roboolympics-match", "Embodied Safety Exam": "embodied-safety-exam",
+    "Embodied Olympics - Fun": "embodied-olympics-fun", "Embodied Olympics - Match": "embodied-olympics-match", "Embodied Safety Exam": "embodied-safety-exam",
     "Panda Dynamic Scenes": "pandadyn", "AM-Bench": "ambench", "iSpatialGym": "ispatialgym", "IKEA MuJoCo": "ikea-mujoco",
     "roboEngineer": "roboengineer",
 }
@@ -305,20 +294,51 @@ def replace_words(s: str) -> str:
 
 # PROTOCOL D12 / §2.16: each mode of MODE_REGISTRY is the whole suffix of its task directories. A mode is recognised by
 # its complete suffix only, longest first: `-standard-realtime` is never `-standard` (it does not end in it).
+MODES_LONGEST_FIRST = tuple(sorted(MODES, key=len, reverse=True))
+
+
+def mode_suffix(name: str) -> str | None:
+    """The mode a task dir name ends in (its whole suffix, longest first), None for a name that ends in none."""
+    return next((m for m in MODES_LONGEST_FIRST if name.endswith(f"-{m}")), None)
+
+
 def mode_of(task: Path) -> str:
-    for mode in sorted(MODES, key=len, reverse=True):   # longest suffix first
-        if task.name.endswith(f"-{mode}"):
-            return mode
-    raise ValueError(f"{task.name}: task directories end in " + ", ".join(f"-{m}" for m in MODES)
-                     + " (docs/protocol/README.md §2.2, the modes of §2.16)")
+    mode = mode_suffix(task.name)
+    if mode is None:
+        raise ValueError(f"{task.name}: task directories end in " + ", ".join(f"-{m}" for m in MODES)
+                         + " (docs/protocol/README.md §2.2, the modes of §2.16)")
+    return mode
 
 
 def base_of(task: Path) -> str:
     """The name without its mode suffix (`-privileged`, `-standard`, `-standard-realtime`, ...; PROTOCOL §2.2)."""
-    for mode in sorted(MODES, key=len, reverse=True):
-        if task.name.endswith(f"-{mode}"):
-            return task.name[: -len(mode) - 1]
-    return task.name
+    mode = mode_suffix(task.name)
+    return task.name[: -len(mode) - 1] if mode else task.name
+
+
+def canonical_name(name: str) -> str:
+    """The task dir name of a task name from any protocol version (the runner's results of old jobs): before protocol
+    v1.0 a privileged task had no suffix and a standard one ended in `-limited`."""
+    if mode_suffix(name):
+        return name
+    if name.endswith("-limited"):
+        return name[: -len("-limited")] + "-standard"
+    return name + "-privileged"
+
+
+def cutoff_pairs(task: Path) -> list[tuple[Path, Path]]:
+    """(task, its twin) for every mode pair the registry ties together (`same_cutoff_as`), in either direction, where the
+    twin exists; sorted so that a pair reached from both sides is the same tuple."""
+    mode, base = mode_of(task), base_of(task)
+    out = []
+    for m, d in MODE_REGISTRY.items():
+        o = d["same_cutoff_as"]
+        if not o or mode not in (m, o):
+            continue
+        other = task.with_name(f"{base}-{o if mode == m else m}")
+        if (other / "task.toml").is_file():
+            out.append(tuple(sorted((task, other))))
+    return out
 
 
 def twin_of(task: Path) -> Path | None:
@@ -332,7 +352,7 @@ def modes_table() -> str:
     """One line per mode, longest name first, for the shell checks (`python3 scripts/task_conventions.py modes`):
     `<mode> <sidecar 0|1> <twin mode or ->`."""
     return "\n".join(f"{m} {int(MODE_REGISTRY[m]['sidecar'])} {MODE_REGISTRY[m]['twin'] or '-'}"
-                     for m in sorted(MODES, key=len, reverse=True))
+                     for m in MODES_LONGEST_FIRST)
 
 
 def bench_of(task: Path) -> str:
@@ -379,13 +399,15 @@ def iter_tasks(tasks_dir: "Path | str | None" = None) -> list[Path]:
 
 
 TASKS_TOP_FILES = ("README.md", "dataset.toml")   # tasks/ holds the benchmark folders and these (dataset.toml: generated)
+BENCH_DOC_SUFFIXES = (".md", ".png")              # a benchmark folder's own pages (README.md, <topic>.md) and their figures
 FOLDER_MAX = 1000                                 # GitHub's web UI lists at most this many entries of a folder
 
 
 def check_layout(tasks_dir: Path | None = None) -> list[str]:
     """What is wrong with the tree's layout (`benchmarks --check`): a BENCHMARKS label without its folder (or a folder
     without its label, or two labels on one folder), anything at the top of tasks/ besides the benchmark folders and
-    TASKS_TOP_FILES, a task dir in another benchmark's folder or nested deeper, a folder over FOLDER_MAX entries."""
+    TASKS_TOP_FILES, anything in a benchmark folder besides task dirs and its pages (BENCH_DOC_SUFFIXES), a task dir in
+    another benchmark's folder or nested deeper, a folder over FOLDER_MAX entries."""
     tasks_dir = tasks_dir or TASKS_DIR
     labels = {label for _, label in BENCHMARKS}
     bad = [f"BENCHMARKS label {b!r}: no folder in BENCHMARK_DIRS" for b in sorted(labels - set(BENCHMARK_DIRS))]
@@ -404,6 +426,8 @@ def check_layout(tasks_dir: Path | None = None) -> list[str]:
         if len(entries) > FOLDER_MAX:
             bad.append(f"tasks/{p.name}: {len(entries)} entries, over {FOLDER_MAX} (GitHub lists no more)")
         for t in entries:
+            if t.is_file() and t.suffix in BENCH_DOC_SUFFIXES:
+                continue                     # the benchmark's pages, not task dirs
             if not (t / "task.toml").is_file():
                 bad.append(f"tasks/{p.name}/{t.name}: not a task dir")
             elif bench_dir(t.name) != p.name:
@@ -421,6 +445,14 @@ def check_benchmarks(tasks_dir: Path | None = None) -> list[str]:
     seen = collections.Counter(p for p, _ in BENCHMARKS)
     bad += [f"prefix {p!r} is listed {k} times in BENCHMARKS" for p, k in seen.items() if k > 1]
     return bad
+
+
+def task_toml(task: Path) -> dict:
+    """The task's task.toml, parsed; {} when it is missing or unreadable."""
+    try:
+        return tomllib.loads((task / "task.toml").read_text())
+    except (OSError, ValueError):            # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
+        return {}
 
 
 def read_text(p: Path) -> str | None:
@@ -467,7 +499,7 @@ def normalize_toml(task: Path) -> None:
     p = task / "task.toml"
     s = p.read_text()
     mode = mode_of(task)
-    s = re.sub(r'^name = "robot-coding-bench/[^"]*"', f'name = "robot-coding-bench/{task.name}"', s, count=1, flags=re.M)
+    s = re.sub(r'^name = "embodied-first-exam/[^"]*"', f'name = "embodied-first-exam/{task.name}"', s, count=1, flags=re.M)
     s = re.sub(r'(?m)^tier = .*\n', "", s)
     if re.search(r'(?m)^mode = ', s):
         s = re.sub(r'(?m)^mode = "[^"]*"', f'mode = "{mode}"', s)
@@ -730,33 +762,17 @@ def render_external(task: "Path | str" = "") -> str:
         text = external_paragraph(read_text(task / "instruction.md") or "") or EXTERNAL_TEXT_OPEN
     # owner 2026-10-14: the words above are the baseline every task carries; a task may add STRICTER requirements of
     # its own on top (never looser), as `[metadata.honour] stricter = "..."` in its task.toml, rendered after them
-    stricter = ""
-    if isinstance(task, Path):
-        try:
-            stricter = ((tomllib.loads((task / "task.toml").read_text()).get("metadata") or {}).get("honour") or {}).get("stricter", "")
-        except (OSError, ValueError):
-            stricter = ""
+    stricter = ((metadata_of(task).get("honour") or {}).get("stricter", "")) if isinstance(task, Path) else ""
     if stricter:
         text = text.rstrip() + "\n\nAdditional rules for this task (stricter than the above): " + str(stricter).strip()
     return EXTERNAL_HEADING + "\n" + text + "\n"
-
-
-def family_of(task: Path) -> str:
-    """A task's family: `[metadata] family` in its task.toml."""
-    try:
-        return str(tomllib.loads((task / "task.toml").read_text()).get("metadata", {}).get("family", ""))
-    except (OSError, tomllib.TOMLDecodeError):
-        return ""
 
 
 def cutoff_for(task: Path) -> int | None:
     """The agent's time cutoff of a task in seconds: its own `[agent] timeout_sec` (PROTOCOL §2.12), the one source of the
     number. None when task.toml has none, or one that is not a whole positive number of seconds (ci_checks/check-cutoffs.py
     fails such a task; normalize then writes nothing from it)."""
-    try:
-        v = tomllib.loads((task / "task.toml").read_text()).get("agent", {}).get("timeout_sec")
-    except (OSError, tomllib.TOMLDecodeError):
-        return None
+    v = task_toml(task).get("agent", {}).get("timeout_sec")
     if isinstance(v, bool) or not isinstance(v, (int, float)) or v <= 0 or float(v) != int(v):
         return None
     return int(v)
@@ -815,18 +831,6 @@ def _set_number(old: str, sec: int) -> str:
     return f"{sec}.0" if "." in old else str(sec)
 
 
-def set_agent_timeout(toml: str, sec: int, name: str = "") -> str:
-    """A task.toml text whose `[agent] timeout_sec` is `sec` (the literal's form kept: `3600.0` stays a float), for a
-    generator that renders a task.toml written for another number (its benchmark's constant wins; PROTOCOL §2.12)."""
-    def in_agent(m: re.Match) -> str:
-        return re.sub(r"(?m)^(timeout_sec\s*=\s*)([0-9][0-9_.]*)", lambda t: t.group(1) + _set_number(t.group(2), sec),
-                      m.group(0), count=1)
-    out = re.sub(r"(?ms)^\[agent\][ \t]*(?:#[^\n]*)?\n.*?(?=^\[|\Z)", in_agent, toml, count=1)
-    if float(tomllib.loads(out).get("agent", {}).get("timeout_sec", -1)) != sec:
-        raise RuntimeError(f"{name}: task.toml has no `[agent] timeout_sec` line to set to {sec}")
-    return out
-
-
 def normalize_cutoff(task: Path) -> None:
     """In the standard modes, the sim service's `RCB_WALL_CLOCK_S` (what its `/spec` budget and `meta["time_left_s"]`
     report) is the task's own cutoff, `[agent] timeout_sec` (PROTOCOL §2.12). A task without a usable number is left as
@@ -876,7 +880,8 @@ def normalize_instruction(task: Path) -> None:
     in task.toml) and, last, `## Time limit` rendered from the task's `[agent] timeout_sec` (§2.12; left out when it has
     no usable number): the last thing the agent reads."""
     p = task / "instruction.md"
-    md = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
+    toml = tomllib.loads((task / "task.toml").read_text())
+    md = toml.get("metadata", {})
     lim = (md.get("resources") or {}).get("limits")
     if not p.is_file():
         return
@@ -888,8 +893,7 @@ def normalize_instruction(task: Path) -> None:
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
     s = s.rstrip() + "\n\n" + render_external(task)
     if isinstance(lim, dict):
-        env = tomllib.loads((task / "task.toml").read_text()).get("environment", {})
-        s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), env.get("cpus"))
+        s += "\n" + render_limits(lim, md.get("mode", mode_of(task)), sidecars_of(task), toml.get("environment", {}).get("cpus"))
     if sec is not None:
         s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task), task.name)
     write_if_changed(p, s)
@@ -1239,7 +1243,7 @@ def realtime_of(task: Path) -> tuple[float, int | None] | None:
 
 
 def slowdown_var(task: Path) -> str:
-    """The setting S comes from: `RCB_SLOWDOWN`, or a §4c service's own (RoboOlympics `RO_SLOWDOWN`)."""
+    """The setting S comes from: `RCB_SLOWDOWN`, or a §4c service's own (Embodied Olympics `RO_SLOWDOWN`)."""
     c = read_text(task / "environment/docker-compose.yaml") or ""
     return "RCB_SLOWDOWN" if SLOWDOWN_RE.search(c) or not OWN_SLOWDOWN_RE.search(c) else "RO_SLOWDOWN"
 
@@ -1272,15 +1276,11 @@ def normalize_slowdown(task: Path) -> None:
 # "Results"). Standard library only: scripts/write_task_results.py, scripts/dataset_manifest.py and the scheduler's run
 # policy (batch_eval_live) read these.
 PROTOCOL_VERSION = "2.0"                         # docs/protocol/README.md
-NETWORKS = ("allowlist", "open")                 # `[metadata] network` (PROTOCOL §2, Appendix H.6); absent = allowlist
 RESET_DECL_RE = re.compile(r'^\s*RCB_RESET_BUDGET:\s*"?(?:\$\{RCB_RESET_BUDGET:-([0-9]+)\}|([0-9]+))"?\s*(?:#.*)?$', re.M)
 
 
 def metadata_of(task: Path) -> dict:
-    try:
-        return tomllib.loads((task / "task.toml").read_text()).get("metadata", {}) or {}
-    except (OSError, tomllib.TOMLDecodeError):
-        return {}
+    return task_toml(task).get("metadata", {}) or {}
 
 
 def network_of(task: Path) -> str:
@@ -1328,7 +1328,6 @@ def validated_of(task: Path) -> bool:
 CORE_SET_FILE = Path(os.environ.get("RCB_CORE_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "core_set.toml")
 # RCB_CORE_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
 CORE_FIELDS = ("task", "default_mode")
-CORE_MODES = ("privileged", "standard", "standard-realtime")
 
 
 @functools.lru_cache(maxsize=8)
@@ -1393,21 +1392,48 @@ _CORE_WARNED: set[str] = set()
 
 
 README_FILE = Path(__file__).resolve().parents[1] / "README.md"
-README_TABLE = re.compile(r"(<!-- task-table: generated by `python3 scripts/task_conventions.py readme-table --write` -->\n)"
-                          r"(.*?)(<!-- /task-table -->)", re.S)
+README_QUICK = re.compile(r"(<!-- quick-start: generated by `python3 scripts/task_conventions.py readme --write` -->\n)"
+                          r"(.*?)(<!-- /quick-start -->)", re.S)
 
 
-def readme_table(tasks_dir: Path | None = None) -> str:
-    """The README's task table: per benchmark label, its core tasks (core_tasks()) and all its task dirs."""
+def readme_quick_start(tasks_dir: Path | None = None) -> str:
+    """The README's header counts and quick start (core_tasks(), iter_tasks()): one command per line, its comment on
+    the line above, so no line needs a horizontal scroll on GitHub."""
     tasks_dir = tasks_dir or TASKS_DIR
     dirs = iter_tasks(tasks_dir)
-    every = collections.Counter(bench_of(p) for p in dirs)
-    core = collections.Counter(bench_of(Path(t)) for t in core_tasks(tasks_dir=tasks_dir)
-                               if (task_dir(t, tasks_dir) / "task.toml").is_file())
-    rows = ["| Benchmark | Core | All |", "|---|---:|---:|"]
-    rows += [f"| {b} | {core.get(b, 0)} | {every[b]} |" for b in sorted(every, key=str.lower)]
-    rows.append(f"| **Total** | **{sum(core.values())}** | **{sum(every.values())}** |")
-    return "\n".join(rows)
+    core = len(core_tasks(tasks_dir=tasks_dir))
+    priv = len(core_tasks({"privileged"}, tasks_dir=tasks_dir))
+    bases = len({base_of(p) for p in dirs})
+    benches = len({p.parent.name for p in dirs})
+    arc = sum(1 for p in dirs if p.parent.name == "roboarc")
+    m = "-a codex -m openai/gpt-6-astra"
+    d = "harbor run -d embodied-first-exam"
+
+    def block(*lines: str) -> str:
+        return "```bash\n" + "\n".join(lines) + "\n```\n"
+    return "\n".join([
+        "### 1. Install", "",
+        block("# clone with the submodules; install Harbor 0.23.0 with this repository's flags",
+              "git clone --recurse-submodules https://github.com/mll-lab-nu/embodied-first-exam.git",
+              "cd embodied-first-exam",
+              "uv tool install --force -e . --with-executables-from harbor",
+              "# your API keys go in .env",
+              "cp .env.example .env"),
+        "### 2. Run", "",
+        block(f"# the core set: {core} tasks, each in its default mode", f"{d} {m}"),
+        block(f"# the core tasks in another mode: --privileged ({priv} tasks), --standard, --standard-realtime",
+              f"{d} --privileged {m}"),
+        block(f"# every task: {len(dirs)} task dirs ({bases} tasks in their modes, {benches} benchmarks)",
+              f"{d}@all {m}"),
+        block(f"# one benchmark, here RoboARC ({arc} task dirs)", f"{d}@all -p tasks/roboarc {m}"),
+        block("# one task", f"{d}@all -p tasks/<benchmark>/<task> -a oracle"),
+        "Some benchmarks' images are not public: build them first as the benchmark's README in `tasks/<benchmark>/` "
+        "describes (e.g. [tasks/ambench](tasks/ambench)).", "",
+        "### 3. Or use a subscription instead of an API key", "",
+        block("# ChatGPT: log in once", "codex login", f"CODEX_FORCE_AUTH_JSON=1 {d} {m}"),
+        block("# Claude: put the token it prints in .env as CLAUDE_CODE_OAUTH_TOKEN", "claude setup-token",
+              f"CLAUDE_FORCE_OAUTH=1 {d} \\", "  -a claude-code -m anthropic/claude-opus-5-5"),
+    ])
 
 
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
@@ -1433,8 +1459,8 @@ def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) ->
         if t != Path(t).name or base_of(Path(t)) != t:
             bad.append(f"{t}: not a task name (a task dir name without its mode suffix)")
             continue
-        if dm not in CORE_MODES:
-            bad.append(f"{t}: default_mode {dm!r} is not one of {', '.join(CORE_MODES)}")
+        if dm not in MODES:
+            bad.append(f"{t}: default_mode {dm!r} is not one of {', '.join(MODES)}")
             continue
         if not (task_dir(f"{t}-{dm}", tasks_dir) / "task.toml").is_file():
             bad.append(f"{t}: no task directory {t}-{dm} under tasks/")
@@ -1468,11 +1494,10 @@ def effective_config(task: Path, seed: int | None = None, env: dict | None = Non
 
 def verifier_cpus_of(task: Path) -> float | None:
     """The verifier's pinned CPUs ([verifier.environment] cpus, = [metadata.resources] verifier_min_cpus) of a task
-    whose verifier plays a live wall-clock match ([metadata] verifier_wall_clock; RoboOlympics' privileged twins)."""
+    whose verifier plays a live wall-clock match ([metadata] verifier_wall_clock; Embodied Olympics' privileged twins)."""
     try:
-        meta = tomllib.loads((task / "task.toml").read_text())
-        return float(meta["verifier"]["environment"]["cpus"])
-    except (OSError, KeyError, TypeError, ValueError, tomllib.TOMLDecodeError):
+        return float(task_toml(task)["verifier"]["environment"]["cpus"])
+    except (KeyError, TypeError, ValueError):
         return None
 
 
@@ -1566,17 +1591,17 @@ def main(argv: list[str]) -> int:
         for t in iter_tasks():
             print(f"{t.name}\t{bench_of(t)}\t{t.parent.name}")
         return 0
-    if argv[:1] == ["readme-table"]:   # `readme-table --check` / `--write`: README.md's task table (readme_table())
+    if argv[:1] == ["readme"]:         # `readme --check` / `--write`: README.md's quick start (readme_quick_start())
         text = README_FILE.read_text(encoding="utf-8")
-        m = README_TABLE.search(text)
-        if not m:
-            print("FAIL README.md: no task-table markers"); return 1
-        want = readme_table() + "\n"
+        q = README_QUICK.search(text)
+        if not q:
+            print("FAIL README.md: no quick-start markers"); return 1
+        want_q = readme_quick_start()
         if "--write" in argv:
-            README_FILE.write_text(text[:m.start(2)] + want + text[m.end(2):], encoding="utf-8"); return 0
-        if m.group(2) != want:
-            print("FAIL README.md: the task table is stale (python3 scripts/task_conventions.py readme-table --write)"); return 1
-        print("ok README.md task table"); return 0
+            README_FILE.write_text(text[:q.start(2)] + want_q + text[q.end(2):], encoding="utf-8"); return 0
+        if q.group(2) != want_q:
+            print("FAIL README.md: the quick start is stale (python3 scripts/task_conventions.py readme --write)"); return 1
+        print("ok README.md quick start"); return 0
     if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml (PROTOCOL §4); `core-set [--<mode>...]`:
         if "--check" in argv:            # list the core tasks' default-mode dirs, or their dirs of those modes (core_tasks())
             bad = check_core_set()
@@ -1585,7 +1610,7 @@ def main(argv: list[str]) -> int:
             if not bad:
                 print(f"ok docs/core_set.toml: {len(core_set())} core tasks")
             return 1 if bad else 0
-        for t in core_tasks({a[2:] for a in argv[1:] if a[2:] in CORE_MODES}):
+        for t in core_tasks({a[2:] for a in argv[1:] if a[2:] in MODES}):
             print(t)
         return 0
     check = "--check" in argv

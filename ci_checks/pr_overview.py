@@ -30,16 +30,12 @@ import ci_scope  # noqa: E402
 MARKER = "<!-- rcb-pr-overview -->"
 
 
-def git(*args: str) -> str:
-    return subprocess.run(["git", "-C", str(ROOT), *args], check=True, capture_output=True, text=True).stdout
-
-
 def old_toml(rev: str, name: str) -> dict | None:
     """The task's task.toml at `rev`: tasks/<folder>/<task>/, or the flat tasks/<task>/ of a revision before the
     benchmark folders."""
     for rel in (tc.task_relpath(name), f"tasks/{name}"):
         try:
-            return tomllib.loads(git("show", f"{rev}:{rel}/task.toml"))
+            return tomllib.loads(ci_scope.git("show", f"{rev}:{rel}/task.toml"))
         except (subprocess.CalledProcessError, tomllib.TOMLDecodeError):
             continue
     return None
@@ -54,7 +50,7 @@ def main(argv: list[str]) -> int:
     rev = argv[argv.index("--diff-from") + 1] if "--diff-from" in argv else "origin/main"
     labels_file = Path(argv[argv.index("--labels") + 1]) if "--labels" in argv else None
     adv_file = Path(argv[argv.index("--advisories") + 1]) if "--advisories" in argv else None
-    paths = sorted({p for p in git("diff", "--name-only", "--no-renames", rev, "HEAD").splitlines() if p})
+    paths = sorted({p for p in ci_scope.git("diff", "--name-only", "--no-renames", rev, "HEAD").splitlines() if p})
     names = sorted({n for p in paths if (n := ci_scope.task_name_of(p))})
     added, changed, removed = [], [], []
     for n in names:
@@ -118,14 +114,8 @@ def main(argv: list[str]) -> int:
             vs = sorted(v, key=lambda x: (x is None, x or 0))
             out.append(f"| {bench} | {mode} | {' / '.join(f'{x} s' for x in vs)}"
                        + (" **(several numbers: the pull request says why, PROTOCOL §2)**" if len(vs) > 1 else "") + " |")
-        twins = []
-        for t in every:
-            for m, dd in tc.MODE_REGISTRY.items():
-                o = dd["same_cutoff_as"]
-                if o and tc.mode_of(t) == m:
-                    other = t.with_name(f"{tc.base_of(t)}-{o}")
-                    if (other / "task.toml").is_file() and tc.cutoff_for(other) != tc.cutoff_for(t):
-                        twins.append(f"`{t.name}` {tc.cutoff_for(t)} s, `{other.name}` {tc.cutoff_for(other)} s")
+        pairs = sorted({p for t in every for p in tc.cutoff_pairs(t) if tc.cutoff_for(p[0]) != tc.cutoff_for(p[1])})
+        twins = [f"`{b.name}` {tc.cutoff_for(b)} s, `{a.name}` {tc.cutoff_for(a)} s" for a, b in pairs]
         if twins:
             out += ["", "**Twins with different cutoffs** (the required job `invariants` fails; PROTOCOL Appendix H.7): " + "; ".join(twins[:10])]
     if adv_file is not None:

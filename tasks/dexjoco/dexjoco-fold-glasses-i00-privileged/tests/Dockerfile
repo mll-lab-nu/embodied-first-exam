@@ -7,7 +7,7 @@ COPY --from=ghcr.io/mll-lab-nu/efe:dexjoco-files-0.1.0@sha256:faff6d798789844a22
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 # the thread count the instances and references were made with; it needs 4 CPUs visible to this container, which
-# grade.py checks before it replays (docs/benchmarks/dexjoco.md, Threads)
+# grade.py checks before it replays (tasks/dexjoco/README.md, Threads)
 ENV OPENBLAS_NUM_THREADS=4
 WORKDIR /tests
 # resource limits: the verifier step (from the monitor image) and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor

@@ -1,6 +1,6 @@
 # The core set: the tasks the headline statistics are computed on (PROTOCOL §4). One entry per task (the task dir
-# name without its mode suffix) and its default mode: `harbor run --core` runs that mode's dir; `--privileged`,
-# `--standard` or `--standard-realtime` runs another mode of the same tasks.
+# name without its mode suffix) and its default mode: `harbor run -d embodied-first-exam` runs that mode's dir;
+# `--privileged`, `--standard` or `--standard-realtime` runs another mode of the same tasks.
 # Checked by `python3 scripts/task_conventions.py core-set --check`.
 
 [[task]]
@@ -1364,299 +1364,299 @@ task = "robolab-white-mug-in-center-of-table-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-backflip-i00"
+task = "embodied-olympics-fun-backflip-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-badminton-serve-i00"
+task = "embodied-olympics-fun-badminton-serve-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-balance-beam-i00"
+task = "embodied-olympics-fun-balance-beam-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-balance-board-i00"
+task = "embodied-olympics-fun-balance-board-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-basketball-dribble-i00"
+task = "embodied-olympics-fun-basketball-dribble-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-basketball-dribble-realgrasp-i00"
+task = "embodied-olympics-fun-basketball-dribble-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-bowling-realgrasp-i00"
+task = "embodied-olympics-fun-bowling-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-box-jump-i00"
+task = "embodied-olympics-fun-box-jump-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-catch-and-shoot-i00"
+task = "embodied-olympics-fun-catch-and-shoot-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-catch-and-shoot-realgrasp-i00"
+task = "embodied-olympics-fun-catch-and-shoot-realgrasp-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-catch-realgrasp-i00"
+task = "embodied-olympics-fun-catch-realgrasp-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-clean-and-jerk-i00"
+task = "embodied-olympics-fun-clean-and-jerk-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-discus-i00"
+task = "embodied-olympics-fun-discus-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-discus-realgrasp-i00"
+task = "embodied-olympics-fun-discus-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-dribble-slalom-i00"
+task = "embodied-olympics-fun-dribble-slalom-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-dunk-between-legs-i00"
+task = "embodied-olympics-fun-dunk-between-legs-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-dunk-i00"
+task = "embodied-olympics-fun-dunk-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-dunk-realgrasp-i00"
+task = "embodied-olympics-fun-dunk-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-free-throw-realgrasp-i00"
+task = "embodied-olympics-fun-free-throw-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-golf-putt-realgrasp-i00"
+task = "embodied-olympics-fun-golf-putt-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-high-jump-i00"
+task = "embodied-olympics-fun-high-jump-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-hurdles-freestanding-i00"
+task = "embodied-olympics-fun-hurdles-freestanding-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-hurdles-i00"
+task = "embodied-olympics-fun-hurdles-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-javelin-i00"
+task = "embodied-olympics-fun-javelin-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-javelin-realgrasp-i00"
+task = "embodied-olympics-fun-javelin-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-juggle-three-i00"
+task = "embodied-olympics-fun-juggle-three-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-juggle-three-realgrasp-i00"
+task = "embodied-olympics-fun-juggle-three-realgrasp-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-juggling-feet-i00"
+task = "embodied-olympics-fun-juggling-feet-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-juggling-feet-realgrasp-i00"
+task = "embodied-olympics-fun-juggling-feet-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-juggling-head-i00"
+task = "embodied-olympics-fun-juggling-head-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-juggling-i00"
+task = "embodied-olympics-fun-juggling-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-juggling-realgrasp-i00"
+task = "embodied-olympics-fun-juggling-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-jump-rope-i00"
+task = "embodied-olympics-fun-jump-rope-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-layup-i00"
+task = "embodied-olympics-fun-layup-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-layup-realgrasp-i00"
+task = "embodied-olympics-fun-layup-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-long-rope-i00"
+task = "embodied-olympics-fun-long-rope-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-paddle-bounce-realgrasp-i00"
+task = "embodied-olympics-fun-paddle-bounce-realgrasp-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-pitch-target-i00"
+task = "embodied-olympics-fun-pitch-target-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-pitch-target-realgrasp-i00"
+task = "embodied-olympics-fun-pitch-target-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-pole-vault-i00"
+task = "embodied-olympics-fun-pole-vault-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-shot-put-i00"
+task = "embodied-olympics-fun-shot-put-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-shot-put-realgrasp-i00"
+task = "embodied-olympics-fun-shot-put-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-slalom-i00"
+task = "embodied-olympics-fun-slalom-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-standing-long-jump-i00"
+task = "embodied-olympics-fun-standing-long-jump-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-steeplechase-i00"
+task = "embodied-olympics-fun-steeplechase-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-table-tennis-return-realgrasp-i00"
+task = "embodied-olympics-fun-table-tennis-return-realgrasp-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-tennis-return-realgrasp-i00"
+task = "embodied-olympics-fun-tennis-return-realgrasp-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-tennis-serve-i00"
+task = "embodied-olympics-fun-tennis-serve-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-tennis-serve-realgrasp-i00"
+task = "embodied-olympics-fun-tennis-serve-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-toes-to-bar-realgrasp-i00"
+task = "embodied-olympics-fun-toes-to-bar-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-triple-jump-i00"
+task = "embodied-olympics-fun-triple-jump-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-vault-i00"
+task = "embodied-olympics-fun-vault-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-volleyball-serve-realgrasp-i00"
+task = "embodied-olympics-fun-volleyball-serve-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-volleyball-spike-i00"
+task = "embodied-olympics-fun-volleyball-spike-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-fun-wall-ball-i00"
+task = "embodied-olympics-fun-wall-ball-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-wall-ball-realgrasp-i00"
+task = "embodied-olympics-fun-wall-ball-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-match-badminton-duelrl-i01"
+task = "embodied-olympics-match-badminton-duelrl-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-badminton-match-i01"
+task = "embodied-olympics-match-badminton-match-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-badminton-match-i02"
+task = "embodied-olympics-match-badminton-match-i02"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-badminton-match-i04"
+task = "embodied-olympics-match-badminton-match-i04"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-badminton-matchlow-i01"
+task = "embodied-olympics-match-badminton-matchlow-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-fencing-bout-i01"
+task = "embodied-olympics-match-fencing-bout-i01"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-match-foosball-match-i01"
+task = "embodied-olympics-match-foosball-match-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-soccer-jointcpu-i01"
+task = "embodied-olympics-match-soccer-jointcpu-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-soccer-jointgpu-i01"
+task = "embodied-olympics-match-soccer-jointgpu-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-soccer-match-i00"
+task = "embodied-olympics-match-soccer-match-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-soccerssl-match-i00"
+task = "embodied-olympics-match-soccerssl-match-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-soccerssl-match-i01"
+task = "embodied-olympics-match-soccerssl-match-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-tabletennis-duelrl-i01"
+task = "embodied-olympics-match-tabletennis-duelrl-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-tabletennis-match-i01"
+task = "embodied-olympics-match-tabletennis-match-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-tabletennis-match-i02"
+task = "embodied-olympics-match-tabletennis-match-i02"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-tabletennis-match-i03"
+task = "embodied-olympics-match-tabletennis-match-i03"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-tabletennis-match-i04"
+task = "embodied-olympics-match-tabletennis-match-i04"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "roboolympics-match-tabletennis-matchlow-i01"
+task = "embodied-olympics-match-tabletennis-matchlow-i01"
 default_mode = "standard-realtime"
 
 [[task]]

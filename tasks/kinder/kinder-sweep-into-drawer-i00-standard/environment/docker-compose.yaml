@@ -25,7 +25,7 @@ services:
       RCB_WALL_CLOCK_S: "1800.0"
       # Knobs: ${NAME:-default} takes NAME from the shell that runs harbor. The defaults are the standard
       # configuration; results under other settings are reported separately.
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # KinDER standard's default (docs/benchmarks/kinder.md); 0: one episode
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # KinDER standard's default (tasks/kinder/README.md); 0: one episode
       RCB_OBS_DEPTH: "${RCB_OBS_DEPTH:-1}"              # 1: depth (m) with robot_wrist, the Gen3's RGB-D camera
       RCB_OBS_ROOM_CAMERA: "${RCB_OBS_ROOM_CAMERA:-0}"  # 1: + room_camera, fixed in the room, never overhead
       NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility

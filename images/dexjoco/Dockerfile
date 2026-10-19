@@ -1,8 +1,8 @@
-# eai-dexjoco: DexJoCo (brave-eai/dexjoco @ 8d23b0f, MIT) on MuJoCo 3.4.0, Franka Panda + 16-DoF Allegro hand (one or two
+# dexjoco: DexJoCo (brave-eai/dexjoco @ 8d23b0f, MIT) on MuJoCo 3.4.0, Franka Panda + 16-DoF Allegro hand (one or two
 # arms), 11 tasks. Infrastructure only: the upstream package and its dependencies, pinned (requirements.txt = the closure
 # that rcb-dexjoco:0.1.1 resolved, frozen with `pip freeze`); no benchmark code, no demonstrations, no policies.
 # Physics and rendering both run on the CPU (MuJoCo + OSMesa), so the image needs no GPU.
-# Build from the repo root: scripts/build_images.sh (tag = images/dexjoco/VERSION). docs/benchmarks/dexjoco.md.
+# Build from the repo root: scripts/build_images.sh (tag = images/dexjoco/VERSION). tasks/dexjoco/README.md.
 FROM python@sha256:e41613d42d4891e4930f79523f93f81bbc7632584ec65e36ab055f41a800b41e
 ARG DEXJOCO_COMMIT=8d23b0fab23b17a58c4b55f3942e17013aaf8267
 RUN apt-get update && apt-get install -y --no-install-recommends git libosmesa6 libgl1 libglfw3 libegl1 ffmpeg && \

@@ -1,4 +1,4 @@
-# eai-pandadyn Python stack (resolved into requirements.lock by `uv pip compile`, Python 3.11, linux x86_64), at the
+# pandadyn Python stack (resolved into requirements.lock by `uv pip compile`, Python 3.11, linux x86_64), at the
 # versions of the Panda Dynamic Scenes checkout its frozen instances were verified on (its own requirements.lock, used
 # as constraints: -c). torch is the CPU build: physics is CPU PhysX and nothing runs on CUDA (the GPU only renders).
 mani-skill==3.0.1

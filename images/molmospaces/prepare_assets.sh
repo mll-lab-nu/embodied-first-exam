@@ -19,7 +19,7 @@ mkdir -p "$WORK/check/instances"
 for t in "$ROOT"/tasks/molmospaces/molmospaces-*-privileged; do
   b="$(basename "$t")"; b="${b#molmospaces-}"; cp "$t/environment/instance.json" "$WORK/check/instances/${b%-privileged}.json"
 done
-cp "$t/environment/rcb_molmospaces.py" "$HERE/install_assets.py" "$WORK/check/"
+cp "$ROOT/embodied_first_exam/benchmarks/molmospaces/privileged/environment/rcb_molmospaces.py" "$HERE/install_assets.py" "$WORK/check/"   # the tooling's one source (images/molmospaces-files/FILES.json)
 dk run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e RCB_SESSION_LOG= -e MUJOCO_GL=osmesa -e PYOPENGL_PLATFORM=osmesa \
    -e PYTHONPATH=/work --cap-add SYS_PTRACE \
    -v "$WORK/assets:/opt/molmospaces/assets" -v "$WORK/cache:/opt/molmospaces/cache" -v "$WORK/check:/work" -w /work \

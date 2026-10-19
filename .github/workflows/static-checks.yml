@@ -17,22 +17,20 @@ permissions:
 concurrency:
   group: static-checks-${{ github.ref }}
   cancel-in-progress: true
-# Runner (2026-10-12): the two self-hosted runners with the label `rcb-ci` (containers on the lab workstation, no host
-# mounts; the official actions-runner image plus xz-utils, file, rsync). The repository is private and GitHub-hosted
-# minutes ran out for the month (jobs were refused: "recent account payments have failed or your spending limit needs
-# to be increased"). To go back to GitHub's runners, put `ubuntu-latest` in both `runs-on` lines. Do not give these
-# runners the `docker` label: validate-task.yml targets [self-hosted, docker] and runs Harbor trials.
+# Runner: GitHub-hosted (ubuntu-latest) only. The repository is public: a pull request from a fork runs this workflow
+# with a read-only token and no secrets (`pull_request`, never `pull_request_target`), and no job here may target a
+# self-hosted runner, because a fork's pull request can run any code on the runner it gets.
 jobs:
   # THE required check (docs/protocol/README.md Appendix H; board 0124): every check and test that enforces the eight
   # invariants, nothing else. ci_checks/run_invariants.sh runs with `set -euo pipefail`, an explicit expected count of
   # commands (parallel.py --expect) and an INVARIANT-PASS line from each: a failure, an error or an incomplete run fails
   # this job. No continue-on-error anywhere in it. Branch protection's required context: `invariants`.
   invariants:
-    runs-on: [self-hosted, rcb-ci]
+    runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 2 }   # a pull request's checkout is GitHub's merge commit: HEAD^1 = main, HEAD^2 = the branch
+        with: { fetch-depth: 2, persist-credentials: false }   # a pull request's checkout is GitHub's merge commit: HEAD^1 = main, HEAD^2 = the branch
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - name: Invariants (pull request - what it can affect; main - all tasks)
@@ -49,7 +47,7 @@ jobs:
   # request, in the "Advisories (not blocking)" section of its sticky overview comment (ci_checks/pr_overview.py;
   # this job also posts the overview and the labels: new-task, task-fix, shared, cutoff-change).
   advisories:
-    runs-on: [self-hosted, rcb-ci]
+    runs-on: ubuntu-latest
     timeout-minutes: 60
     continue-on-error: true
     permissions:
@@ -58,7 +56,7 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 2 }
+        with: { fetch-depth: 2, persist-credentials: false }
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - name: Advisory checks (pull request - what it can affect; main - all tasks)
@@ -108,11 +106,11 @@ jobs:
   # checks above do not wait for it. On a pull request: the tests of the benchmarks in scope (all of them when the scope
   # is full).
   unit-tests:
-    runs-on: [self-hosted, rcb-ci]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 2 }
+        with: { fetch-depth: 2, persist-credentials: false }
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - name: numpy and requests

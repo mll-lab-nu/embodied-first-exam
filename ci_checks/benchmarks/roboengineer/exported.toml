@@ -2,7 +2,7 @@
 # Appendix H applies unchanged; results are reported apart): the agent tunes a numeric policy against a public nominal
 # simulator in its own container, deploys it to the private evaluator in the `sim` sidecar for at most three feedback
 # rounds (noisy telemetry and camera images back), and the sidecar evaluates the selected policy on a private held-out
-# bank (docs/benchmarks/roboengineer.md, docs/benchmarks/roboengineer-policy.md). ci_checks/check-protocol.py accepts
+# bank (tasks/roboengineer/README.md, tasks/roboengineer/policy.md). ci_checks/check-protocol.py accepts
 # the protocols below for the directories listed here only.
 # `source_task`: the package name in PR #329 (WENLIXIAO-CS,
 # experimental/roboengineer/tasks/ there). The Control Transfer tasks keep its plant seeds and case banks; their frozen
@@ -153,7 +153,7 @@ name = "roboengineer-go2-yaw-jump-i01-standard"
 source_task = "control-transfer-go2-yaw-jump-i01-standard"
 protocol = "eai-policy/1.1"
 
-# G1 walking over terrain (board 0165): the agent trains on its own GPU (image eai-control-transfer:<V>-train).
+# G1 walking over terrain (board 0165): the agent trains on its own GPU (image efe:control-transfer-<V>-train).
 [[tasks]]
 name = "roboengineer-g1-terrain-walk-i00-standard"
 source_task = "control-transfer-g1-i00-standard"

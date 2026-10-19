@@ -1,0 +1,6 @@
+Private (ghcr.io/mll-lab-nu/efe-private:vlabench-<VERSION>): the tasks reference the efe-private tag. VLABench's code is
+MIT, but its asset set (Hugging Face lerobot/vlabench-assets @ 08d7a44, VLABench's Google Drive release) carries no
+licence, and it holds third-party works (images of in-copyright paintings, book-cover scans, scene models and branded
+products), so the built image is not published. Build it from the repository root (tasks/vlabench/README.md):
+  docker build -f images/vlabench/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION) .
+Evaluation hosts pull it with the organization's token. The files image efe:vlabench-files is public (own code only).

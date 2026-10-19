@@ -4,7 +4,7 @@
 # the verdict.
 FROM ghcr.io/mll-lab-nu/efe-private:ambench-0.2.0
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe-private:ambench-files-0.1.0@sha256:31ae5caa3060994aa63457d302ccd0fda4083a68fafb6e0c2324e7fd4f8b80da /privileged/environment/rcb_ambench.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:ambench-files-0.2.0@sha256:416a555923062b9c999765a50688889dfb5a1e5525c5fdf8471ec3bd4c1e4061 /privileged/environment/rcb_ambench.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

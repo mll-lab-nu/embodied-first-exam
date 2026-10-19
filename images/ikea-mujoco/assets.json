@@ -1,9 +1,9 @@
 {
  "note": "sha256 of every file of the eai-ikea-mujoco build context (scripts/ikea_mujoco/stage_context.py)",
- "private": true,
- "repo": "eai-v2-internal/ikea-mujoco-assets",
+ "path_prefix": "ikea-mujoco/",
+ "repo": "MLL-Lab/embodied-first-exam-public",
  "repo_type": "dataset",
- "revision": "610b424b3d4152d8990e226eae60b9170ac7dbdf",
+ "revision": "e16299e2741e263335c118952fbaf3779fba7e35",
  "tasks": {
   "burvik": {
    "digest": "e93617b7455107c21c93b9d95d541a9b2399a3a387269a58c8fd88f901488410",
@@ -2226,6 +2226,22 @@
     "task.json": "81a3d5542e2bbe82b39686f909a3a5a815df864532b0359ff106e74ffaff1fbf",
     "vesken_mechanism.py": "add141360c4403b450e7372f0b124ba66c4af87b1e9e7401783d146dad61bca0"
    }
+  }
+ },
+ "upstream": {
+  "assets/aloha/": {
+   "LICENSE": "aloha/LICENSE",
+   "commit": "62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35",
+   "license": "BSD-3-Clause",
+   "path": "aloha/assets/",
+   "repo": "google-deepmind/mujoco_menagerie"
+  },
+  "assets/panda/": {
+   "LICENSE": "franka_emika_panda/LICENSE",
+   "commit": "62ab00f2bc44f6f20c1c9b7a13f3fb1dd41a4e35",
+   "license": "Apache-2.0",
+   "path": "franka_emika_panda/assets/",
+   "repo": "google-deepmind/mujoco_menagerie"
   }
  }
 }

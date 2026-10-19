@@ -10,7 +10,7 @@
 #    FILES.json, scripts/files_image.py) counts as a copy at <context>/<basename of dest> with FILES.json's sha256, and
 #    the line must name the image FILES.json pins.
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as ci_checks/benchmarks/robopaint/advisory-tooling.sh.
-#    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: RoboOlympics, PROTOCOL §4c) are a group of their own,
+#    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: Embodied Olympics, PROTOCOL §4c) are a group of their own,
 #    one per exporter and [metadata] skill_in_loop.
 # 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo; Panda Dynamic Scenes until 2026-10-17): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
@@ -35,7 +35,7 @@
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 - "${1:-$root/tasks}" "$root/embodied_first_exam/standard" <<'PY'
-import collections, hashlib, json, os, re, sys, tomllib
+import collections, hashlib, os, re, sys, tomllib
 from pathlib import Path
 tasks, src = sys.argv[1], sys.argv[2]
 ROOTD = os.path.dirname(os.path.dirname(os.path.abspath(src)))   # the repository (src: embodied_first_exam/standard)
@@ -43,7 +43,7 @@ sys.path.insert(0, os.path.join(ROOTD, "scripts")); import task_conventions as t
 MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits": "rcb_robowits.py", "maniguard": "rcb_maniguard.py",
           "molmospaces": "rcb_molmospaces.py", "myosuite": "rcb_myosuite.py",
           "dexjoco": "rcb_dexjoco.py", "dexhand": "rcb_dexhand.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",
-          "roboolympics": "rcb_rfo.py",
+          "embodied-olympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py", "ispatialgym": "rcb_ispatialgym.py",
           "ikea": "rcb_ikea.py",   # IKEA MuJoCo
@@ -77,45 +77,23 @@ canon = {f: sha(os.path.join(src, f)) for f in set(LAYER.values()) if os.path.is
 V24 = {"rcb_limited.py", "rcb_client.py"}   # the 2.4 layer's own files (embodied_first_exam/standard/v2_4/); the rest is 2.2's
 canon24 = {f: sha(os.path.join(src, "v2_4" if f in V24 else "", f)) for f in set(LAYER.values())
            if os.path.isfile(os.path.join(src, "v2_4" if f in V24 else "", f))}
-# files-only images (scripts/files_image.py): repository -> (pinned ref, {file: sha256}, images/<name>)
-FILES_IMAGES = {}
-def image_key(ref):   # what names a files-only image: its repository, or efe / efe-private + <name> (tags <name>-<version>)
-    name = ref.split("@")[0]
-    repo, tag = name.rsplit(":", 1) if ":" in name.rsplit("/", 1)[-1] else (name, "")
-    if repo in ("ghcr.io/mll-lab-nu/efe", "ghcr.io/mll-lab-nu/efe-private") and tag:
-        m = re.match(r"^(.*?)-(\d+\.\d+.*|latest)$", tag)
-        return f"{repo}:{m.group(1) if m else tag}"
-    return repo
+# files-only images (scripts/files_image.py): a file's one source -> the sha256 FILES.json pins for it
+import files_image  # noqa: E402
+PINNED = {}
 for fj in sorted(Path(images).glob("*/FILES.json")):
-    s = json.load(open(fj))
-    FILES_IMAGES[image_key(s["image"])] = (s["image"], s["files"], f"images/{fj.parent.name}")
+    s = files_image.spec(fj.parent.name)
+    PINNED.update({Path(ROOTD) / s["source"] / f: h for f, h in s["files"].items()})
 
 
 def from_files_image(task_dir: str) -> dict:
-    """{<context>/<basename of dest>: sha} of the files the task's Dockerfiles take from a files-only image."""
+    """{<context>/<basename of dest>: sha} of the files the task's Dockerfiles take from a files-only image (FILES.json's
+    sha256 of each: what the pinned image holds); a line files_image.copied_from cannot resolve is a failure."""
     got = {}
     for ctx in ("environment", "tests"):
-        df = os.path.join(task_dir, ctx, "Dockerfile")
-        if not os.path.isfile(df):
-            continue
-        text = open(df).read()
-        for line in text.splitlines():   # a line naming a files-only image in another form would not be compared
-            m = re.search(r"--from=(\S+)", line)
-            if m and image_key(m.group(1)) in FILES_IMAGES and not (
-                    re.fullmatch(r"COPY --from=\S+ /\S+ \S+\s*", line) or re.fullmatch(r"COPY --from=\S+ (/\S+ )+\S+/\s*", line)):
-                bad.append(f"{os.path.basename(task_dir)}: {ctx}/Dockerfile: {line.strip()[:120]!r}: a files-only image is "
-                           "copied as `COPY --from=<image@digest> /<file> <dest>` or `... /<file>... <dir>/` (scripts/files_image.py)")
-        for ref, srcs, dest in re.findall(r"(?m)^COPY --from=(\S+) ((?:/\S+ )+)(\S+)\s*$", text):
-            repo = image_key(ref)
-            if repo not in FILES_IMAGES:
-                continue
-            pinned, files, where = FILES_IMAGES[repo]
-            for f in (x.lstrip("/") for x in srcs.split()):
-                if ref != pinned or f not in files:
-                    bad.append(f"{os.path.basename(task_dir)}: {ctx}/Dockerfile takes /{f} from {ref}, not a file of the image "
-                               f"{where}/FILES.json pins ({pinned}): regenerate the task")
-                    continue
-                got[f"{ctx}/{os.path.basename(f) if dest.endswith('/') else os.path.basename(dest)}"] = files[f][:16]
+        out, problems = files_image.copied_from(Path(task_dir) / ctx / "Dockerfile")
+        bad.extend(f"{os.path.basename(task_dir)}: {p} (regenerate the task)" for p in problems)
+        for dest, f in out.items():
+            got[f"{ctx}/{os.path.basename(dest)}"] = PINNED[f][:16]
     return got
 
 
@@ -155,7 +133,7 @@ for t in sorted(TDIR):
     tt = os.path.join(TDIR[t], "task.toml")
     if not os.path.isfile(tt):
         continue
-    bench = t.split("-")[0]
+    bench = "embodied-olympics" if t.startswith("embodied-olympics-") else t.split("-")[0]   # a two-word prefix
     meta = tomllib.load(open(tt, "rb")).get("metadata", {})
     proto = str(meta.get("protocol", ""))
     v24 = proto == "eai-standard/2.4"
@@ -216,8 +194,8 @@ for t in sorted(TDIR):
     if bench not in MODULE:
         continue
     module = MODULE[bench]
-    if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c; Embodied Safety Exam 0.5.4): its own sources
-        # one group per exporter and skill-in-the-loop setting: RoboOlympics-Match's table-tennis privileged twins come
+    if meta.get("exporter"):   # written by the benchmark's own exporter (Embodied Olympics, PROTOCOL §4c; Embodied Safety Exam 0.5.4): its own sources
+        # one group per exporter and skill-in-the-loop setting: Embodied Olympics - Match's table-tennis privileged twins come
         # from their own simulator's exporter (tools.tt_fullsim, #282 / #325) and the low-level matches with the agent's
         # skill in the loop have their own standard-realtime grader (#300); each is shared within its group
         bench += f" (exported: {meta['exporter']}" + (f", {meta['skill_in_loop']}" if meta.get("skill_in_loop") else "") + ")"

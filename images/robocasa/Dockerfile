@@ -1,4 +1,4 @@
-# eai-robocasa: RoboCasa (robocasa/robocasa @ 756598a, "v0.2"; robosuite 1.5.1, MuJoCo 3.2.6) with the kitchen
+# robocasa: RoboCasa (robocasa/robocasa @ 756598a, "v0.2"; robosuite 1.5.1, MuJoCo 3.2.6) with the kitchen
 # fixtures, textures and object meshes its tasks load. CPU physics (bit-exact replay) and CPU rendering (OSMesa): no
 # GPU. One image for the RoboCasa privileged tasks' environment and verifier and the standard tasks' `sim` service.
 # Infrastructure only: no benchmark code and no demonstrations (those are the reference solutions; they stay under

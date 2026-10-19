@@ -141,7 +141,7 @@ The grader replays in two fresh processes, each exactly this CLI (a fresh proces
 - **Your only budget is the time limit (`## Time limit`)**; there is no step budget. A runaway guard stops an episode at 72000 control steps (1 h
   of simulated time). Everything runs on the CPU except camera rendering.
 - The exemplar picture is derived from a public-domain historical work of cursive-script calligraphy (Wikimedia Commons,
-  public domain); rendered by robot-coding-bench (RoboPaint): `/app/NOTICE-exemplar.md`.
+  public domain); rendered by Embodied First Exam (RoboPaint): `/app/NOTICE-exemplar.md`.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

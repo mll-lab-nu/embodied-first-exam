@@ -46,7 +46,7 @@ without this simulator package or its reference methods. Generated oracle plans 
 trusted validation sidecars remain outside the generated task directories. This source provenance
 statement is not a substitute for the final image's isolation and installed-runtime checks.
 
-The `realism_v3` pack's `.png` / `.obj` files are not committed (`images/ese/.gitignore`): `python3 images/ese/assets.py fetch` restores them from the Hugging Face dataset pinned in `images/ese/assets.json` (`MLL-Lab/robosafe-assets`, public) before a build. After a context refresh, `assets.py export <dir>` lays them out for upload and `assets.py pin <dir> <revision>` records the new revision.
+The `realism_v3` pack's `.png` / `.obj` files and the third-party `assets/third_party/bigym2/` `.STL` / `.onnx` files are not committed (`images/ese/.gitignore`): `python3 images/ese/assets.py fetch` restores them from the Hugging Face datasets pinned in `images/ese/assets.json` (`MLL-Lab/robosafe-assets` and `MLL-Lab/embodied-first-exam-public`, both public: no login) before a build. After a context refresh, `assets.py export <dir>` lays them out for upload and `assets.py pin <pack> <dir> <revision>` records a pack's new revision.
 
 To move to another Embodied Safety Exam commit: set `ESE_COMMIT` and `ESE_VERSION` in `source.env`, bump `VERSION`,
 run `fetch_context.sh <clone>` (needs a clone with that commit) and rebuild; the tasks are a frozen release:

@@ -7,14 +7,14 @@
 | Twin | — (none: roboEngineer has no privileged mode, PROTOCOL §2.15) |
 | Simulator / robot | `mujoco` / `intel-aero-partial` |
 | Family / instance | `roboengineer/landing-random-pad` / seed 0 |
-| Oracle | `full` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-quadrotor-landing:0.1.0: six safe held-out landings of six, mean score 84.11; nop 0. |
+| Oracle | `full` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image efe-private:quadrotor-landing-0.1.0: six safe held-out landings of six, mean score 84.11; nop 0. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0` |
 
 ## Task
-**roboEngineer → Drone → Neural Landing.** See the [collection roadmap](../../docs/benchmarks/roboengineer.md).
+**roboEngineer → Drone → Neural Landing.** See the [collection roadmap](tasks/roboengineer/README.md).
 
-Randomized aerial landing with bounded sensor-only policy adaptation and a private held-out bank. Reference runs: the Oracle row; build instructions: docs/benchmarks/roboengineer.md.
+Randomized aerial landing with bounded sensor-only policy adaptation and a private held-out bank. Reference runs: the Oracle row; build instructions: tasks/roboengineer/README.md.
 
 ## Difficulty
 Identify unmodeled aerodynamic forces using noisy sensors and camera samples, while trading landing time against contact safety.

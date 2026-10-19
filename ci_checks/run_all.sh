@@ -30,7 +30,7 @@ fi
 umask 022
 root="$(cd "$(dirname "$0")/.." && pwd)"
 if [ "${1:-}" != "--changed" ]; then   # task dirs given relative to the caller's directory: made absolute first
-  args=(); for a in "$@"; do if [ -d "$a" ]; then args+=("$(cd "$a" && pwd)"); else args+=("$a"); fi; done; set -- "${args[@]}"
+  args=(); for a in "$@"; do if [ -d "$a" ]; then args+=("$(cd "$a" && pwd)"); else args+=("$a"); fi; done; set -- ${args[@]+"${args[@]}"}
 fi
 cd "$root" || exit 1
 q() { printf %q "$1"; }
@@ -53,7 +53,7 @@ if [ "${1:-}" = "--changed" ]; then
 else
   tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=(tasks/*/*/) || explicit=1
 fi
-real=(); for t in "${tasks[@]}"; do t="${t%/}"; [ -f "$t/task.toml" ] && real+=("$t"); done; tasks=("${real[@]}")
+real=(); for t in ${tasks[@]+"${tasks[@]}"}; do t="${t%/}"; [ -f "$t/task.toml" ] && real+=("$t"); done; tasks=(${real[@]+"${real[@]}"})
 echo "per-task checks on ${#tasks[@]} task(s)"
 
 cmds=""
@@ -74,7 +74,8 @@ for ((i = 0; i < ${#tasks[@]}; i += chunk)); do
   add python3 scripts/task_conventions.py --check"$part"
 done
 # per-task Python checks over the tasks in scope: the given ones, else all (a scoped run: its benchmarks' tasks)
-targs=""; if [ $explicit -eq 1 ] || [ "$scope" = benchmarks ]; then for t in "${tasks[@]}"; do targs+=" $(q "$t")"; done; fi
+targs=""; if [ $explicit -eq 1 ] || [ "$scope" = benchmarks ]; then for t in ${tasks[@]+"${tasks[@]}"}; do targs+=" $(q "$t")"; done; fi
+[ ${#targs} -le 100000 ] || targs=""   # longer than one `bash -c` argument may be (128 KiB): the checks' default, every task (a superset)
 # the benchmarks' own advisory hooks: every ci_checks/benchmarks/*/advisory-*, given the tasks in scope as arguments, through
 # xargs from a list file (every task's path in one command line is longer than a single argument may be, 128 KiB)
 if [ ${#tasks[@]} -gt 0 ]; then

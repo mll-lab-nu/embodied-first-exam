@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:roboengineer-files-0.1.0@sha256:7ffc4213019f7d88bd5072a8c1d56936a2b3f78cad7c7aea920a33794749d040",
+ "image": "ghcr.io/mll-lab-nu/efe:roboengineer-files-0.2.0@sha256:ba990671b5b877a27996906464cb06c07bd0e237c0ec5762053a2540c4af0e6b",
  "source": "embodied_first_exam/benchmarks/roboengineer",
  "files": {
   "standard/environment/public/anycarbench/LICENSE.anycar": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",

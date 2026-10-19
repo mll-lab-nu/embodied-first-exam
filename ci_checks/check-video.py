@@ -58,16 +58,9 @@ def collects_video(src: str) -> bool:
     return src.endswith(".mp4") or (src.endswith("/") and src.rstrip("/").count("/") == 1)
 
 
-def mode_of(task: Path) -> str:
-    for m in ("standard-realtime", "standard", "privileged"):
-        if task.name.endswith("-" + m):
-            return m
-    return ""
-
-
 def check(task: Path) -> list[str]:
     errs: list[str] = []
-    mode = mode_of(task)
+    mode = tc.mode_suffix(task.name) or ""
     if not mode:
         return errs
     tests = list(texts(task / "tests", errs))

@@ -3,7 +3,7 @@ schema_version = "1.3"
 artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
 
 [task]
-name = "robot-coding-bench/robodojo-solve-equation-i00-privileged"
+name = "embodied-first-exam/robodojo-solve-equation-i00-privileged"
 description = "RoboDojo solve_equation (Open; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: An arithmetic equation (a op b = result) is laid out on pads with exactly one number or operator missing; pick the correct missing digit or operator tile from the loose tiles on the table, place it on the empty pad, and bring the arms home. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/solve_equation_0.json; graded by RoboDojo's own reward check."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]

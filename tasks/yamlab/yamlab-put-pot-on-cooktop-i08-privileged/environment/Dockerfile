@@ -2,7 +2,7 @@
 # Everything task-specific is copied here; YAMLab's demonstrations are not in the image.
 FROM ghcr.io/mll-lab-nu/efe-private:yamlab-0.1.0
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe-private:yamlab-files-0.1.0@sha256:ef6bd2b1ac385d0fb702e3129722330655bd0836a2f93e142b61924e00ad384b /privileged/environment/rcb_yamlab.py /opt/tools/rcb_yamlab.py
+COPY --from=ghcr.io/mll-lab-nu/efe:yamlab-files-0.2.0@sha256:dcf2cdbd2b6dc96201e6c66f15fdb65a44098e8e27abc7a316375ceb1168cf85 /privileged/environment/rcb_yamlab.py /opt/tools/rcb_yamlab.py
 ENV PYTHONPATH=/opt/tools
 RUN mkdir -p /app/output
 WORKDIR /app

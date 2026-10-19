@@ -20,21 +20,6 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402
 
 
-def cutoff_pairs(task: Path) -> list[tuple[Path, Path]]:
-    """(task, its twin) for every mode pair the registry ties together (`same_cutoff_as`), in either direction, where the
-    twin exists; sorted so that a pair reached from both sides is the same tuple."""
-    mode, base = tc.mode_of(task), tc.base_of(task)
-    out = []
-    for m, d in tc.MODE_REGISTRY.items():
-        o = d["same_cutoff_as"]
-        if not o or mode not in (m, o):
-            continue
-        other = task.with_name(f"{base}-{o if mode == m else m}")
-        if (other / "task.toml").is_file():
-            out.append(tuple(sorted((task, other))))
-    return out
-
-
 def seeds_key(task: Path):
     sd = tc.seeds_of(tc.metadata_of(task))
     return sd["default"], sd["allowed"], sd["build"]
@@ -48,7 +33,7 @@ def errors(tasks: list[Path]) -> list[str]:
         except ValueError as e:
             errs.append(f"{t.name}: {e}")
             continue
-        for a, b in cutoff_pairs(t):
+        for a, b in tc.cutoff_pairs(t):
             if (a, b) in seen:
                 continue
             seen.add((a, b))

@@ -1,16 +1,19 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:control-transfer-<images/control-transfer/VERSION> (the `-nominal` agent base, the
-G1 family's `-train` agent base and the evaluator) is never published (docs/protocol/README.md §1). An evaluation host builds it (images/control-transfer/README.md),
-or takes it from the organization's own non-public copy of the package; the roboEngineer Control Transfer tasks reference
-that tag and Harbor finds it in the local Docker image store.
+BUILD_ONLY: the evaluator ghcr.io/mll-lab-nu/efe-private:control-transfer-<images/control-transfer/VERSION> is never published
+(docs/protocol/README.md §1). An evaluation host builds it (images/control-transfer/README.md), or takes it from the
+organization's own non-public copy of the package; the roboEngineer Control Transfer tasks reference that tag and Harbor
+finds it in the local Docker image store. The agents' bases built from the same Dockerfile, efe:control-transfer-<VERSION>-nominal
+and the G1 family's -train, hold public assets only and are public (build.sh).
 
 Why
-  The evaluator stage holds the Neural Fly force surrogate (forces.npz), fitted (by tooling kept outside this repository)
-  to the Neural-Fly flight logs (github aerorobotics/neural-fly, pinned commit), whose terms allow personal / educational
-  use only and no redistribution. The nominal stage holds only public assets (Unitree mjlab G1 subset: Apache-2.0;
-  MuJoCo Menagerie unitree_go2: BSD-3-Clause; skydio_x2: Apache-2.0) and could be public on its own.
+  The evaluator stage holds the Neural Fly force surrogate (forces.npz), fitted by calibrate_fly.py to the Neural-Fly
+  flight logs (github aerorobotics/neural-fly, pinned commit), whose terms allow personal / educational use only
+  ("written permission from the authors is required for further use"), so the fit is not redistributed. The nominal stage holds only public assets (Unitree mjlab G1 subset: Apache-2.0;
+  MuJoCo Menagerie unitree_go2: BSD-3-Clause; skydio_x2: Apache-2.0): public.
 
 What the builder needs
-  Network access to github.com (the three pinned upstream checkouts) and PyPI; the preparation runs in a plain
-  python:3.12 container (numpy 2.3.1, mujoco 3.5.0, scipy 1.17.0). The fit reproduces the documented validation RMSE;
-  its file digest is pinned in each Neural Fly task's environment/sim/scripts/control_transfer/trusted/fly.py ASSET_SHA256
-  (the evaluator checks it at start).
+  git, python3 and network access to github.com and PyPI: fetch_assets.sh stages everything public from pinned upstream
+  commits (checked), then build.sh. The force fit is not distributed: fetch_assets.sh --fit-fly downloads the public
+  flight logs and fits it locally (calibrate_fly.py in a python:3.12.14-slim container, numpy 2.3.1 / mujoco 3.5.0;
+  byte-identical to the pinned asset); docker is needed for that step. Its digest is pinned in each Neural Fly task's
+  environment/sim/scripts/control_transfer/trusted/fly.py ASSET_SHA256 (the evaluator checks it at start), and
+  fetch_assets.sh checks it too.

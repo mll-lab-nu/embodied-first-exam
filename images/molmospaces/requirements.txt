@@ -1,4 +1,4 @@
-# eai-molmospaces: the Python environment the MolmoSpaces tasks were measured in (molmo-spaces 0.2.9 and its dependencies),
+# molmospaces: the Python environment the MolmoSpaces tasks were measured in (molmo-spaces 0.2.9 and its dependencies),
 # installed with --no-deps; torch / torchvision are the CPU builds (https://download.pytorch.org/whl/cpu).
 absl-py==2.5.0
 aiohappyeyeballs==2.7.1

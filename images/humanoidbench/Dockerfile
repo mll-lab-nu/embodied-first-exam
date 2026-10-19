@@ -1,10 +1,10 @@
-# eai-humanoidbench: HumanoidBench (MuJoCo / dm_control / Unitree H1) environment. Infrastructure only —
+# humanoidbench: HumanoidBench (MuJoCo / dm_control / Unitree H1) environment. Infrastructure only —
 # contains no benchmark code; tasks `FROM` it and COPY their own tooling. Tag = images/humanoidbench/VERSION.
-# Unlike rcb-robosuite / rcb-libero this image has no CUDA base: HumanoidBench needs neither curobo nor a
+# Unlike the robosuite / libero images, this image has no CUDA base: HumanoidBench needs neither curobo nor a
 # GPU. MuJoCo physics is CPU-only, so a GPU can only ever accelerate offscreen rendering — osmesa does it
 # on the CPU at ~130 ms/frame (256x256), egl on the GPU at ~0.4 ms. Both backends are installed and
 # rcb_hb.py picks one per run, so the same image works with and without a GPU.
-# Build from the repo root (docs/benchmarks/humanoidbench.md).
+# Build from the repo root (tasks/humanoidbench/README.md).
 FROM python:3.11-slim-bookworm
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1
 # libegl1 is the libglvnd EGL loader; the NVIDIA vendor driver behind it is mounted by the container
@@ -39,7 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # container of its own once the agent's is gone. rcb_hb.py (the tooling every task ships) comes along because the scrub keeps the
 # helpers it calls: it is a reader of the package like any other.
 #
-# Physics fixes (the table, measurements and reasons: docs/benchmarks/humanoidbench.md, Physics); upstream's rewards,
+# Physics fixes (the table, measurements and reasons: tasks/humanoidbench/README.md, Physics); upstream's rewards,
 # success bars and terminations are untouched:
 # - MuJoCo 3.3.7, not upstream's 3.1.6 (the install layer below): 3.1.6's general convex collision gave wrong contacts.
 # - `box_feet.py apply`: box feet where the feet stand on a box (h1 and h1hand: stair, balance_simple, balance_hard).

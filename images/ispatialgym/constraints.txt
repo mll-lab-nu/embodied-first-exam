@@ -1,4 +1,4 @@
-# Exact versions of everything setup.sh --omnigibson adds or changes on eai-behavior; written from the first build's pip
+# Exact versions of everything setup.sh --omnigibson adds or changes on the behavior image; written from the first build's pip
 # freeze (see BUILD_ONLY) so that a rebuild resolves the same versions.
 pillow==11.0.0
 warp-lang==1.12.0

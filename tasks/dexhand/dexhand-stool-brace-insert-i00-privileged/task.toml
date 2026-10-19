@@ -3,7 +3,7 @@ schema_version = "1.3"
 artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
 
 [task]
-name = "robot-coding-bench/dexhand-stool-brace-insert-i00-privileged"
+name = "embodied-first-exam/dexhand-stool-brace-insert-i00-privileged"
 description = "With one dexterous hand (Sharpa Wave by default, or Wuji Hand 2.2) on a six-axis wrist stage, pick up the loose cross brace of an ODDVAR-style pine stool dry frame, stand it in the empty bore of the lower side frame, then lift the opposite side frame onto all four upper dowels so both brace dowels are seated in their legs; drops, knocked rails or a displaced frame fail at once."
 authors = [{ name = "Embodied Exam contributors" }]
 keywords = ["robotics", "dexterous-hand", "mujoco", "sharpa-wave", "wuji-hand-2.2", "furniture_assembly", "furniture-assembly", "dowel-insertion", "peg-in-hole", "multi-object", "in-hand-regrasp"]
@@ -35,7 +35,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 2.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "wave-2 integration smoke (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-15; one privileged and one standard Sharpa oracle per family; docker cgroup memory.peak): privileged verifier <= 0.64 GiB with two concurrent replays, standard sim sidecar <= 0.96 GiB, agent containers < 0.05 GiB; one fresh replay process 0.26-0.39 GiB max RSS (os.wait4); x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3-0.5 GiB each)"
+measured = "wave-2 integration smoke (Harbor 0.23, efe:dexhand-0.2.0, CPU-only, 2026-10-15; one privileged and one standard Sharpa oracle per family; docker cgroup memory.peak): privileged verifier <= 0.64 GiB with two concurrent replays, standard sim sidecar <= 0.96 GiB, agent containers < 0.05 GiB; one fresh replay process 0.26-0.39 GiB max RSS (os.wait4); x1.2 rounded up to a GB, raised to the 2 CPU / 2 GB design minimum (an agent's own simulator sessions take about 0.3-0.5 GiB each)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

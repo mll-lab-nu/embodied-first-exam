@@ -55,9 +55,14 @@ DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbenc
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
-OPEN = "roboolympics-fun-sprint-i00-standard"                      # declares open egress, `[metadata] network = "open"` (Appendix H.6)
-FUN_P = "roboolympics-fun-sprint-i00-privileged"                   # its tooling and grader from a files-only image (COPY --from)
+OPEN = "embodied-olympics-fun-sprint-i00-standard"                      # declares open egress, `[metadata] network = "open"` (Appendix H.6)
+FUN_P = "embodied-olympics-fun-sprint-i00-privileged"                   # its tooling and grader from a files-only image (COPY --from)
 RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (ci_checks/benchmarks/*/invariant-*)
+
+
+def check_name(cmd: list[str]) -> str:
+    """The check a command runs (its script's name; MONITOR's last word is its tier)."""
+    return next(Path(c).name for c in cmd if c.endswith((".py", ".sh")))
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -315,22 +320,27 @@ MUTATIONS = [
     # ---- review round 3, M6: benchmarks without a generator check mode (one task hand-edited, its digest refreshed)
     ("DexToolBench: one task's grader edited", DTB, "tests/grade.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of standard tests/grade.py"),
     ("... its service", DTB, "environment/sim/server_mj.py", append("# drift\n"), IDENTITY, "environment/sim/server_mj.py differs from images/mujoco/limited/server_mj.py"),
-    ("... its client", DTB, "environment/rcb_client.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of standard environment/rcb_client.py"),
-    ("... its tooling module", DTB_P, "tests/rcb_dtb.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of rcb_dtb.py"),
+    ("... its client (from the standard client image, another digest)", DTB, "environment/Dockerfile",
+     sub(r"(efe:standard-files-\S+@sha256:)[0-9a-f]{64}( /rcb1\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY, "not the pinned"),
+    ("... its tooling module (from the files image, another digest)", DTB_P, TEST_DF,
+     sub(r"(efe:dextoolbench-files-\S+@sha256:)[0-9a-f]{64}( /privileged/environment/rcb_dtb\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
+     "not the pinned"),
     ("... tests/test.sh without the resource step", DTB_P, TEST_SH, NO_TRAP, IDENTITY, "dextoolbench: 2 versions of privileged tests/test.sh"),
     ("MuJoCo Playground (ALOHA): the same service edited", MJ, "environment/sim/server_mj.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of standard environment/sim/server_mj.py"),
     ("MetaWorld+: one task's service edited", MWP, "environment/sim/server_mw.py", append("# drift\n"), IDENTITY, "environment/sim/server_mw.py differs from images/metaworld/standard/server_mw.py"),
-    ("... its grader", MWP_P, "tests/grade.py", append("# drift\n"), IDENTITY, "metaworldplus: 2 versions of privileged tests/grade.py"),
+    ("... its grader (from the files image, another digest)", MWP_P, TEST_DF,
+     sub(r"(efe:metaworldplus-files-\S+@sha256:)[0-9a-f]{64}( /privileged/environment/mw_tool\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
+     "not the pinned"),
     ("... its tooling module", MWP, "environment/sim/mw_tool.py", append("# drift\n"), IDENTITY, "metaworldplus: 2 versions of mw_tool.py"),
     ("... tests/test.sh without the resource step", MWP, TEST_SH, NO_TRAP, IDENTITY, "metaworldplus: 2 versions of standard tests/test.sh"),
     ("RoboTwin: a privileged task's tests/test.sh without the resource step", TWIN_P, TEST_SH, NO_TRAP, IDENTITY, "robotwin_2_0: 2 versions of privileged tests/test.sh"),
     ("... its grader", TWIN_P, "tests/grade.py", append("# drift\n"), IDENTITY, "robotwin_2_0: 2 versions of privileged tests/grade.py"),
     # ---- files from a files-only image (images/<name>/FILES.json) count as copies of their benchmark's shared files
-    ("RoboOlympics-Fun: a verifier takes its grader from an image other than the pinned files image", FUN_P, TEST_DF,
-     sub(r"(efe:roboolympics-fun-files-\S+@sha256:)[0-9a-f]{64}( /grade\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
-     "not a file of the pinned"),
+    ("Embodied Olympics - Fun: a verifier takes its grader from an image other than the pinned files image", FUN_P, TEST_DF,
+     sub(r"(efe:embodied-olympics-fun-files-\S+@sha256:)[0-9a-f]{64}( /grade\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
+     "not the pinned"),
     ("... a standard sidecar's tooling edited (compared with the files image's)", OPEN, "environment/sim/rcb_rfo.py",
-     append("# drift\n"), IDENTITY, "roboolympics: 2 versions of rcb_rfo.py"),
+     append("# drift\n"), IDENTITY, "embodied-olympics: 2 versions of rcb_rfo.py"),
     # ---- caps and minimums (PROTOCOL §2.10)
     ("a sidecar's memory cap below the verifier phase's declared minimum (the kernel would kill it at a cap the task itself says is too low)",
      HEAVY, None, {TOML: sub(r"^(sim = \{ cpus = [0-9.]+, memory_gb = )[0-9.]+", r"\g<1>20.0"),
@@ -381,6 +391,10 @@ MUTATIONS = [
     ("a RoboPaint agent image takes a grader from the files-only image", RP, "environment/Dockerfile",
      sub(r"^(COPY --from=\S+) /rcb_brush\.py /opt/tools/rcb_brush\.py$", r"\1 /rcb_brush_score.py /opt/tools/rcb_brush.py"),
      RP_LEAK, "only an allowed agent-side file of the pinned"),
+    ("a RoboPaint standard agent image takes a non-client file from the standard client image", RP.replace("-privileged", "-standard"),
+     "environment/Dockerfile", sub(r"^(COPY --from=\S+standard-files\S+) /rcb_client\.py /rcb1\.py /opt/tools/$",
+                                    r"\1 /rcb_client.py /rcb1.py /realtime/rcb_client.py /opt/tools/"),
+     RP_LEAK, "only an allowed agent-side file of the pinned"),
     ("a RoboPaint task dir's own rcb_brush.py with grader code, next to the files-only image's", RP, "+environment/rcb_brush.py",
      append("def score_canvas(sheet):\n    pass\n"), RP_LEAK, "grader code ('def score_canvas') in the agent's tooling"),
     # PROTOCOL §4b: a standard-realtime task declares its slowdown S and its reset budget, and they agree
@@ -394,7 +408,8 @@ MUTATIONS = [
      "humanoidbench-loco-walk-i00-standard-realtime", COMPOSE, sub(r"^\s*RCB_RESET_BUDGET:.*\n", ""), REALTIME,
      "must declare its reset budget"),
     # PROTOCOL §4 (board 0136): every graded trial leaves a replay video
-    ("a privileged verifier that renders no video", DTB_P, "tests/grade.py", sub(r"\.mp4\b", ".bin", count=0), VIDEO,
+    ("a privileged verifier that renders no video", TWIN_P, None,
+     {"tests/grade.py": sub(r"\.mp4\b", ".bin", count=0), "tests/rcb_traj.py": sub(r"\.mp4\b", ".bin", count=0)}, VIDEO,
      "its verifier renders no replay video"),
     ("a standard task whose sim video is not collected", "humanoidbench-loco-walk-i00-standard", TOML,
      sub(r'^\s*\{ source = "/data/replay\.mp4", service = "sim" \},\n', ""), VIDEO, "the sim's video is never collected"),
@@ -465,7 +480,7 @@ def main(argv: list[str]) -> int:
             for cmd in sorted({id(m[4]): m[4] for m in sel if m[1] == name and m[4] not in WITH_NEIGHBOURS and m[4] is not DIGESTS}.values()):
                 rc, out = run(cmd, clean[name])
                 if rc != 0:
-                    print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {Path(cmd[-1]).name}:\n{out[-800:]}")
+                    print(f"FAIL check-ci-selftest: the unmutated {name} does not pass {check_name(cmd)}:\n{out[-800:]}")
                     bad += 1
         for k, (what, name, rel, mutate, cmd, expect) in enumerate(sel):
             t = Path(tmp) / f"m{k}" / name                      # the directory keeps the task's name (its mode is in it)
@@ -492,7 +507,7 @@ def main(argv: list[str]) -> int:
                 rc, out = run(cmd, t)
             if rc == 0 or expect not in out:
                 bad += 1
-                print(f"FAIL check-ci-selftest [{what}]: {Path(cmd[-1]).name} "
+                print(f"FAIL check-ci-selftest [{what}]: {check_name(cmd)} "
                       + ("PASSED the broken task: the rule is blind" if rc == 0 else f"failed, but not with `{expect}`:\n{out[-600:]}"))
         if tier != "advisory":
             bad += twin_cutoffs(Path(tmp))

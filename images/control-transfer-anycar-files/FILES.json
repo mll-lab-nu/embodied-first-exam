@@ -1,7 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:control-transfer-anycar-files-0.1.0@sha256:5b4f9dab86b3d77decba4d0199646c3c1cd8e02adde165abfecbb9943997b373",
+ "image": "ghcr.io/mll-lab-nu/efe:control-transfer-anycar-files-0.3.0@sha256:e2bea2b8566a020ea097719ff4ee25de59e960bc0ee6816b8aa1eae47614e329",
  "source": "embodied_first_exam/benchmarks/roboengineer/anycarbench",
  "files": {
+  "LICENSE.anycar": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+  "LICENSE.f1db": "9e5f1b3c610b9c2da5c313bf81d577a7d1acec686bdb0384edefa6df0f90cd94",
+  "NOTICE": "174ed0f44f4de923d20557c8e1ee8d590e49c10fd40a74a1a40bea6f863e69b8",
   "circuits.json": "ffaca1377e206bc19ee0ae4aad57518adb943a53bd7282369df40d22046f82fe",
   "compact_routes.json": "8b12131a95576364cdd03ae95b4128d3aa3d2fea18a96b0a3758155864152a5c"
  }

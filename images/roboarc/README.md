@@ -1,9 +1,8 @@
-# eai-roboarc
+# roboarc
 
-> **2026-10-13: the MuJoCo release.** `Dockerfile` here now builds RoboARC's MuJoCo release image
-> (`eai-roboarc:<VERSION>`, 0.3.1 and later), FROM the published Genesis image `eai-robotangle:0.2.22` pinned by
-> digest. The recipe of that base image is kept as `Dockerfile.genesis-0.2.22`; everything below this note describes
-> it (the simulator source, libuipc builds and instance staging the MuJoCo image inherits).
+> `Dockerfile` builds RoboARC's MuJoCo release image (`efe:roboarc-<VERSION>`) FROM the published base image
+> `efe:robotangle-0.2.22`, pinned by digest. Everything below describes that base image (the simulator source, libuipc
+> builds and instance staging the MuJoCo image inherits); its build recipe is not part of this repository.
 
 `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>` is a public image: RoboARC's simulator (the pruned
 `topogym` package of the release commit), Genesis 1.2.1, libuipc (the audited determinism-patched wheel, plus an sm_86 build
@@ -36,14 +35,14 @@ it. Maintainers push it with `scripts/push_images.sh` after validating a build.
   them, as in `images/robopaint/`. `VK_ICD_FILENAMES` names the image's ICD file: a toolkit in CDI mode also mounts the
   host's `/etc/vulkan/icd.d/nvidia_icd.json`, which would list the GPU twice.
 - `count: 1` is host GPU 0 unless the runner pins GPUs; IPC sims (knot_untying, rope_threading) run alone on a 24 GB GPU
-  (`docs/benchmarks/roboarc.md`, Image).
-- GPU architecture (`docs/benchmarks/roboarc.md`, Image, has the table):
+  (`tasks/roboarc/README.md`, Image).
+- GPU architecture (`tasks/roboarc/README.md`, Image, has the table):
   - knot_untying and rope_threading run libuipc: the audited wheel on compute capability 8.9 and 12.x, the sm_86 build on
     any other GPU (native on 8.6, e.g. RTX A6000; untested elsewhere). 7.5 (T4, RTX 20xx) can run neither;
   - GPUs without RT cores (e.g. A100, H100) cannot run Nyx, so they run no RoboARC task;
   - the driver must include its graphics (GL/Vulkan) user-space libraries.
 - blanket_flatten: on a GPU other than the one its frozen PBD states were prepared on (an RTX PRO 6000 Blackwell), the task
-  generates the birth state from the recipe frozen in the instance (`docs/benchmarks/roboarc.md`, GPU portability).
+  generates the birth state from the recipe frozen in the instance (`tasks/roboarc/README.md`, GPU portability).
 - Build:
   - about 25 GB of free disk: the 11.3 GB image plus BuildKit cache;
   - BuildKit with the default `docker` driver;
@@ -97,16 +96,3 @@ The image holds two builds of one libuipc recipe (libuipc 292c98c3 with the dete
 Both keep the pyuipc version and libuipc commit, which the frozen IPC settled states record; that is why the sm_86 build
 restores them. Do not give a rebuild another local version label.
 
-The sm_86 recipe is `images/roboarc/uipc-sm86-build/`: the release Dockerfile's compile stages verbatim, its config
-`uipc-build-sm86.json` (the release config with the architecture list changed, plus a `recipe` record), and the release's
-`verify_uipc_wheel.py` with one change: the audit requires the PTX of the config's `-virtual` architectures instead of a
-fixed compute_120. A rebuild follows the same recipe but need not give the same bytes or even the same machine code (two
-sm_86 builds of 2026-10-08 differ in 10 of 1230 functions), so a rebuilt wheel needs new bindings. A single wheel for
-sm_86, sm_89 and sm_120 was tried and not used: its sm_89 code differed from the audited wheel's in 8 of 1230 functions
-(`docs/benchmarks/roboarc.md`, Image).
-
-```bash
-cd images/roboarc/uipc-sm86-build
-docker build -f Dockerfile.uipc --build-arg UIPC_CONFIG=uipc-build-sm86.json --build-arg UIPC_BUILD_JOBS=16 \
-  --target uipc-export -o type=local,dest=<out> .
-```
