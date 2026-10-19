@@ -14,18 +14,16 @@ Some images are not on a public registry: build them first ([Getting the images]
 ## Getting the images
 
 All iSpatialGym tasks (privileged and standard) need images that are not on a public registry: the iSpatialGym simulator
-image, built on the BEHAVIOR-1K image (NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute),
-and the tooling's files image; and the licensed BEHAVIOR dataset on the host. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit; the containerd image store, the default of Docker Engine 29 and Docker Desktop, so the task Dockerfiles find the locally built files image by its pinned digest), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
+image, built on the BEHAVIOR-1K image (NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute), and the licensed BEHAVIOR dataset on the host. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
 
 1. Licences: building accepts the NVIDIA Isaac Sim / Omniverse terms of the official `stanfordvl/behavior` image; the
    dataset step asks you to accept the BEHAVIOR Data Bundle licence (no redistribution). No account, login or token is
    needed: Docker Hub, github.com (iSpatialGym and its BEHAVIOR-1K fork, fetched by commit), pypi.org and the public
    Hugging Face dataset `behavior-1k/zipped-datasets` are all anonymous.
-2. Build the BEHAVIOR-1K image first (iSpatialGym's Dockerfile starts `FROM` it), then iSpatialGym's and the files image:
+2. Build the BEHAVIOR-1K image first (iSpatialGym's Dockerfile starts `FROM` it), then iSpatialGym's (the files image is public: the task builds pull it):
    ```bash
    docker build -f images/behavior/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) .
    docker build -f images/ispatialgym/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ispatialgym-$(cat images/ispatialgym/VERSION) .
-   python3 scripts/files_image.py build ispatialgym-files
    ```
 3. The dataset, `RCB_BEHAVIOR_DATA` (the same directory BEHAVIOR-1K's tasks use; skip if you have it): BEHAVIOR-1K's own
    downloader, in the behavior image, no GPU needed; it prints the licence and asks you to accept it:

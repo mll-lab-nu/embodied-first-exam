@@ -13,8 +13,7 @@ Some images are not on a public registry: build them first ([Getting the images]
 ## Getting the images
 All 16 tasks (both modes) need `efe-private:ikea-mujoco-0.3.0` (privileged agent and verifier) and the standard tasks
 also `efe-private:ikea-mujoco-sim-0.4.0` (sidecar); neither can be pulled. Build them with the tags the tasks name; the
-tasks then run unchanged. Docker needs the containerd image store (the default of Docker Engine 29 and Docker Desktop):
-the files image is written byte for byte from the repository and has the digest the tasks pin.
+tasks then run unchanged. The files image `efe:ikea-mujoco-files` is public (the task builds pull it).
 
 ```bash
 pip install huggingface_hub
@@ -22,7 +21,6 @@ images/ikea-mujoco/fetch_image_context.sh   # robot meshes from MuJoCo Menagerie
                                             # dataset in images/ikea-mujoco/assets.json (still private: needs read access)
 docker build -f images/ikea-mujoco/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-0.3.0 images/ikea-mujoco/context
 docker build -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-0.4.0 images/ikea-mujoco/sim
-python3 scripts/files_image.py build ikea-mujoco-files
 harbor run -d embodied-first-exam@all -p tasks/ikea-mujoco -a codex -m openai/gpt-6-astra
 ```
 

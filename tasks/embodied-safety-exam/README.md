@@ -14,35 +14,21 @@ a report on the way.
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/embodied-safety-exam -a codex -m openai/gpt-6-astra
 ```
-Some images are not on a public registry: build them first ([Getting the images](#getting-the-images)).
+Every image is public: Harbor pulls it.
 
-## Getting the images
-
-The images are private (`ghcr.io/mll-lab-nu/efe-private`: the Embodied Safety Exam source is not released yet). Build them from the repository root with the tags the tasks name, then run the tasks unchanged. The files image (`scripts/files_image.py build`) is written byte for byte from the repository, so it has the very digest the task Dockerfiles pin (`COPY --from=<tag>@sha256:…`), and the tasks build from it as they are; that needs Docker's containerd image store (the default of Docker Engine 29 and Docker Desktop), as the classic store resolves a digest only for a pulled image.
+## Building the images from source
+The images are public (`ghcr.io/mll-lab-nu/efe`; the task builds pull them). To build them instead, from the repository
+root with the tags the tasks name (the tasks then run unchanged): `images/ese/assets.py fetch` first puts the build
+context's large files, kept out of git, into it from the public Hugging Face datasets pinned in `images/ese/assets.json`
+(no login). The files image is written byte for byte by `scripts/files_image.py build` from the repository, so it has the
+very digest the task Dockerfiles pin; that needs Docker's containerd image store (the default of Docker Engine 29 and
+Docker Desktop).
 
 ```bash
 python3 images/ese/assets.py fetch
-docker build -f images/ese/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ese-$(cat images/ese/VERSION) images/ese/context
+docker build -f images/ese/Dockerfile -t ghcr.io/mll-lab-nu/efe:ese-$(cat images/ese/VERSION) images/ese/context
 python3 scripts/files_image.py build ese-files
-harbor run -d embodied-first-exam@all -p tasks/embodied-safety-exam -a codex -m openai/gpt-6-astra
 ```
-
-Source: one frozen release ("The served set"): Embodied Safety Exam 0.5.4, 76 task directories (71 standard, 5 standard-realtime); the commit is in `images/ese/source.env`, vendored into the
-image's build context (`images/ese/context/`, "Image"). Tasks: `tasks/embodied-safety-exam/ese-<slug>-i<NN>-standard` (and
-`-standard-realtime`, "The realtime set"). The tasks are frozen task directories, exported by Embodied Safety Exam's release tooling (not carried here) and
-not re-rendered here. There is no privileged mode ("Owner review").
-
-| | |
-|---|---|
-| Benchmark | Embodied Safety Exam (task directories `ese-<slug>-i<NN>-standard`, "Names") |
-| Mode | standard (`eai-standard/2.1`) and standard-realtime (`eai-standard/2.3`, "The realtime set"); no privileged mode (a benchmark ships any subset of the modes; "Owner review") |
-| Twin | none: each task's README says "Embodied Safety Exam has no privileged mode" |
-| Simulator / robots | `mujoco` (Embodied Safety Exam's worlds on MuJoCo 3.8.1, CPU physics, OSMesa rendering) / `ur5e-robotiq-2f85` (UR5e with a Robotiq 2F-85), `franka-robotiq-2f85` (Franka FR3 with a Robotiq 2F-85), `i2rt-yam-bimanual` (two I2RT YAM arms), each at a work table; `tidybot-plus-plus` and `unitree-g1-dex1` in the room families ("Room families") |
-| Family / instance | a neutral slug `<track><nn>` per Embodied Safety Exam family; NN over the family's served members on every robot (and the hidden member's tiers), seed 0, in a fixed hashed order |
-| Oracle | `full` on seed 0: an offline expert, recorded as control rows (Embodied Safety Exam's scripted reference of each member, compiled into `joint_position` rows at 50 Hz with its questions, reports and exit in place); the agent gets no planner |
-| Seeds | `[metadata.seeds]` default 0, allowed [0], oracle [0] |
-| Agent time budget | 3600 s (each task's `[agent] timeout_sec`); tokens: the runner's default (docs/protocol/running.md) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ese-<images/ese/VERSION>` |
 
 ## Task
 A request from the operator in a frozen scene on a work table: put the can on the plate, push the knife into what lies
@@ -625,7 +611,7 @@ compose file unset. What the realtime set needs from the runner:
   reported apart;
 - a trial whose clock stalled for more than 5 % of its time (`stalled_share` in `reward.json`) is listed as
   "overloaded host" in the realtime block, never failed;
-- images by their registry name, `ghcr.io/mll-lab-nu/efe-private:ese-<VERSION>`, never `localhost/…`: Harbor tears a trial
+- images by their registry name, `ghcr.io/mll-lab-nu/efe:ese-<VERSION>`, never `localhost/…`: Harbor tears a trial
   down with `compose down --rmi local`, which removes local-only images, and the host's next trial then waits for an
   image that is gone.
 
@@ -719,9 +705,12 @@ Menagerie are taken from Menagerie's public repository at a pinned commit and ch
 The 0.5.4 image's `realism_v3` asset pack's textures and meshes (627 `.png` / `.obj` files, about 390 MB) are not in git:
 they are in the public Hugging Face dataset `MLL-Lab/robosafe-assets` (every asset CC0 1.0 or CC BY 4.0, credits in
 the pack's `credits.json`), pinned by commit and by every file's sha256 in `images/ese/assets.json`, the way
-other benchmarks fetch large upstream assets at build time. Before building the image, run
+other benchmarks fetch large upstream assets at build time. The vendored third-party G1 meshes and GR00T whole-body-control
+policies (`assets/third_party/bigym2/`: 39 `.STL` / `.onnx` files, 23 MB; their `LICENSE` / `NOTICE` files stay in git) are
+likewise in the public dataset `MLL-Lab/embodied-first-exam-public` (folder `embodied-safety-exam/bigym2/`), pinned the
+same way (pack `third_party`). Before building the image, run
 `python3 images/ese/assets.py fetch` (no login; `huggingface_hub` if installed, else a standard-library download of each pinned file): it downloads them, checks every sha256
-and puts them into the build context, where the Dockerfile checks them again with the rest of `robosafe-src.sha256`.
+and puts them into the build context, where the Dockerfile checks them again with the rest of `ese-src.sha256`.
 
 ### Licences
 Embodied Safety Exam: Apache-2.0 (`images/ese/LICENSE.ese`); its generated assets CC BY 4.0
@@ -770,7 +759,7 @@ oracle driver and public observation helpers; `realtime`, the realtime clock's o
 realtime clock and client: `realtime/`). The files outside `environment/sim/` that many
 tasks share are not in the task directories: the paused standard client (`rcb_client.py`), the graders
 (`tests/grade.py`, the realtime tasks' `tests/grade_ese.py`). They are built into the files-only image
-`images/ese-files/` (`ghcr.io/mll-lab-nu/efe-private:ese-files-<version>`, private like the simulator image: `BUILD_ONLY`;
+`images/ese-files/` (`ghcr.io/mll-lab-nu/efe:ese-files-<version>`, public like the simulator image;
 `scripts/files_image.py`), and each task's `environment/Dockerfile` and `tests/Dockerfile` take them with
 `COPY --from=<image@digest>` to the same container paths (`/opt/tools/`, `/tests/`). `images/ese-files/FILES.json` pins the image and its files' sha256.
 
@@ -782,7 +771,7 @@ tasks), the video wait the video's run. A trial that needs less ends as soon as 
 verdict and video are in.
 
 ### Names in the simulator
-From image `efe-private:ese-0.5.5` the simulator is built from Embodied Safety Exam commit `e2c431f`
+From image `efe:ese-0.5.5` the simulator is built from Embodied Safety Exam commit `e2c431f`
 (`images/ese/SOURCE.md`):
 - the package is `embodied_safety_exam`; environment variables are `ESE_*` (setting a `ROBOSAFE_*` or `ROBOSAFEBENCH_*`
   variable is an error, except the guard `ROBOSAFE_THIRD_PARTY`); format strings are `ese-x/1`; frozen fields are
@@ -805,7 +794,7 @@ files are replaced by public identifiers, which changes the asset manifest's SHA
 simulated. Each task's `environment/sim/instance.json` carries a `candidate_identity` (source digest and the
 visual identity: profile, revision, asset-manifest SHA-256, physics catalogue version), also in `task.toml` and the
 README; the sim sidecar refuses to start an episode in an image whose installed assets differ
-(`candidate_identity.assert_runtime`). The compose files name `ghcr.io/mll-lab-nu/efe-private:ese-0.5.5` ("Rename").
+(`candidate_identity.assert_runtime`). The compose files name `ghcr.io/mll-lab-nu/efe:ese-0.5.5` ("Rename").
 
 The reference solutions stream Embodied Safety Exam's native reference as control rows over the task's
 own HTTP client (`solution/oracle_replay.py`); on the fixed arms the plans ask for their pictures through the agent's

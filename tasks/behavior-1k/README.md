@@ -14,18 +14,17 @@ Some images are not on a public registry: build them first ([Getting the images]
 
 ## Getting the images
 
-All BEHAVIOR-1K tasks (privileged and standard) need two images that are not on a public registry, the simulator image
+All BEHAVIOR-1K tasks (privileged and standard) need the simulator image, which is not on a public registry
 (the official `stanfordvl/behavior:3.9.2` plus ffmpeg: NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to
-redistribute) and the tooling's files image, and the licensed BEHAVIOR dataset on the host. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit; the containerd image store, the default of Docker Engine 29 and Docker Desktop, so the task Dockerfiles find the locally built files image by its pinned digest), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
+redistribute), and the licensed BEHAVIOR dataset on the host. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
 
 1. Licences: building the image accepts the NVIDIA Isaac Sim / Omniverse terms of the official image; the dataset step
    asks you to accept the BEHAVIOR Data Bundle licence (no redistribution). No account, login or token is needed: the
    base image is on Docker Hub, the dataset on the public Hugging Face dataset `behavior-1k/zipped-datasets`. About 15 GB to
    pull for the image, about 32 GB to download and 40 GB on disk for the dataset.
-2. Build the simulator image and the files image:
+2. Build the simulator image (the files image is public: the task builds pull it):
    ```bash
    docker build -f images/behavior/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) .
-   python3 scripts/files_image.py build behavior-files
    ```
 3. Download the dataset into `RCB_BEHAVIOR_DATA` with BEHAVIOR-1K's own downloader (in the image just built, no GPU
    needed; it prints the licence and asks you to accept it, then installs the decryption key). The directory ends up with
@@ -47,8 +46,9 @@ redistribute) and the tooling's files image, and the licensed BEHAVIOR dataset o
   is the official `stanfordvl/behavior:3.9.2` **by digest** plus a snapshot-pinned ffmpeg layer. It contains NVIDIA
   Isaac Sim and Omniverse Kit (no redistribution) and a 13.7 GB layer above ghcr.io's per-layer limit: **BUILD_ONLY**,
   never pushed. `images/behavior/BUILD_ONLY` has the build command, the licences and the data it needs.
-- **The files image** `ghcr.io/mll-lab-nu/efe-private:behavior-files-<version>` (`images/behavior-files/FILES.json` pins it by digest;
-  `python3 scripts/files_image.py build behavior-files` writes it from the repository with that very digest): the
+- **The files image** `ghcr.io/mll-lab-nu/efe:behavior-files-<version>` (`images/behavior-files/FILES.json` pins it by digest;
+  public, pulled by the task builds; `python3 scripts/files_image.py build behavior-files` also writes it from the
+  repository with that very digest): the
   tooling and the graders (Tasks and generator), which the agent and verifier Dockerfiles take with `COPY --from`.
 - **The licensed dataset**, `RCB_BEHAVIOR_DATA`: the host directory with the BEHAVIOR Data Bundle
   (`omnigibson-robot-assets/`, `behavior-1k-assets/`, `2026-challenge-task-instances/`, `omnigibson.key`), downloaded after

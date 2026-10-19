@@ -15,19 +15,18 @@ Some images are not on a public registry: build them first ([Getting the images]
 
 ## Getting the images
 
-All RoboDojo tasks (privileged and standard) need two images that are not on a public registry: the simulator image
-(NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute) and the tooling's files image. Build both
-locally under the tags the tasks name; the tasks then run unchanged. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit; the containerd image store, the default of Docker Engine 29 and Docker Desktop, so the task Dockerfiles find the locally built files image by its pinned digest), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
+All RoboDojo tasks (privileged and standard) need the simulator image, which is not on a public registry
+(NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute); the tooling's files image is public. Build the simulator image
+locally under the tags the tasks name; the tasks then run unchanged. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
 
 1. Licence: building the image accepts the NVIDIA Isaac Sim / Omniverse licence and NVIDIA's terms for the isaacsim wheels
    and cuRobo (the Dockerfile sets `OMNI_KIT_ACCEPT_EULA=YES`). No account, login or token is needed: every input (Docker
    Hub `nvidia/cuda`, github.com, pypi.org, pypi.nvidia.com, download.pytorch.org, the public Hugging Face dataset
    `RoboDojo-Benchmark/RoboDojo` (~41 GB of assets), NVIDIA's extension registry and asset bucket) is anonymous. About
    120 GB of free disk and an hour.
-2. Build the simulator image and the files image:
+2. Build the simulator image (the files image is public: the task builds pull it):
    ```bash
    docker build -f images/robodojo/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robodojo-$(cat images/robodojo/VERSION) .
-   python3 scripts/files_image.py build robodojo-files
    ```
    (With RoboDojo's `Assets/` already on disk at the pinned revision, add `--build-context robodojo-assets=<dir containing Assets/>`.)
 3. Run:

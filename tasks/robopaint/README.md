@@ -209,13 +209,21 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
   the files of `embodied_first_exam/benchmarks/robopaint/` (checkout modes, content-derived mtimes). A change to one of them needs a new
   version: bump `VERSION`, `python3 scripts/files_image.py build robopaint-files`, push, `python3 scripts/files_image.py pin
   robopaint-files <digest>`, then the tasks' `COPY --from` lines name the new digest.
+- `images/robopaint-pictures-files/` is the files-only image of the 43 exemplar pictures,
+  `ghcr.io/mll-lab-nu/efe:robopaint-pictures-files-<VERSION>@<digest>`, public: `/<task without mode>/target.png`. The pictures
+  are not in git; they are in the public Hugging Face dataset `MLL-Lab/embodied-first-exam-public` (folder `robopaint/`, each
+  with its licence notice), pinned by commit and sha256 in its `FILES.json` (`python3 scripts/files_image.py fetch
+  robopaint-pictures-files`, no login). The agent image (`/app/target.png`) and the privileged verifier (`/tests/target.png`)
+  take the task's picture with `COPY --from`; the bind-mounted sidecar directories (`environment/sim/`, `environment/scorer/`)
+  keep their own copy.
 - Every simulator container needs an NVIDIA GPU: SAPIEN needs a Vulkan device to build the scene and to render. Physics
   and the brush models run on the CPU.
 - A standard twin's agent container and verifier use the one client base of every standard task
   (`embodied_first_exam/standard/client.env`, pinned by digest). The agent side installs the exact pins of
   `client-requirements.txt`, inline (`ci_checks/check-standard-client.sh`).
 - Agent egress is an allowlist (the model APIs and the package registries) on every task, because the sources of some targets are public.
-- Frozen inputs over 2 MB: 9 of the 11 oil reference pictures (`target.png`, 2.0–2.5 MB, 5 copies per pair).
+- Frozen inputs over 2 MB: 9 of the 11 oil reference pictures (`target.png`, 2.0–2.5 MB; per pair, the two sidecar copies in the task
+  directories and the pictures image's one for the agent and verifier images).
   - They are photographic scans, so lossless re-encoding gets only 5 of the 9 under 2 MB.
   - They stay as frozen (the instance hash covers their pixels). The 2 MB limit is for results.
 

@@ -15,9 +15,8 @@ Some images are not on a public registry: build them first ([Getting the images]
 
 ## Getting the images
 
-All ManiGuard tasks (privileged and standard) need two images that are not on a public registry, the simulator image
-(BEHAVIOR-1K 3.7.2 on NVIDIA Isaac Sim 4.5, which NVIDIA does not allow anyone to redistribute) and the tooling's files
-image, and a BEHAVIOR-1K 3.7.2 data root on the host. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit; the containerd image store, the default of Docker Engine 29 and Docker Desktop, so the task Dockerfiles find the locally built files image by its pinned digest), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
+All ManiGuard tasks (privileged and standard) need the simulator image, which is not on a public registry
+(BEHAVIOR-1K 3.7.2 on NVIDIA Isaac Sim 4.5, which NVIDIA does not allow anyone to redistribute), and a BEHAVIOR-1K 3.7.2 data root on the host. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
 
 1. Licences: building accepts the NVIDIA Isaac Sim / Omniverse licence and NVIDIA's terms for the Isaac Sim 4.5 wheels
    (the Dockerfile sets `OMNI_KIT_ACCEPT_EULA=YES`); the key step asks you to accept the BEHAVIOR Data Bundle licence (no
@@ -25,10 +24,9 @@ image, and a BEHAVIOR-1K 3.7.2 data root on the host. Run every command from the
    pypi.nvidia.com, download.pytorch.org, conda-forge, snapshot.ubuntu.com, NVIDIA's Kit extension CDN, the public Hugging
    Face datasets `behavior-1k/zipped-datasets` and `IDEAS-Lab-Northwestern/franka-panda-longfinger`) is anonymous.
    About 50 GB of free disk for the build.
-2. Build the simulator image and the files image:
+2. Build the simulator image (the files image is public: the task builds pull it):
    ```bash
    docker build -f images/maniguard/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) .
-   python3 scripts/files_image.py build maniguard-files
    ```
 3. The BEHAVIOR Data Bundle key: if you already have one (e.g. `$RCB_BEHAVIOR_DATA/omnigibson.key` from BEHAVIOR-1K), use
    it; otherwise BEHAVIOR-1K's own code prints the licence, asks you to accept it and installs the key (no GPU needed):

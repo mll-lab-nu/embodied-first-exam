@@ -14,18 +14,17 @@ Some images are not on a public registry: build them first ([Getting the images]
 
 ## Getting the images
 
-All RoboLab tasks (privileged and standard) need two images that are not on a public registry: the simulator image
-(NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute) and the tooling's files image. Build both
-locally under the tags the tasks name; the tasks then run unchanged. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit; the containerd image store, the default of Docker Engine 29 and Docker Desktop, so the task Dockerfiles find the locally built files image by its pinned digest), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
+All RoboLab tasks (privileged and standard) need the simulator image, which is not on a public registry
+(NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute); the tooling's files image is public. Build the simulator image
+locally under the tags the tasks name; the tasks then run unchanged. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
 
 1. Licence: building the image accepts the NVIDIA Isaac Sim / Omniverse licence and NVIDIA's terms for the isaacsim /
    isaaclab wheels (the Dockerfile sets `OMNI_KIT_ACCEPT_EULA=YES`). No account, login or token is needed: every input
    (Docker Hub `nvidia/cuda`, RoboLab v0.3.1 and its git LFS asset library on github.com, pypi.org, pypi.nvidia.com,
    download.pytorch.org, NVIDIA's public asset bucket on S3) is anonymous. About 40 GB of free disk and 45-60 min.
-2. Build the simulator image and the files image:
+2. Build the simulator image (the files image is public: the task builds pull it):
    ```bash
    docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .
-   python3 scripts/files_image.py build robolab-files
    ```
 3. Run:
    ```bash
@@ -91,9 +90,8 @@ success from firing before the task is done:
   `images/robolab/BUILD_ONLY` has the licences, the build command
   (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .`),
   the check of a build and how a CI machine builds it.
-- `images/robolab-files/`: `ghcr.io/mll-lab-nu/efe-private:robolab-files-<VERSION>`, files only (`FROM scratch`): the tooling
-  `rcb_robolab.py` that the privileged agent and verifier images `COPY --from` (Tooling, below); BUILD_ONLY (private),
-  pulled with the organization's token like `efe-private:robolab-<version>`.
+- `images/robolab-files/`: `ghcr.io/mll-lab-nu/efe:robolab-files-<VERSION>`, files only (`FROM scratch`): the tooling
+  `rcb_robolab.py` that the privileged agent and verifier images `COPY --from` (Tooling, below); public, pulled by the task builds.
 - Isaac needs an RTX-class GPU even headless (PhysX runs on the CPU). One Isaac simulator at a time per 32 GB of host RAM.
 - Standard mode: the agent container and the verifier use the one digest-pinned client image of every standard task and
   its exact pip pins (`embodied_first_exam/standard/client.env`, `client-requirements.txt`, copied into `environment/`); only the
@@ -210,8 +208,8 @@ iterations cost more than in the other simulators.
 | `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`) |
 
 The privileged tasks carry no copy of the tooling: their `environment/Dockerfile` and `tests/Dockerfile` take
-`rcb_robolab.py` with `COPY --from` from the files-only image `ghcr.io/mll-lab-nu/efe-private:robolab-files-<version>` (`images/robolab-files/`,
-`scripts/files_image.py`; FILES.json pins its digest and the file's sha256; BUILD_ONLY, private like `efe-private:robolab-<version>`), built
+`rcb_robolab.py` with `COPY --from` from the files-only image `ghcr.io/mll-lab-nu/efe:robolab-files-<version>` (`images/robolab-files/`,
+`scripts/files_image.py`; FILES.json pins its digest and the file's sha256; public), built
 from its one source `embodied_first_exam/benchmarks/robolab/rcb_robolab.py`. The verifier's image gets its own copy from that image when
 it is built; nothing from the agent's container reaches it. The standard tasks keep their copy in `environment/sim/`
 (bind-mounted at `/srv`). After a change to `rcb_robolab.py`: bump `images/robolab-files/VERSION`, `python3 scripts/files_image.py build
