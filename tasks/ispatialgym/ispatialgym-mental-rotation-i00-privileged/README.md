@@ -13,7 +13,7 @@
 
 ## Task
 iSpatialGym `mental_rotation` (family `mental_rotation`), upstream subtask `mental_rotation_carving_knife`, instance 0 (house_single_floor): The object is held in the right hand; the goal is a new orientation with its position unchanged. The task is given
-only as the goal image (`environment/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
+only as the goal image (`/app/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
 evaluation; the instruction names no object.
 
 ## Difficulty
@@ -52,6 +52,6 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | Agent's container | efe-private:ispatialgym with every BDDL problem, the eval data's repository id and folder names, the project URLs, tests and docs removed at build; the build fails if any is left or if a scripted expert, sampler, task spec or eval-data file is in the image (the public release ships none) (`environment/scrub/scrub.sh`); this task's start-only BDDL problem is written from the image's own copy |
 | Action space | `s.step(a)`: 23 floats (base velocity command, trunk, both arms, one command per gripper; iSpatialGym's JoyLo action), one 30 Hz control step |
-| Goal | `environment/goal.png` (copied to `/app/goal.png`): upstream's goal image of this instance, the head camera at 1080×1080 |
+| Goal | `/app/goal.png` (from the files-only image `ispatialgym-goals-files`): upstream's goal image of this instance, the head camera at 1080×1080 |
 | Instance | `environment/instance.json` = `tests/instance.json`: the start only (scene, template keys the loader reads, start-only TRO, objects without upstream's role names); start-state hash 71977925c944d190 |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition) |

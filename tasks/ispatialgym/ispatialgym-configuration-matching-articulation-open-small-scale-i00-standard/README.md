@@ -13,7 +13,7 @@
 
 ## Task
 iSpatialGym `configuration_matching_articulation_open_small_scale` (family `configuration_matching`), upstream subtask `configuration_matching_articulation_open_small_scale_blender`, instance 0 (house_single_floor): Open a small articulated object, such as a blender or carton, to the goal angle while the other arm braces it. The task is given
-only as the goal image (`environment/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
+only as the goal image (`/app/goal.png`, the head camera's view once it is done), as in iSpatialGym's own
 evaluation; the instruction names no object.
 
 ## Difficulty
@@ -55,7 +55,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | Protocol | `eai-standard/2.2`: RGB + proprioception through the client; no reset, no object poses, no success predicate |
 | Action space | `submit` chunks of `joint_position` (23: base velocity command, trunk, both arms, one command per gripper; iSpatialGym's JoyLo action) streamed at the 30 Hz control rate; `observe` frames or a watch window; stateless `/kinematics` |
-| Goal | `environment/goal.png` (copied to `/app/goal.png`): upstream's goal image of this instance, the head camera at 1080×1080 |
+| Goal | `/app/goal.png` (from the files-only image `ispatialgym-goals-files`): upstream's goal image of this instance, the head camera at 1080×1080 |
 | Instance | `environment/sim/instance.json`, byte-identical to the privileged twin's: the start only (scene, template keys the loader reads, start-only TRO, objects without upstream's role names); `environment/sim/goal.json` (sidecar only) restores upstream's targets onto it, checked by sha256; start-state hash a7c52d92e0e71d0a |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only into the sidecar from `$RCB_BEHAVIOR_DATA` (a precondition) |
 | Crash recovery | `restart: on-failure:6`; the service journals every control step and resumes the same episode after a crash (resume class `approx`) |

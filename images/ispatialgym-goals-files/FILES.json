@@ -1,0 +1,23 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:ispatialgym-goals-files-0.1.0@sha256:a5b14edb2270793a3d97edeb2ff151646532f30221fe40b55867d33732c97e7f",
+ "source": "images/ispatialgym-goals-files/context",
+ "hf": {
+  "repo": "MLL-Lab/embodied-first-exam-public",
+  "revision": "17215db4ba32fa3f39ac40f36936b325b5d8e4d8",
+  "path": "ispatialgym"
+ },
+ "files": {
+  "alignment-axial-i00/goal.png": "db38028a8402ff86db1e764c5acb8ebfd434e5b9f57f7d6d9ce7dd93db54a234",
+  "alignment-vertical-i00/goal.png": "51dbfe26d79576ed181f116b445ce9867aa0eec36bef2c91f758045330a4262c",
+  "camera-relocalization-obstructed-i00/goal.png": "fd0a7fd82fe3000c6d8a02c153f485e35f61dc3aa634a717045e8c6411d55e43",
+  "configuration-matching-articulation-open-small-scale-i00/goal.png": "8e65fed35ce4131f9fed98d70d6624d3dfcade10cc2a03ba2e687c743430e388",
+  "configuration-matching-block-design-i00/goal.png": "4a37b1b29552e60c3ea312690eb76b2a6db95b9522fe015987a6c809cde0b3a3",
+  "inter-object-relation-satisfaction-inside-small-scale-i00/goal.png": "766330244bf08940b2094673fa8e6946883927c70e3b6ea0600209a2b041708b",
+  "inter-object-relation-satisfaction-nextto-small-scale-i00/goal.png": "fbcbb668633ab5d8d8cb166fde4d0eaf1813191e962c3d3c0ce07073f2c9df4e",
+  "inter-object-relation-satisfaction-ontop-small-scale-i00/goal.png": "e83e959a5e12d87a2d787526ce107be6cd7d91edfb737cd6673962835332b60c",
+  "inter-object-relation-satisfaction-touching-small-scale-i00/goal.png": "e83241d5d76501d6d6252a71b0ea95973537d2e51005039df765aa0b72b218f9",
+  "inter-object-relation-satisfaction-under-small-scale-i00/goal.png": "8e3e7b27f36fa5682697450c5ab7bd82ad59b2cbe2561130d67536250ec4b5ce",
+  "mental-rotation-i00/goal.png": "a80c6dba1df0a37a95492a6fd192014b462206371467dd74d4c1e11bdc7418d0",
+  "object-scaling-i00/goal.png": "e5522868ec3ae4255308b714725be67dbf4130af7f8c1ba70232092f1f32619d"
+ }
+}

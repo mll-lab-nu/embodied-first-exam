@@ -6,6 +6,6 @@ COPY client-requirements.txt /tmp/client-requirements.txt
 RUN pip install --no-cache-dir -r /tmp/client-requirements.txt
 COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.1.0@sha256:9c2e0818bfffddb463167566942af946862a60bf260f1400468f0d6f3ffd32b1 /rcb_client.py /rcb1.py /opt/tools/
 ENV PYTHONPATH=/opt/tools
-COPY goal.png /app/goal.png
+COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-goals-files-0.1.0@sha256:a5b14edb2270793a3d97edeb2ff151646532f30221fe40b55867d33732c97e7f /inter-object-relation-satisfaction-ontop-small-scale-i00/goal.png /app/goal.png
 RUN mkdir -p /app/output
 WORKDIR /app
