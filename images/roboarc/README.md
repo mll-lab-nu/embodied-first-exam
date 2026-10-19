@@ -1,9 +1,8 @@
 # roboarc
 
-> **2026-10-13: the MuJoCo release.** `Dockerfile` here now builds RoboARC's MuJoCo release image
-> (`efe:roboarc-<VERSION>`, 0.3.1 and later), FROM the published Genesis image `efe:robotangle-0.2.22` pinned by
-> digest. The recipe of that base image is kept as `Dockerfile.genesis-0.2.22`; everything below this note describes
-> it (the simulator source, libuipc builds and instance staging the MuJoCo image inherits).
+> `Dockerfile` builds RoboARC's MuJoCo release image (`efe:roboarc-<VERSION>`) FROM the published base image
+> `efe:robotangle-0.2.22`, pinned by digest. Everything below describes that base image (the simulator source, libuipc
+> builds and instance staging the MuJoCo image inherits); its build recipe is not part of this repository.
 
 `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>` is a public image: RoboARC's simulator (the pruned
 `topogym` package of the release commit), Genesis 1.2.1, libuipc (the audited determinism-patched wheel, plus an sm_86 build
@@ -97,16 +96,3 @@ The image holds two builds of one libuipc recipe (libuipc 292c98c3 with the dete
 Both keep the pyuipc version and libuipc commit, which the frozen IPC settled states record; that is why the sm_86 build
 restores them. Do not give a rebuild another local version label.
 
-The sm_86 recipe is `images/roboarc/uipc-sm86-build/`: the release Dockerfile's compile stages verbatim, its config
-`uipc-build-sm86.json` (the release config with the architecture list changed, plus a `recipe` record), and the release's
-`verify_uipc_wheel.py` with one change: the audit requires the PTX of the config's `-virtual` architectures instead of a
-fixed compute_120. A rebuild follows the same recipe but need not give the same bytes or even the same machine code (two
-sm_86 builds of 2026-10-08 differ in 10 of 1230 functions), so a rebuilt wheel needs new bindings. A single wheel for
-sm_86, sm_89 and sm_120 was tried and not used: its sm_89 code differed from the audited wheel's in 8 of 1230 functions
-(`docs/benchmarks/roboarc.md`, Image).
-
-```bash
-cd images/roboarc/uipc-sm86-build
-docker build -f Dockerfile.uipc --build-arg UIPC_CONFIG=uipc-build-sm86.json --build-arg UIPC_BUILD_JOBS=16 \
-  --target uipc-export -o type=local,dest=<out> .
-```
