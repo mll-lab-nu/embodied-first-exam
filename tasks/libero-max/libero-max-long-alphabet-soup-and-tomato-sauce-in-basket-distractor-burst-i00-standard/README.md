@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: verifier 1.6 GB, mem_guard (docker memory per container, mll-4090-1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)
+- Measured: verifier 1.6 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 17 GiB memory. Limits measured: memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 9 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
