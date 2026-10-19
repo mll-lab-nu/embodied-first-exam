@@ -231,7 +231,7 @@
    "support_derivation": {
     "input_glb_sha256": "41b8ca430478b753dd37ad3dd93049c4b9166aef23f42a691e241f9f58ef82ef",
     "posed_glb_sha256": "90b892b3291e15c76eb8be10f4d8c1d9e2d46e855af8ccd3247816272500bf84",
-    "calibration_report_sha256": "afae8fe4eea87e3d4e041804d3239040d14a59ad1bd17951481a3b35b07b33f7",
+    "calibration_report_sha256": "ed502391ca0d185238b332fe5dbad122eced6dcb07713f5a5a2d299626272d82",
     "source_faces": 38445,
     "derived_faces": 38445,
     "source_diffuse_files_unchanged": true
@@ -465,7 +465,7 @@
    "support_derivation": {
     "input_glb_sha256": "4af654d7ba68ef3d82fe360405782392f2bce705d60c0da009ac1c65aff98004",
     "posed_glb_sha256": "74e9dbd863c8fd4d92c89c06b67941e472e538606d2cc0602b984c7f1fcc58be",
-    "calibration_report_sha256": "f286d062b481692f6445e8695f2f95fbeb702d13093bbc258e324b1e68cb64e6",
+    "calibration_report_sha256": "0c2f6ef7db1de327bf2b2ab26ff3d13c1e7fc8edf3acff04ccb4526027a25975",
     "source_faces": 38445,
     "derived_faces": 38445,
     "source_diffuse_files_unchanged": true
@@ -699,7 +699,7 @@
    "support_derivation": {
     "input_glb_sha256": "a5f5c4e6424035e654d9c45a12295ea13f68267c09e426f9673ab7b0e4207626",
     "posed_glb_sha256": "39f6604dd864a06285e5fe5d2622a0f967b48cc501e1fb342465bf20468d18d1",
-    "calibration_report_sha256": "3124b9fcd69eaf22f9810cc63515b9ea6099a1ce1bd759dbcaf3ea4cb00c31a7",
+    "calibration_report_sha256": "be9b593979aaed20c0711ac2b2ef2e65f4837e47bd8f5f905f79fe59466cad08",
     "source_faces": 26827,
     "derived_faces": 26827,
     "source_diffuse_files_unchanged": true
@@ -933,7 +933,7 @@
    "support_derivation": {
     "input_glb_sha256": "2df1c57d433681e86d8bf3f71300deb674437fd140df7a7be76ef245c10c2a97",
     "posed_glb_sha256": "bb55d63ee128070bfa17303d2c80535dbc9e86a78248bd099886b67832811ccf",
-    "calibration_report_sha256": "a840356f774d92bc4251ca8e9158c6b1e4b5384b44aeff99a656d1cc971e0fc5",
+    "calibration_report_sha256": "8acaed1b4707f98bab9f2e7267144f377961a04d36f8a59064b8a46dcb3e5371",
     "source_faces": 26827,
     "derived_faces": 26827,
     "source_diffuse_files_unchanged": true
@@ -1167,7 +1167,7 @@
    "support_derivation": {
     "input_glb_sha256": "f1b43ccf175206b9a4e82252503a3499a5ea66aa1285d49769de917c4bf3d31c",
     "posed_glb_sha256": "684f10d520a5e4a5d9f69aeb1fa2c58f52df8a51e1dc37d5c3213b29839c70b2",
-    "calibration_report_sha256": "368418320d01fd1e83f2ad5897fc8e0104c18d956219b3dcbd3ecf85946096ce",
+    "calibration_report_sha256": "13c8c18cfcd40ce7c2b6a29683ece24d4c7709a8164dedab58b9e4a80e593512",
     "source_faces": 26907,
     "derived_faces": 26907,
     "source_diffuse_files_unchanged": true
@@ -1401,7 +1401,7 @@
    "support_derivation": {
     "input_glb_sha256": "c74d005f907ba6db80ddf721695d8cd32354cb4df99702c4d06a8523091e792b",
     "posed_glb_sha256": "2d46b9ab2dcb80a5daa45d36f835bbb15f72b8531a04dbd49a5efaac6686d978",
-    "calibration_report_sha256": "b58d354a3a288413b0e5fe395a368ff135dbd940eb95b568be2e3f6982e5ad4c",
+    "calibration_report_sha256": "b5f4cad9f7b1a61149802109d5bb8a40a4df0b7856c88369c893514c450e5c70",
     "source_faces": 26907,
     "derived_faces": 26907,
     "source_diffuse_files_unchanged": true
@@ -1635,7 +1635,7 @@
    "support_derivation": {
     "input_glb_sha256": "64c6cf6dd9be181b1606a73fdbf5312dda86235fd173ccb5d7aa61f30e70cfe6",
     "posed_glb_sha256": "dc4967efa528191faf0a4e0770216073d2182432172be1456e7a673ec7d2452d",
-    "calibration_report_sha256": "6ac913372e69df7813d2de2ce9eefee560a49cbc69a6ab076949ff20fa3a6926",
+    "calibration_report_sha256": "a2dbe77b1714495c840fb260105eb88910f2955ea41c6a0e734c0e8eb29969a5",
     "source_faces": 32776,
     "derived_faces": 32776,
     "source_diffuse_files_unchanged": true
@@ -1869,7 +1869,7 @@
    "support_derivation": {
     "input_glb_sha256": "64c7bac1f952e7f90e0fdc7a3390a9895bae61cebbafaaacddca61cf05c38794",
     "posed_glb_sha256": "84b094a084f1acd1cd419f26a9a91f2a9b16e7bee0dcce799e669e70e26639e2",
-    "calibration_report_sha256": "159c8ae3073241f4f93ec70d72aae7cdf54b9abacd3b8e7a6f5c0a0312032879",
+    "calibration_report_sha256": "027989d3c6295346491032b766c6ab48432371e2bd8c0739dacf31f757e71cf0",
     "source_faces": 32776,
     "derived_faces": 32775,
     "source_diffuse_files_unchanged": true,
@@ -2104,7 +2104,7 @@
    "support_derivation": {
     "input_glb_sha256": "04878a32430f66d49b85c2110d651ef169885022ab8af26669373ec83eeec60e",
     "posed_glb_sha256": "b6339bbea7f23b66d3f200c20a52534657ce0ba2f0b7fa5279ba5b17cc759dae",
-    "calibration_report_sha256": "62a97e96b485b31d00037b67c350b8a9c356fddbd714c9b8c0fbd1cd84dcac08",
+    "calibration_report_sha256": "5fd1b22f70e86bcc025782522775c5665c6b2491af12aa93540b70a6dfb06c73",
     "source_faces": 28276,
     "derived_faces": 28276,
     "source_diffuse_files_unchanged": true
@@ -2338,7 +2338,7 @@
    "support_derivation": {
     "input_glb_sha256": "660287663734e6295f8d8417f07d71bb89744557a9eae057ecee7eac0246c670",
     "posed_glb_sha256": "5e251e0ff35ad4be6bff1b9cf7c6344c457a7630c9c9af399e0a807aa8f6ddb9",
-    "calibration_report_sha256": "885ebf591b7526e3d16b350283c892a2fd8d917825d3e7bc8259fe25d491da9c",
+    "calibration_report_sha256": "1ecfd36afede32bbe53274cae18ac3434ae2dc73573fb6d65e8e678de018fe37",
     "source_faces": 28276,
     "derived_faces": 28276,
     "source_diffuse_files_unchanged": true
@@ -2572,7 +2572,7 @@
    "support_derivation": {
     "input_glb_sha256": "9a4a7aa7b0902fd8527e25df6b74a611192633d021a0a86084169a34fe21b26f",
     "posed_glb_sha256": "7ef410afe44f006fd692e1c0c0d8f8f3653376b7ea6a4e1ad996c43489615d07",
-    "calibration_report_sha256": "eb8889392596938818ff0d30d8ebab21f1d593821258b371b03e3ab0a28aa871",
+    "calibration_report_sha256": "31c551fc5ca8df4baef875e177172a1fe924ffe854271c795a1bd8a092af6791",
     "source_faces": 33241,
     "derived_faces": 33241,
     "source_diffuse_files_unchanged": true
@@ -2806,7 +2806,7 @@
    "support_derivation": {
     "input_glb_sha256": "a42d25947059b9e309ba68b3c99a78d13819ac5d0b78cca6f388ee554c53d588",
     "posed_glb_sha256": "f251ff9c7b89c91e69f2c6978653eceec8a1b2d96594d25a1770183748d0675e",
-    "calibration_report_sha256": "ba2422de964cab076782b6cb06ed4364ffc3aeaf4bd53610f8326aa8f3a18651",
+    "calibration_report_sha256": "e071f1d6462fd45e2491ed5d46b746e9547efce1e53a0ee1652af3389ba84418",
     "source_faces": 33241,
     "derived_faces": 33241,
     "source_diffuse_files_unchanged": true
