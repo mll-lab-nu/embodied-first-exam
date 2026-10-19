@@ -1,10 +1,14 @@
 # Embodied First Exam
 
-[![Website](https://img.shields.io/badge/Website-embodied--first--exam.ai-000000?style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxjaXJjbGUgY3g9IjEyIiBjeT0iMTIiIHI9IjEwIi8+PGxpbmUgeDE9IjIiIHkxPSIxMiIgeDI9IjIyIiB5Mj0iMTIiLz48cGF0aCBkPSJNMTIgMmExNS4zIDE1LjMgMCAwIDEgNCAxMCAxNS4zIDE1LjMgMCAwIDEtNCAxMCAxNS4zIDE1LjMgMCAwIDEtNC0xMCAxNS4zIDE1LjMgMCAwIDEgNC0xMHoiLz48L3N2Zz4=&labelColor=000000)](https://www.embodied-first-exam.ai)
-[![Discord](https://img.shields.io/badge/Discord-Join-000000?style=for-the-badge&logo=discord&logoColor=white&labelColor=000000)](https://discord.gg/TvscHrhDt)
+<p>
+  <a href="https://www.embodied-first-exam.ai"><img src="docs/assets/badge-website.svg" alt="Website: embodied-first-exam.ai" height="36"></a>
+  <a href="https://discord.gg/TvscHrhDt"><img src="docs/assets/badge-discord.svg" alt="Discord" height="36"></a>
+</p>
 
-**Can a coding agent program a robot?** Robot-manipulation tasks for coding agents (Claude Code, Codex, …) in the
-[Harbor](https://github.com/harbor-framework/harbor) task format.
+Code agents have passed many exams in the digital world.<br>
+**What is their first exam to enter the physical world?**
+
+Robot tasks for code agents (Claude Code, Codex, …) in the [Harbor](https://github.com/harbor-framework/harbor) task format.
 
 ## Quick start
 
