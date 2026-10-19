@@ -9,7 +9,7 @@
 | Family / instance | `pick` |
 | Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-pick-i00-privileged__Y6SSCTZ (run codex-gpt6_1_sol-high, batch molmo-v2-sol, 2026-10-16); human review in PR #276 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.5` |
+| Base image | `ghcr.io/mll-lab-nu/efe-molmospaces:0.2.5` |
 
 ## Task
 Pick up the pie. One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `procthor-objaverse/FrankaPickHardBench/FrankaPickHardBench_20260206_json_benchmark`, episode 806:

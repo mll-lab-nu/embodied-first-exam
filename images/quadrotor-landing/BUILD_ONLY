@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/eai-quadrotor-landing:<images/quadrotor-landing/VERSION> (the roboEngineer Neural Landing
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-quadrotor-landing:<images/quadrotor-landing/VERSION> (the roboEngineer Neural Landing
 evaluator) is never published (docs/protocol/README.md §1). An evaluation host builds it (prepare_assets.sh, then
 `docker build -f images/quadrotor-landing/Dockerfile .` from the repository root), or takes it from the organization's own
 non-public copy of the package.

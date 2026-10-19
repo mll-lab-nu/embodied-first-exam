@@ -9,7 +9,7 @@
 | Family / instance | `collect_screws` / seed 0 |
 | Oracle | `none` — No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-collect-screws-i00-limi__xxcMFF8 (robowits-lunaxh-limited-0929, standard) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7). Re-graded with the 2026-10-14 grader (AMD hosts ws / ws3; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited __xxcMFF8 passes the earlier grader but fails the 2026-10-14 one: the screw is still in the gripper. The privileged positive __BQiUvZm, streamed as joint rows, scored 1 under Harbor on this version (ws3, 2026-10-14; nop 0). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robowits:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robowits:0.1.1` |
 
 ## Task
 Collect the screw into the container The same frozen instance as `robowits-collect-screws-i00-privileged`, as a robot

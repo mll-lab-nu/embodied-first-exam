@@ -2,7 +2,7 @@
 # that removes what states or solves a task and asserts nothing of it is left (scrub.sh, bind-mounted for the build only),
 # and this task's frozen start (instance.json, the copy the standard twin and the verifier also hold): no goal, no target,
 # no success check here; the verifier has them (tests/).
-FROM ghcr.io/mll-lab-nu/eai-ispatialgym:0.2.0
+FROM ghcr.io/mll-lab-nu/efe-ispatialgym:0.2.0
 COPY instance.json /app/instance.json
 COPY goal.png /app/goal.png
 COPY rcb_ispatialgym.py /opt/tools/

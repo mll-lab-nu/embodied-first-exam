@@ -9,7 +9,7 @@
 | Family / instance | `hurdle` / seed 0 |
 | Oracle | `none` — no rollout of this instance; published RL passes the bar (FastTD3 887 / 700); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-humanoidbench:0.2.0` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-loco-hurdle-i00-privileged`: the same

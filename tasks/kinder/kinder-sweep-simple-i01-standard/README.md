@@ -9,7 +9,7 @@
 | Family / instance | `sweep-simple` / seed 0 |
 | Oracle | `none` — none yet: no positive example is known for this instance (human review pending) |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` |
+| Base image | `ghcr.io/mll-lab-nu/efe-kinder:0.1.6` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `kinder-sweep-simple-i01-privileged`: the same KinDER instance (`kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0`, seed

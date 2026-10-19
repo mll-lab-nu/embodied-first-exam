@@ -196,10 +196,10 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 
 ## Image and host
 - `images/robopaint/` holds ManiSkill 3.0.1, SAPIEN 3.0.3, a patched libmypaint 1.6.1 and Spline-FRIDA.
-  - The image is `ghcr.io/mll-lab-nu/eai-robopaint:<images/robopaint/VERSION>` (0.2.0), public.
+  - The image is `ghcr.io/mll-lab-nu/efe-robopaint:<images/robopaint/VERSION>` (0.2.0), public.
   - It is built from the repository root: `docker build -f images/robopaint/Dockerfile .`.
 - `images/robopaint-files/` is the files-only image of the shared tooling and graders,
-  `ghcr.io/mll-lab-nu/eai-robopaint-files:<VERSION>@<digest>` (`FILES.json`), public like the base image: `FROM scratch` with
+  `ghcr.io/mll-lab-nu/efe-robopaint-files:<VERSION>@<digest>` (`FILES.json`), public like the base image: `FROM scratch` with
   the files of `embodied_first_exam/benchmarks/robopaint/` (checkout modes, content-derived mtimes). A change to one of them needs a new
   version: bump `VERSION`, `python3 scripts/files_image.py build robopaint-files`, push, `python3 scripts/files_image.py pin
   robopaint-files <digest>`, then the tasks' `COPY --from` lines name the new digest.

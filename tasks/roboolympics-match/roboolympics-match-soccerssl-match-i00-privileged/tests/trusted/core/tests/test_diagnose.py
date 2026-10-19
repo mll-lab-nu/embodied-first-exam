@@ -1,7 +1,7 @@
 """Tests of the diagnostic records (core/diaglog.py, core 0.2.25) and the post-match diagnosis (core/diagnose.py):
 in-process matches (core/local.py) of the realtime fixture and the live realtime service (a turn-protocol
 example: the example sport's tests/test_diagnose.py). Run in the sim image:
-    docker run --rm -v $PWD:/w -w /w -e MUJOCO_GL=osmesa ghcr.io/mll-lab-nu/eai-olympiad:0.1.0 \\
+    docker run --rm -v $PWD:/w -w /w -e MUJOCO_GL=osmesa ghcr.io/mll-lab-nu/efe-olympiad:0.1.0 \\
         python3 core/tests/test_diagnose.py
 """
 from __future__ import annotations

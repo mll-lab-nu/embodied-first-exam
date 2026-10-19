@@ -9,7 +9,7 @@
 | Family / instance | `bimanual_unlock_ipad` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-dexjoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe-dexjoco:0.1.2` |
 
 ## Task
 DexJoCo `bimanual_unlock_ipad` (two Franka Panda arms, each with a 16-DoF Allegro hand): Pick up the iPad and enter the passcode 1-2-3 on its screen. A digit is pressed when a FINGERTIP touches its button; pressing any other digit than the next one of 1-2-3 ends the episode as a failure. Success: the screen is unlocked (1, 2, 3 in order) and stays unlocked for 10 consecutive control steps.

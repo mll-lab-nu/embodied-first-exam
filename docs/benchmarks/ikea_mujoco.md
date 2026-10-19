@@ -168,11 +168,11 @@ and 63.3 %): MuJoCo's own step is about 95 % of the time (their SDF threads). Th
 agent's budget is the same 10800 s on every host, so on a slow host an agent has less room for full replays.
 
 ## Image and assets
-- `ghcr.io/mll-lab-nu/eai-ikea-mujoco:<images/ikea-mujoco/VERSION>` (0.3.0, image id `ed950d079b63`): MuJoCo 3.14.0
+- `ghcr.io/mll-lab-nu/efe-ikea-mujoco:<images/ikea-mujoco/VERSION>` (0.3.0, image id `ed950d079b63`): MuJoCo 3.14.0
   (EPA-patched), numpy 2.5.4, Python 3.12, and the twelve scenes at `/opt/ikea/scenes/<task>` (the four in progress
   included). The privileged agent and the privileged verifier run it; the standard verifier runs the shared client
   base (it replays nothing).
-- `ghcr.io/mll-lab-nu/eai-ikea-mujoco-sim:<images/ikea-mujoco/sim/VERSION>` (0.4.0): the standard sidecar. It adds Nyx,
+- `ghcr.io/mll-lab-nu/efe-ikea-mujoco-sim:<images/ikea-mujoco/sim/VERSION>` (0.4.0): the standard sidecar. It adds Nyx,
   RoboARC's renderer and look, in its own venv `/opt/nyx` (gs-nyx 0.1.3 needs numpy < 2.4; the physics process keeps
   numpy 2.5.4 and the patched MuJoCo): RGB from Nyx (path tracer, 32 spp, denoised, studio HDRI, point lights placed
   relative to each scene's work surface), depth from MuJoCo's EGL raster, the same camera rig and calibration. The live

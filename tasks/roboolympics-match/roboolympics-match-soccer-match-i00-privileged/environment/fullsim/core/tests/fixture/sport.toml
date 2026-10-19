@@ -5,7 +5,7 @@
 name = "fixture"
 protocol = "realtime"
 revision = "fixture-1"
-image = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0"
+image = "ghcr.io/mll-lab-nu/efe-olympiad:0.1.0"
 status = "sport"
 
 [observation]

@@ -191,7 +191,7 @@ memory (the cap every past trial ran under; an agent may run a second Session); 
 Caps: privileged main 8 CPUs / 39 GiB; standard main 8 CPUs / 16 GiB, sim sidecar 16 CPUs / 25 GiB.
 
 ## Image and host
-`images/robodojo/` → `ghcr.io/mll-lab-nu/eai-robodojo:0.1.0` (~74 GB, with RoboDojo's 41 GB of assets). It contains Isaac
+`images/robodojo/` → `ghcr.io/mll-lab-nu/efe-robodojo:0.1.0` (~74 GB, with RoboDojo's 41 GB of assets). It contains Isaac
 Sim: **BUILD_ONLY** (`images/robodojo/BUILD_ONLY` has the licences, the build command and the check of a build). Needs an
 RTX-class GPU and ~5-10 GB of GPU memory per Isaac process; Isaac hangs instead of exiting when the GPU runs out of memory,
 so a shared GPU runs few at once. Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount
