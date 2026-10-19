@@ -66,7 +66,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Network | the model APIs and the package registries (`scripts/set_agent_egress.py`) |
 
 ### Notes
-Source `e2c431f6ff4932089adc0b5ff5ecc0b16447fe14`; image `sha256:4d31e2d41006202199b7f1aa0b6e0929b271b6ea1ea5ad6ffcee9525029095f4`; tracked source digest `c487ee7bdf02bc06dca0135681ca7f18db5fb8f3646fe26082033f7127821e05`; visual profile `realism_v3`, revision `realism_v3-b5bf312-dog-fallen-power-detail-v2`, manifest SHA256 `2e030c8f77c301bee3ed2733f4bcc4f3e1e6b4a7502dcf5816883e1c7c705913`.
+Source `e2c431f6ff4932089adc0b5ff5ecc0b16447fe14`; image `sha256:256ccfa622be1aca87dc52ded88d939da97e0355082d1b0d3fa5deda668a9db6`; tracked source digest `c487ee7bdf02bc06dca0135681ca7f18db5fb8f3646fe26082033f7127821e05`; visual profile `realism_v3`, revision `realism_v3-b5bf312-dog-fallen-power-detail-v2`, manifest SHA256 `2e030c8f77c301bee3ed2733f4bcc4f3e1e6b4a7502dcf5816883e1c7c705913`.
 
 ### Change Log
 - 2026-10-19 (Embodied Safety Exam): the rename goes into the simulator image: image `efe-private:ese-0.5.5` (package `embodied_safety_exam`, environment `ESE_*`, Embodied Safety Exam commit e2c431f; the same scenes, rules and verdicts as before), files-only image `ese-files-0.2.0`; `rcb_rsb.py` -> `rcb_ese.py`; reward.json `rsb_calls` / `rsb_pass` -> `ese_calls` / `ese_pass` (docs/benchmarks/embodied-safety-exam.md "Rename").
