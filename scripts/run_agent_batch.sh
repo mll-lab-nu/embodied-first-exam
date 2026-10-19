@@ -147,11 +147,9 @@ mkdir -p "$JOBS/.plan"
 python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
 import json, os, pathlib, sys
 repo, out, batch, run_id, seq, modes, *tasks = sys.argv[1:]
-sys.path.insert(0, f"{repo}/scripts")
-import task_conventions as tc
 name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "standard-realtime": f"{t}-standard-realtime"}.get(m, f"{t}-privileged")
 jobs = [{"job": f"{batch}-{m}-{t}" if seq == "1" else f"{batch}-{m}", "task": name(m, t), "mode": m}
-        for t in tasks for m in modes.split() if tc.task_dir(name(m, t), pathlib.Path(repo) / "tasks").is_dir()]
+        for t in tasks for m in modes.split() if any(pathlib.Path(repo).glob(f"tasks/*/{name(m, t)}/task.toml"))]   # tasks/<benchmark folder>/<task>/
 tmp = pathlib.Path(f"{out}.{os.getpid()}")
 tmp.write_text(json.dumps({"batch": batch, "run_id": run_id, "jobs": jobs}, indent=1))
 tmp.replace(out)
@@ -374,11 +372,11 @@ stamp_task_dirs() {  # <root>: give every file of the job's task copies a mtime 
 }
 
 # the repository's task dirs live at tasks/<benchmark folder>/<task> (scripts/task_conventions.py task_dir); a job's own
-# copy is flat, <dir>/tasks/<task>, which `harbor run -p tasks -i <task>` reads (Harbor's local datasets are one level)
-declare -A SRC_DIR=()
-while IFS=$'\t' read -r n _ f; do SRC_DIR[$n]="$R/tasks/$f/$n"; done < <(python3 "$R/scripts/task_conventions.py" benchmarks)
+# copy is flat, <dir>/tasks/<task>, which `harbor run -p tasks -i <task>` reads (Harbor's local datasets are one level).
+# Found by a glob, not by task_conventions: a runner host's python3 may predate tomllib (babel nodes: 3.9).
 src_of() {  # <task dir name>: its directory in the repository (no such task: a path that does not exist)
-  printf '%s' "${SRC_DIR[$1]:-$R/tasks/.none/$1}"
+  local d; for d in "$R"/tasks/*/"$1"; do [ -f "$d/task.toml" ] && { printf '%s' "$d"; return 0; }; done
+  printf '%s' "$R/tasks/.none/$1"
 }
 
 gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (PROTOCOL §2.11)
