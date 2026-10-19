@@ -6,6 +6,17 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
 `robolab-<family>-i00-standard` (`eai-standard/2.2`), on the same frozen instance. Results are attributed by DIGEST
 (PROTOCOL H.8).
 
+## Build the images locally
+
+The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
+Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+
+```bash
+docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .
+python3 scripts/files_image.py build robolab-files
+grep -rlE 'efe-private:[^@ ]+@sha256' tasks/robolab | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+```
+
 ## Tasks
 - The task directories are the deliverable; the tooling that built them is kept outside this repository. Each family's
   frozen instance is in its task dir (`tasks/robolab/robolab-<family>-i00-privileged/environment/instance.json`); the code

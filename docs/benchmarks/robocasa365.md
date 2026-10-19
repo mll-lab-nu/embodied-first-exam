@@ -13,6 +13,17 @@
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
 | sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 
+## Build the images locally
+
+The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
+Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+
+```bash
+docker build -f images/robocasa365/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robocasa365-$(cat images/robocasa365/VERSION) images/robocasa365
+python3 scripts/files_image.py build robocasa365-files
+grep -rlE 'efe-private:[^@ ]+@sha256' tasks/robocasa365 | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+```
+
 ## Scope and selection rule
 PR #4 accepted 256 RoboCasa365 families with a demonstration-based reference (63 atomic, 193 composite; the 109 others
 have no official demonstration at the pinned commit or no validated reference). This benchmark takes 50 of them
