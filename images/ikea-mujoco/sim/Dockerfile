@@ -1,5 +1,5 @@
-# eai-ikea-mujoco-sim: the `sim` sidecar image of the IKEA MuJoCo STANDARD-mode tasks (tasks/ikea-<task>-i00-standard).
-# = eai-ikea-mujoco (plain MuJoCo 3.14.0 CPU float64 with the EPA-patched libmujoco.so + numpy 2.5.4 + the frozen scenes,
+# ikea-mujoco-sim: the `sim` sidecar image of the IKEA MuJoCo STANDARD-mode tasks (tasks/ikea-<task>-i00-standard).
+# = ikea-mujoco (plain MuJoCo 3.14.0 CPU float64 with the EPA-patched libmujoco.so + numpy 2.5.4 + the frozen scenes,
 # unchanged: the physics process) + what the robot-as-a-service layer needs to render and encode:
 #   - Nyx, RoboARC's renderer, in its OWN interpreter environment, the venv /opt/nyx (python 3.12 of the base, separate
 #     site-packages): gs-nyx 0.1.3 needs numpy < 2.4, the physics keeps numpy 2.5.4, so the sim service renders every RGB

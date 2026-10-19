@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Prepare the eai-ikea-mujoco build context images/ikea-mujoco/context/ (images/ikea-mujoco/BUILD_CONTEXT):
+# Prepare the ikea-mujoco build context images/ikea-mujoco/context/ (images/ikea-mujoco/BUILD_CONTEXT):
 #   - the scenes' meshes, <task>/assets/<file>, from the private Hugging Face dataset at the revision pinned in
 #     images/ikea-mujoco/assets.json ("repo", "revision"); every file's sha256 is checked against the same file's
 #     per-task "files" entries;

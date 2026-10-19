@@ -1,4 +1,4 @@
-# eai-monitor: the resource-limits monitor sidecar (service `rcb_monitor` in every task; docs/protocol/README.md §2.10) and
+# monitor: the resource-limits monitor sidecar (service `rcb_monitor` in every task; docs/protocol/README.md §2.10) and
 # the verifier step's code. The runtime is Python only (BASE: python:3.12-slim-bookworm with PYTHONUNBUFFERED=1,
 # PYTHONDONTWRITEBYTECODE=1, NVIDIA_DRIVER_CAPABILITIES=utility, so the NVIDIA runtime / CDI inject libnvidia-ml when the
 # task reserves a GPU; WORKDIR /var/rcb-monitor). On top: the monitor's code at /opt/rcb_monitor/, from its one source,

@@ -1,4 +1,4 @@
-# eai-robofunolympics: the Python stack of the RoboOlympics simulator (the same pins as eai-olympiad). MuJoCo 3.3.7 (CPU physics, bit-exact replay), osmesa rendering.
+# robofunolympics: the Python stack of the RoboOlympics simulator (the same pins as the olympiad image). MuJoCo 3.3.7 (CPU physics, bit-exact replay), osmesa rendering.
 mujoco==3.3.7
 numpy==2.2.6
 imageio==2.37.0

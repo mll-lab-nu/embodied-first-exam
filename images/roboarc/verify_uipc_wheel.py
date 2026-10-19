@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build-only CMake fix, the hash-checked determinism source patches, CUDA wheel audit and hash-checked runtime install.
 
-robot_coding_bench copy (images/roboarc/): images/topogym/verify_uipc_wheel.py of release 2dafa5f2b with two changes.
+Embodied First Exam copy (images/roboarc/): images/topogym/verify_uipc_wheel.py of release 2dafa5f2b with two changes.
 - audit requires the PTX of every `<N>-virtual` architecture of the config (the release script: compute_120 only).
   images/roboarc/uipc-sm86-build/audit/verify_uipc_wheel.py is this script without `check`; the sm_86 wheel was built with it.
 - check (new): a prebuilt wheel against its uipc-build.json in the recipe's builder image, without the source tree. The
