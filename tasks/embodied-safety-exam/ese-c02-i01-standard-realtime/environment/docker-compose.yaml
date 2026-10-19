@@ -13,12 +13,12 @@ services:
     cpus: 6   # rcb-monitor
     mem_limit: 8192m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:ese-0.5.4
+    image: ghcr.io/mll-lab-nu/efe-private:ese-0.5.5
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro
     working_dir: /tmp
-    command: python /srv/rcb_rsb_rt.py                  # server.py's adapter under rcb_realtime.py's clock
+    command: python /srv/rcb_ese_rt.py                  # server.py's adapter under rcb_realtime.py's clock
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:
       RCB_INSTANCE: /srv/instance.json

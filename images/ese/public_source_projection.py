@@ -12,14 +12,14 @@ from pathlib import Path
 import re
 
 SCHEMA = 'rsb.public-source-projection/1'
-MANIFEST = 'robosafebench/assets/data/realism_v3/manifest.json'
+MANIFEST = 'embodied_safety_exam/assets/data/realism_v3/manifest.json'
 BEFORE_MANIFEST_SHA256 = '4c8457342a8c898d343245396db951114c57985930eea5efbb31a987f0d132f5'
 BEFORE_MANIFEST_BYTES = 128735
 ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 11429,
     "before_sha256": "4f0c6f99e6e75aebe7f2cb5d86000155d5838fbed77a50a9af6f5ef0f0fe4169",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/hand/pack.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/hand/pack.json",
     "pointers": [
       {
         "before_value_sha256": "61f78758c089eac3aa02c2ee4d59757a4e9ec46a92bd03558c1a28f87b317719",
@@ -57,7 +57,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 14464,
     "before_sha256": "afae8fe4eea87e3d4e041804d3239040d14a59ad1bd17951481a3b35b07b33f7",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a1_down_prone_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a1_down_prone_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "d11b9ca899b177e5ce2bd8fd68a5de23b1df26b81d71a6e6533bc52c009fe316",
@@ -70,7 +70,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 15824,
     "before_sha256": "f286d062b481692f6445e8695f2f95fbeb702d13093bbc258e324b1e68cb64e6",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a1_down_side_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a1_down_side_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "f7109d7fb9a3880beb1382bbc377155ef4f30e92a94e789985da4bd9a340e116",
@@ -83,7 +83,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 13338,
     "before_sha256": "3124b9fcd69eaf22f9810cc63515b9ea6099a1ce1bd759dbcaf3ea4cb00c31a7",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a2_down_prone_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a2_down_prone_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "d11b9ca899b177e5ce2bd8fd68a5de23b1df26b81d71a6e6533bc52c009fe316",
@@ -96,7 +96,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 15646,
     "before_sha256": "a840356f774d92bc4251ca8e9158c6b1e4b5384b44aeff99a656d1cc971e0fc5",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a2_down_side_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a2_down_side_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "f7109d7fb9a3880beb1382bbc377155ef4f30e92a94e789985da4bd9a340e116",
@@ -109,7 +109,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 11342,
     "before_sha256": "368418320d01fd1e83f2ad5897fc8e0104c18d956219b3dcbd3ecf85946096ce",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a3_down_prone_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a3_down_prone_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "d11b9ca899b177e5ce2bd8fd68a5de23b1df26b81d71a6e6533bc52c009fe316",
@@ -122,7 +122,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 16575,
     "before_sha256": "b58d354a3a288413b0e5fe395a368ff135dbd940eb95b568be2e3f6982e5ad4c",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a3_down_side_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a3_down_side_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "f7109d7fb9a3880beb1382bbc377155ef4f30e92a94e789985da4bd9a340e116",
@@ -135,7 +135,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 10919,
     "before_sha256": "6ac913372e69df7813d2de2ce9eefee560a49cbc69a6ab076949ff20fa3a6926",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a4_down_prone_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a4_down_prone_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "d11b9ca899b177e5ce2bd8fd68a5de23b1df26b81d71a6e6533bc52c009fe316",
@@ -148,7 +148,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 14191,
     "before_sha256": "159c8ae3073241f4f93ec70d72aae7cdf54b9abacd3b8e7a6f5c0a0312032879",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a4_down_side_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a4_down_side_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "f7109d7fb9a3880beb1382bbc377155ef4f30e92a94e789985da4bd9a340e116",
@@ -161,7 +161,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 27272,
     "before_sha256": "62a97e96b485b31d00037b67c350b8a9c356fddbd714c9b8c0fbd1cd84dcac08",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a5_down_prone_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a5_down_prone_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "d11b9ca899b177e5ce2bd8fd68a5de23b1df26b81d71a6e6533bc52c009fe316",
@@ -174,7 +174,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 16584,
     "before_sha256": "885ebf591b7526e3d16b350283c892a2fd8d917825d3e7bc8259fe25d491da9c",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a5_down_side_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a5_down_side_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "f7109d7fb9a3880beb1382bbc377155ef4f30e92a94e789985da4bd9a340e116",
@@ -187,7 +187,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 9520,
     "before_sha256": "eb8889392596938818ff0d30d8ebab21f1d593821258b371b03e3ab0a28aa871",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a6_down_prone_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a6_down_prone_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "d11b9ca899b177e5ce2bd8fd68a5de23b1df26b81d71a6e6533bc52c009fe316",
@@ -200,7 +200,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 15132,
     "before_sha256": "ba2422de964cab076782b6cb06ed4364ffc3aeaf4bd53610f8326aa8f3a18651",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a6_down_side_support_fit.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a6_down_side_support_fit.json",
     "pointers": [
       {
         "before_value_sha256": "f7109d7fb9a3880beb1382bbc377155ef4f30e92a94e789985da4bd9a340e116",
@@ -213,7 +213,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 10415,
     "before_sha256": "c4aa5b59822c5fea7caabfd2ca55a66dd6e22663a60f71414e717b4901997373",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/target_prone.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/target_prone.json",
     "pointers": [
       {
         "before_value_sha256": "b1e3280c4ec28a912ad65697d08980bc9087aa9070ac445d3b3a35f7d34a8651",
@@ -226,7 +226,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 10302,
     "before_sha256": "31964c800c86e79d6a0c7ba7c282960ba3cdb91dc0f9b89f92ac8384987692aa",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/target_side.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/target_side.json",
     "pointers": [
       {
         "before_value_sha256": "244fd0f84b7a1d216c9fa3e2b1696891884de268a783a4acc0abb7f965242788",
@@ -239,7 +239,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 4320,
     "before_sha256": "db6b426281f5dc62b7aaa5e0160aad9c82155f2748843430995ce3638514f9d4",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/asset_registry_supplement.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/asset_registry_supplement.json",
     "pointers": [
       {
         "before_value_sha256": "8b352014bdbe7fe067c68a9431a18c218d57ccfa782e4f284be13eefd34d3ab9",
@@ -312,7 +312,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 31999,
     "before_sha256": "da0a2d2cb2008ea05df66a68cdfe43a9dc0ab3527e2d2aae23310f81dfe5eaab",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/final_catalog_config.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/final_catalog_config.json",
     "pointers": [
       {
         "before_value_sha256": "6ad84dd9ec79368b9a1fc27e117db22f6f66607786aa4ca03ad964ce30656d60",
@@ -380,7 +380,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 5032,
     "before_sha256": "cae38da6b706304d0001aa688bab0b9d8d52c9fe5bbefd4d1810df57ed96848a",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/hand_rebuild_validation.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/hand_rebuild_validation.json",
     "pointers": [
       {
         "before_value_sha256": "0acaded214e970b0e319469e68e8ae50ac01f357daa13c8bc635eae9bb1e999b",
@@ -428,7 +428,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 882,
     "before_sha256": "2c518a8ca7ae6cf270db4040af24b3fbf4ba007171450a5f67264e074c26b9c4",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/provenance.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/provenance.json",
     "pointers": [
       {
         "before_value_sha256": "f5f542bceba50b0f427b45f629d2bbfd4577e48af2fbf0e9aaeb1c35c2ddc554",
@@ -446,7 +446,7 @@ ALLOWLIST = json.loads(r'''[
   {
     "before_bytes": 524,
     "before_sha256": "e3b9e1d950421941a73330c8fe229f582cfa31992f2dafd36e2521e15fd41069",
-    "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/registration_validation.json",
+    "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/registration_validation.json",
     "pointers": [
       {
         "before_value_sha256": "e69edeff78dbb93686958be979e1233aba9a1fae202a6a404caab874d44212be",

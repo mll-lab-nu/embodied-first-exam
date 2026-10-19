@@ -12,7 +12,7 @@ services:
     cpus: 6   # rcb-monitor
     mem_limit: 8192m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:ese-0.5.4
+    image: ghcr.io/mll-lab-nu/efe-private:ese-0.5.5
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro
@@ -22,8 +22,8 @@ services:
     environment:
       RCB_INSTANCE: /srv/instance.json
       RCB_DATA: /data
-      ROBOSAFEBENCH_ASSET_PROFILE: "realism_v3"
-      ROBOSAFEBENCH_THIRD_PARTY: ""
+      ESE_ASSET_PROFILE: "realism_v3"
+      ESE_THIRD_PARTY: ""
       LP_NUM_THREADS: "1"
       RCB_WALL_CLOCK_S: "3600"
       RCB_STARTUP_TIMEOUT_S: "300"                      # the scene builds in a few seconds
