@@ -38,7 +38,7 @@ def stage(source, manifest):
     expected = inventory(source / ROOT)
     if inventory(source / PACKAGE) != expected:
         raise ValueError("Root and package asset trees differ; no files removed")
-    value = {"schema": "rsb.third-party-context/1", "root": ROOT.as_posix(),
+    value = {"schema": "ese.third-party-context/1", "root": ROOT.as_posix(),
              "package": PACKAGE.as_posix(), "files": expected,
              "duplicate_bytes_omitted": sum(x["bytes"] for x in expected.values())}
     # Seal first, and remove only the package duplicate in this disposable context.
@@ -51,7 +51,7 @@ def stage(source, manifest):
 def restore(source, manifest):
     value = json.loads(manifest.read_text())
     if (value.get("schema"), value.get("root"), value.get("package")) != (
-            "rsb.third-party-context/1", ROOT.as_posix(), PACKAGE.as_posix()):
+            "ese.third-party-context/1", ROOT.as_posix(), PACKAGE.as_posix()):
         raise ValueError("Unexpected asset manifest layout")
     for relative in value["files"]:
         path = Path(relative)

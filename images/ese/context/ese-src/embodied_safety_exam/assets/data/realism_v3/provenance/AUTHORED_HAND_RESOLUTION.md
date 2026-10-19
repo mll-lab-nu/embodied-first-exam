@@ -18,7 +18,7 @@ data; it does not supply the missing authored skin normal or roughness maps.
 `repair_skin_resolution.py` creates a fresh private pilot and performs the pack
 checks. `review_skin_resolution.py` validates a compiled scene pair. Both run on
 Slurm compute nodes. Review artifacts are under
-`robosafe_bench/realism_cpu_20261015/geometry_agent/skin/`: the final default pack
+`historical-source://asset-build/geometry_agent/skin/`: the final default pack
 check is `hand_authored_default/validation.json`, the scene check is
 `hand_pair_validation.json`, and the paired images are `hand_1k/pbr.png` and
 `hand_2k/pbr.png`.

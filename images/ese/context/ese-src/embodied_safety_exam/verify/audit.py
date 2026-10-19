@@ -476,7 +476,10 @@ def visibility(family_ids=None, out: Path = Path("build/audit"), seed: int = 0, 
 
 
 # ---- the agent image -----------------------------------------------------------------------------------------------------
-BENCHMARK_NAMES = ("embodied_safety_exam", "embodied-safety-exam", "robosafe", "rsafe")   # the benchmark's names, current and former: an agent must not meet any
+# The benchmark's names an agent must not meet. The former names stay in this one tuple on purpose: old images, task
+# directories and work paths made before the rename still carry them, and the audit must still catch them there.
+BENCHMARK_NAMES = ("embodied_safety_exam", "embodied-safety-exam", "robosafe", "rsafe")
+_NAMES_RE = "|".join(n.replace("_", ".").replace("-", ".") for n in BENCHMARK_NAMES)
 FORBIDDEN_PATHS = ("families", "hazard", "episode", "verify", "harness", "assets", "metrics", "server", "rules", "sources")
 
 
@@ -484,11 +487,11 @@ def image_leak(version: str | None = None, image: str | None = None) -> dict:
     """List `/opt/client` of the agent image and look for anything that is not the client."""
     from embodied_safety_exam import __version__, families
     root = Path(__file__).resolve().parent.parent
-    image = image or f"rsafe-agent:{version or __version__}"
+    image = image or f"ese-agent:{version or __version__}"
     if shutil.which("docker") is None:
         return {"ran": False, "image": image, "why": "docker is not on the PATH"}
     script = ("cd /opt/client && find . -type f | sort | while read f; do echo \"F $(sha256sum \"$f\" | cut -c1-64) $(wc -c < \"$f\") $f\"; done; "
-              "find / -xdev \\( -iname '*robosafe*' -o -iname '*embodied_safety_exam*' -o -iname '*mujoco*' -o -iname 'sources.json' -o -iname 'RULES.md' \\) "
+              "find / -xdev \\( " + " -o ".join(f"-iname '*{n}*'" for n in BENCHMARK_NAMES) + " -o -iname '*mujoco*' -o -iname 'sources.json' -o -iname 'RULES.md' \\) "
               "-not -path '/proc/*' -not -path '/sys/*' 2>/dev/null | sed 's/^/P /'; "
               "pip list --format=freeze 2>/dev/null | sed 's/^/L /'")
     run = subprocess.run(["docker", "run", "--rm", "--network", "none", "--entrypoint", "sh", image, "-c", script], capture_output=True, text=True, timeout=300)
@@ -523,9 +526,9 @@ def image_leak(version: str | None = None, image: str | None = None) -> dict:
            "forbidden_paths": bad_paths, "ese_or_mujoco_outside_client": outside,
            "files_naming_families_or_rules": [l for l in grep.stdout.splitlines() if l.strip()],
            "files_naming_the_benchmark": sorted({l for l in named.stdout.splitlines() if l.strip()} | {p for p in elsewhere if any(n in p.lower() for n in BENCHMARK_NAMES)}),
-           "packages": [p for p in packages if re.match(r"(?i)(mujoco|robosafe|embodied.safety.exam|numpy|pillow)", p)]}
+           "packages": [p for p in packages if re.match(rf"(?i)(mujoco|{_NAMES_RE}|numpy|pillow)", p)]}
     out["clean"] = not (out["unknown_files"] or bad_paths or outside or out["files_naming_families_or_rules"] or out["files_naming_the_benchmark"]
-                        or any(re.match(r"(?i)(mujoco|robosafe|embodied.safety.exam)", p) for p in packages))
+                        or any(re.match(rf"(?i)(mujoco|{_NAMES_RE})", p) for p in packages))
     return out
 
 

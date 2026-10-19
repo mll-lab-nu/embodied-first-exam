@@ -38,21 +38,6 @@ def load(path):
     return identity
 
 
-def frozen_fields(value):
-    """Read historical public names without rewriting frozen bytes or granting admission."""
-    if not isinstance(value, dict):
-        return value
-    parsed = dict(value)
-    for suffix in ('commit', 'version', 'image_id'):
-        current = 'ese_'+suffix
-        for old in ('robosafe_'+suffix, 'robosafebench_'+suffix):   # the names before 0.5.4, and before the rename
-            if old in value and current in value and (type(value[old]) is not type(value[current]) or value[old] != value[current]):
-                raise ValueError('Conflicting historical/current frozen identity fields: '+suffix)
-            if old in value and current not in parsed:
-                parsed[current] = value[old]
-    return parsed
-
-
 def key_identity(key):
     out = {name: key.get(name, DEFAULTS.get(name)) for name in KEY_FIELDS}
     if 'think_s' not in key:
@@ -73,7 +58,6 @@ def native_matches(native, identity):
             and native.get('source_overlay') is False and native.get('isolated_python') is True
             and native.get('native_assets_package_only') is True
             and native.get('native_asset_path') == str(Path(native.get('package_path', '')).parent/'assets/data/third_party')
-            and native.get('process_environment', {}).get('ROBOSAFE_THIRD_PARTY') is None
             and native.get('process_environment', {}).get('ESE_THIRD_PARTY') == ''
             and native.get('process_environment', {}).get('ESE_ASSET_PROFILE')
                 == identity['visual_assets']['asset_profile'])
@@ -88,8 +72,7 @@ def assert_runtime(identity):
     from embodied_safety_exam.assets.catalog import visual_provenance
     from embodied_safety_exam.assets.paths import third_party_dir
     package = Path(embodied_safety_exam.__file__).resolve().parent
-    if ('ROBOSAFE_THIRD_PARTY' in os.environ or os.environ.get('ESE_THIRD_PARTY')
-            or third_party_dir().resolve() != package/'assets/data/third_party'):
+    if (os.environ.get('ESE_THIRD_PARTY') or third_party_dir().resolve() != package/'assets/data/third_party'):
         raise RuntimeError('Runtime native assets differ from the image-installed package data')
     if os.environ.get('ESE_ASSET_PROFILE') != identity['visual_assets']['asset_profile']:
         raise RuntimeError('Runtime asset profile differs from the frozen task')

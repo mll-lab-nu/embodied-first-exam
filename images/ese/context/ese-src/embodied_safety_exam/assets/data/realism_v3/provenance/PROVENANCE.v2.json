@@ -1,7 +1,7 @@
 {
- "generated_for": "RoboSafeBench realistic asset set v2 (visual-only, for RSB 0.6), 2026-10-15",
+ "generated_for": "Embodied Safety Exam realistic asset set v2 (visual-only, for ESE 0.6), 2026-10-15",
  "licence_policy": "CC0 or CC BY 4.0 only; no NC/ND/SMPL/Mixamo/login-gated sources; no scans of identifiable people; doubtful uploads dropped",
- "rsb_source": "RoboSafeBench lane/int053 (70373cd)",
+ "ese_source": "Embodied Safety Exam lane/int053 (70373cd)",
  "kinds": {
   "apple": {
    "status": "done",
@@ -44,7 +44,7 @@
        0.0748
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.036,
        -0.036,
@@ -110,7 +110,7 @@
        0.0659
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.075286,
        -0.07901,
@@ -177,7 +177,7 @@
        0.0474
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.19,
        -0.032,
@@ -257,7 +257,7 @@
        0.2355
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.281869,
        -0.062744,
@@ -298,7 +298,7 @@
        0.0919
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.262962,
        -0.092095,
@@ -368,7 +368,7 @@
        0.9
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.22,
        -0.22,
@@ -438,7 +438,7 @@
        0.0182
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.175,
        -0.125,
@@ -508,7 +508,7 @@
        0.75
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.7,
        -0.4,
@@ -588,7 +588,7 @@
        0.5865
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.422804,
        -0.093798,
@@ -629,7 +629,7 @@
        0.3937
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.394443,
        -0.138142,
@@ -699,7 +699,7 @@
        0.0399
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.068,
        -0.0025,
@@ -765,7 +765,7 @@
        0.2179
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.065174,
        -0.065174,
@@ -1100,7 +1100,7 @@
        0.016
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.16,
        -0.032,
@@ -1141,7 +1141,7 @@
        0.32
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.0092,
        -0.0225,
@@ -1211,7 +1211,7 @@
        0.35
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.3,
        -0.2,
@@ -1278,7 +1278,7 @@
        0.1564
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.101,
        -0.078312,
@@ -1344,7 +1344,7 @@
        0.0951
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.04111,
        -0.04111,
@@ -3042,7 +3042,7 @@
        0.0253
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.125335,
        -0.125335,
@@ -3108,7 +3108,7 @@
        0.0207
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.072275,
        -0.07585,
@@ -3190,7 +3190,7 @@
        0.026
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.1,
        -0.0138,
@@ -3231,7 +3231,7 @@
        0.2
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.012,
        -0.0138,
@@ -3302,7 +3302,7 @@
        0.8
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.95,
        -0.44,
@@ -3683,7 +3683,7 @@
        0.22
       ]
      ],
-     "rsb_bbox": [
+     "ese_bbox": [
       [
        -0.206,
        -0.156,
@@ -3717,7 +3717,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "basin": {
@@ -3725,7 +3725,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "beaker": {
@@ -3744,7 +3744,7 @@
      "pillow": "fabric",
      "blanket": "fabric_coarse"
     },
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "belt_conveyor": {
@@ -3754,7 +3754,7 @@
     "by_geom": {
      "belt": "rubber"
     },
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "billy_can": {
@@ -3762,7 +3762,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "biohazard_bin": {
@@ -3770,7 +3770,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "blade_box": {
@@ -3782,7 +3782,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "bottle_cap": {
@@ -3790,7 +3790,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "bucket": {
@@ -3798,7 +3798,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "cabinet": {
@@ -3806,7 +3806,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "candle": {
@@ -3814,7 +3814,7 @@
    "materials": {
     "finish": "wax",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "carboy": {
@@ -3822,7 +3822,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "card": {
@@ -3834,7 +3834,7 @@
    "materials": {
     "finish": "cardboard",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "charging_dock": {
@@ -3844,7 +3844,7 @@
     "by_geom": {
      "mat": "rubber"
     },
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "chocolate_bar": {
@@ -3852,7 +3852,7 @@
    "materials": {
     "finish": "paper",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "coaster": {
@@ -3860,7 +3860,7 @@
    "materials": {
     "finish": "wood_light",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "coin_cell_pack": {
@@ -3874,7 +3874,7 @@
     "by_geom": {
      "worktop": "wood"
     },
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "cover_box": {
@@ -3882,7 +3882,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "cup": {
@@ -3890,7 +3890,7 @@
    "materials": {
     "finish": "paper",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "document": {
@@ -3902,7 +3902,7 @@
    "materials": {
     "finish": "cardboard",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "dog_biscuit_box": {
@@ -3910,7 +3910,7 @@
    "materials": {
     "finish": "cardboard",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "dog_bowl": {
@@ -3918,7 +3918,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "doll": {
@@ -3932,7 +3932,7 @@
      "hand": "plastic",
      "foot": "plastic"
     },
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "door": {
@@ -3940,7 +3940,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "drawer_unit": {
@@ -3948,7 +3948,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "drying_rack": {
@@ -3956,7 +3956,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "estop_button": {
@@ -3964,7 +3964,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "floor_cord": {
@@ -3976,7 +3976,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "flyer_stack": {
@@ -3988,7 +3988,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "glass": {
@@ -4000,7 +4000,7 @@
    "materials": {
     "finish": "rubber",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "high_shelf": {
@@ -4008,7 +4008,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "hob_counter": {
@@ -4018,7 +4018,7 @@
     "by_geom": {
      "worktop": "granite"
     },
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "hot_plate": {
@@ -4026,7 +4026,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "iron": {
@@ -4034,7 +4034,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "kettle": {
@@ -4042,7 +4042,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "keyboard": {
@@ -4050,7 +4050,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "knife_block": {
@@ -4058,7 +4058,7 @@
    "materials": {
     "finish": "wood_light",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "laptop": {
@@ -4066,7 +4066,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "light_bulb": {
@@ -4074,7 +4074,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "machine_hopper": {
@@ -4082,7 +4082,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "marker_pen": {
@@ -4090,7 +4090,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "metal_cube": {
@@ -4102,7 +4102,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "packing_box": {
@@ -4110,7 +4110,7 @@
    "materials": {
     "finish": "cardboard",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "paper_stack": {
@@ -4118,7 +4118,7 @@
    "materials": {
     "finish": "paper",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "passport": {
@@ -4130,7 +4130,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "pill_bottle": {
@@ -4138,7 +4138,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "pill_organizer": {
@@ -4146,7 +4146,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "plug_adapter": {
@@ -4154,7 +4154,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "plug_stand": {
@@ -4162,7 +4162,7 @@
    "materials": {
     "finish": "wood_light",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "pot": {
@@ -4173,7 +4173,7 @@
      "handle": "plastic",
      "shell": "brushed_metal"
     },
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "power_bank": {
@@ -4181,7 +4181,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "power_strip": {
@@ -4189,7 +4189,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "puddle": {
@@ -4201,7 +4201,7 @@
    "materials": {
     "finish": "leather_t",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "reagent_bottle": {
@@ -4209,7 +4209,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "room_door": {
@@ -4217,7 +4217,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "rubber_block": {
@@ -4225,7 +4225,7 @@
    "materials": {
     "finish": "rubber",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "rug": {
@@ -4233,7 +4233,7 @@
    "materials": {
     "finish": "fabric_coarse",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "salt_jar": {
@@ -4241,7 +4241,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "sample_tube": {
@@ -4253,7 +4253,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "shelf": {
@@ -4261,7 +4261,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "shredder": {
@@ -4269,7 +4269,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "sink": {
@@ -4277,7 +4277,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "solvent_cabinet": {
@@ -4285,7 +4285,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "space_heater": {
@@ -4293,7 +4293,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "spice_jar": {
@@ -4301,7 +4301,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "spoon": {
@@ -4309,7 +4309,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "stack_light": {
@@ -4317,7 +4317,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "sticky_note": {
@@ -4329,7 +4329,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "tablet": {
@@ -4337,7 +4337,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "tag_card": {
@@ -4349,7 +4349,7 @@
    "materials": {
     "finish": "fabric_coarse",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "threshold_strip": {
@@ -4357,7 +4357,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "toaster": {
@@ -4365,7 +4365,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "tool_basket": {
@@ -4373,7 +4373,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "tool_holder": {
@@ -4381,7 +4381,7 @@
    "materials": {
     "finish": "wood_light",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "towel": {
@@ -4389,7 +4389,7 @@
    "materials": {
     "finish": "fabric",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "towel_warmer": {
@@ -4397,7 +4397,7 @@
    "materials": {
     "finish": "brushed_metal",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "toy_ball": {
@@ -4405,7 +4405,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "tray": {
@@ -4413,7 +4413,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "utility_knife": {
@@ -4421,7 +4421,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "wall_sign": {
@@ -4433,7 +4433,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "waste_bin": {
@@ -4441,7 +4441,7 @@
    "materials": {
     "finish": "plastic",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   },
   "wine_glass": {
@@ -4453,7 +4453,7 @@
    "materials": {
     "finish": "painted",
     "by_geom": {},
-    "by_rsb_material": "plan_v2.BY_RSB_MATERIAL"
+    "by_ese_material": "plan_v2.BY_ESE_MATERIAL"
    }
   }
  },
@@ -4464,7 +4464,7 @@
    "source": {
     "provider": "drawn for this set from noise",
     "license": "CC0 1.0",
-    "author": "RoboSafeBench realism pilot"
+    "author": "Embodied Safety Exam realism pilot"
    }
   },
   "brushed_metal": {
@@ -4473,7 +4473,7 @@
    "source": {
     "provider": "drawn for this set from noise",
     "license": "CC0 1.0",
-    "author": "RoboSafeBench realism pilot"
+    "author": "Embodied Safety Exam realism pilot"
    }
   },
   "painted": {
@@ -4482,7 +4482,7 @@
    "source": {
     "provider": "drawn for this set from noise",
     "license": "CC0 1.0",
-    "author": "RoboSafeBench realism pilot"
+    "author": "Embodied Safety Exam realism pilot"
    }
   },
   "rubber": {
@@ -4491,7 +4491,7 @@
    "source": {
     "provider": "drawn for this set from noise",
     "license": "CC0 1.0",
-    "author": "RoboSafeBench realism pilot"
+    "author": "Embodied Safety Exam realism pilot"
    }
   },
   "ceramic": {
@@ -4500,7 +4500,7 @@
    "source": {
     "provider": "drawn for this set from noise",
     "license": "CC0 1.0",
-    "author": "RoboSafeBench realism pilot"
+    "author": "Embodied Safety Exam realism pilot"
    }
   },
   "fabric": {
@@ -4542,7 +4542,7 @@
    "source": {
     "provider": "drawn for this set from noise",
     "license": "CC0 1.0",
-    "author": "RoboSafeBench realism pilot"
+    "author": "Embodied Safety Exam realism pilot"
    }
   },
   "paper": {
@@ -4551,7 +4551,7 @@
    "source": {
     "provider": "drawn for this set from noise",
     "license": "CC0 1.0",
-    "author": "RoboSafeBench realism pilot"
+    "author": "Embodied Safety Exam realism pilot"
    }
   },
   "cardboard": {
@@ -4560,7 +4560,7 @@
    "source": {
     "provider": "drawn for this set from noise",
     "license": "CC0 1.0",
-    "author": "RoboSafeBench realism pilot"
+    "author": "Embodied Safety Exam realism pilot"
    }
   },
   "wood_light": {
@@ -5334,7 +5334,7 @@
   },
   {
    "what": "GSO Kanex keyboard, Black+Decker toaster",
-   "why": "visible brand marks; RSB prints only invented names"
+   "why": "visible brand marks; ESE prints only invented names"
   },
   {
    "what": "Poly Haven plastic_crate_01",
