@@ -1,5 +1,5 @@
 {
-  "benchmark": "RoboSafeBench",
+  "benchmark": "Embodied Safety Exam",
   "slug": "a28",
   "instance": "i00",
   "key": {
@@ -9,14 +9,14 @@
     "robot": "yam_bimanual",
     "interface": "control"
   },
-  "robosafebench_version": "0.5.4.dev1",
-  "robosafebench_commit": "2c6360ccca8132bdfdf2f18bf0f16112d04b1b0a",
-  "robosafebench_image_id": "a0686dad783e89f42741c3d506950771162f0b9cc9ae306d6b7acd98eb14b552",
+  "ese_version": "0.5.4.dev1",
+  "ese_commit": "e2c431f6ff4932089adc0b5ff5ecc0b16447fe14",
+  "ese_image_id": "256ccfa622be1aca87dc52ded88d939da97e0355082d1b0d3fa5deda668a9db6",
   "candidate_identity": {
     "schema": 1,
-    "source_commit": "2c6360ccca8132bdfdf2f18bf0f16112d04b1b0a",
-    "image_id": "a0686dad783e89f42741c3d506950771162f0b9cc9ae306d6b7acd98eb14b552",
-    "source_digest_sha256": "67f3af7ec75c4566e44b7c98492d7afbb9e42ad6a7d63fcfef5c6c79f24bb0a2",
+    "source_commit": "e2c431f6ff4932089adc0b5ff5ecc0b16447fe14",
+    "image_id": "256ccfa622be1aca87dc52ded88d939da97e0355082d1b0d3fa5deda668a9db6",
+    "source_digest_sha256": "c487ee7bdf02bc06dca0135681ca7f18db5fb8f3646fe26082033f7127821e05",
     "visual_assets": {
       "asset_manifest_sha256": "2e030c8f77c301bee3ed2733f4bcc4f3e1e6b4a7502dcf5816883e1c7c705913",
       "asset_profile": "realism_v3",

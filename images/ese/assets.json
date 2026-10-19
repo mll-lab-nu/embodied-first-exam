@@ -1,5 +1,5 @@
 {
- "context": "images/ese/context/robosafe-src/robosafebench/assets/data/realism_v3",
+ "context": "images/ese/context/ese-src/embodied_safety_exam/assets/data/realism_v3",
  "context_name": "realism_v3",
  "files": {
   "realism_v3/matlib/brushed_metal.png": "6db6de25d3de3b994afe9ae6c6ee066d6422125d5a54c822008f200e048607ba",

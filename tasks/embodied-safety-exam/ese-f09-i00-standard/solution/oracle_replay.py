@@ -29,7 +29,7 @@ def run_reference(document, arrays, robot, output=None, *, monotonic=time.monoto
             raise ValueError('Public paused schema2 must retain its normal all-public HTTP policy')
         if output is None:raise ValueError('Schema2 requires an observation delivery artifact directory')
         output=Path(output);output.mkdir(parents=True,exist_ok=False)
-    elif document.get('schema') not in (None,'rsb.public-control-plan/1') or any(
+    elif document.get('schema') not in (None,'ese.public-control-plan/1') or any(
             item.get('type')=='observe' for item in plan):
         raise ValueError('Unversioned snapshots cannot change legacy paused semantics')
     if document.get('candidate_identity') or version2:
@@ -69,7 +69,7 @@ def run_reference(document, arrays, robot, output=None, *, monotonic=time.monoto
         pass
     status=robot.status()
     if version2:
-        (output/'DELIVERY_RECEIPT.json').write_text(json.dumps({'schema':'rsb.public-observation-run/1',
+        (output/'DELIVERY_RECEIPT.json').write_text(json.dumps({'schema':'ese.public-observation-run/1',
             'clock':'paused','public_plan_sha256':O.canonical(document),
             'observation_policy':document['observation_policy'],
             'snapshot_batches_delivered':len(deliveries),'final_status':status,
