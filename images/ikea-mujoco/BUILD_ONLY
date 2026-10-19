@@ -1,0 +1,1 @@
+Private (ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-<VERSION>, and its sim/ sidecar image): the meshes come from a private Hugging Face dataset (docs/benchmarks/ikea_mujoco.md). The tasks reference the efe-private tags.

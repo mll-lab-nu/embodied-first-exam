@@ -7,8 +7,9 @@
 
 `materialize` copies the task directory and, for a seed other than the default, puts that seed's frozen instance
 (`tests/seeds/<S>/instance.{json,npz}` of the task that holds the pair's instances: the privileged twin of a standard
-task, else the task itself) in every place the task runs and grades from: privileged `environment/` and `tests/`;
-standard and standard-realtime `environment/sim/`; RoboPaint's `environment/scorer/`. The copy's `[metadata.seeds]`
+task, else the task itself) in every place the task runs and grades from: privileged `environment/` (or a scorer
+sidecar's `environment/scorer/`) and `tests/`; standard and standard-realtime `environment/sim/` and, without a twin,
+their own `tests/`; each also in an `instance/` folder one level down (ManiGuard). The copy's `[metadata.seeds]`
 `default` (and `instance_seed`, where present) say the seed it runs from, so a result records it; its `tests/seeds/`
 is removed, and every file gets its content-derived mtime (scripts/stamp_mtimes.py, issue #258). A seed without a
 committed instance, of a task with `build = "runtime"`, is written instead as a file `seed` (the integer) in each of
@@ -41,12 +42,14 @@ def holder(task: Path) -> Path:
 
 
 def places(task: Path) -> list[str]:
-    """Where a task's instance copies are (the same mapping as ci_checks/check-instance-copies.sh)."""
+    """Where a task's instance copies are (the mapping of ci_checks/check-instance-copies.sh): the copy it runs from and the
+    verifier's tests/ copy (a standard task without a privileged twin carries its own), each also one level down in an
+    `instance/` folder (ManiGuard)."""
     if tc.mode_of(task) in tc.SIDECAR_MODES:
-        return ["environment/sim"]
-    if task.name.startswith("robopaint-"):
-        return ["environment/scorer", "tests"]
-    return ["environment", "tests"]
+        run = "environment/sim"
+    else:
+        run = "environment/scorer" if (task / "environment" / "scorer").is_dir() else "environment"
+    return [d for p in (run, "tests") for d in (p, f"{p}/instance")]
 
 
 ANY = 2 ** 31                                   # "any": a seed is drawn from 0 .. ANY - 1
@@ -72,12 +75,15 @@ def materialize(task: Path, seed: int, out: Path) -> Path:
     src = holder(task) / "tests" / "seeds" / str(seed)
     files = [f for f in ("instance.json", "instance.npz") if (src / f).is_file()]
     if seed != sd["default"] and files:            # a committed instance of that seed
+        copied = 0
         for place in places(task):
             for f in ("instance.json", "instance.npz"):
                 if (dst / place / f).is_file():
                     if f not in files:
                         raise SystemExit(f"{task.name}: seed {seed} has no {f} (the default instance has one)")
-                    shutil.copyfile(src / f, dst / place / f)
+                    shutil.copyfile(src / f, dst / place / f); copied += 1
+        if not copied:                             # never a copy that says seed S and runs the default instance
+            raise SystemExit(f"{task.name}: no instance copy found to replace with seed {seed}'s ({', '.join(places(task))})")
     elif seed != sd["default"]:
         if sd["build"] != "runtime":
             raise SystemExit(f"{task.name}: seed {seed} has no frozen instance under {src}")

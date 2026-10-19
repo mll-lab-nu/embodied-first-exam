@@ -115,7 +115,6 @@ policies are deleted from the image in the layer that installs them.
 ```bash
 docker build -t ghcr.io/mll-lab-nu/efe:metaworld-$(cat images/metaworld/VERSION) \
     -f images/metaworld/Dockerfile images/metaworld          # ~780 MB
-cd tasks && harbor add --scan . && cd ..
 bash ci_checks/run_all.sh tasks/metaworldplus/metaworldplus-*
 ```
 

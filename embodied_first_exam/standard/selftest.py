@@ -558,7 +558,7 @@ def agent_clock_starts_at_the_first_request_and_survives_a_resume():
 
 @case
 def every_adapter_reports_the_agents_clock():
-    """Each eai-standard/2.2 adapter (tasks/*/environment/sim/server.py next to a copy of this layer) computes meta
+    """Each eai-standard/2.2 adapter (tasks/<benchmark>/<task>/environment/sim/server.py next to a copy of this layer) computes meta
     time_s and time_left_s from the agent's first request: from rcb_limited.agent_time (or the first-request time the
     layer keeps in E["t_first"]), never from the service's start or the episode's own t0."""
     import glob, hashlib, re
@@ -567,7 +567,7 @@ def every_adapter_reports_the_agents_clock():
     # benchmark's own regeneration, board 0151, and the adapters' clock does not depend on it)
     proto = next(x for x in open(os.path.join(HERE, "rcb_limited.py"), encoding="utf-8") if x.startswith("PROTOCOL ="))
     seen, bad = {}, []
-    for f in sorted(glob.glob(os.path.join(tasks, "*", "environment", "sim", "server.py"))):
+    for f in sorted(glob.glob(os.path.join(tasks, "*", "*", "environment", "sim", "server.py"))):
         lay = os.path.join(os.path.dirname(f), "rcb_limited.py")
         if not os.path.isfile(lay) or proto not in open(lay, encoding="utf-8").read().splitlines(keepends=True):
             continue                               # another protocol's service

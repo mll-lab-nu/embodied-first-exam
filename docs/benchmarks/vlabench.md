@@ -117,7 +117,6 @@ agent's client and the verifier (`grade.py`: `success = live_success`) are main'
 docker build -t ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION) \
     -f images/vlabench/Dockerfile .                  # from the repository root; ~15 GB
 python3 scripts/task_conventions.py --check tasks/vlabench/vlabench-*
-cd tasks && harbor add --scan . && cd ..           # then drop dataset entries whose directory is gone
 bash ci_checks/run_all.sh tasks/vlabench/vlabench-*
 ```
 
