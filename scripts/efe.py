@@ -4,6 +4,7 @@ flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywh
 
   harbor run -a codex -m openai/gpt-6-luna            # core (one mode per task): the default
   harbor run --core --privileged -a codex -m openai/gpt-6-luna   # core-privileged (also --standard, --standard-realtime)
+  harbor run --core-all -a codex -m openai/gpt-6-luna   # core-all: every dir of docs/core_set.toml, every mode
   harbor run --all -a codex -m openai/gpt-6-luna      # every task
   harbor run --standard -a claude-code -m anthropic/claude-fable-5-1   # --privileged / --standard / --standard-realtime
   harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # -i / -x filter within the set
@@ -11,8 +12,9 @@ flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywh
   harbor run -p tasks/<benchmark>/<task> -a nop       # one task: Harbor's own -p, untouched
   harbor run -p tasks/<benchmark> -a nop              # every task of one benchmark: Harbor's own -p, untouched
 
-Set: --core (default) or --all. core = one task dir per task of docs/core_set.toml, its mode the first listed of
-standard-realtime > standard > privileged; with mode flags, core-<mode> = the list's dirs of those modes. Modes: any of
+Set: --core (default), --core-all or --all. core = one task dir per task of docs/core_set.toml, its mode the first
+listed of standard-realtime > standard > privileged; core-all = every dir of the list; with mode flags (either set),
+core-<mode> = the list's dirs of those modes. Modes: any of
 --privileged, --standard, --standard-realtime; none = every mode (with --all) or one per task (core).
 --benchmark <name> keeps a benchmark: its README label or its folder under tasks/ (repeatable). With any of these flags,
 -p <dir> (a task dir, a benchmark folder or tasks/) narrows the set to the task dirs under it, and -c <file> is layered
@@ -76,15 +78,15 @@ def config_file(pick: list[str]) -> str:
 def run(argv: list[str], app=None) -> int:
     """`harbor run` with the set / mode / benchmark flags: picks the task dirs, then `harbor run -c <job config> ...`
     (config_file: one dataset per benchmark folder)."""
-    ours = ("--core", "--all", "--benchmark", "--list")
+    ours = ("--core", "--core-all", "--all", "--benchmark", "--list")
     if any(a in SOURCES or a.startswith(tuple(s + "=" for s in SOURCES if s.startswith("--"))) for a in argv):
         if not any(a in MODES or a in ours or a.startswith("--benchmark=") for a in argv):
             return harbor(["run", *argv], app)                # the user's own task source: plain Harbor
-    use_all, modes, benches, inc, exc, paths, listing, rest = False, set(), [], [], [], [], False, []
+    which, modes, benches, inc, exc, paths, listing, rest = "core", set(), [], [], [], [], False, []
     it = iter(argv)
     for a in it:
-        if a in ("--all", "--core"):
-            use_all = a == "--all"
+        if a in ("--all", "--core", "--core-all"):
+            which = a[2:]
         elif a in MODES:
             modes.add(MODES[a])
         elif a == "--benchmark" or a.startswith("--benchmark="):
@@ -113,7 +115,7 @@ def run(argv: list[str], app=None) -> int:
         else:
             rest.append(a)
     tasks = [t.name for t in tc.iter_tasks()]
-    pick = tasks if use_all else sorted(set(tc.core_tasks(modes)) & set(tasks))
+    pick = tasks if which == "all" else sorted(set(tc.core_tasks(modes, which == "core-all")) & set(tasks))
     scope = under(paths)
     pick = [t for t in pick if (scope is None or t in scope)
             and (not modes or tc.mode_of(Path(t)) in modes)
@@ -122,7 +124,7 @@ def run(argv: list[str], app=None) -> int:
             and not any(fnmatch.fnmatchcase(t, p) for p in exc)]
     if not pick:
         print("no task matches", file=sys.stderr); return 2
-    print(f"{len(pick)} task(s) of " + ("all" if use_all else "core") + (f", {', '.join(sorted(modes))}" if modes else "")
+    print(f"{len(pick)} task(s) of " + which + (f", {', '.join(sorted(modes))}" if modes else "")
           + (f", {', '.join(sorted(set(benches)))}" if benches else ""), file=sys.stderr)
     if listing:
         print("\n".join(pick)); return 0
