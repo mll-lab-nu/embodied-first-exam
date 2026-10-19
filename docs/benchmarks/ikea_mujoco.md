@@ -24,6 +24,19 @@ The agent budget is 10800 s (3 h) of wall clock in both modes. One reference exe
 the trial host (Timing, below). A privileged trajectory may have at most the task's row cap (stated in its instruction:
 the verifier's replays must fit its time limit).
 
+## Build the images locally
+
+The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
+Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+
+```bash
+images/ikea-mujoco/fetch_image_context.sh   # needs read access to the private mesh dataset (ask the maintainers)
+docker build -f images/ikea-mujoco/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-$(cat images/ikea-mujoco/VERSION) images/ikea-mujoco/context
+docker build -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-$(cat images/ikea-mujoco/sim/VERSION) images/ikea-mujoco/sim
+python3 scripts/files_image.py build ikea-mujoco-files
+grep -rlE 'efe-private:[^@ ]+@sha256' tasks/ikea-mujoco | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+```
+
 ## Work in progress (not tasks)
 Four more scenes are in the image (`/opt/ikea/scenes/`) but are not tasks: no reference passes every gate yet.
 - `burvik`: no reference passes under the prism rule and the joint-speed clamp; leg 3 is blocked by the scene's

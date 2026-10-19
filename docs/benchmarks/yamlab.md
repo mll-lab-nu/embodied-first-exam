@@ -13,6 +13,17 @@ object assets (pot_k + cooktop_k, mug_k + mug_tree_k) placed as in one of YAMLab
 The instances keep the ids they were frozen with: `put_pot_on_cooktop` i00, i03, i04, i07, i08; `hang_mug_on_tree` i10,
 i13, i15, i20, i21.
 
+## Build the images locally
+
+The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
+Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+
+```bash
+docker build -f images/yamlab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:yamlab-$(cat images/yamlab/VERSION) .
+python3 scripts/files_image.py build yamlab-files
+grep -rlE 'efe-private:[^@ ]+@sha256' tasks/yamlab | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+```
+
 ## Instances
 25 instances per family were frozen (Tasks), and five per family are kept: the 25 differ only in the
 object pair and one of 9 (pot) or 3 (mug) placements and so repeat each other. The kept five mix solved and failed

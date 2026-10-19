@@ -38,6 +38,17 @@ Not in this set:
 - AM-Bench's other robot and controller profiles (the quadrotor, the omnidirectional hexa, the under-actuated hexa, the
   end-effector-only robot; L1 and MPC controllers) are variants of the same tasks.
 
+## Build the images locally
+
+The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
+Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+
+```bash
+docker build -f images/ambench/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ambench-$(cat images/ambench/VERSION) .
+python3 scripts/files_image.py build ambench-files
+grep -rlE 'efe-private:[^@ ]+@sha256' tasks/ambench | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+```
+
 ## Tasks
 - The task directories are the deliverable; the tooling that built them is kept outside this repository. Each instance's
   `instance.json` and `oracle_actions.npy` are committed in the tasks; PullLever has only its standard task.

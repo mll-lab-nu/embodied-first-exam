@@ -60,6 +60,17 @@ never copied into the task and not replayed here.
 | `maniguard-clutter-pickup-i09` | `clutter_pickup/task_0009` | `23d5d2418f027373` | a small mug from a dense pack; a 2.6 cm sphere; a low coffee table |
 | `maniguard-clutter-pickup-i23` | `clutter_pickup/task_0023` | `021f30c779dc2819` | a top-heavy cocktail glass among a 25 cm vase and a wineglass; a raised sphere |
 
+## Build the images locally
+
+The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
+Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+
+```bash
+docker build -f images/maniguard/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) .
+python3 scripts/files_image.py build maniguard-files
+grep -rlE 'efe-private:[^@ ]+@sha256' tasks/maniguard | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+```
+
 ## Prerequisites (every ManiGuard run)
 - **The image** `ghcr.io/mll-lab-nu/efe-private:maniguard-<images/maniguard/VERSION>`, built on the host
   (BUILD_ONLY: NVIDIA Isaac Sim 4.5 inside). `images/maniguard/` has the recipe: BEHAVIOR-1K v3.7.2 installed the way its

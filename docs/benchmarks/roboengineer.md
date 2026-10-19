@@ -7,6 +7,19 @@ evaluator whose dynamics differ in hidden ways, read back noisy telemetry and ca
 of the same hidden plant. Contributed by WENLIXIAO-CS in #329 (the "Robotic Engineering Bench contributors"); admitted
 as a benchmark by the owner on 2026-10-17 (board 0146).
 
+## Build the images locally
+
+The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
+Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+
+```bash
+# first prepare the assets and build control-transfer-* and quadrotor-landing as in Images below
+# (the Neural Fly force fit is not in this repository: ask the maintainers)
+python3 scripts/files_image.py build roboengineer-files
+python3 scripts/files_image.py build control-transfer-anycar-files
+grep -rlE 'efe-private:[^@ ]+@sha256' tasks/roboengineer | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+```
+
 ## Tasks
 
 30 tasks, 15 families × 2 instances (`i00`, `i01`: two independently drawn hidden plants), all `-standard`:
@@ -83,8 +96,8 @@ All are `BUILD_ONLY` (licence-restricted evaluator assets; see the marker files)
 
 Build (any Linux host with Docker and network access to github.com and PyPI): run the preparation in a
 `python:3.12` container (numpy 2.3.1, mujoco 3.5.0, scipy 1.17.0, CPU torch for the landing checkpoint conversion):
-`python -m images/control-transfer/stage_nominal_assets.py --workspace <ws with sim2realbench/vendor/unitree_rl_mjlab @1425b15f>
---go2-source <menagerie @0059d433> --out <nominal> --private-go2-out <go2>`, `python -m images/control-transfer/neuralfly_visual.py --out <skydio>`,
+`python images/control-transfer/stage_nominal_assets.py --workspace <ws with sim2realbench/vendor/unitree_rl_mjlab @1425b15f>
+--go2-source <menagerie @0059d433> --out <nominal> --private-go2-out <go2>`, `python images/control-transfer/neuralfly_visual.py --out <skydio>`,
 the Neural Fly force fit `<fly>` (from aerorobotics/neural-fly @0ed50246; its fitting tool is kept outside this repository),
 `python images/control-transfer/prepare_assets.py --assets <nominal> --fly <fly> --go2 <go2> --skydio <skydio>`,
 `bash images/quadrotor-landing/prepare_assets.sh`; then `BUILD_TRAIN=1 bash images/control-transfer/build.sh` (a host that
