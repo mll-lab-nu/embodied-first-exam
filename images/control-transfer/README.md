@@ -5,16 +5,20 @@ The evaluator image is **BUILD_ONLY** (private): flight-log-derived calibration 
 From the repository root (git, python3 and network access to github.com and PyPI):
 
 ```bash
-images/control-transfer/fetch_assets.sh [--fly /path/to/dir-with-forces.npz]   # pinned public sources -> assets/
+images/control-transfer/fetch_assets.sh --fit-fly   # pinned public sources -> assets/, Neural Fly force fit made locally
 BUILD_TRAIN=1 bash images/control-transfer/build.sh
 ```
 
 `fetch_assets.sh` clones unitree_rl_mjlab @ `1425b15f73bd4095f0df53709d7c389c3eb9e790` and MuJoCo Menagerie @
 `0059d4335f8156206f63a35662313385f7ad6d74` (Go2), downloads the Skydio X2 files from Menagerie @ `d7b481ba` with their
-sha256 checked, and runs `stage_nominal_assets.py`, `neuralfly_visual.py` and `prepare_assets.py`. Without `--fly` the
-evaluator holds no force asset and the `roboengineer-neuralfly-*` tasks refuse to start; all other tasks run.
+sha256 checked, and runs `stage_nominal_assets.py`, `neuralfly_visual.py` and `prepare_assets.py`. `--fit-fly` also
+clones aerorobotics/neural-fly @ `0ed50246b1f1db194e8f0726749351636d3501bf` and fits the Neural Fly force surrogate locally
+with `calibrate_fly.py` in a throwaway `python:3.12.14-slim` container (numpy 2.3.1, mujoco 3.5.0; needs docker and PyPI):
+the result is byte-identical to the pinned `forces.npz` (`8e1c148e…`), which the script checks. `--fly <dir>` uses a
+`forces.npz` you already have (same check). With neither, the evaluator holds no force asset and the
+`roboengineer-neuralfly-*` tasks refuse to start; all other tasks run.
 
-Both preparation steps require fresh output directories. Staged `assets/` are gitignored. The private flight directory must contain the pinned `forces.npz` described in [Neural Fly](../../tasks/roboengineer/neuralfly.md); its fitting procedure (calibrate_fly.py) is kept with the benchmark's construction tooling, outside this repository. A different fitted artifact requires a separately versioned benchmark definition, not a silent replacement.
+Both preparation steps require fresh output directories. Staged `assets/` are gitignored. The private flight directory must contain the pinned `forces.npz` described in [Neural Fly](../../tasks/roboengineer/neuralfly.md); `calibrate_fly.py` is its fitting procedure. The fit is never published: the Neural-Fly logs are "for personal and educational use only", with written permission from the authors required for further use. A different fitted artifact requires a separately versioned benchmark definition, not a silent replacement.
 
 | Target | Contents | Tag |
 |---|---|---|
