@@ -62,13 +62,11 @@ never copied into the task and not replayed here.
 
 ## Build the images locally
 
-The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
-Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+The images are private (`ghcr.io/mll-lab-nu/efe-private`: Isaac Sim / Omniverse inside, which NVIDIA does not allow to redistribute). Build them from the repository root with the tags the tasks name, then run the tasks unchanged. The files image (`scripts/files_image.py build`) is written byte for byte from the repository, so it has the very digest the task Dockerfiles pin (`COPY --from=<tag>@sha256:…`), and the tasks build from it as they are; that needs Docker's containerd image store (the default of Docker Engine 29 and Docker Desktop), as the classic store resolves a digest only for a pulled image.
 
 ```bash
 docker build -f images/maniguard/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) .
 python3 scripts/files_image.py build maniguard-files
-grep -rlE 'efe-private:[^@ ]+@sha256' tasks/maniguard | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
 ```
 
 ## Prerequisites (every ManiGuard run)

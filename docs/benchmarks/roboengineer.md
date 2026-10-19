@@ -9,15 +9,13 @@ as a benchmark by the owner on 2026-10-17 (board 0146).
 
 ## Build the images locally
 
-The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
-Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+The images are private (`ghcr.io/mll-lab-nu/efe-private`: data that may not be redistributed). Build them from the repository root with the tags the tasks name, then run the tasks unchanged. The files image (`scripts/files_image.py build`) is written byte for byte from the repository, so it has the very digest the task Dockerfiles pin (`COPY --from=<tag>@sha256:…`), and the tasks build from it as they are; that needs Docker's containerd image store (the default of Docker Engine 29 and Docker Desktop), as the classic store resolves a digest only for a pulled image. The Control Transfer evaluator image needs the Neural Fly force fit, which is not in this repository (Neural-Fly's flight-log terms forbid redistributing it, and its fitting tool is kept outside): it is available on request from the maintainers. Everything else is fetched from public sources by the preparation steps under Images.
 
 ```bash
 # first prepare the assets and build control-transfer-* and quadrotor-landing as in Images below
-# (the Neural Fly force fit is not in this repository: ask the maintainers)
+# (the Neural Fly force fit is not in this repository: available on request from the maintainers)
 python3 scripts/files_image.py build roboengineer-files
 python3 scripts/files_image.py build control-transfer-anycar-files
-grep -rlE 'efe-private:[^@ ]+@sha256' tasks/roboengineer | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
 ```
 
 ## Tasks
@@ -91,7 +89,7 @@ All are `BUILD_ONLY` (licence-restricted evaluator assets; see the marker files)
 | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0-nominal` | python 3.12, MuJoCo 3.5.0, OSMesa, ffmpeg; public assets (Unitree mjlab G1 subset, Menagerie Go2, Skydio X2) | the agent's container (FROM) |
 | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0-train` | nominal + libEGL and the G1 training stack, pinned: torch 2.11.0+cu128 (CUDA 12.8 wheels: NVIDIA driver >= 570), mujoco-warp 3.5.0, warp-lang 1.12.0, mjlab 1.2.0, rsl-rl-lib 5.0.1, tensordict 0.14.3, tensorboard 2.21.0, onnx 1.23.0, onnxscript 0.7.2, onnxruntime 1.23.2, wandb 0.30.0 (`pip check` clean); 4.7 GB | the G1 agent's container (FROM) |
 | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` | nominal + the Neural Fly force surrogate (`/opt/private-fly/forces.npz`) and the evaluator Go2 assets | the `sim` sidecar |
-| `ghcr.io/mll-lab-nu/efe-private:control-transfer-anycar-files-0.1.0` | files only: AnyCar's `circuits.json` and `compact_routes.json` (`scripts/files_image.py`; `images/control-transfer-anycar-files/FILES.json` pins it) | the AnyCar compact-lap and tracking agents' containers (`COPY --from`) |
+| `ghcr.io/mll-lab-nu/efe-private:control-transfer-anycar-files-0.2.0` | files only: AnyCar's `circuits.json` and `compact_routes.json` (`scripts/files_image.py`; `images/control-transfer-anycar-files/FILES.json` pins it) | the AnyCar compact-lap and tracking agents' containers (`COPY --from`) |
 | `ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0` | python 3.12, MuJoCo, OSMesa, ffmpeg; the Neural Lander residual (`/opt/landing/residual.npz`) | the landing `sim` sidecar (its agent image is built from the client base) |
 
 Build (any Linux host with Docker and network access to github.com and PyPI): run the preparation in a
