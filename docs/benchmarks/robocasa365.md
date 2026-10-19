@@ -9,19 +9,18 @@
 | upstream | robocasa/robocasa @ `4f8a2980def75a55dff96b990745b83540425f09` (robocasa 1.0.1, MIT), robosuite @ `5ce6643` (1.5.2), MuJoCo 3.3.1 |
 | tasks | `tasks/robocasa365/robocasa365-<task>-i00-privileged` and `tasks/robocasa365/robocasa365-<task>-i00-standard`, 50 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa365/<Env>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/efe-private:robocasa365-0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
+| image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
 | sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 
-## Build the images locally
+## Images
 
-The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
-Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+The images are public: `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` and the files image
+`ghcr.io/mll-lab-nu/efe:robocasa365-files-<version>` (pinned by digest), so a task build pulls them. To build the simulator
+image yourself instead, from the repository root:
 
 ```bash
-docker build -f images/robocasa365/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robocasa365-$(cat images/robocasa365/VERSION) images/robocasa365
-python3 scripts/files_image.py build robocasa365-files
-grep -rlE 'efe-private:[^@ ]+@sha256' tasks/robocasa365 | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+docker build -f images/robocasa365/Dockerfile -t ghcr.io/mll-lab-nu/efe:robocasa365-$(cat images/robocasa365/VERSION) images/robocasa365
 ```
 
 ## Scope and selection rule
@@ -114,10 +113,11 @@ demonstration data.
 ## Image
 `images/robocasa365/Dockerfile` pins the base image by digest, every pip package, the robosuite and RoboCasa commits
 and every asset archive by SHA-256 (`fetch_assets.sh`; four archives from RoboCasa's Hugging Face mirror, byte-identical
-to the UT Box ones). It reproduces the content of the image the tasks were validated with. **Open: a clean rebuild**
-(~11 GB of downloads, ~55 GB of disk) and a re-check of the hashes before publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0; the
-Lightwheel fixtures and objects come from RoboCasa's UT Box links under RoboCasa's asset terms (maintainers to
-confirm publishing, otherwise `BUILD_ONLY`).
+to the UT Box ones). It reproduces the content of the image the tasks were validated with; the published image is that validated image
+(a clean rebuild needs ~11 GB of downloads and ~55 GB of disk). Licences: RoboCasa code MIT; RoboCasa's assets
+(robocasa/robocasa-assets: textures, generative textures, Objaverse and AI-generated objects; the Lightwheel fixtures and
+objects from RoboCasa's UT Box links) CC-BY-4.0, as RoboCasa states (credit: RoboCasa, robocasa.ai), the same asset
+terms as the public RoboCasa images.
 
 ## Evidence
 For all 50: not solved at the start; `reset()` bit-exact; the reference

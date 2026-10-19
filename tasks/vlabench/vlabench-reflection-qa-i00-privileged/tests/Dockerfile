@@ -2,7 +2,7 @@
 # only the declared artifacts (/app/output/) arrive from the agent.
 FROM ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0
 COPY test.sh instance.json /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe-private:vlabench-files-0.1.0@sha256:40a954b7f643e4bb280cdf5e07c3f086a1bda555785977e704b085b30211da17 /privileged/environment/vlb_tool.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.2.0@sha256:f5d2fd8b386a90292984125c4c5fa4da919e12ebbe6218a745a36c7eef740a42 /privileged/environment/vlb_tool.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests:/opt/VLABench:/opt/rrt-algorithms
 WORKDIR /tests
