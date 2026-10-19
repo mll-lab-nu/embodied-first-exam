@@ -1,4 +1,4 @@
-"""Synthetic test of the RoboARC standard sim service (scripts/roboarc/shared/standard/sim/server.py) on the real
+"""Synthetic test of the RoboARC standard sim service (embodied_first_exam/benchmarks/roboarc/standard/sim/server.py) on the real
 eai-standard/2.4 layer, with a stub Session (fake_service.py; needs numpy, no simulator, no GPU; about 20 s):
   1. malformed request fields are a 400 that moves nothing and leaves the episode alive (PROTOCOL §4.6), including JSON
      integers beyond the float range, which were a 500 that ended the episode as an infrastructure error (review
@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.join(ROOT, "scripts/eai_standard"))
 import rcb1  # noqa: E402
 TMP = tempfile.mkdtemp(prefix="rt_srv_")
 SIM = os.path.join(TMP, "sim"); os.makedirs(SIM)       # the sim directory of a task, assembled from the sources
-for src in ("scripts/roboarc/shared/standard/sim/server.py", "scripts/roboarc/shared/rcb_topogym.py",
+for src in ("embodied_first_exam/benchmarks/roboarc/standard/sim/server.py", "embodied_first_exam/benchmarks/roboarc/rcb_topogym.py",
             "scripts/eai_standard/v2_4/rcb_limited.py", "scripts/eai_standard/rcb1.py"):
     shutil.copy(os.path.join(ROOT, src), SIM)
 

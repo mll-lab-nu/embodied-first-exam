@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Unit test of the RoboARC standard grading (board 0151: graded by the live episode, no grading replay), standard library
-only, no simulator: scripts/roboarc/shared/standard/sim/finalize.sh runs with a stub `python` that answers
+only, no simulator: embodied_first_exam/benchmarks/roboarc/standard/sim/finalize.sh runs with a stub `python` that answers
 `/srv/rcb_limited.py end` with the case's exit code and stands in for `/srv/replay.py` (the video-only pass: it renders,
 fails, or records what final.json held when it started), and a stub rcb_topogym (atomic_json, breakdown_words); then
-scripts/roboarc/shared/standard/grade.py runs on the result.
+embodied_first_exam/benchmarks/roboarc/standard/grade.py runs on the result.
     python3 scripts/roboarc/tests/test_live_grade.py   (also run at the end of test_server_requests.py)"""
 import hashlib, json, os, pathlib, subprocess, sys, tempfile
 
 HERE = pathlib.Path(__file__).resolve().parent
-STD = HERE.parent / "shared/standard"
+STD = HERE.parents[2] / "embodied_first_exam/benchmarks/roboarc/standard"
 TOPO = '''
 import json, os
 def atomic_json(p, obj):
