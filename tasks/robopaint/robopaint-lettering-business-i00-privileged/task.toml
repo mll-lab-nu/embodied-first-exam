@@ -2,7 +2,7 @@ schema_version = "1.3"
 artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
 
 [task]
-name = "robot-coding-bench/robopaint-lettering-business-i00-privileged"
+name = "embodied-first-exam/robopaint-lettering-business-i00-privileged"
 description = "RoboPaint lettering: embodied robotic lettering (ManiSkill 3.0.1 Franka Panda holding a pointed flexible dip pen; the mark is the ink laid between the two tines, whose spread follows the press depth): produce one replayable trajectory that copies the line Business makes a Man respected. (engraved English round hand, 1741), shown in the picture target.png, onto the main sheet with pen and ink, in at most 9 strokes. Scored against the picture (after the best single shift of the sheet, at most 5 mm along each axis: success iff IoU >= 0.85, boundary F within 1 mm >= 0.80, every region of the exemplar (at most 30 mm each along its strokes) covered >= 0.75, stray ink <= 0.04 of its inked area and at most 9 strokes; the IoU is the continuous score). s.score() is served by a separate scoring container. Process rules: letter with pen strokes the way a scribe writes; colouring in or filling the letters, zigzag, serpentine or contour-offset fills fail: a pen-tip path on the main sheet longer than 3730 mm made of marks narrower than 0.10 mm on average is colouring in."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robopaint", "maniskill", "sapien", "lettering", "calligraphy", "pointed-pen", "copperplate", "round-hand", "franka", "code-as-policy", "trajectory", "robopaint_lettering_business"]
@@ -16,7 +16,7 @@ family = "robopaint_lettering_business"
 mode = "privileged"               # privileged (exact sheets, pen state, reset, scoring service) | standard (RGB only: the -standard twin)
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
-oracle_evidence = "Reference solution in solution/ (the lettering family redesigned on 2026-10-09: 臨摹 of engraved round hand; generated with the current tooling on the native eai-robopaint:0.2.0 runtime): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1240 and mark_width_mm 0.37, against the colouring-in limits 3730 mm and 0.10 mm. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Lettering)."
+oracle_evidence = "Reference solution in solution/ (the lettering family redesigned on 2026-10-09: 臨摹 of engraved round hand; generated with the current tooling on the native efe:robopaint-0.2.0 runtime): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1240 and mark_width_mm 0.37, against the colouring-in limits 3730 mm and 0.10 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Lettering)."
 instance_seed = 0                 # scene = environment/instance.json (agent's copy: sheets, pen, ink well, start joints, the rule, instance_sha)
 expert_time_estimate_hours = 3.0
 difficulty = "extreme"          # RoboPaint tiers: line easy; lettering extreme (臨摹 of engraved round hand: long connected contacts, shades, loops)
@@ -40,7 +40,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -56,7 +56,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 5.0
 trial_max_memory_gb = 21.0
-measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

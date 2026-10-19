@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Prepare $RCB_MANIGUARD_DATA, the host's BEHAVIOR-1K 3.7.2 data root that every ManiGuard task mounts read-only at /data
-(docs/benchmarks/maniguard.md). Host side, Python 3 standard library only; never run inside a task.
+(tasks/maniguard/README.md). Host side, Python 3 standard library only; never run inside a task.
 
     python3 images/maniguard/prep_data.py --root /path/maniguard_data --key /path/to/omnigibson.key            # task subset
     python3 images/maniguard/prep_data.py --root /path/maniguard_data --key /path/to/omnigibson.key --full     # every member

@@ -7,7 +7,7 @@
 | Twin | — (none: roboEngineer has no privileged mode, PROTOCOL §2.15) |
 | Simulator / robot | `mujoco` / `neural-fly-partial` |
 | Family / instance | `roboengineer/neuralfly-vector-wind` / seed 1 |
-| Oracle | `full` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-control-transfer:0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 88.41; nop 0. |
+| Oracle | `full` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image efe-private:control-transfer-0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 88.41; nop 0. |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
@@ -18,7 +18,7 @@ Track six timed laps of a randomized figure eight: vertical, horizontal or incli
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
 
 ## Reference solution
-Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-control-transfer:0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 88.41; nop 0.
+Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image efe-private:control-transfer-0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 10/10 held-out cases, mean engineering score 88.41; nop 0.
 
 ## Verification
 Frozen development and held-out banks, data-only deployment, fresh-process state hashes, separate no-network verifier. All numeric scores and physical outcomes are operator-only until submission closes.

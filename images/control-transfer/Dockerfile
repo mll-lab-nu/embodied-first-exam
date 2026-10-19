@@ -9,7 +9,7 @@ ENV CONTROL_ASSETS=/opt/control-assets MUJOCO_GL=osmesa OPENBLAS_NUM_THREADS=1 L
 WORKDIR /srv
 # The agent's GPU training base of the G1 family (build.sh BUILD_TRAIN=1): FROM the nominal tag, so a host that pulled
 # the nominal image builds it without the assets. CUDA 12.8 wheels (driver >= 570); the training stack of
-# docs/benchmarks/roboengineer-g1.md, pinned.
+# tasks/roboengineer/g1.md, pinned.
 FROM ${NOMINAL_IMAGE} AS train
 RUN apt-get update -qq && apt-get install -y -qq --no-install-recommends libegl1 && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir --index-url https://download.pytorch.org/whl/cu128 torch==2.11.0+cu128

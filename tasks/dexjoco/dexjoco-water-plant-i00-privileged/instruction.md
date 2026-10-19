@@ -26,7 +26,7 @@ def _compute_success(self):
     return success, failed_trigger_outside
 ```
 
-robot_coding_bench adds the aiming condition to DexJoCo's check: upstream's zone + trigger test alone passes with the bottle lying on the table and spraying away from the plant. The episode ends in success only when `_compute_success`'s zone + trigger condition and the aim below hold together for 30 consecutive steps (`status()['info']` reports `aim_deg` and `rcb_success_count`); DexJoCo's own `succeed` flag alone no longer ends it.
+Embodied First Exam adds the aiming condition to DexJoCo's check: upstream's zone + trigger test alone passes with the bottle lying on the table and spraying away from the plant. The episode ends in success only when `_compute_success`'s zone + trigger condition and the aim below hold together for 30 consecutive steps (`status()['info']` reports `aim_deg` and `rcb_success_count`); DexJoCo's own `succeed` flag alone no longer ends it.
 ```python
 WATER_AIM_MAX_DEG = 45.0
 

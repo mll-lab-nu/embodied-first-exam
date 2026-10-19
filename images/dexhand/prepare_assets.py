@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fetch the pinned hand models baked into the eai-dexhand image and verify every file's hash.
+"""Fetch the pinned hand models baked into the dexhand image and verify every file's hash.
 
 * Sharpa Wave (Apache-2.0): MuJoCo Menagerie `sharpa_wave`, pinned in asset-manifest.json -> assets/hand/
 * Wuji Hand 2.2 (MIT): wuji-description `hand2/hand2_2`, runtime subset pinned in wuji-asset-manifest.json

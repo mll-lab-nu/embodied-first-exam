@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/behavior-store-honey-i00-standard"
+name = "embodied-first-exam/behavior-store-honey-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): BEHAVIOR-1K v3.9.2 store_honey on the same frozen instance as the privileged task (2026 challenge public_test instance 301). Put the jar of honey, which stands on the kitchen countertop, inside the cabinet in the entryway. The agent only gets a client: get_obs (RGB-D + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory, resumes it after a crash, and grades the episode it ran (no replay)."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "standard-mode", "trajectory", "store_honey"]
@@ -44,7 +44,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 6.0
 verifier_min_memory_gb = 15.0
 verifier_min_gpu_memory_gb = 10.5
-measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (batch_eval_live vram override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (board 0048, ps); author: 13-16 GB of RAM per Isaac process"
+measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (batch_eval_live vram override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + 4090-ws1, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (board 0048, ps); author: 13-16 GB of RAM per Isaac process"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -60,7 +60,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 16.0
 trial_max_memory_gb = 49.0
-measured = "GPU: 9.0 GiB with RCB_TEXTURE_BUDGET=0.1, now the tasks' default (live sampler (cgroup anon, 13 AWS hosts + ws-1, 10-10); uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container docker peak 2.5 GiB over 1 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 24 GiB cap; whole trial: + the sim service's 41 GiB (docker peak 27.0 GiB, 39 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 9.0 GiB with RCB_TEXTURE_BUDGET=0.1, now the tasks' default (live sampler (cgroup anon, 13 AWS hosts + 4090-ws1, 10-10); uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container docker peak 2.5 GiB over 1 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 24 GiB cap; whole trial: + the sim service's 41 GiB (docker peak 27.0 GiB, 39 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
@@ -102,7 +102,7 @@ timeout_sec = 23400               # 6.5 h = the episode end (up to 2 h through a
                                   # < 3.5 steps/s. finalize.sh's BUDGET_S is this value: the render stops 5 min before it
 
 [agent]
-timeout_sec = 7200.0             # BEHAVIOR budget (Isaac Sim + scene load, ~10 steps/s), same as the privileged twin (docs/benchmarks/behavior.md)
+timeout_sec = 7200.0             # BEHAVIOR budget (Isaac Sim + scene load, ~10 steps/s), same as the privileged twin (tasks/behavior-1k/README.md)
 network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 

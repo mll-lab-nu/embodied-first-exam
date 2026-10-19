@@ -9,7 +9,7 @@
 | Family / instance | `ikea_stegesund` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 10800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-0.3.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` |
 
 ## Task
 IKEA STEGESUND toilet roll stand (AA-2652783-1), manual steps 1-3 in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled): produce one replayable trajectory. Build the STEGESUND roll stand: press half B onto half A at the two leg crossings, push the shelf in from the foot end, drive the four bolts through the legs into the shelf's rail ends with the hex key, stand the frame up and drop the top rod into the two crotches.
@@ -30,7 +30,7 @@ the last row). Pass iff both replays pass and end in the same state hashes (`det
 scene in the verifier image must match `tests/runtime_binding.json` file by file (`instance_exact`) and build to its
 initial-state hash (`instance_ok`). Replay video (evidence only, never the verdict): a third process replays the same rows and renders `/logs/verifier/replay.mp4` (CPU OSMesa, 512 x 288, at most 750 frames over the episode and the 1.0 s hold; `video_rendered`).
 
-Harbor checks (2026-10-16, ws3 (ws-3: Ryzen 9 7950X; shared, loaded), Docker, Harbor 0.23.0, harbor_run_safe.sh (fresh mtime base), image 0.3.0 sha256:ed950d079b63, the replay-video verifier, image `ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-0.3.0` id `ed950d079b63`): `oracle` scored 1 (two replays, 1508.1 s wall); `nop` scored 0. Reference timing against the 10800 s budget: one unobserved replay 3160 s (29.3 %, inside the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'; 3245-3518 s in earlier Quest runs, 1612 s on vast EPYC 9354.
+Harbor checks (2026-10-16, ws3 (4090-ws3: Ryzen 9 7950X; shared, loaded), Docker, Harbor 0.23.0, harbor_run_safe.sh (fresh mtime base), image 0.3.0 sha256:ed950d079b63, the replay-video verifier, image `ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0` id `ed950d079b63`): `oracle` scored 1 (two replays, 1508.1 s wall); `nop` scored 0. Reference timing against the 10800 s budget: one unobserved replay 3160 s (29.3 %, inside the 40 % bar) on a dedicated Quest Xeon Gold 6230R core (2.1 GHz, a slow trial-class CPU), end and settled hashes equal to the Harbor runs'; 3245-3518 s in earlier Quest runs, 1612 s on vast EPYC 9354.
 
 ## Compute resources
 Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.

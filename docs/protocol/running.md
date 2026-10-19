@@ -67,7 +67,7 @@ The rule is PROTOCOL Appendix H.5; how the runner applies it:
   and is flagged for audit.
 
 ## Results
-Results are not committed (published on the results site and the Hugging Face dataset, keyed by run id
+Results are not committed (published on the [results site](https://www.embodied-first-exam.ai) and the Hugging Face dataset, keyed by run id
 `<harness>-<model>-<effort>`, the model token with underscores: `codex-gpt6_luna-xhigh`; provider, tier and settings go
 in the metadata). `scripts/write_task_results.py` writes, per task and run id, `README.md`, `config.json` (the trial's
 effective configuration: `protocol_version`, `mode`, `cutoff_s`, `reset_budget`, `slowdown`, `seed`, `network`,
@@ -161,7 +161,7 @@ from a tree whose files share mtimes (a git checkout, `git archive`, tar, `cp -r
 task's equal-size file in its image, silently, with `--no-cache` too (issue #258; rootless podman builds are not
 affected). **Never build a task image from a tree without stamping it:** `scripts/stamp_mtimes.py` gives every file a
 mtime derived from its content, so different files never share one (content, modes and DIGEST unchanged; git ignores
-mtimes). `scripts/run_agent_batch.sh`, `/validate` and `scripts/task_seed.py materialize` build from stamped copies. For a bare `harbor run` or `harbor trial regrade`:
+mtimes). `scripts/run_agent_batch.sh`, `/validate` and `scripts/task_seed.py materialize` build from stamped copies; `harbor run` with this repository's set flags (`-d embodied-first-exam`, `--core`, `--all`, a mode flag, `--benchmark`) stamps the task dirs it runs in place. For a bare `harbor run -p` or `harbor trial regrade`:
 ```bash
 c=$(python3 scripts/stamp_mtimes.py stage tasks/<benchmark>/<task> "$(mktemp -d)") && harbor run -p "$c" -a oracle ...   # a stamped copy
 python3 scripts/stamp_mtimes.py tasks           # or stamp the checkout in place (again after every pull: --check tells)
@@ -170,10 +170,10 @@ python3 scripts/stamp_mtimes.py tasks           # or stamp the checkout in place
 ## Running a two-mode batch (privileged + standard)
 ```bash
 python3 scripts/stamp_mtimes.py tasks                   # first ("Building task images" above)
-harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
-harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-std>
+harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-astra -n 3 -o $PWD/exps/jobs --job-name <job-priv>
+harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-astra -n 3 -o $PWD/exps/jobs --job-name <job-std>
 harbor trial regrade --help                             # re-run the verifier of a recorded trial (a grader error, a missing video)
-scripts/write_task_results.py exps/jobs <job> <run-id> "<agent label>" --out <dir outside the repository>   # per-task results (README, video, cost)
+python3 scripts/write_task_results.py exps/jobs <job> <run-id> "<agent label>" --out <dir outside the repository>   # per-task results (README, video, cost)
 ```
 `CODEX_FORCE_AUTH_JSON=1` uses a ChatGPT-subscription login (`codex login --device-auth`) instead of an API key.
 Use an absolute `-o` (compose cp is noisy otherwise); 3 concurrent trials fit one RTX 4090 with headroom for the
@@ -251,7 +251,7 @@ timeout=...)`): after the environment has been built and started and the harness
 own. A standard-mode `sim` service starts with the environment; what it has not finished starting by then is waited out
 inside the agent's time. The service's own clock (`/spec.budget.wall_clock_s`, `meta.time_left_s`) counts the same
 number from the agent's first request to the service (kept through a restart) and never runs out before Harbor's; it only
-reports, except that RoboARC's service ends the episode when its count reaches 0 (docs/benchmarks/roboarc.md). At the cutoff Harbor stops the agent (`AgentTimeoutError`), collects the artifacts and runs the verifier, so
+reports, except that RoboARC's service ends the episode when its count reaches 0 (tasks/roboarc/README.md). At the cutoff Harbor stops the agent (`AgentTimeoutError`), collects the artifacts and runs the verifier, so
 the trial is graded as it stands: a result, not an infrastructure failure, never run again.
 
 **Official runs** pass no multiplier and add nothing to the instruction (Official runs above), so `## Time limit` is the
@@ -263,8 +263,8 @@ README row, `RCB_WALL_CLOCK_S` and `DIGEST`), and state old -> new and why in th
 changes in place and keeps its name; results under another cutoff are a different configuration (`config_key`). Not
 derived from the cutoff: the token budget, the resource limits, reset budgets, step caps, verifier timeouts. When
 raising one, look at collect-hook and verifier budgets sized for an episode as long as the agent's time (RoboCasa,
-RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K: their `docs/benchmarks/`
-pages) and, for RoboOlympics' exported matches, a match's wall time at its slowdown plus the reviews between points.
+RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K: their `tasks/<benchmark>/README.md`
+pages) and, for Embodied Olympics - Match's exported matches, a match's wall time at its slowdown plus the reviews between points.
 
 ## Base images
 Every base image is a tag of one of two packages (PROTOCOL §1): `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (public), or `ghcr.io/mll-lab-nu/efe-private:<name>-<VERSION>` for an image with `images/<name>/BUILD_ONLY` (org members only): `scripts/build_images.sh`
@@ -273,6 +273,11 @@ that has `write:packages`). A new image is a new tag of `efe`, which is public, 
 change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
 public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
 a private package for org members.
+A files-only image (`images/<name>/FILES.json`) is no docker build: `scripts/files_image.py build <name>` writes it byte
+for byte from the repository, so it has the digest the task Dockerfiles pin (`COPY --from=<tag>@sha256:…`), and loads it;
+`files_image.py push` pushes those same bytes (`docker push` would recompress the layer). A private one built locally
+serves the tasks unchanged on Docker's containerd image store (Docker Engine 29's and Docker Desktop's default); the
+classic store resolves a digest only for a pulled image.
 
 ## What an agent's container reaches
 Every task's `[agent]` allowlist is one list, `HOSTS` in `scripts/set_agent_egress.py`: the model APIs and the package

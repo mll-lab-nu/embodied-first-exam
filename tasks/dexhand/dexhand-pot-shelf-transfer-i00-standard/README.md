@@ -62,7 +62,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: pot_shelf_transfer oracle/nop trials (Harbor 0.23, eai-dexhand:0.2.0, CPU-only, 2026-10-14; rcb_monitor samples every 5 s for the agent container, docker cgroup memory.peak for the others): privileged verifier 3.68 GiB with two concurrent replays (3.92 GiB for two Wuji replays), standard sim sidecar 2.25-2.53 GiB, agent containers < 0.06 GiB; sweep_dustpan: one oracle replay 1.93 GiB max RSS (os.wait4, 599 s), standard sim sidecar 2.20 GiB (docker stats); x1.2 rounded up to a GB; two cores for the two concurrent verifier replays
+- Measured: pot_shelf_transfer oracle/nop trials (Harbor 0.23, efe:dexhand-0.2.0, CPU-only, 2026-10-14; rcb_monitor samples every 5 s for the agent container, docker cgroup memory.peak for the others): privileged verifier 3.68 GiB with two concurrent replays (3.92 GiB for two Wuji replays), standard sim sidecar 2.25-2.53 GiB, agent containers < 0.06 GiB; sweep_dustpan: one oracle replay 1.93 GiB max RSS (os.wait4, 599 s), standard sim sidecar 2.20 GiB (docker stats); x1.2 rounded up to a GB; two cores for the two concurrent verifier replays
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: memory: 8 GiB lets an agent run about twenty 0.3 GiB simulator sessions (pot/sweep: three or four 2 GiB sessions) next to its harness; measurements as in the [[rule]]; processes 512 and disk 10 GiB: design defaults, not yet measured; whole trial: + the sim service's 8 GiB cap (peaks 0.65 GiB, dual-arm 2.53 GiB).
 
 ## Details
@@ -79,7 +79,7 @@ boxes plus the source base mesh. Tianji Marvin arm geometry from DexForce's Tian
 Genesis public inertia estimates (MIT); Sharpa Wave from MuJoCo Menagerie `0059d4335f8156206f63a35662313385f7ad6d74`
 (Apache-2.0; the left hand is a declared mirror of the right model); Wuji Hand 2.2 from wuji-description
 `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT). Every mesh is checked against `assets/manifest.json` (sha256) before
-the scene compiles; the arm and hand meshes come from the `eai-dexhand` image, the pot meshes from the task.
+the scene compiles; the arm and hand meshes come from the `efe:dexhand` image, the pot meshes from the task.
 
 Modelling scope: estimated mass, inertia and contact compliance, no fluid, heat or deformation, internal hand
 self-contact is not judged. Open kitchen shelf, not a narrow-cupboard challenge. The pot's 438 mm handles span the

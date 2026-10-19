@@ -6,7 +6,7 @@
 # imports); it has no fixed name, so every trial's compose project gets its own (Harbor's teardown deletes it).
 # Crash recovery (docs/protocol/standard_mode.md §13): run.sh exits non-zero when the service crashes and compose restarts the
 # same container (its /data kept); the service resumes the episode from its journal. RCB_STARTUP_TIMEOUT_S: the startup
-# watchdog, at least twice the slowest measured scene build (docs/benchmarks/ambench.md).
+# watchdog, at least twice the slowest measured scene build (tasks/ambench/README.md).
 services:
   main:
     pids_limit: 8192   # rcb-monitor

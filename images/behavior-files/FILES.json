@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:behavior-files-0.1.0@sha256:ad8a69c004fd66aac5c74de16b43dc9c26b4e9eb10a52c01887e834a6f3fb2fb",
+ "image": "ghcr.io/mll-lab-nu/efe:behavior-files-0.2.0@sha256:e2594de8dd89711e917968ab5dc01d13f614f6e9844f05263ae67736109f3f85",
  "source": "embodied_first_exam/benchmarks/behavior-1k",
  "files": {
   "privileged/grade.py": "221b1382853ec5f312689c734bdc1e64b8b75d6593a480ba335e750b8b09aaf5",

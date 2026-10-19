@@ -1,4 +1,4 @@
-# eai-robocasa365: RoboCasa365 (robocasa/robocasa @ 4f8a298, robocasa 1.0.1; robosuite @ 5ce6643 = 1.5.2, MuJoCo 3.3.1)
+# robocasa365: RoboCasa365 (robocasa/robocasa @ 4f8a298, robocasa 1.0.1; robosuite @ 5ce6643 = 1.5.2, MuJoCo 3.3.1)
 # with the kitchen fixtures, textures and object meshes its tasks load. CPU physics (bit-exact replay) and CPU rendering
 # (OSMesa): no GPU. One image for the RoboCasa365 privileged tasks' environment and verifier and the standard tasks'
 # `sim` service. Infrastructure only: no benchmark code and no demonstrations (those are the reference solutions; they
@@ -7,10 +7,10 @@
 # This recipe reproduces the content of the image the tasks were validated with (built in the PR #4 era as
 # rcb-robocasa365:0.1.0: the runtime image, then the assets fetched by scripts/robot24/download_assets.py --suite 365
 # copied in). Build from this directory:
-#   docker build -t ghcr.io/mll-lab-nu/efe-private:robocasa365-$(cat VERSION) .
-# About 27 GB, ~11 GB downloaded. Licences: RoboCasa code MIT; robocasa/robocasa-assets CC-BY-4.0 (textures,
-# generative textures, objaverse and AI-generated objects); the Lightwheel fixtures and objects come from RoboCasa's
-# UT Box links (RoboCasa's asset terms) -- check before publishing.
+#   docker build -t ghcr.io/mll-lab-nu/efe:robocasa365-$(cat VERSION) .
+# About 27 GB, ~11 GB downloaded. Licences: RoboCasa code MIT; RoboCasa's assets CC-BY-4.0 as RoboCasa states
+# (robocasa/robocasa-assets: textures, generative textures, objaverse and AI-generated objects; the Lightwheel fixtures
+# and objects from RoboCasa's UT Box links). Public, like the RoboCasa images (tasks/robocasa365/README.md, Image).
 FROM docker.io/library/python:3.11.13-slim-bookworm@sha256:86adf8dbadc3d6e82ee5dd2c74bec2e1c2467cdad47886280501df722372d2e1
 ENV PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 RUN apt-get update && apt-get install -y --no-install-recommends libosmesa6 libgl1 libglib2.0-0 ffmpeg git curl gcc libc6-dev && rm -rf /var/lib/apt/lists/*

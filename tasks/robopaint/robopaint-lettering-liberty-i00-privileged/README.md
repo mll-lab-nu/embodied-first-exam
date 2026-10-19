@@ -7,18 +7,18 @@
 | Twin | `robopaint-lettering-liberty-i00-standard` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_lettering_liberty` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/ (the lettering family redesigned on 2026-10-09: 臨摹 of engraved round hand; generated with the current tooling on the native eai-robopaint:0.2.0 runtime): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 2644 and mark_width_mm 0.47, against the colouring-in limits 7940 mm and 0.13 mm. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Lettering). |
+| Oracle | `partial` — Reference solution in solution/ (the lettering family redesigned on 2026-10-09: 臨摹 of engraved round hand; generated with the current tooling on the native efe:robopaint-0.2.0 runtime): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 2644 and mark_width_mm 0.47, against the colouring-in limits 7940 mm and 0.13 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Lettering). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
-**Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
+**Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: colouring in fails: a pen-tip path on the main sheet (`path_mm`) longer than 7940 mm (3 × the reference
 solution's 2644 mm) made of marks narrower than 0.13 mm on average (`mark_width_mm`: each stroke's own
 inked area / `path_mm`; 0.3 × the reference's 0.47 mm). They are part of the frozen instance (the rules added to its `target.success`); the graders'
 `rcb_brush_strict.py` applies them (the verifier and the scoring service).
 
-Copy the flourished word **Liberty.** (engraved English round hand, 1741) (7 letters; 臨摹 of a public-domain engraved copybook plate: Sources) shown in `environment/target.png` onto the 227 mm main sheet in at most 5 strokes (the exemplar's own pen lifts: one stroke per connected piece of its ink), with ink from an ink well and a practice sheet beside it; the pen starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).
+Copy the flourished word **Liberty.** (engraved English round hand, 1741) (7 letters; 臨摹 of a public-domain engraved copybook plate: Sources) shown in `/app/target.png` onto the 227 mm main sheet in at most 5 strokes (the exemplar's own pen lifts: one stroke per connected piece of its ink), with ink from an ink well and a practice sheet beside it; the pen starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).
 
 Copy the lettering, scored against the picture: the main sheet's inked area vs the exemplar's ink. The thinnest lines are 0.4 mm,
 so every term is measured after the best single shift of the sheet, at most 5 mm along each axis (the common RoboPaint registration: one translation,
@@ -61,7 +61,7 @@ A file that is not a readable trajectory (not an npz, no `actions`, a wrong shap
 `bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
 or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
 The verifier has 3600 s: two replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured
-67-102 steps/s (docs/benchmarks/robopaint.md).
+67-102 steps/s (tasks/robopaint/README.md).
 
 ## Compute resources
 Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -73,8 +73,8 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 1 GB | 1 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
-- Measured: GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial the agent drives (the benchmark's own `scorer` service is recorded only): 5 GiB GPU memory, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 5 GiB GPU memory, 21 GiB memory. Limits measured: GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured.
+- Measured: GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial the agent drives (the benchmark's own `scorer` service is recorded only): 5 GiB GPU memory, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 5 GiB GPU memory, 21 GiB memory. Limits measured: GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured.
 
 ## Details
 | | |

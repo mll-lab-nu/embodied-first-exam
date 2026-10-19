@@ -1,4 +1,4 @@
-# ManiGuard files copied into eai-maniguard (NU-IDEAS-Lab/ManiGuard @ a1b6444b3d17b2f9e4118c406824d36af6b24187): the import
+# ManiGuard files copied into the maniguard image (NU-IDEAS-Lab/ManiGuard @ a1b6444b3d17b2f9e4118c406824d36af6b24187): the import
 # closure of its evaluator (maniguard/eval/benchmark.py and the modules it imports at any level, with their package
 # __init__ files), the family eval configs and the licence. Nothing else: no data generator (scripted demonstrations,
 # grasp annotations, cuRobo segments), no policy servers, no SFT code, no tools. The build fails if a listed file is

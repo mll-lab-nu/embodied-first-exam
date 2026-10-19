@@ -1,0 +1,16 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.1.0@sha256:49a33342a72b57b56742cc754e427205a30f39dfcd69a99d1d7275c0eae4a619",
+ "source": "embodied_first_exam/benchmarks/embodied-olympics-fun",
+ "files": {
+  "grade.py": "45a72043fe35b6de3c201d7b08bc04a18905de504daf43cdd3e7640bd2319730",
+  "rcb_rfo.py": "f80baf874060852c1e5ba3360c5e6ba5d2ac8b08483ba09b5c03b64e3f11453c",
+  "rfo/__init__.py": "11f0d5beb4e003a970058ae432a88161a82adaa04db7972c9c2d1b01d58f17c7",
+  "rfo/looks.py": "d52047ac9de8e754468d8527f7e8d2dfad811a5e91cd7c21774535ac769bffce",
+  "rfo/realhand.py": "e825750d6b028146c2dfff13c16fb28b4b98ee9207a18545f6db9ded12deaac6",
+  "rfo/referee.py": "35a421e79fc0f3adc2365b857a5e4e7f39f5af5d43df0a13ec428db5af4316e8",
+  "rfo/scene.py": "fb3e8931379e09c9669708105303b76e98960cf0c62c0f85517cb1cc3f917b0e",
+  "rfo/task.py": "82875f202fdcca6385f930f756cf2e11373dd75d10b9461505baec5c1aad7d50",
+  "rfo/world.py": "050ebff8b756500109a086744907b1434396529429674249a257c57b7283bbd9",
+  "standard/grade.py": "3094b444150f76f0a4a4c0b70d82a43d726e912a3c9d0eb954699d2e82c38f4d"
+ }
+}

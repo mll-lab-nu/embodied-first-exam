@@ -1,11 +1,11 @@
-# eai-libero-max: LIBERO-PRO (Zxy-MLlab/LIBERO-PRO @ 2b910b5, MIT: its LIBERO package and object assets) with the
+# libero-max: LIBERO-PRO (Zxy-MLlab/LIBERO-PRO @ 2b910b5, MIT: its LIBERO package and object assets) with the
 # LIBERO-PRO task data (zhouxueyang/LIBERO-Pro @ c86fc3b, CC-BY-4.0: BDDL and initial-state files only) and LIBERO-MAX's
-# event runtime (liberomax/LIBERO-MAX @ a1e3cef: src/libero_max and its source overlay only; no licence file upstream, used with its authors' permission (docs/benchmarks/libero-max.md),
-# see docs/benchmarks/libero-max.md); robosuite 1.4.0 / MuJoCo 3.2.6; CPU physics (bit-exact replay) and CPU rendering
+# event runtime (liberomax/LIBERO-MAX @ a1e3cef: src/libero_max and its source overlay only; no licence file upstream, used with its authors' permission (tasks/libero-max/README.md),
+# see tasks/libero-max/README.md); robosuite 1.4.0 / MuJoCo 3.2.6; CPU physics (bit-exact replay) and CPU rendering
 # (OSMesa): no GPU. One image for the LIBERO-MAX privileged tasks' environment and verifier and the standard sim service.
 # Deliberately NOT included: demonstrations and LIBERO's dataset download utilities, LIBERO-MAX's policy runners,
 # manifests, results and figures, every .git, and the Hugging Face client used to fetch the task data (last layers).
-# Build from the repository root (the COPY names images/libero-max/...): see docs/benchmarks/libero-max.md.
+# Build from the repository root (the COPY names images/libero-max/...): see tasks/libero-max/README.md.
 FROM docker.io/library/python:3.10.18-slim-bookworm@sha256:445b9efb2c047a7ccdb30d293fd6b1aa0f62a55062dc2b69051df91e10848749
 # OPENBLAS_CORETYPE=Zen (0.1.1): the frozen start-state hashes depend on OpenBLAS's kernels (robosuite's OSC controller
 # and LIBERO run on numpy/scipy). The OpenBLAS 0.3.18 that numpy 1.22.4 and scipy 1.10.1 bundle picks them per CPU

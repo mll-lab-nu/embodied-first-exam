@@ -7,7 +7,7 @@
 | Twin | `myosuite-relocate-i00-standard` |
 | Simulator / robot | `myosuite` / `myoarm` |
 | Family / instance | `relocate` / seed 0 |
-| Oracle | `none` — a successful model trial on this frozen instance: Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2` (231 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
+| Oracle | `none` — a successful model trial on this frozen instance: Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2` (231 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
@@ -19,7 +19,7 @@ An object stands on the table in front of the arm; a receptacle marks the target
 First-pass rating: hard. The action is muscle-level (63 muscles, each only pulling, several crossing more than one joint, with activation delays): the agent has to build its own joint control from muscle excitations. MyoSuite's goal has to hold for 1.0 s, so passing through the goal does not count.
 
 ## Reference solution
-None. Solvability evidence: a successful model trial on this frozen instance: Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2` (231 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65.
+None. Solvability evidence: a successful model trial on this frozen instance: Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2` (231 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65.
 
 ## Verification
 `tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success (the goal held 100 control steps) in the same state (`deterministic`). No oracle; human review in PR #65. `nop`: no trajectory, reward 0.
@@ -34,20 +34,20 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 10 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 10 GiB memory. Limits measured: memory: the [environment] cap 8 GiB, which every past trial ran under (docker peak 8.0 GiB over 18 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured.
+- Measured: memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only; CPU author estimate
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 10 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 10 GiB memory. Limits measured: memory: the [environment] cap 8 GiB, which every past trial ran under (docker peak 8.0 GiB over 18 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
 |---|---|
 | Upstream | MyoSuite 2.12.2 (Apache-2.0) on MuJoCo 3.6.0, the models that ship in its wheel |
 | Instance | `myoChallengeRelocateP1-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `2edad198591899f9`, checked on every load |
-| Actions | 63 actuator commands per control step (10 ms, 5 physics substeps); success rule `hold` (docs/benchmarks/myosuite.md) |
+| Actions | 63 actuator commands per control step (10 ms, 5 physics substeps); success rule `hold` (tasks/myosuite/README.md) |
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering) |
 
 ### Provenance
 Generated by `scripts/myosuite/generate.py` from `scripts/myosuite/instances/relocate.npz` and `relocate.json`
-(`make_facts.py`); see `docs/benchmarks/myosuite.md`.
+(`make_facts.py`); see `tasks/myosuite/README.md`.
 
 ### Change Log
 - 2026-10-10 (review round 3, board 0067): `tests/grade.py` only. A byte that is not valid UTF-8 in the session log

@@ -1,8 +1,8 @@
-# eai-maniguard: ManiGuard on BEHAVIOR-1K 3.7.2 / Isaac Sim 4.5
+# maniguard: ManiGuard on BEHAVIOR-1K 3.7.2 / Isaac Sim 4.5
 
-`eai-maniguard:0.1.0` (`VERSION`) runs ManiGuard's evaluator on exactly the stack ManiGuard pins: its `behavior-1k`
+`efe-private:maniguard-0.1.0` (`VERSION`) runs ManiGuard's evaluator on exactly the stack ManiGuard pins: its `behavior-1k`
 submodule is BEHAVIOR-1K tag **v3.7.2** (`88454bd04f75`), installed the way that release's `setup.sh` installs it. It is
-NOT the BEHAVIOR-1K 3.9.2 stack of `eai-behavior` (Isaac Sim 5.1): ManiGuard's frozen scenes are 3.7.2 snapshots, its
+NOT the BEHAVIOR-1K 3.9.2 stack of `behavior` (Isaac Sim 5.1): ManiGuard's frozen scenes are 3.7.2 snapshots, its
 runtime patches target 3.7.2, and upstream abandoned its own port to a newer Isaac.
 
 | | |
@@ -34,7 +34,7 @@ encode or point to reference solutions, which must not be in reach of an agent (
 ## Locks
 Every build writes `/opt/locks/{dpkg,conda,pip}.lock` in the image. `dpkg.lock`, `conda.lock` and `pip.lock` here are
 those of the first tested build (2026-10-03, about 26 GB on disk), and a build fails unless it installs exactly those sets
-(as `eai-behavior`'s `dpkg.lock`).
+(as `behavior`'s `dpkg.lock`).
 
 ## Check a build
 ```bash

@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robocasa365-turn-on-toaster-oven-i00-standard-realtime"
+name = "embodied-first-exam/robocasa365-turn-on-toaster-oven-i00-standard-realtime"
 description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 2): RoboCasa365 (TurnOnToasterOven, a Franka Panda arm on an Omron mobile base (with a torso lift)): Turn on the toaster oven by setting the timer. The robot and the kitchen move on while the agent thinks (the timer knob, once set, turns back by itself (1/3000 of its range per simulated second)), so the agent plans or streams native controller commands from a program of its own through the client (calibrated RGB-D cameras, the robot's own joints and end effector); 10 resets, only the last episode graded; no object poses; the sim service records every executed control step and grades the last episode live."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "standard-realtime-mode"]
@@ -45,7 +45,7 @@ gpu_class = "none"
 verifier_min_cpus = 3.0
 verifier_min_memory_gb = 8.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "as the standard twin (the same service process and fresh-replay session; board 0112); memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+measured = "as the standard twin (the same service process and fresh-replay session; board 0112); memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -61,7 +61,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 19.0
-measured = "as the standard twin (board 0112); memory: agent container docker peak 3.9 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 11 GiB (docker peak 6.4 GiB, 14 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "as the standard twin (board 0112); memory: agent container docker peak 3.9 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 11 GiB (docker peak 6.4 GiB, 14 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

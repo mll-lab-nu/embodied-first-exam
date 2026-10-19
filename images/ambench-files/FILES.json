@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:ambench-files-0.1.0@sha256:31ae5caa3060994aa63457d302ccd0fda4083a68fafb6e0c2324e7fd4f8b80da",
+ "image": "ghcr.io/mll-lab-nu/efe:ambench-files-0.2.0@sha256:416a555923062b9c999765a50688889dfb5a1e5525c5fdf8471ec3bd4c1e4061",
  "source": "embodied_first_exam/benchmarks/ambench",
  "files": {
   "privileged/environment/rcb_ambench.py": "53a7523ae39fb33344407c8c3ef910e7fc51a8a36b34bff7f4ee5e0aee8046c3",

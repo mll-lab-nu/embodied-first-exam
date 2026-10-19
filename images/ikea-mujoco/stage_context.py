@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage the build context of the eai-ikea-mujoco image (images/ikea-mujoco/) from an IKEA MuJoCo source tree.
+"""Stage the build context of the ikea-mujoco image (images/ikea-mujoco/) from an IKEA MuJoCo source tree.
 
 usage: python3 images/ikea-mujoco/stage_context.py <source tree> [--out images/ikea-mujoco/context] [--pin]
   <source tree>  a tree with scenes/<task>/: the scene code of images/ikea-mujoco/scenes/<task>/ plus its meshes,
@@ -35,7 +35,7 @@ def select(scene: pathlib.Path) -> list[pathlib.Path]:
 
 
 # H.2 (PROTOCOL v2.0): nothing the agent can read points at upstream material. The scene texts (code, XML, JSON) are
-# refused when they name the upstream repositories, their paths, or a URL; provenance lives in provenance.json.
+# refused when they name the upstream repositories, their paths, or a URL; provenance is kept outside this repository.
 POINTERS = re.compile(r"astra|robobench|roboprobe|untrusted/|assembly27|https?://|controller\.py|mechanics/|diagnostics/|"
                       r"grader/|experiments/|\.usda?\b", re.I)
 

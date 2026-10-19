@@ -175,6 +175,20 @@ def test_config_and_attempts():
         cfg = json.loads((out / f"{SMALL}-standard" / "codex-x-high" / "config.json").read_text())
         check(cfg.get("cutoff_s") == "legacy" and cfg.get("digest_match") is False and cfg.get("mode") == "standard"
               and cfg.get("result") == "fail", f"legacy trial: {cfg}")
+        jobs3, out3 = td / "jobs3", td / "out3"   # apart from the attempts above
+        # Harbor 0.23: result.json's task_checksum is a dirhash (never DIGEST); lock.json's task.digest is DIGEST
+        tl = make_trial(jobs3, "f", "k1", TASK, "2026-10-14T05:00:00Z", {"success": 0}, {"task_checksum": "1" * 64})
+        (tl / "lock.json").write_text(json.dumps({"task": {"name": TASK, "digest": "sha256:" + dg}}))
+        write(jobs3, "f", out3)
+        cfg = json.loads((out3 / TASK / "codex-x-high" / "config.json").read_text())
+        check(cfg.get("digest_match") is True and cfg.get("cutoff_s") != "legacy", f"lock.json digest = DIGEST, still legacy: {cfg}")
+        # a trial of the runner's changed copy (run_agent_batch.sh records <job>.copies.json): this version, not legacy
+        tl = make_trial(jobs3, "g", "k2", TASK, "2026-10-14T06:00:00Z", {"success": 0}, {"task_checksum": "1" * 64})
+        (tl / "lock.json").write_text(json.dumps({"task": {"name": TASK, "digest": "sha256:" + "2" * 64}}))
+        (jobs3 / "g.copies.json").write_text(json.dumps({TASK: {"copy": "sha256:" + "2" * 64, "source": "sha256:" + dg}}))
+        write(jobs3, "g", out3)
+        cfg = json.loads((out3 / TASK / "codex-x-high" / "config.json").read_text())
+        check(cfg.get("digest_match") is True and cfg.get("cutoff_s") != "legacy", f"a runner copy's trial is legacy: {cfg}")
         # a legacy result.json without a checksum: derived from task.toml as it is
         make_trial(jobs, "e", "l2", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 0})
         write(jobs, "e", out)
@@ -295,14 +309,14 @@ def test_benchmarks():
     import task_conventions as tc
     bad = tc.check_benchmarks()
     check(not bad, f"benchmark labels: {bad[:5]}")
-    check(tc.bench_of(Path("roboolympics-fun-sprint-i00")) == "RoboOlympics-Fun"
-          and tc.bench_of(Path("roboolympics-match-tabletennis-match-i01-standard-realtime")) == "RoboOlympics-Match"
+    check(tc.bench_of(Path("embodied-olympics-fun-sprint-i00")) == "Embodied Olympics - Fun"
+          and tc.bench_of(Path("embodied-olympics-match-tabletennis-match-i01-standard-realtime")) == "Embodied Olympics - Match"
           and tc.bench_of(Path("roboolympics-sprint-i00-standard")) == ""
           and tc.bench_of(Path("robocasa-gr1-x-i00-standard")) == "RoboCasa-GR1", "bench_of: the first matching prefix")
     with tempfile.TemporaryDirectory() as td:
-        for n in ("roboolympics-fun-sprint-i00-privileged", "no-such-bench-i00-standard"):
-            (Path(td) / "roboolympics-fun" / n).mkdir(parents=True)
-            (Path(td) / "roboolympics-fun" / n / "task.toml").write_text("")
+        for n in ("embodied-olympics-fun-sprint-i00-privileged", "no-such-bench-i00-standard"):
+            (Path(td) / "embodied-olympics-fun" / n).mkdir(parents=True)
+            (Path(td) / "embodied-olympics-fun" / n / "task.toml").write_text("")
         found = tc.check_benchmarks(Path(td))
         check(not any("sprint" in x for x in found) and any("no-such-bench" in x and "no benchmark label" in x for x in found),
               f"an unclaimed name: {found[:3]}")

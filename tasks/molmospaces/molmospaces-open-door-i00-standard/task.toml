@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/molmospaces-open-door-i00-standard"
+name = "embodied-first-exam/molmospaces-open-door-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): MolmoSpaces open-door on the same frozen episode as molmospaces-open-door-i00-privileged. Pull the door open. The agent only gets a client: camera images (RGB, depth) and proprioception, joint-position chunks, upstream's kinematic model, done. No reset, no object state; the sim service records the episode and grades it with upstream's success check."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "molmospaces", "mujoco", "rainbow-rby1", "standard-mode", "trajectory", "open-door"]

@@ -16,7 +16,7 @@ services:
     cpus: 6   # rcb-monitor
     mem_limit: 14336m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:robocasa365-0.1.0
+    image: ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro

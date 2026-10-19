@@ -9,7 +9,7 @@ services:
       MKL_NUM_THREADS: "8"
     shm_size: "8gb"
     volumes:
-      - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by scripts/maniguard/prep_data.py (docs/benchmarks/maniguard.md)}:/data:ro
+      - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by scripts/maniguard/prep_data.py (tasks/maniguard/README.md)}:/data:ro
       - rcb_maniguard_cache_trusted:/cache
     deploy:
       resources:

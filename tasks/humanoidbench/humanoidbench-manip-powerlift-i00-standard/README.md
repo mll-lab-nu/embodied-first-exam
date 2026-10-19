@@ -54,24 +54,24 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 3 GB | 3 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
-- Measured: GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 7 GiB GPU memory, 13 GiB memory. Limits measured: GPU: 2.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.3 GiB over 10 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
+- Measured: GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 7 GiB GPU memory, 13 GiB memory. Limits measured: GPU: 2.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.3 GiB over 10 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
 |---|---|
 | mode / sensors | standard: head-camera RGB + joint angles and velocities (HumanoidBench's own `image` and `proprio` sensors), a pelvis IMU and a camera fixed in the room; no root pose, no dumbbell pose, no reward; 50 resets (a new episode from the frozen start each; only the last episode is graded) |
 | action space | HumanoidBench's own: 61 normalised position targets, 50 Hz, sent in chunks |
-| knobs (compose env) | `RCB_RESET_BUDGET` (50: HumanoidBench's standard configuration, docs/benchmarks/humanoidbench.md), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are the standard configuration; a run that changes one (`RCB_RESET_BUDGET=0 harbor run ...`: one episode, no reset) is reported separately, and `episode.jsonl` records the `/spec` it ran under |
+| knobs (compose env) | `RCB_RESET_BUDGET` (50: HumanoidBench's standard configuration, tasks/humanoidbench/README.md), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are the standard configuration; a run that changes one (`RCB_RESET_BUDGET=0 harbor run ...`: one episode, no reset) is reported separately, and `episode.jsonl` records the `/spec` it ran under |
 | agent API | `environment/rcb_client.py` (its docstring is the reference); `instruction.md` lists the endpoints |
-| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics). Also fixed here: **dumbbell mass**: upstream's plates have density="500" on geoms whose class sets mass="0", so it never applied and the dumbbell weighed 104 kg; it is 53.7 kg (`images/humanoidbench/upstream-fixes.patch`). |
+| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). Also fixed here: **dumbbell mass**: upstream's plates have density="500" on geoms whose class sets mass="0", so it never applied and the dumbbell weighed 104 kg; it is 53.7 kg (`images/humanoidbench/upstream-fixes.patch`). |
 
 ### Change Log
 - 2026-10-07: `RCB_RESET_BUDGET`'s default 0 -> 50 (owner decision; PROTOCOL §4.5,
-  docs/benchmarks/humanoidbench.md). The scene, instance, pass rule and verifier are unchanged, so the task
+  tasks/humanoidbench/README.md). The scene, instance, pass rule and verifier are unchanged, so the task
   keeps its name; runs recorded before this date had no reset and are reported separately.
 - 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6, and this task's own fix
-  (*Physics vs upstream*) (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are
+  (*Physics vs upstream*) (tasks/humanoidbench/README.md, Physics). The pass rule and verifier are
   unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported
   separately.
 - 2026-10-10: the sim service marks `final.json` `finalized` the moment the verdict is written, before the

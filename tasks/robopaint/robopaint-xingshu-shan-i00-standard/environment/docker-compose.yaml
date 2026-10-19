@@ -26,7 +26,7 @@ services:
       RCB_TOOL: /srv/rcb_brush_strict.py   # the sim service scores the live sheet with it: the picture rule and the process rules
       RCB_DATA: /data
       RCB_WALL_CLOCK_S: "3600"
-      RCB_STARTUP_TIMEOUT_S: "600"     # startup watchdog: >= 4x the slowest measured start (126 s; docs/benchmarks/robopaint.md)
+      RCB_STARTUP_TIMEOUT_S: "600"     # startup watchdog: >= 4x the slowest measured start (126 s; tasks/robopaint/README.md)
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
     deploy:

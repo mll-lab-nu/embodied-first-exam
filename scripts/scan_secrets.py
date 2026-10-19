@@ -11,7 +11,7 @@ occurrence is replaced with [REDACTED-<NAME>] in place. Binary files (videos, np
 files (the usage gateway's raw logs) decompressed. A damaged .gz / .xz (truncated, corrupt) is scanned as far as it
 decompresses, and as bytes; it is reported as DAMAGED and counted in the last line, and --redact rewrites it with only
 its readable part."""
-import argparse, gzip, json, lzma, os, pathlib, sys, zlib
+import argparse, gzip, json, lzma, os, pathlib, re, sys, zlib
 
 MAGIC = {".gz": b"\x1f\x8b", ".xz": b"\xfd7zXZ\x00"}
 DECOMPRESSOR = {".gz": lambda: zlib.decompressobj(zlib.MAX_WBITS | 16), ".xz": lzma.LZMADecompressor}
@@ -53,23 +53,26 @@ def load_env(path: str) -> dict:
         k = k.strip().removeprefix("export ").strip(); v = v.strip()
         if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
             v = v[1:-1]
+        else:
+            v = re.split(r"\s+#", v, maxsplit=1)[0].strip()   # as dotenv (Harbor, efe.py) reads it: an unquoted value ends at " #"
         out[k] = v
     return out
 
 
 ap = argparse.ArgumentParser()
 ap.add_argument("dir")
-ap.add_argument("--env-file", action="append", help="repeatable (default: <repo>/../.env)")
+ap.add_argument("--env-file", action="append", help="repeatable (default: the clone's .env and .env.local, which Harbor loads, and <repo>/../.env)")
 ap.add_argument("--var", action="append", help="repeatable (default: VARS)")
 ap.add_argument("--codex-auth", action="append", default=[], help="a Codex auth.json whose login tokens are secrets too")
 ap.add_argument("--redact", action="store_true")
 a = ap.parse_args()
-env = {}
-for f in a.env_file or [str(pathlib.Path(__file__).resolve().parents[2] / ".env")]:
-    if pathlib.Path(f).is_file():
-        env.update(load_env(f))
-secrets = {n: (env.get(n) or os.environ.get(n, "")).encode() for n in (a.var or VARS)}
-secrets = {n: v for n, v in secrets.items() if len(v) >= 16}
+REPO = pathlib.Path(__file__).resolve().parents[1]
+sources = [load_env(f) for f in a.env_file or [str(REPO.parent / ".env"), str(REPO / ".env"), str(REPO / ".env.local")]
+           if pathlib.Path(f).is_file()] + [dict(os.environ)]
+secrets = {}
+for n in a.var or VARS:   # every value a key has in any source (the env files and this environment): any of them may be in use
+    vals = list(dict.fromkeys(s[n] for s in sources if len(s.get(n) or "") >= 16))
+    secrets.update({n if i == 0 else f"{n}#{i + 1}": v.encode() for i, v in enumerate(vals)})
 for f in a.codex_auth:
     d = json.loads(pathlib.Path(f).expanduser().read_text())
     for k, v in (d.get("tokens") or {}).items():

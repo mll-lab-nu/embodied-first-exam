@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # ADVISORY. task.toml: name matches folder, required metadata (docs/protocol/README.md §1, §2, docs/TAXONOMY.md), deliverable
-# dir, agent timeout cap (14400 s for every task), the task's declared scene dynamics (no central table, board 0124).
+# dir, the task's declared scene dynamics (no central table, board 0124). The agent's timeout: check-cutoffs.py.
 t="$1"; python3 - "$t" "$(cd "$(dirname "$0")/.." && pwd)" <<'PY'
 import sys, tomllib, pathlib
 t = pathlib.Path(sys.argv[1]); d = tomllib.load(open(t / "task.toml", "rb")); rc = 0
 def fail(m):
     global rc; print(f"FAIL {t}: {m}"); rc = 1
-if d.get("task", {}).get("name") != f"robot-coding-bench/{t.name}": fail("[task].name must be robot-coding-bench/<folder>")
+if d.get("task", {}).get("name") != f"embodied-first-exam/{t.name}": fail("[task].name must be embodied-first-exam/<folder>")
 m = d.get("metadata", {})
 for k in ["author_name", "task_type", "simulator", "robot", "family", "expert_time_estimate_hours"]:
     if k not in m: fail(f"[metadata].{k} missing")
@@ -27,10 +27,5 @@ if "tier" in m: fail("[metadata].tier was removed in protocol v1.0 (use mode)")
 if m.get("dynamics") not in ("static", "dynamic"):
     fail(f'[metadata].dynamics must be declared, "static" or "dynamic" (PROTOCOL §2), got {m.get("dynamics")!r}')
 if "/app/output/" not in d.get("artifacts", []): fail('top-level artifacts must include "/app/output/"')
-if not d.get("agent", {}).get("timeout_sec"): fail("[agent].timeout_sec required")
-else:
-    # PROTOCOL D8 / §2.3: 14400 s cap, no benchmark excepted (the same cap: scripts/task_conventions.py CUTOFF_CAP)
-    if d["agent"]["timeout_sec"] > 14400:
-        fail("[agent].timeout_sec > 14400 s cap (4h, PROTOCOL §2.3)")
 sys.exit(rc)
 PY

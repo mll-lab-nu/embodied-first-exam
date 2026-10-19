@@ -1,8 +1,0 @@
-**
-!requirements/uipc-build.lock
-!images/topogym/build_uipc.sh
-!images/topogym/verify_uipc_wheel.py
-!images/topogym/uipc-build-sm86.json
-!images/topogym/uipc-patches/
-!images/topogym/uipc-patches/**
-!audit/verify_uipc_wheel.py

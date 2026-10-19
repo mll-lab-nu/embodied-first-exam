@@ -4,7 +4,7 @@
 #   scripts/run_agent_batch.sh <batch-name> <base> [<base> ...]      # <base> = a task name without its -privileged / -standard
 # Official runs use Harbor's native agents only (PROTOCOL D11): no adapter; the transparent usage gateway below only
 # records and is off by default. Env (defaults):
-#   AGENT        codex | claude-code (codex)        MODEL   the -m model (openai/gpt-6-luna)
+#   AGENT        codex | claude-code (codex)        MODEL   the -m model (openai/gpt-6-astra)
 #   EFFORT       reasoning effort, --ak reasoning_effort=<EFFORT> (xhigh); `default` passes none
 #   AK           more agent options, e.g. "--ak reasoning_summary=detailed"
 #   WEB_SEARCH   disabled (default) = the harness offers the model no web search: Codex --ak web_search=disabled,
@@ -79,7 +79,7 @@ set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 [ $# -ge 2 ] || { sed -n 2,40p "$0"; exit 2; }
 batch="$1"; shift; tasks=("$@")
-AGENT="${AGENT:-codex}"; MODEL="${MODEL:-openai/gpt-6-luna}"; EFFORT="${EFFORT:-xhigh}"; AK="${AK:-}"
+AGENT="${AGENT:-codex}"; MODEL="${MODEL:-openai/gpt-6-astra}"; EFFORT="${EFFORT:-xhigh}"; AK="${AK:-}"
 WEB_SEARCH="${WEB_SEARCH:-disabled}"
 AGENT_CONFIG="${AGENT_CONFIG:-}"; ENV_FILE="${ENV_FILE:-}"
 MODES="${MODES:-privileged standard}"; SEQ="${SEQ:-1}"; N_P="${N_P:-2}"; N_S="${N_S:-2}"; K="${K:-1}"; WAIT_FOR="${WAIT_FOR:-}"
@@ -98,7 +98,7 @@ JOBS="$(abspath "$JOBS")"; ENV_FILE="$(abspath "$ENV_FILE")"; AGENT_CONFIG="$(ab
 TOKEN_BUDGET_IN="${TOKEN_BUDGET_IN:-10000000000}"; TOKEN_BUDGET_OUT="${TOKEN_BUDGET_OUT:-10000000000}"
 case "$AGENT" in codex|claude-code) ;; *) echo "AGENT must be a Harbor native agent: codex or claude-code (PROTOCOL D11)" >&2; exit 2 ;; esac
 # Run id (D4): harness = the agent name with - -> _; model = MODEL's last path segment, lower case, gpt-<n> joined
-# (gpt-6-luna -> gpt6_luna), a leading claude- dropped (claude-fable-5-1 -> fable_5_1), every other
+# (gpt-6-astra -> gpt6_astra), a leading claude- dropped (claude-fable-5-1 -> fable_5_1), every other
 # character outside [a-z0-9] -> _; effort as given ("default" when the harness sets none).
 if [ -z "${RUN_ID:-}" ]; then
   f() { tr 'A-Z' 'a-z' | sed -E 's/[^a-z0-9]+/_/g; s/^_+|_+$//g'; }
@@ -181,7 +181,7 @@ if [ "$GATEWAY" = 1 ]; then
   # the upstream each base URL would have used: this environment, else the env file, else the API's default
   upstream() {  # <VAR> <default>
     local v="${!1:-}"
-    [ -z "$v" ] && [ -n "$ENV_FILE" ] && v=$(sed -n "s/^[[:space:]]*\(export[[:space:]]\+\)\?$1=//p" "$ENV_FILE" | tail -1 | tr -d "\"'")
+    [ -z "$v" ] && [ -n "$ENV_FILE" ] && v=$(sed -n "s/^[[:space:]]*\(export[[:space:]]\+\)\?$1=//p" "$ENV_FILE" | tail -1 | sed -E 's/[[:space:]]+#.*$//; s/[[:space:]]+$//' | tr -d "\"'")   # dotenv: an unquoted value ends at " #"
     printf '%s' "${v:-$2}"
   }
   gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
@@ -291,13 +291,12 @@ finish_job() {  # <job>: the raw logs compacted; no key in any saved file (+reda
 }
 
 summary() {  # one table per comparable configuration over every job of this batch, rewritten after each job (atomically: lanes share it)
-  python3 - "$JOBS" "$batch" "$R" > "$JOBS/$batch.summary.md.$$" <<'PY'
-import json, pathlib, sys, datetime as dt
+  if python3 - "$JOBS" "$batch" "$R" > "$JOBS/$batch.summary.md.$$" <<'PY'
+import json, pathlib, sys
 from collections import defaultdict
 jobs, batch, R = pathlib.Path(sys.argv[1]), sys.argv[2], pathlib.Path(sys.argv[3])
 sys.path.insert(0, str(R / "scripts"))
 import task_conventions as tc, write_task_results as wtr  # noqa: E402
-from task_names import canonical  # noqa: E402
 # docs/protocol/running.md "Results" (PROTOCOL v2.0): results are compared only within one configuration (task_conventions.config_key:
 # protocol version, mode, cutoff, reset budget, S, network); validated and unvalidated tasks (task_conventions.validated_of)
 # are ranked together, the unvalidated ones marked; a trial that is not a result (infrastructure, voided) never counts in a
@@ -305,32 +304,27 @@ from task_names import canonical  # noqa: E402
 # of the headline rate (PROTOCOL §4).
 HEAD = ("| task | success | result | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |\n"
         "|---|---|---|---|---|---|---|---|---|---|---|---|")
-f = lambda s: dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
 groups = defaultdict(list)          # config key -> [(started, row, status, validated, not core)]
 labels = {}
 for trial in jobs.glob(f"{batch}-*/*__*"):
     if not trial.is_dir():
         continue
-    r = json.loads((trial / "result.json").read_text()) if (trial / "result.json").exists() else {}
-    rw = json.loads((trial / "verifier/reward.json").read_text()) if (trial / "verifier/reward.json").exists() else {}
+    r, rw = wtr.load_json(trial / "result.json"), wtr.load_json(trial / "verifier/reward.json")   # {}: not (yet) readable
     ar = r.get("agent_result") or {}; ex = (r.get("exception_info") or {}).get("exception_type") or ""
     ae = r.get("agent_execution") or {}
-    gw = json.loads((trial / "gateway/totals.json").read_text()) if (trial / "gateway/totals.json").exists() else {}
+    gw = wtr.load_json(trial / "gateway/totals.json")
     gw_cell = (f"{gw['input']} / {gw['output']}" + (" OVER BUDGET" if gw.get("over_token_budget") else "")) if gw else "-"
     # requests the gateway refused because they were not model-API calls (PROTOCOL §2.11): attempts, for a look; they
     # do not void the trial, and the harness's own start-up probes are not among them
     left = sum(gw.get(k, 0) for k in ("refused_paths", "refused_server_tools", "refused_bodies", "refused_hosts"))
     gw_cell += f" REFUSED {left}" if left else ""
-    try:
-        wall = round((f(ae["finished_at"]) - f(ae["started_at"])).total_seconds())
-    except Exception:
-        wall = ""
-    task = canonical((r.get("task_name") or trial.name.split("__")[0]).split("/")[-1])
+    wall = "" if wtr.span(ae) is None else wtr.span(ae)
+    task = tc.canonical_name((r.get("task_name") or trial.name.split("__")[0]).split("/")[-1])
     if r and (tc.task_dir(task, R / "tasks") / "task.toml").is_file():
         status, why, _ = wtr.classify(trial, r, rw)
         cfg = wtr.trial_config(trial, task, r)
     else:
-        status, why, cfg = ("not_a_result", "no result.json", {}) if not r else ("legacy", None, {"mode": task.rsplit("-", 1)[-1]})
+        status, why, cfg = ("not_a_result", "no result.json", {}) if not r else ("legacy", None, {"mode": tc.mode_of(pathlib.Path(task))})
     key = tc.config_key(cfg)
     labels[key] = tc.config_label(cfg)
     keys = {k: rw[k] for k in ("deterministic", "live_success", "replay_success", "instance_ok", "missing_trajectory", "grader_error",
@@ -360,7 +354,8 @@ for k in sorted(groups, key=lambda k: tuple(map(str, k))):
     for _, row, _, _, _ in sorted(rows):
         print(row)
 PY
-  mv -f "$JOBS/$batch.summary.md.$$" "$JOBS/$batch.summary.md"
+  then mv -f "$JOBS/$batch.summary.md.$$" "$JOBS/$batch.summary.md"
+  else rm -f "$JOBS/$batch.summary.md.$$"; log "summary: not rewritten (the summary script failed)"; fi
 }
 
 stamp_task_dirs() {  # <root>: give every file of the job's task copies a mtime derived from its content (scripts/stamp_mtimes.py)
@@ -373,7 +368,7 @@ stamp_task_dirs() {  # <root>: give every file of the job's task copies a mtime 
 
 # the repository's task dirs live at tasks/<benchmark folder>/<task> (scripts/task_conventions.py task_dir); a job's own
 # copy is flat, <dir>/tasks/<task>, which `harbor run -p tasks -i <task>` reads (Harbor's local datasets are one level).
-# Found by a glob, not by task_conventions: a runner host's python3 may predate tomllib (babel nodes: 3.9).
+# Found by a glob, not by task_conventions: a runner host's python3 may predate tomllib (some Slurm nodes: 3.9).
 src_of() {  # <task dir name>: its directory in the repository (no such task: a path that does not exist)
   local d; for d in "$R"/tasks/*/"$1"; do [ -f "$d/task.toml" ] && { printf '%s' "$d"; return 0; }; done
   printf '%s' "$R/tasks/.none/$1"
@@ -436,6 +431,18 @@ run_job() {  # <job> <concurrency> <harbor -i args...>
       || { log "FAILED $job: could not clamp its CPU caps to the host's $HOST_CPUS ($root); not started"; rm -rf "$root"; return 1; }
   fi
   stamp_task_dirs "$root" || { log "FAILED $job: could not stamp its task copy (scripts/stamp_mtimes.py, $root); not started"; rm -rf "$root"; return 1; }
+  # the copies' digests next to the job (scripts/write_task_results.py): a trial of a copy the runner changed (egress, CPU caps)
+  # is a trial of the task's current DIGEST, not of another version
+  mapfile -t dirs < <(task_dirs "$root" "$@")
+  python3 - "$JOBS/$job.copies.json" "$R" "${dirs[@]}" <<'PY' || log "WARN $job: could not record its task copies' digests"
+import json, pathlib, sys
+sys.path.insert(0, sys.argv[2] + "/scripts"); import task_conventions as tc  # noqa: E402
+out = {}
+for d in map(pathlib.Path, sys.argv[3:]):
+    src = tc.task_dir(d.name, pathlib.Path(sys.argv[2]) / "tasks") / "DIGEST"
+    out[d.name] = {"copy": tc.digest(d), "source": src.read_text().strip() if src.is_file() else ""}
+pathlib.Path(sys.argv[1]).write_text(json.dumps(out, indent=1) + "\n")
+PY
   log "start $job: $* (concurrency $n, attempts $K)"
   (cd "$root" && harbor run -p tasks "$@" "${AGENT_ARGS[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
   log "done $job (harbor rc=$?)"

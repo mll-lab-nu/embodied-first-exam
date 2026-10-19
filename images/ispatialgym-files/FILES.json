@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:ispatialgym-files-0.1.0@sha256:d7698c93db51cd166c0523be6ca01fe662a54016be37e8b0897efc939b6963cc",
+ "image": "ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.2.0@sha256:f07933a4ac0bab0b0743f4754d67587798e70e47c10057c44827a94d6cbb8ea9",
  "source": "embodied_first_exam/benchmarks/ispatialgym",
  "files": {
   "privileged/environment/rcb_ispatialgym.py": "c0e239bebf689f12df76704f447e339ef0041178a4f356753b20e43a2d38ca4b",

@@ -4,7 +4,7 @@
 # the verdict.
 FROM ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe-private:robodojo-files-0.1.0@sha256:7f956758f4b9252efde5e3cb930fa5b58a059ae68c6da0a607db5e28f8d8d13b /privileged/environment/rcb_robodojo.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:robodojo-files-0.2.0@sha256:97d0d2d80e4865bdf8f0e35cffdc8fa92f375c2efa442508580c8a45e5832b21 /privileged/environment/rcb_robodojo.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

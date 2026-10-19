@@ -4,7 +4,7 @@
 # commit's simulator source, robot assets and image helpers, and the frozen instances from the HF dataset pinned in
 # images/roboarc/assets.json); then scripts/build_images.sh. The only change from Dockerfile.mujoco: the instances
 # are the context's instances/ directory instead of a named build context.
-# RoboTangle MuJoCo dev image (local only, never pushed): the published eai-robotangle 0.2.22 plus
+# RoboTangle MuJoCo dev image (local only, never pushed): the published efe:robotangle-0.2.22 plus
 #   - this commit's simulator source (topogym/, with the MuJoCo core topogym/world/mujoco/), pruned as
 #     images/topogym/Dockerfile does: /opt/topogym/SOURCE.json is its hash, which every runtime binding names;
 #   - this commit's robot assets (assets/robots/ -> /opt/topogym-assets/robots/, TOPOGYM_ASSET_ROOT);
@@ -25,7 +25,7 @@
 # Build on a host that has the base image (from the repository root; the root .dockerignore keeps the context to topogym/,
 # assets/robots/ and images/topogym/prune.py):
 #   docker buildx build --load -f images/robotangle/Dockerfile.mujoco --build-context instances=<dir of instance bases> \
-#     -t eai-robotangle:0.3.0-dev .
+#     -t efe:robotangle-0.3.0-dev .
 ARG BASE=ghcr.io/mll-lab-nu/efe:robotangle-0.2.22@sha256:eb1a75177bf3d11f60540ef5a285c5a47d8cf35e2e99630759bb108b9f05dfad
 FROM ${BASE} AS unsquashed
 RUN python -c "import mujoco, coacd; assert mujoco.__version__ == '3.14.0', mujoco.__version__"

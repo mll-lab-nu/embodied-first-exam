@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robopaint-lettering-commendation-i00-standard"
+name = "embodied-first-exam/robopaint-lettering-commendation-i00-standard"
 description = "RoboPaint lettering, STANDARD MODE (robot as a service, eai-standard/2.2): embodied robotic lettering (ManiSkill 3.0.1 Franka Panda holding a pointed flexible dip pen) on the same frozen instance as the privileged task: copy the line Commendation animates the mind. (engraved English round hand, 1741), shown in the picture target.png, onto the main sheet in at most 9 strokes, with a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no pen model, no score; the sim service records the episode and scores its main sheet against the picture (after the best single shift of the sheet, at most 5 mm along each axis: success iff IoU >= 0.85, boundary F within 1 mm >= 0.80, every region of the exemplar (at most 30 mm each along its strokes) covered >= 0.75, stray ink <= 0.04 and at most 9 strokes). Process rules: letter with pen strokes the way a scribe writes; colouring in or filling the letters, zigzag, serpentine or contour-offset fills fail: a pen-tip path on the main sheet longer than 3240 mm made of marks narrower than 0.12 mm on average is colouring in."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robopaint", "maniskill", "sapien", "lettering", "calligraphy", "pointed-pen", "copperplate", "round-hand", "franka", "standard-mode", "trajectory", "robopaint_lettering_commendation"]
@@ -30,7 +30,7 @@ mode = "standard"                  # camera RGB + proprioception only; no sheet 
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
-oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets; the lettering family redesigned on 2026-10-09, generated with the current tooling on the native eai-robopaint:0.2.0 runtime): the same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 1079 and mark_width_mm 0.41, against the colouring-in limits 3240 mm and 0.12 mm. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Lettering)."
+oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets; the lettering family redesigned on 2026-10-09, generated with the current tooling on the native efe:robopaint-0.2.0 runtime): the same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 1079 and mark_width_mm 0.41, against the colouring-in limits 3240 mm and 0.12 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Lettering)."
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 difficulty = "extreme"          # RoboPaint tiers: line easy; lettering extreme (臨摹 of engraved round hand: long connected contacts, shades, loops)
@@ -54,7 +54,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -70,7 +70,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 5.0
 trial_max_memory_gb = 17.0
-measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 5.0 GiB over 83 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 3.4 GiB, 36 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 5.0 GiB over 83 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 3.4 GiB, 36 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

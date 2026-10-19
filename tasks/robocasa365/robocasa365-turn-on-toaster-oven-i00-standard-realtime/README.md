@@ -10,7 +10,7 @@
 | Oracle | `none` — the privileged reference planned from step 0 through this service at S = 2 succeeds live and in the fresh replay, deterministic, no stall (board 0112, 2026-10-14); human review in PR #205 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 2 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robocasa365-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` |
 
 ## Task
 Standard-realtime mode (`eai-standard/2.3`, slowdown S = 2) of `robocasa365-turn-on-toaster-oven-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar on a clock that does not stop (the shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics with `environment/sim/server.py`, this benchmark's adapter on `casa_tool`). The scene is dynamic (scripts/task_dynamics.toml): the timer knob, once set, turns back by itself (1/3000 of its range per simulated second). The agent sees the robot's cameras (RGB-D; intrinsics, and each camera's pose in every proprioception row), its own joints and end effector, and the instruction; 10 resets, only the last episode graded.
@@ -34,13 +34,13 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: as the standard twin (the same service process and fresh-replay session; board 0112); memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 19 GiB memory. Limits measured: as the standard twin (board 0112); memory: agent container docker peak 3.9 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 11 GiB (docker peak 6.4 GiB, 14 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
+- Measured: as the standard twin (the same service process and fresh-replay session; board 0112); memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 19 GiB memory. Limits measured: as the standard twin (board 0112); memory: agent container docker peak 3.9 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 11 GiB (docker peak 6.4 GiB, 14 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
 |---|---|
-| Slowdown | S = 2 (`RCB_SLOWDOWN`'s default): measured RTF 1.27-1.29 (2026-10-14, board 0112, ws-1 (32 cores, load 35-45), the service capped at 4 CPUs: 1.29 with the realtime service's clock flat out (RCB_SLOWDOWN = 0.01, 3 episodes of 600 control steps), 1.27 for the bare physics holding still; S = ceil(1.5 / 1.29) = 2) |
+| Slowdown | S = 2 (`RCB_SLOWDOWN`'s default): measured RTF 1.27-1.29 (2026-10-14, board 0112, 4090-ws1 (32 cores, load 35-45), the service capped at 4 CPUs: 1.29 with the realtime service's clock flat out (RCB_SLOWDOWN = 0.01, 3 episodes of 600 control steps), 1.27 for the bare physics holding still; S = ceil(1.5 / 1.29) = 2) |
 | Episode | at most 3000 control steps (150 s of robot time; the privileged deliverable's cap); ends at the first success |
 | Reset budget | 10 (`RCB_RESET_BUDGET`; PROTOCOL §4b); a reset rebuilds the scene (about 20 s) |
 | Action type | `joint_position` (13 channels, `control_dt` 0.05 s) |

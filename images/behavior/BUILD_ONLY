@@ -1,4 +1,4 @@
-eai-behavior is BUILD_ONLY (PROTOCOL §2.4): it is never pushed to a registry, and every host that runs BEHAVIOR-1K
+behavior is BUILD_ONLY (PROTOCOL §2.4): it is never pushed to a registry, and every host that runs BEHAVIOR-1K
 tasks builds it locally.
 
 Why: the image is the official stanfordvl/behavior:3.9.2 (BEHAVIOR-1K v3.9.2, the 2026 BEHAVIOR Challenge stack) plus
@@ -11,17 +11,17 @@ Build (from the repository root; Docker with BuildKit, the default since Docker 
 The tag is the name every BEHAVIOR task uses (environment/Dockerfile, tests/Dockerfile, the standard `sim` service).
 The build pulls the public base by digest and installs ffmpeg from the Ubuntu archive snapshot of 2026-09-20; it fails
 unless the package state equals dpkg.lock. README.md here shows how to check a build against the tested image.
-A host that already built this Dockerfile as rcb-behavior:0.1.1 (the name before protocol v1.0) has the same image and
-may tag it instead:
-  docker tag ghcr.io/jameskrw/rcb-behavior:0.1.1 \
-    ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1
 
 Licences the builder accepts: the NVIDIA Isaac Sim / Omniverse licence terms of the official image (BEHAVIOR-1K's own
 code is MIT).
 
 Data, needed to run (never in the image): the licensed BEHAVIOR dataset (the BEHAVIOR Data Bundle, downloaded after
 accepting its licence: no redistribution), mounted read-only at run time from $RCB_BEHAVIOR_DATA. The directory holds
-omnigibson-robot-assets/, behavior-1k-assets/, 2026-challenge-task-instances/ and omnigibson.key
-(docs/benchmarks/behavior.md).
+omnigibson-robot-assets/, behavior-1k-assets/, 2026-challenge-task-instances/ and omnigibson.key. BEHAVIOR-1K's own
+downloader, run in this image, fetches them anonymously from the public Hugging Face dataset behavior-1k/zipped-datasets
+and installs the key after you accept the licence (no GPU needed):
+  docker run --rm -it -e OMNIGIBSON_DATA_PATH=/data -v "$RCB_BEHAVIOR_DATA":/data \
+    ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) python -m omnigibson.utils.asset_utils \
+    --download_omnigibson_robot_assets --download_behavior_1k_assets --download_2026_challenge_task_instances
 
 GPU: an RTX-class NVIDIA GPU (Isaac Sim needs one even headless) and the NVIDIA container toolkit.

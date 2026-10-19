@@ -32,7 +32,7 @@ model APIs and the package registries.
 `tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the
 instance (`tests/instance.json`; the rebuilt start is checked against its hash); pass iff AM-Bench's success check holds
 in both (`deterministic`: the outcome repeats; the end-state hashes are reported as `state_identical`, not decisive:
-docs/benchmarks/ambench.md, Determinism). `/logs/verifier/replay.mp4` (both onboard cameras) is filmed after the verdict
+tasks/ambench/README.md, Determinism). `/logs/verifier/replay.mp4` (both onboard cameras) is filmed after the verdict
 by the `film` CLI, the same rows drawn by the render worker, an illustration only. Oracle: success at control step
 395 (3.292 s simulated) in both fresh-process replays, which end in the frozen end state (hash
 `f778f7c7a8593239`; a rare race can change the last bits of one, never measured to change the outcome). `nop`: no

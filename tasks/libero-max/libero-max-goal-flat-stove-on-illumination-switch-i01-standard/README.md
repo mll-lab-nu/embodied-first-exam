@@ -38,7 +38,7 @@ finalized verdict. Nothing is replayed to grade it. The frozen start is checked 
 does not start at the instance's recorded state hash is `instance_mismatch` (`infra_error = 1`), before the agent is
 served. After the verdict the collect hook replays `trajectory.npz` once in a fresh process for `replay.mp4` (and
 `replay.video.json`: whether that replay ended in the live state); it can neither change nor cost the verdict
-(`docs/benchmarks/libero-max.md`, "Grading (standard mode)").
+(`tasks/libero-max/README.md`, "Grading (standard mode)").
 
 ## Compute resources
 Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: verifier 1.6 GB, mem_guard (docker memory per container, ws-1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)
+- Measured: verifier 1.6 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 17 GiB memory. Limits measured: memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 9 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
@@ -61,7 +61,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Resources | 4 CPUs, no GPU (CPU physics, OSMesa rendering); the collect hook: the verdict at once, then one video pass (up to 5,400 s for the longest episode on a busy host) |
 
 ### Change Log
-- 2026-10-08: image `eai-libero-max:0.1.1` (`OPENBLAS_CORETYPE=Zen`); the instance, its start-state hash, the reference
+- 2026-10-08: image `efe:libero-max-0.1.1` (`OPENBLAS_CORETYPE=Zen`); the instance, its start-state hash, the reference
   solution and the pass rule are unchanged, so the task keeps its name. With 0.1.0 the start state did not rebuild on
   Intel Xeon 8488C hosts (the Session refused with a hash mismatch): the OpenBLAS 0.3.18 bundled with numpy and scipy
   does not know that CPU and fell back to its generic Prescott kernels, while the instances were frozen with its Zen

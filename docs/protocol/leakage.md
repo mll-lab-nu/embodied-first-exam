@@ -143,8 +143,8 @@ under an unrelated name would be missed. A new benchmark whose solution is one `
 | LIBERO-MAX | `libero`, `hf-libero`, `rlinf-libero`, `rpent-libero`, `praxis-libero`, `libero-infinity`, `rlinf-liberopro`, `rpent-liberopro`, `rlinf-liberoplus` | LIBERO's goal definitions and initial states; no meshes, no demonstrations, not LIBERO-MAX's events |
 
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
-ManiGuard, DexJoCo, VLABench, RoboDojo, RoboARC, RoboOlympics, BiGym,
+ManiGuard, DexJoCo, VLABench, RoboDojo, RoboARC, Embodied Olympics, BiGym,
 YAMLab, Panda Dynamic Scenes (not published at all: its environment package is this repository's `images/pandadyn/`),
 DexHand (not published at all: its scenes and tooling are this repository's task dirs and `images/dexhand/`),
 AM-Bench, iSpatialGym (GitHub and Hugging Face only), IKEA MuJoCo (not published at all: its scenes are this repository's
-`images/ikea-mujoco/scenes/` with meshes on a private dataset); Isaac Sim does not install from pypi.org.
+`images/ikea-mujoco/scenes/` with meshes on a public Hugging Face dataset); Isaac Sim does not install from pypi.org.

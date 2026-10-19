@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robocasa-gr1-tray-to-pot-i00-standard"
+name = "embodied-first-exam/robocasa-gr1-tray-to-pot-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa-GR1 (PosttrainPnPNovelFromTrayToPotSplitA, a Fourier GR1 humanoid (arms, waist and two dexterous six-command Fourier hands; fixed base)): pick the lemon from the tray and place it in the pot. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa-gr1", "humanoid", "dexterous-hands", "code-as-policy", "trajectory", "standard-mode"]
@@ -39,7 +39,7 @@ gpu_class = "none"
 verifier_min_cpus = 3.0
 verifier_min_memory_gb = 13.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+measured = "memory: robosuite sim p90 9.7 GB, verifier p90 4.0 GB (RoboCasa and RoboCasa-GR1 together), mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -55,7 +55,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 19.0
-measured = "memory: agent container docker peak 2.5 GiB over 3 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 11 GiB (docker peak 6.7 GiB, 10 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "memory: agent container docker peak 2.5 GiB over 3 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 11 GiB (docker peak 6.7 GiB, 10 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

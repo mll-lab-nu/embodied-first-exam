@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PAIR = "roboolympics-fun-sprint-i00"
+PAIR = "embodied-olympics-fun-sprint-i00"
 CHECK = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
 SEED = [sys.executable, str(ROOT / "scripts/task_seed.py")]
 sys.path.insert(0, str(ROOT / "scripts"))

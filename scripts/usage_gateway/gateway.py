@@ -70,7 +70,6 @@ included). Requests from an address no trial owns go to <jobs>/.gateway/unattrib
 from __future__ import annotations
 
 import argparse
-import ast
 import base64
 import fnmatch
 import zlib
@@ -93,17 +92,12 @@ import rawlog  # noqa: E402
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
-def _model_hosts() -> list[str]:
-    """The model APIs' hosts: HOSTS of scripts/set_agent_egress.py without its PACKAGE_HOSTS (the package index is on
-    every task's allowlist, but nothing of it goes through this gateway). Read, not imported: that script acts on import."""
-    src = (ROOT / "scripts" / "set_agent_egress.py").read_text()
-    m = re.search(r"^HOSTS\s*=\s*(\[.*?\])", src, re.M | re.S)
-    k = re.search(r"^PACKAGE_HOSTS\s*=\s*(\[.*?\])", src, re.M | re.S)
-    skip = set(ast.literal_eval(k.group(1))) if k else set()
-    return [h for h in (ast.literal_eval(m.group(1)) if m else []) if h not in skip]
+sys.path.insert(0, str(ROOT / "scripts"))
+import set_agent_egress  # noqa: E402
 
-
-MODEL_HOSTS = _model_hosts()   # extended at start-up by --extra-host (e.g. an Azure AI Foundry *.services.ai.azure.com)
+# The model APIs' hosts: HOSTS of scripts/set_agent_egress.py without its PACKAGE_HOSTS (the package index is on every
+# task's allowlist, but nothing of it goes through this gateway).
+MODEL_HOSTS = [h for h in set_agent_egress.HOSTS if h not in set_agent_egress.PACKAGE_HOSTS]   # extended at start-up by --extra-host (e.g. an Azure AI Foundry *.services.ai.azure.com)
 HTTP_HOSTS: set[str] = set()   # --http-host: exact <host>:<port> plain-HTTP upstreams (/h/ routes)
 API_PATHS = pathlib.Path(__file__).resolve().parent / "api_paths.json"
 PROVIDERS: list[dict] = []     # api_paths.json, loaded at start-up (load_paths); empty = every request refused

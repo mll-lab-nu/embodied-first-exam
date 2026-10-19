@@ -1,8 +1,8 @@
-# eai-vlabench: VLABench (OpenMOSS/VLABench @ cf588fe) on MuJoCo 3.2.2 / dm_control 1.0.22 with its pinned assets
+# vlabench: VLABench (OpenMOSS/VLABench @ cf588fe) on MuJoCo 3.2.2 / dm_control 1.0.22 with its pinned assets
 # (lerobot/vlabench-assets @ 08d7a44, ~12 GB); CPU physics (bit-exact replay) and CPU rendering (OSMesa): no GPU.
 # One image for the VLABench privileged tasks' environment and verifier and the standard tasks' `sim` service.
 # Deliberately NOT included: VLABench's reference solutions (strip_experts.py, last layers).
-# Build from the repository root (the COPYs name images/vlabench/...): see docs/benchmarks/vlabench.md; with an assets
+# Build from the repository root (the COPYs name images/vlabench/...): see tasks/vlabench/README.md; with an assets
 # checkout already on disk, images/vlabench/build_local.sh swaps the 11 GB LFS fetch for a COPY of it.
 FROM docker.io/library/python:3.10.18-slim-bookworm@sha256:445b9efb2c047a7ccdb30d293fd6b1aa0f62a55062dc2b69051df91e10848749
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \

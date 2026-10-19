@@ -3,12 +3,15 @@
 # An image with images/<name>/BUILD_ONLY (e.g. Isaac Sim inside, which may not be redistributed) is skipped: it is never
 # public (PROTOCOL §2.4); RCB_PUSH_PRIVATE=1 pushes it to the organization's private package efe-private (org members
 # only). Public images are tags <name>-<version> of the one public package efe: no package visibility to set.
+# Files-only images (images/<name>/FILES.json) are skipped: `docker push` would recompress their layer (another digest);
+# push one with scripts/files_image.py push <name> <user> (the token on stdin), then pin it.
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"; cd "$ROOT"
 REG="${RCB_IMAGE_REGISTRY:-ghcr.io/mll-lab-nu}"
 D=docker; docker ps >/dev/null 2>&1 || D="sg docker -c"
 for dir in images/*/; do
-  name="$(basename "$dir")"; VER="$(cat "$dir/VERSION" 2>/dev/null || cat images/VERSION)"
+  name="$(basename "$dir")"; [ -f "$dir/FILES.json" ] && { echo "skip $name: a files-only image (scripts/files_image.py push)"; continue; }
+  VER="$(cat "$dir/VERSION" 2>/dev/null || cat images/VERSION)"
   P=efe
   if [ -f "$dir/BUILD_ONLY" ]; then
     [ "${RCB_PUSH_PRIVATE:-0}" = 1 ] || { echo "skip $name: images/$name/BUILD_ONLY, never public ($(grep -m1 . "$dir/BUILD_ONLY"))"; continue; }

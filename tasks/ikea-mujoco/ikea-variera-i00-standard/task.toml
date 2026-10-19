@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/ikea-variera-i00-standard"
+name = "embodied-first-exam/ikea-variera-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.4): IKEA MuJoCo VARIERA shelf insert (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. Assemble the VARIERA shelf insert: place the two side frames, lower the shelf onto them, and drive the four screws through the shelf holes into the frames' receivers until they seat. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
 authors = [{ name = "Xiaoyu" }]
 keywords = ["robotics", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "standard-mode", "trajectory"]

@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/myosuite-die-reorient-i00-standard"
+name = "embodied-first-exam/myosuite-die-reorient-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite die_reorient (MyoHand, 39 muscles) on the same frozen instance as myosuite-die-reorient-i00-privileged: Rotate the die in the hand to the target pose: its position within 0.025 m of the target and the norm of its Euler-angle error below 0.262 rad, for 100 consecutive control steps (1.0 s). The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myohand", "code-as-policy", "trajectory", "die_reorient", "standard-mode"]
@@ -28,7 +28,7 @@ mode = "standard"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "none"
-oracle_evidence = "the privileged twin's positive example (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-die-reorient-i00__EtyJ3X7`, 225 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65"
+oracle_evidence = "the privileged twin's positive example (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-die-reorient-i00__EtyJ3X7`, 225 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (tasks/myosuite/README.md); human review in PR #65"
 instance_seed = 0                 # myoChallengeDieReorientP1-v0: seed(0), then reset(seed=0)
 expert_time_estimate_hours = 4.0
 
@@ -42,7 +42,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only; CPU author estimate"
+measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only; CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

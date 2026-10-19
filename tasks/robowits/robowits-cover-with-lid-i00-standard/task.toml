@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robowits-cover-with-lid-i00-standard"
+name = "embodied-first-exam/robowits-cover-with-lid-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboWits cover_with_lid on the same frozen instance as the privileged task (evaluation scene 0 of task 13). Cover the pot precisely using one lid. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "standard-mode", "trajectory", "cover_with_lid"]
@@ -42,7 +42,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 7.0
 verifier_min_gpu_memory_gb = 2.0
-measured = "GPU 0.5-1.4 GB (physics on the CPU, GPU renders the cameras), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.5 GB, privileged container p90 4.7 GB, verifier 2.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (single-threaded Genesis CPU backend)"
+measured = "GPU 0.5-1.4 GB (physics on the CPU, GPU renders the cameras), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.5 GB, privileged container p90 4.7 GB, verifier 2.4 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate (single-threaded Genesis CPU backend)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -58,7 +58,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 6.0
 trial_max_memory_gb = 17.0
-measured = "GPU: 1.4 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.5 GiB over 4 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 9 GiB (docker peak 4.5 GiB, 8 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 1.4 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.5 GiB over 4 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 9 GiB (docker peak 4.5 GiB, 8 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
@@ -99,7 +99,7 @@ command = "python3 /srv/rcb_limited.py end /data --wait-key video_done --timeout
 timeout_sec = 2400                # service up (a resume replays the journal first), the settle window, then the video
 
 [agent]
-timeout_sec = 3600.0             # RoboWits budget (why: docs/benchmarks/robowits.md)
+timeout_sec = 3600.0             # RoboWits budget (why: tasks/robowits/README.md)
 network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 

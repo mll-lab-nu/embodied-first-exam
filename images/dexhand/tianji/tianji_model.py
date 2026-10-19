@@ -1,7 +1,7 @@
 """Convert the public Tianji Marvin fixed dual-arm assets to MuJoCo.
 
 Copied unchanged (apart from this note) from scripts/everyday_dexterity/tianji_model.py so that
-images/dexhand/prepare_assets.py rebuilds the eai-dexhand Tianji meshes from public sources only.
+images/dexhand/prepare_assets.py rebuilds the dexhand Tianji meshes from public sources only.
 
 Geometry and joint frames come from DexForce's complete ACD asset. Its very
 small mesh-density inertias are replaced by the corresponding public Genesis
