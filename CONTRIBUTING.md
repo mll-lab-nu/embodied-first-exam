@@ -2,6 +2,7 @@
 
 Thank you for helping build Embodied First Exam ([site](https://www.embodied-first-exam.ai), [Discord](https://discord.gg/TvscHrhDt)). Tasks follow the contract in [docs/protocol/README.md](docs/protocol/README.md);
 this page explains how a contribution gets from an idea to `main`. Reviewers follow [docs/REVIEWING.md](docs/REVIEWING.md).
+Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md); report security problems privately ([SECURITY.md](SECURITY.md)).
 
 ## Kinds of pull requests
 
@@ -20,7 +21,8 @@ stay outside this repository. Code several tasks share may go in `embodied_first
 recommended place is the benchmark's image (`images/<sim>/`), so the tasks get it from the image.
 
 ## Proposal (new benchmarks)
-Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
+Open a benchmark-proposal issue first (or e-mail the proposal to embodied-first-exam@gmail.com, as the
+[contribute page](https://www.embodied-first-exam.ai/contribute/) describes). A good proposal shows that the tasks are:
 - **verifiable** by a program, in a fresh process, without a learned judge;
 - **solvable** — a positive example the verifier (standard modes: the sidecar) scores 1: an oracle, an upstream expert or policy, a successful
   model trial, or a hand-built trajectory (tasks without one are human-reviewed and marked unvalidated, PROTOCOL §2, §4);

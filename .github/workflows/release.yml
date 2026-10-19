@@ -15,7 +15,7 @@ permissions:
   contents: write          # upload the release assets
 jobs:
   assets:
-    runs-on: [self-hosted, rcb-ci]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
       TAG: ${{ github.event.release.tag_name || inputs.tag }}

@@ -23,7 +23,7 @@
 
 ```bash
 # clone with the submodules; install Harbor 0.23.0 with this repository's flags
-git clone --recurse-submodules git@github.com:mll-lab-nu/embodied-first-exam.git
+git clone --recurse-submodules https://github.com/mll-lab-nu/embodied-first-exam.git
 cd embodied-first-exam
 uv tool install --force -e . --with-executables-from harbor
 # your API keys go in .env
@@ -77,7 +77,7 @@ CLAUDE_FORCE_OAUTH=1 harbor run -d embodied-first-exam \
 
 ## Contribute
 
-See [embodied-first-exam.ai/contribute](https://www.embodied-first-exam.ai/contribute/).
+See [embodied-first-exam.ai/contribute](https://www.embodied-first-exam.ai/contribute/) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
