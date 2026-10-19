@@ -32,7 +32,7 @@ services:
       RCB_STARTUP_TIMEOUT_S: "600"
       PYTHONPATH: /srv:/opt/pandadyn
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-3}"        # 3 resets, as in the standard-realtime twins (docs/benchmarks/pandadyn.md, "Reset budget"); 0: one episode
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-3}"        # 3 resets, as in the standard-realtime twins (tasks/pandadyn/README.md, "Reset budget"); 0: one episode
     deploy:
       resources:
         reservations:

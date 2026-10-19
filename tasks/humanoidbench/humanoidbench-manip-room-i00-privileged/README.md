@@ -74,7 +74,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | | |
 |---|---|
 | Capability class | C8 · mobile manipulation (see `scripts/humanoidbench/subset.toml`) |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics). Also fixed here: **reset**: upstream's reset loops over seven objects in a scene of six and wrote the seventh's x/y into the right little finger's two joints (it started bent through its own fingertip, pressing on it with about 1.4 kN), and left the tilted headphones and a package 5-8 cm inside the floor. The finger now starts in range and every object on the floor, at upstream's positions; the frozen instance was redrawn with the fix (`images/humanoidbench/upstream-fixes.patch`). |
+| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). Also fixed here: **reset**: upstream's reset loops over seven objects in a scene of six and wrote the seventh's x/y into the right little finger's two joints (it started bent through its own fingertip, pressing on it with about 1.4 kN), and left the tilted headphones and a package 5-8 cm inside the floor. The finger now starts in range and every object on the floor, at upstream's positions; the frozen instance was redrawn with the fix (`images/humanoidbench/upstream-fixes.patch`). |
 
 ### GPU
 Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
@@ -91,5 +91,5 @@ Everything in this directory except the instance (`environment/instance.npz` and
 `gen_tasks.py instance room` (seed 0, sha `b69705228ecf`).
 
 ### Change Log
-- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6, and this task's own fix (*Physics vs upstream*) (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
+- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6, and this task's own fix (*Physics vs upstream*) (tasks/humanoidbench/README.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
 - 2026-10-10: `reward.json` carries `deterministic` in every branch (0 where no replay ran; PROTOCOL §2.6). The verdict is unchanged.

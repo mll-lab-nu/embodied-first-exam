@@ -2,7 +2,7 @@
 # rejects [environment].gpus, but merging this onto the main service passes one GPU through (`count: 1`). The licensed
 # BEHAVIOR-1K 3.7.2 data root is mounted read-only from the host: $RCB_MANIGUARD_DATA (behavior-1k-assets/ 3.7.2rc1,
 # omnigibson-robot-assets/ with ManiGuard's long-finger Franka, omnigibson.key; scripts/maniguard/prep_data.py) is a
-# precondition of every ManiGuard run (docs/benchmarks/maniguard.md). Isaac's shader/extension cache gets a volume of this
+# precondition of every ManiGuard run (tasks/maniguard/README.md). Isaac's shader/extension cache gets a volume of this
 # trial only: no fixed name, so compose names it after the trial's project and Harbor's teardown deletes it.
 services:
   main:
@@ -13,7 +13,7 @@ services:
     shm_size: "8gb"
     volumes:
       - rcb_limits:/run/rcb-limits:ro   # rcb-monitor
-      - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by scripts/maniguard/prep_data.py (docs/benchmarks/maniguard.md)}:/data:ro
+      - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by scripts/maniguard/prep_data.py (tasks/maniguard/README.md)}:/data:ro
       - rcb_maniguard_cache:/cache
     deploy:
       resources:

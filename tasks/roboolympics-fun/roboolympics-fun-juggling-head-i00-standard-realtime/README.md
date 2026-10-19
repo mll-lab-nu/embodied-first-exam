@@ -54,4 +54,4 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 3.55 with the clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 attempts; ws-1, 4 CPUs, board 0163, 2026-10-18); PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 6000 control steps (60 s at 100 Hz); 10 resets, the last attempt graded |
-| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; docs/benchmarks/roboolympics.md) |
+| Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/roboolympics-fun/README.md) |
