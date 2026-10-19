@@ -5,7 +5,7 @@
       "after_sha256": "557420d44501d7b133b769c14ac3eeaa201aece4c57613d699639598020fd3a4",
       "before_bytes": 11429,
       "before_sha256": "4f0c6f99e6e75aebe7f2cb5d86000155d5838fbed77a50a9af6f5ef0f0fe4169",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/hand/pack.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/hand/pack.json",
       "pointers": [
         {
           "after_value_sha256": "1f2440855ffc1788c5c27eec762b724810b9715b7c98dfcf352b86cdfeac5f66",
@@ -45,7 +45,7 @@
       "after_sha256": "ed502391ca0d185238b332fe5dbad122eced6dcb07713f5a5a2d299626272d82",
       "before_bytes": 14464,
       "before_sha256": "afae8fe4eea87e3d4e041804d3239040d14a59ad1bd17951481a3b35b07b33f7",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a1_down_prone_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a1_down_prone_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "6e1a10d6a394abca5e131d4890ccc0252381207c89573611e6e49ecee7284d56",
@@ -60,7 +60,7 @@
       "after_sha256": "0c2f6ef7db1de327bf2b2ab26ff3d13c1e7fc8edf3acff04ccb4526027a25975",
       "before_bytes": 15824,
       "before_sha256": "f286d062b481692f6445e8695f2f95fbeb702d13093bbc258e324b1e68cb64e6",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a1_down_side_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a1_down_side_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "dab64cbf4c647dbc836bc5fedee43b7bf2b959a669528df31e1730aa2cb4e71c",
@@ -75,7 +75,7 @@
       "after_sha256": "be9b593979aaed20c0711ac2b2ef2e65f4837e47bd8f5f905f79fe59466cad08",
       "before_bytes": 13338,
       "before_sha256": "3124b9fcd69eaf22f9810cc63515b9ea6099a1ce1bd759dbcaf3ea4cb00c31a7",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a2_down_prone_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a2_down_prone_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "6e1a10d6a394abca5e131d4890ccc0252381207c89573611e6e49ecee7284d56",
@@ -90,7 +90,7 @@
       "after_sha256": "8acaed1b4707f98bab9f2e7267144f377961a04d36f8a59064b8a46dcb3e5371",
       "before_bytes": 15646,
       "before_sha256": "a840356f774d92bc4251ca8e9158c6b1e4b5384b44aeff99a656d1cc971e0fc5",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a2_down_side_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a2_down_side_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "dab64cbf4c647dbc836bc5fedee43b7bf2b959a669528df31e1730aa2cb4e71c",
@@ -105,7 +105,7 @@
       "after_sha256": "13c8c18cfcd40ce7c2b6a29683ece24d4c7709a8164dedab58b9e4a80e593512",
       "before_bytes": 11342,
       "before_sha256": "368418320d01fd1e83f2ad5897fc8e0104c18d956219b3dcbd3ecf85946096ce",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a3_down_prone_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a3_down_prone_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "6e1a10d6a394abca5e131d4890ccc0252381207c89573611e6e49ecee7284d56",
@@ -120,7 +120,7 @@
       "after_sha256": "b5f4cad9f7b1a61149802109d5bb8a40a4df0b7856c88369c893514c450e5c70",
       "before_bytes": 16575,
       "before_sha256": "b58d354a3a288413b0e5fe395a368ff135dbd940eb95b568be2e3f6982e5ad4c",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a3_down_side_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a3_down_side_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "dab64cbf4c647dbc836bc5fedee43b7bf2b959a669528df31e1730aa2cb4e71c",
@@ -135,7 +135,7 @@
       "after_sha256": "a2dbe77b1714495c840fb260105eb88910f2955ea41c6a0e734c0e8eb29969a5",
       "before_bytes": 10919,
       "before_sha256": "6ac913372e69df7813d2de2ce9eefee560a49cbc69a6ab076949ff20fa3a6926",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a4_down_prone_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a4_down_prone_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "6e1a10d6a394abca5e131d4890ccc0252381207c89573611e6e49ecee7284d56",
@@ -150,7 +150,7 @@
       "after_sha256": "027989d3c6295346491032b766c6ab48432371e2bd8c0739dacf31f757e71cf0",
       "before_bytes": 14191,
       "before_sha256": "159c8ae3073241f4f93ec70d72aae7cdf54b9abacd3b8e7a6f5c0a0312032879",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a4_down_side_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a4_down_side_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "dab64cbf4c647dbc836bc5fedee43b7bf2b959a669528df31e1730aa2cb4e71c",
@@ -165,7 +165,7 @@
       "after_sha256": "5fd1b22f70e86bcc025782522775c5665c6b2491af12aa93540b70a6dfb06c73",
       "before_bytes": 27272,
       "before_sha256": "62a97e96b485b31d00037b67c350b8a9c356fddbd714c9b8c0fbd1cd84dcac08",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a5_down_prone_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a5_down_prone_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "6e1a10d6a394abca5e131d4890ccc0252381207c89573611e6e49ecee7284d56",
@@ -180,7 +180,7 @@
       "after_sha256": "1ecfd36afede32bbe53274cae18ac3434ae2dc73573fb6d65e8e678de018fe37",
       "before_bytes": 16584,
       "before_sha256": "885ebf591b7526e3d16b350283c892a2fd8d917825d3e7bc8259fe25d491da9c",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a5_down_side_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a5_down_side_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "dab64cbf4c647dbc836bc5fedee43b7bf2b959a669528df31e1730aa2cb4e71c",
@@ -195,7 +195,7 @@
       "after_sha256": "31c551fc5ca8df4baef875e177172a1fe924ffe854271c795a1bd8a092af6791",
       "before_bytes": 9520,
       "before_sha256": "eb8889392596938818ff0d30d8ebab21f1d593821258b371b03e3ab0a28aa871",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a6_down_prone_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a6_down_prone_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "6e1a10d6a394abca5e131d4890ccc0252381207c89573611e6e49ecee7284d56",
@@ -210,7 +210,7 @@
       "after_sha256": "e071f1d6462fd45e2491ed5d46b746e9547efce1e53a0ee1652af3389ba84418",
       "before_bytes": 15132,
       "before_sha256": "ba2422de964cab076782b6cb06ed4364ffc3aeaf4bd53610f8326aa8f3a18651",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/a6_down_side_support_fit.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/a6_down_side_support_fit.json",
       "pointers": [
         {
           "after_value_sha256": "dab64cbf4c647dbc836bc5fedee43b7bf2b959a669528df31e1730aa2cb4e71c",
@@ -225,7 +225,7 @@
       "after_sha256": "9b22fa61fcb12804687671f7f20975072c9f20435dca52a6991bf19f307e9780",
       "before_bytes": 10415,
       "before_sha256": "c4aa5b59822c5fea7caabfd2ca55a66dd6e22663a60f71414e717b4901997373",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/target_prone.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/target_prone.json",
       "pointers": [
         {
           "after_value_sha256": "3e1d1f6bd10908e1dcfe507c2caeec20a3b130304e58a506d27c65853677c254",
@@ -240,7 +240,7 @@
       "after_sha256": "76751231533ad08cec187f902bbcc31c9bd6698877483e0fc53e0bae1ed54ead",
       "before_bytes": 10302,
       "before_sha256": "31964c800c86e79d6a0c7ba7c282960ba3cdb91dc0f9b89f92ac8384987692aa",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/packs/person_down/calibration/target_side.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/packs/person_down/calibration/target_side.json",
       "pointers": [
         {
           "after_value_sha256": "694aaf67fd5b90dd96dd23df93fd119f55ff8163393ccf290a83e08b38314c58",
@@ -255,7 +255,7 @@
       "after_sha256": "4ce963bc74f2174cdc2cc01a18f1f442362f0a0691bf8c6aea9af6e7a4a7de39",
       "before_bytes": 4320,
       "before_sha256": "db6b426281f5dc62b7aaa5e0160aad9c82155f2748843430995ce3638514f9d4",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/asset_registry_supplement.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/asset_registry_supplement.json",
       "pointers": [
         {
           "after_value_sha256": "9dc1b09581b7cb0dcb49b7cf855e8ea896f777ec20d3c57b9d15fa07c43fde4c",
@@ -330,7 +330,7 @@
       "after_sha256": "d52bb7dfe7f159daea71ff80c9a49d3de9a73672b0e12a0b4ce7d28382341a3c",
       "before_bytes": 31999,
       "before_sha256": "da0a2d2cb2008ea05df66a68cdfe43a9dc0ab3527e2d2aae23310f81dfe5eaab",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/final_catalog_config.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/final_catalog_config.json",
       "pointers": [
         {
           "after_value_sha256": "284389e6b95e022074ee7a092e873f1055f3d715c2227310c7431e0cdecc3a0e",
@@ -400,7 +400,7 @@
       "after_sha256": "5ad39d6a4c64320c4dc48a3d7678bca8c52420c3895aeb39c71ba9474f6ed51f",
       "before_bytes": 5032,
       "before_sha256": "cae38da6b706304d0001aa688bab0b9d8d52c9fe5bbefd4d1810df57ed96848a",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/hand_rebuild_validation.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/hand_rebuild_validation.json",
       "pointers": [
         {
           "after_value_sha256": "a982d4a6bac8f9c761161ad284e34ffac84017b87b77ce0e7a56643792d6ad75",
@@ -450,7 +450,7 @@
       "after_sha256": "549c4600a64724ce9b95c21c294d87cb042021ad20af13b132028db81b2f45da",
       "before_bytes": 882,
       "before_sha256": "2c518a8ca7ae6cf270db4040af24b3fbf4ba007171450a5f67264e074c26b9c4",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/provenance.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/provenance.json",
       "pointers": [
         {
           "after_value_sha256": "813252aa6de6dab0a99e55c4a9b594d7d8333a84911c000876a54d6069fc0b97",
@@ -470,7 +470,7 @@
       "after_sha256": "87b8631fa9ce1cd1f6827ff69699019b69cea4dd22ff3db8af5e5a76ff320d1e",
       "before_bytes": 524,
       "before_sha256": "e3b9e1d950421941a73330c8fe229f582cfa31992f2dafd36e2521e15fd41069",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/provenance/registration_validation.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/provenance/registration_validation.json",
       "pointers": [
         {
           "after_value_sha256": "30ca5a096cf4f4ba04036d151216e839e6a3a2538486fb14f86b55e0f0f41025",
@@ -490,7 +490,7 @@
       "after_sha256": "2e030c8f77c301bee3ed2733f4bcc4f3e1e6b4a7502dcf5816883e1c7c705913",
       "before_bytes": 128735,
       "before_sha256": "4c8457342a8c898d343245396db951114c57985930eea5efbb31a987f0d132f5",
-      "native_relative_path": "robosafebench/assets/data/realism_v3/manifest.json",
+      "native_relative_path": "embodied_safety_exam/assets/data/realism_v3/manifest.json",
       "pointers": [
         {
           "after_value_sha256": "8e2ef7e0fc2335202a0aa432cd73664c26932a2e9b6d4f582708867c2f2edbbc",

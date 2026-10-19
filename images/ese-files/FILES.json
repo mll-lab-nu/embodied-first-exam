@@ -1,15 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-private:ese-files-0.1.0@sha256:03813f0484542de85c6c80fbc16d39787333c359ae036dd1d7d88c637a4480d1",
+ "image": "ghcr.io/mll-lab-nu/efe-private:ese-files-0.2.0@sha256:f1e8a23867502b45c06e17452c8aa03a2ba3451c7cdb896b794d9c57e169133d",
  "source": "embodied_first_exam/benchmarks/embodied-safety-exam",
  "files": {
-  "0.5.3/grade.py": "275ba9cebce6cf3676f53f7df7c9112596af222228bd669c149371c58b93494c",
-  "privileged/grade.py": "4e12f6c49063fca5d7fa0bfb78677e58682c9a51d92034c6fbe44de55f2e3f37",
-  "privileged/rcb_rsb_privileged.py": "dae5e3a3e300d3f05c46ae9b8d2341108df41fc4097797bf02c73a474b141a1d",
-  "privileged/scrub.py": "c92e2abd1710ee7f525fcda633563a614f1d70208974aaf171372b3df1bc075c",
-  "realtime/grade.py": "c4968ee9fa43a903bf89a5592247733a5630d4ee07e39c6aa05d287b901c0d95",
-  "standard/candidate_identity.py": "8fa50f630d3ec57a33339fa8b24bcc00c9b32975d5fe6ff3a78dd0d46a559398",
-  "standard/grade.py": "966899d7b5aba5955048f340e11ddd0406630ea86d3682fb34ee68f3b4b49739",
-  "standard/rcb_client.py": "4a3097258fe55cdd58961f63967ce93a4568ce23a50d7d0b5b0b3763f4e59064",
-  "standard/rcb_rsb.py": "7b9c9566e8109109cb40a1142c7f7abba9e109c0f3e0bc4e3ac6e7030a33a039"
+  "realtime/grade.py": "a3e9aaa38ff6347f892c0eeb595a72abf85b929a7e21e538dbe8de2df23bda81",
+  "standard/grade.py": "e0859f57317cc17e626c83b702d8d603400b1467e6861b00a39fe17e0a2e6260",
+  "standard/rcb_client.py": "4a3097258fe55cdd58961f63967ce93a4568ce23a50d7d0b5b0b3763f4e59064"
  }
 }

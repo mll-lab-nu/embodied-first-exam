@@ -46,8 +46,8 @@ Benchmark-specific fields (optional, PROTOCOL §1):
 | Embodied Safety Exam | `track` | `A` (a hazard in the request or the scene) · `B` (a side effect of how the work is done) · `C` (a hazard that appears mid-task) · `D` (instructions from others than the operator) · `E` (oversight and honest reporting) · `F` (a long chore with one hazardous step); Embodied Safety Exam's own names for them are AB, C, D, E, F, G (a family id keeps its own letter: `d_hand_enters` is in track C) |
 | Embodied Safety Exam | `evidence_tier` | `hazard_hidden` only: how hard the evidence is to get at, one of `plain` · `closer` · `other_side` · `move_first` · `clue` · `off_screen` · `partly_legible` |
 | Embodied Safety Exam | `camera_condition` | room families only (the robots that drive): `room` (the robot's own cameras and a fixed camera in the room) · `onboard` (the robot's own cameras only); each condition is a task of its own |
-| Embodied Safety Exam | `robosafe_family`, `robosafe_version`; the 0.5.4 tasks also `exporter` (they are a group of their own in check-tooling-identity.sh) | Embodied Safety Exam's family id (`a_knife_doll`) and the version the instance was frozen with; the task directory carries a neutral slug instead (task names below) |
-| Embodied Safety Exam | `robosafe_clock` | `realtime` on the `-standard-realtime` tasks (Embodied Safety Exam's realtime clock); absent on the standard tasks |
+| Embodied Safety Exam | `ese_family`, `ese_version`, `exporter` (they are a group of their own in check-tooling-identity.sh) | Embodied Safety Exam's family id (`a_knife_doll`) and the version the instance was frozen with; the task directory carries a neutral slug instead (task names below) |
+| Embodied Safety Exam | `ese_clock` | `realtime` on the `-standard-realtime` tasks (Embodied Safety Exam's realtime clock); absent on the standard tasks |
 
 ## Dynamics
 A task is `dynamic` when something in its scene other than the robot can do work by a force other than the robot's
@@ -82,7 +82,7 @@ actively. The standard-realtime mode is offered where a benchmark's tasks call f
 - Embodied Safety Exam: `<base>` is `ese-<slug>-i<NN>` (standard tasks, and for the realtime set `-standard-realtime` twins of
   some of them; no privileged twin): the slug is `<track><nn>` (`a03`), neutral because
   an Embodied Safety Exam family id names its hazard and a task's name can be read from inside the agent's container;
-  `[metadata].family` is the slug, `robosafe_family` Embodied Safety Exam's id; NN runs over the family's members (and the
+  `[metadata].family` is the slug, `ese_family` the Embodied Safety Exam's id; NN runs over the family's members (and the
   hidden member's tiers) in a fixed hashed order.
 - ManiGuard: `<base>` is `maniguard-<family-with-dashes>-i<NN>`, NN = the ManiGuard-Bench task index (base level, e.g.
   `maniguard-jar-transport-i14` = `jar_transport/task_0014`); `[metadata].family` is ManiGuard's family (`jar_transport`).

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Embodied Safety Exam's large files: the binary textures and meshes of the realism_v3 asset pack (`.png`, `.obj`) that the
-image's build context (images/ese/context/robosafe-src/robosafebench/assets/data/realism_v3/) holds. They are kept
+image's build context (images/ese/context/ese-src/embodied_safety_exam/assets/data/realism_v3/) holds. They are kept
 out of git (images/ese/.gitignore) in the public Hugging Face dataset named in images/ese/assets.json (MLL-Lab/robosafe-assets), pinned
 by commit and by the sha256 of every file; the pack's JSON metadata, credits and licences stay in git. Build the image
-only after `fetch` (context/robosafe-src.sha256 lists these files too, and the Dockerfile checks every one).
+only after `fetch` (context/ese-src.sha256 lists these files too, and the Dockerfile checks every one).
 
 usage:
   python3 images/ese/assets.py fetch [<dir>]       download the pinned revision into <dir> (default:
-                                                         $RCB_ROBOSAFE_ASSETS or ~/.cache/robosafe-assets), check every
+                                                         $RCB_ESE_ASSETS or ~/.cache/robosafe-assets), check every
                                                          sha256 and copy the files into the build context
   python3 images/ese/assets.py stage <dir>         check an existing copy and copy it into the build context
   python3 images/ese/assets.py check [<dir>]       check a copy (default: the build context itself)
@@ -131,7 +131,7 @@ def pin_from(d: pathlib.Path, rev: str) -> dict:
 
 def main() -> None:
     a = sys.argv[1:]
-    default = pathlib.Path(os.environ.get("RCB_ROBOSAFE_ASSETS") or pathlib.Path.home() / ".cache" / "robosafe-assets")
+    default = pathlib.Path(os.environ.get("RCB_ESE_ASSETS") or pathlib.Path.home() / ".cache" / "robosafe-assets")
     if not a or a[0] not in ("fetch", "stage", "check", "pin", "export"):
         sys.exit(__doc__)
     pin = load()
