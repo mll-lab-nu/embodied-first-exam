@@ -10,9 +10,7 @@
 <p align="center">Code agents have passed many exams in the digital world.<br>
 <b>What is their first exam to enter the physical world?</b></p>
 
-<p align="center">
-  <a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro.mp4"><img src="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro-play.jpg" alt="Embodied First Exam: intro video (2 min)" width="820"></a>
-</p>
+<p align="center"><a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro.mp4"><img src="docs/assets/intro.gif" alt="Embodied First Exam: intro video" width="600"></a></p>
 
 ## News
 
