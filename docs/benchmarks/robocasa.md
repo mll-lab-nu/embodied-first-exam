@@ -142,7 +142,7 @@ uses the registry (only `robocasa/demos`, `robocasa/scripts` and `utils/{env,eva
 ## Image
 `images/robocasa/Dockerfile` pins the base image by digest, every pip package, the RoboCasa commit and every asset
 archive by SHA-256 (`fetch_objects.sh` for the object meshes). It reproduces the content of the image the tasks were
-validated with. **Open: the tagged `eai-robocasa:0.1.0` build predates the scrub above (it still has the
+validated with. **Open: the tagged `ghcr.io/mll-lab-nu/efe:robocasa-0.1.0` build predates the scrub above (it still has the
 downloader, the links and `.git`); rebuild from this Dockerfile before pushing or running.** The scrub touches no file
 the simulation loads, so the hashes should not move. A clean rebuild downloads ~12 GB and needs ~50 GB of free disk;
 after it, re-check the

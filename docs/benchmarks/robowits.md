@@ -61,7 +61,7 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf.
   `ghcr.io/mll-lab-nu/efe:robowits-<images/robowits/VERSION>`, public; the Dockerfile pins the uv, huggingface_hub,
   imageio and asset-bundle versions. The GPU renders the three cameras; physics runs
   on the CPU.
-- `scripts/build_images.sh` builds it as `eai-robowits` (docs/protocol/running.md, "Base images").
+- `scripts/build_images.sh` builds it as `ghcr.io/mll-lab-nu/efe:robowits-<images/robowits/VERSION>` (docs/protocol/running.md, "Base images").
 - Standard agent containers and verifiers use the shared client base, pinned by digest, and the shared pip pins
   (`embodied_first_exam/standard/client.env`, `client-requirements.txt`, copied into `environment/`; `check-standard-client.sh`).
 - 12 of the 15 families load BlenderKit models, which may not be redistributed (`images/robowits/NOTICE`). Each user
