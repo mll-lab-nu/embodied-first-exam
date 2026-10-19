@@ -57,7 +57,7 @@ harbor run -d embodied-first-exam@all -p tasks/roboarc -a codex -m openai/gpt-6-
 harbor run -d embodied-first-exam@all -p tasks/<benchmark>/<task> -a oracle
 ```
 
-Some benchmarks' images are not public: build them first as their page under [docs/benchmarks/](docs/benchmarks/) describes (section *Getting the images*).
+Some benchmarks' images are not public: build them first as the benchmark's README in `tasks/<benchmark>/` describes (e.g. [tasks/ambench](tasks/ambench)).
 
 ### 3. Or use a subscription instead of an API key
 
