@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe-private:behavior-files-0.1.0@sha256:ad8a69c004fd66aac5c74de16b43dc9c26b4e9eb10a52c01887e834a6f3fb2fb",
+ "source": "embodied_first_exam/benchmarks/behavior-1k",
+ "files": {
+  "privileged/grade.py": "221b1382853ec5f312689c734bdc1e64b8b75d6593a480ba335e750b8b09aaf5",
+  "r1pro_primitives_eval.yaml": "b47a29b68ad5a5600d129c639be5d9dd14b2a85929de2204adc23d5b979345f8",
+  "rcb_behavior.py": "027a6dccb086c4638d631d24f88f893dcab22a186ade04087a9b3695729b622f",
+  "standard/grade.py": "e071834560da9fa7e8567a79663570b2c13b88f1bb445c89ccb3c4d73c09220f"
+ }
+}

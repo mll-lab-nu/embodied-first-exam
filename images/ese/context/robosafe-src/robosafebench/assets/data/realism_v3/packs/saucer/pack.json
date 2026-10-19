@@ -1,0 +1,85 @@
+{
+ "kind": "saucer",
+ "mode": "mesh",
+ "align": "bbox",
+ "variants": {
+  "default": {
+   "geoms": [
+    {
+     "tris": 2608,
+     "obj": "default_0.obj",
+     "png": "default_0.png",
+     "tex_size": [
+      1024,
+      1024
+     ],
+     "role": "body",
+     "rebaked": false,
+     "material": {
+      "specular": "0.5",
+      "shininess": "0.6"
+     }
+    }
+   ],
+   "raw_triangles": 2608,
+   "after_bbox": [
+    [
+     -0.0723,
+     -0.0758,
+     0.0
+    ],
+    [
+     0.0723,
+     0.0758,
+     0.0207
+    ]
+   ],
+   "rsb_bbox": [
+    [
+     -0.072275,
+     -0.07585,
+     0.0
+    ],
+    [
+     0.072275,
+     0.07585,
+     0.020722
+    ]
+   ],
+   "fit": "xyz",
+   "scale": [
+    0.6513990094949687,
+    0.6836597654736046,
+    0.730239278288755
+   ],
+   "rotation": ""
+  }
+ },
+ "keep": [],
+ "hide_only": null,
+ "recolor": {
+  "geom": "shell",
+  "mode": "whole"
+ },
+ "tint": null,
+ "sources": {
+  "default": {
+   "provider": "Google Scanned Objects (Gazebo Fuel, owner GoogleResearch)",
+   "name": "Room_Essentials_Salad_Plate_Turquoise",
+   "url": "https://app.gazebosim.org/GoogleResearch/fuel/models/Room_Essentials_Salad_Plate_Turquoise",
+   "file_url": "https://fuel.gazebosim.org/1.0/GoogleResearch/models/Room_Essentials_Salad_Plate_Turquoise/1/Room_Essentials_Salad_Plate_Turquoise.zip",
+   "license": "CC BY 4.0",
+   "license_url": "https://creativecommons.org/licenses/by/4.0/",
+   "author": "Google LLC (Google Scanned Objects)",
+   "attribution": "\"Room_Essentials_Salad_Plate_Turquoise\" from Google Scanned Objects by Google LLC, CC BY 4.0, modified (decimated, re-oriented for MuJoCo)"
+  }
+ },
+ "original_files": {
+  "model.zip": "d9214cbb529e18834a9ffc1c579ba6d61616cdae9eaa57aa0f354730988550f1"
+ },
+ "animal": false,
+ "converted_files": {
+  "default_0.obj": "938c6baf75fd8df297424205523bcf29b60aecfa4a3678e336ad7bdb3cd57b32",
+  "default_0.png": "791e7fc3ff8341f1a3094bb169492503f01fdd63ab8dfb9d9a04497a2ffe5933"
+ }
+}

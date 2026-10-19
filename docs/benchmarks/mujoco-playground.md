@@ -1,7 +1,7 @@
 # MuJoCo Playground
 
 GPU-scale RL environments from Google DeepMind, here in plain MuJoCo on the CPU. This page covers the quadruped
-locomotion tasks (`scripts/mujoco-playground/`); the four manipulation tasks (`mujoco_playground_{aloha,panda}_*`,
+locomotion tasks; the four manipulation tasks (`mujoco_playground_{aloha,panda}_*`,
 ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it and are made by hand.
 
 | | |
@@ -10,8 +10,8 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
 | simulator | MuJoCo 3.3.7, CPU physics (bit-exact replay); EGL rendering on a GPU, else OSMesa |
 | robots | `unitree-go1` (Unitree Go1), `boston-dynamics-spot` (Boston Dynamics Spot), `google-barkour-vb` (Google Barkour vB); 12 joint position actuators each |
 | score | binary, defined here from Playground's termination rules and reward targets (Playground has shaped RL rewards only) |
-| tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/2.2`); BarkourJoystick, the one dynamic environment, also `-standard-realtime` (`eai-standard/2.3`) |
-| image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged) |
+| tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco-playground/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/2.2`); BarkourJoystick, the one dynamic environment, also `-standard-realtime` (`eai-standard/2.3`) |
+| image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged) |
 | oracle | full, both modes |
 
 ## Tasks
@@ -33,16 +33,16 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
   its `xmls/` and Menagerie's robot directory; Barkour: Menagerie's scene plus the foot-contact sensors its environment
   adds), with the drive gains Playground's environment sets (`Kp` as the actuator gain, `Kd` as joint damping; an
   actuator's own `kv` stays). One control step = 5 physics steps: 20 ms (Go1, Spot), 10 ms (Barkour, see below).
-- **Instance.** One episode as Playground's own `reset` draws it with `jax.random.PRNGKey(seed)` (`make_instances.py`,
-  Playground's code): the start state and, for the joystick tasks, the command schedule (and Barkour's pushes, Spot gait
+- **Instance.** One episode as Playground's own `reset` draws it with `jax.random.PRNGKey(seed)` (Playground's
+  code): the start state and, for the joystick tasks, the command schedule (and Barkour's pushes, Spot gait
   tracking's gait) that the environment's command process draws over the episode, its per-step key splits replayed
   exactly; the draws do not depend on the physics while the episode does not terminate. Getup: the drop's start state;
   the 0.5 s settle runs in the task's own MuJoCo. `instance.json` holds the start, the schedule, the t = 0 state hash
   and the numbers the texts quote.
-- **Selection** (`select_instances.py`, never looking at an agent's result): seeds in order; skip a joystick schedule
+- **Selection** (never looking at an agent's result): seeds in order; skip a joystick schedule
   that is mostly standstill (under half the episode commanding |v_xy| >= 0.3 m/s or |w_z| >= 0.3 rad/s), Barkour pushes
   that are null or weak (peak under 20% of the torso's weight), a getup start that is not a fall (no drop, or tilted
-  under 90 deg), and any seed whose reference fails. Every task's skipped seeds and why: `scripts/mujoco-playground/selection/`.
+  under 90 deg), and any seed whose reference fails.
 - **Actions.** 12 absolute joint position targets per control step, in actuator order; clipped to the actuator ranges.
 
 ## Success
@@ -72,9 +72,9 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
 
 ## Reference solutions
 - **Go1 joystick:** MuJoCo Playground's own Go1 joystick policy (`experimental/sim2sim/onnx/go1_policy.onnx`, the one its
-  `play_go1_joystick.py` runs in native MuJoCo), closed loop on the frozen instance, its targets recorded (`oracle.py`).
+  `play_go1_joystick.py` runs in native MuJoCo), closed loop on the frozen instance, its targets recorded.
 - **The rest:** Playground ships no other quadruped policy. Policies are trained here with PPO on the CPU
-  (`scripts/mujoco-playground/train/`: rsl_rl with Playground's hyperparameters; each environment re-implemented in numpy
+  (rsl_rl with Playground's hyperparameters; each environment re-implemented in numpy
   with Playground's reset, action mapping, observations and rewards), then run closed loop on the frozen instance.
   - Go1 getup: the policy turns the robot belly-down and level but stops in a crouch (a local optimum of the reward); the
     reference then moves the joint targets linearly to `home` in 1 s.
@@ -125,7 +125,7 @@ The references' own margins (worst joystick segment, end pose):
 | SpotJoystickGaitTracking | 0.183 m/s, 0.136 rad/s, foot height 0.038 m |
 | BarkourJoystick | 0.033 m/s, 0.028 rad/s |
 
-Outside Harbor, the standard service run on each reference (`std_local` check): live verdict success. Generator: `python3 scripts/mujoco-playground/generate.py --check`.
+Outside Harbor, the standard service run on each reference (`std_local` check): live verdict success.
 
 ## Task-specific rules
 - **ALOHA single peg insertion** (both modes): the peg tip's axial parameter `t_min <= t <= 0.75`, within 5 mm of the
@@ -135,7 +135,7 @@ Outside Harbor, the standard service run on each reference (`std_local` check): 
 - **Privileged graders** (`tests/grade.py`): a `trajectory.npz` that cannot be read as an npz with a numeric `actions`
   array is `bad_trajectory`; quadrupeds: a replay process that died or timed out (`replay_failed`), a rebuilt start that
   does not match the instance's hash (`instance_mismatch`) and an exception of the verifier write `infra_error = 1`
-  beside `grader_error = 1` (`scripts/mujoco-playground/tests/test_grade_privileged.py`).
+  beside `grader_error = 1`.
 - **Resets.** The quadruped standard tasks allow 10 resets: `RCB_RESET_BUDGET` (the compose files' default 10; 0 = a
   single episode), `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) abandons the running or ended
   episode and restarts from the frozen start; 409 after a success, once the agent's time is up and once the budget is
@@ -145,7 +145,7 @@ Outside Harbor, the standard service run on each reference (`std_local` check): 
   the two ALOHA and two Panda standard tasks set none (`/reset` is a 404, `budget.reset` 0).
 
 ## Grading (standard modes)
-- **2.2 quadrupeds** (`shared/standard/`): the service runs `rcb_quadruped.Session.check()` on the live simulator when
+- **2.2 quadrupeds** (each standard task's `environment/sim/`): the service runs `rcb_quadruped.Session.check()` on the live simulator when
   the episode ends (`finish()`; a getup / stand episode ends the moment its hold is met, a joystick episode passes only
   at the horizon) and writes it to `episode.json`; `finalize.sh` makes it `final.json`'s `success` (`graded_by =
   "live"`), then `video.py` renders `replay.mp4` in one fresh process (at most the horizon, ~150 frames: well under a
@@ -171,9 +171,9 @@ Outside Harbor, the standard service run on each reference (`std_local` check): 
 ## Standard-realtime (`eai-standard/2.3`)
 The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-standard-realtime` twin. Among the quadrupeds that is **BarkourJoystick** (its torso is pushed 12 times at
 frozen moments: an external force that is neither the robot's nor gravity).
-- **Service.** The shared realtime layer, unchanged (`shared/realtime/rcb_realtime.py`, `rcb_service.py`,
-  `rcb_client.py`, `grade.py`: byte-identical copies of `scripts/humanoidbench/shared/`; `check-tooling-identity.sh`),
-  with `shared/realtime/server.py`, which implements `rcb_service.Sim` on `rcb_quadruped.Session`: the standard twin's
+- **Service.** The shared realtime layer, unchanged (`rcb_realtime.py` and `rcb_client.py` from
+  `embodied_first_exam/standard/realtime/`; `rcb_service.py` and `grade.py`, byte-identical to HumanoidBench's realtime
+  tasks' copies; `check-tooling-identity.sh`), with the twin's `environment/sim/server.py`, which implements `rcb_service.Sim` on `rcb_quadruped.Session`: the standard twin's
   instance, schedule, pushes, termination rule, check and replay; the proprioception adds `cmd_vx`, `cmd_vy`, `cmd_wz`
   (the command in force; standard mode has it in `meta["command_now"]`). Not served: the 2.2 additions (`/kinematics`,
   per-frame camera poses, depth modes) and the `done` action. Graded on the live episode; the clock's record is
@@ -189,13 +189,13 @@ frozen moments: an external force that is neither the robot's nor gravity).
 ## Files
 | | |
 |---|---|
-| `scripts/mujoco-playground/shared/rcb_quadruped.py` | the tooling (privileged), the verifier's replay CLI and the service's simulator |
-| `shared/standard/server.py` | the 2.2 adapter on `scripts/eai_standard/rcb_limited.py`; `finalize.sh`, the collect hook |
-| `make_instances.py`, `select_instances.py`, `oracle.py` | candidates (Playground's code, JAX), selection and freezing, references |
-| `instances/`, `oracles/`, `selection/` | the frozen instances, the reference rows, every candidate tried |
-| `train/` | the reference-policy training (CPU PPO), not used by any task |
-| `shared/realtime/` | the standard-realtime twin's service (`server.py`, the 2.3 adapter) and its reference (`oracle_plan.py`, `solve.sh`) |
-| `generate.py`, `templates/` | the task directories (`--check` compares) |
+| each task's `rcb_quadruped.py` (`environment/`, `tests/`, the standard twin's `environment/sim/`) | the tooling (privileged), the verifier's replay CLI and the service's simulator |
+| the standard twin's `environment/sim/server.py` | the 2.2 adapter on `embodied_first_exam/standard/rcb_limited.py`; `finalize.sh`, the collect hook |
+| `environment/instance.json` | the frozen instance |
+| `solution/oracle.npy` | the reference rows |
+| the standard-realtime twin's `environment/sim/server.py`, `solution/` | its service (the 2.3 adapter) and its reference (`oracle_plan.py`, `solve.sh`) |
+
+The task directories are the deliverable; the tooling that built them is kept outside this repository.
 
 ## Standard-mode service details
 

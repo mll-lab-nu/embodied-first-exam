@@ -7,12 +7,17 @@ this page explains how a contribution gets from an idea to `main`. Reviewers fol
 
 | Kind | What it may change | Before you start |
 |---|---|---|
-| **New benchmark** | `tasks/<its tasks>`, `scripts/<bench>/`, `images/<sim>/`, `docs/benchmarks/<bench>.md` | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
+| **New benchmark** | `tasks/<benchmark>/<its tasks>`, `images/<sim>/`, `docs/benchmarks/<bench>.md` (and, if needed, `embodied_first_exam/benchmarks/<benchmark>/`, `ci_checks/benchmarks/<benchmark>/`) | an approved [benchmark proposal](.github/ISSUE_TEMPLATE/benchmark-proposal.yml) |
 | **Tasks for an existing benchmark** | the same, without `images/` | — |
-| **Task fix** | the affected task directories and their generator | describe the agent behaviour it closes; include before/after runs |
+| **Task fix** | the affected task directories | describe the agent behaviour it closes; include before/after runs |
 | **Shared files / protocol** | `docs/protocol/`, `docs/TAXONOMY.md`, `ci_checks/`, `.github/`, shared `scripts/`, `README.md` | a [protocol-change issue](.github/ISSUE_TEMPLATE/protocol-change.yml) for protocol changes |
 
 One benchmark per pull request. A pull request that adds tasks **and** changes shared files is split before review.
+
+A pull request delivers tasks only: task directories under `tasks/<benchmark>/` (PROTOCOL §1, "What a contribution
+delivers"). Scripts that build or generate tasks (generators, oracle searches, instance freezers, release builders)
+stay outside this repository. Code several tasks share may go in `embodied_first_exam/benchmarks/<benchmark>/`; the
+recommended place is the benchmark's image (`images/<sim>/`), so the tasks get it from the image.
 
 ## Proposal (new benchmarks)
 Open a benchmark-proposal issue first. A good proposal shows that the tasks are:
@@ -32,16 +37,17 @@ It also states the oracle source (PROTOCOL §4), the minimum compute per trial (
 and GPU class, §6), image size, whether the images can be published, and
 the expected size of the pull request.
 A new benchmark's shared-files change adds its label to `scripts/task_conventions.py` `BENCHMARKS` (task-directory prefix
--> name) and its row to `ci_checks/ci_scope.py` `UNITS`.
+-> name) and its row to `ci_checks/ci_scope.py` `UNITS`; every benchmark has its own prefix
+(`task_conventions.py benchmarks --check`).
 
 ## Authoring a task
-1. Copy the closest existing pair (`tasks/robotwin_2_0_stack_blocks_two-privileged/` and `-standard/`) or generate tasks
-   with a script under `scripts/<bench>/`. Name them `<base>-privileged` / `<base>-standard` (and `<base>-standard-realtime` for the standard-realtime mode, PROTOCOL §1, §3) and write
+1. Copy the closest existing pair (`tasks/robotwin-2/robotwin_2_0_stack_blocks_two-privileged/` and `-standard/`), or
+   generate tasks with your own tooling (kept outside this repository). Name them `<base>-privileged` / `<base>-standard` (and `<base>-standard-realtime` for the standard-realtime mode, PROTOCOL §1, §3) and write
    the README in the standard layout (§1); there is no `results/` directory.
 2. Fill in `task.toml` (PROTOCOL §1, §2: declare its settings, `dynamics` and `network` included), `instruction.md`
    (§5, written by a human), the verifier under `tests/` (Appendix H.1, separate sandbox) and `solution/` (H.2).
    The agent's time cutoff (PROTOCOL §2) is the task's own `[agent] timeout_sec`, which you set in this pull
-   request (a generator: a constant in your `scripts/<bench>/`) and state in its Contract: a whole number of seconds,
+   request and state in its Contract: a whole number of seconds,
    3600 unless you justify another number, at most 14400, the same for a task's privileged and standard versions,
    and one number for all your benchmark's tasks of a mode unless you say why. There is no central table. `normalize`
    writes from it the standard modes' `RCB_WALL_CLOCK_S` and the README row, and ends `instruction.md` with the
@@ -53,8 +59,8 @@ A new benchmark's shared-files change adds its label to `scripts/task_convention
    (docs/protocol/standard_mode.md, "The agent's clock": the shared layers do it for you; a test must show it).
 3. State the minimum compute (PROTOCOL §6): CPU cores, memory and GPU memory of the agent phase and the verifier
    phase, the GPU class and a recommended GPU, derived from measured peaks (oracle or agent trials; `docker stats` /
-   cgroup `memory.stat` and `nvidia-smi` while they run). Add a rule to `scripts/task_resources.toml` (or have the
-   generator write `[metadata.resources]`); `scripts/task_conventions.py` writes it into `task.toml` and renders the
+   cgroup `memory.stat` and `nvidia-smi` while they run). Add a rule to `scripts/task_resources.toml` (or write
+   `[metadata.resources]` yourself); `scripts/task_conventions.py` writes it into `task.toml` and renders the
    README's `## Compute resources`.
    Add the resource limits and caps too (PROTOCOL §6, docs/protocol/running.md "Resources"): a `[[limit]]` and a `[[cap]]` rule in the same file (scope
    `trial` for privileged tasks, `agent` for standard ones; GPU memory, memory, processes, disk in GiB, the whole trial's
@@ -73,19 +79,16 @@ A new benchmark's shared-files change adds its label to `scripts/task_convention
 
 ## Before opening the pull request
 ```bash
-bash ci_checks/run_invariants.sh tasks/<your tasks>   # must pass (the required CI job `invariants`)
-bash ci_checks/run_all.sh tasks/<your tasks>      # both tiers: fix the advisory findings or say why the task departs
+bash ci_checks/run_invariants.sh tasks/<benchmark>/<your tasks>   # must pass (the required CI job `invariants`)
+bash ci_checks/run_all.sh tasks/<benchmark>/<your tasks>      # both tiers: fix the advisory findings or say why the task departs
 bash ci_checks/run_all.sh --changed               # what CI runs on your pull request (scope: ci_checks/ci_scope.py)
-python3 scripts/task_conventions.py --check tasks/<your tasks>     # README, task.toml, test.sh in the standard layout
-python3 ci_checks/check-resources.py tasks/<your tasks>             # [metadata.resources] + limits + README / instruction (PROTOCOL §6)
-python3 ci_checks/check-cutoffs.py tasks/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, twins equal, cap (PROTOCOL §2)
-python3 scripts/<bench>/gen_tasks.py check        # generated tasks (e.g. scripts/kinder/): tasks/ is what render writes
-#   older generators: re-run them (scripts/robotwin_mk_task.py, robotwin_mk_limited.py, dtb_mk_task.py, mj_mk_limited.py)
-#   and check that `git diff --exit-code tasks/` is empty
+python3 scripts/task_conventions.py --check tasks/<benchmark>/<your tasks>     # README, task.toml, test.sh in the standard layout
+python3 ci_checks/check-resources.py tasks/<benchmark>/<your tasks>             # [metadata.resources] + limits + README / instruction (PROTOCOL §6)
+python3 ci_checks/check-cutoffs.py tasks/<benchmark>/<your tasks>               # the time cutoff: task.toml = instruction = README = sim service, twins equal, cap (PROTOCOL §2)
 python3 scripts/stamp_mtimes.py tasks             # before any image build from the checkout (below)
-harbor run -p tasks/<task> -a oracle               # on a sample: >= 2 tasks per mode
-harbor run -p tasks/<task> -a nop                  # must score 0
-python3 scripts/task_conventions.py tasks/<your tasks>    # after a hand edit: normalize, which also refreshes each DIGEST
+harbor run -p tasks/<benchmark>/<task> -a oracle               # on a sample: >= 2 tasks per mode
+harbor run -p tasks/<benchmark>/<task> -a nop                  # must score 0
+python3 scripts/task_conventions.py tasks/<benchmark>/<your tasks>    # after a hand edit: normalize, which also refreshes each DIGEST
 ```
 Never build a task image (a `harbor run`, a `docker build` of `environment/` or `tests/`) from a tree you have not
 stamped with `scripts/stamp_mtimes.py`: Docker's BuildKit reuses another build's same-name context file when its size and
@@ -105,12 +108,12 @@ The checklist is in PROTOCOL §4.
 ## Review and merge
 1. Static checks run on every pull request (`.github/workflows/static-checks.yml`), on what the pull request can
    affect (`ci_checks/ci_scope.py`, from the diff against `main`): when it changes only one benchmark's own paths (its
-   `tasks/<prefix>*`, `scripts/<bench>/`, `images/<bench>/`, `docs/benchmarks/<bench>.md`; plus the benchmarks that
+   `tasks/<benchmark>/`, `images/<bench>/`, `docs/benchmarks/<bench>.md`, `ci_checks/benchmarks/<benchmark>/`; plus the benchmarks that
    share code with it), the per-task checks (incl. each task's `DIGEST`) and `task_conventions.py --check` on that
-   benchmark's tasks, its generator's check and its unit tests (and `check-cutoffs.py` on its tasks); the cheap repo-level checks (resources,
+   benchmark's tasks (and `check-cutoffs.py` on its tasks); the cheap repo-level checks (resources,
    protocol, ...) always run on every task. Anything shared -- `ci_checks/`, `.github/`, the shared `scripts/` modules and tables
-   (`task_conventions.py`, `task_resources.toml`, `eai_standard/`,
-   `rcb_monitor/`, ...), `images/monitor/`, `images/VERSION`, the protocol documents (`docs/protocol/`), or a
+   (`task_conventions.py`, `task_resources.toml`, ...),
+   `embodied_first_exam/standard/`, `images/monitor/`, `images/VERSION`, the protocol documents (`docs/protocol/`), or a
    path the scope table does not know -- runs the full suite, as does every push to `main`, the nightly run and a manual
    run (`workflow_dispatch`). The CI mutation self-test (`check-ci-selftest.py`) runs with the full suite.
    The checks are in two tiers (PROTOCOL v2.0): the job **`invariants`** (`ci_checks/run_invariants.sh`: the checks
@@ -136,8 +139,7 @@ The checklist is in PROTOCOL §4.
   H.8), and results are attributed by digest. Recommended: say what changed and why in the pull request and the README's
   Change Log.
 - To change a time cutoff (the task author's decision; owner involvement only where official results must stay
-  comparable), set the new `[agent] timeout_sec` in the tasks concerned (a generated
-  benchmark: its generator's constant, then regenerate), in both twins, run `python3 scripts/task_conventions.py` on them
+  comparable), set the new `[agent] timeout_sec` in the tasks concerned, in both twins, run `python3 scripts/task_conventions.py` on them
   and say old -> new and why in the pull request (docs/protocol/running.md "The agent's time"). The task keeps its name and gets
   a new digest; results under the earlier cutoff are ranked separately (PROTOCOL §2, H.8).
 - Pin everything (`FROM` tags or digests, pip versions); no network access during verification.
@@ -153,7 +155,7 @@ The checklist is in PROTOCOL §4.
   recorded episodes and links to them (`ci_checks/check-agent-pointers.py` covers the task's own files only).
 - The agent is root in its container: assume it can modify anything under `/app` and `/opt`. Grading therefore runs in
   a separate sandbox, and only the declared artifacts cross over (PROTOCOL Appendix H.1). A benchmark-specific check
-  goes into the benchmark's own `scripts/<bench>/ci/` as an `invariant-*` hook (it guards Appendix H: blocking) or an
+  goes into the benchmark's own `ci_checks/benchmarks/<bench>/` as an `invariant-*` hook (it guards Appendix H: blocking) or an
   `advisory-*` hook (a convention: a warning); shared `ci_checks/` names no benchmark.
 - No credentials, personal absolute paths, large binaries or agent results in the repository (results go to the results
   site and the Hugging Face dataset).

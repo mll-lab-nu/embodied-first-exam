@@ -1,0 +1,66 @@
+{
+ "case": {
+  "case_id": "pro-object-shape-object-t00-i03-target_relocation-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 3,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/object_shape/libero_object/task_0",
+   "change": {
+    "calibration": "deterministic_candidate_requires_preflight",
+    "delta_position_m": [
+     0.0,
+     0.06,
+     0.0
+    ],
+    "direction_xy": [
+     0.0,
+     1.0
+    ],
+    "distance_m": 0.06,
+    "object": "alphabet_soup_1",
+    "operation": "move_object",
+    "support_entity": "floor"
+   },
+   "change_family": "GEO",
+   "change_type": "target_relocation",
+   "expected_response_mode": "replan",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3561727387
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-object-shape-object-t00-i03-target_relocation-d0",
+   "seed": 3561727387,
+   "severity": "medium",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "alphabet_soup_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/object_shape",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "06_object_shape/bddl/libero_object/pick_up_the_alphabet_soup_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "object_shape",
+   "init_reference_bddl_file": "libero_object_lan/pick_up_the_alphabet_soup_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object/pick_up_the_alphabet_soup_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the alphabet soup and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 0,
+  "task_name": "pick_up_the_alphabet_soup_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "674b944ede7a47578099c38c5d804e6b79440958f8628366b0467fb974b02b69",
+ "instance_sha": "858de430fcaec8c591026f9dfcd8242b3c7507a0e24c2fbe72b5b35a36e80ed0",
+ "schema": "eai-libero-max-instance/1"
+}

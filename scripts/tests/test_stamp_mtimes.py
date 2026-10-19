@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""scripts/stamp_mtimes.py (issue #258: BuildKit reuses another build's same-name context file when size and mtime match)
-and the Dockerfile mapping of scripts/check_image_files.py. Standard library only, no docker:
+"""scripts/stamp_mtimes.py (issue #258: BuildKit reuses another build's same-name context file when size and mtime match).
+Standard library only, no docker:
 
 - the stamp is the evaluation pool's function exactly (reference values from batch_eval_live/exec/stamp_mtimes.py);
 - different content of equal size -> different mtimes; equal content -> one stable mtime in any directory; a second run
   changes nothing; a file rewritten after stamping is restamped (fast path), --full rehashes, --check counts;
 - `stage` makes a stamped copy and leaves the source's mtimes alone; the task's DIGEST (paths and contents only) is the
-  same for the copy, and still matches the committed DIGEST;
-- check_image_files maps a real task's tests/Dockerfile COPY lines to the image paths Harbor's verifier image has."""
+  same for the copy, and still matches the committed DIGEST."""
 import hashlib
 import os
 import shutil
@@ -18,12 +17,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-import check_image_files  # noqa: E402
 import stamp_mtimes as sm  # noqa: E402
 import task_conventions as tc  # noqa: E402
 
 TOOL = [sys.executable, str(ROOT / "scripts/stamp_mtimes.py")]
-TASK = ROOT / "tasks/robotwin_2_0_stack_blocks_two-privileged"
+TASK = tc.task_dir("robotwin_2_0_stack_blocks_two-privileged")
 fails = []
 
 
@@ -109,27 +107,12 @@ def test_stage_and_digest():
         shutil.rmtree(dst)
 
 
-def test_image_mapping():
-    exp = check_image_files.expected(str(TASK / "tests"), str(TASK / "tests/Dockerfile"))
-    check(exp.get("/tests/test.sh") == "test.sh", f"tests/test.sh is not mapped to /tests/test.sh: {exp}")
-    check(exp.get("/tests/rcb_limits.json") == "rcb_limits.json", f"rcb_limits.json is not mapped: {exp}")
-    with tempfile.TemporaryDirectory() as td:
-        td = Path(td)
-        (td / "d").mkdir(); (td / "d/k.txt").write_text("k"); (td / "a.py").write_text("a"); (td / "b.py").write_text("b")
-        (td / "Dockerfile").write_text("FROM x AS b\nCOPY a.py /nope/\nFROM y\nWORKDIR /w\n# c\nCOPY --chmod=644 *.py \\\n  lib/\n"
-                                       "COPY [\"d\", \"/opt/d\"]\nCOPY a.py /one\nCOPY --from=b /x /y\n")
-        exp = check_image_files.expected(str(td), str(td / "Dockerfile"))
-        want = {"/w/lib/a.py": "a.py", "/w/lib/b.py": "b.py", "/opt/d/k.txt": "d/k.txt", "/one": "a.py"}
-        check(exp == want, f"Dockerfile mapping: {exp} != {want}")
-
-
 if __name__ == "__main__":
     test_function()
     test_stamp()
     test_stage_and_digest()
-    test_image_mapping()
     if fails:
         print(f"{len(fails)} failure(s)")
         sys.exit(1)
     print("ok: stamp_mtimes = the pool's stamp; distinct content -> distinct mtimes, stable, fast path, --full, --check; "
-          "stage leaves the source and DIGEST unchanged; check_image_files' COPY mapping")
+          "stage leaves the source and DIGEST unchanged")

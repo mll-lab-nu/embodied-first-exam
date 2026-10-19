@@ -1,8 +1,0 @@
-{
- "task": "place_bread_basket",
- "seed": 60417,
- "embodiment": "aloha-agilex",
- "state_sha": "47fa5010ca35",
- "text": "If there is one bread on the table, use one arm to grab the bread and put it in the basket, if there are two breads on the table, use two arms to simultaneously grab up two breads and put them in the basket.",
- "n_active_joints": 16
-}

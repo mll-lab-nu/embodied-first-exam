@@ -4,7 +4,7 @@ RoboARC's topological puzzle families on MuJoCo 3.14.0 physics, run by the simul
 built FROM the published `eai-robotangle:0.2.22` image (pinned by digest), whose recipe is kept as
 `images/roboarc/Dockerfile.genesis-0.2.22`; results of the earlier Genesis release are not comparable with this one.
 
-- Name: RoboARC (display) / `roboarc` (task prefix, image `eai-roboarc`, `scripts/roboarc/`, `images/roboarc/`, this
+- Name: RoboARC (display) / `roboarc` (task prefix, image `eai-roboarc`, `images/roboarc/`, this
   page). Code identifiers keep the simulator's name: the package `topogym`, the tooling `rcb_topogym.py`, `TOPOGYM_*` variables, the family keys
   (`interlocked_claws`), and the development branch dev/robotangle_mujoco with its `scripts/robotangle/` and
   `images/robotangle/`; inside the image, `/opt/robotangle/` (the instances and `stage_instance.py`).
@@ -16,32 +16,40 @@ built FROM the published `eai-robotangle:0.2.22` image (pinned by digest), whose
 - `<NN>`: two digits, the base's number in its family. A number is never reused: removing a task leaves a gap. The
   difficulty is not in the name: it is `[metadata].difficulty` in task.toml (TAXONOMY).
 - `i01`: the MuJoCo instance (the HF dataset's `instances/<family>-<NN>-i01/`).
-- `scripts/roboarc/roboarc_names.json` maps every base of the working names (`robotangle-*`) to its RoboARC name: old
-  base -> new base, family, number, difficulty.
 
 Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and the eai-standard/2.4 layer:
 - physics: MuJoCo 3.14.0, CPU float64 (the blanket families' cloth: a deterministic CUDA step, `blanket_vbd_gpu`);
 - the numpy / OpenBLAS SIMD masking in every container that runs a Session (so every CPU class builds the same frozen
   bytes); `render_bridge.py` and `nyx_direct.py` next to every tooling copy, named in the runtime binding;
+- the privileged images (agent `/opt/tools/`, verifier `/tests/`) take `rcb_topogym.py`, `render_bridge.py` and
+  `nyx_direct.py` from the files-only image `ghcr.io/mll-lab-nu/efe:roboarc-files-<version>` (`images/roboarc-files/`, built
+  from `embodied_first_exam/benchmarks/roboarc/`; `FILES.json` pins its digest and the files' sha256) with
+  `COPY --from=<image@digest>`: the privileged task dirs carry no copy. The standard sim service keeps its copies in `environment/sim/` (bind-mounted);
 - the texts state what the tooling grades: the contact-review values come from `CONTACT_RULE`, and the grasping rule is
   `Session.grasp_rules()` of the instance (the weld's slip force over 20 ms, 60 N ALOHA / 65 N Robotiq, and the
   Robotiq's release after 0.2 s without finger contact).
 
-## Generator and release
+## Release
 
-- `scripts/roboarc/mk_tasks.py` (`--check` in CI) renders the task dirs from this directory: `release.json`,
-  `packages/` (the texts of the RoboARC base each task ports, renamed, with the family's own texts over them),
-  `oracles/`, `assets.json`, `shared/` (the tooling and the graders). Generated tasks end with
-  `scripts/task_conventions.py` normalize.
+- The shared task code (the tooling, the graders, the sim service, the standard oracle player) has one source,
+  `embodied_first_exam/benchmarks/roboarc/`. A change to a file of `images/roboarc-files/FILES.json` needs a new image
+  version: `images/roboarc-files/VERSION`, `python3 scripts/files_image.py build roboarc-files`, push,
+  `files_image.py pin roboarc-files <digest>`, then the tasks' `COPY --from` lines name the new digest; until then
+  `scripts/files_image.py check` fails.
+- The files a task carries are in `tasks/`: the privileged reference
+  (`tasks/roboarc/roboarc-<base>-privileged/solution/trajectory.npz`, both modes), the instance's lock (that task's
+  `tests/runtime_binding.json`), the goal-state images (its `environment/goal/`) and the standard agent Dockerfile.
+  The privileged reference must be the file `images/roboarc/release.json`'s evidence names (`trajectory_sha256`).
+  The task directories are the deliverable; the tooling that built them is kept outside this repository.
 - The release files are written by `scripts/robotangle/release_rebuild.py --onto <main>` on dev/robotangle_mujoco
   (its `mujoco_release.json` names each base: a tier through its family's `numbers`, a new design by its key): image,
   instances made in the image, release files, render, checks, Harbor oracle / nop.
 - Large files: the frozen instances are in the private HF dataset `eai-v2-internal/robotangle-assets` (shared with the
-  Genesis release), under `instances/<base>/`, pinned file by file in `scripts/roboarc/assets.json`.
-- Image: `ghcr.io/mll-lab-nu/eai-roboarc:<images/roboarc/VERSION>`, built FROM the published
+  Genesis release), under `instances/<base>/`, pinned file by file in `images/roboarc/assets.json`.
+- Image: `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>`, built FROM the published
   `eai-robotangle:0.2.22` with the release commit's simulator source and the frozen MuJoCo instances
   (`images/roboarc/Dockerfile`, generated from dev/robotangle_mujoco's `Dockerfile.mujoco`; context:
-  `scripts/roboarc/fetch_image_context.sh`).
+  `images/roboarc/fetch_image_context.sh`).
 
 ## Time budget
 
@@ -66,21 +74,6 @@ instruction says where `s.replay(actions, grading=True)` reports it (`["grading"
 release replays deterministically on the same host (the cloth step on a deterministic GPU solver, the rest on the CPU), so
 a recording that stops on its own success reaches it within its rows; without the strict goal the hold's relaxed
 thresholds would become the effective goal in privileged mode only.
-
-**Re-grading recorded results** (nothing is re-run). `scripts/roboarc/regrade.py JOBS_DIR ... [--replay] --out
-regrade.jsonl` reads every RoboARC privileged trial under the Harbor jobs trees and gives its recorded verdict, the old
-rule's and the new rule's:
-- without `--replay`, from the trial's recorded `verifier/reward.json` alone: the new verdict is the recorded success AND
-  `strict_goal_reached`. This is exact: the replays are
-  deterministic on the host class they ran on, and the rule only adds that condition;
-- with `--replay`, it also replays the recorded `artifacts/app/output/trajectory.npz` with the current task's own
-  `tests/grade.py` in the task's verifier image (docker, GPU), the verifier's two replays, and reports both verdicts from that
-  run (old = the replays succeed; new = the current `success`); a trial whose recorded success the replay does not reproduce
-  under the old rule is `inconclusive` (re-grade it on the host class it ran on).
-
-Only the 94 tasks of the RoboARC 0.1.0 release are re-graded; a trial of any other task (a later RoboARC task, a Genesis
-`robotangle-*` task) is listed as `skipped` with the reason. Standard trials are skipped too: they are re-scored from their
-recorded live fields (Standard grading, below).
 
 **Validation** (Harbor `-a oracle` / `-a nop`, `eai-roboarc:0.1.0`): the privileged oracle scores 1 with
 `strict_goal_reached` 1 on one task of each family with a hold and on interlocked-claws-01, deterministic; nop scores 0.
@@ -137,12 +130,12 @@ These are forces, depths, ratios and the names of the parts involved, never a po
 A change to this list is a change of the declaration and goes through the protocol-change process (PROTOCOL §7).
 
 Names of the parts involved are allowed in standard mode; positions / poses in the simulator's world frame, the table
-height and physics parameters are withheld. The service's `robot_felt` passes exactly these fields (`SAFETY_PUBLISHED`); `scripts/roboarc/tests/test_server_requests.py` checks the list and the names.
+height and physics parameters are withheld. The service's `robot_felt` passes exactly these fields (`SAFETY_PUBLISHED`).
 
 ## Standard mode, world frame, network
 
 `eai-standard/2.4`; no world coordinates in standard texts (D7,
-`scripts/roboarc/ci/advisory-world-frame.sh`); agent egress on the allowlist (PROTOCOL Appendix H.6).
+`ci_checks/benchmarks/roboarc/advisory-world-frame.sh`); agent egress on the allowlist (PROTOCOL Appendix H.6).
 
 Every text the agent sees calls the service's frame the world frame, as the other services call theirs, and defines it in
 words; it is the robot frame (the table height and the robot base's world position are never disclosed): origin at the robot's kinematic root link on its mounting, axes as the simulator's world
@@ -154,12 +147,12 @@ or robot base position either.
 
 ## Registration (the lines a rename changes)
 
-`BENCH` in `scripts/roboarc/mk_tasks.py` and `--bench` of dev/robotangle_mujoco's `scripts/robotangle/release_rebuild.py`;
-`git mv` of `scripts/roboarc/`, `images/roboarc/` and this page; then the registration lines: `scripts/task_conventions.py`
+`--bench` of dev/robotangle_mujoco's `scripts/robotangle/release_rebuild.py`;
+`git mv` of `images/roboarc/`, `images/roboarc-files/` (a new image name: build, push, pin) and this page; then the registration lines: `scripts/task_conventions.py`
 (`BENCHMARKS`), `scripts/task_resources.toml`
-(the `^roboarc-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix or generator
-(`ci_checks/check-tooling-identity.sh` `MODULE`, `scripts/roboarc/ci/advisory-world-frame.sh`, `check-generated-tasks.sh`,
-`check-unit-tests.sh`); the cutoff is each task's own `[agent] timeout_sec` (the generator's constant).
+(the `^roboarc-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix
+(`ci_checks/check-tooling-identity.sh` `MODULE`, `ci_checks/benchmarks/roboarc/advisory-world-frame.sh`); the cutoff is
+each task's own `[agent] timeout_sec`.
 
 ## Standard-mode service details
 

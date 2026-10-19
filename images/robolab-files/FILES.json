@@ -1,0 +1,7 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe-private:robolab-files-0.1.0@sha256:4e656f245a9e7eb7c55bc5f2c94342813f48c7ea868be8f08aab2ca2b5dee932",
+ "source": "embodied_first_exam/benchmarks/robolab",
+ "files": {
+  "rcb_robolab.py": "bf23584c43e0c90031ec055dd3e84ead78363340397cf729de64a5e534d78cc3"
+ }
+}

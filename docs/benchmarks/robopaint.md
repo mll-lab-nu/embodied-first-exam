@@ -21,9 +21,8 @@ person does, not coloured in (Process rules).
 - Acrylic: ten paintings.
 
 **麟鳳龜龍** (the four auspicious creatures of the 禮記) is the densest work: 71 strokes, an exemplar of 8036 mm², strokes
-about 4.2 mm wide (the exemplar's area per stroke length), and 麟 alone has 23 strokes. It is made like the other kaishu targets: Make Me a Hanzi's `graphics.txt` @ bddc96d
-(Arphic Public License), `scripts/robopaint_brush_mk_task.py --family kaishu --target linfengguilong --entry diagonal`,
-`measure_reference.py`, `mk_tasks.py`.
+about 4.2 mm wide (the exemplar's area per stroke length), and 麟 alone has 23 strokes. Like the other kaishu targets it comes from Make Me a Hanzi's `graphics.txt` @ bddc96d
+(Arphic Public License); its reference writer uses `--entry diagonal`.
 
 **The reference writer's entry (`--entry`).** The default writer stops above each stroke's start, presses straight down
 and lifts straight up. At the stop the arm rebounds a fraction of a millimetre, and the brush takes the rebound as its
@@ -44,10 +43,7 @@ stays its default):
 - the robot step runs with 3 and 5 passes of iterative learning control and keeps the better result (`plans.json`
   `ilc_passes`).
 
-The process limits are set from the first references (`rules.json` `reference_path_mm`, `reference_mark_width_mm`); the
-current references' values are in `current_reference`. An existing pair is re-solved with
-`scripts/robopaint_brush_mk_task.py --resolve tasks/<pair>-privileged --plans <plans.json>` (the robot step and the
-self-test in the base image, on the frozen instance), then `mk_tasks.py`. The references' verifier metrics:
+The process limits are set from the first references' `path_mm` and mark width. The references' verifier metrics:
 
 | target | IoU | boundary F | min stroke coverage | stray | `path_mm` | `mark_width_mm` |
 |---|---|---|---|---|---|---|
@@ -69,39 +65,17 @@ What still limits the copy:
 - **Robot tracking.** The robot's result is 0.005–0.015 IoU below the robot-free plan.
 - **Dense works.** 麟鳳龜龍, 茂林脩竹 and 惠風和暢 lose most in the 1 mm band around their thin strokes.
 
-## Tasks and generator
-- `python3 scripts/robopaint_strict/mk_tasks.py [--check]` writes every task from the committed ones, with no docker and no GPU
-  (standard library only). CI runs `--check` (`ci_checks/check-generated-tasks.sh`); rerunning it over every pair leaves
-  `git diff tasks/` empty. It works in two stages:
-  1. `scripts/robopaint_brush_mk_task.py --refresh`, into a temporary directory, rebuilds each pair without the process rules
-     from its own frozen files (the instance and the picture, the reference plan and its records).
-     - The code comes from the family's template pair: kaishu `yongzibafa`, xingshu `yong`, caoshu `wen`, lettering `liberty`,
-       acrylic `redfuji`, oil `cypresses`. Any committed pair of the family would do. A tooling change is made in the template
-       pair and reaches every task when the script is rerun. A painting's program is read from the template's
-       `solution/programs_json/`, where a pair's own entry is its current program, so a painting pair is remade with itself as
-       the template.
-     - The standard twin's client and service layer come from `scripts/eai_standard/`.
-     - The texts come from `scripts/robopaint_templates/<family>/`. They take their values from the frozen files
-       (`derive_values`). The oil rule is calibrated at generation time on the reference solution's own execution
-       (`solution/calibration.json`), and the oil texts are written with the calibrated thresholds.
-  2. The script adds the process rules: the rules to every copy of the instance's `target.success`, `rcb_brush_strict.py`
-     (from `scripts/robopaint_strict/`) to the graders' side, the rule texts (`scripts/robopaint_strict/texts/`) to
-     `instruction.md` (after "Target and score"), `README.md` and the `task.toml` description, and the oracle evidence.
-     The wiring of `rcb_brush_strict.py` (`tests/grade.py`, `tests/Dockerfile`, `environment/docker-compose.yaml`) is part of the
-     template pair's code; the script checks that it is there.
-- `scripts/robopaint_strict/rules.json` holds the family parameters, the oracle evidence texts, and `reference_path_mm` /
-  `reference_mark_width_mm` per pair. "strict" survives in internal names only: this directory, `rcb_brush_strict.py`,
-  `RCB_TOOL_MODULE=rcb_brush_strict` and the `reward.json` key `strict_ok` (the process rules).
-- A new pair:
-  1. `scripts/robopaint_brush_mk_task.py` (docker, GPU) makes the frozen files inside the base image: the instance and the
-     picture, the reference plan, and a self-test of the scoring path. Its pair has the picture rule only. A dense kaishu work
-     needs `--entry diagonal` (Targets). A reference like the current ones is planned outside with `opt_calli.py --profile
-     print` and passed with `--plans`, or the pair is re-solved afterwards with `--resolve` (Targets).
-  2. `scripts/robopaint_strict/measure_reference.py` (base image, GPU) measures the reference solution's `path_mm` and mark
-     width: each pair's `solution/oracle_qpos.npy`, replayed with `rcb_brush_strict`'s Session on the graders' instance.
-     They go into `rules.json`.
-  3. `mk_tasks.py` writes the pair with its rules; then `cd tasks && harbor add --scan .`.
-- Every generated task ends with `normalize()` of `scripts/task_conventions.py` (the repository's conventions; `--check`
+## Tasks
+- The task directories are the deliverable; the tooling that built them is kept outside this repository.
+- The standard twin's client and service layer come from `embodied_first_exam/standard/`.
+- The process rules are in every copy of the instance's `target.success`; `rcb_brush_strict.py` is on the graders' side
+  (wired in by `tests/grade.py`, `tests/Dockerfile` and `environment/docker-compose.yaml`); the rule texts are in
+  `instruction.md` (after "Target and score"), `README.md` and the `task.toml` description. "strict" survives in internal
+  names only: `rcb_brush_strict.py`, `RCB_TOOL_MODULE=rcb_brush_strict` and the `reward.json` key `strict_ok` (the process
+  rules).
+- The oil rule is calibrated on the reference solution's own execution (`solution/calibration.json`), and the oil texts
+  state the calibrated thresholds.
+- Every task follows `normalize()` of `scripts/task_conventions.py` (the repository's conventions; `--check`
   passes on every RoboPaint task).
 - Benchmark-specific metadata: `difficulty`, `medium`, `stroke_count`, `structure`, `characters` (TAXONOMY).
 - Every pair has a real reference solution in `solution/`.
@@ -109,16 +83,19 @@ What still limits the copy:
   - The standard one streams the same joint targets through the client; it waits out a service restart and continues
     from the control step the service reports.
   - The oracle label is `partial` on all 86 tasks (see Oracle evidence).
-  - The generator writes each task's `oracle_evidence` from `scripts/robopaint_strict/rules.json`.
 - CI:
-  - `scripts/robopaint_strict/ci/advisory-tooling.sh` keeps every copy of the shared files, `rcb_brush_strict.py` included,
-    byte-identical within a family and across the families;
-  - `scripts/robopaint_strict/ci/invariant-leak.sh` (PROTOCOL Appendix H.2) admits the rule keys in the agent's copy of the instance.
+  - `python3 scripts/files_image.py check robopaint-files`: `embodied_first_exam/benchmarks/robopaint/` still hashes to
+    `images/robopaint-files/FILES.json` (the pinned files-only image);
+  - `ci_checks/benchmarks/robopaint/advisory-tooling.sh` keeps every copy of the shared files left in task dirs (the sidecars'),
+    `rcb_brush_strict.py` included, byte-identical to `embodied_first_exam/benchmarks/robopaint/`, within a family and across the families;
+  - `ci_checks/benchmarks/robopaint/invariant-leak.sh` (PROTOCOL Appendix H.2) admits the rule keys in the agent's copy of the
+    instance, and in the agent's Dockerfile a `COPY --from` only of the pinned files-only image and only for an allowed
+    agent-side file (`rcb_brush.py`: its source must hash to FILES.json and, like a task dir's copy, carry no grader code).
 
 ## Oracle evidence
 A task is labelled `oracle = "full"` only if a recorded oracle run scored 1 on byte-identical grader, frozen instance,
-tooling and oracle code; every RoboPaint task is `partial`. Its `oracle_evidence` (written from `rules.json`) points to the
-runs in Validation: the pairs in `oracle_evidence_pairs` to Harbor `-a oracle` (1) and `-a nop` (0) runs in both modes on
+tooling and oracle code; every RoboPaint task is `partial`. Its `oracle_evidence` points to the
+runs in Validation: the pairs with their own evidence to Harbor `-a oracle` (1) and `-a nop` (0) runs in both modes on
 their current files, the others to the release validation and the process-rule validation. Human review in PR #3.
 
 ## Validation
@@ -133,9 +110,9 @@ their current files, the others to the release validation and the process-rule v
   oracle 1 and nop 0 on both modes of one pair per family. Re-graded recorded runs of the picture-rule version: the process
   rules turn 102 of GPT-6 Astra's 109 picture-rule successes (colouring in) and 4 of GPT-6 Luna's 53 (Calibration) into
   failures and no failure into a success; the picture verdict is unchanged in all 360 runs.
-- **Pairs with their own evidence** (`oracle_evidence_pairs`: the ten calligraphy pairs with re-made references, kaishu
-  linfengguilong among them): Harbor `-a oracle` 1 and `-a nop` 0 in both modes on their current files; the generator's `--resolve`
-  (robot step and self-test) passes and writes the same reference trajectory bit for bit.
+- **Pairs with their own evidence** (the ten calligraphy pairs with re-made references, kaishu
+  linfengguilong among them): Harbor `-a oracle` 1 and `-a nop` 0 in both modes on their current files; re-solving each
+  (robot step and self-test) passes and gives the same reference trajectory bit for bit.
 
 ## Caoshu (草书)
 Cursive writes a character in a few long brush contacts: the contact cap is the exemplar's own connected contacts (1.6–3 per
@@ -143,8 +120,7 @@ character, against 6 in xingshu and 8 in kaishu, medians), each contact runs thr
 ligatures (牵丝) join strokes and characters. Six targets: `wen` 文 and `zhen` 真 (characters), and four works, each one column of
 the scroll as written, its characters sharing one 210 mm frame so the ligatures between them stay on the sheet: `nangong` 南宮,
 `siwushaonian` 四五少年, `zhongtiangechuifen` 中天哥吹分 and `beiquelindanshui` 北闕臨丹水.
-- Exemplars: 張旭《古詩四帖》, Wikimedia Commons File:張旭 古詩四帖.jpg ({{PD-old-70}}), by
-  `scripts/robopaint_caoshu/cs_exemplar.py` (spec `exemplars.json`, results `exemplars/`). The scan is thresholded (Otsu, with a
+- Exemplars: 張旭《古詩四帖》, Wikimedia Commons File:張旭 古詩四帖.jpg ({{PD-old-70}}). The scan is thresholded (Otsu, with a
   hysteresis that keeps faint ligatures). Whole ink components are kept: the selection box only picks them, a ligature into a
   neighbouring character is cut explicitly (`cut`) and a stroke of the neighbouring column is excluded explicitly (`exclude`). A
   dashed hairline that the threshold breaks up is bridged along its own trace (`bridge_lines`), a dry stroke (飛白) is closed
@@ -157,12 +133,9 @@ the scroll as written, its characters sharing one 210 mm frame so the ligatures 
   robot) and, in the works, at most 1 mm of press at the touch-down and the lift (`--z0max`, `--zendmax`: the arm sways there
   and a deeper press leaves a blot); nangong's longest contact keeps its control points within 6 mm of their start
   (`--leash-mm`: with a press floor the optimiser otherwise parked surplus path off the sheet, outside the residual's window).
-  The robot execution is the kaishu one (`ref_calli.py`; three ILC passes, more made the tracking worse). Generator:
-  `robopaint_brush_mk_task.py --family caoshu` (the first pair took its code from xingshu `yong`: `--template-family xingshu
-  --template yong`), then `measure_reference.py` and `mk_tasks.py` as for every pair (on a host without docker, with the
-  base image's runtime: `cs_gen_native.py`). Scoring, thresholds and process rules are those of kaishu
+  The robot execution is the kaishu one (`ref_calli.py`; three ILC passes, more made the tracking worse). Scoring, thresholds and process rules are those of kaishu
   and xingshu.
-- Robot-free checks of the rule on the reference plans (`cs_perturb.py`): one press for the whole sheet, a lift at every region
+- Robot-free checks of the rule on the reference plans: one press for the whole sheet, a lift at every region
   boundary or in the middle of every contact, a missing contact, presses ×0.8 or ×1.2 and the naive plan fail on all six; one
   press per contact fails on five (文 passes with IoU 0.83 and a worst region of 0.81); every contact moved ±0.5 mm relative to
   the others fails on the four works, ±1.5 mm on all six.
@@ -184,8 +157,7 @@ Wikimedia Commons under {{PD-scan}}). Six targets, each placed 205 mm wide
 on the sheet: two flourished headings with all their flourishes, `liberty` ("Liberty.", G. Brooks) and `virtue` ("Virtue.", plate
 12), and four copy lines of the plate COPIES (W. Clark): `aim` ("Aim at improvement in every line."), `business` ("Business makes
 a Man respected."), `commendation` ("Commendation animates the mind.") and `diligence` ("Diligence in youth is commendable.").
-`exemplars.json` also holds two alternates that are not tasks (`excess`, `friendship`).
-- **The exemplar** (`scripts/robopaint_lettering/lt_exemplar.py`; spec `exemplars.json`, files `exemplars/<slug>.exemplar.json`):
+- **The exemplar**:
   the scan's ink (darkness against the local paper level, upsampled x4, Otsu with a hysteresis; short faint gaps of a hairline
   bridged where the scan still has ink), its centre paths and thickness, re-drawn with the task's own pointed pen: one spread axis
   for the whole exemplar (the normal of the shades' mean direction, -33° to -38°) and at every point the tines' spread that gives the
@@ -194,7 +166,7 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
   raster its IoU is 0.86-0.88 (the pen's hairline is 0.4 mm, the engraving's about 0.2-0.3 mm), 99.8-100 % of the scan's ink lies
   within 0.5 mm of the target and all of the target within 0.5 mm of the scan's ink. One known shortfall: the heaviest shade of
   `virtue`'s right swash runs too far from square to the spread axis, so the tines at their full 2.0 mm draw it a little thinner
-  than the engraving. QA: the target's outline on the scan (`lt_exemplar.py` writes it), checked for every target before generation.
+  than the engraving. QA: the target's outline on the scan, checked for every target.
 - **Regions** (the strokes of the scorer's per-stroke coverage): the centre paths joined into trails by good continuation through
   the crossings, each cut into equal pieces of at most 30 mm, so every part of a long flourish counts.
 - **The cap** = one contact per connected piece of the exemplar's ink (its own pen lifts, no margin): a whole word, a capital with
@@ -205,10 +177,7 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 - **Reference solution** (`solution/plans.json`: the routes; `solution/ref_lettering.py`): the pen at the spread axis, the press
   from the spread, 5 mm/s (slower at sharp turns), lag feed-forward and eight passes of iterative learning control; the recorded
   pass is the best one (every contact one stroke, the smallest tracking error).
-- **A new pair**: `lt_exemplar.py` -> `scripts/robopaint_brush_mk_task.py --family lettering --target <slug> --exemplar
-  <slug>.exemplar.json` (catalogue and licence record: `scripts/robopaint_templates/lettering/targets.json`; on a host without
-  docker but with the image's runtime: `lt_gen_native.py`) -> `measure_reference.py` -> `rules.json` -> `mk_tasks.py`.
-- **Rule study** (`lt_perturb.py`, robot-free: the plan drawn with the pen's ideal mark and scored by the unchanged scorer), all six
+- **Rule study** (robot-free: the plan drawn with the pen's ideal mark and scored by the unchanged scorer), all six
   targets: the reference plan passes; one constant press (per contact or overall), hairlines only, full press, the spread axis
   turned 90°, contacts shifted alternately by ±0.5 mm, one lift more, one contact skipped, one stroke per region and the shades
   filled with hairline passes all fail. The spread axis turned 30° fails the two words but passes the four lines (their shades are
@@ -227,22 +196,27 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 
 ## Image and host
 - `images/robopaint/` holds ManiSkill 3.0.1, SAPIEN 3.0.3, a patched libmypaint 1.6.1 and Spline-FRIDA.
-  - The image is `ghcr.io/mll-lab-nu/eai-robopaint:<images/robopaint/VERSION>` (0.2.0), public.
+  - The image is `ghcr.io/mll-lab-nu/efe:robopaint-<images/robopaint/VERSION>` (0.2.0), public.
   - It is built from the repository root: `docker build -f images/robopaint/Dockerfile .`.
+- `images/robopaint-files/` is the files-only image of the shared tooling and graders,
+  `ghcr.io/mll-lab-nu/efe:robopaint-files-<VERSION>@<digest>` (`FILES.json`), public like the base image: `FROM scratch` with
+  the files of `embodied_first_exam/benchmarks/robopaint/` (checkout modes, content-derived mtimes). A change to one of them needs a new
+  version: bump `VERSION`, `python3 scripts/files_image.py build robopaint-files`, push, `python3 scripts/files_image.py pin
+  robopaint-files <digest>`, then the tasks' `COPY --from` lines name the new digest.
 - Every simulator container needs an NVIDIA GPU: SAPIEN needs a Vulkan device to build the scene and to render. Physics
   and the brush models run on the CPU.
 - A standard twin's agent container and verifier use the one client base of every standard task
-  (`scripts/eai_standard/client.env`, pinned by digest). The agent side installs the exact pins of
-  `client-requirements.txt`, inline; the generator writes both (`ci_checks/check-standard-client.sh`).
+  (`embodied_first_exam/standard/client.env`, pinned by digest). The agent side installs the exact pins of
+  `client-requirements.txt`, inline (`ci_checks/check-standard-client.sh`).
 - Agent egress is an allowlist (the model APIs and the package registries) on every task, because the sources of some targets are public.
 - Frozen inputs over 2 MB: 9 of the 11 oil reference pictures (`target.png`, 2.0–2.5 MB, 5 copies per pair).
   - They are photographic scans, so lossless re-encoding gets only 5 of the 9 under 2 MB.
   - They stay as frozen (the instance hash covers their pixels). The 2 MB limit is for results.
 
 ## Time budget
-3600 s for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
+3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
 docs/protocol/running.md "The agent's time"); `instruction.md` states it once, in its closing `## Time limit` section, and the
-templates' own text says "the time limit (`## Time limit`)". What the agent has to fit into it:
+rest of the text says "the time limit (`## Time limit`)". What the agent has to fit into it:
 - learning the brush's mark from test strokes on the practice sheet: width against press depth, the drag of the tuft, the
   paint's blending (the privileged mode gives the exact sheet but no brush model);
 - every stroke on the main sheet is irreversible in standard mode;
@@ -251,7 +225,7 @@ templates' own text says "the time limit (`## Time limit`)". What the agent has 
 
 ## The target is only a picture
 `target.png` (RGB) in both modes. Its source (glyph outlines, pen paths, the exemplar's paint coverage) stays in the
-graders' copy of the instance. Nothing derived from it is in the agent's container (`scripts/robopaint_strict/ci/invariant-leak.sh` (PROTOCOL Appendix H.2)).
+graders' copy of the instance. Nothing derived from it is in the agent's container (`ci_checks/benchmarks/robopaint/invariant-leak.sh` (PROTOCOL Appendix H.2)).
 
 ## Scoring
 Success needs the picture rule and the process rules; `final_reward` is the continuous score.
@@ -295,7 +269,7 @@ words (write or paint with strokes the way a person does; colouring in, filling,
 and with the task's numbers.
 
 Where they are applied: `rcb_brush_strict.py` (graders' side only), a `Session` subclass whose `score()` adds the rules, run with
-`rcb_brush.py`'s CLI. The privileged verifier replays with it (`tests/grade.py`), the privileged scoring service imports it
+`rcb_brush.py`'s CLI. The privileged verifier replays with it (`/tests/grade.py`), the privileged scoring service imports it
 (`RCB_TOOL_MODULE=rcb_brush_strict`), and the standard sim service scores the live sheet with it (`RCB_TOOL=/srv/rcb_brush_strict.py`).
 The agent's container holds `rcb_brush.py` only.
 
@@ -352,7 +326,7 @@ agent's own privileged copy of the instance holds no counting numbers):
   runs of marking samples, joined across non-marking samples unless the tip moves more than `stroke_gap_mm` = 5 mm there; the
   touch-down and the lift before the first and after the last marking sample belong to no piece;
 - each piece counts as one stroke, or ⌈length / `max_stroke_path_mm`⌉ when it is longer than `max_stroke_path_mm` =
-  5 × the reference's longest piece (rules.json `reference_longest_stroke_mm`, `measure_reference.py`), rounded up to 10 mm:
+  5 × the reference's longest piece, rounded up to 10 mm:
   600–2240 mm; `strokes_counted_ok` = `n_strokes_counted` ≤ `max_strokes`;
 - the paintings' sweep rule on the pieces: at most 10 % of the pieces' path in pieces longer than 12 × their bounding-box
   diagonal (at least 10 mm);
@@ -376,17 +350,6 @@ joined at a 0.2 mm press with nothing written twice are not penalised.
 **Not caught (accepted).** A contact may still go over its own stroke a few times: up to 5 × the reference's longest piece
 it counts once (Luna's genuine 2.98 × retrace sets that margin), unless its back-and-forth makes it a scribble (ratio > 12).
 
-**Re-grading existing results** (nothing is re-run). `scripts/robopaint_strict/regrade.py JOBS_DIR ... [--traj PATH.npz]
---out regrade.jsonl` replays every recorded RoboPaint trajectory once with the current task's graders' copy (`tests/`:
-`rcb_brush_strict.py` and the frozen instance) in the base image (docker, GPU) and scores the same final state twice: with
-the rules without counted strokes (`old_verdict`: the instance's `target.success` without the counted-stroke and calligraphy sweep
-keys) and with the current rules (`new_verdict`); the picture rule alone is `image_success`. A
-trajectory recorded on another instance (its `instance_sha`) is not re-graded, and a recorded success the old rule does not
-reproduce is `inconclusive`. Only the 43 pairs on main (the released set, `RELEASED` in the tool) are re-graded: a trial of any
-other RoboPaint task (pruned or earlier targets, later additions) is listed as `skipped`. Lettering and the paintings re-grade
-to their recorded verdicts. Standard re-grades are conservative ("re-graded under 2026-10-14 rules (conservative)"): the agent
-read an instruction without these rules.
-
 ## Oil: the pointed brush
 - **The brush.** `tanda/oil-03-paint` at `radius_log_offset` 0.6, made pointed: libmypaint's `offset_by_random` and
   `tracking_noise` get a pressure input, so they grow with the pressure as the dab radius does (0 at no pressure, the
@@ -398,7 +361,7 @@ read an instruction without these rules.
   rows at a 7 mm press, then 4 layers of curved strokes at 4, 2.5, 1.6 and 1.3 mm presses (marks of about 6, 3.6, 2.6 and 2.1 mm).
   - `solution/ref_oil.py` executes it with the program's `motion`: a 6 mm hover between strokes, quick dips and short holds.
   - 1316–1697 strokes and 49.7k–62.0k control steps: 41–52 of the episode's 60 simulated minutes (the 72000-step guard).
-- **The rule.** It is the generator's calibration on that execution, with an SSIM margin of 0.04 (with 0.03 the reference
+- **The rule.** It is calibrated on that execution, with an SSIM margin of 0.04 (with 0.03 the reference
   painted 50 % faster misses on Pearl Earring; with 0.04 no coarse painting passes). The stroke cap is 1.5 × and the path
   budget 3 × the reference.
 
@@ -471,8 +434,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
   `sim_error = 1` marks an episode that a simulator error ended. The hook writes `final.json` whole (temporary file + rename).
 - Malformed requests (standard mode, `environment/sim/server.py`): every field of `/submit` and `/observe` is checked
   before anything is executed (`parse_submit` / `parse_observe`; `note` included), and whatever a malformed field raises
-  is a 400 that leaves the episode alive. Null is the default; `video_fps` is accepted in [0, 1000]. Test:
-  `scripts/robopaint_strict/tests/test_server_requests.py` (needs numpy; the checks are taken from `server.py` by `ast`).
+  is a 400 that leaves the episode alive. Null is the default; `video_fps` is accepted in [0, 1000].
 - Instance drift (privileged mode, `tests/grade.py`): a frozen instance the verifier does not rebuild (`instance_ok = 0`)
   is `grader_error = 1` + `infra_error = 1`, and `infra_error = 1`
   goes with every `grader_error = 1`.
@@ -490,21 +452,26 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
   resource scope (in privileged mode every service is, docs/protocol/running.md "Resources"; `scripts/task_resources.toml` adds 5 GiB for it
   to the trial's memory limit and caps it at 7 GiB). With `RCB_LIMITS_ENFORCE=1` an out-of-memory kill inside the
   scorer would therefore count against the agent, which cannot enter that container but does decide how many actions
-  it posts. Taking it out of the scope is a change to `scripts/rcb_monitor/inject.py` (the service class) and the
+  it posts. Taking it out of the scope is a change to `images/monitor/rcb_monitor/inject.py` (the service class) and the
   limit rule, not to the task.
 
 ## Tooling (file names)
 | main's convention | RoboPaint |
 |---|---|
-| `environment/rcb_traj.py` (privileged tooling, `Session`) | `environment/rcb_brush.py` |
-| `tests/rcb_traj.py` | `tests/rcb_brush.py` + `tests/rcb_brush_score.py` |
+| `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_brush.py` (from the files-only image) |
+| `tests/rcb_traj.py` | `/tests/rcb_brush.py` + `/tests/rcb_brush_score.py` (from the files-only image) |
 | — | `environment/scorer/` (privileged `s.score()`: `rcb_scorer.py` + the scoring module) |
-| standard sidecar | `environment/sim/server.py` (the 2.2 adapter), `finalize.sh` (the collect hook), the brush tooling and its scorer, and from `scripts/eai_standard/`: `rcb_limited.py`, `rcb1.py`, `run.sh` |
-| `rcb_client.py`, `rcb1.py` | the same names (`scripts/eai_standard/`) |
-| — | `rcb_brush_strict.py` (the process rules, graders' side only): `tests/` and `environment/scorer/` (privileged), `environment/sim/` (standard) |
+| standard sidecar | `environment/sim/server.py` (the 2.2 adapter), `finalize.sh` (the collect hook), the brush tooling and its scorer, and from `embodied_first_exam/standard/`: `rcb_limited.py`, `rcb1.py`, `run.sh` |
+| `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`) |
+| — | `rcb_brush_strict.py` (the process rules, graders' side only): `/tests/` (privileged, from the files-only image), `environment/scorer/` (privileged), `environment/sim/` (standard) |
 
-Every copy of the tooling is byte-identical within a family and across the six families
-(`scripts/robopaint_strict/ci/advisory-tooling.sh`). The 2.2 layer is byte-identical to `scripts/eai_standard/`
+`rcb_brush.py`, `rcb_brush_score.py`, `rcb_brush_strict.py` and the two `grade.py` (`privileged/`, `standard/`) live once, in
+`embodied_first_exam/benchmarks/robopaint/`. The images take them from the pinned files-only image `images/robopaint-files/` with
+`COPY --from=<image@digest>` (`scripts/files_image.py`), at the paths above: the privileged agent image `rcb_brush.py` at
+`/opt/tools/`, the privileged verifier image the four graders' files at `/tests/`, the standard verifier image `grade.py`
+at `/tests/`; no task dir carries them. The sidecar dirs `environment/scorer/` and `environment/sim/` are bind-mounted at
+`/srv`, not built, so they keep copies; every copy is byte-identical to the source
+(`ci_checks/benchmarks/robopaint/advisory-tooling.sh`). The 2.2 layer is byte-identical to `embodied_first_exam/standard/`
 (`ci_checks/check-tooling-identity.sh`).
 
 ## Declarations
@@ -512,7 +479,7 @@ Every copy of the tooling is byte-identical within a family and across the six f
   sheets, rendering and replay. No stroke planner or painting skill is added to the agent's tooling; the reference
   solutions keep theirs under `solution/`.
 - **World-frame information.** Standard tasks never say where things are in the world: no sheet heights or centres,
-  no well positions, no pixel-to-world formula (docs/protocol/standard_mode.md §10, `scripts/robopaint_strict/ci/advisory-world-frame.sh`).
+  no well positions, no pixel-to-world formula (docs/protocol/standard_mode.md §10, `ci_checks/benchmarks/robopaint/advisory-world-frame.sh`).
   - Accepted consequence: the calibrated `canvas_cam` above the main sheet tells roughly where the sheet is.
   - Privileged tasks give the sheets through the tooling.
 

@@ -16,8 +16,8 @@ run on wheeled bases.
 | sensors | three RGB cameras on the robot (`head`, `left_wrist`, `right_wrist`, 60° fovy; upstream renders 84×84); arm and finger (+ waist) joints, gripper states, pelvis x, y, z, yaw from the base controller |
 | score | upstream's predicate held for 1 s (50 steps) **and** no fall during the episode (pelvis tilt > ~53° or height < 0.30 m); fail-fast: an object on the floor (plates, blocks, dishwasher loads), a gripper on the sandwich |
 | horizon | per task, 700–8750 control steps (14–175 s): twice the longest of 60 human demonstrations |
-| tasks | 13 families × 3 modes: `tasks/bigym2-<family>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (`eai-standard/2.3`) |
-| image | `ghcr.io/mll-lab-nu/eai-bigym2:0.1.1` (`images/bigym2/`, 1.5 GB; dependencies at upstream's `uv.lock`, plus imageio-ffmpeg for the service's mp4 videos) |
+| tasks | 13 families × 3 modes: `tasks/bigym2/bigym2-<family>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (`eai-standard/2.3`) |
+| image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` (`images/bigym2/`, 1.5 GB; dependencies at upstream's `uv.lock`, plus imageio-ffmpeg for the service's mp4 videos) |
 | oracle | none: upstream has no expert or planner; human review |
 
 Upstream ships its own coding-agent protocol (`bigym-agent`: one `policy.py` written from a task sentence and a
@@ -61,7 +61,7 @@ Why these (no model's results enter the choice):
   reserved evaluation range 620000–629999, whose rollouts upstream publishes.
 
 ## Modes
-One module, `scripts/bigym2/shared/rcb_bigym2.py`, copied into every task: the instance is upstream's official
+One module, `rcb_bigym2.py`, in every task's `environment/` and `tests/`: the instance is upstream's official
 `make(task)` reset with seed 0 (its deterministic reset and 200-step controller warm-up), one control step is one
 upstream env step of a physical action row (upstream's `EnvTools` contract), success is upstream's `is_success`. A
 load accepts the instance when the state matches bit for bit, or when the scene matches and every joint is within
@@ -86,7 +86,7 @@ and the graded attempt share. (The robot itself does not fall: 15 adversarial co
 `RCB_RESET_BUDGET=N` runs a configuration with N resets, reported separately.
 
 Grading in both service modes: the live episode. The sim sidecar judges the episode it runs with upstream's
-`is_success` at every control step (`step()` in `scripts/bigym2/shared/standard/server.py`) and the episode ends where
+`is_success` at every control step (`step()` in each standard task's `environment/sim/server.py`) and the episode ends where
 upstream ends it; `rcb_service.py` writes that verdict (`graded_by = "live"`, `replays = 0`) once the agent's container
 is stopped. The 1 s hold is upstream's, inside the episode; nothing is added after it. The frozen start is checked on
 the live simulator when the scene is built (`instance_check`: the instance's `t0` state bit for bit, or within
@@ -147,12 +147,11 @@ These notes stay in this page: no task file the agent sees mentions them.
 
 ## Build and run
 ```bash
-docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) .
-docker run --rm --gpus all --network none -e NVIDIA_DRIVER_CAPABILITIES=all -v "$PWD/scripts/bigym2:/w" -w /w \
-  ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) python make_instances.py --check   # instances/ rebuild
-python3 scripts/bigym2/gen_tasks.py check          # tasks/ is what the generator writes (`render` rewrites it)
-harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/protocol/running.md
+docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/efe:bigym2-$(cat images/bigym2/VERSION) .
+harbor run -p tasks/bigym2/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/protocol/running.md
 ```
+The frozen instances live in the task dirs only (`tasks/bigym2/bigym2-<family>-i00-privileged/environment/instance.json`).
+The task directories are the deliverable; the tooling that built them is kept outside this repository.
 
 ## Measured (RTX 4090, host load ~25 on 32 cores)
 - Every task builds in ~1 s; a reset (with the controller's 200-step warm-up) takes under 1 s; 5–12 ms per control step
@@ -166,4 +165,4 @@ harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna -
 - Other CPUs (on the 7950X): every instance rebuilds bit for bit with OpenBLAS forced to its Prescott,
   Haswell or Sapphire Rapids kernels, with numpy's AVX-512 loops off, and on 2 cores. onnxruntime picks its kernels by
   CPU and has no switch: rounding-level noise (±2e-7 relative) on the controller's outputs moves the t = 0 joints by at
-  most 2.2e-7, far inside 5e-4. Not yet checked on an Intel or AVX2-only host (`make_instances.py --check`).
+  most 2.2e-7, far inside 5e-4. Not yet checked on an Intel or AVX2-only host.

@@ -1,0 +1,241 @@
+{
+ "task": "robopaint_acrylic_applesoranges",
+ "family": "robopaint_acrylic_applesoranges",
+ "medium": "mypaint",
+ "sheets": [
+  {
+   "name": "main",
+   "center_xy": [
+    -0.1,
+    0.0
+   ],
+   "rows": 1024,
+   "cols": 1024,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": true
+  },
+  {
+   "name": "practice",
+   "center_xy": [
+    -0.1,
+    -0.1856
+   ],
+   "rows": 1024,
+   "cols": 448,
+   "px_m": 0.00022185986964255727,
+   "z": 0.02,
+   "scored": false
+  }
+ ],
+ "robot_qpos": [
+  0.0,
+  0.39269908169872414,
+  0.0,
+  -1.9634954084936207,
+  0.0,
+  2.356194490192345,
+  0.7853981633974483
+ ],
+ "robot_base": [
+  -0.615,
+  0.0,
+  0.0
+ ],
+ "control_hz": 20,
+ "sim_hz": 100,
+ "max_steps": 72000,
+ "brush": {
+  "model": "mypaint",
+  "preset": "tanda/acrylic-03-paint",
+  "radius_log_offset": 1.0,
+  "full_press_m": 0.015,
+  "bristle_m": 0.015,
+  "bristle_r": 0.004,
+  "libmypaint": "1.6.1 + calloc patch",
+  "mypaint_brushes": "2.0.2",
+  "preset_json": "{\n    \"comment\": \"MyPaint brush file\", \n    \"description\": \"\", \n    \"group\": \"\", \n    \"notes\": \"\", \n    \"parent_brush_name\": \"tanda/acrylic-03-paint\", \n    \"settings\": {\n        \"anti_aliasing\": {\n            \"base_value\": 0.63, \n            \"inputs\": {}\n        }, \n        \"change_color_h\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"change_color_hsl_s\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"change_color_hsv_s\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"change_color_l\": {\n            \"base_value\": 0.0, \n            \"inputs\": {\n                \"stroke\": [\n                    [\n                        0.0, \n                        -0.01\n                    ], \n                    [\n                        1.0, \n                        0.01\n                    ]\n                ]\n            }\n        }, \n        \"change_color_v\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"color_h\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"color_s\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"color_v\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"colorize\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"custom_input\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"custom_input_slowness\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"dabs_per_actual_radius\": {\n            \"base_value\": 6.0, \n            \"inputs\": {}\n        }, \n        \"dabs_per_basic_radius\": {\n            \"base_value\": 6.0, \n            \"inputs\": {}\n        }, \n        \"dabs_per_second\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"direction_filter\": {\n            \"base_value\": 2.0, \n            \"inputs\": {}\n        }, \n        \"elliptical_dab_angle\": {\n            \"base_value\": 90.0, \n            \"inputs\": {\n                \"random\": [\n                    [\n                        0.0, \n                        -180.0\n                    ], \n                    [\n                        1.0, \n                        180.0\n                    ]\n                ]\n            }\n        }, \n        \"elliptical_dab_ratio\": {\n            \"base_value\": 10.0, \n            \"inputs\": {\n                \"speed1\": [\n                    [\n                        0.0, \n                        -8.5\n                    ], \n                    [\n                        1.6, \n                        -8.5\n                    ], \n                    [\n                        4.0, \n                        2.62008760413345\n                    ]\n                ]\n            }\n        }, \n        \"eraser\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"hardness\": {\n            \"base_value\": 1.0, \n            \"inputs\": {}\n        }, \n        \"lock_alpha\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"offset_by_random\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"offset_by_speed\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"offset_by_speed_slowness\": {\n            \"base_value\": 1.0, \n            \"inputs\": {}\n        }, \n        \"opaque\": {\n            \"base_value\": 1.0, \n            \"inputs\": {\n                \"pressure\": [\n                    [\n                        0.0, \n                        1.0\n                    ], \n                    [\n                        1.0, \n                        1.0\n                    ]\n                ]\n            }\n        }, \n        \"opaque_linearize\": {\n            \"base_value\": 0.9, \n            \"inputs\": {}\n        }, \n        \"opaque_multiply\": {\n            \"base_value\": 0.0, \n            \"inputs\": {\n                \"pressure\": [\n                    [\n                        0.0, \n                        0.0\n                    ], \n                    [\n                        0.049383, \n                        0.572917\n                    ], \n                    [\n                        0.151235, \n                        0.916667\n                    ], \n                    [\n                        1.0, \n                        1.0\n                    ]\n                ]\n            }\n        }, \n        \"pressure_gain_log\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"radius_by_random\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"radius_logarithmic\": {\n            \"base_value\": 2.7, \n            \"inputs\": {\n                \"pressure\": [\n                    [\n                        0.0, \n                        -2.5\n                    ], \n                    [\n                        1.0, \n                        0.3125\n                    ]\n                ], \n                \"stroke\": [\n                    [\n                        0.0, \n                        -0.0\n                    ], \n                    [\n                        0.669753, \n                        -0.0\n                    ], \n                    [\n                        1.0, \n                        -2.0\n                    ]\n                ]\n            }\n        }, \n        \"restore_color\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"slow_tracking\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"slow_tracking_per_dab\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"smudge\": {\n            \"base_value\": 0.0, \n            \"inputs\": {\n                \"pressure\": [\n                    [\n                        0.0, \n                        0.0\n                    ], \n                    [\n                        1.0, \n                        0.4\n                    ]\n                ]\n            }\n        }, \n        \"smudge_length\": {\n            \"base_value\": 0.5, \n            \"inputs\": {}\n        }, \n        \"smudge_radius_log\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"snap_to_pixel\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"speed1_gamma\": {\n            \"base_value\": 4.0, \n            \"inputs\": {}\n        }, \n        \"speed1_slowness\": {\n            \"base_value\": 0.03, \n            \"inputs\": {}\n        }, \n        \"speed2_gamma\": {\n            \"base_value\": 4.0, \n            \"inputs\": {}\n        }, \n        \"speed2_slowness\": {\n            \"base_value\": 0.8, \n            \"inputs\": {}\n        }, \n        \"stroke_duration_logarithmic\": {\n            \"base_value\": 7.0, \n            \"inputs\": {}\n        }, \n        \"stroke_holdtime\": {\n            \"base_value\": 10.0, \n            \"inputs\": {}\n        }, \n        \"stroke_threshold\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }, \n        \"tracking_noise\": {\n            \"base_value\": 0.0, \n            \"inputs\": {}\n        }\n    }, \n    \"version\": 3\n}"
+ },
+ "wells": {
+  "plate_center_xy": [
+   -0.1,
+   0.16
+  ],
+  "plate_half_size": [
+   0.075,
+   0.035,
+   0.003
+  ],
+  "plate_top_z": 0.026,
+  "surface_z": 0.028,
+  "wells": [
+   {
+    "name": "paint01",
+    "hex": "#d8d1c9",
+    "rgb": [
+     0.847059,
+     0.819608,
+     0.788235
+    ],
+    "center_xy": [
+     -0.16,
+     0.145
+    ],
+    "radius_m": 0.012
+   },
+   {
+    "name": "paint02",
+    "hex": "#b4b2b6",
+    "rgb": [
+     0.705882,
+     0.698039,
+     0.713725
+    ],
+    "center_xy": [
+     -0.13,
+     0.145
+    ],
+    "radius_m": 0.012
+   },
+   {
+    "name": "paint03",
+    "hex": "#959499",
+    "rgb": [
+     0.584314,
+     0.580392,
+     0.6
+    ],
+    "center_xy": [
+     -0.1,
+     0.145
+    ],
+    "radius_m": 0.012
+   },
+   {
+    "name": "paint04",
+    "hex": "#a37739",
+    "rgb": [
+     0.639216,
+     0.466667,
+     0.223529
+    ],
+    "center_xy": [
+     -0.07,
+     0.145
+    ],
+    "radius_m": 0.012
+   },
+   {
+    "name": "paint05",
+    "hex": "#75777a",
+    "rgb": [
+     0.458824,
+     0.466667,
+     0.478431
+    ],
+    "center_xy": [
+     -0.04,
+     0.145
+    ],
+    "radius_m": 0.012
+   },
+   {
+    "name": "paint06",
+    "hex": "#82745d",
+    "rgb": [
+     0.509804,
+     0.454902,
+     0.364706
+    ],
+    "center_xy": [
+     -0.16,
+     0.175
+    ],
+    "radius_m": 0.012
+   },
+   {
+    "name": "paint07",
+    "hex": "#53514b",
+    "rgb": [
+     0.32549,
+     0.317647,
+     0.294118
+    ],
+    "center_xy": [
+     -0.13,
+     0.175
+    ],
+    "radius_m": 0.012
+   },
+   {
+    "name": "paint08",
+    "hex": "#763c26",
+    "rgb": [
+     0.462745,
+     0.235294,
+     0.14902
+    ],
+    "center_xy": [
+     -0.1,
+     0.175
+    ],
+    "radius_m": 0.012
+   },
+   {
+    "name": "paint09",
+    "hex": "#5d3f2f",
+    "rgb": [
+     0.364706,
+     0.247059,
+     0.184314
+    ],
+    "center_xy": [
+     -0.07,
+     0.175
+    ],
+    "radius_m": 0.012
+   },
+   {
+    "name": "paint10",
+    "hex": "#312c27",
+    "rgb": [
+     0.192157,
+     0.172549,
+     0.152941
+    ],
+    "center_xy": [
+     -0.04,
+     0.175
+    ],
+    "radius_m": 0.012
+   }
+  ],
+  "rule": "a tip inside a well's circle and below the paint surface loads that paint on a fresh brush (the previous paint is gone: no mixing on the palette, no depletion); the brush starts dry"
+ },
+ "target": {
+  "kind": "painting",
+  "image": "target.png",
+  "success": {
+   "de_mean": 2.0,
+   "de_p90": 6.0,
+   "ssim_L": 0.92,
+   "edge_corr": 0.8,
+   "paint_iou": 0.95,
+   "blur_mm": 1.0,
+   "register_mm": 5.0,
+   "max_strokes": 390,
+   "max_path_mm": 33900.0,
+   "max_scribble": 2.5,
+   "max_scribble_share": 0.1,
+   "scribble_min_mm": 10.0
+  }
+ },
+ "instance_sha": "8f58e8c69460447f",
+ "versions": {
+  "mani_skill": "3.0.1",
+  "sapien": "3.0.3",
+  "torch": "2.3.1+cpu",
+  "numpy": "1.24.4",
+  "scipy": "1.15.3"
+ }
+}

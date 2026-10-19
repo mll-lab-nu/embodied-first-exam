@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:dexjoco-files-0.1.0@sha256:faff6d798789844a229091f4e65b36f5edc7f2a9a407b26f3b4a9ed6c4ad888d",
+ "source": "embodied_first_exam/benchmarks/dexjoco",
+ "files": {
+  "privileged/environment/rcb_dexjoco.py": "7c73efd96f60360eb0d32c96dcd155340fec168dfcf033aae7a9df42e91777db",
+  "privileged/tests/grade.py": "b4f14fd6f24a931664b2cf2f45d9c7823740352bb2bac4b0d8a49f9f2048227f",
+  "standard/tests/grade.py": "4d578e9969aaf6c460c7e82062cc4058777f841cdfc10fc82be905a0b38b3296"
+ }
+}

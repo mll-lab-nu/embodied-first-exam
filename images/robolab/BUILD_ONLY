@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION> is never published
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:robolab-<images/robolab/VERSION> is never published
 (docs/protocol/README.md §2.4, D5). An evaluation host builds it locally, or takes it from the organization's own non-public
 copy of the package (docs/protocol/README.md §7, item 1); the RoboLab tasks reference that tag and Harbor finds it in the local
 Docker image store.
@@ -28,22 +28,22 @@ Host
   spelling), about 45-60 min. Run: one Isaac simulator per 32 GB of host RAM (the standard sidecar and its replays run one at a time).
 
 Build (from the repository root)
-  docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .
-  (scripts/build_images.sh builds every images/<sim>/ with its own naming; until it names images eai-<sim>, use the
+  docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .
+  (scripts/build_images.sh builds every images/<sim>/ with its own naming; until it names images efe-private:<sim>-<version>, use the
   command above.) The build context is the repository root: the Dockerfile copies images/robolab/uv.lock, which pins
   every Python package (torch 2.7.0+cu128, numpy 1.26.0, isaacsim 5.1.0.0, isaaclab 2.3.2.post1).
 
 Check a build
   The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of a reference trajectory
-  must end in its recorded hash. With a task directory at hand:
-    docker run --rm --gpus all --shm-size 8g -v $PWD/tasks/robolab-banana-in-bowl-i00-privileged:/t \
-      ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) bash -c \
-      "cd /tmp && python /t/environment/rcb_robolab.py run-oracle --task banana_in_bowl --instance /t/environment/instance.json \
+  must end in its recorded hash. From the repository root (the tooling's source and a task directory):
+    docker run --rm --gpus all --shm-size 8g -v $PWD/tasks/robolab/robolab-banana-in-bowl-i00-privileged:/t \
+      -v $PWD/embodied_first_exam/benchmarks/robolab:/s:ro ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) bash -c \
+      "cd /tmp && python /s/rcb_robolab.py run-oracle --task banana_in_bowl --instance /t/environment/instance.json \
          --code /t/solution/oracle_banana_in_bowl.py --out /tmp/t.npz && \
-       python /t/environment/rcb_robolab.py replay --task banana_in_bowl --instance /t/environment/instance.json --traj /tmp/t.npz"
+       python /s/rcb_robolab.py replay --task banana_in_bowl --instance /t/environment/instance.json --traj /tmp/t.npz"
   expects instance_exact true (instance sha 7c211bc3fe6d80cd), success true, and the same final state_sha from both
   commands. Compare the two commands, not hosts: the final hash can differ between hosts (two values seen on ours,
-  61afa384566be3a5 and 902e40deb3d42ed0, both successes). Or run `harbor run -p tasks/robolab-banana-in-bowl-i00-privileged -a oracle`.
+  61afa384566be3a5 and 902e40deb3d42ed0, both successes). Or run `harbor run -p tasks/robolab/robolab-banana-in-bowl-i00-privileged -a oracle`.
 
 On a CI machine (maintainers)
   A self-hosted runner with such a GPU builds the image with the command above when images/robolab/ or VERSION changes,
@@ -62,8 +62,8 @@ Versions
   The organization's copy of 0.1.2 (digest sha256:3503e3b554f313f1e62e8f53c9f771c5743f3f67c07ea44d12ac72fc267b9ea6)
   was made as a delta, so that a host with 0.1.1 fetches one 651 MB layer: 0.1.1
   (sha256:1b3194b90fe3991303070a78d041126ff91717d0b5777b14b9ae5b6b9fc3b0d6) plus exactly those two instructions,
-    printf 'FROM ghcr.io/mll-lab-nu/eai-robolab:0.1.1@sha256:1b3194b90fe3991303070a78d041126ff91717d0b5777b14b9ae5b6b9fc3b0d6\nCOPY mirror_remote_assets.py remote_assets.sha256 /opt/robolab/\nRUN python /opt/robolab/mirror_remote_assets.py /opt/robolab/assets /opt/robolab/assets/_remote --check /opt/robolab/remote_assets.sha256\n' \
-      | docker build -f - -t ghcr.io/mll-lab-nu/eai-robolab:0.1.2 images/robolab
+    printf 'FROM ghcr.io/mll-lab-nu/efe-private:robolab-0.1.1@sha256:1b3194b90fe3991303070a78d041126ff91717d0b5777b14b9ae5b6b9fc3b0d6\nCOPY mirror_remote_assets.py remote_assets.sha256 /opt/robolab/\nRUN python /opt/robolab/mirror_remote_assets.py /opt/robolab/assets /opt/robolab/assets/_remote --check /opt/robolab/remote_assets.sha256\n' \
+      | docker build -f - -t ghcr.io/mll-lab-nu/efe-private:robolab-0.1.2 images/robolab
   A full build with the command above gives the same files in other layers. (The copy of mirror_remote_assets.py inside
   the published 0.1.2 is the script before three checks were added to it: a file is compared with the pinned list before
   it is written or opened, a URL must map inside the mirror, and a layer that still names a served remote file fails the
@@ -71,5 +71,5 @@ Versions
   same 150 references.) Check of either, without network: every
   mirrored file has its pinned hash, and no text layer of the library names the bucket by URL any more (the binary
   layers were checked with pxr when 0.1.2 was built: none of the 409 layers kept a remote reference):
-    docker run --rm --network none ghcr.io/mll-lab-nu/eai-robolab:0.1.2 sh -c \
+    docker run --rm --network none ghcr.io/mll-lab-nu/efe-private:robolab-0.1.2 sh -c \
       'cd /opt/robolab/assets/_remote && sha256sum -c --quiet /opt/robolab/remote_assets.sha256 && ! grep -rIlE "https?:/+omniverse-content" /opt/robolab/assets --include=*.usda'

@@ -1,10 +1,10 @@
 # Neural Landing — roboEngineer / Drone
 
-> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `scripts/roboengineer/exported.toml`).
+> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 Neural Landing is the first implemented task in the [roboEngineer collection](roboengineer.md). This page specifies quadrotor landing with deployment adaptation, random-pad v4. Existing task IDs and the internal `Neural Lander` benchmark label are retained.
 
-This implementation lives in `scripts/quadrotor_landing/`. It includes two generated native Harbor policy tasks using the explicit `eai-policy/1.0` contract ([POLICY_MODE.md](roboengineer-policy.md)); native Docker/Harbor oracle/nop validation passed on both instances with resource enforcement. Task identity is `random-pad-landing/4`, score version `oracle-relative-time/1`. Version 4 retains the ordinary agent physics and `landing-policy/2` interface, and normalizes timing against a private full-model oracle for each case. Earlier records keep their original interpretation and cannot be resumed or relabeled as v4 results.
+The implementation is carried by its two native Harbor policy tasks (each task's `environment/sim/scripts/quadrotor_landing/`: `trusted/`, `public/`, `native/`), which use the explicit `eai-policy/1.0` contract ([POLICY_MODE.md](roboengineer-policy.md)); native Docker/Harbor oracle/nop validation passed on both instances with resource enforcement. Task identity is `random-pad-landing/4`, score version `oracle-relative-time/1`. Version 4 retains the ordinary agent physics and `landing-policy/2` interface, and normalizes timing against a private full-model oracle for each case. Earlier records keep their original interpretation and cannot be resumed or relabeled as v4 results.
 
 ## Task
 
@@ -84,22 +84,9 @@ All adaptation and held-out references are frozen **before** the session deadlin
 
 The verifier executes each final case twice in fresh Python processes and requires exact private-record equality, including trajectories, initial placement, pad position and full residual forces. The first replay may render video. Rendering/simulator failure is infrastructure failure, not an agent zero. Tests cover wrong-pad rejection, crossing the arena, task sampling, full residual inputs and quaternion convention, public-field filtering, replay/render independence, sealing, tampering and budget persistence.
 
-## Run locally (trusted operator)
-
-Use Python 3.12 with `requirements.txt`, `scipy==1.17.0` for the trusted optimizer, ffmpeg and EGL/OSMesa. SciPy is installed only in the evaluator image; the agent does not need it. Preparation and the calibration audit additionally require PyTorch. Output directories for validation must be new.
-
-```bash
-python -m scripts.quadrotor_landing.prepare_assets --out /tmp/landing-assets
-python -m scripts.quadrotor_landing.audit_calibration --cache /tmp/landing-source-cache --residual /tmp/landing-assets/residual.npz --out /tmp/landing-calibration-audit.json
-python -m scripts.quadrotor_landing.validate --residual /tmp/landing-assets/residual.npz --out /tmp/landing-oracle-time-v4
-LANDING_TEST_RESIDUAL=/tmp/landing-assets/residual.npz python -m unittest discover -s scripts/quadrotor_landing/tests -v
-```
-
-Validation saves submitted policies, exact agent feedback/image payloads, diagnoses, videos, private trajectories, source hashes, runtime versions, and final grading records. Its disclosed reference seeds must not be reused as secret model-evaluation banks. Existing v1/v2 binary-score records and v3 unnormalized time-score records remain unchanged. Oracle calibration can take several minutes; `--oracle-workers N` controls operator-side case parallelism and is not charged to the agent deadline. The standalone validator uses operator-disclosed seeds and is not a coding-agent score.
-
 ## Isolation and integration status
 
-The standalone development compose transport (`Dockerfile.agent`, `Dockerfile.sim`, `compose.yaml`) was removed in #329's review: its agent image copied all of `public/`, which then held the reference learner (now `scripts/quadrotor_landing/reference/`, copied only into `solution/`). The Harbor tasks are the one transport.
+The standalone development compose transport (`Dockerfile.agent`, `Dockerfile.sim`, `compose.yaml`) was removed in #329's review: its agent image copied all of `public/`, which then held the reference learner (now only in `solution/`). The Harbor tasks are the one transport.
 
 Native Harbor integration now includes egress controls, policy-task protocol declarations, generated tasks, resource/cutoff declarations, and CI registration; the oracle/nop validation is recorded below. LLM coding-agent evaluation remains separate. Completing the physical airframe calibration still requires the missing experimental identification data and is not implied by successful reference landings.
 
@@ -109,9 +96,9 @@ Native Harbor integration now includes egress controls, policy-task protocol dec
 
 ## Native Harbor packaging and validation
 
-`python3 scripts/quadrotor_landing/gen_tasks.py render` writes two standard-only tasks, `quadrotor-landing-random-pad-i00-standard` and `i01-standard`. Each has three adaptation and six held-out cases, frozen in matching simulator/verifier instance files. Instance 0 matches the disclosed standalone validation bank; instance 1 uses a different bank. These are reproducible development instances, not undisclosed competition test seeds. Official new held-out banks must be frozen by the operator before model comparisons.
+There are two standard-only tasks, `quadrotor-landing-random-pad-i00-standard` and `i01-standard`. Each has three adaptation and six held-out cases, frozen in matching simulator/verifier instance files. Instance 0 matches the disclosed standalone validation bank; instance 1 uses a different bank. These are reproducible development instances, not undisclosed competition test seeds. Official new held-out banks must be frozen by the operator before model comparisons.
 
-The generator copies public nominal simulation and the numeric ABI into the agent image. The reference fitting algorithm is copied only into `solution/`. Hidden deployment code and casebanks are copied only into the sidecar; checkpoint weights are baked into its own simulator image. All runtime imports resolve inside the task/image. CPU OSMesa supplies 720p/25fps video rendering without a GPU. The `flight-studio/1-cpu` presentation profile keeps geometry/camera/lighting but reduces shadow resolution and disables multisample antialiasing; physics is unchanged. Image preparation downloads the pinned weights at build-preparation time; the runtime and verifier do not download assets.
+The agent image holds the public nominal simulation and the numeric ABI. The reference fitting algorithm is only in `solution/`. Hidden deployment code and casebanks are only in the sidecar; checkpoint weights are baked into its own simulator image. All runtime imports resolve inside the task/image. CPU OSMesa supplies 720p/25fps video rendering without a GPU. The `flight-studio/1-cpu` presentation profile keeps geometry/camera/lighting but reduces shadow resolution and disables multisample antialiasing; physics is unchanged. Image preparation downloads the pinned weights at build-preparation time; the runtime and verifier do not download assets.
 
 The idle client container starts alongside the simulator so the resource monitor can discover it during private calibration. Both containers expose a health check against the simulator readiness endpoint. Harbor 0.23.0 with Docker Compose uses `up --wait`, so the agent starts only after calibration succeeds; the client must not depend on the simulator becoming healthy before its own container starts. This avoids the monitor's 120-second missing-container timeout without disabling monitoring or charging calibration to the agent.
 
@@ -119,8 +106,7 @@ On a host with Docker, Compose and Buildx installed, and NumPy and PyTorch avail
 
 ```bash
 bash images/quadrotor-landing/prepare_assets.sh
-docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/eai-quadrotor-landing:0.1.0 .
-python3 scripts/quadrotor_landing/gen_tasks.py check
+docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0 .
 # Use the native Harbor runner described in docs/RUNNING.md for oracle and nop on both instances.
 # Keep run artifacts outside tasks/ and outside a repository-level results/ directory.
 ```
@@ -141,13 +127,3 @@ During recorded agent execution, operator probes confirmed absent private evalua
 The original validation passed task-specific checks and 100 CI mutation cases. That checkout's full repository check reported pre-existing generator file-permission mismatches in unrelated task families. Full logs, media, source hashes, trial checksums and replay evidence are retained in the operator's integration-test archive (SHA-256 `bbafe6ffa619f92946c26efececa0101c7a7ba10b7900ed008536f421d21023c`); run artifacts are kept outside the source repository. Validation metadata was updated after the run; executable task contents are unchanged from the tested archive. The review branch was subsequently based on upstream `74e458323ab93103e98fc0d57d0b31abd7b131bc` in a clean checkout with `umask 022`: the full `ci_checks/run_all.sh` run passed, including all registered generator checks, 101 CI mutations, service suites and both landing task contract checks. This repository validation does not constitute an additional physics or LLM evaluation.
 
 The protocol/CI changes are shared infrastructure and should be reviewed separately from the generated task files when preparing upstream pull requests. No upstream issue, PR, merge or registry publication is performed by generation.
-
-For a local generated-package smoke test (separate processes, without container isolation), use a Python environment with the simulator requirements and SciPy installed:
-
-```bash
-MUJOCO_GL=egl LANDING_RENDER_QUALITY=cpu python -m scripts.quadrotor_landing.validate_native --instance 0 --out /tmp/landing-native-i00 --residual /path/to/residual.npz
-# Run the other frozen bank with --instance 1 and a different output directory.
-# For nop, add --mode nop; an already validated session's timing bank may be reused via --oracle-cache.
-```
-
-Use `MUJOCO_GL=osmesa` on a CPU-only host with OSMesa installed. The local smoke driver executes only the generated task copies, retains exact responses/media/private grading evidence, and labels its output `container_isolation_tested: false`. It is not an agent adapter and is not used for official model runs.

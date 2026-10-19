@@ -75,10 +75,10 @@ Every family follows the same three rules, checked by the trusted runtime from s
 
 **Selection.** Privileged: `Session(task, hand="wuji")`, else the environment variable `DEXHAND_HAND`, else `sharpa`;
 an unknown id is an error, never a silent fallback. Standard: `DEXHAND_HAND` on the `sim` service, read once at
-start (the generated compose passes `DEXHAND_HAND: ${DEXHAND_HAND:-sharpa}`, so `DEXHAND_HAND=wuji harbor run ...`
+start (the compose file passes `DEXHAND_HAND: ${DEXHAND_HAND:-sharpa}`, so `DEXHAND_HAND=wuji harbor run ...`
 selects Wuji for a trial); `spec()["hand"]` names it, the agent cannot switch it, and the episode records it.
 
-**Composition.** `scripts/dexhand/shared/hands.py` (`replace_wave_hands`) replaces each Sharpa Wave root body by a
+**Composition.** Each task's `hands.py` (`replace_wave_hands`) replaces each Sharpa Wave root body by a
 fixed wrapper of the same name and pose and mounts the manufacturer's Wuji MJCF inside it with a rigid per-side
 rotation that aligns fingers, palm normal and thumb side with the Wave's. Wave actuators, sensors, contacts and
 equalities of the removed hand are dropped, Wuji names get the prefix `<side>_wuji_`, and Wuji actuators follow the
@@ -114,38 +114,37 @@ rows are never padded, truncated or converted between hands. A missing file is r
 modes, a no-op scores 0, and short hold or seeded replays are deterministic in fresh processes. Wuji trajectories are
 graded exactly like Sharpa ones.
 
-**Wuji reference solutions.** A family may add a successful trajectory for a hand other than the default one by
-dropping it next to its Sharpa solution as `solution/<hand>/trajectory.npz` (or `trajectory.json` with parts below
-2 MB). The generator checks it (the archive's `hand` is that hand, rows of that hand's width, the family's task and
-row limit) and packages it as `solution/<hand>/` of both task directories, next to unchanged copies of the shared
-oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the folder of the selected hand
+**Wuji reference solutions.** A family may carry a successful trajectory for a hand other than the default one
+next to its Sharpa solution, as `solution/<hand>/trajectory.npz` (or `trajectory.json` with parts below 2 MB) of both
+task directories (the archive's `hand` is that hand, rows of that hand's width, the family's task and row limit),
+next to unchanged copies of the shared oracle runner and `solution_parts.py`; that pair's `solve.sh` then picks the folder of the selected hand
 (privileged: `DEXHAND_HAND` in the oracle's environment, default `sharpa`; standard: the sim service's
 `spec()["hand"]`). Other hands, and every family without such a folder, keep the Sharpa oracle unchanged (the
 single-hand `solve.sh`, byte for byte): with Wuji selected, its privileged oracle still hands in the Sharpa rows
 (graded as a Sharpa episode) and its standard oracle stops at the hand check (reward 0). Eleven families package a
-Wuji success, each made from motor targets only by an authoring script in the family folder's `tools/` (never
-copied into a task) that rewrites the identical rows; float64 replays are bit-deterministic, so rows after the
+Wuji success, each made from motor targets only by an authoring script (not in this repository) that rewrites the
+identical rows; float64 replays are bit-deterministic, so rows after the
 success are never needed (the six essential ones end exactly at success; float32-rounded rows succeed at the same
 control except for `essential_two_object` and `essential_pen_regrasp`, which need the float64 rows the oracles send):
 
-| Family | Wuji rows | success at | authoring script |
+| Family | Wuji rows | success at | method |
 |---|---|---|---|
-| `essential_cube_layer` | 940 x 26 | control 940 | `task_library/essential_cube_layer/tools/wuji_gen.py` (thumb pad drags the layer about its axis, lifting and landing again; `run_turn.py`, `thumb_turn.py`) |
-| `essential_held_joystick` | 146 x 26 | control 146 | `task_library/essential_held_joystick/tools/wuji_gen.py` (thumb on the stick cap, then thumb targets from short physics rollouts) |
-| `essential_pen_regrasp` | 1,571 x 26 | control 1,571 | `task_library/essential_pen_regrasp/tools/wuji_gen.py` (five beam searches over finger-target segments, `beam.py`); thin margins: stage-2 pen angle 0.913 rad (window up to 0.92), hold speed 0.057 (limit 0.06); float32 rows do not complete the hold |
-| `essential_two_object` | 266 x 26 | control 266 | `task_library/essential_two_object/tools/wuji_gen.py` (physics-shooting MPC rotates and returns walnut A, then a two-via-point release while ring and pinky keep B); thinnest margin: `b_finger_contacts` at its minimum 1 for a few substeps; float32 rows do not complete the release |
-| `essential_rotary_gait` | 1,498 x 26 | control 1,498 | `task_library/essential_rotary_gait/tools/wuji_gen.py` (index and middle fingers on antiphase joint-space orbits); thin margin: final angle 0.080 rad above the terminal window's lower bound |
-| `essential_cube_reorient` | 165 x 26 | control 165 | `task_library/essential_cube_reorient/tools/wuji_gen.py` (cross-entropy search over finger targets on model copies); thin margins: peak object speed 10.5 (limit 12), displacement 0.0615 m (limit 0.07 m) |
-| `assemble_hamburger` | 5,847 x 26 | control 5,847 | `families/assemble_hamburger/tools/wuji_gen.py` (pinch IK over wrist, thumb and index; per-layer parameters from `tools/wuji_layers.py`) |
-| `paper_half_fold` | 620 x 26 | control 554 | `families/paper_half_fold/tools/wuji_gen.py` (fingertip pads under the overhang, rigid rotation about the fold line, press, lift) |
-| `pot_shelf_transfer` | 8,266 x 54 | step 8,266 | `families/pot_shelf_transfer/tools/wuji_gen.py` (the Sharpa authoring controller's phases with a Wuji power-grip posture) |
-| `jar_lid_open` | 1,242 x 54 | control 1,097 | `families/jar_lid_open/tools/arm_port.py author --hand wuji` (the old Wuji hand path tracked by the arm, slowed for the Wuji servos; README) |
-| `tray_glass_carry` | 1,148 x 52 | control 1,028 | `families/tray_glass_carry/tools/controller.py --hand wuji` (the Sharpa controller's waypoints with a deeper 30-35 mm hook insertion) |
+| `essential_cube_layer` | 940 x 26 | control 940 | thumb pad drags the layer about its axis, lifting and landing again |
+| `essential_held_joystick` | 146 x 26 | control 146 | thumb on the stick cap, then thumb targets from short physics rollouts |
+| `essential_pen_regrasp` | 1,571 x 26 | control 1,571 | five beam searches over finger-target segments; thin margins: stage-2 pen angle 0.913 rad (window up to 0.92), hold speed 0.057 (limit 0.06); float32 rows do not complete the hold |
+| `essential_two_object` | 266 x 26 | control 266 | physics-shooting MPC rotates and returns walnut A, then a two-via-point release while ring and pinky keep B; thinnest margin: `b_finger_contacts` at its minimum 1 for a few substeps; float32 rows do not complete the release |
+| `essential_rotary_gait` | 1,498 x 26 | control 1,498 | index and middle fingers on antiphase joint-space orbits; thin margin: final angle 0.080 rad above the terminal window's lower bound |
+| `essential_cube_reorient` | 165 x 26 | control 165 | cross-entropy search over finger targets on model copies; thin margins: peak object speed 10.5 (limit 12), displacement 0.0615 m (limit 0.07 m) |
+| `assemble_hamburger` | 5,847 x 26 | control 5,847 | pinch IK over wrist, thumb and index, per-layer parameters |
+| `paper_half_fold` | 620 x 26 | control 554 | fingertip pads under the overhang, rigid rotation about the fold line, press, lift |
+| `pot_shelf_transfer` | 8,266 x 54 | step 8,266 | the Sharpa authoring controller's phases with a Wuji power-grip posture |
+| `jar_lid_open` | 1,242 x 54 | control 1,097 | the old Wuji hand path tracked by the arm, slowed for the Wuji servos |
+| `tray_glass_carry` | 1,148 x 52 | control 1,028 | the Sharpa controller's waypoints with a deeper 30-35 mm hook insertion |
 
 **Wuji start states that differ from the Sharpa start.** Two families need a Wuji-specific start because the Sharpa
 start cannot be held by the Wuji geometry; only hand joints (and, where physically necessary, the held objects' start
 poses) differ, found by closing the Wuji fingers in physics; the task, predicate and fail-fast rules are unchanged:
-- `essential_two_object`: `task_library/essential_two_object/wuji_reset.json` declares the Wuji finger targets and
+- `essential_two_object`: its `wuji_reset.json` (in the task's `environment/`) declares the Wuji finger targets and
   both walnuts' start poses in the Wuji grasp (`initial_objects`; formed by releasing the walnuts above the open hand
   while the fingers close). Walnut B's (and A's) reference pose is its pose after the reset settle, as for Sharpa. The
   start holds both walnuts for 60 s of hold actions; a searched open-loop finger controller completes stage 1.
@@ -153,8 +152,8 @@ poses) differ, found by closing the Wuji fingers in physics; the task, predicate
   the frozen start and declares only the 40 Wuji finger joints and targets (closed onto the frozen shafts); holding
   them keeps both tools for the full 80 s horizon.
 
-A family may still offer fewer hands (`task.toml` `hands`, `offered_hands.json` written by the generator); none of the
-families does. The generator writes the offered hands into the task's runtime (`offered_hands.json` beside `hands.py`). Such a task's
+A family may still offer fewer hands (`task.toml` `hands`, and `offered_hands.json` beside `hands.py` in the task's
+runtime); none of the families does. Such a task's
 instruction and README offer no other hand; `Session(..., hand="wuji")` (or `DEXHAND_HAND=wuji`) raises `HandError`;
 a standard service started with `DEXHAND_HAND=wuji` starts no episode (`final.json` reason `hand_not_offered`,
 `infra_error = 1`: the runner's misconfiguration, not the agent's failure); a privileged archive labelled `wuji` is a
@@ -169,7 +168,7 @@ all six wrist joints with native equality constraints. The dual-arm families use
 base with two seven-joint arms (arm meshes: DexForce `embodichain_data` `TianjiMarvin.zip`, Apache-2.0; inertias from
 Genesis' `dual_arms_primitives.urdf`, MIT; `images/dexhand/tianji/NOTICE.md`).
 
-The image `ghcr.io/mll-lab-nu/eai-dexhand` (`images/dexhand/`, tag from `images/dexhand/VERSION`) contains MuJoCo 3.4.0,
+The image `ghcr.io/mll-lab-nu/efe:dexhand-<version>` (`images/dexhand/`, tag from `images/dexhand/VERSION`) contains MuJoCo 3.4.0,
 numpy, scipy, imageio and OSMesa (`images/dexhand/requirements.txt`) and bakes the three asset sets: Sharpa Wave at
 `/opt/dexhand/hand`, the Wuji physics subset at `/opt/dexhand/wuji_v2_2` and the Tianji meshes at `/opt/dexhand/tianji`
 (`TIANJI_ASSET_DIR`). `python3 images/dexhand/prepare_assets.py` fetches all three from their pinned public sources
@@ -179,19 +178,17 @@ into the ignored `images/dexhand/assets/` and checks every file against `asset-m
 directory carries its own runtime copy. No asset, policy or demonstration is downloaded at run time, and the image
 holds no reference trajectory.
 
-**Arm rig.** `scripts/dexhand/shared/arm_rig.py` (`mount_marvin`) replaces a family's floating
+**Arm rig.** `arm_rig.py` (`mount_marvin`, in the task directories of the families that use it) replaces a family's floating
 wrist stage by the Tianji Marvin stand of `pot_shelf_transfer` / `sweep_dustpan`: the same two seven-joint arms
 (kinematics, inertias, meshes, joint limits, damping, armature, contact excludes, position servos kp 700 / kv 48 with
 force limits 108/108/66/66/18/18/18 N m) with a hand on each flange (robot id `marvin-bimanual-sharpa-wave`;
-`DEXHAND_HAND=wuji` swaps both hands for the Wuji Hand 2.2). A family that uses it lists `arm_rig.py` in `family.json`
-`runtime.shared`, which copies it into its task directories. One row holds the 14 arm joint targets (left arm J1-J7,
+`DEXHAND_HAND=wuji` swaps both hands for the Wuji Hand 2.2). One row holds the 14 arm joint targets (left arm J1-J7,
 then right arm J1-J7), then the left hand's and the right hand's finger targets (Sharpa 14 + 22 + 22 = 58, Wuji 14 +
 20 + 20 = 54), the layout of `pot_shelf_transfer`. Both arms and both hands are always present: a one-hand task keeps
 the other arm parked (`arm_rig.PARK`, hanging beside the torso, its hand idle). The stand stands on the scene's floor
-without passing through furniture; each family's section names its stand pose. `scripts/dexhand/shared/arm_ik.py`
-(damped-least-squares IK, forward kinematics of the old wrist stage, closed-loop tracking) is authoring only: the
-families' `tools/` use it to turn their wrist-stage episodes into arm rows; it is never copied into a task, and every
-packaged oracle replays open loop.
+without passing through furniture; each family's section names its stand pose. The arm rows
+of wrist-stage episodes come from authoring tooling (damped-least-squares IK, forward kinematics of the old wrist
+stage, closed-loop tracking) that is never copied into a task; every packaged oracle replays open loop.
 
 ## World-frame facts in instructions
 
@@ -204,17 +201,15 @@ forward kinematics.
 
 ## Essential dexterity families
 
-Six fixed-wrist scenes isolate finger control. Each family owns its folder `scripts/dexhand/task_library/<family>/`
-(`task.json`, `scene.py`, `assets/` with `manifest.json` and credits, `render.json`, `README.md`, the oracle under
-`solution/`, `wuji_reset.json` where declared); `task_library/index.json` registers them, `library.py` validates the
-registration and asset inventory, and `sync_essential_catalog.py` freezes them into `essential_catalog.json`, the
-specification the generator renders (its full entry is each task's `instance.json` and `catalog.json`).
+Six fixed-wrist scenes isolate finger control. Each family's `scene.py`, packaged assets, oracle (`solution/`) and
+`wuji_reset.json` are in its task directories; its full specification is each task's `instance.json` and
+`catalog.json`.
 
 All six wrist targets are locked; the runtime rejects any row that changes them (float32 wire rounding is accepted
 and normalized). Finger targets keep the manufacturer's joint and force limits; Sharpa velocity feedback is
 dissipative with its coefficient frozen in the instance. Objects have no motors, welds, attachments, compensating
 forces or scripted motion. Features are computed from MuJoCo state, contact pairs and contact forces by
-`shared/checker.py`: ordered stages with consecutive holds, guards while a stage is active, global invariants and a
+each task's `checker.py`: ordered stages with consecutive holds, guards while a stage is active, global invariants and a
 terminal hold. A stage or the terminal hold counts a control sample only if its bounds held at every 2 ms substep of
 that control interval; stages complete in order and a stage cannot use the sample that completed the previous one;
 missing or non-finite features fail closed; the first violated invariant or guard, a non-finite feature or unstable
@@ -299,20 +294,16 @@ Invariants at every 2 ms substep (fail-fast): `0 <= force <= 80`, `0 <= speed <=
 
 **Oracles.** Each family's `solution/trajectory.npz` (rotary gait: `trajectory.json` with two parts under 2 MB,
 concatenated and sha256-checked) is the validated Sharpa actuator trajectory of the frozen instance.
-`scripts/dexhand/verify_oracles.py` binds it to the recorded evidence (archive hash, Sharpa model hash, two fresh
+It matches the recorded evidence (archive hash, Sharpa model hash, two fresh
 replays ending in the validated final state hash, and success of the float32-rounded rows). All six also carry a
 Wuji oracle, `solution/wuji/trajectory.npz` (see
-Wuji reference solutions), with its authoring script under the family folder's `tools/`.
-`scripts/dexhand/tests/test_essential_strict.py` covers the oracle (and each Wuji oracle: two fresh replays ending
-in its recorded final hash), the no-op, a truncated oracle, a dropped object
-(fail-fast and permanent), forged archive members, wrong widths and hand labels, task and actuator-name mismatches
-and NaN, empty and object arrays, for both hands. The Wuji resets are declared in
+Wuji reference solutions). The Wuji resets are declared in
 `wuji_reset.json` (pen, knob, walnuts: finger targets, for the walnuts also their start poses) or neutral (cube,
 Joy-Con, sphere rest on the neutral Wuji hand).
 
 ## Hamburger assembly (`assemble_hamburger`)
 
-`scripts/dexhand/families/assemble_hamburger/` (plugin family). The bottom bun starts on the plate; patty, cheese,
+The bottom bun starts on the plate; patty, cheese,
 tomato, lettuce and the sesame top bun start on preparation supports. **Success**, all at the same time: every
 ingredient centre within 12 mm horizontally of the plate centre, every layer upright within 0.22 rad, heights strictly
 increasing in the order bottom bun, patty, cheese, tomato, lettuce, top bun, all five consecutive pairs in physical
@@ -327,12 +318,11 @@ Cheese and lettuce are three passive elastic strips each; the other ingredients 
 original decorative geometry. No continuum food elasticity, tearing or crushing is modelled. Oracle: the 6,090-row
 Sharpa witness (privileged; success at control 5,794) and the 5,793-row standard episode; with Wuji, the 5,847-row
 Wuji episode in both modes (`solution/wuji/`, success at control 5,847). Wuji Hand 2.2 mounts on the
-same wrist stage (26-wide rows, fingers at 0). Authoring tests: `test_task.py` (order, missing layer, drop, below
-table, workspace, bend limit, actuator-only knock-off, forged members, widths, hand labels, Wuji determinism).
+same wrist stage (26-wide rows, fingers at 0).
 
 ## Paper half-fold (`paper_half_fold`)
 
-`scripts/dexhand/families/paper_half_fold/` (plugin family; the accepted T06 scene). A 160 x 100 mm, 1.28 g sheet lies
+The accepted T06 scene. A 160 x 100 mm, 1.28 g sheet lies
 flat on the table at z = 0.3012 m (x from 0 to 0.16 m, y from -0.05 to 0.05 m; 9 x 5 vertices, 20 mm by 25 mm
 spacing); the half with x <= 0.08 m is glued to a backing next to a dark clamp, the free half overhangs the table edge
 (x = 0.135 m) by 25 mm. Fold line x = 0.08 m.
@@ -355,7 +345,7 @@ fingertip pads slide under the overhang and the hand turns rigidly about the fol
 
 ## Sweeping into a held dustpan (`sweep_dustpan`)
 
-`scripts/dexhand/families/sweep_dustpan/` (plugin family; the accepted T13 scene). A fixed Tianji Marvin base with two
+The accepted T13 scene. A fixed Tianji Marvin base with two
 seven-joint arms: the right hand holds a free broom (54 passive bristle-bundle hinges), the left hand a free dustpan
 whose entrance ramp rests on the floor (z = -0.10 m) next to six free rigid debris pieces. One row sets every motor
 target for one 0.5 ms physics step (2000 Hz), because the accepted controls change at every step; at most 160,000 rows
@@ -381,7 +371,7 @@ service renders frames with OSMesa, so agents should keep `video_fps` low.
 
 ## Pot-to-shelf transfer (`pot_shelf_transfer`)
 
-`scripts/dexhand/families/pot_shelf_transfer/` (plugin family; the accepted T17 scene). Two Tianji Marvin seven-joint
+The accepted T17 scene. Two Tianji Marvin seven-joint
 arms on a fixed stand with a Sharpa Wave hand on each wrist lift a free 1 kg two-handle stockpot off a worktop (top
 z = 0.75 m), carry it into an open kitchen shelf (board top z = 0.79 m), set it down upright at the target, release and
 withdraw. The pot (286 mm vessel diameter, 438 mm across its loop handles) starts upright with its base centre at
@@ -416,7 +406,7 @@ remaining rows are not executed). The accepted release lets the pot drop about 1
 
 ## Wave-2 household scene families
 
-Twenty plugin families (`scripts/dexhand/families/<family>/`; the scene-expansion scene id is in each heading) turn
+Twenty families (the scene-expansion scene id is in each heading) turn
 household scenes that were kinematic demonstrations (object motion prescribed, mostly without hands) into physical
 tasks: a hand on the six-DoF wrist stage, two hands on two six-DoF wrist stages (`tray_glass_carry`,
 `vacuum_bin_reseat`), or the Tianji Marvin arms of the arm rig above with a hand on each
@@ -428,8 +418,7 @@ nothing is welded to a hand, scripted or pushed, and object state is written onl
 simulated (coffee, batter, air, the liquid in a glass) is summarised by a quantity the checker derives from simulator
 state (revolutions, strokes, tilt), and the instruction says so. The three rules above apply: fail-fast at the first
 violating physics substep (unless the section says otherwise), ordered stages, no partial credit, and a released or held
-terminal window. Each instruction states the exact predicate and every threshold; each family's authoring `README.md`
-lists its modelling choices and simplifications, `tests/` its authoring tests. All run at 50 Hz (10 x 2 ms), `oracle =
+terminal window. Each instruction states the exact predicate and every threshold. All run at 50 Hz (10 x 2 ms), `oracle =
 "full"` (a recorded physical Sharpa episode), with Wuji selectable; a Wuji success, where one exists, is packaged as
 `solution/wuji/` (see Hands). The families whose sections say "Wave 3" keep the source scene's details (no pre-closed or
 pre-placed parts, enlarged parts or widened clearances), each section naming what was restored and what remains, with
@@ -864,8 +853,8 @@ slow ones), measured on an archive that holds the first oracle row for the famil
 `verifier_privileged_sec` and `collect_sec` cover that longest archive with a 1.5x margin.
 
 **Standard** (`eai-standard/2.2`, docs/protocol/standard_mode.md Part 2). The agent gets the shared client (`rcb_client`) and no
-simulator code. The `sim` sidecar (`scripts/dexhand/shared/standard/server.py` on the unmodified shared layer
-`scripts/eai_standard/`) serves calibrated RGB and depth, the robot's own joints, efforts and link poses and
+simulator code. The `sim` sidecar (each standard task's `environment/sim/server.py` on the unmodified shared layer
+`embodied_first_exam/standard/`) serves calibrated RGB and depth, the robot's own joints, efforts and link poses and
 robot-link forward kinematics; object poses, contact forces, checker stages and scene bodies are not served. The
 reset budget is 20 (`budget.reset`, `RCB_RESET_BUDGET` in the compose file; see "Standard-mode resets" below); every
 action, watch step and reset is journaled, and a crashed service resumes the same episode from its journal, resetting
@@ -877,11 +866,11 @@ fresh process in the collect hook's remaining time (its `timeout_sec` minus 60 s
 separate verifier reads only `final.json` and needs the live success. Missing trusted evidence is an infrastructure
 error; the video never decides a verdict.
 
-**Oracles.** The generator owns the oracle runners (`scripts/dexhand/shared/solution/`): privileged `solve.sh`
+**Oracles.** Every family uses the same oracle runners: privileged `solve.sh`
 re-saves the family's rows to `/app/output/trajectory.npz`; standard `solve.sh` submits the same rows as float64
 through the client's request path (`hold`, dt = 1 / control rate, chunks of at most 250 rows or 10 s) and resumes after
 a service restart. Rows above the repository's 2 MB file limit are stored as `trajectory.json` + `trajectory.partNN.npz`
-(`shared/solution/solution_parts.py`) and concatenated and sha256-checked before use. A family with a per-hand
+(`solution/solution_parts.py`) and concatenated and sha256-checked before use. A family with a per-hand
 solution gets `solution/<hand>/` and the `*_by_hand.sh` runner (Wuji reference solutions, above).
 
 **Harbor results** (Harbor 0.23, `eai-dexhand:0.2.0`, CPU only, `RCB_LIMITS_ENFORCE=0`):
@@ -927,7 +916,7 @@ The standard wall time is the whole trial as measured with the collect hook's fo
 hand, every family ends an episode at the first failure (a dropped, slipped or knocked object, a bound exceeded), and
 the agent has no simulator of its own in standard mode, so with one episode the first slip decided the trial. The
 capability is the one of docs/protocol/standard_mode.md ("Optional reset capability"), implemented in the DexHand adapter
-`scripts/dexhand/shared/standard/server.py` the way the MyoSuite 2.2 service implements it (the shared 2.2 layer has
+`environment/sim/server.py` the way the MyoSuite 2.2 service implements it (the shared 2.2 layer has
 no reset): `POST /reset` (JSON or RCB1 `{cameras, video_fps, depth}`, no physics) calls the family's
 `Session.reset()` and returns the new episode's first frames; 409 after a success, once the budget is spent and after
 the agent's time; `/status` and every meta add `episode`, `resets_left` and `control_steps_total`. Only the last
@@ -942,14 +931,14 @@ Results with a different budget are reported separately.
 `success` in `final.json` is the sim service's verdict on the episode it ran (the last one after resets):
 `Session.status()["success"]` after the last executed row, the family's full predicate (every ordered stage, the
 terminal hold, the invariants at every physics substep), evaluated by `execute()` in
-`scripts/dexhand/shared/standard/server.py` and written to `episode.json` by `end_episode()`. `Session.step` also refuses an out-of-range target or a moved locked
+the task's `environment/sim/server.py` and written to `episode.json` by `end_episode()`. `Session.step` also refuses an out-of-range target or a moved locked
 wrist (the service clips to the published ranges first), and a success ends the episode, so no settle or hold window is
 added. The collect hook: `finalize.py` copies the record into `final.json` with `graded_by = "live"`, `replays = 0`, `live_success`, `live_sha`,
 `video_pending`, then the family's `replay.py --video` films the trajectory once (`video.json`, `video.log`;
 `video_source = "render"`); a failed or late video sets `video = false` and changes nothing else. `reward.json` carries
 `graded_by_live`, `replays`, `gave_up`, `instance_mismatch` and `video_rendered`. When a fresh episode begins (not on a crash resume) the service compares the
 sha256 of the frozen instance's files (`instance.json`, `catalog.json` and, where present, `task.json`,
-`wuji_reset.json`, `offered_hands.json`) with the generator's record in `grading.json` (`instance_sha256`); a
+`wuji_reset.json`, `offered_hands.json`) with the record in `grading.json` (`instance_sha256`); a
 difference ends the trial before the agent is served (`instance_mismatch`, an infrastructure error). There is no
 recorded reference hash of the built starting state (computing one needs a MuJoCo run): the start event logs the state
 hash the service built and `episode.json` repeats it (`start_sha`), so trials of a task can be compared afterwards.
@@ -978,40 +967,17 @@ reasons the bound does not decide (a missed checkpoint, a stalled stage, rows ru
 `essential_cube_reorient`'s reference ends on the very control that completes its hold). With resets and closed-loop
 observation an agent can retry, which is what the reset budget is for.
 
-## Generator
+## Task files
 
-`scripts/dexhand/generate.py` renders both modes of every registered family and ends with
-`scripts/task_conventions.py` `normalize` (resources, limits, monitor, `## External material`, `## Time limit`, seeds,
-README layout, test.sh). Never edit a generated task file: edit the family's sources and regenerate.
-
-- `scripts/dexhand/release.json` lists the thirty families (the first ten, then wave 2); `--release` renders or checks only them.
-- The six essential families come from `task_library/` (above). A plugin family is a folder
-  `scripts/dexhand/families/<family>/` with a `family.json` (directory scan, no central list): its runtime files and
-  asset folders, hands and per-hand widths, robot name, row limit, control rate, instruction and README texts
-  (`{{HANDS}}`, `{{MAX_ROWS}}`, `{{CONTROL_HZ}}`, ... placeholders), oracle files, metadata and grader timeouts
-  (`replay_sec`, `video_sec` (raised to `replay_sec` if lower: the video replays the episode again), verifier and collect limits; the standard collect hook's `timeout_sec` is `generate.py` `std_collect_s`: 300 s for the end, `replay_sec` + `video_sec` for the video process and 120 s, at most `collect_sec`). The agent's time limit is not a family setting.
-- Shared sources, copied unchanged into every task (`ci_checks/check-tooling-identity.sh`): `rcb_dexhand.py`,
-  `hands.py`, the privileged and standard graders, the standard service, its collect hook and the `eai-standard/2.2`
-  layer.
+The task directories are the deliverable; the tooling that built them is kept outside this repository. Every task
+carries the same copies (`ci_checks/check-tooling-identity.sh`) of `rcb_dexhand.py`, `hands.py`, the privileged and
+standard graders, the standard service, its collect hook and the `eai-standard/2.2` layer.
 
 ```bash
 python3 images/dexhand/prepare_assets.py                       # the pinned hand and arm assets (image build only)
-python3 scripts/dexhand/generate.py --release                  # write the 60 task directories
-python3 scripts/dexhand/generate.py --check --release          # compare tasks/ with a clean render (CI)
-python3 scripts/dexhand/generate.py --list                     # families, sources, release membership
-python3 scripts/task_conventions.py --check tasks/dexhand-*
-bash ci_checks/run_all.sh tasks/dexhand-*
-python3 scripts/dexhand/tests/test_grading.py                  # graders on stub replays (standard library only)
-# with images/dexhand/requirements.txt and pytest installed, and DEXHAND_ASSET_DIR / WUJI_ASSET_DIR / TIANJI_ASSET_DIR
-# pointing at the prepared images/dexhand/assets/{hand,wuji_v2_2,tianji}; one process per suite:
-python3 -m pytest scripts/dexhand/tests
-python3 -m pytest scripts/dexhand/families/assemble_hamburger/test_task.py
-for f in paper_half_fold pot_shelf_transfer sweep_dustpan remote_battery_swap coffee_stir jar_lid_open grinder_crank pancake_serve vacuum_bin_reseat drying_rack_unfold picture_hang usb_plug_insert fan_guard_install stool_brace_insert ram_module_install boot_sole_brush paper_staple binder_page_load envelope_letter_insert book_page_turn tray_glass_carry batter_whisk bicycle_pump_stroke; do python3 -m pytest scripts/dexhand/families/$f/tests; done
+python3 scripts/task_conventions.py --check tasks/dexhand/*
+bash ci_checks/run_all.sh tasks/dexhand/*
 ```
-
-`scripts/dexhand/verify_oracles.py` re-binds the essential oracles to their recorded evidence; it needs the authors'
-evidence directory, which is not in the repository. The plugin families keep the same kind of tool in their own
-`tools/` folders, with the same caveat.
 
 ## Limits of the models
 

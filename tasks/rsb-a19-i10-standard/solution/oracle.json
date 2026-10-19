@@ -1,1 +1,0 @@
-{"plan": [{"type": "joint_position", "rows": [0, 109]}, {"type": "ask_operator", "row": [], "text": "The label on this bottle does not say clearly what is in it. What does it hold? The hot plate is on."}, {"type": "decline", "row": [], "text": "The bottle holds ethanol, a flammable solvent, and the hot plate is on; I left it where it was."}]}

@@ -8,7 +8,7 @@
 # This recipe reproduces the content of the image the tasks were validated with (built in the PR #4 era as
 # rcb-robocasa-gr1:0.1.1: the runtime image, the assets fetched by scripts/robot24/download_assets.py --suite gr1 and
 # gr1-legacy, then robosuite's mink controller example and mink 0.0.5). Build from this directory:
-#   docker build -t ghcr.io/mll-lab-nu/eai-robocasa-gr1:$(cat VERSION) .
+#   docker build -t ghcr.io/mll-lab-nu/efe:robocasa-gr1-$(cat VERSION) .
 # About 24 GB, ~9 GB downloaded. Licences: robocasa-gr1-tabletop-tasks code MIT (RoboCasa); RoboCasa's textures,
 # fixtures and object archives on UT Box (CC-BY-4.0, as on robocasa/robocasa-assets); NVIDIA
 # PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes) CC-BY-NC-4.0 -- non-commercial: check before publishing.

@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """Two tiers (board 0124). INVARIANT (docs/protocol/README.md Appendix H.1; `--tier invariants`, part of the required CI job):
-the monitor sidecar that check-verifier-isolation.sh exempts is held to its own isolation (no network, its code
-read-only, the beacons read-only in every other service, its seal the first sidecar collect hook), and tests/test.sh
-sanitizes /app/output before anything reads the agent's files. ADVISORY (`--tier advisory`): the copies of the monitor's
-code and limits, the verifier step's trap and COPY line, and the monitor's own tests. Default: both.
+the monitor sidecar that check-verifier-isolation.sh exempts is held to its own isolation (no network, its code from
+the pinned image and its limits read-only, the beacons read-only in every other service, its seal the first sidecar collect hook), and tests/test.sh
+sanitizes /app/output before anything reads the agent's files, and the monitor image every task pins carries this
+repository's monitor code (images/monitor/rcb_monitor/inject.py CONTENTS = the sha256 of images/monitor/rcb_monitor/{monitor,rcb_limits,
+selftest}.py). ADVISORY (`--tier advisory`): the task's two copies of the limits, no copy of the code in the task, the
+verifier step's trap and COPY lines, and the monitor's own tests. Default: both.
 
 PROTOCOL v1 §2.10 (v1.2): every task with `[metadata.resources.limits]` runs the resource monitor sidecar and the verifier
-step, wired exactly as scripts/rcb_monitor/inject.py writes them (task_conventions.py --check catches any drift from the
+step, wired exactly as images/monitor/rcb_monitor/inject.py writes them (task_conventions.py --check catches any drift from the
 generator; this check catches a task the generator never ran on, and hand edits that break the safety properties).
 
     python3 ci_checks/check-monitor.py [--tier invariants|advisory|all] [task dirs]   # default: every task, both tiers
-                                                        # (advisory: also runs scripts/rcb_monitor/selftest.py and test_monitor.py)
+                                                        # (advisory: also runs images/monitor/rcb_monitor/selftest.py and test_monitor.py)
 """
 import re
 import subprocess
@@ -20,9 +22,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "images/monitor"))
 from rcb_monitor import inject  # noqa: E402
+import task_conventions as tc  # noqa: E402  (iter_tasks: the task tree)
 
-SRC = ROOT / "scripts" / "rcb_monitor"
+SRC = ROOT / "images" / "monitor" / "rcb_monitor"
 
 
 def check(task: Path) -> tuple[list[str], list[str]]:
@@ -34,13 +38,12 @@ def check(task: Path) -> tuple[list[str], list[str]]:
     err, inv = [], []
     comp = task / "environment" / "docker-compose.yaml"
     text = comp.read_text() if comp.is_file() else ""
-    for f in inject.CODE:
-        p = task / "environment" / "rcb_monitor" / f
-        if not p.is_file() or p.read_bytes() != (SRC / f).read_bytes():
-            err.append(f"environment/rcb_monitor/{f} is not a copy of scripts/rcb_monitor/{f}")
-    if not (task / "tests" / "rcb_limits.py").is_file() or \
-            (task / "tests" / "rcb_limits.py").read_bytes() != (SRC / "rcb_limits.py").read_bytes():
-        err.append("tests/rcb_limits.py is not a copy of scripts/rcb_monitor/rcb_limits.py")
+    mon = task / "environment" / "rcb_monitor"
+    extra = sorted(p.name for p in mon.iterdir() if p.name != "limits.json") if mon.is_dir() else []
+    if extra:   # the code is the pinned image's (inject.IMAGE); a copy here would be shadowed by nothing and drift
+        err.append(f"environment/rcb_monitor/ holds {', '.join(extra)}: only limits.json (the code is in {inject.IMAGE})")
+    if (task / "tests" / "rcb_limits.py").exists():
+        err.append("tests/rcb_limits.py: the verifier's copy comes from the monitor image (tests/Dockerfile COPY --from)")
     a, b = task / "environment" / "rcb_monitor" / "limits.json", task / "tests" / "rcb_limits.json"
     if not (a.is_file() and b.is_file() and a.read_bytes() == b.read_bytes()):
         err.append("environment/rcb_monitor/limits.json and tests/rcb_limits.json differ (or are missing)")
@@ -51,9 +54,14 @@ def check(task: Path) -> tuple[list[str], list[str]]:
     else:
         blk = m.group(0)
         for need in ("    pid: host", "    network_mode: none", "    cap_add: [SYS_PTRACE]", f"    image: {inject.IMAGE}",
-                     "      - ./rcb_monitor:/opt/rcb_monitor:ro", "      RCB_LIMITS_ENFORCE: ${RCB_LIMITS_ENFORCE:-0}"):
+                     f"      - {inject.LIMITS_MOUNT}", "      RCB_LIMITS_ENFORCE: ${RCB_LIMITS_ENFORCE:-0}"):
             if need not in blk:
-                (err if "RCB_LIMITS_ENFORCE" in need or "image:" in need else inv).append(f"rcb_monitor service: missing `{need.strip()}`")
+                (err if "RCB_LIMITS_ENFORCE" in need else inv).append(f"rcb_monitor service: missing `{need.strip()}`")
+        # the whole service is the generator's (its code from the pinned image, nothing else mounted, no other command)
+        gen = [inject.monitor_block(gpu, observe) for gpu in (False, True) for observe in (False, True)]
+        if not any(blk + "\n" == "".join(g) for g in gen):
+            inv.append("rcb_monitor service: not the block images/monitor/rcb_monitor/inject.py writes (another image, mount, "
+                       "command or entrypoint)")
     # every other service mounts its beacon read-only, the right one for the mode
     try:
         lines = text.splitlines(keepends=True)
@@ -87,9 +95,9 @@ def check(task: Path) -> tuple[list[str], list[str]]:
         inv.append("tests/test.sh: something reads the agent's files before the sanitize line")
     elif inject.TRAP in sh and not sh.index(inject.TRAP) < sh.index(inject.GUARD):
         err.append("tests/test.sh: the sanitize line comes before the verifier-step trap")
-    if "COPY rcb_limits.py rcb_limits.json /tests/" not in ((task / "tests" / "Dockerfile").read_text()
-                                                            if (task / "tests" / "Dockerfile").is_file() else ""):
-        err.append("tests/Dockerfile: does not COPY rcb_limits.py rcb_limits.json")
+    if inject.DOCKER_COPY not in ((task / "tests" / "Dockerfile").read_text()
+                                  if (task / "tests" / "Dockerfile").is_file() else ""):
+        inv.append(f"tests/Dockerfile: does not COPY rcb_limits.py from {inject.IMAGE} and rcb_limits.json (inject.DOCKER_COPY)")
     return inv, err
 
 
@@ -99,13 +107,27 @@ def main(argv):
         tier, argv = argv[1], argv[2:]
         if tier not in ("invariants", "advisory", "all"):
             raise SystemExit("--tier invariants|advisory|all")
-    dirs = [Path(a) for a in argv if (Path(a) / "task.toml").is_file()] or sorted(p.parent for p in (ROOT / "tasks").glob("*/task.toml"))
+    dirs = [Path(a) for a in argv if (Path(a) / "task.toml").is_file()] or tc.iter_tasks()
     bad = 0
-    if tier != "invariants":
+    if tier != "advisory":   # the image every task pins carries this repository's monitor code (inject.CONTENTS)
+        drift = {f: h for f, h in inject.contents().items() if inject.CONTENTS.get(f) != h}
+        if drift or set(inject.CONTENTS) != set(inject.CODE):
+            print(f"FAIL images/monitor/rcb_monitor: {', '.join(sorted(drift)) or 'CONTENTS'} differ from inject.CONTENTS, i.e. from "
+                  f"what {inject.IMAGE} carries: build and push a new images/monitor/ version, then update IMAGE and CONTENTS "
+                  "(images/monitor/rcb_monitor/inject.py contents; verify-image) and re-run scripts/task_conventions.py on every task")
+            bad = 1
+    if tier != "invariants":   # what the pinned image really carries (anonymous registry read; a network failure warns)
+        try:
+            bad_img = inject.registry_contents_problems()
+        except Exception as e:   # noqa: BLE001  (no network on this runner, registry down)
+            bad_img = [f"could not read {inject.IMAGE} from the registry: {e}"]
+        for e in bad_img:
+            print(f"FAIL {inject.IMAGE}: {e}")
+            bad = 1
         for test in ("selftest.py", "test_monitor.py"):      # the violation rule and the verifier step; the monitor's own logic
             r = subprocess.run([sys.executable, str(SRC / test)], capture_output=True, text=True)
             if r.returncode != 0:
-                print(f"FAIL scripts/rcb_monitor/{test}:\n" + r.stdout + r.stderr)
+                print(f"FAIL images/monitor/rcb_monitor/{test}:\n" + r.stdout + r.stderr)
                 bad = 1
     for d in dirs:
         inv, adv = check(d)

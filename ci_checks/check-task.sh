@@ -6,7 +6,7 @@
 #                      `INVARIANT-PASS per-task <n>` on success, n = the number of task dirs checked
 #   --tier advisory    the advisory checks (the CI job `advisories`: findings are warnings)
 #   (no --tier)        both
-# Benchmark-specific checks are not here: each benchmark's scripts/<bench>/ci/{invariant,advisory}-* hooks (run_all.sh).
+# Benchmark-specific checks are not here: each benchmark's ci_checks/benchmarks/<bench>/{invariant,advisory}-* hooks (run_all.sh).
 # Usage: check-task.sh [--tier invariants|advisory] <task dir>...
 set -uo pipefail
 umask 022

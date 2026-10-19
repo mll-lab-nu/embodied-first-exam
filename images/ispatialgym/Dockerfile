@@ -5,8 +5,8 @@
 # the image holds only iSpatialGym's own small dataset `ispatialgym-assets` (its Kohs block, tray and puzzle pieces). The
 # tasks' frozen instances come from the eval data in the task directories, never from a download at run time.
 # BUILD_ONLY (NVIDIA Isaac Sim inside; images/ispatialgym/BUILD_ONLY). Build eai-behavior first, then from the repo root:
-#   docker build -t ghcr.io/mll-lab-nu/eai-ispatialgym:$(cat images/ispatialgym/VERSION) -f images/ispatialgym/Dockerfile .
-FROM ghcr.io/mll-lab-nu/eai-behavior:0.1.1
+#   docker build -t ghcr.io/mll-lab-nu/efe-private:ispatialgym-$(cat images/ispatialgym/VERSION) -f images/ispatialgym/Dockerfile .
+FROM ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1
 ARG B1K_COMMIT=6a6194600939179671054e1ae5e78b0a158f996c
 ARG ISG_COMMIT=fddcf756c8134bab1358e539f8b6c1f16ad3e1ec
 # OmniGibson and bddl are editable installs of /behavior-src in the official image: the fork's checkout replaces it

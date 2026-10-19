@@ -6,8 +6,8 @@ Kit, whose licences forbid redistribution) with iSpatialGym's BEHAVIOR-1K fork a
 
 Build (from the repository root; Docker with BuildKit):
   1. eai-behavior, as images/behavior/BUILD_ONLY says:
-       docker build -t ghcr.io/mll-lab-nu/eai-behavior:$(cat images/behavior/VERSION) -f images/behavior/Dockerfile .
-  2. docker build -t ghcr.io/mll-lab-nu/eai-ispatialgym:$(cat images/ispatialgym/VERSION) -f images/ispatialgym/Dockerfile .
+       docker build -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) -f images/behavior/Dockerfile .
+  2. docker build -t ghcr.io/mll-lab-nu/efe-private:ispatialgym-$(cat images/ispatialgym/VERSION) -f images/ispatialgym/Dockerfile .
 The BEHAVIOR-1K fork (kmy17518/BEHAVIOR-1K) and iSpatialGym (kmy17518/iSpatialGym) are fetched by commit during the build;
 constraints.txt fixes the versions of what setup.sh --omnigibson adds on eai-behavior (a rebuild on 2026-10-16 gave the
 same `pip freeze`).

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # PROTOCOL §2.4: the agent container and the verifier of every standard task share ONE client base image, pinned by
-# digest, and pinned pip versions. The image and the pins are scripts/eai_standard/client.env (CLIENT_IMAGE) and
-# scripts/eai_standard/client-requirements.txt. For each standard or standard-realtime task (mode standard /
+# digest, and pinned pip versions. The image and the pins are embodied_first_exam/standard/client.env (CLIENT_IMAGE) and
+# embodied_first_exam/standard/client-requirements.txt. For each standard or standard-realtime task (mode standard /
 # standard-realtime, or a -standard / -standard-realtime name), environment/Dockerfile and tests/Dockerfile:
 #   - every FROM is CLIENT_IMAGE;
 #   - every `pip install` installs the pins: `-r <file>` with a byte-identical copy of client-requirements.txt in the
@@ -9,13 +9,14 @@
 # A failure for the eai-standard/2.2 and 2.4 tasks, whose generators copy client.env and the pins (BEHAVIOR-1K, RoboLab,
 # RoboWits, RoboPaint; RoboARC on 2.4). For every other task it only reports (a warning, never a failure) whether all standard tasks
 # share the one client image of client.env (their own pip pins are their benchmark's business; PROTOCOL §7, open).
-# Usage: check-standard-client.sh [tasks dir]   (repo-level; run_all.sh calls it once)
+# Usage: check-standard-client.sh [tasks dir] (tasks/, or a flat tree of task dirs)   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
-python3 - "${1:-$root/tasks}" "$root/scripts/eai_standard" <<'PY'
+python3 - "${1:-$root/tasks}" "$root/embodied_first_exam/standard" <<'PY'
 import os, re, shlex, sys, tomllib
+from pathlib import Path
 tasks, src = sys.argv[1], sys.argv[2]
-sys.path.insert(0, os.path.dirname(os.path.abspath(src))); import task_conventions as tc   # the mode registry (§2.16)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(src))), "scripts")); import task_conventions as tc   # the mode registry (§2.16)
 env = dict(l.split("=", 1) for l in open(os.path.join(src, "client.env")).read().splitlines() if "=" in l and not l.startswith("#"))
 IMAGE = env["CLIENT_IMAGE"].strip()
 req_path = os.path.join(src, env.get("CLIENT_REQUIREMENTS", "client-requirements.txt").strip())
@@ -59,7 +60,7 @@ def pip_problems(dockerfile: str, context: str) -> list:
             for r in reqs:
                 local = os.path.join(context, os.path.basename(r))
                 if os.path.basename(r) != "client-requirements.txt" or not os.path.isfile(local) or open(local, "rb").read() != REQ_BYTES:
-                    out.append(f"pip install -r {r}: needs a byte-identical copy of scripts/eai_standard/client-requirements.txt in the build context")
+                    out.append(f"pip install -r {r}: needs a byte-identical copy of embodied_first_exam/standard/client-requirements.txt in the build context")
             if specs:
                 got = {}
                 for s in specs:
@@ -71,7 +72,12 @@ def pip_problems(dockerfile: str, context: str) -> list:
 
 
 bad, v1, v1_off, n22 = [], 0, [], 0
-for t in sorted(os.listdir(tasks)):
+def task_dirs(root):   # (name, its parent) of every task dir: the repository's tasks/<folder>/<task>/ (tc.iter_tasks), or a flat scratch tree
+    flat = [(n, root) for n in sorted(os.listdir(root)) if os.path.isfile(os.path.join(root, n, "task.toml"))]
+    return flat or [(p.name, str(p.parent)) for p in tc.iter_tasks(Path(root))]
+
+
+for t, tasks in task_dirs(tasks):
     tt = os.path.join(tasks, t, "task.toml")
     if not os.path.isfile(tt):
         continue

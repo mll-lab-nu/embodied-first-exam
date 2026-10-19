@@ -1,6 +1,6 @@
 # roboEngineer — AnyCar multi-surface tracking
 
-> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `scripts/roboengineer/exported.toml`).
+> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 This family ports AnyCar's MuJoCo contact-wheel vehicle mechanism into the bounded control-transfer workflow. It evaluates a coding agent's ability to calibrate a controller using permitted deployment observations. It does not evaluate the pretrained AnyCar transformer. The earlier local desert showcase used a numeric dynamic bicycle plant and Isaac rendering; that showcase is not the evaluator here.
 
@@ -70,22 +70,13 @@ Stationary, reverse, crawling and chord-cutting trajectories are negative tests.
 - Preserve the public namespace under `/app/scripts/control_transfer/`: allowlist `control_public/anycar.py`, `control_public/anycar_nominal.py` and `components/anycarbench/{__init__,model,tracks}.py` and `components/anycarbench/circuits.json`, with empty package initializers or Python namespace packages. Do not package `trusted/anycar*.py` into the agent image. The nominal component has no private draws, case bank or private locations.
 - Supported nominal training command (working directory `/app`): `python -m scripts.control_transfer.control_public.anycar_nominal --out /app/output/nominal`. Optional `--policy /app/output/policy.json` loads a validated numeric controller. The output directory must be new; outputs are `nominal.npz` and canonical `policy.json`. The parent namespace makes the relative `..components.anycarbench.model` import resolve entirely within the public allowlist.
 - The duplicated `/app/control_public` alias also supports `python -m control_public.anycar_nominal`: an explicit package-name branch imports the same namespaced public components. No trusted import or exception-catching fallback is used.
-- Install the reference fitting/iteration utility from `trusted/anycar_reference.py` only under `solution/` (adjust relative imports during generation). Shared native `Client` retains exact HTTP bytes. Its `iterate` helper accepts that client.
+- The reference fitting/iteration utility is installed only under `solution/` (`solution/reference.py`). Shared native `Client` retains exact HTTP bytes. Its `iterate` helper accepts that client.
 - Adapter feedback must allow only `t` plus 18 finite `values`, and fixed-schedule images. `public_feedback(record, folder)` in the reference module demonstrates the exact projection; copying the fitting code into the public image is not needed.
 - Evaluation dependencies: native `mujoco==3.5.0`, `numpy==2.3.1`, system OSMesa, FFmpeg. No Isaac, JAX, Torch or GPU runtime is imported by this family. Container packaging should set `CUDA_VISIBLE_DEVICES=''`, `MUJOCO_GL=osmesa`, `LIBGL_ALWAYS_SOFTWARE=1`, `GALLIUM_DRIVER=llvmpipe`, `OMP_NUM_THREADS=1`, `OPENBLAS_NUM_THREADS=1`, `MKL_NUM_THREADS=1`, `LP_NUM_THREADS=2`; FFmpeg uses one thread.
 
-## Validation commands and limits
+## Validation and limits
 
-Run with the pinned CPU dependencies and software OpenGL available:
-
-```bash
-MUJOCO_GL=osmesa OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 LP_NUM_THREADS=2 CUDA_VISIBLE_DEVICES='' \
-  python -m unittest scripts.control_transfer.tests.test_anycar -v
-MUJOCO_GL=osmesa OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 LP_NUM_THREADS=2 CUDA_VISIBLE_DEVICES='' \
-  python -m scripts.control_transfer.trusted.anycar_validate --out /tmp/anycar-validation
-```
-
-Run the campaign separately with `--index 0` and `--index 1` to validate distinct persistent plants against one frozen source snapshot. Each campaign starts from the nominal policy and fits only its own adaptation feedback. The campaign writes three adaptation rounds, ten held-out rollouts with videos, ten fresh-process replays, two negative controller rollouts, policy/feedback history, a seal record and a validation summary outside the repository. All recorded video streams are fully decoded and checked for frame count and dimensions. This family-level test is **not a native Harbor/container isolation test or a real coding-agent evaluation**. The orchestrator owns those integration checks and shared resource declarations. Local videos and raw results must remain outside Git.
+The validation campaign runs separately on instances 0 and 1 to validate distinct persistent plants against one frozen source snapshot. Each campaign starts from the nominal policy and fits only its own adaptation feedback. The campaign writes three adaptation rounds, ten held-out rollouts with videos, ten fresh-process replays, two negative controller rollouts, policy/feedback history, a seal record and a validation summary outside the repository. All recorded video streams are fully decoded and checked for frame count and dimensions. This family-level test is **not a native Harbor/container isolation test or a real coding-agent evaluation**. The orchestrator owns those integration checks and shared resource declarations. Local videos and raw results must remain outside Git.
 
 Generation imports `scripts.control_transfer.anycar_spec.make_spec` directly; this module and its public constants import with the Python standard library alone (including under `python -S`). Compatibility re-exports remain in `trusted.anycar_spec` and `trusted.anycar`. The top-level spec contains private instance seed banks and must stay outside the public image allowlist. Include it in operator-side packaging and source hash snapshots.
 
@@ -111,35 +102,13 @@ python -m control_public.anycar_nominal --track monaco --full-lap --out /app/out
 python -m scripts.control_transfer.trusted.anycar --track suzuka --policy policy.json --out preview
 ```
 
-Public allowlist adds `components/anycarbench/tracks.py`, `circuits.json`, `LICENSE.f1db` and `NOTICE`; no converter or private bank belongs in the agent image. Runtime requires no extra dependency beyond existing NumPy/MuJoCo. Offline conversion only uses PyYAML, svgpathtools1.8.0 and svgwrite1.4.3:
-
-```bash
-python -m scripts.control_transfer.trusted.anycar_build_tracks --source <pinned-f1db-checkout> --output scripts/control_transfer/components/anycarbench/circuits.json
-python -m unittest scripts.control_transfer.tests.test_anycar scripts.control_transfer.tests.test_anycar_tracks -v
-python -m scripts.control_transfer.trusted.anycar_circuits_validate --out <fresh-external-directory>
-```
+Public allowlist adds `components/anycarbench/tracks.py`, `circuits.json`, `LICENSE.f1db` and `NOTICE`; no converter or private bank belongs in the agent image. The agent image takes `circuits.json` and `compact_routes.json` (6.6 MB together) from the files-only image `eai-control-transfer-anycar-files` (`images/control-transfer-anycar-files/FILES.json` pins it; not public), copied by `COPY --from` lines in each task's `environment/Dockerfile`, at the same `/app` paths as the other public files; the trusted `sim/` tree keeps its own copies. After changing either file: `python3 scripts/files_image.py build control-transfer-anycar-files`, push, `pin` the new digest. Runtime requires no extra dependency beyond existing NumPy/MuJoCo. The offline conversion (PyYAML, svgpathtools1.8.0 and svgwrite1.4.3) is kept outside this repository.
 
 The all-venue validation executes one bend-focused24s CPU rollout per latest raced venue layout plus zigzag, alternating two plants, using the unadapted public nominal controller. Four videos are replayed and exact feedback preserved. This is broad implementation smoke coverage, **not** an all-layout/full-lap or multi-round agent acceptance result. The original two-instance ellipse evidence is historical and is never relabelled as circuit evaluation.
 
-## Generating optional circuit tasks
-
-Existing control-transfer task identities and ellipse instances are preserved.
 The catalog and nominal trainer support all 159 runnable historical layouts plus zigzag.
-Create self-contained circuit tasks on demand, two independent plant instances per selected route:
-
-```bash
-python3 -S -m scripts.control_transfer.gen_tasks list-circuits
-python3 -S -m scripts.control_transfer.gen_tasks render --circuit zigzag --circuit monaco --output-root /tmp/circuit-tasks
-python3 -S -m scripts.control_transfer.gen_tasks check --circuit zigzag --circuit monaco --output-root /tmp/circuit-tasks
-# All runnable historical layout versions, plus zigzag: 320 tasks, several GB of standalone copies.
-python3 -S -m scripts.control_transfer.gen_tasks render --all-circuits --output-root /tmp/all-circuit-tasks
-```
-
 An explicit layout selects that historical version; a venue alias resolves to its latest raced
-available layout in the pinned catalog. Unknown or unavailable layouts fail before task writes.
-The default generator check also covers optional circuit tasks materialized in its output directory.
-Refresh `tasks/dataset.toml` with Harbor if optional tasks are added under repository `tasks/`.
-The trusted adapter passes the route ID unchanged; only public geometry/nominal modules and license
+available layout in the pinned catalog. The trusted adapter passes the route ID unchanged; only public geometry/nominal modules and license
 attribution enter the agent package. Converter, evaluator, plant draws and case banks stay private.
 Current circuit evidence is local CPU sector smoke, not native Harbor circuit acceptance.
 
@@ -165,8 +134,8 @@ wheelbase, mass, steering, contact, controller bounds and hidden dynamics draws
 are unchanged. Existing sector and long-lap layouts/specs remain unchanged.
 
 New public allowlist asset: `components/anycarbench/compact_routes.json` alongside
-`tracks.py` and `circuits.json`. The operator-only offline builder is
-`trusted/anycar_compact_routes.py`; rebuild with `--out PATH`. The public trainer
+`tracks.py` and `circuits.json`. The offline builder is operator-only and
+not in this repository. The public trainer
 supports `--track NAME --compact-30s`; the trusted evaluator uses the same flags.
 Cases set `full_lap=true, route_revision="compact-30s/1"`. Root owns separate
 registration, sampling, and task budgets; the stdlib `compact_route_budget(name)`
@@ -203,8 +172,7 @@ The stdlib-only `route_metadata(name)` / `route_metadata_catalog()` helpers in
 `components.anycarbench.tracks` load `route_lengths.json` without NumPy/MuJoCo.
 The frozen metadata covers 159 runnable historical layouts plus zigzag and binds
 to the existing circuit catalog SHA-256. Every recorded length and horizon is
-checked against the unchanged physics Route implementation. Rebuild offline with
-`python -m scripts.control_transfer.trusted.anycar_route_metadata --out PATH`.
+checked against the unchanged physics Route implementation.
 The longest full-lap horizon is Valencia-1: 3,878.76 seconds (193,938 control
 steps, 3,294.8199857283616 m). The unavailable Buenos Aires layout stays excluded.
 Copy `route_lengths.json` alongside `tracks.py` in explicit allowlists. Register
@@ -243,13 +211,7 @@ the orchestrator; this hook remains standard-library-only under `python -S`.
 
 The shared registry keeps `anycar-circuit-v1-<layout>` as 24-second sectors and registers
 `anycar-circuit-lap-v2-<layout>` separately. Default generation includes both plants for
-Silverstone-8 and Monaco-6. All 159 runnable historical layouts plus zigzag can be selected:
-
-```bash
-python3 -S -m scripts.control_transfer.gen_tasks render --lap-circuit suzuka
-python3 -S -m scripts.control_transfer.gen_tasks render --all-lap-circuits --output-root /operator/full-lap-tasks
-python3 -S -m scripts.control_transfer.gen_tasks check --all-lap-circuits --output-root /operator/full-lap-tasks
-```
+Silverstone-8 and Monaco-6. All 159 runnable historical layouts plus zigzag can be selected.
 
 The private CPU evaluator keeps the full 10 fps, 1280×480 video and every 10 Hz noisy
 telemetry row. The shared adapter delivers up to 128 equally spread decoded-frame indices,
@@ -288,13 +250,7 @@ physical primitives. No additional external assets or packages are required.
 
 The registry name is `anycar-circuit-compact-v3-<layout>`. Default generation includes
 Silverstone-8 and Monaco-6, each with two persistent plants. The full 160-route catalog is
-available without changing either earlier circuit revision:
-
-```bash
-python3 -S -m scripts.control_transfer.gen_tasks render --compact-circuit suzuka
-python3 -S -m scripts.control_transfer.gen_tasks render --all-compact-circuits --output-root /operator/compact-tasks
-python3 -S -m scripts.control_transfer.gen_tasks check --all-compact-circuits --output-root /operator/compact-tasks
-```
+available without changing either earlier circuit revision.
 
 Public geometry is precomputed in `compact_routes.json`; the offline builder remains
 operator-only. Each task declares its smoothing and minor-axis widening, 45 m route,

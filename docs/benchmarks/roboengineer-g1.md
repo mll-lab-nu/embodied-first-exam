@@ -1,12 +1,48 @@
 # roboEngineer — G1 Walking over Terrain
 
-> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `scripts/roboengineer/exported.toml`).
+> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 This family extends the imported G1 flat-walking prototype to **flat, slope, rough heightfield, and steps**, with blind-policy training in mjlab/MuJoCo Warp and deployment in native **CPU MuJoCo 3.5.0**, NumPy CPU inference, and **OSMesa software rendering**. It is sim-to-sim transfer. A real robot, hardware calibration, and native Harbor isolation validation are separate requirements.
 
+## In the benchmark (board 0165, 2026-10-18)
+
+Shipped as `roboengineer-g1-terrain-walk-i00-standard` / `-i01-standard` (spec
+family `g1`), the same runtime, cutoff (14400 s) and verdict as the other roboEngineer tasks
+([roboengineer.md](roboengineer.md)).
+
+- **The agent's GPU**: the agent's image is `eai-control-transfer:0.2.0-train` (nominal + the pinned training stack,
+  BUILD_ONLY like the others); `environment/docker-compose.yaml` reserves one NVIDIA device for `main` only; the
+  `sim` sidecar gets none (`NVIDIA_VISIBLE_DEVICES=void`, `CUDA_VISIBLE_DEVICES=""`) and evaluates in CPU MuJoCo 3.5.0
+  with NumPy inference and OSMesa, as before. `[metadata.resources]`: `gpu_required = true`, `min_gpu_memory_gb =
+  20`, any CUDA GPU (no ray tracing needed); limits: 20 GiB of GPU memory and 10 GiB of memory for the agent's
+  container, caps `main` 4 CPUs / 12 GB, `sim` 4 CPUs / 6 GB.
+- **Measured** (L40S, `aws:rcb-gpu14`, the public trainer `control_public.g1_training`, PPO with 24 steps per
+  environment and iteration): 256 environments (the default) 1.8 GB of GPU memory, 1.1-1.4 s per iteration; 1024 (the
+  trainer's cap) 4.7 GB, 1.4 s; 4096 (the reference) 16.5 GB, 2.0-2.5 s (slower while the host's other trials run);
+  about one CPU core (one Python thread drives the GPU) and 2.5 GiB of memory, 3.2 GiB cgroup peak; the export to the
+  numeric actor matches the torch actor within 1.2e-6. Over the reference's 3.5 hours the agent's container peaked at
+  16.1 GiB of GPU memory, 5.6 GiB of memory and 1.6 cores. The sidecar uses 2.2-2.6 cores while a deployment runs
+  (four rendered 20 s cases, about 3.6 minutes), its 4-CPU cap while it finalizes (12 held-out cases twice + the
+  video: 419 s), peak 2.1 GiB.
+- **Reference** (`solution/reference.py`): trains from scratch (no warm start, no
+  released actor: none is in any image) with 4096 environments in a probe and three resumed segments sized from the
+  time left, deploys each segment's actor in the background while the next trains, seals the last completed round.
+  `i00` (aws:rcb-gpu14, an earlier planner with a fixed first segment: 2500 + 1733 + 1155 iterations, 529 M
+  transitions, 12638 s of the 14400 s): the three rounds passed 1/4, 1/4 and 0/4 development cases (round 0: flat
+  passed, slope and rough walked the 20 s but drifted 3.1 / 4.5 m sideways, beyond the 2 m bound, steps fell at 8 s;
+  the sealed last round drifted 1.8-8.5 m); held-out 1/12, mean score 43.14. `i01` (aws:rcb-gpu13, the shipped
+  planner: 200 + 2466 + 1479 + 986 iterations, 12009 s): round 0 passed all four development cases (scores 82-84,
+  drift <= 1.3 m), rounds 1 and 2 drifted 1.0-9.0 m (1/4 in round 2); held-out of the sealed round 2: 4/12, mean
+  score 82.68. Both: `oracle = "partial"`, not validated (PROTOCOL §4: human review). Lateral drift under the hidden
+  plant (motor strengths, delay, encoder bias) is what the feedback rounds have to show and fix: the reference does
+  not look at them (it seals its last round; on i01 its first would have been the better choice). nop: 0 on both,
+  `infra_error` 0 (no deployment, no episode, no video). Collection 419-488 s (budget 1740 s), the verifier ~20 s.
+- **CPU**: neither the trainer nor the evaluator pins itself to CPUs (pinning to the host's first four put every trial
+  on a host on the same cores); the containers' CPU quotas bound them.
+
 ## Task and interface
 
-The Unitree G1 has the pinned 29-actuator joint order, stiffness/damping, default pose and action scale in `scripts/control_transfer/components/sim2realbench/g1/actuator_abi.json`. These values are unchanged. Every episode stands for 2 seconds then walks forward for 18 seconds. Public forward-speed commands vary across 0.5, 0.6 and 0.65 m/s; commanded lateral/yaw velocities are zero. Initial x/y each vary within ±0.15 m of the launch area. Evaluation commands and noise differ between adaptation and held-out cases.
+The Unitree G1 has the pinned 29-actuator joint order, stiffness/damping, default pose and action scale in each task's `environment/sim/sim2realbench/g1/actuator_abi.json`. These values are unchanged. Every episode stands for 2 seconds then walks forward for 18 seconds. Public forward-speed commands vary across 0.5, 0.6 and 0.65 m/s; commanded lateral/yaw velocities are zero. Initial x/y each vary within ±0.15 m of the launch area. Evaluation commands and noise differ between adaptation and held-out cases.
 
 The fixed actor receives 98 values: noisy angular velocity (3), noisy normalized projected gravity (3), velocity command (3), sine/cosine gait phase (2), noisy relative joint position (29), noisy joint velocity (29), and previous action (29). The phase period is 0.6 s. Actor inference runs at 50 Hz; joint PD/physics run at 500 Hz. The actor receives no terrain scan, true base position, true velocity, contact flags or reward. Position/velocity used in the physical PD servo are internal simulator actuator state, not observations returned to the coding agent or inputs added to the learned actor.
 
@@ -37,18 +73,17 @@ The robot, actuator ABI and base PPO task derive from [Unitree's mjlab stack](ht
 Example commands (asset and output paths are operator supplied):
 
 ```bash
-export PYTHONPATH=scripts/control_transfer/components:scripts/control_transfer
+export PYTHONPATH=<task>/environment/sim   # control_public/ and sim2realbench/
 python -m control_public.g1_training --upstream "$NOMINAL_G1_SOURCE" --out "$TRAIN_OUT" \
   --gpu 0 --num-envs 256 --iterations 300 --seed 42
 python -m sim2realbench.g1.validate_terrain --policy "$TRAIN_OUT/policy.npz" --out "$VALIDATION_OUT"
-CONTROL_ASSETS="$PUBLIC_ASSETS" python -m unittest scripts.control_transfer.tests.test_g1_terrain -v
 ```
 
 The evaluator requires the native OSMesa library installed by the image. `CONTROL_ASSETS` identifies the prepared robot assets; validation needs no GPU. Training explicitly selects one GPU, caps CPU affinity at four cores, records learning curves and its actual step budget, and compares the trained torch actor with the exported NumPy actor. A short PPO run is training/transfer evidence, **not evidence of convergence**.
 
 ## Integration contract
 
-Lightweight generators should import `make_spec` directly from `sim2realbench.g1.terrain`; module import and spec construction require only the Python standard library. Simulation imports are local to terrain construction/query functions. The isolated-interpreter regression rejects importing MuJoCo, NumPy, Torch or Warp during spec generation.
+Lightweight generators should import `make_spec` directly from `sim2realbench.g1.terrain`; module import and spec construction require only the Python standard library. Simulation imports are local to terrain construction/query functions.
 
 The trusted runtime hook is `sim2realbench.g1.evaluation`: `validate(policy) -> bytes`, `make_spec(index) -> dict`, and `rollout(policy_path, case, out, render) -> record`. A case has exactly `plant_seed`, `episode_seed`, `terrain`, `duration`, `speed`. Records include `state_sha256`, `metrics.success`, `metrics.score`, `feedback.telemetry`, `feedback.commands`, and operator-only `dynamics`/`terrain`. State hashes cover qpos, qvel, actuator state and controls at **every physics tick**. Rendering does not change the dynamics or feedback-noise stream.
 

@@ -1,7 +1,0 @@
-#!/bin/bash
-# Oracle (standard mode): replays the reference rows (AM-Bench's end-effector targets + gripper), one per control
-# step, as `ee_pose` chunks (hold) through the client. Uses no privileged information at run time (only the pre-recorded targets).
-set -e
-mkdir -p /app/output
-cp /solution/oracle_replay.py /app/output/gen.py
-python /solution/oracle_replay.py

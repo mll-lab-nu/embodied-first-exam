@@ -49,7 +49,7 @@ seed reset is exact; `instance.json` holds the task, the resolved parameters, th
 (`initial_sha`), which the privileged verifier's replays and the standard services' scene build check.
 
 The benchmark keeps a bank of verified instances (20 nominal + 10 hard per task), each with a recorded rollout of its
-reference controller and an independent action replay. For each task, `scripts/pandadyn/freeze.py` took the lowest-seed
+reference controller and an independent action replay. For each task, the frozen instance is the lowest-seed
 nominal instance of the bank whose rollout passes here, in `eai-pandadyn`:
 1. the instance rebuilt from its parameters and seed;
 2. the rollout replayed here reproduces the physical state it recorded after **every** control step, bit for bit (joint
@@ -63,15 +63,14 @@ the instance's seed, written by `normalize`). The bank holds 19 more verified no
 rows, so `allowed` can grow by freezing them under `tests/seeds/<seed>/` (the same three checks); S01's designated channel
 and S08's selected branch are drawn per seed and named in the instruction, so those two need an instruction per seed first.
 
-All 25 tasks passed with their first candidate: seed 0, except D04 and S12 (seed 1, the lowest seed their bank holds). The choice and its provenance (the rollout's path in the benchmark checkout, its source digest, the hashes)
-are in `scripts/pandadyn/instances.json`; `instance.json`, which the agent reads in privileged mode, names no rollout.
+All 25 tasks passed with their first candidate: seed 0, except D04 and S12 (seed 1, the lowest seed their bank holds). `instance.json`, which the agent reads in privileged mode, names no rollout.
 
-## Tasks and generator
-`scripts/pandadyn/mk_tasks.py` (`--check`) writes both twins of every instance in `instances.json` from
-`scripts/pandadyn/descr/<code>.json` (what the task asks and exactly what its check tests, written from the task's code;
-`scene` is what both modes may read, `scene_privileged` privileged mode only), `frozen/`, `template/<mode>/`, `shared/`
-and `scripts/eai_standard/`, and passes them through `scripts/task_conventions.py`'s `normalize()`.
-`scripts/pandadyn/sync_env.py` copies the environment package into `images/pandadyn/` (below).
+## Tasks
+Every instance has both twins; the instance files live only in the tasks (privileged: `environment/instance.json`,
+`solution/oracle_actions.npy`; standard: `environment/sim/instance.json`, `solution/oracle_qpos.npy`). The texts say what
+the task asks and exactly what its check tests, written from the task's code. The task directories are the deliverable;
+the tooling that built them is kept outside this repository.
+`images/pandadyn/sync_env.py` copies the environment package into `images/pandadyn/` (below).
 
 ## Success (the task's own)
 Every task is a sequence of phases, each with its own physical predicate (a catch, a hold for a stated time, a crossing,
@@ -124,7 +123,7 @@ CPU PhysX with `enable_enhanced_determinism`, one simulated scene per process, o
   IK does not converge there, joint 4 ends on its bound), whose last bits follow the BLAS kernel OpenBLAS picks for the
   CPU. Frozen under the AVX-512 kernel, its start never rebuilt on the pool's AVX2 hosts (AWS EPYC 7R13, SC EPYC 7402,
   babel EPYC 7763; 4 joints differ in the last float32 bit: `instance_mismatch`). Its containers now pin the kernel
-  (`OPENBLAS_CORETYPE=Haswell`, `mk_tasks.py` `BLAS_PIN`; re-frozen with it): the start and the oracle's final state are
+  (`OPENBLAS_CORETYPE=Haswell`; frozen with it): the start and the oracle's final state are
   the same on a Ryzen 9 7950X and an EPYC 7R13. The other 24 starts come from Pinocchio's IK and rebuild on both
   (all 25 checked on aws:rcb-gpu8), and every oracle succeeds on both; 6 oracles (D03, D08, D10, D13, S05, S07) end in
   another state hash there than the README's (measured here): a trajectory and its grading replay always run on one
@@ -172,8 +171,8 @@ The shared service layer's (`rcb_service.py`): every executed control step is jo
 float64 row the servo received), every completed call checkpointed with the state hash; after a crash compose restarts the
 service, which rebuilds the instance, replays the journal of the running episode (at most 3,500 control steps, seconds
 to a minute), checks the hash and continues the same episode (never a reset; the realtime twin resumes it paused).
-`scripts/pandadyn/kill_test.sh` runs a standard task's oracle with Harbor and kills the service with SIGKILL in the
-middle of a call; the service resumes the same episode with the same state hash.
+Killed with SIGKILL in the middle of a call during a standard task's oracle run, the service resumes the same episode
+with the same state hash.
 
 ## Time budget
 3600 s for every task of both modes (each task's `[agent] timeout_sec`; the benchmark's own text names no number). A scene
@@ -181,10 +180,9 @@ builds in 5-15 s and runs ~40-150 control steps per second, so the budget is the
 
 ## Standard mode (eai-standard/2.1)
 Standard and standard-realtime differ only in the clock. Both run
-the same adapter (`template/realtime/environment/sim/server.py`; `mk_tasks.py` writes the standard copy with its own
-docstring, the code byte for byte) on the same shared service layer (`rcb_service.py`, copied with `grade.py` and the
-2.1 client from `scripts/humanoidbench/shared/standard/`, as in HumanoidBench, BiGym 2.0 and RoboOlympics), with the same
-reset budget (`RESETS` in `mk_tasks.py`, "Reset budget" below). The static families (D05, D08, D11, D12, D13, S06) have
+the same adapter (each twin's `environment/sim/server.py`: the same code, each copy with its own docstring) on the same
+shared service layer (`rcb_service.py`, with `grade.py` and the 2.1 client: the same files as HumanoidBench's, BiGym
+2.0's and RoboOlympics-Fun's), with the same reset budget ("Reset budget" below). The static families (D05, D08, D11, D12, D13, S06) have
 only the standard twin and get the same rules.
 - **Action.** `joint_position` only (8 per arm: 7 joint targets + the total aperture, the environment's own action;
   clipped to the limits and executed as float64, which the client sends): rows `dt` apart, a whole multiple of the 10 ms
@@ -205,9 +203,9 @@ only the standard twin and get the same rules.
 The dynamic families (`[metadata] dynamics`, declared by each task; D05, D08, D11, D12, D13 and S06 are static: nothing in
 them moves by itself) get a `-standard-realtime` twin, sharing the standard twin's adapter, service layer and reset budget
 ("Standard mode" above).
-- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged (`rcb_realtime.py`,
-  `rcb_service.py`, `rcb_client.py`, `grade.py`, copied by `mk_tasks.py` from `scripts/humanoidbench/shared/`), with
-  `template/realtime/environment/sim/server.py`, an `rcb_service.Sim` adapter on `rcb_pandadyn.Session`: the standard
+- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics-Fun, unchanged (`rcb_realtime.py`
+  and `rcb_client.py` from `embodied_first_exam/standard/realtime/`, `rcb_service.py`, `grade.py`), with the twin's
+  `environment/sim/server.py`, an `rcb_service.Sim` adapter on `rcb_pandadyn.Session`: the standard
   twin's frozen instance, `joint_position` action (clipped to the limits, executed as float64), success check, cameras
   (`overview`, `closeup`, RGB and z-depth, with their calibration in `/spec`) and proprioception columns. Not served: the
   2.2 additions (`/kinematics`, per-frame camera poses, depth modes), all MAYs in 2.3. Resets: `Session.reset()`, the
@@ -246,7 +244,7 @@ them moves by itself) get a `-standard-realtime` twin, sharing the standard twin
   (2.3 s dropped, largest lag 1.1 s) and once in S08 (0.5 s), at host load 24-71; nop (no request): `timeout`, not a
   success, in all 19. A first oracle run of S04 at S = 2 showed one 0.6 s step (a stall) at step 310: the clock re-anchors
   and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing.
-- **Reset budget: 3**, in both standard modes (`RESETS` in `mk_tasks.py`; below the standard-realtime mode's default of
+- **Reset budget: 3**, in both standard modes (below the standard-realtime mode's default of
   10, the benchmark's choice). Every reset
   restores the same frozen start, and the client lets a program plan up to 10 s ahead (`at`), so the budget is the
   number of times an agent can rerun an open-loop plan on a deterministic scene, watch the outcome and tune it; the
@@ -263,20 +261,19 @@ them moves by itself) get a `-standard-realtime` twin, sharing the standard twin
   know them otherwise, since nothing in the scene marks them. Standard mode never gives where objects or fixtures are,
   their physical parameters (mass, friction, restitution, launch velocities), the seed, or goal values derived from the
   seeded variation; the privileged instruction and tooling give all of them. Panda Dynamic Scenes is therefore not among
-  the benchmarks whose own `scripts/<bench>/ci/advisory-world-frame.sh` checks for "no world coordinates".
+  the benchmarks whose own `ci_checks/benchmarks/<bench>/advisory-world-frame.sh` checks for "no world coordinates".
 - **Pointers to the reference solution.** None reaches the agent: the image holds the environment package only (its
   command-line front end, which drives the benchmark's validation tooling, is left out, and comments that named that
-  tooling are reworded: `scripts/pandadyn/sync_env.py`, which refuses a copy with such text); `instance.json` names no
+  tooling are reworded: `images/pandadyn/sync_env.py`, which refuses a copy with such text); `instance.json` names no
   rollout; the reference rows are under `solution/` only. The benchmark is not published, and nothing of it is on PyPI.
 - **Contact and safety telemetry.** None is published beyond the robot's own proprioception (motor torques, joint and
   TCP motion), which is what the safety limits are judged on; contact forces stay private (PROTOCOL H.3).
 
-- **Scene motion in the privileged instruction.** The template's sentence "Things move by themselves from the first
-  control step on: the scene does not wait for the robot." is written for the 19 dynamic families only (`REALTIME` in
-  `mk_tasks.py`); the six static ones say "Nothing moves by itself".
+- **Scene motion in the privileged instruction.** The sentence "Things move by themselves from the first
+  control step on: the scene does not wait for the robot." is written for the 19 dynamic families only; the six static ones say "Nothing moves by itself".
 
 ## Notes on the tasks' checks
-The instructions describe each check exactly as the task's code implements it (`scripts/pandadyn/descr/`, written from
+The instructions describe each check exactly as the task's code implements it (written from
 the code alone, never from the reference controllers). Writing them brought up properties of the benchmark's own checks
 that a reader of results should know; none was changed here (a change would be a new benchmark source and new instances):
 - some phase conditions are looser than their names: D02's redirects need only a paddle touch after a free flight; D04's
@@ -292,7 +289,7 @@ No task is satisfied without completing every phase in order; the benchmark's ow
 diagnostics as unfinished.
 
 ## Image and host
-`images/pandadyn/` → `ghcr.io/mll-lab-nu/eai-pandadyn:0.1.0` (~2.4 GB): Python 3.11.16, ManiSkill 3.0.1, SAPIEN 3.0.3,
+`images/pandadyn/` → `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` (~2.4 GB): Python 3.11.16, ManiSkill 3.0.1, SAPIEN 3.0.3,
 torch 2.14.1 (CPU build), Ruckig 0.12.2 (`requirements.lock`, the versions of the benchmark's own lock file; torch is its
 CPU build, which reproduces the bank's physics bit for bit), and the environment package. Public (every component is
 redistributable). SAPIEN needs a Vulkan device to build a scene and render, so every container that builds one reserves
@@ -306,7 +303,7 @@ The Panda Dynamic Scenes environment package: MLL Lab, released with this reposi
 
 Serves `eai-standard/2.1` with the optional reset capability (3 resets). Resume by journal replay to the logged state hash (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).
 
-## Easy set
+## Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
@@ -314,44 +311,43 @@ for any access to tests, solutions or graders (for this benchmark mostly from th
 was partial). It is **hard** when GPT-6 Luna and every later run that attempted it failed, GPT-6 Astra and Claude Opus
 5.5 among them; a standard directory that only Astra solved is hard as well. It is **unverified** when only Luna
 attempted it and failed (the later runs only take bases Luna solved in no mode), and **pending** without a Luna verdict.
-A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason `solved`): kept under its name and
-reported apart from the main table.
+A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-1 of 25 bases are in the easy set; by directory: 33 easy, 11 hard, 24 unverified, 1 pending.
+By directory: 33 easy, 11 hard, 24 unverified, 1 pending.
 
-| base | easy set | privileged | standard | standard-realtime |
-|---|---|---|---|---|
-| `pandadyn-d01-reciprocal-cup-relay-i00` |  | easy: Astra, Opus, GLM 5.3 Flash | hard | easy: Astra (3), Opus (9) |
-| `pandadyn-d02-strike-catch-merge-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-d03-cooperative-puck-course-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | hard | easy: Astra (10) |
-| `pandadyn-d04-shared-tray-transport-discharge-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Gemini 4 Argon | easy: Astra (1), Opus (1), GLM 5.3 Flash (7) |
-| `pandadyn-d05-moving-ramp-relay-i00` |  | easy: Astra, Opus | hard | — |
-| `pandadyn-d06-moving-bank-relay-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-d07-spring-gate-switchyard-i00` |  | easy: Astra, Opus, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Opus (7) |
-| `pandadyn-d08-pendulum-energy-relay-i00` |  | easy: Luna | unverified | — |
-| `pandadyn-d09-lever-launch-catch-reload-i00` |  | easy: Astra, Opus | hard | hard |
-| `pandadyn-d10-moving-grasp-handover-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-d11-moving-fixture-unlock-i00` |  | easy: Luna | unverified | — |
-| `pandadyn-d12-reciprocal-sliding-transfer-i00` |  | easy: Luna | unverified | — |
-| `pandadyn-d13-supported-cube-flip-relay-i00` |  | easy: Luna | unverified | — |
-| `pandadyn-s01-cup-route-delivery-i00` |  | easy: Astra, Opus | hard | easy: Astra (9) |
-| `pandadyn-s02-plate-catch-transport-release-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s03-clear-gate-hockey-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s04-impact-release-relay-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s05-sliding-receive-align-deliver-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s06-cube-flip-route-recover-i00` |  | pending | hard | — |
-| `pandadyn-s07-conveyor-load-brake-unload-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s08-load-switch-recover-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s09-toss-recatch-delivery-i00` |  | easy: Astra, Opus, Gemini 4 Argon | hard | easy: Astra (7), Opus (10) |
-| `pandadyn-s10-swinging-load-transit-dock-i00` |  | easy: Luna | unverified | unverified |
-| `pandadyn-s11-cylinder-rescue-route-deliver-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Astra (3), Gemini 3.8 Flash (6) |
-| `pandadyn-s12-moving-bridge-puck-relay-i00` |  | easy: Astra, Opus | hard | easy: Astra (7), Opus (5) |
+| base | privileged | standard | standard-realtime |
+|---|---|---|---|
+| `pandadyn-d01-reciprocal-cup-relay-i00` | easy: Astra, Opus, GLM 5.3 Flash | hard | easy: Astra (3), Opus (9) |
+| `pandadyn-d02-strike-catch-merge-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-d03-cooperative-puck-course-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | hard | easy: Astra (10) |
+| `pandadyn-d04-shared-tray-transport-discharge-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Gemini 4 Argon | easy: Astra (1), Opus (1), GLM 5.3 Flash (7) |
+| `pandadyn-d05-moving-ramp-relay-i00` | easy: Astra, Opus | hard | — |
+| `pandadyn-d06-moving-bank-relay-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-d07-spring-gate-switchyard-i00` | easy: Astra, Opus, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Opus (7) |
+| `pandadyn-d08-pendulum-energy-relay-i00` | easy: Luna | unverified | — |
+| `pandadyn-d09-lever-launch-catch-reload-i00` | easy: Astra, Opus | hard | hard |
+| `pandadyn-d10-moving-grasp-handover-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-d11-moving-fixture-unlock-i00` | easy: Luna | unverified | — |
+| `pandadyn-d12-reciprocal-sliding-transfer-i00` | easy: Luna | unverified | — |
+| `pandadyn-d13-supported-cube-flip-relay-i00` | easy: Luna | unverified | — |
+| `pandadyn-s01-cup-route-delivery-i00` | easy: Astra, Opus | hard | easy: Astra (9) |
+| `pandadyn-s02-plate-catch-transport-release-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s03-clear-gate-hockey-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s04-impact-release-relay-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s05-sliding-receive-align-deliver-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s06-cube-flip-route-recover-i00` | pending | hard | — |
+| `pandadyn-s07-conveyor-load-brake-unload-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s08-load-switch-recover-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s09-toss-recatch-delivery-i00` | easy: Astra, Opus, Gemini 4 Argon | hard | easy: Astra (7), Opus (10) |
+| `pandadyn-s10-swinging-load-transit-dock-i00` | easy: Luna | unverified | unverified |
+| `pandadyn-s11-cylinder-rescue-route-deliver-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Astra (3), Gemini 3.8 Flash (6) |
+| `pandadyn-s12-moving-bridge-puck-relay-i00` | easy: Astra, Opus | hard | easy: Astra (7), Opus (5) |
 
 Standard-realtime cells name each solving run with the resets it used (the screening allowed 10; a solve that used more
 than 3 would not count under today's budget). The standard cells are from standard twins with no reset, a configuration
-being rerun under today's. The easy-set base here, `pandadyn-d04-shared-tray-transport-discharge-i00`, has realtime solves with 1 reset (Astra, Opus).
+being rerun under today's. `pandadyn-d04-shared-tray-transport-discharge-i00`, easy in every mode and so left out of the core set, has realtime solves with 1 reset (Astra, Opus).

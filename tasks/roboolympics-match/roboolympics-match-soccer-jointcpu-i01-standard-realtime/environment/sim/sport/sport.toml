@@ -1,0 +1,375 @@
+# soccer (docs/framework_zh.md §4.2, §10 stage 4): robot soccer 2 v 2, migrated from the legacy tree
+# (scripts/olympiad/soccer/, scripts/olympiad/shared/soccer/sim/), the simulator unchanged (soccer.py, soccer_scene.py,
+# models/). Three formats on one world: `match` (one seat against the scripted team), `duel` (format A: one seat per
+# team) and `team` (format B: one seat per robot, the team channel between teammates). Revision soccer-2v2-4
+# (2026-10-09): the robots are held to the real Booster T1's limits (bodies/booster_t1: leg torques, joint speeds as a
+# torque-speed envelope, walking-command rate; bodies/servo.py) and the platform kick is a real swing-leg kick (swing_kick.py); the
+# legacy recordings of soccer-2v2-3 no longer replay (golden/convert.py retires them).
+
+[sport]
+name = "soccer"
+title = "Robot soccer 2 v 2"
+summary = "robot soccer 2 v 2 under the RoboCup Humanoid Soccer League rules: four simulated Booster T1 humanoids (lower bodies on the released walking policy, held to the real robot's joint limits) and one ball on a boarded 10 x 7 m pitch with two goals, two halves of 5 minutes of game time, a penalty shoot-out when level; each robot takes a walk velocity command, stand or a swing-leg kick, and you see the game only through your robots' head cameras; in the `match` format you command both robots of team A against a scripted team, in the `duel` format another player commands team B, in the `team` format each robot has its own player and teammates talk only through the team channel, in the `team_match` format each robot of team A has its own player against the scripted team; `match_overhead` and `duel_overhead` are match and duel seen through fixed overhead cameras instead of the head cameras"
+protocol = "realtime"
+revision = "soccer-2v2-11+core-0.2"   # = plugin.REVISION; the world is soccer-2v2-11 (soccer.py REVISION; -6: D16 removed; -7: timed kick, wider aim; -8: ball physics, in-walk kick; -9: the scripted levels kick with the in-walk kick; -10: the realistic T1 motor model, bodies/booster_t1 t1-2; -11: near-rigid foot-turf contact, soccer_scene.FLOOR_SOLREF)
+physics = "MuJoCo 3.3.7 (2 ms physics steps, 20 ms control steps; four Booster T1 lower bodies on the released walking policy, a model-based swing kick and an in-walk kick, a ball calibrated to FIFA turf (bounce, rolling deceleration), near-rigid foot-turf contact (4 ms, elliptic friction cone, mu 1.0), the real T1's leg torques, torque-speed envelope and walking-command rate; robot-robot, robot-ball, goal and board contacts)"
+image = "ghcr.io/mll-lab-nu/efe:olympiad-soccer-0.1.0"
+status = "sport"
+publish = true
+category = "robotics-sports-arena"
+
+[legs]                                # the robot: bodies/booster_t1/body.toml, a limits-only legged entry of the robot
+body = "booster_t1"                   # library; the legs through bodies/servo.py Actuators + WalkCommand
+
+[rulebook]
+name = "RoboCup Humanoid Soccer League (HSL) Rule Book 2026, Laws 1-17 (its Laws of the Game follow the IFAB Laws of the Game)"
+version = "2026 (commit 06c44d4, 2026-06-29)"
+url = "https://github.com/RoboCup-HumanoidSoccerLeague/HSL-Rules"
+
+[[deviations]]
+id = "D1"
+rule = "Law 1"
+text = "pitch 10 x 7 m (HSL S-Field 9 x 6, M-Field 14 x 9); boards 0.3 m high on the touchlines and goal lines (open goal mouths), no border strip; goals 2.6 x 1.8 m, 0.6 m deep"
+affects_result = true
+[[deviations]]
+id = "D2"
+rule = "Law 3"
+text = "2 v 2, no designated goalkeeper, no substitutes; robot-to-robot communication: in the team and team_match formats the team channel (at most 512 bytes per message, one message per robot every 0.2 game seconds, 4000 per robot and match, teammates only; 4000, not 3000: 3000 is exactly a full regular time of 600 s at the 0.2 s rate, so a robot that talks at the full rate would be refused in the shoot-out after it); in the match and duel formats one player commands both robots (no channel needed)"
+affects_result = true
+[[deviations]]
+id = "D3"
+rule = "Laws 5-6"
+text = "an automatic, deterministic referee in the simulator instead of human referees and the GameController"
+affects_result = false
+[[deviations]]
+id = "D4"
+rule = "Law 7"
+text = "2 x 5 minutes of game time (HSL 2 x 10 min; 2 x 2.5 min up to soccer-2v2-4), a review at half time, no change of ends (each team's frame stays), no timeouts; the world and the clock freeze at every stoppage until the reviews; ball-stop extension at most 3 s; mercy rule (10 goals) kept"
+affects_result = true
+[[deviations]]
+id = "D5"
+rule = "Law 8"
+text = "the referee places the robots for a kick-off (seeded positions, up to 0.3 m off the nominal spots); the ball is in play when it has moved 0.15 m or 10 s after play resumes; the kick-off team must touch the ball outside the centre circle before it can score (else no goal, the other team kicks off); dropped ball: ball on the centre mark, robots placed in their halves; game stuck: local 15 s (the nearest robot removed; 10 s up to soccer-2v2-3, longer now that a swing kick takes about 5 s), global 30 s (dropped ball), with a 0.3 m ball-movement threshold and 1 m proximity"
+affects_result = true
+[[deviations]]
+id = "D6"
+rule = "Laws 9, 13, 15-17"
+text = "the boards keep the ball in: no kick-ins, goal kicks or corners; a ball resting at a board (within 0.3 m of a touchline, or of a goal line beside the goal, moved less than 0.3 m for 3 s) is moved 1 m straight inwards while play goes on; no free kicks (a foul only removes the offender); a ball that ever leaves the pitch restarts with a dropped ball"
+affects_result = true
+[[deviations]]
+id = "D7"
+rule = "Law 10"
+text = "no draws: a level match goes straight to the penalty shoot-out"
+affects_result = true
+[[deviations]]
+id = "D8"
+rule = "Law 12 (pushing)"
+text = "measurable pushing: an opponent falls within 0.5 s of contact while the offender moved towards it faster (> 0.15 m/s more); or an opponent pushed more than 0.6 m back during one contact (gaps up to 0.5 s) by a robot moving towards it faster; or contact over 5 s (the faster mover); a kicking robot within 1.3 m of the ball is exempt"
+affects_result = true
+[[deviations]]
+id = "D9"
+rule = "Law 12 (illegal position, defence)"
+text = "added: both robots of a team inside their own penalty area (2 x 4 m, the goal included) for more than 5 s: the one farther from the ball is removed (not counted as an offence)"
+affects_result = true
+[[deviations]]
+id = "D10"
+rule = "Law 12 (ball holding, fallen robot, removal penalty)"
+text = "ball holding = the ball's centre within 0.16 m of a standing robot's trunk centre for more than 5 s; a fallen robot (trunk below 0.40 m) lies still 3 s and is stood up where it lies (no penalty: the walking policy cannot get up); removal penalty 15 s + 5 s per counted team offence (pushing, ball holding), served off the pitch beside the robot's own half, re-entry on the touchline; penalties end at half time; no cards"
+affects_result = true
+[[deviations]]
+id = "D11"
+rule = "Law 14"
+text = "shoot-out: 3 kicks each, then up to 3 sudden-death rounds ranked by the HSL kick categories (goal, saved, post, wide, other, no kick), then a seeded coin toss; each team shoots at the goal it attacks; strikers robot 1, 2, 1, the keeper the other team's robot with the same number; 20 s to touch the ball; the keeper stays within 0.6 m of its line until the touch (else a goal); the team that kicked off first shoots first"
+affects_result = true
+[[deviations]]
+id = "D12"
+rule = "Law 4"
+text = "same-colour team jerseys (A blue, B red) with bold white front and back numbers 1 and 2"
+affects_result = false
+[[deviations]]
+id = "D13"
+rule = "Law 4 (players: robots)"
+text = "the robots are Booster T1 lower bodies (legs and trunk): the real T1's two 4-joint arms are not modelled (no arm motion, no arm contact, no dive or get-up motion); the legs are held to the real T1's limits (Booster URDF torques and joint speeds; estimates of bodies/booster_t1/body.toml: a linear torque-speed envelope, a rated torque of 60 % of the URDF torque with an I^2 t foldback after about 5 s at the peak, a 1 kW bus per robot, a walking-command rate limit)"
+affects_result = true
+
+[[deviations]]
+id = "D14"
+rule = "Law 4 (players: robots), robot perception"
+text = "each robot's own pose comes from the simulator (exact self-localization in the team frame); a real T1 localizes itself from its camera and odometry with errors of several centimetres to decimetres. The ball and the other robots are only in the camera images"
+affects_result = true
+[[deviations]]
+id = "D15"
+rule = "Law 1 (field surface: artificial turf 20-30 mm)"
+text = "the turf is a ball model calibrated to the FIFA Quality Programme for Football Turf (soccer-2v2-8; up to -7 the ball rolled with 0.15 m/s^2 and hardly bounced): a constant rolling deceleration of 0.52 m/s^2 (the FIFA roll test, a ball leaving a 1 m ramp at about 3.2 m/s, rolls 9.8 m here: allowed 4-10 m; the low end of 0.51-1.28 m/s^2, nearest RoboCup practice), a 2 m drop rebounds 0.81 m (allowed 0.60-1.00 m), the ball a thin shell (a ball struck at its centre skids and rolls on at 3/5 of its speed); not measured on a real HSL field (30 mm turf); a constant deceleration instead of one that grows with speed; the robots' feet meet the turf with a near-rigid contact (soccer-2v2-11; up to -10 a soft contact let a loaded foot creep inside its friction cone): friction coefficient 1.0 (studs on artificial turf about 0.8-1.3), no sliding below the friction limit, about 0.1 mm of sinking (a real turf yields a few millimetres under a foot; not modelled)"
+affects_result = true
+
+[formats.match]                       # one seat against the scripted team inside the world (soccer.Coach)
+seats = ["A"]
+opponent = true                       # success = winning a valid match (core/grading.py), as in the legacy task
+levels = [1, 2, 3]                    # the scripted team's level (RCB_LEVEL; default 2); official 2 and 3, level 1 a warm-up
+[formats.duel]                        # format A: one player per team
+seats = ["A", "B"]
+first = ["A", "B"]                    # the team that kicks off first (and shoots first in a shoot-out)
+[formats.match_overhead]              # coach control, overhead perception: match with the overhead cameras (overhead.py)
+seats = ["A"]
+opponent = true
+levels = [1, 2, 3]                    # the same scripted team as `match`; official 2 and 3, level 1 a warm-up
+perception = "overhead"               # the players see two fixed overhead cameras (no head cameras), 40 ms late
+[formats.duel_overhead]               # coach control, overhead perception: duel with the overhead cameras
+seats = ["A", "B"]
+first = ["A", "B"]
+perception = "overhead"
+[formats.team]                        # format B: one player per robot, sides = the teams; PREVIEW (not official: no hidden seed cell, owner 2026-10-13)
+preview = true                        # the declaration of that (core 0.2.21: official_config = 0; tools/seeds.py: no cell)
+seats = ["A1", "A2", "B1", "B2"]
+sides = { A1 = "A", A2 = "A", B1 = "B", B2 = "B" }
+first = ["A", "B"]
+[formats.team_match]                  # format B against the scripted team: one player per robot of team A (one side).
+                                      # PREVIEW, not official (user decision 2026-10-13): official in a later soccer revision,
+                                      # once a model camera win is registered and the freeze checks pass; no hidden seeds,
+                                      # official_config = 0 (core/grading.py), tools/check reports its camera gate as a WARN
+preview = true
+seats = ["A1", "A2"]
+sides = { A1 = "A", A2 = "A" }
+opponent = true                       # success = the side winning a valid match, as `match`
+levels = [1, 2, 3]                    # the scripted team's level (RCB_LEVEL; default 2); official 2 and 3, level 1 a warm-up
+
+[team_channel]                        # core/channel.py: teammates only (format B)
+max_bytes = 512                       # HSL Law 3: 512 bytes per message
+min_interval_s = 0.2                  # one message per robot every 0.2 game seconds (legacy: 5 per game second)
+max_messages = 4000                   # per robot and match: 3000 = a full regular time (600 s) at the 0.2 s rate, so the
+                                      # shoot-out after it would be refused at the full rate (user decision 2026-10-13)
+
+[modes]
+action_levels = ["high", "low"]       # high (Agent as Athlete): the walking controller's velocity command, stand, the kick skill; low (Agent as Robotics Engineer, soccer-joint pilot): 12 leg joint targets per robot every 20 ms, no walking policy, no kick skill (user decisions 2026-10-13, review/screening/soccer_joint_level_zh.md)
+plays = ["program"]
+
+[timing]
+slowdown = 10                         # the legacy default (RCB_SLOWDOWN; official: match 1, 2, 5, 10; duel and team 10)
+start_timeout_s = 1800
+ready_timeout_s = 600                 # every review, every format (300 up to soccer-2v2-4: the screening's first model duel ended incomplete when neither seat answered a goal review within 300 s)
+
+[observation]
+fields = ["team", "your_robots", "stoppages", "referee", "robots", "events", "stoppage", "result", "truth"]   # truth: only at the low level (pilot: full state; RCB_SOCCER_FULLSTATE=0 turns it off)
+renderer = "mujoco"
+frame_budget_ms = 1000                # two head cameras of 480 x 360 (match, duel): about 0.3 s on a loaded CPU host
+columns = 2                           # one tile per own robot, side by side
+
+[spec]                                # the rule constants: /spec shows them, the prompt lists them
+frame = "metres, seconds; your team's frame: you attack the goal at x = +5 and defend the goal at x = -5, y to the left when facing +x, z up, yaw counter-clockwise from +x (both teams see the pitch this way in their own frame)"
+pitch = "field of play 10 x 7 m (|x| <= 5, |y| <= 3.5), halfway line x = 0, centre circle radius 1.0 m, penalty areas 2.0 m deep and 4.0 m wide, goal areas 1.0 x 3.0 m, penalty marks 1.5 m in front of each goal line; boards 0.3 m high on the touchlines and goal lines except the goal mouths; goals 2.6 m wide (|y| < 1.3), 1.8 m high, 0.6 m deep with nets"
+ball = "radius 0.11 m, 0.45 kg, orange, a thin shell; on the turf it rolls with a deceleration of about 0.52 m/s^2 (a kicked ball first skids and loses about 2/5 of its speed); it bounces: a 2 m drop rebounds about 0.8 m, it comes off a post or a board at about 0.7 of its speed; a rolling ball that runs into a standing robot's legs mostly stops at its feet (its spin takes the rebound)"
+robots = "Booster T1 lower bodies (legs and trunk, no arms), trunk about 0.68 m above the floor, head camera about 1.0 m (it sees the floor from about 0.55 m ahead of the trunk on: a ball at your feet is out of view); held to the real T1's leg limits (motor torques 45 / 30 / 30 / 60 / 24 / 15 N m for hip pitch / roll / yaw, knee, ankle pitch / roll, a torque-speed envelope at the joint speed limits 12.5 / 10.9 / 10.9 / 11.7 / 18.8 / 12.4 rad/s, a rated (continuous) torque of 60 % of those torques: a motor held near its peak for more than about 5 s folds back to it (thermal), a 1 kW bus per robot, the walking-command rate limit above); team A wears blue, team B red, bold white numbers 1 and 2 on the front and back; robots collide and contact can make a robot fall; a robot whose trunk drops below 0.40 m has fallen: it lies still and is stood up where it lies 3 s later"
+actions = "per robot (entity = its number): walk v = [vx, vy, wz] (the walking controller's body-frame velocity command, each in [-1, 1] m/s, m/s, rad/s; the command the controller sees moves toward yours by at most 2 m/s^2, 2 m/s^2, 4 rad/s^2 (the robot's state shows it as command.walk_now); the robot reaches about 0.75 of a forward command; held until the next command), stand, kick (power in [0, 1], default 1; aim in [-0.6, 0.6] rad, default 0: up to 0.6 rad away from the support foot's side (right foot: to the right, left foot: to the left), up to 0.3 rad across it (larger values across are clipped); foot right (default) or left; style swing (default), step or push; optional at = [t, x, y]: the timed kick, below; optional v for step). Swing: the swing kick of the chosen leg (right by default) from a standing stance: the walking controller first stops the robot and the kick waits for the ball to roll slower than 0.15 m/s (if either takes longer than 1 s the kick is called off and the robot stands; your events then show kick_cancelled with the reason), then the kick shifts the weight onto the other foot, winds the kicking foot back and swings it through the ball as it lies when the kick starts (control authority: the kick reads the ball's position once, when it starts, and moves the foot's path onto it by at most 0.08 m sideways, the strike point clipped to 0.05-0.32 m beyond the support foot's toe line and 0.03-0.12 m high; it never follows a rolling ball, predicts or chooses a direction), along the robot's heading turned by aim (+ = left), returns to the standing pose and steps in place; the ball is hit about 2.4-2.9 s after the command and the kick ends after about 4.7-5.6 s; it hits the ball well only if the ball's centre lies 0.26-0.38 m ahead of the trunk and 0.02-0.10 m to the kicking foot's side (right foot: to the right; left foot: to the left) when the kick starts (a ball farther out may be hit badly and the foot may land on it); power sets the swing's speed: a clean hit sends the ball off at about 1.2 m/s at power 0 to 4.3 m/s at power 1 and it rolls on at about 0.8, 1.0, 1.8, 2.45 and 2.8 m/s at power 0, 0.25, 0.5, 0.75 and 1 (about 0.6, 1.0, 3.1, 5.8 and 7.5 m). Step: the in-walk kick: the robot walks on with v (default: the walk under way, else [0.3, 0, 0]) and the first lift-off of the kicking foot with the ball 0.16-0.40 m ahead of the support foot and within 0.08 m of the kicking foot's line (about 0.16 m to that side of the trunk) starts the kick: the walking controller keeps the support leg and the balance, the kicking foot winds back (0.08 s), swings through the ball as it lies then (2.4 + 1.6 power m/s nominal foot speed, along the heading turned by aim) and comes back to a short step (0.08 s), then the controller puts it down and steps to a stop (0.6 s); contact typically 0.5-1.5 s after the command; the ball leaves at about 2.7-3.9 m/s and rolls on at about 1.6-2.6 m/s (power 0-1); if no step reaches the ball within 2 s the kick is called off (kick_cancelled); the same control authority as the swing (the ball read once when the swing is planned, the path moved onto it by at most 0.08 m sideways). Push: the toe-poke run-up (stand 0.5 s, walk straight at 0.6 + 0.4 power m/s holding the heading until a foot is past the ball's centre, at most 2.64 m, stand 0.5 s; best with the ball 0.90-1.05 m ahead and 0.10-0.20 m to the right; about 1.3 m/s, never falls; aim does nothing). Wider aims: the ball must lie where the swing's line passes for that aim (robot.strike_zone.swing_by_aim: ahead and left of the trunk per aim, right foot; the left foot mirrored); the ball leaves 0.05-0.15 rad less wide than aimed at the widest aims. Timed kick (at = [t, x, y], swing only): you say where the ball's centre will be (x, y in your frame) and when (t s from now, at most 6); the kick does not wait for a still ball and never reads the ball: the robot stops, prepares as for every swing (about 2.6 s) and keeps the foot wound up until the swing must start so that the strike point meets (x, y) at t (if t is shorter than the preparation, it strikes as soon as it can and your events show kick_late with the delay); sending the same kick again (same foot and aim) before the swing starts only moves t and (x, y) (no new preparation, the robot's state shows command.at as now planned; the foot stands on one leg while it waits: an update that moves the point by more than a few centimetres jerks the foot and can unbalance the robot); a rolling ball arriving from the front half is struck as by a still one (a ball crossing the swing leaves turned by its own sideways speed: about 0.3-0.6 rad per m/s). A robot can fall during a swing kick (the kick ends; it is stood up 3 s later). A command takes effect at the next 20 ms control step and replaces the one under way (also a kick); one act per robot in flight; a command for a penalized or fallen robot is refused (HTTP 409)"
+observation = "per own robot one head-camera tile (480 x 360, 80 degree vertical field of view, tile robotN; during a review the frame before the stoppage); its own state (pose: exact self-localization in your frame, velocity, IMU, trunk height, joints, fallen, penalized, command); the referee's information (score, period, clock, kick-off, every robot's penalty, the shoot-out) and its events of the current unit (goals, penalties, stoppages; falls and called-off kicks only of your own robots); no ball or opponent coordinates"
+match_format = "you (seat A) command both robots of team A against the scripted team B of level RCB_LEVEL 1-3, default 2; every level kicks with the in-walk kick (style step) (level 1, a warm-up, reacts to the ball 0.6 s late, walks at most 0.45 m/s and lines up its kicks loosely; level 2 0.3 s, 0.65 m/s, tighter; level 3, a challenge level: both robots go for the ball, react at once, walk at most 0.8 m/s and line up most precisely, the strongest scripted team found in the screening); success = winning the match"
+duel_format = "seat A commands team A (robots A1, A2), seat B team B (B1, B2); FIRST_PLAYER's team kicks off first (and shoots first in a shoot-out); play both orders"
+team_match_format = "two seats, one robot each (A1, A2: team A) against the scripted team B of level RCB_LEVEL 1-3, default 2 (the levels of the match format); you see only your robot's camera and state; your teammate is reachable only through the team channel (POST /say, delivered with the game step it was sent); success = your team winning the match"
+team_format = "four seats, one robot each (A1, A2 against B1, B2); you see only your robot's camera and state; your teammate is reachable only through the team channel (POST /say, delivered with the game step it was sent; the opponents never see it)"
+overhead_formats = "match_overhead and duel_overhead are match and duel with an overhead view instead of the head cameras: two fixed cameras 6.0 m above the floor look straight down, one over each half (tiles overhead0 = your own half, overhead1 = the opponents' half, 600 x 800 each), each tile a map of its half in your team's frame (image right = your +x, image up = your +y; calibration in game spec camera.overhead); the images show the world 0.04 s ago (as RoboCup SSL's shared vision); no head cameras; your robots' own state and the referee's information as in the other formats; the same scripted levels as match"
+kickoff = "your frame: when you kick off, your robot 1 stands about (-0.32, 0.06) facing +x behind the ball on the centre mark (the ball in its swing zone) and robot 2 about (-2.5, -1.5); when the opponents kick off, about (-1.6, 0.4) and (-3.6, -0.8) (up to 0.3 m off, seeded); before the ball is in play only the kick-off team's robots may be in the centre circle and nobody in the opponents' half (else a removal penalty)"
+stoppages = "a goal, half time, full time (level: the shoot-out), a dropped ball (the ball left the pitch, or nobody near the ball for 30 s) and every shoot-out kick end a unit: the world freezes and every player sends game ready WHY PLAN"
+
+[tiebreaks]
+order = ["goals", "shootout", "sudden_death", "coin_toss"]
+text = "more goals after two halves wins (or a 10-goal lead at any time, the mercy rule); if level, a penalty shoot-out of 3 kicks each (the team that kicked off first shoots first); if still level, up to 3 sudden-death rounds, each won by the better kick category (goal, saved, post, wide, other, no kick); then (last resort, not from the rulebook) a coin toss drawn from the seed"
+last_resort_in_prompt = true
+
+[[exploits]]
+id = "E1"
+text = "an out-of-range, non-finite or malformed command (or one for a robot the seat does not command) is refused (HTTP 400) and changes nothing"
+test = "test_exploit_out_of_range_commands_refused"
+[[exploits]]
+id = "E2"
+text = "a command for a penalized or fallen robot is refused (HTTP 409) and the world does not apply it at the boundary either"
+test = "test_exploit_penalized_robot_cannot_act"
+[[exploits]]
+id = "E3"
+text = "holding the ball under the trunk is penalized (ball holding, 5 s)"
+test = "test_exploit_ball_holding_is_penalized"
+[[exploits]]
+id = "E4"
+text = "bulldozing an opponent is pushing (removal penalty); charging at full speed never removes the opponent without a penalty"
+test = "test_exploit_ramming_is_pushing"
+[[exploits]]
+id = "E5"
+text = "a team that never plays loses to the scripted level-1 team (stalling gains nothing)"
+test = "test_exploit_stalling_loses_to_the_scripted_team"
+[[exploits]]
+id = "E6"
+text = "parking both robots in the own goal is illegal defence (one is removed after 5 s); a single keeper is legal"
+test = "test_exploit_parking_both_robots_in_goal_is_illegal_defence"
+[[exploits]]
+id = "E7"
+text = "a goal straight from the kick-off without a touch outside the centre circle does not count"
+test = "test_exploit_kickoff_goal_without_touch_outside_circle"
+[[exploits]]
+id = "E8"
+text = "a ball that leaves the pitch restarts with a dropped ball; nobody near the ball for 30 s restarts with a dropped ball; a robot that sits on a still ball for 15 s is removed (game stuck)"
+test = "test_exploit_game_stuck_and_ball_out"
+[[exploits]]
+id = "E9"
+text = "a shoot-out keeper that leaves its line before the kick concedes the goal"
+test = "test_exploit_keeper_off_line_concedes"
+[[exploits]]
+id = "E10"
+text = "no draws: a level shoot-out goes to sudden death ranked by the kick categories, then to a seeded coin toss that differs between seeds"
+test = "test_exploit_no_draw_shootout"
+[[exploits]]
+id = "E11"
+text = "the observation holds no ball or opponent coordinates and no seed; opponents' touches, passes and falls are not announced"
+test = "test_exploit_no_world_state_in_observation"
+[[exploits]]
+id = "E12"
+text = "the world is mirror-symmetric: both teams' robots, the pitch and the outcome of the same kick and walk in each team's frame are equal, so the seat gives no advantage"
+test = "test_exploit_mirror_symmetric_world"
+[[exploits]]
+id = "E13"
+text = "a review that is never handed in loses the match for the seat's side (a core forfeit); the forfeit does not change the world"
+test = "test_exploit_review_stall_forfeits"
+[[exploits]]
+id = "E14"
+text = "the team channel reaches only the sender's teammates, within its byte, rate and count limits"
+test = "test_exploit_team_channel_teammates_only"
+
+[[exploits]]
+id = "E15"
+text = "the robots cannot do what the real Booster T1 cannot: leg torques within the URDF's, a torque-speed envelope at the joint speed limits, the walking command rate limited (no instant reversal), also during a kick"
+test = "test_exploit_real_limits_hold"
+
+[[exploits]]
+id = "E17"
+text = "the timed kick (kick `at` = [t, x, y], soccer-2v2-7) cannot be used as a ball-tracking or aiming aid: it never reads the ball (the leg moves the same with the ball anywhere), it does not wait for a still ball, the same kick sent again only moves its time and point before the swing, a strike time shorter than the preparation is struck late and announced (kick_late, own robots), and an aim across the support foot is clipped at 0.3 rad"
+test = "test_exploit_timed_kick_reads_only_the_robot"
+
+[[exploits]]
+id = "E18"
+text = "updating a timed kick before its swing gives no new preparation and no extra kick; a late timed kick is announced only to its own team"
+test = "test_exploit_timed_kick_update_and_late"
+
+[[exploits]]
+id = "E19"
+text = "the in-walk kick (kick style step, soccer-2v2-8) is no free ball-seeking kick: it kicks only when a lift-off of the kicking foot finds the ball within a step's reach on that foot's line (else the robot just walks on and the kick is called off after 2 s, kick_cancelled to its own team); the walking controller keeps the support leg; the real limits hold"
+test = "test_exploit_step_kick_needs_a_reachable_step"
+
+[players]
+reference = "reference"               # Sport.players() names: camera-only (swing kicks); on the soccer-2v2-8 physics it won 0 of 10 against the swing-kick level 2 (docs/screening/soccer.md section 13)
+reference_class = "builtin_players:Reference"   # in team_match (preview) it plays the in-walk kick (2026-10-13)
+check = []                            # no extra check policy: an in-process match draws ~3000 views (about 30 minutes on a loaded CPU host)
+
+[fairness]
+policy = "reference"
+matches_per_order = 20                # the contract's minimum (N = 40 per format); realtime: a CI wider than 5 pp warns
+max_advantage_pp = 5
+mirror = "statistical"                # a swapped match differs in the kick-off positions' seeded jitter
+
+[official]
+seeds = [1, 2, 3, 202, 212, 222, 303, 313, 323]   # duel/team: 1-3 (both first orders); match, team_match: 202.. (L2), 303.. (L3); level 1 a warm-up (soccer-2v2-6)
+levels = [2, 3]
+first_any = true
+
+[official.hidden_seeds]                 # registered hidden seed set (tools/seeds.py; public commitments: seed_commitments.json)
+sha256 = "4f8136d04da2743d4c5ddeea407f2903f8aa0004c265c6685ae0a5be39020899"
+counts = { "duel" = 20, "duel_overhead" = 20, "match/L2" = 20, "match/L3" = 20, "match_overhead/L2" = 20, "match_overhead/L3" = 20 }
+
+[check]                               # tools/check limits: an in-process soccer match takes 8-25 CPU minutes
+stage_timeout_s = 129600              # stage 2 (~22 matches) and stage 4 (N = 80 matches) run serially for hours
+live_player_timeout_s = 9000          # a full match at x10 is 6000 s of world time plus reviews
+
+[reference]                           # tools/check stage 5, the reference check (docs/screening/README.md)
+match = "reference_check:reference_match"   # truth: Coach("reference") = all go for the ball, in-walk kick; camera: builtin Reference
+seeds = 20                            # per official level (2, 3)
+camera_seeds = [202, 212, 222, 232, 242]    # the camera reference at the lowest official level (25 min per match)
+
+# [[reference.camera_wins]]: the soccer-2v2-6 entries (Astra and Opus 10:0 against the swing-kick L2) were removed with
+# soccer-2v2-9 (new physics, in-walk-kick levels); new entries come from the step-5 model matches on soccer-2v2-9
+# soccer-2v2-10 (realistic T1 motors): the soccer-2v2-9 entries carry over (owner's decision, 2026-10-13)
+# soccer-2v2-11 (near-rigid foot-turf contact): the entries carry over (owner's decision GF2, 2026-10-17: the World-level
+# step 4 on -11 left every L2 / L3 conclusion unchanged; the released walking policy walks the same, slip 0.13 -> 0.04 m/m)
+
+[[reference.camera_wins]]             # step 5 on soccer-2v2-9 (2026-10-13): cameras only, x10, seed 202
+format = "match"
+level = 2
+who = "GPT-6 Astra (Codex 0.158.0, reasoning medium)"
+score = "12:2 (mercy rule)"
+evidence = "docs/screening/soccer.md#step-5-on-soccer-2v2-9"
+
+[[reference.camera_wins]]             # step 5 on soccer-2v2-9 (2026-10-13): cameras only, x10, seed 303
+format = "match"
+level = 3
+who = "GPT-6 Astra (Codex 0.158.0, reasoning medium)"
+score = "11:5"
+evidence = "docs/screening/soccer.md#step-5-on-soccer-2v2-9"
+
+[[reference.camera_wins]]             # step 5 of the overhead formats on soccer-2v2-9 (2026-10-13; carries over to -10): overhead cameras only, x10, seed 202
+format = "match_overhead"
+level = 2
+who = "GPT-6 Astra (Codex 0.158.0, reasoning medium)"
+score = "11:1 (mercy rule)"
+evidence = "docs/screening/soccer.md#14-coach-formats-with-an-overhead-view-match_overhead-duel_overhead-2026-10-13"
+
+[score]                               # the continuous score (core 0.2.14, core/score.py): larger is better
+name = "goal_difference"
+text = "the side's goals minus the other side's goals in regulation time (the shoot-out not counted)"
+from = "margin"                       # Match.scores() = the regulation goals
+forfeit = -10.0                       # a side that forfeits gets the worst value a match can give (the 10-goal mercy rule)
+range = [-10, 10]
+
+[golden]
+episodes = "golden"                   # + the legacy records of the golden-data store, converted by golden/convert.py
+
+[[tasks]]
+id = "soccer-match-wallclock-program-standard"
+format = "match"
+action_level = "high"
+agent_timeout_s = 10800                # 2 x 5 min at x10 = 6000 s of play, plus the start and the reviews
+[[tasks]]
+id = "soccer-duel-wallclock-program-standard"
+format = "duel"
+action_level = "high"
+agent_timeout_s = 10800                # 2 x 5 min at x10 = 6000 s of play, plus the start and the reviews
+[[tasks]]
+id = "soccer-match-overhead-wallclock-program-standard"
+format = "match_overhead"
+action_level = "low"
+agent_timeout_s = 10800                # 2 x 5 min at x10 = 6000 s of play, plus the start and the reviews
+[[tasks]]
+id = "soccer-duel-overhead-wallclock-program-standard"
+format = "duel_overhead"
+action_level = "low"
+agent_timeout_s = 10800
+[[tasks]]
+id = "soccer-team-wallclock-program-standard"
+format = "team"
+action_level = "high"
+agent_timeout_s = 10800                # 2 x 5 min at x10 = 6000 s of play, plus the start and the reviews
+[[tasks]]
+id = "soccer-team-match-wallclock-program-standard"
+format = "team_match"
+action_level = "high"
+agent_timeout_s = 10800                # 2 x 5 min at x10 = 6000 s of play, plus the start and the reviews
+
+[[tasks]]                             # the low level (pilot): joint targets, full state (observation `truth`)
+id = "soccer-match-wallclock-program-lowlevel-standard"
+format = "match"
+action_level = "low"
+agent_timeout_s = 14400                # decision 7: 2 h to develop, then the match (x10: 100 min) and the reviews
+[[tasks]]                             # the low level (pilot): a duel at the joint level (the GPU-vs-CPU test)
+id = "soccer-duel-wallclock-program-lowlevel-standard"
+format = "duel"
+action_level = "low"
+agent_timeout_s = 14400
+
+[broadcast]                           # spectators: the broadcast log every 5 control steps, the replay video's camera
+every = 5
+camera = { name = "broadcast", pos = [0.0, -9.0, 6.5], lookat = [0.0, 0.0, 0.0], fovy_deg = 45, width = 640, height = 360 }
+
+[capabilities]                        # docs/capabilities_zh.md: 2 primary, 1 secondary, 0 none
+a1 = 2                                # the ball and the opponents only from the head cameras (ray casting from the robot's pose)
+a2 = 1                                # the ball's rolling, the kick's reach, robot contact and falls
+a3 = 2                                # walking and kicking through the walking controller: positioning decides every touch
+a4 = 1                                # real time (x10): the world does not wait; latency and stale images
+b1 = 2                                # kick-off, pushing, ball holding, illegal defence, game stuck, shoot-out
+b2 = 2                                # positioning against the opponents, when to shoot or defend
+b3 = 0                                # not declared (soccer-2v2-9 screening, 代你决定 2026-10-12): no coordinated plan beats every robot going for the ball (head to head with the in-walk kick: striker + cover 4/3/33, striker + presser 7/4/29 of 40), so coordination is not measured; nor passing or division of labour (owner's decision 2026-10-12; docs/screening/soccer.md sections 12-13); team tactics are the wheeled 5 v 5's
+physics = ["locomotion", "contact"]

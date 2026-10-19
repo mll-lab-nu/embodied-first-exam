@@ -77,16 +77,13 @@ the results site) compare trials only within one comparable configuration (`task
 version, mode, cutoff, reset budget, S, network), report success together with cost (tokens, money, turns, wall clock,
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
 unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
-every core task, the flag is shown as a marker and may be used as a filter. The easy set ([`easy_set.toml`](../easy_set.toml),
-`task_conventions.set_of`) is kept apart: its tasks are run and their results kept and shown, marked, but the main
-table and every headline number (success rates, rankings, totals) count `core` tasks only; the easy set's results are
-shown separately (the batch summary marks them in their configuration's table and leaves them out of its rate; the
-results site and the pool dashboard, outside this repository, are to list them apart). `set` in `config.json` is the value when the result was written; a
-report derives it from `docs/easy_set.toml` at the commit it publishes, so a task that leaves the list (e.g. after a
-grader fix) counts again without any change to its results. A base listed with `reason = "solved"` was solved in every
-mode by the screening runs its `note` names, or, with `solved_by` (`"luna"`: codex-gpt6_luna-xhigh),
-in any mode by that run (`scripts/easy_set_add_solved.py` appends them): core-set numbers of those runs are filtered
-against them (Luna's core-set success rate is 0 by construction), so report those runs on all tasks alongside.
+every core task, the flag is shown as a marker and may be used as a filter. The main table and every headline number
+(success rates, rankings, totals) count core only: the tasks of [`core_set.toml`](../core_set.toml), each in its
+`default_mode` (`task_conventions.core_tasks()`); a run of the core tasks in another mode is reported apart (`set_of`:
+`core` for every mode of a listed task, else `excluded`). Task dirs the list leaves out stay in the repository under
+their names and are not evaluated by official runs; results they already have are kept and shown marked (the batch
+summary marks them in their configuration's table and leaves them out of its rate). `set` in `config.json` is the
+value when the result was written; a report derives it from `docs/core_set.toml` at the commit it publishes.
 
 A standard-mode result recorded while a grading replay still decided is re-read from its own `final.json` (the live
 episode's success, where that record applied the task's whole rule); the recorded verdict stays beside it, and a trial
@@ -131,8 +128,7 @@ checked by `ci_checks/check-resources.py`).
 ## Agent logs and timelines
 Harbor keeps, per trial, `agent/codex.txt` (every message, command and output), `agent/trajectory.json` and the raw
 Codex session (`agent/sessions/`). Run Codex with `--ak reasoning_summary=detailed` to also keep reasoning summaries
-(otherwise reasoning is stored encrypted). `scripts/agent_timeline.py <trial_dir>` merges the agent's messages,
-reasoning summaries, tool calls, images and token use with the robot service's log into one `analysis/timeline.md`.
+(otherwise reasoning is stored encrypted).
 
 ## Recordings
 
@@ -165,19 +161,17 @@ from a tree whose files share mtimes (a git checkout, `git archive`, tar, `cp -r
 task's equal-size file in its image, silently, with `--no-cache` too (issue #258; rootless podman builds are not
 affected). **Never build a task image from a tree without stamping it:** `scripts/stamp_mtimes.py` gives every file a
 mtime derived from its content, so different files never share one (content, modes and DIGEST unchanged; git ignores
-mtimes). `scripts/run_agent_batch.sh`, `/validate`, `scripts/task_seed.py materialize`, the benchmarks' kill tests and
-RoboARC's `regrade.py --replay` build from stamped copies. For a bare `harbor run` or `harbor trial regrade`:
+mtimes). `scripts/run_agent_batch.sh`, `/validate` and `scripts/task_seed.py materialize` build from stamped copies. For a bare `harbor run` or `harbor trial regrade`:
 ```bash
-c=$(python3 scripts/stamp_mtimes.py stage tasks/<task> "$(mktemp -d)") && harbor run -p "$c" -a oracle ...   # a stamped copy
+c=$(python3 scripts/stamp_mtimes.py stage tasks/<benchmark>/<task> "$(mktemp -d)") && harbor run -p "$c" -a oracle ...   # a stamped copy
 python3 scripts/stamp_mtimes.py tasks           # or stamp the checkout in place (again after every pull: --check tells)
-python3 scripts/check_image_files.py <image> <context dir>   # after building an image yourself: it holds the context's files
 ```
 
 ## Running a two-mode batch (privileged + standard)
 ```bash
 python3 scripts/stamp_mtimes.py tasks                   # first ("Building task images" above)
-harbor run -p tasks -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
-harbor run -p tasks -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-std>
+harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-priv>
+harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-luna -n 3 -o $PWD/exps/jobs --job-name <job-std>
 harbor trial regrade --help                             # re-run the verifier of a recorded trial (a grader error, a missing video)
 scripts/write_task_results.py exps/jobs <job> <run-id> "<agent label>" --out <dir outside the repository>   # per-task results (README, video, cost)
 ```
@@ -206,13 +200,8 @@ results site with `scripts/write_task_results.py --out` outside the repository (
 next to the checkout, gets `<batch>/<task>/<run id>/`; `RESULTS=` skips it), updates `$JOBS/<batch>.summary.md`, and
 stops its lane when a trial shows a model-account failure.
 
-To watch a batch live: `scripts/live_board.py --jobs <JOBS>` (repeatable; stdlib only) serves a page on 127.0.0.1 that
-refreshes every 5 s. It shows every trial as pending, setup, running (agent time against the task's limit), verifying,
-success or failed, with live tokens when the usage gateway runs, the reward, the videos and the tail of the agent's
-output. Pending trials come from `$JOBS/.plan/<batch>.json`, which the runner writes when it starts. Reach the page from
-another machine with `ssh -N -L 8765:127.0.0.1:<port> <host>`; it shows the agent's output, so keep it off public
-addresses. It has no login (every user of a shared host can open it) and serves a running trial's files before the
-runner's secret scan has redacted them.
+Each batch's plan (every job, pending until it starts) is `$JOBS/.plan/<batch>.json`, which the runner writes when
+it starts.
 
 Runner-side tools (they run on the host, never in a task): `scripts/log_mirror.py` (in the `rcb-log-mirror` container: an
 append-only copy of every trial's `agent/` record that neither the agent nor the host user can delete),
@@ -230,8 +219,8 @@ drawn from the allowed list (official batches draw one per trial), let the runne
 write a copy and run that:
 
 ```bash
-python3 scripts/task_seed.py list tasks/<task>                      # {'default': 0, 'allowed': [0, ...], 'oracle': [...]}
-python3 scripts/task_seed.py materialize tasks/<task> --seed draw --out /tmp/run1   # prints the copy and the seed
+python3 scripts/task_seed.py list tasks/<benchmark>/<task>                      # {'default': 0, 'allowed': [0, ...], 'oracle': [...]}
+python3 scripts/task_seed.py materialize tasks/<benchmark>/<task> --seed draw --out /tmp/run1   # prints the copy and the seed
 harbor run -p /tmp/run1/<task> -a <agent> ...
 ```
 
@@ -243,8 +232,7 @@ above); it materializes a seed per trial once a benchmark allows more than one.
 
 ## The agent's time (the cutoff)
 Every task gives the agent a fixed wall-clock time, its cutoff: Harbor's `[agent] timeout_sec` in the task's own
-`task.toml`, set by the task's author in the pull request that adds or changes the task (a generated benchmark keeps it
-as a constant of its generator, `CUTOFF_SEC` / `CUTOFF`). `ci_checks/check-cutoffs.py` checks per task: a whole number
+`task.toml`, set by the task's author in the pull request that adds or changes the task  `ci_checks/check-cutoffs.py` checks per task: a whole number
 of seconds, at most 14400 (`CUTOFF_CAP`), 3600 unless the pull request justifies another; the instruction's closing
 `## Time limit`, the README's `Agent time budget` row and, in the standard modes, the sim service's `RCB_WALL_CLOCK_S`
 state the same number; nothing else in the instruction states the limit as a duration. A task's privileged and
@@ -270,8 +258,7 @@ the trial is graded as it stands: a result, not an infrastructure failure, never
 last thing the agent reads. `--agent-setup-timeout-multiplier` (slow harness
 installs) is fine: set-up is not the agent's time.
 
-**Changing a cutoff** (the author's decision): set the new `[agent] timeout_sec` (or the generator's constant, then
-re-render) in both twins, run `python3 scripts/task_conventions.py tasks/<task> ...` (it rewrites the closing section, the
+**Changing a cutoff** (the author's decision): set the new `[agent] timeout_sec` in both twins, run `python3 scripts/task_conventions.py tasks/<benchmark>/<task> ...` (it rewrites the closing section, the
 README row, `RCB_WALL_CLOCK_S` and `DIGEST`), and state old -> new and why in the change (label `cutoff-change`). The task
 changes in place and keeps its name; results under another cutoff are a different configuration (`config_key`). Not
 derived from the cutoff: the token budget, the resource limits, reset budgets, step caps, verifier timeouts. When
@@ -280,10 +267,10 @@ RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHA
 pages) and, for RoboOlympics' exported matches, a match's wall time at its slowdown plus the reviews between points.
 
 ## Base images
-Every base image is `ghcr.io/mll-lab-nu/eai-<name>:<images/<name>/VERSION>` (PROTOCOL §1): `scripts/build_images.sh`
+Every base image is a tag of one of two packages (PROTOCOL §1): `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (public), or `ghcr.io/mll-lab-nu/efe-private:<name>-<VERSION>` for an image with `images/<name>/BUILD_ONLY` (org members only): `scripts/build_images.sh`
 builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token
-that has `write:packages`). New packages in the org start private; an org admin makes them public in the package
-settings (the API cannot). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
+that has `write:packages`). A new image is a new tag of `efe`, which is public, so nothing needs an admin's visibility
+change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
 public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
 a private package for org members.
 
@@ -301,11 +288,11 @@ In the Ubuntu images built on NVIDIA's CUDA base, `apt-get update` warns about N
 The list is the one switch.
 - Another host for every task: add it to `HOSTS` (to `PACKAGE_HOSTS` too if a run through the gateway should reach it
   directly), update the generators' copies of the list, `python3 scripts/set_agent_egress.py allowlist`,
-  `cd tasks && harbor add --scan .`.
+  `python3 scripts/task_conventions.py tasks/*/*/` (normalize refreshes each DIGEST).
 - A run with no restriction at all (the agent may reach anything): run a copy of the tasks, since CI keeps the list
   in `tasks/`:
-  `cp -a tasks /some/dir/tasks && python3 scripts/set_agent_egress.py public /some/dir/tasks/*/`, then
-  `harbor run -p /some/dir/tasks ...` (with `scripts/run_agent_batch.sh`: a copy of the repository with that `tasks/`,
+  `cp -a tasks /some/dir/tasks && python3 scripts/set_agent_egress.py public /some/dir/tasks/*/*/`, then
+  `harbor run -p /some/dir/tasks/<benchmark> ...` (with `scripts/run_agent_batch.sh`: a copy of the repository with that `tasks/`,
   and `GATEWAY_EGRESS=task`, or the runner narrows each job's copy again). The instructions' last sentence about the
   network is then no longer true: change `EXTERNAL_TEXT` in `scripts/task_conventions.py` if that becomes the default.
 

@@ -5,7 +5,7 @@
 # at a pinned revision) are baked in under /opt/yamlab-data. Isaac Sim needs an RTX-class GPU even headless; a task's
 # compose reserves it and mounts a trial-scoped cache volume at /cache.
 # Tag = images/yamlab/VERSION; build from the repo root (images/yamlab/BUILD_ONLY has the command, licences and checks):
-#   docker build -f images/yamlab/Dockerfile -t ghcr.io/mll-lab-nu/eai-yamlab:$(cat images/yamlab/VERSION) .
+#   docker build -f images/yamlab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:yamlab-$(cat images/yamlab/VERSION) .
 # BUILD_ONLY, never published: Isaac Sim 5.1 / Omniverse Kit may be installed and used but not redistributed.
 FROM nvidia/cuda:12.8.1-base-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 UV_LINK_MODE=copy \

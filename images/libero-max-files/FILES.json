@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:libero-max-files-0.1.0@sha256:0f62fc62ebfa96cc1ac3e56edd27d8259f73622a1ee74bdcdcf37ab69e5b8371",
+ "source": "embodied_first_exam/benchmarks/libero-max",
+ "files": {
+  "privileged/environment/lmx_tool.py": "4209d8c52596622e9220fa09c0d3b0317574b9e60823e479b14340e35dff5f7b",
+  "privileged/tests/grade.py": "9a416bac57252c82f7cd95f8c1b9f72aa15db00ccb646f0bb6ddb0cea0262c13",
+  "standard/tests/grade.py": "0f798b9c8c7d1710c33fa2f03b33122ac063dad91d397b88da3a90b3d62cee24"
+ }
+}

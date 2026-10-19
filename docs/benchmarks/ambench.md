@@ -31,31 +31,25 @@ any subset of the modes; its README's Twin row says why) and is graded by its li
 (its frozen `instance.json` says `"determinism": "verdict"`), as RoboDojo's six non-reproducible tasks. The tooling
 switches off its re-colouring of the lever at reset (Tooling, below), so the descriptions say its colours do not change.
 
-Not in this set (descriptions written: `scripts/ambench/descr/`):
+Not in this set:
 - **FrameAssembly, WipeWindow, TossBall**: AM-Bench's scripted experts did not succeed on the seed-0 instances (FrameAssembly
   0/13, WipeWindow 0/9, TossBall 0/21 runs over the expert's own draw and torch seeds), so there is no reference solution yet.
   They fail on Isaac Lab v2.3.2 too (the release for Isaac Sim 5.1), so the cause is not the Isaac Lab commit.
 - AM-Bench's other robot and controller profiles (the quadrotor, the omnidirectional hexa, the under-actuated hexa, the
   end-effector-only robot; L1 and MPC controllers) are variants of the same tasks.
 
-## Tasks and generator
-- `python3 scripts/ambench/mk_tasks.py` writes every AM-Bench task dir from `scripts/ambench/` alone: `instances.json`
-  (`modes`, per task the frozen instance with its hashes and provenance, and the task's own `modes` where it has fewer:
-  PullLever, `["standard"]`),
-  `frozen/<task>-iNN/` (`instance.json`, `oracle_actions.npy`), `descr/<task>.json` (what the task asks and exactly what its
-  check tests, written from the task's code), `shared/rcb_ambench.py` (the tooling), `template/<mode>/` and
-  `scripts/eai_standard/` (the 2.2 layer and the standard client). Re-running it leaves `git diff tasks/` empty; `--check`
-  only compares.
-- Freezing (`scripts/ambench/freeze.py`, on a GPU host with the image): the instance is AM-Bench's seeded reset with seed 0
+## Tasks
+- The task directories are the deliverable; the tooling that built them is kept outside this repository. Each instance's
+  `instance.json` and `oracle_actions.npy` are committed in the tasks; PullLever has only its standard task.
+- The instance is AM-Bench's seeded reset with seed 0
   (`cfg.seed = 0`, `env.reset(seed=0)`); AM-Bench draws the task's variation from it. `instance.json` holds the environment
   id, the seed and `initial_sha` (the sha256 of every articulation's and rigid object's root state, joint positions and
-  velocities after the reset); every replay rebuilds the start and checks it (`instance_matches`). `freeze.py --verify-only`
-  replays the frozen rows again (after a change of the tooling) and updates the hashes.
+  velocities after the reset); every replay rebuilds the start and checks it (`instance_matches`).
 
 ## Success (AM-Bench's own)
 Each task's `_get_success` (its `terminated` signal), unchanged except RotateValve's angle (below), evaluated after
 every control step; the episode ends at the first step where it holds, or with AM-Bench's time-out (`episode_length_buf >= max_episode_length - 1`, at decimation 1:
-control step 120 × episode length − 1). Each task's description (`descr/<task>.json`, shown in both instructions) gives the
+control step 120 × episode length − 1). Each task's description (shown in both instructions) gives the
 check exactly. Weak checks are kept as AM-Bench wrote them and stated: CabinetPickPlace only tests the can's height and
 speed (a can still held at that height passes); FrameAssembly (not in the set) tests one moment of the frame's centre.
 
@@ -73,7 +67,7 @@ direction and timing stay as they are.
 
 ## Oracle (PROTOCOL §4)
 `oracle = "full"`, 17/17. The reference solution of an instance is AM-Bench's scripted expert for the task
-(`policies/scripted/<task>.py`, `inject_noise=False`), run in closed loop on the frozen instance by `freeze.py` and
+(`policies/scripted/<task>.py`, `inject_noise=False`), run in closed loop on the frozen instance and
 recorded as the rows the tooling executed, followed by 2 s of holding its last command (`solution/oracle_actions.npy`);
 rows after a replay's own success never run. The privileged oracle (`solution/oracle.py`) replays them through the
 agent's own tooling and hands in all of them, the 2 s hold included, not only the rows its own run executed (handing in
@@ -84,7 +78,7 @@ replays with the grader's CLI must both succeed and end in the same state before
 
 The experts are not in the image: the Dockerfile copies AM-Bench without `policies/scripted/`, `ambench_learn`, its scripts,
 documentation and git history, blanks the task registrations' `scripted_policy_entry_point`, and fails if anything left
-names them. `freeze.py` mounts the expert read-only from a checkout outside the image. AM-Bench is public on GitHub and
+names them. The recording mounts the expert read-only from a checkout outside the image. AM-Bench is public on GitHub and
 not on PyPI; the agent's egress is the model APIs and the package registries (`network_mode = "allowlist"`), so the experts
 cannot be fetched during a trial.
 
@@ -216,14 +210,14 @@ below).
   4.6 GB of GPU memory (PhysX buffers, above).
 - **Episode**: one, no reset; AM-Bench's own time-out stays (the task's episode length; reason `episode_timeout`); simulated
   time advances only with the agent's calls; the wall clock (3600 s) is the budget.
-- **Crash recovery**: resume class `approx` for every task (`scripts/ambench/kill_test.sh`): the resumed service replays
+- **Crash recovery**: resume class `approx` for every task: the resumed service replays
   the journal to a TCP about 1e-6 m from its checkpoint (the race of Determinism), which `exact` would make
   `resume_failed`. `approx` records the deviation (`resume_state_mismatch`, `resume_max_tcp_dev_m`) and ends the episode
   only beyond `RCB_RESUME_MAX_DEV_M` (5 cm); the verdict is the resumed live episode's. Kill test (PushSlider, kill -9
   during the fifth call): resumed at control step 480, the oracle carried on, success at 1353, `infra_error` 0.
 
 ## Time budget
-3600 s for every task of both modes (each task's `[agent] timeout_sec`, from `mk_tasks.py` `CUTOFF_SEC`), stated in each instruction's closing `## Time limit` section. Every Python
+3600 s for every task of both modes (each task's `[agent] timeout_sec`), stated in each instruction's closing `## Time limit` section. Every Python
 process pays ~2-6 min of Isaac Sim launch and scene build (the upper end with other Isaac jobs on the GPU); stepping runs
 at about 9-15 control steps/s.
 
@@ -234,18 +228,17 @@ at about 9-15 control steps/s.
   instance's state through the tooling). Standard texts give no position of anything (sizes and layout only); NDT's
   inspection point, which nothing in the scene marks, is given as goal geometry.
 - **Pointers to the reference solution.** The reference rows come from AM-Bench's public scripted experts; the image has
-  none and the agent's egress cannot reach GitHub. `instance.json` names no expert (`mk_tasks.py` refuses one that does);
-  the provenance is in `scripts/ambench/instances.json` only.
+  none and the agent's egress cannot reach GitHub. `instance.json` names no expert.
 - **Upstream data.** Thirteen of AM-Bench's USDs load files from NVIDIA's asset buckets by URL, and NDT's scene is an Isaac
   sample warehouse: the image holds every file (2269, ~0.95 GB, sha256-checked) and `images/ambench/localize_assets.py`
   rewrites the URLs to them.
 - **AM-Bench's controller sees the scene.** For some tasks the IK caps the airframe's position using object poses (e.g.
   CabinetPickPlace's cabinet): part of the environment in both modes; the agent never receives those poses.
 
-## Easy set
+## Screening
 
 A base whose every mode a screening run solved (a graded success within the task's time limit; logs of solves by runs
-other than GPT-6 Luna checked for shortcuts and for access to tests, solutions or graders) is in the easy set
-(`docs/easy_set.toml`, reason `solved`): kept under its name and reported apart from the main table. 8 of 9 bases are
-in it, each solved by GPT-6 Luna (`codex-gpt6_luna-xhigh`) in every mode it ships; `ambench-peg-in-hole-fahexa-i00`
-stays in the core set (privileged solved by Luna, standard unverified: only Luna attempted it, and failed).
+other than GPT-6 Luna checked for shortcuts and for access to tests, solutions or graders), and every base GPT-6 Luna
+(`codex-gpt6_luna-xhigh`) solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their
+names. Luna solved 8 of the 9 bases in every mode they ship and `ambench-peg-in-hole-fahexa-i00` in privileged mode
+(standard unverified: only Luna attempted it, and failed), so no AM-Bench task is in the core set.

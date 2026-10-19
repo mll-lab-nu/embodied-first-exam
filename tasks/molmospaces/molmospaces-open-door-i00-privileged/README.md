@@ -1,0 +1,59 @@
+# molmospaces-open-door-i00-privileged
+
+| | |
+|---|---|
+| Benchmark | MolmoSpaces |
+| Mode | privileged |
+| Twin | `molmospaces-open-door-i00-standard` |
+| Simulator / robot | `molmospaces` / `rainbow-rby1` |
+| Family / instance | `open-door` |
+| Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-door-i00-privil__EJchtFe (run codex-gpt6_1_sol-high, batch molmo-v2-sol-rby1, 2026-10-16); human review in PR #276 |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` |
+
+## Task
+Pull the door open. One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `procthor-10k/rby1_benchmarks/door_opening_benchmark`, episode 0:
+a door to pull), with a Rainbow Robotics RB-Y1 mobile manipulator (upstream's RBY1M configuration): holonomic base, 6-joint torso, two 7-joint arms with parallel grippers, head camera. Privileged mode: full simulator state, unlimited resets; the deliverable is one
+open-loop trajectory of joint-position targets, one row per control step.
+
+## Difficulty
+Open a closed room door with the mobile manipulator: base and arms have to move together to swing it past two thirds of its range, pushing or pulling as the door opens. 400 control steps (40 s at 10 Hz).
+
+## Reference solution
+None is shipped. Upstream's scripted experts (`molmo_spaces/policy/solvers`) are reference solutions and are not in the
+image; neither are grasp files nor the public MolmoBot trajectories (agent egress: the model APIs and the package
+registries; the PyPI distribution `molmo-spaces` has those experts, PROTOCOL §2.11).
+
+## Verification
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`).
+Each replay is upstream's evaluation loop: one upstream `Task.step` per row until upstream's `is_done()` (the
+benchmark's 40 s horizon = 400 control steps) or the last row, then upstream's `judge_success()`
+on the final state: the door's hinge is open at least 67% of its 90-degree range. Pass iff both replays succeed and end in the same state; `replay.mp4` is rendered after
+the verdict. No oracle; human review in PR #276 (PROTOCOL §2.7: per family, this task and its twin, a
+positive example and the `nop` result).
+
+## Compute resources
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 6 GB | 4 GB |
+| GPU memory | 3.5 GB | 3.5 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4 / L40S).
+- Measured: GPU 2.7 GB on L40S, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory and CPU author estimate (MuJoCo, CPU physics, EGL rendering)
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 7 GiB GPU memory, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 7 GiB GPU memory, 16 GiB memory. Limits measured: GPU: 2.7 GiB on a 48 GB card (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)); one trial on a 24 GB card peaked at 18.4 GiB and would exceed: calibrate -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (no samples); processes 512 and disk 10 GiB: design defaults, not yet measured.
+
+## Details
+| | |
+|---|---|
+| Upstream | molmo-spaces 0.2.9 (MuJoCo 3.5.0, CPU physics; EGL rendering on the GPU), benchmark `molmospaces-bench-v2/20260415`, package `procthor-10k/rby1_benchmarks/door_opening_benchmark` (Door Open (MolmoSpaces benchmarks)), episode 0, house procthor-10k val 0 |
+| Frozen episode | `environment/instance.json`: the upstream episode unchanged except `source` (its expert trajectory's path) removed, plus the numbers the texts quote (`facts`) and its t = 0 record (`t0`: state hash, action layout) |
+| Generator | `scripts/molmospaces/mk_tasks.py` (`families.json`, `instances/`, `template/`, `shared/`); docs/benchmarks/molmospaces.md |
+
+### Change Log
+- 2026-10-10: how a file that is not a trajectory is recorded; the frozen episode, upstream's success rule and the pass rule are unchanged, so the task keeps its name. `tests/grade.py`: a file that cannot be read as a trajectory (not an npz, a pickled or non-numeric `actions`) is `bad_trajectory = 1` (was `grader_error = 1`; 0 either way), and every reward that ends early also carries `deterministic`. A pass before this change is a pass after it.
+- 2026-10-10 (review round 2, board 0067): `tests/grade.py` writes `infra_error` = 1 next to every `grader_error` = 1 (a replay process that died or ran out of time, a frozen instance the host did not rebuild, an exception in the grader), as the other benchmarks do: a reader of `infra_error` alone (PROTOCOL §2.6) took these for the agent's 0. The reward is 0 in these cases, as before; the pass rule is unchanged, so the task keeps its name.
+- 2026-10-10 (review round 3, board 0067): `tests/grade.py` only. A byte that is not valid UTF-8 in the session log the agent's tools write (`/app/output/rcb_session_log.jsonl`, read only for the self-reported `agent_*` cost fields) stopped the grader before it wrote a reward, so the trial had no verdict; the log is now read tolerantly and can no longer decide anything. A trial whose log is valid is graded as before; the pass rule is unchanged.
+- 2026-10-16: the frozen episode, the base image and the replay limit. The frozen episode is the one the 2026-10-16 selection rule picks (docs/benchmarks/molmospaces.md, Instances: the target small in the fixed cameras for the pick families, a longer travel for open and close); for every family but navigate-to and open-door that is a different episode, so results recorded on those tasks before this date are of another episode. Base image 0.2.5 (the assets of the new episodes). `tests/grade.py`: the two grading replays share the verifier's time (1740 s of its 1800 s; the first gets half of it) instead of 500 s each, which ended genuine successes on a loaded host as `replay_timed_out` + `infra_error`; the verdict, the pass rule and upstream's success rule are unchanged. `instruction.md` now states the pass rule (both replays succeed and end in the same state), which only this README stated.

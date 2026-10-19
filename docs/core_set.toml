@@ -1,0 +1,1804 @@
+# The core set: the tasks the headline statistics are computed on (PROTOCOL §4). One entry per task (the task dir
+# name without its mode suffix) and its default mode: `harbor run --core` runs that mode's dir; `--privileged`,
+# `--standard` or `--standard-realtime` runs another mode of the same tasks.
+# Checked by `python3 scripts/task_conventions.py core-set --check`.
+
+[[task]]
+task = "ambench-cabinet-pick-place-fahexa-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ambench-peg-in-hole-fahexa-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-assembling-gift-baskets-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-boxing-books-up-for-storage-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-boxing-food-after-dinner-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-bringing-in-wood-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-bringing-paper-to-recycling-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-bringing-water-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-can-meat-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-canning-food-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-carrying-in-groceries-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-carrying-out-garden-furniture-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-chopping-wood-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-clean-a-patio-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-clean-a-trumpet-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-clean-boxing-gloves-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-clean-up-your-desk-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-clean-your-rusty-garden-tools-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-cleaning-up-branches-and-twigs-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-cleaning-up-plates-and-food-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-clearing-food-from-table-into-fridge-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-collecting-aluminum-cans-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-collecting-childrens-toys-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-cook-a-brisket-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-cook-a-frozen-pie-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-cook-bacon-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-cook-broccolini-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-cook-brussels-sprouts-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-cook-cabbage-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-cook-hot-dogs-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-dispose-of-batteries-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-freeze-fruit-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-freeze-pies-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-halve-an-egg-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-installing-a-fax-machine-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-laying-tile-floors-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-loading-the-car-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-make-gift-bags-for-baby-showers-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-make-pizza-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-make-rose-centerpieces-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-organizing-art-supplies-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-organizing-school-stuff-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-outfit-a-basic-toolbox-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-packing-meal-for-delivery-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-polishing-shoes-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-preparing-lunch-box-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-put-together-a-basic-pruning-kit-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-putting-away-toys-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-putting-dirty-dishes-in-sink-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-putting-dishes-away-after-cleaning-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-putting-up-Christmas-decorations-inside-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-re-shelving-library-books-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-rearrange-your-room-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-rearranging-kitchen-furniture-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-setting-the-fire-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-setting-the-table-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-setup-a-bar-for-a-cocktail-party-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-slicing-vegetables-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-sorting-books-on-shelf-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-sorting-bottles-cans-and-paper-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-sorting-household-items-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-sorting-vegetables-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-store-batteries-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-store-produce-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-storing-food-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-sweeping-garage-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-thawing-frozen-food-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-tidying-living-room-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-turning-out-all-lights-before-sleep-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-unloading-the-car-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-vacuuming-floors-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-wash-a-baseball-cap-i00"
+default_mode = "standard"
+
+[[task]]
+task = "behavior-wash-dog-toys-i00"
+default_mode = "standard"
+
+[[task]]
+task = "bigym2-dishwasher-close-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "bigym2-dishwasher-load-plates-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "bigym2-flip-cutlery-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "bigym2-move-two-plates-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "bigym2-pick-box-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "bigym2-put-cups-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "bigym2-sandwich-remove-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "bigym2-saucepan-to-hob-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "bigym2-stack-blocks-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "bigym2-wall-cupboard-open-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "dexhand-assemble-hamburger-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-batter-whisk-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-bicycle-pump-stroke-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-binder-page-load-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-book-page-turn-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-boot-sole-brush-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-drying-rack-unfold-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-envelope-letter-insert-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-essential-cube-reorient-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-essential-pen-regrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-essential-rotary-gait-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-essential-two-object-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-fan-guard-install-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-grinder-crank-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-jar-lid-open-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-pancake-serve-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-picture-hang-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-ram-module-install-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-remote-battery-swap-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-stool-brace-insert-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-sweep-dustpan-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-usb-plug-insert-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexhand-vacuum-bin-reseat-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexjoco-bimanual-photograph-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dexjoco-fold-glasses-i00"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_brush_blue_brush_sweep_forward"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_brush_red_brush_sweep_forward"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_brush_red_brush_sweep_right"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_eraser_handle_eraser_wipe_c"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_hammer_claw_hammer_swing_down"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_hammer_claw_hammer_swing_side"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_hammer_mallet_hammer_swing_down"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_hammer_mallet_hammer_swing_side"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_marker_sharpie_marker_draw_smile"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_marker_sharpie_marker_write_c"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_marker_staples_marker_draw_smile"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_marker_staples_marker_write_c"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_screwdriver_long_screwdriver_spin_horizontal"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_screwdriver_long_screwdriver_spin_vertical"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_screwdriver_short_screwdriver_spin_horizontal"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_screwdriver_short_screwdriver_spin_vertical"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_spatula_flat_spatula_flip_over"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_spatula_flat_spatula_serve_plate"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_spatula_spoon_spatula_flip_over"
+default_mode = "standard"
+
+[[task]]
+task = "dextoolbench_spatula_spoon_spatula_serve_plate"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a01-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a01-i02"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a01-i04"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a01-i08"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a02-i03"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a04-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a06-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a06-i03"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a08-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a17-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a26-i02"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a27-i06"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a28-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a28-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a28-i03"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a29-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a29-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a29-i03"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a33-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a33-i04"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a34-i07"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a34-i09"
+default_mode = "standard"
+
+[[task]]
+task = "ese-a34-i11"
+default_mode = "standard"
+
+[[task]]
+task = "ese-b06-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-b06-i02"
+default_mode = "standard"
+
+[[task]]
+task = "ese-b11-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-b11-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-b11-i03"
+default_mode = "standard"
+
+[[task]]
+task = "ese-b12-i04"
+default_mode = "standard"
+
+[[task]]
+task = "ese-b12-i06"
+default_mode = "standard"
+
+[[task]]
+task = "ese-b12-i07"
+default_mode = "standard"
+
+[[task]]
+task = "ese-c02-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "ese-c02-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "ese-c04-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "ese-c04-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "ese-c05-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "ese-c05-i02"
+default_mode = "standard"
+
+[[task]]
+task = "ese-c16-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-d12-i04"
+default_mode = "standard"
+
+[[task]]
+task = "ese-e06-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-e06-i03"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f01-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f04-i02"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f05-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f05-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f06-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f06-i01"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f08-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f09-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ese-f11-i00"
+default_mode = "standard"
+
+[[task]]
+task = "humanoidbench-loco-balance-hard-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "humanoidbench-loco-hurdle-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "humanoidbench-manip-bookshelf-simple-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "humanoidbench-manip-cube-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "humanoidbench-manip-door-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "humanoidbench-manip-powerlift-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "humanoidbench-manip-room-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "humanoidbench-manip-window-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "ikea-eket-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ikea-gladom-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ikea-ikea365-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ikea-lack-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ikea-stegesund-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ikea-svallet-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ikea-variera-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ikea-vesken-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ispatialgym-alignment-axial-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ispatialgym-camera-relocalization-obstructed-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ispatialgym-configuration-matching-articulation-open-small-scale-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ispatialgym-configuration-matching-block-design-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ispatialgym-inter-object-relation-satisfaction-nextto-small-scale-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ispatialgym-inter-object-relation-satisfaction-ontop-small-scale-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ispatialgym-inter-object-relation-satisfaction-touching-small-scale-i00"
+default_mode = "standard"
+
+[[task]]
+task = "ispatialgym-mental-rotation-i00"
+default_mode = "standard"
+
+[[task]]
+task = "kinder-constrained-cupboard-i00"
+default_mode = "standard"
+
+[[task]]
+task = "kinder-scoop-pour-i01"
+default_mode = "standard"
+
+[[task]]
+task = "kinder-sweep-into-drawer-i00"
+default_mode = "standard"
+
+[[task]]
+task = "kinder-sweep-simple-i01"
+default_mode = "standard"
+
+[[task]]
+task = "libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00"
+default_mode = "standard"
+
+[[task]]
+task = "libero-max-goal-wine-bottle-on-wine-rack-top-visual-theme-switch-i00"
+default_mode = "standard"
+
+[[task]]
+task = "maniguard-cabinet-pickup-i22"
+default_mode = "standard"
+
+[[task]]
+task = "maniguard-cabinet-pickup-i26"
+default_mode = "standard"
+
+[[task]]
+task = "maniguard-dusty-transfer-i03"
+default_mode = "standard"
+
+[[task]]
+task = "maniguard-dusty-transfer-i16"
+default_mode = "standard"
+
+[[task]]
+task = "maniguard-jar-transport-i13"
+default_mode = "standard"
+
+[[task]]
+task = "maniguard-jar-transport-i25"
+default_mode = "standard"
+
+[[task]]
+task = "maniguard-lid-transport-i12"
+default_mode = "standard"
+
+[[task]]
+task = "metaworldplus-basketball-i00"
+default_mode = "standard"
+
+[[task]]
+task = "metaworldplus-button-press-topdown-i00"
+default_mode = "standard"
+
+[[task]]
+task = "molmospaces-navigate-to-i00"
+default_mode = "standard"
+
+[[task]]
+task = "molmospaces-pick-i00"
+default_mode = "standard"
+
+[[task]]
+task = "mujoco_playground_aloha_single_peg_insertion"
+default_mode = "standard"
+
+[[task]]
+task = "mujoco_playground_barkour_joystick"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "mujoco_playground_go1_handstand"
+default_mode = "standard"
+
+[[task]]
+task = "mujoco_playground_go1_joystick_flat_terrain"
+default_mode = "standard"
+
+[[task]]
+task = "mujoco_playground_go1_joystick_rough_terrain"
+default_mode = "standard"
+
+[[task]]
+task = "mujoco_playground_spot_flat_terrain_joystick"
+default_mode = "standard"
+
+[[task]]
+task = "mujoco_playground_spot_joystick_gait_tracking"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-baoding-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-bimanual-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-chase-tag-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-dex-airplane-fly-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-dex-apple-lift-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-dex-bunny-inspect-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-dex-cup-pour-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-dex-cylinder-pass-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-dex-hammer-use-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-die-reorient-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-obj-reorient-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-osl-run-i00"
+default_mode = "standard"
+
+[[task]]
+task = "myosuite-soccer-i00"
+default_mode = "standard"
+
+[[task]]
+task = "pandadyn-d01-reciprocal-cup-relay-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "pandadyn-d03-cooperative-puck-course-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "pandadyn-d05-moving-ramp-relay-i00"
+default_mode = "standard"
+
+[[task]]
+task = "pandadyn-d07-spring-gate-switchyard-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "pandadyn-d09-lever-launch-catch-reload-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "pandadyn-s01-cup-route-delivery-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "pandadyn-s06-cube-flip-route-recover-i00"
+default_mode = "standard"
+
+[[task]]
+task = "pandadyn-s09-toss-recatch-delivery-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "pandadyn-s11-cylinder-rescue-route-deliver-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "pandadyn-s12-moving-bridge-puck-relay-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboarc-blanket-flatten-02-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-blanket-flatten-03-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-blanket-flatten-04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-blanket-flatten-07-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-blanket-flatten-08-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-blanket-fold-01-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-blanket-fold-03-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-blanket-fold-04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-blanket-fold-05-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-01-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-02-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-06-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-07-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-09-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-buzz-wire-3d-10-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-cast-coil-04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-cast-coil-06-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-cast-coil-07-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-cast-coil-08-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-cast-keyhole-03-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-cast-keyhole-04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-cast-keyhole-05-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-fiber-bundling-04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-fiber-bundling-06-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-fiber-bundling-07-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-fiber-bundling-09-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-fiber-bundling-10-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-hedgehog-in-cage-05-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-hedgehog-in-cage-06-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-hedgehog-in-cage-07-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-horseshoe-ring-02-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-horseshoe-ring-03-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-interlocked-claws-05-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-interlocked-claws-09-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-interlocked-claws-11-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-interlocked-claws-12-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-knot-untying-06-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-knot-untying-09-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-lock-picking-04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-lock-picking-05-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-rope-threading-03-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-rope-threading-04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-rope-threading-05-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-rope-threading-06-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-rope-threading-07-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-rope-threading-08-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-slotted-post-ring-03-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-slotted-post-ring-04-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-slotted-post-ring-05-i01"
+default_mode = "standard"
+
+[[task]]
+task = "robocasa-coffee-setup-mug-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robocasa-turn-off-sink-faucet-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robocasa-gr1-potato-to-microwave-close-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robocasa365-assemble-cooking-array-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robocasa365-cereal-and-bowl-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robocasa365-display-meat-variety-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robocasa365-microwave-defrost-meat-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robocasa365-searing-meat-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-fill-egg-holder-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-hang-mugs-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-hang-mugs-random-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-insert-key-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-make-kong-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-make-toast-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-pack-objects-into-box-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-store-laptop-and-headphones-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-store-laptop-and-headphones-random-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-store-tools-in-toolbox-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-swap-blocks-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robodojo-sweep-blocks-random-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-anycar-drift-park-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-anycar-drift-park-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-anycar-tight-drift-park-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-anycar-tight-drift-park-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-g1-terrain-walk-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-g1-terrain-walk-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-go2-forward-jump-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-go2-forward-jump-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-go2-weave-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-go2-weave-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-go2-yaw-jump-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-go2-yaw-jump-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-landing-random-pad-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-neuralfly-general-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboengineer-neuralfly-general-skydio-i01"
+default_mode = "standard"
+
+[[task]]
+task = "robolab-bbq-sauce-in-bin-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robolab-food-packing3-cans-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robolab-put-two-mugs-on-shelf-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robolab-red-dishes-in-bin-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robolab-utensils-in-mug-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robolab-white-mug-in-center-of-table-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-backflip-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-badminton-serve-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-balance-beam-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-balance-board-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-basketball-dribble-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-basketball-dribble-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-bowling-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-box-jump-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-realgrasp-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-catch-realgrasp-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-clean-and-jerk-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-discus-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-discus-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-dribble-slalom-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-dunk-between-legs-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-dunk-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-dunk-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-free-throw-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-golf-putt-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-high-jump-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-hurdles-freestanding-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-hurdles-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-javelin-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-javelin-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-realgrasp-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-juggling-feet-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-juggling-feet-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-juggling-head-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-juggling-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-juggling-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-jump-rope-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-layup-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-layup-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-long-rope-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-paddle-bounce-realgrasp-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-pitch-target-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-pitch-target-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-pole-vault-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-shot-put-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-shot-put-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-slalom-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-standing-long-jump-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-steeplechase-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-table-tennis-return-realgrasp-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-tennis-return-realgrasp-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-tennis-serve-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-tennis-serve-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-toes-to-bar-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-triple-jump-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-vault-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-volleyball-serve-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-volleyball-spike-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-fun-wall-ball-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-fun-wall-ball-realgrasp-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-match-badminton-duelrl-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-badminton-match-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-badminton-match-i02"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-badminton-match-i04"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-badminton-matchlow-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-fencing-bout-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboolympics-match-foosball-match-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-soccer-jointcpu-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-soccer-jointgpu-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-soccer-match-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-soccerssl-match-i00"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-soccerssl-match-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-tabletennis-duelrl-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i02"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i03"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-tabletennis-match-i04"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "roboolympics-match-tabletennis-matchlow-i01"
+default_mode = "standard-realtime"
+
+[[task]]
+task = "robopaint-acrylic-applesoranges-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-acrylic-bedroom-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-acrylic-bluehorses-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-acrylic-greatwave-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-acrylic-kajikazawa-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-acrylic-plumpark-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-acrylic-redfuji-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-acrylic-suddenshower-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-acrylic-sunflowers-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-acrylic-vision-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-caoshu-beiquelindanshui-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-caoshu-siwushaonian-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-caoshu-zhen-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-kaishu-linfengguilong-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-oil-monalisa-i01"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-oil-starrynight-i01"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-xingshu-feng-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-xingshu-he-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-xingshu-huifenghechang-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-xingshu-maolinxiuzhu-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-xingshu-xian-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robopaint-xingshu-yong-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robotwin_2_0_hanging_mug"
+default_mode = "standard"
+
+[[task]]
+task = "robotwin_2_0_place_bread_skillet"
+default_mode = "standard"
+
+[[task]]
+task = "robotwin_2_0_put_bottles_dustbin"
+default_mode = "standard"
+
+[[task]]
+task = "robowits-ball-into-bottle-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robowits-cover-with-lid-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robowits-retrieve-cube-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robowits-stack-bowls-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robowits-stand-bulb-i00"
+default_mode = "standard"
+
+[[task]]
+task = "robowits-stand-pages-i00"
+default_mode = "standard"
+
+[[task]]
+task = "vlabench-heat-food-i00"
+default_mode = "standard"
+
+[[task]]
+task = "vlabench-texas-holdem-i00"
+default_mode = "standard"
+
+[[task]]
+task = "yamlab-hang-mug-on-tree-i15"
+default_mode = "standard"
+
+[[task]]
+task = "yamlab-put-pot-on-cooktop-i00"
+default_mode = "standard"

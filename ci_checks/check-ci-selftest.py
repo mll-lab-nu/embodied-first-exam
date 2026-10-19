@@ -2,7 +2,7 @@
 """The checks check something: mutation self-test of the rules that guard the trust boundary and the resource caps.
 
 A rule that reads compose files or task.toml by pattern can go blind without anyone noticing: the trailing comment that
-scripts/rcb_monitor/inject.py writes after `volumes:` once hid every volume of the agent's container from
+images/monitor/rcb_monitor/inject.py writes after `volumes:` once hid every volume of the agent's container from
 check-verifier-isolation.sh, and all checks stayed green on a task whose agent container mounted the simulator's trusted
 volume (review of 2026-10-10, M5). This script copies a few real tasks into a temporary directory, breaks each copy in one
 way a rule exists for, and requires that the rule's check fails with the rule's message -- and that the unbroken copy
@@ -24,6 +24,8 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import task_conventions as tc  # noqa: E402  (task_dir / iter_tasks: the task tree)
 ISOLATION = ["bash", str(ROOT / "ci_checks/check-verifier-isolation.sh")]
 RESOURCES = [sys.executable, str(ROOT / "ci_checks/check-resources.py")]
 POINTERS = [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")]
@@ -39,7 +41,7 @@ MONITOR = [sys.executable, str(ROOT / "ci_checks/check-monitor.py"), "--tier", "
 DIGESTS = ["bash", str(ROOT / "ci_checks/check-dataset-manifest.sh")]
 DOCKERFILE = ["bash", str(ROOT / "ci_checks/check-dockerfile.sh")]
 FIELDS = ["bash", str(ROOT / "ci_checks/check-task-fields.sh")]
-RP_LEAK = ["bash", str(ROOT / "scripts/robopaint_strict/ci/invariant-leak.sh")]
+RP_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/robopaint/invariant-leak.sh")]
 # the checks that enforce Appendix H (run_invariants.sh); every other check here is advisory
 INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK)
 WITH_NEIGHBOURS = (IDENTITY, TWINS)   # run on the broken copy among (links to) every other task
@@ -53,8 +55,9 @@ DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbenc
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
 MWP, MWP_P = "metaworldplus-coffee-button-i00-standard", "metaworldplus-coffee-button-i00-privileged"
 TWIN_P = "robotwin_2_0_grab_roller-privileged"
-OPEN = "roboolympics-sprint-i00-standard"                      # declares open egress, `[metadata] network = "open"` (Appendix H.6)
-RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (scripts/*/ci/invariant-*)
+OPEN = "roboolympics-fun-sprint-i00-standard"                      # declares open egress, `[metadata] network = "open"` (Appendix H.6)
+FUN_P = "roboolympics-fun-sprint-i00-privileged"                   # its tooling and grader from a files-only image (COPY --from)
+RP = "robopaint-acrylic-applesoranges-i00-privileged"           # a benchmark with its own leak hook (ci_checks/benchmarks/*/invariant-*)
 
 
 def sub(pattern: str, repl: str, count: int = 1, flags: int = re.M):
@@ -306,7 +309,7 @@ MUTATIONS = [
     ("the kernel's OOM killer switched off for a container", STD, COMPOSE, in_service("sim", "    oom_kill_disable: true"), ISOLATION, "`oom_kill_disable` is not allowed"),
     # ---- pinned images in every stage and file; the verifier's log directory emptied, not a look-alike of it
     ("a second, unpinned stage in the verifier's Dockerfile", STD, TEST_DF, append("FROM python:latest\nCOPY --from=0 /tests /tests\n"), DOCKERFILE, "must be a pinned registry image"),
-    ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/eai-behavior):\S+", r"\1:${TAG:-latest}"), DOCKERFILE, "must be pinned"),
+    ("a sidecar image whose tag is a variable", STD, COMPOSE, sub(r"^(    image: ghcr\.io/mll-lab-nu/efe-private:behavior)-\S+", r"\1-${TAG:-latest}"), DOCKERFILE, "must be pinned"),
     ("tests/test.sh removes only a look-alike of the verifier's logs",
      STD, TEST_SH, sub(r"^rm -rf /logs/verifier/\*", "rm -rf /logs/verifier/*.bak"), ISOLATION, "must empty /logs/verifier"),
     # ---- review round 3, M6: benchmarks without a generator check mode (one task hand-edited, its digest refreshed)
@@ -322,6 +325,12 @@ MUTATIONS = [
     ("... tests/test.sh without the resource step", MWP, TEST_SH, NO_TRAP, IDENTITY, "metaworldplus: 2 versions of standard tests/test.sh"),
     ("RoboTwin: a privileged task's tests/test.sh without the resource step", TWIN_P, TEST_SH, NO_TRAP, IDENTITY, "robotwin_2_0: 2 versions of privileged tests/test.sh"),
     ("... its grader", TWIN_P, "tests/grade.py", append("# drift\n"), IDENTITY, "robotwin_2_0: 2 versions of privileged tests/grade.py"),
+    # ---- files from a files-only image (images/<name>/FILES.json) count as copies of their benchmark's shared files
+    ("RoboOlympics-Fun: a verifier takes its grader from an image other than the pinned files image", FUN_P, TEST_DF,
+     sub(r"(efe:roboolympics-fun-files-\S+@sha256:)[0-9a-f]{64}( /grade\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
+     "not a file of the pinned"),
+    ("... a standard sidecar's tooling edited (compared with the files image's)", OPEN, "environment/sim/rcb_rfo.py",
+     append("# drift\n"), IDENTITY, "roboolympics: 2 versions of rcb_rfo.py"),
     # ---- caps and minimums (PROTOCOL §2.10)
     ("a sidecar's memory cap below the verifier phase's declared minimum (the kernel would kill it at a cap the task itself says is too low)",
      HEAVY, None, {TOML: sub(r"^(sim = \{ cpus = [0-9.]+, memory_gb = )[0-9.]+", r"\g<1>20.0"),
@@ -353,12 +362,27 @@ MUTATIONS = [
      append("COPY sim/ /opt/sim/\n"), STDIMG, "name files outside sim/ only"),
     ("the monitor sidecar gets a network", STD, COMPOSE, sub(r"^    network_mode: none\n", ""), MONITOR,
      "missing `network_mode: none`"),
+    ("the monitor sidecar runs another image", STD, COMPOSE,
+     sub(r"^    image: ghcr.io/mll-lab-nu/efe:monitor-\S+", "    image: python:3.12-slim"), MONITOR,
+     "not the block images/monitor/rcb_monitor/inject.py writes"),
+    ("the monitor sidecar mounts code over the image's", STD, COMPOSE,
+     sub(r"^(      - \./rcb_monitor/limits\.json:/opt/rcb_monitor/limits\.json:ro\n)",
+         r"\1      - ./rcb_monitor/monitor.py:/opt/rcb_monitor/monitor.py:ro\n"), MONITOR,
+     "not the block images/monitor/rcb_monitor/inject.py writes"),
+    ("the verifier image no longer takes rcb_limits.py from the monitor image", STD, "tests/Dockerfile",
+     sub(r"^COPY --from=\S+ /opt/rcb_monitor/rcb_limits\.py /tests/rcb_limits\.py\n", ""), MONITOR,
+     "does not COPY rcb_limits.py from"),
     ("tests/test.sh no longer sanitizes /app/output before the grader", STD, TEST_SH,
      sub(r"^.*rcb_limits\.py sanitize /app/output.*\n", ""), MONITOR, "no `rcb_limits.py sanitize /app/output` line"),
     ("a task file changed without its DIGEST", PRIV, "README.md", append("\nedited\n"), DIGESTS,
      "a DIGEST that is not the digest of the task's current files"),
     ("a RoboPaint agent image gets a file derived from the target", RP, "+environment/target_strokes.json", append("{}"),
      RP_LEAK, "not an allowed agent-side file"),
+    ("a RoboPaint agent image takes a grader from the files-only image", RP, "environment/Dockerfile",
+     sub(r"^(COPY --from=\S+) /rcb_brush\.py /opt/tools/rcb_brush\.py$", r"\1 /rcb_brush_score.py /opt/tools/rcb_brush.py"),
+     RP_LEAK, "only an allowed agent-side file of the pinned"),
+    ("a RoboPaint task dir's own rcb_brush.py with grader code, next to the files-only image's", RP, "+environment/rcb_brush.py",
+     append("def score_canvas(sheet):\n    pass\n"), RP_LEAK, "grader code ('def score_canvas') in the agent's tooling"),
     # PROTOCOL §4b: a standard-realtime task declares its slowdown S and its reset budget, and they agree
     ("a standard-realtime task.toml whose slowdown is not its service's",
      "humanoidbench-loco-walk-i00-standard-realtime", TOML, sub(r"^slowdown = [0-9.]+", "slowdown = 2"), REALTIME,
@@ -399,7 +423,7 @@ def twin_cutoffs(tmp: Path) -> int:
             print(f"FAIL check-ci-selftest [twin cutoffs: {what}]" + (f":\n{out[-600:]}" if out else ""))
 
     work = tmp / "twins"
-    shutil.copytree(ROOT / "tasks" / STD, work / STD)   # alone first; its twin joins it below
+    shutil.copytree(tc.task_dir(STD), work / STD)   # alone first; its twin joins it below
     t = work / STD
     sec = int(tomllib.loads((t / "task.toml").read_text())["agent"]["timeout_sec"]) // 2   # a number that is not its twin's
     toml = (t / "task.toml").read_text()
@@ -413,7 +437,7 @@ def twin_cutoffs(tmp: Path) -> int:
            f"the sim service's wall clock is not {sec}")
     rc, out = run(CUTOFFS, t)
     expect(rc == 0, "check-cutoffs.py on the normalized task alone", out)
-    shutil.copytree(ROOT / "tasks" / PRIV, work / PRIV)
+    shutil.copytree(tc.task_dir(PRIV), work / PRIV)
     r = subprocess.run(TWINS + [str(t)], capture_output=True, text=True)
     out = r.stdout + r.stderr
     expect(r.returncode != 0 and "the twins have the same cutoff" in out, "check-twins.py must refuse twins with two cutoffs", out)
@@ -432,7 +456,7 @@ def main(argv: list[str]) -> int:
     with tempfile.TemporaryDirectory(prefix="rcb-ci-selftest-") as tmp:
         clean = {}
         for name in sorted({m[1] for m in sel}):
-            src = ROOT / "tasks" / name
+            src = tc.task_dir(name)
             if not (src / "task.toml").is_file():
                 print(f"FAIL check-ci-selftest: the task {name} this self-test mutates is gone (pick another one in MUTATIONS)")
                 return 1
@@ -460,8 +484,8 @@ def main(argv: list[str]) -> int:
                 bad += 1
                 continue
             if any(cmd is c for c in WITH_NEIGHBOURS):   # the broken copy among every other task (links to the real ones)
-                for other in (ROOT / "tasks").iterdir():
-                    if other.name != name and (other / "task.toml").is_file():
+                for other in tc.iter_tasks():
+                    if other.name != name:
                         (t.parent / other.name).symlink_to(other)
                 rc, out = run(cmd, t.parent if cmd is IDENTITY else t)
             else:

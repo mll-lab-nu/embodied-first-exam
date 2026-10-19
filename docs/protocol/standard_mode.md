@@ -16,9 +16,9 @@ types, cameras, proprioception columns, resume class, measured start-up times, k
 | Version | Content | Part | Implementation |
 |---|---|---|---|
 | `eai-standard/2.1` | the base: `/submit` and `/observe`, RCB1 responses, measured proprioception, optional depth noise; the optional reset capability | Part 1 | each benchmark's own service |
-| `eai-standard/2.2` | 2.1 + optional capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer | Part 2 (§1–§18) | [`scripts/eai_standard/`](../../scripts/eai_standard/) |
-| `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop | Part 3 | `scripts/humanoidbench/shared/realtime/rcb_realtime.py` |
-| `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | [`scripts/eai_standard/v2_4/`](../../scripts/eai_standard/v2_4/) |
+| `eai-standard/2.2` | 2.1 + optional capabilities: depth `last` / `frames`, per-frame steps, times and extrinsics, camera intrinsics and mounting, `robot_spec`, `world`, `POST /kinematics`, a per-call wall-clock bound; one shared service layer | Part 2 (§1–§18) | [`embodied_first_exam/standard/`](../../embodied_first_exam/standard/) |
+| `eai-standard/2.3` | 2.2 + the realtime capability: a clock that does not stop | Part 3 | `embodied_first_exam/standard/realtime/rcb_realtime.py` |
+| `eai-standard/2.4` | 2.3 + the operations capability: operation ids, request deadlines, `GET /operations/<id>`, a call watchdog, a physics-tick ledger | Part 4 (§19–§25) | [`embodied_first_exam/standard/v2_4/`](../../embodied_first_exam/standard/v2_4/) |
 
 Which version a task serves is its `[metadata] protocol` (= `/spec.protocol`); which benchmarks serve which version is
 in their docs, not listed here.
@@ -184,11 +184,10 @@ budget is part of a result's configuration: results with different budgets are n
 > this part says otherwise, every 2.2 addition is an optional capability, and a request written for 2.0 or 2.1 gets
 > the same answer as before (plus parts and keys an old client ignores).
 
-**One implementation.** The source is [`scripts/eai_standard/`](../../scripts/eai_standard/): the service layer
+**One implementation.** The source is [`embodied_first_exam/standard/`](../../embodied_first_exam/standard/): the service layer
 `rcb_limited.py` (HTTP, RCB1 responses, the protocol helpers, the `/spec` self-check, crash recovery), the client
 `rcb_client.py` + `rcb1.py`, the sidecar entrypoint `run.sh`, and the client image: `client.env` (the one client base,
-pinned by digest) and `client-requirements.txt` (exact pins). The generators copy the code unchanged into every 2.2
-task (`environment/rcb_client.py`, `environment/rcb1.py`, `environment/sim/{rcb_limited.py,rcb1.py,run.sh}`). Each
+pinned by digest) and `client-requirements.txt` (exact pins). Every 2.2 task carries the code unchanged (`environment/rcb_client.py`, `environment/rcb1.py`, `environment/sim/{rcb_limited.py,rcb1.py,run.sh}`). Each
 benchmark writes only its adapter, `environment/sim/server.py`: the robot, the cameras, the clock (`toy_server.py` is
 the smallest complete one).
 
@@ -409,7 +408,7 @@ what the agent saw; `reward.json` reports `resumes` and `resume_state_mismatch` 
 `resume_max_joint_dev` (`Episode.final_fields()`), and a give-up adds `gave_up`, `reason` and `infra_error`. Graders copy the
 numeric ones into `reward.json`, with `infra_error`.
 
-#### 13.3 What generators emit
+#### 13.3 What a 2.2 task declares
 - `environment/docker-compose.yaml`, service `sim`: `command: sh /srv/run.sh` and `restart: on-failure:N` (N ≥ 3
   recommended); `RCB_DATA` = the record dir (`/data` unless the benchmark's image uses it otherwise).
 - `RCB_STARTUP_TIMEOUT_S` per task, from the measured build time of its family on the evaluation hosts (at least twice the
@@ -418,7 +417,7 @@ numeric ones into `reward.json`, with `infra_error`.
 - Optional: `RCB_MAX_RESUMES` (2), `RCB_MAX_CALL_WALL_S` (900), `RCB_RESUME_MAX_DEV_M` (0.05).
 - `artifacts`: also `journal.f64`, `startups.jsonl`, `server.log` from `service = "sim"`.
 - The agent container (`environment/Dockerfile`) and the verifier (`tests/Dockerfile`) `FROM` the `CLIENT_IMAGE` of
-  `scripts/eai_standard/client.env`, and any `pip install` installs `client-requirements.txt`: the full pin list inline,
+  `embodied_first_exam/standard/client.env`, and any `pip install` installs `client-requirements.txt`: the full pin list inline,
   or `-r client-requirements.txt` with a byte-identical copy in the build context. A new package or version is a change
   to the pins.
 - The collect hook starts with `python3 /srv/rcb_limited.py end "$DATA"`: it waits through a resume (no PID file until the
@@ -436,7 +435,7 @@ In the benchmarks' docs: each records its own build times next to its `RCB_START
 
 #### 13.5 Cost and tests
 One state hash per call (not per step). A resume replays the episode so far without rendering, on the agent's wall
-clock (the benchmarks' docs give their replay rates). `python3 scripts/eai_standard/selftest.py` (CPU only, ~2 min) runs
+clock (the benchmarks' docs give their replay rates). `python3 embodied_first_exam/standard/selftest.py` (CPU only, ~2 min) runs
 `toy_server.py` under `run.sh` with a stand-in for compose's restart policy and checks: resume between and inside calls,
 both classes, the third crash, the watchdog and back-off, client hang-up, the wall bound, both collect-hook outcomes,
 SIGUSR1 during a resume, a simulator error, the client's protocol names, malformed requests, a port that is taken, a
@@ -471,7 +470,7 @@ for `include_depth` and ignore the new parts and keys).
 
 Time does not stop. The wire protocol of the standard-realtime mode, served by
 standard-realtime tasks only (`mode = "standard-realtime"`, `protocol = "eai-standard/2.3"`); the shared implementation
-is `scripts/humanoidbench/shared/realtime/rcb_realtime.py`, which other benchmarks' realtime services use unchanged. 2.3
+is `embodied_first_exam/standard/realtime/rcb_realtime.py`, which other benchmarks' realtime services use unchanged. 2.3
 is 2.2 plus the realtime capability below; every 2.2 addition stays optional, so a 2.1 service with this capability is a
 2.3 service. Same endpoints, RCB1 frames and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S
 (`RCB_SLOWDOWN`; each task declares its default, `[metadata] slowdown`), `control_dt`, `wall_s_per_control_step`,
@@ -545,8 +544,8 @@ are part of a result's configuration (running.md).
 ## Part 4 — `eai-standard/2.4`: the operations capability
 
 Reference implementation:
-[`scripts/eai_standard/v2_4/`](../../scripts/eai_standard/v2_4/), with `rcb_limited.py` and `rcb_client.py`. `rcb1.py`,
-`run.sh`, the client image and the client pins are the 2.2 ones in `scripts/eai_standard/`. In the tables below, MUST
+[`embodied_first_exam/standard/v2_4/`](../../embodied_first_exam/standard/v2_4/), with `rcb_limited.py` and `rcb_client.py`. `rcb1.py`,
+`run.sh`, the client image and the client pins are the 2.2 ones in `embodied_first_exam/standard/`. In the tables below, MUST
 means "required of a service that reports 2.4" (what a 2.4 client may rely on).
 
 ### 19. Version
@@ -616,12 +615,12 @@ As in 2.2 (`/data/episode.jsonl`, `trajectory.npz`, `final.json`, `calls/`), plu
 
 The verifier still transcribes `final.json` only.
 
-`python3 scripts/eai_standard/v2_4/selftest.py` tests the watchdog's evidence, the tick ledger and the 400 for malformed
+`python3 embodied_first_exam/standard/v2_4/selftest.py` tests the watchdog's evidence, the tick ledger and the 400 for malformed
 bodies on the CPU (numpy only, about 15 s).
 
 ### 25. Compatibility
 
 - 2.x clients connect to a 2.4 service unchanged. They send no operation ids and get 2.2 behaviour.
 - The 2.4 client sends ids only when `/spec.protocol` is 2.4, so it also works against 2.1–2.3 services.
-- A benchmark adopts 2.4 by copying `scripts/eai_standard/v2_4/` unchanged; `ci_checks/check-tooling-identity.sh`
+- A benchmark adopts 2.4 by copying `embodied_first_exam/standard/v2_4/` unchanged; `ci_checks/check-tooling-identity.sh`
   checks the copies.

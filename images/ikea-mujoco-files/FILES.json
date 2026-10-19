@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-files-0.1.0@sha256:bf7494f261723da1ef81fb4a6314a8daba4a5a2a5373ce787652ada708314af0",
+ "source": "embodied_first_exam/benchmarks/ikea-mujoco",
+ "files": {
+  "privileged/environment/rcb_ikea.py": "8a18f209c9074b7efe688c896adc2d5fcb4efd23acc947bd0d80e01d17a28a1b",
+  "privileged/tests/grade.py": "7c1ed085e2cc6790b7479a850c91c8399660229d5428cab72c6eb8e10e48e284",
+  "privileged/tests/render_video.py": "81f51e04a736b7763c84896b716043d544f83f5f44e7440b8b220824839f9cb0",
+  "standard/tests/grade.py": "6491f13234ee4931d623c3bbb3e18028e55f952919cd5d01ed4990bb6d791637"
+ }
+}

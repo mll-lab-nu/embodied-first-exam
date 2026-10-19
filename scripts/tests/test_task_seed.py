@@ -9,9 +9,11 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PAIR = "roboolympics-sprint-i00"
+PAIR = "roboolympics-fun-sprint-i00"
 CHECK = [sys.executable, str(ROOT / "ci_checks/check-seeds.py")]
 SEED = [sys.executable, str(ROOT / "scripts/task_seed.py")]
+sys.path.insert(0, str(ROOT / "scripts"))
+import task_conventions as tc  # noqa: E402  (task_dir: the task tree)
 
 
 def run(cmd):
@@ -30,7 +32,7 @@ def main() -> int:
         tasks.mkdir()
         priv, std = tasks / f"{PAIR}-privileged", tasks / f"{PAIR}-standard"
         for t in (priv, std):
-            shutil.copytree(ROOT / "tasks" / t.name, t, symlinks=True)
+            shutil.copytree(tc.task_dir(t.name), t, symlinks=True)
         rc, out = run(CHECK + [str(priv), str(std)])
         assert rc == 0, out
         # a second seed: its frozen instance under the privileged task's tests/seeds/7/

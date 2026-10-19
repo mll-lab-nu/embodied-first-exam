@@ -1,0 +1,15 @@
+# Separate verifier sandbox (PROTOCOL §4): the same simulator image with the verifier's own copies of the tooling and the graders'
+# frozen instance (+ the target picture and its licence) baked in. Nothing the agent did in its container reaches this one — Harbor
+# uploads only the declared artifacts (/app/output/), so a patched scorer or a swapped interpreter cannot influence the verdict.
+FROM ghcr.io/mll-lab-nu/efe:robopaint-0.2.0
+COPY instance.json target.png truth_alpha.npz test.sh NOTICE-exemplar.md /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.1.0@sha256:e97f8e066284e7490b3dc8bc24f9b634761f95396e8236bced1ff445c271355f /privileged/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.1.0@sha256:e97f8e066284e7490b3dc8bc24f9b634761f95396e8236bced1ff445c271355f /rcb_brush.py /tests/rcb_brush.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.1.0@sha256:e97f8e066284e7490b3dc8bc24f9b634761f95396e8236bced1ff445c271355f /rcb_brush_score.py /tests/rcb_brush_score.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.1.0@sha256:e97f8e066284e7490b3dc8bc24f9b634761f95396e8236bced1ff445c271355f /rcb_brush_strict.py /tests/rcb_brush_strict.py
+RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
+ENV PYTHONPATH=/tests
+WORKDIR /tests
+# resource limits: the verifier step (from the monitor image) and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
+COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
+COPY rcb_limits.json /tests/rcb_limits.json

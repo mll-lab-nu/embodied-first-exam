@@ -13,6 +13,9 @@ files this check refuses:
   4. a key that names the demonstration or episode a file was made from (IDS): `"demo": "<demo id>"`, `demo_id`,
      `episode_id`, `source_demo`, ... (board 0105: DexJoCo's instance.npz `meta` named the demonstration whose actions
      are the reference solution).
+Files the agent's image takes from a files-only image (`COPY --from=<image>` in environment/Dockerfile, the image pinned
+by an images/<name>/FILES.json, scripts/files_image.py) are scanned from their one source in the repository, reported as
+`files:<name>/<file>`.
 Binary files are skipped except numpy archives (`.npz`, a zip of `.npy` members): their string members (`<U`, `S`) and
 any text member are read and scanned like a text file (the members' names are reported as `file.npz[member]`); numeric
 members are not read past their header. Images and other binaries are skipped.
@@ -22,11 +25,13 @@ allowlist is what stops a download; this check keeps the address out of the task
 That file was in the simulator image, which this check cannot read: an image's own files are reviewed when the image
 is built (docs/protocol/leakage.md).
 
-Usage: check-agent-pointers.py [task dirs...]   (default: all of tasks/*)
+Usage: check-agent-pointers.py [task dirs...]   (default: every task dir, tasks/*/*)
 """
 import ast, pathlib, re, sys, zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import task_conventions as tc  # noqa: E402  (iter_tasks: the task tree)
 SIDECAR_DIRS = {"sim", "scorer", "rcb_monitor"}          # other containers' files under environment/
 MAX_BYTES = 8 << 20                                        # larger files are assets (meshes, arrays), not text
 HOSTS = re.compile(
@@ -44,22 +49,43 @@ FILES = re.compile(r"""(?<![\w.-])(?:[\w.-]+\.(?:hdf5|h5|mcap|parquet|rlds|tfrec
 ALLOW = [
     (r"^maniguard-", r"^environment/instance/NOTICE$", r"datasets/IDEAS-Lab-Northwestern/ManiGuard-Bench|github\.com/NU-IDEAS-Lab/ManiGuard",
      "CC BY-NC 4.0 attribution the licence requires, of the scene files' dataset (its demonstrations are other datasets, not named)"),
-    (r"^roboengineer-anycar-", r"^environment/public/(?:scripts/control_transfer/components/)?anycarbench/(?:NOTICE|circuits\.json)$",
+    (r"^roboengineer-anycar-", r"^(?:environment/public/(?:scripts/control_transfer/components/)?anycarbench/(?:NOTICE|circuits\.json)|files:control-transfer-anycar-files/circuits\.json)$",
      r"^https://github\.com/f1db/f1db/?$",
      "CC BY 4.0 attribution the licence requires, of F1DB's historical circuit outlines (track geometry the instruction "
      "gives the agent, not a controller or a demonstration)"),
 ]
 
 
+def files_images() -> dict:
+    """{pinned image ref: (name, source dir, files)} of the files-only images (images/<name>/FILES.json)."""
+    import json
+    out = {}
+    for f in sorted((ROOT / "images").glob("*/FILES.json")):
+        s = json.loads(f.read_text())
+        out[s["image"]] = (f.parent.name, ROOT / s["source"], s["files"])
+    return out
+
+
+FILES_IMAGES = files_images()
+COPY_FROM = re.compile(r"^COPY\s+--from=(\S+)\s+/(\S+)\s+\S+\s*$", re.M)
+
+
 def agent_files(task: pathlib.Path):
+    """(path, the name it is reported under) of every file the agent's container gets from the task."""
     f = task / "instruction.md"
     if f.is_file():
-        yield f
+        yield f, "instruction.md"
     env = task / "environment"
     for p in sorted(env.rglob("*")) if env.is_dir() else []:
         rel = p.relative_to(env).parts
         if p.is_file() and not p.is_symlink() and rel[0] not in SIDECAR_DIRS and "__pycache__" not in rel:
-            yield p
+            yield p, p.relative_to(task).as_posix()
+    df = env / "Dockerfile"
+    for ref, file in COPY_FROM.findall(df.read_text()) if df.is_file() else []:
+        if ref in FILES_IMAGES:   # a file from a files-only image: its one source in the repository
+            name, src, files = FILES_IMAGES[ref]
+            if file in files:
+                yield src / file, f"files:{name}/{file}"
 
 
 def npy_text(f) -> str | None:
@@ -105,8 +131,8 @@ def texts(p: pathlib.Path, rel: str):
 
 
 def findings(task: pathlib.Path):
-    for p in agent_files(task):
-        for rel, text in texts(p, p.relative_to(task).as_posix()):
+    for p, name in agent_files(task):
+        for rel, text in texts(p, name):
             text = text.replace("\\/", "/")    # JSON may escape "/"
             for kind, rx in (("URL", HOSTS), ("key", KEYS), ("file", FILES), ("id", IDS)):
                 for m in rx.finditer(text):
@@ -117,7 +143,7 @@ def findings(task: pathlib.Path):
 
 
 def main(argv):
-    tasks = [pathlib.Path(a) for a in argv] or sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    tasks = [pathlib.Path(a) for a in argv] or tc.iter_tasks()
     bad = 0
     for t in tasks:
         for rel, line, kind, hit in findings(t):

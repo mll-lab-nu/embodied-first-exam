@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/eai-robodojo:<images/robodojo/VERSION> is never pushed to a public registry (docs/protocol/README.md
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:robodojo-<images/robodojo/VERSION> is never pushed to a public registry (docs/protocol/README.md
 §2.4, D5). Every evaluation host builds it locally; the RoboDojo tasks reference that tag and Harbor finds it in the local
 Docker image store.
 
@@ -38,7 +38,7 @@ Host
   once; an agent's own sessions, the standard sidecar and the verifier's replays each need one.
 
 Build (from the repository root)
-  docker build -f images/robodojo/Dockerfile -t ghcr.io/mll-lab-nu/eai-robodojo:$(cat images/robodojo/VERSION) .
+  docker build -f images/robodojo/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robodojo-$(cat images/robodojo/VERSION) .
   The assets stage downloads Assets/ at the pinned dataset revision; with a copy already on disk (same revision), pass it
   instead: --build-context robodojo-assets=<directory that contains Assets/>. The build follows RoboDojo's install.sh
   (torch 2.7.0+cu128, Isaac Sim 5.1.0, RoboDojo's Isaac Lab and cuRobo forks), then sets every Python package to
@@ -47,8 +47,8 @@ Build (from the repository root)
 
 Check a build
   Every frozen instance must rebuild to its recorded state hash. With a task directory at hand:
-    t=tasks/robodojo-stack-bowls-i00-privileged
-    docker run --rm --gpus all --shm-size 8g -v $PWD/$t:/t ghcr.io/mll-lab-nu/eai-robodojo:$(cat images/robodojo/VERSION) bash -c \
+    t=tasks/robodojo/robodojo-stack-bowls-i00-privileged
+    docker run --rm --gpus all --shm-size 8g -v $PWD/$t:/t ghcr.io/mll-lab-nu/efe-private:robodojo-$(cat images/robodojo/VERSION) bash -c \
       "cd /tmp && cp /t/environment/rcb_robodojo.py . && python -c \"import numpy as np; np.savez('/tmp/t.npz', \
          actions=np.zeros((0, 14), np.float32), task='stack_bowls')\" && \
        python rcb_robodojo.py replay --task stack_bowls --instance /t/environment/instance.json --traj /tmp/t.npz"

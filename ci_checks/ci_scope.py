@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """What a change can affect: the scope of the checks on a pull request (CI, `run_all.sh --changed`).
 
-A pull request that touches only one benchmark's tasks, generator, tests, image sources or docs page cannot break
-another benchmark's tasks, so its CI runs the per-task checks on that benchmark's tasks, that benchmark's generator
-check and its unit tests (plus the repo-level checks, which are cheap and always run on everything). Anything else --
+A pull request that touches only one benchmark's tasks, image sources, CI hooks or docs page cannot break
+another benchmark's tasks, so its CI runs the per-task checks on that benchmark's tasks (plus the repo-level checks, which are cheap and always run on everything). Anything else --
 the checks themselves, the workflows, the shared modules (scripts/task_conventions.py, retry_policy,
-eai_standard, rcb_monitor, ...), the shared images, the protocol documents, a path this table does not know -- runs the
+embodied_first_exam/standard, images/monitor, ...), the shared images, the protocol documents, a path this table does not know -- runs the
 FULL suite. Pushes to main always run the full suite (.github/workflows/static-checks.yml), so nothing that slips past
 a scoped run stays unnoticed for longer than one merge.
 
 A benchmark B is affected by a changed path P when P is one of B's own paths (UNITS below: its task-name prefix,
-scripts/<b>/, images/<b>/, docs/benchmarks/<b>.md, extra files) or when B's and P's benchmark refer to each other's
+images/<b>/, docs/benchmarks/<b>.md, ci_checks/benchmarks/<b>/, extra files) or when B's and P's benchmark refer to each other's
 paths (`scripts/<x>` / `images/<x>` in a .py / .sh file under the other's own directories: shared layers that one
 benchmark copies from another, e.g. MyoSuite and HumanoidBench's realtime service).
 
@@ -20,7 +19,7 @@ benchmark copies from another, e.g. MyoSuite and HumanoidBench's realtime servic
 
 Output: shell assignments (`eval "$(python3 ci_checks/ci_scope.py ...)"`): RCB_SCOPE=full|benchmarks|none,
 RCB_SCOPE_REASON, RCB_SCOPE_BENCHES (labels, `;`-separated), RCB_SCOPE_PATHS (the affected benchmarks' own path
-prefixes, for check-generated-tasks.sh / check-unit-tests.sh `--only`), RCB_SCOPE_TASKS (their task dirs). A new
+prefixes, for check-unit-tests.sh `--only`), RCB_SCOPE_TASKS (their task dirs). A new
 benchmark without a row here makes every pull request that touches it run the full suite: add its row.
 """
 from __future__ import annotations
@@ -34,25 +33,26 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-import task_conventions as tc  # noqa: E402  (BENCHMARKS: (task dir prefix, label))
+import task_conventions as tc  # noqa: E402  (BENCHMARKS: (task dir prefix, label); bench_of)
 
-# label -> the benchmark's own path prefixes besides tasks/<prefix>. Default for a label not listed with a key here:
-# none (full suite). `d` = the directory name under scripts/ (and images/, docs/benchmarks/<d>.md).
+# label -> the benchmark's own path prefixes besides its task dirs (tasks/<folder>/<task>/, the folder BENCHMARK_DIRS
+# names). Default for a label not listed with a key here: none (full suite). `d` = the directory name under images/ (and
+# docs/benchmarks/<d>.md).
 def _own(d: str, *extra: str) -> list[str]:
-    return [f"scripts/{d}/", f"images/{d}/", f"docs/benchmarks/{d}.md", *extra]
+    return [f"images/{d}/", f"docs/benchmarks/{d}.md", *extra]
 
 
 UNITS: dict[str, list[str]] = {
-    "RoboTwin 2.0": _own("robotwin", "scripts/robotwin_"),        # robotwin_mk_task.py, robotwin_mk_limited.py, ...
-    "DexToolBench": ["scripts/dtb_", "docs/benchmarks/dextoolbench.md", "images/mujoco/"],   # serves server_mj.py
-    "MuJoCo Playground": _own("mujoco-playground", "scripts/mj_mk_limited.py", "images/mujoco/"),
+    "RoboTwin 2.0": _own("robotwin"),
+    "DexToolBench": ["docs/benchmarks/dextoolbench.md", "images/mujoco/"],   # serves server_mj.py
+    "MuJoCo Playground": _own("mujoco-playground", "images/mujoco/"),
     "KinDER": _own("kinder"),
     "HumanoidBench": _own("humanoidbench"),
     "MetaWorld+": _own("metaworldplus", "images/metaworld/"),
     "RoboWits": _own("robowits"),
-    "RoboPaint": ["scripts/robopaint_", "images/robopaint/", "docs/benchmarks/robopaint"],   # strict, caoshu, lettering, brush
-    "RoboLab": _own("robolab"),
-    "BEHAVIOR-1K": _own("behavior"),
+    "RoboPaint": ["images/robopaint/", "images/robopaint-files/", "docs/benchmarks/robopaint"],
+    "RoboLab": _own("robolab", "images/robolab-files/"),
+    "BEHAVIOR-1K": _own("behavior", "images/behavior-files/"),
     "ManiGuard": _own("maniguard"),
     "MolmoSpaces": _own("molmospaces"),
     "MyoSuite": _own("myosuite"),
@@ -63,26 +63,30 @@ UNITS: dict[str, list[str]] = {
     "RoboCasa": _own("robocasa"),
     "RoboCasa365": _own("robocasa365"),
     "LIBERO-MAX": _own("libero-max"),
-    "RoboARC": _own("roboarc"),
-    "RoboOlympics": _own("roboolympics", "images/olympiad/"),
+    "RoboARC": _own("roboarc", "images/roboarc-files/"),
+    "RoboOlympics-Fun": _own("roboolympics", "images/robofunolympics/", "images/roboolympics-fun-files/", "docs/benchmarks/roboolympics.md"),
+    "RoboOlympics-Match": ["images/olympiad/", "docs/benchmarks/roboolympics-match.md"],   # eai-olympiad: built from RoboOlympics' tree, not here
     "BiGym 2.0": _own("bigym2"),
     "YAMLab": _own("yamlab"),
     "RoboDojo": _own("robodojo"),
-    "RoboFunOlympics": _own("robofunolympics"),
     "Panda Dynamic Scenes": _own("pandadyn"),
     "AM-Bench": _own("ambench"),
     "iSpatialGym": _own("ispatialgym"),
-    "IKEA MuJoCo": _own("ikea_mujoco", "images/ikea-mujoco/"),
-    "roboEngineer": _own("roboengineer", "scripts/control_transfer/", "scripts/quadrotor_landing/",
-                         "scripts/roboengineer_presentation/", "images/control-transfer/", "images/quadrotor-landing/",
+    "IKEA MuJoCo": _own("ikea_mujoco", "images/ikea-mujoco/", "embodied_first_exam/benchmarks/roboarc/nyx_direct.py"),   # its standard tasks copy it
+    "roboEngineer": _own("roboengineer",
+                         "images/control-transfer/", "images/control-transfer-anycar-files/", "images/quadrotor-landing/",
                          "docs/benchmarks/roboengineer", "docs/benchmarks/control-transfer.md",
                          "docs/benchmarks/quadrotor-landing.md"),
 }
+# the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md), and its CI
+# hooks, ci_checks/benchmarks/<folder>/: the folder of its task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)
+for _label, _folder in tc.BENCHMARK_DIRS.items():
+    UNITS.setdefault(_label, []).extend([f"embodied_first_exam/benchmarks/{_folder}/", f"ci_checks/benchmarks/{_folder}/"])
 # changes that no check reads: they need only the repo-level checks (which always run). Everything not listed here and
 # not a benchmark's own path runs the full suite.
 NO_TASK_EFFECT = ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "docs/protocol/running.md",
                   "docs/REVIEWING.md", ".gitignore",
-                  "docs/easy_set.toml")   # read by reports only; its own check (run_all.sh) and test (run_invariants.sh) always run
+                  "docs/core_set.toml")   # read by reports only; its own check (run_all.sh) and test (run_invariants.sh) always run
 # tasks/dataset.toml: no longer committed (generated for a release; check-dataset-manifest.sh fails when it is tracked)
 REPO_LEVEL_ONLY = ("tasks/dataset.toml",)
 REF = re.compile(r"\b(scripts|images)/([A-Za-z0-9_.-]+)")
@@ -102,19 +106,32 @@ def changed_paths(diff_from: str | None, base: str) -> list[str]:
 
 
 def label_of_task(name: str) -> str | None:
-    return next((label for prefix, label in tc.BENCHMARKS if name.startswith(prefix)), None)
+    return tc.bench_of(Path(name)) or None
+
+
+def task_name_of(path: str) -> str | None:
+    """The task dir a repository path is in: tasks/<folder>/<task>/... -> <task>; None for a path in no task dir (a
+    file directly in tasks/ or in a benchmark folder). A path of the flat layout before the benchmark folders
+    (tasks/<task>/..., the old side of the move in a diff) names its task one level up."""
+    parts = path.split("/")
+    if parts[0] != "tasks" or len(parts) < 3:
+        return None
+    if parts[1] in tc.BENCHMARK_DIRS.values():
+        return parts[2] if len(parts) >= 4 else None
+    return parts[1]
 
 
 def owners(path: str) -> set[str]:
     """Every benchmark that owns `path` (images/mujoco/ is DexToolBench's and MuJoCo Playground's)."""
-    if path.startswith("tasks/") and path.count("/") >= 2:
-        lab = label_of_task(path.split("/")[1])
+    if path.startswith("tasks/") and path.count("/") >= 2:   # a task's file: the task's name says its benchmark
+        name = task_name_of(path)
+        lab = label_of_task(name) if name else None
         return {lab} if lab else set()
     return {label for label, own in UNITS.items() if any(path.startswith(p) for p in own)}
 
 
 def top(path: str) -> str | None:
-    """`scripts/<x>` / `images/<x>` of a path (a file directly under scripts/: its stem with the dir, e.g. scripts/dtb_mk_task)."""
+    """`scripts/<x>` / `images/<x>` of a path (a file directly under scripts/: its stem with the dir, e.g. scripts/efe)."""
     m = REF.match(path)
     if not m:
         return None
@@ -189,8 +206,8 @@ def main(argv: list[str]) -> int:
     benches = s["benches"]
     prefixes = sorted({p for b in benches for p in UNITS[b]})
     tprefixes = tuple(pre for pre, lab in tc.BENCHMARKS if lab in benches)
-    tasks = sorted(f"tasks/{t.name}" for t in (ROOT / "tasks").iterdir()
-                   if t.is_dir() and (t / "task.toml").is_file() and label_of_task(t.name) in benches) if tprefixes else []
+    tasks = [t.relative_to(ROOT).as_posix() for t in tc.iter_tasks()
+             if label_of_task(t.name) in benches] if tprefixes else []
     print(f"RCB_SCOPE={s['scope']}")
     print(f"RCB_SCOPE_REASON={shlex.quote(s['reason'])}")
     print(f"RCB_SCOPE_BENCHES={shlex.quote(';'.join(benches))}")

@@ -1,0 +1,68 @@
+# robowits-stand-bulb-i00-privileged
+
+| | |
+|---|---|
+| Benchmark | RoboWits |
+| Mode | privileged |
+| Twin | `robowits-stand-bulb-i00-standard` |
+| Simulator / robot | `robowits` / `marvin-bimanual` |
+| Family / instance | `stand_bulb` / seed 0 |
+| Oracle | `none` — No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-stand-bulb-i00__BrTmH6k (robowits-lunaxh-0925-2042, privileged) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7). 2026-10-18: the frozen instance is now that scene settled at rest (board 0178); the positive above was recorded on the earlier instance. |
+| Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
+| Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
+
+## Task
+Stand the tall object with curved bottom stably within the green target area. One replayable trajectory from the
+frozen instance (evaluation scene 0 of RoboWits task 16), with the privileged tooling (`rcb_robowits.py`: the scene's
+state, resets, thin primitives, replay); the success criterion as graded is in `instruction.md`.
+
+## Difficulty
+Stand a tall object with curved bottom stably within a target area. A tall object with curved bottom is prone to
+tipping due to a curved base. A surrounding ring provides lateral support and increases the effective base, using
+geometry for stability. The tooling's primitives are thin (IK moves, joint moves, gripper, hold).
+
+## Reference solution
+None: RoboWits ships no expert or planner, and none is written for this family (`oracle = "none"`). Evidence that it
+is solvable: `oracle_evidence` in `task.toml` and the positive example cited in the review table of PR #3 (the trial
+is published on the results site).
+
+## Verification
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff
+RoboWits' `_check_success` holds after every replay, the final-state hashes agree and the rebuilt frozen scene matches
+the recorded one (`tests/grade.py`; a scene that does not match is the host's failure, `infra_error = 1`, never the
+agent's 0), plus `/logs/verifier/replay.mp4`. What the predicate checks, in words:
+`instruction.md`, "Success criterion (as graded)". The trajectory is the per-control-step JOINT_ABS record (T, 16);
+Genesis' CPU backend restores the frozen snapshot exactly, so in-process repeats and fresh processes agree bit for bit
+on one host; another host's rebuild matches the frozen poses within the tolerance (docs/benchmarks/robowits.md).
+
+No oracle; human review in PR #3 (PROTOCOL §2.7): the positive example, the `nop` result and the predicate
+summary are in the PR's review table.
+
+## Compute resources
+Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
+
+| | Agent phase | Verifier |
+|---|---|---|
+| CPU cores | 2 | 2 |
+| Memory | 6 GB | 3 GB |
+| GPU memory | 2 GB | 2 GB |
+
+- GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
+- Measured: GPU 0.5-1.4 GB (physics on the CPU, GPU renders the cameras), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.5 GB, privileged container p90 4.7 GB, verifier 2.4 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (single-threaded Genesis CPU backend)
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: 6 GiB GPU memory, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 6 GiB GPU memory, 16 GiB memory. Limits measured: GPU: 1.4 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 5.1 GiB over 10 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured.
+
+## Details
+| | |
+|---|---|
+| RoboWits task | `16-stand-bulb-v0` (RoboWits @ 9cc30ae, Genesis 0.4.7: CPU physics backend, EGL rendering on the GPU) |
+| Instance | entry 0 of RoboWits' `eval_dataset_50/16.json`, settled at rest (board 0178); object poses and the expected state hash in `environment/instance.json` (the verifier's copy in `tests/`) |
+| Robot | Marvin bimanual: 2 × 7-DoF arms with Pika parallel grippers; JOINT_ABS actions (T, 16) at 30 Hz |
+| GPU | EGL camera rendering only (`environment/docker-compose.yaml`, `tests/docker-compose.yaml`) |
+| BlenderKit models | not redistributable, so not in the image: mounted read-only from `$RCB_ROBOWITS_BLENDERKIT` (how to obtain them: `images/robowits/NOTICE`) |
+
+### Change Log
+- 2026-10-10 (review of board 0067; findings RW-1, RW-5, RW-6, RW-7): the verifier reports an infrastructure error (`infra_error = 1`) instead of the agent's 0 when it cannot build the frozen scene or the scene it rebuilt does not match the frozen instance on its host (`instance_ok = 0`: another CPU vendor, docs/benchmarks/robowits.md, Hosts); a `trajectory.npz` that cannot be read or lacks `task` / `actions` is `bad_trajectory`, no longer `grader_error`; `reward.json` always carries `infra_error`; the verifier runs without network (`network_mode = "no-network"`); the instruction states the tooling's cap of 200000 control steps per trajectory instead of leaving it unsaid. The pass rule, the frozen instance, the tooling and the predicate are unchanged; validated with synthetic tests of the grader, not re-run in the simulator.
+- 2026-10-10 (review round 2, board 0067; minor 2): `tests/grade.py` time-boxes the replay video, which it renders after the verdict is on disk: it is skipped or stopped (`video_timed_out = 1`) 180 s before the verifier's `timeout_sec` (`tests/test.sh` passes it as `--budget`). Before, the video replay of a very long trajectory could run into Harbor's verifier timeout, which discards the verdict already written. The verdict, the pass rule, the frozen instance and the tooling are unchanged; validated with a synthetic test of the grader, not re-run in the simulator.
+- 2026-10-10 (owner decision, board 0072): the agent's network egress is restricted to the model APIs (`[agent] network_mode = "allowlist"`, the hosts of `scripts/set_agent_egress.py`; since 2026-10-11 these include the package registries, PyPI and the Debian / Ubuntu archives, so that `pip install` and `apt-get install` work); it was open before (Harbor's default), and agents could download upstream sources, reference solutions and robot models from their own shell. The scene, the frozen instance, the tooling and the pass rule are unchanged, so the task keeps its name; results from before this date were obtained with open egress.
+- 2026-10-14 (in place: a new DIGEST, PROTOCOL v2.0 §1 and H.8; the verifier changed). From the failure analysis of the 10-14 results (25 of 84 RoboWits successes did not do the task: an object held in place at the end, a trajectory cut while things still moved, a gripper propping the pages from just outside the 3 cm zone, a cube knocked off the table). (1) A settle window after the last action (`rcb_robowits.Session.settle_check`, the verifier's `replay`): the last command is held for 1 s, then for 2 s the goal must hold at every 6th control step and at the last, and every graded object stay within 2 mm (at rest); before, the predicate was checked once, on the state right after the last action. (2) The goal is RoboWits' predicate (unchanged) with the graded objects released: no robot contact with them (Genesis' contact list); move_cube's cube must also be on the table. (3) The BlenderKit models reach the agent's container through a `blenderkit` service that writes this family's models alone into a volume; the host's folder, its key and the rest of the bundle are no longer mounted in the agent's container. The frozen instance, RoboWits' predicate and the time limit are unchanged; results recorded before this date (the earlier DIGEST) are not comparable with this version.
+- 2026-10-18 (board 0178; in place: a new DIGEST, the frozen instance changed). The frozen instance did not rebuild on most hosts: entry 0 of RoboWits' `eval_dataset_50/16.json` places the stabilizing ring into the tall object, and after RoboWits' 10 settle steps both were still moving (up to 0.15 m/s), so the last bits of each CPU's arithmetic grew into mm (rcb-gpu1, AMD EPYC: 12 mm off) and every trial ended `instance_ok = 0`. The instance's scene is now that build simulated on until both objects were at rest (1500 steps, the hold pose), written as `pos` + `quat`; RoboWits' 10 settle steps start from rest, so a 1e-4 perturbation of the poses moves nothing by more than 0.05 mm and another host's rebuild matches within the tolerance (AMD Ryzen 7950X: bit-exact; AMD EPYC 7R13: positions equal to 1e-5 m). The ring rests 17 cm from where the old instance froze it and the tall object 10 cm. `[metadata].host_cpu_vendor` is gone (any CPU). The predicate, the pass rule, the tooling and the time limit are unchanged; results recorded before this date (the earlier DIGEST) were on the earlier instance.

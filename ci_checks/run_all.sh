@@ -8,14 +8,14 @@
 #                                tasks (default: all), and every repo-level check
 #   run_all.sh --changed [REV]   a pull request's scope (ci_checks/ci_scope.py; REV: diff REV..HEAD, default: the merge base
 #                                with origin/main). Shared code changed -> the full suite (as with no arguments). Only
-#                                some benchmarks' own paths changed -> the per-task checks on those benchmarks' tasks, their
-#                                generators' checks and unit tests, and the cheap repo-level checks on everything; the CI
+#                                some benchmarks' own paths changed -> the per-task checks on those benchmarks' tasks
+#                                and the cheap repo-level checks on everything; the CI
 #                                mutation self-test runs in the full suite only (it tests ci_checks/, which a scoped change
 #                                does not touch). Nothing a scoped run skips goes unchecked: pushes to main run the full suite.
 # Everything runs concurrently (ci_checks/parallel.py; RCB_CI_JOBS=N caps it, default: the CPUs), each command's output
 # printed in one piece when it ends. RCB_SKIP_UNIT_TESTS=1: leave out check-unit-tests.sh (the CI workflow runs it, with
-# --all, in a job of its own). Benchmark-specific checks are each benchmark's own hooks, scripts/<bench>/ci/advisory-*
-# (here) and scripts/<bench>/ci/invariant-* (run_invariants.sh); nothing in ci_checks/ names a benchmark.
+# --all, in a job of its own). Benchmark-specific checks are each benchmark's own hooks, ci_checks/benchmarks/<bench>/advisory-*
+# (here) and ci_checks/benchmarks/<bench>/invariant-* (run_invariants.sh); nothing in ci_checks/ names a benchmark.
 set -uo pipefail
 tier=all
 if [ "${1:-}" = --tier ]; then tier="${2:-}"; shift 2; fi
@@ -25,9 +25,8 @@ if [ "$tier" != advisory ]; then
   bash "$(dirname "$0")/run_invariants.sh" "$@" || inv_rc=1
   [ "$tier" = invariants ] && exit $inv_rc
 fi
-# Seven generators' check modes compare file modes with a fresh render, which depends on the caller's umask: with 0002
-# (a common default) every rendered file is group-writable and 179 checks fail on a clean checkout. The checks run with
-# the umask the repository is written with; the checkout itself must be made with umask 022 too.
+# The checks compare file modes, which depend on the caller's umask: they run with the umask the repository is
+# written with (022); the checkout itself must be made with umask 022 too.
 umask 022
 root="$(cd "$(dirname "$0")/.." && pwd)"
 if [ "${1:-}" != "--changed" ]; then   # task dirs given relative to the caller's directory: made absolute first
@@ -46,13 +45,13 @@ if [ "${1:-}" = "--changed" ]; then
   scope="$RCB_SCOPE"
   echo "scope: $RCB_SCOPE ($RCB_SCOPE_REASON)${RCB_SCOPE_BENCHES:+ -- benchmarks: $RCB_SCOPE_BENCHES}"
   case "$scope" in
-    full) tasks=(tasks/*/) ;;
+    full) tasks=(tasks/*/*/) ;;
     benchmarks) read -ra tasks <<<"$RCB_SCOPE_TASKS"; read -ra only <<<"$RCB_SCOPE_PATHS" ;;
     none) tasks=() ;;
     *) echo "FAIL ci_checks/ci_scope.py: unknown scope $scope"; exit 1 ;;
   esac
 else
-  tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=(tasks/*/) || explicit=1
+  tasks=("$@"); [ ${#tasks[@]} -eq 0 ] && tasks=(tasks/*/*/) || explicit=1
 fi
 real=(); for t in "${tasks[@]}"; do t="${t%/}"; [ -f "$t/task.toml" ] && real+=("$t"); done; tasks=("${real[@]}")
 echo "per-task checks on ${#tasks[@]} task(s)"
@@ -61,14 +60,12 @@ cmds=""
 add() { cmds+="$*"$'\n'; }
 # the slow ones first
 if [ "$scope" = full ]; then
-  add bash ci_checks/check-generated-tasks.sh              # generators with a check mode: tasks/ is what they write
   add python3 ci_checks/check-ci-selftest.py --tier advisory   # the advisory rules still fire (the invariant ones: run_invariants.sh)
   [ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add bash ci_checks/check-unit-tests.sh   # graders / collect hooks: the tests that need only the standard library
 elif [ "$scope" = benchmarks ]; then
-  add bash ci_checks/check-generated-tasks.sh --only "${only[@]}"
   [ "${RCB_SKIP_UNIT_TESTS:-0}" = 1 ] || add bash ci_checks/check-unit-tests.sh --only "${only[@]}"
 fi
-# the per-task checks, in chunks: check-task.sh (the shell checks) and the generators' normal form
+# the per-task checks, in chunks: check-task.sh (the shell checks) and the normal form
 # (scripts/task_conventions.py --check: README, task.toml, test.sh are what normalize writes)
 chunk=24
 for ((i = 0; i < ${#tasks[@]}; i += chunk)); do
@@ -78,17 +75,19 @@ for ((i = 0; i < ${#tasks[@]}; i += chunk)); do
 done
 # per-task Python checks over the tasks in scope: the given ones, else all (a scoped run: its benchmarks' tasks)
 targs=""; if [ $explicit -eq 1 ] || [ "$scope" = benchmarks ]; then for t in "${tasks[@]}"; do targs+=" $(q "$t")"; done; fi
-# the benchmarks' own advisory hooks: every scripts/*/ci/advisory-*, given the tasks in scope
+# the benchmarks' own advisory hooks: every ci_checks/benchmarks/*/advisory-*, given the tasks in scope as arguments, through
+# xargs from a list file (every task's path in one command line is longer than a single argument may be, 128 KiB)
 if [ ${#tasks[@]} -gt 0 ]; then
-  hparts=""; for t in "${tasks[@]}"; do hparts+=" $(q "$t")"; done
-  for h in scripts/*/ci/advisory-*; do
+  hlist="$(mktemp)"; trap 'rm -f "$hlist"' EXIT
+  printf '%s\n' "${tasks[@]}" > "$hlist"
+  for h in ci_checks/benchmarks/*/advisory-*; do
     [ -f "$h" ] || continue
-    case "$h" in *.py) add python3 "$(q "$h")$hparts" ;; *) add bash "$(q "$h")$hparts" ;; esac
+    case "$h" in *.py) add xargs python3 "$(q "$h") < $(q "$hlist")" ;; *) add xargs bash "$(q "$h") < $(q "$hlist")" ;; esac
   done
 fi
 # repo-level, cheap: always on everything, or on the given task dirs as before
 pargs=""; [ $explicit -eq 1 ] && pargs="$targs"
-add bash ci_checks/check-tooling-identity.sh                # D9 shared sources; the eai-standard/2.2 layer = scripts/eai_standard/
+add bash ci_checks/check-tooling-identity.sh                # D9 shared sources; the eai-standard/2.2 layer = embodied_first_exam/standard/
 add bash ci_checks/check-standard-client.sh                 # standard agent + verifier images: the pinned client base and pins
 # PROTOCOL §2.9 (v1.1.4): [metadata.resources] (minimum compute) in every task.toml, consistent with the GPU reservations and
 # caps, and the README's Compute resources section rendered from it
@@ -112,8 +111,10 @@ add python3 ci_checks/check-protocol.py"$pargs"
 add python3 ci_checks/check-monitor.py --tier advisory"$pargs"
 # issue #258: every script or workflow that builds images builds from a stamped copy (scripts/stamp_mtimes.py)
 add python3 ci_checks/check-build-stamps.py
-# PROTOCOL §4: the easy set (docs/easy_set.toml) names existing task bases, with a known reason and their benchmark label
-add python3 scripts/task_conventions.py easy-set --check
+# PROTOCOL §4: the core set (docs/core_set.toml) names existing task dirs, with their base, benchmark label and mode
+add python3 scripts/task_conventions.py core-set --check
+# every task dir has its benchmark label and sits in its benchmark's folder, tasks/<folder>/<task>/ (BENCHMARK_DIRS)
+add python3 scripts/task_conventions.py benchmarks --check
 
 t0=$SECONDS
 printf %s "$cmds" | python3 "$root/ci_checks/parallel.py" --advisory; rc=$?

@@ -6,7 +6,7 @@
 # docs) and a task mounts it read-only at /data through its environment/docker-compose.yaml, which is also where the
 # task reserves a GPU: Isaac Sim needs an RTX-class NVIDIA GPU even when headless. Tag = images/behavior/VERSION.
 # BUILD_ONLY (never pushed: NVIDIA Isaac Sim inside). Build from the repo root, as images/behavior/BUILD_ONLY says:
-#   docker build -t ghcr.io/mll-lab-nu/eai-behavior:$(cat images/behavior/VERSION) -f images/behavior/Dockerfile .
+#   docker build -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) -f images/behavior/Dockerfile .
 #
 # FIXED versions (README.md here): the base by digest, and ffmpeg with every dependency at the versions of the tested image
 # (built 2026-09-20): apt reads the Ubuntu archive snapshot of that day, and the build fails unless the resulting package

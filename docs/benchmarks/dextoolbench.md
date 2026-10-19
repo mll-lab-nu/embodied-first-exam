@@ -1,16 +1,15 @@
 # DexToolBench
 
 Twenty-one tasks of DexToolBench (SimToolReal, MIT) in plain MuJoCo 3.3.7, in both modes: 42 task directories,
-`tasks/dextoolbench_<category>_<object>_<task>-{privileged,standard}`. A KUKA iiwa 14 arm with a 22-joint Sharpa HA4
+`tasks/dextoolbench/dextoolbench_<category>_<object>_<task>-{privileged,standard}`. A KUKA iiwa 14 arm with a 22-joint Sharpa HA4
 hand (29 position-controlled joints, 60 Hz control) must pick a tool up from a table and carry it through a human
 demonstration's goal poses in order; a goal counts when all 8 corners of the tool's grasp box are within 1.5 cm of the
 goal's, and the task passes only when every goal is reached. The scene, tooling (`rcb_dtb.py`) and the oracle rules are
-in the privileged tasks' READMEs. Three demonstrations of the 24 are excluded (the top-level README says why).
+in the privileged tasks' READMEs. Three demonstrations of the 24 are excluded, because the reference policy reaches no goal in this scene: `blue_brush/sweep_right`, `flat_eraser/wipe_c` and `flat_eraser/wipe_smile`.
 
-Generators: `scripts/dtb_mk_task.py` (privileged), `scripts/dtb_mk_oracle.py` (the oracles), `scripts/mj_mk_limited.py`
-(the standard twins, which share `images/mujoco/limited/server_mj.py` with the MuJoCo Playground ALOHA and Panda twins;
-docs/benchmarks/mujoco-playground.md). None has a check mode:
-`ci_checks/check-tooling-identity.sh` holds their copies together.
+The task directories are the deliverable; the tooling that built them is kept outside this repository. The standard
+twins share `images/mujoco/limited/server_mj.py` with the MuJoCo Playground ALOHA and Panda twins
+(docs/benchmarks/mujoco-playground.md); `ci_checks/check-tooling-identity.sh` holds the task copies together.
 
 ## Tasks
 | category | object | task | goals | oracle |
@@ -55,9 +54,7 @@ graded, a success ends the trial, and once the agent's time is up no reset is ac
 `meta` and `/status` carry `episode`, `resets_left` and `control_steps_total`; `final.json` and the verifier's
 `reward.json` record `resets` and `reset_budget`. Why 20: with one episode the first grasp decided the trial (a tool
 knocked off the table took most of the hour to recover). After every reset the state hash, all four cameras' RGB and
-depth images, the proprioception and the task info equal the start's. The service's unit tests
-(`scripts/mujoco-playground/tests/test_standard_2_1_servers.py`) cover the budget, the 404 without one, crash recovery
-across resets and the refusal after the time is up. Results with another reset budget are reported separately.
+depth images, the proprioception and the task info equal the start's. Results with another reset budget are reported separately.
 
 ## Grading in standard mode
 The verdict is the live episode's (`graded_by = "live"`, `replays = 0`). `server_mj.py`'s goal tracker
@@ -72,8 +69,8 @@ so both modes apply one rule (H.7); there is no settle window after the last goa
   service that crashed late in a long episode resumes it from the journal first: 400-800 s for 200,000 steps) and until
   1680 s for the video.
 - **Start state:** the instances record no state hash, so the compose file carries `RCB_START_SHA`, the hash
-  (`Session.state_sha()`, qpos and qvel at the frozen start) every recorded episode of the task started from
-  (`scripts/mj_mk_limited.py` `DTB_START_SHA`). A fresh episode on another start is refused before the agent is served
+  (`Session.state_sha()`, qpos and qvel at the frozen start) every recorded episode of the task started from.
+  A fresh episode on another start is refused before the agent is served
   (`instance_mismatch`, `infra_error = 1`). Re-measure the hashes when the tooling, an instance or the image changes.
 - **Infrastructure:** a missing, unreadable or unfinalized `final.json`, a give-up after crashes between calls or a
   failed resume (`sim_crashed`, `resume_failed`), `instance_mismatch`, a failure writing the verdict (`finalize_error`).

@@ -2,24 +2,24 @@
 
 50 of [RoboCasa365](https://github.com/robocasa/robocasa)'s kitchen tasks (robocasa 1.0.1) with a mobile manipulator
 (Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks; and one standard-realtime twin:
-`tasks/robocasa365-turn-on-toaster-oven-i00-standard-realtime`, the benchmark's one dynamic task.
+`tasks/robocasa365/robocasa365-turn-on-toaster-oven-i00-standard-realtime`, the benchmark's one dynamic task.
 
 | | |
 |---|---|
 | upstream | robocasa/robocasa @ `4f8a2980def75a55dff96b990745b83540425f09` (robocasa 1.0.1, MIT), robosuite @ `5ce6643` (1.5.2), MuJoCo 3.3.1 |
-| tasks | `tasks/robocasa365-<task>-i00-privileged` and `tasks/robocasa365-<task>-i00-standard`, 50 each |
+| tasks | `tasks/robocasa365/robocasa365-<task>-i00-privileged` and `tasks/robocasa365/robocasa365-<task>-i00-standard`, 50 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa365/<Env>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
+| image | `ghcr.io/mll-lab-nu/efe-private:robocasa365-0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| generator | `scripts/robocasa365/` (`select_instances.py`, `import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
+| sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 
 ## Scope and selection rule
 PR #4 accepted 256 RoboCasa365 families with a demonstration-based reference (63 atomic, 193 composite; the 109 others
 have no official demonstration at the pinned commit or no validated reference). This benchmark takes 50 of them
-(`select_instances.py`, deterministic): the slots are shared between atomic and composite tasks in proportion to their
+(deterministically): the slots are shared between atomic and composite tasks in proportion to their
 sizes (12 atomic, 38 composite; the group is the module the environment class lives in); within a group, families are
 taken in the order of the SHA-256 of their environment name, skipping any whose reference does not verify with this
-benchmark's tooling (`import_references.py`), until the group's slots are filled. One candidate was skipped:
+benchmark's tooling, until the group's slots are filled. One candidate was skipped:
 `OrganizeMugsByHandle` (its reference does not reach success when replayed with MuJoCo's mesh cache off (every build cold); PR #4 had accepted it with the cache on).
 
 - Atomic (12): PickPlaceSinkToCounter, PickPlaceCabinetToCounter, CloseDrawer, TurnOnMicrowave, CloseOven, TurnOnStove, TurnOnToasterOven, OpenDishwasher, TurnOffMicrowave, PackDessert, TurnOnSinkFaucet, CloseStandMixerHead.
@@ -56,20 +56,20 @@ benchmark's tooling (`import_references.py`), until the group's slots are filled
   are hidden.
 
 ## Standard-mode service
-`images/robocasa365/standard/server_casa.py` and the collect hook `scripts/robocasa365/shared/finalize.sh`, the same
+`images/robocasa365/standard/server_casa.py` and the collect hook `environment/sim/finalize.sh`, the same
 service and hook as RoboCasa's, byte for byte (`docs/benchmarks/robocasa.md`: graded by the live episode, nothing
-replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RCB_START_SHA` from
-`scripts/robocasa365/frozen/start_state.json`, a mismatch is infrastructure), the video one render pass after the
+replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RCB_START_SHA` in
+each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one render pass after the
 verdict; the hook's budget; request validation; the camera calibration is the rendered viewpoint).
 
 ## Standard-realtime (`eai-standard/2.3`)
 The dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-standard-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
 by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
 it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.
-- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics, unchanged
-  (`scripts/robocasa365/shared/realtime/rcb_realtime.py`, `rcb_service.py`, `rcb_client.py`, `grade.py`: byte-identical
-  copies of `scripts/humanoidbench/shared/`; `ci_checks/check-tooling-identity.sh`), with
-  `scripts/robocasa365/shared/realtime/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
+- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics-Fun, unchanged
+  (the task's `environment/sim/rcb_realtime.py`, `rcb_service.py`, `environment/rcb_client.py`, `tests/grade.py`: byte-identical
+  copies of the HumanoidBench realtime tasks' files; `ci_checks/check-tooling-identity.sh`), with
+  `environment/sim/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
   twin's frozen instance, native controller command (`joint_position`, 13 channels, clipped and reported), success
   check (`_check_success`, twice per control step) and cameras (RGB-D, 320 x 240, OSMesa on the CPU; no GPU). The
   verdict is the live episode's (the shared layer's `graded_by = live`): the last episode's success as it ran, and the
@@ -104,95 +104,85 @@ demonstration data.
 `images/robocasa365/Dockerfile` pins the base image by digest, every pip package, the robosuite and RoboCasa commits
 and every asset archive by SHA-256 (`fetch_assets.sh`; four archives from RoboCasa's Hugging Face mirror, byte-identical
 to the UT Box ones). It reproduces the content of the image the tasks were validated with. **Open: a clean rebuild**
-(~11 GB of downloads, ~55 GB of disk) and a re-check of the hashes with `import_references.sh` before publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0; the
+(~11 GB of downloads, ~55 GB of disk) and a re-check of the hashes before publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0; the
 Lightwheel fixtures and objects come from RoboCasa's UT Box links under RoboCasa's asset terms (maintainers to
 confirm publishing, otherwise `BUILD_ONLY`).
 
-## Rebuilding the tasks
-```bash
-docker build -t ghcr.io/mll-lab-nu/eai-robocasa365:$(cat images/robocasa365/VERSION) images/robocasa365
-bash scripts/robocasa365/import_references.sh <PR #4 checkout>
-python3 scripts/robocasa365/generate.py      # ends with scripts/task_conventions.py normalize; re-running reproduces the tasks
-cd tasks && harbor add --scan . && cd ..
-bash ci_checks/run_all.sh tasks/robocasa365-*
-```
-
 ## Evidence
-`scripts/robocasa365/frozen/report.json`, for all 50: not solved at the start; `reset()` bit-exact; the reference
+For all 50: not solved at the start; `reset()` bit-exact; the reference
 succeeds on its final state without truncation; two fresh-process replays end in the live state's hash and succeed.
 
 Harbor runs on the generated tasks: `-a oracle` scores 1 (50/50 privileged, 6/6 standard sampled), `-a nop` 0;
 scripted cheat attempts score 0 in both modes.
 
-## Easy set
+## Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
 **unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
-`solved`): kept under its name and reported apart from the main table.
+**pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-19 of 50 bases are in the easy set; by directory: 70 easy, 6 hard, 25 unverified, 0 pending.
+By directory: 70 easy, 6 hard, 25 unverified, 0 pending.
 
-| base | easy set | privileged | standard | standard-realtime |
-|---|---|---|---|---|
-| `robocasa365-add-lemon-to-fish-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Astra, Opus, Sol 6.1 | — |
-| `robocasa365-assemble-cooking-array-i00` |  | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) | — |
-| `robocasa365-beverage-sorting-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Gemini 4 Argon | — |
-| `robocasa365-bread-and-cheese-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-candle-cleanup-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon | — |
-| `robocasa365-cereal-and-bowl-i00` |  | easy: Astra, Sol 6.1, Gemini 3.8 Flash | hard | — |
-| `robocasa365-choose-measuring-cup-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-clear-food-waste-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | — |
-| `robocasa365-clear-sink-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Gemini 3.8 Flash, Gemini 4 Argon | — |
-| `robocasa365-close-drawer-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-close-oven-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-close-stand-mixer-head-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-cookie-dough-prep-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-deliver-brewed-coffee-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Sol 6.1, Gemini 4 Argon | — |
-| `robocasa365-dessert-upgrade-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-display-meat-variety-i00` |  | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | hard | — |
-| `robocasa365-divide-basins-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-drain-veggies-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol | easy: Gemini 4 Argon | — |
-| `robocasa365-drinkware-consolidation-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-make-ice-lemonade-i00` | yes | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Opus, Gemini 4 Argon | — |
-| `robocasa365-make-loaded-potato-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-meal-prep-staging-i00` | yes | easy: Astra, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus | — |
-| `robocasa365-microwave-defrost-meat-i00` |  | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | hard | — |
-| `robocasa365-open-dishwasher-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol, Gemini 4 Argon, DeepSeek V4.1 Flash | — |
-| `robocasa365-organize-coffee-condiments-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon | — |
-| `robocasa365-oven-broil-fish-i00` | yes | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Astra, Opus | — |
-| `robocasa365-pack-dessert-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-pick-place-cabinet-to-counter-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon | — |
-| `robocasa365-pick-place-sink-to-counter-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-plate-steak-meal-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | — |
-| `robocasa365-portion-in-tupperware-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-pre-rinse-station-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-prep-for-sanitizing-i00` | yes | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Astra, Opus | — |
-| `robocasa365-prep-marinating-meat-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-reheat-meal-i00` | yes | easy: Astra, Gemini 4 Argon | easy: Opus | — |
-| `robocasa365-retrieve-meat-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus, Gemini 3.8 Flash, Gemini 4 Argon | — |
-| `robocasa365-sanitize-prep-cutting-board-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-scrub-bowl-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-searing-meat-i00` |  | easy: Astra, Opus | hard | — |
-| `robocasa365-seasoning-spice-setup-i00` |  | easy: Astra, Sol 6.1, Gemini 4 Argon | hard | — |
-| `robocasa365-set-up-cutting-station-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash | easy: Astra, Sol 6.1 | — |
-| `robocasa365-stocking-breakfast-foods-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-sweeten-coffee-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-thaw-in-sink-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-tong-buffet-setup-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash | easy: Opus | — |
-| `robocasa365-turn-off-microwave-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-turn-on-microwave-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-turn-on-sink-faucet-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-turn-on-stove-i00` |  | easy: Luna | unverified | — |
-| `robocasa365-turn-on-toaster-oven-i00` |  | easy: Luna | unverified | easy: Luna |
+| base | privileged | standard | standard-realtime |
+|---|---|---|---|
+| `robocasa365-add-lemon-to-fish-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Astra, Opus, Sol 6.1 | — |
+| `robocasa365-assemble-cooking-array-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) | — |
+| `robocasa365-beverage-sorting-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Gemini 4 Argon | — |
+| `robocasa365-bread-and-cheese-i00` | easy: Luna | unverified | — |
+| `robocasa365-candle-cleanup-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon | — |
+| `robocasa365-cereal-and-bowl-i00` | easy: Astra, Sol 6.1, Gemini 3.8 Flash | hard | — |
+| `robocasa365-choose-measuring-cup-i00` | easy: Luna | unverified | — |
+| `robocasa365-clear-food-waste-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | — |
+| `robocasa365-clear-sink-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Gemini 3.8 Flash, Gemini 4 Argon | — |
+| `robocasa365-close-drawer-i00` | easy: Luna | unverified | — |
+| `robocasa365-close-oven-i00` | easy: Luna | unverified | — |
+| `robocasa365-close-stand-mixer-head-i00` | easy: Luna | unverified | — |
+| `robocasa365-cookie-dough-prep-i00` | easy: Luna | unverified | — |
+| `robocasa365-deliver-brewed-coffee-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Sol 6.1, Gemini 4 Argon | — |
+| `robocasa365-dessert-upgrade-i00` | easy: Luna | unverified | — |
+| `robocasa365-display-meat-variety-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | hard | — |
+| `robocasa365-divide-basins-i00` | easy: Luna | unverified | — |
+| `robocasa365-drain-veggies-i00` | easy: Astra, Opus, Sol 6.1, Sol | easy: Gemini 4 Argon | — |
+| `robocasa365-drinkware-consolidation-i00` | easy: Luna | unverified | — |
+| `robocasa365-make-ice-lemonade-i00` | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Opus, Gemini 4 Argon | — |
+| `robocasa365-make-loaded-potato-i00` | easy: Luna | unverified | — |
+| `robocasa365-meal-prep-staging-i00` | easy: Astra, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus | — |
+| `robocasa365-microwave-defrost-meat-i00` | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | hard | — |
+| `robocasa365-open-dishwasher-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol, Gemini 4 Argon, DeepSeek V4.1 Flash | — |
+| `robocasa365-organize-coffee-condiments-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon | — |
+| `robocasa365-oven-broil-fish-i00` | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Astra, Opus | — |
+| `robocasa365-pack-dessert-i00` | easy: Luna | unverified | — |
+| `robocasa365-pick-place-cabinet-to-counter-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon | — |
+| `robocasa365-pick-place-sink-to-counter-i00` | easy: Luna | unverified | — |
+| `robocasa365-plate-steak-meal-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | — |
+| `robocasa365-portion-in-tupperware-i00` | easy: Luna | unverified | — |
+| `robocasa365-pre-rinse-station-i00` | easy: Luna | unverified | — |
+| `robocasa365-prep-for-sanitizing-i00` | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon | easy: Astra, Opus | — |
+| `robocasa365-prep-marinating-meat-i00` | easy: Luna | unverified | — |
+| `robocasa365-reheat-meal-i00` | easy: Astra, Gemini 4 Argon | easy: Opus | — |
+| `robocasa365-retrieve-meat-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus, Gemini 3.8 Flash, Gemini 4 Argon | — |
+| `robocasa365-sanitize-prep-cutting-board-i00` | easy: Luna | unverified | — |
+| `robocasa365-scrub-bowl-i00` | easy: Luna | unverified | — |
+| `robocasa365-searing-meat-i00` | easy: Astra, Opus | hard | — |
+| `robocasa365-seasoning-spice-setup-i00` | easy: Luna, Astra, Sol 6.1, Gemini 4 Argon | hard | — |
+| `robocasa365-set-up-cutting-station-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash | easy: Astra, Sol 6.1 | — |
+| `robocasa365-stocking-breakfast-foods-i00` | easy: Luna | unverified | — |
+| `robocasa365-sweeten-coffee-i00` | easy: Luna | unverified | — |
+| `robocasa365-thaw-in-sink-i00` | easy: Luna | unverified | — |
+| `robocasa365-tong-buffet-setup-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash | easy: Opus | — |
+| `robocasa365-turn-off-microwave-i00` | easy: Luna | unverified | — |
+| `robocasa365-turn-on-microwave-i00` | easy: Luna | unverified | — |
+| `robocasa365-turn-on-sink-faucet-i00` | easy: Luna | unverified | — |
+| `robocasa365-turn-on-stove-i00` | easy: Luna | unverified | — |
+| `robocasa365-turn-on-toaster-oven-i00` | easy: Luna | unverified | easy: Luna |
 
 Judgment calls: `robocasa365-beverage-sorting-i00`: the one standard solve hit the 3600 s agent timeout after its
 episode was recorded (graded as a success).

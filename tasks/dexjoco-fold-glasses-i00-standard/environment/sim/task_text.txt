@@ -1,3 +1,0 @@
-Fold both temples of the glasses and put the glasses into the open case. Success: both temple hinges past 1.1 rad AND the glasses' centre inside the case (within 0.145 m of the case centre in x and y, between 0.045 m below and 0.0275 m above it), held for 50 consecutive control steps.
-
-Open glasses lie on the table; the open case is next to them. Each temple is a hinge (`temple_0`, `temple_1`).

@@ -1,0 +1,94 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
+
+[task]
+name = "robot-coding-bench/roboolympics-fun-hurdles-i00-privileged"
+description = "RoboOlympics hurdles (one Unitree H1-2 on the RoboOlympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Run the 50 m hurdles: go over all four hurdles in your lane, never beside one or under its top, and bring your torso to the finish line. A referee of events, geometry and contact rules decides the success."
+authors = [{ name = "Kangrui Wang" }]
+keywords = ["robotics", "roboolympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "hurdles"]
+
+[metadata]
+author_name = "Kangrui Wang"
+task_type = "trajectory"
+simulator = "mujoco"               # the RoboOlympics simulator: MuJoCo 3.3.7 on the CPU with RoboOlympics' robot library
+robot = "unitree-h1-2"
+family = "hurdles"
+category = "track-and-jumps"
+mode = "privileged"
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
+# scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
+instance_seed = 0
+expert_time_estimate_hours = 8.0
+oracle = "none"
+oracle_evidence = "no reference solution; the referee is tested by scripts/roboolympics/tests/test_hurdles.py: positive by injection (the H1-2 given 2.0 m/s forward and 5.5 m/s up over each standing 1.067 m hurdle, a real walk to the line); negatives: knocked with a hand, arm or trunk, under the top, beside the hurdle, a leg beside it, left the lane, down. The H1-2's pelvis stands at 1.035 m and walks at 0.7 m/s (50 m alone is 71 s of the 140 s); nothing known lifts it over the bar; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+
+[metadata.resources]
+# minimum compute to run this task (docs/protocol/README.md §2.9)
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "author estimate (ws-1, 2026-10-11): CPU-only MuJoCo with OSMesa rendering; one world steps 5 times faster than real time on one core and holds about 0.4 GB; the verifier runs two replays and a filmed one"
+
+[metadata.resources.limits]
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
+scope = "trial"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 13.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 13.0
+measured = "author estimate: no trials yet; memory under the 16 GiB cap by the margin the monitor needs (an agent may run several worlds at once or train a controller); disk 20 GiB for downloaded tools and controllers; processes 512: design default"
+
+[metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
+main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
+
+[metadata.seeds]
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = []
+
+[verifier]
+timeout_sec = 900.0
+# grade.py runs in its own container (tests/Dockerfile): the agent's container is gone by then and only /app/output/
+# crosses over. It replays in two fresh processes, with no network.
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+[verifier.environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 8192
+
+[agent]
+timeout_sec = 7200.0
+# Egress: open (Harbor's default), as `[metadata] network` declares. RoboOlympics lets the agent search for and download
+# public tools, robot models and pretrained controllers (owner, 2026-10-11; docs/benchmarks/roboolympics.md).
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 8
+memory_mb = 16384
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

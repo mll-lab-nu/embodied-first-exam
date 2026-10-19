@@ -9,8 +9,8 @@ multi-object manipulation, geometric and dynamic constraints.
 | simulator | MuJoCo 3.3 (Dynamic3D) in KinDER's MimicLabs lab, CPU physics |
 | robot | TidyBot++: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper; delta actions (MuJoCo: 10 Hz) |
 | score | pass = KinDER's own goal check within the episode (1000 control steps) |
-| tasks | 5 families × 2 modes: `tasks/kinder-<family>-i00-privileged` (scoop-pour, sweep-simple: `-i01-`) and `-standard` (`eai-standard/2.1`) |
-| image | `ghcr.io/mll-lab-nu/eai-kinder:0.1.6` (`images/kinder/`, 4.6 GB with the lab scenes) |
+| tasks | 5 families × 2 modes: `tasks/kinder/kinder-<family>-i00-privileged` (scoop-pour, sweep-simple: `-i01-`) and `-standard` (`eai-standard/2.1`) |
+| image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` (`images/kinder/`, 4.6 GB with the lab scenes) |
 | oracle | `dynamo` (the fixture): full, both modes; the other four: none, human review (positive examples below; scoop-pour and sweep-simple: none yet, unvalidated) |
 
 ## Tasks (one variant each, seed 0)
@@ -31,7 +31,6 @@ Why these (no model's results enter the choice):
 - **Variant:** both cube families use their o50 variant; sweep-simple's o50 has three goals, and the one used is upstream's README example (the right side of the
   kitchen island). Scoop-pour's o100 is not used: it simulates about 5x slower, and known 30-cube solutions already use
   770 and 845 of the 1000 control steps. Cupboard (o1-o6) and drawer (o5 only) are at their largest.
-- Per-task reasons: `scripts/kinder/subset.toml`.
 
 Positive examples are runs published on the results
 site; each scores 1 under today's privileged verifier, and "both" means it also passes when sent through the
@@ -55,7 +54,7 @@ to be solvable. One standard twin has none of its own yet:
 | standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | 0 (the protocol's default) | the last episode, as it ran (live; nothing replayed) |
 
 Grading in standard mode: the live episode. The sim sidecar judges the episode it runs with KinDER's own goal check
-(the environment's `terminated`, at every control step; `step()` in `scripts/kinder/shared/standard/server.py`) and
+(the environment's `terminated`, at every control step; `step()` in each standard task's `environment/sim/server.py`) and
 ends it there; `rcb_service.py` writes that verdict (`graded_by = "live"`, `replays = 0`) once the agent's container is
 stopped. The frozen start is checked on the live simulator: `start_sha` is the instance's recorded `scene_sha` (the
 state hash right after reset), and a KinDER that no longer builds the instance (rcb_kinder's own check) is
@@ -70,7 +69,7 @@ World-frame information (PROTOCOL §5): privileged mode gives KinDER's world sta
 starts at the robot's start pose, and the goal is named by what the cameras see. One exception: where
 the goal is a translucent region marked on the floor (dynamo's green square, sweep-simple's grey box), faint in the
 robot's cameras, the standard instruction states its centre, size (and the box's height) in the odometry frame at t = 0,
-measured on the frozen instance (`gen_tasks.py measure`, facts.json `goal_region`).
+measured on the frozen instance.
 
 | standard mode: given (a real TidyBot++ has it) | not given |
 |---|---|
@@ -82,12 +81,12 @@ measured on the frozen instance (`gen_tasks.py measure`, facts.json `goal_region
 ## Run
 
 ```bash
-harbor run -p tasks/kinder-scoop-pour-i01-standard -a codex -m openai/gpt-6-luna --env-file .env
-harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
+harbor run -p tasks/kinder/kinder-scoop-pour-i01-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/kinder/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
 Agent, provider and effort settings: docs/protocol/running.md. Agent time cutoff: 1800 s in both modes. Standard tasks grant no reset by default (the protocol's default): one episode, whose 1000 control steps the practice and the graded attempt share;
-`RCB_RESET_BUDGET=N harbor run ...` runs a configuration with N resets, whose results are reported separately (the shipped instruction describes the default, one episode; for N > 0 regenerate the tasks with `RESET_BUDGET = N`, which renders the reset rules and `r.reset()`). Build the image: `docker build -f images/kinder/Dockerfile -t
-ghcr.io/mll-lab-nu/eai-kinder:$(cat images/kinder/VERSION) .` (from the repository root).
+`RCB_RESET_BUDGET=N harbor run ...` runs a configuration with N resets, whose results are reported separately (the shipped instruction describes the default, one episode). Build the image: `docker build -f images/kinder/Dockerfile -t
+ghcr.io/mll-lab-nu/efe:kinder-$(cat images/kinder/VERSION) .` (from the repository root).
 
 ## Results
 
@@ -97,7 +96,7 @@ runs with another reset budget are reported separately.
 ## Standard-mode service details
 
 **KinDER and HumanoidBench service (`eai-standard/2.1`).** Same endpoints, RCB1 frames and crash recovery, served by one
-shared service (`scripts/{kinder,humanoidbench}/shared/standard/rcb_service.py`, identical in both) with a per-benchmark
+shared service (`rcb_service.py` in each standard task's `environment/sim/`, identical in both) with a per-benchmark
 simulator adapter (`server.py`). Actions are delta or joint-position rows at the task's control rate (KinDER 10 Hz,
 PyBullet tasks kinematic: a refused move comes back `blocked` and stops the chunk; HumanoidBench 50 Hz); the step
 counters are `rows` and `control_steps`. No world coordinates are given (odometry and camera poses are in the robot's

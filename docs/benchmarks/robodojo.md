@@ -13,16 +13,15 @@ each a privileged task `robodojo-<task>-i00-privileged` and its standard twin `r
 standard only, graded by the live episode. 48 privileged + 54 standard = 102 task directories. `oracle = "none"` for every
 task (below).
 
-## Tasks and generator
-`scripts/robodojo/mk_tasks.py [--check]` writes the 102 directories from:
-- `scripts/robodojo/descr/<task>.json`: what the task asks and exactly what its check tests (every predicate, threshold,
-  stage and end-of-episode requirement), written from RoboDojo's code (`task/RoboDojo/tasks/<task>.py`, its config,
-  `env/reward_manager/`); the instructions quote it. The code is the reference.
-- `scripts/robodojo/frozen/<task>-i00/instance.json`: the evaluation layout verbatim (with its sha256), the state hash after
-  RoboDojo's reset, RoboDojo's language instruction for the layout, and per-task fields from
-  `scripts/robodojo/instance_overrides.json` (`physics`, `determinism`), copied in by `sync_frozen.py` from the determinism
-  test's output (`rcb_robodojo.py make-instance --task T --seed 0 --layout 0 [--physx key=value]`).
-- `scripts/robodojo/dimensions.json` (RoboDojo's documentation), `conventions.json`, `template/<mode>/`.
+## Tasks
+The task directories are the deliverable; the tooling that built them is kept outside this repository. Each task carries:
+- in its instruction, what the task asks and exactly what its check tests (every predicate, threshold, stage and
+  end-of-episode requirement), written from RoboDojo's code (`task/RoboDojo/tasks/<benchmark>/<task>.py`, its config,
+  `env/reward_manager/`). The code is the reference.
+- its instance's `instance.json` (`environment/sim/instance.json`): the evaluation layout verbatim (with its sha256),
+  the state hash after RoboDojo's reset, RoboDojo's language instruction for the layout, and per-task fields
+  (`physics`, `determinism`) from the determinism test's output (`rcb_robodojo.py make-instance --task T --seed 0
+  --layout 0 [--physx key=value]`). The committed standard tasks are the list of instances.
 
 ## Success (RoboDojo's own check)
 RoboDojo's reward manager for the task, unchanged: its `run_reward()` check list (registered at the start of every episode,
@@ -38,7 +37,7 @@ None: RoboDojo releases no expert or planner script, and its training demonstrat
 initial state or layout, so none replays on a frozen layout. Every task is `oracle = "none"` and needs human review
 (CONTRIBUTING.md; the review is in pull request #142). Model trials gave positive examples (privileged
 `general_pickup`, `deposit_coin`, `match_and_pick_from_conveyor`, `stack_blocks_by_language`; standard
-`general_pickup`); the easy-set table below lists the bases solved by the screening runs.
+`general_pickup`); the screening table below lists the bases solved by the screening runs.
 
 ## Tooling (`rcb_robodojo.py`)
 `Session(task, instance=...)` builds RoboDojo's own evaluator environment (`src/eval_client/eval_env.py`: one env, the
@@ -117,11 +116,6 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
   encodes it after the verdict (CPU, at most 600 s); a frame or an encode that fails costs the video only. Privileged:
   the one replay is the filmed one (`replay.mp4`); a video that cannot be written gives `video_ok` false and the replay
   stands.
-- Unit tests with stand-ins for the simulator (CI: check-unit-tests.sh): `scripts/robodojo/tests/test_standard_grading.py`
-  runs the collect hook and the standard grader (live success / failure, both kinds of task, crashes between and inside
-  calls, an instance mismatch, no episode.json, a failing, crashing or hanging encode; no replay may start);
-  `test_server.py` (numpy) the real service on a stub Session (the start check, the live video's frames only at rendered
-  actions); `test_privileged_grading.py` the privileged grader (exactly one replay process, the filmed one).
 - Time limits (wall clock only; the verdict rules do not depend on them). A replay process takes up to ~7 min until the
   layout is ready (a cold first start, which every privileged verifier's replay is) and runs at about 5-11 actions/s
   filmed. A replay's allowance is max(1800 s, 1200 s + rows / 2.5), so 7200 s for the 15,000 rows a trajectory may
@@ -136,14 +130,14 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
 
 ## Crash recovery (standard mode, docs/protocol/standard_mode.md §13)
 Resume class `exact` (the resumed service is a fresh process whose journal replay is that process's first run), `approx` for
-the six standard-only tasks graded by the live episode. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test `scripts/robodojo/kill_test.sh`: RoboDojo
+the six standard-only tasks graded by the live episode. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test: RoboDojo
 has no oracle, so a driver client (12 joint_position chunks; not a solution) runs as Harbor's oracle on a copy of
 `robodojo-general-pickup-i00-standard`, and the service is killed with SIGKILL inside the 6th call, after 5 checkpoints.
 Expected: one exact resume (the checkpoint's state hash), the killed call rolled back, the driver's other chunks run,
 finalized, no infrastructure error. The driver does not solve the task (success 0 is expected).
 
 ## Time budget
-3600 s for every task of both modes: each task's own `[agent] timeout_sec`, the generator's `CUTOFF_SEC` (PROTOCOL §2,
+3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
 docs/protocol/running.md "The agent's time"). Every Python process pays ~2.5-4 min of Isaac Sim launch, scene build and RoboDojo's
 settling (a trial's first start also compiles shaders and materials), and many tasks are long (RoboDojo gives policies
 up to 1900 actions), so an hour holds about a dozen simulator starts at most.
@@ -197,7 +191,7 @@ memory (the cap every past trial ran under; an agent may run a second Session); 
 Caps: privileged main 8 CPUs / 39 GiB; standard main 8 CPUs / 16 GiB, sim sidecar 16 CPUs / 25 GiB.
 
 ## Image and host
-`images/robodojo/` → `ghcr.io/mll-lab-nu/eai-robodojo:0.1.0` (~74 GB, with RoboDojo's 41 GB of assets). It contains Isaac
+`images/robodojo/` → `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` (~74 GB, with RoboDojo's 41 GB of assets). It contains Isaac
 Sim: **BUILD_ONLY** (`images/robodojo/BUILD_ONLY` has the licences, the build command and the check of a build). Needs an
 RTX-class GPU and ~5-10 GB of GPU memory per Isaac process; Isaac hangs instead of exiting when the GPU runs out of memory,
 so a shared GPU runs few at once. Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount
@@ -211,79 +205,78 @@ fork: NVIDIA's cuRobo licence. Isaac Sim 5.1 and its wheels: NVIDIA proprietary 
 
 Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six standard-only tasks graded by the live episode (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.
 
-## Easy set
+## Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
 **unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
-`solved`): kept under its name and reported apart from the main table.
+**pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-33 of 54 bases are in the easy set; by directory: 80 easy, 13 hard, 9 unverified, 0 pending.
+By directory: 80 easy, 13 hard, 9 unverified, 0 pending.
 
-| base | easy set | privileged | standard |
-|---|---|---|---|
-| `robodojo-align-blocks-i00` | yes | easy: Astra, Opus, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash |
-| `robodojo-arrange-largest-number-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-arrange-largest-number-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash | easy: Astra, Opus, Gemini 4 Argon |
-| `robodojo-build-tower-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
-| `robodojo-classify-objects-by-language-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
-| `robodojo-classify-objects-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-cover-blocks-i00` |  | easy: Luna | unverified |
-| `robodojo-deposit-coin-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
-| `robodojo-fasten-screws-i00` | yes | easy: Luna | easy: Luna |
-| `robodojo-fill-egg-holder-i00` |  | easy: Astra | hard |
-| `robodojo-fill-pen-holder-i00` | yes | easy: Astra | easy: Astra, Gemini 4 Argon |
-| `robodojo-fold-clothes-i00` | yes | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-fold-clothes-random-i00` | yes | — | easy: Astra, Opus, Gemini 4 Argon |
-| `robodojo-general-pickup-i00` | yes | easy: Luna | easy: Luna |
-| `robodojo-hang-mugs-i00` |  | easy: Astra, Opus | hard |
-| `robodojo-hang-mugs-random-i00` |  | hard | easy: Gemini 4 Argon |
-| `robodojo-imitate-sorting-sequence-i00` |  | easy: Luna | unverified |
-| `robodojo-insert-key-i00` |  | easy: Astra, Gemini 4 Argon | hard |
-| `robodojo-insert-tubes-i00` |  | easy: Luna | unverified |
-| `robodojo-make-kong-i00` |  | easy: Astra, Opus, Gemini 3.8 Flash | hard (only Astra) |
-| `robodojo-make-toast-i00` |  | easy: Astra | hard |
-| `robodojo-make-toast-random-i00` | yes | — | easy: Opus, Gemini 4 Argon |
-| `robodojo-match-and-pick-from-conveyor-i00` | yes | easy: Luna | easy: Luna |
-| `robodojo-organize-table-i00` | yes | easy: Astra, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
-| `robodojo-pack-objects-into-box-i00` |  | easy: Astra, Opus, Gemini 4 Argon | hard |
-| `robodojo-pack-objects-into-box-random-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Gemini 4 Argon |
-| `robodojo-pick-from-conveyor-by-image-i00` | yes | easy: Astra, Opus | easy: Opus |
-| `robodojo-play-stacking-toy-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
-| `robodojo-play-tic-tac-toe-i00` |  | easy: Luna | unverified |
-| `robodojo-play-xylophone-i00` |  | unverified | easy: Luna |
-| `robodojo-plug-in-charger-i00` | yes | easy: Astra, Opus, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon |
-| `robodojo-pour-balls-into-vase-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash |
-| `robodojo-pour-by-language-i00` | yes | — | easy: Opus |
-| `robodojo-pour-liquid-into-cup-i00` | yes | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-pour-liquid-into-cup-random-i00` | yes | — | easy: Astra, Opus, Gemini 3.8 Flash |
-| `robodojo-press-by-number-i00` |  | easy: Luna | unverified |
-| `robodojo-push-t-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus |
-| `robodojo-push-t-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash |
-| `robodojo-put-bottles-into-dustbin-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-solve-equation-i00` |  | easy: Luna | unverified |
-| `robodojo-sort-nesting-dolls-by-size-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
-| `robodojo-sort-nesting-dolls-by-size-random-i00` |  | easy: Luna | unverified |
-| `robodojo-stack-blocks-by-language-i00` | yes | easy: Luna | easy: Luna |
-| `robodojo-stack-blocks-i00` | yes | easy: Luna | easy: Luna |
-| `robodojo-stack-blocks-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash |
-| `robodojo-stack-bowls-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-stack-bowls-random-i00` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus |
-| `robodojo-store-laptop-and-headphones-i00` |  | easy: Astra | hard |
-| `robodojo-store-laptop-and-headphones-random-i00` |  | hard | hard |
-| `robodojo-store-tools-in-toolbox-i00` |  | easy: Astra | hard |
-| `robodojo-swap-blocks-i00` |  | easy: Astra | hard |
-| `robodojo-swap-t-i00` | yes | easy: Luna | easy: Luna |
-| `robodojo-sweep-blocks-i00` |  | easy: Luna | unverified |
-| `robodojo-sweep-blocks-random-i00` |  | easy: Astra, Opus | hard (only Astra) |
+| base | privileged | standard |
+|---|---|---|
+| `robodojo-align-blocks-i00` | easy: Astra, Opus, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash |
+| `robodojo-arrange-largest-number-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-arrange-largest-number-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-build-tower-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
+| `robodojo-classify-objects-by-language-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-classify-objects-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-cover-blocks-i00` | easy: Luna | unverified |
+| `robodojo-deposit-coin-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
+| `robodojo-fasten-screws-i00` | easy: Luna | easy: Luna |
+| `robodojo-fill-egg-holder-i00` | easy: Astra | hard |
+| `robodojo-fill-pen-holder-i00` | easy: Astra | easy: Astra, Gemini 4 Argon |
+| `robodojo-fold-clothes-i00` | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-fold-clothes-random-i00` | — | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-general-pickup-i00` | easy: Luna | easy: Luna |
+| `robodojo-hang-mugs-i00` | easy: Astra, Opus | hard |
+| `robodojo-hang-mugs-random-i00` | hard | easy: Gemini 4 Argon |
+| `robodojo-imitate-sorting-sequence-i00` | easy: Luna | unverified |
+| `robodojo-insert-key-i00` | easy: Astra, Gemini 4 Argon | hard |
+| `robodojo-insert-tubes-i00` | easy: Luna | unverified |
+| `robodojo-make-kong-i00` | easy: Astra, Opus, Gemini 3.8 Flash | hard (only Astra) |
+| `robodojo-make-toast-i00` | easy: Astra | hard |
+| `robodojo-make-toast-random-i00` | — | easy: Opus, Gemini 4 Argon |
+| `robodojo-match-and-pick-from-conveyor-i00` | easy: Luna | easy: Luna |
+| `robodojo-organize-table-i00` | easy: Astra, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
+| `robodojo-pack-objects-into-box-i00` | easy: Astra, Opus, Gemini 4 Argon | hard |
+| `robodojo-pack-objects-into-box-random-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Gemini 4 Argon |
+| `robodojo-pick-from-conveyor-by-image-i00` | easy: Astra, Opus | easy: Opus |
+| `robodojo-play-stacking-toy-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-play-tic-tac-toe-i00` | easy: Luna | unverified |
+| `robodojo-play-xylophone-i00` | unverified | easy: Luna |
+| `robodojo-plug-in-charger-i00` | easy: Astra, Opus, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon |
+| `robodojo-pour-balls-into-vase-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash |
+| `robodojo-pour-by-language-i00` | — | easy: Opus |
+| `robodojo-pour-liquid-into-cup-i00` | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-pour-liquid-into-cup-random-i00` | — | easy: Astra, Opus, Gemini 3.8 Flash |
+| `robodojo-press-by-number-i00` | easy: Luna | unverified |
+| `robodojo-push-t-i00` | easy: Astra, Opus, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus |
+| `robodojo-push-t-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash |
+| `robodojo-put-bottles-into-dustbin-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-solve-equation-i00` | easy: Luna | unverified |
+| `robodojo-sort-nesting-dolls-by-size-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus |
+| `robodojo-sort-nesting-dolls-by-size-random-i00` | easy: Luna | unverified |
+| `robodojo-stack-blocks-by-language-i00` | easy: Luna | easy: Luna |
+| `robodojo-stack-blocks-i00` | easy: Luna | easy: Luna |
+| `robodojo-stack-blocks-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash |
+| `robodojo-stack-bowls-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-stack-bowls-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Astra, Opus |
+| `robodojo-store-laptop-and-headphones-i00` | easy: Astra | hard |
+| `robodojo-store-laptop-and-headphones-random-i00` | hard | hard |
+| `robodojo-store-tools-in-toolbox-i00` | easy: Astra | hard |
+| `robodojo-swap-blocks-i00` | easy: Astra | hard |
+| `robodojo-swap-t-i00` | easy: Luna | easy: Luna |
+| `robodojo-sweep-blocks-i00` | easy: Luna | unverified |
+| `robodojo-sweep-blocks-random-i00` | easy: Astra, Opus | hard (only Astra) |
 
 Judgment calls: `robodojo-put-bottles-into-dustbin-i00`: the standard solves by Opus and Gemini 3.8 Flash relayed a
 bottle over the table instead of the suggested handover, which the task text says is not enforced.

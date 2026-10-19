@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe-private:ispatialgym-files-0.1.0@sha256:d7698c93db51cd166c0523be6ca01fe662a54016be37e8b0897efc939b6963cc",
+ "source": "embodied_first_exam/benchmarks/ispatialgym",
+ "files": {
+  "privileged/environment/rcb_ispatialgym.py": "c0e239bebf689f12df76704f447e339ef0041178a4f356753b20e43a2d38ca4b",
+  "privileged/tests/grade.py": "9458e1664f21378794488c9e67bb818bf4bcfa32ec750fd99f2fc2505e627e63",
+  "standard/tests/grade.py": "da9956fd9a548b844d6236709a1e21d84e9491692a58ba4ed2f2b025df5bf167"
+ }
+}

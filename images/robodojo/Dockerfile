@@ -4,7 +4,7 @@
 # Traj, Eval_Layout; Apache-2.0, Hugging Face dataset RoboDojo-Benchmark/RoboDojo at a pinned revision, ~41 GB) are baked
 # in under /opt/RoboDojo/Assets. Isaac Sim needs an RTX-class GPU even headless; cuRobo needs CUDA.
 # Tag = images/robodojo/VERSION; build from the repo root (images/robodojo/BUILD_ONLY has the command, licences, checks):
-#   docker build -f images/robodojo/Dockerfile -t ghcr.io/mll-lab-nu/eai-robodojo:$(cat images/robodojo/VERSION) .
+#   docker build -f images/robodojo/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robodojo-$(cat images/robodojo/VERSION) .
 # With the assets already downloaded (same revision), pass them instead of downloading again:
 #   --build-context robodojo-assets=<dir containing Assets/>
 # BUILD_ONLY, never published: Isaac Sim 5.1 / Omniverse Kit may be installed and used but not redistributed.

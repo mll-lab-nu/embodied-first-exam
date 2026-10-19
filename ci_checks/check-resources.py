@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from task_conventions import (  # noqa: E402  (one list of keys, one README / instruction renderer)
     CAP_KEYS, CUTOFF_HEADING, LIMIT_KEYS, LIMIT_SCOPES, RESOURCE_KEYS, mode_of, observed_of, render_external, render_limits, render_resources,
-    sidecars_of)
+    sidecars_of, iter_tasks)
 from rcb_monitor import inject  # noqa: E402  (one reader of the compose file's services and caps)
 
 GPU_CLASSES = {"none", "any", "rtx"}
@@ -312,9 +312,7 @@ def main_has_gpu(task: Path) -> bool:
 
 
 def main(argv: list[str]) -> int:
-    tasks = [Path(a).resolve() for a in argv] or sorted(
-        p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file()
-    )
+    tasks = [Path(a).resolve() for a in argv] or iter_tasks()
     rc = 0
     n = 0
     for t in tasks:

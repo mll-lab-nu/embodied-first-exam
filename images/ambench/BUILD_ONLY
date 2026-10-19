@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/eai-ambench:<images/ambench/VERSION> is never pushed to a public registry (docs/protocol/README.md §2.4,
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:ambench-<images/ambench/VERSION> is never pushed to a public registry (docs/protocol/README.md §2.4,
 D5). Every evaluation host builds it locally; the AM-Bench tasks reference that tag and Harbor finds it in the local Docker
 image store.
 
@@ -22,8 +22,7 @@ What is left out on purpose
   AM-Bench's scripted experts (source/ambench/ambench/policies/scripted/: they solve the tasks; the task registrations'
   pointer to them is blanked), its policy-learning package (ambench_learn), its scripts, documentation and git history.
   The build fails if anything left in /opt/ambench/source still names them. The reference solutions live in the task
-  directories' solution/ only (recorded by scripts/ambench/freeze.py with the expert mounted from a checkout outside the
-  image).
+  directories' solution/ only (recorded with the expert mounted from a checkout outside the image).
 
 Data
   The web assets the scenes would otherwise load from NVIDIA's asset bucket at run time are baked in under /opt/isaac-assets,
@@ -47,7 +46,7 @@ Host
   (docs/benchmarks/ambench.md, Determinism).
 
 Build (from the repository root)
-  docker build -f images/ambench/Dockerfile -t ghcr.io/mll-lab-nu/eai-ambench:$(cat images/ambench/VERSION) .
+  docker build -f images/ambench/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ambench-$(cat images/ambench/VERSION) .
   The build follows AM-Bench's scripts/setup/install.sh (torch 2.7.0+cu128, Isaac Sim 5.1.0, Isaac Lab at YAMLab's commit,
   Pyroki with JAX 0.4.28 on the CPU, acados with qpOASES, AM-Bench), then sets every Python package to
   images/ambench/requirements.lock (the reference build's `uv pip freeze`) without resolving and fails unless the environment
@@ -56,13 +55,13 @@ Build (from the repository root)
 Check a build
   The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of the reference trajectory
   must succeed and end in its recorded hash. With a task directory at hand:
-    t=tasks/ambench-press-button-fahexa-i00-privileged
-    docker run --rm --gpus all --shm-size 8g --network none -v $PWD/$t:/t ghcr.io/mll-lab-nu/eai-ambench:$(cat images/ambench/VERSION) \
+    t=tasks/ambench/ambench-press-button-fahexa-i00-privileged
+    docker run --rm --gpus all --shm-size 8g --network none -v $PWD/$t:/t ghcr.io/mll-lab-nu/efe-private:ambench-$(cat images/ambench/VERSION) \
       bash -c "cd /tmp && python /t/environment/rcb_ambench.py run-actions --instance /t/environment/instance.json \
                  --actions /t/solution/oracle_actions.npy --out /tmp/t.npz && \
                python /t/environment/rcb_ambench.py replay --instance /t/environment/instance.json --traj /tmp/t.npz"
   expects instance_matches true, success true and, from the replay, the end state_sha of the task README's Verification
-  section (the oracle's hash; both commands run camera-free). Or run `harbor run -p tasks/ambench-press-button-fahexa-i00-privileged -a oracle`.
+  section (the oracle's hash; both commands run camera-free). Or run `harbor run -p tasks/ambench/ambench-press-button-fahexa-i00-privileged -a oracle`.
 
 On a CI machine (maintainers)
   A self-hosted runner with such a GPU builds the image with the command above when images/ambench/ changes, runs the check,

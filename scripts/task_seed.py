@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Run a task from one of its allowed seeds (docs/protocol/README.md §2.13). The runner chooses the seed, never the agent:
 
-    python3 scripts/task_seed.py list tasks/<task>                      # default, allowed, oracle
-    python3 scripts/task_seed.py pick tasks/<task> [--rng N]            # a seed drawn uniformly from `allowed`
-    python3 scripts/task_seed.py materialize tasks/<task> --seed S --out DIR   # -> DIR/<task>, run that with Harbor
+    python3 scripts/task_seed.py list tasks/<benchmark>/<task>                      # default, allowed, oracle
+    python3 scripts/task_seed.py pick tasks/<benchmark>/<task> [--rng N]            # a seed drawn uniformly from `allowed`
+    python3 scripts/task_seed.py materialize tasks/<benchmark>/<task> --seed S --out DIR   # -> DIR/<task>, run that with Harbor
 
 `materialize` copies the task directory and, for a seed other than the default, puts that seed's frozen instance
 (`tests/seeds/<S>/instance.{json,npz}` of the task that holds the pair's instances: the privileged twin of a standard

@@ -9,7 +9,7 @@ as a benchmark by the owner on 2026-10-17 (board 0146).
 
 ## Tasks
 
-28 tasks, 14 families × 2 instances (`i00`, `i01`: two independently drawn hidden plants), all `-standard`:
+30 tasks, 15 families × 2 instances (`i00`, `i01`: two independently drawn hidden plants), all `-standard`:
 
 | Family (`roboengineer-<family>-iNN-standard`) | Robot / objective | Adaptation / held-out cases | Oracle |
 |---|---|---|---|
@@ -25,26 +25,27 @@ as a benchmark by the owner on 2026-10-17 (board 0146).
 | `go2-attitude` | Unitree Go2: track commanded body roll / pitch | 3 / 10 | full |
 | `go2-forward-jump`, `go2-yaw-jump` | jump forward / with a heading change and land stably | 3 / 10 | none (no positive example yet) |
 | `go2-weave` | weave between poles | 3 / 10 | none (no positive example yet) |
+| `g1-terrain-walk` | Unitree G1 humanoid, blind walking over flat, sloped, rough and stepped terrain; the agent trains its 98 → 512 → 256 → 128 → 29 actor with mjlab / MuJoCo Warp **on its own GPU** | 4 / 12 | partial (i00: 1/12, i01: 4/12; the reference trains from scratch on the GPU) |
 
 Per-family details (plants, randomization, score, feedback channels, provenance): [Neural Fly](roboengineer-neuralfly.md),
-[Neural Landing](quadrotor-landing.md), [AnyCar](roboengineer-anycar.md), [Go2](roboengineer-go2.md); the shared
+[Neural Landing](quadrotor-landing.md), [AnyCar](roboengineer-anycar.md), [Go2](roboengineer-go2.md), [G1](roboengineer-g1.md); the shared
 service: [control-transfer.md](control-transfer.md); the wire interface: [roboengineer-policy.md](roboengineer-policy.md).
 
-Not shipped from #329: the G1 terrain family (GPU training image and solvability not validated), the four full-lap
+Not shipped from #329: the four full-lap
 circuit packages (they need up to 32631 s of agent time, above the 14400 s cap), the circuit-sector variants and the
-Linearbot / spacecraft / YAM prototypes (source only). `scripts/roboengineer/exported.toml` maps every task to its
+Linearbot / spacecraft / YAM prototypes (source only). `ci_checks/benchmarks/roboengineer/exported.toml` maps every task to its
 package name in #329.
 
 ## Mode, runtime and grading
 
 - **Standard mode with the benchmark's own runtime** (PROTOCOL §3): `eai-policy/1.0` (Neural Landing) and
-  `eai-policy/1.1` (the others), listed in `scripts/roboengineer/exported.toml`; results are reported apart from the
+  `eai-policy/1.1` (the others), listed in `ci_checks/benchmarks/roboengineer/exported.toml`; results are reported apart from the
   `eai-standard/2.x` tasks. Appendix H applies unchanged. The private evaluator runs in the `sim` sidecar (port 8000
   on localhost, no published port); the agent's container holds the public nominal model and the controller ABI only
-  (environment/public/, an explicit allowlist checked by `scripts/roboengineer/ci/invariant-boundary.py`).
+  (environment/public/, an explicit allowlist checked by `ci_checks/benchmarks/roboengineer/invariant-boundary.py`, plus AnyCar's two track data files from the files-only image).
 - **No privileged twin**: the hidden plant is the task; a privileged agent would read it.
-- **Deliverable**: numeric policies only (bounded JSON coefficients; the G1 family's fixed-shape NPZ actor is not
-  shipped). No agent code runs in the evaluator.
+- **Deliverable**: numeric policies only (bounded JSON coefficients; G1: the fixed-shape NPZ actor's weights). No
+  agent code runs in the evaluator.
 - **Verdict** (H.4): when the agent's time is up the collect hooks run `kill -9 -1` in the agent's container, then
   signal the sidecar: from that signal on it refuses every request (a deployment still running is stopped, Control
   Transfer, or finishes ungraded, Neural Landing), takes the round the agent sealed or else the latest round completed before the cutoff, and evaluates
@@ -70,44 +71,63 @@ package name in #329.
 
 ## Images
 
-Both are `BUILD_ONLY` (licence-restricted evaluator assets; see the marker files), built from their directories:
+All are `BUILD_ONLY` (licence-restricted evaluator assets; see the marker files), built from their directories:
 
 | Image | Contents | Used by |
 |---|---|---|
-| `ghcr.io/mll-lab-nu/eai-control-transfer:0.2.0-nominal` | python 3.12, MuJoCo 3.5.0, OSMesa, ffmpeg; public assets (Unitree mjlab G1 subset, Menagerie Go2, Skydio X2) | the agent's container (FROM) |
-| `ghcr.io/mll-lab-nu/eai-control-transfer:0.2.0` | nominal + the Neural Fly force surrogate (`/opt/private-fly/forces.npz`) and the evaluator Go2 assets | the `sim` sidecar |
-| `ghcr.io/mll-lab-nu/eai-quadrotor-landing:0.1.0` | python 3.12, MuJoCo, OSMesa, ffmpeg; the Neural Lander residual (`/opt/landing/residual.npz`) | the landing `sim` sidecar (its agent image is built from the client base) |
+| `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0-nominal` | python 3.12, MuJoCo 3.5.0, OSMesa, ffmpeg; public assets (Unitree mjlab G1 subset, Menagerie Go2, Skydio X2) | the agent's container (FROM) |
+| `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0-train` | nominal + libEGL and the G1 training stack, pinned: torch 2.11.0+cu128 (CUDA 12.8 wheels: NVIDIA driver >= 570), mujoco-warp 3.5.0, warp-lang 1.12.0, mjlab 1.2.0, rsl-rl-lib 5.0.1, tensordict 0.14.3, tensorboard 2.21.0, onnx 1.23.0, onnxscript 0.7.2, onnxruntime 1.23.2, wandb 0.30.0 (`pip check` clean); 4.7 GB | the G1 agent's container (FROM) |
+| `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` | nominal + the Neural Fly force surrogate (`/opt/private-fly/forces.npz`) and the evaluator Go2 assets | the `sim` sidecar |
+| `ghcr.io/mll-lab-nu/efe-private:control-transfer-anycar-files-0.1.0` | files only: AnyCar's `circuits.json` and `compact_routes.json` (`scripts/files_image.py`; `images/control-transfer-anycar-files/FILES.json` pins it) | the AnyCar compact-lap and tracking agents' containers (`COPY --from`) |
+| `ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0` | python 3.12, MuJoCo, OSMesa, ffmpeg; the Neural Lander residual (`/opt/landing/residual.npz`) | the landing `sim` sidecar (its agent image is built from the client base) |
 
 Build (any Linux host with Docker and network access to github.com and PyPI): run the preparation in a
 `python:3.12` container (numpy 2.3.1, mujoco 3.5.0, scipy 1.17.0, CPU torch for the landing checkpoint conversion):
-`python -m scripts.control_transfer.prepare_assets --workspace <ws with sim2realbench/vendor/unitree_rl_mjlab @1425b15f>
---go2-source <menagerie @0059d433> --out <nominal> --private-go2-out <go2>`, `python -m scripts.control_transfer.neuralfly_visual --out <skydio>`,
-`python -m scripts.control_transfer.calibrate_fly --source <aerorobotics/neural-fly @0ed50246> --out <fly>`,
+`python -m images/control-transfer/stage_nominal_assets.py --workspace <ws with sim2realbench/vendor/unitree_rl_mjlab @1425b15f>
+--go2-source <menagerie @0059d433> --out <nominal> --private-go2-out <go2>`, `python -m images/control-transfer/neuralfly_visual.py --out <skydio>`,
+the Neural Fly force fit `<fly>` (from aerorobotics/neural-fly @0ed50246; its fitting tool is kept outside this repository),
 `python images/control-transfer/prepare_assets.py --assets <nominal> --fly <fly> --go2 <go2> --skydio <skydio>`,
-`bash images/quadrotor-landing/prepare_assets.sh`; then `bash images/control-transfer/build.sh` and
-`docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/eai-quadrotor-landing:0.1.0 .`. The force
+`bash images/quadrotor-landing/prepare_assets.sh`; then `BUILD_TRAIN=1 bash images/control-transfer/build.sh` (a host that
+pulled the nominal image builds the training image alone with `TRAIN_ONLY=1`: its stage starts FROM the nominal tag) and
+`docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0 .`. The force
 fit reproduces the documented validation RMSE (0.8749 / 0.5893 / 1.6956 N); its digest is pinned in
-`scripts/control_transfer/gen_tasks.py` `FLY_ASSET_SHA256` (= `trusted/fly.py` `ASSET_SHA256`); the landing residual
+each Neural Fly task's `environment/sim/scripts/control_transfer/trusted/fly.py` `ASSET_SHA256`; the landing residual
 conversion is byte-reproducible (`bebb6c7f…`).
 
 ## Resources
 
-CPU only. Per trial: the agent's container is capped at 2 CPUs / 6 GB (limit 4 GiB), the sidecar at 4 CPUs / 6 GB;
-the held-out evaluation runs four single-threaded workers. The verifier only reads JSON. Rules:
-`scripts/task_resources.toml` (`^roboengineer-`).
+Rules: `scripts/task_resources.toml` (`^roboengineer-`), measured on 2026-10-18 (board 0165: Harbor 0.23 trials,
+docker stats, cgroup `memory.peak` and per-container `nvidia-smi` every 3-6 s). The verifier only reads JSON (~20 s).
 
-## Generators and checks
+- **28 CPU tasks** (all but G1): the agent's container is capped at 2 CPUs / 6 GB (limit 4 GiB), the sidecar at 4 CPUs
+  / 6 GB. The sidecar uses 1.7-1.9 cores while a deployment runs (one worker, OSMesa), its full 4 cores while it
+  finalizes (held-out cases twice on four single-threaded workers, then the video: 79-199 s) and, for Neural Landing,
+  through the per-case reference search before the agent starts (~480 s); its peak memory is 0.6-2.1 GiB (go2-weave
+  the largest), 1.2 GiB for landing. The reference runs' agent containers stay below 0.25 GiB. Minimum: 4 CPUs (the
+  sidecar's 4 never coincide with the agent's work: the agent waits for the health check and is stopped before
+  finalization; during a deployment the agent's 2-core cap + the sidecar's ~2) and 9 GB (landing 8 GB) = the agent's
+  6 GB cap (its 4 GiB limit is recorded, not enforced, by default) + the sidecar's peak x 1.2 + the monitor. The
+  verifier phase is the sidecar's collect hook: 4 CPUs, 3 GB. Timeouts: collection budgets 1740 s (compact laps
+  5520 s, a worst-case bound) against 79-199 s measured; the verifier step 600 s against ~20 s.
+- **G1** (`g1-terrain-walk`): one NVIDIA GPU for the agent's container (`environment/docker-compose.yaml` reserves one
+  device for `main`; the sidecar has none and checks it). Measured on an L40S (`aws:rcb-gpu14`) with the public
+  trainer: 1.8 GB of GPU memory at its default 256 environments, 4.7 GB at its cap of 1024, 16.5 GB at 4096 (the
+  reference solution), about one CPU core (the PPO loop is bound by one Python thread); over the reference's 3.5 hours
+  16.1 GiB of GPU memory, 5.6 GiB of memory, 1.6 cores at most. The sidecar: 2.2-2.6 cores during a deployment (four
+  rendered 20 s cases, ~3.6 min), its 4-CPU cap while finalizing (419-488 s), peak 2.1 GiB. Declared: `gpu_required`,
+  `min_gpu_memory_gb = 20` (16.1 GiB x 1.15 = 18.5, rounded up; any CUDA GPU by memory, but all measurements are on
+  the L40S: a 24 GB card fits only when otherwise free and trains slower, so fewer iterations fit the cutoff and
+  results are comparable only on one GPU model; the trainer caps torch at 15 % of the card, which its 0.64 GB at
+  4096 environments stays under on 24 GB), 6 CPUs, 15 GB (the agent's 12 GB cap + the sidecar); limits 20 GiB of GPU memory and 10 GiB of memory for the
+  agent's container; caps `main` 4 CPUs / 12 GB, `sim` 4 CPUs / 6 GB. Hosts: a GPU host that holds the three
+  control-transfer images (`-train`, `-nominal` is its base, the evaluator) and lists the `roboengineer` bench.
 
-- `python3 -m scripts.quadrotor_landing.gen_tasks render|check`, `python3 -m scripts.control_transfer.gen_tasks
-  render|check` (standard library only; both end with `scripts/task_conventions.py` normalize; CI:
-  `ci_checks/check-generated-tasks.sh`).
-- `scripts/roboengineer/ci/invariant-boundary.py` (the required job `invariants`): the agent's copy is exactly the
-  generators' public allowlist, the agent's Dockerfile copies nothing else, one frozen instance in sidecar and verifier.
-- Unit tests: the standard-library ones run in CI (`ci_checks/check-unit-tests.sh`); the service, rollout and
-  packaging tests need MuJoCo and the assets: run them in the images,
-  `docker run --rm -v $PWD:/r -w /r -e MUJOCO_GL=osmesa ghcr.io/mll-lab-nu/eai-control-transfer:0.2.0 python -m unittest discover -s scripts/control_transfer/tests -p 'test_*.py'`
-  and the same with `eai-quadrotor-landing:0.1.0`, `-e LANDING_TEST_RESIDUAL=/opt/landing/residual.npz` and
-  `scripts/quadrotor_landing/tests` (2026-10-18: 154 + 28 pass, one full-lap test skipped).
+## Checks
+
+The task directories are the deliverable; the tooling that built them is kept outside this repository.
+
+- `ci_checks/benchmarks/roboengineer/invariant-boundary.py` (the required job `invariants`): the agent's copy is exactly the
+  public allowlist, the agent's Dockerfile copies nothing else, one frozen instance in sidecar and verifier.
 
 ## Validation (2026-10-18, Harbor 0.23.0 on aws:rcb-cpu3, the images above)
 
@@ -120,6 +140,10 @@ the held-out evaluation runs four single-threaded workers. The verifier only rea
   partial where it succeeds on some cases, none otherwise. A second run of four of them reproduced the same scores
   (determinism across fresh trials).
 - **nop** on all 28: reward 0, `infra_error` 0 (no deployment: `no_submission`; no episode, so no video).
+- **G1** (board 0165, Harbor 0.23.0 on aws:rcb-gpu14 / -gpu13, L40S): the reference (trains from scratch on the
+  agent's GPU, 12009-12638 s of agent time, three deployments) held-out 1/12 (mean 43.14, i00) and 4/12 (82.68, i01):
+  `oracle = "partial"`; nop 0 on both, `infra_error` 0; every graded trial has `replay.mp4` (`matches_graded`).
+  [roboengineer-g1.md](roboengineer-g1.md).
 - **Cutoff**: a Neural Fly copy with a 90 s limit was stopped during its second deployment: the round was
   `aborted_at_cutoff`, the first round was graded (score 40.21, `infra_error` 0), video present. A Neural Landing copy
   with 200 s: its in-process case running at the cutoff finished 17 s later, that round was not eligible, the earlier

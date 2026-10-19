@@ -4,8 +4,7 @@
 bimanual Marvin robot. `simulator = "robowits"`, `robot = "marvin-bimanual"`. Each family (one RoboWits seed task, one
 success predicate) is a privileged task `robowits-<family>-i00-privileged` and its standard twin
 `robowits-<family>-i00-standard`, on the same frozen evaluation scene (entry 0 of RoboWits' `eval_dataset_50/<NN>.json`).
-Results are attributed by DIGEST (PROTOCOL H.8); `scripts/robowits/regrade.py` re-grades recorded trials under the
-current verdict (Re-grading).
+Results are attributed by DIGEST (PROTOCOL H.8).
 
 ## Families
 **In the repository: 15 families, 30 tasks.** The `oracle` level and its evidence are in each `task.toml`;
@@ -19,9 +18,8 @@ every task goes through the human review in PR #3.
   raise_platform, retrieve_cube, stack_bowls, stand_bulb, stand_pages. The positives are from earlier versions too (same
   frozen instance and predicate).
 
-**Not in the repository: 11 families** without a valid positive. A later PR can add one (an entry in
-`scripts/robowits/families.py`, its predicate with `mk_tasks.py --extract-predicate`, a written success criterion) once it
-has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py --instance`).
+**Not in the repository: 11 families** without a valid positive. A later PR can add one once it
+has a positive; their frozen instances are in dev/qineng 9eb18edf.
 - No graded positive: balance_board, ball_into_jar, differentiate_cubes, pinch_card, place_book, retrieve_roll,
   round_dough_sheet, seal_colander, water_into_mug. place_book can pass only with the thin book stood on its edge: the book
   (22 x 19 cm) is larger than the mat (12 x 20 cm), so a flat book has at most about 57 % of its footprint over the mat,
@@ -31,7 +29,7 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py 
 - place_tall_box: its only positive exploits a missing height check (the box stands on the beam plank above the target,
   which footprint overlap alone accepts).
 
-**Dropped: 4 families** (`families.py` DROPPED).
+**Dropped: 4 families**.
 - roll_up_ball: unsolvable in the frozen scene. The 10 cm box must fit inside the high basket's bounding box shrunk by 1 cm,
   but the basket is 9.2 cm tall, so the height test can never pass.
 - cylinder_through_hole: unsolvable in the frozen scene. Half of the 9.1 cm peg must reach below the fixed hole plate's
@@ -40,29 +38,17 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py 
   bounding box, while the sand is still in the jar, so "keep the marbles in the jar" means putting all five back in.
 - align_chopsticks: its frozen scene hits NaN constraint forces in Genesis within a few steps.
 
-## Tasks and generator
-- `scripts/robowits/mk_tasks.py` renders both tasks of every family whose status is `pr`; `--check` writes nothing and
-  fails if a task would change (re-running it gives no diff); `--list` prints the table. Inputs, all in the repository:
-  - `scripts/robowits/shared/`: the shared sources, copied unchanged into every task: the tooling `rcb_robowits.py`, the
-    standard sim adapter `server.py`, the graders `grade_privileged.py` / `grade_standard.py` (as `tests/grade.py`), the
-    standard oracle player `oracle_replay.py`;
-  - `scripts/eai_standard/`: the eai-standard/2.2 layer (`rcb_limited.py`, `rcb_client.py`, `rcb1.py`, `run.sh`);
-  - `scripts/robowits/families.py`: per family the texts (task text, objects, difficulty), flags (BlenderKit, physics
-    backend, oracle and its evidence), measured scene builds and the success criterion;
-  - `scripts/robowits/predicates/<NN>_<family>.py`: RoboWits' `_check_success`, verbatim (MIT, RoboWits @ 9cc30ae), which the
-    privileged instruction quotes; `predicate_sha` in `families.py` pins the criterion text to it;
-  - `scripts/robowits/oracles/<family>/`: the reference solutions (the privileged oracle script; the standard oracle's
-    joint rows, recorded from it).
-  The frozen instance is the one input kept in the task: `tasks/robowits-<family>-i00-privileged/environment/instance.json`
-  (copied to `tests/` and to the standard twin's `environment/sim/`). Both twins are rendered side by side into a scratch
-  directory and passed through `scripts/task_conventions.normalize()` before they are written, so `--check` compares against the normalized tasks and
-  `python3 scripts/task_conventions.py --check tasks/robowits-*` passes. After rendering: `cd tasks && harbor add --scan .`.
+## Tasks
+- The task directories are the deliverable; the tooling that built them is kept outside this repository. Every task
+  carries the shared sources unchanged: the tooling `rcb_robowits.py`, the standard sim adapter `server.py`, the mode's
+  grader (`tests/grade.py`), the standard oracle player `solution/oracle_replay.py`; the eai-standard/2.2 layer
+  (`rcb_limited.py`, `rcb_client.py`, `rcb1.py`, `run.sh`) comes from `embodied_first_exam/standard/`. The privileged
+  instruction quotes RoboWits' `_check_success` verbatim (MIT, RoboWits @ 9cc30ae).
+  The frozen instance is `tasks/robowits/robowits-<family>-i00-privileged/environment/instance.json` (copied to `tests/` and to
+  the standard twin's `environment/sim/`). `python3 scripts/task_conventions.py --check tasks/robowits/robowits-*` passes.
 - One frozen input is over 2 MB: ball_into_bottle's `instance.json`, 2,047,384 bytes (2.05 MB; 1.95 MiB), in its three
   copies. It is the frozen scene: almost all of it is the frozen Genesis convex decomposition of its meshes
   (`genesis_cvx`, 2.04 MB), a task input and not a result; shrinking it would change the instance.
-- A new family: register it in `shared/rcb_robowits.py` (TASKS), freeze its instance with `rcb_robowits.py make-instance` in
-  the image (`mk_tasks.py --help`), add its `families.py` entry, vendor its predicate (`--extract-predicate`), write its
-  criterion, render, run the oracle (if any) and `nop`, register it.
 - Every instruction carries a section "Success criterion (as graded)", written from the family's predicate: what is checked,
   with every threshold, what is not checked, and where the task text differs from the code (the code wins, and the section
   says so). The privileged instruction also quotes the predicate's source.
@@ -72,15 +58,15 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py 
 
 ## Image
 - `images/robowits/`: RoboWits @ 9cc30ae, Genesis 0.4.7 and RoboWits' locked stack, RoboWits' Apache-2.0 asset bundle.
-  `ghcr.io/mll-lab-nu/eai-robowits:<images/robowits/VERSION>`, public; the Dockerfile pins the uv, huggingface_hub,
+  `ghcr.io/mll-lab-nu/efe:robowits-<images/robowits/VERSION>`, public; the Dockerfile pins the uv, huggingface_hub,
   imageio and asset-bundle versions. The GPU renders the three cameras; physics runs
   on the CPU.
 - `scripts/build_images.sh` builds it as `eai-robowits` (docs/protocol/running.md, "Base images").
 - Standard agent containers and verifiers use the shared client base, pinned by digest, and the shared pip pins
-  (`scripts/eai_standard/client.env`, `client-requirements.txt`, copied into `environment/`; `check-standard-client.sh`).
+  (`embodied_first_exam/standard/client.env`, `client-requirements.txt`, copied into `environment/`; `check-standard-client.sh`).
 - 12 of the 15 families load BlenderKit models, which may not be redistributed (`images/robowits/NOTICE`). Each user
-  fetches them with their own key (`scripts/robowits/fetch_blenderkit.sh`) or uses the encrypted research bundle
-  (`scripts/robowits/fetch_blenderkit_encrypted.sh`); the tasks mount the folder read-only from `$RCB_ROBOWITS_BLENDERKIT`
+  fetches them with their own key (`images/robowits/fetch_blenderkit.sh`) or uses the encrypted research bundle
+  (`images/robowits/fetch_blenderkit_encrypted.sh`); the tasks mount the folder read-only from `$RCB_ROBOWITS_BLENDERKIT`
   into the verifier and the standard `sim` sidecar. The privileged agent's container never sees that folder or the
   bundle's key: the task's `blenderkit` service runs `rcb_robowits.py blenderkit-serve`, which decrypts the
   models of this family alone and serves them on localhost:8765; the tooling in `main` fetches them for each scene build
@@ -90,13 +76,15 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf (`mk_tasks.py 
 ## Hosts: one CPU vendor
 Genesis' CPU backend is bit-exact only within one CPU vendor. The instances were frozen on Intel (the laptop). On AMD
 hosts (ws, ws3, lab) the rebuilt instance's state hash differs; the grader's tolerance check (every object and joint
-pose within tolerance) still accepts it, except for stand_bulb (and differentiate_cubes and ball_into_jar, which are not in the repository),
-which therefore run on Intel hosts only. A trajectory recorded on one vendor can fail on the other, so a positive is
+pose within tolerance) still accepts it, except for differentiate_cubes and ball_into_jar (not in the repository), which
+run on Intel hosts only. stand_bulb's instance is its dataset scene simulated on until both objects are at rest (the dataset
+entry overlaps the ring and the tall object, which were still moving after RoboWits' 10 settle steps and drifted by up to
+12 mm between hosts), so it rebuilds within tolerance on either vendor. A trajectory recorded on one vendor can fail on the other, so a positive is
 re-graded on the vendor it was graded on: the Intel laptop for every positive in the review table except stack_bowls,
 which was graded on ws (AMD, with `instance_exact = 1`).
-- **Machine-readable:** both stand_bulb tasks carry `host_cpu_vendor = "GenuineIntel"` in `[metadata]` of `task.toml`
-  (a RoboWits field, docs/TAXONOMY.md; `families.py` `host_cpu_vendor`), and
-  their READMEs a `Host CPU` row. A scheduler runs such a task only on a host whose `/proc/cpuinfo` `vendor_id` equals
+- **Machine-readable:** a task bound to one vendor carries `host_cpu_vendor = "GenuineIntel"` in `[metadata]` of `task.toml`
+  (a RoboWits field, docs/TAXONOMY.md; no task in the repository needs it now), and
+  its README a `Host CPU` row. A scheduler runs such a task only on a host whose `/proc/cpuinfo` `vendor_id` equals
   the value; a task without the key runs on either vendor. The key is not in `[metadata.resources]`, whose fields are
   fixed by PROTOCOL §6.
 - **A host that cannot rebuild the instance is an infrastructure error, never a result.** Privileged: the
@@ -107,7 +95,7 @@ which was graded on ws (AMD, with `instance_exact = 1`).
   gets a service, and `reward.json` has `infra_error = 1`, `instance_mismatch = 1`.
 
 ## Time budget
-3600 s for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
+3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
 docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section. The families are
 bimanual physical puzzles that take several attempts, every Python process pays about a minute of scene build before
 its first step, and a standard-mode crash resume replays the episode on the agent's clock.
@@ -169,7 +157,7 @@ the hosts of `scripts/set_agent_egress.py`); nothing in a trial needs the networ
 demonstrations of its seed tasks (the LeRobot dataset its README names; the image's `/opt/robowits/README.md` and
 `.git/config` carry the addresses, which the allowlist makes unreachable).
 - Privileged `main` (the simulator image): RoboWits resolves assets from local paths only (the image's asset bundle and
-  the BlenderKit models served by the task's `blenderkit` service; `scripts/robowits/fetch_blenderkit*.sh` run on the
+  the BlenderKit models served by the task's `blenderkit` service; `images/robowits/fetch_blenderkit*.sh` run on the
   host, never in a container), Genesis' convex-decomposition and particle caches are seeded from `instance.json`, and
   `QD_OFFLINE_CACHE=0` only turns off Quadrants' on-disk kernel cache. The image's Python has no `pip`; `uv pip install`
   from PyPI works, `git` and `curl` fail for any host outside the allowlist.
@@ -195,7 +183,7 @@ pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`ep
   resume class `exact` on the CPU backend and `approx` on the GPU backend. A smoke test outside Harbor (the service
   killed between calls) resumes with the state hash matching; the Harbor acceptance test (kill the sidecar of a running
   trial) has not been run.
-- `RCB_STARTUP_TIMEOUT_S` = max(900, 2 x the slowest measured scene build), per family in `families.py` (`build_s`): 900 s
+- `RCB_STARTUP_TIMEOUT_S` = max(900, 2 x the slowest measured scene build), per family: 900 s
   for all 15 families (builds of 48-71 s on the laptop; 47-234 s across 94 standard trials on every host). When the
   particle families come back: about 150 s on the GPU backend (900 s), 13-22 min for water_into_mug's SPH scene on the CPU
   (3600 s), and at least 7200 s for a particle scene built on the CPU backend.
@@ -209,11 +197,11 @@ pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`ep
 | `environment/rcb_traj.py` (privileged tooling, `Session`) | `environment/rcb_robowits.py` (`Session`: the frozen instance in `instance.json`, thin primitives, rendering, recording, replay) |
 | `tests/rcb_traj.py` (the verifier's copy) | `tests/rcb_robowits.py` |
 | standard sidecar (`environment/sim/server.py`) | `environment/sim/server.py` (the 2.2 adapter) + `environment/sim/rcb_robowits.py` |
-| `rcb_client.py`, `rcb1.py` | the same names (`scripts/eai_standard/`) |
+| `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`) |
 
 The tooling records (T, 16) JOINT_ABS rows (per arm 7 joints + gripper width) at the 30 Hz control rate. Every copy of
 `rcb_robowits.py`, of the standard sidecar files and of each mode's grader is byte-identical across the benchmark
-(`check-tooling-identity.sh`; their source is `scripts/robowits/shared/`).
+(`check-tooling-identity.sh`).
 
 ## Declarations
 - **Tooling: thin wrappers only.** The agent's tooling gives the frozen instance, the privileged state, recording and
@@ -221,31 +209,11 @@ The tooling records (T, 16) JOINT_ABS rows (per arm 7 joints + gripper width) at
   moves, IK moves without collision checking, gripper, hold). Task-level skills (grasp, place, navigate) are never added
   to it; reference solutions keep theirs under `solution/`.
 - **World-frame information.** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
-  `scripts/robowits/ci/advisory-world-frame.sh`): no object poses or positions, no world coordinates of workspace items. Their success
+  `ci_checks/benchmarks/robowits/advisory-world-frame.sh`): no object poses or positions, no world coordinates of workspace items. Their success
   criterion is stated in words and distances relative to the objects and the table top; the corners of the predicate's
   table-bounds rectangle and the goal line's coordinate are withheld. Given: object names, sizes and colours, the robot
   (its base pose included), the cameras' calibration, the world frame's convention. Privileged tasks give the privileged
   state through the tooling, and their criterion gives world coordinates.
-
-## Re-grading recorded trials
-`scripts/robowits/regrade.py JOBS_DIR ... [--parallel N] [--out regrade.jsonl]` re-grades recorded trials under the
-current verdict without re-running them. It finds every RoboWits trial in a Harbor jobs tree and reads two things from it:
-the recorded trajectory (privileged: `artifacts/app/output/trajectory.npz`; standard: the sidecar's `trajectory.npz`, or
-its `journal.f64`) and the recorded verdict. Per family it starts one container of the image with the current task's own
-grader copies (`tests/`). It replays each trajectory twice from the frozen instance and reports three things: the old
-verdict (RoboWits' predicate after the last row), the new verdict (the settle window, deterministic, instance ok) and the
-window's reason. Standard trials are replayed with the window that ended the episode (`replay_standard`; a trial graded
-live carries that window's live result in final.json):
-the window that ended the episode over its recorded rows, its length and the episode's reason read from the trial's
-episode log (`verifier/episode.jsonl`), else `artifacts/data/final.json`, else the trajectory's meta; with
-`artifacts/data/final.json` it also reports `replay_matches_live`. The 12 BlenderKit families need `$RCB_ROBOWITS_BLENDERKIT`.
-- **Same CPU vendor.** Genesis' CPU backend is bit-exact within one vendor only (Hosts). The tool prints the host's
-  vendor and flags a trial `inconclusive` when its recorded success does not reproduce under the old rule here.
-- **Standard trials.** A trial recorded with the live settle window is re-graded exactly: the same window over the
-  same rows; the label is "re-graded under 2026-10-17 rules". A trial recorded without a live window gets the window
-  after its last row; that is conservative (under the current rule a failed window does not end the episode, and the
-  agent could have gone on); its label is "re-graded under 2026-10-17 rules (conservative)".
-- **Privileged trials are close to exact.** The deliverable is the trajectory; only the window after its last row is new.
 
 ## Licences
 RoboWits: MIT (declared in its pyproject.toml); Genesis: Apache-2.0; RoboWits' asset bundle: Apache-2.0; BlenderKit models:
@@ -256,9 +224,9 @@ licensed to whoever downloads them, never in the image or the repository (`image
   no `actions` part, fails in the shared layer before the adapter sees it (`rcb_limited.py`: 500, the episode ends).
   The official client always sends an RCB1 `actions` array, so only a hand-written request can do this.
 - The response of one call is built in memory, so one call returns at most 1500 images (`/spec` `max_frames_per_call`,
-  `shared/server.py` `MAX_FRAMES`: cameras x frames, a frame with per-frame depth counts 4): over it a 400 before anything
+  `environment/sim/server.py` `MAX_FRAMES`: cameras x frames, a frame with per-frame depth counts 4): over it a 400 before anything
   runs, and `ee_pose` rows that take longer than counted (up to 400 control steps each) stop adding frames there
-  (`meta["frames_skipped"]`; `scripts/robowits/tests/test_server_frames.py`).
+  (`meta["frames_skipped"]`).
 - `ball_into_bottle`: the red bottle's base collides as a thin shell (about 3.5 mm), so a ball that falls fast down the
   bottle can pass through it onto the table (9 of 16 slightly perturbed replays of one pour). The instruction says so;
   a thicker collision base would change the frozen scene and has not been made.

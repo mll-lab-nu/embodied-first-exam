@@ -11,7 +11,7 @@ import argparse, os, re, subprocess, time
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ap = argparse.ArgumentParser()
 ap.add_argument("--min-gb", type=float, default=2.0)
-ap.add_argument("--match", default=r"rcb|eai-|hb__|robowits|robolab|behavior|robopaint|robotwin|robosuite|^mk-|^ck-")
+ap.add_argument("--match", default=r"rcb|eai-|efe-|efe:|hb__|robowits|robolab|behavior|robopaint|robotwin|robosuite|^mk-|^ck-")
 ap.add_argument("--protect", default="rcb-log-mirror")
 ap.add_argument("--interval", type=float, default=1.0)
 ap.add_argument("--cooldown", type=float, default=15.0)

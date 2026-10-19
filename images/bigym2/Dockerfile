@@ -3,7 +3,7 @@
 # the package under the NVIDIA Open Model License). Infrastructure only: the upstream package, no benchmark code; tasks
 # `FROM` it and COPY their own tooling. Physics on the CPU, rendering through EGL on an NVIDIA GPU.
 # Tag = images/bigym2/VERSION. Build from the repo root:
-#   docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/eai-bigym2:$(cat images/bigym2/VERSION) .
+#   docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/efe:bigym2-$(cat images/bigym2/VERSION) .
 FROM python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1
 # libegl1 is the libglvnd EGL loader (the NVIDIA vendor library is mounted by the container runtime); ffmpeg writes

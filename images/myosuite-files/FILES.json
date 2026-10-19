@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:myosuite-files-0.1.0@sha256:cd14933231bb0ae0b84658a2980a3adfe24a19fdcff0ce157f870f4a030fcdf4",
+ "source": "embodied_first_exam/benchmarks/myosuite",
+ "files": {
+  "privileged/environment/rcb_myosuite.py": "25598d53e8a1f130670cfe513697ba9e2beb56096fc0dc80aea9e0b7e19ba69c",
+  "privileged/tests/grade.py": "a0df2d378cf40058daf0e64062f0ed2241aafcbebfd817dc1e8089c720633d68",
+  "standard/tests/grade.py": "654bc2cb01d020596718d511f85a499098c6d18eec1fd0bdc3b7ad66becc45ae"
+ }
+}

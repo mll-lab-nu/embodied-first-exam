@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # ADVISORY (docs/protocol/README.md §1: images pinned for reproducibility; the frozen instance's hash check backs it up at run
 # time): every FROM of environment/Dockerfile and tests/Dockerfile (every stage) is a registry image with an explicit,
-# non-`latest` tag or digest, and so is every compose `image:` (environment/ and tests/). Moved here from
+# non-`latest` tag or digest, and so is every compose `image:` (environment/ and tests/); every `COPY --from=<image>`
+# (files-only images, the monitor's code) names its image by digest. Moved here from
 # check-verifier-isolation.sh (board 0124): a pin is reproducibility, not the trust boundary.
 t="$1"; python3 - "$t" <<'PY'
 import pathlib, re, sys
@@ -18,6 +19,12 @@ for rel in ("environment/Dockerfile", "tests/Dockerfile"):
         if frm in [a for _, a in froms[:k] if a]: continue     # an earlier stage of this file
         if not (PINNED.match(frm) and not frm.endswith(":latest") and "$" not in frm):
             fail(f"{rel} FROM {frm!r} must be a pinned registry image (<registry>/<image>:<tag> or @sha256, never :latest)")
+    stages = {a for _, a in froms if a}
+    for src in re.findall(r"^COPY\s+(?:--\S+\s+)*--from=(\S+)", df.read_text(), re.M | re.I):
+        if src in stages or src.isdigit():
+            continue                                          # an earlier stage of this file
+        if not (PINNED.match(src) and "@sha256:" in src and "$" not in src):
+            fail(f"{rel} COPY --from={src!r} must name a registry image by digest (<registry>/<image>:<tag>@sha256:<digest>)")
 for cf in (t / "environment/docker-compose.yaml", t / "tests/docker-compose.yaml"):
     if cf.is_file():
         for img in re.findall(r"^\s*image:\s*(\S+)", cf.read_text(), re.M):

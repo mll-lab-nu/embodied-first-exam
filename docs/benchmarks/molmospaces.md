@@ -9,8 +9,8 @@ objects and navigation, on a fixed-base arm and a mobile manipulator.
 | simulator | `molmospaces`: MuJoCo 3.5.0, CPU physics, EGL rendering on a GPU (OSMesa without one, ~15× slower) |
 | robots | `franka-robotiq-2f85` (Franka FR3 + Robotiq 2F-85 on a fixed base, the DROID setup); `rainbow-rby1` (RB-Y1: holonomic base, 6-joint torso, two 7-joint arms) |
 | score | upstream's `judge_success()` on the state at the episode's end |
-| tasks | 8 families × 2 modes: `tasks/molmospaces-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
-| image | `ghcr.io/mll-lab-nu/eai-molmospaces:0.2.5` (`images/molmospaces/`, ~1.8 GB of assets) |
+| tasks | 8 families × 2 modes: `tasks/molmospaces/molmospaces-<family>-i00-privileged` and `-standard` (`eai-standard/2.2`) |
+| image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` (`images/molmospaces/`, ~1.8 GB of assets) |
 | oracle | none: upstream's planners and grasp files are not shipped; a positive example per family (`oracle_evidence`: GPT-6.1 Sol's privileged passes), human review in PR #276 |
 
 | family | upstream package | robot, control period | variants | kept episode (i00) | horizon |
@@ -24,9 +24,9 @@ objects and navigation, on a fixed-base arm and a mobile manipulator.
 | navigate-to | `holodeck-objaverse/NavToObjDataGenConfig` | RB-Y1, 200 ms | one target / several (nearest counts) | #237: a table lamp (two in the house; the nearest counts) | 500 (100 s) |
 | open-door | `procthor-10k/rby1_benchmarks/door_opening_benchmark` | RB-Y1 (RBY1M), 100 ms | push / pull | #0: a door to pull | 400 (40 s) |
 
-## Instances (`scripts/molmospaces/make_instances.py`)
+## Instances
 Per family, the first episode in the package's order that passes every filter ships as `i00` (no model's results enter
-the choice; `keep` in `families.json` records it, `make_instances.py` checks it):
+the choice):
 - **Valid:** no public MolmoBot trajectory of the house (`allenai/molmobot-data`, val); upstream builds every listed
   object; not done at t = 0; no asset whose licence forbids commercial use (the image redistributes them).
 - **Named unambiguously:** no identical copy of the target or receptacle, and no other object of a named object's
@@ -51,7 +51,7 @@ to `20260131`), pinned with upstream's `MLSPACES_PINNED_ASSETS_FILE`; navigation
 ProcTHOR-10k one misses objects on 0.2.9's scene version).
 
 ## Upstream decides the outcome
-- `scripts/molmospaces/shared/rcb_molmospaces.py`, copied unchanged into every task, builds the frozen episode through
+- The tooling, each task's `environment/rcb_molmospaces.py` (the same file in every task), builds the frozen episode through
   upstream's evaluation path (`JsonEvalRunner` → `JsonEvalTaskSampler` → `task.reset`, action noise off). One control
   step = one upstream `Task.step` with every move group's targets; each step also polls every camera, as upstream's
   pick-and-place success reads that history. Physics, controllers, kinematics and the success checks are upstream's.
@@ -70,7 +70,7 @@ ProcTHOR-10k one misses objects on 0.2.9's scene version).
 | privileged | `Session`: full state (`s.state()`, `s.model` / `s.data`), any camera, upstream's kinematics, reward and success code | unlimited | `tests/grade.py`: `trajectory.npz` replayed in two fresh processes; both succeed with equal final hashes |
 | standard | `joint_position` (Franka 8, RB-Y1 25) and `done`; the robot's cameras (not the third-person follower), proprioception, `/kinematics` | none (D1) | the live episode: upstream's `judge_success()` on the state it ends in, in the sim service; nothing replays it |
 
-Standard mode's texts name objects and the goal only (D7, `scripts/molmospaces/ci/advisory-world-frame.sh`); the robot's pose and
+Standard mode's texts name objects and the goal only (D7, `ci_checks/benchmarks/molmospaces/advisory-world-frame.sh`); the robot's pose and
 camera calibration come from the service, object poses never. The privileged grader checks that each replay starts in the
 instance's t = 0 state (else `grader_error`, with `infra_error`); the standard sim service checks its own start against
 that hash when it builds the scene, before the agent is served (else it gives up: `instance_mismatch`, `infra_error`).
@@ -79,11 +79,8 @@ rendered on the GPU, 20-120 s, over 500 s on a loaded host) renders `replay.mp4`
 (`video_pending` while it runs); its success and hash are not read, and a failed or late render loses only the video.
 Rendering during the live episode was not chosen: the service renders only what the agent asks for, and a frame every
 control step would add a GPU render to every step of the agent's calls. Crash recovery:
-resume class `exact` (`scripts/molmospaces/kill_test.sh`). Budget: each task's own `[agent] timeout_sec` (PROTOCOL §2,
+resume class `exact`. Budget: each task's own `[agent] timeout_sec` (PROTOCOL §2,
 docs/protocol/running.md "The agent's time"), stated by the closing `## Time limit` section of every instruction; no step limit beyond the horizon.
-
-Tests without a simulator: `scripts/molmospaces/tests/test_ms.py` (run as a script; numpy): both graders, `finalize.sh` with
-stand-in replays and the real `server.py` on the real shared layer with a stub Session.
 
 What is not the agent's failure is flagged, and a reward is always written. Standard `infra_error = 1`: no
 `final.json` (`missing_log`), an unreadable one (also `grader_error`), an unfinished one (`finalized` 0: the collect hook
@@ -101,21 +98,20 @@ checks a request completely before anything moves: a null or wrongly typed `dt`,
 Franka tasks) and `meta["seconds"]` is what ran, not what was asked for. The only step limit is upstream's horizon, which
 the instruction and `/spec` (`max_control_steps`, `episode`) state.
 
-## Image and generator
+## Image and tasks
 - `images/molmospaces/prepare_assets.sh`, then the image build: the measured environment (`requirements.txt`,
   `--no-deps`); upstream's scripted experts replaced by raising stubs in the same layer (`scrub_experts.py`); the assets
   the instances open under `strace` (everything else deleted, no grasp file); every instance's t = 0 hash checked again
   without network. Upstream's generic A* and grasp-generation library code stay installed. Licences: scenes and
   AI2-THOR objects CC BY 4.0; Objaverse objects ODC-BY 1.0 and each its creator's CC BY / BY-SA / CC0, listed with
   their attributions in the image's `/opt/molmospaces/ATTRIBUTION.md` (the build fails on a non-commercial one).
-- `python3 scripts/molmospaces/mk_tasks.py [--check]` writes all 16 task dirs from `families.json`, `instances/`,
-  `template/<mode>/`, `shared/` and `scripts/eai_standard/`; re-running leaves `git diff tasks/` empty.
+- The 16 task directories are the deliverable; the tooling that built them is kept outside this repository.
 
 ## Run
 
 ```bash
-harbor run -p tasks/molmospaces-pick-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
-harbor run -p tasks/molmospaces-pick-i00-privileged -a nop      # scores 0
+harbor run -p tasks/molmospaces/molmospaces-pick-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/molmospaces/molmospaces-pick-i00-privileged -a nop      # scores 0
 ```
 Agent, provider and effort settings: docs/protocol/running.md.
 

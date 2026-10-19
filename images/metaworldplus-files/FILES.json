@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.1.0@sha256:71ed06f7370f8f3f855842b19c4f9062fc4454b1329530c0c2b44751ef4fa44d",
+ "source": "embodied_first_exam/benchmarks/metaworldplus",
+ "files": {
+  "privileged/environment/mw_tool.py": "899cf5f04443f20043648804f6dfb5f6cc1879f54b8fd95916497818b203e316",
+  "privileged/tests/grade.py": "27479be3860840b4077e82a7b2a97759b774048ecf372602bb33000f48a89246",
+  "standard/tests/grade.py": "7b8ac3496e2ad75779fdbcced32892df908025e2685776ed94eeb818215cb5f3"
+ }
+}

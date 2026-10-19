@@ -6,7 +6,7 @@
 # run time. Isaac Sim needs an RTX-class GPU even headless: a task's environment/docker-compose.yaml reserves it and mounts a
 # trial-scoped cache volume at /cache (shader/extension cache, ~2 min first launch).
 # Tag = images/robolab/VERSION; build from the repo root (images/robolab/BUILD_ONLY has the command, the licences and the checks):
-#   docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .
+#   docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .
 # BUILD_ONLY, never published: Isaac Sim 5.1 / Omniverse Kit may be installed and used but not redistributed; every host builds it.
 FROM nvidia/cuda:12.8.1-base-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 UV_LINK_MODE=copy \

@@ -3,7 +3,7 @@
 # environment and verifier and the standard tasks' `sim` service. Not merged into eai-mujoco (MuJoCo 3.3.7): frozen
 # instance hashes depend on the MuJoCo version.
 # Deliberately NOT included: Meta-World's scripted expert policies (metaworld/policies/), removed in the layer that
-# installs them; scripts/metaworldplus/freeze.sh mounts them from the pinned commit when the oracles are recorded.
+# installs them.
 FROM docker.io/library/python:3.11.13-slim-bookworm@sha256:86adf8dbadc3d6e82ee5dd2c74bec2e1c2467cdad47886280501df722372d2e1
 ENV PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa \
     OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1

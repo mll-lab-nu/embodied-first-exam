@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:roboarc-files-0.1.0@sha256:3ebbe4b6947849941de2dd5b9af0592ead637da1bd9125df1a1b0d584ea4a49a",
+ "source": "embodied_first_exam/benchmarks/roboarc",
+ "files": {
+  "nyx_direct.py": "4809c45a7a5cd7725f95f9e49e55a1dc9d184d2b2b59e780aac19cdaf98fac20",
+  "rcb_topogym.py": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "render_bridge.py": "0e04db54feded2929769443e183e2db1e6138eaec62701070fbd462925d8a2b0"
+ }
+}

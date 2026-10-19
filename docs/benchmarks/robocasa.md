@@ -6,11 +6,11 @@ Omron mobile base), each on one frozen instance, in both modes: 58 tasks.
 | | |
 |---|---|
 | upstream | robocasa/robocasa @ `756598a5be52e052339bb2d957426e39015c2afb` (MIT), robosuite 1.5.1, MuJoCo 3.2.6 |
-| tasks | `tasks/robocasa-<task>-i00-privileged` and `tasks/robocasa-<task>-i00-standard`, 29 each |
+| tasks | `tasks/robocasa/robocasa-<task>-i00-privileged` and `tasks/robocasa/robocasa-<task>-i00-standard`, 29 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa/<Env>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/eai-robocasa:0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
+| image | `ghcr.io/mll-lab-nu/efe:robocasa-0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| generator | `scripts/robocasa/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
+| sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 
 ## Scope
 All 29 of RoboCasa v0.2's 111 kitchen environments that have an official demonstration in the dataset registry
@@ -41,7 +41,7 @@ Not included (82):
   already at the start. The check runs twice after every control step and once at reset, in the agent's session, the
   verifier and the service alike: some checks keep timers, so the call pattern is part of the task (the pattern the
   instances and references were validated with). Every reference's success also holds for 10 more still steps.
-  Both instructions list what the check requires for the task (`SUCCESS` in `scripts/robocasa/envs.py`, read off the
+  Both instructions list what the check requires for the task (read off the
   upstream predicates): thresholds (doors ≥ 90% / ≤ 5% open, drawers ≥ 95%, knob ≥ 0.35 rad, handle 0.40 rad–π,
   spout 30°–180°, placement radii) and implicit conditions (the gripper more than 25 cm from the placed object, or
   15 cm from a pressed button; the microwave only switches on with its door closed). Text only: the grader is the
@@ -91,7 +91,7 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items
    (`sim_crashed`, `resume_failed`); `instance_mismatch` (item 11); `finalize_error`. The agent's own result (0, never
    infra): a crash inside its calls (`sim_crashed_on_call`), a simulator error from its actions (`sim_error`), the
    timeout.
-7. **Collect hook** `environment/sim/finalize.sh` (`scripts/robocasa/shared/finalize.sh`; `timeout_sec = 3600`). It
+7. **Collect hook** `environment/sim/finalize.sh` (`timeout_sec = 3600`). It
    sends SIGUSR1 (again every 30 s) and waits for the verdict, then for the video, up to 3450 s in all on the clock
    (`RCB_COLLECT_WAIT_S`). The verdict takes a second; the wait is long only for a service that crashed late in the
    episode and resumes it from its journal first (crash recovery replays the journal, at most the episode's physics):
@@ -103,7 +103,7 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items
    (0.035 s per step, about 3 minutes for a 5,000-step episode, 30–60 minutes at most for an hour-long one) on the
    sidecar's CPUs, no GPU. The hook's 3600 s is a number of its own, sized for the agent cutoff of 3600 s (the cutoff is
    each task's own `[agent] timeout_sec`, docs/protocol/README.md §2, docs/protocol/running.md "The agent's time"): lowering the cutoff keeps it
-   safe, raising it means raising `COLLECT_TIMEOUT_S` in the three RoboCasa generators too.
+   safe, raising it means raising the hook's `timeout_sec` in the three RoboCasa benchmarks' standard tasks too.
 8. **Request validation.** A request is checked as a whole before any physics (`parse_submit` / `parse_observe`):
    a `dt`, `seconds` or `video_fps` that is not a finite number in range, `cameras` that is not a list of names,
    a `note` that is not a string, actions that are not a `(T, N)` array of finite numbers are a 400 and nothing ran
@@ -114,12 +114,6 @@ SIGUSR1 collect hook, `/data` evidence, verdict before video. Differences (items
    `episode.jsonl`, which a resume reads back), as in every other benchmark (docs/protocol/standard_mode.md, "The agent's clock").
    `time_s` counts from the agent's first request too; `elapsed_s` from the episode's start (the service ready).
 
-Tests: `scripts/robocasa/tests/test_graders.py` (CI `unit-tests`): the grader on forged records and, with numpy, the
-service and its collect hook on a stand-in tool module (live success / failure, a success lost before the end, a
-failed video, a simulator error, crashes inside and between calls, the start check; no replay runs);
-`scripts/mujoco-playground/tests/test_standard_2_1_servers.py` (`TestServerCasa`): request handling, the agent's clock,
-the camera pose.
-
 10. **Camera calibration = the rendered viewpoint.** `cam2world_gl` is `data.cam_xpos` / `data.cam_xmat` of the
    camera, the pose the renderer draws the mono RGB and depth images from (`cam2world()`, as `server_mj.py`), not
    MuJoCo's left-eye camera `scene.camera[0]` (3.4 cm to the side): a marker's projection through the reported
@@ -127,15 +121,15 @@ the camera pose.
    principal point at the image centre (every camera of these models is given by its `fovy`, no `sensorsize`).
 11. **Start-state check** (`_start_mismatch()`). With no replay from the frozen instance, the
    start is checked when a fresh episode begins, before the port is bound: the instance file's own hash against
-   `RCB_INSTANCE_SHA` (frozen/report.json; `casa_tool` also checks the file against its embedded hash on load), the
+   `RCB_INSTANCE_SHA` (`casa_tool` also checks the file against its embedded hash on load), the
    start state's hash (`casa_tool.state_hash`: MuJoCo integration state, the model arrays the kitchen rewrites, the
-   task's Python state) against `RCB_START_SHA` (`scripts/<benchmark>/frozen/start_state.json`: the hash every
+   task's Python state) against `RCB_START_SHA` (the hash every
    archived standard episode of the instance logged at its start, on every runner host, never two values for one
-   instance; `import_references.py` records it for a newly imported instance), and the scene must not be solved at the start (no frozen
+   instance), and the scene must not be solved at the start (no frozen
    instance is). A mismatch gives up as `instance_mismatch`, `infra_error = 1`; the agent is never served. Both
    variables are in the task's `environment/docker-compose.yaml` (the sidecar's environment; the agent never sees
    it). Not checked: an instance without an archived episode (RoboCasa365 `PortionInTupperware`) has no start hash,
-   only the file's; re-record `start_state.json` whenever the image or `casa_tool` changes how a scene is built.
+   only the file's; `RCB_START_SHA` changes whenever the image or `casa_tool` changes how a scene is built.
 
 ## Egress
 The demonstrations (the references) are public, so `task.toml` closes agent egress to the model APIs and the package registries
@@ -151,81 +145,68 @@ archive by SHA-256 (`fetch_objects.sh` for the object meshes). It reproduces the
 validated with. **Open: the tagged `eai-robocasa:0.1.0` build predates the scrub above (it still has the
 downloader, the links and `.git`); rebuild from this Dockerfile before pushing or running.** The scrub touches no file
 the simulation loads, so the hashes should not move. A clean rebuild downloads ~12 GB and needs ~50 GB of free disk;
-after it, `freeze`-check the
-hashes (`import_references.sh`, which must report the same `instance_sha`, `live_state_sha` for every task), before
+after it, re-check the
+hashes (the same `instance_sha`, `live_state_sha` for every task) before
 publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0, jianzhang96/robocasa-assets Apache-2.0,
 RoboCasa's own object archives on UT Box (CC-BY-4.0, as RoboCasa licenses its assets on robocasa/robocasa-assets), NVIDIA PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes)
 **CC-BY-NC-4.0** (non-commercial; maintainers to confirm the image may be published, otherwise `BUILD_ONLY`).
 
-## Rebuilding the tasks
-```bash
-docker build -t ghcr.io/mll-lab-nu/eai-robocasa:$(cat images/robocasa/VERSION) images/robocasa
-bash scripts/robocasa/import_references.sh <PR #4 checkout>   # instances + references -> scripts/robocasa/frozen/
-python3 scripts/robocasa/generate.py                            # -> tasks/robocasa-* (ends with scripts/task_conventions.py normalize); re-running reproduces them
-python3 scripts/robocasa/generate.py --check                    # tasks/ equals a fresh render (no simulator needed)
-cd tasks && harbor add --scan . && cd ..
-bash ci_checks/run_all.sh tasks/robocasa-*
-```
-The instances and references were authored in PR #4 (`scripts/coverage/author_demo.py` there: freeze the
-demonstration's initial state, execute its actions with the native controller, validate in fresh processes);
-`frozen/` keeps them, and `import_references.sh` re-verifies them with this benchmark's tooling.
-
 ## Evidence
-`scripts/robocasa/frozen/report.json`, for all 29: not solved at the start; `reset()` bit-exact; the reference
+Each instance is a demonstration's frozen initial state and each reference its actions executed with the native
+controller. For all 29: not solved at the start; `reset()` bit-exact; the reference
 (87–1007 actions) succeeds on its final state without truncation; two replays in fresh processes end in the live
 state's hash and succeed; the success survives 10 more still steps.
 
 Harbor runs on the generated tasks: `-a oracle` scores 1 (29/29 privileged, 6/6 standard sampled), `-a nop` 0;
 scripted cheat attempts and Codex red-team trials score 0.
 
-## Easy set
+## Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
 **unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
-`solved`): kept under its name and reported apart from the main table.
+**pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-9 of 29 bases are in the easy set; by directory: 38 easy, 1 hard, 19 unverified, 0 pending.
+By directory: 38 easy, 1 hard, 19 unverified, 0 pending.
 
-| base | easy set | privileged | standard |
-|---|---|---|---|
-| `robocasa-arrange-vegetables-i00` |  | easy: Luna | unverified |
-| `robocasa-close-double-door-i00` |  | easy: Luna | unverified |
-| `robocasa-close-drawer-i00` |  | easy: Luna | unverified |
-| `robocasa-close-single-door-i00` |  | easy: Luna | unverified |
-| `robocasa-coffee-press-button-i00` | yes | easy: Luna | easy: Luna |
-| `robocasa-coffee-serve-mug-i00` |  | easy: Luna | unverified |
-| `robocasa-coffee-setup-mug-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B | easy: Opus, Sol 6.1 |
-| `robocasa-microwave-thawing-i00` |  | easy: Astra, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) |
-| `robocasa-open-double-door-i00` |  | easy: Luna | unverified |
-| `robocasa-open-drawer-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
-| `robocasa-open-single-door-i00` |  | easy: Luna | unverified |
-| `robocasa-pnp-cab-to-counter-i00` |  | easy: Luna | unverified |
-| `robocasa-pnp-counter-to-cab-i00` | yes | easy: Luna | easy: Luna |
-| `robocasa-pnp-counter-to-microwave-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robocasa-pnp-counter-to-sink-i00` | yes | easy: Luna | easy: Luna |
-| `robocasa-pnp-counter-to-stove-i00` |  | easy: Luna | unverified |
-| `robocasa-pnp-microwave-to-counter-i00` |  | easy: Luna | unverified |
-| `robocasa-pnp-sink-to-counter-i00` | yes | easy: Luna | easy: Luna |
-| `robocasa-pnp-stove-to-counter-i00` |  | easy: Luna | unverified |
-| `robocasa-pre-soak-pan-i00` |  | easy: Luna | unverified |
-| `robocasa-prepare-coffee-i00` |  | easy: Luna | unverified |
-| `robocasa-restock-pantry-i00` |  | easy: Luna | unverified |
-| `robocasa-turn-off-microwave-i00` |  | easy: Luna | unverified |
-| `robocasa-turn-off-sink-faucet-i00` |  | easy: Luna | unverified |
-| `robocasa-turn-off-stove-i00` |  | easy: Luna | unverified |
-| `robocasa-turn-on-microwave-i00` | yes | easy: Luna | easy: Luna |
-| `robocasa-turn-on-sink-faucet-i00` |  | easy: Luna | unverified |
-| `robocasa-turn-on-stove-i00` |  | easy: Luna | unverified |
-| `robocasa-turn-sink-spout-i00` | yes | easy: Luna | easy: Luna |
+| base | privileged | standard |
+|---|---|---|
+| `robocasa-arrange-vegetables-i00` | easy: Luna | unverified |
+| `robocasa-close-double-door-i00` | easy: Luna | unverified |
+| `robocasa-close-drawer-i00` | easy: Luna | unverified |
+| `robocasa-close-single-door-i00` | easy: Luna | unverified |
+| `robocasa-coffee-press-button-i00` | easy: Luna | easy: Luna |
+| `robocasa-coffee-serve-mug-i00` | easy: Luna | unverified |
+| `robocasa-coffee-setup-mug-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B | easy: Opus, Sol 6.1 |
+| `robocasa-microwave-thawing-i00` | easy: Luna, Astra, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) |
+| `robocasa-open-double-door-i00` | easy: Luna | unverified |
+| `robocasa-open-drawer-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
+| `robocasa-open-single-door-i00` | easy: Luna | unverified |
+| `robocasa-pnp-cab-to-counter-i00` | easy: Luna | unverified |
+| `robocasa-pnp-counter-to-cab-i00` | easy: Luna | easy: Luna |
+| `robocasa-pnp-counter-to-microwave-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash, Qwen3.8 27B | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robocasa-pnp-counter-to-sink-i00` | easy: Luna | easy: Luna |
+| `robocasa-pnp-counter-to-stove-i00` | easy: Luna | unverified |
+| `robocasa-pnp-microwave-to-counter-i00` | easy: Luna | unverified |
+| `robocasa-pnp-sink-to-counter-i00` | easy: Luna | easy: Luna |
+| `robocasa-pnp-stove-to-counter-i00` | easy: Luna | unverified |
+| `robocasa-pre-soak-pan-i00` | easy: Luna | unverified |
+| `robocasa-prepare-coffee-i00` | easy: Luna | unverified |
+| `robocasa-restock-pantry-i00` | easy: Luna | unverified |
+| `robocasa-turn-off-microwave-i00` | easy: Luna | unverified |
+| `robocasa-turn-off-sink-faucet-i00` | easy: Luna | unverified |
+| `robocasa-turn-off-stove-i00` | easy: Luna | unverified |
+| `robocasa-turn-on-microwave-i00` | easy: Luna | easy: Luna |
+| `robocasa-turn-on-sink-faucet-i00` | easy: Luna | unverified |
+| `robocasa-turn-on-stove-i00` | easy: Luna | unverified |
+| `robocasa-turn-sink-spout-i00` | easy: Luna | easy: Luna |
 
 Judgment calls: `robocasa-pnp-counter-to-cab-i00`: the one standard solve hit the 3600 s agent timeout after its episode
 was recorded (graded as a success).

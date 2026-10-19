@@ -1,8 +1,0 @@
-{
- "task": "open_microwave",
- "seed": 28831,
- "embodiment": "aloha-agilex",
- "state_sha": "82f51007f0f6",
- "text": "Open the microwave door: pull it open until its hinge joint reaches at least 60 percent of its joint range.",
- "n_active_joints": 16
-}

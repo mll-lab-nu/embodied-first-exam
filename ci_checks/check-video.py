@@ -12,6 +12,7 @@ tell whether a render finishes in time (the runner flags a graded trial without 
   - a declared video time bound is not shorter than the verdict replay's in the same file (`video_timeout_s` vs
     `replay_timeout_s` in a JSON/TOML/compose file; privileged, or wherever a task still declares both): the video
     replays the episode again, so a shorter bound loses the video of exactly the long episodes the verdict still grades.
+A build context's files include those its Dockerfile takes from a files-only image (scripts/files_image.py copied()).
 
     python3 ci_checks/check-video.py [task dirs]      # default: every task
 Standard library only.
@@ -25,6 +26,9 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import files_image  # noqa: E402  (a Dockerfile's files from a files-only image count as its context's)
+import task_conventions as tc  # noqa: E402  (iter_tasks: the task tree)
 TEXT = {".py", ".sh", ".yaml", ".yml", ".toml", ".json", ".cfg", ".txt"}
 MAX_BYTES = 1 << 20
 MP4 = re.compile(r"\.mp4\b")
@@ -33,10 +37,15 @@ SWITCH = re.compile(r"\bRCB_RENDER_VIDEO\b|\bRCB_VIDEO_[A-Z_]+\b")
 BOUND = re.compile(r"""["']?(video_timeout_s|replay_timeout_s)["']?\s*[:=]\s*["']?([0-9]+(?:\.[0-9]+)?)""")
 
 
-def texts(d: Path):
+def texts(d: Path, problems: list[str] | None = None):
+    """The text files of a build context, and those its Dockerfile takes from a files-only image (at their sources; a
+    line it cannot resolve goes to `problems`)."""
     if not d.is_dir():
         return
-    for p in sorted(d.rglob("*")):
+    got, bad = files_image.copied_from(d / "Dockerfile")
+    if problems is not None:
+        problems += [f"{d.parent.name}: {b}" for b in bad]
+    for p in sorted(d.rglob("*")) + sorted(got.values()):
         if p.suffix in TEXT and p.is_file() and not p.is_symlink() and p.stat().st_size <= MAX_BYTES:
             try:
                 yield p, p.read_text(errors="replace")
@@ -61,8 +70,8 @@ def check(task: Path) -> list[str]:
     mode = mode_of(task)
     if not mode:
         return errs
-    tests = list(texts(task / "tests"))
-    env = list(texts(task / "environment"))
+    tests = list(texts(task / "tests", errs))
+    env = list(texts(task / "environment", errs))
     in_tests = any(MP4.search(s) for _, s in tests)
     if mode == "privileged":
         if not in_tests:
@@ -84,13 +93,13 @@ def check(task: Path) -> list[str]:
         for k, v in BOUND.findall(s):
             found.setdefault(k, float(v))
         if "video_timeout_s" in found and "replay_timeout_s" in found and found["video_timeout_s"] < found["replay_timeout_s"]:
-            errs.append(f"{task.name}: {p.relative_to(task)} bounds the video at {found['video_timeout_s']:g} s, shorter "
+            errs.append(f"{task.name}: {p.relative_to(task) if p.is_relative_to(task) else p.relative_to(ROOT)} bounds the video at {found['video_timeout_s']:g} s, shorter "
                         f"than the verdict replay's {found['replay_timeout_s']:g} s (long episodes lose their video)")
     return errs
 
 
 def main(argv: list[str]) -> int:
-    dirs = [Path(a) for a in argv] or sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    dirs = [Path(a) for a in argv] or tc.iter_tasks()
     errs = [e for t in dirs for e in check(t)]
     if errs:
         print(f"FAIL videos (PROTOCOL §4: every graded trial leaves a video; {len(errs)} finding(s)):")

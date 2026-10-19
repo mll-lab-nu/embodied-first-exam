@@ -1,8 +1,0 @@
-{
- "task": "move_pillbottle_pad",
- "seed": 60417,
- "embodiment": "aloha-agilex",
- "state_sha": "26dfd4a01616",
- "text": "Use one arm to pick the pillbottle and place it onto the pad.",
- "n_active_joints": 16
-}

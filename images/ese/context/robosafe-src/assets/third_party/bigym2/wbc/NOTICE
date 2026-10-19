@@ -1,0 +1,7 @@
+Licensed by NVIDIA Corporation under the NVIDIA Open Model License
+
+GR00T-WholeBodyControl-Balance.onnx and GR00T-WholeBodyControl-Walk.onnx: NVIDIA GR00T Whole-Body Control
+(decoupled WBC) G1 policy checkpoints, https://github.com/NVlabs/GR00T-WholeBodyControl
+(decoupled_wbc/sim2mujoco/resources/robots/g1/policy/), as redistributed byte for byte by BiGym 2.0
+(bigym/loco/assets/ at commit 93ad4b3faedeba35b4b330987bb298aafd207e3f). MD5 409ca65a1937dfe2528bb604090fd2ae (Balance),
+3856429cab4856cfa47cefe2d34cb7ca (Walk). The agreement text is in "NVIDIA Open Model License.txt" next to this file.

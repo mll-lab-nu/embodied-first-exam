@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/eai-yamlab:<images/yamlab/VERSION> is never pushed to a public registry (docs/protocol/README.md §2.4,
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:yamlab-<images/yamlab/VERSION> is never pushed to a public registry (docs/protocol/README.md §2.4,
 D5). Every evaluation host builds it locally; the YAMLab tasks reference that tag and Harbor finds it in the local Docker
 image store.
 
@@ -37,7 +37,7 @@ Host
   initialisation fails when the GPU runs out of memory: start fewer at once on a shared GPU).
 
 Build (from the repository root)
-  docker build -f images/yamlab/Dockerfile -t ghcr.io/mll-lab-nu/eai-yamlab:$(cat images/yamlab/VERSION) .
+  docker build -f images/yamlab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:yamlab-$(cat images/yamlab/VERSION) .
   The build follows YAMLab's install.sh (torch 2.7.0+cu128, Isaac Sim 5.1.0, Isaac Lab at the commit YAMLab pins, LeRobot,
   YAMLab), then sets every Python package to images/yamlab/requirements.lock (the reference build's `uv pip freeze`) without
   resolving and fails unless the environment is exactly the lock.
@@ -45,14 +45,14 @@ Build (from the repository root)
 Check a build
   The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of the reference trajectory
   must succeed and end in its recorded hash. With a task directory at hand:
-    t=tasks/yamlab-put-pot-on-cooktop-i00-privileged
-    docker run --rm --gpus all --shm-size 8g -v $PWD/$t:/t ghcr.io/mll-lab-nu/eai-yamlab:$(cat images/yamlab/VERSION) bash -c \
+    t=tasks/yamlab/yamlab-put-pot-on-cooktop-i00-privileged
+    docker run --rm --gpus all --shm-size 8g -v $PWD/$t:/t ghcr.io/mll-lab-nu/efe-private:yamlab-$(cat images/yamlab/VERSION) bash -c \
       "cd /tmp && cp /t/environment/rcb_yamlab.py . && python -c \"import json, numpy as np, rcb_yamlab as m; \
          s = m.Session('put_pot_on_cooktop', instance='/t/environment/instance.json'); s.record_start(); \
          [s.step(a) for a in np.load('/t/solution/oracle_actions.npy')]; s.save_trajectory(s.record_stop(), '/tmp/t.npz'); \
          print(s.status())\" && python rcb_yamlab.py replay --task put_pot_on_cooktop --instance /t/environment/instance.json --traj /tmp/t.npz"
   expects instance_exact true, success true and the same final state_sha from both runs as the task README's Verification
-  section (the oracle's hash). Or run `harbor run -p tasks/yamlab-put-pot-on-cooktop-i00-privileged -a oracle`.
+  section (the oracle's hash). Or run `harbor run -p tasks/yamlab/yamlab-put-pot-on-cooktop-i00-privileged -a oracle`.
 
 On a CI machine (maintainers)
   A self-hosted runner with such a GPU builds the image with the command above when images/yamlab/ changes, runs the check,

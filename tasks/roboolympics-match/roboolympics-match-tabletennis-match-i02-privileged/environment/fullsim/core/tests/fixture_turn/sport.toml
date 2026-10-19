@@ -1,0 +1,24 @@
+# The core's turn-protocol test fixture (core/tests/test_core.py): a synthetic game with no physics, written against
+# the interface only: the sides take turns adding a number to their score; N sides with a ranking and retirement;
+# a team format whose sides are not its seats (the fairness check, core/testkit.py).
+[sport]
+name = "fixture_turn"
+protocol = "turn"
+revision = "fixture-turn-1"
+image = "ghcr.io/mll-lab-nu/efe:olympiad-0.1.0"
+status = "sport"
+
+[observation]
+fields = ["unit", "pos"]
+
+[formats.team]
+seats = ["A1", "A2", "B1", "B2"]
+sides = { A1 = "A", A2 = "A", B1 = "B", B2 = "B" }
+first = ["A", "B"]
+
+[score]                               # core 0.2.14: the continuous score (core/score.py), checked through the turn tests
+name = "score_share"
+text = "the side's share of all points scored"
+from = "share"
+forfeit = 0.0
+range = [0, 1]

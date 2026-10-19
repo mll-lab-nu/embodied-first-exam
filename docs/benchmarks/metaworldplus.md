@@ -6,11 +6,11 @@ each on one frozen instance, in both modes: 100 tasks.
 | | |
 |---|---|
 | upstream | Meta-World @ `59fc34d7768af9785e4688c3e1db671424f4a6c3` (MIT), MuJoCo 3.3.0, gymnasium 1.1.1 |
-| tasks | `tasks/metaworldplus-<env>-i00-privileged` and `tasks/metaworldplus-<env>-i00-standard` (twins share the instance) |
+| tasks | `tasks/metaworldplus/metaworldplus-<env>-i00-privileged` and `tasks/metaworldplus/metaworldplus-<env>-i00-standard` (twins share the instance) |
 | metadata | `simulator = "mujoco"`, `robot = "sawyer"`, `family = "metaworld/<env>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` (`images/metaworld/`), CPU only |
-| standard client | the one client base and pins of `scripts/eai_standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` byte copies of the MuJoCo standard tasks' (accepting both protocol spellings) |
-| generator | `scripts/metaworldplus/` (`freeze.sh` → `frozen/`, `generate.py` → `tasks/`) |
+| image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` (`images/metaworld/`), CPU only |
+| standard client | the one client base and pins of `embodied_first_exam/standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` byte copies of the MuJoCo standard tasks' (accepting both protocol spellings) |
+| instances | each instance and oracle is committed in its privileged task (`environment/instance.npz`, `solution/oracle.npz`). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
 ## Task definition
 - **Instance.** Meta-World's reset randomization (object and goal positions) drawn with the instance seed: 0, except
@@ -24,7 +24,7 @@ each on one frozen instance, in both modes: 100 tasks.
   the upstream robot model. In standard mode the type is called `ee_delta`.
 - **Success.** Meta-World's own check (`evaluate_state`) on the state after the last action (PROTOCOL §3): no
   "success at any step". The check differs per environment, and a standard-mode agent cannot read the source, so both
-  instructions state it in words (`scripts/metaworldplus/envs.py` `SUCCESS`, one sentence per environment, read from
+  instructions state it in words (one sentence per environment, read from
   the source at the pinned commit): what is compared with the target point, in which axes, with which tolerance, and
   whatever else the final state must satisfy. Not every check is "the object near the target": stick-push also needs
   the stick still grasped and lifted, stick-pull the stick still in the thermos's handle (so letting go of the stick
@@ -59,8 +59,8 @@ evidence, verdict before video). Differences:
    numeric array) is a 400 that changes nothing; `final.json` carries `live_success` and the grader writes numeric
    fields only; `/status` and `meta` also carry `sim_steps`, submit responses `clipped`.
 
-Protocol: `eai-standard/2.1` (`/spec`, `task.toml`, instructions). `generate.py` finishes every task with
-`scripts/task_conventions.py` `normalize` (README layout, no `results/`), and `--check` is clean on all 100.
+Protocol: `eai-standard/2.1` (`/spec`, `task.toml`, instructions). Every task is in the normal form of
+`scripts/task_conventions.py` `normalize` (README layout, no `results/`).
 
 ## Grading (standard mode): the live episode
 The standard twin is graded by the live episode and nothing is replayed to grade it (privileged mode: the verifier's
@@ -75,8 +75,8 @@ two fresh-process replays).
   resume the same episode after a sidecar crash) stays: it grades nothing.
 - **Start state.** Checked when the episode begins (`_check_start()`), before the agent is served: the instance's
   SHA-256 must be `RCB_INSTANCE_SHA` and the restored scene's state hash (SHA-256 of the MuJoCo integration state)
-  must be `RCB_START_SHA`, both written into `environment/docker-compose.yaml` by `generate.py` from the frozen
-  instance (`start_shas()`).
+  must be `RCB_START_SHA`, both set in `environment/docker-compose.yaml` from the frozen
+  instance.
   A mismatch gives up with `reason = "instance_mismatch: ..."`, `infra_error = 1`.
 - **Video.** One pass after the verdict is on disk (`render_video()`): a fresh session renders the recorded trajectory
   (`front` camera, at most about 600 frames, OSMesa on the CPU) to `replay.mp4` / `replay.last.png`;
@@ -99,11 +99,6 @@ two fresh-process replays).
   episode's counts; no `replay_success` / `deterministic`.
 - **Compute.** The video pass is one scene build plus the episode's physics (0.2–0.9 ms per control step) plus its
   frames: seconds per trial, CPU.
-- **Tests.** `scripts/metaworldplus/tests/test_live_grading.py` (numpy, no simulator): the service and grader on a
-  stand-in tool module (live success / failure, nothing replayed, video failure and a crash while rendering, crashes
-  between and inside calls, the start check, missing / unreadable / unfinalized `final.json`), and the generator's
-  hashes against mw_tool's on the frozen instances. `scripts/mujoco-playground/tests/test_standard_2_1_servers.py`
-  covers the service's protocol.
 
 `meta["time_s"]` / `meta["time_left_s"]` count from the agent's first request to the service (logged, so a crash
 resume keeps it), not from the service's start: the service is up before the harness has installed the agent.
@@ -114,21 +109,18 @@ the one allowlist (`network_mode = "allowlist"`, the hosts of `scripts/set_agent
 list has the package registries, so the PyPI distribution `metaworld`, which ships those policies, is reachable: the
 instruction's honour rule asks the agent not to fetch a solution, nothing blocks it, and a trial
 that installs `metaworld` is one to look at (PROTOCOL §5). The
-policies are deleted from the image in the layer that installs them; `freeze.sh` mounts them from the pinned commit.
+policies are deleted from the image in the layer that installs them.
 
 ## Rebuilding
 ```bash
-docker build -t ghcr.io/mll-lab-nu/eai-metaworld:$(cat images/metaworld/VERSION) \
+docker build -t ghcr.io/mll-lab-nu/efe:metaworld-$(cat images/metaworld/VERSION) \
     -f images/metaworld/Dockerfile images/metaworld          # ~780 MB
-bash scripts/metaworldplus/freeze.sh            # instances + oracles -> scripts/metaworldplus/frozen/ (~1 min)
-python3 scripts/metaworldplus/generate.py       # -> tasks/metaworldplus-* ; re-running reproduces them exactly
 cd tasks && harbor add --scan . && cd ..
-bash ci_checks/run_all.sh tasks/metaworldplus-*
+bash ci_checks/run_all.sh tasks/metaworldplus/metaworldplus-*
 ```
-`freeze.sh` re-creates every instance and oracle, so the task digests change only if the image or Meta-World changes.
 
 ## Evidence
-`scripts/metaworldplus/frozen/report.json` (written by `freeze.sh`), for all fifty environments: the instance is not
+Measured when the instances were frozen, for all fifty environments: the instance is not
 solved at the start; `reset()` is bit-exact; the oracle (Meta-World's scripted policy, up to its first success, 41–136
 actions) succeeds; two replays in fresh processes end in the live state's hash and succeed (the reference's
 determinism, which the trajectory deliverable and the privileged verifier rely on).
@@ -137,72 +129,71 @@ Harbor runs on the generated tasks: `-a oracle` scores 1 (50/50 privileged, 6/6 
 reward files and a do-nothing trajectory; in standard mode, hidden endpoints (`/reset`, `/state`, `/success`: 404), a
 wrong action type and `dt` (400), and a forged `final.json` in the agent's container (never collected).
 
-## Easy set
+## Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
 **unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
-`solved`): kept under its name and reported apart from the main table.
+**pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-29 of 50 bases are in the easy set; by directory: 79 easy, 0 hard, 21 unverified, 0 pending.
+By directory: 79 easy, 0 hard, 21 unverified, 0 pending.
 
-| base | easy set | privileged | standard |
-|---|---|---|---|
-| `metaworldplus-assembly-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-basketball-i00` |  | easy: Luna | unverified |
-| `metaworldplus-bin-picking-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-box-close-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-button-press-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-button-press-topdown-i00` |  | easy: Luna | unverified |
-| `metaworldplus-button-press-topdown-wall-i00` |  | easy: Luna | unverified |
-| `metaworldplus-button-press-wall-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-coffee-button-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-coffee-pull-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-coffee-push-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-dial-turn-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-disassemble-i00` |  | easy: Luna | unverified |
-| `metaworldplus-door-close-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-door-lock-i00` |  | easy: Luna | unverified |
-| `metaworldplus-door-open-i00` |  | easy: Luna | unverified |
-| `metaworldplus-door-unlock-i00` |  | easy: Luna | unverified |
-| `metaworldplus-drawer-close-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-drawer-open-i00` |  | easy: Luna | unverified |
-| `metaworldplus-faucet-close-i00` |  | easy: Luna | unverified |
-| `metaworldplus-faucet-open-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-hammer-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-hand-insert-i00` |  | easy: Luna | unverified |
-| `metaworldplus-handle-press-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-handle-press-side-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-handle-pull-i00` |  | easy: Luna | unverified |
-| `metaworldplus-handle-pull-side-i00` |  | easy: Luna | unverified |
-| `metaworldplus-lever-pull-i00` |  | easy: Luna | unverified |
-| `metaworldplus-peg-insert-side-i00` |  | easy: Luna | unverified |
-| `metaworldplus-peg-unplug-side-i00` |  | easy: Luna | unverified |
-| `metaworldplus-pick-out-of-hole-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-pick-place-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-pick-place-wall-i00` |  | easy: Luna | unverified |
-| `metaworldplus-plate-slide-back-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-plate-slide-back-side-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-plate-slide-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-plate-slide-side-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-push-back-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-push-i00` |  | easy: Luna | unverified |
-| `metaworldplus-push-wall-i00` |  | easy: Luna | unverified |
-| `metaworldplus-reach-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-reach-wall-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-shelf-place-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-soccer-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-stick-pull-i00` |  | easy: Luna | unverified |
-| `metaworldplus-stick-push-i00` |  | easy: Luna | unverified |
-| `metaworldplus-sweep-i00` |  | easy: Luna | unverified |
-| `metaworldplus-sweep-into-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-window-close-i00` | yes | easy: Luna | easy: Luna |
-| `metaworldplus-window-open-i00` | yes | easy: Luna | easy: Luna |
+| base | privileged | standard |
+|---|---|---|
+| `metaworldplus-assembly-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-basketball-i00` | easy: Luna | unverified |
+| `metaworldplus-bin-picking-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-box-close-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-button-press-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-button-press-topdown-i00` | easy: Luna | unverified |
+| `metaworldplus-button-press-topdown-wall-i00` | easy: Luna | unverified |
+| `metaworldplus-button-press-wall-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-coffee-button-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-coffee-pull-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-coffee-push-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-dial-turn-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-disassemble-i00` | easy: Luna | unverified |
+| `metaworldplus-door-close-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-door-lock-i00` | easy: Luna | unverified |
+| `metaworldplus-door-open-i00` | easy: Luna | unverified |
+| `metaworldplus-door-unlock-i00` | easy: Luna | unverified |
+| `metaworldplus-drawer-close-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-drawer-open-i00` | easy: Luna | unverified |
+| `metaworldplus-faucet-close-i00` | easy: Luna | unverified |
+| `metaworldplus-faucet-open-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-hammer-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-hand-insert-i00` | easy: Luna | unverified |
+| `metaworldplus-handle-press-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-handle-press-side-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-handle-pull-i00` | easy: Luna | unverified |
+| `metaworldplus-handle-pull-side-i00` | easy: Luna | unverified |
+| `metaworldplus-lever-pull-i00` | easy: Luna | unverified |
+| `metaworldplus-peg-insert-side-i00` | easy: Luna | unverified |
+| `metaworldplus-peg-unplug-side-i00` | easy: Luna | unverified |
+| `metaworldplus-pick-out-of-hole-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-pick-place-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-pick-place-wall-i00` | easy: Luna | unverified |
+| `metaworldplus-plate-slide-back-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-plate-slide-back-side-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-plate-slide-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-plate-slide-side-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-push-back-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-push-i00` | easy: Luna | unverified |
+| `metaworldplus-push-wall-i00` | easy: Luna | unverified |
+| `metaworldplus-reach-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-reach-wall-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-shelf-place-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-soccer-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-stick-pull-i00` | easy: Luna | unverified |
+| `metaworldplus-stick-push-i00` | easy: Luna | unverified |
+| `metaworldplus-sweep-i00` | easy: Luna | unverified |
+| `metaworldplus-sweep-into-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-window-close-i00` | easy: Luna | easy: Luna |
+| `metaworldplus-window-open-i00` | easy: Luna | easy: Luna |

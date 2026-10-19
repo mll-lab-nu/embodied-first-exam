@@ -4,8 +4,10 @@
 Every generator ends with `normalize(task_dir)`, so a re-generated task equals the committed one. It also migrates a
 pre-v1.0 task (old field names, protocol spelling, README layout); renaming directories is the caller's job.
 
-    python3 scripts/task_conventions.py tasks/<task> [...]     # normalize these tasks
-    python3 scripts/task_conventions.py --check tasks/<task>   # exit 1 if normalizing would change anything
+    python3 scripts/task_conventions.py tasks/<benchmark>/<task> [...]     # normalize these tasks
+    python3 scripts/task_conventions.py --check tasks/<benchmark>/<task>   # exit 1 if normalizing would change anything
+    python3 scripts/task_conventions.py benchmarks [--check]   # every task dir's benchmark label (BENCHMARKS) and folder
+    python3 scripts/task_conventions.py task-dir <task> ...    # where a task dir lives: tasks/<benchmark folder>/<task>
 
 What it does:
 - `task.toml`: `mode` from the directory suffix (`-privileged` / `-standard` / `-standard-realtime`), no `tier`, `protocol = "eai-standard/2.1"`
@@ -37,6 +39,7 @@ What it does:
 """
 from __future__ import annotations
 
+import collections
 import fnmatch
 import functools
 import hashlib
@@ -49,6 +52,7 @@ import tomllib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "images/monitor"))   # the monitor image's source (rcb_monitor/)
 from rcb_monitor import inject as rcb_monitor_inject  # noqa: E402
 
 CLIENT_ASSERT_OLD = 'assert str(self._spec.get("protocol", "")).startswith("rcb-limited/2."), self._spec.get("protocol")'
@@ -82,38 +86,39 @@ BENCHMARKS = [  # (directory prefix, label)
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
-    ("roboolympics-", "RoboOlympics"),       # formerly RoboFunOlympics (`robofunolympics-`; renamed 2026-10-14, owner)
-    ("rsb-", "RoboSafeBench"),    # formerly `cell-` (renamed in 0.5.4, the authors); an agent can read its task name
+    ("roboolympics-fun-", "RoboOlympics-Fun"),      # the single-humanoid sports families
+    ("roboolympics-match-", "RoboOlympics-Match"),  # the matches RoboOlympics exports with its own service, and their twins
+    ("ese-", "Embodied Safety Exam"),
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
     ("ispatialgym-", "iSpatialGym"),
     ("ikea-", "IKEA MuJoCo"),
-    ("roboengineer-", "roboEngineer"),   # its own multi-round runtime eai-policy/1.x (scripts/roboengineer/exported.toml)
+    ("roboengineer-", "roboEngineer"),   # its own multi-round runtime eai-policy/1.x (ci_checks/benchmarks/roboengineer/exported.toml)
 ]
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
-# RoboOlympics' exported tasks (PROTOCOL v1 §4c; scripts/roboolympics/exported.toml) have a cutoff note of their own
+# RoboOlympics' exported tasks (PROTOCOL v1 §4c; ci_checks/benchmarks/roboolympics-match/exported.toml) have a cutoff note of their own
 # (CUTOFF_NOTE_TASK below):
-RO_EXPORTED_TASKS = ("roboolympics-badminton-match-i01-standard-realtime",
-                     "roboolympics-badminton-duelrl-i01-standard-realtime",
-                     "roboolympics-badminton-match-i02-standard-realtime",
-                     "roboolympics-badminton-match-i04-standard-realtime",
-                     "roboolympics-fencing-bout-i01-standard",
-                     "roboolympics-fencing-bout-i02-standard",
-                     "roboolympics-foosball-match-i01-standard-realtime",
-                     "roboolympics-soccer-match-i00-standard-realtime",
-                     "roboolympics-soccer-jointcpu-i01-standard-realtime",
-                     "roboolympics-soccer-jointgpu-i01-standard-realtime",
-                     "roboolympics-soccerssl-match-i00-standard-realtime",
-                     "roboolympics-soccerssl-match-i01-standard-realtime",
-                     "roboolympics-tabletennis-duelrl-i01-standard-realtime",
-                     "roboolympics-badminton-matchlow-i01-standard-realtime",
-                     "roboolympics-tabletennis-matchlow-i01-standard-realtime",
-                     "roboolympics-tabletennis-match-i01-standard-realtime",
-                     "roboolympics-tabletennis-match-i02-standard-realtime",
-                     "roboolympics-tabletennis-match-i03-standard-realtime",
-                     "roboolympics-tabletennis-match-i04-standard-realtime")
+RO_EXPORTED_TASKS = ("roboolympics-match-badminton-match-i01-standard-realtime",
+                     "roboolympics-match-badminton-duelrl-i01-standard-realtime",
+                     "roboolympics-match-badminton-match-i02-standard-realtime",
+                     "roboolympics-match-badminton-match-i04-standard-realtime",
+                     "roboolympics-match-fencing-bout-i01-standard",
+                     "roboolympics-match-fencing-bout-i02-standard",
+                     "roboolympics-match-foosball-match-i01-standard-realtime",
+                     "roboolympics-match-soccer-match-i00-standard-realtime",
+                     "roboolympics-match-soccer-jointcpu-i01-standard-realtime",
+                     "roboolympics-match-soccer-jointgpu-i01-standard-realtime",
+                     "roboolympics-match-soccerssl-match-i00-standard-realtime",
+                     "roboolympics-match-soccerssl-match-i01-standard-realtime",
+                     "roboolympics-match-tabletennis-duelrl-i01-standard-realtime",
+                     "roboolympics-match-badminton-matchlow-i01-standard-realtime",
+                     "roboolympics-match-tabletennis-matchlow-i01-standard-realtime",
+                     "roboolympics-match-tabletennis-match-i01-standard-realtime",
+                     "roboolympics-match-tabletennis-match-i02-standard-realtime",
+                     "roboolympics-match-tabletennis-match-i03-standard-realtime",
+                     "roboolympics-match-tabletennis-match-i04-standard-realtime")
 # PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
@@ -216,7 +221,7 @@ _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` ab
 # owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
 # high and stopped early; every agent gets the same way to know it (a command, not a guess).
 # robot_coding_bench #231 (10-15): a sentence asking for `date` was not enough (agents still guessed); the resource
-# monitor now shows the clock itself (scripts/rcb_monitor/monitor.py clock(): from the trial environment's start, so it
+# monitor now shows the clock itself (images/monitor/rcb_monitor/monitor.py clock(): from the trial environment's start, so it
 # never overstates the time left; `monitor.py beacon` keeps it on runners that cannot run the monitor).
 _CUTOFF_CLOCK = (" Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few "
                  "seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a "
@@ -254,7 +259,7 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
     "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
-# roboEngineer (#329): its own multi-round runtime (scripts/roboengineer/exported.toml) grades a deployed policy, not an
+# roboEngineer (#329): its own multi-round runtime (ci_checks/benchmarks/roboengineer/exported.toml) grades a deployed policy, not an
 # episode that stands at the cutoff, and its service reports a deadline, not `time_left_s`
 CUTOFF_NOTE_OWN[("roboEngineer", "standard")] = (
     "This is wall-clock time from the start of your session; the time you wait for the deployment service counts, "
@@ -272,6 +277,22 @@ CUTOFF_NOTE_TASK = {n: (
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_CAP = 14400                               # PROTOCOL D8 / §2.3, no benchmark excepted; the same cap: ci_checks/check-task-fields.sh
+# The repository's task tree: one folder per benchmark, tasks/<folder>/<task>/ (a task dir's name says its benchmark,
+# bench_of; GitHub lists at most 1000 entries of a folder). The folder of each BENCHMARKS label, the same slug as the
+# benchmark's embodied_first_exam/benchmarks/ folder. Everything that finds a task dir in the repository goes through task_dir() /
+# iter_tasks() (and the pool reads this table); `benchmarks --check` holds the tree to it.
+TASKS_DIR = Path(__file__).resolve().parents[1] / "tasks"
+BENCHMARK_DIRS = {
+    "RoboTwin 2.0": "robotwin-2", "DexToolBench": "dextoolbench", "MuJoCo Playground": "mujoco-playground",
+    "KinDER": "kinder", "HumanoidBench": "humanoidbench", "MetaWorld+": "metaworldplus", "RoboWits": "robowits",
+    "RoboPaint": "robopaint", "RoboLab": "robolab", "BEHAVIOR-1K": "behavior-1k", "ManiGuard": "maniguard",
+    "MolmoSpaces": "molmospaces", "MyoSuite": "myosuite", "DexJoCo": "dexjoco", "DexHand": "dexhand",
+    "VLABench": "vlabench", "RoboCasa-GR1": "robocasa-gr1", "RoboCasa": "robocasa", "RoboCasa365": "robocasa365",
+    "LIBERO-MAX": "libero-max", "RoboARC": "roboarc", "BiGym 2.0": "bigym2", "YAMLab": "yamlab", "RoboDojo": "robodojo",
+    "RoboOlympics-Fun": "roboolympics-fun", "RoboOlympics-Match": "roboolympics-match", "Embodied Safety Exam": "embodied-safety-exam",
+    "Panda Dynamic Scenes": "pandadyn", "AM-Bench": "ambench", "iSpatialGym": "ispatialgym", "IKEA MuJoCo": "ikea-mujoco",
+    "roboEngineer": "roboengineer",
+}
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -315,7 +336,91 @@ def modes_table() -> str:
 
 
 def bench_of(task: Path) -> str:
-    return next((label for prefix, label in BENCHMARKS if task.name.startswith(prefix)), "")
+    """The task's BENCHMARKS label (a task dir or a base): its first matching prefix's label; "" for a name no label
+    claims."""
+    name = Path(task).name
+    return next((label for p, label in BENCHMARKS if name.startswith(p)), "")
+
+
+def bench_dir(task: "Path | str") -> str:
+    """The folder under tasks/ of the task's benchmark (BENCHMARK_DIRS; a task dir or a base), "" for a name no label
+    claims."""
+    return BENCHMARK_DIRS.get(bench_of(Path(task)), "")
+
+
+def task_dir(name: "Path | str", tasks_dir: "Path | str | None" = None) -> Path:
+    """The task dir of that name in the repository's tree, tasks/<benchmark folder>/<name> (tasks_dir: another tree of
+    the same layout, e.g. a deploy checkout). It need not exist. A name no benchmark claims: tasks/<name>, which
+    `benchmarks --check` rejects."""
+    tasks_dir = Path(tasks_dir) if tasks_dir else TASKS_DIR
+    name = Path(name).name
+    folder = bench_dir(name)
+    return tasks_dir / folder / name if folder else tasks_dir / name
+
+
+def task_relpath(name: "Path | str") -> str:
+    """task_dir() relative to the repository root, as git names it: `tasks/<benchmark folder>/<name>`."""
+    return task_dir(name, Path("tasks")).as_posix()
+
+
+def bench_root(bench: str, tasks_dir: "Path | str | None" = None) -> Path:
+    """The folder of a benchmark (a BENCHMARKS label or its BENCHMARK_DIRS folder) under tasks/: what its generators
+    write into and glob."""
+    folder = BENCHMARK_DIRS.get(bench, bench)
+    if folder not in BENCHMARK_DIRS.values():
+        raise KeyError(f"{bench!r}: not a BENCHMARKS label or benchmark folder (scripts/task_conventions.py BENCHMARK_DIRS)")
+    return (Path(tasks_dir) if tasks_dir else TASKS_DIR) / folder
+
+
+def iter_tasks(tasks_dir: "Path | str | None" = None) -> list[Path]:
+    """Every task dir of the tree (tasks/<folder>/<task>/ with a task.toml), sorted by name."""
+    tasks_dir = Path(tasks_dir) if tasks_dir else TASKS_DIR
+    return sorted((p.parent for p in tasks_dir.glob("*/*/task.toml")), key=lambda p: p.name)
+
+
+TASKS_TOP_FILES = ("README.md", "dataset.toml")   # tasks/ holds the benchmark folders and these (dataset.toml: generated)
+FOLDER_MAX = 1000                                 # GitHub's web UI lists at most this many entries of a folder
+
+
+def check_layout(tasks_dir: Path | None = None) -> list[str]:
+    """What is wrong with the tree's layout (`benchmarks --check`): a BENCHMARKS label without its folder (or a folder
+    without its label, or two labels on one folder), anything at the top of tasks/ besides the benchmark folders and
+    TASKS_TOP_FILES, a task dir in another benchmark's folder or nested deeper, a folder over FOLDER_MAX entries."""
+    tasks_dir = tasks_dir or TASKS_DIR
+    labels = {label for _, label in BENCHMARKS}
+    bad = [f"BENCHMARKS label {b!r}: no folder in BENCHMARK_DIRS" for b in sorted(labels - set(BENCHMARK_DIRS))]
+    bad += [f"BENCHMARK_DIRS {b!r}: not a BENCHMARKS label" for b in sorted(set(BENCHMARK_DIRS) - labels)]
+    folders = collections.Counter(BENCHMARK_DIRS.values())
+    bad += [f"BENCHMARK_DIRS: folder {f!r} given to {k} labels" for f, k in folders.items() if k > 1]
+    bad += [f"BENCHMARK_DIRS: folder {f!r} is not a lowercase slug" for f in folders if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", f)]
+    for p in sorted(tasks_dir.iterdir()):
+        if p.name in TASKS_TOP_FILES and p.is_file():
+            continue
+        if not p.is_dir() or p.name not in folders:
+            bad.append(f"tasks/{p.name}: not a benchmark folder (scripts/task_conventions.py BENCHMARK_DIRS)"
+                       + (" -- a task dir belongs in tasks/<benchmark folder>/" if (p / "task.toml").exists() else ""))
+            continue
+        entries = sorted(p.iterdir())
+        if len(entries) > FOLDER_MAX:
+            bad.append(f"tasks/{p.name}: {len(entries)} entries, over {FOLDER_MAX} (GitHub lists no more)")
+        for t in entries:
+            if not (t / "task.toml").is_file():
+                bad.append(f"tasks/{p.name}/{t.name}: not a task dir")
+            elif bench_dir(t.name) != p.name:
+                bad.append(f"tasks/{p.name}/{t.name}: belongs in tasks/{bench_dir(t.name) or '<no benchmark>'}/")
+    return bad
+
+
+def check_benchmarks(tasks_dir: Path | None = None) -> list[str]:
+    """What is wrong with the benchmark labels and the tree (`benchmarks --check`): check_layout(), a task dir no label
+    claims, a prefix listed twice."""
+    tasks_dir = tasks_dir or TASKS_DIR
+    names = sorted(p.name for p in iter_tasks(tasks_dir))
+    bad = check_layout(tasks_dir)
+    bad += [f"{n}: no benchmark label (scripts/task_conventions.py BENCHMARKS)" for n in names if not bench_of(Path(n))]
+    seen = collections.Counter(p for p, _ in BENCHMARKS)
+    bad += [f"prefix {p!r} is listed {k} times in BENCHMARKS" for p, k in seen.items() if k > 1]
+    return bad
 
 
 def read_text(p: Path) -> str | None:
@@ -662,11 +767,11 @@ def bench_has_mode(bench: str, mode: str) -> bool:
     """Whether the benchmark (a BENCHMARKS label) ships tasks of the mode: a task directory of it under the repository's
     tasks/ (PROTOCOL §2.15). Read from the repository, not from the directory a task is rendered in."""
     prefixes = tuple(p for p, label in BENCHMARKS if label == bench)
-    tasks = Path(__file__).resolve().parents[1] / "tasks"
-    if not tasks.is_dir():  # Source-only generation has no committed task tree.
+    if not TASKS_DIR.is_dir() or bench not in BENCHMARK_DIRS:  # Source-only generation has no committed task tree.
         return False
+    folder = bench_root(bench)
     return any(d.name.startswith(prefixes) and mode_of(d) == mode and bench_of(d) == bench
-               for d in tasks.iterdir() if (d / "task.toml").is_file()) if prefixes else False
+               for d in folder.iterdir() if (d / "task.toml").is_file()) if prefixes and folder.is_dir() else False
 
 
 def no_twin_reason(task: Path) -> str | None:
@@ -678,7 +783,7 @@ def no_twin_reason(task: Path) -> str | None:
     twin = MODE_REGISTRY[mode_of(task)]["twin"]
     if twin is None:
         return None
-    committed = Path(__file__).resolve().parents[1] / "tasks" / task.name / "README.md"
+    committed = task_dir(task.name) / "README.md"
     for f in (task / "README.md", committed):
         m = re.search(r"(?m)^\| Twin \| (— \(none:[^\n]*?\)) \|\s*$", read_text(f) or "")
         if m:
@@ -791,16 +896,16 @@ def normalize_instruction(task: Path) -> None:
 
 
 def _shared_sources() -> set[bytes]:
-    """Contents of the files generators copy unchanged from scripts/eai_standard/ (the eai-standard/2.2 layer, and the 2.4
+    """Contents of the files generators copy unchanged from embodied_first_exam/standard/ (the eai-standard/2.2 layer, and the 2.4
     layer in v2_4/; D9): their copies must stay byte-identical to the source (check-tooling-identity.sh), so normalize never
     rewrites them."""
-    src = Path(__file__).resolve().parent / "eai_standard"
+    src = Path(__file__).resolve().parents[1] / "embodied_first_exam/standard"
     shared = {p.read_bytes() for p in src.rglob("*") if p.is_file() and "__pycache__" not in p.parts} if src.is_dir() else set()
-    return shared | rcb_monitor_inject.generated_sources()     # the resource monitor's copies (scripts/rcb_monitor/)
+    return shared | rcb_monitor_inject.generated_sources()     # the resource monitor's copies (images/monitor/rcb_monitor/)
 
 
 def _is_layer_copy(f: Path) -> bool:
-    """A copy of some version of scripts/eai_standard/rcb_limited.py or v2_4/rcb_limited.py (its PROTOCOL line and COMPAT
+    """A copy of some version of embodied_first_exam/standard/rcb_limited.py or v2_4/rcb_limited.py (its PROTOCOL line and COMPAT
     list): board 0151 changed the layer, and the tasks of each benchmark move onto the new bytes only when it regenerates."""
     t = read_text(f) or ""
     return bool(re.search(r'(?m)^PROTOCOL = "eai-standard/2\.\d"', t)) and bool(re.search(r"(?m)^COMPAT = \[", t))
@@ -910,7 +1015,7 @@ def parse_readme(s: str) -> tuple[str, list[tuple[str, str]], list[tuple[str, st
 def image_of(task: Path) -> str:
     if mode_of(task) in SIDECAR_MODES:
         c = read_text(task / "environment/docker-compose.yaml") or ""
-        imgs = [i for i in re.findall(r"^\s*image:\s*(\S+)", c, re.M) if "/eai-monitor:" not in i]   # not the monitor's
+        imgs = [i for i in re.findall(r"^\s*image:\s*(\S+)", c, re.M) if not re.search(r"/(?:eai|efe)-monitor[:@]|/efe:monitor-", i)]   # not the monitor's
         if imgs:
             return imgs[0]
     d = read_text(task / "environment/Dockerfile") or ""
@@ -1084,18 +1189,18 @@ def normalize_seeds(task: Path) -> None:
 
 def committed_line(task: Path, key: str) -> str | None:
     """The `key = ...` line of the committed task of the same name (a generator renders a task into a scratch directory,
-    or over the task in tasks/: what the task declared is kept): the repository's tasks/<name>/task.toml when that is
+    or over the task in tasks/: what the task declared is kept): the repository's task dir's task.toml when that is
     another file and has the line, else the version committed at HEAD. None when neither has it."""
     rx = re.compile(rf"(?m)^{re.escape(key)} = .*\n")
     root = Path(__file__).resolve().parents[1]
-    p = root / "tasks" / task.name / "task.toml"
+    p = task_dir(task.name) / "task.toml"
     if p.is_file() and p.resolve() != (task / "task.toml").resolve():
         m = rx.search(read_text(p) or "")
         if m:
             return m.group(0)
     try:
         import subprocess
-        r = subprocess.run(["git", "-C", str(root), "show", f"HEAD:tasks/{task.name}/task.toml"], capture_output=True,
+        r = subprocess.run(["git", "-C", str(root), "show", f"HEAD:{task_relpath(task.name)}/task.toml"], capture_output=True,
                            text=True, timeout=30)
         m = rx.search(r.stdout) if r.returncode == 0 else None
     except (OSError, subprocess.SubprocessError):
@@ -1216,89 +1321,123 @@ def validated_of(task: Path) -> bool:
     return md.get("oracle") == "full"
 
 
-# The easy set (PROTOCOL §4, docs/protocol/running.md "Results"): task bases kept in the repository and run like any other, but reported
-# apart from the main table and left out of the headline statistics. One central list, docs/easy_set.toml, not a task
-# field: marking a task changes none of its files, so its DIGEST and the results recorded against it stay as they are.
-EASY_SET_FILE = Path(os.environ.get("RCB_EASY_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "easy_set.toml")
-# RCB_EASY_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
-EASY_REASONS = {
-    "shortcut": "a success came through a goal looser than the task's text, or a grader shortcut (`note`: the pattern)",
-    "owner": "the benchmark owner judges the task too easy or not discriminative",
-    "solved": "the screening runs solved the task in every mode it ships, or the `solved_by` run in any mode (`note`: "
-              "which runs, which modes)",
-}
-# `solved_by` (optional, reason "solved" only): the reference run that solved the base in ANY mode it ships (owner 10-17,
-# board 0155); `easy-set --solved-by luna` lists them. scripts/easy_set_add_solved.py appends such entries.
-SOLVED_BY = {"luna": "codex-gpt6_luna-xhigh"}
+# The core set (PROTOCOL §4, docs/protocol/running.md "Results"): the tasks the headline statistics are computed on, one
+# central list, docs/core_set.toml, not a task field: listing a task changes none of its files, so its DIGEST and the
+# results recorded against it stay as they are. One entry per task: `task` (the task dir name without its mode suffix,
+# base_of()) and `default_mode`, the mode `harbor run --core` runs; another mode of the same tasks can be forced.
+CORE_SET_FILE = Path(os.environ.get("RCB_CORE_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "core_set.toml")
+# RCB_CORE_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
+CORE_FIELDS = ("task", "default_mode")
+CORE_MODES = ("privileged", "standard", "standard-realtime")
 
 
-def easy_set(path: Path = EASY_SET_FILE) -> dict[str, dict]:
-    """docs/easy_set.toml as {base: entry}; empty when the file is absent. Entries: `base` (the task name without its
-    mode suffix: every mode the base ships is in the set), `benchmark` (its BENCHMARKS label), `reason` (EASY_REASONS),
-    optional `note` and `solved_by` (SOLVED_BY). ValueError on a malformed file (ci_checks: `task_conventions.py easy-set --check`). Parsed once per
-    version of the file (its mtime), so a long-running reader sees an edited list."""
+@functools.lru_cache(maxsize=8)
+def _core_set(path: Path, mtime: int) -> dict[str, str]:
+    d = tomllib.loads(path.read_text(encoding="utf-8"))
+    out: dict[str, str] = {}
+    for e in d.get("task", []):
+        t = e.get("task") if isinstance(e, dict) else None
+        if not isinstance(t, str) or not t:
+            raise ValueError(f"{path.name}: an entry without a task: {e!r}")
+        if t in out:
+            raise ValueError(f"{path.name}: {t} listed twice")
+        out[t] = str(e.get("default_mode") or "")
+    return out
+
+
+def core_set(path: Path = CORE_SET_FILE) -> dict[str, str]:
+    """docs/core_set.toml as {task: default mode}; empty when the file is absent. ValueError on a malformed file
+    (ci_checks: `task_conventions.py core-set --check`). Parsed once per version of the file (its mtime), so a
+    long-running reader sees an edited list."""
     try:
         mtime = path.stat().st_mtime_ns
     except FileNotFoundError:
         return {}
-    return dict(_easy_set(path, mtime))
+    return dict(_core_set(path, mtime))
 
 
-@functools.lru_cache(maxsize=8)
-def _easy_set(path: Path, mtime: int) -> dict[str, dict]:
-    out: dict[str, dict] = {}
-    for e in tomllib.loads(path.read_text(encoding="utf-8")).get("task", []):
-        b = e.get("base") if isinstance(e, dict) else None
-        if not isinstance(b, str) or not b:
-            raise ValueError(f"{path.name}: an entry without a base: {e!r}")
-        if b in out:
-            raise ValueError(f"{path.name}: {b} listed twice")
-        out[b] = e
-    return out
+def core_tasks(modes: "set[str] | None" = None, path: Path = CORE_SET_FILE, tasks_dir: Path | None = None,
+               missing: "dict[str, list[str]] | None" = None) -> list[str]:
+    """The task dirs of the core tasks: no modes, each task's default_mode dir; with modes, each task's dir of each of
+    those modes that exists (a task without that mode is skipped and added to missing[mode] when given)."""
+    out = []
+    for t, dm in core_set(path).items():
+        for m in sorted(modes) if modes else [dm]:
+            d = f"{t}-{m}"
+            if modes and not (task_dir(d, tasks_dir) / "task.toml").is_file():
+                if missing is not None:
+                    missing.setdefault(m, []).append(t)
+                continue
+            out.append(d)
+    return sorted(out)
 
 
 def set_of(task: Path) -> str:
-    """`easy` when the task's base is in the easy set (docs/easy_set.toml), else `core`. A marker like `validated`,
-    never part of config_key: the headline statistics count `core` tasks only. Recorded with each result as the value
-    when it was written; reports re-derive it from the list at the commit they publish. A malformed list never stops a
-    result from being written (a warning, and `core`): `easy-set --check` reports it."""
+    """`core` when the task dir is a mode of a task listed in docs/core_set.toml, else `excluded`. A marker like
+    `validated`, never part of config_key: the headline statistics count `core` tasks only. Recorded with each result
+    as the value when it was written; reports re-derive it from the list at the commit they publish. A malformed list
+    never stops a result from being written: a missing or malformed list gives a warning and `core`; `core-set --check`
+    reports it."""
     try:
-        es = easy_set()
+        cs = _core_set(CORE_SET_FILE, CORE_SET_FILE.stat().st_mtime_ns)
     except (ValueError, OSError) as e:                  # tomllib.TOMLDecodeError and UnicodeDecodeError are ValueErrors
-        if str(e) not in _EASY_WARNED:
-            _EASY_WARNED.add(str(e))
-            print(f"WARN {EASY_SET_FILE.name}: {e} (every task counts as core; task_conventions.py easy-set --check)",
+        if str(e) not in _CORE_WARNED:
+            _CORE_WARNED.add(str(e))
+            print(f"WARN {CORE_SET_FILE.name}: {e} (every task counts as core; task_conventions.py core-set --check)",
                   file=sys.stderr)
         return "core"
-    return "easy" if base_of(Path(task)) in es else "core"
+    return "core" if base_of(Path(task)) in cs else "excluded"
 
 
-_EASY_WARNED: set[str] = set()
+_CORE_WARNED: set[str] = set()
 
 
-def check_easy_set(tasks_dir: Path | None = None, path: Path = EASY_SET_FILE) -> list[str]:
-    """What is wrong with the easy set: an unknown reason, a base no task directory has, a benchmark label that is not
-    the base's."""
-    tasks_dir = tasks_dir or Path(__file__).resolve().parents[1] / "tasks"
+README_FILE = Path(__file__).resolve().parents[1] / "README.md"
+README_TABLE = re.compile(r"(<!-- task-table: generated by `python3 scripts/task_conventions.py readme-table --write` -->\n)"
+                          r"(.*?)(<!-- /task-table -->)", re.S)
+
+
+def readme_table(tasks_dir: Path | None = None) -> str:
+    """The README's task table: per benchmark label, its core tasks (core_tasks()) and all its task dirs."""
+    tasks_dir = tasks_dir or TASKS_DIR
+    dirs = iter_tasks(tasks_dir)
+    every = collections.Counter(bench_of(p) for p in dirs)
+    core = collections.Counter(bench_of(Path(t)) for t in core_tasks(tasks_dir=tasks_dir)
+                               if (task_dir(t, tasks_dir) / "task.toml").is_file())
+    rows = ["| Benchmark | Core | All |", "|---|---:|---:|"]
+    rows += [f"| {b} | {core.get(b, 0)} | {every[b]} |" for b in sorted(every, key=str.lower)]
+    rows.append(f"| **Total** | **{sum(core.values())}** | **{sum(every.values())}** |")
+    return "\n".join(rows)
+
+
+def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
+    """What is wrong with the core set: no file, an unknown top-level key or field, a task that is not a plain task name
+    without a mode suffix, a default_mode that is not a mode, or no task dir of the task in its default_mode."""
+    tasks_dir = tasks_dir or TASKS_DIR
+    if not path.is_file():
+        return [f"{path.name}: no such file"]
     try:
-        es = easy_set(path)
+        cs = core_set(path)
+        raw = tomllib.loads(path.read_text(encoding="utf-8"))
     except (ValueError, OSError) as e:
         return [str(e)]
-    names = {p.name for p in tasks_dir.iterdir() if (p / "task.toml").is_file()}
-    have = {base_of(Path(n)) for n in names}
     bad = []
-    for b, e in es.items():
-        if not isinstance(e.get("reason"), str) or e["reason"] not in EASY_REASONS:
-            bad.append(f"{b}: reason {e.get('reason')!r} is not one of {', '.join(EASY_REASONS)}")
-        if b not in have:
-            bad.append(f"{b}: no task directory {b}-<mode> under tasks/")
-        if e.get("benchmark") != bench_of(Path(b)):
-            bad.append(f"{b}: benchmark {e.get('benchmark')!r}, its label is {bench_of(Path(b))!r}")
-        unknown = set(e) - {"base", "benchmark", "reason", "note", "solved_by"}
-        if unknown:
-            bad.append(f"{b}: unknown field(s) {', '.join(sorted(unknown))}")
-        if "solved_by" in e and (e["solved_by"] not in SOLVED_BY or e.get("reason") != "solved"):
-            bad.append(f"{b}: solved_by {e['solved_by']!r} needs reason \"solved\" and one of {', '.join(SOLVED_BY)}")
+    unknown = set(raw) - {"task"}
+    if unknown:
+        bad.append(f"{path.name}: unknown top-level key(s) {', '.join(sorted(unknown))}")
+    for e in raw.get("task", []):
+        u = set(e) - set(CORE_FIELDS)
+        if u:
+            bad.append(f"{e.get('task')}: unknown field(s) {', '.join(sorted(u))}")
+    for t, dm in cs.items():
+        if t != Path(t).name or base_of(Path(t)) != t:
+            bad.append(f"{t}: not a task name (a task dir name without its mode suffix)")
+            continue
+        if dm not in CORE_MODES:
+            bad.append(f"{t}: default_mode {dm!r} is not one of {', '.join(CORE_MODES)}")
+            continue
+        if not (task_dir(f"{t}-{dm}", tasks_dir) / "task.toml").is_file():
+            bad.append(f"{t}: no task directory {t}-{dm} under tasks/")
     return bad
 
 
@@ -1411,23 +1550,43 @@ def main(argv: list[str]) -> int:
     if argv[:1] == ["modes"]:          # the mode registry for the shell checks (PROTOCOL §2.16)
         print(modes_table())
         return 0
-    if argv[:1] == ["easy-set"]:       # `easy-set --check`: docs/easy_set.toml (PROTOCOL §4); `easy-set`: list its tasks
-        if "--solved-by" in argv:      # `easy-set --solved-by luna`: the bases that run solved (SOLVED_BY)
-            who = argv[argv.index("--solved-by") + 1] if len(argv) > argv.index("--solved-by") + 1 else ""
-            for b, e in sorted(easy_set().items()):
-                if e.get("solved_by") == who:
-                    print(b)
-            return 0
+    if argv[:1] == ["task-dir"]:       # `task-dir <name>...`: each task dir's path in this tree (task_dir), one per line
+        for n in argv[1:]:
+            print(task_dir(n))
+        return 0
+    if argv[:1] == ["benchmarks"]:     # `benchmarks --check`: every task dir has its label (BENCHMARKS); `benchmarks`: the labels
         if "--check" in argv:
-            bad = check_easy_set()
+            bad = check_benchmarks(TASKS_DIR)
             for b in bad:
-                print(f"FAIL docs/easy_set.toml: {b}")
+                print(f"FAIL benchmark labels: {b}")
             if not bad:
-                print(f"ok docs/easy_set.toml: {len(easy_set())} task bases")
+                n = len(iter_tasks())
+                print(f"ok benchmark labels: {n} task dirs, each with its label, in its benchmark's folder")
             return 1 if bad else 0
-        root = Path(__file__).resolve().parents[1] / "tasks"
-        for t in sorted(p for p in root.iterdir() if (p / "task.toml").is_file() and set_of(p) == "easy"):
-            print(t.name)
+        for t in iter_tasks():
+            print(f"{t.name}\t{bench_of(t)}\t{t.parent.name}")
+        return 0
+    if argv[:1] == ["readme-table"]:   # `readme-table --check` / `--write`: README.md's task table (readme_table())
+        text = README_FILE.read_text(encoding="utf-8")
+        m = README_TABLE.search(text)
+        if not m:
+            print("FAIL README.md: no task-table markers"); return 1
+        want = readme_table() + "\n"
+        if "--write" in argv:
+            README_FILE.write_text(text[:m.start(2)] + want + text[m.end(2):], encoding="utf-8"); return 0
+        if m.group(2) != want:
+            print("FAIL README.md: the task table is stale (python3 scripts/task_conventions.py readme-table --write)"); return 1
+        print("ok README.md task table"); return 0
+    if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml (PROTOCOL §4); `core-set [--<mode>...]`:
+        if "--check" in argv:            # list the core tasks' default-mode dirs, or their dirs of those modes (core_tasks())
+            bad = check_core_set()
+            for b in bad:
+                print(f"FAIL docs/core_set.toml: {b}")
+            if not bad:
+                print(f"ok docs/core_set.toml: {len(core_set())} core tasks")
+            return 1 if bad else 0
+        for t in core_tasks({a[2:] for a in argv[1:] if a[2:] in CORE_MODES}):
+            print(t)
         return 0
     check = "--check" in argv
     dirs = [Path(a) for a in argv if a != "--check" and (Path(a) / "task.toml").is_file()]

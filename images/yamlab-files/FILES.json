@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe-private:yamlab-files-0.1.0@sha256:ef6bd2b1ac385d0fb702e3129722330655bd0836a2f93e142b61924e00ad384b",
+ "source": "embodied_first_exam/benchmarks/yamlab",
+ "files": {
+  "privileged/environment/rcb_yamlab.py": "440aef4408313422ba37b37a27c73dd0f25319ca67118516eb9d4ae82330ed5e",
+  "privileged/tests/grade.py": "18d5759cbe251fd881e8fe578e1dfc83a2679345d775899d7306a0ee44c556fb",
+  "standard/tests/grade.py": "8b331172d6436a79e342fb200e5e89f54e2a8f1e311a9c6d8ae4e2bd88dbde3a"
+ }
+}

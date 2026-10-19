@@ -6,21 +6,21 @@ on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 | | |
 |---|---|
 | upstream | VLABench @ `cf588fe60c0c7282174fe979f5913170cfe69017` (MIT), assets `lerobot/vlabench-assets` @ `08d7a44`, MuJoCo 3.2.2, dm_control 1.0.22 |
-| tasks | `tasks/vlabench-<task>-i00-privileged` and `tasks/vlabench-<task>-i00-standard` |
+| tasks | `tasks/vlabench/vlabench-<task>-i00-privileged` and `tasks/vlabench/vlabench-<task>-i00-standard` |
 | metadata | `simulator = "vlabench"`, `robot = "franka-panda"`, `family = "vlabench/<task>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
-| standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + `scripts/vlabench/shared/standard/server.py` |
-| standard client | the shared client base and exact pins of `scripts/eai_standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
-| generator | `scripts/vlabench/` (`frozen/`: the instances and references, imported from PR #4 @ ad3c510; `freeze.sh` → `frozen/report.json`, `generate.py` → `tasks/`, finished with `scripts/task_conventions.py`; `generate.py --check`) |
+| image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
+| standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + each standard task's `environment/sim/server.py` |
+| standard client | the shared client base and exact pins of `embodied_first_exam/standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
+| instances | the instances and references, imported from PR #4 @ ad3c510, committed only in the privileged tasks (`environment/instance.json`, `solution/oracle.npy`). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
 ## Scope
 VLABench @ cf588fe has 96 native tasks that PR #4 surveyed. A task is in when it has a reference solution that this
-benchmark re-verifies on its frozen instance (`scripts/vlabench/freeze.sh`) and whose instruction identifies the task:
-36 tasks. Left out, with the reason per task in `scripts/vlabench/tasks.json` (`excluded`, `dropped`):
+benchmark re-verifies on its frozen instance and whose instruction identifies the task:
+36 tasks. Left out:
 - 41 with no reference: VLABench's own expert sequence does not reach the task's success on the frozen instance;
 - 13 that could not be frozen (the scene does not build or does not reset bit-exactly);
 - 3 whose PR #4 "reference" is a recorded failure (complex_seesaw_use, hammer_loose_nail, set_dining_table);
-- 3 that verify but were dropped in review (`dropped`): select_fruit_semantic duplicates select_fruit_common_sense
+- 3 that verify but were dropped in review: select_fruit_semantic duplicates select_fruit_common_sense
   (same scene hashes, reference, instruction and check), and select_book_semantic and set_study_table carry VLABench's
   unfilled instruction template (a literal "..." where the target book's description belongs);
 - PR #4's `*-sensor-only` variants, which are an access mode, not VLABench tasks.
@@ -41,7 +41,7 @@ benchmark re-verifies on its frozen instance (`scripts/vlabench/freeze.sh`) and 
   `select_fruit`'s containment checks the fruit's root point against the plate's footprint and a 0–0.1 m height band,
   not that the fruit rests on the plate (found by the red-team trial). Changing them would make it another benchmark.
 - **Instructions say what is graded.** Where VLABench's instruction does not say what its check requires, the task
-  states it instead (`tasks.json` `instructions`: the text and why; the README's Details row quotes VLABench's own
+  states it instead (the README's Details row quotes VLABench's own
   wording, which also stays in the instance and in privileged mode in `s.state()["instruction"]`). 24 tasks: e.g. the
   `*_qa` and `select_painting` answers are button presses; `heat_food` needs the food in the microwave, the door closed
   and the start button pressed; `hammer_nail_and_hang_picture` needs the nail driven in and the painting brought to it;
@@ -81,7 +81,7 @@ silent change.
 
 **Grading: the live episode** (PROTOCOL H.4). The sim sidecar judges the episode it runs with VLABench's own success
 check (the task's termination condition, `should_terminate_episode`, at every control step; `step()` in
-`scripts/vlabench/shared/standard/server.py`) and ends it there; `rcb_service.py` writes that verdict
+`environment/sim/server.py`) and ends it there; `rcb_service.py` writes that verdict
 (`graded_by = "live"`, `replays = 0`) once the agent's container is stopped. The frozen start is checked on the live
 simulator: `vlb_tool.Session` refuses a scene whose initial state or compiled model hash differs from `instance.json`
 (`instance_mismatch`), and `start_sha` (`initial_state_sha256`) is checked when the episode begins; both give up as
@@ -90,7 +90,7 @@ the verdict (`render_video`: a fresh scene, CPU physics, OSMesa rendering; media
 minutes); it never changes the verdict. `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after
 crashes not all inside the agent's calls, a reset whose scene does not rebuild, and `instance_mismatch`; a simulator
 error raised by the agent's call, crashes inside its calls, a timeout and a failure are the agent's 0.
-`environment/sim/rcb_service.py` is a byte copy of main's `scripts/humanoidbench/shared/standard/rcb_service.py`
+`environment/sim/rcb_service.py` is a byte copy of HumanoidBench's standard tasks' `environment/sim/rcb_service.py`
 (protocol `eai-standard/2.1`: four endpoints, RCB1, no reset unless `budget.reset > 0`, journal + checkpoints with at
 most two resumes, startup watchdog, SIGUSR1 collect hook, `/data` evidence, verdict before video, 413 / 500 handling).
 `final.json` is `finalized` the moment the verdict is written, before the video is rendered (`video_pending` while it
@@ -103,22 +103,19 @@ agent's client and the verifier (`grade.py`: `success = live_success`) are main'
 
 ## Rebuilding
 ```bash
-docker build -t ghcr.io/mll-lab-nu/eai-vlabench:$(cat images/vlabench/VERSION) \
+docker build -t ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION) \
     -f images/vlabench/Dockerfile .                  # from the repository root; ~15 GB
-bash scripts/vlabench/freeze.sh                   # re-verify them in the image -> scripts/vlabench/frozen/report.json
-python3 scripts/vlabench/generate.py              # -> tasks/vlabench-* (normalized); removes stale vlabench-* dirs
-python3 scripts/vlabench/generate.py --check      # tasks/ is exactly what it writes
-python3 scripts/task_conventions.py --check tasks/vlabench-*
+python3 scripts/task_conventions.py --check tasks/vlabench/vlabench-*
 cd tasks && harbor add --scan . && cd ..           # then drop dataset entries whose directory is gone
-bash ci_checks/run_all.sh tasks/vlabench-*
+bash ci_checks/run_all.sh tasks/vlabench/vlabench-*
 ```
 
 ## Evidence
-`scripts/vlabench/frozen/report.json` (written by `freeze.sh`), for the 36 tasks: the instance rebuilds with matching
+Measured when the instances were frozen, for the 36 tasks: the instance rebuilds with matching
 model and initial-state hashes and is not solved at the start; `reset()` is bit-exact; the reference ends with the
 task's success at its last step; two replays in fresh processes end in the live state's hash and succeed. The 3
 tasks dropped in review verified the same way; the 3 whose PR #4 references are recorded failures did not (their
-frozen inputs and report entries are not kept, `tasks.json` `dropped`).
+frozen inputs are not kept).
 
 Harbor runs: `-a oracle` scores 1 on every privileged task and on 8 standard tasks (heat_food, texas_holdem,
 take_out_cool_drink, book_rearrange, find_unseen_object, select_painting, friction_qa, select_fruit_common_sense);
@@ -127,7 +124,7 @@ score 0: in privileged mode, tooling patched to report success, a do-nothing tra
 `sitecustomize.py` in `/app/output`, forged reward files; in standard mode, hidden endpoints (`/reset`, `/state`,
 `/success`, `/data/final.json`: 404), a wrong action type, a `dt` that is not a multiple of 0.1 and NaN rows (400,
 nothing runs), and a forged `final.json` in the agent's container (never collected). Two agent red-team trials (Codex,
-told to make the verifier pass without solving) score 0. Re-running `generate.py` gives the same tree hash.
+told to make the verifier pass without solving) score 0.
 
 ## Reference hashes
 Final-state hashes of some references (live = replay 1 = replay 2):
@@ -148,63 +145,62 @@ Final-state hashes of some references (live = replay 1 = replay 2):
 - **Privileged difficulty.** With VLABench's skills as planning primitives the privileged mode is largely solved;
   the standard twin carries the difficulty.
 - **eai-standard/2.1 or 2.2.** The standard twins serve 2.1 with main's HumanoidBench layer (byte copies); moving to the
-  shared 2.2 layer (`scripts/eai_standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
+  shared 2.2 layer (`embodied_first_exam/standard/`) would add its optional capabilities (depth as uint16, `robot_spec`,
   `/kinematics`, a per-call wall-clock bound) and its CI identity check.
 
-## Easy set
+## Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
 **unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
-`solved`): kept under its name and reported apart from the main table.
+**pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-15 of 36 bases are in the easy set; by directory: 51 easy, 0 hard, 21 unverified, 0 pending.
+By directory: 51 easy, 0 hard, 21 unverified, 0 pending.
 
-| base | easy set | privileged | standard |
-|---|---|---|---|
-| `vlabench-add-condiment-i00` | yes | easy: Astra, Opus, DeepSeek V4.1 Flash | easy: Astra, Opus |
-| `vlabench-book-rearrange-i00` |  | easy: Luna | unverified |
-| `vlabench-find-unseen-object-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-friction-qa-i00` |  | easy: Luna | unverified |
-| `vlabench-hammer-nail-and-hang-picture-i00` |  | easy: Luna | unverified |
-| `vlabench-heat-food-i00` | yes | easy: Astra, Opus, Sol 6.1 | easy: Opus |
-| `vlabench-insert-bloom-flower-i00` |  | unverified | easy: Luna |
-| `vlabench-insert-flower-i00` |  | easy: Luna | unverified |
-| `vlabench-magnetism-qa-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-play-math-game-i00` |  | easy: Luna | unverified |
-| `vlabench-put-box-on-painting-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-reflection-qa-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-billiards-common-sense-i00` |  | easy: Luna | unverified |
-| `vlabench-select-billiards-i00` |  | easy: Luna | unverified |
-| `vlabench-select-billiards-spatial-i00` |  | easy: Luna | unverified |
-| `vlabench-select-book-spatial-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-chemistry-tube-common-sense-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-chemistry-tube-i00` |  | easy: Luna | unverified |
-| `vlabench-select-chemistry-tube-semantic-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-chemistry-tube-spatial-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-drink-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-fruit-common-sense-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-fruit-i00` |  | easy: Luna | unverified |
-| `vlabench-select-mahjong-i00` |  | easy: Luna | unverified |
-| `vlabench-select-mahjong-semantic-i00` |  | easy: Luna | unverified |
-| `vlabench-select-mahjong-spatial-i00` |  | easy: Luna | unverified |
-| `vlabench-select-nth-largest-poker-i00` |  | easy: Luna | unverified |
-| `vlabench-select-painting-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-poker-i00` |  | easy: Luna | unverified |
-| `vlabench-select-poker-semantic-i00` |  | easy: Luna | unverified |
-| `vlabench-select-poker-spatial-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-specific-type-book-i00` |  | easy: Luna | unverified |
-| `vlabench-select-toy-i00` | yes | easy: Luna | easy: Luna |
-| `vlabench-select-unique-type-mahjong-i00` |  | easy: Luna | unverified |
-| `vlabench-take-out-cool-drink-i00` |  | easy: Luna | unverified |
-| `vlabench-texas-holdem-i00` |  | easy: Luna | unverified |
+| base | privileged | standard |
+|---|---|---|
+| `vlabench-add-condiment-i00` | easy: Astra, Opus, DeepSeek V4.1 Flash | easy: Astra, Opus |
+| `vlabench-book-rearrange-i00` | easy: Luna | unverified |
+| `vlabench-find-unseen-object-i00` | easy: Luna | easy: Luna |
+| `vlabench-friction-qa-i00` | easy: Luna | unverified |
+| `vlabench-hammer-nail-and-hang-picture-i00` | easy: Luna | unverified |
+| `vlabench-heat-food-i00` | easy: Astra, Opus, Sol 6.1 | easy: Opus |
+| `vlabench-insert-bloom-flower-i00` | unverified | easy: Luna |
+| `vlabench-insert-flower-i00` | easy: Luna | unverified |
+| `vlabench-magnetism-qa-i00` | easy: Luna | easy: Luna |
+| `vlabench-play-math-game-i00` | easy: Luna | unverified |
+| `vlabench-put-box-on-painting-i00` | easy: Luna | easy: Luna |
+| `vlabench-reflection-qa-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-billiards-common-sense-i00` | easy: Luna | unverified |
+| `vlabench-select-billiards-i00` | easy: Luna | unverified |
+| `vlabench-select-billiards-spatial-i00` | easy: Luna | unverified |
+| `vlabench-select-book-spatial-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-chemistry-tube-common-sense-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-chemistry-tube-i00` | easy: Luna | unverified |
+| `vlabench-select-chemistry-tube-semantic-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-chemistry-tube-spatial-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-drink-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-fruit-common-sense-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-fruit-i00` | easy: Luna | unverified |
+| `vlabench-select-mahjong-i00` | easy: Luna | unverified |
+| `vlabench-select-mahjong-semantic-i00` | easy: Luna | unverified |
+| `vlabench-select-mahjong-spatial-i00` | easy: Luna | unverified |
+| `vlabench-select-nth-largest-poker-i00` | easy: Luna | unverified |
+| `vlabench-select-painting-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-poker-i00` | easy: Luna | unverified |
+| `vlabench-select-poker-semantic-i00` | easy: Luna | unverified |
+| `vlabench-select-poker-spatial-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-specific-type-book-i00` | easy: Luna | unverified |
+| `vlabench-select-toy-i00` | easy: Luna | easy: Luna |
+| `vlabench-select-unique-type-mahjong-i00` | easy: Luna | unverified |
+| `vlabench-take-out-cool-drink-i00` | easy: Luna | unverified |
+| `vlabench-texas-holdem-i00` | easy: Luna | unverified |
 
 Judgment calls: `vlabench-select-drink-i00`: solved in the first test evaluation; repo-wide changes only since.

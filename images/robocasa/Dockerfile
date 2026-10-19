@@ -7,7 +7,7 @@
 # This recipe reproduces the content of the image the tasks were validated with (built in the PR #4 era as
 # rcb-robocasa:0.1.1 from images/robocasa/Dockerfile + Dockerfile.coverage, whose objects layer came from the GR1
 # image's asset fetch: scripts/robot24/download_assets.py --suite gr1 / gr1-legacy). Build from this directory:
-#   docker build -t ghcr.io/mll-lab-nu/eai-robocasa:$(cat VERSION) .
+#   docker build -t ghcr.io/mll-lab-nu/efe:robocasa-$(cat VERSION) .
 # About 24 GB, ~12 GB downloaded. Licences: RoboCasa code MIT; robocasa/robocasa-assets CC-BY-4.0;
 # jianzhang96/robocasa-assets Apache-2.0; the UT Box objaverse / aigen archives are RoboCasa's (CC-BY-4.0); NVIDIA
 # PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab) CC-BY-NC-4.0 -- non-commercial: check before publishing.

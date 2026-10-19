@@ -1,0 +1,121 @@
+# Exported by RoboOlympics tools/export_fexam.py from tabletennis-match-wallclock-program-standard (sports/tabletennis/sport.toml): do not edit.
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  "/app/output/",
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/video.json", service = "sim" },
+  { source = "/data/broadcast.jsonl", service = "sim" },
+]
+
+[task]
+name = "robot-coding-bench/roboolympics-match-tabletennis-match-i02-standard-realtime"
+description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): table tennis, one match against the scripted opponent at level 3, program play (eai-standard-realtime/1.0: the world runs at 1/10 of real speed and never waits, except that it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players. Exported from RoboOlympics task tabletennis-match-wallclock-program-standard by tools/export_fexam.py."
+authors = [{ name = "RoboOlympics (CHIGUI0)" }]
+keywords = ["robotics", "roboolympics", "sports", "tabletennis", "mujoco", "standard-realtime-mode", "vision", "real-time"]
+
+[metadata]
+author_name = "RoboOlympics"
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "franka-panda"
+family = "tabletennis_match"
+mode = "standard-realtime"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+slowdown = 10                     # standard-realtime: the world runs at 1/S of real speed (docs/protocol/README.md §4b); RO_SLOWDOWN's default
+protocol = "eai-standard-realtime/1.0"
+instance_seed = 12
+opponent_level = 3
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+play = "program"
+action_level = "high"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+source_commits = ["0d7f680cc049"]
+exporter = "roboolympics tools/export_fexam.py"
+player_mode = "unmetered"
+official = false
+expert_time_estimate_hours = 0.5
+oracle = "partial"
+oracle_evidence = "re-screen 2026-10-12 (revision 15, D = 5, S = 20): our camera-only reference player beat level 3 in 7 of 40 seeds, this seed 5:1; S = 10 since 2026-10-14 (PR #138); the live oracle run is in the export report"
+
+[metadata.resources]
+# minimum compute to run this task (docs/protocol/README.md §2.9)
+min_cpus = 8.0
+min_memory_gb = 5.0
+min_gpu_memory_gb = 0.0
+gpu_required = false
+gpu_class = "none"
+verifier_min_cpus = 7.0
+verifier_min_memory_gb = 3.0
+verifier_min_gpu_memory_gb = 0.0
+measured = "RoboOlympics' exported matches (scripts/roboolympics/exported.toml): the values of the matches it measured on the 2.3 adapter (docs/benchmarks/roboolympics.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only, real time needs the cores"
+
+[metadata.resources.limits]
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 4.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 0.0
+trial_max_memory_gb = 12.0
+measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
+main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
+sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }
+
+[metadata.seeds]
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 12
+allowed = [12]
+oracle = [12]
+
+[verifier]
+timeout_sec = 1260.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running (a program would keep playing; the match is graded as it stands).
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay,
+# board 0151), then the spectator video.
+[[verifier.collect]]
+service = "sim"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 180); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 720); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
+timeout_sec = 1080
+
+[agent]
+timeout_sec = 7200
+# The agent reaches the model APIs, the package registries and the sim (localhost:8000, Harbor's egress control).
+network_mode = "allowlist"
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 1200.0
+cpus = 2
+memory_mb = 6144
+
+[verifier.environment]
+build_timeout_sec = 600.0
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

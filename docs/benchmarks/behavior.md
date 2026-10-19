@@ -7,10 +7,13 @@ public_test instance 301: 11 tasks with a reference solution or a positive examp
 supplementary tasks for harder testing (below), which have neither yet.
 
 ## Prerequisites (every BEHAVIOR run)
-- **The image**, built on the host: `ghcr.io/mll-lab-nu/eai-behavior:<images/behavior/VERSION>`
+- **The image**, built on the host: `ghcr.io/mll-lab-nu/efe-private:behavior-<images/behavior/VERSION>`
   is the official `stanfordvl/behavior:3.9.2` **by digest** plus a snapshot-pinned ffmpeg layer. It contains NVIDIA
   Isaac Sim and Omniverse Kit (no redistribution) and a 13.7 GB layer above ghcr.io's per-layer limit: **BUILD_ONLY**,
   never pushed. `images/behavior/BUILD_ONLY` has the build command, the licences and the data it needs.
+- **The files image** `ghcr.io/mll-lab-nu/efe-private:behavior-files-<version>` (`images/behavior-files/FILES.json` pins it by digest;
+  BUILD_ONLY: the organization's private package, pulled with its token before a host builds BEHAVIOR tasks): the
+  tooling and the graders (Tasks and generator), which the agent and verifier Dockerfiles take with `COPY --from`.
 - **The licensed dataset**, `RCB_BEHAVIOR_DATA`: the host directory with the BEHAVIOR Data Bundle
   (`omnigibson-robot-assets/`, `behavior-1k-assets/`, `2026-challenge-task-instances/`, `omnigibson.key`), downloaded after
   accepting its licence, which forbids redistribution. It is never in an image: every compose service that runs the
@@ -23,19 +26,21 @@ supplementary tasks for harder testing (below), which have neither yet.
   at 8 threads in every compose service that runs the simulator (uncapped they span every core of a large host and run up
   to 15× slower).
 
-## Tasks and generator
-- `scripts/behavior/mk_tasks.py` generates every task from the template twins `tasks/behavior-picking-up-trash-i00-privileged`
-  and `-standard` (maintained by hand), `scripts/behavior/families.json` (the texts of each family: goal, success conditions,
-  difficulty, the standard goal in words; the oracle level and its evidence: the cited positive, or the challenge's
-  official human demonstrations, `"demo"`; `"added"` for a family added after the first 50, and its own `"review_pr"`
-  where a later pull request reviews it; `"include"`), the BDDL problems
-  `scripts/behavior/bddl/` (BEHAVIOR-1K's `bddl` package, MIT: `/behavior-src/bddl3/bddl/activity_definitions/<task>/problem0.bddl`
-  in the image), the frozen instances `scripts/behavior/instances/` and the reference solutions
-  `scripts/behavior/solutions/`, plus the eai-standard/2.2 layer from `scripts/eai_standard/`. A rerun reproduces the
-  committed tasks; `mk_tasks.py --check` regenerates into a temporary tree and diffs. It writes every README in the
-  protocol's layout and ends each task with `scripts/task_conventions.py`'s `normalize()`, like every generator.
-  `scripts/behavior/goal.py` words each BDDL predicate a goal uses, with OmniGibson's thresholds. Agent results are not
-  in the repository: the positives are cited by trial id, results-site log and Hugging Face replay.
+## Tasks
+- Shared task code: `embodied_first_exam/benchmarks/behavior-1k/` is the one source of the tooling and the graders
+  (`rcb_behavior.py`, `r1pro_primitives_eval.yaml`, `privileged/grade.py`, `standard/grade.py`), built into the files
+  image `images/behavior-files/`. The task Dockerfiles take them with `COPY --from=<image@digest>`: the privileged agent
+  image at `/opt/tools/`, both modes' verifier images at `/tests/` (`grade.py`, and the privileged one's tooling and robot
+  config); only the standard sidecar's tree `environment/sim/` (bind-mounted at `/srv`) carries copies of the tooling.
+  A changed file needs a new image version (`VERSION`, `python3 scripts/files_image.py build behavior-files`, push, `pin`
+  the digest) and the new digest in every task's `COPY --from` lines; `files_image.py check` holds the source to
+  FILES.json.
+- The task directories are the deliverable; the tooling that built them is kept outside this repository. The goals are
+  BEHAVIOR-1K's BDDL problems (its `bddl` package, MIT: `/behavior-src/bddl3/bddl/activity_definitions/<task>/problem0.bddl`
+  in the image); the frozen instances and the reference solutions are in the task dirs: `environment/instance.json` of
+  each privileged task, `solution/oracle_*.py` of the privileged and `solution/oracle_qpos.npy` + `oracle_meta.json` of
+  the standard task. Agent results are not in the repository: the positives are cited by trial id, results-site log and
+  Hugging Face replay.
 - The predicate is the task's official BDDL goal (OmniGibson object states), checked at every control step; success needs
   it to hold for 1 s, released and at rest (§ Success), and the episode ends there, or as a failure when the
   robot has fallen over (§ Falls). The challenge's timeout is lifted to
@@ -52,7 +57,7 @@ supplementary tasks for harder testing (below), which have neither yet.
 
 The labels follow one rule: `full` only when a recorded oracle run scored 1 on a byte-identical grader, frozen instance and
 oracle code, with every tooling change since shown to be off the oracle and replay path. This version was validated
-statically (CI, the generator's `--check`), not re-run.
+statically (CI), not re-run.
 
 **Loose official goals** (reported, the official judgement is kept): `stacking_wood` only needs every log to touch
 another log (no stack; its positive pushed the logs together with the robot body); `hiding_Easter_eggs` only needs the
@@ -72,10 +77,9 @@ demonstrations (the challenge's teleoperators needed 80-869 s on average), a spr
 use, heat, cutting, surface cleaning, particles, devices, two-handed carrying, outdoor scenes, several rooms). Their
 predicates go beyond the first eleven's: `real` (objects that the simulator's transition rules create during the episode:
 halves, diced pieces, cooked food, a pizza), `filled` and `contains` (particles in a container), `attached`
-(hanging_pictures, the poster on a wall nail); `goal.py` words them. No reference solution was written: `oracle =
+(hanging_pictures, the poster on a wall nail). No reference solution was written: `oracle =
 "none"`, with the official demonstrations as the solvability evidence (`demo`), reviewed per family (PROTOCOL §4); the
-families with `added` in `families.json` name the pull request of their human review (`REVIEW_PR`, or
-`THIRD_BATCH_PR` for `review_pr: third_batch`, in `mk_tasks.py`) in `oracle_evidence` and the README. Every instance is
+families added after the first 50 name the pull request of their human review in `oracle_evidence` and the README. Every instance is
 the challenge's public_test instance 301, frozen with `Evaluator.load_task_instance`, its BDDL goal false at the start;
 checked per batch (fresh-process reloads with an exact state hash or every object pose within tolerance, `instance_ok`;
 Harbor `nop` 0 in both modes) on a sample of each batch, not on every instance.
@@ -101,7 +105,7 @@ tidying_living_room, turning_out_all_lights_before_sleep, unloading_the_car, vac
 wash_dog_toys.
 
 ## Time budget
-7200 s for every task of both modes (each task's own `[agent] timeout_sec`, written by the generator; `instruction.md`
+7200 s for every task of both modes (each task's own `[agent] timeout_sec`; `instruction.md`
 states it once, in its closing `## Time limit` section, and the benchmark's own text says "the time limit (`## Time
 limit`)"). Every Python process pays an Isaac launch and scene load (about 2-3 minutes with a warm Kit cache; the first
 launch of a trial adds about 4 minutes to compile shaders into the trial's own cache, below), and the simulator runs
@@ -143,7 +147,7 @@ trial's teardown could delete. A cache can reach ~10 GB; it lives as long as the
 
 ## Network
 The agent reaches the model APIs and the package registries (PyPI, apt archives), nothing else: `[agent] network_mode =
-"allowlist"` with the hosts of `scripts/set_agent_egress.py`, which `mk_tasks.py` (`agent_egress`) writes into every
+"allowlist"` with the hosts of `scripts/set_agent_egress.py`, written into every
 task. Nothing in a BEHAVIOR container needs the network at run time: the image holds Isaac Sim, OmniGibson, cuRobo and
 every Python package, the scenes and robot assets come from the mounted dataset, and the EULA is accepted by an
 environment variable. Open egress would allow a download of the 2026 challenge's public material for the same
@@ -224,22 +228,7 @@ orientation after the robot tumbled), and an infrastructure failure would be voi
 Whether a breakdown should be infrastructure is an open owner decision. A read that fails is no evidence: the check
 stands down.
 
-## Re-grading recorded results
-`scripts/behavior/regrade.py JOBS_DIR... [--gpus 0,1] [--select candidates|all] [--dry-run]` (host side, from the
-repository root: docker, the private `eai-behavior` image, an RTX GPU, `$RCB_BEHAVIOR_DATA`) runs the family's current
-privileged `tests/grade.py` (two fresh-process replays, no video) on each recorded trajectory and writes old / new
-verdicts as JSON lines. `goal_first_step` (`reward.json`, the first control step the bare goal held, -1 never) is the
-older first-step rule, so an old success that fails now is labelled `stricter rule` when the bare goal still held in
-the replay here and `inconclusive` when the replay went elsewhere (re-grade on the host class it ran on). The default
-`--select candidates` re-grades the trials whose verdict can change: old successes and
-failures whose replays succeeded or disagreed (standard: also a live success). Privileged re-grades are close to exact
-(the deliverable is the trajectory; only the settle window after its last row is added). Standard re-grades are
-conservative: the old service ended the live episode on the first step the bare goal held, where the agent could otherwise have
-gone on and let go, so they only say whether the recorded rows plus the settle window reach the current rule; a
-standard trajectory over 40,000 rows cannot be re-graded with the privileged grader. A re-grade that ends on a
-breakdown is a 0 with `sim_breakdown` (see Simulator breakdown); `regrade.py` labels it.
-
-### Whose failure a 0 is
+## Whose failure a 0 is
 How a 0 that is not the agent's is reported (`reward.json`):
 - **Standard.** `final.json` is the trusted sidecar's own file (a frozen start that does not rebuild is the service's
   `instance_mismatch` give-up), so `tests/grade.py` reports `infra_error` = 1 (no verdict on
@@ -255,9 +244,6 @@ How a 0 that is not the agent's is reported (`reward.json`):
 - **Runaway guard.** The tooling ends an episode at `MAX_STEPS` = 200,000 control steps (1.85 h of simulated time; the
   challenge's timeout termination lifted that far). It is not a step budget, but it exists, so both instructions state it
   and the standard `/spec` carries it as `max_control_steps` (reason `step_guard`).
-- Tests without a simulator: `python3 -m unittest discover -s scripts/behavior/tests` (`test_grading.py`: both graders and
-  the whole `finalize.sh` on synthetic records; `test_standard_service.py`: the real service and shared layer on a stub
-  simulator over HTTP).
 
 ## Falls
 The episode ends, as a failure, when the robot has fallen over: OmniGibson's own `Falling` termination condition
@@ -308,21 +294,21 @@ downtime on the agent's wall clock). Artifacts: `final.json`, `episode.jsonl`, `
 ## Tooling (file names)
 | main's convention | BEHAVIOR-1K |
 |---|---|
-| `environment/rcb_traj.py` (privileged tooling, `Session`) | `environment/rcb_behavior.py` (`Session`: the frozen instance, thin primitives, the robot's cameras, recording, replay) |
-| `tests/rcb_traj.py` | `tests/rcb_behavior.py` |
-| standard sidecar | `environment/sim/server.py` (2.2 adapter), `finalize.sh`, `rcb_behavior.py`, the robot config; `rcb_limited.py`, `rcb1.py`, `run.sh` from `scripts/eai_standard/` |
+| `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_behavior.py` (`Session`: the frozen instance, thin primitives, the robot's cameras, recording, replay), from the files image |
+| `tests/rcb_traj.py` | `/tests/rcb_behavior.py`, from the files image |
+| standard sidecar | `environment/sim/server.py` (2.2 adapter), `finalize.sh`, `rcb_behavior.py`, the robot config; `rcb_limited.py`, `rcb1.py`, `run.sh` from `embodied_first_exam/standard/` |
 | reference tooling | `solution/rcb_behavior_ref.py` (frozen; the oracle agent only) |
-| `rcb_client.py`, `rcb1.py` | the same names (`scripts/eai_standard/`); the agent container and the verifier are FROM the shared digest-pinned client image (`scripts/eai_standard/client.env`), the agent's pip pins are `environment/client-requirements.txt` |
+| `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`); the agent container and the verifier are FROM the shared digest-pinned client image (`embodied_first_exam/standard/client.env`), the agent's pip pins are `environment/client-requirements.txt` |
 
 The tooling records 25-D actions (base + trunk + arms + grippers) at 30 Hz. Every copy of the tooling and of the standard
-sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh`).
+sidecar files is byte-identical across the benchmark, the files image's included (`check-tooling-identity.sh`).
 
 ## Declarations
 - **Tooling: thin wrappers only.** Joint moves, a straight-line base drive, cuRobo IK moves, gripper commands and the
   robot's cameras. Task-level skills (grasp, place, navigate) are never added to the agent's tooling; the reference
   solutions keep theirs in `solution/rcb_behavior_ref.py`.
 - **World-frame information.** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
-  `scripts/behavior/ci/advisory-world-frame.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
+  `ci_checks/benchmarks/behavior-1k/advisory-world-frame.sh`); the convention that the floor is the plane z = 0 defines the world frame and is given.
   Privileged tasks give the privileged state through the tooling.
 
 ## Licences

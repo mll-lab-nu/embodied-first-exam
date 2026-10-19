@@ -73,8 +73,8 @@
 # append-only into ${JOBS}_mirror/ (scripts/log_mirror.py; root-owned: neither the agent nor the host user can delete it),
 # and scripts/mem_guard.py keeps 2 GiB of host memory available. After each job: a key scan with redaction
 # (scripts/scan_secrets.py), the task results, the summary table $JOBS/<batch>.summary.md, and a lane stop on structured
-# model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log; in a browser, every trial's
-# state (pending / running / done) with scripts/live_board.py --jobs $JOBS.
+# model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log; the batch's plan (every job, pending until it
+# starts): $JOBS/.plan/<batch>.json.
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 [ $# -ge 2 ] || { sed -n 2,40p "$0"; exit 2; }
@@ -142,14 +142,14 @@ LOG="$JOBS/$batch.log"
 log() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
 if [ -n "$ENV_FILE" ] && [ ! -f "$ENV_FILE" ]; then log "no env file $ENV_FILE"; exit 2; fi
 log "runner $$: $AGENT $MODEL effort $EFFORT, run id $RUN_ID, modes $MODES, web search $WEB_SEARCH"
-# the batch's plan, for scripts/live_board.py: every job this command runs, "pending" there until it starts
+# the batch's plan: every job this command runs, "pending" there until it starts
 mkdir -p "$JOBS/.plan"
 python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
 import json, os, pathlib, sys
 repo, out, batch, run_id, seq, modes, *tasks = sys.argv[1:]
 name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "standard-realtime": f"{t}-standard-realtime"}.get(m, f"{t}-privileged")
 jobs = [{"job": f"{batch}-{m}-{t}" if seq == "1" else f"{batch}-{m}", "task": name(m, t), "mode": m}
-        for t in tasks for m in modes.split() if (pathlib.Path(repo) / "tasks" / name(m, t)).is_dir()]
+        for t in tasks for m in modes.split() if any(pathlib.Path(repo).glob(f"tasks/*/{name(m, t)}/task.toml"))]   # tasks/<benchmark folder>/<task>/
 tmp = pathlib.Path(f"{out}.{os.getpid()}")
 tmp.write_text(json.dumps({"batch": batch, "run_id": run_id, "jobs": jobs}, indent=1))
 tmp.replace(out)
@@ -301,12 +301,12 @@ from task_names import canonical  # noqa: E402
 # docs/protocol/running.md "Results" (PROTOCOL v2.0): results are compared only within one configuration (task_conventions.config_key:
 # protocol version, mode, cutoff, reset budget, S, network); validated and unvalidated tasks (task_conventions.validated_of)
 # are ranked together, the unvalidated ones marked; a trial that is not a result (infrastructure, voided) never counts in a
-# success rate. Tasks of the easy set (docs/easy_set.toml, task_conventions.set_of) are listed, marked, and left out of
-# the headline rate (PROTOCOL §4).
+# success rate. Tasks outside the core set (docs/core_set.toml, task_conventions.set_of) are listed, marked, and left out
+# of the headline rate (PROTOCOL §4).
 HEAD = ("| task | success | result | reward fields | actions | agent wall s | input tok | cached | output tok | gateway in / out | cost $ | exception |\n"
         "|---|---|---|---|---|---|---|---|---|---|---|---|")
 f = lambda s: dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
-groups = defaultdict(list)          # config key -> [(started, row, status, validated, easy)]
+groups = defaultdict(list)          # config key -> [(started, row, status, validated, not core)]
 labels = {}
 for trial in jobs.glob(f"{batch}-*/*__*"):
     if not trial.is_dir():
@@ -326,7 +326,7 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
     except Exception:
         wall = ""
     task = canonical((r.get("task_name") or trial.name.split("__")[0]).split("/")[-1])
-    if r and (R / "tasks" / task / "task.toml").is_file():
+    if r and (tc.task_dir(task, R / "tasks") / "task.toml").is_file():
         status, why, _ = wtr.classify(trial, r, rw)
         cfg = wtr.trial_config(trial, task, r)
     else:
@@ -337,26 +337,26 @@ for trial in jobs.glob(f"{batch}-*/*__*"):
                                "infra_error", "resumes") if k in rw}
     res = "not a result (voided" + (f": {why}" if why else "") + ")" if status == "not_a_result" else status
     val = cfg.get("validated") is True
-    easy = (R / "tasks" / task / "task.toml").is_file() and tc.set_of(R / "tasks" / task) == "easy"
-    groups[key].append((r.get("started_at") or "~", f"| {task}{'' if val else ' (unvalidated)'}{' (easy set)' if easy else ''} | {rw.get('success', '-')} | {res} | {json.dumps(keys)} | "
+    out = (tc.task_dir(task, R / "tasks") / "task.toml").is_file() and tc.set_of(tc.task_dir(task, R / "tasks")) != "core"
+    groups[key].append((r.get("started_at") or "~", f"| {task}{'' if val else ' (unvalidated)'}{' (not core)' if out else ''} | {rw.get('success', '-')} | {res} | {json.dumps(keys)} | "
                         f"{rw.get('n_actions', '-')} | {wall} | {ar.get('n_input_tokens', '-')} | {ar.get('n_cache_tokens', '-')} | "
                         f"{ar.get('n_output_tokens', '-')} | {gw_cell} | {round(ar['cost_usd'], 4) if ar.get('cost_usd') is not None else '-'} | {ex} |",
-                        status, val, easy))
+                        status, val, out))
 print(f"# {batch}\n\nOne table per comparable configuration (docs/protocol/running.md \"Results\"); success rates count results only "
       "(a trial that is not a result is voided and never counted). Validated and unvalidated tasks are ranked together; "
       "tasks without a validated oracle (`oracle` not `full` and no `[metadata] validated = true`), and trials of a task "
-      "version this checkout does not have, are marked (unvalidated). Tasks of the easy set (docs/easy_set.toml) are "
-      "marked (easy set) and left out of the success rate (PROTOCOL §4).")
+      "version this checkout does not have, are marked (unvalidated). Tasks outside the core set (docs/core_set.toml) "
+      "are marked (not core) and left out of the success rate (PROTOCOL §4).")
 for k in sorted(groups, key=lambda k: tuple(map(str, k))):
     rows = groups[k]
     counted = [(s, v) for _, _, s, v, e in rows if s in ("success", "fail") and not e]
-    easy_n = sum(1 for _, _, s, _, e in rows if s in ("success", "fail") and e)
+    out_n = sum(1 for _, _, s, _, e in rows if s in ("success", "fail") and e)
     rate = f"{sum(s == 'success' for s, _ in counted)} / {len(counted)}" if counted else "-"
     cv = [s for s, v in counted if v]
     vrate = f" (validated tasks: {sum(s == 'success' for s in cv)} / {len(cv)})" if len(cv) != len(counted) else ""
     print(f"\n## {labels[k]}\n\nSuccess (results only): {rate}{vrate}; "
           f"{sum(s == 'not_a_result' for _, _, s, _, _ in rows)} voided"
-          + (f"; {easy_n} result(s) of easy-set tasks not counted" if easy_n else "") + f".\n\n{HEAD}")
+          + (f"; {out_n} result(s) of tasks outside the core set not counted" if out_n else "") + f".\n\n{HEAD}")
     for _, row, _, _, _ in sorted(rows):
         print(row)
 PY
@@ -371,16 +371,24 @@ stamp_task_dirs() {  # <root>: give every file of the job's task copies a mtime 
   python3 "$R/scripts/stamp_mtimes.py" --full "$1/tasks" >/dev/null
 }
 
+# the repository's task dirs live at tasks/<benchmark folder>/<task> (scripts/task_conventions.py task_dir); a job's own
+# copy is flat, <dir>/tasks/<task>, which `harbor run -p tasks -i <task>` reads (Harbor's local datasets are one level).
+# Found by a glob, not by task_conventions: a runner host's python3 may predate tomllib (babel nodes: 3.9).
+src_of() {  # <task dir name>: its directory in the repository (no such task: a path that does not exist)
+  local d; for d in "$R"/tasks/*/"$1"; do [ -f "$d/task.toml" ] && { printf '%s' "$d"; return 0; }; done
+  printf '%s' "$R/tasks/.none/$1"
+}
+
 gateway_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task with the gateway and the package registries as its only egress (PROTOCOL §2.11)
   local dir="$1" a; shift
   rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
   while [ $# -gt 0 ]; do
     a="$1"; shift
     if [ "$a" = -i ] && [ $# -gt 0 ]; then
-      if [ "$(python3 "$R/scripts/set_agent_egress.py" network "$R/tasks/$1")" = open ]; then    # the task declares open egress (`[metadata] network = "open"`, PROTOCOL §2): the copy keeps it
-        cp -a "$R/tasks/$1" "$dir/tasks/$1" || return 1; shift; continue
+      if [ "$(python3 "$R/scripts/set_agent_egress.py" network "$(src_of "$1")")" = open ]; then    # the task declares open egress (`[metadata] network = "open"`, PROTOCOL §2): the copy keeps it
+        cp -a "$(src_of "$1")" "$dir/tasks/$1" || return 1; shift; continue
       fi
-      cp -a "$R/tasks/$1" "$dir/tasks/$1" && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$dir/tasks/$1" >/dev/null || return 1
+      cp -a "$(src_of "$1")" "$dir/tasks/$1" && python3 "$R/scripts/set_agent_egress.py" only "$GATEWAY_ONLY" "$dir/tasks/$1" >/dev/null || return 1
       grep -q "^allowed_hosts = \[\"${GATEWAY_ONLY//,/\", \"}\"\]\$" "$dir/tasks/$1/task.toml" || return 1     # fail closed
       shift
     fi
@@ -392,15 +400,15 @@ plain_copy() {  # <dir> <harbor -i args...>: <dir>/tasks/<task> = the task as it
   rm -rf "$dir" && mkdir -p "$dir/tasks" || return 1
   while [ $# -gt 0 ]; do
     a="$1"; shift
-    if [ "$a" = -i ] && [ $# -gt 0 ]; then cp -a "$R/tasks/$1" "$dir/tasks/$1" || return 1; shift; fi
+    if [ "$a" = -i ] && [ $# -gt 0 ]; then cp -a "$(src_of "$1")" "$dir/tasks/$1" || return 1; shift; fi
   done
 }
 
-task_dirs() {  # <root> <harbor -i args...>: the task directories the -i arguments name under <root>/tasks
+task_dirs() {  # <root> <harbor -i args...>: the task directories the -i arguments name: the repository's ($R), or under a job copy's <root>/tasks
   local root="$1" a; shift
   while [ $# -gt 0 ]; do
     a="$1"; shift
-    if [ "$a" = -i ] && [ $# -gt 0 ]; then printf '%s\n' "$root/tasks/$1"; shift; fi
+    if [ "$a" = -i ] && [ $# -gt 0 ]; then if [ "$root" = "$R" ]; then printf '%s\n' "$(src_of "$1")"; else printf '%s\n' "$root/tasks/$1"; fi; shift; fi
   done
 }
 
@@ -449,7 +457,7 @@ if [ "$SEQ" = 1 ]; then
   for t in "${tasks[@]}"; do
     for m in $MODES; do
       job="$batch-$m-$t"
-      if [ ! -d "$R/tasks/$(name "$m" "$t")" ]; then log "skip $job (no task dir $(name "$m" "$t"))"; continue; fi
+      if [ ! -d "$(src_of "$(name "$m" "$t")")" ]; then log "skip $job (no task dir $(name "$m" "$t"))"; continue; fi
       if [ -f "$JOBS/$job/result.json" ]; then log "skip $job (already has result.json)"; continue; fi
       mkdir "$JOBS/.claims/$job" 2>/dev/null || continue   # another lane of this batch took it
       wait_for "$m"
@@ -469,7 +477,7 @@ if [ "$SEQ" = 1 ]; then
 else
   pids=()
   for m in $MODES; do
-    inc=(); for t in "${tasks[@]}"; do [ -d "$R/tasks/$(name "$m" "$t")" ] && inc+=(-i "$(name "$m" "$t")"); done
+    inc=(); for t in "${tasks[@]}"; do [ -d "$(src_of "$(name "$m" "$t")")" ] && inc+=(-i "$(name "$m" "$t")"); done
     [ ${#inc[@]} -eq 0 ] && continue
     n="$N_P"; case "$m" in standard|limited|standard-realtime) n="$N_S" ;; esac   # sidecar modes
     (wait_for "$m"; run_job "$batch-$m" "$n" "${inc[@]}") &

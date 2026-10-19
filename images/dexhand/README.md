@@ -1,6 +1,6 @@
 # DexHand simulator image
 
-`ghcr.io/mll-lab-nu/eai-dexhand:<VERSION>` (tag from `VERSION`): Python 3.12 slim with MuJoCo 3.4.0, numpy, scipy,
+`ghcr.io/mll-lab-nu/efe:dexhand-<VERSION>` (tag from `VERSION`): Python 3.12 slim with MuJoCo 3.4.0, numpy, scipy,
 imageio (ffmpeg), Pillow and PyOpenGL (`requirements.txt`, exact pins), OSMesa and EGL libraries for CPU rendering,
 and three pinned asset sets, each checked file by file (sha256 and size) against its manifest:
 
@@ -18,11 +18,11 @@ run time.
 # prepare_assets.py runs on the host; the Tianji conversion needs these exact versions (tianji/source-manifest.json):
 python3 -m pip install -r images/dexhand/requirements-assets.txt   # trimesh==4.11.2 mujoco==3.4.0 numpy==2.3.5 scipy==1.16.3
 python3 images/dexhand/prepare_assets.py      # fetch the pinned sources into the git-ignored assets/ and verify them
-sudo docker build -t ghcr.io/mll-lab-nu/eai-dexhand:$(cat images/dexhand/VERSION) images/dexhand
+sudo docker build -t ghcr.io/mll-lab-nu/efe:dexhand-$(cat images/dexhand/VERSION) images/dexhand
 ```
 
-The published image is `ghcr.io/mll-lab-nu/eai-dexhand:0.2.0`. After a `docker push` of a new version, write its digest
-(`sha256:...`) to `DIGEST`; `scripts/dexhand/generate.py` then pins every task's `FROM` and standard `sim.image` to it.
+The published image is `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0`. After a `docker push` of a new version, write its digest
+(`sha256:...`) to `DIGEST`; every task's `FROM` and standard `sim.image` are pinned to it.
 
 `prepare_assets.py` reuses files that already match their manifest and rebuilds the Tianji meshes from the pinned
 public archives (`tianji/source-manifest.json`) when no verified copy exists; the conversion must reproduce

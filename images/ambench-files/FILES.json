@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe-private:ambench-files-0.1.0@sha256:31ae5caa3060994aa63457d302ccd0fda4083a68fafb6e0c2324e7fd4f8b80da",
+ "source": "embodied_first_exam/benchmarks/ambench",
+ "files": {
+  "privileged/environment/rcb_ambench.py": "53a7523ae39fb33344407c8c3ef910e7fc51a8a36b34bff7f4ee5e0aee8046c3",
+  "privileged/tests/grade.py": "ceffdbeafd525914e98b2c04fbc3769ec0bf12e2aa0dbab8a5fc8789b33988b6",
+  "standard/tests/grade.py": "03e72f8841bfd037e3c719cb881b3d1f6088531d1ba8737ab0af92163551a973"
+ }
+}

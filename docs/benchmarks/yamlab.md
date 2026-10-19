@@ -14,18 +14,16 @@ The instances keep the ids they were frozen with: `put_pot_on_cooktop` i00, i03,
 i13, i15, i20, i21.
 
 ## Instances
-25 instances per family were frozen (Tasks and generator), and five per family are kept: the 25 differ only in the
+25 instances per family were frozen (Tasks), and five per family are kept: the 25 differ only in the
 object pair and one of 9 (pot) or 3 (mug) placements and so repeat each other. The kept five mix solved and failed
-instances and spread over the placement schedule. `scripts/yamlab/instances.json` lists the kept instances with their
-ids and, under `pruned`, the removed ids; `freeze.py`'s `KEEP` applies the same cut.
+instances and spread over the placement schedule.
 
-## Tasks and generator
-- `python3 scripts/yamlab/mk_tasks.py` writes every YAMLab task dir (both modes) from `scripts/yamlab/` alone:
-  `instances.json` (per family, the frozen instances in order with their source demonstration, assets and oracle hashes),
-  `frozen/<family>-iNN/` (`instance.json`, `oracle_actions.npy`), `shared/rcb_yamlab.py` (the tooling), `template/<mode>/`
-  and `scripts/eai_standard/` (the 2.2 layer and the standard client). Re-running it leaves `git diff tasks/` empty;
-  `--check` only compares.
-- Selection (`scripts/yamlab/select_instances.py`, in the image, on a GPU host) and freezing (`scripts/yamlab/freeze.py`):
+## Tasks
+- Every YAMLab task dir carries the tooling (`rcb_yamlab.py`), its instance's `instance.json` and its reference
+  (privileged: `solution/oracle_actions.npy`; standard: `solution/oracle_qpos.npy`), and the standard twin the 2.2 layer
+  and the standard client of `embodied_first_exam/standard/`. The task directories are the deliverable; the tooling that
+  built them is kept outside this repository.
+- Selection and freezing (in the image, on a GPU host):
   YAMLab's dataset `yamlab/yamlab_datasets` @ fc6be97 has 40 teleoperation files per task, one object pair each
   (`putpot_007.hdf5` = `Pot/pot_007` + `Cooktop/cooktop_007`), with 9 (PutPotOnCooktop) or 3 (HangMugOnTree) human
   demonstrations recorded on YAMLab's fixed placement schedule: demo j is schedule entry j (PutPotOnCooktop: the pot at
@@ -39,7 +37,7 @@ ids and, under `pruned`, the removed ids; `freeze.py`'s `KEEP` applies the same 
   3. two `replay` runs, each in its own fresh process (the second one also films the replay), succeed and end in the
      live run's state hash.
   The first accepted demo of a file is that pair's instance; the first 25 accepted pairs per family became i00..i24, of
-  which five per family are kept. `instances.json` lists the rejected candidates with their reason.
+  which five per family are kept.
 - The tasks carry the frozen instance in `environment/` and `tests/` (privileged) and `environment/sim/` (standard).
 
 ## Success (YAMLab's own, evaluation thresholds)
@@ -141,13 +139,13 @@ the simulator to 2e-7 m), and thin primitives: `move_ee` (both arms together, Is
 Resume class `exact`: the resumed service is a fresh process whose journal replay is that process's first run, so the
 state hash at the last checkpoint must match exactly (else `resume_failed`, `infra_error`). `RCB_STARTUP_TIMEOUT_S = 1800`
 (the compose file's value; see Time budget).
-Acceptance test `scripts/yamlab/kill_test.sh` (Harbor oracle on a standard task, the service killed with SIGKILL in the
+Acceptance test (Harbor oracle on a standard task, the service killed with SIGKILL in the
 middle of a call): the container restarts, the fresh service replays the journaled steps, matches the checkpoint's state
 hash exactly, resumes the same episode, the oracle continues from the reported step, and the episode is graded as usual
 (`resumes = 1`, `sim_startups = 2`, no infra error).
 
 ## Time budget
-3600 s for every task of both modes: each task's own `[agent] timeout_sec`, written by the generator (PROTOCOL §2,
+3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
 docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
 own text names no number. Every Python process pays ~1.5-2.5 min of Isaac Sim launch and scene build (more on a loaded
 host). A trial's first Isaac start in a container compiles the shaders into the trial's fresh Kit cache (up to ~10 min on
@@ -158,7 +156,6 @@ Verifier-side limits. Privileged: each fresh-process replay has max(1800 s, 1200
 Isaac start is the cold one; 20 control steps/s is a third of the slow nominal rate) and `[verifier] timeout_sec = 13000`
 fits two replays of the longest accepted trajectory (100,000 rows: 6200 s each) plus 600 s. Standard:
 `[[verifier.collect]] timeout_sec = 3600` (the episode end + the video encode, at most 600 s on the CPU, + a margin).
-The tests of these rules run without a simulator and cover YAMLab with RoboLab: `scripts/robolab/tests/test_*.py`.
 
 The tooling's runaway guard ends an episode after 100,000 control steps (`step_guard`, 55.6 min of simulated time). It
 is stated in `/spec` (`max_control_steps`, `episode`), in both instructions and in the README (a technical cap, not a
@@ -178,19 +175,18 @@ the world origin on any axis or a zero quaternion are 400s that execute nothing.
   flags, recording, replay and rendering. Task-level skills (grasp, lift, handover, place, hang) are never added to the
   agent's tooling.
 - **World-frame information (D7).** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
-  `scripts/yamlab/ci/advisory-world-frame.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
+  `ci_checks/benchmarks/yamlab/advisory-world-frame.sh`); the robot (both arm bases) and the world conventions are given. Privileged tasks give the
   privileged state through the tooling and the world heights of the success check in the instruction.
 
 - **Pointers to the reference solution.** The reference solution of an instance is the YAMLab teleoperation
   demonstration it was frozen from, replayed (Evidence), and that dataset is public. The agent's egress is the model
-  APIs and the package registries only, so it cannot be fetched. The instance file an agent reads names no recording
-  (`mk_tasks.py` refuses one with a `source` entry; the provenance is in `scripts/yamlab/instances.json` only). What still locates it for someone outside the trial: the
+  APIs and the package registries only, so it cannot be fetched. The instance file an agent reads names no recording. What still locates it for someone outside the trial: the
   instance id `iNN` in the task name is the index of the dataset's recording file, the privileged instruction names the
   object asset with the same number, and the image's `/opt/yamlab` (its README and `scripts/download_data.py`) names the
   dataset. Renaming the instances would change every task's identity; it is left as it is.
 
 ## Image and host
-`images/yamlab/` → `ghcr.io/mll-lab-nu/eai-yamlab:0.1.0` (~26.5 GB): YAMLab, Isaac Lab, Isaac Sim 5.1, the LeRobot fork
+`images/yamlab/` → `ghcr.io/mll-lab-nu/efe-private:yamlab-0.1.0` (~26.5 GB): YAMLab, Isaac Lab, Isaac Sim 5.1, the LeRobot fork
 YAMLab's recorder imports, and the two tasks' object assets (~3 GB). It contains Isaac Sim: **BUILD_ONLY**
 (`images/yamlab/BUILD_ONLY` has the licences, the build command and the check of a build). Needs an RTX-class GPU (PhysX on
 the CPU); one simulator per ~16 GB of RAM. Isaac keeps generated Python in its Kit cache: the verifier and the standard
@@ -204,33 +200,31 @@ YAMLab, its USDs and its dataset (objects, demonstrations): MIT. Isaac Lab: BSD-
 
 Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, CPU PhysX, a fixed env seed: the resumed service is a fresh process, whose first run is bit-exact). Its service states no `max_frames_per_call` yet (calls are bounded by `max_watch_s`, `max_chunk_s` and the frame rate).
 
-## Easy set
+## Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders (for this benchmark from the grading records only: the log review was
 partial). It is **hard** when GPT-6 Luna and every later run that attempted it failed, GPT-6 Astra and Claude Opus 5.5
 among them; a standard directory that only Astra solved is hard as well. It is **unverified** when only Luna attempted
-it and failed (the later runs only take bases Luna solved in no mode), and **pending** without a Luna verdict. A base
-whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason `solved`): kept under its name and reported
-apart from the main table.
+it and failed (the later runs only take bases Luna solved in no mode), and **pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-5 of 10 bases are in the easy set; by directory: 15 easy, 0 hard, 5 unverified, 0 pending.
+By directory: 15 easy, 0 hard, 5 unverified, 0 pending.
 
-| base | easy set | privileged | standard |
-|---|---|---|---|
-| `yamlab-hang-mug-on-tree-i10` |  | easy: Luna | unverified |
-| `yamlab-hang-mug-on-tree-i13` |  | unverified | easy: Luna |
-| `yamlab-hang-mug-on-tree-i15` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus |
-| `yamlab-hang-mug-on-tree-i20` | yes | easy: Luna | easy: Luna |
-| `yamlab-hang-mug-on-tree-i21` |  | unverified | easy: Luna |
-| `yamlab-put-pot-on-cooktop-i00` | yes | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
-| `yamlab-put-pot-on-cooktop-i03` |  | easy: Luna | unverified |
-| `yamlab-put-pot-on-cooktop-i04` |  | easy: Luna | unverified |
-| `yamlab-put-pot-on-cooktop-i07` | yes | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus |
-| `yamlab-put-pot-on-cooktop-i08` | yes | easy: Astra, Opus, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon |
+| base | privileged | standard |
+|---|---|---|
+| `yamlab-hang-mug-on-tree-i10` | easy: Luna | unverified |
+| `yamlab-hang-mug-on-tree-i13` | unverified | easy: Luna |
+| `yamlab-hang-mug-on-tree-i15` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon | easy: Opus |
+| `yamlab-hang-mug-on-tree-i20` | easy: Luna | easy: Luna |
+| `yamlab-hang-mug-on-tree-i21` | unverified | easy: Luna |
+| `yamlab-put-pot-on-cooktop-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon |
+| `yamlab-put-pot-on-cooktop-i03` | easy: Luna | unverified |
+| `yamlab-put-pot-on-cooktop-i04` | easy: Luna | unverified |
+| `yamlab-put-pot-on-cooktop-i07` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus |
+| `yamlab-put-pot-on-cooktop-i08` | easy: Astra, Opus, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon |

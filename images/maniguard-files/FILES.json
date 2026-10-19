@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe-private:maniguard-files-0.1.0@sha256:c3f228906c44d58cdbb2dfef6a0adaf989f1be969d227e1c9db9e060f5b3f6cf",
+ "source": "embodied_first_exam/benchmarks/maniguard",
+ "files": {
+  "privileged/environment/rcb_maniguard.py": "ab479550a5c89a7732245680b306c645672a100ed92340d4e8db0e3eba75b1a2",
+  "privileged/tests/grade.py": "92218daba686ad789e3bf8cb8424bb37d81d3a8a9c9ff4bc4c48f5275ec2f134",
+  "standard/tests/grade.py": "6b575bb6809f85c07e9cf88011c9ab38e63adfa6652818e6522da9f2faa1d8fd"
+ }
+}

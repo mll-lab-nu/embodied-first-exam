@@ -1,6 +1,6 @@
 # roboEngineer control transfer
 
-> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `scripts/roboengineer/exported.toml`).
+> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 The shared `eai-policy/1.1` service supports repeated nominal-training → deployment-feedback → revision rounds, followed by private held-out evaluation. See the [collection roadmap](roboengineer.md) for task readiness; implementation, successful control, native Harbor isolation and LLM evaluation are separate claims.
 
@@ -14,7 +14,7 @@ The shared `eai-policy/1.1` service supports repeated nominal-training → deplo
 | [Unitree G1 terrain](roboengineer-g1.md) | Blind-terrain PPO in mjlab/MuJoCo Warp; fixed numeric MLP export | 29 noisy joint angles, three public velocity commands and images | 4 / 12 |
 | [Unitree Go2](roboengineer-go2.md) | Nominal MuJoCo tuning; bounded numeric controller | 37 noisy proprioceptive/public-command channels and images | 3 / 10 per objective |
 
-The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The generator produces 32 tasks: two instances of eight existing variants, long-lap and compact-lap Silverstone and Monaco, the explicit Skydio appearance revision of general-eight Neural Fly, the separate experimental vector-wind revision, two original Drift to Park plants and two separate tight-bay Drift to Park plants. Neural Landing has its own generator and validated service; this service does not replace it.
+The Go2 objectives are weave poles, attitude tracking, forward jump and yaw jump. Some reference controllers remain unsuccessful; those objectives are development tasks, not admission-ready benchmarks. The benchmark has 32 tasks: two instances of eight existing variants, long-lap and compact-lap Silverstone and Monaco, the explicit Skydio appearance revision of general-eight Neural Fly, the separate experimental vector-wind revision, two original Drift to Park plants and two separate tight-bay Drift to Park plants. Neural Landing has its own validated service; this service does not replace it.
 
 Earlier imported Linearbot, spacecraft and YAM modules remain prototype source. They are not generated members of the original eight-objective collection. Their old twelve-instance release must not be confused with the current task bank.
 
@@ -42,19 +42,18 @@ Private records include realized parameters, true state, contacts, task metrics,
 
 ## Reproduction and status
 
-Prepare nominal robot assets with `python -m scripts.control_transfer.prepare_assets --workspace /path/to/workspace --go2-source /path/to/pinned-menagerie --out /operator/assets --private-go2-out /operator/private-go2`; this requires the pinned Unitree checkout and excludes reference policies and unrelated robot archives. Stage them with `python images/control-transfer/prepare_assets.py --assets /operator/assets --fly /operator/fly-calibration --go2 /operator/private-go2`, then build the `nominal`, `train` and `evaluator` targets with `images/control-transfer/build.sh`. Only the evaluator target contains the flight-force artifact and the full prepared Go2 integrity directory; nominal/train stages contain only nominal robot assets. Images are `BUILD_ONLY`; neither restricted flight-derived assets nor user-provided robot archives are published by these scripts.
+Prepare nominal robot assets with `python -m images/control-transfer/stage_nominal_assets.py --workspace /path/to/workspace --go2-source /path/to/pinned-menagerie --out /operator/assets --private-go2-out /operator/private-go2`; this requires the pinned Unitree checkout and excludes reference policies and unrelated robot archives. Stage them with `python images/control-transfer/prepare_assets.py --assets /operator/assets --fly /operator/fly-calibration --go2 /operator/private-go2`, then build the `nominal`, `train` and `evaluator` targets with `images/control-transfer/build.sh`. Only the evaluator target contains the flight-force artifact and the full prepared Go2 integrity directory; nominal/train stages contain only nominal robot assets. Images are `BUILD_ONLY`; neither restricted flight-derived assets nor user-provided robot archives are published by these scripts.
+
+The task directories are the deliverable; the tooling that built them is kept outside this repository.
 
 ```bash
-python -m scripts.control_transfer.gen_tasks render
-python -S -m scripts.control_transfer.gen_tasks check
-# Refresh task digests from tasks/ with: harbor add --scan .
-RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer-anycar-tracking-i00-standard -a oracle -e docker
-RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer-anycar-tracking-i00-standard -a nop -e docker
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer/roboengineer-anycar-tracking-i00-standard -a oracle -e docker
+RCB_LIMITS_ENFORCE=1 harbor run -p tasks/roboengineer/roboengineer-anycar-tracking-i00-standard -a nop -e docker
 ```
 
 The supplied reference candidates are scripted engineering baselines, not LLM scores. Fixed-eight Neural Fly, ellipse AnyCar and Go2 attitude declare full scripted references after both native instance banks and no-submission controls passed. General-eight Neural Fly, G1 and the other Go2 objectives remain `oracle=none` and require human review. See the [integration validation record](roboengineer-validation.md). Family documents identify source pins, model assumptions, exact score semantics, training initialization and reference failures. Neural Fly uses a heavily clipped flight-data quadratic surrogate rather than the paper's DAIML controller or a calibrated digital twin; AnyCar uses rigid Coulomb contacts rather than deformable soil; G1 and Go2 results are simulation transfer, not hardware tests.
 
-Full historical circuit laps use separately versioned `anycar-circuit-lap-v2-<layout>` IDs and a declared 129600-second long-budget track. Default generation includes Silverstone and Monaco; other layouts, including Suzuka and every runnable historical layout, are available through `--lap-circuit` / `--all-lap-circuits`. Original ellipse and sector cutoffs and semantics are unchanged.
+Full historical circuit laps use separately versioned `anycar-circuit-lap-v2-<layout>` IDs and a declared 129600-second long-budget track. The tasks cover Silverstone and Monaco; the catalog also covers Suzuka and every runnable historical layout. Original ellipse and sector cutoffs and semantics are unchanged.
 
 ### Optional appearance revision: Skydio X2
 
@@ -69,9 +68,8 @@ native/model validation of this appearance is pending. Asset staging and license
 checks are described in the [image guide](../../images/control-transfer/README.md).
 
 Compact 30-second laps use `anycar-circuit-compact-v3-<layout>` / `circuit-compact-lap/3`,
-with a separately versioned `compact-30s/1` route. Default generation includes both plants
-for Silverstone and Monaco; `--compact-circuit` / `--all-compact-circuits` select other
-layouts. These public 45 m routes target a 28 s lap within a hard 30 s episode. They are
+with a separately versioned `compact-30s/1` route. The tasks cover both plants
+for Silverstone and Monaco. These public 45 m routes target a 28 s lap within a hard 30 s episode. They are
 F1-inspired approximations with recorded smoothing and aspect widening; sharp turns and
 crossovers may be removed. The car physics and controller ABI are unchanged. Compact tasks
 use the ordinary 14400-second agent cutoff, with all 301 noisy samples and 31 images spanning

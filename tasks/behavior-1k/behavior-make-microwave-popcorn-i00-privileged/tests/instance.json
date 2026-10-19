@@ -1,0 +1,71 @@
+{
+ "task": "make_microwave_popcorn",
+ "challenge_task": "make_microwave_popcorn",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Make microwave popcorn. A bag of popcorn kernels lies on the kitchen countertop and there is a microwave in the kitchen; heat the bag in the microwave until the popcorn is cooked, so that the cooked (popped) popcorn ends up inside the bag.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "8aa790dfd066e7ca",
+ "action_dim": 25,
+ "challenge_max_steps": 4856,
+ "objects": {
+  "countertop.n.01_1": {
+   "category": "bar",
+   "position": [
+    6.748,
+    -0.7066,
+    0.4014
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    0.7071,
+    0.7071
+   ]
+  },
+  "microwave.n.02_1": {
+   "category": "microwave",
+   "position": [
+    6.1162,
+    -0.6968,
+    1.0086
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.7071,
+    0.7071
+   ]
+  },
+  "popcorn__bag.n.01_1": {
+   "category": "popcorn_bag",
+   "position": [
+    7.5602,
+    -0.5656,
+    0.9761
+   ],
+   "orientation_xyzw": [
+    -0.0052,
+    0.0105,
+    0.4617,
+    0.887
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    4.8314,
+    1.1399,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

@@ -1,9 +1,0 @@
-{
-  "files_registered": 12,
-  "pack_manifest_unchanged": true,
-  "bound_to_previously_registered_source": true,
-  "render_code_and_helpers_unchanged": true,
-  "registry": "historical-source://asset-build/asset_registry_supplement.json",
-  "registry_sha256": "db6b426281f5dc62b7aaa5e0160aad9c82155f2748843430995ce3638514f9d4",
-  "previous_reports": "historical-source://asset-build/runtime/registration_history"
-}

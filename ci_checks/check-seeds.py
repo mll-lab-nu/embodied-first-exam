@@ -112,7 +112,7 @@ def check(task: Path) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
-    dirs = [Path(a) for a in argv] or sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    dirs = [Path(a) for a in argv] or tc.iter_tasks()
     bad = 0
     for t in dirs:
         if not (t / "task.toml").is_file():

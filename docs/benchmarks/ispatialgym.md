@@ -12,8 +12,8 @@ its goal this way; BEHAVIOR-1K runs the same robot in the same houses with goals
 | simulator | OmniGibson (the fork: 3.9 + the vector-env merge + iSpatialGym's object states) on Isaac Sim 5.1, CPU PhysX at 120 Hz |
 | robot | R1Pro: holonomic base, 4-joint trunk, two 7-joint arms with parallel grippers; iSpatialGym's 23-D JoyLo action at 30 Hz; head and wrist cameras, 1080×1080 RGB |
 | score | upstream's geometric success with its settle-eval on: the BDDL goal and every measured target within the `isg-v2` tolerances × 3 (`run_isg --mode policy`) at every one of the last 45 control steps, the measured objects and the robot at rest over them (`pose_settled`); within max(300, 2 × the demo's length) control steps |
-| tasks | 12 in both modes: `tasks/ispatialgym-<task>-i00-privileged` and `-standard` (`eai-standard/2.2`), one frozen instance per pair |
-| image | `ghcr.io/mll-lab-nu/eai-ispatialgym:0.2.0` (`images/ispatialgym/`, BUILD_ONLY: Isaac Sim inside; both upstream repositories are fetched by commit) |
+| tasks | 12 in both modes: `tasks/ispatialgym/ispatialgym-<task>-i00-privileged` and `-standard` (`eai-standard/2.2`), one frozen instance per pair |
+| image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` (`images/ispatialgym/`, BUILD_ONLY: Isaac Sim inside; both upstream repositories are fetched by commit) |
 | oracle | none |
 
 ## Tasks: upstream's 23, ours ✅ (12)
@@ -35,14 +35,14 @@ its goal this way; BEHAVIOR-1K runs the same robot in the same houses with goals
 | mental rotation | (one) | turn a held object in the hand to the pictured orientation | ✅ | |
 | object scaling | (one) | move a held object along the camera's axis until it looks as large as pictured | ✅ | |
 
-Why these (no model's results enter the choice; `scripts/ispatialgym/subset.toml`):
+Why these (no model's results enter the choice):
 - **One task per success rule.** A task whose BDDL goal and measured targets are another's keeps one: the obstructed
   camera relocalization (the standard one is it without the obstacle); of an open / close pair the opening twin, as in
   BiGym 2.0; of a relation checked at two scales the small-scale task (tighter tolerances; at scene scale the partner is a
   fixed fixture reached with the base, what BEHAVIOR-1K's tasks cover on the same robot and houses). 23 → 14.
 - **Valid here.** Within a task, the first subtask in upstream's index (`metadata/instances.jsonl`) whose instance loads,
   does not succeed when the robot holds still for the whole budget, and replays to the same final state in fresh
-  processes (`scripts/ispatialgym/instances/<task>/facts.json`). Every first subtask passed.
+  processes (`facts.json` of the task's instance). Every first subtask passed.
 - **Instance 0** of that subtask (the release has one per subtask); 11 of the 12 are in `house_single_floor`.
 - **Both modes without the answer in reach.** The privileged agent's simulator must load the start and nothing that
   scores it, and the same rows must give it the scoring side's states. Two tasks cannot: attachment (upstream's attach
@@ -57,7 +57,7 @@ upstream's role prefix (`target_*`, `partner_*`, …). Renaming moves the settle
 most 5e-5 (m or rad; alignment_axial, block_design, touching) and none of the others, measured; both twins and the agent
 run the renamed one. What scores it is
 `goal.json` (docs/protocol/leakage.md §3): every key taken out of upstream's TRO and template_meta (the targets, the goal camera pose, the
-variant), lifted by `mk_tasks.py instances` against the real removal, copied only to the scoring side (`environment/sim/`,
+variant), lifted against the real removal, copied only to the scoring side (`environment/sim/`,
 `tests/`), restored there and checked against upstream's TRO by sha256 (a failed restore is a grader error). One success
 rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the policy tolerances × 3, in both.
 
@@ -71,7 +71,7 @@ The privileged agent's image is eai-ispatialgym with a layer that removes, and t
 problem (goals), the docs (they preview the reference demonstrations; the fork's link the authors' pages), tests,
 configs and README, the eval data's repository id and folder names and the project URLs (they locate the
 demonstrations) and bytecode; upstream's public release ships no scripted expert, planner, sampler or task spec, and the
-build fails if one is there (`scripts/ispatialgym/shared/scrub.sh`; the names it looks for are read from the image, so
+build fails if one is there (each privileged task's `environment/scrub/scrub.sh`; the names it looks for are read from the image, so
 no task file names the eval data). It writes this task's start-only BDDL problem (objects and positive initial
 atoms, one neutral goal atom) from the image's own copy. Upstream's success-check code stays in the image, as KinDER's and
 BEHAVIOR-1K's do; with no goal, target or problem in the container it has nothing to check, and the tooling reports no
@@ -114,14 +114,15 @@ verifier's, for all 12 tasks.
 ## Run
 ```bash
 export RCB_BEHAVIOR_DATA=/path/to/behavior-data   # omnigibson-robot-assets/, behavior-1k-assets/ (3.9.0), omnigibson.key; mounted at /bdata
-harbor run -p tasks/ispatialgym-mental-rotation-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
-harbor run -p tasks/ispatialgym-mental-rotation-i00-standard -a nop      # scores 0
-harbor run -p tasks/ispatialgym-mental-rotation-i00-privileged -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-standard -a nop      # scores 0
+harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-privileged -a codex -m openai/gpt-6-luna --env-file .env
 ```
 The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `download_omnigibson_robot_assets()`,
 `download_behavior_1k_assets(accept_license=True)`), the same one BEHAVIOR-1K's tasks mount. Build the image as
-`images/ispatialgym/BUILD_ONLY` says. Regenerate the tasks: `python3 scripts/ispatialgym/mk_tasks.py render`
-(`instances` splits the picked instances of upstream's eval data into `instance.json` and `goal.json`; `measure --task T` writes `facts.json`, on a GPU).
+`images/ispatialgym/BUILD_ONLY` says. The task directories are the deliverable; the tooling that built them is kept
+outside this repository. The frozen instances are kept in the task directories only: the standard twin's
+`environment/sim/` (`instance.json`, `goal.json`, `facts.json`, `upstream.json`) and `environment/goal.png`.
 
 ## Positive examples (oracle none, PROTOCOL §4)
 Upstream's recorded demonstration of each instance (the eval data's `-demo.hdf5`, `data/demo_0/action`, unchanged), handed

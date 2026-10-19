@@ -24,4 +24,4 @@ copy = (
 Path(sys.argv[2]).write_text(src[:start] + copy + src[end:])
 PY
 docker build --build-context "vlabench_assets=$assets" -f "$context/Dockerfile" \
-  -t "ghcr.io/mll-lab-nu/eai-vlabench:$(cat "$root/images/vlabench/VERSION")" "$root"
+  -t "ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat "$root/images/vlabench/VERSION")" "$root"

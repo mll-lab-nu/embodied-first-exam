@@ -7,7 +7,7 @@
 # payloads and materials, the robot's paint, Isaac Lab's ground, NDT's warehouse scene) is baked in under /opt/isaac-assets
 # (images/ambench/web_assets.txt), mirroring the asset buckets' layouts: the tasks run with closed egress.
 # Tag = images/ambench/VERSION; build from the repo root (images/ambench/BUILD_ONLY has the command, licences and checks):
-#   docker build -f images/ambench/Dockerfile -t ghcr.io/mll-lab-nu/eai-ambench:$(cat images/ambench/VERSION) .
+#   docker build -f images/ambench/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ambench-$(cat images/ambench/VERSION) .
 # Every Python package is pinned in images/ambench/requirements.lock (`uv pip freeze` of the reference build).
 # BUILD_ONLY, never published: Isaac Sim 5.1 / Omniverse Kit may be installed and used but not redistributed.
 # The layers up to Isaac Lab are YAMLab's (images/yamlab/Dockerfile), the same Isaac Sim / Isaac Lab stack.

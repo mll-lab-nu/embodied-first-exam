@@ -1,0 +1,7 @@
+{
+ "task_text": "Rotate the die in the hand to the target pose: its position within 0.025 m of the target and the norm of its Euler-angle error below 0.262 rad, for 100 consecutive control steps (1.0 s). Failure (the episode ends): the die more than 0.2 m from the target (dropped).",
+ "default_cameras": [
+  "hand_top"
+ ],
+ "reference": null
+}

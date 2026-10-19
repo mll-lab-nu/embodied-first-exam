@@ -7,11 +7,11 @@ RoboCasa's [GR1 tabletop tasks](https://github.com/robocasa/robocasa-gr1-tableto
 | | |
 |---|---|
 | upstream | robocasa/robocasa-gr1-tabletop-tasks @ `4840e671596f93ca03651524b9f72ffb1aadfeff` (MIT), robosuite @ `51cc017` (1.5.1) with its whole-body mink IK controller (mink 0.0.5), MuJoCo 3.2.6 |
-| tasks | `tasks/robocasa-gr1-<task>-i00-privileged` and `tasks/robocasa-gr1-<task>-i00-standard`, 24 each |
+| tasks | `tasks/robocasa-gr1/robocasa-gr1-<task>-i00-privileged` and `tasks/robocasa-gr1/robocasa-gr1-<task>-i00-standard`, 24 each |
 | metadata | `simulator = "robosuite"`, `robot = "fourier-gr1"`, `family = "robocasa-gr1/<Env>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/eai-robocasa-gr1:0.1.0` (`images/robocasa-gr1/`), CPU only, ~24 GB |
+| image | `ghcr.io/mll-lab-nu/efe:robocasa-gr1-0.1.0` (`images/robocasa-gr1/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| generator | `scripts/robocasa-gr1/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`) |
+| sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 
 ## Scope
 All 24 GR1 tabletop environments with an official demonstration whose reference PR #4 validated, one
@@ -54,9 +54,9 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
 ## Standard-mode service
 `images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's: derived from
 `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect hook is
-`scripts/robocasa-gr1/shared/finalize.sh`; both files are RoboCasa's byte for byte (`docs/benchmarks/robocasa.md`:
+each standard task's `environment/sim/finalize.sh`; both files are RoboCasa's byte for byte (`docs/benchmarks/robocasa.md`:
 graded by the live episode, nothing replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
-`RCB_START_SHA` from `scripts/robocasa-gr1/frozen/start_state.json`, a mismatch is infrastructure), the video one
+`RCB_START_SHA` in each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one
 render pass after the verdict; the hook's budget; request validation; the camera calibration is the rendered
 viewpoint).
 
@@ -68,69 +68,58 @@ contains no demonstration data.
 `images/robocasa-gr1/Dockerfile` pins the base image by digest, every pip package, the GR1 tabletop and robosuite
 commits, robosuite's mink controller file and every asset archive by SHA-256 (`fetch_assets.sh`). It reproduces the
 content of the image the tasks were validated with. **Open: a clean rebuild from this Dockerfile** (~9 GB of
-downloads, ~50 GB of disk) and a re-check of the hashes with `import_references.sh` before publishing. Licences: code MIT; RoboCasa's own textures, fixtures and object archives (UT Box) CC-BY-4.0; NVIDIA
+downloads, ~50 GB of disk) and a re-check of the hashes before publishing. Licences: code MIT; RoboCasa's own textures, fixtures and object archives (UT Box) CC-BY-4.0; NVIDIA
 PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes) **CC-BY-NC-4.0** (non-commercial; maintainers to
 confirm publishing, otherwise `BUILD_ONLY`).
 
-## Rebuilding the tasks
-```bash
-docker build -t ghcr.io/mll-lab-nu/eai-robocasa-gr1:$(cat images/robocasa-gr1/VERSION) images/robocasa-gr1
-bash scripts/robocasa-gr1/import_references.sh <PR #4 checkout>
-python3 scripts/robocasa-gr1/generate.py      # ends with scripts/task_conventions.py normalize; re-running reproduces the tasks
-python3 scripts/robocasa-gr1/generate.py --check   # writes nothing; exit 1 if tasks/ differs from a fresh render
-cd tasks && harbor add --scan . && cd ..
-bash ci_checks/run_all.sh tasks/robocasa-gr1-*
-```
-
 ## Evidence
-`scripts/robocasa-gr1/frozen/report.json`, for all 24: not solved at the start; `reset()` bit-exact; the
+For all 24: not solved at the start; `reset()` bit-exact; the
 reference (123–393 actions) succeeds on its final state without truncation; two fresh-process replays end
 in the live state's hash and succeed; the success survives 10 more still steps. Same hashes with and without
 MuJoCo's mesh cache.
 
-## Easy set
+## Screening
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
 **unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy is in the easy set (`docs/easy_set.toml`, reason
-`solved`): kept under its name and reported apart from the main table.
+**pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-9 of 24 bases are in the easy set; by directory: 33 easy, 1 hard, 14 unverified, 0 pending.
+By directory: 33 easy, 1 hard, 14 unverified, 0 pending.
 
-| base | easy set | privileged | standard |
-|---|---|---|---|
-| `robocasa-gr1-bottle-to-cabinet-close-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Astra, Gemini 4 Argon |
-| `robocasa-gr1-can-to-drawer-close-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-cup-to-drawer-close-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-cuttingboard-to-basket-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 4 Argon |
-| `robocasa-gr1-cuttingboard-to-cardboardbox-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-cuttingboard-to-pan-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Gemini 4 Argon |
-| `robocasa-gr1-cuttingboard-to-pot-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
-| `robocasa-gr1-cuttingboard-to-tieredbasket-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-milk-to-microwave-close-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-placemat-to-basket-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
-| `robocasa-gr1-placemat-to-bowl-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-placemat-to-plate-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-placemat-to-tieredshelf-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-plate-to-bowl-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-plate-to-cardboardbox-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash, Qwen3.8 27B | easy: Astra, Gemini 4 Argon |
-| `robocasa-gr1-plate-to-pan-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-plate-to-plate-i00` |  | unverified | easy: Luna |
-| `robocasa-gr1-potato-to-microwave-close-i00` |  | easy: Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | hard |
-| `robocasa-gr1-tray-to-cardboardbox-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Opus, Sol 6.1, Sol |
-| `robocasa-gr1-tray-to-plate-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-tray-to-pot-i00` |  | easy: Luna | unverified |
-| `robocasa-gr1-tray-to-tieredbasket-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash | easy: Sol 6.1, Gemini 4 Argon |
-| `robocasa-gr1-tray-to-tieredshelf-i00` | yes | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Gemini 4 Argon |
-| `robocasa-gr1-wine-to-cabinet-close-i00` |  | easy: Luna | unverified |
+| base | privileged | standard |
+|---|---|---|
+| `robocasa-gr1-bottle-to-cabinet-close-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Astra, Gemini 4 Argon |
+| `robocasa-gr1-can-to-drawer-close-i00` | easy: Luna | unverified |
+| `robocasa-gr1-cup-to-drawer-close-i00` | easy: Luna | unverified |
+| `robocasa-gr1-cuttingboard-to-basket-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Gemini 4 Argon |
+| `robocasa-gr1-cuttingboard-to-cardboardbox-i00` | easy: Luna | unverified |
+| `robocasa-gr1-cuttingboard-to-pan-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Gemini 4 Argon |
+| `robocasa-gr1-cuttingboard-to-pot-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
+| `robocasa-gr1-cuttingboard-to-tieredbasket-i00` | easy: Luna | unverified |
+| `robocasa-gr1-milk-to-microwave-close-i00` | easy: Luna | unverified |
+| `robocasa-gr1-placemat-to-basket-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Sol 6.1, Gemini 4 Argon |
+| `robocasa-gr1-placemat-to-bowl-i00` | easy: Luna | unverified |
+| `robocasa-gr1-placemat-to-plate-i00` | easy: Luna | unverified |
+| `robocasa-gr1-placemat-to-tieredshelf-i00` | easy: Luna | unverified |
+| `robocasa-gr1-plate-to-bowl-i00` | easy: Luna | unverified |
+| `robocasa-gr1-plate-to-cardboardbox-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash, Qwen3.8 27B | easy: Astra, Gemini 4 Argon |
+| `robocasa-gr1-plate-to-pan-i00` | easy: Luna | unverified |
+| `robocasa-gr1-plate-to-plate-i00` | unverified | easy: Luna |
+| `robocasa-gr1-potato-to-microwave-close-i00` | easy: Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon | hard |
+| `robocasa-gr1-tray-to-cardboardbox-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Opus, Sol 6.1, Sol |
+| `robocasa-gr1-tray-to-plate-i00` | easy: Luna | unverified |
+| `robocasa-gr1-tray-to-pot-i00` | easy: Luna | unverified |
+| `robocasa-gr1-tray-to-tieredbasket-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, DeepSeek V4.1 Flash | easy: Sol 6.1, Gemini 4 Argon |
+| `robocasa-gr1-tray-to-tieredshelf-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 3.8 Flash, Gemini 4 Argon, GLM 5.3 Flash | easy: Gemini 4 Argon |
+| `robocasa-gr1-wine-to-cabinet-close-i00` | easy: Luna | unverified |
 
 Judgment calls: `robocasa-gr1-cuttingboard-to-pan-i00`: Astra's standard success is borderline (the agent doubted its
 placement); Gemini 4 Argon's is clean.

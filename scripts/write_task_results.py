@@ -98,7 +98,7 @@ def trial_config(trial, task, r):
     `[metadata.seeds] default`), else the task's default seed (`seed_source = "default"`). Run-time overrides: the trial's
     recorded environment. A trial of another version of the task (its `task_checksum` is not the task's DIGEST now) keeps
     only what its name says; the rest is "legacy"."""
-    tdir = ROOT / "tasks" / task
+    tdir = tc.task_dir(task, ROOT / "tasks")
     hc = load_json(trial / "config.json")
     env = {}
     for src in ((hc.get("environment") or {}).get("env"), (hc.get("agent") or {}).get("env"), hc.get("env")):
@@ -160,7 +160,7 @@ def main(argv):
             trials.append((trial, json.load(open(trial / "result.json"))))
     for trial, r in sorted(trials, key=lambda tr: (started(tr[1]), tr[0].name)):
         task = canonical(r["task_name"].split("/")[-1])   # also pre-v1.0 jobs
-        tdir = ROOT / "tasks" / task
+        tdir = tc.task_dir(task, ROOT / "tasks")
         if not tdir.is_dir(): continue
         rw = load_reward(trial)
         ar = r.get("agent_result") or {}; mode = mode_of(task); limited = mode != "privileged"; fam = base(task).replace("robotwin_2_0_", "")
@@ -191,7 +191,7 @@ def main(argv):
                  f"| result | {'**1 (success)**' if ok else NOT_A_RESULT.format(why) if why else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
                  f"| configuration | {tc.config_label(cfg)}; seed {cfg.get('seed')} ({cfg.get('seed_source')}); "
                  f"{'validated' if cfg.get('validated') is True else 'unvalidated' if cfg.get('validated') is False else 'legacy'}"
-                 f"{'; easy set (docs/easy_set.toml)' if cfg.get('set') == 'easy' else ''} (`config.json`) |",
+                 f"{'; not in the core set (docs/core_set.toml)' if cfg.get('set') not in (None, '', 'core') else ''} (`config.json`) |",
                  f"| attempts | {len(led)}" + (f" — **over the cap of {MAX_ATTEMPTS}**" if over_cap else "") + " |",
                  f"| agent time | {span(r.get('agent_execution') or {})} s |",
                  f"| actions / physics steps | {rw.get('steps') or rw.get('n_actions') or '—'} / {rw.get('sim_steps') or '—'} |",

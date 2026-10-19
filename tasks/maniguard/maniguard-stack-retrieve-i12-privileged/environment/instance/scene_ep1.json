@@ -1,0 +1,730 @@
+{
+    "versions": {
+        "omnigibson": {
+            "version": "3.7.2",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "bddl": {
+            "version": "3.7.0",
+            "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+        },
+        "behavior-1k-assets": {
+            "version": "3.7.2rc1"
+        },
+        "omnigibson-robot-assets": {
+            "version": null,
+            "git_hash": null
+        }
+    },
+    "metadata": {},
+    "state": {
+        "pos": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "ori": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+        ],
+        "registry": {
+            "system_registry": {},
+            "object_registry": {
+                "nightstand_roxnbe_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            5.92437219619751,
+                            3.7766809463500977,
+                            0.4112929701805115
+                        ],
+                        "ori": [
+                            3.979075984261726e-07,
+                            -3.525687759520224e-07,
+                            -0.7071059942245483,
+                            0.7071075439453125
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "target_pop_case_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            5.924745559692383,
+                            3.744262933731079,
+                            0.7433830499649048
+                        ],
+                        "ori": [
+                            1.0541392470031496e-07,
+                            4.586691204622184e-07,
+                            2.5155415528388403e-08,
+                            1.0000001192092896
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {
+                        "Temperature": {
+                            "temperature": 23.0
+                        }
+                    }
+                },
+                "stack_bottle_of_face_cream_ep1_1": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            5.926353931427002,
+                            3.7451398372650146,
+                            0.8186731338500977
+                        ],
+                        "ori": [
+                            0.0016760603757575154,
+                            0.0025184538681060076,
+                            -0.0001320692535955459,
+                            0.9999955296516418
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "stack_bottle_of_face_cream_ep1_2": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            5.923743724822998,
+                            3.7438693046569824,
+                            0.8720545768737793
+                        ],
+                        "ori": [
+                            0.0013972027227282524,
+                            0.00793368835002184,
+                            -0.004223438911139965,
+                            0.9999586343765259
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "stack_bottle_of_face_cream_ep1_3": {
+                    "is_asleep": true,
+                    "root_link": {
+                        "pos": [
+                            5.923273086547852,
+                            3.74399471282959,
+                            0.925427258014679
+                        ],
+                        "ori": [
+                            0.000997489900328219,
+                            0.013144388794898987,
+                            -0.0017907870933413506,
+                            0.9999116063117981
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "non_kin": {}
+                },
+                "goal_region__target_pop_case_ep1_1": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            5.383780479431152,
+                            3.7445895671844482,
+                            0.7461345195770264
+                        ],
+                        "ori": [
+                            0.0,
+                            0.0,
+                            0.0,
+                            1.0
+                        ]
+                    },
+                    "non_kin": {},
+                    "radius": 0.08855395019054413,
+                    "height": -1,
+                    "size": -1
+                },
+                "agent_0": {
+                    "is_asleep": false,
+                    "root_link": {
+                        "pos": [
+                            5.924930572509766,
+                            3.229012966156006,
+                            0.7199993133544922
+                        ],
+                        "ori": [
+                            -5.960464477539063e-08,
+                            5.2386894822120667e-08,
+                            0.7070435881614685,
+                            0.707170307636261
+                        ],
+                        "lin_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ],
+                        "ang_vel": [
+                            0.0,
+                            0.0,
+                            0.0
+                        ]
+                    },
+                    "joint_pos": [
+                        0.0,
+                        -1.2999999523162842,
+                        0.0,
+                        -2.869999885559082,
+                        0.0,
+                        2.0,
+                        0.75,
+                        0.03999999910593033,
+                        0.03999999910593033
+                    ],
+                    "joint_vel": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "controllers": {
+                        "arm_0": {
+                            "goal_is_valid": false,
+                            "goal": null
+                        },
+                        "gripper_0": {
+                            "goal_is_valid": false,
+                            "goal": null,
+                            "vel_filter": {
+                                "past_samples": [
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        -0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ],
+                                    [
+                                        0.0,
+                                        0.0
+                                    ]
+                                ],
+                                "current_idx": 0,
+                                "fully_filled": false
+                            }
+                        }
+                    },
+                    "non_kin": {},
+                    "ag_obj_constraint_params": {
+                        "0": {}
+                    }
+                }
+            }
+        }
+    },
+    "init_info": {
+        "class_module": "omnigibson.scenes.scene_base",
+        "class_name": "Scene",
+        "args": {
+            "scene_file": {
+                "versions": {
+                    "omnigibson": {
+                        "version": "3.7.2",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "bddl": {
+                        "version": "3.7.0",
+                        "git_hash": "88454bd04f75dc57c00ab1f1a00bcde1ff505950"
+                    },
+                    "behavior-1k-assets": {
+                        "version": "3.7.2rc1"
+                    },
+                    "omnigibson-robot-assets": {
+                        "version": null,
+                        "git_hash": null
+                    }
+                },
+                "metadata": {},
+                "state": {
+                    "pos": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "ori": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "registry": {
+                        "system_registry": {},
+                        "object_registry": {
+                            "nightstand_roxnbe_0": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        5.92437219619751,
+                                        3.7766802310943604,
+                                        0.4112929701805115
+                                    ],
+                                    "ori": [
+                                        3.979075984261726e-07,
+                                        -3.525687759520224e-07,
+                                        -0.7071059942245483,
+                                        0.7071075439453125
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "target_pop_case_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        5.924745559692383,
+                                        3.744262933731079,
+                                        0.7433830499649048
+                                    ],
+                                    "ori": [
+                                        1.0541396022745175e-07,
+                                        4.5858175212742935e-07,
+                                        2.515545460823887e-08,
+                                        1.0
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {
+                                    "Temperature": {
+                                        "temperature": 23.0
+                                    }
+                                }
+                            },
+                            "stack_bottle_of_face_cream_ep1_1": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        5.926353931427002,
+                                        3.7451398372650146,
+                                        0.8186731338500977
+                                    ],
+                                    "ori": [
+                                        0.0016760603757575154,
+                                        0.002518454333767295,
+                                        -0.00013206926814746112,
+                                        0.9999954700469971
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "stack_bottle_of_face_cream_ep1_2": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        5.923743724822998,
+                                        3.7438693046569824,
+                                        0.8720545768737793
+                                    ],
+                                    "ori": [
+                                        0.0013972028391435742,
+                                        0.00793368835002184,
+                                        -0.004223439376801252,
+                                        0.9999586343765259
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "stack_bottle_of_face_cream_ep1_3": {
+                                "is_asleep": true,
+                                "root_link": {
+                                    "pos": [
+                                        5.923273086547852,
+                                        3.74399471282959,
+                                        0.925427258014679
+                                    ],
+                                    "ori": [
+                                        0.000997487804852426,
+                                        0.01314439158886671,
+                                        -0.0017907725414261222,
+                                        0.9999115467071533
+                                    ],
+                                    "lin_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ],
+                                    "ang_vel": [
+                                        0.0,
+                                        0.0,
+                                        0.0
+                                    ]
+                                },
+                                "non_kin": {}
+                            },
+                            "goal_region__target_pop_case_ep1_1": {
+                                "is_asleep": false,
+                                "root_link": {
+                                    "pos": [
+                                        5.383780479431152,
+                                        3.7445895671844482,
+                                        0.7461345195770264
+                                    ],
+                                    "ori": [
+                                        0.0,
+                                        0.0,
+                                        0.0,
+                                        1.0
+                                    ]
+                                },
+                                "non_kin": {},
+                                "radius": 0.08855395019054413,
+                                "height": -1,
+                                "size": -1
+                            }
+                        }
+                    }
+                },
+                "init_info": {
+                    "class_module": "omnigibson.scenes.scene_base",
+                    "class_name": "Scene",
+                    "args": {
+                        "scene_file": null
+                    }
+                },
+                "objects_info": {
+                    "init_info": {
+                        "nightstand_roxnbe_0": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "nightstand_roxnbe_0",
+                                "category": "nightstand",
+                                "model": "roxnbe",
+                                "scale": [
+                                    0.9999985098838806,
+                                    0.999971330165863,
+                                    0.9999985694885254
+                                ],
+                                "fixed_base": true,
+                                "expected_file_hash": "5ba69d219dbaff0546a93fe237b09207"
+                            }
+                        },
+                        "target_pop_case_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "target_pop_case_ep1_1",
+                                "category": "pop_case",
+                                "model": "rzhvvk",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "d9e323dda39d0efffb3ddcd49c00e43d"
+                            }
+                        },
+                        "stack_bottle_of_face_cream_ep1_1": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "stack_bottle_of_face_cream_ep1_1",
+                                "category": "bottle_of_face_cream",
+                                "model": "dztaed",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "44e4e2a16aa77f60a57fbf4170dcc1a6"
+                            }
+                        },
+                        "stack_bottle_of_face_cream_ep1_2": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "stack_bottle_of_face_cream_ep1_2",
+                                "category": "bottle_of_face_cream",
+                                "model": "dztaed",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "44e4e2a16aa77f60a57fbf4170dcc1a6"
+                            }
+                        },
+                        "stack_bottle_of_face_cream_ep1_3": {
+                            "class_module": "omnigibson.objects.dataset_object",
+                            "class_name": "DatasetObject",
+                            "args": {
+                                "name": "stack_bottle_of_face_cream_ep1_3",
+                                "category": "bottle_of_face_cream",
+                                "model": "dztaed",
+                                "scale": [
+                                    1.0,
+                                    1.0,
+                                    1.0
+                                ],
+                                "fixed_base": false,
+                                "expected_file_hash": "44e4e2a16aa77f60a57fbf4170dcc1a6"
+                            }
+                        },
+                        "goal_region__target_pop_case_ep1_1": {
+                            "class_module": "omnigibson.objects.primitive_object",
+                            "class_name": "PrimitiveObject",
+                            "args": {
+                                "name": "goal_region__target_pop_case_ep1_1",
+                                "primitive_type": "Sphere",
+                                "relative_prim_path": "/goal_region__target_pop_case_ep1_1",
+                                "category": "goal_region_marker",
+                                "fixed_base": true,
+                                "visual_only": true,
+                                "rgba": [
+                                    0.1,
+                                    0.8,
+                                    0.2,
+                                    1.0
+                                ],
+                                "radius": 0.08855395317077637
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "objects_info": {
+        "init_info": {
+            "nightstand_roxnbe_0": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "nightstand_roxnbe_0",
+                    "category": "nightstand",
+                    "model": "roxnbe",
+                    "scale": [
+                        0.9999985098838806,
+                        0.999971330165863,
+                        0.9999985694885254
+                    ],
+                    "fixed_base": true,
+                    "expected_file_hash": "5ba69d219dbaff0546a93fe237b09207"
+                }
+            },
+            "target_pop_case_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "target_pop_case_ep1_1",
+                    "category": "pop_case",
+                    "model": "rzhvvk",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "d9e323dda39d0efffb3ddcd49c00e43d"
+                }
+            },
+            "stack_bottle_of_face_cream_ep1_1": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "stack_bottle_of_face_cream_ep1_1",
+                    "category": "bottle_of_face_cream",
+                    "model": "dztaed",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "44e4e2a16aa77f60a57fbf4170dcc1a6"
+                }
+            },
+            "stack_bottle_of_face_cream_ep1_2": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "stack_bottle_of_face_cream_ep1_2",
+                    "category": "bottle_of_face_cream",
+                    "model": "dztaed",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "44e4e2a16aa77f60a57fbf4170dcc1a6"
+                }
+            },
+            "stack_bottle_of_face_cream_ep1_3": {
+                "class_module": "omnigibson.objects.dataset_object",
+                "class_name": "DatasetObject",
+                "args": {
+                    "name": "stack_bottle_of_face_cream_ep1_3",
+                    "category": "bottle_of_face_cream",
+                    "model": "dztaed",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "fixed_base": false,
+                    "expected_file_hash": "44e4e2a16aa77f60a57fbf4170dcc1a6"
+                }
+            },
+            "goal_region__target_pop_case_ep1_1": {
+                "class_module": "omnigibson.objects.primitive_object",
+                "class_name": "PrimitiveObject",
+                "args": {
+                    "name": "goal_region__target_pop_case_ep1_1",
+                    "primitive_type": "Sphere",
+                    "relative_prim_path": "/goal_region__target_pop_case_ep1_1",
+                    "category": "goal_region_marker",
+                    "fixed_base": true,
+                    "visual_only": true,
+                    "rgba": [
+                        0.1,
+                        0.8,
+                        0.2,
+                        1.0
+                    ],
+                    "radius": 0.08855395317077637
+                }
+            },
+            "agent_0": {
+                "class_module": "omnigibson.robots.franka",
+                "class_name": "FrankaPanda",
+                "args": {
+                    "name": "agent_0",
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "self_collisions": true,
+                    "fixed_base": true,
+                    "controller_config": {
+                        "arm_0": {
+                            "name": "JointController",
+                            "motor_type": "position",
+                            "command_input_limits": null,
+                            "command_output_limits": null,
+                            "use_delta_commands": false,
+                            "use_impedances": false
+                        },
+                        "gripper_0": {
+                            "name": "MultiFingerGripperController",
+                            "command_input_limits": null,
+                            "mode": "binary"
+                        }
+                    },
+                    "action_type": "continuous",
+                    "action_normalize": false,
+                    "reset_joint_pos": [
+                        -5.253741983324289e-05,
+                        1.897890615509823e-05,
+                        -2.6854851967073046e-05,
+                        -0.06982837617397308,
+                        5.3535484767053276e-05,
+                        0.08162922412157059,
+                        -5.682115806848742e-05,
+                        0.019974740222096443,
+                        0.019747434183955193
+                    ],
+                    "obs_modalities": [
+                        "rgb"
+                    ],
+                    "include_sensor_names": null,
+                    "exclude_sensor_names": null,
+                    "grasping_mode": "assisted",
+                    "expected_file_hash": "9ddd461281d1c875d2ae552f61751c3f"
+                }
+            }
+        }
+    }
+}

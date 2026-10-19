@@ -1,128 +1,48 @@
 #!/usr/bin/env bash
-# Unit tests of benchmark and shared tooling, in two tiers.
-#  1. Standard library and a shell only (no numpy, no simulator, no image): the graders and collect hooks that decide a
-#     verdict from files, the usage gateway's raw log. Run by run_all.sh and the CI job `unit-tests` (not required; the
-#     tests that enforce PROTOCOL Appendix H also run in the required job `invariants`, run_invariants.sh), except one
-#     slow test that waits for `--all`.
-#  2. numpy + requests (no simulator, no image, no GPU): the shared service layers on stub simulators (the
-#     eai-standard/2.2 and 2.4 selftests: the layers' in-trial crash recovery, request checks; the rcb_service and realtime layers) and the
-#     benchmarks' service and grader tests. Run when both modules can be imported (the CI job `unit-tests` installs
-#     them), skipped with a note otherwise; `--all` makes a missing module a failure.
-# Not here: tests that need a simulator image or media libraries (scripts/roboolympics/tests/: the
-# eai-robofunolympics image; scripts/maniguard/tests/test_mg_*.py: imageio, Pillow), run by hand as each benchmark's
-# docs/benchmarks/<bench>.md says. The resource monitor's own tests are run by check-monitor.py.
+# Unit tests of the repository's shared tooling, in two tiers.
+#  1. Standard library only: the runner's helpers (scripts/tests/), the usage gateway's raw log and budget stop, the
+#     runner's lane stop and infra rules (account_failure_check.py --selftest).
+#  2. numpy + requests (no simulator, no image, no GPU): the eai-standard/2.2 and 2.4 layers' selftests on a stub
+#     simulator (embodied_first_exam/standard/). Run when both modules can be imported, skipped with a note otherwise;
+#     `--all` makes a missing module a failure.
+# A benchmark's own tests live with its tasks (their tests/), not here. The resource monitor's tests are run by
+# check-monitor.py.
 # Usage: check-unit-tests.sh [--all] [--only <path prefix>...]   (repo-level; run_all.sh calls it once)
-#   --only: just the tests whose path (scripts/...) starts with one of the prefixes (a pull request's scope,
-#   ci_checks/ci_scope.py RCB_SCOPE_PATHS); the shared layers' tests (scripts/tests/, eai_standard/, usage_gateway/) run
-#   in the full suite. The tests run concurrently (ci_checks/parallel.py, -j from RCB_CI_JOBS or the CPUs; the service
-#   tests on ports one at a time, see lane() below).
+#   --only: just the tests whose repository path starts with one of the prefixes (ci_checks/ci_scope.py RCB_SCOPE_PATHS).
+#   The tests run concurrently (ci_checks/parallel.py); the ones that start a service run one at a time (lane `port`).
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"; rc=0
-if [ "${1:-}" = "--one" ]; then   # --one <timeout s> <test path under scripts/> [arguments of the test]
+if [ "${1:-}" = "--one" ]; then   # --one <timeout s> <test path in the repository> [arguments of the test]
   limit="$2" t="$3"; shift 3
-  [ -f "$root/scripts/$t" ] || { echo "FAIL scripts/$t: listed in check-unit-tests.sh but missing"; exit 1; }
-  if out=$(cd "${TMPDIR:-/tmp}" && PYTHONDONTWRITEBYTECODE=1 timeout "$limit" python3 "$root/scripts/$t" "$@" 2>&1); then
-    echo "ok scripts/$t${*:+ $*}: ${out##*$'\n'}"; exit 0
-  else echo "FAIL scripts/$t${*:+ $*}:"; echo "$out" | tail -n 40; exit 1; fi
+  [ -f "$root/$t" ] || { echo "FAIL $t: listed in check-unit-tests.sh but missing"; exit 1; }
+  if out=$(cd "${TMPDIR:-/tmp}" && PYTHONDONTWRITEBYTECODE=1 timeout "$limit" python3 "$root/$t" "$@" 2>&1); then
+    echo "ok $t${*:+ $*}: ${out##*$'\n'}"; exit 0
+  else echo "FAIL $t${*:+ $*}:"; echo "$out" | tail -n 40; exit 1; fi
 fi
 all=0; [ "${1:-}" = "--all" ] && { all=1; shift; }
 only=(); if [ "${1:-}" = "--only" ]; then shift; only=("$@"); fi
 self=ci_checks/check-unit-tests.sh; cmds=""   # the commands run from the repository root
-want() {   # want <path under scripts/>...: one of them is in the --only scope (or no --only)
+want() {   # want <path>: in the --only scope (or no --only)
   [ ${#only[@]} -eq 0 ] && return 0
-  local p a; for a in "$@"; do for p in "${only[@]}"; do [[ "scripts/$a" == "$p"* ]] && return 0; done; done; return 1
+  local p; for p in "${only[@]}"; do [[ "$1" == "$p"* ]] && return 0; done; return 1
 }
-# Tests that start a service on a port they pick (or may: sockets, subprocesses, servers) run one at a time, in the lane
-# `port` of parallel.py: two of them at once can pick the same free port and one test then talks to the other's service
-# (seen on the 4-CPU runners: eai_standard/selftest.py's client reached v2_4/selftest.py's service). The rest run concurrently.
-lane() { grep -qE 'socket|free_port|_PORT|Popen|serve|import test_' "$root/scripts/$1" 2>/dev/null && printf '@lane:port '; }
-run() {   # run <timeout s> <test path under scripts/> [arguments of the test]: queue it when in scope
+lane() { grep -qE 'socket|free_port|_PORT|Popen|serve|import test_' "$root/$1" 2>/dev/null && printf '@lane:port '; }
+run() {   # run <timeout s> <test path in the repository> [arguments of the test]: queue it when in scope
   want "$2" && cmds+="$(lane "$2")bash $self --one $*"$'\n'
 }
-for t in robolab/tests/test_grade_standard.py \
-         myosuite/tests/test_standard_grade.py mujoco-playground/tests/test_grade_privileged.py \
-         robocasa/tests/test_graders.py usage_gateway/tests/test_rawlog.py usage_gateway/tests/test_paths.py usage_gateway/tests/test_budget_stop.py \
-         tests/test_codex_tools_off.py tests/test_task_seed.py tests/test_runner_results.py tests/test_retry_policy.py tests/test_stamp_mtimes.py; do
+for t in scripts/usage_gateway/tests/test_rawlog.py scripts/usage_gateway/tests/test_paths.py \
+         scripts/usage_gateway/tests/test_budget_stop.py scripts/tests/test_codex_tools_off.py scripts/tests/test_task_seed.py \
+         scripts/tests/test_runner_results.py scripts/tests/test_retry_policy.py scripts/tests/test_stamp_mtimes.py; do
   run 300 "$t"
 done
-run 120 account_failure_check.py --selftest   # the runner's lane stop and infra rules (account, usage gateway) on synthetic trials
-# RoboDojo's collect hook and standard grader on both of its rules (its tasks pull request adds the test); its privileged
-# grader's test needs numpy and runs in the second tier
-if [ -f "$root/scripts/robodojo/tests/test_standard_grading.py" ]; then run 300 robodojo/tests/test_standard_grading.py; fi
-# board 0151: RoboOlympics' exported-task live grading and IKEA MuJoCo's standard grader (their pull requests add them)
-for t in roboolympics/tests/test_live_export.py roboolympics/tests/test_matchlow_skill_server.py ikea_mujoco/tests/test_standard_grade.py ambench/tests/test_standard_grading.py; do
-  if [ -f "$root/scripts/$t" ]; then run 300 "$t"; fi
-done
-# RoboSafeBench's standard grader (its tasks pull request adds the test)
-if [ -f "$root/scripts/robosafe/tests/test_grade.py" ]; then run 300 robosafe/tests/test_grade.py; run 300 robosafe/tests/test_score.py; fi
-# ... and its standard-realtime grader (the realtime tasks' commit adds the test)
-if [ -f "$root/scripts/robosafe/tests/test_grade_rt.py" ]; then run 300 robosafe/tests/test_grade_rt.py; fi
-# Export and admission contracts need only the standard library; keep them in ordinary CI.
-for t in test_054_reporting test_admission_import test_release_export test_realtime_seed_export test_frozen_source_guard test_variant_export test_image_publication test_mechanism_selection; do
-  if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
-done
-# roboEngineer (#329): the Control Transfer verifier on stub sidecar records and the frozen spec / pin checks (standard
-# library; the service and rollout tests need MuJoCo and the evaluator images: docs/benchmarks/roboengineer.md)
-for t in control_transfer/tests/test_verifier_diagnostics.py control_transfer/tests/test_neuralfly_spec.py \
-         control_transfer/tests/test_go2_spec.py quadrotor_landing/tests/test_native.py; do
-  if [ -f "$root/scripts/$t" ]; then run 300 "$t"; fi
-done
-# DexHand's graders, privileged and standard, on stub replays (its tasks pull request adds the test)
-if [ -f "$root/scripts/dexhand/tests/test_grading.py" ]; then run 300 dexhand/tests/test_grading.py; fi
-# IKEA MuJoCo's privileged grader on a stub replay that crashes or not (its tasks pull request adds the test)
-if [ -f "$root/scripts/ikea_mujoco/tests/test_grade.py" ]; then run 300 ikea_mujoco/tests/test_grade.py; fi
-# standard library too, but slow (RoboLab's collect hook under its real time limits: two to four minutes): with --all
-# (board 0151: without grading replays it takes about a minute, so it runs in every scope now)
-run 900 robolab/tests/test_finalize.py
-
+run 120 scripts/account_failure_check.py --selftest
 if python3 -c "import numpy, requests" 2>/dev/null; then
   export PATH="$(dirname "$(command -v python3)"):$PATH"   # run.sh starts `python`: the same interpreter
-  for t in eai_standard/selftest.py eai_standard/v2_4/selftest.py \
-           humanoidbench/tests/test_standard_service.py humanoidbench/tests/test_realtime_service.py \
-           kinder/tests/test_standard_service.py \
-           behavior/tests/test_fall.py behavior/tests/test_grading.py behavior/tests/test_standard_service.py \
-           molmospaces/tests/test_ms.py robolab/tests/test_grade_privileged.py robolab/tests/test_server.py \
-           robolab/tests/test_tooling_units.py robotwin/tests/test_gripper_state.py robotwin/tests/test_standard_service.py \
-           robopaint_strict/tests/test_server_requests.py roboarc/tests/test_server_requests.py \
-           mujoco-playground/tests/test_standard_2_1_servers.py dexjoco/tests/test_standard_server.py \
-           dexjoco/tests/test_grade_privileged.py dexjoco/tests/test_server_validation.py \
-           myosuite/tests/test_standard_server.py robowits/tests/test_server_frames.py \
-           robodojo/tests/test_privileged_grading.py; do
-    run 900 "$t"
-  done
-  # Public RT source compilation and actual loopback RCB1/client snapshots; no simulator.
-  for t in test_public_observation_compile test_public_rt_oracle_http test_public_paused_oracle_http test_live_verdict test_tidy_observe_barrier test_quaternions; do
-    if [ -f "$root/scripts/robosafe/tests/$t.py" ]; then run 300 "robosafe/tests/$t.py"; fi
-  done
-  # Existing accepted native records compile through the same converter as legacy references.
-  if [ -f "$root/scripts/robosafe/tests/test_compile_record.py" ]; then run 300 robosafe/tests/test_compile_record.py; fi
-  # RoboSafeBench's adapter serves the control interface only (its tasks pull request adds the test)
-  if [ -f "$root/scripts/robosafe/tests/test_interface_guard.py" ]; then run 300 robosafe/tests/test_interface_guard.py; fi
-  if [ -f "$root/scripts/robosafe/tests/test_picture_delivery.py" ]; then run 300 robosafe/tests/test_picture_delivery.py; fi
-  if [ -f "$root/scripts/robosafe/tests/test_picture_resume.py" ]; then run 300 robosafe/tests/test_picture_resume.py; fi
-  # Panda Dynamic Scenes' graders, privileged and standard (its tasks pull request adds the test)
-  if [ -f "$root/scripts/pandadyn/tests/test_grading.py" ]; then run 300 pandadyn/tests/test_grading.py; fi
-  # iSpatialGym's frozen instances: goal.json restores upstream's TRO, nothing answer-like in instance.json, the start-only
-  # BDDL states no goal (its tasks pull request adds the test)
-  if [ -f "$root/scripts/ispatialgym/tests/test_instance.py" ]; then run 300 ispatialgym/tests/test_instance.py; fi
-  # board 0151: the live-grading tests of MetaWorld+ and LIBERO-MAX (their pull requests add them)
-  for t in metaworldplus/tests/test_live_grading.py libero-max/tests/test_live_grading.py roboarc/tests/test_live_grade.py \
-           roboolympics/tests/test_live_adapter.py ispatialgym/tests/test_grading.py robowits/tests/test_live_grading.py \
-           robopaint_strict/tests/test_live_grading.py robodojo/tests/test_server.py robolab/tests/test_live_video.py \
-           roboolympics/tests/test_matchlow_sync_step.py; do
-    if [ -f "$root/scripts/$t" ]; then run 900 "$t"; fi
-  done
-  # LIBERO-MAX keeps its own copy of rcb_service.py (since board 0151 the layer's bytes): the classes of the shared
-  # service test that apply to it, run against that copy
-  want humanoidbench/tests/test_standard_service.py libero-max/shared/standard &&
-    cmds+="@lane:port RCB_SERVICE_DIR=$(printf %q "$root/scripts/libero-max/shared/standard") bash $self --one 900 humanoidbench/tests/test_standard_service.py Endpoints Submit Observe AgentClock ResetCapability ResetChecks Client Boot"$'\n'
-  # the realtime clock under request load: the classes that do not depend on the runner's speed (TestClockUnderLoad
-  # measures step counts under floods of requests; run the whole file by hand on a quiet host)
-  run 900 humanoidbench/tests/test_realtime_load.py TestRequests TestStallEvidence TestGraders
+  for t in embodied_first_exam/standard/selftest.py embodied_first_exam/standard/v2_4/selftest.py; do run 900 "$t"; done
 elif [ $all -eq 1 ]; then
   echo "FAIL check-unit-tests.sh --all: numpy and requests are needed for the second tier (pip install numpy requests)"; rc=1
 else
-  echo "note check-unit-tests.sh: numpy / requests not installed, the service-layer tests were not run (CI job unit-tests runs them; locally: pip install numpy requests, then check-unit-tests.sh --all)"
+  echo "note check-unit-tests.sh: numpy / requests not installed, the service-layer tests were not run (pip install numpy requests, then check-unit-tests.sh --all)"
 fi
 if [ -z "$cmds" ]; then echo "ok check-unit-tests.sh: no test in scope (${only[*]})"
 else (cd "$root" && printf %s "$cmds" | python3 ci_checks/parallel.py) || rc=1; fi

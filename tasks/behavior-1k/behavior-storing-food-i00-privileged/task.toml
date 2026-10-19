@@ -1,0 +1,91 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
+
+[task]
+name = "robot-coding-bench/behavior-storing-food-i00-privileged"
+description = "BEHAVIOR-1K v3.9.2 (2026 BEHAVIOR Challenge) storing_food (R1Pro mobile manipulator, OmniGibson / Isaac Sim): produce one replayable trajectory. Store the food in the kitchen cabinets. Two boxes of oatmeal, two bags of chips, two bottles of olive oil and two jars of sugar stand on the kitchen countertop; put all eight inside kitchen cabinets (any cabinet, they need not all go into the same one). Frozen scene instance (challenge public_test instance 301)."
+authors = [{ name = "qineng" }]
+keywords = ["robotics", "behavior", "omnigibson", "isaac-sim", "r1pro", "mobile-manipulation", "code-as-policy", "trajectory", "storing_food"]
+
+[metadata]
+author_name = "qineng"
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
+simulator = "behavior"            # BEHAVIOR-1K v3.9.2 = OmniGibson 3.9.2 on Isaac Sim (the 2026 challenge stack)
+robot = "r1pro"
+family = "storing_food"
+mode = "privileged"               # privileged state, unlimited resets, thin primitives (docs/protocol/README.md §3)
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+oracle = "none"
+oracle_evidence = "No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (662 s on average); demonstration video (662 s): https://player.vimeo.com/video/1114059272 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §2.7)."
+instance_seed = 301               # scene = environment/instance.json (2026 challenge public_test instance 301 + its state hash); identity = dataset.toml digest
+expert_time_estimate_hours = 3.0
+
+[metadata.resources]
+# minimum compute to run this task (docs/protocol/README.md §2.9)
+min_cpus = 6.0
+min_memory_gb = 16.0
+min_gpu_memory_gb = 10.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 6.0
+verifier_min_memory_gb = 16.0
+verifier_min_gpu_memory_gb = 10.5
+measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (batch_eval_live vram override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + ws-1, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (board 0048, ps); author: 13-16 GB of RAM per Isaac process"
+
+[metadata.resources.limits]
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
+scope = "trial"
+max_gpu_memory_gb = 24.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 24.0
+trial_max_memory_gb = 24.0
+measured = "GPU: 15.1 GiB held for most of the episode by the reference solution alone on a 48 GB card (L40S) with RCB_TEXTURE_BUDGET=0.1, the tasks' default (the tasks' own monitor, three oracle runs of two tasks on two hosts, 10-10: 15.14-15.15 GiB; the 9.0 GiB of the live sampler (nvidia-smi every 30 s, 13 AWS hosts + ws-1) was below that; uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile) -> max(1.5 x peak, peak + 4) rounded up to 24 (was 16: 5 % above the reference solution's own use); memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.8 GiB over 5 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
+
+[metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
+main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
+
+[metadata.seeds]
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 301
+allowed = [301]
+oracle = []
+
+[verifier]
+timeout_sec = 85800.0             # two fresh-process replays, each capped at 28000 s by tests/grade.py (1200 s start + 1.5
+                                  # steps/s for at most 40,000 rows, floor 3600 s), + the video replay after the verdict (the
+                                  # same cap: PROTOCOL §4) + 30 min (tests/grade.py VERIFIER_TIMEOUT_S); slowest replay
+                                  # measured: 1.88 steps/s (filmed, 2026-10-09), Isaac start up to 1,115 s
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
+
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+[agent]
+timeout_sec = 7200.0             # BEHAVIOR budget: every Python process pays ~3 min of Isaac Sim + scene load, ~10 steps/s (docs/benchmarks/behavior.md)
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 8
+memory_mb = 29696
+
+[verifier.environment]
+build_timeout_sec = 1800.0
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

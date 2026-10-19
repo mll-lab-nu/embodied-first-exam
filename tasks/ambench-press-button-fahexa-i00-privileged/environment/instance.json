@@ -1,9 +1,0 @@
-{
- "env_id": "PressButton-Am-FAHexa-Abs-PID-Direct-v0",
- "seed": 0,
- "task": "PressButton",
- "action_dim": 8,
- "control_hz": 120,
- "episode_length_s": 20.0,
- "initial_sha": "c125ec8a4fdd266248f2224493e8e50fd06b6648f7a21ca8568d8dd84267acd8"
-}

@@ -7,9 +7,9 @@
 # hydra, torch-cluster), and ManiGuard's evaluator only (images/maniguard/maniguard-keep.txt: its import closure; no data
 # generator, demonstrations, grasp annotations, policy servers or SFT code).
 # NO dataset: the licensed BEHAVIOR-1K 3.7.2 data root is mounted read-only at /data from $RCB_MANIGUARD_DATA
-# (scripts/maniguard/prep_data.py). Isaac Sim needs an RTX-class GPU even headless; a task's compose reserves it.
+# (images/maniguard/prep_data.py). Isaac Sim needs an RTX-class GPU even headless; a task's compose reserves it.
 # BUILD_ONLY, never pushed (NVIDIA Isaac Sim inside; images/maniguard/BUILD_ONLY). Build from the repository root:
-#   docker build -t ghcr.io/mll-lab-nu/eai-maniguard:$(cat images/maniguard/VERSION) -f images/maniguard/Dockerfile .
+#   docker build -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) -f images/maniguard/Dockerfile .
 # Locks: the build writes the installed package sets to /opt/locks/{dpkg,conda,pip}.lock and fails unless they equal the
 # committed images/maniguard/*.lock (copied from the first tested build, 2026-10-03).
 FROM nvidia/cuda:12.4.1-base-ubuntu22.04@sha256:0f6bfcbf267e65123bcc2287e2153dedfc0f24772fb5ce84afe16ac4b2fada95

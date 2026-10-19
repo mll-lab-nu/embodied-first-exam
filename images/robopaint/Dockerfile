@@ -1,9 +1,9 @@
 # eai-robopaint (formerly rcb-robopaint, rcb-maniskill-paint): ManiSkill 3.0.1 (SAPIEN 3.0.3) + the Spline-FRIDA brush-stroke model
 # (github.com/cmubig/Frida @ 1652973, GPL-3.0, weights included in that repository) + libmypaint 1.6.1 (ISC) with the
 # mypaint-brushes 2.0.2 presets (CC0) for the brush families. Infrastructure only — contains no benchmark code: tasks `FROM` it and
-# COPY their own tooling (rcb_brush.py). Tag = ghcr.io/mll-lab-nu/eai-robopaint:<images/robopaint/VERSION>
+# COPY their own tooling (rcb_brush.py). Tag = ghcr.io/mll-lab-nu/efe:robopaint-<images/robopaint/VERSION>
 # (this image's own version); the build context is the repo root:
-#   docker build -f images/robopaint/Dockerfile -t ghcr.io/mll-lab-nu/eai-robopaint:$(cat images/robopaint/VERSION) .
+#   docker build -f images/robopaint/Dockerfile -t ghcr.io/mll-lab-nu/efe:robopaint-$(cat images/robopaint/VERSION) .
 # Physics (PhysX) and the stroke models run on the CPU (torch CPU build). SAPIEN still needs a Vulkan device (the NVIDIA GPU) to
 # build a scene at all (visual shapes create render materials) and to render the cameras: NVIDIA_DRIVER_CAPABILITIES=all makes the
 # container runtime mount the driver's Vulkan/EGL libraries and the ICD json files below point the loaders at them. Tasks pass the

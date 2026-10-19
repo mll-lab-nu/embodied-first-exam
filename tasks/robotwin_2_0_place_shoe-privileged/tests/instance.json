@@ -1,8 +1,0 @@
-{
- "task": "place_shoe",
- "seed": 28831,
- "embodiment": "aloha-agilex",
- "state_sha": "161cafd8612a",
- "text": "Use one arm to grab the shoe from the table and place it on the mat.",
- "n_active_joints": 16
-}

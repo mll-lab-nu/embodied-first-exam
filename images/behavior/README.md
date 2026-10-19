@@ -34,15 +34,15 @@ eai-behavior is never pushed to a registry (user decision 2026-09-28; PROTOCOL Â
 
 Each host builds it from the repository root (`BUILD_ONLY` has the command, the licences and the data it needs): the build
 pulls the public base from StanfordVL (14.7 GB), runs the pinned apt step and is tagged
-`ghcr.io/mll-lab-nu/eai-behavior:0.1.1`, the name the tasks use:
+`ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1`, the name the tasks use:
 ```bash
-docker build -t ghcr.io/mll-lab-nu/eai-behavior:$(cat images/behavior/VERSION) -f images/behavior/Dockerfile .
+docker build -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) -f images/behavior/Dockerfile .
 ```
 A host that built it as `rcb-behavior:0.1.1` may `docker tag` that image instead (the same build).
 
 To check a build against the tested image:
 ```bash
-img=ghcr.io/mll-lab-nu/eai-behavior:0.1.1
+img=ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1
 base=stanfordvl/behavior@sha256:2702900192741904e69a573aa7869ea51c592586f9791050796efc37faa893fb
 # 1. layers 1-16 are the official base
 diff <(docker image inspect -f '{{range .RootFS.Layers}}{{println .}}{{end}}' $base | head -16) \

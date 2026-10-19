@@ -4,26 +4,21 @@
 for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "robolab"`, `robot = "franka-robotiq-2f85"`.
 53 families, each as a privileged task `robolab-<family>-i00-privileged` and its standard twin
 `robolab-<family>-i00-standard` (`eai-standard/2.2`), on the same frozen instance. Results are attributed by DIGEST
-(PROTOCOL H.8); `scripts/robolab/regrade.py` re-grades recorded trials under the current success term (Re-grading).
+(PROTOCOL H.8).
 
-## Tasks and generator
-- One generator: `python3 scripts/robolab/mk_tasks.py` writes every RoboLab task dir (both modes) from
-  `scripts/robolab/` alone: `families.json` (per family: RoboLab's task class and file, the goal, the success term's
-  source, the texts of both modes, the oracle level, the cited positives), `instances/<family>.json` (the frozen
-  instances), `oracles/<family>/` (the reference solutions and the standard oracle's recorded joint targets), `shared/`
-  (the tooling `rcb_robolab.py`, the oracles' skills `ref_primitives.py`), `template/<mode>/` (every other task file) and
-  `scripts/eai_standard/` (the 2.2 layer and the standard client). Both twins of a family are written to a scratch
-  directory, passed through `scripts/task_conventions.py`'s `normalize()` and then synced into `tasks/`. Re-running it leaves
-  `git diff tasks/` empty; `--check` only compares.
+## Tasks
+- The task directories are the deliverable; the tooling that built them is kept outside this repository. Each family's
+  frozen instance is in its task dir (`tasks/robolab/robolab-<family>-i00-privileged/environment/instance.json`); the code
+  the tasks share has its one source in `embodied_first_exam/benchmarks/robolab/` (the tooling `rcb_robolab.py`, the oracles' skills
+  `ref_primitives.py`) and `embodied_first_exam/standard/` (the 2.2 layer and the standard client).
 - A family is RoboLab's benchmark task of that name, its success predicate RoboLab's own `success` termination term.
-  `families.json` holds the 53 families that have tasks: the 2 with a reference solution and the 51 with
+  The 53 families that have tasks are the 2 with a reference solution and the 51 with
   a graded positive example. 35 further RoboLab tasks were frozen but have no positive yet (one is needed before
-  review); their entries and instances are not kept here (repository history, 9621e47d1).
+  review); their instances are not kept here (repository history, 9621e47d1).
 - The frozen instance is the full scene state after RoboLab's canonical seeded reset (`env.reset()` twice, as RoboLab's
   evaluation loop does), with its state hash, made in the image by `rcb_robolab.py make-instance --task <f> --seed 0`;
   the tasks carry it in `environment/` and `tests/` (privileged) and `environment/sim/` (standard). Each instance was
   checked in a second fresh process: the same hash, success false at t = 0 and during a 1 s hold.
-- New family: add its entry to `families.json` and `instances/`, then run the generator and `cd tasks && harbor add --scan .`.
 
 ## Oracle and review
 - banana_in_bowl and rubiks_cube_left_of_bowl have a reference solution: `solution/oracle_<family>.py`, a human-written
@@ -65,22 +60,24 @@ success from firing before the task is done:
 ## Image and host
 - `images/robolab/` (Isaac Lab 2.3.2 / Isaac Sim 5.1 from the pinned `uv.lock`, RoboLab's Apache-2.0 asset library baked
   in, with the remote files of the asset library: Network, below), tagged
-  `ghcr.io/mll-lab-nu/eai-robolab:<images/robolab/VERSION>`. It
+  `ghcr.io/mll-lab-nu/efe-private:robolab-<images/robolab/VERSION>`. It
   contains NVIDIA Isaac Sim, whose licence forbids redistribution: **BUILD_ONLY**.
   `images/robolab/BUILD_ONLY` has the licences, the build command
-  (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/eai-robolab:$(cat images/robolab/VERSION) .`),
+  (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .`),
   the check of a build and how a CI machine builds it.
+- `images/robolab-files/`: `ghcr.io/mll-lab-nu/efe-private:robolab-files-<VERSION>`, files only (`FROM scratch`): the tooling
+  `rcb_robolab.py` that the privileged agent and verifier images `COPY --from` (Tooling, below); BUILD_ONLY (private),
+  pulled with the organization's token like eai-robolab.
 - Isaac needs an RTX-class GPU even headless (PhysX runs on the CPU). One Isaac simulator at a time per 32 GB of host RAM.
 - Standard mode: the agent container and the verifier use the one digest-pinned client image of every standard task and
-  its exact pip pins (`scripts/eai_standard/client.env`, `client-requirements.txt`, copied into `environment/`); only the
+  its exact pip pins (`embodied_first_exam/standard/client.env`, `client-requirements.txt`, copied into `environment/`); only the
   `sim` sidecar uses eai-robolab.
 - Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount their own `*_trusted` cache
   volumes, never the agent's; every cache volume is scoped to the trial's compose project (no fixed name).
 
 ## Network
 The agent reaches the model APIs and the package registries (PyPI, apt archives), nothing else: `[agent] network_mode =
-"allowlist"` with the hosts of `scripts/set_agent_egress.py`, in both templates' `task.toml.tmpl` (`mk_tasks.py` fills
-the host list from that script).
+"allowlist"` with the hosts of `scripts/set_agent_egress.py`, in every task's `task.toml`.
 
 | Service | Network |
 |---|---|
@@ -109,7 +106,7 @@ the host list from that script).
   simulator image, and the verifier's image is not the agent's.
 
 ## Time budget
-3600 s for every task of both modes: each task's own `[agent] timeout_sec`, the generator's `CUTOFF_SEC` (PROTOCOL §2,
+3600 s for every task of both modes: each task's own `[agent] timeout_sec` (PROTOCOL §2,
 docs/protocol/running.md "The agent's time"); every instruction states it in its closing `## Time limit` section, and the benchmark's
 own text names no number. Every Python process pays about 2 minutes of Isaac launch and scene build, so an agent's
 iterations cost more than in the other simulators.
@@ -150,12 +147,6 @@ iterations cost more than in the other simulators.
   accepted trajectory (100,000 rows: 14,234 s each) plus 600 s. Standard: `[[verifier.collect]] timeout_sec = 3600`
   (`HOOK_BUDGET_S`, the same number) = the episode end (up to 2700 s through a resume) + the video encode (at most 600
   s, CPU, at most 3001 frames) + a margin; the hook uses no GPU after the service exits.
-- Tests without a simulator (numpy only): `scripts/robolab/tests/test_*.py`, each run as a script (RoboLab and YAMLab
-  together): both graders on synthetic records, the whole `finalize.sh` with stand-ins for the service's end and the video
-  encode (live success / failure / settle failure, crashes between and inside calls, instance mismatch, no episode.json,
-  a failing, crashing or hanging encode; no case may start a replay), the tooling's replay CLI with a failing video, and the
-  real `server.py` on the real shared layer with a stub simulator over HTTP (malformed requests, the step cap, the start
-  check, the live video's frames and a broken camera).
 - The video (standard) is filmed during the live episode by the service (`live_video.py`): Isaac Lab
   renders every camera with each control step anyway (the observation), so a frame (the tooling's `_video_frame`: the
   viewport cameras + the wrist camera) is taken every 3 control steps (5 per simulated second) and written as a JPEG file
@@ -166,8 +157,6 @@ iterations cost more than in the other simulators.
   that cannot open, a frame that cannot be rendered or written and an encoder that fails at close (`video_ok` false in the
   replay's result; `stop_video()` returns None), and the frames go straight to the encoder. A trajectory longer than
   9,000 control steps is filmed as a time lapse (at most 9,000 frames, `MAX_VIDEO_FRAMES`).
-- `scripts/robolab/regrade.sh <task> <trial> <out>` re-grades a finished trial with the current task version in two fresh
-  processes (the review's determinism check), on the host the trial ran on.
 - **Re-scoring a standard trial recorded while a grading replay still decided**: its live verdict is `final.json`
   `success` (the live result, merged from `episode.json`); `infra_error` only when the live record is missing (no or
   unfinalized `final.json`, no `live_sha`: no `episode.json`, the service never ended the episode) or the service gave up with `infra_error`;
@@ -183,20 +172,27 @@ iterations cost more than in the other simulators.
 - `RCB_STARTUP_TIMEOUT_S = 900`: the scene builds measured 99-217 s; 900 s is more than four times the slowest.
 - The crash recovery is exercised on the CPU with a test double of the tooling under `run.sh` and a restart loop (kills
   inside and between calls, an exact-hash mismatch, three crashes inside calls, the 400s), with the shared layer's own
-  selftest; `scripts/robolab/kill_test.sh` is the acceptance test on a GPU host (Harbor oracle, the service killed
-  mid-episode). Per-call state hashing only reads the scene (`InteractiveScene.get_state` reads PhysX views into Isaac
+  selftest. Per-call state hashing only reads the scene (`InteractiveScene.get_state` reads PhysX views into Isaac
   Lab's timestamped buffers and writes nothing), so it cannot change a live run.
 
 ## Tooling (file names)
 | main's convention | RoboLab |
 |---|---|
-| `environment/rcb_traj.py` (privileged tooling, `Session`) | `environment/rcb_robolab.py` (`Session`: the frozen scene state, thin primitives, rendering, recording, replay) |
-| `tests/rcb_traj.py` | `tests/rcb_robolab.py` |
-| standard sidecar | `environment/sim/server.py` (the 2.2 adapter), `finalize.sh`, `rcb_robolab.py`; `run.sh`, `rcb_limited.py`, `rcb1.py` from `scripts/eai_standard/` |
-| `rcb_client.py`, `rcb1.py` | the same names (`scripts/eai_standard/`) |
+| `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_robolab.py` in the agent's image (`Session`: the frozen scene state, thin primitives, rendering, recording, replay), from the files-only image below |
+| `tests/rcb_traj.py` | `/tests/rcb_robolab.py` in the verifier's image, from the same files-only image |
+| standard sidecar | `environment/sim/server.py` (the 2.2 adapter), `finalize.sh`, `rcb_robolab.py`; `run.sh`, `rcb_limited.py`, `rcb1.py` from `embodied_first_exam/standard/` |
+| `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`) |
+
+The privileged tasks carry no copy of the tooling: their `environment/Dockerfile` and `tests/Dockerfile` take
+`rcb_robolab.py` with `COPY --from` from the files-only image `ghcr.io/mll-lab-nu/efe-private:robolab-files-<version>` (`images/robolab-files/`,
+`scripts/files_image.py`; FILES.json pins its digest and the file's sha256; BUILD_ONLY, private like eai-robolab), built
+from its one source `embodied_first_exam/benchmarks/robolab/rcb_robolab.py`. The verifier's image gets its own copy from that image when
+it is built; nothing from the agent's container reaches it. The standard tasks keep their copy in `environment/sim/`
+(bind-mounted at `/srv`). After a change to `rcb_robolab.py`: bump `images/robolab-files/VERSION`, `python3 scripts/files_image.py build
+robolab-files`, push it, `python3 scripts/files_image.py pin robolab-files <digest>`.
 
 The tooling records (T, 8) actions (7 joint targets + the binary gripper command) at 15 Hz. Every copy of the tooling and
-of the standard sidecar files is byte-identical across the benchmark (`check-tooling-identity.sh`); the tooling's TASKS
+of the standard sidecar files is byte-identical across the benchmark, the files image's included (`check-tooling-identity.sh`); the tooling's TASKS
 registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 without a positive), so adding a family later does not change existing tasks.
 
 ## Declarations
@@ -204,7 +200,7 @@ registry lists all 88 RoboLab tasks that were frozen (the 53 here and the 35 wit
   recording, replay and rendering. Task-level skills (grasp, place, navigate) are never added to the agent's tooling;
   reference solutions keep theirs under `solution/`.
 - **World-frame information.** Standard tasks never say where things are in the world (docs/protocol/standard_mode.md §10,
-  `scripts/robolab/ci/advisory-world-frame.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
+  `ci_checks/benchmarks/robolab/advisory-world-frame.sh`); the robot's root frame (Franka base at the origin) is the world convention. Privileged tasks
   give the privileged state through the tooling.
 
 ## Standard mode (eai-standard/2.2)
@@ -218,7 +214,7 @@ Requests are checked completely before the first control step: a field of the wr
 `video_fps`, `note`, `cameras`, `interpolate`, `video`, `type`, `depth`), a value out of range, an `ee_pose` position more
 than 2 m from the robot's base on any axis or a zero quaternion is a 400 that executes nothing; an absent or null field
 takes its default. One case is left in
-the shared layer (`scripts/eai_standard/rcb_limited.py`): `actions` sent as a JSON object is converted before the adapter
+the shared layer (`embodied_first_exam/standard/rcb_limited.py`): `actions` sent as a JSON object is converted before the adapter
 sees it and still ends the episode with a 500.
 
 ## Known issues
@@ -237,20 +233,6 @@ sees it and still ends the episode with a 500.
   that looks ordinary (rare: about once in 350 trials); in standard mode that episode is lost. A
   privileged `s.reset()` does not restore the start bit for bit; the verifier replays in a fresh process.
 
-
-## Re-grading recorded trials
-`scripts/robolab/regrade.py JOBS_DIR ... [--parallel N] [--cache-volume V] [--out regrade.jsonl]` re-grades recorded
-trials under the current success term without re-running them. It finds every RoboLab trial in a Harbor jobs tree and
-reads its recorded trajectory (privileged: `artifacts/app/output/trajectory.npz`; standard: the sidecar's
-`trajectory.npz`, or its `journal.f64`) and its recorded verdict. It replays each trajectory once, in a fresh Isaac
-process, with the current task's own tooling copy. At every control step it watches RoboLab's upstream term with the
-one-finger contact (the old verdict) and the current term (the new verdict, settle hold included), and reports where
-each first held.
-- **Same host class.** A trial is graded on the host it ran on (Grading and determinism). The tool prints the host's CPU
-  and GPU and flags a trial `inconclusive` when its recorded success does not reproduce under the old rule here.
-- **Standard trials are conservative.** Under the current rule an early success would not have ended the episode, and
-  the agent could still have released the object; the label is "re-graded under 2026-10-14 rules (conservative)".
-- **Privileged trials are close to exact.**
 
 ## Licences
 RoboLab: Apache-2.0 (code and assets); Isaac Lab: BSD-3-Clause on GitHub, its pip wheels and Isaac Sim 5.1 are NVIDIA
