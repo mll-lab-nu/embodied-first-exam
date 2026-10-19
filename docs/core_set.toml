@@ -1436,10 +1436,6 @@ task = "roboolympics-fun-dunk-realgrasp-i00"
 default_mode = "standard"
 
 [[task]]
-task = "roboolympics-fun-dunk-realgrasp-lower-i00"
-default_mode = "standard"
-
-[[task]]
 task = "roboolympics-fun-free-throw-realgrasp-i00"
 default_mode = "standard"
 
