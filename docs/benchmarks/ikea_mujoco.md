@@ -37,31 +37,18 @@ Four more scenes are in the image (`/opt/ikea/scenes/`) but are not tasks: no re
   with the same hashes, but one replay takes 12,680 / 12,684 s on an Intel Xeon Gold 6230R core, 2.9 x the bar (its
   two screw drives cost 22-26 ms per row).
 
-## Tasks and generator
-- `python3 scripts/ikea_mujoco/mk_tasks.py` writes the privileged tasks, `mk_standard_tasks.py` the standard twins
-  (privileged first: the twins share one reference). `--check` compares only; CI runs both (no simulator needed).
-- Inputs, all in `scripts/ikea_mujoco/`:
-  - `tasks.json`: the texts (goal, success requirements, mechanism, the terminal rules);
-  - `assets.json`: the sha256 of every scene file in the image, and the dataset pin of the meshes (Image and assets);
-  - `bindings.json`: what each scene builds to in the image (initial-state hash, actuators, timestep);
-  - `evidence.json`, `standard_evidence.json`: the Harbor checks and timings the READMEs and the privileged verifier
-    timeouts are written from;
-  - `shared/`: `rcb_ikea.py` (the tooling and the replay), `grade.py` (the verifier), `render_video.py` (the replay
-    video);
-  - `standard/`: the sim service (`server.py`, `ikea_rig.py`, `ikea_nyx.py`, `finalize.sh`; `ikea_nyx.py` drives
-    RoboARC's `nyx_direct.py`, which the tasks get from `embodied_first_exam/benchmarks/roboarc/`), its grader (`grade.py`:
-    transcribes the live episode's `final.json`) and the oracle client, `rigs.json` (camera rigs), `std_reference.py`;
-  - `oracles/<task>/`: how the closed-loop references were built (eket, ikea365, vesken) and stegesund's reference
-    notes; the references themselves are kept in the task directories only (the standard
-    `solution/oracle_actions.npz`, which the privileged `solution/trajectory.npz` is a copy of; a new one dropped in
-    as `oracles/<task>/<task>_ref.npz` or `<task>.npz` is taken while it exists); `tails/variera.npy`: variera's
-    release tail;
-  - `provenance.json`: the scenes' upstream provenance, kept out of the image (PROTOCOL Appendix H.2);
-  - `tests/test_grade.py`: the privileged grader's crash handling on a stub replay, then `tests/test_standard_grade.py`:
-    the standard hook and grader on synthetic `final.json` / `episode.json` (live success, live failure, settle failure,
-    crash give-ups, instance mismatch, no video, missing `final.json`, no replay started) (`ci_checks/check-unit-tests.sh`).
-- Every generator ends with `scripts/task_conventions.py` normalize; the generators also write the egress allowlist
-  of `scripts/set_agent_egress.py`.
+## Tasks
+- The task directories are the deliverable; the tooling that built them is kept outside this repository.
+- In `images/ikea-mujoco/`: `assets.json` (the sha256 of every scene file in the image, and the dataset pin of the
+  meshes; Image and assets), `bindings.json` (what each scene builds to in the image: initial-state hash, actuators,
+  timestep) and `provenance.json` (the scenes' upstream provenance, kept out of the image; PROTOCOL Appendix H.2).
+- Each privileged task carries `rcb_ikea.py` (the tooling and the replay), `tests/grade.py` (the verifier) and
+  `tests/render_video.py` (the replay video); each standard task the sim service (`environment/sim/`: `server.py`,
+  `ikea_rig.py`, `ikea_nyx.py`, `finalize.sh`; `ikea_nyx.py` drives RoboARC's `nyx_direct.py`, which the tasks get from `embodied_first_exam/benchmarks/roboarc/`), its
+  grader (`tests/grade.py`: transcribes the live episode's `final.json`) and the oracle client.
+- The references are kept in the task directories only (the standard `solution/oracle_actions.npz`, which the
+  privileged `solution/trajectory.npz` is a copy of).
+- Every task's agent egress is the allowlist of `scripts/set_agent_egress.py`.
 
 ## Grading (both modes, every task)
 One rule in both modes. Privileged: the deliverable (`/app/output/trajectory.npz`) is replayed open-loop in two fresh
@@ -81,7 +68,7 @@ replayed (below). Success needs all of:
   grader or infrastructure error gives the trial a free retry (PROTOCOL H.5), which the deliverable's own failures must
   not get. A scene that differs from the binding or builds to another initial state is `infra_error 1`.
 - The privileged verifier's time limit covers a trajectory of the task's row cap on a slow trial-class CPU (one
-  reference replay on a Xeon Gold 6230R core, `evidence.json` `slow_replay_wall_s`, with a 1.5x margin), not only the
+  reference replay on a Xeon Gold 6230R core, with a 1.5x margin), not only the
   Harbor host's timing: a verifier that times out writes no verdict.
 - The privileged verifier checks the scene in its image file by file against `tests/runtime_binding.json`
   (`instance_exact`) and its initial-state hash (`instance_ok`); the standard sim service does the same before its
@@ -139,9 +126,9 @@ table penetration (gladom, prefix-jerk), ViperX self-contact on jerk (svallet).
 Each task has one reference for both modes, every row within the joint-speed limits (the privileged
 `solution/trajectory.npz` and the standard `solution/oracle_actions.npz` are the same rows):
 - lack: the authors' demo passed through the clamp;
-- svallet, gladom, variera: the demo time-dilated or centred to the limits (`standard/std_reference.py`); variera's
+- svallet, gladom, variera: the demo time-dilated or centred to the limits; variera's
   demo ended holding the screwdriver, so a 240-row release tail is appended;
-- eket, ikea365, vesken: closed-loop references built on the final physics (build scripts in `oracles/<task>/`): the
+- eket, ikea365, vesken: closed-loop references built on the final physics: the
   demo as the phase guide, with true-state feedback (Jacobian-IK servos, gates, local searches), recorded as the
   executed rows;
 - stegesund: the authors' speed-limited demo, unchanged.
@@ -158,8 +145,7 @@ or the simulator), Codex + GPT-6 Luna xhigh with the pool's lane settings: rewar
 infrastructure error. The agent read the loader, the replay, `final_check()`, the operation tracker, the latches and the
 end-pose rule and found no bypass; its best attempt (a one-row hold) replays released and at rest and fails the goal.
 A malformed or compressed-bomb trajectory, a scene exception and, in standard mode, a simulator error or a malformed
-request field are the agent's 0, never a free retry. Harbor checks: `evidence.json` `maintainer_checks` (eket) and
-`maintainer_checks_standard` (svallet).
+request field are the agent's 0, never a free retry.
 
 ## Timing
 One reference execution against the 4320 s bar (40 % of 10800 s). A Xeon Gold 6230R core (2.1 GHz) is a slow
@@ -194,7 +180,7 @@ agent's budget is the same 10800 s on every host, so on a slow host an agent has
   draws only what MuJoCo's raster drew.
 - The scene code is in git (`images/ikea-mujoco/scenes/<task>/`); the meshes (2,078 files) are on the private Hugging
   Face dataset `eai-v2-internal/ikea-mujoco-assets`, pinned by revision and by every file's sha256 in
-  `scripts/ikea_mujoco/assets.json`. `scripts/ikea_mujoco/fetch_image_context.sh` downloads them, checks them and stages
+  `images/ikea-mujoco/assets.json`. `images/ikea-mujoco/fetch_image_context.sh` downloads them, checks them and stages
   the build context (`images/ikea-mujoco/README.md`).
 - `stage_context.py` refuses a scene text that points at upstream material (H.2).
 

@@ -11,7 +11,7 @@ RoboCasa's [GR1 tabletop tasks](https://github.com/robocasa/robocasa-gr1-tableto
 | metadata | `simulator = "robosuite"`, `robot = "fourier-gr1"`, `family = "robocasa-gr1/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-robocasa-gr1:0.1.0` (`images/robocasa-gr1/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
-| generator | `scripts/robocasa-gr1/` (`import_references.sh` -> `frozen/`, `generate.py` -> `tasks/`); each instance and reference is committed once, in its privileged task (`environment/instance.npz`, `solution/oracle.npz`), which `generate.py` reads; `frozen/` keeps `report.json` and `start_state.json` (a fresh import's `frozen/<slug>/` is deleted once its tasks are generated) |
+| sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 
 ## Scope
 All 24 GR1 tabletop environments with an official demonstration whose reference PR #4 validated, one
@@ -54,9 +54,9 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
 ## Standard-mode service
 `images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's: derived from
 `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect hook is
-`scripts/robocasa-gr1/shared/finalize.sh`; both files are RoboCasa's byte for byte (`docs/benchmarks/robocasa.md`:
+each standard task's `environment/sim/finalize.sh`; both files are RoboCasa's byte for byte (`docs/benchmarks/robocasa.md`:
 graded by the live episode, nothing replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`,
-`RCB_START_SHA` from `scripts/robocasa-gr1/frozen/start_state.json`, a mismatch is infrastructure), the video one
+`RCB_START_SHA` in each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one
 render pass after the verdict; the hook's budget; request validation; the camera calibration is the rendered
 viewpoint).
 
@@ -68,22 +68,12 @@ contains no demonstration data.
 `images/robocasa-gr1/Dockerfile` pins the base image by digest, every pip package, the GR1 tabletop and robosuite
 commits, robosuite's mink controller file and every asset archive by SHA-256 (`fetch_assets.sh`). It reproduces the
 content of the image the tasks were validated with. **Open: a clean rebuild from this Dockerfile** (~9 GB of
-downloads, ~50 GB of disk) and a re-check of the hashes with `import_references.sh` before publishing. Licences: code MIT; RoboCasa's own textures, fixtures and object archives (UT Box) CC-BY-4.0; NVIDIA
+downloads, ~50 GB of disk) and a re-check of the hashes before publishing. Licences: code MIT; RoboCasa's own textures, fixtures and object archives (UT Box) CC-BY-4.0; NVIDIA
 PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes) **CC-BY-NC-4.0** (non-commercial; maintainers to
 confirm publishing, otherwise `BUILD_ONLY`).
 
-## Rebuilding the tasks
-```bash
-docker build -t ghcr.io/mll-lab-nu/eai-robocasa-gr1:$(cat images/robocasa-gr1/VERSION) images/robocasa-gr1
-bash scripts/robocasa-gr1/import_references.sh <PR #4 checkout>
-python3 scripts/robocasa-gr1/generate.py      # ends with scripts/task_conventions.py normalize; re-running reproduces the tasks
-python3 scripts/robocasa-gr1/generate.py --check   # writes nothing; exit 1 if tasks/ differs from a fresh render
-cd tasks && harbor add --scan . && cd ..
-bash ci_checks/run_all.sh tasks/robocasa-gr1-*
-```
-
 ## Evidence
-`scripts/robocasa-gr1/frozen/report.json`, for all 24: not solved at the start; `reset()` bit-exact; the
+For all 24: not solved at the start; `reset()` bit-exact; the
 reference (123–393 actions) succeeds on its final state without truncation; two fresh-process replays end
 in the live state's hash and succeed; the success survives 10 more still steps. Same hashes with and without
 MuJoCo's mesh cache.

@@ -1,6 +1,6 @@
 # roboEngineer / Drone / Neural Fly
 
-> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `scripts/roboengineer/exported.toml`).
+> roboEngineer task names: [roboengineer.md](roboengineer.md) (the package names of #329 used on this page, `control-transfer-*` / `quadrotor-landing-*`, map to `roboengineer-*` in `ci_checks/benchmarks/roboengineer/exported.toml`).
 
 The separately scored `neural-fly-general-v1` task asks a coding agent to track **six timed laps of varied figure-eight commands**, improve a numeric controller over three deployment-feedback rounds, and freeze it for a ten-case held-out bank. Deployment uses **native CPU MuJoCo, NumPy CPU inference and OSMesa software rendering**. This task is simulation transfer with a real-flight-data force surrogate; it is not a physical flight experiment, DAIML reproduction, or PX4 reproduction.
 
@@ -10,7 +10,7 @@ The source is [Neural-Fly Enables Rapid Learning for Agile Flight in Strong Wind
 
 The custom aircraft's published mass is 2.53 kg and thrust-to-weight ratio is 2.2. This benchmark uses those values and 11-inch propeller visuals, but approximates the body as an untilted symmetric X quadrotor with rotor coordinates (±0.195, ±0.195) m, diagonal inertia (0.04, 0.04, 0.07) kg·m² and yaw torque/thrust ratio ±0.02 m. The paper aircraft is a wider, tilted-rotor custom platform. Geometry, inertia, lag, sensor noise and contact shapes here are benchmark assumptions, not a complete aircraft identification.
 
-`calibrate_fly.py` fits an 18-feature quadratic ridge surrogate to the official baseline flight logs, using velocity, quaternion vector components and wind speed. It does not train the paper's wind-invariant DAIML representation. The existing private asset is reused without retraining:
+The force fit (kept outside this repository) is an 18-feature quadratic ridge surrogate to the official baseline flight logs, using velocity, quaternion vector components and wind speed. It does not train the paper's wind-invariant DAIML representation. The existing private asset is reused without retraining:
 
 - `forces.npz` SHA-256: `551eeb0d8e2c75e157c087f1ab2f5e40e68400a84fdf0882ed719ddfcfd8108a`.
 - 36,984 training rows and 9,252 validation rows, the final 20% of each flight reserved temporally.
@@ -73,20 +73,12 @@ Owned entry points:
 | Private deployment | `trusted.fly.rollout(policy_or_path, case, out, asset, render) -> record` |
 | Public nominal training | `neuralfly_nominal.rollout(policy, phase=..., center=..., initial_offset=..., noise_seed=..., out=..., render=...)` |
 | Reference adaptation | `neuralfly_reference.solve(client, out)` |
-| Full local validation | `python -m scripts.control_transfer.neuralfly_validate --asset /path/to/forces.npz --out /path/to/evidence --workers 2 --revision general-eight/1` |
 
 The orchestrator owns the shared generator, protocol, task metadata, bank integration and native Harbor validation. It must copy `neuralfly_video.py` into the task-local private package and public root; copy `neuralfly_nominal.py` as public `nominal_fly.py`; and import this family's `make_spec` instead of the old case generator. Canonical policy submission still uses the shared adapter. No family module requires an evaluator GPU.
 
-Run with the evaluator's pinned Python 3.12, NumPy 2.3.1, MuJoCo 3.5.0 and SciPy 1.17.0 environment. Set `MUJOCO_GL=osmesa`, `CUDA_VISIBLE_DEVICES=''`, `OPENBLAS_NUM_THREADS=1`, `LP_NUM_THREADS=1` and `OMP_NUM_THREADS=1`; install OSMesa and FFmpeg. Two instance workers leave room for their software encoders within the four-worker local allocation.
+The family checks (the evaluator's pinned Python 3.12, NumPy 2.3.1, MuJoCo 3.5.0 and SciPy 1.17.0 environment, `MUJOCO_GL=osmesa`, OSMesa and FFmpeg) cover randomized initialization, disjoint fixed-plant banks, analytic reference derivatives, numeric validation, observation-only adaptation, public/private separation, OSMesa enforcement and no-submission behavior. The local runner executes both complete held-out banks after three adaptation rounds, checks fresh-process replay, decodes every video and records source/runtime hashes. This is local integration evidence, **not a container-isolation proof, native Harbor certification or an LLM model score**. Final numeric results and any remaining gaps are retained in the external validation receipt and worker handoff; raw run artifacts are not committed to Git.
 
-```bash
-python -m unittest scripts.control_transfer.tests.test_neuralfly -v
-python -m scripts.control_transfer.neuralfly_validate --asset /path/to/forces.npz --out /path/to/new-evidence --workers 2 --revision general-eight/1
-```
-
-The family checks cover randomized initialization, disjoint fixed-plant banks, analytic reference derivatives, numeric validation, observation-only adaptation, public/private separation, OSMesa enforcement and no-submission behavior. The local runner executes both complete held-out banks after three adaptation rounds, checks fresh-process replay, decodes every video and records source/runtime hashes. This is local integration evidence, **not a container-isolation proof, native Harbor certification or an LLM model score**. Final numeric results and any remaining gaps are retained in the external validation receipt and worker handoff; raw run artifacts are not committed to Git.
-
-The spec imports only standard-library code and `neuralfly_constants.py`, a public data-only source of `DEFAULT` and `BOUNDS` re-exported by the controller. Include this constants module both in the private package root and in the exported public root beside `nominal_fly.py`. Static CI can run `python -S -m unittest scripts.control_transfer.tests.test_neuralfly_spec -v` without NumPy or MuJoCo.
+The spec imports only standard-library code and `neuralfly_constants.py`, a public data-only source of `DEFAULT` and `BOUNDS` re-exported by the controller. Include this constants module both in the private package root and in the exported public root beside `nominal_fly.py`.
 
 ## Historical fixed-eight native integration acceptance
 
@@ -112,7 +104,7 @@ At rate 0.8, six laps round to 2,356 ticks (47.12 s). Telemetry and video contai
 
 `NEURALFLY_VISUAL_STYLE=skydio-x2/1` selects manufacturer-provided Skydio X2 mesh/texture assets from MuJoCo Menagerie commit `d7b481bac63d3d600ab404ee74f7474c5efe8a67`, Apache-2.0. This is **Skydio appearance with Neural Fly surrogate dynamics**, not calibrated Skydio physics. The visual model is a separate MjModel/MjData; only the physical pose is copied into it, with no stepping or writes back into physics. Camera output is 960×720 at 10 fps. The default `primitive` profile preserves existing tasks' videos; introducing the new appearance changes visual observations and must be recorded explicitly in task metadata/environment.
 
-Prepare the public assets outside Git with `python -m scripts.control_transfer.neuralfly_visual --out /path/to/skydio_x2`. Bake that directory, including LICENSE and README.md, into the existing public asset image at `/opt/control-assets/skydio_x2`; runtime never downloads anything. An explicit `NEURALFLY_VISUAL_ASSETS` directory overrides the default. All four source files are SHA-256 checked before model construction; absent or mismatched assets fail visibly instead of falling back. These are public visual assets, not hidden dynamics assets.
+Prepare the public assets outside Git with `python -m images/control-transfer/neuralfly_visual.py --out /path/to/skydio_x2`. Bake that directory, including LICENSE and README.md, into the existing public asset image at `/opt/control-assets/skydio_x2`; runtime never downloads anything. An explicit `NEURALFLY_VISUAL_ASSETS` directory overrides the default. All four source files are SHA-256 checked before model construction; absent or mismatched assets fail visibly instead of falling back. These are public visual assets, not hidden dynamics assets.
 
 Root packaging addition: copy `neuralfly_visual.py` alongside `neuralfly_video.py` into both repository-style and top-level public/private package layouts. Set the profile only on the intended new task revision, consistently for nominal and deployment video. No controller, mass, inertia, collision, motor or scoring changes are required. The helper is safe to export publicly; spec banks and reference modules remain private. Preserve the Apache license and pinned provenance when redistributing assets. Renderer enablement/image preparation remains orchestrator-owned.
 
@@ -165,14 +157,8 @@ The HUD gives world x/y/z velocity and magnitude in m/s. Skydio geometry is appe
 only. Every frame is labeled operator-only and synthetic. Input/output SHA-256 hashes,
 sampled times and vectors are retained in the adjacent private receipt.
 
-```bash
-MUJOCO_GL=osmesa CUDA_VISIBLE_DEVICES= python -m scripts.control_transfer.neuralfly_wind_demo \
-  --episode /private/episode --output /private/operator-wind.mp4 \
-  --assets /opt/control-assets/skydio_x2
-```
-
-Pillow and ffmpeg are operator rendering dependencies. This module is excluded from
-both task runtime layouts, alongside its output and the private wind trace. It cannot
+Pillow and ffmpeg are operator rendering dependencies. The replay tool is not in this
+repository and is excluded from both task runtime layouts, alongside its output and the private wind trace. It cannot
 replace `video.mp4` in an episode directory; the benchmark's feedback video must stay
 unchanged. A synthetic vector trace must never be described as measured hardware wind.
 

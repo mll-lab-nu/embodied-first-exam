@@ -9,8 +9,8 @@ each on one frozen instance, in both modes: 100 tasks.
 | tasks | `tasks/metaworldplus-<env>-i00-privileged` and `tasks/metaworldplus-<env>-i00-standard` (twins share the instance) |
 | metadata | `simulator = "mujoco"`, `robot = "sawyer"`, `family = "metaworld/<env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` (`images/metaworld/`), CPU only |
-| standard client | the one client base and pins of `scripts/eai_standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` byte copies of the MuJoCo standard tasks' (accepting both protocol spellings) |
-| generator | `scripts/metaworldplus/` (`freeze.sh` → `frozen/`, `generate.py` → `tasks/`); each instance and oracle is committed once, in its privileged task (`environment/instance.npz`, `solution/oracle.npz`), which `generate.py` reads; `frozen/` keeps `report.json` (a fresh `freeze.sh` run's `frozen/<env>/` is deleted once its tasks are generated) |
+| standard client | the one client base and pins of `embodied_first_exam/standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` byte copies of the MuJoCo standard tasks' (accepting both protocol spellings) |
+| instances | each instance and oracle is committed in its privileged task (`environment/instance.npz`, `solution/oracle.npz`). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
 ## Task definition
 - **Instance.** Meta-World's reset randomization (object and goal positions) drawn with the instance seed: 0, except
@@ -24,7 +24,7 @@ each on one frozen instance, in both modes: 100 tasks.
   the upstream robot model. In standard mode the type is called `ee_delta`.
 - **Success.** Meta-World's own check (`evaluate_state`) on the state after the last action (PROTOCOL §3): no
   "success at any step". The check differs per environment, and a standard-mode agent cannot read the source, so both
-  instructions state it in words (`scripts/metaworldplus/envs.py` `SUCCESS`, one sentence per environment, read from
+  instructions state it in words (one sentence per environment, read from
   the source at the pinned commit): what is compared with the target point, in which axes, with which tolerance, and
   whatever else the final state must satisfy. Not every check is "the object near the target": stick-push also needs
   the stick still grasped and lifted, stick-pull the stick still in the thermos's handle (so letting go of the stick
@@ -59,8 +59,8 @@ evidence, verdict before video). Differences:
    numeric array) is a 400 that changes nothing; `final.json` carries `live_success` and the grader writes numeric
    fields only; `/status` and `meta` also carry `sim_steps`, submit responses `clipped`.
 
-Protocol: `eai-standard/2.1` (`/spec`, `task.toml`, instructions). `generate.py` finishes every task with
-`scripts/task_conventions.py` `normalize` (README layout, no `results/`), and `--check` is clean on all 100.
+Protocol: `eai-standard/2.1` (`/spec`, `task.toml`, instructions). Every task is in the normal form of
+`scripts/task_conventions.py` `normalize` (README layout, no `results/`).
 
 ## Grading (standard mode): the live episode
 The standard twin is graded by the live episode and nothing is replayed to grade it (privileged mode: the verifier's
@@ -75,8 +75,8 @@ two fresh-process replays).
   resume the same episode after a sidecar crash) stays: it grades nothing.
 - **Start state.** Checked when the episode begins (`_check_start()`), before the agent is served: the instance's
   SHA-256 must be `RCB_INSTANCE_SHA` and the restored scene's state hash (SHA-256 of the MuJoCo integration state)
-  must be `RCB_START_SHA`, both written into `environment/docker-compose.yaml` by `generate.py` from the frozen
-  instance (`start_shas()`).
+  must be `RCB_START_SHA`, both set in `environment/docker-compose.yaml` from the frozen
+  instance.
   A mismatch gives up with `reason = "instance_mismatch: ..."`, `infra_error = 1`.
 - **Video.** One pass after the verdict is on disk (`render_video()`): a fresh session renders the recorded trajectory
   (`front` camera, at most about 600 frames, OSMesa on the CPU) to `replay.mp4` / `replay.last.png`;
@@ -99,11 +99,6 @@ two fresh-process replays).
   episode's counts; no `replay_success` / `deterministic`.
 - **Compute.** The video pass is one scene build plus the episode's physics (0.2–0.9 ms per control step) plus its
   frames: seconds per trial, CPU.
-- **Tests.** `scripts/metaworldplus/tests/test_live_grading.py` (numpy, no simulator): the service and grader on a
-  stand-in tool module (live success / failure, nothing replayed, video failure and a crash while rendering, crashes
-  between and inside calls, the start check, missing / unreadable / unfinalized `final.json`), and the generator's
-  hashes against mw_tool's on the frozen instances. `scripts/mujoco-playground/tests/test_standard_2_1_servers.py`
-  covers the service's protocol.
 
 `meta["time_s"]` / `meta["time_left_s"]` count from the agent's first request to the service (logged, so a crash
 resume keeps it), not from the service's start: the service is up before the harness has installed the agent.
@@ -114,22 +109,18 @@ the one allowlist (`network_mode = "allowlist"`, the hosts of `scripts/set_agent
 list has the package registries, so the PyPI distribution `metaworld`, which ships those policies, is reachable: the
 instruction's honour rule asks the agent not to fetch a solution, nothing blocks it, and a trial
 that installs `metaworld` is one to look at (PROTOCOL §5). The
-policies are deleted from the image in the layer that installs them; `freeze.sh` mounts them from the pinned commit.
+policies are deleted from the image in the layer that installs them.
 
 ## Rebuilding
 ```bash
 docker build -t ghcr.io/mll-lab-nu/eai-metaworld:$(cat images/metaworld/VERSION) \
     -f images/metaworld/Dockerfile images/metaworld          # ~780 MB
-bash scripts/metaworldplus/freeze.sh            # instances + oracles -> scripts/metaworldplus/frozen/ (~1 min)
-python3 scripts/metaworldplus/generate.py       # -> tasks/metaworldplus-* ; re-running reproduces them exactly
-rm -r scripts/metaworldplus/frozen/*/           # tasks/ keeps the instances and oracles; frozen/report.json stays
 cd tasks && harbor add --scan . && cd ..
 bash ci_checks/run_all.sh tasks/metaworldplus-*
 ```
-`freeze.sh` re-creates every instance and oracle, so the task digests change only if the image or Meta-World changes.
 
 ## Evidence
-`scripts/metaworldplus/frozen/report.json` (written by `freeze.sh`), for all fifty environments: the instance is not
+Measured when the instances were frozen, for all fifty environments: the instance is not
 solved at the start; `reset()` is bit-exact; the oracle (Meta-World's scripted policy, up to its first success, 41–136
 actions) succeeds; two replays in fresh processes end in the live state's hash and succeed (the reference's
 determinism, which the trajectory deliverable and the privileged verifier rely on).

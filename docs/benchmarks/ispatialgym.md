@@ -35,7 +35,7 @@ its goal this way; BEHAVIOR-1K runs the same robot in the same houses with goals
 | mental rotation | (one) | turn a held object in the hand to the pictured orientation | ✅ | |
 | object scaling | (one) | move a held object along the camera's axis until it looks as large as pictured | ✅ | |
 
-Why these (no model's results enter the choice; `scripts/ispatialgym/subset.toml`):
+Why these (no model's results enter the choice):
 - **One task per success rule.** A task whose BDDL goal and measured targets are another's keeps one: the obstructed
   camera relocalization (the standard one is it without the obstacle); of an open / close pair the opening twin, as in
   BiGym 2.0; of a relation checked at two scales the small-scale task (tighter tolerances; at scene scale the partner is a
@@ -57,7 +57,7 @@ upstream's role prefix (`target_*`, `partner_*`, …). Renaming moves the settle
 most 5e-5 (m or rad; alignment_axial, block_design, touching) and none of the others, measured; both twins and the agent
 run the renamed one. What scores it is
 `goal.json` (docs/protocol/leakage.md §3): every key taken out of upstream's TRO and template_meta (the targets, the goal camera pose, the
-variant), lifted by `mk_tasks.py instances` against the real removal, copied only to the scoring side (`environment/sim/`,
+variant), lifted against the real removal, copied only to the scoring side (`environment/sim/`,
 `tests/`), restored there and checked against upstream's TRO by sha256 (a failed restore is a grader error). One success
 rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the policy tolerances × 3, in both.
 
@@ -71,7 +71,7 @@ The privileged agent's image is eai-ispatialgym with a layer that removes, and t
 problem (goals), the docs (they preview the reference demonstrations; the fork's link the authors' pages), tests,
 configs and README, the eval data's repository id and folder names and the project URLs (they locate the
 demonstrations) and bytecode; upstream's public release ships no scripted expert, planner, sampler or task spec, and the
-build fails if one is there (`scripts/ispatialgym/shared/scrub.sh`; the names it looks for are read from the image, so
+build fails if one is there (each privileged task's `environment/scrub/scrub.sh`; the names it looks for are read from the image, so
 no task file names the eval data). It writes this task's start-only BDDL problem (objects and positive initial
 atoms, one neutral goal atom) from the image's own copy. Upstream's success-check code stays in the image, as KinDER's and
 BEHAVIOR-1K's do; with no goal, target or problem in the container it has nothing to check, and the tooling reports no
@@ -120,13 +120,9 @@ harbor run -p tasks/ispatialgym-mental-rotation-i00-privileged -a codex -m opena
 ```
 The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `download_omnigibson_robot_assets()`,
 `download_behavior_1k_assets(accept_license=True)`), the same one BEHAVIOR-1K's tasks mount. Build the image as
-`images/ispatialgym/BUILD_ONLY` says. Regenerate the tasks: `python3 scripts/ispatialgym/mk_tasks.py render`
-(`instances` splits the picked instances of upstream's eval data into `instance.json` and `goal.json`; `measure --task T` writes `facts.json`, on a GPU).
-The frozen instances are kept in the task directories only: the standard twin's `environment/sim/` (`instance.json`,
-`goal.json`, `facts.json`, `upstream.json`) and `environment/goal.png`. `instances` and `measure` write
-`scripts/ispatialgym/instances/<task>/` (git-ignored; `measure` stages the task's instance there from `tasks/`), which
-`render` prefers for that task (it says so); delete it once the task is rendered. `instances` imports the tasks named
-by `--task`, else only those with no standard twin in `tasks/` yet.
+`images/ispatialgym/BUILD_ONLY` says. The task directories are the deliverable; the tooling that built them is kept
+outside this repository. The frozen instances are kept in the task directories only: the standard twin's
+`environment/sim/` (`instance.json`, `goal.json`, `facts.json`, `upstream.json`) and `environment/goal.png`.
 
 ## Positive examples (oracle none, PROTOCOL §4)
 Upstream's recorded demonstration of each instance (the eval data's `-demo.hdf5`, `data/demo_0/action`, unchanged), handed

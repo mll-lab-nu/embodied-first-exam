@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 """What a change can affect: the scope of the checks on a pull request (CI, `run_all.sh --changed`).
 
-A pull request that touches only one benchmark's tasks, generator, tests, image sources or docs page cannot break
-another benchmark's tasks, so its CI runs the per-task checks on that benchmark's tasks, that benchmark's generator
-check and its unit tests (plus the repo-level checks, which are cheap and always run on everything). Anything else --
+A pull request that touches only one benchmark's tasks, image sources, CI hooks or docs page cannot break
+another benchmark's tasks, so its CI runs the per-task checks on that benchmark's tasks (plus the repo-level checks, which are cheap and always run on everything). Anything else --
 the checks themselves, the workflows, the shared modules (scripts/task_conventions.py, retry_policy,
-eai_standard, rcb_monitor, ...), the shared images, the protocol documents, a path this table does not know -- runs the
+embodied_first_exam/standard, images/monitor, ...), the shared images, the protocol documents, a path this table does not know -- runs the
 FULL suite. Pushes to main always run the full suite (.github/workflows/static-checks.yml), so nothing that slips past
 a scoped run stays unnoticed for longer than one merge.
 
 A benchmark B is affected by a changed path P when P is one of B's own paths (UNITS below: its task-name prefix,
-scripts/<b>/, images/<b>/, docs/benchmarks/<b>.md, extra files) or when B's and P's benchmark refer to each other's
+images/<b>/, docs/benchmarks/<b>.md, ci_checks/benchmarks/<b>/, extra files) or when B's and P's benchmark refer to each other's
 paths (`scripts/<x>` / `images/<x>` in a .py / .sh file under the other's own directories: shared layers that one
 benchmark copies from another, e.g. MyoSuite and HumanoidBench's realtime service).
 
@@ -20,7 +19,7 @@ benchmark copies from another, e.g. MyoSuite and HumanoidBench's realtime servic
 
 Output: shell assignments (`eval "$(python3 ci_checks/ci_scope.py ...)"`): RCB_SCOPE=full|benchmarks|none,
 RCB_SCOPE_REASON, RCB_SCOPE_BENCHES (labels, `;`-separated), RCB_SCOPE_PATHS (the affected benchmarks' own path
-prefixes, for check-generated-tasks.sh / check-unit-tests.sh `--only`), RCB_SCOPE_TASKS (their task dirs). A new
+prefixes, for check-unit-tests.sh `--only`), RCB_SCOPE_TASKS (their task dirs). A new
 benchmark without a row here makes every pull request that touches it run the full suite: add its row.
 """
 from __future__ import annotations
@@ -37,20 +36,20 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402  (BENCHMARKS: (task dir prefix, label); bench_of)
 
 # label -> the benchmark's own path prefixes besides tasks/<prefix>. Default for a label not listed with a key here:
-# none (full suite). `d` = the directory name under scripts/ (and images/, docs/benchmarks/<d>.md).
+# none (full suite). `d` = the directory name under images/ (and docs/benchmarks/<d>.md).
 def _own(d: str, *extra: str) -> list[str]:
-    return [f"scripts/{d}/", f"images/{d}/", f"docs/benchmarks/{d}.md", *extra]
+    return [f"images/{d}/", f"docs/benchmarks/{d}.md", *extra]
 
 
 UNITS: dict[str, list[str]] = {
-    "RoboTwin 2.0": _own("robotwin", "scripts/robotwin_"),        # robotwin_mk_task.py, robotwin_mk_limited.py, ...
-    "DexToolBench": ["scripts/dtb_", "docs/benchmarks/dextoolbench.md", "images/mujoco/"],   # serves server_mj.py
-    "MuJoCo Playground": _own("mujoco-playground", "scripts/mj_mk_limited.py", "images/mujoco/"),
+    "RoboTwin 2.0": _own("robotwin"),
+    "DexToolBench": ["docs/benchmarks/dextoolbench.md", "images/mujoco/"],   # serves server_mj.py
+    "MuJoCo Playground": _own("mujoco-playground", "images/mujoco/"),
     "KinDER": _own("kinder"),
     "HumanoidBench": _own("humanoidbench"),
     "MetaWorld+": _own("metaworldplus", "images/metaworld/"),
     "RoboWits": _own("robowits"),
-    "RoboPaint": ["scripts/robopaint_", "images/robopaint/", "images/robopaint-files/", "docs/benchmarks/robopaint"],   # strict, caoshu, lettering, brush
+    "RoboPaint": ["images/robopaint/", "images/robopaint-files/", "docs/benchmarks/robopaint"],
     "RoboLab": _own("robolab", "images/robolab-files/"),
     "BEHAVIOR-1K": _own("behavior", "images/behavior-files/"),
     "ManiGuard": _own("maniguard"),
@@ -64,9 +63,8 @@ UNITS: dict[str, list[str]] = {
     "RoboCasa365": _own("robocasa365"),
     "LIBERO-MAX": _own("libero-max"),
     "RoboARC": _own("roboarc", "images/roboarc-files/"),
-    # one generator directory, two benchmarks (board 0160): a change under scripts/roboolympics/ is in both
-    "RoboOlympics-Fun": _own("roboolympics", "images/robofunolympics/", "images/roboolympics-fun-files/"),
-    "RoboOlympics-Match": ["scripts/roboolympics/", "images/olympiad/", "docs/benchmarks/roboolympics-match.md"],   # eai-olympiad: built from RoboOlympics' tree, not here
+    "RoboOlympics-Fun": _own("roboolympics", "images/robofunolympics/", "images/roboolympics-fun-files/", "docs/benchmarks/roboolympics.md"),
+    "RoboOlympics-Match": ["images/olympiad/", "docs/benchmarks/roboolympics-match.md"],   # eai-olympiad: built from RoboOlympics' tree, not here
     "BiGym 2.0": _own("bigym2"),
     "YAMLab": _own("yamlab"),
     "RoboDojo": _own("robodojo"),
@@ -74,15 +72,15 @@ UNITS: dict[str, list[str]] = {
     "AM-Bench": _own("ambench"),
     "iSpatialGym": _own("ispatialgym"),
     "IKEA MuJoCo": _own("ikea_mujoco", "images/ikea-mujoco/", "embodied_first_exam/benchmarks/roboarc/nyx_direct.py"),   # its standard tasks copy it
-    "roboEngineer": _own("roboengineer", "scripts/control_transfer/", "scripts/quadrotor_landing/",
+    "roboEngineer": _own("roboengineer",
                          "images/control-transfer/", "images/control-transfer-anycar-files/", "images/quadrotor-landing/",
                          "docs/benchmarks/roboengineer", "docs/benchmarks/control-transfer.md",
                          "docs/benchmarks/quadrotor-landing.md"),
 }
-# the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md): the folder of its
-# task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)
+# the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md), and its CI
+# hooks, ci_checks/benchmarks/<folder>/: the folder of its task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)
 for _label, _folder in tc.BENCHMARK_DIRS.items():
-    UNITS.setdefault(_label, []).append(f"embodied_first_exam/benchmarks/{_folder}/")
+    UNITS.setdefault(_label, []).extend([f"embodied_first_exam/benchmarks/{_folder}/", f"ci_checks/benchmarks/{_folder}/"])
 # changes that no check reads: they need only the repo-level checks (which always run). Everything not listed here and
 # not a benchmark's own path runs the full suite.
 NO_TASK_EFFECT = ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "docs/protocol/running.md",
@@ -119,7 +117,7 @@ def owners(path: str) -> set[str]:
 
 
 def top(path: str) -> str | None:
-    """`scripts/<x>` / `images/<x>` of a path (a file directly under scripts/: its stem with the dir, e.g. scripts/dtb_mk_task)."""
+    """`scripts/<x>` / `images/<x>` of a path (a file directly under scripts/: its stem with the dir, e.g. scripts/efe)."""
     m = REF.match(path)
     if not m:
         return None

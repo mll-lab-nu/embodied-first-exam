@@ -14,8 +14,8 @@ it. Maintainers push it with `scripts/push_images.sh` after validating a build.
   redistribute it in this image.
 - **Build source.** The build context comes from the private Hugging Face dataset `eai-v2-internal/robotangle-assets`. It is
   internal and is never made public; only the built image is public. It holds, at the revision and sha256s pinned in
-  `scripts/roboarc/assets.json`:
-  - `image/release-<commit>.tar.gz`: the release tree (`scripts/roboarc/release.json` `release_commit`), the paths
+  `images/roboarc/assets.json`:
+  - `image/release-<commit>.tar.gz`: the release tree (`images/roboarc/release.json` `release_commit`), the paths
     `images/topogym/Dockerfile` copies;
   - `image/uipc-prebuilt/`: the audited libuipc wheel and its `uipc-build.json` (sha256 `39781d19…`), which every task's
     runtime binding names. nvcc output is not bit-reproducible, so a wheel compiled elsewhere never matches the binding;
@@ -58,7 +58,7 @@ revision, and a host that has 0.2.21 pulls only that layer (13 MB). A full build
 files in other layers.
 
 ```bash
-scripts/roboarc/fetch_image_context.sh [<download dir>]     # images/roboarc/context/ from the pinned dataset, checked
+images/roboarc/fetch_image_context.sh [<download dir>]     # images/roboarc/context/ from the pinned dataset, checked
 docker build -f images/roboarc/Dockerfile -t ghcr.io/mll-lab-nu/eai-roboarc:$(cat images/roboarc/VERSION) images/roboarc/context
 ```
 
@@ -74,11 +74,11 @@ The image must install exactly the runtime every task is bound to:
 
 ```bash
 docker run --rm ghcr.io/mll-lab-nu/eai-roboarc:$(cat images/roboarc/VERSION) python -c 'import json; from topogym.simulator.frozen_binding import installed_runtime; print(json.dumps(installed_runtime(), sort_keys=True))' > /tmp/roboarc_runtime.json
-python3 -c 'import json, sys; sys.exit(0 if json.load(open("/tmp/roboarc_runtime.json")) == json.load(open("scripts/roboarc/release.json"))["runtime"] else "image differs from the tasks runtime binding: do not run")'
+python3 -c 'import json, sys; sys.exit(0 if json.load(open("/tmp/roboarc_runtime.json")) == json.load(open("images/roboarc/release.json"))["runtime"] else "image differs from the tasks runtime binding: do not run")'
 ```
 
 Every session checks it again at start (`runtime_binding_ok` in reward.json) and refuses a different runtime. The two
-libuipc builds must be the ones `scripts/roboarc/release.json` `uipc_builds` names, and the image build already checked
+libuipc builds must be the ones `images/roboarc/release.json` `uipc_builds` names, and the image build already checked
 both wheels against their build records:
 
 ```bash

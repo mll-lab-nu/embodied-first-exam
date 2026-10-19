@@ -43,8 +43,8 @@ docker run --rm $img python -c "import omnigibson, maniguard.eval.benchmark; pri
 for l in dpkg conda pip; do docker run --rm $img cat /opt/locks/$l.lock | diff - images/maniguard/$l.lock; done
 # a frozen instance loads with the long-finger robot and to its recorded state hash (GPU, the data root):
 docker run --rm --gpus all --shm-size 8g -v "$RCB_MANIGUARD_DATA:/data:ro" -v $PWD:/r:ro $img \
-  python /r/scripts/maniguard/shared/rcb_maniguard.py make-instance --task jar_transport/task_0014 \
-  --instance /r/tasks/maniguard-jar-transport-i14-privileged/environment/instance --out /tmp/i.json
+  python /r/tasks/maniguard/maniguard-jar-transport-i14-privileged/environment/rcb_maniguard.py make-instance --task jar_transport/task_0014 \
+  --instance /r/tasks/maniguard/maniguard-jar-transport-i14-privileged/environment/instance --out /tmp/i.json
 ```
 
 ## Not published: build it (`BUILD_ONLY`)

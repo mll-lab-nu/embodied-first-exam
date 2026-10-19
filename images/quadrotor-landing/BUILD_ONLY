@@ -5,6 +5,6 @@ non-public copy of the package.
 
 Why
   It holds the residual force network converted from the Neural Lander release checkpoint
-  (github GuanyaShi/neural_lander_sim_1d, pinned commit; scripts/quadrotor_landing/prepare_assets.py), a repository with
+  (github GuanyaShi/neural_lander_sim_1d, pinned commit; images/quadrotor-landing/prepare_assets.py), a repository with
   no licence: it may not be redistributed. The conversion is byte-reproducible (the Dockerfile checks its digest).
   The agent's image is built by each task from the shared client base and holds none of it.

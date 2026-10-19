@@ -106,8 +106,8 @@ Restore code against the **defining module's own namespace** so it closes over w
 tooling should report that scoring is unavailable rather than return a zero.
 
 *Worked example:* HumanoidBench's grader is a dense reward — `images/humanoidbench/scrub_oracles.py`
-(remove), `scripts/humanoidbench/extract_rewards.py` (diff), `scripts/humanoidbench/shared/rcb_rewards.py` (restore),
-`scripts/humanoidbench/gen_tasks.py check` (enforce; CI runs it through `ci_checks/check-generated-tasks.sh`). For
+(remove; `images/humanoidbench/rewards.json` holds what it removed), each task's verifier copy of `rcb_rewards.py`
+(restore, in the verifier only). For
 every standard task, `ci_checks/check-standard-agent-image.sh` keeps `environment/sim/` out of the agent's image.
 
 ## 4. The task statement is then the only account
@@ -145,6 +145,6 @@ under an unrelated name would be missed. A new benchmark whose solution is one `
 Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
 ManiGuard, DexJoCo, VLABench, RoboDojo, RoboARC, RoboOlympics, BiGym,
 YAMLab, Panda Dynamic Scenes (not published at all: its environment package is this repository's `images/pandadyn/`),
-DexHand (not published at all: its scenes and tooling are this repository's `scripts/dexhand/` and `images/dexhand/`),
+DexHand (not published at all: its scenes and tooling are this repository's task dirs and `images/dexhand/`),
 AM-Bench, iSpatialGym (GitHub and Hugging Face only), IKEA MuJoCo (not published at all: its scenes are this repository's
 `images/ikea-mujoco/scenes/` with meshes on a private dataset); Isaac Sim does not install from pypi.org.

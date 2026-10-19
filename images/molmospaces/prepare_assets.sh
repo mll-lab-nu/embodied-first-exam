@@ -14,7 +14,12 @@ dk() { if docker ps >/dev/null 2>&1; then docker "$@"; else sg docker -c "docker
 
 dk build --target base -t "$BASE" "$HERE"
 rm -rf "$WORK"; mkdir -p "$WORK/assets" "$WORK/cache" "$WORK/check"
-cp -r "$ROOT/scripts/molmospaces/instances" "$ROOT/scripts/molmospaces/shared/rcb_molmospaces.py" "$HERE/install_assets.py" "$WORK/check/"
+# the frozen instances and the tooling, from the committed privileged tasks (tasks/molmospaces/molmospaces-<base>-privileged/)
+mkdir -p "$WORK/check/instances"
+for t in "$ROOT"/tasks/molmospaces/molmospaces-*-privileged; do
+  b="$(basename "$t")"; b="${b#molmospaces-}"; cp "$t/environment/instance.json" "$WORK/check/instances/${b%-privileged}.json"
+done
+cp "$t/environment/rcb_molmospaces.py" "$HERE/install_assets.py" "$WORK/check/"
 dk run --rm --user "$(id -u):$(id -g)" -e HOME=/tmp -e RCB_SESSION_LOG= -e MUJOCO_GL=osmesa -e PYOPENGL_PLATFORM=osmesa \
    -e PYTHONPATH=/work --cap-add SYS_PTRACE \
    -v "$WORK/assets:/opt/molmospaces/assets" -v "$WORK/cache:/opt/molmospaces/cache" -v "$WORK/check:/work" -w /work \

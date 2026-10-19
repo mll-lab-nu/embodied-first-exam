@@ -10,7 +10,7 @@
 # What enforces what (Appendix H):
 #   H.1 verifier isolation      check-verifier-isolation.sh (per task), check-monitor.py --tier invariants,
 #                               check-ci-selftest.py --tier invariants (the rules fire), benchmark hooks (a skill sandbox)
-#   H.2 no answer in reach      check-agent-pointers.py, the benchmarks' scripts/*/ci/invariant-* hooks
+#   H.2 no answer in reach      check-agent-pointers.py, the benchmarks' ci_checks/benchmarks/*/invariant-* hooks
 #   H.3 standard trust boundary check-standard-agent-image.sh, check-verifier-isolation.sh (ports, sidecar topology)
 #   H.4 trusted verdict         check-verifier-isolation.sh (evidence from a sidecar), check-instance-copies.sh
 #   H.5 infrastructure retry    scripts/tests/test_retry_policy.py, scripts/tests/test_runner_results.py (a voided
@@ -66,10 +66,10 @@ if [ "$scope" = full ] && [ $explicit -eq 0 ]; then
   EXPECTED_NAMED=7
 fi
 [ "${#ids[@]}" -eq "$EXPECTED_NAMED" ] || { echo "FAIL run_invariants.sh: ${#ids[@]} named checks, $EXPECTED_NAMED expected"; exit 1; }
-# the benchmarks' own invariant hooks (H.1 / H.2: leak checks, a skill sandbox's test): every scripts/*/ci/invariant-*,
+# the benchmarks' own invariant hooks (H.1 / H.2: leak checks, a skill sandbox's test): every ci_checks/benchmarks/*/invariant-*,
 # given the tasks in scope
 hooks=()
-for h in scripts/*/ci/invariant-*; do
+for h in ci_checks/benchmarks/*/invariant-*; do
   [ -f "$h" ] || continue
   hooks+=("$h")
   case "$h" in *.py) run="python3 $(q "$h")" ;; *) run="bash $(q "$h")" ;; esac
