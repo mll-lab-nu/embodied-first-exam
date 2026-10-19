@@ -9,7 +9,6 @@ COPY --from=ghcr.io/mll-lab-nu/efe-roboolympics-match-files:0.1.0@sha256:a66af6a
 RUN chmod 700 /opt/trusted && chmod -R a-w /opt/dev && chmod -R a+rX /opt/dev \
     && chmod +x /tests/test.sh && mkdir -p /logs/verifier && chmod 700 /logs/verifier
 WORKDIR /opt/trusted
-COPY --from=ghcr.io/mll-lab-nu/efe-monitor:0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 # resource limits: the verifier step (from the monitor image) and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe-monitor:0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json
