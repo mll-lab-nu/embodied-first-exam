@@ -1,6 +1,6 @@
-# eai-metaworld: Meta-World v3 (Farama-Foundation/Metaworld @ 59fc34d) on MuJoCo 3.3.0; CPU physics (bit-exact replay)
+# metaworld: Meta-World v3 (Farama-Foundation/Metaworld @ 59fc34d) on MuJoCo 3.3.0; CPU physics (bit-exact replay)
 # and CPU rendering (OSMesa, ~45 ms per 320x240 frame): no GPU. One image for the MetaWorld+ privileged tasks'
-# environment and verifier and the standard tasks' `sim` service. Not merged into eai-mujoco (MuJoCo 3.3.7): frozen
+# environment and verifier and the standard tasks' `sim` service. Not merged into the mujoco image (MuJoCo 3.3.7): frozen
 # instance hashes depend on the MuJoCo version.
 # Deliberately NOT included: Meta-World's scripted expert policies (metaworld/policies/), removed in the layer that
 # installs them.

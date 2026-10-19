@@ -1,4 +1,4 @@
-# eai-robopaint (formerly rcb-robopaint, rcb-maniskill-paint): ManiSkill 3.0.1 (SAPIEN 3.0.3) + the Spline-FRIDA brush-stroke model
+# robopaint (formerly rcb-robopaint, rcb-maniskill-paint): ManiSkill 3.0.1 (SAPIEN 3.0.3) + the Spline-FRIDA brush-stroke model
 # (github.com/cmubig/Frida @ 1652973, GPL-3.0, weights included in that repository) + libmypaint 1.6.1 (ISC) with the
 # mypaint-brushes 2.0.2 presets (CC0) for the brush families. Infrastructure only — contains no benchmark code: tasks `FROM` it and
 # COPY their own tooling (rcb_brush.py). Tag = ghcr.io/mll-lab-nu/efe:robopaint-<images/robopaint/VERSION>

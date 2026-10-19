@@ -1,6 +1,6 @@
-# eai-behavior: BEHAVIOR-1K 3.9.2, fixed
+# behavior: BEHAVIOR-1K 3.9.2, fixed
 
-`eai-behavior:0.1.1` (`VERSION`; named `rcb-behavior:0.1.1` before protocol v1.0, same Dockerfile) = the official
+`efe-private:behavior-0.1.1` (`VERSION`; named `rcb-behavior:0.1.1` before protocol v1.0, same Dockerfile) = the official
 BEHAVIOR-1K 3.9.2 image **by digest** + ffmpeg (for replay videos). Every BEHAVIOR result in this repo ran on this
 version, which is the one the 2026 BEHAVIOR Challenge pins.
 
@@ -27,7 +27,7 @@ A rebuild then has the tested package versions. The layer bytes still differ (fi
 2026-09-20 has the layer 17 diff ID above.
 
 ## Not published: build it (`BUILD_ONLY`)
-eai-behavior is never pushed to a registry (user decision 2026-09-28; PROTOCOL §2.4):
+behavior is never pushed to a registry (user decision 2026-09-28; PROTOCOL §2.4):
 - it contains NVIDIA Isaac Sim 5.1.0 and Omniverse Kit (from the official image), whose licences forbid redistribution
   (NOTICE);
 - its base has a 13.7 GB layer, above ghcr.io's 10 GB per-layer limit.

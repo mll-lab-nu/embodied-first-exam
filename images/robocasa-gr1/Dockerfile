@@ -1,4 +1,4 @@
-# eai-robocasa-gr1: RoboCasa GR1 tabletop tasks (robocasa/robocasa-gr1-tabletop-tasks @ 4840e67; robosuite @ 51cc017 =
+# robocasa-gr1: RoboCasa GR1 tabletop tasks (robocasa/robocasa-gr1-tabletop-tasks @ 4840e67; robosuite @ 51cc017 =
 # 1.5.1 with its whole-body mink IK controller, MuJoCo 3.2.6) with the kitchen fixtures, textures and object meshes its
 # tasks load. CPU physics (bit-exact replay) and CPU rendering (OSMesa): no GPU. One image for the RoboCasa-GR1
 # privileged tasks' environment and verifier and the standard tasks' `sim` service. Infrastructure only: no benchmark

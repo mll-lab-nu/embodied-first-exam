@@ -1,7 +1,7 @@
-# eai-roboarc
+# roboarc
 
 > **2026-10-13: the MuJoCo release.** `Dockerfile` here now builds RoboARC's MuJoCo release image
-> (`eai-roboarc:<VERSION>`, 0.3.1 and later), FROM the published Genesis image `eai-robotangle:0.2.22` pinned by
+> (`efe:roboarc-<VERSION>`, 0.3.1 and later), FROM the published Genesis image `efe:robotangle-0.2.22` pinned by
 > digest. The recipe of that base image is kept as `Dockerfile.genesis-0.2.22`; everything below this note describes
 > it (the simulator source, libuipc builds and instance staging the MuJoCo image inherits).
 

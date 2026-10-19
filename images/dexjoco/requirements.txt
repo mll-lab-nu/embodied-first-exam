@@ -1,4 +1,4 @@
-# eai-dexjoco pip pins: the closure rcb-dexjoco:0.1.1 resolved for DexJoCo @ 8d23b0f (dexjoco + openpi-client and their
+# dexjoco pip pins: the closure rcb-dexjoco:0.1.1 resolved for DexJoCo @ 8d23b0f (dexjoco + openpi-client and their
 # dependencies), frozen with `pip freeze` on 2026-10-06. dexjoco and openpi-client themselves are installed --no-deps
 # from the clone. A change here is a new image version (frozen-instance hashes depend on mujoco and numpy).
 absl-py==2.5.0

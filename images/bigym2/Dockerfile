@@ -1,4 +1,4 @@
-# eai-bigym2: BiGym 2.0 (bigym 1.0.0, Apache-2.0; Imperial College London) on MuJoCo 3.8.1: a Unitree G1 with Dex1-1
+# bigym2: BiGym 2.0 (bigym 1.0.0, Apache-2.0; Imperial College London) on MuJoCo 3.8.1: a Unitree G1 with Dex1-1
 # grippers whose legs and waist NVIDIA's GR00T-WBC drives (two ONNX policies on onnxruntime, CPU; the weights ship in
 # the package under the NVIDIA Open Model License). Infrastructure only: the upstream package, no benchmark code; tasks
 # `FROM` it and COPY their own tooling. Physics on the CPU, rendering through EGL on an NVIDIA GPU.

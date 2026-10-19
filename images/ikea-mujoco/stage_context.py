@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage the build context of the eai-ikea-mujoco image (images/ikea-mujoco/) from an IKEA MuJoCo source tree.
+"""Stage the build context of the ikea-mujoco image (images/ikea-mujoco/) from an IKEA MuJoCo source tree.
 
 usage: python3 images/ikea-mujoco/stage_context.py <source tree> [--out images/ikea-mujoco/context] [--pin]
   <source tree>  a tree with scenes/<task>/: the scene code of images/ikea-mujoco/scenes/<task>/ plus its meshes,

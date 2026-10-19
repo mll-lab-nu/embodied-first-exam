@@ -1,5 +1,5 @@
 #!/bin/bash
-# Assemble the rcb-mujoco asset tree (build context images/mujoco/rcb_mj, not committed) from pinned upstream commits.
+# Assemble the mujoco image's asset tree (build context images/mujoco/rcb_mj, not committed) from pinned upstream commits.
 #   MuJoCo Menagerie 1b86ece (the commit MuJoCo Playground pins): aloha, kuka_iiwa_14, franka_emika_panda, robotiq_2f85,
 #     unitree_go1, boston_dynamics_spot, google_barkour_vb
 #   MuJoCo Playground 4057c14 (Apache-2.0): manipulation/{aloha,franka_emika_panda,franka_emika_panda_robotiq}/xmls,

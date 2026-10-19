@@ -1,10 +1,10 @@
-# eai-ispatialgym: iSpatialGym (kmy17518/iSpatialGym, MIT, its pre-release "v1.0" evaluation pipeline) on its BEHAVIOR-1K
+# ispatialgym: iSpatialGym (kmy17518/iSpatialGym, MIT, its pre-release "v1.0" evaluation pipeline) on its BEHAVIOR-1K
 # fork (kmy17518/BEHAVIOR-1K, branch ispatialgym-eval: OmniGibson 3.9 + the vector-env merge + iSpatialGym's object
-# states), as iSpatialGym's setup.sh installs them, on eai-behavior (Isaac Sim 5.1.0, ffmpeg).
+# states), as iSpatialGym's setup.sh installs them, on the behavior image (Isaac Sim 5.1.0, ffmpeg).
 # No dataset: the BEHAVIOR Data Bundle (licence: no redistribution) is mounted read-only from $RCB_BEHAVIOR_DATA at /bdata;
 # the image holds only iSpatialGym's own small dataset `ispatialgym-assets` (its Kohs block, tray and puzzle pieces). The
 # tasks' frozen instances come from the eval data in the task directories, never from a download at run time.
-# BUILD_ONLY (NVIDIA Isaac Sim inside; images/ispatialgym/BUILD_ONLY). Build eai-behavior first, then from the repo root:
+# BUILD_ONLY (NVIDIA Isaac Sim inside; images/ispatialgym/BUILD_ONLY). Build the behavior image first, then from the repo root:
 #   docker build -t ghcr.io/mll-lab-nu/efe-private:ispatialgym-$(cat images/ispatialgym/VERSION) -f images/ispatialgym/Dockerfile .
 FROM ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1
 ARG B1K_COMMIT=6a6194600939179671054e1ae5e78b0a158f996c

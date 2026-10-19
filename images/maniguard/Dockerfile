@@ -1,4 +1,4 @@
-# eai-maniguard: ManiGuard (NU-IDEAS-Lab/ManiGuard @ a1b6444b3, a manipulation SAFETY benchmark) on its own pinned stack:
+# maniguard: ManiGuard (NU-IDEAS-Lab/ManiGuard @ a1b6444b3, a manipulation SAFETY benchmark) on its own pinned stack:
 # BEHAVIOR-1K v3.7.2 = OmniGibson 3.7.2 + bddl 3.7.0 + Isaac Sim 4.5.0.0 (NVIDIA's pip wheels), Python 3.10, torch
 # 2.6.0+cu124, and Spot 2.16 (conda-forge; the LTL library ManiGuard's safety monitor needs). This is what BEHAVIOR-1K
 # v3.7.2's own installer builds (`setup.sh --new-env --omnigibson --bddl`, the order and pins of that script) plus PyAV from
