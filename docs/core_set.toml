@@ -1,6 +1,6 @@
 # The core set: the tasks the headline statistics are computed on (PROTOCOL §4). One entry per task (the task dir
-# name without its mode suffix) and its default mode: `harbor run --core` runs that mode's dir; `--privileged`,
-# `--standard` or `--standard-realtime` runs another mode of the same tasks.
+# name without its mode suffix) and its default mode: `harbor run -d embodied-first-exam` runs that mode's dir;
+# `--privileged`, `--standard` or `--standard-realtime` runs another mode of the same tasks.
 # Checked by `python3 scripts/task_conventions.py core-set --check`.
 
 [[task]]

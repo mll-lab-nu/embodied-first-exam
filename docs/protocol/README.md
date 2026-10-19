@@ -1,6 +1,8 @@
-# Robot Coding Bench — Task Protocol v2.0
+# Embodied First Exam — Task Protocol v2.0
 
-The protocol is the four documents in this folder: this README (the conventions a task follows, and the binding
+This is the task protocol of Embodied First Exam (EFE; [repository](https://github.com/mll-lab-nu/embodied-first-exam),
+[site](https://www.embodied-first-exam.ai), [how to contribute](https://www.embodied-first-exam.ai/contribute/)). It is
+the four documents in this folder: this README (the conventions a task follows, and the binding
 invariants of Appendix H), [`standard_mode.md`](standard_mode.md) (the `eai-standard/2.x` wire format of the standard
 modes), [`running.md`](running.md) (official-run configuration, seeds, retries, gateway, resource enforcement, results;
 enforced by the runner and scheduler) and [`leakage.md`](leakage.md) (where answer keys survive and how they are
@@ -17,7 +19,7 @@ benchmark document can override them, and the required CI job `invariants` fails
 the runner refuses a run that would. The only setting Appendix H leaves to the task's author is the agent's network:
 the allowlist unless the task declares open egress (H.6).
 
-Older tasks and code cite v1 section numbers (§2.10); the table at the end maps them.
+Tasks and code that cite v1 section numbers (§2.10): the table at the end maps them.
 
 ## 1. What a task is
 
@@ -30,17 +32,19 @@ verifier decides internally) is the task's own business.
 | `task.toml`, `instruction.md`, `README.md`, `environment/Dockerfile`, `tests/test.sh` (executable), `tests/Dockerfile`; `solution/solve.sh` when `oracle` is `full` or `partial` | `ci_checks/check-task-structure.sh` |
 | `[task].name = "robot-coding-bench/<folder>"`; `[metadata]` `author_name`, `task_type` (`trajectory` / `policy`), `simulator`, `robot` ([`TAXONOMY.md`](../TAXONOMY.md)), `family`, `mode`, `expert_time_estimate_hours`, `oracle` (+ `oracle_evidence`), `protocol` (sidecar modes), the settings of §2 | `check-task-fields.sh`, `check-protocol.py` |
 | The directory name `<base>-<mode>`, `<base>` = `<benchmark>-<family>-i<NN>` or the upstream name; no versions or durations in names | the mode is the whole suffix |
-| All task code in the directory, copied in by its Dockerfiles; base images hold the simulator and its assets; nothing imports repository code at run time | a task's identity is its directory (H.8) |
+| All task code in the directory, or in a pinned image its Dockerfiles take it from (the benchmark's base image; a files-only image built from `embodied_first_exam/benchmarks/<benchmark>/`, `COPY --from=<image@digest>`); base images hold the simulator and its assets; nothing imports repository code at run time | a task's identity is its directory (H.8) |
 | Every task is in the normal form `scripts/task_conventions.py` `normalize` writes (README layout, rendered sections, `DIGEST`) | `task_conventions.py --check` |
 | Base images `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (one public package, a tag per image), or `efe-private:<name>-<VERSION>` when `images/<name>/BUILD_ONLY` (one private package); every `FROM` / `image:` pinned to a tag or digest | `check-dockerfile.sh` |
 | README in the standard layout (`# <dir>`, key table, Task, Difficulty, Reference solution, Verification, Compute resources, Details); no `results/` | rendered by `normalize` |
 | A change to a published task, its scene included, is made in place: same name, a new DIGEST, a README Change Log entry | H.8 |
 
-**What a contribution delivers.** The deliverable is the tasks only: task directories under `tasks/<benchmark>/`. No
-task-generation code goes into the repository (generators, oracle searches, instance freezers, release builders stay
-with their authors). What several tasks of a benchmark share may go in `embodied_first_exam/benchmarks/<benchmark>/`;
-the recommended place is the benchmark's image (its `images/<name>/` Dockerfile and build), so the tasks get it from the
-image.
+**What a contribution delivers.** Tasks only: task directories under `tasks/<benchmark>/`. No task-generation code
+goes into the repository (generators, oracle searches, instance freezers, release builders stay with their authors), and
+`scripts/` holds only what running the benchmark needs. Code several tasks of a benchmark share goes, preferably, into the
+benchmark's image (`images/<name>/`), so the tasks get it from the image; else into
+`embodied_first_exam/benchmarks/<benchmark>/` (the same folder name as `tasks/<benchmark>/`), from which a files-only
+image is built (`scripts/files_image.py`, `images/<name>/FILES.json`) that the tasks' Dockerfiles copy from. A benchmark's
+own choices are documented in `docs/benchmarks/<benchmark>.md`.
 
 ## 2. Task-declared settings
 
@@ -94,7 +98,7 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 | An infrastructure failure is `infra_error = 1`: not a result, neither a success nor the agent's 0 (H.5) | `scripts/write_task_results.py` |
 | `nop` scores 0; with `oracle = "full"` the oracle scores 1 on every seed in `seeds.oracle` (`/validate`); a task without an oracle gets a human review (a positive example, the predicate, `nop` 0, determinism; recorded in the PR) | the `validated` marker (§2) |
 | Results report success with cost (tokens, money, turns, wall clock, simulation steps) per mode and per comparable configuration; run id `<harness>-<model>-<effort>`; not committed to the repository | running.md |
-| The core set: the tasks listed in [`core_set.toml`](../core_set.toml), one entry per task (`task`, the task dir name without its mode suffix) with its `default_mode`. The headline statistics are computed on the core tasks in their default mode; the same tasks may be run in another mode (`harbor run --core --privileged` / `--standard` / `--standard-realtime`), reported apart. Each result records `set` (`core` / `excluded`) as a marker, never part of the configuration. Listing a task changes none of its files | `task_conventions.py core-set --check` |
+| The core set: the tasks listed in [`core_set.toml`](../core_set.toml), one entry per task (`task`, the task dir name without its mode suffix) with its `default_mode`. The headline statistics are computed on the core tasks in their default mode; the same tasks may be run in another mode (`--privileged` / `--standard` / `--standard-realtime`), reported apart. Two sets run: `core` (`harbor run -d embodied-first-exam`) and `all`, every task dir (`harbor run -d embodied-first-exam@all`; `-p tasks/<benchmark>` narrows either to one benchmark). Each result records `set` (`core` / `excluded`) as a marker, never part of the configuration. Listing a task changes none of its files | `task_conventions.py core-set --check` |
 
 ## 5. Instructions and information
 

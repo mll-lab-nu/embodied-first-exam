@@ -67,7 +67,7 @@ The rule is PROTOCOL Appendix H.5; how the runner applies it:
   and is flagged for audit.
 
 ## Results
-Results are not committed (published on the results site and the Hugging Face dataset, keyed by run id
+Results are not committed (published on the [results site](https://www.embodied-first-exam.ai) and the Hugging Face dataset, keyed by run id
 `<harness>-<model>-<effort>`, the model token with underscores: `codex-gpt6_luna-xhigh`; provider, tier and settings go
 in the metadata). `scripts/write_task_results.py` writes, per task and run id, `README.md`, `config.json` (the trial's
 effective configuration: `protocol_version`, `mode`, `cutoff_s`, `reset_budget`, `slowdown`, `seed`, `network`,
@@ -264,7 +264,7 @@ changes in place and keeps its name; results under another cutoff are a differen
 derived from the cutoff: the token budget, the resource limits, reset budgets, step caps, verifier timeouts. When
 raising one, look at collect-hook and verifier budgets sized for an episode as long as the agent's time (RoboCasa,
 RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHAVIOR-1K: their `docs/benchmarks/`
-pages) and, for RoboOlympics' exported matches, a match's wall time at its slowdown plus the reviews between points.
+pages) and, for RoboOlympics-Match's exported matches, a match's wall time at its slowdown plus the reviews between points.
 
 ## Base images
 Every base image is a tag of one of two packages (PROTOCOL §1): `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (public), or `ghcr.io/mll-lab-nu/efe-private:<name>-<VERSION>` for an image with `images/<name>/BUILD_ONLY` (org members only): `scripts/build_images.sh`
