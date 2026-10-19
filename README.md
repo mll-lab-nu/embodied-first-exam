@@ -1,6 +1,11 @@
 <h1 align="center"><a href="https://www.embodied-first-exam.ai"><img src="docs/assets/logo.svg" alt="" height="44" align="top"></a>&nbsp;Embodied First Exam</h1>
 
-<p align="center"><a href="https://www.embodied-first-exam.ai"><img src="docs/assets/badge-website.svg" alt="Website: embodied-first-exam.ai" height="36"></a>&nbsp;<a href="https://discord.gg/TvscHrhDt"><img src="docs/assets/badge-discord.svg" alt="Discord" height="36"></a></p>
+<p align="center">
+  <a href="https://www.embodied-first-exam.ai"><img src="https://img.shields.io/badge/Website-embodied--first--exam.ai-2f4f4f" alt="Website"></a>
+  <a href="https://discord.gg/TvscHrhDt"><img src="https://img.shields.io/badge/Discord-join-5865f2?logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-b8a133" alt="License: MIT"></a>
+  <a href="docs/assets/wechat.jpg"><img src="https://img.shields.io/badge/WeChat-group-07c160?logo=wechat&logoColor=white" alt="WeChat group"></a>
+</p>
 
 <p align="center">Code agents have passed many exams in the digital world.<br>
 <b>What is their first exam to enter the physical world?</b></p>
