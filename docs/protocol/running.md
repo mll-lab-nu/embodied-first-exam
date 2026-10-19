@@ -173,7 +173,7 @@ python3 scripts/stamp_mtimes.py tasks                   # first ("Building task 
 harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-privileged -i robotwin_2_0_<t2>-privileged -a codex -m openai/gpt-6-astra -n 3 -o $PWD/exps/jobs --job-name <job-priv>
 harbor run -p tasks/robotwin-2 -i robotwin_2_0_<t1>-standard ... -a codex -m openai/gpt-6-astra -n 3 -o $PWD/exps/jobs --job-name <job-std>
 harbor trial regrade --help                             # re-run the verifier of a recorded trial (a grader error, a missing video)
-scripts/write_task_results.py exps/jobs <job> <run-id> "<agent label>" --out <dir outside the repository>   # per-task results (README, video, cost)
+python3 scripts/write_task_results.py exps/jobs <job> <run-id> "<agent label>" --out <dir outside the repository>   # per-task results (README, video, cost)
 ```
 `CODEX_FORCE_AUTH_JSON=1` uses a ChatGPT-subscription login (`codex login --device-auth`) instead of an API key.
 Use an absolute `-o` (compose cp is noisy otherwise); 3 concurrent trials fit one RTX 4090 with headroom for the
