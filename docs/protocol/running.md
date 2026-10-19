@@ -80,7 +80,7 @@ unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"
 every core task, the flag is shown as a marker and may be used as a filter. The main table and every headline number
 (success rates, rankings, totals) count core only: one dir per task of [`core_set.toml`](../core_set.toml), its mode
 the first listed of standard-realtime > standard > privileged (`task_conventions.core_tasks()`); core-privileged /
-core-standard / core-standard-realtime are the list's dirs of that mode (`set_of`: `core` when listed, else
+core-standard / core-standard-realtime are the list's dirs of that mode, core-all every listed dir (`set_of`: `core` when listed, else
 `excluded`). The list names task dirs, each mode its own task: every task dir of main at the list's
 `generated_from` commit minus the tasks judged easy (solved through a shortcut, judged too easy by the benchmark owner, or
 solved in every mode by the screening runs) and minus the dirs the reference run codex-gpt6_luna-xhigh solved (a success
