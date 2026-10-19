@@ -4,6 +4,8 @@ Thank you for helping build Embodied First Exam ([site](https://www.embodied-fir
 this page explains how a contribution gets from an idea to `main`. Reviewers follow [docs/REVIEWING.md](docs/REVIEWING.md).
 Everyone taking part follows the [code of conduct](CODE_OF_CONDUCT.md); report security problems privately ([SECURITY.md](SECURITY.md)).
 
+Pull requests can be opened by the repository's collaborators only. To contribute a benchmark or a task fix from outside, open an issue or propose it as the [contribute page](https://www.embodied-first-exam.ai/contribute/) describes; a maintainer brings it in.
+
 ## Kinds of pull requests
 
 | Kind | What it may change | Before you start |
