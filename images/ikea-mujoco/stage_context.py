@@ -35,7 +35,7 @@ def select(scene: pathlib.Path) -> list[pathlib.Path]:
 
 
 # H.2 (PROTOCOL v2.0): nothing the agent can read points at upstream material. The scene texts (code, XML, JSON) are
-# refused when they name the upstream repositories, their paths, or a URL; provenance lives in provenance.json.
+# refused when they name the upstream repositories, their paths, or a URL; provenance is kept outside this repository.
 POINTERS = re.compile(r"astra|robobench|roboprobe|untrusted/|assembly27|https?://|controller\.py|mechanics/|diagnostics/|"
                       r"grader/|experiments/|\.usda?\b", re.I)
 

@@ -52,7 +52,7 @@ Four more scenes are in the image (`/opt/ikea/scenes/`) but are not tasks: no re
 - The task directories are the deliverable; the tooling that built them is kept outside this repository.
 - In `images/ikea-mujoco/`: `assets.json` (the sha256 of every scene file in the image, and the dataset pin of the
   meshes; Image and assets), `bindings.json` (what each scene builds to in the image: initial-state hash, actuators,
-  timestep) and `provenance.json` (the scenes' upstream provenance, kept out of the image; PROTOCOL Appendix H.2).
+  timestep). The scenes' upstream provenance is kept outside this repository (PROTOCOL Appendix H.2).
 - Each privileged task carries `rcb_ikea.py` (the tooling and the replay), `tests/grade.py` (the verifier) and
   `tests/render_video.py` (the replay video); each standard task the sim service (`environment/sim/`: `server.py`,
   `ikea_rig.py`, `ikea_nyx.py`, `finalize.sh`; `ikea_nyx.py` drives RoboARC's `nyx_direct.py`, which the tasks get from `embodied_first_exam/benchmarks/roboarc/`), its
