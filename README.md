@@ -14,7 +14,7 @@
 
 ## News
 
-- 🔥 **2026-10-19**: First release of Embodied First Exam.
+- 🔥 **2026-10-19**: Embodied First Exam is publicly released.
 
 ## Quick start
 
