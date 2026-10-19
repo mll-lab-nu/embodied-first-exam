@@ -10,7 +10,7 @@
 #    FILES.json, scripts/files_image.py) counts as a copy at <context>/<basename of dest> with FILES.json's sha256, and
 #    the line must name the image FILES.json pins.
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as ci_checks/benchmarks/robopaint/advisory-tooling.sh.
-#    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: RoboOlympics, PROTOCOL §4c) are a group of their own,
+#    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: EmbodiedOlympics, PROTOCOL §4c) are a group of their own,
 #    one per exporter and [metadata] skill_in_loop.
 # 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo; Panda Dynamic Scenes until 2026-10-17): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
@@ -43,7 +43,7 @@ sys.path.insert(0, os.path.join(ROOTD, "scripts")); import task_conventions as t
 MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits": "rcb_robowits.py", "maniguard": "rcb_maniguard.py",
           "molmospaces": "rcb_molmospaces.py", "myosuite": "rcb_myosuite.py",
           "dexjoco": "rcb_dexjoco.py", "dexhand": "rcb_dexhand.py", "roboarc": "rcb_topogym.py", "bigym2": "rcb_bigym2.py", "yamlab": "rcb_yamlab.py", "robodojo": "rcb_robodojo.py",
-          "roboolympics": "rcb_rfo.py",
+          "embodied-olympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py", "ispatialgym": "rcb_ispatialgym.py",
           "ikea": "rcb_ikea.py",   # IKEA MuJoCo
@@ -133,7 +133,7 @@ for t in sorted(TDIR):
     tt = os.path.join(TDIR[t], "task.toml")
     if not os.path.isfile(tt):
         continue
-    bench = t.split("-")[0]
+    bench = "embodied-olympics" if t.startswith("embodied-olympics-") else t.split("-")[0]   # a two-word prefix
     meta = tomllib.load(open(tt, "rb")).get("metadata", {})
     proto = str(meta.get("protocol", ""))
     v24 = proto == "eai-standard/2.4"
@@ -194,8 +194,8 @@ for t in sorted(TDIR):
     if bench not in MODULE:
         continue
     module = MODULE[bench]
-    if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c; Embodied Safety Exam 0.5.4): its own sources
-        # one group per exporter and skill-in-the-loop setting: RoboOlympics-Match's table-tennis privileged twins come
+    if meta.get("exporter"):   # written by the benchmark's own exporter (EmbodiedOlympics, PROTOCOL §4c; Embodied Safety Exam 0.5.4): its own sources
+        # one group per exporter and skill-in-the-loop setting: EmbodiedOlympics-Match's table-tennis privileged twins come
         # from their own simulator's exporter (tools.tt_fullsim, #282 / #325) and the low-level matches with the agent's
         # skill in the loop have their own standard-realtime grader (#300); each is shared within its group
         bench += f" (exported: {meta['exporter']}" + (f", {meta['skill_in_loop']}" if meta.get("skill_in_loop") else "") + ")"

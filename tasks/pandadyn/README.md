@@ -188,7 +188,7 @@ builds in 5-15 s and runs ~40-150 control steps per second, so the budget is the
 Standard and standard-realtime differ only in the clock. Both run
 the same adapter (each twin's `environment/sim/server.py`: the same code, each copy with its own docstring) on the same
 shared service layer (`rcb_service.py`, with `grade.py` and the 2.1 client: the same files as HumanoidBench's, BiGym
-2.0's and RoboOlympics-Fun's), with the same reset budget ("Reset budget" below). The static families (D05, D08, D11, D12, D13, S06) have
+2.0's and EmbodiedOlympics-Fun's), with the same reset budget ("Reset budget" below). The static families (D05, D08, D11, D12, D13, S06) have
 only the standard twin and get the same rules.
 - **Action.** `joint_position` only (8 per arm: 7 joint targets + the total aperture, the environment's own action;
   clipped to the limits and executed as float64, which the client sends): rows `dt` apart, a whole multiple of the 10 ms
@@ -209,7 +209,7 @@ only the standard twin and get the same rules.
 The dynamic families (`[metadata] dynamics`, declared by each task; D05, D08, D11, D12, D13 and S06 are static: nothing in
 them moves by itself) get a `-standard-realtime` twin, sharing the standard twin's adapter, service layer and reset budget
 ("Standard mode" above).
-- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics-Fun, unchanged (`rcb_realtime.py`
+- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and EmbodiedOlympics-Fun, unchanged (`rcb_realtime.py`
   and `rcb_client.py` from `embodied_first_exam/standard/realtime/`, `rcb_service.py`, `grade.py`), with the twin's
   `environment/sim/server.py`, an `rcb_service.Sim` adapter on `rcb_pandadyn.Session`: the standard
   twin's frozen instance, `joint_position` action (clipped to the limits, executed as float64), success check, cameras

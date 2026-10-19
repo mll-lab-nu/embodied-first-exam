@@ -86,8 +86,8 @@ BENCHMARKS = [  # (directory prefix, label)
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
-    ("roboolympics-fun-", "RoboOlympics-Fun"),      # the single-humanoid sports families
-    ("roboolympics-match-", "RoboOlympics-Match"),  # the matches RoboOlympics exports with its own service, and their twins
+    ("embodied-olympics-fun-", "EmbodiedOlympics-Fun"),      # the single-humanoid sports families
+    ("embodied-olympics-match-", "EmbodiedOlympics-Match"),  # the matches EmbodiedOlympics exports with its own service, and their twins
     ("ese-", "Embodied Safety Exam"),
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
@@ -98,27 +98,27 @@ BENCHMARKS = [  # (directory prefix, label)
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
-# RoboOlympics' exported tasks (PROTOCOL v1 §4c; ci_checks/benchmarks/roboolympics-match/exported.toml) have a cutoff note of their own
+# EmbodiedOlympics' exported tasks (PROTOCOL v1 §4c; ci_checks/benchmarks/embodied-olympics-match/exported.toml) have a cutoff note of their own
 # (CUTOFF_NOTE_TASK below):
-RO_EXPORTED_TASKS = ("roboolympics-match-badminton-match-i01-standard-realtime",
-                     "roboolympics-match-badminton-duelrl-i01-standard-realtime",
-                     "roboolympics-match-badminton-match-i02-standard-realtime",
-                     "roboolympics-match-badminton-match-i04-standard-realtime",
-                     "roboolympics-match-fencing-bout-i01-standard",
-                     "roboolympics-match-fencing-bout-i02-standard",
-                     "roboolympics-match-foosball-match-i01-standard-realtime",
-                     "roboolympics-match-soccer-match-i00-standard-realtime",
-                     "roboolympics-match-soccer-jointcpu-i01-standard-realtime",
-                     "roboolympics-match-soccer-jointgpu-i01-standard-realtime",
-                     "roboolympics-match-soccerssl-match-i00-standard-realtime",
-                     "roboolympics-match-soccerssl-match-i01-standard-realtime",
-                     "roboolympics-match-tabletennis-duelrl-i01-standard-realtime",
-                     "roboolympics-match-badminton-matchlow-i01-standard-realtime",
-                     "roboolympics-match-tabletennis-matchlow-i01-standard-realtime",
-                     "roboolympics-match-tabletennis-match-i01-standard-realtime",
-                     "roboolympics-match-tabletennis-match-i02-standard-realtime",
-                     "roboolympics-match-tabletennis-match-i03-standard-realtime",
-                     "roboolympics-match-tabletennis-match-i04-standard-realtime")
+RO_EXPORTED_TASKS = ("embodied-olympics-match-badminton-match-i01-standard-realtime",
+                     "embodied-olympics-match-badminton-duelrl-i01-standard-realtime",
+                     "embodied-olympics-match-badminton-match-i02-standard-realtime",
+                     "embodied-olympics-match-badminton-match-i04-standard-realtime",
+                     "embodied-olympics-match-fencing-bout-i01-standard",
+                     "embodied-olympics-match-fencing-bout-i02-standard",
+                     "embodied-olympics-match-foosball-match-i01-standard-realtime",
+                     "embodied-olympics-match-soccer-match-i00-standard-realtime",
+                     "embodied-olympics-match-soccer-jointcpu-i01-standard-realtime",
+                     "embodied-olympics-match-soccer-jointgpu-i01-standard-realtime",
+                     "embodied-olympics-match-soccerssl-match-i00-standard-realtime",
+                     "embodied-olympics-match-soccerssl-match-i01-standard-realtime",
+                     "embodied-olympics-match-tabletennis-duelrl-i01-standard-realtime",
+                     "embodied-olympics-match-badminton-matchlow-i01-standard-realtime",
+                     "embodied-olympics-match-tabletennis-matchlow-i01-standard-realtime",
+                     "embodied-olympics-match-tabletennis-match-i01-standard-realtime",
+                     "embodied-olympics-match-tabletennis-match-i02-standard-realtime",
+                     "embodied-olympics-match-tabletennis-match-i03-standard-realtime",
+                     "embodied-olympics-match-tabletennis-match-i04-standard-realtime")
 # PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
@@ -160,7 +160,7 @@ RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
 # there (same rules: ci_checks/check-realtime.py)
 SLOWDOWN_RE = re.compile(r'RCB_SLOWDOWN:\s*"?\$\{RCB_SLOWDOWN:-([0-9.]+)\}"?')
 RESET_RE = re.compile(r'RCB_RESET_BUDGET:\s*"?\$\{RCB_RESET_BUDGET:-([0-9]+)\}"?')
-# a task a benchmark exports with its own service (PROTOCOL §4c) sets S its own way: RoboOlympics `RO_SLOWDOWN: "10"`
+# a task a benchmark exports with its own service (PROTOCOL §4c) sets S its own way: EmbodiedOlympics `RO_SLOWDOWN: "10"`
 OWN_SLOWDOWN_RE = re.compile(r'^\s*RO_SLOWDOWN:\s*"?([0-9.]+)"?\s*$', re.M)
 RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
     "min_cpus": float, "min_memory_gb": float, "min_gpu_memory_gb": float, "gpu_required": bool, "gpu_class": str,
@@ -256,7 +256,7 @@ CUTOFF_NOTE_OWN[("roboEngineer", "standard")] = (
     "or, if you sealed none, the latest deployment that completed before that moment; a deployment still running then "
     "is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs "
     "out before your time does." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
-# RoboOlympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
+# EmbodiedOlympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
 # RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode (board 0121 m4)
 CUTOFF_NOTE_TASK = {n: (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When "
@@ -278,7 +278,7 @@ BENCHMARK_DIRS = {
     "MolmoSpaces": "molmospaces", "MyoSuite": "myosuite", "DexJoCo": "dexjoco", "DexHand": "dexhand",
     "VLABench": "vlabench", "RoboCasa-GR1": "robocasa-gr1", "RoboCasa": "robocasa", "RoboCasa365": "robocasa365",
     "LIBERO-MAX": "libero-max", "RoboARC": "roboarc", "BiGym 2.0": "bigym2", "YAMLab": "yamlab", "RoboDojo": "robodojo",
-    "RoboOlympics-Fun": "roboolympics-fun", "RoboOlympics-Match": "roboolympics-match", "Embodied Safety Exam": "embodied-safety-exam",
+    "EmbodiedOlympics-Fun": "embodied-olympics-fun", "EmbodiedOlympics-Match": "embodied-olympics-match", "Embodied Safety Exam": "embodied-safety-exam",
     "Panda Dynamic Scenes": "pandadyn", "AM-Bench": "ambench", "iSpatialGym": "ispatialgym", "IKEA MuJoCo": "ikea-mujoco",
     "roboEngineer": "roboengineer",
 }
@@ -1243,7 +1243,7 @@ def realtime_of(task: Path) -> tuple[float, int | None] | None:
 
 
 def slowdown_var(task: Path) -> str:
-    """The setting S comes from: `RCB_SLOWDOWN`, or a §4c service's own (RoboOlympics `RO_SLOWDOWN`)."""
+    """The setting S comes from: `RCB_SLOWDOWN`, or a §4c service's own (EmbodiedOlympics `RO_SLOWDOWN`)."""
     c = read_text(task / "environment/docker-compose.yaml") or ""
     return "RCB_SLOWDOWN" if SLOWDOWN_RE.search(c) or not OWN_SLOWDOWN_RE.search(c) else "RO_SLOWDOWN"
 
@@ -1494,7 +1494,7 @@ def effective_config(task: Path, seed: int | None = None, env: dict | None = Non
 
 def verifier_cpus_of(task: Path) -> float | None:
     """The verifier's pinned CPUs ([verifier.environment] cpus, = [metadata.resources] verifier_min_cpus) of a task
-    whose verifier plays a live wall-clock match ([metadata] verifier_wall_clock; RoboOlympics' privileged twins)."""
+    whose verifier plays a live wall-clock match ([metadata] verifier_wall_clock; EmbodiedOlympics' privileged twins)."""
     try:
         return float(task_toml(task)["verifier"]["environment"]["cpus"])
     except (KeyError, TypeError, ValueError):

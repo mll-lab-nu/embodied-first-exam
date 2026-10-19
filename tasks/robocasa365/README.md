@@ -82,7 +82,7 @@ verdict; the hook's budget; request validation; the camera calibration is the re
 The dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-standard-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
 by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
 it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.
-- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and RoboOlympics-Fun, unchanged
+- **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and EmbodiedOlympics-Fun, unchanged
   (the task's `environment/sim/rcb_realtime.py`, `rcb_service.py`, `environment/rcb_client.py`, `tests/grade.py`: byte-identical
   copies of the HumanoidBench realtime tasks' files; `ci_checks/check-tooling-identity.sh`), with
   `environment/sim/server.py`, an `rcb_service.Sim` adapter on `casa_tool.Session`: the standard
