@@ -79,6 +79,10 @@ CLAUDE_FORCE_OAUTH=1 harbor run -d embodied-first-exam \
 
 See [embodied-first-exam.ai/contribute](https://www.embodied-first-exam.ai/contribute/) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Authors
+
+Kangrui Wang\*§, Changhe Chen\*§, Qineng Wang\*§, Pingyue Zhang\*§, Chi Gui\*§, Feishi Wang§, Canyu Chen§, Wenli Xiao§, Xiaoyu Huang§, Tonghe Zhang§, Linjie (Lindsey) Li§, Yiyou Sun, Mingkai Deng, Jinyu Hou, Xiangyi Li, Eric P. Xing, Huaxiu Yao, Zhiwen Fan, Yuejiang Liu, Jiajun Wu, Yuke Zhu, Guanya Shi†, Ruohan Zhang†, Manling Li†
+
 ## License
 
 [MIT](LICENSE) for the code in this repository. Third-party simulators, assets, reference solutions derived from
@@ -89,7 +93,7 @@ upstream experts and the contents of the base images keep their own licenses.
 ```bibtex
 @misc{embodiedfirstexam2026,
   title        = {Embodied First Exam},
-  author       = {Embodied First Exam Team},
+  author       = {Kangrui Wang and Changhe Chen and Qineng Wang and Pingyue Zhang and Chi Gui and Feishi Wang and Canyu Chen and Wenli Xiao and Xiaoyu Huang and Tonghe Zhang and Linjie Li and Yiyou Sun and Mingkai Deng and Jinyu Hou and Xiangyi Li and Eric P. Xing and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Jiajun Wu and Yuke Zhu and Guanya Shi and Ruohan Zhang and Manling Li},
   year         = {2026},
   url          = {https://github.com/mll-lab-nu/embodied-first-exam}
 }
