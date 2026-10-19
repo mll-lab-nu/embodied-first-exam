@@ -9,7 +9,7 @@
 | Family / instance | `ikea_gladom` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 10800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-0.4.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-0.4.0` |
 
 ## Task
 IKEA GLADOM tray table (AA-1832218-3), full seven-operation scope in plain MuJoCo 3.14.0 (CPU, float64) with two 7-DoF Franka Panda arms, each with the MuJoCo Menagerie Panda hand (two-finger, tendon-coupled), through the robot service (eai-standard/2.4; 2.1 / 2.2

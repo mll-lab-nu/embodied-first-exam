@@ -50,8 +50,8 @@ Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and
 - The release files are written by `scripts/robotangle/release_rebuild.py --onto <main>` on dev/robotangle_mujoco
   (its `mujoco_release.json` names each base: a tier through its family's `numbers`, a new design by its key): image,
   instances made in the image, release files, render, checks, Harbor oracle / nop.
-- Large files: the frozen instances are in the private HF dataset `eai-v2-internal/robotangle-assets` (shared with the
-  Genesis release), under `instances/<base>/`, pinned file by file in `images/roboarc/assets.json`.
+- Large files: the frozen instances are in the public image, under `/opt/robotangle/instances/<base>/`, pinned file by
+  file in `images/roboarc/assets.json`.
 - Image: `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>`, built FROM the published
   `efe:robotangle-0.2.22` with the release commit's simulator source and the frozen MuJoCo instances
   (`images/roboarc/Dockerfile`, generated from dev/robotangle_mujoco's `Dockerfile.mujoco`; context:

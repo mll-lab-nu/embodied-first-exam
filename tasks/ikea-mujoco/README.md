@@ -8,21 +8,8 @@ grasps (finger friction, no assist). Eight tasks ship, each in both modes (16 ta
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/ikea-mujoco -a codex -m openai/gpt-6-astra
 ```
-Some images are not on a public registry: build them first ([Getting the images](#getting-the-images)).
-
-## Getting the images
-All 16 tasks (both modes) need `efe-private:ikea-mujoco-0.3.0` (privileged agent and verifier) and the standard tasks
-also `efe-private:ikea-mujoco-sim-0.4.0` (sidecar); neither can be pulled. Build them with the tags the tasks name; the
-tasks then run unchanged. The files image `efe:ikea-mujoco-files` is public (the task builds pull it).
-
-```bash
-pip install huggingface_hub
-images/ikea-mujoco/fetch_image_context.sh   # robot meshes from MuJoCo Menagerie (public); furniture part meshes from the
-                                            # dataset in images/ikea-mujoco/assets.json (still private: needs read access)
-docker build -f images/ikea-mujoco/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-0.3.0 images/ikea-mujoco/context
-docker build -t ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-0.4.0 images/ikea-mujoco/sim
-harbor run -d embodied-first-exam@all -p tasks/ikea-mujoco -a codex -m openai/gpt-6-astra
-```
+All images are public (`efe:ikea-mujoco-0.3.0`, `efe:ikea-mujoco-sim-0.4.0`, `efe:ikea-mujoco-files`): the tasks run
+directly. To rebuild the images from source, see [Image and assets](#image-and-assets) and `images/ikea-mujoco/README.md`.
 
 | task | robot | what is assembled | mechanism |
 |---|---|---|---|
@@ -188,11 +175,11 @@ and 63.3 %): MuJoCo's own step is about 95 % of the time (their SDF threads). Th
 agent's budget is the same 10800 s on every host, so on a slow host an agent has less room for full replays.
 
 ## Image and assets
-- `ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-<images/ikea-mujoco/VERSION>` (0.3.0, image id `ed950d079b63`): MuJoCo 3.14.0
+- `ghcr.io/mll-lab-nu/efe:ikea-mujoco-<images/ikea-mujoco/VERSION>` (0.3.0, image id `ed950d079b63`): MuJoCo 3.14.0
   (EPA-patched), numpy 2.5.4, Python 3.12, and the twelve scenes at `/opt/ikea/scenes/<task>` (the four in progress
   included). The privileged agent and the privileged verifier run it; the standard verifier runs the shared client
   base (it replays nothing).
-- `ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-<images/ikea-mujoco/sim/VERSION>` (0.4.0): the standard sidecar. It adds Nyx,
+- `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-<images/ikea-mujoco/sim/VERSION>` (0.4.0): the standard sidecar. It adds Nyx,
   RoboARC's renderer and look, in its own venv `/opt/nyx` (gs-nyx 0.1.3 needs numpy < 2.4; the physics process keeps
   numpy 2.5.4 and the patched MuJoCo): RGB from Nyx (path tracer, 32 spp, denoised, studio HDRI, point lights placed
   relative to each scene's work surface), depth from MuJoCo's EGL raster, the same camera rig and calibration. The live
@@ -201,8 +188,8 @@ agent's budget is the same 10800 s on every host, so on a slow host an agent has
 - The scene code is in git (`images/ikea-mujoco/scenes/<task>/`); the meshes (2,078 files) are not, and every file's
   sha256 is pinned in `images/ikea-mujoco/assets.json`. The robot meshes (828: Franka Panda, Apache-2.0; ALOHA,
   BSD-3-Clause) come from MuJoCo Menagerie at a pinned commit; the furniture part meshes (1,250, parameterized
-  reconstructions drawn from the IKEA assembly manuals, not IKEA CAD) from the private Hugging Face dataset
-  `eai-v2-internal/ikea-mujoco-assets` at a pinned revision. `images/ikea-mujoco/fetch_image_context.sh` downloads
+  reconstructions drawn from the IKEA assembly manuals, not IKEA CAD; CC BY 4.0) from the public Hugging Face dataset
+  `MLL-Lab/embodied-first-exam-public` (`ikea-mujoco/`) at a pinned revision, no login. `images/ikea-mujoco/fetch_image_context.sh` downloads
   both, checks them and stages the build context (`images/ikea-mujoco/README.md`).
 - `stage_context.py` refuses a scene text that points at upstream material (H.2).
 

@@ -7,7 +7,7 @@
 | Twin | `robolab-take-measuring-spoon-out-i00-privileged` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `take_measuring_spoon_out` / seed 0 |
-| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-take-measuring-spoon-out__vK2T2MY (robolab-take-measuring-spoon-out-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/take_measuring_spoon_out/unlimited/); robolab-take-measuring-spoon-out__3KikKcU (robolab-take-measuring-spoon-out-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/take_measuring_spoon_out/limited/). The standard positive ran on the lab host and was not re-graded; the privileged positive __vK2T2MY passes the 2026-10-14 term (ws, 2026-10-14). Human review per family (PROTOCOL §2.7). |
+| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-take-measuring-spoon-out__vK2T2MY (robolab-take-measuring-spoon-out-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3); robolab-take-measuring-spoon-out__3KikKcU (robolab-take-measuring-spoon-out-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab). The standard positive ran on the lab host and was not re-graded; the privileged positive __vK2T2MY passes the 2026-10-14 term (ws, 2026-10-14). Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.1.2` |
 
@@ -24,8 +24,8 @@ That of `robolab-take-measuring-spoon-out-i00-privileged` (its README), without 
 
 ## Reference solution
 None: RoboLab ships no expert or planner, and no reference solution has been written for this family (`oracle = "none"`). Positive examples, model trials the separate verifier scored 1:
-- `robolab-take-measuring-spoon-out__vK2T2MY` (privileged mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`, host ws3): [trial log](https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/take_measuring_spoon_out/unlimited/), [replay video](https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/take_measuring_spoon_out/unlimited/replay.mp4)
-- `robolab-take-measuring-spoon-out__3KikKcU` (standard mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`, host lab): [trial log](https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/take_measuring_spoon_out/limited/), [replay video](https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/take_measuring_spoon_out/limited/replay.mp4)
+- `robolab-take-measuring-spoon-out__vK2T2MY` (privileged mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`, host ws3)
+- `robolab-take-measuring-spoon-out__3KikKcU` (standard mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`, host lab)
 
 ## Verification
 Graded by the live episode (owner 2026-10-17, board 0151): `success` = the live episode's success, judged by the sim

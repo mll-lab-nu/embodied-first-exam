@@ -19,7 +19,7 @@
  ],
  "image": {
   "id": "sha256:ed950d079b6304219d3b1ec2f428f851e383cec841d38a4c11bd0f25a42dea00",
-  "reference": "ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-0.3.0"
+  "reference": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0"
  },
  "initial_state_sha256": "9815e6dc4b4a98566a644f09a7dac430a05cdc59f4559ca7095f3c12e5b4b034",
  "nu": 16,

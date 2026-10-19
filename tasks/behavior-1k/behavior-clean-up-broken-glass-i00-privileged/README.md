@@ -7,7 +7,7 @@
 | Twin | `behavior-clean-up-broken-glass-i00-standard` |
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `clean_up_broken_glass` / seed 301 |
-| Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-clean-up-broken-glass-i__Pw85YoX (behavior-lunaxh-t8-0927, privileged) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 912567fa; grader verdict and frozen instance unchanged since); agent log https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/clean_up_broken_glass/unlimited/, verifier replay https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/clean_up_broken_glass/unlimited/replay.mp4; not re-run on this version (static validation only). Human review per family (protocol §2.7). |
+| Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-clean-up-broken-glass-i__Pw85YoX (behavior-lunaxh-t8-0927, privileged) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 912567fa; grader verdict and frozen instance unchanged since); not re-run on this version (static validation only). Human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
 
@@ -21,7 +21,7 @@ Three pieces of broken glass lie on the dining-room floor; put all of them insid
 First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 290 s on average (8,691 control steps at 30 Hz) and drove 29.12 m; the scene loads 5 rooms, and the goal uses `inside`.
 
 ## Reference solution
-None (`oracle = "none"`): no reference solution was written (the challenge ships teleop demos, not scripts). Evidence that the task is solvable: model trial `behavior-clean-up-broken-glass-i__Pw85YoX` (behavior-lunaxh-t8-0927), graded 1 by the separate verifier; its agent log is on the results site (https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/clean_up_broken_glass/unlimited/) and the verifier's replay on Hugging Face (https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/clean_up_broken_glass/unlimited/replay.mp4); `task.toml` `oracle_evidence` has the version it ran on.
+None (`oracle = "none"`): no reference solution was written (the challenge ships teleop demos, not scripts). Evidence that the task is solvable: model trial `behavior-clean-up-broken-glass-i__Pw85YoX` (behavior-lunaxh-t8-0927), graded 1 by the separate verifier; `task.toml` `oracle_evidence` has the version it ran on.
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff the BDDL goal

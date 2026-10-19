@@ -1,7 +1,7 @@
 {
  "image": {
   "id": "sha256:ed950d079b6304219d3b1ec2f428f851e383cec841d38a4c11bd0f25a42dea00",
-  "reference": "ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-0.3.0"
+  "reference": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-0.3.0"
  },
  "note": "per task, what the image's scene builds to: python /opt/tools/rcb_ikea.py info --task <t> inside the image; a task's own \"image\" (a scene added in a later image version) overrides the default image",
  "runtime": {

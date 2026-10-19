@@ -7,7 +7,7 @@
 | Twin | `robolab-put-two-mugs-on-shelf-i00-privileged` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `put_two_mugs_on_shelf` / seed 0 |
-| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-put-two-mugs-on-shelf-i0__AMuARWT (robolab-put-two-mugs-on-shelf-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3; https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/put_two_mugs_on_shelf/unlimited/). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7). |
+| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-put-two-mugs-on-shelf-i0__AMuARWT (robolab-put-two-mugs-on-shelf-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.1.2` |
 
@@ -24,7 +24,7 @@ That of `robolab-put-two-mugs-on-shelf-i00-privileged` (its README), without res
 
 ## Reference solution
 None: RoboLab ships no expert or planner, and no reference solution has been written for this family (`oracle = "none"`). Positive examples, model trials the separate verifier scored 1:
-- `robolab-put-two-mugs-on-shelf-i0__AMuARWT` (privileged mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`, host ws3): [trial log](https://embodied-agent-interface-v2-internal.github.io/runs/robolab/codex-gpt6_luna-xhigh/put_two_mugs_on_shelf/unlimited/), [replay video](https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/robolab/codex-gpt6_luna-xhigh/put_two_mugs_on_shelf/unlimited/replay.mp4)
+- `robolab-put-two-mugs-on-shelf-i0__AMuARWT` (privileged mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`, host ws3)
 
 ## Verification
 Graded by the live episode (owner 2026-10-17, board 0151): `success` = the live episode's success, judged by the sim
