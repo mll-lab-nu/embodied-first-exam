@@ -16,6 +16,18 @@ its goal this way; BEHAVIOR-1K runs the same robot in the same houses with goals
 | image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` (`images/ispatialgym/`, BUILD_ONLY: Isaac Sim inside; both upstream repositories are fetched by commit) |
 | oracle | none |
 
+## Build the images locally
+
+The images are not public (`ghcr.io/mll-lab-nu/efe-private`): build them from the repository root before running the tasks. The task
+Dockerfiles pin the files images by registry digest, which a local build does not have; the last line drops the pin.
+
+```bash
+docker build -f images/behavior/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) .
+docker build -f images/ispatialgym/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ispatialgym-$(cat images/ispatialgym/VERSION) .
+python3 scripts/files_image.py build ispatialgym-files
+grep -rlE 'efe-private:[^@ ]+@sha256' tasks/ispatialgym | xargs sed -i -E 's#(efe-private:[^@ ]+)@sha256:[0-9a-f]{64}#\1#g'   # use the local files image
+```
+
 ## Tasks: upstream's 23, ours ✅ (12)
 
 | family | task | the robot must | ours | why not |
