@@ -28,6 +28,8 @@ A coding agent writes code, runs the robot and sees the result, in a frozen scen
 ### 1. Install
 
 ```bash
+# needs git, uv (https://docs.astral.sh/uv/) and Docker with Compose; GPU tasks also need an NVIDIA GPU
+# and the NVIDIA Container Toolkit
 # clone with the submodules; install Harbor 0.23.0 with this repository's flags
 git clone --recurse-submodules https://github.com/mll-lab-nu/embodied-first-exam.git
 cd embodied-first-exam
@@ -59,7 +61,7 @@ harbor run -d embodied-first-exam@all -p tasks/roboarc -a codex -m openai/gpt-6-
 ```
 
 ```bash
-# one task
+# one task (-y skips Harbor's confirmation prompt, e.g. in a script)
 harbor run -d embodied-first-exam@all -p tasks/<benchmark>/<task> -a oracle
 ```
 

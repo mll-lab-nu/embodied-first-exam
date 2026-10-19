@@ -1413,7 +1413,9 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
         return "```bash\n" + "\n".join(lines) + "\n```\n"
     return "\n".join([
         "### 1. Install", "",
-        block("# clone with the submodules; install Harbor 0.23.0 with this repository's flags",
+        block("# needs git, uv (https://docs.astral.sh/uv/) and Docker with Compose; GPU tasks also need an NVIDIA GPU",
+              "# and the NVIDIA Container Toolkit",
+              "# clone with the submodules; install Harbor 0.23.0 with this repository's flags",
               "git clone --recurse-submodules https://github.com/mll-lab-nu/embodied-first-exam.git",
               "cd embodied-first-exam",
               "uv tool install --force -e . --with-executables-from harbor",
@@ -1426,7 +1428,8 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
         block(f"# every task: {len(dirs)} task dirs ({bases} tasks in their modes, {benches} benchmarks)",
               f"{d}@all {m}"),
         block(f"# one benchmark, here RoboARC ({arc} task dirs)", f"{d}@all -p tasks/roboarc {m}"),
-        block("# one task", f"{d}@all -p tasks/<benchmark>/<task> -a oracle"),
+        block("# one task (-y skips Harbor's confirmation prompt, e.g. in a script)",
+              f"{d}@all -p tasks/<benchmark>/<task> -a oracle"),
         "Some benchmarks' images are not public: build them first as the benchmark's README in `tasks/<benchmark>/` "
         "describes (e.g. [tasks/ambench](tasks/ambench)).", "",
         "### 3. Or use a subscription instead of an API key", "",

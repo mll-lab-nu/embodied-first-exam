@@ -59,9 +59,12 @@ RUN cd /opt/RoboDojo/third_party/curobo && pip install --no-cache-dir -e ".[cu12
 # (images/robodojo/requirements.lock, without resolving: the reference environment is what upstream's sequence of pip
 # installs leaves), and the build fails unless the result is exactly the lock (editable checkouts aside: RoboDojo's Isaac
 # Lab and cuRobo at the commits above).
+# Packages an unpinned upstream install step pulls in today but the lock does not list are removed first, so a fresh
+# build still ends at exactly the lock.
 COPY images/robodojo/requirements.lock /opt/requirements.lock
 RUN uv pip install --no-deps --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cu128 \
       --extra-index-url https://pypi.nvidia.com -r /opt/requirements.lock && rm -rf /root/.cache/uv && \
+    uv pip freeze --exclude-editable | grep -vxFf /opt/requirements.lock | sed 's/[ =@].*//' | xargs -r uv pip uninstall && \
     uv pip freeze --exclude-editable | diff - /opt/requirements.lock && echo "environment == requirements.lock"
 # RoboDojo's Isaac Lab (2.3.2) pins the extension isaacsim.asset.importer.urdf =2.4.31, the isaacsim 5.1.0 wheels carry
 # 2.4.30: Kit downloads 2.4.31 from NVIDIA's extension registry at its first start, as on any RoboDojo install. The tasks
