@@ -7,6 +7,9 @@ COPY instance.json /app/instance.json
 COPY --from=ghcr.io/mll-lab-nu/efe-private:behavior-files-0.1.0@sha256:ad8a69c004fd66aac5c74de16b43dc9c26b4e9eb10a52c01887e834a6f3fb2fb /rcb_behavior.py /opt/tools/rcb_behavior.py
 COPY --from=ghcr.io/mll-lab-nu/efe-private:behavior-files-0.1.0@sha256:ad8a69c004fd66aac5c74de16b43dc9c26b4e9eb10a52c01887e834a6f3fb2fb /r1pro_primitives_eval.yaml /opt/tools/r1pro_primitives_eval.yaml
 ENV PYTHONPATH=/opt/tools
+# this task's state-dump patch (sitecustomize.py, imported at startup from PYTHONPATH): the state can be dumped on the
+# step a log is split (board 0178); the shared tooling is unchanged
+COPY sitecustomize.py /opt/tools/sitecustomize.py
 # sets of strings iterate in the same order in every process (with the tooling's stable object hashes, item 16 of the
 # 2026-10-14 failure analysis: a replay must take the same path as the live run)
 ENV PYTHONHASHSEED=0

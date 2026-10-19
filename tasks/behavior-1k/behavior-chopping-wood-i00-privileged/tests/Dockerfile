@@ -10,6 +10,9 @@ COPY --from=ghcr.io/mll-lab-nu/efe-private:behavior-files-0.1.0@sha256:ad8a69c00
 COPY --from=ghcr.io/mll-lab-nu/efe-private:behavior-files-0.1.0@sha256:ad8a69c004fd66aac5c74de16b43dc9c26b4e9eb10a52c01887e834a6f3fb2fb /r1pro_primitives_eval.yaml /tests/r1pro_primitives_eval.yaml
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
+# this task's state-dump patch (sitecustomize.py, imported at startup from PYTHONPATH): the state can be dumped on the
+# step a log is split (board 0178); the shared tooling is unchanged
+COPY sitecustomize.py /tests/sitecustomize.py
 ENV PYTHONHASHSEED=0
 WORKDIR /tests
 # resource limits: the verifier step (from the monitor image) and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
