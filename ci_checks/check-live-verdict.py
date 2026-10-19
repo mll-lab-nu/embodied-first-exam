@@ -22,8 +22,8 @@ docs/protocol/running.md ("Infrastructure failures"). For every standard / stand
       replay_success / deterministic true, the live episode not -> reward 0 (a replay never grants a success)
     The records are the shared layers' common fields; a benchmark whose grader needs more of its own (e.g. a verdict
     file next to final.json) may fail the success case, which is then a finding to read, not a rule. A grader that does
-    not read RCB_DATA / RCB_VERIFIER_LOG_DIR, or a task without tests/grade.py, is checked statically only (the summary
-    says how many). One run per distinct content of tests/*.py + tests/*.json. The verifier's files include those
+    not read RCB_DATA / RCB_VERIFIER_LOG_DIR, one that accepts only its own final.json schema (`final["schema"] != ...`),
+    or a task without tests/grade.py, is checked statically only (the summary says how many). One run per distinct content of tests/*.py + tests/*.json. The verifier's files include those
     tests/Dockerfile takes from a files-only image into /tests/ (scripts/files_image.py copied): read at their source,
     and the grader run from a copy of the assembled /tests/.
 
@@ -47,6 +47,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import files_image  # noqa: E402  (the verifier's files from a files-only image count as its tests/)
 import task_conventions as tc  # noqa: E402  (iter_tasks: the task tree)
 STATIC_ONLY: list[str] = []                         # standard tasks whose grader could not be run here
+OWN_SCHEMA = re.compile(r"""\[\s*["']schema["']\s*\]\s*!=\s*["']""")   # a grader that accepts only its own final.json schema
 LIVE_OK = {"finalized": True, "graded_by": "live", "replays": 0, "success": True, "live_success": True, "done": True,
            "reason": "success", "n_actions": 10, "control_steps": 10, "video": True}
 CASES = (
@@ -173,6 +174,9 @@ def check(tasks: list[Path]) -> list[str]:
         alltext = src
         if "RCB_DATA" not in alltext or "RCB_VERIFIER_LOG_DIR" not in alltext:   # a grader may read them in a module
             STATIC_ONLY.append(task.name)
+            continue
+        if OWN_SCHEMA.search(text):   # its own final.json schema (RoboEngineer landing: landing-final/1 + session/grade.json):
+            STATIC_ONLY.append(task.name)   # the shared layers' synthetic records do not apply
             continue
         h = hashlib.sha256(b"".join(n.encode() + p.read_bytes() for n, p in sorted(files.items())
                                     if Path(n).suffix in (".py", ".json"))).hexdigest()
