@@ -1,20 +1,25 @@
 #!/usr/bin/env bash
-# RoboPaint only (tasks/robopaint-*): the agent's container may hold nothing derived from the target except target.png
+# RoboPaint only (tasks/robopaint/robopaint-*): the agent's container may hold nothing derived from the target except target.png
 # (lead, 2026-09-28), and the task texts describe the target as the picture only.
 #  1. environment/ (the agent image's build context) holds only whitelisted files; sidecar dirs (sim/, scorer/) are mounted into
 #     their own services by docker-compose.yaml and never COPYed by the Dockerfile;
-#  2. every Dockerfile COPY/ADD source is whitelisted (no wildcards, no sidecar paths);
+#  2. every Dockerfile COPY/ADD source is whitelisted (no wildcards, no sidecar paths); a COPY --from names the pinned
+#     files-only image (images/robopaint-files/FILES.json) and one of its whitelisted agent-side files;
 #  3. environment/instance.json (the agent's copy) has only scene / rule keys: no truth, no target geometry, masks or counts;
-#  4. the agent-visible tooling (environment/rcb_*.py) carries no grader code (target parsing, scoring);
+#  4. the agent-visible tooling (environment/rcb_brush.py, and its source in embodied_first_exam/benchmarks/robopaint/ when the
+#     Dockerfile takes it from the files-only image: that source must hash to FILES.json) carries no grader code (target
+#     parsing, scoring);
 #  5. instruction.md, README.md, the task.toml description and the standard service's spec texts use none of the words that
 #     describe the target as anything but a picture (vector, SVG, centre line, skeleton, outline, median, stroke order, ...).
-# Usage: check_leak.sh tasks/<task-dir>   (moved from ci_checks/check-robopaint-leak.sh, board 0124; run by invariant-leak.sh)
+# Usage: check_leak.sh tasks/robopaint/<task-dir>   (moved from ci_checks/check-robopaint-leak.sh, board 0124; run by invariant-leak.sh)
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"
 case "$n" in robopaint-*) ;; *) exit 0 ;; esac
-python3 - "$t" <<'PY'
-import json, os, re, sys
-t = sys.argv[1]; name = os.path.basename(t); env = os.path.join(t, "environment"); bad = []
+root="$(cd "$(dirname "$0")/../../.." && pwd)"
+python3 - "$t" "$root" <<'PY'
+import hashlib, json, os, re, sys
+t, root = sys.argv[1:3]; name = os.path.basename(t); env = os.path.join(t, "environment"); bad = []
+FILES = json.load(open(os.path.join(root, "images", "robopaint-files", "FILES.json")))   # the files-only image (scripts/files_image.py)
 ALLOWED = {"Dockerfile", "docker-compose.yaml", "instance.json", "target.png", "rcb_brush.py", "rcb_client.py", "rcb1.py",
            "client-requirements.txt", "NOTICE-exemplar.md", "ARPHICPL.TXT"}
 SIDECARS = {"sim", "scorer"}
@@ -28,8 +33,21 @@ for f in sorted(os.listdir(env)):
         bad.append(f"environment/{f}: not an allowed agent-side file")
 # 2. the Dockerfile copies whitelisted files only
 df = open(os.path.join(env, "Dockerfile")).read()
+tooling = {}   # agent-side tooling file -> where its bytes are (the task dir, or the files-only image's source)
 for m in re.finditer(r"^\s*(COPY|ADD)\s+(.+)$", df, re.M):
     parts = [x for x in m.group(2).split() if not x.startswith("--")]
+    frm = [x for x in m.group(2).split() if x.startswith("--from")]
+    if frm:   # only the pinned files-only image, only a whitelisted agent-side file of it
+        f = parts[0].lstrip("/") if len(parts) == 2 else ""
+        if m.group(1) != "COPY" or frm != ["--from=" + FILES["image"]] or f not in FILES["files"] or "/" in f or f not in ALLOWED:
+            bad.append(f"Dockerfile: COPY --from of {' '.join(parts)}: only an allowed agent-side file of the pinned {FILES['image']}")
+        else:
+            src = os.path.join(root, FILES["source"], f)
+            # the source is what the pinned image carries (the hook stands alone: no generator check needed)
+            if not os.path.isfile(src) or hashlib.sha256(open(src, "rb").read()).hexdigest() != FILES["files"][f]:
+                bad.append(f"{os.path.relpath(src, root)}: not the file images/robopaint-files/FILES.json pins (sha256)")
+            tooling[f] = src
+        continue
     for src in parts[:-1]:
         if src not in ALLOWED or any(c in src for c in "*?[") or "/" in src:
             bad.append(f"Dockerfile: {m.group(1)} {src} is not an allowed agent-side file")
@@ -67,14 +85,13 @@ if os.path.exists(ip):
 elif not name.endswith("-standard"):
     bad.append("environment/instance.json missing (privileged twin)")
 # 4. agent-visible tooling: simulation only
-for f in ("rcb_brush.py",):
-    p = os.path.join(env, f)
-    if os.path.exists(p):
+for f, p in [(f, p) for f in ("rcb_brush.py",) for p in (os.path.join(env, f), tooling.get(f)) if p]:
+    if os.path.exists(p):   # the task dir's copy and the files-only image's source, both (either may reach the image)
         s = open(p).read()
         for w in (r"def score_canvas", r"def score_ink", r"def score_paint", r"class Target\b(?!Picture)", r"class GlyphTarget",
                   r"class LetterTarget", r"class PaintTarget", r"svgpathtools", r"graphics\.txt", r"parse_path"):
             if re.search(w, s):
-                bad.append(f"environment/{f}: grader code ({w!r}) in the agent's tooling")
+                bad.append(f"{os.path.relpath(p, t if p.startswith(t) else root)}: grader code ({w!r}) in the agent's tooling")
 # 5. wording
 WORDS = [r"\bsvg\b", r"vector", r"cent(re|er)[ -]?lines?", r"skeleton", r"\boutlines?\b", r"\bmedians?\b", r"stroke order", r"stroke list",
          r"sub-?paths?", r"decompos", r"vectori[sz]", r"target_masks", r"\bmasks?\b", r"per-element", r"element coverage",

@@ -16,7 +16,7 @@ WANT = ("checked", "number", "note_of", "video_fps", "tip_steps", "call_steps", 
 BAD = [None, True, False, [], [1], {}, {"a": 1}, "x", "0.02", "", float("nan"), float("inf"), -float("inf"), -1, 0, 0.5, 1, 7,
        10 ** 400, -10 ** 400, 1e308, [None], [["a"]], ["canvas_cam"], ["nope"], "canvas_cam", 5, 3.7, "mp4", "hold", "frames", "none", "last"]
 FIELDS = ("type", "dt", "seconds", "video_fps", "cameras", "note", "interpolate", "video", "depth", "include_depth")
-paths = sorted(glob.glob(os.path.join(ROOT, "tasks/robopaint-*-standard/environment/sim/server.py")))
+paths = sorted(glob.glob(os.path.join(ROOT, "tasks/robopaint/robopaint-*-standard/environment/sim/server.py")))
 assert paths and len({open(p, "rb").read() for p in paths}) == 1, "the RoboPaint standard tasks share one server.py"
 tree = ast.parse(open(paths[0]).read())
 fns = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in WANT]

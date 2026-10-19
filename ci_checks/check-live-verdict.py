@@ -91,11 +91,15 @@ def mode_of(task: Path) -> str:
     return ""
 
 
-def verifier_files(task: Path) -> dict[str, Path]:
-    """{name: file} of the verifier's /tests/: tests/'s files and those tests/Dockerfile takes from a files-only image."""
+def verifier_files(task: Path, problems: list[str] | None = None) -> dict[str, Path]:
+    """{name: file} of the verifier's /tests/: tests/'s files and those tests/Dockerfile takes from a files-only image
+    (a line it cannot resolve goes to `problems`)."""
     tests = task / "tests"
     out = {p.name: p for p in sorted(tests.iterdir()) if p.is_file()} if tests.is_dir() else {}
-    for dest, src in files_image.copied(tests / "Dockerfile").items():
+    got, bad = files_image.copied_from(tests / "Dockerfile")
+    if problems is not None:
+        problems += [f"{task.name}: {b}" for b in bad]
+    for dest, src in got.items():
         name = dest.removeprefix("/tests/")
         if name != dest and "/" not in name:
             out[name] = src
@@ -141,9 +145,10 @@ def check(tasks: list[Path]) -> list[str]:
     for task in tasks:
         if not mode_of(task):
             continue
-        files = verifier_files(task)
+        files = verifier_files(task, errs)
         src = "\n".join(p.read_text(errors="replace") for n, p in sorted(files.items()) if n.endswith(".py"))
         if not src:
+            STATIC_ONLY.append(task.name)                 # no verifier code to read (none in tests/, none from an image)
             continue
         if "graded_by_live" not in src:
             errs.append(f"{task.name}: its verifier reports no `graded_by_live` (the standard modes are graded by the "

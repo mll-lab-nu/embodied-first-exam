@@ -111,9 +111,13 @@ What still limits the copy:
   - The oracle label is `partial` on all 86 tasks (see Oracle evidence).
   - The generator writes each task's `oracle_evidence` from `scripts/robopaint_strict/rules.json`.
 - CI:
-  - `scripts/robopaint_strict/ci/advisory-tooling.sh` keeps every copy of the shared files, `rcb_brush_strict.py` included,
-    byte-identical within a family and across the families;
-  - `scripts/robopaint_strict/ci/invariant-leak.sh` (PROTOCOL Appendix H.2) admits the rule keys in the agent's copy of the instance.
+  - `python3 scripts/files_image.py check robopaint-files`: `embodied_first_exam/benchmarks/robopaint/` still hashes to
+    `images/robopaint-files/FILES.json` (the pinned files-only image);
+  - `scripts/robopaint_strict/ci/advisory-tooling.sh` keeps every copy of the shared files left in task dirs (the sidecars'),
+    `rcb_brush_strict.py` included, byte-identical to `embodied_first_exam/benchmarks/robopaint/`, within a family and across the families;
+  - `scripts/robopaint_strict/ci/invariant-leak.sh` (PROTOCOL Appendix H.2) admits the rule keys in the agent's copy of the
+    instance, and in the agent's Dockerfile a `COPY --from` only of the pinned files-only image and only for an allowed
+    agent-side file (`rcb_brush.py`: its source must hash to FILES.json and, like a task dir's copy, carry no grader code).
 
 ## Oracle evidence
 A task is labelled `oracle = "full"` only if a recorded oracle run scored 1 on byte-identical grader, frozen instance,
@@ -229,6 +233,11 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 - `images/robopaint/` holds ManiSkill 3.0.1, SAPIEN 3.0.3, a patched libmypaint 1.6.1 and Spline-FRIDA.
   - The image is `ghcr.io/mll-lab-nu/eai-robopaint:<images/robopaint/VERSION>` (0.2.0), public.
   - It is built from the repository root: `docker build -f images/robopaint/Dockerfile .`.
+- `images/robopaint-files/` is the files-only image of the shared tooling and graders,
+  `ghcr.io/mll-lab-nu/eai-robopaint-files:<VERSION>@<digest>` (`FILES.json`), public like the base image: `FROM scratch` with
+  the files of `embodied_first_exam/benchmarks/robopaint/` (checkout modes, content-derived mtimes). A change to one of them needs a new
+  version: bump `VERSION`, `python3 scripts/files_image.py build robopaint-files`, push, `python3 scripts/files_image.py pin
+  robopaint-files <digest>`, then the tasks' `COPY --from` lines name the new digest.
 - Every simulator container needs an NVIDIA GPU: SAPIEN needs a Vulkan device to build the scene and to render. Physics
   and the brush models run on the CPU.
 - A standard twin's agent container and verifier use the one client base of every standard task
@@ -295,7 +304,7 @@ words (write or paint with strokes the way a person does; colouring in, filling,
 and with the task's numbers.
 
 Where they are applied: `rcb_brush_strict.py` (graders' side only), a `Session` subclass whose `score()` adds the rules, run with
-`rcb_brush.py`'s CLI. The privileged verifier replays with it (`tests/grade.py`), the privileged scoring service imports it
+`rcb_brush.py`'s CLI. The privileged verifier replays with it (`/tests/grade.py`), the privileged scoring service imports it
 (`RCB_TOOL_MODULE=rcb_brush_strict`), and the standard sim service scores the live sheet with it (`RCB_TOOL=/srv/rcb_brush_strict.py`).
 The agent's container holds `rcb_brush.py` only.
 
@@ -496,14 +505,19 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
 ## Tooling (file names)
 | main's convention | RoboPaint |
 |---|---|
-| `environment/rcb_traj.py` (privileged tooling, `Session`) | `environment/rcb_brush.py` |
-| `tests/rcb_traj.py` | `tests/rcb_brush.py` + `tests/rcb_brush_score.py` |
+| `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_brush.py` (from the files-only image) |
+| `tests/rcb_traj.py` | `/tests/rcb_brush.py` + `/tests/rcb_brush_score.py` (from the files-only image) |
 | — | `environment/scorer/` (privileged `s.score()`: `rcb_scorer.py` + the scoring module) |
 | standard sidecar | `environment/sim/server.py` (the 2.2 adapter), `finalize.sh` (the collect hook), the brush tooling and its scorer, and from `scripts/eai_standard/`: `rcb_limited.py`, `rcb1.py`, `run.sh` |
 | `rcb_client.py`, `rcb1.py` | the same names (`scripts/eai_standard/`) |
-| — | `rcb_brush_strict.py` (the process rules, graders' side only): `tests/` and `environment/scorer/` (privileged), `environment/sim/` (standard) |
+| — | `rcb_brush_strict.py` (the process rules, graders' side only): `/tests/` (privileged, from the files-only image), `environment/scorer/` (privileged), `environment/sim/` (standard) |
 
-Every copy of the tooling is byte-identical within a family and across the six families
+`rcb_brush.py`, `rcb_brush_score.py`, `rcb_brush_strict.py` and the two `grade.py` (`privileged/`, `standard/`) live once, in
+`embodied_first_exam/benchmarks/robopaint/`. The images take them from the pinned files-only image `images/robopaint-files/` with
+`COPY --from=<image@digest>` (`scripts/files_image.py`), at the paths above: the privileged agent image `rcb_brush.py` at
+`/opt/tools/`, the privileged verifier image the four graders' files at `/tests/`, the standard verifier image `grade.py`
+at `/tests/`; no task dir carries them. The sidecar dirs `environment/scorer/` and `environment/sim/` are bind-mounted at
+`/srv`, not built, so they keep copies; every copy is byte-identical to the source
 (`scripts/robopaint_strict/ci/advisory-tooling.sh`). The 2.2 layer is byte-identical to `scripts/eai_standard/`
 (`ci_checks/check-tooling-identity.sh`).
 

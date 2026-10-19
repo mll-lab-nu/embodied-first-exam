@@ -48,10 +48,10 @@ The plan is frozen at generation time (`solution/oracle_qpos.npy`); `solution/so
 
 ## Verification
 "The rule" below is the picture rule and the process rules (Task); the replays run
-`tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
+`/tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
 `max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
 Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`); pass iff
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`/tests/grade.py`); pass iff
 both replayed main sheets meet the rule, the final-state hashes (ink of both sheets + robot state + pen state) agree and the
 rebuilt frozen instance matches the recorded one (target picture and scoring data included). Physics is PhysX on the CPU and the pen
 runs in float64 on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit

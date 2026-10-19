@@ -2,7 +2,7 @@
 # agent's copy of the frozen instance), the target picture, its licence notice and the tooling; Session.score() asks the `scorer`.
 FROM ghcr.io/mll-lab-nu/eai-robopaint:0.2.0
 COPY instance.json target.png NOTICE-exemplar.md /app/
-COPY rcb_brush.py /opt/tools/rcb_brush.py
+COPY --from=ghcr.io/mll-lab-nu/eai-robopaint-files:0.1.0@sha256:e97f8e066284e7490b3dc8bc24f9b634761f95396e8236bced1ff445c271355f /rcb_brush.py /opt/tools/rcb_brush.py
 RUN uv pip uninstall --python /opt/venv/bin/python svgpathtools && mkdir -p /app/output
 ENV PYTHONPATH=/opt/tools
 WORKDIR /app
