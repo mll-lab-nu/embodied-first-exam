@@ -1,0 +1,4 @@
+# The realism_v3 pack's textures and meshes: not in git, fetched into the build context by
+# `python3 images/ese/assets.py fetch` (pinned in images/ese/assets.json).
+context/robosafe-src/robosafebench/assets/data/realism_v3/**/*.png
+context/robosafe-src/robosafebench/assets/data/realism_v3/**/*.obj

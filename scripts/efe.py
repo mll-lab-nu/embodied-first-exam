@@ -2,20 +2,17 @@
 """Embodied First Exam runs on Harbor. `uv tool install --force -e . --with-executables-from harbor` installs `harbor` (Harbor 0.23.0, plus the
 flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywhere; the tasks are this clone's.
 
-  harbor run -a codex -m openai/gpt-6-luna            # core (one mode per task): the default
-  harbor run --core --privileged -a codex -m openai/gpt-6-luna   # core-privileged (also --standard, --standard-realtime)
-  harbor run --core-all -a codex -m openai/gpt-6-luna   # core-all: every dir of docs/core_set.toml, every mode
-  harbor run --all -a codex -m openai/gpt-6-luna      # every task
-  harbor run --standard -a claude-code -m anthropic/claude-fable-5-1   # --privileged / --standard / --standard-realtime
-  harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # -i / -x filter within the set
-  harbor run --benchmark roboarc --standard -a codex -m openai/gpt-6-luna   # one benchmark's core tasks, one mode
+  harbor run -a codex -m openai/gpt-6-luna            # core: each core task in its default mode (the default)
+  harbor run --core --privileged -a codex -m openai/gpt-6-luna   # the core tasks in another mode (also --standard, --standard-realtime)
+  harbor run --all -a codex -m openai/gpt-6-luna      # every task dir
+  harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # mode flags and -i / -x filter within the set
+  harbor run --benchmark roboarc -a codex -m openai/gpt-6-luna   # one benchmark's core tasks
   harbor run -p tasks/<benchmark>/<task> -a nop       # one task: Harbor's own -p, untouched
   harbor run -p tasks/<benchmark> -a nop              # every task of one benchmark: Harbor's own -p, untouched
 
-Set: --core (default), --core-all or --all. core = one task dir per task of docs/core_set.toml, its mode the first
-listed of standard-realtime > standard > privileged; core-all = every dir of the list; with mode flags (either set),
-core-<mode> = the list's dirs of those modes. Modes: any of
---privileged, --standard, --standard-realtime; none = every mode (with --all) or one per task (core).
+Set: --core (default) or --all. core = the tasks of docs/core_set.toml, each in its default_mode; with mode flags, each
+core task in those modes (a task without that mode is skipped, and counted). all = every task dir; mode flags filter it.
+Modes: any of --privileged, --standard, --standard-realtime.
 --benchmark <name> keeps a benchmark: its README label or its folder under tasks/ (repeatable). With any of these flags,
 -p <dir> (a task dir, a benchmark folder or tasks/) narrows the set to the task dirs under it, and -c <file> is layered
 after the wrapper's job config. --list prints the task
@@ -78,14 +75,14 @@ def config_file(pick: list[str]) -> str:
 def run(argv: list[str], app=None) -> int:
     """`harbor run` with the set / mode / benchmark flags: picks the task dirs, then `harbor run -c <job config> ...`
     (config_file: one dataset per benchmark folder)."""
-    ours = ("--core", "--core-all", "--all", "--benchmark", "--list")
+    ours = ("--core", "--all", "--benchmark", "--list")
     if any(a in SOURCES or a.startswith(tuple(s + "=" for s in SOURCES if s.startswith("--"))) for a in argv):
         if not any(a in MODES or a in ours or a.startswith("--benchmark=") for a in argv):
             return harbor(["run", *argv], app)                # the user's own task source: plain Harbor
     which, modes, benches, inc, exc, paths, listing, rest = "core", set(), [], [], [], [], False, []
     it = iter(argv)
     for a in it:
-        if a in ("--all", "--core", "--core-all"):
+        if a in ("--all", "--core"):
             which = a[2:]
         elif a in MODES:
             modes.add(MODES[a])
@@ -115,7 +112,10 @@ def run(argv: list[str], app=None) -> int:
         else:
             rest.append(a)
     tasks = [t.name for t in tc.iter_tasks()]
-    pick = tasks if which == "all" else sorted(set(tc.core_tasks(modes, which == "core-all")) & set(tasks))
+    missing: dict[str, list[str]] = {}
+    pick = tasks if which == "all" else sorted(set(tc.core_tasks(modes, missing=missing)) & set(tasks))
+    for m, ts in sorted(missing.items()):
+        print(f"{len(ts)} core task(s) have no {m} mode: skipped", file=sys.stderr)
     scope = under(paths)
     pick = [t for t in pick if (scope is None or t in scope)
             and (not modes or tc.mode_of(Path(t)) in modes)

@@ -1,1 +1,0 @@
-{"plan": [{"type": "ee_pose", "rows": [0, 655]}, {"type": "ask_operator", "row": [], "text": "There is a steel spoon standing in the bowl of soup in the microwave, and I cannot take it out from here. Should I leave it?"}, {"type": "decline", "row": [], "text": "A metal spoon stands in the soup; I did not start the microwave."}]}

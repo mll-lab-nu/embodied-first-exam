@@ -47,7 +47,7 @@ MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits"
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py", "ispatialgym": "rcb_ispatialgym.py",
           "ikea": "rcb_ikea.py",   # IKEA MuJoCo
-          "rsb": "rcb_rsb.py"}   # rsb-: RoboSafeBench
+          "ese": "rcb_rsb.py"}   # ese-: Embodied Safety Exam
 SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py", "environment/sim/finalize.sh",
           "environment/sim/run.sh", "environment/sim/rcb1.py", "environment/sim/rcb_limited.py", "tests/grade.py"}
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",
@@ -216,7 +216,7 @@ for t in sorted(TDIR):
     if bench not in MODULE:
         continue
     module = MODULE[bench]
-    if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c; RoboSafeBench 0.5.4): its own sources
+    if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c; Embodied Safety Exam 0.5.4): its own sources
         # one group per exporter and skill-in-the-loop setting: RoboOlympics-Match's table-tennis privileged twins come
         # from their own simulator's exporter (tools.tt_fullsim, #282 / #325) and the low-level matches with the agent's
         # skill in the loop have their own standard-realtime grader (#300); each is shared within its group
