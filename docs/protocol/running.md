@@ -161,7 +161,7 @@ from a tree whose files share mtimes (a git checkout, `git archive`, tar, `cp -r
 task's equal-size file in its image, silently, with `--no-cache` too (issue #258; rootless podman builds are not
 affected). **Never build a task image from a tree without stamping it:** `scripts/stamp_mtimes.py` gives every file a
 mtime derived from its content, so different files never share one (content, modes and DIGEST unchanged; git ignores
-mtimes). `scripts/run_agent_batch.sh`, `/validate` and `scripts/task_seed.py materialize` build from stamped copies. For a bare `harbor run` or `harbor trial regrade`:
+mtimes). `scripts/run_agent_batch.sh`, `/validate` and `scripts/task_seed.py materialize` build from stamped copies; `harbor run` with this repository's set flags (`-d embodied-first-exam`, `--core`, `--all`, a mode flag, `--benchmark`) stamps the task dirs it runs in place. For a bare `harbor run -p` or `harbor trial regrade`:
 ```bash
 c=$(python3 scripts/stamp_mtimes.py stage tasks/<benchmark>/<task> "$(mktemp -d)") && harbor run -p "$c" -a oracle ...   # a stamped copy
 python3 scripts/stamp_mtimes.py tasks           # or stamp the checkout in place (again after every pull: --check tells)
