@@ -2,7 +2,7 @@
 name = "embodied-first-exam"
 version = "0.1.0"
 description = "Embodied First Exam on Harbor: `harbor run --core|--all|--privileged|--standard|--standard-realtime`, or `efe run`"
-requires-python = ">=3.12"
+requires-python = ">=3.12,<3.15"   # Harbor's dependency fastuuid has no wheel for newer Pythons yet
 dependencies = ["harbor==0.23.0"]
 
 [project.scripts]
