@@ -17,7 +17,7 @@ concurrency:
   cancel-in-progress: true # the latest main wins
 jobs:
   list:
-    runs-on: [self-hosted, rcb-ci]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
