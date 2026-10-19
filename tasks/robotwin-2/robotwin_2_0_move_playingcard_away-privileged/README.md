@@ -9,7 +9,7 @@
 | Family / instance | `move_playingcard_away` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robotwin:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
 RoboTwin 2.0 move_playingcard_away (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use the arm to pick up the playing card and move it away from the table. For example, if the playing card is on the outward side of the table, you should move it further outward side of the table. Frozen scene instance (RoboTwin seed 60417).

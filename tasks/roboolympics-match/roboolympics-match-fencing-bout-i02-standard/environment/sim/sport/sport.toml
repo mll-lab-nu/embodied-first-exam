@@ -22,7 +22,7 @@ summary = "two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-b
 protocol = "turn"
 revision = "fencing-7+core-0.2"       # bump on any change that alters play (the phrase table, the rules, the opponent, the observation)
 physics = "the phrases: MuJoCo 3.3.7 (1 ms physics steps, 10 ms control steps), two Unitree G1 of the robot library (bodies/unitree_g1, 29 DOF; Unitree's motor torque-speed curves through the library's output stage) with epees, robot x robot, blade x body and blade x blade contacts (bodies/contacts.py), NVIDIA SONIC (GR00T-WholeBodyControl b042411) on the legs, waist and free arm, the point skill on the sword arm, fencing-6's apparatus and phrase referee; each of the 2916 phrases measured once in that world (it is deterministic: 2799 earlier measurements of 1953 of the phrases all ended as in that run, with the same result at the same step) and replayed from sports/fencing/phrases/table.json"
-image = "ghcr.io/mll-lab-nu/efe-olympiad:0.1.0"
+image = "ghcr.io/mll-lab-nu/efe:olympiad-0.1.0"
 status = "sport"
 publish = true                        # both formats are PREVIEW formats ([formats.*] preview = true, D12)
 category = "robotics-sports-arena"

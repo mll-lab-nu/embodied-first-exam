@@ -168,7 +168,7 @@ all six wrist joints with native equality constraints. The dual-arm families use
 base with two seven-joint arms (arm meshes: DexForce `embodichain_data` `TianjiMarvin.zip`, Apache-2.0; inertias from
 Genesis' `dual_arms_primitives.urdf`, MIT; `images/dexhand/tianji/NOTICE.md`).
 
-The image `ghcr.io/mll-lab-nu/efe-dexhand` (`images/dexhand/`, tag from `images/dexhand/VERSION`) contains MuJoCo 3.4.0,
+The image `ghcr.io/mll-lab-nu/efe:dexhand-<version>` (`images/dexhand/`, tag from `images/dexhand/VERSION`) contains MuJoCo 3.4.0,
 numpy, scipy, imageio and OSMesa (`images/dexhand/requirements.txt`) and bakes the three asset sets: Sharpa Wave at
 `/opt/dexhand/hand`, the Wuji physics subset at `/opt/dexhand/wuji_v2_2` and the Tianji meshes at `/opt/dexhand/tianji`
 (`TIANJI_ASSET_DIR`). `python3 images/dexhand/prepare_assets.py` fetches all three from their pinned public sources

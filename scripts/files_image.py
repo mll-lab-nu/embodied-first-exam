@@ -59,10 +59,24 @@ def copy_line(name: str, file: str, dest: str) -> str:
     return f"COPY --from={s['image']} /{file} {dest}"
 
 
+PACKAGES = ("ghcr.io/mll-lab-nu/efe", "ghcr.io/mll-lab-nu/efe-private")   # one public, one private package: <name>-<version> tags
+
+
 def _repo(ref: str) -> str:
-    """The repository of an image reference (no tag, no digest)."""
+    """What names the image in a reference (no version, no digest): its repository, or for the efe / efe-private
+    packages (tags <name>-<version>) the package and <name>."""
     name = ref.split("@", 1)[0]
-    return name.rsplit(":", 1)[0] if ":" in name.rsplit("/", 1)[-1] else name
+    repo, tag = name.rsplit(":", 1) if ":" in name.rsplit("/", 1)[-1] else (name, "")
+    if repo in PACKAGES and tag:
+        m = re.match(r"^(.*?)-(\d+\.\d+.*|latest)$", tag)
+        return f"{repo}:{m.group(1) if m else tag}"
+    return repo
+
+
+def _versioned(image: str, ver: str) -> str:
+    """The image's reference at another version (no digest)."""
+    r = _repo(image)
+    return f"{r}-{ver}" if r.split(":", 1)[0] in PACKAGES and ":" in r.rsplit("/", 1)[-1] else f"{r}:{ver}"
 
 
 def copied_from(dockerfile: Path) -> tuple[dict[str, Path], list[str]]:
@@ -160,7 +174,7 @@ def stage(name: str) -> Path:
 
 def build(name: str) -> str:
     s = spec(name)
-    tag = s["image"].split("@")[0].rsplit(":", 1)[0] + ":" + (ROOT / "images" / name / "VERSION").read_text().strip()
+    tag = _versioned(s["image"], (ROOT / "images" / name / "VERSION").read_text().strip())
     ctx = stage(name)
     subprocess.run(["docker", "build", "--no-cache", "-q", "-t", tag, "-f", str(ROOT / "images" / name / "Dockerfile"),
                     str(ctx)], check=True)
@@ -207,7 +221,7 @@ def pin(name: str, digest: str) -> None:
     p = ROOT / "images" / name / "FILES.json"
     s = json.loads(p.read_text())
     ver = (ROOT / "images" / name / "VERSION").read_text().strip()
-    ref = s["image"].split("@")[0].rsplit(":", 1)[0] + f":{ver}@{digest}"
+    ref = _versioned(s["image"], ver) + f"@{digest}"
     files = {f: sha256(ROOT / s["source"] / f) for f in sorted(s["files"])}
     bad = verify(name, ref, files)
     if bad:

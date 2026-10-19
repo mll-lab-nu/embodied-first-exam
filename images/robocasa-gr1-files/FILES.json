@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-robocasa-gr1-files:0.1.0@sha256:c8499500a886e1ad61cefb6fc30111b2084ed3deb18909464c3a52ca1b77edea",
+ "image": "ghcr.io/mll-lab-nu/efe:robocasa-gr1-files-0.1.0@sha256:c8499500a886e1ad61cefb6fc30111b2084ed3deb18909464c3a52ca1b77edea",
  "source": "embodied_first_exam/benchmarks/robocasa-gr1",
  "files": {
   "privileged/environment/casa_tool.py": "e9f0fa9a8cc6c5892d417b6294b2c525066058231e2a8950156ca33c0c0b2d7e",

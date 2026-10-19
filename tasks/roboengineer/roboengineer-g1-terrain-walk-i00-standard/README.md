@@ -9,7 +9,7 @@
 | Family / instance | `roboengineer/g1-terrain-walk` / seed 0 |
 | Oracle | `partial` — Harbor 0.23.0 oracle agent on aws:rcb-gpu14 (L40S), 2026-10-18, images eai-control-transfer:0.2.0-train / 0.2.0, an earlier planner of the reference with a fixed first segment (2500 + 1733 + 1155 PPO iterations x 4096 environments from scratch; 12638 s of the 14400 s): the reference (trains the public curriculum from scratch on the agent's GPU, three deployments, the last sealed) succeeded on 1/12 held-out cases, mean engineering score 43.14; nop 0. No full oracle: human review (PROTOCOL §4). |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-control-transfer:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
 ## Task
 Train a blind 29-DoF Unitree G1 policy in mjlab/MuJoCo Warp and transfer to CPU MuJoCo over flat, sloped, rough and stepped terrain. Stand 2 s, then follow a public forward velocity command of 0.5–0.65 m/s for 18 s.

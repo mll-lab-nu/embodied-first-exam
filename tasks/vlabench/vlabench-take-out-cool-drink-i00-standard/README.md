@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/take_out_cool_drink` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0` |
 
 ## Task
 VLABench's `take_out_cool_drink` as a robot service: a Franka Panda arm at a table, instructed **"I am so thirsty after sport, I want to drink something healthy cool: take it out of the small fridge and close the fridge door."**

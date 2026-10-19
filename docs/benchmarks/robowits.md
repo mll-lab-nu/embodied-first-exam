@@ -58,7 +58,7 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf.
 
 ## Image
 - `images/robowits/`: RoboWits @ 9cc30ae, Genesis 0.4.7 and RoboWits' locked stack, RoboWits' Apache-2.0 asset bundle.
-  `ghcr.io/mll-lab-nu/efe-robowits:<images/robowits/VERSION>`, public; the Dockerfile pins the uv, huggingface_hub,
+  `ghcr.io/mll-lab-nu/efe:robowits-<images/robowits/VERSION>`, public; the Dockerfile pins the uv, huggingface_hub,
   imageio and asset-bundle versions. The GPU renders the three cameras; physics runs
   on the CPU.
 - `scripts/build_images.sh` builds it as `eai-robowits` (docs/protocol/running.md, "Base images").

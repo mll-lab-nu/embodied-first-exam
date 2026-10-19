@@ -10,7 +10,7 @@
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_catch.py: positive by injection (the real launch and flight; below 3 m the ball is put 0.12 m above the upturned palm at 3 m/s and really gripped); negatives: onto the trunk, touched while rising, dropped after the catch, a fall. The ball comes down 1.25 m from the robot after 3 s at 16.6 m/s: the walk and a palm placed within centimetres are the task; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robofunolympics-0.2.1` |
 
 ## Task
 Catch the fly ball: grip the baseball with a hand before it touches the ground or your body, and keep hold of it. (RoboOlympics `catch`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

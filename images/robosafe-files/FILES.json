@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-robosafe-files:0.1.0@sha256:03813f0484542de85c6c80fbc16d39787333c359ae036dd1d7d88c637a4480d1",
+ "image": "ghcr.io/mll-lab-nu/efe-private:robosafe-files-0.1.0@sha256:03813f0484542de85c6c80fbc16d39787333c359ae036dd1d7d88c637a4480d1",
  "source": "embodied_first_exam/benchmarks/robosafebench",
  "files": {
   "0.5.3/grade.py": "275ba9cebce6cf3676f53f7df7c9112596af222228bd669c149371c58b93494c",

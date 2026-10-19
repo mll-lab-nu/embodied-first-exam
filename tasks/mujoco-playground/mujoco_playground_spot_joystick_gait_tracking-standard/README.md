@@ -9,7 +9,7 @@
 | Family / instance | `mujoco_playground/SpotJoystickGaitTracking` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-mujoco:0.1.3` |
+| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
 MuJoCo Playground `SpotJoystickGaitTracking` (Boston Dynamics Spot) on the same frozen instance as `mujoco_playground_spot_joystick_gait_tracking-privileged`: Make Boston Dynamics Spot follow the joystick command schedule for the whole 20 s episode with the commanded gait (the feet's swing pattern, frequency and height) without falling over.

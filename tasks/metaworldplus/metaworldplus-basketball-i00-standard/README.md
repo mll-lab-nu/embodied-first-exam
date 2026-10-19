@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/basketball` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
 Standard-mode twin of `metaworldplus-basketball-i00-privileged`: the same instance and success check (Pick up the ball and place it through the basketball hoop.), served

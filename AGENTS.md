@@ -5,7 +5,7 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
 
 - Modes: **privileged**, **standard** (wire protocol `eai-standard/2.x`) and **standard-realtime** (standard mode on a
   clock that does not stop, `eai-standard/2.3`), PROTOCOL §3. Task directories end in `-privileged`, `-standard` or
-  `-standard-realtime`; base images are `ghcr.io/mll-lab-nu/efe-<name>`, one image per benchmark (PROTOCOL §1). No
+  `-standard-realtime`; base images are `ghcr.io/mll-lab-nu/efe:<name>-<version>` (private: `efe-private:<name>-<version>`), one image per benchmark (PROTOCOL §1). No
   `results/` in task dirs.
 - A pull request delivers tasks only (PROTOCOL §1, "What a contribution delivers"): no task-generation code in the
   repository; `scripts/` holds only what running the benchmark needs. Every task is in the normal form of

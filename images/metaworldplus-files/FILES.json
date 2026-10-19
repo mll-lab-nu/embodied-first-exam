@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-metaworldplus-files:0.1.0@sha256:71ed06f7370f8f3f855842b19c4f9062fc4454b1329530c0c2b44751ef4fa44d",
+ "image": "ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.1.0@sha256:71ed06f7370f8f3f855842b19c4f9062fc4454b1329530c0c2b44751ef4fa44d",
  "source": "embodied_first_exam/benchmarks/metaworldplus",
  "files": {
   "privileged/environment/mw_tool.py": "899cf5f04443f20043648804f6dfb5f6cc1879f54b8fd95916497818b203e316",

@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-mujoco-playground-files:0.1.0@sha256:d3aae70562661fe171078e8ae59abc91c4b2d2c70c0f361b90052150f0359b7e",
+ "image": "ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.1.0@sha256:d3aae70562661fe171078e8ae59abc91c4b2d2c70c0f361b90052150f0359b7e",
  "source": "embodied_first_exam/benchmarks/mujoco-playground",
  "files": {
   "privileged/environment/rcb_aloha.py": "d81d625d02f41dafaecd7834eb76f6f3f25c3e426de941ad939c9cd20b8fbadf",

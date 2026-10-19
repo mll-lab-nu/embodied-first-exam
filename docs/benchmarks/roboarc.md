@@ -22,7 +22,7 @@ Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and
 - the numpy / OpenBLAS SIMD masking in every container that runs a Session (so every CPU class builds the same frozen
   bytes); `render_bridge.py` and `nyx_direct.py` next to every tooling copy, named in the runtime binding;
 - the privileged images (agent `/opt/tools/`, verifier `/tests/`) take `rcb_topogym.py`, `render_bridge.py` and
-  `nyx_direct.py` from the files-only image `ghcr.io/mll-lab-nu/efe-roboarc-files` (`images/roboarc-files/`, built
+  `nyx_direct.py` from the files-only image `ghcr.io/mll-lab-nu/efe:roboarc-files-<version>` (`images/roboarc-files/`, built
   from `embodied_first_exam/benchmarks/roboarc/`; `FILES.json` pins its digest and the files' sha256) with
   `COPY --from=<image@digest>`: the privileged task dirs carry no copy. The standard sim service keeps its copies in `environment/sim/` (bind-mounted);
 - the texts state what the tooling grades: the contact-review values come from `CONTACT_RULE`, and the grasping rule is
@@ -46,7 +46,7 @@ Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and
   instances made in the image, release files, render, checks, Harbor oracle / nop.
 - Large files: the frozen instances are in the private HF dataset `eai-v2-internal/robotangle-assets` (shared with the
   Genesis release), under `instances/<base>/`, pinned file by file in `images/roboarc/assets.json`.
-- Image: `ghcr.io/mll-lab-nu/efe-roboarc:<images/roboarc/VERSION>`, built FROM the published
+- Image: `ghcr.io/mll-lab-nu/efe:roboarc-<images/roboarc/VERSION>`, built FROM the published
   `eai-robotangle:0.2.22` with the release commit's simulator source and the frozen MuJoCo instances
   (`images/roboarc/Dockerfile`, generated from dev/robotangle_mujoco's `Dockerfile.mujoco`; context:
   `images/roboarc/fetch_image_context.sh`).

@@ -79,9 +79,16 @@ canon24 = {f: sha(os.path.join(src, "v2_4" if f in V24 else "", f)) for f in set
            if os.path.isfile(os.path.join(src, "v2_4" if f in V24 else "", f))}
 # files-only images (scripts/files_image.py): repository -> (pinned ref, {file: sha256}, images/<name>)
 FILES_IMAGES = {}
+def image_key(ref):   # what names a files-only image: its repository, or efe / efe-private + <name> (tags <name>-<version>)
+    name = ref.split("@")[0]
+    repo, tag = name.rsplit(":", 1) if ":" in name.rsplit("/", 1)[-1] else (name, "")
+    if repo in ("ghcr.io/mll-lab-nu/efe", "ghcr.io/mll-lab-nu/efe-private") and tag:
+        m = re.match(r"^(.*?)-(\d+\.\d+.*|latest)$", tag)
+        return f"{repo}:{m.group(1) if m else tag}"
+    return repo
 for fj in sorted(Path(images).glob("*/FILES.json")):
     s = json.load(open(fj))
-    FILES_IMAGES[s["image"].split("@")[0].rsplit(":", 1)[0]] = (s["image"], s["files"], f"images/{fj.parent.name}")
+    FILES_IMAGES[image_key(s["image"])] = (s["image"], s["files"], f"images/{fj.parent.name}")
 
 
 def from_files_image(task_dir: str) -> dict:
@@ -94,12 +101,12 @@ def from_files_image(task_dir: str) -> dict:
         text = open(df).read()
         for line in text.splitlines():   # a line naming a files-only image in another form would not be compared
             m = re.search(r"--from=(\S+)", line)
-            if m and m.group(1).split("@")[0].rsplit(":", 1)[0] in FILES_IMAGES and not (
+            if m and image_key(m.group(1)) in FILES_IMAGES and not (
                     re.fullmatch(r"COPY --from=\S+ /\S+ \S+\s*", line) or re.fullmatch(r"COPY --from=\S+ (/\S+ )+\S+/\s*", line)):
                 bad.append(f"{os.path.basename(task_dir)}: {ctx}/Dockerfile: {line.strip()[:120]!r}: a files-only image is "
                            "copied as `COPY --from=<image@digest> /<file> <dest>` or `... /<file>... <dir>/` (scripts/files_image.py)")
         for ref, srcs, dest in re.findall(r"(?m)^COPY --from=(\S+) ((?:/\S+ )+)(\S+)\s*$", text):
-            repo = ref.split("@")[0].rsplit(":", 1)[0]
+            repo = image_key(ref)
             if repo not in FILES_IMAGES:
                 continue
             pinned, files, where = FILES_IMAGES[repo]

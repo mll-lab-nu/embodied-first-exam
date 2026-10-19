@@ -9,7 +9,7 @@
 | Family / instance | `juggling_feet` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_juggling_feet.py: positive by injection (a real release; the pelvis held where it stands and the ball put back over the toe after each touch; ten real strikes by the right foot's own motors, a lowcmd hip/knee stroke lifting the toe at 0.8 m/s, in/out about 3 m/s, contacts 0.011-0.013 s against a 0.05 s carry limit); negatives: a still raised foot (0.54 of the speed back, not counted), soft strikes, below knee height, the shin above the instep, the thigh, the chest, the head, a hand (also a hand during a foot touch inside the release grace), resting on the foot, trapped between the feet, a re-grip, out of the grid, down. On the G1 a falling ball meets the foot clear of the lower leg's collision hull only on the front 2-3 cm of its top; a foot-following strike controller (pelvis held) lost the ball after two touches; nothing built in stands on one leg; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robofunolympics-0.2.1` |
 
 ## Task
 Juggle the football with your feet: drop it from your hand and keep it in the air for ten foot touches in a row, each one sending the ball up above your knees, without it touching the ground or any other part of you. (RoboOlympics `juggling-feet`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

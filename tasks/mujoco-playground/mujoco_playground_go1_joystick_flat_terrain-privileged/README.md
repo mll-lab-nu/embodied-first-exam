@@ -9,7 +9,7 @@
 | Family / instance | `mujoco_playground/Go1JoystickFlatTerrain` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-mujoco:0.1.3` |
+| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
 MuJoCo Playground `Go1JoystickFlatTerrain` (Unitree Go1), rebuilt in plain MuJoCo from Playground's scene files: Make the Unitree Go1 follow the joystick command schedule on flat ground for the whole 20 s episode without falling over.
