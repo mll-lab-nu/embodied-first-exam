@@ -8,6 +8,11 @@ images/<name>/FILES.json describes one such image:
   {"image": "<registry ref>:<VERSION>@sha256:<digest>",     the pinned image every task names
    "source": "<repo-relative directory>",                     the files' one source
    "files": {"<file in source>": "<sha256>", ...}}            what the image carries, at /<file>
+A source too large for git lives in a Hugging Face dataset instead (FILES.json "hf": {"repo": "MLL-Lab/<dataset>",
+"revision": "<commit>", "path": "<folder in the dataset>"}; "source" is then images/<name>/context/, not in git):
+`fetch` downloads every file of "files" from <path>/<file> at that commit into the source directory and checks its
+sha256 (build, digest and check fetch first). MLL-Lab/embodied-first-exam-public is public: no login. A private
+dataset (MLL-Lab/embodied-first-exam) needs read access: the token comes from $HF_TOKEN or `hf auth login`.
 The image is written directly from FILES.json and the sources (no Dockerfile, no docker build): one uncompressed layer
 whose tar lists the parent directories and then the files in sorted order, owner 0:0, the checkout mode of each file
 (0755 / 0644: git keeps only the executable bit), the content-derived mtime of scripts/stamp_mtimes.py (to the
@@ -17,6 +22,8 @@ image, and a user can build a private files-only image instead of pulling it. It
 ghcr.io/mll-lab-nu/efe:<name>-<VERSION>, or efe-private:<name>-<VERSION> when images/<name>/BUILD_ONLY marks it private
 (PROTOCOL §1: hosts pull it with the organization's token).
 
+    python3 scripts/files_image.py fetch [name ...]       download the pinned files of the images whose source is a Hugging
+                                                          Face dataset ("hf" in FILES.json) and check them
     python3 scripts/files_image.py check [name ...]       the sources still hash to FILES.json (no docker)
     python3 scripts/files_image.py digest [name ...]      the digest a build gives, against the pinned one (no docker)
     python3 scripts/files_image.py build <name> [--out F] build <tag>@<digest> and `docker load` it (--out: also write
@@ -94,12 +101,16 @@ def _repo(ref: str) -> str:
     return repo
 
 
+_FETCHED: set[str] = set()
+
+
 def copied_from(dockerfile: Path) -> tuple[dict[str, Path], list[str]]:
     """({container path: source file in this repository}, problems) of the Dockerfile's COPY --from lines that name a
     files-only image (a repository of images/*/FILES.json, or any *-files repository). A line resolves when it names the
     pinned image@digest, carries no other flag, and copies one file or one directory of the image (`/<dir>/`: every file
     of FILES.json under it, to <dest>/<path below it>), or several files into one directory (`/<a> /<b> <dir>/`: each
-    keeps its basename); anything else is a problem, never silently skipped."""
+    keeps its basename); anything else is a problem, never silently skipped. The sources of an image pinned to a Hugging
+    Face dataset are fetched first (once per process)."""
     if not dockerfile.is_file():
         return {}, []
     specs = {p.parent.name: spec(p.parent.name) for p in sorted((ROOT / "images").glob("*/FILES.json"))}
@@ -120,6 +131,9 @@ def copied_from(dockerfile: Path) -> tuple[dict[str, Path], list[str]]:
                 bad.append(f"{dockerfile}: {line.strip()}: a files-only image without images/*/FILES.json")
             continue                                                  # another stage or image (e.g. the monitor's)
         s = specs[name]
+        if s.get("hf") and ref == s["image"] and name not in _FETCHED:   # its sources come from a dataset: fetch them once
+            fetch(name)
+            _FETCHED.add(name)
         if ref != s["image"]:
             bad.append(f"{dockerfile}: {line.strip()}: not the pinned {s['image']} (images/{name}/FILES.json)")
             continue
@@ -162,8 +176,62 @@ def _mode(p: Path) -> int:
     return 0o755 if p.stat().st_mode & stat.S_IXUSR else 0o644
 
 
+def _hf_token() -> str | None:
+    """The Hugging Face token for a private dataset: $HF_TOKEN, else the one `hf auth login` stored; never printed."""
+    t = os.environ.get("HF_TOKEN")
+    if t:
+        return t.strip()
+    try:
+        from huggingface_hub import get_token
+        return get_token()
+    except ImportError:
+        p = Path(os.environ.get("HF_HOME", Path.home() / ".cache" / "huggingface")) / "token"
+        return p.read_text().strip() if p.is_file() else None
+
+
+def fetch(name: str) -> int:
+    """Download the files of an image whose source is a Hugging Face dataset at its pinned commit into the source
+    directory (a file already there with the pinned sha256 is kept); the number downloaded. Each file is checked
+    against FILES.json before it replaces anything."""
+    s = spec(name)
+    hf = s.get("hf")
+    if not hf:
+        return 0
+    src = ROOT / s["source"]
+    base = f"https://huggingface.co/datasets/{hf['repo']}/resolve/{hf['revision']}/{hf['path'].strip('/')}/"
+    token, n = None, 0
+    for f, want in sorted(s["files"].items()):
+        out = src / f
+        if out.is_file() and sha256(out) == want:
+            continue
+        if token is None:
+            token = _hf_token() or ""
+        headers = {"Accept-Encoding": "identity"}       # no content encoding: the bytes as stored
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        try:
+            with urllib.request.urlopen(urllib.request.Request(base + urllib.parse.quote(f), headers=headers),
+                                        timeout=300) as r:
+                data = r.read()
+        except urllib.error.HTTPError as e:
+            hint = (" (a private dataset: $HF_TOKEN or `hf auth login` with read access to it)"
+                    if e.code in (401, 403, 404) else "")
+            raise SystemExit(f"fetch {name}: {hf['repo']}@{hf['revision'][:12]} {hf['path']}/{f}: HTTP {e.code}{hint}")
+        if hashlib.sha256(data).hexdigest() != want:
+            raise SystemExit(f"fetch {name}: {hf['path']}/{f}: sha256 differs from images/{name}/FILES.json")
+        out.parent.mkdir(parents=True, exist_ok=True)
+        tmp = out.with_name(out.name + ".part")
+        tmp.write_bytes(data)
+        tmp.chmod(0o644)
+        tmp.replace(out)
+        n += 1
+    return n
+
+
 def check(name: str) -> list[str]:
     s = spec(name)
+    if s.get("hf"):
+        fetch(name)
     src = ROOT / s["source"]
     bad = [f"{s['source']}/{f}: sha256 {sha256(src / f) if (src / f).is_file() else 'missing'} != images/{name}/FILES.json"
            for f, h in sorted(s["files"].items()) if not (src / f).is_file() or sha256(src / f) != h]
@@ -373,6 +441,12 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
     names = args or sorted(p.parent.name for p in (ROOT / "images").glob("*/FILES.json"))
+    if cmd == "fetch":
+        for n in names:
+            if spec(n).get("hf"):
+                k = fetch(n)
+                print(f"{n}: {len(spec(n)['files'])} files in {spec(n)['source']} ({k} downloaded)")
+        return 0
     if cmd == "check":
         bad = [e for n in names for e in check(n)]
         print("\n".join(bad) or f"ok files images: {', '.join(names)} match their sources")

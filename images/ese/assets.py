@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
-"""Embodied Safety Exam's large files: the binary textures and meshes of the realism_v3 asset pack (`.png`, `.obj`) that the
-image's build context (images/ese/context/ese-src/embodied_safety_exam/assets/data/realism_v3/) holds. They are kept
-out of git (images/ese/.gitignore) in the public Hugging Face dataset named in images/ese/assets.json (MLL-Lab/robosafe-assets), pinned
-by commit and by the sha256 of every file; the pack's JSON metadata, credits and licences stay in git. Build the image
-only after `fetch` (context/ese-src.sha256 lists these files too, and the Dockerfile checks every one).
+"""Embodied Safety Exam's large files, kept out of git (images/ese/.gitignore) in Hugging Face datasets, pinned in
+images/ese/assets.json by commit and by the sha256 of every file. One entry ("pack") per dataset folder:
+  realism_v3       the realism_v3 asset pack's binary textures and meshes (`.png`, `.obj`) under
+                   context/ese-src/embodied_safety_exam/assets/data/realism_v3/, from MLL-Lab/robosafe-assets (public;
+                   CC0 1.0 / CC BY 4.0 assets, credits in its realism_v3/credits.json)
+  third_party      the vendored third-party G1 meshes and GR00T whole-body-control weights (`.STL`, `.onnx`) under
+                   context/ese-src/assets/third_party/bigym2/, from the embodied-safety-exam/ folder of the dataset
+                   named in assets.json (their LICENSE / NOTICE files stay in git next to them)
+The packs' JSON metadata, credits and licences stay in git. Build the image only after `fetch`
+(context/ese-src.sha256 lists these files too, and the Dockerfile checks every one).
 
 usage:
-  python3 images/ese/assets.py fetch [<dir>]       download the pinned revision into <dir> (default:
+  python3 images/ese/assets.py fetch [<dir>]       download the pinned revisions into <dir> (default:
                                                          $RCB_ESE_ASSETS or ~/.cache/robosafe-assets), check every
                                                          sha256 and copy the files into the build context
   python3 images/ese/assets.py stage <dir>         check an existing copy and copy it into the build context
   python3 images/ese/assets.py check [<dir>]       check a copy (default: the build context itself)
-  python3 images/ese/assets.py pin <dir> <rev>     maintainers: write assets.json from a local copy of revision <rev>
+  python3 images/ese/assets.py pin <pack> <dir> <rev>   maintainers: write a pack's pins from a local copy of
+                                                         revision <rev>
   python3 images/ese/assets.py export <dir>        maintainers: copy the build context's pinned files into <dir>,
-                                                         laid out as the dataset (realism_v3/...), to upload
+                                                         laid out as the datasets (<prefix>...), to upload
 
-Access: the dataset is public (CC0 1.0 / CC BY 4.0 assets, credits in its realism_v3/credits.json); no login needed. The
-fetch uses huggingface_hub when it is installed and falls back to a standard-library download of each pinned file (its
-public resolve URL at the pinned revision) when it is not or when its download fails; the other commands use the standard
-library.
+Access: a pack whose "private" is false downloads without a login. A private one needs read access to its dataset:
+the token comes from $HF_TOKEN or `hf auth login` (never printed). The fetch uses huggingface_hub when it is installed
+and falls back to a standard-library download of each pinned file (its resolve URL at the pinned revision) when it is
+not or when its download fails; the other commands use the standard library.
 """
 from __future__ import annotations
 
@@ -32,7 +38,6 @@ import sys
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 PIN = HERE / "assets.json"
-SUFFIXES = (".png", ".obj")
 
 
 def file_sha(p: pathlib.Path) -> str:
@@ -43,12 +48,27 @@ def file_sha(p: pathlib.Path) -> str:
     return h.hexdigest()
 
 
-def load() -> dict:
-    return json.loads(PIN.read_text())
+def load() -> list[dict]:
+    return json.loads(PIN.read_text())["packs"]
 
 
 def context(pin: dict) -> pathlib.Path:
     return ROOT / pin["context"]
+
+
+def token(pin: dict) -> str | None:
+    """The token for a private pack ($HF_TOKEN, else `hf auth login`'s); None for a public one."""
+    if not pin.get("private"):
+        return None
+    t = os.environ.get("HF_TOKEN")
+    if t:
+        return t.strip()
+    try:
+        from huggingface_hub import get_token
+        return get_token()
+    except ImportError:
+        p = pathlib.Path(os.environ.get("HF_HOME", pathlib.Path.home() / ".cache" / "huggingface")) / "token"
+        return p.read_text().strip() if p.is_file() else None
 
 
 def check(d: pathlib.Path, pin: dict) -> list[str]:
@@ -65,7 +85,7 @@ def check(d: pathlib.Path, pin: dict) -> list[str]:
 def stage(d: pathlib.Path, pin: dict) -> None:
     bad = check(d, pin)
     if bad:
-        sys.exit("not staged:\n  " + "\n  ".join(bad[:20]))
+        sys.exit(f"{pin['name']}: not staged:\n  " + "\n  ".join(bad[:20]))
     dst = context(pin)
     prefix = pin["prefix"]
     for rel in pin["files"]:
@@ -77,16 +97,21 @@ def stage(d: pathlib.Path, pin: dict) -> None:
 
 
 def fetch_plain(d: pathlib.Path, pin: dict) -> None:
-    """Standard-library download of every pinned file from the dataset's public resolve URLs, without content
-    encoding (huggingface_hub 1.x through httpx can fail with a brotli DecodingError; seen 2026-10-17)."""
+    """Standard-library download of every pinned file from the dataset's resolve URLs, without content encoding
+    (huggingface_hub 1.x through httpx can fail with a brotli DecodingError; seen 2026-10-17)."""
+    import urllib.parse
     import urllib.request
     base = f"https://huggingface.co/datasets/{pin['repo']}/resolve/{pin['revision']}/"
+    headers = {"Accept-Encoding": "identity"}
+    tok = token(pin)
+    if tok:
+        headers["Authorization"] = f"Bearer {tok}"
     for rel, want in sorted(pin["files"].items()):
         out = d / rel
         if out.is_file() and file_sha(out) == want:
             continue
         out.parent.mkdir(parents=True, exist_ok=True)
-        req = urllib.request.Request(base + rel, headers={"Accept-Encoding": "identity"})
+        req = urllib.request.Request(base + urllib.parse.quote(rel), headers=headers)
         with urllib.request.urlopen(req, timeout=120) as r, (out.parent / (out.name + ".part")).open("wb") as f:
             shutil.copyfileobj(r, f)
         (out.parent / (out.name + ".part")).replace(out)
@@ -94,19 +119,22 @@ def fetch_plain(d: pathlib.Path, pin: dict) -> None:
 
 def fetch(d: pathlib.Path, pin: dict) -> None:
     if not pin.get("revision"):
-        sys.exit("images/ese/assets.json has no revision yet (the dataset has not been pinned)")
+        sys.exit(f"images/ese/assets.json: pack {pin['name']} has no revision yet (the dataset has not been pinned)")
     d.mkdir(parents=True, exist_ok=True)
     try:
         from huggingface_hub import snapshot_download
         snapshot_download(repo_id=pin["repo"], repo_type="dataset", revision=pin["revision"], local_dir=str(d),
-                          allow_patterns=[pin["prefix"] + "**", "README.md"])
+                          allow_patterns=[pin["prefix"] + "**"], token=token(pin) or False)
+        if check(d, pin):
+            raise ValueError("incomplete download")
     except Exception as e:  # noqa: BLE001  (no huggingface_hub, or its download failed: the plain one)
-        print(f"huggingface_hub download unavailable or failed ({type(e).__name__}); downloading file by file",
-              file=sys.stderr)
+        print(f"{pin['name']}: huggingface_hub download unavailable or failed ({type(e).__name__}); downloading file by "
+              "file", file=sys.stderr)
         try:
             fetch_plain(d, pin)
         except Exception as e2:  # noqa: BLE001
-            sys.exit(f"download of {pin['repo']}@{pin['revision'][:12]} failed ({type(e2).__name__})")
+            hint = " (a private dataset: $HF_TOKEN or `hf auth login` with read access)" if pin.get("private") else ""
+            sys.exit(f"download of {pin['repo']}@{pin['revision'][:12]} failed ({type(e2).__name__}){hint}")
     stage(d, pin)
 
 
@@ -114,19 +142,18 @@ def export(d: pathlib.Path, pin: dict) -> None:
     src = context(pin)
     n = 0
     for p in sorted(src.rglob("*")):
-        if p.is_file() and p.suffix in SUFFIXES:
+        if p.is_file() and p.suffix in pin["suffixes"]:
             out = d / pin["prefix"] / p.relative_to(src)
             out.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(p, out)
             n += 1
-    print(f"exported {n} files into {d}")
+    print(f"{pin['name']}: exported {n} files into {d}")
 
 
-def pin_from(d: pathlib.Path, rev: str) -> dict:
-    old = load()
-    files = {p.relative_to(d).as_posix(): file_sha(p) for p in sorted((d / old["prefix"]).rglob("*"))
-             if p.is_file() and p.suffix in SUFFIXES and ".cache" not in p.parts}
-    return {**old, "revision": rev, "files": files}
+def pin_from(pin: dict, d: pathlib.Path, rev: str) -> dict:
+    files = {p.relative_to(d).as_posix(): file_sha(p) for p in sorted((d / pin["prefix"]).rglob("*"))
+             if p.is_file() and p.suffix in pin["suffixes"] and ".cache" not in p.parts}
+    return {**pin, "revision": rev, "files": files}
 
 
 def main() -> None:
@@ -134,29 +161,38 @@ def main() -> None:
     default = pathlib.Path(os.environ.get("RCB_ESE_ASSETS") or pathlib.Path.home() / ".cache" / "robosafe-assets")
     if not a or a[0] not in ("fetch", "stage", "check", "pin", "export"):
         sys.exit(__doc__)
-    pin = load()
+    packs = load()
     if a[0] == "fetch":
-        fetch(pathlib.Path(a[1]) if len(a) > 1 else default, pin)
+        for pin in packs:
+            fetch((pathlib.Path(a[1]) if len(a) > 1 else default) / pin["repo"].replace("/", "--"), pin)
     elif a[0] == "stage" and len(a) == 2:
-        stage(pathlib.Path(a[1]), pin)
+        for pin in packs:
+            stage(pathlib.Path(a[1]) / pin["repo"].replace("/", "--"), pin)
     elif a[0] == "check":
-        if len(a) > 1:
-            d = pathlib.Path(a[1])
-        else:   # the build context: its files sit at the paths without the dataset's prefix
-            d = context(pin).parent
-            pin = {**pin, "files": {pin["context_name"] + rel[len(pin["prefix"]) - 1:]: s
-                                    for rel, s in pin["files"].items()}}
-        bad = check(d, pin)
+        bad, n = [], 0
+        for pin in packs:
+            if len(a) > 1:
+                d = pathlib.Path(a[1]) / pin["repo"].replace("/", "--")
+            else:   # the build context: its files sit at the paths without the dataset's prefix
+                d = context(pin).parent
+                pin = {**pin, "files": {pin["context_name"] + rel[len(pin["prefix"]) - 1:]: s
+                                        for rel, s in pin["files"].items()}}
+            bad += [f"{pin['name']}: {b}" for b in check(d, pin)]
+            n += len(pin["files"])
         for b in bad[:40]:
             print("FAIL", b)
         if bad:
             sys.exit(1)
-        print(f"ok {len(pin['files'])} files match images/ese/assets.json")
-    elif a[0] == "pin" and len(a) == 3:
-        PIN.write_text(json.dumps(pin_from(pathlib.Path(a[1]), a[2]), indent=1, sort_keys=True) + "\n")
+        print(f"ok {n} files match images/ese/assets.json")
+    elif a[0] == "pin" and len(a) == 4:
+        new = [pin_from(p, pathlib.Path(a[2]), a[3]) if p["name"] == a[1] else p for p in packs]
+        if new == packs and not any(p["name"] == a[1] for p in packs):
+            sys.exit(f"no pack {a[1]!r} in images/ese/assets.json")
+        PIN.write_text(json.dumps({"packs": new}, indent=1, sort_keys=True) + "\n")
         print(f"wrote {PIN.relative_to(ROOT)}")
     elif a[0] == "export" and len(a) == 2:
-        export(pathlib.Path(a[1]), pin)
+        for pin in packs:
+            export(pathlib.Path(a[1]), pin)
     else:
         sys.exit(__doc__)
 

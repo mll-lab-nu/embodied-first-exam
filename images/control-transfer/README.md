@@ -1,6 +1,6 @@
 # Control Transfer images
 
-These images are **BUILD_ONLY**. Private flight-log-derived calibration and operator assets are not published by this repository. See [task fidelity and provenance](../../docs/benchmarks/control-transfer.md) before preparing assets.
+The evaluator image is **BUILD_ONLY** (private): flight-log-derived calibration and operator assets are not published by this repository. The agents' bases `nominal` and `train` hold public assets only and are public (`ghcr.io/mll-lab-nu/efe`). See [task fidelity and provenance](../../docs/benchmarks/control-transfer.md) before preparing assets.
 
 From the repository root, provide a workspace containing `sim2realbench/vendor/unitree_rl_mjlab` at commit `1425b15f73bd4095f0df53709d7c389c3eb9e790`, a Menagerie checkout at `0059d4335f8156206f63a35662313385f7ad6d74`, and the separately prepared private flight-force asset:
 
@@ -23,8 +23,8 @@ Both preparation steps require fresh output directories. Staged `assets/` are gi
 
 | Target | Contents | Tag |
 |---|---|---|
-| `nominal` | CPU MuJoCo and software rendering; public G1 training dependency subset and nominal Go2 geometry | `efe-private:control-transfer-0.2.0-nominal` |
-| `train` | Nominal image plus pinned Torch (CUDA 12.8), MuJoCo Warp, mjlab, rsl-rl, export dependencies and EGL | `efe-private:control-transfer-0.2.0-train` |
+| `nominal` | CPU MuJoCo and software rendering; public G1 training dependency subset and nominal Go2 geometry | `efe:control-transfer-0.2.0-nominal` |
+| `train` | Nominal image plus pinned Torch (CUDA 12.8), MuJoCo Warp, mjlab, rsl-rl, export dependencies and EGL | `efe:control-transfer-0.2.0-train` |
 | `evaluator` | Nominal runtime plus private force model and complete Go2 integrity manifest | `efe-private:control-transfer-0.2.0` |
 
 Task code is copied by the tasks' Dockerfiles; it is not installed into these base images. Agent services use only `nominal` or `train`. The evaluator runs native CPU MuJoCo and numeric NumPy policies with no GPU devices, even when training uses a GPU.

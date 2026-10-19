@@ -21,7 +21,7 @@ longest, 270 mm) counts once per started 1360 mm; at most 10 % of the
 path in strokes longer than 12 × their bounding box's diagonal (sweeps). They are part of the frozen instance (the rules added to its `target.success`); the graders'
 `rcb_brush_strict.py` applies them (the verifier and the scoring service).
 
-Copy the exemplar character 山 in running script shown in `environment/target.png` onto the 227 mm main sheet in at most 4 strokes, with ink from an ink stone and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).
+Copy the exemplar character 山 in running script shown in `/app/target.png` onto the 227 mm main sheet in at most 4 strokes, with ink from an ink stone and a practice sheet beside it; the brush starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).
 
 Copy the exemplar (臨帖), scored against the picture after the best single shift of the sheet, at most 5 mm along each axis (translation only): IoU of the inked areas ≥ 0.80, boundary F (edge precision / recall within
 1 mm) ≥ 0.75, region coverage ≥ 0.80 (the exemplar's ink is divided into 5 regions; the fraction of each region covered by
