@@ -35,8 +35,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402  (BENCHMARKS: (task dir prefix, label); bench_of)
 
-# label -> the benchmark's own path prefixes besides tasks/<prefix>. Default for a label not listed with a key here:
-# none (full suite). `d` = the directory name under images/ (and docs/benchmarks/<d>.md).
+# label -> the benchmark's own path prefixes besides its task dirs (tasks/<folder>/<task>/, the folder BENCHMARK_DIRS
+# names). Default for a label not listed with a key here: none (full suite). `d` = the directory name under images/ (and
+# docs/benchmarks/<d>.md).
 def _own(d: str, *extra: str) -> list[str]:
     return [f"images/{d}/", f"docs/benchmarks/{d}.md", *extra]
 
@@ -108,10 +109,23 @@ def label_of_task(name: str) -> str | None:
     return tc.bench_of(Path(name)) or None
 
 
+def task_name_of(path: str) -> str | None:
+    """The task dir a repository path is in: tasks/<folder>/<task>/... -> <task>; None for a path in no task dir (a
+    file directly in tasks/ or in a benchmark folder). A path of the flat layout before the benchmark folders
+    (tasks/<task>/..., the old side of the move in a diff) names its task one level up."""
+    parts = path.split("/")
+    if parts[0] != "tasks" or len(parts) < 3:
+        return None
+    if parts[1] in tc.BENCHMARK_DIRS.values():
+        return parts[2] if len(parts) >= 4 else None
+    return parts[1]
+
+
 def owners(path: str) -> set[str]:
     """Every benchmark that owns `path` (images/mujoco/ is DexToolBench's and MuJoCo Playground's)."""
-    if path.startswith("tasks/") and path.count("/") >= 2:
-        lab = label_of_task(path.split("/")[1])
+    if path.startswith("tasks/") and path.count("/") >= 2:   # a task's file: the task's name says its benchmark
+        name = task_name_of(path)
+        lab = label_of_task(name) if name else None
         return {lab} if lab else set()
     return {label for label, own in UNITS.items() if any(path.startswith(p) for p in own)}
 
@@ -192,8 +206,8 @@ def main(argv: list[str]) -> int:
     benches = s["benches"]
     prefixes = sorted({p for b in benches for p in UNITS[b]})
     tprefixes = tuple(pre for pre, lab in tc.BENCHMARKS if lab in benches)
-    tasks = sorted(f"tasks/{t.name}" for t in (ROOT / "tasks").iterdir()
-                   if t.is_dir() and (t / "task.toml").is_file() and label_of_task(t.name) in benches) if tprefixes else []
+    tasks = [t.relative_to(ROOT).as_posix() for t in tc.iter_tasks()
+             if label_of_task(t.name) in benches] if tprefixes else []
     print(f"RCB_SCOPE={s['scope']}")
     print(f"RCB_SCOPE_REASON={shlex.quote(s['reason'])}")
     print(f"RCB_SCOPE_BENCHES={shlex.quote(';'.join(benches))}")

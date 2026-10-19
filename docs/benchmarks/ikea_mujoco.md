@@ -2,7 +2,7 @@
 
 IKEA furniture-assembly scenes in plain MuJoCo 3.14.0 on the CPU (float64), each with two robot arms and physical
 grasps (finger friction, no assist). Eight tasks ship, each in both modes (16 task directories,
-`tasks/ikea-<task>-i00-{privileged,standard}`):
+`tasks/ikea-mujoco/ikea-<task>-i00-{privileged,standard}`):
 
 | task | robot | what is assembled | mechanism |
 |---|---|---|---|

@@ -23,6 +23,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CLAMP = [sys.executable, str(ROOT / "scripts/clamp_cpus.py")]
+sys.path.insert(0, str(ROOT / "scripts"))
+import task_conventions as tc  # noqa: E402  (task_dir / iter_tasks: the task tree)
 TASK = "robotwin_2_0_stack_blocks_two-standard"          # any task of the repository (write_task_results looks it up)
 BIG = "behavior-boxing-food-after-dinner-i00"             # its standard twin's sidecar caps are 12 CPUs
 HB = "humanoidbench-loco-walk-i00-privileged"            # [environment] cpus = 16
@@ -139,7 +141,7 @@ def test_config_and_attempts():
     infra = {"success": 0, "infra_error": 1}
     with tempfile.TemporaryDirectory() as td:
         td = Path(td); jobs, out = td / "jobs", td / "out"
-        dg = (ROOT / "tasks" / TASK / "DIGEST").read_text().strip().removeprefix("sha256:")
+        dg = (tc.task_dir(TASK) / "DIGEST").read_text().strip().removeprefix("sha256:")
         make_trial(jobs, "a", "t1", TASK, "2026-10-14T01:00:00Z", infra, {"task_checksum": dg})
         make_trial(jobs, "a", "t2", TASK, "2026-10-14T02:00:00Z", {"success": 1}, {"task_checksum": dg})
         write(jobs, "a", out)
@@ -181,7 +183,7 @@ def test_config_and_attempts():
               f"an unvalidated realtime task without a checksum: {cfg}")
         # the seed the runner chose: its copy of the task says it (scripts/task_seed.py materialize)
         copy = td / "copy" / TASK
-        shutil.copytree(ROOT / "tasks" / TASK, copy)
+        shutil.copytree(tc.task_dir(TASK), copy)
         s = (copy / "task.toml").read_text()
         (copy / "task.toml").write_text(re.sub(r"(?m)^(\[metadata\.seeds\]\n(?:.*\n)*?default = )\d+", r"\g<1>4242", s, count=1))
         make_trial(jobs, "f", "s1", TASK, "2026-10-14T01:00:00Z", {"success": 0}, None, {"task": {"path": str(copy)}})
@@ -230,10 +232,10 @@ def test_core_set():
     sys.path.insert(0, str(ROOT / "scripts"))
     import task_conventions as tc
     check(not tc.check_core_set(), f"docs/core_set.toml: {tc.check_core_set()[:3]}")   # this test is in run_invariants.sh
-    names = sorted(p.name for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    names = [p.name for p in tc.iter_tasks()]
     cs = tc.core_set()
     def entry(t, **k):                                   # a valid entry for task dir t, with the fields in k changed
-        d = ROOT / "tasks" / t
+        d = tc.task_dir(t)
         f = {"task": t, "base": tc.base_of(d), "benchmark": tc.bench_of(d), "mode": tc.mode_of(d), "luna": "failed", **k}
         return "[[task]]\n" + "".join(f'{n} = "{v}"\n' for n, v in f.items())
     ANY = sorted(cs)[0]
@@ -264,7 +266,7 @@ def test_core_set():
         check(any("top-level" in x for x in tc.check_core_set(path=Path(td) / "toplevel.toml")), "an unknown top-level key passes")
     # a listed standard dir and an unlisted one in the same configuration (one summary table); the list changes over
     # time, so both are looked up
-    key = functools.lru_cache(maxsize=None)(lambda t: tc.config_key(tc.effective_config(ROOT / "tasks" / t)))
+    key = functools.lru_cache(maxsize=None)(lambda t: tc.config_key(tc.effective_config(tc.task_dir(t))))
     IN = OUT = None
     for c in (t for t in names if t.endswith("-standard") and t in cs):
         same = sorted((t for t in names if t.endswith("-standard") and t not in cs),
@@ -276,9 +278,9 @@ def test_core_set():
     if IN is None:
         print("note: no core standard dir with an excluded one of the same configuration; the core-set test is skipped")
         return
-    check(tc.set_of(ROOT / "tasks" / IN) == "core" and tc.set_of(ROOT / "tasks" / OUT) == "excluded",
-          f"set_of: {IN} {tc.set_of(ROOT / 'tasks' / IN)}, {OUT} {tc.set_of(ROOT / 'tasks' / OUT)}")
-    a, b = tc.effective_config(ROOT / "tasks" / IN), tc.effective_config(ROOT / "tasks" / OUT)
+    check(tc.set_of(tc.task_dir(IN)) == "core" and tc.set_of(tc.task_dir(OUT)) == "excluded",
+          f"set_of: {IN} {tc.set_of(tc.task_dir(IN))}, {OUT} {tc.set_of(tc.task_dir(OUT))}")
+    a, b = tc.effective_config(tc.task_dir(IN)), tc.effective_config(tc.task_dir(OUT))
     check(a.get("set") == "core" and b.get("set") == "excluded", f"effective_config set: {a.get('set')}, {b.get('set')}")
     check(tc.config_key(a) == tc.config_key(dict(a, set="excluded")), "the set is part of config_key")
     with tempfile.TemporaryDirectory() as td:
@@ -313,7 +315,25 @@ def test_benchmarks():
         found = tc.check_benchmarks(Path(td))
         check(not any("sprint" in x for x in found) and any("no-such-bench" in x and "no benchmark label" in x for x in found),
               f"an unclaimed name: {found[:3]}")
-    print("ok benchmark labels: every task dir has one (its BENCHMARKS prefix)")
+    with tempfile.TemporaryDirectory() as td:            # the layout: tasks/<benchmark folder>/<task>/ and nothing else
+        td = Path(td)
+        for rel in ("robolab/robolab-x-i00-privileged", "robowits/robolab-y-i00-standard", "kinder-z-i00-privileged",
+                    "robolab/robolab-w-i00-standard/deeper"):
+            (td / rel).mkdir(parents=True)
+        for rel in ("robolab/robolab-x-i00-privileged", "robowits/robolab-y-i00-standard", "kinder-z-i00-privileged",
+                    "robolab/robolab-w-i00-standard/deeper"):
+            (td / rel / "task.toml").write_text("")
+        (td / "README.md").write_text("")
+        found = tc.check_layout(td)
+        check(not any("robolab-x" in x for x in found), f"a task dir in its folder was flagged: {found}")
+        check(any("robolab-y" in x and "belongs in tasks/robolab/" in x for x in found), f"a task in another benchmark's folder: {found}")
+        check(any("kinder-z" in x and "not a benchmark folder" in x for x in found), f"a flat task dir: {found}")
+        check(any("robolab-w-i00-standard" in x and "not a task dir" in x for x in found), f"a task dir nested deeper: {found}")
+        check(not any("README" in x for x in found), f"tasks/README.md was flagged: {found}")
+        check(not any("no folder" in x or "not a BENCHMARKS label" in x for x in found), f"BENCHMARK_DIRS: {found}")
+    check(tc.task_dir(TASK) == ROOT / "tasks" / "robotwin-2" / TASK and tc.task_relpath(TASK) == f"tasks/robotwin-2/{TASK}"
+          and (tc.task_dir(TASK) / "task.toml").is_file(), f"task_dir({TASK}) = {tc.task_dir(TASK)}")
+    print("ok benchmark labels: every task dir has one (its BENCHMARKS prefix), in its benchmark's folder")
 
 
 def caps(task: Path) -> list[str]:
@@ -331,19 +351,19 @@ def test_clamp():
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)
         for t in (f"{BIG}-standard", HB, f"{SMALL}-standard"):
-            shutil.copytree(ROOT / "tasks" / t, td / t, symlinks=True)
+            shutil.copytree(tc.task_dir(t), td / t, symlinks=True)
         big, hb, small = td / f"{BIG}-standard", td / HB, td / f"{SMALL}-standard"
         check(max(num(c) for c in caps(big)) == 12 and max(num(c) for c in caps(hb)) == 16, "the fixtures' caps changed")
         r = subprocess.run(CLAMP + ["--cpus", "8", "--needs", str(small)], capture_output=True, text=True)
         check(r.returncode == 1 and not r.stdout, f"--needs on caps <= 8: {r.returncode} {r.stdout}")
         r = subprocess.run(CLAMP + ["--cpus", "8", "--needs", str(small), str(big)], capture_output=True, text=True)
         check(r.returncode == 0 and "12 -> 8" in r.stdout, f"--needs on a cap of 12: {r.returncode} {r.stdout}")
-        check(caps(big) == caps(ROOT / "tasks" / f"{BIG}-standard"), "--needs wrote something")
+        check(caps(big) == caps(tc.task_dir(f"{BIG}-standard")), "--needs wrote something")
         before = {t: {p: p.read_bytes() for p in t.rglob("*") if p.is_file()} for t in (big, hb, small)}
         r = subprocess.run(CLAMP + ["--cpus", "8", str(big), str(hb), str(small)], capture_output=True, text=True)
         check(r.returncode == 0, f"clamp: {r.returncode} {r.stderr}")
         for t in (big, hb, small):
-            orig = caps(ROOT / "tasks" / t.name)
+            orig = caps(tc.task_dir(t.name))
             got = caps(t)
             check(len(got) == len(orig) and all(num(g) == min(num(o), 8) for g, o in zip(got, orig)), f"{t.name}: {orig} -> {got}")
             for p, b in before[t].items():                     # only the cpus values changed, nothing else in any file
@@ -354,10 +374,10 @@ def test_clamp():
         check(all(p.read_bytes() == b for p, b in before[small].items()), "a task without a cap above the host's was rewritten")
         check(subprocess.run(CLAMP + ["--cpus", "8", "--needs", str(big), str(hb)], capture_output=True).returncode == 1,
               "a clamped copy still needs clamping")
-        orig = caps(ROOT / "tasks" / HB)
-        r = subprocess.run(CLAMP + ["--cpus", "8", str(ROOT / "tasks" / HB)], capture_output=True, text=True)
+        orig = caps(tc.task_dir(HB))
+        r = subprocess.run(CLAMP + ["--cpus", "8", str(tc.task_dir(HB))], capture_output=True, text=True)
         check(r.returncode != 0 and "copy" in r.stderr, f"clamping tasks/ itself was not refused: {r.returncode} {r.stderr}")
-        check(caps(ROOT / "tasks" / HB) == orig and max(num(c) for c in orig) == 16, "tasks/ was clamped")
+        check(caps(tc.task_dir(HB)) == orig and max(num(c) for c in orig) == 16, "tasks/ was clamped")
 
 
 FAKE_HARBOR = r'''#!/usr/bin/env python3
@@ -384,7 +404,7 @@ def test_batch_runner():
         (td / "bin").mkdir()
         (td / "bin/harbor").write_text(FAKE_HARBOR); (td / "bin/harbor").chmod(0o755)
         rec = td / "harbor.jsonl"
-        orig = {t: caps(ROOT / "tasks" / t) for t in (f"{BIG}-standard", f"{SMALL}-standard")}
+        orig = {t: caps(tc.task_dir(t)) for t in (f"{BIG}-standard", f"{SMALL}-standard")}
         env = {**os.environ, "PATH": f"{td / 'bin'}:{os.environ['PATH']}", "FAKE_HARBOR_OUT": str(rec), "JOBS": str(td / "jobs"),
                "RESULTS": "", "LOG_MIRROR": "0", "MEM_GUARD": "0", "GATEWAY": "0", "WEB_SEARCH": "allowed", "MODES": "standard",
                "HOST_CPUS": "8", "RCB_SCRIPTS": str(ROOT / "scripts")}
@@ -405,7 +425,7 @@ def test_batch_runner():
         check("clamped" in log and "12 -> 8" in log, "the clamp is not in the batch log")
         check(not any((td / f"jobs/.tasks/clamptest-standard-{b}").exists() for b in (BIG, SMALL)), "a job copy was not removed")
         for t, c in orig.items():
-            check(caps(ROOT / "tasks" / t) == c, f"tasks/{t} was changed")
+            check(caps(tc.task_dir(t)) == c, f"{tc.task_relpath(t)} was changed")
 
 
 KILLER_HARBOR = r'''#!/usr/bin/env python3

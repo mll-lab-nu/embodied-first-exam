@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       tasks:
-        description: "space-separated task dirs, e.g. tasks/foo-privileged (default: all, or a pull request's changed tasks)"
+        description: "space-separated task dirs, e.g. tasks/<benchmark>/foo-privileged (default: all, or a pull request's changed tasks)"
         required: false
         default: ""
       pr:
@@ -52,7 +52,7 @@ jobs:
             [ -n "$got" ] || break
             files+="$got"$'\n'
           done
-          dirs=$(printf '%s' "$files" | sed -n 's#^\(tasks/[^/]*\)/.*#\1#p' | sort -u | tr '\n' ' ')
+          dirs=$(printf '%s' "$files" | sed -n 's#^\(tasks/[^/]*/[^/]*\)/.*#\1#p' | sort -u | tr '\n' ' ')
           echo "HEAD_SHA=$sha" >> "$GITHUB_ENV"
           [ -n "$TASKS" ] || echo "TASKS=$dirs" >> "$GITHUB_ENV"
           echo "pull request #$PR at $sha; changed task dirs: ${dirs:-none}"
@@ -66,10 +66,10 @@ jobs:
       - name: Resolve task list
         run: |
           set -eu
-          if [ -n "$PR" ] && [ -z "$TASKS" ]; then list=""; else list=${TASKS:-$(ls -d tasks/*/)}; fi
+          if [ -n "$PR" ] && [ -z "$TASKS" ]; then list=""; else list=${TASKS:-$(ls -d tasks/*/*/)}; fi
           real=""
           for t in $list; do
-            [[ "$t" =~ ^tasks/[A-Za-z0-9_.-]+/?$ ]] || { echo "bad task dir: $t"; exit 1; }
+            [[ "$t" =~ ^tasks/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/?$ ]] || { echo "bad task dir: $t"; exit 1; }
             if [ -f "${t%/}/task.toml" ]; then real+=" ${t%/}"; else echo "skip $t (no task.toml: removed)"; fi
           done
           echo "TASK_LIST=$(echo $real)" >> "$GITHUB_ENV"

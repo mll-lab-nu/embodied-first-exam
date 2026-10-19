@@ -139,7 +139,7 @@ def check_repository() -> None:
 
 def main() -> int:
     args = sys.argv[1:]
-    tasks = [Path(a).resolve() for a in args] or sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    tasks = [Path(a).resolve() for a in args] or tc.iter_tasks()
     for t in tasks:
         if (t / "task.toml").is_file():
             check_task(t)

@@ -44,8 +44,8 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf.
   grader (`tests/grade.py`), the standard oracle player `solution/oracle_replay.py`; the eai-standard/2.2 layer
   (`rcb_limited.py`, `rcb_client.py`, `rcb1.py`, `run.sh`) comes from `embodied_first_exam/standard/`. The privileged
   instruction quotes RoboWits' `_check_success` verbatim (MIT, RoboWits @ 9cc30ae).
-  The frozen instance is `tasks/robowits-<family>-i00-privileged/environment/instance.json` (copied to `tests/` and to
-  the standard twin's `environment/sim/`). `python3 scripts/task_conventions.py --check tasks/robowits-*` passes.
+  The frozen instance is `tasks/robowits/robowits-<family>-i00-privileged/environment/instance.json` (copied to `tests/` and to
+  the standard twin's `environment/sim/`). `python3 scripts/task_conventions.py --check tasks/robowits/robowits-*` passes.
 - One frozen input is over 2 MB: ball_into_bottle's `instance.json`, 2,047,384 bytes (2.05 MB; 1.95 MiB), in its three
   copies. It is the frozen scene: almost all of it is the frozen Genesis convex decomposition of its meshes
   (`genesis_cvx`, 2.04 MB), a task input and not a result; shrinking it would change the instance.

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Task digests (PROTOCOL §2.8): every task carries the digest of its current files in `tasks/<task>/DIGEST` (one line
+# Task digests (PROTOCOL §2.8): every task carries the digest of its current files in `tasks/<benchmark>/<task>/DIGEST` (one line
 # `sha256:<hex>`, written last by scripts/task_conventions.py `normalize`, so every generator and
 # every normalize run refresh it). A digest left over from before a change makes the published dataset and
-# the repository disagree, so it fails here: refresh with `python3 scripts/task_conventions.py tasks/<task>` (umask 022).
+# the repository disagree, so it fails here: refresh with `python3 scripts/task_conventions.py tasks/<benchmark>/<task>` (umask 022).
 # The release manifest tasks/dataset.toml is generated from the DIGEST files (scripts/dataset_manifest.py) and is not
 # committed: pull requests that change different tasks share no file. This check fails when it is tracked again.
 # The digest is recomputed the way Harbor does it (harbor.publisher.packager.Packager.compute_content_hash, Harbor
@@ -15,15 +15,16 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 if git -C "$root" ls-files --error-unmatch tasks/dataset.toml >/dev/null 2>&1; then
   echo "FAIL tasks/dataset.toml is tracked: it is generated for a release (scripts/dataset_manifest.py write), not committed (git rm --cached tasks/dataset.toml)"; exit 1
 fi
-# Every directory under tasks/ that holds a tracked file is a task: it has its task.toml. Every other check skips a
-# directory without one, so a half-deleted task (36 DIGEST-only dirs were left on main by a merge, board 0121 m3) would pass
-# them all. Always over the whole of tasks/ (git's index: cheap).
+# Every directory tasks/<benchmark>/<dir>/ that holds a tracked file is a task: it has its task.toml (and a benchmark
+# folder holds nothing but task dirs). Every other check skips a directory without one, so a half-deleted task (36
+# DIGEST-only dirs were left on main by a merge, board 0121 m3) would pass them all. Always over the whole of tasks/
+# (git's index: cheap).
 orphans=$(git -C "$root" ls-files -- tasks | python3 -c 'import sys
 files = {l.rstrip("\n") for l in sys.stdin}
-dirs = sorted({f.split("/")[1] for f in files if f.count("/") >= 2})
+dirs = sorted({"/".join(f.split("/")[1:3]) for f in files if f.count("/") >= 2})
 print("\n".join(d for d in dirs if f"tasks/{d}/task.toml" not in files))')
 if [ -n "$orphans" ]; then
-  echo "FAIL tasks/<dir> without a task.toml (a task directory removed only in part: remove the rest, or restore task.toml):"
+  echo "FAIL tasks/<benchmark>/<dir> without a task.toml (a task directory removed only in part: remove the rest, or restore task.toml):"
   sed 's#^#  tasks/#' <<< "$orphans" | head -50; exit 1
 fi
 python3 - "$root" "$@" <<'PY'
@@ -31,7 +32,7 @@ import fnmatch, hashlib, pathlib, re, sys
 root = pathlib.Path(sys.argv[1])
 given = [pathlib.Path(a) for a in sys.argv[2:]]
 tasks = sorted({(p if p.is_absolute() else pathlib.Path.cwd() / p).resolve() for p in given if (p / "task.toml").is_file()}) \
-    if given else sorted(p for p in (root / "tasks").iterdir() if p.is_dir() and (p / "task.toml").exists())
+    if given else sorted((p.parent for p in (root / "tasks").glob("*/*/task.toml")), key=lambda p: p.name)   # tasks/<benchmark>/<task>/
 rc = 0
 
 IGNORE_NAMES = ("*.pyc", ".DS_Store", "*.swp", "*.swo", "*~")
@@ -65,7 +66,7 @@ stale, missing = [], []
 for task in tasks:
     x = task.name
     if (task / ".gitignore").exists():
-        print(f"FAIL tasks/{x}: a task-level .gitignore changes what Harbor packages; this check does not read it"); rc = 1
+        print(f"FAIL {task.parent.name}/{x}: a task-level .gitignore changes what Harbor packages; this check does not read it"); rc = 1
         continue
     f = task / "DIGEST"
     have = f.read_text() if f.is_file() else None
@@ -77,7 +78,7 @@ for what, xs in (("no DIGEST file (or not one line `sha256:<hex>`)", missing),
                  ("a DIGEST that is not the digest of the task's current files", stale)):
     if xs:
         rc = 1
-        print(f"FAIL {len(xs)} task(s) with {what} (refresh: python3 scripts/task_conventions.py tasks/<task>, umask 022):")
+        print(f"FAIL {len(xs)} task(s) with {what} (refresh: python3 scripts/task_conventions.py tasks/<benchmark>/<task>, umask 022):")
         for x in xs[:20]: print(f"  - {x}")
         if len(xs) > 20: print(f"  ... {len(xs) - 20} more")
 if rc == 0:

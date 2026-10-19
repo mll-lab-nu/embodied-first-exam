@@ -6,7 +6,7 @@ on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 | | |
 |---|---|
 | upstream | VLABench @ `cf588fe60c0c7282174fe979f5913170cfe69017` (MIT), assets `lerobot/vlabench-assets` @ `08d7a44`, MuJoCo 3.2.2, dm_control 1.0.22 |
-| tasks | `tasks/vlabench-<task>-i00-privileged` and `tasks/vlabench-<task>-i00-standard` |
+| tasks | `tasks/vlabench/vlabench-<task>-i00-privileged` and `tasks/vlabench/vlabench-<task>-i00-standard` |
 | metadata | `simulator = "vlabench"`, `robot = "franka-panda"`, `family = "vlabench/<task>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/efe-vlabench:0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
 | standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + each standard task's `environment/sim/server.py` |
@@ -105,9 +105,9 @@ agent's client and the verifier (`grade.py`: `success = live_success`) are main'
 ```bash
 docker build -t ghcr.io/mll-lab-nu/efe-vlabench:$(cat images/vlabench/VERSION) \
     -f images/vlabench/Dockerfile .                  # from the repository root; ~15 GB
-python3 scripts/task_conventions.py --check tasks/vlabench-*
+python3 scripts/task_conventions.py --check tasks/vlabench/vlabench-*
 cd tasks && harbor add --scan . && cd ..           # then drop dataset entries whose directory is gone
-bash ci_checks/run_all.sh tasks/vlabench-*
+bash ci_checks/run_all.sh tasks/vlabench/vlabench-*
 ```
 
 ## Evidence

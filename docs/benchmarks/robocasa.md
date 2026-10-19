@@ -6,7 +6,7 @@ Omron mobile base), each on one frozen instance, in both modes: 58 tasks.
 | | |
 |---|---|
 | upstream | robocasa/robocasa @ `756598a5be52e052339bb2d957426e39015c2afb` (MIT), robosuite 1.5.1, MuJoCo 3.2.6 |
-| tasks | `tasks/robocasa-<task>-i00-privileged` and `tasks/robocasa-<task>-i00-standard`, 29 each |
+| tasks | `tasks/robocasa/robocasa-<task>-i00-privileged` and `tasks/robocasa/robocasa-<task>-i00-standard`, 29 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa/<Env>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/efe-robocasa:0.1.0` (`images/robocasa/`), CPU only, ~24 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |

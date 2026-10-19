@@ -24,6 +24,8 @@ import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import task_conventions as tc  # noqa: E402  (task_dir / iter_tasks: the task tree)
 ISOLATION = ["bash", str(ROOT / "ci_checks/check-verifier-isolation.sh")]
 RESOURCES = [sys.executable, str(ROOT / "ci_checks/check-resources.py")]
 POINTERS = [sys.executable, str(ROOT / "ci_checks/check-agent-pointers.py")]
@@ -421,7 +423,7 @@ def twin_cutoffs(tmp: Path) -> int:
             print(f"FAIL check-ci-selftest [twin cutoffs: {what}]" + (f":\n{out[-600:]}" if out else ""))
 
     work = tmp / "twins"
-    shutil.copytree(ROOT / "tasks" / STD, work / STD)   # alone first; its twin joins it below
+    shutil.copytree(tc.task_dir(STD), work / STD)   # alone first; its twin joins it below
     t = work / STD
     sec = int(tomllib.loads((t / "task.toml").read_text())["agent"]["timeout_sec"]) // 2   # a number that is not its twin's
     toml = (t / "task.toml").read_text()
@@ -435,7 +437,7 @@ def twin_cutoffs(tmp: Path) -> int:
            f"the sim service's wall clock is not {sec}")
     rc, out = run(CUTOFFS, t)
     expect(rc == 0, "check-cutoffs.py on the normalized task alone", out)
-    shutil.copytree(ROOT / "tasks" / PRIV, work / PRIV)
+    shutil.copytree(tc.task_dir(PRIV), work / PRIV)
     r = subprocess.run(TWINS + [str(t)], capture_output=True, text=True)
     out = r.stdout + r.stderr
     expect(r.returncode != 0 and "the twins have the same cutoff" in out, "check-twins.py must refuse twins with two cutoffs", out)
@@ -454,7 +456,7 @@ def main(argv: list[str]) -> int:
     with tempfile.TemporaryDirectory(prefix="rcb-ci-selftest-") as tmp:
         clean = {}
         for name in sorted({m[1] for m in sel}):
-            src = ROOT / "tasks" / name
+            src = tc.task_dir(name)
             if not (src / "task.toml").is_file():
                 print(f"FAIL check-ci-selftest: the task {name} this self-test mutates is gone (pick another one in MUTATIONS)")
                 return 1
@@ -482,8 +484,8 @@ def main(argv: list[str]) -> int:
                 bad += 1
                 continue
             if any(cmd is c for c in WITH_NEIGHBOURS):   # the broken copy among every other task (links to the real ones)
-                for other in (ROOT / "tasks").iterdir():
-                    if other.name != name and (other / "task.toml").is_file():
+                for other in tc.iter_tasks():
+                    if other.name != name:
                         (t.parent / other.name).symlink_to(other)
                 rc, out = run(cmd, t.parent if cmd is IDENTITY else t)
             else:
