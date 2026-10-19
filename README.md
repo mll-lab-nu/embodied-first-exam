@@ -1,11 +1,11 @@
 <h1 align="center"><a href="https://www.embodied-first-exam.ai"><img src="docs/assets/logo.svg" alt="" height="44" align="top"></a>&nbsp;Embodied First Exam</h1>
 
+<p align="center">Code agents have passed many exams in the digital world.<br>
+<b>What is their first exam to enter the physical world?</b></p>
+
 <p align="center"><a href="https://www.embodied-first-exam.ai"><img src="docs/assets/badge-website.svg" alt="Website: embodied-first-exam.ai" height="36"></a>&nbsp;<a href="https://discord.gg/TvscHrhDt"><img src="docs/assets/badge-discord.svg" alt="Discord" height="36"></a></p>
 
 <p align="center"><img src="docs/assets/teaser.png" alt="Embodied First Exam: a coding agent programs a robot in a frozen scene, in each mode" width="100%"></p>
-
-<p align="center">Code agents have passed many exams in the digital world.<br>
-<b>What is their first exam to enter the physical world?</b></p>
 
 ## Quick start
 
