@@ -81,7 +81,7 @@ measured on the frozen instance.
 ## Run
 
 ```bash
-harbor run -p tasks/kinder/kinder-scoop-pour-i01-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/kinder/kinder-scoop-pour-i01-standard -a codex -m openai/gpt-6-astra --env-file .env
 harbor run -p tasks/kinder/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
 Agent, provider and effort settings: docs/protocol/running.md. Agent time cutoff: 1800 s in both modes. Standard tasks grant no reset by default (the protocol's default): one episode, whose 1000 control steps the practice and the graded attempt share;
