@@ -9,8 +9,9 @@ Host side (needs docker, a GPU and the image ghcr.io/mll-lab-nu/eai-robopaint:<i
 RoboPaint trial under JOBS_DIR (a Harbor trial: the task from result.json / config.json or the trial dir's name; a dashboard
 download: files/verifier/), takes its recorded trajectory (privileged: artifacts/app/output/trajectory.npz; standard: the
 collect hook's verifier/trajectory.npz or artifacts/data/trajectory.npz) and its recorded verdict (verifier/reward.json
-`success`), and runs, per pair, ONE container with the current privileged task's graders' copy (tasks/<pair>-privileged/
-tests/: rcb_brush_strict.py, rcb_brush.py and the frozen instance with the rules). Inside, each trajectory is replayed once
+`success`), and runs, per pair, ONE container with the current graders' tooling (embodied_first_exam/benchmarks/robopaint/: rcb_brush_strict.py,
+rcb_brush.py, the files the verifier image takes) and the privileged task's frozen instance with the rules
+(tasks/robopaint/<pair>-privileged/tests/instance.json). Inside, each trajectory is replayed once
 from the frozen instance (rcb_brush_strict.Session.replay, as the verifiers replay it) and the same final state is scored
 twice:
   old_verdict  with the rules before 2026-10-14: the instance's target.success without the counted-stroke keys
@@ -117,7 +118,7 @@ def find_trials(roots: list[str]) -> list[dict]:
 
 def worker(tests: str, items_path: str, out_path: str) -> None:
     """In the image: one Session of the current graders' copy; every trajectory of this pair replayed once, scored twice."""
-    sys.path.insert(0, tests)
+    sys.path[:0] = [tests, "/tools"]                           # the frozen instance; the graders' tooling (embodied_first_exam/benchmarks/robopaint/)
     os.environ["RCB_SESSION_LOG"] = ""
     import numpy as np
     import rcb_brush as B
@@ -191,7 +192,7 @@ def main() -> int:
             by_pair.setdefault(t["pair"], []).append(t)
 
     def run_pair(pair: str, items: list, td: pathlib.Path) -> list:
-        tests = ROOT / "tasks" / f"{pair}-privileged" / "tests"
+        tests = ROOT / "tasks" / "robopaint" / f"{pair}-privileged" / "tests"
         if not tests.is_dir():
             return [dict(t, error=f"no task {tests.parent.name} in this checkout") for t in items]
         work = td / pair; (work / "in").mkdir(parents=True, exist_ok=True)
@@ -202,6 +203,7 @@ def main() -> int:
         (work / "out.jsonl").unlink(missing_ok=True)
         cmd = ["docker", "run", "--rm", "--gpus", "all", "-e", "NVIDIA_DRIVER_CAPABILITIES=all", "--cpus", "2", "--memory", "8g",
                "-e", "OMP_NUM_THREADS=2", "-e", "MKL_NUM_THREADS=2", "-v", f"{work}:/w", "-v", f"{tests}:/tests:ro",
+               "-v", f"{ROOT / 'embodied_first_exam' / 'benchmarks' / 'robopaint'}:/tools:ro",
                "-v", f"{pathlib.Path(__file__).resolve()}:/regrade.py:ro", a.image,
                "python", "/regrade.py", "--worker", "/tests", "/w/items.json", "/w/out.jsonl"]
         print(f"[regrade] {pair}: {len(items)} trajectories", file=sys.stderr, flush=True)
