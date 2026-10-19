@@ -1,12 +1,32 @@
+# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+.pytest_cache/
+.ipynb_checkpoints/
+# run outputs and logs
 /exps/
 /jobs/
 *.log
+nohup.out
+# secrets
 .env
 .env.*
 !.env.example
+# editor, OS and merge leftovers
+.DS_Store
+Thumbs.db
+*.swp
+*~
+*.bak
+*.bak-*
+*.orig
+*.rej
+*.tmp
+# build contexts that scripts stage (images/<name>/BUILD_CONTEXT); images/ese/context/ is the committed snapshot
+/images/*/context/
+!/images/ese/context/
 images/mujoco/rcb_mj/
+# generated (scripts/dataset_manifest.py write)
 /tasks/dataset.toml
