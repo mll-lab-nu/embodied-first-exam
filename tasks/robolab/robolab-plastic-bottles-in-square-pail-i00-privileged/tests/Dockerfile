@@ -4,7 +4,7 @@
 # the agent container cannot influence the verdict.
 FROM ghcr.io/mll-lab-nu/efe-private:robolab-0.1.2
 COPY grade.py instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe-private:robolab-files-0.2.0@sha256:83c97de0bc5674bd5bbfb79101d774104989d8aab0f63113694535af856dba07 /rcb_robolab.py /tests/rcb_robolab.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.2.0@sha256:83c97de0bc5674bd5bbfb79101d774104989d8aab0f63113694535af856dba07 /rcb_robolab.py /tests/rcb_robolab.py
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

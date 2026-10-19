@@ -18,7 +18,7 @@ solution's 998 mm) made of marks narrower than 0.12 mm on average (`mark_width_m
 inked area / `path_mm`; 0.3 × the reference's 0.43 mm). They are part of the frozen instance (the rules added to its `target.success`); the graders'
 `rcb_brush_strict.py` applies them (the verifier and the scoring service).
 
-Copy the line **Aim at improvement in every line.** (engraved English round hand, 1741) (27 letters; 臨摹 of a public-domain engraved copybook plate: Sources) shown in `environment/target.png` onto the 227 mm main sheet in at most 11 strokes (the exemplar's own pen lifts: one stroke per connected piece of its ink), with ink from an ink well and a practice sheet beside it; the pen starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).
+Copy the line **Aim at improvement in every line.** (engraved English round hand, 1741) (27 letters; 臨摹 of a public-domain engraved copybook plate: Sources) shown in `/app/target.png` onto the 227 mm main sheet in at most 11 strokes (the exemplar's own pen lifts: one stroke per connected piece of its ink), with ink from an ink well and a practice sheet beside it; the pen starts dry; start pose = PandaStick's rest keyframe; the scene frozen in `environment/instance.json` (the agent's copy: scene constants, the rule, the picture).
 
 Copy the lettering, scored against the picture: the main sheet's inked area vs the exemplar's ink. The thinnest lines are 0.4 mm,
 so every term is measured after the best single shift of the sheet, at most 5 mm along each axis (the common RoboPaint registration: one translation,

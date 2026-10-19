@@ -7,8 +7,9 @@
 # checks it): Embodied Safety Exam's package at the commit in images/ese/source.env, every file checked against
 # ese-src.sha256 here; the robot models it vendors from MuJoCo Menagerie are taken from Menagerie's public
 # repository at the pinned commit and checked against menagerie.sha256 (images/ese/SOURCE.md).
-# Before building, `python3 images/ese/assets.py fetch` puts the realism_v3 textures and meshes (kept out of git, in
-# the Hugging Face dataset pinned in images/ese/assets.json) into the context; without them the check below fails.
+# Before building, `python3 images/ese/assets.py fetch` puts the realism_v3 textures and meshes and the third-party G1
+# meshes and GR00T-WBC policies (kept out of git, in the public Hugging Face datasets pinned in images/ese/assets.json)
+# into the context; without them the check below fails.
 FROM docker.io/library/python@sha256:0a310eeecf4e1f5a0743f9a6520c90c88d089c903ca5fd283f501e3a805f5f89 AS dependencies
 ENV DEBIAN_FRONTEND=noninteractive PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1 PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 MUJOCO_GL=osmesa PYOPENGL_PLATFORM=osmesa \
