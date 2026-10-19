@@ -3,5 +3,5 @@ LABEL roboengineer.instance_sha256="781fd8671eadb96cc8a265f2f660ce3c293828ae9f18
 COPY grade.py test.sh instance.json /tests/
 RUN echo '781fd8671eadb96cc8a265f2f660ce3c293828ae9f187090c67ba1d080794abf  /tests/instance.json' | sha256sum -c - && chmod +x /tests/test.sh
 # resource limits: the verifier step (from the monitor image) and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
-COPY --from=ghcr.io/mll-lab-nu/eai-monitor:0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
+COPY --from=ghcr.io/mll-lab-nu/efe-monitor:0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

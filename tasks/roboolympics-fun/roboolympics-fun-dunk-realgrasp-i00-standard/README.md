@@ -9,7 +9,7 @@
 | Family / instance | `dunk_realgrasp` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_dunk_realgrasp.py: positive by injection (a real two-palm squeeze raised overhead in stand mode, a ghost take-off by an acceleration field on the robot only so the ball rides on palm friction (about 2 g), teleport over the ring at the apex, the squeezed ball really taken down through the ring with both palms on it and no rim contact; the landing is injected too); negatives: drop from above, let go over the rim, one hand at the entry, from below, missed after letting go inside, ball on the floor, a third step, hanging on the ring, a fall. nop holds the ball 15 s (about 20 N per palm, holds an extra 3.6 g) and fails by time. Overhead the ball's centre reaches 2.2 m; the ring is at 3.05 m; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
 
 ## Task
 Dunk the basketball with both hands: holding it pressed between your two palms, jump, force it down through the ring from above with both hands on it, and land on your feet. (RoboOlympics `dunk-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

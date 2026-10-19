@@ -9,7 +9,7 @@
 | Family / instance | `beat_block_hammer` / seed 28831 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robotwin:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robotwin:0.1.2` |
 
 ## Task
 RoboTwin 2.0 beat_block_hammer (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. There is a hammer and a block on the table, use the arm to grab the hammer and beat the block. Frozen scene instance (RoboTwin seed 28831).

@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/eai-roboolympics-fun-files:0.1.0@sha256:49a33342a72b57b56742cc754e427205a30f39dfcd69a99d1d7275c0eae4a619",
+ "image": "ghcr.io/mll-lab-nu/efe-roboolympics-fun-files:0.1.0@sha256:49a33342a72b57b56742cc754e427205a30f39dfcd69a99d1d7275c0eae4a619",
  "source": "embodied_first_exam/benchmarks/roboolympics-fun",
  "files": {
   "grade.py": "45a72043fe35b6de3c201d7b08bc04a18905de504daf43cdd3e7640bd2319730",

@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/select_unique_type_mahjong` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-vlabench:0.1.0` |
 
 ## Task
 VLABench's `select_unique_type_mahjong` as a robot service: a Franka Panda arm at a table, instructed **"Put the unique type mahjong on the placemat"**

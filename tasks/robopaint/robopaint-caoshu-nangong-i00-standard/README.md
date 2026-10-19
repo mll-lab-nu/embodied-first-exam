@@ -9,7 +9,7 @@
 | Family / instance | `robopaint_caoshu_nangong` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets; a new family, generated on 2026-10-09 with the current tooling): the same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet): path_mm 890 and mark_width_mm 3.11, against the colouring-in limits 2680 mm and 0.93 mm. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Caoshu). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robopaint:0.2.0` |
 
 ## Task
 **Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather

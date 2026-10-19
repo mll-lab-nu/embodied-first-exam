@@ -9,7 +9,7 @@
 | Family / instance | `stand_pages` / seed 0 |
 | Oracle | `none` — No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-stand-pages-i00__npAKeQv (calib-high-1944, privileged) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7). Re-graded with the 2026-10-14 grader (AMD hosts ws / ws3; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited robowits-stand-pages-i00__npAKeQv fails the earlier grader on AMD as well (inconclusive); __ZfFjKom passes the earlier grader but fails the 2026-10-14 one: it ends at the first control step where the predicate holds (row 549 of 549) and the pages fall within the settle second. No positive confirmed under the 2026-10-14 grader yet (the 10-14 standard A trial of Opus stood them as a tent; its trajectory is not in our hands). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robowits:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robowits:0.1.1` |
 
 ## Task
 Stand the two pages up on the table so that they brace each other. They start joined like an open book: the

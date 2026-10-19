@@ -10,7 +10,7 @@
 | Oracle | `full` — Reference: the paddle kept level under the ball and tapped up at each bounce, closed loop on the ball's state: 20 bounces, each back to the drop height; 11 of 11 perturbations when it was written. A still blade gets 6 to 13 bounces of the 0.15 m rise alone, which is why each bounce must also reach the drop height. In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S (board 0112). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
 
 ## Task
 Keep the table tennis ball that is dropped in front of you bouncing on the paddle in your right hand: 20 bounces in a row, each back up to the height the ball was dropped from. (RoboOlympics `paddle-bounce`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

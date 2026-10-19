@@ -9,7 +9,7 @@
 | Family / instance | `roboengineer/anycar-drift-park` / seed 1 |
 | Oracle | `none` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-control-transfer:0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 0/10 held-out cases, mean engineering score 0.00; nop 0. No full oracle: human review (PROTOCOL §4). No positive example yet. |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-control-transfer:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-control-transfer:0.2.0` |
 
 ## Task
 Follow the ordered U-bend, then slide sideways into a parallel-parking space between two stationary cars and hold a precise stop.

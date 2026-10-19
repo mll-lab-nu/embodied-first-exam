@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/eai-control-transfer-anycar-files:0.1.0@sha256:5b4f9dab86b3d77decba4d0199646c3c1cd8e02adde165abfecbb9943997b373",
+ "image": "ghcr.io/mll-lab-nu/efe-control-transfer-anycar-files:0.1.0@sha256:5b4f9dab86b3d77decba4d0199646c3c1cd8e02adde165abfecbb9943997b373",
  "source": "embodied_first_exam/benchmarks/roboengineer/anycarbench",
  "files": {
   "circuits.json": "ffaca1377e206bc19ee0ae4aad57518adb943a53bd7282369df40d22046f82fe",

@@ -9,7 +9,7 @@
 | Family / instance | `baoding` / seed 0 |
 | Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-09-28), trial `myosuite-baoding-i00__J6BJVtG` (215 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoChallengeBaodingP1-v1` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Baoding balls: rotate the two balls around each other in the palm so that each follows its moving target (the targets circle the palm once every 5 s). Success: both balls within 0.015 m of their targets for 200 consecutive control steps (5.0 s: one full orbit of the targets). Failure (the episode ends): a ball's height (world z) drops below 1.25 m, i.e. it falls out of the palm. MyoSuite's target trajectory has 1000 points: an episode that has not succeeded after 1000 control steps (25 s) ends there, as a failure.

@@ -9,7 +9,7 @@
 | Family / instance | `robopaint_acrylic_redfuji` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: docs/benchmarks/robopaint.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet) (ws3, 2026-10-05): path_mm 17225 of the 51700 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: docs/benchmarks/robopaint.md (Validation). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robopaint:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robopaint:0.2.0` |
 
 ## Task
 **Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather

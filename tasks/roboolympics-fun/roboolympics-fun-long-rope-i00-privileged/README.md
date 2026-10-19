@@ -9,7 +9,7 @@
 | Family / instance | `long_rope` / seed 0 |
 | Oracle | `full` — Reference: a periodic hop from a balanced crouch (joints/lowcmd rows) timed to the rope's angle, closed loop on privileged rope and pelvis state: 10 consecutive jumps, the rope 4-9 cm under the soles, lands at 10.17 s and stands 0.5 s before the still-turning rope comes round (success 10.85 s); 10 of 10 under small perturbations of the rope's phase and tempo and a push at the start; 48 of 50 with its own lead and push gain varied (push gain +3 %: 8 of 10). Also an injected positive (2.0 m/s kicks 0.18 s before each pass). Negatives: standing still, a late or low hop, a squat, leaving the centre zone, lying down, a tipping jump, a bad last landing, no stand after the landing; two hops per turn count once. Measured (make_oracles.py): success after 10.85 s of the 20 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
 
 ## Task
 Jump the long rope: standing in the middle of a rope turned by two turners, jump it 10 times in a row, the rope passing under both your feet while you are in the air, without the rope ever touching you. (RoboOlympics `long-rope`: one Unitree G1 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

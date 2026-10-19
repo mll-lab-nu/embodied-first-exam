@@ -11,7 +11,7 @@ ALOHA and Franka Panda, scripted IK references, `eai-standard/2.1`) predate it a
 | robots | `unitree-go1` (Unitree Go1), `boston-dynamics-spot` (Boston Dynamics Spot), `google-barkour-vb` (Google Barkour vB); 12 joint position actuators each |
 | score | binary, defined here from Playground's termination rules and reward targets (Playground has shaped RL rewards only) |
 | tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/2.2`); BarkourJoystick, the one dynamic environment, also `-standard-realtime` (`eai-standard/2.3`) |
-| image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged) |
+| image | `ghcr.io/mll-lab-nu/efe-mujoco:0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged) |
 | oracle | full, both modes |
 
 ## Tasks

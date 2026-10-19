@@ -9,7 +9,7 @@
 | Family / instance | `soccer_match` / seed 7 |
 | Oracle | `partial` — full-state reference program (solution/): the screening's truth reference (the frozen scripted coach at the reference level: both robots go for the ball, in-walk kick) as a program reading the declared truth; in step timing it reproduces the in-world truth reference bit for bit; its results at levels 2 and 3 and on this instance are in the RoboOlympics privileged report (soccer section); not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0@sha256:b6fbfae73399a7daee9c623eb34cfe18de63b458349b5a2b9d122c00e9f1602b` |
+| Base image | `ghcr.io/mll-lab-nu/efe-olympiad-soccer:0.1.0@sha256:b6fbfae73399a7daee9c623eb34cfe18de63b458349b5a2b9d122c00e9f1602b` |
 
 ## Task
 The privileged twin of `roboolympics-match-soccer-match-i00-standard-realtime`: robot soccer 2 v 2 (RoboCup Humanoid Soccer League rules, soccer-2v2-10): two simulated Booster T1 humanoids of team A, commanded by one program, against the scripted team B on a boarded 10 x 7 m pitch, two halves of 5 minutes of game time; level 2, seed 7, S = 5.

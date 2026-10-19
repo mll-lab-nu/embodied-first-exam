@@ -33,7 +33,7 @@ READY_TIMEOUT_S = 600  # the twin's READY_TIMEOUT_S (sport.toml [timing] ready_t
 # phase took 87 min in all (47 446 steps).
 MATCH_WALL_S = 13500
 REPLAY_TIMEOUT_S = 1800  # the twin's RO_REPLAY_TIMEOUT_S: a fresh-process replay of a whole match
-IMAGE = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
+IMAGE = "ghcr.io/mll-lab-nu/efe-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
 RESOURCES = {
     "min_cpus": 4.0,
     "min_memory_gb": 6.0,

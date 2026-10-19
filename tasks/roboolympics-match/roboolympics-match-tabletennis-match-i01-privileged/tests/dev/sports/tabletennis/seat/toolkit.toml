@@ -110,4 +110,4 @@ lowtk1 = "toolkit 1.0.0 (PR #31, fixed base, 7 joints, velocity limits only): IK
 [versions]
 mujoco = "3.3.7"
 numpy = "2.2.6"                              # the simulator image's; the seat installs numpy with mujoco
-image = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0"
+image = "ghcr.io/mll-lab-nu/efe-olympiad:0.1.0"

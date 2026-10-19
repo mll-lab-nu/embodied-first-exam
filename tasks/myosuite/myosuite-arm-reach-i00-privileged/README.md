@@ -9,7 +9,7 @@
 | Family / instance | `arm_reach` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoArmReachFixed-v0` (MyoArm, a musculoskeletal model of a human shoulder, arm and hand, 34 muscles): Bring the index fingertip to the target point in space: its distance below 0.0125 m for 50 consecutive control steps (1.0 s). Failure (the episode ends, from the third control step on): the distance above 1.00 m.

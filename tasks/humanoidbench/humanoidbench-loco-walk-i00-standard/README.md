@@ -9,7 +9,7 @@
 | Family / instance | `walk` / seed 0 |
 | Oracle | `none` — Claude Opus 5.5's privileged-mode trajectory (834.80 / 700 on image 0.1.6, MuJoCo 3.1.6), run `claude_code-claude_opus_5_5-medium` on the results site; it is open-loop, so it does not carry over to image 0.2.0's physics (51.46 / 700 there); published RL passes as well (SAC 854, FastTD3 928, on upstream's MuJoCo 3.1.6); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-humanoidbench:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-humanoidbench:0.2.0` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-loco-walk-i00-privileged`: the same

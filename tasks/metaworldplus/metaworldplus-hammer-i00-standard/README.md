@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/hammer` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-metaworld:0.1.0` |
 
 ## Task
 Standard-mode twin of `metaworldplus-hammer-i00-privileged`: the same instance and success check (Use the hammer to drive the nail into the block.), served

@@ -3,7 +3,7 @@ FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c3
 COPY client-requirements.txt /tmp/
 RUN pip install --no-cache-dir -r /tmp/client-requirements.txt
 COPY rcb1.py /opt/tools/
-COPY --from=ghcr.io/mll-lab-nu/eai-robosafe-files:0.1.0@sha256:03813f0484542de85c6c80fbc16d39787333c359ae036dd1d7d88c637a4480d1 /standard/rcb_client.py /opt/tools/rcb_client.py
+COPY --from=ghcr.io/mll-lab-nu/efe-robosafe-files:0.1.0@sha256:03813f0484542de85c6c80fbc16d39787333c359ae036dd1d7d88c637a4480d1 /standard/rcb_client.py /opt/tools/rcb_client.py
 ENV PYTHONPATH=/opt/tools
 RUN mkdir -p /app/output
 WORKDIR /app

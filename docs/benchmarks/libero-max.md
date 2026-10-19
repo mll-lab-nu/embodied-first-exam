@@ -10,7 +10,7 @@ tasks, each with one online event, in both modes: 64 cases, 128 tasks.
 | upstream | LIBERO-MAX @ `a1e3cef` (benchmark 3.0.0; event runtime and case parameters); LIBERO-PRO @ `2b910b5` (MIT; LIBERO package and assets), task data `zhouxueyang/LIBERO-Pro` @ `c86fc3b` (CC-BY-4.0); robosuite 1.4.0, MuJoCo 3.2.6 |
 | tasks | `tasks/libero-max-<suite>-<task>-<event>-iNN-privileged` and `...-standard` |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda"`, `family = "libero-max/<suite>/<event>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/eai-libero-max:0.1.1` (`images/libero-max/`; `sha256:0e5b5e15aaeb761e4b66772a351f4195392fa638572d47bec5d924305c89aa99`), 3.5 GB, CPU only; x86-64 with AVX-512 (see Host CPUs) |
+| image | `ghcr.io/mll-lab-nu/efe-libero-max:0.1.1` (`images/libero-max/`; `sha256:0e5b5e15aaeb761e4b66772a351f4195392fa638572d47bec5d924305c89aa99`), 3.5 GB, CPU only; x86-64 with AVX-512 (see Host CPUs) |
 | standard client | the shared client base and pins of `embodied_first_exam/standard/`; `rcb_client.py` and `rcb1.py` are byte copies of main's (HumanoidBench / VLABench); the standard `grade.py` is LIBERO-MAX's own (every path writes the same `reward.json` fields; it grades the live episode); `rcb_service.py` is a byte copy (the shared service's `live_verdict()` carries LIBERO-MAX's event record, `event_fired` / `event_step`, into `final.json`) |
 | instances | each case's `instance.json` and `oracle.npy` are committed only in its privileged task (`environment/instance.json`, `solution/oracle.npy`; the case is the instance's `case.case_id`, not the task name). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
@@ -156,7 +156,7 @@ This page cites the paper and links the repository; when the repository adds a l
 
 ## Rebuilding
 ```bash
-docker build -t ghcr.io/mll-lab-nu/eai-libero-max:$(cat images/libero-max/VERSION) -f images/libero-max/Dockerfile .
+docker build -t ghcr.io/mll-lab-nu/efe-libero-max:$(cat images/libero-max/VERSION) -f images/libero-max/Dockerfile .
 cd tasks && harbor add --scan . && cd .. && bash ci_checks/run_all.sh
 ```
 

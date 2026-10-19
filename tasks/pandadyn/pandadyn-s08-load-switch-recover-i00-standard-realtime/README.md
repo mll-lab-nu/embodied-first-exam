@@ -10,7 +10,7 @@
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 6 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 3 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/eai-pandadyn:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-pandadyn:0.1.0` |
 
 ## Task
 Standard-realtime twin of `pandadyn-s08-load-switch-recover-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s08-load-switch-recover-i00-standard`): the agent gets only
