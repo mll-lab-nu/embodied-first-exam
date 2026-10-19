@@ -81,11 +81,11 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | action space | HumanoidBench's own: 19 normalised position targets, 50 Hz, streamed one row at a time or in chunks of up to 10 s |
 | knobs (compose env) | `RCB_SLOWDOWN` (1: real time, the official configuration; S: one control step every S x 0.02 s, results reported apart from S = 1), `RCB_RESET_BUDGET` (50: HumanoidBench's configuration, an exception to the mode's default of 0, PROTOCOL §4.5), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are this task's configuration; a run that changes one is reported separately, and `episode.jsonl` records the `/spec` it ran under |
 | agent API | `environment/rcb_client.py` (the realtime client; its docstring is the reference); `instruction.md` lists the endpoints |
-| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics). |
+| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). |
 
 ### Change Log
 - 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6
-  (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its
+  (tasks/humanoidbench/README.md, Physics). The pass rule and verifier are unchanged, so the task keeps its
   name; results recorded on 0.1.6 are other physics and are reported separately.
 - 2026-10-09: the service no longer holds waiting requests while it is behind its clock: it serves one after
   each control step it catches up on (before, a request waited until the next stall re-anchored the clock: up

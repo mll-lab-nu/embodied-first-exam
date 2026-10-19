@@ -73,7 +73,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | | |
 |---|---|
 | Capability class | C3 · quasi-static stabilisation (see `scripts/humanoidbench/subset.toml`) |
-| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (docs/benchmarks/humanoidbench.md, Physics). Also fixed here: **box feet**: a mesh foot on a box gets one contact point, which on 3.1.6 reported wrong depths (a robot with every joint locked slid off a stair tread) and on 3.3.7 never comes to rest; each foot is four boxes that follow the mesh's hull, the sole exactly (`images/humanoidbench/box_feet.py`). |
+| Physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). Also fixed here: **box feet**: a mesh foot on a box gets one contact point, which on 3.1.6 reported wrong depths (a robot with every joint locked slid off a stair tread) and on 3.3.7 never comes to rest; each foot is four boxes that follow the mesh's hull, the sole exactly (`images/humanoidbench/box_feet.py`). |
 
 ### GPU
 Optional, and passing never depends on it: MuJoCo physics is CPU-only, so a GPU only speeds up the
@@ -90,5 +90,5 @@ Everything in this directory except the instance (`environment/instance.npz` and
 `gen_tasks.py instance balance_hard` (seed 0, sha `d0209e3edd87`).
 
 ### Change Log
-- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6, and this task's own fix (*Physics vs upstream*) (docs/benchmarks/humanoidbench.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
+- 2026-10-08: base image 0.1.6 -> 0.2.0: MuJoCo 3.3.7 instead of upstream's 3.1.6, and this task's own fix (*Physics vs upstream*) (tasks/humanoidbench/README.md, Physics). The pass rule and verifier are unchanged, so the task keeps its name; results recorded on 0.1.6 are other physics and are reported separately.
 - 2026-10-10: `reward.json` carries `deterministic` in every branch (0 where no replay ran; PROTOCOL §2.6). The verdict is unchanged.

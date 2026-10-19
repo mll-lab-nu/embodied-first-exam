@@ -7,12 +7,12 @@
 | Twin | `robopaint-kaishu-yongzibafa-i00-standard` |
 | Simulator / robot | `maniskill` / `franka-panda` |
 | Family / instance | `robopaint_kaishu_yongzibafa` / seed 0 |
-| Oracle | `partial` — Reference solution in solution/, re-made on 2026-10-09 by the calligraphy planner of solution/README.md (README, Change Log; docs/benchmarks/robopaint.md, Targets). The verifier scores it 1 under the process rules (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1270 and mark_width_mm 3.71, against the colouring-in limits 3230 mm and 1.34 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): docs/benchmarks/robopaint.md (Validation). |
+| Oracle | `partial` — Reference solution in solution/, re-made on 2026-10-09 by the calligraphy planner of solution/README.md (README, Change Log; tasks/robopaint/README.md, Targets). The verifier scores it 1 under the process rules (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1270 and mark_width_mm 3.71, against the colouring-in limits 3230 mm and 1.34 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): tasks/robopaint/README.md (Validation). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
-**Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
+**Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
 than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 3230 mm (3 × the reference
 solution's 1075 mm) made of marks narrower than 1.34 mm on average (`mark_width_mm`: each stroke's own
 inked area / `path_mm`; 0.3 × the reference's 4.47 mm). The cap counts strokes as written: a contact is cut where the brush moves more than 5 mm without a mark
@@ -62,7 +62,7 @@ A file that is not a readable trajectory (not an npz, no `actions`, a wrong shap
 `bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
 or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
 The verifier has 3600 s: two replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured
-67-102 steps/s (docs/benchmarks/robopaint.md).
+67-102 steps/s (tasks/robopaint/README.md).
 
 ## Compute resources
 Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
