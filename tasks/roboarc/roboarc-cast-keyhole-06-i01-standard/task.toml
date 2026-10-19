@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboarc-cast-keyhole-06-i01-standard"
+name = "embodied-first-exam/roboarc-cast-keyhole-06-i01-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC cast_keyhole on the same frozen instance as the privileged task. Separate and place the entire silver keyhole piece inside the green dashed goal region. Keep the gold piece on the puzzle/system side. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "Jianwen Lyu" }]
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "standard-mode", "trajectory", "cast_keyhole"]

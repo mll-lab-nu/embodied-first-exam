@@ -32,7 +32,7 @@ LAGS = 4                 # #328 review: the row may answer a state up to LAGS - 
 
 
 def seat_won(episode: str, seat: str) -> bool:
-    """robot_coding_bench (board 0151: the standard modes are graded by the live match, no replay to grade it): the audit
+    """Embodied First Exam (board 0151: the standard modes are graded by the live match, no replay to grade it): the audit
     can only take a win away (tests/fexam_reward.py), so it replays the match only when the live verdict in final.json
     (next to episode.jsonl) is a win of the seat's side; an unreadable final.json is audited as a win."""
     try:
@@ -43,7 +43,7 @@ def seat_won(episode: str, seat: str) -> bool:
 
 
 def replay_agrees(episode: str, res: dict):
-    """robot_coding_bench (#328 review): the audit's replay reproduces the live match final.json recorded (state digest,
+    """Embodied First Exam (#328 review): the audit's replay reproduces the live match final.json recorded (state digest,
     scores, winner, steps); False: its samples are not the live match's (tests/fexam_reward.py: the audit is missing);
     None: no final.json to compare with."""
     try:
@@ -97,7 +97,7 @@ def main():
         return row
 
     def pre_step(match):
-        """robot_coding_bench (#328 review): every control step, after the commands of the step took effect and before
+        """Embodied First Exam (#328 review): every control step, after the commands of the step took effect and before
         the world steps, the state the row meets and the row each of the seat's robots asked for, whatever command
         produced it (`joints`, `traj`, `hold`); the earlier sampler saw `joints` command rows only, so a program on
         `traj` plans was never audited (and its win voided for want of samples). A fallen or penalized robot, or one

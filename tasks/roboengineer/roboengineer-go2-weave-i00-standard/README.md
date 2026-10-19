@@ -7,7 +7,7 @@
 | Twin | — (none: roboEngineer has no privileged mode, PROTOCOL §2.15) |
 | Simulator / robot | `mujoco` / `unitree-go2` |
 | Family / instance | `roboengineer/go2-weave` / seed 0 |
-| Oracle | `none` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-control-transfer:0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 0/10 held-out cases, mean engineering score 0.00; nop 0. No full oracle: human review (PROTOCOL §4). No positive example yet. |
+| Oracle | `none` — Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image efe-private:control-transfer-0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 0/10 held-out cases, mean engineering score 0.00; nop 0. No full oracle: human review (PROTOCOL §4). No positive example yet. |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` |
 
@@ -18,7 +18,7 @@ Execute a predeclared body velocity command schedule to pass four alternating po
 Infer transfer failures from video and noisy sensors across bounded adaptation rounds.
 
 ## Reference solution
-Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image eai-control-transfer:0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 0/10 held-out cases, mean engineering score 0.00; nop 0. No full oracle: human review (PROTOCOL §4). No positive example yet.
+Harbor 0.23.0 oracle agent on aws:rcb-cpu3, 2026-10-18, image efe-private:control-transfer-0.2.0: the reference controller (solution/, three feedback rounds) succeeded on 0/10 held-out cases, mean engineering score 0.00; nop 0. No full oracle: human review (PROTOCOL §4). No positive example yet.
 
 ## Verification
 Frozen development and held-out banks, data-only deployment, fresh-process state hashes, separate no-network verifier. All numeric scores and physical outcomes are operator-only until submission closes.

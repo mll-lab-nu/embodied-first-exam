@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/ambench-pull-lever-fahexa-i00-standard"
+name = "embodied-first-exam/ambench-pull-lever-fahexa-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): AM-Bench PullLever-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on its frozen instance; standard only, no privileged twin. Task: A wall stands in front of the hovering aerial manipulator with a lever mounted on its front face: a bar sticking straight out of the wall toward the robot from a small dark-grey base, ending in a horizontal crossbar handle. The lever pivots at the base about a horizontal axis parallel to the wall. Pull the lever up: rotate it so its free end rises by more than 40 degrees from its starting direction, perpendicular to the wall (its travel ends at 45 degrees). The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode and grades it as it happened live (the physics does not replay bit for bit)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "ambench", "aerial-manipulation", "isaac-lab", "isaac-sim", "hexarotor", "standard-mode", "trajectory"]

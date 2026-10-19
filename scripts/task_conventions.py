@@ -499,7 +499,7 @@ def normalize_toml(task: Path) -> None:
     p = task / "task.toml"
     s = p.read_text()
     mode = mode_of(task)
-    s = re.sub(r'^name = "robot-coding-bench/[^"]*"', f'name = "robot-coding-bench/{task.name}"', s, count=1, flags=re.M)
+    s = re.sub(r'^name = "embodied-first-exam/[^"]*"', f'name = "embodied-first-exam/{task.name}"', s, count=1, flags=re.M)
     s = re.sub(r'(?m)^tier = .*\n', "", s)
     if re.search(r'(?m)^mode = ', s):
         s = re.sub(r'(?m)^mode = "[^"]*"', f'mode = "{mode}"', s)

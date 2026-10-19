@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboarc-cast-coil-08-i01-standard"
+name = "embodied-first-exam/roboarc-cast-coil-08-i01-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC cast_coil on the same frozen instance as the privileged task. Assemble the gold and silver Cast Coil pieces into their matching interlocking configuration, then release both. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "Jianwen Lyu" }]
 keywords = ["robotics", "roboarc", "mujoco", "aloha", "standard-mode", "trajectory", "cast_coil"]

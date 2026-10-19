@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/bigym2-dishwasher-close-i00-standard"
+name = "embodied-first-exam/bigym2-dishwasher-close-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): BiGym 2.0 dishwasher-close on the same frozen instance as bigym2-dishwasher-close-i00-privileged. Push the dishwasher racks in and close the door. The agent only gets a client: the robot's three onboard cameras (RGB) and its proprioception, whole-body command chunks (walking, height, lean, arm joints, grippers). One episode, no reset, no object state, no success signal; the sim service records the episode and grades it as it ran with BiGym's own success check (the live episode; nothing is replayed)."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "dishwasher-close"]
@@ -43,7 +43,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.5
-measured = "GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)"
+measured = "GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

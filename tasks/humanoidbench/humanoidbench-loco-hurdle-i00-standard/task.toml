@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-standard"
+name = "embodied-first-exam/humanoidbench-loco-hurdle-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): HumanoidBench hurdle on the same frozen instance as humanoidbench-loco-hurdle-i00-privileged. The agent only gets a client: /observe, /submit and /reset (head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera; joint-position chunks). Up to 50 resets (each a new episode from the frozen start), no privileged state, no reward; the sim service records the episodes and grades the last one as it ran (the live episode; nothing is replayed)."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "humanoidbench", "mujoco", "h1", "locomotion", "standard-mode", "trajectory", "hurdle"]
@@ -45,7 +45,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 2.0
 verifier_min_gpu_memory_gb = 3.0
-measured = "GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+measured = "GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -61,7 +61,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 7.0
 trial_max_memory_gb = 13.0
-measured = "GPU: 2.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.3 GiB over 10 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 2.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.3 GiB over 10 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

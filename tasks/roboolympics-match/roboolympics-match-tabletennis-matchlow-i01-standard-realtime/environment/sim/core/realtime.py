@@ -82,7 +82,7 @@ class RealtimeService(Service):
         return {"timing": {"slowdown": self.slowdown, "control_dt": self.m.dt, "period_s": self.period,
                            "policy": "report_only", "effect_delay_steps": self.delay,
                            "reaction_delay_steps": self.react,
-                           # RCB patch (board 0121): the review window, and what missing it costs (timeout() below)
+                           # EFE patch (board 0121): the review window, and what missing it costs (timeout() below)
                            "review_timeout_s": float(os.environ.get("READY_TIMEOUT_S", "60")),
                            "review_timeout_rule": "after every unit the world stays frozen until each due player sends "
                                                   "ready; a side that has not sent it within review_timeout_s seconds "
@@ -241,13 +241,13 @@ class RealtimeService(Service):
                 if self.seats[seat].retired:
                     continue
                 low = tick(seat, self.m)
-                if low is not None:              # robot_coding_bench (option c): the seat's skill's own command (step())
+                if low is not None:              # Embodied First Exam (option c): the seat's skill's own command (step())
                     self.seats[seat].count("tick_submitted")      # before it is applied (an apply that raises counts)
                     if "rejected" in self.apply_now(seat, low):
                         self.seats[seat].count("rejected")
                     else:
                         self.seats[seat].count("applied_tick")
-        drain = getattr(self.layer, "drain_loads", None)   # robot_coding_bench (option c): every version of a seat's
+        drain = getattr(self.layer, "drain_loads", None)   # Embodied First Exam (option c): every version of a seat's
         if drain is not None:                             # skill that played, an episode row (never replayed)
             for seat, rec in drain():
                 self.ep.write("skill_load", seat=seat, k=self.m.k,
@@ -410,7 +410,7 @@ class RealtimeService(Service):
                 with self.cond:
                     if self.phase != "running":
                         continue
-                    try:                                # robot_coding_bench (board 0151): the control step itself
+                    try:                                # Embodied First Exam (board 0151): the control step itself
                         self.apply_pending()
                         events = self.m.step()
                     except Exception as exc:  # noqa: BLE001

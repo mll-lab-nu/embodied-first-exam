@@ -54,7 +54,7 @@ def get_reward_dict(self, obs_dict):
     )
     return rwd_dict
 ```
-Robot Coding Bench counts the goal only when `solved` holds for 100 consecutive control steps (1.0 s); `done` ends the episode as a failure. MyoSuite's step budget is lifted.
+Embodied First Exam counts the goal only when `solved` holds for 100 consecutive control steps (1.0 s); `done` ends the episode as a failure. MyoSuite's step budget is lifted.
 
 This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.

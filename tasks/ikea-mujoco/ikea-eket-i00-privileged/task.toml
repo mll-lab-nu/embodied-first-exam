@@ -2,7 +2,7 @@ schema_version = "1.3"
 artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
 
 [task]
-name = "robot-coding-bench/ikea-eket-i00-privileged"
+name = "embodied-first-exam/ikea-eket-i00-privileged"
 description = "IKEA MuJoCo EKET cabinet (dual Franka Panda + Menagerie Panda hand, MuJoCo 3.14.0 CPU): produce one replayable trajectory. Build the EKET cabinet frame: slide the two side panels into the top panel, then the back panel into its grooves, then the bottom panel onto the sides, and leave the cabinet standing on the table on its own. Frozen scene (the scene's keyframe 'home'); physical grasps, no assist."
 authors = [{ name = "Xiaoyu" }]
 keywords = ["robotics", "ikea", "furniture-assembly", "mujoco", "panda", "bimanual", "code-as-policy", "trajectory"]

@@ -17,7 +17,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/humanoidbench-loco-hurdle-i00-standard-realtime"
+name = "embodied-first-exam/humanoidbench-loco-hurdle-i00-standard-realtime"
 description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3): HumanoidBench hurdle on the same frozen instance as humanoidbench-loco-hurdle-i00-privileged. Time does not stop: once an episode starts, the robot runs at 50 Hz in real time and holds its last targets while the agent thinks, so the agent streams joint-position targets from a controller program of its own through the client (/observe, /submit with a plan from step `at`, /reset; head-camera RGB, joint proprioception, a pelvis IMU, a fixed room camera). Up to 50 resets, no privileged state, no reward; the sim service records every executed control step and grades the last episode as it ran (the live episode; nothing is replayed)."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "humanoidbench", "mujoco", "h1", "locomotion", "standard-realtime-mode", "trajectory", "hurdle"]
@@ -48,7 +48,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 2.0
 verifier_min_gpu_memory_gb = 3.0
-measured = "GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU author estimate"
+measured = "GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

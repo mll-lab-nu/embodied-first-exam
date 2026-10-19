@@ -3,7 +3,7 @@ schema_version = "1.3"
 artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
 
 [task]
-name = "robot-coding-bench/robodojo-push-t-i00-privileged"
+name = "embodied-first-exam/robodojo-push-t-i00-privileged"
 description = "RoboDojo push_T (Generalization; two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Push the T-shaped block (without lifting it) until it lies exactly on top of the gray T-shaped pad, with the same position and orientation, then return the arms to their start pose. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/push_T_0.json; graded by RoboDojo's own reward check."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]

@@ -2,7 +2,7 @@ schema_version = "1.3"
 artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
 
 [task]
-name = "robot-coding-bench/robocasa365-sweeten-coffee-i00-privileged"
+name = "embodied-first-exam/robocasa365-sweeten-coffee-i00-privileged"
 description = "RoboCasa365 (SweetenCoffee, a Franka Panda arm on an Omron mobile base (with a torso lift)): Take a sugar cube from the saucer and place it inside the coffee. Then, grab milk from the fridge and place it next to the coffee on the counter to sweeten the coffee.  Produce one replayable trajectory of the robot's native controller commands on a frozen instance; graded on the state after the last action."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "privileged"]
@@ -29,7 +29,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 7.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, ws-1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+measured = "memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -45,7 +45,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 16.0
-measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 7.8 GiB over 7 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, ws-1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 7.8 GiB over 7 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

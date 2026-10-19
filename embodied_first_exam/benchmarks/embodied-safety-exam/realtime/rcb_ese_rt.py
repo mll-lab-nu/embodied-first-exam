@@ -7,7 +7,7 @@ scripts/humanoidbench/shared/realtime/) are used unchanged; this module adds wha
 - The episode runs under Embodied Safety Exam's realtime clock (the frozen instance's key has `"clock": "realtime"`): the
   script's animations are queued and take one step per control tick instead of freezing the robot, continuations
   (`Episode.then`) run at the end of their tick, and `stop` is one of the action types.
-- RCB's clock drives the world, one control step per tick, through one-step rows: each tick of rcb_realtime's clock
+- EFE's clock drives the world, one control step per tick, through one-step rows: each tick of rcb_realtime's clock
   hands the adapter the plan's row for that step (or the hold row) and the adapter runs exactly one Embodied Safety Exam
   control tick with it. Call-end triggers are therefore looked at after every tick, whatever the agent's call rhythm:
   the world does not wait for a /submit to end. Two ways, chosen by what the image's Embodied Safety Exam offers:
