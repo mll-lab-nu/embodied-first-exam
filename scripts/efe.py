@@ -16,11 +16,11 @@ core task in those modes (a task without that mode is skipped, and counted). all
 Modes: any of --privileged, --standard, --standard-realtime.
 -d embodied-first-exam[@core|@all] (also `efe`) is --core / --all (no version: core); any other -d is Harbor's.
 --benchmark <name> keeps a benchmark: its README label or its folder under tasks/ (repeatable). With any of these flags,
--p <dir> (a task dir, a benchmark folder or tasks/) narrows the set to the task dirs under it, and -c <file> is layered
-after the wrapper's job config. --list prints the task
-dirs and runs nothing. The tasks are handed to Harbor as one dataset per benchmark folder (Harbor's local datasets are
-not searched recursively). A `harbor run` that names its own tasks (-p, -d, -t, -c) and none of these flags is Harbor's,
-unchanged; so is every other subcommand."""
+-p <dir> (a task dir, a benchmark folder or tasks/) narrows the set to the task dirs under it, -l <n> keeps the first n of
+them, and -c <file> is layered after the wrapper's job config. --list prints the task dirs and runs nothing. The tasks
+are handed to Harbor as one dataset per benchmark folder (Harbor's local datasets are not searched recursively). A
+`harbor run` that names its own tasks (-p, -d, -t, -c) and none of these flags is Harbor's, unchanged; so is every other
+subcommand."""
 import fnmatch, json, os, sys, tempfile
 from pathlib import Path
 
@@ -111,6 +111,7 @@ def run(argv: list[str], app=None) -> int:
         if not any(a in MODES or a in ours or a.startswith("--benchmark=") for a in argv):
             return harbor(["run", *argv], app)                # the user's own task source: plain Harbor
     which, modes, benches, inc, exc, paths, listing, rest = "core", set(), [], [], [], [], False, []
+    n_tasks = None
     it = iter(argv)
     for a in it:
         if a in ("--all", "--core"):
@@ -125,10 +126,15 @@ def run(argv: list[str], app=None) -> int:
                       f"{', '.join(sorted(tc.BENCHMARK_DIRS.values()))})", file=sys.stderr)
                 return 2
             benches.append(lab)
-        elif a in ("-i", "--include-task-name"):
-            inc.append(next(it, ""))
-        elif a in ("-x", "--exclude-task-name"):
-            exc.append(next(it, ""))
+        elif a in ("-i", "--include-task-name") or a.startswith("--include-task-name="):
+            inc.append(a.split("=", 1)[1] if "=" in a else next(it, ""))
+        elif a in ("-x", "--exclude-task-name") or a.startswith("--exclude-task-name="):
+            exc.append(a.split("=", 1)[1] if "=" in a else next(it, ""))
+        elif a in ("-l", "--n-tasks") or a.startswith("--n-tasks="):   # Harbor's -l: applied here, to the picked set
+            v = a.split("=", 1)[1] if "=" in a else next(it, "")
+            if not v.isdigit():
+                print(f"{a} {v!r}: the number of tasks to run", file=sys.stderr); return 2
+            n_tasks = int(v)
         elif a in ("-p", "--path") or a.startswith("--path="):
             paths.append(a.split("=", 1)[1] if "=" in a else next(it, ""))
         elif a in ("-c", "--config"):
@@ -153,6 +159,7 @@ def run(argv: list[str], app=None) -> int:
             and (not benches or tc.bench_of(Path(t)) in benches)
             and (not inc or any(fnmatch.fnmatchcase(t, p) for p in inc))
             and not any(fnmatch.fnmatchcase(t, p) for p in exc)]
+    pick = pick[:n_tasks] if n_tasks is not None else pick
     if not pick:
         print("no task matches", file=sys.stderr); return 2
     print(f"{len(pick)} task(s) of " + which + (f", {', '.join(sorted(modes))}" if modes else "")
