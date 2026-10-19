@@ -13,7 +13,7 @@ summary = "robot soccer 2 v 2 under the RoboCup Humanoid Soccer League rules: fo
 protocol = "realtime"
 revision = "soccer-2v2-11+core-0.2"   # = plugin.REVISION; the world is soccer-2v2-11 (soccer.py REVISION; -6: D16 removed; -7: timed kick, wider aim; -8: ball physics, in-walk kick; -9: the scripted levels kick with the in-walk kick; -10: the realistic T1 motor model, bodies/booster_t1 t1-2; -11: near-rigid foot-turf contact, soccer_scene.FLOOR_SOLREF)
 physics = "MuJoCo 3.3.7 (2 ms physics steps, 20 ms control steps; four Booster T1 lower bodies on the released walking policy, a model-based swing kick and an in-walk kick, a ball calibrated to FIFA turf (bounce, rolling deceleration), near-rigid foot-turf contact (4 ms, elliptic friction cone, mu 1.0), the real T1's leg torques, torque-speed envelope and walking-command rate; robot-robot, robot-ball, goal and board contacts)"
-image = "ghcr.io/mll-lab-nu/eai-olympiad-soccer:0.1.0"
+image = "ghcr.io/mll-lab-nu/efe-olympiad-soccer:0.1.0"
 status = "sport"
 publish = true
 category = "robotics-sports-arena"

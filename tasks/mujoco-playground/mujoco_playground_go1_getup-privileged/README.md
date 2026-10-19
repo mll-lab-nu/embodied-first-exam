@@ -9,7 +9,7 @@
 | Family / instance | `mujoco_playground/Go1Getup` / seed 5 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.3` |
+| Base image | `ghcr.io/mll-lab-nu/efe-mujoco:0.1.3` |
 
 ## Task
 MuJoCo Playground `Go1Getup` (Unitree Go1), rebuilt in plain MuJoCo from Playground's scene files: The Unitree Go1 has fallen over. Make it get up and stand upright at its standing height.

@@ -9,7 +9,7 @@
 | Family / instance | `hand_pose` / seed 0 |
 | Oracle | `none` — a successful model trial on this frozen instance: Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-hand-pose-i00__fC7US9G` (360 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `myoHandPoseFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Put the hand in the target pose: the norm of the 23 hand and wrist joint-angle errors (rad) below 0.7 for 50 consecutive control steps (1.0 s). Failure (the episode ends): that norm above 6.28 rad. The target joint angles are given below. Target joint angles (rad): pro_sup +0.000, deviation +0.000, flexion +0.000, cmc_abduction -0.090, cmc_flexion +0.082, mp_flexion -0.682, ip_flexion -0.515, mcp2_flexion +0.000, mcp2_abduction -0.014, pm2_flexion -0.046, md2_flexion +0.000, mcp3_flexion +0.676, mcp3_abduction -0.021, pm3_flexion +0.770, md3_flexion +0.660, mcp4_flexion +0.000, mcp4_abduction +0.000, pm4_flexion +0.000, md4_flexion +0.000, mcp5_flexion +0.479, mcp5_abduction -0.099, pm5_flexion +0.958, md5_flexion +0.000.

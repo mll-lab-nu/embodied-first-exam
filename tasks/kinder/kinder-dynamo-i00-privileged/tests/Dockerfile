@@ -2,10 +2,10 @@
 # tooling and the frozen instance. Nothing the agent did in its container reaches this one: Harbor uploads only the
 # declared artifacts (/app/output/).
 # Generated from scripts/kinder/templates/tests.Dockerfile -- edit the template, not this copy.
-FROM ghcr.io/mll-lab-nu/eai-kinder:0.1.6
+FROM ghcr.io/mll-lab-nu/efe-kinder:0.1.6
 COPY grade.py instance.json rcb_kinder.py test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 WORKDIR /tests
 # resource limits: the verifier step (from the monitor image) and its copy of the limits (docs/protocol/README.md §2.10) # rcb-monitor
-COPY --from=ghcr.io/mll-lab-nu/eai-monitor:0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
+COPY --from=ghcr.io/mll-lab-nu/efe-monitor:0.2.0@sha256:65442d9e9eeb493d785a59d48a321345e2b48186946cc9d55beb684182514b4b /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py
 COPY rcb_limits.json /tests/rcb_limits.json

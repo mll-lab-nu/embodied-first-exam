@@ -13,7 +13,7 @@ READY_TIMEOUT_S = 300
 MATCH_WALL_S = 7200  # a game to 11 at S = 20: 78-93 min for the camera-only reference
 # the agent's copies: no camera-only reference player and no screening check that names it (H.2, #282 review)
 PUBLIC_DROP_FILES = ("builtin_players.py", "reference_check.py")
-IMAGE = "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
+IMAGE = "ghcr.io/mll-lab-nu/efe-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
 RESOURCES = {"min_cpus": 4.0, "min_memory_gb": 6.0, "verifier_min_cpus": 4.0, "verifier_min_memory_gb": 8.0}
 DESCRIPTION = (
     "singles badminton on a 0.4-scale court (BWF Laws, one game to 11): Franka Panda with a racket on a gantry base "

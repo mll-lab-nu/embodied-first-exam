@@ -32,7 +32,7 @@ verifier decides internally) is the task's own business.
 | The directory name `<base>-<mode>`, `<base>` = `<benchmark>-<family>-i<NN>` or the upstream name; no versions or durations in names | the mode is the whole suffix |
 | All task code in the directory, copied in by its Dockerfiles; base images hold the simulator and its assets; nothing imports repository code at run time | a task's identity is its directory (H.8) |
 | Every task is in the normal form `scripts/task_conventions.py` `normalize` writes (README layout, rendered sections, `DIGEST`) | `task_conventions.py --check` |
-| Base images `ghcr.io/mll-lab-nu/eai-<name>:<images/<name>/VERSION>`, public unless `images/<name>/BUILD_ONLY`; every `FROM` / `image:` pinned to a tag or digest | `check-dockerfile.sh` |
+| Base images `ghcr.io/mll-lab-nu/efe-<name>:<images/<name>/VERSION>`, public unless `images/<name>/BUILD_ONLY`; every `FROM` / `image:` pinned to a tag or digest | `check-dockerfile.sh` |
 | README in the standard layout (`# <dir>`, key table, Task, Difficulty, Reference solution, Verification, Compute resources, Details); no `results/` | rendered by `normalize` |
 | A change to a published task, its scene included, is made in place: same name, a new DIGEST, a README Change Log entry | H.8 |
 

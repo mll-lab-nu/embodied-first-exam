@@ -9,7 +9,7 @@
 | Family / instance | `tennis_serve_realgrasp` / seed 0 |
 | Oracle | `full` — Reference: an underarm serve from a technique found offline by CMA-ES over whole-body key poses (LowCmd rows with the legs' gravity support): the left Dex1 gripper opens at rest, the ball falls 0.8 m onto the strings of the free 0.30 kg racket held by friction in the right gripper, 4.2 m/s in, 13.6 m/s out, over the net by 2.8 m into the diagonal box; 10/10 under gain x release variations. Referee test negatives: dropped, racket dropped / slipping out of the jaws, no speed added, thrown or tossed too high, struck out of the hand, struck by the gripper, carried over by hand, caught again, double hit, carried, not at rest, foot faults, long, wrong box, net, post, spare touched before a let, a second let; the let is replayed with the spare taken from its cup by the gripper Measured (make_oracles.py): success after 3.5 s of the 20 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
 
 ## Task
 Serve: from behind your baseline, release the tennis ball from your left gripper, strike it with the racket held in your right gripper before it reaches the ground, and send it over the net into the service box diagonally opposite. (RoboOlympics `tennis-serve-realgrasp`: one Unitree H1-2 on the RoboOlympics simulator, judged by a referee of events, geometry and contact rules.)

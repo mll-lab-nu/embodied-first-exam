@@ -8,7 +8,7 @@ each on one frozen instance, in both modes: 100 tasks.
 | upstream | Meta-World @ `59fc34d7768af9785e4688c3e1db671424f4a6c3` (MIT), MuJoCo 3.3.0, gymnasium 1.1.1 |
 | tasks | `tasks/metaworldplus-<env>-i00-privileged` and `tasks/metaworldplus-<env>-i00-standard` (twins share the instance) |
 | metadata | `simulator = "mujoco"`, `robot = "sawyer"`, `family = "metaworld/<env>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/eai-metaworld:0.1.0` (`images/metaworld/`), CPU only |
+| image | `ghcr.io/mll-lab-nu/efe-metaworld:0.1.0` (`images/metaworld/`), CPU only |
 | standard client | the one client base and pins of `embodied_first_exam/standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` byte copies of the MuJoCo standard tasks' (accepting both protocol spellings) |
 | instances | each instance and oracle is committed in its privileged task (`environment/instance.npz`, `solution/oracle.npz`). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
@@ -113,7 +113,7 @@ policies are deleted from the image in the layer that installs them.
 
 ## Rebuilding
 ```bash
-docker build -t ghcr.io/mll-lab-nu/eai-metaworld:$(cat images/metaworld/VERSION) \
+docker build -t ghcr.io/mll-lab-nu/efe-metaworld:$(cat images/metaworld/VERSION) \
     -f images/metaworld/Dockerfile images/metaworld          # ~780 MB
 cd tasks && harbor add --scan . && cd ..
 bash ci_checks/run_all.sh tasks/metaworldplus-*

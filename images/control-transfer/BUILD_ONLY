@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/eai-control-transfer:<images/control-transfer/VERSION> (the `-nominal` agent base, the
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-control-transfer:<images/control-transfer/VERSION> (the `-nominal` agent base, the
 G1 family's `-train` agent base and the evaluator) is never published (docs/protocol/README.md §1). An evaluation host builds it (images/control-transfer/README.md),
 or takes it from the organization's own non-public copy of the package; the roboEngineer Control Transfer tasks reference
 that tag and Harbor finds it in the local Docker image store.

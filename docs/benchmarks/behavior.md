@@ -7,11 +7,11 @@ public_test instance 301: 11 tasks with a reference solution or a positive examp
 supplementary tasks for harder testing (below), which have neither yet.
 
 ## Prerequisites (every BEHAVIOR run)
-- **The image**, built on the host: `ghcr.io/mll-lab-nu/eai-behavior:<images/behavior/VERSION>`
+- **The image**, built on the host: `ghcr.io/mll-lab-nu/efe-behavior:<images/behavior/VERSION>`
   is the official `stanfordvl/behavior:3.9.2` **by digest** plus a snapshot-pinned ffmpeg layer. It contains NVIDIA
   Isaac Sim and Omniverse Kit (no redistribution) and a 13.7 GB layer above ghcr.io's per-layer limit: **BUILD_ONLY**,
   never pushed. `images/behavior/BUILD_ONLY` has the build command, the licences and the data it needs.
-- **The files image** `ghcr.io/mll-lab-nu/eai-behavior-files` (`images/behavior-files/FILES.json` pins it by digest;
+- **The files image** `ghcr.io/mll-lab-nu/efe-behavior-files` (`images/behavior-files/FILES.json` pins it by digest;
   BUILD_ONLY: the organization's private package, pulled with its token before a host builds BEHAVIOR tasks): the
   tooling and the graders (Tasks and generator), which the agent and verifier Dockerfiles take with `COPY --from`.
 - **The licensed dataset**, `RCB_BEHAVIOR_DATA`: the host directory with the BEHAVIOR Data Bundle

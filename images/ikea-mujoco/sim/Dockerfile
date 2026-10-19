@@ -12,8 +12,8 @@
 #     through Vulkan; MuJoCo's EGL raster still draws the depth images, as RoboARC's MuJoCo raster depth;
 #   - imageio + ffmpeg (mp4), Pillow (jpeg), PyOpenGL for the physics process (unchanged from 0.3.0).
 # Build (context = this directory):
-#   docker build -t ghcr.io/mll-lab-nu/eai-ikea-mujoco-sim:$(cat images/ikea-mujoco/sim/VERSION) images/ikea-mujoco/sim
-FROM ghcr.io/mll-lab-nu/eai-ikea-mujoco:0.3.0
+#   docker build -t ghcr.io/mll-lab-nu/efe-ikea-mujoco-sim:$(cat images/ikea-mujoco/sim/VERSION) images/ikea-mujoco/sim
+FROM ghcr.io/mll-lab-nu/efe-ikea-mujoco:0.3.0
 RUN apt-get update && apt-get install -y --no-install-recommends libegl1 libgl1 libopengl0 libglvnd0 libvulkan1 curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir PyOpenGL==3.1.10 imageio==2.37.0 imageio-ffmpeg==0.6.0 pillow==12.3.0

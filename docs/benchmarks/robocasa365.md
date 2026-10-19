@@ -9,7 +9,7 @@
 | upstream | robocasa/robocasa @ `4f8a2980def75a55dff96b990745b83540425f09` (robocasa 1.0.1, MIT), robosuite @ `5ce6643` (1.5.2), MuJoCo 3.3.1 |
 | tasks | `tasks/robocasa365-<task>-i00-privileged` and `tasks/robocasa365-<task>-i00-standard`, 50 each |
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda-omron"`, `family = "robocasa365/<Env>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/eai-robocasa365:0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
+| image | `ghcr.io/mll-lab-nu/efe-robocasa365:0.1.0` (`images/robocasa365/`), CPU only, ~27 GB |
 | standard client | `python:3.12.14-slim` pinned by digest, pinned pip; `rcb_client.py` / `rcb1.py`: the HumanoidBench tasks' code, the client with a docstring of its own that describes this service |
 | sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 

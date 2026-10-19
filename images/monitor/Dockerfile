@@ -8,7 +8,7 @@
 # Build: `python3 images/monitor/rcb_monitor/inject.py stage-context` (images/monitor/context/, gitignored: the three files with
 # the content-derived mtimes of scripts/stamp_mtimes.py, which every deployed task file gets), then scripts/build_images.sh
 # (it skips this image while context/ is missing) or
-#   docker build --no-cache -t ghcr.io/mll-lab-nu/eai-monitor:$(cat images/monitor/VERSION) -f images/monitor/Dockerfile images/monitor/context
-ARG BASE=ghcr.io/mll-lab-nu/eai-monitor:0.1.0@sha256:f2c910f53f79c2bfa4a71298b10c78383cae3afc40720ca562cc845b8d20fb0c
+#   docker build --no-cache -t ghcr.io/mll-lab-nu/efe-monitor:$(cat images/monitor/VERSION) -f images/monitor/Dockerfile images/monitor/context
+ARG BASE=ghcr.io/mll-lab-nu/efe-monitor:0.1.0@sha256:f2c910f53f79c2bfa4a71298b10c78383cae3afc40720ca562cc845b8d20fb0c
 FROM ${BASE}
 COPY monitor.py rcb_limits.py selftest.py /opt/rcb_monitor/

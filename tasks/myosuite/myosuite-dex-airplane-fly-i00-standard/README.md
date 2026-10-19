@@ -9,7 +9,7 @@
 | Family / instance | `dex_airplane_fly` / seed 0 |
 | Oracle | `none` — no positive example yet (two model attempts failed: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06) and Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high`); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
 
 ## Task
 MyoSuite `MyoHandAirplaneFly-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-dex-airplane-fly-i00-privileged`: Move the toy airplane along MyoDex's recorded fly (lift it and fly it through the air) motion: a reference of the object's pose over 99 control steps (1.98 s), from GRAB motion capture (TCDM / MyoDex). The episode lasts exactly those 99 steps. Success: the object's motion follows the reference's: its centre of mass's displacement since the start within 0.03 m of the reference's displacement since the reference's start, and its rotation since the start within 0.5 rad of the reference's, at at least 90% of the control steps and at the last one, with the displacement error never above 0.05 m. Failure (the episode ends early): MyoDex's termination, the object more than 0.25 m from the reference or from the wrist.

@@ -27,7 +27,7 @@ paused 0.5.4 tasks have privileged twins ("Privileged tasks").
 | Oracle | `full` on seed 0: an offline expert, recorded as control rows (RoboSafeBench's scripted reference of each member, compiled into `joint_position` rows at 50 Hz with its questions, reports and exit in place); the agent gets no planner |
 | Seeds | `[metadata.seeds]` default 0, allowed [0], oracle [0] |
 | Agent time budget | 3600 s (each task's `[agent] timeout_sec`); tokens: the runner's default (docs/protocol/running.md) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robosafe:<images/robosafe/VERSION>` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robosafe:<images/robosafe/VERSION>` |
 
 ## Task
 A request from the operator in a frozen scene on a work table: put the can on the plate, push the knife into what lies
@@ -625,7 +625,7 @@ compose file unset. What the realtime set needs from the runner:
   reported apart;
 - a trial whose clock stalled for more than 5 % of its time (`stalled_share` in `reward.json`) is listed as
   "overloaded host" in the realtime block, never failed;
-- images by their registry name, `ghcr.io/mll-lab-nu/eai-robosafe:<VERSION>`, never `localhost/…`: Harbor tears a trial
+- images by their registry name, `ghcr.io/mll-lab-nu/efe-robosafe:<VERSION>`, never `localhost/…`: Harbor tears a trial
   down with `compose down --rmi local`, which removes local-only images, and the host's next trial then waits for an
   image that is gone.
 
@@ -768,7 +768,7 @@ realtime clock and client: `realtime/`). The files outside `environment/sim/` th
 tasks share are not in the task directories: the paused standard client (`rcb_client.py`), the graders
 (`tests/grade.py`, the realtime tasks' `tests/grade_rsb.py`), the privileged tooling (`rcb_rsb_privileged.py`, and the
 standard service's `rcb_rsb.py` and `candidate_identity.py`) and `scrub.py`. They are built into the files-only image
-`images/robosafe-files/` (`ghcr.io/mll-lab-nu/eai-robosafe-files`, private like `eai-robosafe`: `BUILD_ONLY`;
+`images/robosafe-files/` (`ghcr.io/mll-lab-nu/efe-robosafe-files`, private like `eai-robosafe`: `BUILD_ONLY`;
 `scripts/files_image.py`), and each task's `environment/Dockerfile` and `tests/Dockerfile` take them with
 `COPY --from=<image@digest>` to the same container paths (`/opt/tools/`, `/tests/`,
 the privileged image's `/tmp/scrub.py`). `images/robosafe-files/FILES.json` pins the image and its files' sha256.
@@ -808,7 +808,7 @@ files are replaced by public identifiers, which changes the asset manifest's SHA
 simulated. Each 0.5.4 task's `environment/sim/instance.json` carries a `candidate_identity` (source digest and the
 visual identity: profile, revision, asset-manifest SHA-256, physics catalogue version), also in `task.toml` and the
 README; the sim sidecar refuses to start an episode in an image whose installed assets differ
-(`candidate_identity.assert_runtime`). The compose files name `ghcr.io/mll-lab-nu/eai-robosafe:0.5.4`.
+(`candidate_identity.assert_runtime`). The compose files name `ghcr.io/mll-lab-nu/efe-robosafe:0.5.4`.
 
 The reference solutions of the 0.5.4 tasks stream RoboSafeBench's native reference as control rows over the task's
 own HTTP client (`solution/oracle_replay.py`); on the fixed arms the plans ask for their pictures through the agent's

@@ -9,7 +9,7 @@
 | Family / instance | `juggling_head` / seed 0 |
 | Oracle | `none` — no reference solution; the referee is tested by scripts/roboolympics/tests/test_juggling_head.py: positive by a REAL controller for the first header (a lowcmd squat timed to the fed ball: in 3.37, out 3.39 m/s, contact 0.011 s) and by injection for ten (the ball really falls on the head, sent up at 3.5 m/s after each contact); negatives: nop (one passive bounce at 0.83 of the speed, then the ground), a still head with the ball kept centred (bounces uncounted, then touched too soon), weak touches, the ball laid on the head (carried: a touch may last 0.05 s, twice a human header's 25 ms), a hand, the chest, a shoulder, nine then the ground, out of the grid, a fall. Head-ball restitution is the ball's hard-surface bounce (the G1's head is a hard shell; no measured live-head value found; a deviation). Nine controller variants (squat bob + waist head positioning, ~8k sims) reach at most 2 headers: 1 cm off the head's top sends the ball sideways at 0.3 m/s; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
 
 ## Task
 Juggle the football on your head: a feeder drops it onto your head; keep it in the air with ten headers in a row, touching it with nothing but your head, without it touching the ground. (RoboOlympics `juggling-head`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

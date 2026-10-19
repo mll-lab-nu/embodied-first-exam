@@ -9,7 +9,7 @@
 | Family / instance | `mujoco_playground/Go1Handstand` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/eai-mujoco:0.1.3` |
+| Base image | `ghcr.io/mll-lab-nu/efe-mujoco:0.1.3` |
 
 ## Task
 MuJoCo Playground `Go1Handstand` (Unitree Go1) on the same frozen instance as `mujoco_playground_go1_handstand-privileged`: Make the Unitree Go1 do a handstand: balance on its front legs, nose down, hind legs in the air, for 2 s.

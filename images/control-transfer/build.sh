@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 V=$(cat VERSION)
-N=ghcr.io/mll-lab-nu/eai-control-transfer:${V}
+N=ghcr.io/mll-lab-nu/efe-control-transfer:${V}
 if [ "${TRAIN_ONLY:-0}" != 1 ]; then docker build --target nominal -t "$N-nominal" .; fi
 if [ "${BUILD_TRAIN:-0}" = 1 ] || [ "${TRAIN_ONLY:-0}" = 1 ]; then
   docker build --target train --build-arg NOMINAL_IMAGE="$N-nominal" -t "$N-train" .
