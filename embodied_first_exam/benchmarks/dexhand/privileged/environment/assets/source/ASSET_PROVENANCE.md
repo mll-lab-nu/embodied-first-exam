@@ -16,16 +16,16 @@ not redistributed as textures or geometry. No manufacturer CAD is claimed.
 
 The read-only Sharpa Wave model and STL/OBJ assets are from
 `images/dexhand/assets/hand/`, licensed Apache-2.0, Copyright 2025 Sharpa Group.
-The unchanged license is copied to `licenses/SHARPA-APACHE-2.0.txt`. All original
+The unchanged license is copied to `SHARPA-APACHE-2.0.txt` (next to this file). All original
 hand mesh hashes are retained in native manifests. `hand_models.py` is imported
 read-only; the mirror transformation and dissipative feedback convention are
 declared in the specification.
 
-Tianji geometry is reused from `images/everyday_dexterity/assets/tianji/` through
+Tianji geometry is not in this directory; it comes from `images/dexhand/tianji/` (see its NOTICE.md) through
 the read-only `tianji_model.py`. The bundle records the DexForceAI asset revision
 `48317bd8733182f36d306cc2a7a60ae5e47ed2c9` (Apache-2.0) and Genesis inertia revision
 `deffbe1685e5ce6aa289efdd541f762f1eb3353f` (MIT), with the public-estimate inertia
-caveat. Its two unchanged license files are copied into `licenses/`.
+caveat. The licence notes are in `images/dexhand/tianji/NOTICE.md`.
 
 The new `robot.py` and `replay.py` adapt the original task's DLS arm solver and
 native rendering logic in this replacement folder. New hand composition,
