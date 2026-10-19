@@ -16,7 +16,7 @@ run on wheeled bases.
 | sensors | three RGB cameras on the robot (`head`, `left_wrist`, `right_wrist`, 60° fovy; upstream renders 84×84); arm and finger (+ waist) joints, gripper states, pelvis x, y, z, yaw from the base controller |
 | score | upstream's predicate held for 1 s (50 steps) **and** no fall during the episode (pelvis tilt > ~53° or height < 0.30 m); fail-fast: an object on the floor (plates, blocks, dishwasher loads), a gripper on the sandwich |
 | horizon | per task, 700–8750 control steps (14–175 s): twice the longest of 60 human demonstrations |
-| tasks | 13 families × 3 modes: `tasks/bigym2-<family>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (`eai-standard/2.3`) |
+| tasks | 13 families × 3 modes: `tasks/bigym2/bigym2-<family>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (`eai-standard/2.3`) |
 | image | `ghcr.io/mll-lab-nu/efe-bigym2:0.1.1` (`images/bigym2/`, 1.5 GB; dependencies at upstream's `uv.lock`, plus imageio-ffmpeg for the service's mp4 videos) |
 | oracle | none: upstream has no expert or planner; human review |
 
@@ -148,7 +148,7 @@ These notes stay in this page: no task file the agent sees mentions them.
 ## Build and run
 ```bash
 docker build -f images/bigym2/Dockerfile -t ghcr.io/mll-lab-nu/efe-bigym2:$(cat images/bigym2/VERSION) .
-harbor run -p tasks/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/protocol/running.md
+harbor run -p tasks/bigym2/bigym2-flip-cup-i00-standard -a codex -m openai/gpt-6-luna --env-file .env   # agent settings: docs/protocol/running.md
 ```
 The frozen instances live in the task dirs only (`tasks/bigym2/bigym2-<family>-i00-privileged/environment/instance.json`).
 The task directories are the deliverable; the tooling that built them is kept outside this repository.

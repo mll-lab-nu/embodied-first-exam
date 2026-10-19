@@ -9,11 +9,12 @@
 # A failure for the eai-standard/2.2 and 2.4 tasks, whose generators copy client.env and the pins (BEHAVIOR-1K, RoboLab,
 # RoboWits, RoboPaint; RoboARC on 2.4). For every other task it only reports (a warning, never a failure) whether all standard tasks
 # share the one client image of client.env (their own pip pins are their benchmark's business; PROTOCOL §7, open).
-# Usage: check-standard-client.sh [tasks dir]   (repo-level; run_all.sh calls it once)
+# Usage: check-standard-client.sh [tasks dir] (tasks/, or a flat tree of task dirs)   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 python3 - "${1:-$root/tasks}" "$root/embodied_first_exam/standard" <<'PY'
 import os, re, shlex, sys, tomllib
+from pathlib import Path
 tasks, src = sys.argv[1], sys.argv[2]
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(src))), "scripts")); import task_conventions as tc   # the mode registry (§2.16)
 env = dict(l.split("=", 1) for l in open(os.path.join(src, "client.env")).read().splitlines() if "=" in l and not l.startswith("#"))
@@ -71,7 +72,12 @@ def pip_problems(dockerfile: str, context: str) -> list:
 
 
 bad, v1, v1_off, n22 = [], 0, [], 0
-for t in sorted(os.listdir(tasks)):
+def task_dirs(root):   # (name, its parent) of every task dir: the repository's tasks/<folder>/<task>/ (tc.iter_tasks), or a flat scratch tree
+    flat = [(n, root) for n in sorted(os.listdir(root)) if os.path.isfile(os.path.join(root, n, "task.toml"))]
+    return flat or [(p.name, str(p.parent)) for p in tc.iter_tasks(Path(root))]
+
+
+for t, tasks in task_dirs(tasks):
     tt = os.path.join(tasks, t, "task.toml")
     if not os.path.isfile(tt):
         continue

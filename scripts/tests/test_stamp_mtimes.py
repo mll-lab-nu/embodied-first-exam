@@ -21,7 +21,7 @@ import stamp_mtimes as sm  # noqa: E402
 import task_conventions as tc  # noqa: E402
 
 TOOL = [sys.executable, str(ROOT / "scripts/stamp_mtimes.py")]
-TASK = ROOT / "tasks/robotwin_2_0_stack_blocks_two-privileged"
+TASK = tc.task_dir("robotwin_2_0_stack_blocks_two-privileged")
 fails = []
 
 

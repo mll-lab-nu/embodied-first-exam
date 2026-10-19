@@ -8,7 +8,7 @@ Whole-body humanoid control: locomotion and manipulation on a Unitree H1, scored
 | simulator | MuJoCo 3.3.7 + dm_control, CPU (upstream pins 3.1.6; see Physics) |
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
-| tasks | 10 × 3 modes: `tasks/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (the standard-realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
+| tasks | 10 × 3 modes: `tasks/humanoidbench/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (the standard-realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
 | image | `ghcr.io/mll-lab-nu/efe-humanoidbench:0.2.0` (`images/humanoidbench/`) |
 | oracle | `sit_simple` (the fixture): full, all three modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml) |
 
@@ -118,7 +118,7 @@ grants N. Results under a budget other than 50 are reported separately.
 
 In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
 chunks loses nothing. A real H1 does not wait. The standard-realtime mode (PROTOCOL §3;
-`tasks/humanoidbench-*-i00-standard-realtime`, 10 tasks, one per family, `mode = "standard-realtime"`) is standard mode with the same
+`tasks/humanoidbench/humanoidbench-*-i00-standard-realtime`, 10 tasks, one per family, `mode = "standard-realtime"`) is standard mode with the same
 instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the closing `## Time limit` section of every instruction, PROTOCOL §2) and client, on a
 clock that does not stop (each task's `environment/sim/rcb_realtime.py`, which extends `rcb_service.py`; the
 wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Standard-realtime mode"):
@@ -209,10 +209,10 @@ its model-API key in its container, so it could call a search-enabled model thro
 ## Run
 
 ```bash
-harbor run -p tasks/humanoidbench-loco-hurdle-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
-harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
-harbor run -p tasks/humanoidbench-loco-walk-i00-standard-realtime -a codex -m openai/gpt-6-luna --env-file .env
-harbor run -p tasks/humanoidbench-loco-sit-simple-i00-standard-realtime -a oracle   # streams the same 999 rows
+harbor run -p tasks/humanoidbench/humanoidbench-loco-hurdle-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/humanoidbench/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
+harbor run -p tasks/humanoidbench/humanoidbench-loco-walk-i00-standard-realtime -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/humanoidbench/humanoidbench-loco-sit-simple-i00-standard-realtime -a oracle   # streams the same 999 rows
 ```
 Agent, provider and effort settings: docs/protocol/running.md. Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
 with none (one episode), whose results are reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t

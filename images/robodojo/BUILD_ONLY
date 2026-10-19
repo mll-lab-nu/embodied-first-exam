@@ -47,7 +47,7 @@ Build (from the repository root)
 
 Check a build
   Every frozen instance must rebuild to its recorded state hash. With a task directory at hand:
-    t=tasks/robodojo-stack-bowls-i00-privileged
+    t=tasks/robodojo/robodojo-stack-bowls-i00-privileged
     docker run --rm --gpus all --shm-size 8g -v $PWD/$t:/t ghcr.io/mll-lab-nu/efe-robodojo:$(cat images/robodojo/VERSION) bash -c \
       "cd /tmp && cp /t/environment/rcb_robodojo.py . && python -c \"import numpy as np; np.savez('/tmp/t.npz', \
          actions=np.zeros((0, 14), np.float32), task='stack_bowls')\" && \

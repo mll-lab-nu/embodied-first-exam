@@ -9,7 +9,7 @@ multi-object manipulation, geometric and dynamic constraints.
 | simulator | MuJoCo 3.3 (Dynamic3D) in KinDER's MimicLabs lab, CPU physics |
 | robot | TidyBot++: holonomic base, Kinova Gen3 7-DoF arm, Robotiq 2F-85 gripper; delta actions (MuJoCo: 10 Hz) |
 | score | pass = KinDER's own goal check within the episode (1000 control steps) |
-| tasks | 5 families × 2 modes: `tasks/kinder-<family>-i00-privileged` (scoop-pour, sweep-simple: `-i01-`) and `-standard` (`eai-standard/2.1`) |
+| tasks | 5 families × 2 modes: `tasks/kinder/kinder-<family>-i00-privileged` (scoop-pour, sweep-simple: `-i01-`) and `-standard` (`eai-standard/2.1`) |
 | image | `ghcr.io/mll-lab-nu/efe-kinder:0.1.6` (`images/kinder/`, 4.6 GB with the lab scenes) |
 | oracle | `dynamo` (the fixture): full, both modes; the other four: none, human review (positive examples below; scoop-pour and sweep-simple: none yet, unvalidated) |
 
@@ -81,8 +81,8 @@ measured on the frozen instance.
 ## Run
 
 ```bash
-harbor run -p tasks/kinder-scoop-pour-i01-standard -a codex -m openai/gpt-6-luna --env-file .env
-harbor run -p tasks/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
+harbor run -p tasks/kinder/kinder-scoop-pour-i01-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/kinder/kinder-dynamo-i00-privileged -a oracle      # or -a nop: scores 0
 ```
 Agent, provider and effort settings: docs/protocol/running.md. Agent time cutoff: 1800 s in both modes. Standard tasks grant no reset by default (the protocol's default): one episode, whose 1000 control steps the practice and the graded attempt share;
 `RCB_RESET_BUDGET=N harbor run ...` runs a configuration with N resets, whose results are reported separately (the shipped instruction describes the default, one episode). Build the image: `docker build -f images/kinder/Dockerfile -t
