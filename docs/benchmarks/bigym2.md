@@ -21,7 +21,7 @@ run on wheeled bases.
 | oracle | none: upstream has no expert or planner; human review |
 
 Upstream ships its own coding-agent protocol (`bigym-agent`: one `policy.py` written from a task sentence and a
-demonstration video, scored on 100 hidden seeds at 84×84). Here the rcb protocol applies: one frozen instance per task,
+demonstration video, scored on 100 hidden seeds at 84×84). Here the EFE protocol applies: one frozen instance per task,
 no demonstration.
 
 ## Tasks: upstream's 20, ours ✅ (13)

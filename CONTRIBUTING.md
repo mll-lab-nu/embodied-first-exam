@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for helping build Robot Coding Bench. Tasks follow the contract in [docs/protocol/README.md](docs/protocol/README.md);
+Thank you for helping build Embodied First Exam ([site](https://www.embodied-first-exam.ai), [Discord](https://discord.gg/TvscHrhDt)). Tasks follow the contract in [docs/protocol/README.md](docs/protocol/README.md);
 this page explains how a contribution gets from an idea to `main`. Reviewers follow [docs/REVIEWING.md](docs/REVIEWING.md).
 
 ## Kinds of pull requests
