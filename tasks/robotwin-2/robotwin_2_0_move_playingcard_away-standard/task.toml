@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robotwin_2_0_move_playingcard_away-standard"
+name = "embodied-first-exam/robotwin_2_0_move_playingcard_away-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 move_playingcard_away on the same frozen instance as the privileged task (seed 60417). Use the arm to pick up the playing card and move it away from the table. For example, if the playing card is on the outward side of the table, you should move it further outward side of the table. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "kangrui" }]
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "standard-mode", "trajectory", "move_playingcard_away"]

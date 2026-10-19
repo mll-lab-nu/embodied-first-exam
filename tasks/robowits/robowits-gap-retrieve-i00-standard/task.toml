@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robowits-gap-retrieve-i00-standard"
+name = "embodied-first-exam/robowits-gap-retrieve-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): RoboWits gap_retrieve on the same frozen instance as the privileged task (evaluation scene 0 of task 3). Place the lemon on the green target area. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robowits", "genesis", "marvin-bimanual", "dual-arm", "standard-mode", "trajectory", "gap_retrieve"]

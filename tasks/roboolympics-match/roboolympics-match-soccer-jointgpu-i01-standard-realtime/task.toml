@@ -12,7 +12,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboolympics-match-soccer-jointgpu-i01-standard-realtime"
+name = "embodied-first-exam/roboolympics-match-soccer-jointgpu-i01-standard-realtime"
 description = "STANDARD-REALTIME (RoboOlympics / Embodied Agent Olympics, our own service): humanoid robot soccer 2 v 2 at the JOINT LEVEL (12 leg joint targets per Booster T1 every 20 ms, no walking policy, no kick skill), coach format (the agent commands both robots of its team) against a learned opponent team at the joint level (level 5: its two T1s walk on a policy trained with reinforcement learning on the same joint interface and limits as yours; a learned strategy layer decides what each robot does), program play (eai-standard-realtime/1.0: the world runs at 1/10 of real speed, freezes at every stoppage for the player's review, at most 300 s). CPU + GPU resource tier (6 CPU cores + 1 NVIDIA GPU with mjlab 1.6.0 + rsl_rl 5.4.2, the full 2 v 2 match world and a single T1 on the GPU); any method (hand-written, planning, optimisation, learning); a practice service with full copies of the match world. 2 h development (start window), then the match. The twin roboolympics-match-soccer-jointcpu-i01-standard-realtime is the same match in the other resource tier. Frozen development instance (seed and opponent fixed, not an official seed). Exported from RoboOlympics pilot v5 (pilots/soccer_joint/make_v5_tasks.py on task soccer-match-wallclock-program-lowlevel-standard) by pilots/soccer_joint/export_fexam_pair.py."
 authors = [{ name = "RoboOlympics (CHIGUI0)" }]
 keywords = ["robotics", "roboolympics", "sports", "soccer", "mujoco", "standard-realtime-mode", "real-time", "joint-level", "gpu-training"]

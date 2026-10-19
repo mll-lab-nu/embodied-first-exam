@@ -16,7 +16,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboolympics-fun-long-rope-i00-standard-realtime"
+name = "embodied-first-exam/roboolympics-fun-long-rope-i00-standard-realtime"
 description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 1): RoboOlympics long-rope on the same frozen instance as roboolympics-fun-long-rope-i00-privileged. Jump the long rope: standing in the middle of a rope turned by two turners, jump it 10 times in a row, the rope passing under both your feet while you are in the air, without the rope ever touching you. Once an attempt starts the venue does not wait; the agent drives the robot from a program of its own through the client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 10 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records every executed control step and grades the last attempt live with the family's referee (no grading replay)."
 authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "roboolympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-realtime-mode", "trajectory", "long-rope"]

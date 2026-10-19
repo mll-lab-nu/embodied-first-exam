@@ -20,7 +20,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/ikea-svallet-i00-standard"
+name = "embodied-first-exam/ikea-svallet-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.4): IKEA MuJoCo SVALLET work lamp (dual ViperX 300 s (Menagerie ALOHA), MuJoCo 3.14.0 CPU) on the same frozen scene as the privileged task. Press the lamp shade's key down into the socket on top of the stand column until the spring jaw snaps over it, then screw the E12 bulb up into the shade's socket until it seats. The agent only gets a client: get_obs (RGB from four ALOHA-style cameras, optional depth, proprioception, calibrated cameras), submit (joint_position chunks, joint targets within the robot's joint velocity limits), stateless kinematics, every pose in the robot's frame. No reset, no privileged state; the sim service records and grades the live episode (no grading replay)."
 authors = [{ name = "Xiaoyu" }]
 keywords = ["robotics", "ikea", "furniture-assembly", "mujoco", "viperx", "bimanual", "standard-mode", "trajectory"]

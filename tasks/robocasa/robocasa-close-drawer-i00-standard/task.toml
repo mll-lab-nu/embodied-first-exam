@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robocasa-close-drawer-i00-standard"
+name = "embodied-first-exam/robocasa-close-drawer-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa (CloseDrawer, a Franka Panda arm on an Omron mobile base (with a torso lift)): Close the left drawer. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa", "mobile-manipulation", "code-as-policy", "trajectory", "standard-mode"]

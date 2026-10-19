@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboolympics-fun-juggling-feet-realgrasp-i00-standard"
+name = "embodied-first-exam/roboolympics-fun-juggling-feet-realgrasp-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboOlympics juggling-feet-realgrasp on the same frozen instance as roboolympics-fun-juggling-feet-realgrasp-i00-privileged. Juggle the football with your feet: drop it from between your palms and keep it in the air for ten foot touches in a row, each one sending the ball up above your knees, without it touching the ground or any other part of you. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 50 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "roboolympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "juggling-feet-realgrasp"]

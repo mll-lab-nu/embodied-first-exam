@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robocasa365-stocking-breakfast-foods-i00-standard"
+name = "embodied-first-exam/robocasa365-stocking-breakfast-foods-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa365 (StockingBreakfastFoods, a Franka Panda arm on an Omron mobile base (with a torso lift)): Pick the canned food and bar from the counter and place them in the cabinets closest to them. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "standard-mode"]

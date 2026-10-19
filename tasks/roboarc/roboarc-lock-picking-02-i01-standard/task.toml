@@ -19,7 +19,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboarc-lock-picking-02-i01-standard"
+name = "embodied-first-exam/roboarc-lock-picking-02-i01-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.4): RoboARC lock_picking on the same frozen instance as the privileged task. Pick up the two-tab key from its rest. Insert the tabbed key through all three rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it. The agent only gets a client: get_obs (RGB, optional depth, proprioception, calibrated cameras), submit (joint_position or ee_pose chunks), stateless kinematics. No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "Jianwen Lyu" }]
 keywords = ["robotics", "roboarc", "mujoco", "panda_robotiq", "standard-mode", "trajectory", "lock_picking"]

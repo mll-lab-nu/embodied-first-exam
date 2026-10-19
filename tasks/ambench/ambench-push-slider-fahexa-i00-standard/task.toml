@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/ambench-push-slider-fahexa-i00-standard"
+name = "embodied-first-exam/ambench-push-slider-fahexa-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): AM-Bench PushSlider-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1) on the same frozen instance as the privileged task. Task: A wall stands in front of the hovering aerial manipulator, with a horizontal slider mounted on its front face: a straight rail about 1 m long and a red knob that slides along it. The knob starts at the rail's left end (as seen from the robot facing the wall) and must be pushed along the rail until it is within 5 cm of the right end of its travel, i.e. at least 0.95 m along its 1 m travel. The agent only gets a client: get_obs (RGB, depth + proprioception of the airframe and the arm), submit (AM-Bench's end-effector pose rows). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "ambench", "aerial-manipulation", "isaac-lab", "isaac-sim", "hexarotor", "standard-mode", "trajectory"]

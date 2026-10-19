@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/vlabench-add-condiment-i00-standard"
+name = "embodied-first-exam/vlabench-add-condiment-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): VLABench add_condiment (Franka Panda) on the same frozen instance as vlabench-add-condiment-i00-privileged: Add bbq_sauce to the dish: hold the bbq_sauce bottle over pan_seen and tip it past horizontal, so that its top is lower than its bottom (pouring itself is not simulated). The agent only gets a client: four cameras (RGB, optional depth, calibrated) and the robot's own state; joint-position chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "vlabench", "mujoco", "franka-panda", "code-as-policy", "trajectory", "standard-mode"]

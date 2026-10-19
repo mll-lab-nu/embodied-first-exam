@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robocasa-gr1-cuttingboard-to-tieredbasket-i00-standard"
+name = "embodied-first-exam/robocasa-gr1-cuttingboard-to-tieredbasket-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa-GR1 (PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA, a Fourier GR1 humanoid (arms, waist and two dexterous six-command Fourier hands; fixed base)): pick the sweet potato from the cutting board and place it in the tiered basket. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa-gr1", "humanoid", "dexterous-hands", "code-as-policy", "trajectory", "standard-mode"]

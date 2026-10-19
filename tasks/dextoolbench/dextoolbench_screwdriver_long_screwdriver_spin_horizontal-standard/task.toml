@@ -10,7 +10,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/dextoolbench_screwdriver_long_screwdriver_spin_horizontal-standard"
+name = "embodied-first-exam/dextoolbench_screwdriver_long_screwdriver_spin_horizontal-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): DexToolBench (SimToolReal) long_screwdriver / spin_horizontal in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the long screwdriver through the 31 demonstrated goal poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; 20 resets (only the last episode graded), no object poses; the sim service records every episode and grades the last one live (no grading replay)."
 authors = [{ name = "kangrui" }]
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory", "standard-mode"]

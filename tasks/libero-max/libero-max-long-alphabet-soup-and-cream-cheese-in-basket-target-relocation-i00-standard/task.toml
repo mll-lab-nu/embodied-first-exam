@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/libero-max-long-alphabet-soup-and-cream-cheese-in-basket-target-relocation-i00-standard"
+name = "embodied-first-exam/libero-max-long-alphabet-soup-and-cream-cheese-in-basket-target-relocation-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): LIBERO-MAX (libero_10, target relocation; Franka Panda) on the same frozen instance as libero-max-long-alphabet-soup-and-cream-cheese-in-basket-target-relocation-i00-privileged: Put both the alphabet soup and the cream cheese box in the basket. Mid-task the scene changes (target relocation). The agent only gets a client: two cameras (RGB, optional depth, calibrated) and the robot's own state; LIBERO's OSC control steps in chunks; one episode, no reset, no object poses; the sim service records the episode and grades it as it ran (no replay)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "libero", "libero-max", "robosuite", "franka-panda", "online-event", "code-as-policy", "trajectory", "standard-mode"]

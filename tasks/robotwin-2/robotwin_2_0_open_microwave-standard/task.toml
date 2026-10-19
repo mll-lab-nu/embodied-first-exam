@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robotwin_2_0_open_microwave-standard"
+name = "embodied-first-exam/robotwin_2_0_open_microwave-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 open_microwave on the same frozen instance as the privileged task (seed 28831). Open the microwave door: pull it open until its hinge joint reaches at least 60 percent of its joint range. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "kangrui" }]
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "standard-mode", "trajectory", "open_microwave"]

@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/roboolympics-fun-dribble-slalom-i00-standard"
+name = "embodied-first-exam/roboolympics-fun-dribble-slalom-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboOlympics dribble-slalom on the same frozen instance as roboolympics-fun-dribble-slalom-i00-privileged. Dribble the football through the slalom: out through the six cones, round the last one and back through them over the start line, keeping the ball within 2 m and touching no cone. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 50 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "roboolympics", "sports", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "dribble-slalom"]

@@ -14,7 +14,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/yamlab-hang-mug-on-tree-i13-standard"
+name = "embodied-first-exam/yamlab-hang-mug-on-tree-i13-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): YAMLab HangMugOnTree-v0 on the same frozen instance as the privileged task (`mug` = `Mug/mug_013` and `mug_tree` = `MugTree/mug_tree_013`). Task: pick up the mug with the left arm, hand it over to the right arm, and hang it on the mug tree. The agent only gets a client: get_obs (RGB, depth + proprioception of both arms), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "yamlab", "isaac-lab", "isaac-sim", "bimanual", "i2rt-yam", "standard-mode", "trajectory"]

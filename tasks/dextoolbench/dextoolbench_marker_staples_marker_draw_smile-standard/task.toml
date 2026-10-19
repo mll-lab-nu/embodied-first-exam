@@ -10,7 +10,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/dextoolbench_marker_staples_marker_draw_smile-standard"
+name = "embodied-first-exam/dextoolbench_marker_staples_marker_draw_smile-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): DexToolBench (SimToolReal) staples_marker / draw_smile in MuJoCo: KUKA iiwa 14 + Sharpa HA4 hand; produce one replayable joint-target trajectory that carries the staples marker through the 49 demonstrated goal poses in order. The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; 20 resets (only the last episode graded), no object poses; the sim service records every episode and grades the last one live (no grading replay)."
 authors = [{ name = "kangrui" }]
 keywords = ["robotics", "dextoolbench", "simtoolreal", "mujoco", "dexterous", "tool-use", "iiwa", "sharpa", "code-as-policy", "trajectory", "standard-mode"]

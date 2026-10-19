@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robopaint-lettering-business-i00-standard"
+name = "embodied-first-exam/robopaint-lettering-business-i00-standard"
 description = "RoboPaint lettering, STANDARD MODE (robot as a service, eai-standard/2.2): embodied robotic lettering (ManiSkill 3.0.1 Franka Panda holding a pointed flexible dip pen) on the same frozen instance as the privileged task: copy the line Business makes a Man respected. (engraved English round hand, 1741), shown in the picture target.png, onto the main sheet in at most 9 strokes, with a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no pen model, no score; the sim service records the episode and scores its main sheet against the picture (after the best single shift of the sheet, at most 5 mm along each axis: success iff IoU >= 0.85, boundary F within 1 mm >= 0.80, every region of the exemplar (at most 30 mm each along its strokes) covered >= 0.75, stray ink <= 0.04 and at most 9 strokes). Process rules: letter with pen strokes the way a scribe writes; colouring in or filling the letters, zigzag, serpentine or contour-offset fills fail: a pen-tip path on the main sheet longer than 3730 mm made of marks narrower than 0.10 mm on average is colouring in."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robopaint", "maniskill", "sapien", "lettering", "calligraphy", "pointed-pen", "copperplate", "round-hand", "franka", "standard-mode", "trajectory", "robopaint_lettering_business"]

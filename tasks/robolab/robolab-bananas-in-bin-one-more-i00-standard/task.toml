@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robolab-bananas-in-bin-one-more-i00-standard"
+name = "embodied-first-exam/robolab-bananas-in-bin-one-more-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): NVIDIA RoboLab bananas_in_bin_one_more on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). Put one (1) more bananas in the grey bin. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "standard-mode", "trajectory", "bananas_in_bin_one_more"]

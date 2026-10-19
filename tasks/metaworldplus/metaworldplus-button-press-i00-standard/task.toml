@@ -10,7 +10,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/metaworldplus-button-press-i00-standard"
+name = "embodied-first-exam/metaworldplus-button-press-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): MetaWorld+ (Meta-World v3 button-press, Sawyer arm): Press the button inward. The agent only gets a client: camera RGB-D, the robot's own state and the target point, and Meta-World's native actions in chunks; no reset, no object poses; the sim service records the episode and grades the live episode's final state."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "mujoco", "metaworld", "sawyer", "code-as-policy", "trajectory", "standard-mode"]

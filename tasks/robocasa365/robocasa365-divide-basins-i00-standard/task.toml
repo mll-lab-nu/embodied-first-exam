@@ -11,7 +11,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robocasa365-divide-basins-i00-standard"
+name = "embodied-first-exam/robocasa365-divide-basins-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboCasa365 (DivideBasins, a Franka Panda arm on an Omron mobile base (with a torso lift)): Move any existing items from the left basin to the right basin for drying. Then move the cup from the counter to the left basin of the sink for washing. The agent only gets a client: the robot's calibrated RGB-D cameras, its own joints and end effector, and native controller commands in chunks; no reset, no object poses; the sim service records the episode and grades it live."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "standard-mode"]

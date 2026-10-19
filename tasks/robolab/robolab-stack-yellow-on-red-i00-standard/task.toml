@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robolab-stack-yellow-on-red-i00-standard"
+name = "embodied-first-exam/robolab-stack-yellow-on-red-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): NVIDIA RoboLab stack_yellow_on_red on the same frozen instance as the privileged task (the state after RoboLab's canonical seed-0 reset). Stack the yellow block on the red block. The agent only gets a client: get_obs (RGB, depth + proprioception), submit (joint_position or ee_pose chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades the live episode."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robolab", "isaac-lab", "isaac-sim", "franka", "standard-mode", "trajectory", "stack_yellow_on_red"]

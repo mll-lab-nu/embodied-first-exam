@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/mujoco_playground_go1_getup-standard"
+name = "embodied-first-exam/mujoco_playground_go1_getup-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): MuJoCo Playground Go1Getup (Unitree Go1) on the same frozen instance as mujoco_playground_go1_getup-privileged: The Unitree Go1 has fallen over. Make it get up and stand upright at its standing height. The agent only gets a client: four cameras that follow the robot (RGB, optional depth), the robot's joints and IMU, joint position chunks at 50 Hz, the feet's kinematics; 10 resets (only the last episode is graded), no world state; the sim service records the episode and grades it live (no grading replay)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "mujoco", "mujoco-playground", "unitree-go1", "quadruped", "locomotion", "getup", "code-as-policy", "trajectory", "standard-mode"]

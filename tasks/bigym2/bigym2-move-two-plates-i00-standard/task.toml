@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/bigym2-move-two-plates-i00-standard"
+name = "embodied-first-exam/bigym2-move-two-plates-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): BiGym 2.0 move-two-plates on the same frozen instance as bigym2-move-two-plates-i00-privileged. Take both plates out of the left dish rack and gently stand them in the right dish rack. The agent only gets a client: the robot's three onboard cameras (RGB) and its proprioception, whole-body command chunks (walking, height, lean, arm joints, grippers). One episode, no reset, no object state, no success signal; the sim service records the episode and grades it as it ran with BiGym's own success check (the live episode; nothing is replayed)."
 authors = [{ name = "pingyue" }]
 keywords = ["robotics", "bigym2", "mujoco", "unitree-g1", "humanoid", "standard-mode", "trajectory", "move-two-plates"]

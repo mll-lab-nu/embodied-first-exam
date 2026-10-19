@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robopaint-acrylic-bedroom-i00-standard"
+name = "embodied-first-exam/robopaint-acrylic-bedroom-i00-standard"
 description = "RoboPaint acrylic stroke copy, STANDARD MODE (robot as a service, eai-standard/2.2): embodied robotic acrylic painting (ManiSkill 3.0.1 Franka Panda with a round acrylic brush; libmypaint 1.6.1 paints) on the same frozen instance as the privileged task: copy the painting shown in the picture target.png (a small acrylic painting after Vincent van Gogh's The Bedroom, 1888) onto the main sheet in at most 388 strokes, with 10 premixed paints and a practice sheet for test strokes. The agent only gets a client: get_obs (camera RGB + proprioception), submit (ee_pose or joint_position chunks). No reset, no sheet readout, no brush model, no score; the sim service records the episode and scores its main sheet at a 1 mm scale against the picture after the best single shift of the sheet, at most 5 mm along each axis (success iff mean CIELAB ΔE <= 2.0, p90 ΔE <= 6.0, SSIM of L* >= 0.92, edge correlation >= 0.8, paint IoU >= 0.95 and at most 388 strokes). Process rules: paint with brush strokes the way a person paints; colouring in or filling areas with a thin line, zigzag, serpentine or contour-offset fills fail; the brush tip's path pressed on the main sheet with paint is at most 40300 mm in total, and at most 10 % of it in strokes longer than 2.5 x the diagonal of their bounding box."
 authors = [{ name = "qineng" }]
 keywords = ["robotics", "robopaint", "maniskill", "sapien", "painting", "acrylic-painting", "mypaint", "brush", "stroke-copy", "franka", "standard-mode", "trajectory", "robopaint_acrylic_bedroom"]

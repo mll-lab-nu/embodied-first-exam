@@ -10,7 +10,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/mujoco_playground_aloha_single_peg_insertion-standard"
+name = "embodied-first-exam/mujoco_playground_aloha_single_peg_insertion-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): MuJoCo Playground AlohaSinglePegInsertion in plain MuJoCo: ALOHA 2 bimanual (two ViperX 300s); produce one replayable trajectory that picks up the socket and the peg and inserts the peg into the socket, frozen instance (seed 60417). The agent only gets a client: camera RGB-D + proprioception and joint-target chunks; no reset, no object poses; the sim service records the episode and grades it live (no grading replay)."
 authors = [{ name = "kangrui" }]
 keywords = ["robotics", "mujoco", "mujoco-playground", "aloha", "bimanual", "peg-insertion", "code-as-policy", "trajectory", "standard-mode"]

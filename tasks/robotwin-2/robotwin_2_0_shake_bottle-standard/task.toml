@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robotwin_2_0_shake_bottle-standard"
+name = "embodied-first-exam/robotwin_2_0_shake_bottle-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.1): RoboTwin 2.0 shake_bottle on the same frozen instance as the privileged task (seed 60417). Shake the bottle with proper arm. The agent only gets a client: /observe (RGB-D video, camera calibration, proprioception) and /submit (joint_position or ee_pose action chunks). No reset, no privileged state; the sim service records the episode as a trajectory and grades it."
 authors = [{ name = "kangrui" }]
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "standard-mode", "trajectory", "shake_bottle"]

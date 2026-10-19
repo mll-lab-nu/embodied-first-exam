@@ -3,7 +3,7 @@ schema_version = "1.3"
 artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
 
 [task]
-name = "robot-coding-bench/robodojo-arrange-largest-number-random-i00-privileged"
+name = "embodied-first-exam/robodojo-arrange-largest-number-random-i00-privileged"
 description = "RoboDojo arrange_largest_number_random (Generalization (randomised variant: other models, clutter); two ARX X5 arms with parallel grippers, Isaac Sim 5.1 / Isaac Lab): produce one replayable trajectory of RoboDojo's 14-D joint actions. Task: Look at the digit blocks on the table (4 or 5 of them) and place them on the row of mats so that, read in order along the row, they form the largest possible number (largest digit on the first mat, smallest on the last), then return the arm home. Frozen scene instance: RoboDojo's own evaluation layout arx_x5/0/arrange_largest_number_random_0.json; graded by RoboDojo's own reward check."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robodojo", "isaac-lab", "isaac-sim", "bimanual", "arx-x5", "code-as-policy", "trajectory", "privileged"]

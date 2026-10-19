@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/robocasa365-turn-on-toaster-oven-i00-standard-realtime"
+name = "embodied-first-exam/robocasa365-turn-on-toaster-oven-i00-standard-realtime"
 description = "STANDARD-REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 2): RoboCasa365 (TurnOnToasterOven, a Franka Panda arm on an Omron mobile base (with a torso lift)): Turn on the toaster oven by setting the timer. The robot and the kitchen move on while the agent thinks (the timer knob, once set, turns back by itself (1/3000 of its range per simulated second)), so the agent plans or streams native controller commands from a program of its own through the client (calibrated RGB-D cameras, the robot's own joints and end effector); 10 resets, only the last episode graded; no object poses; the sim service records every executed control step and grades the last episode live."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "robosuite", "robocasa365", "mobile-manipulation", "code-as-policy", "trajectory", "standard-realtime-mode"]

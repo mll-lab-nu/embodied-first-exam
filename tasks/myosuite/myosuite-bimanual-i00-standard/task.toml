@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/myosuite-bimanual-i00-standard"
+name = "embodied-first-exam/myosuite-bimanual-i00-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): MyoSuite bimanual (MyoArm + MPL, 63 muscles) on the same frozen instance as myosuite-bimanual-i00-privileged: Hand the object over: pick it up with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. The agent only gets a client: cameras (RGB, optional depth, calibration), the body's joints and muscles, actuator command chunks, fingertip kinematics; 10 resets, only the last episode graded; no object state; the sim service records the episode and grades it as it ran (the live episode; nothing is replayed)."
 authors = [{ name = "Chi Gui" }]
 keywords = ["robotics", "myosuite", "mujoco", "musculoskeletal", "myoarm-mpl", "code-as-policy", "trajectory", "bimanual", "standard-mode"]

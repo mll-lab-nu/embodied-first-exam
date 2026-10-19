@@ -13,7 +13,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 ]
 
 [task]
-name = "robot-coding-bench/mujoco_playground_go1_joystick_rough_terrain-standard"
+name = "embodied-first-exam/mujoco_playground_go1_joystick_rough_terrain-standard"
 description = "STANDARD MODE (robot as a service, eai-standard/2.2): MuJoCo Playground Go1JoystickRoughTerrain (Unitree Go1) on the same frozen instance as mujoco_playground_go1_joystick_rough_terrain-privileged: Make the Unitree Go1 follow the joystick command schedule on rough terrain (a 20 x 20 m heightfield, up to 5 cm high) for the whole 20 s episode without falling over. The agent only gets a client: four cameras that follow the robot (RGB, optional depth), the robot's joints and IMU, joint position chunks at 50 Hz, the feet's kinematics; 10 resets (only the last episode is graded), no world state; the sim service records the episode and grades it live (no grading replay)."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "mujoco", "mujoco-playground", "unitree-go1", "quadruped", "locomotion", "joystick", "code-as-policy", "trajectory", "standard-mode"]
