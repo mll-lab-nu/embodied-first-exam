@@ -87,10 +87,9 @@ RT_CASES = (
 
 
 def mode_of(task: Path) -> str:
-    for m in ("standard-realtime", "standard"):
-        if task.name.endswith("-" + m):
-            return m
-    return ""
+    """The task's mode when it is one with a sim sidecar (the standard modes), else ""."""
+    m = tc.mode_suffix(task.name)
+    return m if m in tc.SIDECAR_MODES else ""
 
 
 def verifier_files(task: Path, problems: list[str] | None = None) -> dict[str, Path]:

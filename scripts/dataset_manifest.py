@@ -44,8 +44,7 @@ def render() -> str:
     out = [HEADER]
     bad = []
     for t in tc.iter_tasks():
-        f = t / "DIGEST"
-        d = f.read_text().strip() if f.is_file() else ""
+        d = (tc.read_text(t / tc.DIGEST_FILE) or "").strip()
         if not DIGEST.fullmatch(d):
             bad.append(t.name)
             continue
@@ -55,26 +54,21 @@ def render() -> str:
     return "\n".join(out)
 
 
-def all_tasks() -> list[Path]:
-    return tc.iter_tasks()
-
-
 def entry(t: Path) -> dict:
     """One task's row of the list: what its own files say."""
-    d = tomllib.loads((t / "task.toml").read_text())
-    md, ag = d.get("metadata", {}), d.get("agent", {})
+    md = tomllib.loads((t / "task.toml").read_text()).get("metadata", {})
     r = md.get("resources") or {}
-    f = t / "DIGEST"
-    return {"name": t.name, "benchmark": tc.bench_of(t), "mode": tc.mode_of(t), "base": tc.base_of(t),
-            "family": str(md.get("family", "")), "oracle": md.get("oracle", ""), "timeout_sec": tc.cutoff_for(t),
-            "dynamics": md.get("dynamics", ""), "protocol": md.get("protocol", ""), "simulator": md.get("simulator", ""),
+    # the settings results are grouped by (PROTOCOL v2.0 §2, docs/protocol/running.md "Results"): rankings compare only tasks
+    # and results of one configuration; `validated` is a marker, ranked together. The same fields a result records.
+    cfg = tc.effective_config(t)
+    return {"name": t.name, "benchmark": tc.bench_of(t), "mode": cfg["mode"], "base": tc.base_of(t),
+            "family": str(md.get("family", "")), "oracle": cfg["oracle"], "timeout_sec": cfg["cutoff_s"],
+            "dynamics": md.get("dynamics", ""), "protocol": cfg["service_protocol"], "simulator": md.get("simulator", ""),
             "robot": md.get("robot", ""),
-            # the settings results are grouped by (PROTOCOL v2.0 §2, docs/protocol/running.md "Results"): rankings compare only tasks
-            # and results of one configuration; `validated` is a marker, ranked together
-            "reset_budget": tc.reset_budget_of(t), "slowdown": tc.slowdown_of(t), "network": tc.network_of(t),
-            "validated": tc.validated_of(t), "set": tc.set_of(t), "protocol_version": tc.PROTOCOL_VERSION,
+            "reset_budget": cfg["reset_budget"], "slowdown": cfg["slowdown"], "network": cfg["network"],
+            "validated": cfg["validated"], "set": cfg["set"], "protocol_version": cfg["protocol_version"],
             "resources": {k: r[k] for k in ("min_cpus", "min_memory_gb", "min_gpu_memory_gb", "gpu_class") if k in r},
-            "digest": f.read_text().strip() if f.is_file() else ""}
+            "digest": cfg["digest"]}
 
 
 def _sec(v) -> str:
@@ -146,7 +140,7 @@ def main(argv: list[str]) -> int:
             raise SystemExit("list needs --out DIR")
         out = Path(argv[argv.index("--out") + 1])
         out.mkdir(parents=True, exist_ok=True)
-        rows, commit = [entry(t) for t in all_tasks()], head_commit()
+        rows, commit = [entry(t) for t in tc.iter_tasks()], head_commit()
         (out / "tasks.json").write_text(json.dumps({"commit": commit, "tasks": rows}, indent=1) + "\n", encoding="utf-8")
         (out / "TASKS.md").write_text(render_md(rows, commit), encoding="utf-8")
         (out / "dataset.toml").write_text(render(), encoding="utf-8")
