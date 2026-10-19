@@ -35,10 +35,14 @@ def git(*args: str) -> str:
 
 
 def old_toml(rev: str, name: str) -> dict | None:
-    try:
-        return tomllib.loads(git("show", f"{rev}:tasks/{name}/task.toml"))
-    except (subprocess.CalledProcessError, tomllib.TOMLDecodeError):
-        return None
+    """The task's task.toml at `rev`: tasks/<folder>/<task>/, or the flat tasks/<task>/ of a revision before the
+    benchmark folders."""
+    for rel in (tc.task_relpath(name), f"tasks/{name}"):
+        try:
+            return tomllib.loads(git("show", f"{rev}:{rel}/task.toml"))
+        except (subprocess.CalledProcessError, tomllib.TOMLDecodeError):
+            continue
+    return None
 
 
 def cutoff(d: dict | None):
@@ -51,10 +55,10 @@ def main(argv: list[str]) -> int:
     labels_file = Path(argv[argv.index("--labels") + 1]) if "--labels" in argv else None
     adv_file = Path(argv[argv.index("--advisories") + 1]) if "--advisories" in argv else None
     paths = sorted({p for p in git("diff", "--name-only", "--no-renames", rev, "HEAD").splitlines() if p})
-    names = sorted({p.split("/")[1] for p in paths if p.startswith("tasks/") and p.count("/") >= 2})
+    names = sorted({n for p in paths if (n := ci_scope.task_name_of(p))})
     added, changed, removed = [], [], []
     for n in names:
-        now, before = (ROOT / "tasks" / n / "task.toml").is_file(), old_toml(rev, n) is not None
+        now, before = (tc.task_dir(n) / "task.toml").is_file(), old_toml(rev, n) is not None
         (added if now and not before else changed if now else removed if before else []).append(n)
     sc = ci_scope.scope(paths)
     labels = set()
@@ -71,14 +75,14 @@ def main(argv: list[str]) -> int:
     # cutoffs changed in existing tasks
     moves = []
     for n in changed:
-        a, b = cutoff(old_toml(rev, n)), tc.cutoff_for(ROOT / "tasks" / n)
+        a, b = cutoff(old_toml(rev, n)), tc.cutoff_for(tc.task_dir(n))
         if a != b:
             moves.append((n, a, b))
     if moves:
         labels.add("cutoff-change")
         groups = defaultdict(list)
         for n, a, b in moves:
-            t = ROOT / "tasks" / n
+            t = tc.task_dir(n)
             groups[(tc.bench_of(t), tc.mode_of(t), a, b)].append(n)
         out += ["", "### Cutoff changes (PROTOCOL §2: the task author's decision; say old -> new and why above)", "",
                 "| Benchmark | Mode | Old | New | Tasks |", "|---|---|---|---|---|"]
@@ -90,7 +94,7 @@ def main(argv: list[str]) -> int:
         out += ["", "### Tasks", "", "| Task | Status | Mode | Oracle | Cutoff | Minimum compute (CPU / GB / GPU GB, class) |",
                 "|---|---|---|---|---|---|"]
         for n in shown[:60]:
-            t = ROOT / "tasks" / n
+            t = tc.task_dir(n)
             d = tomllib.loads((t / "task.toml").read_text())
             md = d.get("metadata", {})
             r = md.get("resources") or {}
@@ -103,9 +107,9 @@ def main(argv: list[str]) -> int:
     if removed:
         out += ["", "Removed: " + ", ".join(f"`{n}`" for n in removed[:40]) + (" ..." if len(removed) > 40 else "")]
     # cutoffs per benchmark and mode, after the change, for the benchmarks it touches
-    benches = sorted({tc.bench_of(ROOT / "tasks" / n) for n in shown})
+    benches = sorted({tc.bench_of(Path(n)) for n in shown})
     if benches:
-        every = [p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file() and tc.bench_of(p) in benches]
+        every = [p for p in tc.iter_tasks() if tc.bench_of(p) in benches]
         vals = defaultdict(set)
         for t in every:
             vals[(tc.bench_of(t), tc.mode_of(t))].add(tc.cutoff_for(t))

@@ -71,7 +71,7 @@ def errors(tasks: list[Path]) -> list[str]:
 
 def main(argv: list[str]) -> int:
     tasks = [Path(a).resolve() for a in argv if (Path(a) / "task.toml").is_file()] if argv else \
-        sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+        tc.iter_tasks()
     errs = errors(tasks)
     for e in errs:
         print(f"FAIL {e}")

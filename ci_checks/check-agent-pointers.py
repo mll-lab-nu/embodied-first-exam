@@ -25,11 +25,13 @@ allowlist is what stops a download; this check keeps the address out of the task
 That file was in the simulator image, which this check cannot read: an image's own files are reviewed when the image
 is built (docs/protocol/leakage.md).
 
-Usage: check-agent-pointers.py [task dirs...]   (default: all of tasks/*)
+Usage: check-agent-pointers.py [task dirs...]   (default: every task dir, tasks/*/*)
 """
 import ast, pathlib, re, sys, zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+import task_conventions as tc  # noqa: E402  (iter_tasks: the task tree)
 SIDECAR_DIRS = {"sim", "scorer", "rcb_monitor"}          # other containers' files under environment/
 MAX_BYTES = 8 << 20                                        # larger files are assets (meshes, arrays), not text
 HOSTS = re.compile(
@@ -141,7 +143,7 @@ def findings(task: pathlib.Path):
 
 
 def main(argv):
-    tasks = [pathlib.Path(a) for a in argv] or sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    tasks = [pathlib.Path(a) for a in argv] or tc.iter_tasks()
     bad = 0
     for t in tasks:
         for rel, line, kind, hit in findings(t):

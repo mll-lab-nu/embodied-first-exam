@@ -10,11 +10,13 @@
 # generator's check ties the sources to FILES.json), and the copies left in task dirs (the bind-mounted sidecars
 # environment/scorer/ and environment/sim/) must be byte-identical to that source.
 # ADVISORY hook of RoboPaint (moved from ci_checks/check-robopaint-tooling.sh, board 0124): ci_checks/run_all.sh runs every
-# ci_checks/benchmarks/*/advisory-* hook with the task directories in scope; this one checks the tasks directory they are in.
-# Usage: advisory-tooling.sh [task dirs]   (default: the repository's tasks/)
+# ci_checks/benchmarks/*/advisory-* hook with the task directories in scope; this one checks the folder the first RoboPaint
+# task among them is in (none among them: the repository's tasks/robopaint/).
+# Usage: advisory-tooling.sh [task dirs]   (default: the repository's tasks/robopaint/)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/../../.." && pwd)"
-tdir="$root/tasks/robopaint"; [ $# -gt 0 ] && tdir="$(cd "$(dirname "${1%/}")" && pwd)"
+tdir="$root/tasks/robopaint"
+for a in "$@"; do case "$(basename "${a%/}")" in robopaint-*) tdir="$(cd "$(dirname "${a%/}")" && pwd)"; break ;; esac; done
 python3 - "$tdir" "$root" <<'PY'
 import collections, hashlib, os, sys
 tasks, root = sys.argv[1:3]

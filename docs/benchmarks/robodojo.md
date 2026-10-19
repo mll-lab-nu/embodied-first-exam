@@ -16,7 +16,7 @@ task (below).
 ## Tasks
 The task directories are the deliverable; the tooling that built them is kept outside this repository. Each task carries:
 - in its instruction, what the task asks and exactly what its check tests (every predicate, threshold, stage and
-  end-of-episode requirement), written from RoboDojo's code (`task/RoboDojo/tasks/<task>.py`, its config,
+  end-of-episode requirement), written from RoboDojo's code (`task/RoboDojo/tasks/<benchmark>/<task>.py`, its config,
   `env/reward_manager/`). The code is the reference.
 - its instance's `instance.json` (`environment/sim/instance.json`): the evaluation layout verbatim (with its sha256),
   the state hash after RoboDojo's reset, RoboDojo's language instruction for the layout, and per-task fields

@@ -45,14 +45,14 @@ Build (from the repository root)
 Check a build
   The frozen instances must rebuild to their recorded state hashes, and a fresh-process replay of the reference trajectory
   must succeed and end in its recorded hash. With a task directory at hand:
-    t=tasks/yamlab-put-pot-on-cooktop-i00-privileged
+    t=tasks/yamlab/yamlab-put-pot-on-cooktop-i00-privileged
     docker run --rm --gpus all --shm-size 8g -v $PWD/$t:/t ghcr.io/mll-lab-nu/efe-yamlab:$(cat images/yamlab/VERSION) bash -c \
       "cd /tmp && cp /t/environment/rcb_yamlab.py . && python -c \"import json, numpy as np, rcb_yamlab as m; \
          s = m.Session('put_pot_on_cooktop', instance='/t/environment/instance.json'); s.record_start(); \
          [s.step(a) for a in np.load('/t/solution/oracle_actions.npy')]; s.save_trajectory(s.record_stop(), '/tmp/t.npz'); \
          print(s.status())\" && python rcb_yamlab.py replay --task put_pot_on_cooktop --instance /t/environment/instance.json --traj /tmp/t.npz"
   expects instance_exact true, success true and the same final state_sha from both runs as the task README's Verification
-  section (the oracle's hash). Or run `harbor run -p tasks/yamlab-put-pot-on-cooktop-i00-privileged -a oracle`.
+  section (the oracle's hash). Or run `harbor run -p tasks/yamlab/yamlab-put-pot-on-cooktop-i00-privileged -a oracle`.
 
 On a CI machine (maintainers)
   A self-hosted runner with such a GPU builds the image with the command above when images/yamlab/ changes, runs the check,

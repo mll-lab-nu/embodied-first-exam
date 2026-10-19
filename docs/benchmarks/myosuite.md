@@ -1,8 +1,8 @@
 # MyoSuite
 
 Twenty-two [MyoSuite](https://github.com/MyoHub/myosuite) tasks (2.12.2, Apache-2.0) on MuJoCo 3.6.0, CPU only, in both
-modes: 44 task directories, `tasks/myosuite-<family>-i00-{privileged,standard}`, and one standard-realtime twin
-(`tasks/myosuite-table-tennis-i00-standard-realtime`: table_tennis is the benchmark's one dynamic family). The robot is a musculoskeletal model of a
+modes: 44 task directories, `tasks/myosuite/myosuite-<family>-i00-{privileged,standard}`, and one standard-realtime twin
+(`tasks/myosuite/myosuite-table-tennis-i00-standard-realtime`: table_tennis is the benchmark's one dynamic family). The robot is a musculoskeletal model of a
 human body: the MyoHand (forearm and hand, 39 muscles), the MyoArm (34 or 63 muscles), MyoSuite's torso-and-arm table
 tennis player, the MyoArm next to a prosthetic MPL arm, and the MyoLegs (with or without a prosthetic leg). The main
 command is **one excitation per muscle** (a few families add non-muscle actuators: a positioned wrist, a sliding pelvis,
@@ -64,7 +64,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 
 ## Task definition
 - **Instance.** One frozen instance per family: the env after `seed(0)` and then `reset(seed=0)`, saved by
-  `rcb_myosuite.py make-instance` (committed as `tasks/myosuite-<family>-i00-privileged/environment/instance.npz`): the MuJoCo integration state of the
+  `rcb_myosuite.py make-instance` (committed as `tasks/myosuite/myosuite-<family>-i00-privileged/environment/instance.npz`): the MuJoCo integration state of the
   robot's MjData, every numeric model array (resets edit the model: goal sites, object sizes), the env's Python state, and
   a state hash over state and model that every load checks. The MyoChallenge envs draw their goal, mass or size inside
   `reset()` before `reset(seed=)` reseeds, so the env is seeded first (without it the "frozen" instance changed between
@@ -233,8 +233,8 @@ that score 0; an apple_lift trajectory that leaves the apple on the table scores
 | `obj_hold` | 1 (57 rows) | 1 | `bd82ac6dff499fd2` | 0 |
 | `arm_reach` | 1 (128 rows) | 1 | `8d7d8bc7109dd7e5` | 0 |
 
-- `bash ci_checks/run_all.sh tasks/myosuite-*`: every check of these tasks passes.
-- `python3 scripts/task_conventions.py --check tasks/myosuite-*/`: clean.
+- `bash ci_checks/run_all.sh tasks/myosuite/myosuite-*`: every check of these tasks passes.
+- `python3 scripts/task_conventions.py --check tasks/myosuite/myosuite-*/`: clean.
 - Crash recovery (docs/protocol/standard_mode.md): the key_turn service killed (`kill -9`) after the first 30 rows of the
   oracle stream; the service resumed the same episode (`resumes` 1, exact hash) and the oracle succeeded.
 - `ci_checks/check-standard-protocol.py` against a live hand_reach service: every /spec, /status, /observe and 404

@@ -12,7 +12,7 @@ its goal this way; BEHAVIOR-1K runs the same robot in the same houses with goals
 | simulator | OmniGibson (the fork: 3.9 + the vector-env merge + iSpatialGym's object states) on Isaac Sim 5.1, CPU PhysX at 120 Hz |
 | robot | R1Pro: holonomic base, 4-joint trunk, two 7-joint arms with parallel grippers; iSpatialGym's 23-D JoyLo action at 30 Hz; head and wrist cameras, 1080×1080 RGB |
 | score | upstream's geometric success with its settle-eval on: the BDDL goal and every measured target within the `isg-v2` tolerances × 3 (`run_isg --mode policy`) at every one of the last 45 control steps, the measured objects and the robot at rest over them (`pose_settled`); within max(300, 2 × the demo's length) control steps |
-| tasks | 12 in both modes: `tasks/ispatialgym-<task>-i00-privileged` and `-standard` (`eai-standard/2.2`), one frozen instance per pair |
+| tasks | 12 in both modes: `tasks/ispatialgym/ispatialgym-<task>-i00-privileged` and `-standard` (`eai-standard/2.2`), one frozen instance per pair |
 | image | `ghcr.io/mll-lab-nu/efe-ispatialgym:0.2.0` (`images/ispatialgym/`, BUILD_ONLY: Isaac Sim inside; both upstream repositories are fetched by commit) |
 | oracle | none |
 
@@ -114,9 +114,9 @@ verifier's, for all 12 tasks.
 ## Run
 ```bash
 export RCB_BEHAVIOR_DATA=/path/to/behavior-data   # omnigibson-robot-assets/, behavior-1k-assets/ (3.9.0), omnigibson.key; mounted at /bdata
-harbor run -p tasks/ispatialgym-mental-rotation-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
-harbor run -p tasks/ispatialgym-mental-rotation-i00-standard -a nop      # scores 0
-harbor run -p tasks/ispatialgym-mental-rotation-i00-privileged -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
+harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-standard -a nop      # scores 0
+harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-privileged -a codex -m openai/gpt-6-luna --env-file .env
 ```
 The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `download_omnigibson_robot_assets()`,
 `download_behavior_1k_assets(accept_license=True)`), the same one BEHAVIOR-1K's tasks mount. Build the image as

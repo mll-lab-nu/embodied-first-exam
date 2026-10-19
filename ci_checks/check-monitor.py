@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "images/monitor"))
 from rcb_monitor import inject  # noqa: E402
+import task_conventions as tc  # noqa: E402  (iter_tasks: the task tree)
 
 SRC = ROOT / "images" / "monitor" / "rcb_monitor"
 
@@ -106,7 +107,7 @@ def main(argv):
         tier, argv = argv[1], argv[2:]
         if tier not in ("invariants", "advisory", "all"):
             raise SystemExit("--tier invariants|advisory|all")
-    dirs = [Path(a) for a in argv if (Path(a) / "task.toml").is_file()] or sorted(p.parent for p in (ROOT / "tasks").glob("*/task.toml"))
+    dirs = [Path(a) for a in argv if (Path(a) / "task.toml").is_file()] or tc.iter_tasks()
     bad = 0
     if tier != "advisory":   # the image every task pins carries this repository's monitor code (inject.CONTENTS)
         drift = {f: h for f, h in inject.contents().items() if inject.CONTENTS.get(f) != h}

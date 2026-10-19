@@ -37,7 +37,7 @@ Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and
   `files_image.py pin roboarc-files <digest>`, then the tasks' `COPY --from` lines name the new digest; until then
   `scripts/files_image.py check` fails.
 - The files a task carries are in `tasks/`: the privileged reference
-  (`tasks/roboarc-<base>-privileged/solution/trajectory.npz`, both modes), the instance's lock (that task's
+  (`tasks/roboarc/roboarc-<base>-privileged/solution/trajectory.npz`, both modes), the instance's lock (that task's
   `tests/runtime_binding.json`), the goal-state images (its `environment/goal/`) and the standard agent Dockerfile.
   The privileged reference must be the file `images/roboarc/release.json`'s evidence names (`trajectory_sha256`).
   The task directories are the deliverable; the tooling that built them is kept outside this repository.

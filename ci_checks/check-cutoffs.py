@@ -20,7 +20,7 @@ ADVISORY (the required CI job runs the twins' equal cutoffs, an invariant, in ci
 
     python3 ci_checks/check-cutoffs.py [task dirs]      # default: every task
 Fix: set `[agent] timeout_sec` in task.toml (or the generator's constant, then regenerate) and run
-`python3 scripts/task_conventions.py tasks/<task>`, which renders the rest from it. Standard library only.
+`python3 scripts/task_conventions.py tasks/<benchmark>/<task>`, which renders the rest from it. Standard library only.
 """
 from __future__ import annotations
 
@@ -144,7 +144,7 @@ def check_task(task: Path) -> list[str]:
 
 
 def main(argv: list[str]) -> int:
-    every = sorted(p for p in (ROOT / "tasks").iterdir() if (p / "task.toml").is_file())
+    every = tc.iter_tasks()
     tasks = [Path(a).resolve() for a in argv if (Path(a) / "task.toml").is_file()] if argv else every
     rc = 0
     for t in tasks:

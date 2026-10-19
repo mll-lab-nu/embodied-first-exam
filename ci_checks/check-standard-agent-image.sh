@@ -3,7 +3,7 @@
 # from environment/, but never takes environment/sim/, which compose mounts into the sim sidecar only (and which may
 # hold the scoring code). Every COPY / ADD source of environment/Dockerfile is therefore a named path outside sim/:
 # not `.` or `..`, not a wildcard. Sources from another stage or image (--from) and ADD URLs are not from environment/.
-# Usage: check-standard-agent-image.sh tasks/<task-dir>
+# Usage: check-standard-agent-image.sh tasks/<benchmark>/<task-dir>
 set -uo pipefail
 t="${1%/}"
 # the sidecar modes of the mode registry (PROTOCOL §2.16; run_all.sh reads it once): standard, standard-realtime
