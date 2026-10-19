@@ -49,7 +49,7 @@ harbor run -p tasks/<benchmark>/<task> -a oracle      # one task
 | RoboDojo | 12 | 24 | 102 |
 | roboEngineer | 15 | 15 | 30 |
 | RoboLab | 6 | 12 | 106 |
-| RoboOlympics-Fun | 37 | 80 | 136 |
+| RoboOlympics-Fun | 56 | 123 | 179 |
 | RoboOlympics-Match | 18 | 24 | 25 |
 | RoboPaint | 22 | 44 | 86 |
 | RoboSafeBench | 72 | 77 | 639 |
@@ -57,7 +57,7 @@ harbor run -p tasks/<benchmark>/<task> -a oracle      # one task
 | RoboWits | 6 | 12 | 30 |
 | VLABench | 2 | 4 | 72 |
 | YAMLab | 2 | 4 | 20 |
-| **Total** | **452** | **843** | **2648** |
+| **Total** | **471** | **886** | **2691** |
 <!-- /task-table -->
 
 ## License

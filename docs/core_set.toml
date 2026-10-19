@@ -4089,6 +4089,38 @@ luna = "failed"
 pick = "owner"
 
 [[task]]
+task = "roboolympics-fun-basketball-dribble-realgrasp-i00-privileged"
+base = "roboolympics-fun-basketball-dribble-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-basketball-dribble-realgrasp-i00-standard"
+base = "roboolympics-fun-basketball-dribble-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-bowling-realgrasp-i00-privileged"
+base = "roboolympics-fun-bowling-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-bowling-realgrasp-i00-standard"
+base = "roboolympics-fun-bowling-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
 task = "roboolympics-fun-box-jump-i00-privileged"
 base = "roboolympics-fun-box-jump-i00"
 benchmark = "RoboOlympics-Fun"
@@ -4129,6 +4161,54 @@ luna = "failed"
 pick = "owner"
 
 [[task]]
+task = "roboolympics-fun-catch-and-shoot-realgrasp-i00-privileged"
+base = "roboolympics-fun-catch-and-shoot-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-realgrasp-i00-standard"
+base = "roboolympics-fun-catch-and-shoot-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-and-shoot-realgrasp-i00-standard-realtime"
+base = "roboolympics-fun-catch-and-shoot-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-realgrasp-i00-privileged"
+base = "roboolympics-fun-catch-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-realgrasp-i00-standard"
+base = "roboolympics-fun-catch-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-catch-realgrasp-i00-standard-realtime"
+base = "roboolympics-fun-catch-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
 task = "roboolympics-fun-clean-and-jerk-i00-privileged"
 base = "roboolympics-fun-clean-and-jerk-i00"
 benchmark = "RoboOlympics-Fun"
@@ -4158,6 +4238,22 @@ base = "roboolympics-fun-discus-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-discus-realgrasp-i00-privileged"
+base = "roboolympics-fun-discus-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-discus-realgrasp-i00-standard"
+base = "roboolympics-fun-discus-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
 pick = "owner"
 
 [[task]]
@@ -4225,6 +4321,38 @@ luna = "failed"
 pick = "owner"
 
 [[task]]
+task = "roboolympics-fun-free-throw-realgrasp-i00-privileged"
+base = "roboolympics-fun-free-throw-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-free-throw-realgrasp-i00-standard"
+base = "roboolympics-fun-free-throw-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-golf-putt-realgrasp-i00-privileged"
+base = "roboolympics-fun-golf-putt-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-golf-putt-realgrasp-i00-standard"
+base = "roboolympics-fun-golf-putt-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
 task = "roboolympics-fun-high-jump-i00-privileged"
 base = "roboolympics-fun-high-jump-i00"
 benchmark = "RoboOlympics-Fun"
@@ -4289,6 +4417,22 @@ luna = "failed"
 pick = "owner"
 
 [[task]]
+task = "roboolympics-fun-javelin-realgrasp-i00-privileged"
+base = "roboolympics-fun-javelin-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-javelin-realgrasp-i00-standard"
+base = "roboolympics-fun-javelin-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
 task = "roboolympics-fun-juggle-three-i00-privileged"
 base = "roboolympics-fun-juggle-three-i00"
 benchmark = "RoboOlympics-Fun"
@@ -4313,6 +4457,30 @@ luna = "failed"
 pick = "owner"
 
 [[task]]
+task = "roboolympics-fun-juggle-three-realgrasp-i00-privileged"
+base = "roboolympics-fun-juggle-three-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-realgrasp-i00-standard"
+base = "roboolympics-fun-juggle-three-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggle-three-realgrasp-i00-standard-realtime"
+base = "roboolympics-fun-juggle-three-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
 task = "roboolympics-fun-juggling-feet-i00-privileged"
 base = "roboolympics-fun-juggling-feet-i00"
 benchmark = "RoboOlympics-Fun"
@@ -4326,6 +4494,22 @@ base = "roboolympics-fun-juggling-feet-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-feet-realgrasp-i00-privileged"
+base = "roboolympics-fun-juggling-feet-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-feet-realgrasp-i00-standard"
+base = "roboolympics-fun-juggling-feet-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
 pick = "owner"
 
 [[task]]
@@ -4369,6 +4553,22 @@ luna = "failed"
 pick = "owner"
 
 [[task]]
+task = "roboolympics-fun-juggling-realgrasp-i00-privileged"
+base = "roboolympics-fun-juggling-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-juggling-realgrasp-i00-standard"
+base = "roboolympics-fun-juggling-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
 task = "roboolympics-fun-jump-rope-i00-privileged"
 base = "roboolympics-fun-jump-rope-i00"
 benchmark = "RoboOlympics-Fun"
@@ -4401,6 +4601,22 @@ luna = "failed"
 pick = "owner"
 
 [[task]]
+task = "roboolympics-fun-layup-realgrasp-i00-privileged"
+base = "roboolympics-fun-layup-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-layup-realgrasp-i00-standard"
+base = "roboolympics-fun-layup-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
 task = "roboolympics-fun-long-rope-i00-privileged"
 base = "roboolympics-fun-long-rope-i00"
 benchmark = "RoboOlympics-Fun"
@@ -4425,6 +4641,30 @@ luna = "failed"
 pick = "owner"
 
 [[task]]
+task = "roboolympics-fun-paddle-bounce-realgrasp-i00-privileged"
+base = "roboolympics-fun-paddle-bounce-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-paddle-bounce-realgrasp-i00-standard"
+base = "roboolympics-fun-paddle-bounce-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-paddle-bounce-realgrasp-i00-standard-realtime"
+base = "roboolympics-fun-paddle-bounce-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
 task = "roboolympics-fun-pitch-target-i00-privileged"
 base = "roboolympics-fun-pitch-target-i00"
 benchmark = "RoboOlympics-Fun"
@@ -4438,6 +4678,22 @@ base = "roboolympics-fun-pitch-target-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-pitch-target-realgrasp-i00-privileged"
+base = "roboolympics-fun-pitch-target-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-pitch-target-realgrasp-i00-standard"
+base = "roboolympics-fun-pitch-target-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
 pick = "owner"
 
 [[task]]
@@ -4467,6 +4723,22 @@ pick = "owner"
 [[task]]
 task = "roboolympics-fun-shot-put-i00-standard"
 base = "roboolympics-fun-shot-put-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-shot-put-realgrasp-i00-privileged"
+base = "roboolympics-fun-shot-put-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-shot-put-realgrasp-i00-standard"
+base = "roboolympics-fun-shot-put-realgrasp-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "no result yet"
@@ -4518,6 +4790,30 @@ base = "roboolympics-fun-steeplechase-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-table-tennis-return-realgrasp-i00-privileged"
+base = "roboolympics-fun-table-tennis-return-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-table-tennis-return-realgrasp-i00-standard"
+base = "roboolympics-fun-table-tennis-return-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-table-tennis-return-realgrasp-i00-standard-realtime"
+base = "roboolympics-fun-table-tennis-return-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard-realtime"
+luna = "no result yet"
 pick = "owner"
 
 [[task]]
@@ -4577,6 +4873,22 @@ luna = "no result yet"
 pick = "owner"
 
 [[task]]
+task = "roboolympics-fun-toes-to-bar-realgrasp-i00-privileged"
+base = "roboolympics-fun-toes-to-bar-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-toes-to-bar-realgrasp-i00-standard"
+base = "roboolympics-fun-toes-to-bar-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
 task = "roboolympics-fun-triple-jump-i00-privileged"
 base = "roboolympics-fun-triple-jump-i00"
 benchmark = "RoboOlympics-Fun"
@@ -4606,6 +4918,22 @@ base = "roboolympics-fun-vault-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-volleyball-serve-realgrasp-i00-privileged"
+base = "roboolympics-fun-volleyball-serve-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-volleyball-serve-realgrasp-i00-standard"
+base = "roboolympics-fun-volleyball-serve-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
 pick = "owner"
 
 [[task]]
@@ -4646,6 +4974,22 @@ base = "roboolympics-fun-wall-ball-i00"
 benchmark = "RoboOlympics-Fun"
 mode = "standard"
 luna = "failed"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-wall-ball-realgrasp-i00-privileged"
+base = "roboolympics-fun-wall-ball-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "privileged"
+luna = "no result yet"
+pick = "owner"
+
+[[task]]
+task = "roboolympics-fun-wall-ball-realgrasp-i00-standard"
+base = "roboolympics-fun-wall-ball-realgrasp-i00"
+benchmark = "RoboOlympics-Fun"
+mode = "standard"
+luna = "no result yet"
 pick = "owner"
 
 # ---- RoboOlympics-Match
