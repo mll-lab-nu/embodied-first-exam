@@ -14,14 +14,15 @@ Robot tasks for code agents (Claude Code, Codex, …) in the [Harbor](https://gi
 
 ```bash
 git clone --recurse-submodules git@github.com:mll-lab-nu/embodied-first-exam.git && cd embodied-first-exam
-uv tool install --force -e . --with-executables-from harbor     # harbor 0.23.0 with the flags below
+uv tool install --force -e . --with-executables-from harbor            # harbor 0.23.0 with the flags below
 cp .env.example .env
 
-harbor run -a codex -m openai/gpt-6-luna                         # core tasks, default mode (--core)
-harbor run --core --privileged -a codex -m openai/gpt-6-luna     # core tasks, another mode (--standard / --standard-realtime)
-harbor run --all -a codex -m openai/gpt-6-luna                   # every task
-harbor run -p tasks/roboarc -a codex -m openai/gpt-6-luna        # every task of one benchmark (here RoboARC)
-harbor run -p tasks/<benchmark>/<task> -a oracle                 # one task
+harbor run -a codex -m openai/gpt-6-luna                               # core tasks, default mode (--core)
+harbor run --core --privileged -a codex -m openai/gpt-6-luna           # core tasks, another mode (--standard / --standard-realtime)
+harbor run --all -a codex -m openai/gpt-6-luna                         # every task
+harbor run -d embodied-first-exam@core -a codex -m openai/gpt-6-luna   # as a dataset: @core or @all
+harbor run -p tasks/roboarc -a codex -m openai/gpt-6-luna              # every task of one benchmark (here RoboARC)
+harbor run -p tasks/<benchmark>/<task> -a oracle                       # one task
 ```
 
 ## Tasks
