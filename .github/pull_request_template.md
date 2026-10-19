@@ -11,7 +11,7 @@
 ## Contract
 - Mode(s): privileged / standard / standard-realtime — protocol (standard: `eai-standard/2.1`/`2.2`/`2.4`; standard-realtime: `eai-standard/2.3`): `eai-standard/2.__`
 - Oracle: full / partial / none — evidence: ___
-- Base image(s): `efe-<sim>:<ver>` (published / BUILD_ONLY)
+- Base image(s): `efe:<sim>-<ver>` (published) / `efe-private:<sim>-<ver>` (BUILD_ONLY)
 - Agent time cutoff: ___ s per mode, `[agent] timeout_sec` in each task's task.toml; default 3600, reason if other; at most 14400; the same for a task's privileged and standard versions (PROTOCOL §2.12). A change of an existing task's cutoff: old -> new, decided by ___
 - Compute resources (minimum, PROTOCOL §2.9): agent phase ___ CPU / ___ GB / ___ GB GPU memory (GPU class ___, recommended ___); verifier ___ / ___ / ___; measured from ___
 - Resource limits (PROTOCOL §2.10, GiB): scope ___; ___ GPU memory / ___ memory / ___ processes / ___ disk; whole trial's expected peak ___ GPU / ___ memory; caps per service ___; measured from ___

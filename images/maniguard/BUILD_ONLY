@@ -1,4 +1,4 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/efe-maniguard:<images/maniguard/VERSION> is never pushed to a
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:maniguard-<images/maniguard/VERSION> is never pushed to a
 registry (docs/protocol/README.md §2.4, D5). Every evaluation host builds it locally; the ManiGuard tasks reference that tag and
 Harbor finds it in the local Docker image store.
 
@@ -36,7 +36,7 @@ Host
   580.178.04: a replay peaks at about 4 GB of VRAM.
 
 Build (from the repository root)
-  docker build -t ghcr.io/mll-lab-nu/efe-maniguard:$(cat images/maniguard/VERSION) -f images/maniguard/Dockerfile .
+  docker build -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) -f images/maniguard/Dockerfile .
 
 Check a build (README.md here): the evaluator imports (the build does it), the locks match (the build does it), and a frozen
 instance loads to its recorded state hash with the long-finger robot.

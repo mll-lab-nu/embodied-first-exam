@@ -39,7 +39,7 @@ PUBLIC_DROP_FILES = ()  # opponents/ is built on builtin_players.Reference: the 
 # drives with the true state): the agent's copies stop before them (H.2); plugin.players() then offers the team only
 PUBLIC_EDITS = {"builtin_players.py": [(("<cut>", "# the overhead camera: a colour detector"),
                                         "# (the privileged twin's public copy ends here: the camera-only reference player is left out, H.2)\n")]}
-IMAGE = "ghcr.io/mll-lab-nu/efe-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
+IMAGE = "ghcr.io/mll-lab-nu/efe:olympiad-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
 RESOURCES = {
     "min_cpus": 4.0,
     "min_memory_gb": 6.0,

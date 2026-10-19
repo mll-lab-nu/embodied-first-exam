@@ -9,7 +9,7 @@
 | Family / instance | `tabletennis_match` / seed 12 |
 | Oracle | `partial` — full-state reference program (solution/): the camera-only reference player's serve and stroke planner fed the true ball state; its wins on this instance and across levels 1-4 are in the RoboOlympics privileged report (tools/tt_fullsim/calibrate.py); not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
+| Base image | `ghcr.io/mll-lab-nu/efe:olympiad-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
 Win one complete match against the frozen sport's scripted L3 opponent, seed 12: the same frozen instance as `roboolympics-match-tabletennis-match-i02-standard-realtime` (its standard-realtime twin; there you see only camera images).

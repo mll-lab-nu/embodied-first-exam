@@ -38,7 +38,7 @@ those of the first tested build (2026-10-03, about 26 GB on disk), and a build f
 
 ## Check a build
 ```bash
-img=ghcr.io/mll-lab-nu/efe-maniguard:$(cat images/maniguard/VERSION)
+img=ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION)
 docker run --rm $img python -c "import omnigibson, maniguard.eval.benchmark; print(omnigibson.__version__)"     # 3.7.2
 for l in dpkg conda pip; do docker run --rm $img cat /opt/locks/$l.lock | diff - images/maniguard/$l.lock; done
 # a frozen instance loads with the long-finger robot and to its recorded state hash (GPU, the data root):

@@ -27,7 +27,7 @@ REPLAY_TIMEOUT_S = 600                  # the twin's RO_REPLAY_TIMEOUT_S (a whol
 # + up to 3 sudden-death rounds, 20 s of game time per kick: up to 1200 s of wall time) and the service's lag need the
 # rest. The program's review answers are immediate (ready), so reviews add almost nothing.
 MATCH_WALL_S = 4800
-IMAGE = "ghcr.io/mll-lab-nu/efe-olympiad-soccer:0.1.0@sha256:b6fbfae73399a7daee9c623eb34cfe18de63b458349b5a2b9d122c00e9f1602b"
+IMAGE = "ghcr.io/mll-lab-nu/efe:olympiad-soccer-0.1.0@sha256:b6fbfae73399a7daee9c623eb34cfe18de63b458349b5a2b9d122c00e9f1602b"
 RESOURCES = {"min_cpus": 6.0, "min_memory_gb": 8.0, "verifier_min_cpus": 6.0, "verifier_min_memory_gb": 8.0,
              "cpus": 6, "memory_mb": 10240}
 ROBOT = "booster-t1"
@@ -99,7 +99,7 @@ def truth(match) -> dict:
 
 
 def unavailable():
-    """The soccer simulator needs its image (ghcr.io/mll-lab-nu/efe-olympiad-soccer): PyTorch for the T1 walking policy
+    """The soccer simulator needs its image (ghcr.io/mll-lab-nu/efe:olympiad-soccer-<version>): PyTorch for the T1 walking policy
     and the T1 model at $RCB_T1_ASSETS. Hosts without them (the repository's CI) skip it in the generic tests."""
     import importlib.util
     import os

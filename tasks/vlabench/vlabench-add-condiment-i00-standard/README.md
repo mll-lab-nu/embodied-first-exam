@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/add_condiment` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0` |
 
 ## Task
 VLABench's `add_condiment` as a robot service: a Franka Panda arm at a table, instructed **"Add bbq_sauce to the dish: hold the bbq_sauce bottle over pan_seen and tip it past horizontal, so that its top is lower than its bottom (pouring itself is not simulated)."**

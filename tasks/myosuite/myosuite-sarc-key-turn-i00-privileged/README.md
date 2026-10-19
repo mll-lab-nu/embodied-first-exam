@@ -9,7 +9,7 @@
 | Family / instance | `sarc_key_turn` / seed 0 |
 | Oracle | `none` — a successful model trial on this frozen instance: Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-sarc-key-turn-i00-privi__iVBaqTS` (230 rows); today's verifier scores its trajectory 1 in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
 MyoSuite `myoSarcHandKeyTurnFixed-v0` (MyoHand, a musculoskeletal model of a human forearm and hand, 39 muscles): Turn the key held between the thumb and the index finger by more than 3.14 rad (half a turn). Success: the key's hinge angle above 3.14 rad for 50 consecutive control steps (1.0 s). Failure (the episode ends): the index or thumb tip more than 0.10 m from the key head. The muscles are sarcopenic: MyoSuite's sarcopenia condition halves every muscle's maximum isometric force.

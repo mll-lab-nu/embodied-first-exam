@@ -9,7 +9,7 @@
 | Family / instance | `drying_rack_unfold` |
 | Oracle | `full` — solution/trajectory.npz replays the recorded Sharpa Wave authoring episode (tools/gen_oracle.py, 2,415 controls, success after 2,315). The rows are float32-exact, so the standard oracle submits the same rows through the client. Two fresh-process replays succeed with identical state hashes. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-dexhand:0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
 ## Task
 Set up the folding sweater dryer on the kitchen counter with the dexterous hand. It starts fully folded and stored underside up, its four legs folded between the two frame halves. Open the two halves flat about the pole hinge, open all four legs onto their stops, turn the open rack over and stand it on its four feet, then let go: success needs the fold angle at most 0.314 rad, every leg at least 1.571 rad, the rack upright within 10 degrees on all four feet and nothing else, untouched by the hand and still for 50 consecutive controls (1 s). Dropping the rack, pushing it off the counter, or letting it collapse or fall over after it stands ends the episode as a failure at once.

@@ -60,12 +60,12 @@ success from firing before the task is done:
 ## Image and host
 - `images/robolab/` (Isaac Lab 2.3.2 / Isaac Sim 5.1 from the pinned `uv.lock`, RoboLab's Apache-2.0 asset library baked
   in, with the remote files of the asset library: Network, below), tagged
-  `ghcr.io/mll-lab-nu/efe-robolab:<images/robolab/VERSION>`. It
+  `ghcr.io/mll-lab-nu/efe-private:robolab-<images/robolab/VERSION>`. It
   contains NVIDIA Isaac Sim, whose licence forbids redistribution: **BUILD_ONLY**.
   `images/robolab/BUILD_ONLY` has the licences, the build command
-  (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-robolab:$(cat images/robolab/VERSION) .`),
+  (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .`),
   the check of a build and how a CI machine builds it.
-- `images/robolab-files/`: `ghcr.io/mll-lab-nu/efe-robolab-files:<VERSION>`, files only (`FROM scratch`): the tooling
+- `images/robolab-files/`: `ghcr.io/mll-lab-nu/efe-private:robolab-files-<VERSION>`, files only (`FROM scratch`): the tooling
   `rcb_robolab.py` that the privileged agent and verifier images `COPY --from` (Tooling, below); BUILD_ONLY (private),
   pulled with the organization's token like eai-robolab.
 - Isaac needs an RTX-class GPU even headless (PhysX runs on the CPU). One Isaac simulator at a time per 32 GB of host RAM.
@@ -184,7 +184,7 @@ iterations cost more than in the other simulators.
 | `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`) |
 
 The privileged tasks carry no copy of the tooling: their `environment/Dockerfile` and `tests/Dockerfile` take
-`rcb_robolab.py` with `COPY --from` from the files-only image `ghcr.io/mll-lab-nu/efe-robolab-files` (`images/robolab-files/`,
+`rcb_robolab.py` with `COPY --from` from the files-only image `ghcr.io/mll-lab-nu/efe-private:robolab-files-<version>` (`images/robolab-files/`,
 `scripts/files_image.py`; FILES.json pins its digest and the file's sha256; BUILD_ONLY, private like eai-robolab), built
 from its one source `embodied_first_exam/benchmarks/robolab/rcb_robolab.py`. The verifier's image gets its own copy from that image when
 it is built; nothing from the agent's container reaches it. The standard tasks keep their copy in `environment/sim/`

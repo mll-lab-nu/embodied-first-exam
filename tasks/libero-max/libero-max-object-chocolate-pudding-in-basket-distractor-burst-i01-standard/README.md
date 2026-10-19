@@ -9,7 +9,7 @@
 | Family / instance | `libero-max/libero_object/distractor_burst` / seed 195 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-libero-max:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
 LIBERO-MAX case `pro-semantic-object-t08-i09-distractor_burst-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Lift chocolate pudding and put it in basket."**, on

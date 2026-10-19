@@ -273,10 +273,10 @@ RoboCasa365 and RoboCasa-GR1 `COLLECT_TIMEOUT_S`; RoboLab, YAMLab, DexJoCo, BEHA
 pages) and, for RoboOlympics' exported matches, a match's wall time at its slowdown plus the reviews between points.
 
 ## Base images
-Every base image is `ghcr.io/mll-lab-nu/efe-<name>:<images/<name>/VERSION>` (PROTOCOL §1): `scripts/build_images.sh`
+Every base image is a tag of one of two packages (PROTOCOL §1): `ghcr.io/mll-lab-nu/efe:<name>-<images/<name>/VERSION>` (public), or `ghcr.io/mll-lab-nu/efe-private:<name>-<VERSION>` for an image with `images/<name>/BUILD_ONLY` (org members only): `scripts/build_images.sh`
 builds them all, `scripts/push_images.sh` pushes all but the `BUILD_ONLY` ones (needs `docker login ghcr.io` with a token
-that has `write:packages`). New packages in the org start private; an org admin makes them public in the package
-settings (the API cannot). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
+that has `write:packages`). A new image is a new tag of `efe`, which is public, so nothing needs an admin's visibility
+change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
 public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
 a private package for org members.
 

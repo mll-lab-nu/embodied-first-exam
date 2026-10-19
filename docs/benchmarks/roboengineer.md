@@ -75,11 +75,11 @@ All are `BUILD_ONLY` (licence-restricted evaluator assets; see the marker files)
 
 | Image | Contents | Used by |
 |---|---|---|
-| `ghcr.io/mll-lab-nu/efe-control-transfer:0.2.0-nominal` | python 3.12, MuJoCo 3.5.0, OSMesa, ffmpeg; public assets (Unitree mjlab G1 subset, Menagerie Go2, Skydio X2) | the agent's container (FROM) |
-| `ghcr.io/mll-lab-nu/efe-control-transfer:0.2.0-train` | nominal + libEGL and the G1 training stack, pinned: torch 2.11.0+cu128 (CUDA 12.8 wheels: NVIDIA driver >= 570), mujoco-warp 3.5.0, warp-lang 1.12.0, mjlab 1.2.0, rsl-rl-lib 5.0.1, tensordict 0.14.3, tensorboard 2.21.0, onnx 1.23.0, onnxscript 0.7.2, onnxruntime 1.23.2, wandb 0.30.0 (`pip check` clean); 4.7 GB | the G1 agent's container (FROM) |
-| `ghcr.io/mll-lab-nu/efe-control-transfer:0.2.0` | nominal + the Neural Fly force surrogate (`/opt/private-fly/forces.npz`) and the evaluator Go2 assets | the `sim` sidecar |
-| `ghcr.io/mll-lab-nu/efe-control-transfer-anycar-files:0.1.0` | files only: AnyCar's `circuits.json` and `compact_routes.json` (`scripts/files_image.py`; `images/control-transfer-anycar-files/FILES.json` pins it) | the AnyCar compact-lap and tracking agents' containers (`COPY --from`) |
-| `ghcr.io/mll-lab-nu/efe-quadrotor-landing:0.1.0` | python 3.12, MuJoCo, OSMesa, ffmpeg; the Neural Lander residual (`/opt/landing/residual.npz`) | the landing `sim` sidecar (its agent image is built from the client base) |
+| `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0-nominal` | python 3.12, MuJoCo 3.5.0, OSMesa, ffmpeg; public assets (Unitree mjlab G1 subset, Menagerie Go2, Skydio X2) | the agent's container (FROM) |
+| `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0-train` | nominal + libEGL and the G1 training stack, pinned: torch 2.11.0+cu128 (CUDA 12.8 wheels: NVIDIA driver >= 570), mujoco-warp 3.5.0, warp-lang 1.12.0, mjlab 1.2.0, rsl-rl-lib 5.0.1, tensordict 0.14.3, tensorboard 2.21.0, onnx 1.23.0, onnxscript 0.7.2, onnxruntime 1.23.2, wandb 0.30.0 (`pip check` clean); 4.7 GB | the G1 agent's container (FROM) |
+| `ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0` | nominal + the Neural Fly force surrogate (`/opt/private-fly/forces.npz`) and the evaluator Go2 assets | the `sim` sidecar |
+| `ghcr.io/mll-lab-nu/efe-private:control-transfer-anycar-files-0.1.0` | files only: AnyCar's `circuits.json` and `compact_routes.json` (`scripts/files_image.py`; `images/control-transfer-anycar-files/FILES.json` pins it) | the AnyCar compact-lap and tracking agents' containers (`COPY --from`) |
+| `ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0` | python 3.12, MuJoCo, OSMesa, ffmpeg; the Neural Lander residual (`/opt/landing/residual.npz`) | the landing `sim` sidecar (its agent image is built from the client base) |
 
 Build (any Linux host with Docker and network access to github.com and PyPI): run the preparation in a
 `python:3.12` container (numpy 2.3.1, mujoco 3.5.0, scipy 1.17.0, CPU torch for the landing checkpoint conversion):
@@ -89,7 +89,7 @@ the Neural Fly force fit `<fly>` (from aerorobotics/neural-fly @0ed50246; its fi
 `python images/control-transfer/prepare_assets.py --assets <nominal> --fly <fly> --go2 <go2> --skydio <skydio>`,
 `bash images/quadrotor-landing/prepare_assets.sh`; then `BUILD_TRAIN=1 bash images/control-transfer/build.sh` (a host that
 pulled the nominal image builds the training image alone with `TRAIN_ONLY=1`: its stage starts FROM the nominal tag) and
-`docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/efe-quadrotor-landing:0.1.0 .`. The force
+`docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0 .`. The force
 fit reproduces the documented validation RMSE (0.8749 / 0.5893 / 1.6956 N); its digest is pinned in
 each Neural Fly task's `environment/sim/scripts/control_transfer/trusted/fly.py` `ASSET_SHA256`; the landing residual
 conversion is byte-reproducible (`bebb6c7f…`).

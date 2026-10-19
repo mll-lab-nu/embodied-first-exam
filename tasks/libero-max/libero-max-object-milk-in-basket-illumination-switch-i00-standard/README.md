@@ -9,7 +9,7 @@
 | Family / instance | `libero-max/libero_object/illumination_switch` / seed 195 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-libero-max:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
 LIBERO-MAX case `pro-task-object-t04-i01-illumination_switch-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the milk and place it in the basket."**, on

@@ -9,7 +9,7 @@
 | Family / instance | `badminton_match` / seed 8 |
 | Oracle | `partial` — full-state reference program (solution/): the camera-only reference player's planner fed the true state; its results on this instance and across the levels are in the RoboOlympics privileged report (tools/fullsim/calibrate.py); not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false) |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-olympiad:0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
+| Base image | `ghcr.io/mll-lab-nu/efe:olympiad-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 
 ## Task
 The privileged twin of `roboolympics-match-badminton-match-i02-standard-realtime`: singles badminton on a 0.4-scale court (BWF Laws, one game to 11): Franka Panda with a racket on a gantry base against the scripted opponent; level 2, seed 8, S = 20.
