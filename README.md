@@ -14,11 +14,15 @@
   <a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro.mp4"><img src="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro-play.jpg" alt="Embodied First Exam: intro video (2 min)" width="820"></a>
 </p>
 
-<p align="center"><img src="docs/assets/teaser.png" alt="Embodied First Exam: a coding agent programs a robot in a frozen scene, in each mode" width="100%"></p>
-
 ## News
 
 - 🔥 **2026-10-19**: Embodied First Exam is released!
+
+## Framework
+
+A coding agent writes code, runs the robot and sees the result, in a frozen scene from one of the suites, in each mode.
+
+<p align="center"><img src="docs/assets/teaser.png" alt="Embodied First Exam: a coding agent programs a robot in a frozen scene, in each mode" width="100%"></p>
 
 ## Quick start
 
