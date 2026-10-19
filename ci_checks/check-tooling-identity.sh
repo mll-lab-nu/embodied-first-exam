@@ -10,7 +10,8 @@
 #    FILES.json, scripts/files_image.py) counts as a copy at <context>/<basename of dest> with FILES.json's sha256, and
 #    the line must name the image FILES.json pins.
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as ci_checks/benchmarks/robopaint/advisory-tooling.sh.
-#    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: RoboOlympics, PROTOCOL §4c) are a group of their own.
+#    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: RoboOlympics, PROTOCOL §4c) are a group of their own,
+#    one per exporter and [metadata] skill_in_loop.
 # 2. The eai-standard/2.2 layer (every task whose metadata.protocol is 2.2: BEHAVIOR, RoboLab, RoboWits, RoboPaint, MolmoSpaces, MyoSuite, DexJoCo, DexHand, YAMLab, RoboDojo; Panda Dynamic Scenes until 2026-10-17): the
 #    agent's client environment/rcb_client.py + rcb1.py and the service's environment/sim/rcb_limited.py + rcb1.py +
 #    run.sh are byte-identical to their source in embodied_first_exam/standard/ (docs/protocol/standard_mode.md), and the sidecar is
@@ -209,7 +210,10 @@ for t in sorted(TDIR):
         continue
     module = MODULE[bench]
     if meta.get("exporter"):   # written by the benchmark's own exporter (RoboOlympics, PROTOCOL §4c; RoboSafeBench 0.5.4): its own sources
-        bench += " (exported)"
+        # one group per exporter and skill-in-the-loop setting: RoboOlympics-Match's table-tennis privileged twins come
+        # from their own simulator's exporter (tools.tt_fullsim, #282 / #325) and the low-level matches with the agent's
+        # skill in the loop have their own standard-realtime grader (#300); each is shared within its group
+        bench += f" (exported: {meta['exporter']}" + (f", {meta['skill_in_loop']}" if meta.get("skill_in_loop") else "") + ")"
     dirs[bench] += 1
     for dp, dns, fns in os.walk(TDIR[t]):
         dns[:] = [d for d in dns if d not in ("results", "__pycache__")]
