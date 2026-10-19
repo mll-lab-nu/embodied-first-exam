@@ -1,6 +1,8 @@
-"""Basketball two-hand dunk with a real hold (FIBA): the ball is held between the two flat palms by squeeze and friction
-alone (no grip), the robot jumps, forces it down through the ring from above with both hands on it, and lands on its
-feet. Official court, backboard, ring and size-7 ball; the Unitree H1-2."""
+"""Basketball two-hand dunk with a real hold on a lowered basket (FIBA): the ring at the FIBA
+Mini-Basketball height of 2.60 m and the start 0.75 m from the point under the ring. The ball is held between the two
+flat palms by squeeze and friction alone (no grip), the robot jumps, forces it down through the ring from above with
+both hands on it, and lands on its feet. Official court, size-7 ball, full-size backboard and ring lowered by 0.45 m;
+the Unitree H1-2."""
 import math
 import xml.etree.ElementTree as ET
 
@@ -273,15 +275,19 @@ def ball_between_palms(w) -> None:
 
 class Task(TaskBase):
     name = "dunk-realgrasp"
-    title = "Basketball: two-hand dunk, real hold"
+    title = "Basketball: two-hand dunk, real hold, lowered ring"
     category = "basketball-and-rackets"
     robot = "unitree_h1"
     rulebook = ("FIBA Official Basketball Rules 2024: Art. 2 (court), Art. 3 and the Basketball Equipment appendix "
                 "(backboard, ring, size-7 ball), Art. 14 (control: a player holds a live ball), Art. 15 (a dunk: the "
                 "ball forced downwards into the basket with one or both hands; here both), Art. 16 (goal; a ball that "
                 "passes through the basket from below is a violation), Art. 25 (travelling), Art. 36 (technical foul: "
-                "hanging on the ring)")
+                "hanging on the ring); FIBA Mini-Basketball Rules (the ring at 2.60 m)")
     deviations = [
+        "Basketball Equipment (basket): the basket is lowered by 0.45 m: the ring's top edge is {ring_height_m} m above "
+        "the floor, the ring height of FIBA Mini-Basketball, and the full-size backboard keeps its size and its height "
+        "relative to the ring (lower edge {board_bottom_m} m). The ball stays the size-7 ball. With the official ring at "
+        "3.05 m no H1-2 jump was found that gets the squeezed ball over the ring.",
         "Art. 3 (equipment): the hands are flat rubber palm pads without fingers; the ball is held only by pressing it "
         "between the two palms (friction), and it slips or drops when the arms do not press hard enough.",
         "Art. 3 (equipment, the hand): the palm is modelled as the soft part of a hand: it absorbs the ball (a ball "
@@ -306,8 +312,8 @@ class Task(TaskBase):
     start = (0.0, 0.0, 0.0)
     stages = ["dunk", "stand"]
     fall_z = 0.35                       # (set from params in build)
-    params = dict(ring_height_m=3.05, ring_inner_diameter_m=0.45, ring_metal_m=0.018, ring_centre_to_board_m=0.375,
-                  board_width_m=1.80, board_height_m=1.05, board_bottom_m=2.90, start_to_ring_m=1.25,
+    params = dict(ring_height_m=2.60, ring_inner_diameter_m=0.45, ring_metal_m=0.018, ring_centre_to_board_m=0.375,
+                  board_width_m=1.80, board_height_m=1.05, board_bottom_m=2.45, start_to_ring_m=0.75,
                   touch_gap_s=0.03, basket_touch_s=0.30, max_steps=2, step_gap_s=0.03, foot_slide_m=0.20, stand_s=1.0,
                   stand_speed_m_s=0.35, stand_upright_cos=0.94, fall_z_m=0.35)
 
@@ -343,7 +349,7 @@ class Task(TaskBase):
              "you fall at any time (a fall: your pelvis lower than {fall_z_m} m above the floor, or any part of you "
              "other than your feet on the floor); or after "
              "{time_limit_s} s.")
-    venue = ("A FIBA court. You stand under the basket's front, facing it (+x), on the no-charge semi-circle: the "
+    venue = ("A FIBA court. You stand under the basket's front, facing it (+x), inside the no-charge semi-circle: the "
              "point under the ring's centre is {start_to_ring_m} m ahead of your pelvis, the backboard's face "
              "{ring_centre_to_board_m} m beyond it. The ring's top edge is {ring_height_m} m above the floor. The ball "
              "is pressed between your two palms in front of your chest, its centre about 1.3 m above the floor and "
@@ -353,7 +359,7 @@ class Task(TaskBase):
              "grip: the grip columns of the action rows do "
              "nothing in this task.")
     difficulty = ("With both arms up and the ball pressed between the palms its centre is about 2.2 m above the "
-                  "floor; the ring is at 3.05 m, so the whole 67 kg body has to rise about a metre while the arms keep "
+                  "floor; the ring is at 2.60 m, so the whole 67 kg body has to rise about half a metre while the arms keep "
                   "squeezing the ball through the jump's accelerations, and the hands, wrists and forearms have to go "
                   "into a ring only 0.21 m wider than the ball, then the robot has to come down on its feet. The robot "
                   "has a walking gait and nothing that jumps or lands; the built-in walking gait steps on the spot "
