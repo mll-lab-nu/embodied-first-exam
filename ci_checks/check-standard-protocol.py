@@ -587,6 +587,16 @@ def main() -> int:
     out = a.out or Path(tempfile.mkdtemp(prefix="rcb-conformance-"))
     out.mkdir(parents=True, exist_ok=True)
     client = a.client or (task / "environment" if task else None)
+    if client is not None and not a.client and not (client / "rcb_client.py").exists():
+        # the agent image takes the client from a files-only image (COPY --from): use its source in this repository
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+        import files_image   # noqa: E402
+        got = {Path(dest).name: src for dest, src in files_image.copied(client / "Dockerfile").items()}
+        if "rcb_client.py" in got and "rcb1.py" in got:
+            client = out / "client"
+            client.mkdir(parents=True, exist_ok=True)
+            for n in ("rcb_client.py", "rcb1.py"):
+                (client / n).write_bytes(got[n].read_bytes())
     if client is None or not (client / "rcb_client.py").exists():
         ap.error("need --client DIR (with rcb_client.py + rcb1.py) or --task/--launch")
     rep = Report(); t0 = time.time(); base = None

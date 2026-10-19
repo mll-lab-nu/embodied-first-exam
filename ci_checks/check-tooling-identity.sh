@@ -93,19 +93,21 @@ def from_files_image(task_dir: str) -> dict:
         text = open(df).read()
         for line in text.splitlines():   # a line naming a files-only image in another form would not be compared
             m = re.search(r"--from=(\S+)", line)
-            if m and m.group(1).split("@")[0].rsplit(":", 1)[0] in FILES_IMAGES and not re.fullmatch(r"COPY --from=\S+ /\S+ \S+\s*", line):
+            if m and m.group(1).split("@")[0].rsplit(":", 1)[0] in FILES_IMAGES and not (
+                    re.fullmatch(r"COPY --from=\S+ /\S+ \S+\s*", line) or re.fullmatch(r"COPY --from=\S+ (/\S+ )+\S+/\s*", line)):
                 bad.append(f"{os.path.basename(task_dir)}: {ctx}/Dockerfile: {line.strip()[:120]!r}: a files-only image is "
-                           "copied as `COPY --from=<image@digest> /<file> <dest>`, one file a line (files_image.copy_line)")
-        for ref, f, dest in re.findall(r"(?m)^COPY --from=(\S+) /(\S+) (\S+)\s*$", text):
+                           "copied as `COPY --from=<image@digest> /<file> <dest>` or `... /<file>... <dir>/` (scripts/files_image.py)")
+        for ref, srcs, dest in re.findall(r"(?m)^COPY --from=(\S+) ((?:/\S+ )+)(\S+)\s*$", text):
             repo = ref.split("@")[0].rsplit(":", 1)[0]
             if repo not in FILES_IMAGES:
                 continue
             pinned, files, where = FILES_IMAGES[repo]
-            if ref != pinned or f not in files:
-                bad.append(f"{os.path.basename(task_dir)}: {ctx}/Dockerfile takes /{f} from {ref}, not a file of the image "
-                           f"{where}/FILES.json pins ({pinned}): regenerate the task")
-                continue
-            got[f"{ctx}/{os.path.basename(dest)}"] = files[f][:16]
+            for f in (x.lstrip("/") for x in srcs.split()):
+                if ref != pinned or f not in files:
+                    bad.append(f"{os.path.basename(task_dir)}: {ctx}/Dockerfile takes /{f} from {ref}, not a file of the image "
+                               f"{where}/FILES.json pins ({pinned}): regenerate the task")
+                    continue
+                got[f"{ctx}/{os.path.basename(f) if dest.endswith('/') else os.path.basename(dest)}"] = files[f][:16]
     return got
 
 
@@ -149,11 +151,15 @@ for t in sorted(TDIR):
     meta = tomllib.load(open(tt, "rb")).get("metadata", {})
     proto = str(meta.get("protocol", ""))
     v24 = proto == "eai-standard/2.4"
+    img = from_files_image(TDIR[t])     # layer files the image build takes from a files-only image
     if proto == "eai-standard/2.3":
         n_rt += 1
         for rel, f in sorted(RT_LAYER.items()):
             p = os.path.join(TDIR[t], rel)
-            if not os.path.isfile(p):
+            if not os.path.isfile(p) and rel in img:
+                if img[rel] != (rt_canon.get(f) or "")[:16]:
+                    bad.append(f"{t}: {rel} (from a files-only image) differs from embodied_first_exam/standard/realtime/{f}")
+            elif not os.path.isfile(p):
                 bad.append(f"{t}: {rel} missing (eai-standard/2.3 layer, embodied_first_exam/standard/realtime/{f})")
             elif sha(p) != rt_canon.get(f):
                 bad.append(f"{t}: {rel} differs from embodied_first_exam/standard/realtime/{f} (regenerate the task)")
@@ -163,7 +169,10 @@ for t in sorted(TDIR):
         for rel, f in sorted(LAYER.items()):
             p = os.path.join(TDIR[t], rel)
             srcf = f"embodied_first_exam/standard/{'v2_4/' if v24 and f in V24 else ''}{f}"
-            if not os.path.isfile(p):
+            if not os.path.isfile(p) and rel in img:
+                if img[rel] != (ref.get(f) or "")[:16]:
+                    bad.append(f"{t}: {rel} (from a files-only image) differs from {srcf}")
+            elif not os.path.isfile(p):
                 bad.append(f"{t}: {rel} missing (eai-standard/{ver} layer, {srcf})")
             elif sha(p) != ref.get(f) and not (f == "rcb_limited.py" and sha(p) == PREV_LIMITED.get(ver)):
                 bad.append(f"{t}: {rel} differs from {srcf} (regenerate the task)")
