@@ -1130,7 +1130,7 @@
       "sha256": "ffd0a7b336d3c2d27c35a15cc0d4aaa95196769aca190ac8d6522d3318c345a0"
     }
   },
-  "package": "robosafebench/assets/data/third_party",
+  "package": "embodied_safety_exam/assets/data/third_party",
   "root": "assets/third_party",
   "schema": "rsb.third-party-context/1"
 }

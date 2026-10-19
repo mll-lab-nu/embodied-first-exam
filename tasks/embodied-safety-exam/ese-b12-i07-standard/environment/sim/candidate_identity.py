@@ -44,11 +44,12 @@ def frozen_fields(value):
         return value
     parsed = dict(value)
     for suffix in ('commit', 'version', 'image_id'):
-        old, current = 'robosafe_'+suffix, 'robosafebench_'+suffix
-        if old in value and current in value and (type(value[old]) is not type(value[current]) or value[old] != value[current]):
-            raise ValueError('Conflicting historical/current frozen identity fields: '+suffix)
-        if old in value and current not in value:
-            parsed[current] = value[old]
+        current = 'ese_'+suffix
+        for old in ('robosafe_'+suffix, 'robosafebench_'+suffix):   # the names before 0.5.4, and before the rename
+            if old in value and current in value and (type(value[old]) is not type(value[current]) or value[old] != value[current]):
+                raise ValueError('Conflicting historical/current frozen identity fields: '+suffix)
+            if old in value and current not in parsed:
+                parsed[current] = value[old]
     return parsed
 
 
@@ -73,8 +74,8 @@ def native_matches(native, identity):
             and native.get('native_assets_package_only') is True
             and native.get('native_asset_path') == str(Path(native.get('package_path', '')).parent/'assets/data/third_party')
             and native.get('process_environment', {}).get('ROBOSAFE_THIRD_PARTY') is None
-            and native.get('process_environment', {}).get('ROBOSAFEBENCH_THIRD_PARTY') == ''
-            and native.get('process_environment', {}).get('ROBOSAFEBENCH_ASSET_PROFILE')
+            and native.get('process_environment', {}).get('ESE_THIRD_PARTY') == ''
+            and native.get('process_environment', {}).get('ESE_ASSET_PROFILE')
                 == identity['visual_assets']['asset_profile'])
 
 
@@ -83,14 +84,14 @@ def assert_runtime(identity):
     if not valid(identity):
         raise RuntimeError('Invalid frozen candidate identity')
     import os
-    import robosafebench
-    from robosafebench.assets.catalog import visual_provenance
-    from robosafebench.assets.paths import third_party_dir
-    package = Path(robosafebench.__file__).resolve().parent
-    if ('ROBOSAFE_THIRD_PARTY' in os.environ or os.environ.get('ROBOSAFEBENCH_THIRD_PARTY')
+    import embodied_safety_exam
+    from embodied_safety_exam.assets.catalog import visual_provenance
+    from embodied_safety_exam.assets.paths import third_party_dir
+    package = Path(embodied_safety_exam.__file__).resolve().parent
+    if ('ROBOSAFE_THIRD_PARTY' in os.environ or os.environ.get('ESE_THIRD_PARTY')
             or third_party_dir().resolve() != package/'assets/data/third_party'):
         raise RuntimeError('Runtime native assets differ from the image-installed package data')
-    if os.environ.get('ROBOSAFEBENCH_ASSET_PROFILE') != identity['visual_assets']['asset_profile']:
+    if os.environ.get('ESE_ASSET_PROFILE') != identity['visual_assets']['asset_profile']:
         raise RuntimeError('Runtime asset profile differs from the frozen task')
     if visual_provenance() != identity['visual_assets']:
         raise RuntimeError('Runtime visual revision or manifest differs from the frozen task')

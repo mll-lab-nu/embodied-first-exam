@@ -23,7 +23,7 @@ def save_snapshot(folder, result, spec, boundary, cameras, before, after, sent, 
         data=array.tobytes(order='C');filename='camera-%02d.rgb'%index
         (folder/filename).write_bytes(data)
         saved[camera]={'path':filename,'sha256':_hash(data),'shape':list(array.shape),'dtype':str(array.dtype)}
-    receipt={'schema':'rsb.public-observation-delivery/1','boundary':boundary,'cameras':cameras,
+    receipt={'schema':'ese.public-observation-delivery/1','boundary':boundary,'cameras':cameras,
         'frames':saved,'response_meta':result.meta,'status_before':before,'status_after':after,
         'requested_monotonic_s':sent,'received_monotonic_s':received,
         'original_resolution':True,'native_or_task_credit_granted':False}

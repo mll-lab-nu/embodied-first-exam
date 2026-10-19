@@ -36,7 +36,7 @@ def run_reference(document, arrays, robot, output=None, *, sleep=time.sleep, mon
         if type(maximum) is not int or maximum<max(map(len,O.batches(spec['cameras']))):
             raise ValueError('Actual public RT camera limit differs from frozen snapshot batches')
     else:
-        if document.get('schema') not in (None,'rsb.public-control-plan/1') or any(
+        if document.get('schema') not in (None,'ese.public-control-plan/1') or any(
                 item.get('type')=='observe' for item in document['plan']):
             raise ValueError('An unversioned snapshot must not change legacy RT semantics')
     budget=spec.get('budget',{}).get('wall_clock_s',1800)
@@ -98,7 +98,7 @@ def run_reference(document, arrays, robot, output=None, *, sleep=time.sleep, mon
     except EpisodeOver:
         status=robot.status()
     if version2:
-        (output/'DELIVERY_RECEIPT.json').write_text(json.dumps({'schema':'rsb.public-observation-run/1',
+        (output/'DELIVERY_RECEIPT.json').write_text(json.dumps({'schema':'ese.public-observation-run/1',
             'public_plan_sha256':O.canonical(document),'observation_policy':document['observation_policy'],
             'snapshot_batches_delivered':len(deliveries),'final_status':status,
             'native_or_task_credit_granted':False},indent=2)+'\n')

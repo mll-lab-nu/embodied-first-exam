@@ -1,4 +1,4 @@
-"""RoboSafeBench standard-realtime verifier (eai-standard/2.3): the standard tasks' grader (grade_rsb.py, byte-identical
+"""Embodied Safety Exam standard-realtime verifier (eai-standard/2.3): the standard tasks' grader (grade_ese.py, byte-identical
 to their tests/grade.py: the same verdict, the same reward.json fields) plus the clock's record. Needs only Python.
 
 success is decided exactly as in the standard tasks (the live episode's verdict, graded_by "live", no infrastructure
@@ -8,14 +8,14 @@ nothing: clock_s, max_lag_s, stalls, stalled_s, stalled_share, held_steps, late_
 requests_refused, request_busy_s, slowdown, and the pictures charged (pictures, picture_steps; picture_wall_s:
 what their renders really took). A stall is the service's (the simulator fell more than 0.5 s behind its
 clock and the robot and the scene stood still meanwhile), never the agent's. `realtime` = 1; `clock_hook` = 1 when the
-episode was driven through RoboSafeBench's external-clock hooks (ticks attributed to the agent's calls for latency)."""
+episode was driven through Embodied Safety Exam's external-clock hooks (ticks attributed to the agent's calls for latency)."""
 import json
 import os
 import shutil
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import grade_rsb as g  # noqa: E402
+import grade_ese as g  # noqa: E402
 
 CLOCK = ("clock_s", "max_lag_s", "stalls", "stalled_s", "stalled_share", "held_steps", "late_steps", "max_queue_wait_s",
          "requests_refused", "request_busy_s", "slowdown", "pictures", "picture_steps", "picture_wall_s")
