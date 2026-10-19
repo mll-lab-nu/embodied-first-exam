@@ -7,7 +7,7 @@
 | Twin | `behavior-collecting-aluminum-cans-i00-standard` |
 | Simulator / robot | `behavior` / `r1pro` |
 | Family / instance | `collecting_aluminum_cans` / seed 301 |
-| Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-collecting-aluminum-can__VRvxwLv (behavior-lunaxh-t8-0927, privileged) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 20a382a8; grader verdict and frozen instance unchanged since); agent log https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/collecting_aluminum_cans/unlimited/, verifier replay https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/collecting_aluminum_cans/unlimited/replay.mp4; not re-run on this version (static validation only). Human review per family (protocol §2.7). |
+| Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-collecting-aluminum-can__VRvxwLv (behavior-lunaxh-t8-0927, privileged) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 20a382a8; grader verdict and frozen instance unchanged since); not re-run on this version (static validation only). Human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
 
@@ -21,7 +21,7 @@ Collect the six soda cans in the bedroom, three lying on the bed and three on th
 First-pass rating on the task-list site: medium. The 2026 challenge's 200 teleoperated demonstrations took 340 s on average (10,203 control steps at 30 Hz) and drove 18.51 m; the scene loads 2 rooms, and the goal uses `inside`.
 
 ## Reference solution
-None (`oracle = "none"`): no reference solution was written (the challenge ships teleop demos, not scripts). Evidence that the task is solvable: model trial `behavior-collecting-aluminum-can__VRvxwLv` (behavior-lunaxh-t8-0927), graded 1 by the separate verifier; its agent log is on the results site (https://embodied-agent-interface-v2-internal.github.io/runs/behavior-1k/codex-gpt6_luna-xhigh/collecting_aluminum_cans/unlimited/) and the verifier's replay on Hugging Face (https://huggingface.co/datasets/eai-v2-internal/agent-runs/resolve/main/behavior-1k/codex-gpt6_luna-xhigh/collecting_aluminum_cans/unlimited/replay.mp4); `task.toml` `oracle_evidence` has the version it ran on.
+None (`oracle = "none"`): no reference solution was written (the challenge ships teleop demos, not scripts). Evidence that the task is solvable: model trial `behavior-collecting-aluminum-can__VRvxwLv` (behavior-lunaxh-t8-0927), graded 1 by the separate verifier; `task.toml` `oracle_evidence` has the version it ran on.
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff the BDDL goal

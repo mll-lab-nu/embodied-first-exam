@@ -24,9 +24,9 @@ acceptance needed; every input comes from a pinned public upstream and is checke
 | `roboengineer-landing-random-pad-*` | `efe-private:quadrotor-landing-0.1.0` |
 | every other `roboengineer-*` (anycar, g1, go2, neuralfly) | `efe-private:control-transfer-0.2.0` (evaluator) |
 
-The Neural Fly force fit (`forces.npz`) is the one input that cannot be fetched: Neural-Fly's flight-log terms allow
-personal and educational use only, so it is not distributed. Without it the eight `roboengineer-neuralfly-*` tasks
-cannot run (pass `--fly <dir>` if you have a `forces.npz` with the pinned digest); the other 22 tasks run.
+The Neural Fly force fit (`forces.npz`) is not distributed: Neural-Fly's flight-log terms allow personal and educational
+use only. `fetch_assets.sh --fit-fly` downloads the public logs and makes the fit locally (byte-identical to the pinned
+digest, checked); without it the eight `roboengineer-neuralfly-*` tasks cannot run, and the other 22 tasks run.
 
 ```bash
 # Control Transfer evaluator (builds the public nominal base too, which it starts FROM)
@@ -113,14 +113,16 @@ The evaluators (`control-transfer-<version>`, `quadrotor-landing-<version>`) are
 | `ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0` | python 3.12, MuJoCo, OSMesa, ffmpeg; the Neural Lander residual (`/opt/landing/residual.npz`) | the landing `sim` sidecar (its agent image is built from the client base) |
 
 Build (any Linux host with Docker and network access to github.com and PyPI):
-`images/control-transfer/fetch_assets.sh [--fly <dir with forces.npz>]` clones the pinned public sources (unitree_rl_mjlab
+`images/control-transfer/fetch_assets.sh --fit-fly` clones the pinned public sources (unitree_rl_mjlab
 @1425b15f, Menagerie @0059d433 for Go2 and @d7b481ba for Skydio X2), checks them and stages `images/control-transfer/assets/`;
 then `BUILD_TRAIN=1 bash images/control-transfer/build.sh` (`TRAIN_ONLY=1` builds the training image alone FROM the nominal
 tag). `bash images/quadrotor-landing/prepare_assets.sh` (NumPy and PyTorch) downloads the Neural Lander checkpoint at its
 pinned commit and converts it byte-reproducibly (`bebb6c7f…`, checked by the Dockerfile); then
 `docker build -f images/quadrotor-landing/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:quadrotor-landing-0.1.0 .`. The Neural
 Fly force fit (`forces.npz`) is not in this repository and is not downloadable: Neural-Fly's flight-log terms allow
-personal and educational use only, and its fitting tool is kept outside. Its digest is pinned in each Neural Fly task's
+personal and educational use only. `--fit-fly` fits it locally from the public logs with
+`images/control-transfer/calibrate_fly.py` (in a `python:3.12.14-slim` container, numpy 2.3.1 / mujoco 3.5.0; needs docker),
+byte-identical to the pinned asset; `--fly <dir>` takes a `forces.npz` you already have. Its digest is pinned in each Neural Fly task's
 `environment/sim/scripts/control_transfer/trusted/fly.py` `ASSET_SHA256`; an evaluator built without it runs every
 roboEngineer task except the eight `roboengineer-neuralfly-*` ones.
 

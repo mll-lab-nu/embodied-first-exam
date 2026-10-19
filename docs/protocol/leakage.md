@@ -147,4 +147,4 @@ ManiGuard, DexJoCo, VLABench, RoboDojo, RoboARC, RoboOlympics, BiGym,
 YAMLab, Panda Dynamic Scenes (not published at all: its environment package is this repository's `images/pandadyn/`),
 DexHand (not published at all: its scenes and tooling are this repository's task dirs and `images/dexhand/`),
 AM-Bench, iSpatialGym (GitHub and Hugging Face only), IKEA MuJoCo (not published at all: its scenes are this repository's
-`images/ikea-mujoco/scenes/` with meshes on a private dataset); Isaac Sim does not install from pypi.org.
+`images/ikea-mujoco/scenes/` with meshes on a public Hugging Face dataset); Isaac Sim does not install from pypi.org.

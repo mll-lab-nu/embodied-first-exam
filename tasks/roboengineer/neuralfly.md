@@ -10,9 +10,9 @@ The source is [Neural-Fly Enables Rapid Learning for Agile Flight in Strong Wind
 
 The custom aircraft's published mass is 2.53 kg and thrust-to-weight ratio is 2.2. This benchmark uses those values and 11-inch propeller visuals, but approximates the body as an untilted symmetric X quadrotor with rotor coordinates (±0.195, ±0.195) m, diagonal inertia (0.04, 0.04, 0.07) kg·m² and yaw torque/thrust ratio ±0.02 m. The paper aircraft is a wider, tilted-rotor custom platform. Geometry, inertia, lag, sensor noise and contact shapes here are benchmark assumptions, not a complete aircraft identification.
 
-The force fit (kept outside this repository) is an 18-feature quadratic ridge surrogate to the official baseline flight logs, using velocity, quaternion vector components and wind speed. It does not train the paper's wind-invariant DAIML representation. The existing private asset is reused without retraining:
+The force fit (`images/control-transfer/calibrate_fly.py`; `fetch_assets.sh --fit-fly` runs it locally) is an 18-feature quadratic ridge surrogate to the official baseline flight logs, using velocity, quaternion vector components and wind speed. It does not train the paper's wind-invariant DAIML representation. The fit is deterministic: from the pinned logs it reproduces the tasks' asset byte for byte (the fit itself is never redistributed):
 
-- `forces.npz` SHA-256: `551eeb0d8e2c75e157c087f1ab2f5e40e68400a84fdf0882ed719ddfcfd8108a`.
+- `forces.npz` SHA-256: `8e1c148ed034b9f4c541dfaa71b70b48a652f43c7abcc381416040d7901459b9` (the tasks' `trusted/fly.py` `ASSET_SHA256`).
 - 36,984 training rows and 9,252 validation rows, the final 20% of each flight reserved temporally.
 - Per-axis validation RMSE: 0.8749, 0.5893 and 1.6956 N. These are same-flight temporal splits, not unseen-flight validation.
 - The fit includes the baseline figure-eight logs at strong winds. Consequently this task does **not** replicate the paper's unseen-wind learning experiment.

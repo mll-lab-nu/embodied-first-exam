@@ -1,1 +1,0 @@
-Private (ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-<VERSION>, and its sim/ sidecar image): the furniture part meshes come from a private Hugging Face dataset (the robot meshes from MuJoCo Menagerie; tasks/ikea-mujoco/README.md). The tasks reference the efe-private tags.

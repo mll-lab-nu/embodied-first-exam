@@ -1,9 +1,9 @@
 {
  "note": "sha256 of every file of the eai-ikea-mujoco build context (scripts/ikea_mujoco/stage_context.py)",
- "private": true,
- "repo": "eai-v2-internal/ikea-mujoco-assets",
+ "path_prefix": "ikea-mujoco/",
+ "repo": "MLL-Lab/embodied-first-exam-public",
  "repo_type": "dataset",
- "revision": "610b424b3d4152d8990e226eae60b9170ac7dbdf",
+ "revision": "e16299e2741e263335c118952fbaf3779fba7e35",
  "tasks": {
   "burvik": {
    "digest": "e93617b7455107c21c93b9d95d541a9b2399a3a387269a58c8fd88f901488410",
