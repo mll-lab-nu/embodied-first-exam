@@ -9,7 +9,7 @@
 | Family / instance | `move_cube` / seed 0 |
 | Oracle | `none` — No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-move-cube-i00-limited__9Vd2dpc (robowits-lunaxh-limited-0929, standard) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7). Re-graded with the 2026-10-14 grader (AMD hosts ws / ws3; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited __9Vd2dpc passes the earlier grader but fails the 2026-10-14 one: the cube past the line is off the table; the privileged __Zz28YtH passes the 2026-10-14 grader. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robowits:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
 Move any of the three cubes to the left of the goal line. The same frozen instance as

@@ -9,7 +9,7 @@
 | Family / instance | `libero-max/libero_goal/obstacle_insertion` / seed 195 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-libero-max:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
 LIBERO-MAX case `pro-object-texture-goal-t09-i08-obstacle_insertion-d0-p195` as a robot service: a Franka Panda arm at a table, instructed **"Put the wine bottle on the rack."**, on

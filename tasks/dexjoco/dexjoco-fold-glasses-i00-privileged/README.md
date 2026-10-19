@@ -9,7 +9,7 @@
 | Family / instance | `fold_glasses` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-dexjoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
 DexJoCo `fold_glasses` (a Franka Panda arm with a 16-DoF Allegro hand): Fold both temples of the glasses and put the glasses into the open case. Success: both temple hinges past 1.1 rad AND the glasses' centre inside the case (within 0.145 m of the case centre in x and y, between 0.045 m below and 0.0275 m above it), held for 50 consecutive control steps.

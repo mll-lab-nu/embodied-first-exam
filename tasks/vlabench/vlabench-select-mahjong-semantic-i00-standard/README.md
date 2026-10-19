@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/select_mahjong_semantic` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-vlabench:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0` |
 
 ## Task
 VLABench's `select_mahjong_semantic` as a robot service: a Franka Panda arm at a table, instructed **"You are replacing me to play mahjong, and i think it's time to take out ('9', 'man') now: put that tile on the placemat."**

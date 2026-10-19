@@ -9,7 +9,7 @@
 | Family / instance | `osl_run` / seed 0 |
 | Oracle | `none` — no positive example in standard mode yet: the privileged twin's (Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06), trial `myosuite-osl-run-i00-privileged__cWgLuKv`) fails once its rows are rounded to the client's float32 (the runner falls after 629 control steps); the family's solvability rests on the privileged twin; human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
 MyoSuite `myoChallengeOslRunFixed-v0` (MyoLeg + OSL, 54 muscles) on the same frozen instance as `myosuite-osl-run-i00-privileged`: Run the track: move forward 29 m along it to the finish (MyoChallenge 2024 OSL Run, its own win condition), staying within 1 m of the track's centre line and on your feet; the right leg is the prosthesis (`osl_knee_angle_r`, `osl_ankle_angle_r`), driven by its own controller, so you command only the 54 muscles. Failure (the episode ends): falling, leaving the track sideways, or moving 2 m backwards. There is no time limit.

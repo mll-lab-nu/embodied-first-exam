@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/faucet-open` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
 A Sawyer arm at a table, Meta-World's `faucet-open-v3` (reward v2) on one frozen instance: Rotate the faucet handle to open the faucet. The agent writes a

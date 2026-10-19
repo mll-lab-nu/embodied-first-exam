@@ -9,7 +9,7 @@
 | Family / instance | `tennis_return_realgrasp` / seed 0 |
 | Oracle | `full` — reference solution: walks 0.7 m on the walking policy, backswing while walking, a one-handed backhand at zero command with the free 0.30 kg racket held only by the right Dex1-1 at 120 N (head 7.1 m/s, ball 14.7 in -> 15.1 out, 44 deg; the racket turns 51 deg in the grip and stays); frozen start + 9/10 perturbed starts (4 cm, 0.03 rad) succeed, replay bit-exact. Second positive: a real stand-mode forehand with only the robot's place injected (19.5 m/s out, 12 deg). Negatives: two bounces, racket dropped / thrown / out of the hand in the ball's path, ball on the gripper and on the forearm, volley, double hit, carry, own side, long, wide, net, through the net, line in/out, racket on the net post, body at the net, far side, racket on the waiting ball, a fall. Held-racket impacts measured: e_app 0.47 at 15 m/s, 0.39 at 30; an 8 cm off-axis hit turns the racket 47 deg (15 m/s) / 137 deg (30 m/s) about its handle The privileged twin's reference rows (605 control steps, success after 6.05 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robofunolympics-0.2.1` |
 
 ## Task
 Return the serve: after the tennis ball has bounced once in your service box, hit it with the racket held in your right hand's gripper back over the net so that it lands in the singles court on the far side, without letting go of the racket. (RoboOlympics `tennis-return-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

@@ -10,7 +10,7 @@
 | Oracle | `partial` — the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, ws-1; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 20 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe-olympiad:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:olympiad-0.1.0` |
 
 ## Task
 Foosball against the scripted opponent (level 3), program play: table football on a physical table: you drive the four motorised rods of one team (goalkeeper rod with 3 figures, 2-rod 2, 5-rod 5, 3-rod 3) by slide and angle targets that the motors follow along a speed- and acceleration-limited path, and see the table only through an overhead camera; one game to 5 goals under the ITSF rules (opening sequence, possession time limits per rod, no spinning); in the `match` format the other team is a scripted computer team, in the `duel` format another player.

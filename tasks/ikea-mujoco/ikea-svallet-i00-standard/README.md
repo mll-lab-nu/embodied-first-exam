@@ -9,7 +9,7 @@
 | Family / instance | `ikea_svallet` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 10800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-ikea-mujoco-sim:0.4.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ikea-mujoco-sim-0.4.0` |
 
 ## Task
 IKEA SVALLET work lamp (AA-2140039-1), unpowered steps 1-2 in plain MuJoCo 3.14.0 (CPU, float64) with two 6-DoF ViperX 300 s arms (MuJoCo Menagerie ALOHA), each with its own parallel gripper, through the robot service (eai-standard/2.4; 2.1 / 2.2

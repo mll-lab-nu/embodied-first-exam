@@ -9,7 +9,7 @@
 | Family / instance | `libero-max/libero_spatial/sensor_noise_onset` / seed 195 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-libero-max:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
 LIBERO-MAX case `pro-initial-pose-position-angle-spatial-t03-i00-sensor_noise_onset-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Pick the akita black bowl on the cookies box and place it on the plate."**, on

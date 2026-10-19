@@ -10,7 +10,7 @@
 | Oracle | `partial` — screening (Quest, D = 5): the truth-state reference beats it 15/160 (9 %; it beats level 4 in 2/40), the camera-only reference 3/20 (seed 8, A first: 5:2); mirror RL vs RL 68/120 (57 %, Wilson 48-65 %); simple baselines vs RL: center 4/20, center_truth 3/20, fixed 2/20, random 2/20, short_serve 0/20, no_hit 0/20; same-seed reruns 3/3 identical; 0 refused / rejected commands, fewer joint-velocity reflexes than the reference (74 vs 166 per 40 matches). Realtime play varies run to run, hence partial |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 10 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe-olympiad:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:olympiad-0.1.0` |
 
 ## Task
 Table tennis against a built-in opponent player (seat B, builtin_players:RLOpponentV2), program play: robot table tennis in a continuous world slowed by a factor S (MuJoCo Franka Panda + paddle on an x-y rail base behind the end line, both held to the real robot's limits: the Panda's joint velocity, acceleration, jerk, torque and torque rate, the rail's speed, acceleration and jerk; DeepMind ball and table model), seen only through two cameras of four frames each; one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the players' robots serve by the ITTF service laws (a toss device on the robot projects the ball at least 16 cm up from a point you choose behind your end line, you strike it as it falls; 2 serves each, from 4:4 one each); format match: you against a scripted opponent (level 1-4; you serve first), format duel: two players.

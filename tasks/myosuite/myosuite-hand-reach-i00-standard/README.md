@@ -9,7 +9,7 @@
 | Family / instance | `hand_reach` / seed 0 |
 | Oracle | `none` — the privileged twin's positive example (Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-hand-reach-i00__w2ryUU7`, 70 rows) rounded to float32, as the client sends it, and streamed through the client: the service scores it 1 live and in both replays, in two fresh trials (docs/benchmarks/myosuite.md); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
 MyoSuite `myoHandReachFixed-v0` (MyoHand, 39 muscles) on the same frozen instance as `myosuite-hand-reach-i00-privileged`: Move all five fingertips onto their targets: the norm of the stacked fingertip-to-target errors (5 tips x 3 coordinates) below 0.0625 m, for 50 consecutive control steps (1.0 s). Failure (the episode ends, from the third control step on): that norm above 0.220 m.

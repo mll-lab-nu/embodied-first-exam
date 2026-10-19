@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/door-lock` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
 A Sawyer arm at a table, Meta-World's `door-lock-v3` (reward v2) on one frozen instance: Move the door lock into its locked position. The agent writes a

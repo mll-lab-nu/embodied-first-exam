@@ -9,7 +9,7 @@
 | Family / instance | `robopaint_oil_pearlearring` / seed 0 |
 | Oracle | `partial` — Reference solution in solution/: the hi-res version's stroke program for the pointed brush, executed by the robot at generation time (2026-10-09; README Change Log). The verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays, the eai-robopaint:0.2.0 runtime, 2026-10-09): path_mm 28809 of the 86500 mm budget; its strokes are sweeps. Harbor oracle and nop runs: docs/benchmarks/robopaint.md (Oil: the pointed brush). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robopaint:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robopaint-0.2.0` |
 
 ## Task
 **Process rules** (docs/benchmarks/robopaint.md) on top of the picture rule, so that the exemplar has to be made with strokes rather

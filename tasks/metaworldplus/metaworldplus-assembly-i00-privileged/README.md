@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/assembly` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
 A Sawyer arm at a table, Meta-World's `assembly-v3` (reward v2) on one frozen instance: Place the nut onto the peg. The agent writes a

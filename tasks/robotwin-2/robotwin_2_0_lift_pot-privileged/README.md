@@ -9,7 +9,7 @@
 | Family / instance | `lift_pot` / seed 28831 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robotwin:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
 RoboTwin 2.0 lift_pot (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use arms to lift the pot. Frozen scene instance (RoboTwin seed 28831).

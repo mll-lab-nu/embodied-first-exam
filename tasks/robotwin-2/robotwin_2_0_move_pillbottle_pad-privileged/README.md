@@ -9,7 +9,7 @@
 | Family / instance | `move_pillbottle_pad` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robotwin:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
 RoboTwin 2.0 move_pillbottle_pad (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use one arm to pick the pillbottle and place it onto the pad. Frozen scene instance (RoboTwin seed 60417).

@@ -9,7 +9,7 @@
 | Family / instance | `bimanual` / seed 0 |
 | Oracle | `none` — no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is reported separately until one exists (PROTOCOL §7, Open 4); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
 MyoSuite `myoChallengeBimanual-v0` (MyoArm + MPL, a musculoskeletal right arm and hand next to a motorized prosthetic left arm (the Modular Prosthetic Limb), 63 muscles and 17 other actuators): Hand the object over: pick it up with the MyoHand, pass it to the prosthetic hand, and place it on the goal pillar. Success: the object within 0.17 m of the pillar top after touching only the pillar for 10 control steps, and MyoChallenge 2024's contact check on its whole history passes (held by the MyoHand for at least 100 control steps, by the prosthesis for at least 100, only the pillar at the end, never the table or the floor). Failure (the episode ends): the object below 0.3 m (dropped), or 10 s of simulated time.

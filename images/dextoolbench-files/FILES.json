@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-dextoolbench-files:0.1.0@sha256:23fecf32a083877a692c3be6abc1264ae3b7bde94ae2c2f36d35e95ef28a277f",
+ "image": "ghcr.io/mll-lab-nu/efe:dextoolbench-files-0.1.0@sha256:23fecf32a083877a692c3be6abc1264ae3b7bde94ae2c2f36d35e95ef28a277f",
  "source": "embodied_first_exam/benchmarks/dextoolbench",
  "files": {
   "privileged/environment/rcb_dtb.py": "a945c13ce84a85aad8b56e523003815ece532ee968f81af47504b97ddeea60c1",

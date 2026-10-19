@@ -9,7 +9,7 @@
 | Family / instance | `dextoolbench/screwdriver/long_screwdriver/spin_horizontal` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-mujoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 
 ## Task
 DexToolBench task `screwdriver / long_screwdriver / spin_horizontal` (SimToolReal, MIT) ported to plain MuJoCo for this benchmark.

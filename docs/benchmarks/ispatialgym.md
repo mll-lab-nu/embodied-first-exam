@@ -13,7 +13,7 @@ its goal this way; BEHAVIOR-1K runs the same robot in the same houses with goals
 | robot | R1Pro: holonomic base, 4-joint trunk, two 7-joint arms with parallel grippers; iSpatialGym's 23-D JoyLo action at 30 Hz; head and wrist cameras, 1080×1080 RGB |
 | score | upstream's geometric success with its settle-eval on: the BDDL goal and every measured target within the `isg-v2` tolerances × 3 (`run_isg --mode policy`) at every one of the last 45 control steps, the measured objects and the robot at rest over them (`pose_settled`); within max(300, 2 × the demo's length) control steps |
 | tasks | 12 in both modes: `tasks/ispatialgym/ispatialgym-<task>-i00-privileged` and `-standard` (`eai-standard/2.2`), one frozen instance per pair |
-| image | `ghcr.io/mll-lab-nu/efe-ispatialgym:0.2.0` (`images/ispatialgym/`, BUILD_ONLY: Isaac Sim inside; both upstream repositories are fetched by commit) |
+| image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` (`images/ispatialgym/`, BUILD_ONLY: Isaac Sim inside; both upstream repositories are fetched by commit) |
 | oracle | none |
 
 ## Tasks: upstream's 23, ours ✅ (12)

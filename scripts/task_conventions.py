@@ -1015,7 +1015,7 @@ def parse_readme(s: str) -> tuple[str, list[tuple[str, str]], list[tuple[str, st
 def image_of(task: Path) -> str:
     if mode_of(task) in SIDECAR_MODES:
         c = read_text(task / "environment/docker-compose.yaml") or ""
-        imgs = [i for i in re.findall(r"^\s*image:\s*(\S+)", c, re.M) if "/eai-monitor:" not in i]   # not the monitor's
+        imgs = [i for i in re.findall(r"^\s*image:\s*(\S+)", c, re.M) if not re.search(r"/(?:eai|efe)-monitor[:@]|/efe:monitor-", i)]   # not the monitor's
         if imgs:
             return imgs[0]
     d = read_text(task / "environment/Dockerfile") or ""

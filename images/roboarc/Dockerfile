@@ -26,7 +26,7 @@
 # assets/robots/ and images/topogym/prune.py):
 #   docker buildx build --load -f images/robotangle/Dockerfile.mujoco --build-context instances=<dir of instance bases> \
 #     -t eai-robotangle:0.3.0-dev .
-ARG BASE=ghcr.io/mll-lab-nu/efe-robotangle:0.2.22@sha256:eb1a75177bf3d11f60540ef5a285c5a47d8cf35e2e99630759bb108b9f05dfad
+ARG BASE=ghcr.io/mll-lab-nu/efe:robotangle-0.2.22@sha256:eb1a75177bf3d11f60540ef5a285c5a47d8cf35e2e99630759bb108b9f05dfad
 FROM ${BASE} AS unsquashed
 RUN python -c "import mujoco, coacd; assert mujoco.__version__ == '3.14.0', mujoco.__version__"
 # before the simulator source, so this layer survives source changes

@@ -9,7 +9,7 @@
 | Family / instance | `stack_cubes` / seed 0 |
 | Oracle | `partial` — Reference solution solution/oracle_stack_cubes.py with its skills in solution/ref_primitives.py (written for this instance; RoboWits ships no expert). It scored 1 under Harbor -a oracle on an earlier version of this task: job robowits-stack-cubes-i00-oracle-thin-0925-000706, trial robowits-stack-cubes-i00__2rVdsVe, 2026-09-25 (laptop, Intel; success=1, deterministic=1, instance_exact=1; an uncommitted tree just before dev/qineng f15dbdb7). Same since then: the frozen instance (state hash 41c4d7e7d7193b0d) and the oracle script (byte-identical to that run's /app/output/gen.py; ref_primitives.py unchanged since f15dbdb7). Changed since then, so the label is partial: the grader tests/grade.py (dev/qineng 82d76c61 added the GPU-backend exception; this PR writes the verdict before the video) and the tooling rcb_robowits.py (dev/qineng 5aa848bd, bddfc520, adce3fef, 8f0ebd55, 82d76c61, 6c0b439e, fe5fb9e6, 1515ea4e). Not re-run on this version (static validation only, 2026-10-01). 2026-10-14 (ws, AMD): Harbor -a oracle scored 1 on a pre-final tree of this change (under a temporary -i01 task name) (trial robowits-stack-cubes-i01-privileged__3ppSJuL; the tooling changed after it only in the BlenderKit service code, which this family does not use), nop 0; the oracle trajectory passes the 2026-10-14 grader in a batch re-grade. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robowits:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
 
 ## Task
 Build a stable two-layer stack so the red cube's center is above the green colored dot. One replayable trajectory from

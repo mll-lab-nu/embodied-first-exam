@@ -9,7 +9,7 @@
 | Family / instance | `bimanual_microwave_cook` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-dexjoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
 DexJoCo `bimanual_microwave_cook` (two Franka Panda arms, each with a 16-DoF Allegro hand): Open the microwave door, put the hot dog inside, close the door and press the start button. Success, at one control step: the hot dog is inside the cavity (1 cm margin), the door hinge is within 0.01 rad of closed, and the start button is in contact with something.

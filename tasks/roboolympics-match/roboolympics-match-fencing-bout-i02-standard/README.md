@@ -9,7 +9,7 @@
 | Family / instance | `fencing_bout` / seed 35 |
 | Oracle | `full` — in process (fencing-7): the oracle beats level 2 on this seed 15:13; over 40 player seeds the reference wins this instance 42.5 %, the equilibrium mix 50 % (fresh-seed means 48.0 %, 53.9 %); none of the nine constant intentions nor a random player wins it; live on vanilla Harbor 0.23.0 (2026-10-15, the exported task) the oracle won 15:13 in 32 phrases, replay identical (the world is deterministic) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-olympiad:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:olympiad-0.1.0` |
 
 ## Task
 Robot epee fencing against the scripted opponent (level 2), program play: two Unitree G1 humanoids (the robot library's, NVIDIA's SONIC whole-body policy on the legs, waist and free arm, the point skill on the sword arm) holding real epees fence one FIE direct-elimination bout (15 touches or 9 minutes of fencing time, no draws; unwillingness to fight, FIE t.124) phrase by phrase: every phrase starts on guard 1.95 m apart, both fencers choose one of nine tactical intentions (lunge, low lunge, point in line, reactive line, stop-hit, counter-attack, delayed lunge, retreat, draw), each starts after a random 0-50 ms, and the phrase is played out as it was measured in MuJoCo (2916 phrases: every pair of intentions and delays); format bout: you against a scripted fencer that reads your choices (levels 1-2, `game spec` opponent), format duel: two players choosing at the same time.

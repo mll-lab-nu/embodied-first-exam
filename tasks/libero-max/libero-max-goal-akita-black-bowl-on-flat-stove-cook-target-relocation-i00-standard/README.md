@@ -9,7 +9,7 @@
 | Family / instance | `libero-max/libero_goal/target_relocation` / seed 195 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-libero-max:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
 
 ## Task
 LIBERO-MAX case `pro-semantic-goal-t01-i03-target_relocation-d1-p195` as a robot service: a Franka Panda arm at a table, instructed **"Place the bowl on the stove."**, on

@@ -9,7 +9,7 @@
 | Family / instance | `pinch_tongs` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-dexjoco:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
 
 ## Task
 DexJoCo `pinch_tongs` (a Franka Panda arm with a 16-DoF Allegro hand) on the same frozen instance as `dexjoco-pinch-tongs-i00-privileged`: Pick up the tongs and open and close them three times while holding them up. A pinch counts each time the tongs' hinge goes from open (>= 0.1 rad) to closed (<= -0.07 rad). Success: at least three pinches counted and the tongs at least 0.10 m above the table, held for 30 consecutive control steps.

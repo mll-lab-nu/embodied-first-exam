@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/bin-picking` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
 Standard-mode twin of `metaworldplus-bin-picking-i00-privileged`: the same instance and success check (Pick up the object from its bin and move it to the target bin.), served

@@ -9,7 +9,7 @@
 | Family / instance | `saucepan-to-hob` / seed 0 |
 | Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-bigym2:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
 
 ## Task
 Take the saucepan out of the cabinet and gently set it on the hob. (BiGym 2.0 `saucepan_to_hob`, a Unitree G1 humanoid whose legs and waist NVIDIA's GR00T whole-body controller drives.)

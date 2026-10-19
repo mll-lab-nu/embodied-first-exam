@@ -9,7 +9,7 @@
 | Family / instance | `badminton_serve` / seed 0 |
 | Oracle | `full` — Reference: a forehand low serve as stand rows (CMA-ES over two whole-upper-body key poses; the release timed by a dry run where the strings cross the shuttle's vertical plus a simulated drag fall): the left Dex1 drops the shuttle 0.50 m into the swing of the friction-held racket, hit base first at 0.48 m, 13.9 m/s at 47 deg, lands mid-court in the receiver's right service court; 10/10 with the start shifted 2 cm and with 0.02 rad key-pose noise. Shuttle: terminal 6.795 m/s vs 6.80 measured (Peastrel et al. 1980). Referee test: an injected faster swing; negatives for a shuttle let fall, racket dropped or thrown, racket on the held shuttle, shuttle re-caught or on the gripper, still racket, feint, feathers first, above 1.15 m, thrown shuttle, no speed added, feet off/moved/on the lines, double hit, carry, downward, served shuttle on the robot, into/under/around the net, a post, out, the four lines, unstruck over the net, robot or racket on the net, fall The privileged twin's reference rows (345 control steps, success after 3.45 s) streamed through the client. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robofunolympics:0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robofunolympics-0.2.1` |
 
 ## Task
 Serve: standing in your right service court, let the shuttle go from your left hand and hit it with the racket in your right hand, base first and below 1.15 m, over the net into the receiver's service court diagonally opposite. (RoboOlympics `badminton-serve`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)

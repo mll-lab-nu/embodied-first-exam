@@ -1,6 +1,6 @@
 """Unit tests of the core's stage-0 hooks on the synthetic realtime fixture (core/tests/fixture), of the start window
 (no-show rule, at the window and at a collect before the start, both protocols; turn fixture core/tests/fixture_turn) and of the outcome and grading rules. Standard library + numpy; run in the sim image:
-    docker run --rm -v $PWD:/w -w /w ghcr.io/mll-lab-nu/efe-olympiad:0.1.0 \\
+    docker run --rm -v $PWD:/w -w /w ghcr.io/mll-lab-nu/efe:olympiad-0.1.0 \\
         python3 core/tests/test_core.py
 """
 from __future__ import annotations

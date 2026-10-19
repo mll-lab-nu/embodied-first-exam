@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-dexhand-files:0.1.0@sha256:47919ae95e25b8c6daa3c19c9714a4743fd1c18db580589cb8552a71aa689f9d",
+ "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.1.0@sha256:47919ae95e25b8c6daa3c19c9714a4743fd1c18db580589cb8552a71aa689f9d",
  "source": "embodied_first_exam/benchmarks/dexhand",
  "files": {
   "privileged/environment/arm_rig.py": "5b9e26e313c7a935dfbf04b34aec8047bd713677c638622b8baeaf09453c5a3a",

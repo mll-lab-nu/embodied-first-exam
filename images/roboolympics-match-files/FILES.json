@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe-roboolympics-match-files:0.1.0@sha256:a66af6a80dec19c3c27fc8099c1fe9f64449344eefcb27b9b68bb05e53a9b3da",
+ "image": "ghcr.io/mll-lab-nu/efe:roboolympics-match-files-0.1.0@sha256:a66af6a80dec19c3c27fc8099c1fe9f64449344eefcb27b9b68bb05e53a9b3da",
  "source": "embodied_first_exam/benchmarks/roboolympics-match",
  "files": {
   "privileged/environment/fullsim/bodies/franka_panda/body.toml": "737cf9aafadbeab31963ad73f968eed97ae8acadfe92e265097c4e3dad959a16",

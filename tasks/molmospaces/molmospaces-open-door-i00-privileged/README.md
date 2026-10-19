@@ -9,7 +9,7 @@
 | Family / instance | `open-door` |
 | Oracle | `none` — no reference solution (MolmoSpaces' planners and grasp files are not shipped); positive example graded 1 by the separate verifier: molmospaces-open-door-i00-privil__EJchtFe (run codex-gpt6_1_sol-high, batch molmo-v2-sol-rby1, 2026-10-16); human review in PR #276 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-molmospaces:0.2.5` |
+| Base image | `ghcr.io/mll-lab-nu/efe:molmospaces-0.2.5` |
 
 ## Task
 Pull the door open. One frozen episode of Ai2's MolmoSpaces benchmark (upstream package `procthor-10k/rby1_benchmarks/door_opening_benchmark`, episode 0:

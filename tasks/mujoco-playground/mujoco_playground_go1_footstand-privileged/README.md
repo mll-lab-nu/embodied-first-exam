@@ -9,7 +9,7 @@
 | Family / instance | `mujoco_playground/Go1Footstand` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-mujoco:0.1.3` |
+| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
 MuJoCo Playground `Go1Footstand` (Unitree Go1), rebuilt in plain MuJoCo from Playground's scene files: Make the Unitree Go1 stand up on its hind legs, nose up, front legs in the air, and balance there for 2 s.

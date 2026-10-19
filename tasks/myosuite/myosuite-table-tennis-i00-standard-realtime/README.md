@@ -10,7 +10,7 @@
 | Oracle | `none` — a successful episode of the privileged twin (GPT-6 Luna xhigh, trial `myosuite-table-tennis-i00-privil__SMNgbHk`, 82 rows) planned from step 0 in one `submit(..., at=0)` at S = 1 succeeds live and in the fresh replay, with no stall (board 0112, 2026-10-14); the standard twin's evidence holds for the same instance and rule; human review in PR #201 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe-myosuite:0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
 
 ## Task
 MyoSuite `myoChallengeTableTennisP1-v0` (MyoArm with torso, 273 muscles) on the same frozen instance as `myosuite-table-tennis-i00-privileged`: Return the served ball: hit it with the paddle so that it lands on the opponent's half of the table (MyoChallenge 2025 TableTennis P1's own success test on the ball's contact history: after the serve's bounce on your half, the paddle touches it once, then it touches the opponent's half, with no second paddle touch and no further bounce on your half). Failure (the episode ends): any other outcome of the rally, the ball falling below 0.3 m, or 3 s of simulated time.

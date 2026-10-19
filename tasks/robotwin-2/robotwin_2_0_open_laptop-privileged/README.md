@@ -9,7 +9,7 @@
 | Family / instance | `open_laptop` / seed 60417 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robotwin:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
 RoboTwin 2.0 open_laptop (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use one arm to open the laptop. Frozen scene instance (RoboTwin seed 60417).

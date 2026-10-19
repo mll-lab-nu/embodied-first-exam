@@ -9,7 +9,7 @@
 | Family / instance | `put_bottles_dustbin` / seed 28831 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-robotwin:0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe:robotwin-0.1.2` |
 
 ## Task
 Standard-mode twin of `robotwin_2_0_put_bottles_dustbin-privileged` (same frozen instance, RoboTwin seed 28831): the agent gets

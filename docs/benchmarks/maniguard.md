@@ -61,7 +61,7 @@ never copied into the task and not replayed here.
 | `maniguard-clutter-pickup-i23` | `clutter_pickup/task_0023` | `021f30c779dc2819` | a top-heavy cocktail glass among a 25 cm vase and a wineglass; a raised sphere |
 
 ## Prerequisites (every ManiGuard run)
-- **The image** `ghcr.io/mll-lab-nu/efe-maniguard:<images/maniguard/VERSION>`, built on the host
+- **The image** `ghcr.io/mll-lab-nu/efe-private:maniguard-<images/maniguard/VERSION>`, built on the host
   (BUILD_ONLY: NVIDIA Isaac Sim 4.5 inside). `images/maniguard/` has the recipe: BEHAVIOR-1K v3.7.2 installed the way its
   own `setup.sh --new-env --omnigibson --bddl` does (Python 3.10, torch 2.6.0+cu124, the 26 Isaac Sim 4.5.0.0 wheels,
   sha256-checked), Spot 2.16 from conda-forge, PyAV from PyPI (conda-forge's ffmpeg brings a Vulkan loader and libglvnd

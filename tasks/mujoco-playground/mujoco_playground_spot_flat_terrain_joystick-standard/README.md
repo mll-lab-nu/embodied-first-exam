@@ -9,7 +9,7 @@
 | Family / instance | `mujoco_playground/SpotFlatTerrainJoystick` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-mujoco:0.1.3` |
+| Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` |
 
 ## Task
 MuJoCo Playground `SpotFlatTerrainJoystick` (Boston Dynamics Spot) on the same frozen instance as `mujoco_playground_spot_flat_terrain_joystick-privileged`: Make Boston Dynamics Spot follow the joystick command schedule on flat ground for the whole 20 s episode without falling over.

@@ -9,7 +9,7 @@
 | Family / instance | `window` / seed 0 |
 | Oracle | `none` — none known: no run has passed it, and published RL reaches 94% of the bar (paper 227, FastTD3 613, bar 650); human review in PR #9 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-humanoidbench:0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
 
 ## Task
 Standard mode (robot as a service, `eai-standard/2.1`) of `humanoidbench-manip-window-i00-privileged`: the

@@ -9,7 +9,7 @@
 | Family / instance | `metaworld/stick-push` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-metaworld:0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |
 
 ## Task
 Standard-mode twin of `metaworldplus-stick-push-i00-privileged`: the same instance and success check (Use the stick to push the target object.), served
