@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://www.embodied-first-exam.ai"><img src="https://img.shields.io/badge/Website-embodied--first--exam.ai-2f4f4f" alt="Website"></a>
-  <a href="https://discord.gg/gMEfvXNDc"><img src="https://img.shields.io/badge/Discord-join-5865f2?logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="https://discord.gg/AhC6utNyfk"><img src="https://img.shields.io/badge/Discord-join-5865f2?logo=discord&logoColor=white" alt="Discord"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-b8a133" alt="License: MIT"></a>
   <a href="docs/assets/wechat.jpg"><img src="https://img.shields.io/badge/WeChat-group-07c160?logo=wechat&logoColor=white" alt="WeChat group"></a>
 </p>
