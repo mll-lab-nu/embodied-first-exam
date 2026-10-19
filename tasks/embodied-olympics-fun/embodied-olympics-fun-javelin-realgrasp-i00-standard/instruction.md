@@ -1,6 +1,6 @@
 # embodied-olympics javelin-realgrasp — instance i00 — STANDARD MODE (robot as a service)
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
 client. **Task:** Throw the javelin held by its cord in your right gripper over the shoulder from behind the arc so that its head strikes the ground first, inside the sector, at least 20.0 m from the arc, then leave the runway behind the arc and stand.
 

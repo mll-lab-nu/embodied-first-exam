@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-vault-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Vault over the vault table at the end of the run-up: go over it with only your hands touching it, land on your feet on the landing mat and stand. (EmbodiedOlympics `vault`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Vault over the vault table at the end of the run-up: go over it with only your hands touching it, land on your feet on the landing mat and stand. (Embodied Olympics `vault`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The table is 1.35 m high and the robot has no running policy: its walk reaches about 0.65 m/s and its best standing jump lifts it far less than a metre, so the 67 kg body has to be carried over the table by a take-off and arm support that nobody has built for it. It must then come down feet first from above 1.35 m and absorb the landing without a hand on the mat. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | parkour-apparatus-balance |
 | Rule book | FIG Apparatus Norms (men's vault): the vault table 1.35 m high, its top 1.20 m long and 0.95 m wide; a run-up of 25 m, 1 m wide; a springboard 1.20 m by 0.60 m, 0.22 m high at its high end; landing mats 6 m by 2.5 m, 0.20 m thick. FIG Code of Points for Men's Artistic Gymnastics, the vault section, for what makes a vault invalid: no support of a hand on the table, a foot on the table, not landing feet first; deviations: Apparatus Norms (springboard): the board is a rigid plate hinged at its low end on one spring of 120000.0 N m/rad (83 kN/m at its high end with the default) with light damping, not a leaf-spring board with coil springs; its elasticity is not FIG-tested (the norm is a drop test on the real board) · Code of Points (springboard position): the board stands at a fixed place, its high end 0.5 m before the table, instead of where the gymnast puts it (nobody sets up the venue for the robot) · Code of Points (the vault): any passage over the table with hand support counts, with no vault number, no required take-off from the board and no execution score: the family asks whether the vault is valid, not how well it is done · Code of Points (landing): judged to a stand of 1.0 s on the mat with nothing but the feet on it; the landing mat's corridor lines are not judged · Apparatus Norms (run-up): the robot starts at the far end of the 25.0 m run-up (the gymnast may start nearer); the table's safety collar and the mat around the board are left out |
 | Stages | hands on the table → over the table → landing → stand |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 8000 control steps (80 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

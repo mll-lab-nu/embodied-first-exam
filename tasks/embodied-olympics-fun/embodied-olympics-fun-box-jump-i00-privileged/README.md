@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-box-jump-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Jump from the floor onto the 0.61 m box in front of you with a two-foot take-off, land on its top with both feet, and stand up straight on it. (EmbodiedOlympics `box-jump`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Jump from the floor onto the 0.61 m box in front of you with a two-foot take-off, land on its top with both feet, and stand up straight on it. (Embodied Olympics `box-jump`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 No built-in action of this robot leaves the ground: the jump is whole-body joint control, and it must lift 67 kg far enough for the soles to clear 0.61 m, more than half the length of the legs. The landing has to be absorbed on a box only 0.51 m deep that is free to slide, and the robot must then straighten up on it.

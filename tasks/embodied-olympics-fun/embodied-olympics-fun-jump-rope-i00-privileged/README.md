@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-jump-rope-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Skip rope: turn the rope forwards with both hands, over your head and under your feet, and jump it with both feet together, 17 times within one minute. (EmbodiedOlympics `jump-rope`: one Unitree G1 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Skip rope: turn the rope forwards with both hands, over your head and under your feet, and jump it with both feet together, 17 times within one minute. (Embodied Olympics `jump-rope`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Every jump needs two skills at once. The arms must keep a light, floppy rope turning at a steady speed through grippers that hold it only by friction. The legs must make a two-footed hop, about 0.1 m high and timed to within a tenth of a second, to the rope coming under the feet. Then the robot must land and do it again 17 times without falling. Neither built-in gait can hop, and a rope that stops on a shin or a toe has to be started again from behind.

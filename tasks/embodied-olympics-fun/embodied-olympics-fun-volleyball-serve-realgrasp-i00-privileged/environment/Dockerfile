@@ -1,4 +1,4 @@
-# Base image = the EmbodiedOlympics simulator (MuJoCo 3.3.7 on the CPU, the robot library with its Unitree G1 and H1-2, the walking
+# Base image = the Embodied Olympics simulator (MuJoCo 3.3.7 on the CPU, the robot library with its Unitree G1 and H1-2, the walking
 # and running policies; images/embodied-olympics-fun/). Everything task-specific is copied here: the frozen instance and this
 # family's rules; the tooling and the world package's core come from the files-only image images/embodied-olympics-fun-files/.
 FROM ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1

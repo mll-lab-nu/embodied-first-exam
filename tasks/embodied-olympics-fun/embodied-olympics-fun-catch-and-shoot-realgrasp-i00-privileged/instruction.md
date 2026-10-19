@@ -1,6 +1,6 @@
 # embodied-olympics catch-and-shoot-realgrasp — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** Catch and shoot: catch the chest pass that comes to you from the left wing between your two palms, then shoot from where you stand so that the ball enters the basket from above.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

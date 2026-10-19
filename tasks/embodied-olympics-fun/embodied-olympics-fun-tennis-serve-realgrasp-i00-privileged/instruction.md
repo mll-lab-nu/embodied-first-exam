@@ -1,6 +1,6 @@
 # embodied-olympics tennis-serve-realgrasp — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** Serve: from behind your baseline, release the tennis ball from your left gripper, strike it with the racket held in your right gripper before it reaches the ground, and send it over the net into the service box diagonally opposite.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

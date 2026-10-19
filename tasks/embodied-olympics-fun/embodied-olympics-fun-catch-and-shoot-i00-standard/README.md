@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-catch-and-shoot-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Catch and shoot: catch the chest pass that comes to you from the left wing, then shoot from where you stand so that the ball enters the basket from above. (EmbodiedOlympics `catch-and-shoot`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Catch and shoot: catch the chest pass that comes to you from the left wing, then shoot from where you stand so that the ball enters the basket from above. (Embodied Olympics `catch-and-shoot`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The pass arrives faster than the grip can take it: the hand has to be on the ball's path and moving with it. Then a 0.62 kg ball must leave that hand at about 9 m/s on a steep arc towards a ring 5.8 m away, from a body that may not take a step. The built-in walking gait steps on the spot even at a zero command, so while the ball is in your hand its steps are counted like any others. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | basketball-and-rackets |
 | Rule book | FIBA Official Basketball Rules 2024: Art. 2 (court), Art. 3 and the Basketball Equipment appendix (backboard, ring, size-7 ball), Art. 13 (how the ball is played), Art. 16 (goal), Art. 25 (travelling); deviations: Art. 3 (equipment): the hand holds the ball by a grip switched on and off, not by fingers: the grip takes the ball when its surface is within 3.5 cm of the palm and it moves at most 6 m/s relative to the hand; the ball is released when the grip is switched off. · Basketball Equipment (basket): the ring is rigid (no pressure release) and the net is only drawn: it does not slow the ball. A goal is judged at the ring: the ball's centre down through the ring's plane and on to one ball diameter below it. · The pass is thrown by a machine, not a team-mate: always the same chest pass, at a fixed time. · Art. 13: a touch of the ball by a leg or a foot is always taken as deliberate (a violation); intent cannot be judged. · Art. 25.2.1: a ball caught with a foot off the floor is judged by the two-step rule without the pivoting it allows after a stop: after two steps no foot may touch the floor again while the ball is held. · One attempt, no opponent, no rebound: a pass that is not caught on the fly, and touching the ball after the shot's release, end the attempt. |
 | Stages | catch → release → through the ring |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1500 control steps (15 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

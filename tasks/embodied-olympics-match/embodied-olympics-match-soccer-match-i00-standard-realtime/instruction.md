@@ -1,7 +1,7 @@
 # Robot soccer 2 v 2: program play (match)
 
 You play robot soccer 2 v 2 against a scripted opponent (you are seat `A`). Robot soccer 2 v 2 under the RoboCup Humanoid Soccer League rules: four simulated Booster T1 humanoids (lower bodies on the released walking policy, held to the real robot's joint limits) and one ball on a boarded 10 x 7 m pitch with two goals, two halves of 5 minutes of game time, a penalty shoot-out when level; each robot takes a walk velocity command, stand or a swing-leg kick, and you see the game only through your robots' head cameras; in the `match` format you command both robots of team A against a scripted team, in the `duel` format another player commands team B, in the `team` format each robot has its own player and teammates talk only through the team channel, in the `team_match` format each robot of team A has its own player against the scripted team; `match_overhead` and `duel_overhead` are match and duel seen through fixed overhead cameras instead of the head cameras.
-This is EmbodiedOlympics task `soccer-match-wallclock-program-standard` (revision `soccer-2v2-10+core-0.2`), one frozen instance: the scripted opponent at level 2, the world slowed S = 5 times; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
+This is Embodied Olympics task `soccer-match-wallclock-program-standard` (revision `soccer-2v2-10+core-0.2`), one frozen instance: the scripted opponent at level 2, the world slowed S = 5 times; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
 
 ## Time
 The world runs in real time at 1/S of real speed (S = `timing.slowdown` in `game spec`); your thinking costs game time. At the end of every unit the world freezes for the reviews.

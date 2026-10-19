@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-wall-ball-realgrasp-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Throw the tennis ball held in your right gripper at the target circle on the wall and catch the rebound in a gripper before it touches the ground, and keep hold of it. (EmbodiedOlympics `wall-ball-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Throw the tennis ball held in your right gripper at the target circle on the wall and catch the rebound in a gripper before it touches the ground, and keep hold of it. (Embodied Olympics `wall-ball-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 To come back five metres through the air the ball has to hit the wall at about 16 m/s or more, inside a circle half a metre across, and it then returns in under half a second at about 10 m/s. The ball, 67 mm across, has to arrive between two jaws that open at most 90 mm and are 80 mm long, and the jaws have to close on it in the few milliseconds it spends between them. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | throwing-catching-striking |
 | Rule book | No rule book: a wall-ball drill (throw and catch against a wall, as used in baseball, cricket and handball training) with this benchmark's numbers. The ball is the ITF's (Rules of Tennis 2024, Rule 3 and Appendix I: size, mass, rebound); deviations: The hands: the H1-2's hands are Unitree's Dex1-1 two-jaw grippers (sold for the G1, the H2 and the R1, not for the H1-2; mounted on the wrist where the H1-2's palm ends): 90 mm stroke, 80 mm jaws with rubber pads, at most 120 N of grip, each jaw closing at most 187.5 mm/s; they hold the ball by friction only, and it can slip, turn and drop. One closure command per hand (the real one also takes a speed and a force setting), no 5 N minimum force; two pads at friction 1.0 and 120 N hold about 240 N of shear, some five times the device's rated 5 kg friction-grasp load. · The throw and the catch: the ball is released when it has touched no part of you for 0.05 s (at its last touch); it is held while both jaws of one gripper touch it with its centre between the jaws' pads, and a catch is the ball held after the rebound. A held ball may lose a jaw's touch for at most 0.05 s. · The wall is rigid and smooth; the ball's rebound from it is the ITF ball's rebound from a hard floor (0.745 of the speed across the wall). · Flight: quasi-steady aerodynamics (MuJoCo's ellipsoid fluid model: drag and Magnus lift), still air. The world has elliptic friction cones and an impedance ratio of 100 (the grippers' setting, which makes a clamped ball stay put); they apply to every contact. |
 | Stages | release → target → catch → hold |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1500 control steps (15 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

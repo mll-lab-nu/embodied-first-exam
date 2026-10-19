@@ -1,6 +1,6 @@
 # embodied-olympics dunk-between-legs — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** From the top of the key, with the basketball pressed between your two palms, dribble it, make one of its bounces pass between your legs, gather it in both hands, and with at most two steps dunk it: force it down through the ring from above with your hands on it, then land on your feet.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

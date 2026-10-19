@@ -918,7 +918,7 @@ gpu_class = "none"
 verifier_min_cpus = 7.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "EmbodiedOlympics' exported matches (scripts/embodied-olympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/embodied-olympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only, real time needs the cores"
+measured = "Embodied Olympics' exported matches (scripts/embodied-olympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/embodied-olympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only, real time needs the cores"
 
 # embodied-olympics, exported turn-based matches (standard, eai-standard-turn/1.0): 2 task(s)
 [[rule]]
@@ -931,7 +931,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "vanilla Harbor 0.23.0 on 4090-ws3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: EmbodiedOlympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only"
+measured = "vanilla Harbor 0.23.0 on 4090-ws3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: Embodied Olympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only"
 
 # embodied-olympics, standard-realtime: 13 task(s)
 [[rule]]
@@ -1088,7 +1088,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 12.0
-measured = "design defaults of EmbodiedOlympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB"
+measured = "design defaults of Embodied Olympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB"
 
 [[limit]]
 match = "^embodied-olympics-fun-.*-standard-realtime$"
@@ -1133,7 +1133,7 @@ measured = "author estimate: no trials yet; the agent's container 8 GiB under it
 #   v1.1.5. Privileged: the limit; standard: trial_max_gpu_memory_gb only (no standard agent container has a GPU).
 # - memory, privileged: the [environment] cap every past trial ran under (at least min + 2); RoboPaint's scorer service
 #   is the benchmark's own (recorded only): its 5 GiB margin is in trial_max_memory_gb, not in the limit; standard agent: max(1.5 x peak, peak + 4, 8) of the agent container's docker peak (mem_guard, 10-02..10),
-#   at most its [environment] cap; trial_max adds the sim sidecar's max(1.5 x peak, peak + 4) (EmbodiedOlympics: its mem_limit).
+#   at most its [environment] cap; trial_max adds the sim sidecar's max(1.5 x peak, peak + 4) (Embodied Olympics: its mem_limit).
 # - processes 512 and disk (10 GiB CPU-only privileged, 20 GiB Isaac and standard) under /app, /tmp and /root: not yet
 #   measured; the v1.2 calibration batch confirms or changes them. `measured` in each rule says what each value rests on.
 
@@ -2588,12 +2588,12 @@ sim = { cpus = 6.0, memory_gb = 8.0, pids = 8192 }
 [[cap]]
 match = "^embodied-olympics-match-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl|matchlow)-i[0-9]{2}-standard-realtime$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
-sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }   # the sim service's own pids_limit (EmbodiedOlympics' exported docker-compose.yaml)
+sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }   # the sim service's own pids_limit (Embodied Olympics' exported docker-compose.yaml)
 
 [[cap]]
 match = "^embodied-olympics-match-fencing-bout-i[0-9]{2}-standard$"
 main = { cpus = 2.0, memory_gb = 6.0, pids = 8192 }
-sim = { cpus = 4.0, memory_gb = 8.0, pids = 256 }   # the sim service's own cpus and pids_limit (EmbodiedOlympics' exported docker-compose.yaml)
+sim = { cpus = 4.0, memory_gb = 8.0, pids = 256 }   # the sim service's own cpus and pids_limit (Embodied Olympics' exported docker-compose.yaml)
 
 [[cap]]
 match = "^pandadyn-.*-privileged$"
@@ -2751,7 +2751,7 @@ match = "^ikea-.*-standard$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 
-# embodied-olympics, exported joint-level soccer resource-tier pair (standard-realtime; EmbodiedOlympics
+# embodied-olympics, exported joint-level soccer resource-tier pair (standard-realtime; Embodied Olympics
 # pilots/soccer_joint/export_fexam_pair.py): the agent's container is the v5 pilot's seat (6 cores, 16 GB; the GPU tier
 # adds one NVIDIA GPU for training), plus the sim and the practice service sidecars: 2 task(s)
 [[rule]]
@@ -2764,7 +2764,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 2.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "EmbodiedOlympics' joint-level soccer pilot v5 (4090-ws1/2, 2026-10-15/17, docker stats): the agent's container uses its 6 cores (drills, CPU-parallel rollouts, practice matches), the sim up to its 6 cores (the world, the opponent, the cameras), the practice service up to 4 worlds on its 4 cores; CPU tier: no GPU"
+measured = "Embodied Olympics' joint-level soccer pilot v5 (4090-ws1/2, 2026-10-15/17, docker stats): the agent's container uses its 6 cores (drills, CPU-parallel rollouts, practice matches), the sim up to its 6 cores (the world, the opponent, the cameras), the practice service up to 4 worlds on its 4 cores; CPU tier: no GPU"
 
 [[rule]]
 match = "^embodied-olympics-match-soccer-jointgpu-i[0-9]{2}-standard-realtime$"
@@ -2772,7 +2772,7 @@ min_gpu_memory_gb = 10.0
 gpu_required = true
 gpu_class = "any"
 recommended_gpu = "RTX 4090 24GB / L4 24GB / L40S 48GB"
-measured = "EmbodiedOlympics' joint-level soccer pilot v5 (4090-ws1, 2026-10-15/16, nvidia-smi every 30 s): the agents trained with rsl_rl on the GPU worlds at 3-10 GB of GPU memory (one RTX 4090); the sim and the practice service as the CPU tier"
+measured = "Embodied Olympics' joint-level soccer pilot v5 (4090-ws1, 2026-10-15/16, nvidia-smi every 30 s): the agents trained with rsl_rl on the GPU worlds at 3-10 GB of GPU memory (one RTX 4090); the sim and the practice service as the CPU tier"
 
 [[limit]]
 match = "^embodied-olympics-match-soccer-joint(cpu|gpu)-i[0-9]{2}-standard-realtime$"
@@ -2800,7 +2800,7 @@ main = { cpus = 6.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 6.0, memory_gb = 8.0, pids = 256 }
 practice = { cpus = 4.0, memory_gb = 8.0, pids = 256 }
 
-# EmbodiedOlympics, the table-tennis matches' privileged twins (policy; scripts/embodied-olympics/fullsim/generate.py): the
+# Embodied Olympics, the table-tennis matches' privileged twins (policy; scripts/embodied-olympics/fullsim/generate.py): the
 # agent runs its own simulators (one world: about 0.4 GB, 470 control steps/s on one core without cameras); the
 # verifier runs the original service, the policy process and two replays. Author estimates until measured.
 [[rule]]
@@ -2813,7 +2813,7 @@ gpu_class = "none"
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 8.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "author estimate (EmbodiedOlympics, 4090-ws1, 2026-10-15): CPU-only MuJoCo 3.3.7, no cameras; one world about 0.4 GB, 470 control steps/s on one core; the verifier holds the service, the policy (2 GiB address space) and two fresh replays"
+measured = "author estimate (Embodied Olympics, 4090-ws1, 2026-10-15): CPU-only MuJoCo 3.3.7, no cameras; one world about 0.4 GB, 470 control steps/s on one core; the verifier holds the service, the policy (2 GiB address space) and two fresh replays"
 
 [[limit]]
 match = "^embodied-olympics-match-tabletennis-match-i[0-9]{2}-privileged$"
@@ -2830,7 +2830,7 @@ trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 6.0
 measured = "author estimate, not yet measured: 6 GiB under the 8 GiB container cap (2 GiB for the monitor's margin), enough for about ten worlds at once; processes 512 and disk 20 GiB: design defaults"
 
-# EmbodiedOlympics' other privileged twins (scripts/embodied-olympics/privileged/generate.py), like the table-tennis ones (#282
+# Embodied Olympics' other privileged twins (scripts/embodied-olympics/privileged/generate.py), like the table-tennis ones (#282
 # review): the agent runs its own simulators; the verifier plays the formal match on the wall clock (the original
 # service and the program, its CPUs pinned: verifier_min_cpus = [verifier.environment] cpus), one fresh replay and
 # the replay video. Humanoid soccer's world needs more cores.

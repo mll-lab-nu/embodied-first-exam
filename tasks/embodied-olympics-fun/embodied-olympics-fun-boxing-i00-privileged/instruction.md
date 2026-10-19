@@ -1,6 +1,6 @@
 # embodied-olympics boxing — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** Punch the heavy bag once with the knuckles of your right fist, on the marked band, hard enough to give it 12.0 N s, then bring the fist back to your guard and stand.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

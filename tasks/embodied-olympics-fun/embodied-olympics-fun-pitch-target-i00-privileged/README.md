@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-pitch-target-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Pitch a strike: from the pitcher's plate on the mound, with a foot on the plate, throw the baseball in your right hand through the strike zone over home plate, on the fly. (EmbodiedOlympics `pitch-target`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Pitch a strike: from the pitcher's plate on the mound, with a foot on the plate, throw the baseball in your right hand through the strike zone over home plate, on the fly. (Embodied Olympics `pitch-target`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 From 18.44 m the ball needs more than 13 m/s even on a high arc, and the zone is 0.43 m wide: a release direction right to about one degree. The H1-2 has no throwing motion; the speed has to come from the trunk and the whole arm while a foot stays on the plate and the body on the mound.

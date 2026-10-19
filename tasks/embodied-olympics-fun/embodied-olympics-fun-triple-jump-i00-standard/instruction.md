@@ -1,6 +1,6 @@
 # embodied-olympics triple-jump — instance i00 — STANDARD MODE (robot as a service)
 
-You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 33 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
 client. **Task:** Do a triple jump: run up, hop from behind the take-off line and land on the same foot, step onto the other foot, and jump from it into the sand pit.
 
@@ -148,7 +148,7 @@ What the platform does and does not do for you:
   walker takes the legs at once, from where they are (its memory starts afresh); `walk`, the other walker and `run`
   take them from it the same way. Going from a walker straight to `stand` usually ends in a fall (`stand` holds
   Unitree's stance and does not balance): give `walk` a zero command for about 2 s first.
-- **`run`** runs EmbodiedOlympics' athletics running policy (50 Hz) on all 29 joints: `vx` from 0 to about 4 m/s (it falls
+- **`run`** runs Embodied Olympics' athletics running policy (50 Hz) on all 29 joints: `vx` from 0 to about 4 m/s (it falls
   above that; the command changes at most 1.5 m/s per second), `|vy|` ≤ 0.12 m/s, `|wz|` ≤ 0.5 rad/s. `run_arms` gives
   you the arms while it keeps the legs and the waist; taking the arms away from its swing disturbs it. Switching to
   `stand`, `walk` or `joints` above about 0.6 m/s usually ends in a fall: slow down first (from 2.4 m/s that takes

@@ -1,6 +1,6 @@
 # embodied-olympics catch — instance i00 — STANDARD MODE (robot as a service)
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
 client. **Task:** Catch the fly ball: grip the baseball with a hand before it touches the ground or your body, and keep hold of it.
 

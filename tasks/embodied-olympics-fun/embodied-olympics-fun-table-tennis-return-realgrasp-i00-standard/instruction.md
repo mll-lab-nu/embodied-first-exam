@@ -1,6 +1,6 @@
 # embodied-olympics table-tennis-return-realgrasp — instance i00 — STANDARD MODE (robot as a service)
 
-You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 34 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree G1 humanoid robot (29 joints, 1.32 m tall, 34 kg; the Embodied Olympics simulator on MuJoCo)
 **as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through a
 client. **Task:** Return the service: after the table tennis ball has bounced once on your court, strike it with the paddle held in your right hand's gripper so that it touches the opponent's court, without letting go of the paddle.
 
@@ -13,10 +13,10 @@ Directions are from the robot at the start: +x is the way you face, +y is to you
 ## The rules
 **Rule book:** ITTF Handbook 2024, The Laws of Table Tennis: 2.1 (the table), 2.2 (the net assembly), 2.3 (the ball), 2.4 (the racket), 2.5 (definitions: struck, obstruction, racket hand, free hand), 2.6 (the service), 2.7 (the return), 2.10 (a point). Where this task departs from it:
 
-- 2.6.1-2.6.3 (the service): there is no server and no toss: the ball waits at the server's strike point and is launched at 3.0 s with the position, velocity and spin it has at the strike of a legal service of EmbodiedOlympics' serve library (a service a Franka arm made under its real limits; entry 221, the draw of this instance's seed, not chosen for being returnable), because the task is one return, not a match
+- 2.6.1-2.6.3 (the service): there is no server and no toss: the ball waits at the server's strike point and is launched at 3.0 s with the position, velocity and spin it has at the strike of a legal service of Embodied Olympics' serve library (a service a Franka arm made under its real limits; entry 221, the draw of this instance's seed, not chosen for being returnable), because the task is one return, not a match
 - 2.1.3 (the table's bounce): the playing surface is Google DeepMind's system-identified table, on which a ball dropped from 30 cm rebounds 26 cm, not the Law's about 23 cm; it is the only identified model of the ball's bounce with spin there is
 - 2.2 (the net): the net is a rigid wall 1 cm thick, 0.1525 m high, reaching 0.1525 m beyond each side line, without separate posts or a cord (DeepMind's model); a soft net is not simulated
-- 2.4 (the racket): the blade is a rigid 15 cm square, 1.5 cm thick, on a straight handle 0.1 m long, 0.032 m wide and 0.025 m thick, 0.14 kg in all (legal: the Laws set no size, shape or weight); its covering is one contact law on both faces (EmbodiedOlympics' ball-paddle pair, hand-picked, not identified)
+- 2.4 (the racket): the blade is a rigid 15 cm square, 1.5 cm thick, on a straight handle 0.1 m long, 0.032 m wide and 0.025 m thick, 0.14 kg in all (legal: the Laws set no size, shape or weight); its covering is one contact law on both faces (Embodied Olympics' ball-paddle pair, hand-picked, not identified)
 - 2.5.5 (the racket hand, the hand carrying the racket): the hand is a two-finger gripper, Unitree's Dex1-1 (90 mm stroke, 80 mm jaws, at most 120 N); the handle lies along its jaws and the racket is held by their friction alone, as a hand holds it; "carrying" is defined by contact: the handle touches both of the gripper's jaws, and a break of up to 0.05 s is not a release; the racket may touch nothing of the player but the racket hand (the Laws do not forbid a second hand on the racket; here it would make the free hand a second racket hand)
 - 2.10.1.7 (deliberately striking the ball twice): intent cannot be judged: every contact of the blade or the racket hand within 0.05 s of the first is the same strike, a later one is a second strike
 - 2.10.1.8 (moving the playing surface): the table is fixed and this is not judged: a competition table weighs three times the robot and more, and the robot's push on it is limited by the grip of its own feet
@@ -148,7 +148,7 @@ What the platform does and does not do for you:
   walker takes the legs at once, from where they are (its memory starts afresh); `walk`, the other walker and `run`
   take them from it the same way. Going from a walker straight to `stand` usually ends in a fall (`stand` holds
   Unitree's stance and does not balance): give `walk` a zero command for about 2 s first.
-- **`run`** runs EmbodiedOlympics' athletics running policy (50 Hz) on all 29 joints: `vx` from 0 to about 4 m/s (it falls
+- **`run`** runs Embodied Olympics' athletics running policy (50 Hz) on all 29 joints: `vx` from 0 to about 4 m/s (it falls
   above that; the command changes at most 1.5 m/s per second), `|vy|` ≤ 0.12 m/s, `|wz|` ≤ 0.5 rad/s. `run_arms` gives
   you the arms while it keeps the legs and the waist; taking the arms away from its swing disturbs it. Switching to
   `stand`, `walk` or `joints` above about 0.6 m/s usually ends in a fall: slow down first (from 2.4 m/s that takes

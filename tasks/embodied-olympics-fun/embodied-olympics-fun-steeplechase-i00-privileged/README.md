@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-steeplechase-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Go over the steeplechase hurdle in front of you and over or through the water pit behind it, get out beyond the pit's far edge and stand on your feet. (EmbodiedOlympics `steeplechase`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Go over the steeplechase hurdle in front of you and over or through the water pit behind it, get out beyond the pit's far edge and stand on your feet. (Embodied Olympics `steeplechase`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The bar is at hip height and the walking policy lifts its feet a few centimetres: the hurdle has to be jumped or climbed with whole-body joint control by a 67 kg robot whose best standing jump raises it far less than 0.914 m. Behind the bar the ground is 0.5 m lower than the track, so the landing is a drop of up to 1.4 m, and the way out is a slope.

@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-steeplechase-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Go over the steeplechase hurdle in front of you and over or through the water pit behind it, get out beyond the pit's far edge and stand on your feet. (EmbodiedOlympics `steeplechase`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Go over the steeplechase hurdle in front of you and over or through the water pit behind it, get out beyond the pit's far edge and stand on your feet. (Embodied Olympics `steeplechase`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The bar is at hip height and the walking policy lifts its feet a few centimetres: the hurdle has to be jumped or climbed with whole-body joint control by a 67 kg robot whose best standing jump raises it far less than 0.914 m. Behind the bar the ground is 0.5 m lower than the track, so the landing is a drop of up to 1.4 m, and the way out is a slope. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | parkour-apparatus-balance |
 | Rule book | World Athletics Competition and Technical Rules 2024, Technical Rule 23 (steeplechase races): the men's hurdle 0.914 m high with a top bar 0.127 m square; the hurdle at the water jump 3.66 m wide and fixed; the water jump 3.66 m long including the hurdle, the pit 3.66 m wide, 0.50 m deep at the hurdle for about 1.20 m, then a uniform slope up to the level of the track at the far end; each athlete shall go over each hurdle (in any manner) and over or through the water, and is disqualified for stepping to one side of the water jump or trailing a foot or leg below the horizontal plane of the top of the hurdle at the instant of clearance; deviations: TR 23 (the race): one water jump from a 10.0 m approach instead of a 3000 m race with 28 hurdle and 7 water jumps (a single action; the family is the water jump) · TR 23 (the water jump): the water itself is not simulated; the pit is dry and its floor is the hard, sloping bottom (the simulator has no free-surface water; what remains is the pit's real geometry) · TR 23 (clearance): "foot or leg below the top of the hurdle" is judged on the centres of the two feet and the pelvis where each crosses the vertical plane through the middle of the hurdle's top bar (three points a referee can measure on a robot) · the finish: with no race to run on to, the attempt ends when the whole body is beyond the pit's far edge and the robot has stood on its feet for 1.0 s |
 | Stages | hurdle → out of the water jump → stand |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 6000 control steps (60 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

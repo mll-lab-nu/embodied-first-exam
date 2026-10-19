@@ -1,7 +1,7 @@
 # Robot badminton: program play (match-wallclock)
 
 You play robot badminton against a scripted opponent (you are seat `A`). Robot singles badminton on a small court (the BWF court's lengths x 0.4, the net at its BWF height 1.524 m) in real time (slowed down): a Franka Panda arm held to the real Panda's limits, with a racket, on an x-y gantry of ball-screw axes (2 m/s, 15 m/s^2), a point-mass shuttle with the real shuttle's high quadratic drag (terminal speed 6.8 m/s) and no bounce, a racket contact law of gain 4 (shuttles leave the racket at up to about 10 m/s); rally scoring, one game to 11 points; the players' robots serve (the rally winner serves next): the server tosses the shuttle (from rest or rising up to 0.5 m) at a point it chooses and hits it underhand, below 1.15 m, into the diagonal service court; format match-wallclock: you against a scripted computer opponent (levels 1-3, `game spec` match.opponent_level), format duel-wallclock: two players.
-This is EmbodiedOlympics task `badminton-match-wallclock-program-standard` (revision `badminton-wallclock-12+duel-14+core-0.2`), one frozen instance: the scripted opponent at level 1, the world slowed S = 20 times; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
+This is Embodied Olympics task `badminton-match-wallclock-program-standard` (revision `badminton-wallclock-12+duel-14+core-0.2`), one frozen instance: the scripted opponent at level 1, the world slowed S = 20 times; the seed is fixed and never shown. The simulator service is at `http://localhost:8000`.
 
 ## Time
 The world runs in real time at 1/S of real speed (S = `timing.slowdown` in `game spec`); your thinking costs game time. At the end of every unit the world freezes for the reviews.

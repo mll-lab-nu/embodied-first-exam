@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-standing-long-jump-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a standing long jump: from a standstill behind the take-off line, take off from both feet without a step, land on your feet at least your own height beyond the line, and stand. (EmbodiedOlympics `standing-long-jump`: one Unitree G1 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Do a standing long jump: from a standstill behind the take-off line, take off from both feet without a step, land on your feet at least your own height beyond the line, and stand. (Embodied Olympics `standing-long-jump`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Neither built-in gait can jump. The take-off needs both legs' full power in one coordinated push with the body leaning well ahead of the feet, and a jump of the robot's own height comes down at more than 3 m/s: the legs have to absorb it without a hand or the pelvis going down.

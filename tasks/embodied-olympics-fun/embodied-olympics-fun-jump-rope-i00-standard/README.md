@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-jump-rope-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Skip rope: turn the rope forwards with both hands, over your head and under your feet, and jump it with both feet together, 17 times within one minute. (EmbodiedOlympics `jump-rope`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Skip rope: turn the rope forwards with both hands, over your head and under your feet, and jump it with both feet together, 17 times within one minute. (Embodied Olympics `jump-rope`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Every jump needs two skills at once. The arms must keep a light, floppy rope turning at a steady speed through grippers that hold it only by friction. The legs must make a two-footed hop, about 0.1 m high and timed to within a tenth of a second, to the rope coming under the feet. Then the robot must land and do it again 17 times without falling. Neither built-in gait can hop, and a rope that stops on a shin or a toe has to be started again from behind. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | track-and-jumps |
 | Rule book | The Chinese National Student Physical Fitness Standard (国家学生体质健康标准, 2014 revision, Ministry of Education 教体艺〔2014〕5号), one-minute rope skipping (1分钟跳绳): the rope turned forwards, a two-foot jump (正摇双脚跳); each turn of the rope round the body that passes under the feet counts one; a miss (the rope caught on the body) does not stop the clock, the skipper starts the rope again; the result is the count in one minute. The family's success line is the standard's pass mark (60 points) for first-grade boys: 17 jumps in one minute; deviations: Equipment: the standard names no rope. The rope here is a 7 ft (2.13 m between the swivels) beaded school rope, the length that skipping-rope sizing charts give a skipper shorter than 1.45 m (4 ft 9 in): 28 rigid segments of two 38 mm low-density polyethylene beads each (9.5 mm across, Kanga's deluxe beaded rope), 0.1 kg in all (a 7 ft segmented rope weighs 0.2 lb). Neighbouring segments are tied by stiff pivots that stretch by a few millimetres under load (the cord), and the rope feels the air's drag. Its two plastic handles are 0.15 m long and 0.04 kg each, with the rope on a swivel at their far ends. · Hands: the robot's hands are Unitree Dex1-1 two-finger grippers. Each handle is held between the jaws only by their friction, so it can slip out or be dropped. · Judging: a judge's eye is replaced by geometry, checked at every 1 ms physics step. The rope passes under a foot when its point at that foot's sideways position crosses, from front to back, the upright plane across the robot's heading through the foot, lower than the foot's lowest point (plus the rope's thickness). It passes over the head when its point at the head's sideways position crosses the upright plane through the head from back to front, higher than the top of the head. Three numbers the standard leaves to the judge's eye: the rope must move backwards at 1.0 m/s or more as it passes (a turning rope, not a hop over a still one), under the second foot within 0.15 s of the first, and both feet must leave the floor within 0.1 s of each other (a two-foot jump). · Timing: the minute runs from t = 0, with the robot standing, a handle in each gripper and the rope on the floor behind its heels. The attempt ends with success once the robot has landed on its feet after the 17th jump and stood still for 1.0 s (the families' land-and-stand rule), without waiting for the end of the minute. |
 | Stages | jump 1 → jump 2 → jump 3 → jump 4 → jump 5 → jump 6 → jump 7 → jump 8 → jump 9 → jump 10 → jump 11 → jump 12 → jump 13 → jump 14 → jump 15 → jump 16 → jump 17 → stand |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 6000 control steps (60 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

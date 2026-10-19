@@ -1,6 +1,6 @@
 # embodied-olympics wall-ball-realgrasp — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 68 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** Throw the tennis ball held in your right gripper at the target circle on the wall and catch the rebound in a gripper before it touches the ground, and keep hold of it.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

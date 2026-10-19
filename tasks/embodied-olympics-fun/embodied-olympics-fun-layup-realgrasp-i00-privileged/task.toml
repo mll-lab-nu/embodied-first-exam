@@ -3,14 +3,14 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-layup-realgrasp-i00-privileged"
-description = "EmbodiedOlympics layup-realgrasp (one Unitree H1-2 on the EmbodiedOlympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Make a layup: with the basketball pressed between your two palms take at most two steps towards the basket, jump, and let go of the ball in the air close to the ring so that it enters the basket from above. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics layup-realgrasp (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Make a layup: with the basketball pressed between your two palms take at most two steps towards the basket, jump, and let go of the ball in the air close to the ring so that it enters the basket from above. A referee of events, geometry and contact rules decides the success."
 authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "layup-realgrasp"]
 
 [metadata]
 author_name = "Kangrui Wang"
 task_type = "trajectory"
-simulator = "mujoco"               # the EmbodiedOlympics simulator: MuJoCo 3.3.7 on the CPU with EmbodiedOlympics' robot library
+simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3.7 on the CPU with Embodied Olympics' robot library
 robot = "unitree-h1-2"
 family = "layup_realgrasp"
 category = "basketball-and-rackets"
@@ -82,7 +82,7 @@ memory_mb = 8192
 
 [agent]
 timeout_sec = 7200.0
-# Egress: open (Harbor's default), as `[metadata] network` declares. EmbodiedOlympics lets the agent search for and download
+# Egress: open (Harbor's default), as `[metadata] network` declares. Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
 
 [environment]

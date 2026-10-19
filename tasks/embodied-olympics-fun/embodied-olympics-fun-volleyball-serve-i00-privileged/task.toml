@@ -3,14 +3,14 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-volleyball-serve-i00-privileged"
-description = "EmbodiedOlympics volleyball-serve (one Unitree H1-2 on the EmbodiedOlympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Serve the volleyball: from behind the end line, toss it out of your left hand and hit it with one hand or arm over the net into the opponent's court. A referee of events, geometry and contact rules decides the success."
+description = "Embodied Olympics volleyball-serve (one Unitree H1-2 on the Embodied Olympics simulator, MuJoCo 3.3.7, CPU) in privileged mode: produce one replayable trajectory. Serve the volleyball: from behind the end line, toss it out of your left hand and hit it with one hand or arm over the net into the opponent's court. A referee of events, geometry and contact rules decides the success."
 authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "trajectory", "volleyball-serve"]
 
 [metadata]
 author_name = "Kangrui Wang"
 task_type = "trajectory"
-simulator = "mujoco"               # the EmbodiedOlympics simulator: MuJoCo 3.3.7 on the CPU with EmbodiedOlympics' robot library
+simulator = "mujoco"               # the Embodied Olympics simulator: MuJoCo 3.3.7 on the CPU with Embodied Olympics' robot library
 robot = "unitree-h1-2"
 family = "volleyball_serve"
 category = "football-and-volleyball"
@@ -21,7 +21,7 @@ network = "open"                 # the agent's egress (docs/protocol/README.md ย
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 oracle = "full"
-oracle_evidence = "Reference: an underarm serve (left fist tosses, straight right arm and the trunk's turn hit) from a technique found offline by CMA-ES over whole-body key poses (EmbodiedOlympics' method, search_technique.py): 2.2 m/s in, 11.4 m/s out, over the net into the court 1.8 m beyond it. Referee test negatives: a throw brushing the fist, hit out of the hand, a still fist, the head, into the net, outside the antenna, long, a foot fault, a second touch, held Measured (make_oracles.py): success after 3.28 s of the 12 s limit, live and in a fresh replay, ending in the same state."
+oracle_evidence = "Reference: an underarm serve (left fist tosses, straight right arm and the trunk's turn hit) from a technique found offline by CMA-ES over whole-body key poses (Embodied Olympics' method, search_technique.py): 2.2 m/s in, 11.4 m/s out, over the net into the court 1.8 m beyond it. Referee test negatives: a throw brushing the fist, hit out of the hand, a still fist, the head, into the net, outside the antenna, long, a foot fault, a second touch, held Measured (make_oracles.py): success after 3.28 s of the 12 s limit, live and in a fresh replay, ending in the same state."
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md ยง2.9)
@@ -82,7 +82,7 @@ memory_mb = 8192
 
 [agent]
 timeout_sec = 7200.0
-# Egress: open (Harbor's default), as `[metadata] network` declares. EmbodiedOlympics lets the agent search for and download
+# Egress: open (Harbor's default), as `[metadata] network` declares. Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md).
 
 [environment]

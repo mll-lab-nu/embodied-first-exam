@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-triple-jump-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Do a triple jump: run up, hop from behind the take-off line and land on the same foot, step onto the other foot, and jump from it into the sand pit. (EmbodiedOlympics `triple-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Do a triple jump: run up, hop from behind the take-off line and land on the same foot, step onto the other foot, and jump from it into the sand pit. (Embodied Olympics `triple-jump`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 Seven metres in three flights, each from one foot: every phase has to be more than twice this robot's best published two-foot jump, taken from a single leg, and landed on a single leg with enough balance and speed left to take off again. Nothing built in hops on one foot at all. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | track-and-jumps |
 | Rule book | World Athletics Competition and Technical Rules, 2024 edition: TR 31 (31.1 the hop, step and jump in that order; 31.2 the hop lands on the take-off foot, the step on the other foot; the rules of the long jump apply: TR 29 the runway, the board, the landing area; TR 30.1.1, 30.1.2, 30.1.5 failures; TR 30.3 the measurement), TR 25.17 (one minute for a trial); deviations: TR 31.3 (the take-off line at least 13 m from the pit for men, 11 m for women in international competition; nearer boards for other levels): the board is 7.0 m before the pit, a school competition's board (FAMILIES.md) · TR 31.2, note (a touch of the ground by the 'sleeping' leg is no failure): not applied: between the hop's landing and the step's take-off, and between the step's landing and the jump's take-off, only the foot the phase landed on may touch the ground; a referee without eyes cannot tell a scrape from a supporting step · TR 31.1 (the event is one hop, one step and one jump): between a phase's landing and the next take-off the landing foot is on one place: a touch of it more than 0.3 m from where it landed is a failure (hops too short to be flights, or a slide, would otherwise cover the distance) · the take-off of the hop from one foot (implied by TR 31.2) is judged by a number: the other foot must have left the ground at least 0.05 s before the take-off foot does · TR 30.1.3 (somersaulting) and TR 30.1.6 / 30.2 (how the athlete leaves the landing area) are not judged; the landing is judged for 2.0 s from the first contact with the sand · TR 29.3 (the plasticine indicator board): no imprint; the take-off line is judged geometrically: a foot on the ground with any part of it (also a part in the air) on or over the line's plane is a failure · TR 29.6 (the sand): the pit is a box with a soft, overdamped, high-friction contact (time constant 0.05 s, full stiffness only 0.04 m deep, friction 1.5); it keeps no imprint, so the mark is the contact with the sand nearest the take-off line · TR 31 does not define a hop; here each phase is a flight of at least 0.05 s, and the hop must raise the pelvis at least 0.05 m above its height at lift-off; no wind; one trial |
 | Stages | hop → step → jump → landing |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 6000 control steps (60 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

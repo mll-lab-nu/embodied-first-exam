@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-volleyball-serve-realgrasp-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Serve the volleyball: from behind the end line, toss it up off your open left palm and hit it with one hand or arm over the net into the opponent's court. (EmbodiedOlympics `volleyball-serve-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Serve the volleyball: from behind the end line, toss it up off your open left palm and hit it with one hand or arm over the net into the opponent's court. (Embodied Olympics `volleyball-serve-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The ball has to leave the hit at about 11 m/s (10.8 m/s from 2.2 m up, 11.5 m/s underarm from 1 m) to clear a 2.43 m net 9 m away and still come down inside the far court: a fist at 6 to 7 m/s, about the most a full swing of this arm gives, through a ball the robot has tossed itself off a flat palm (straight up: a palm that moves sideways leaves the ball behind), at the right instant, on a 67 kg robot whose stand has no balance feedback. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | football-and-volleyball |
 | Rule book | FIVB Official Volleyball Rules 2025-2028: Rule 1 (the court 18 m x 9 m, the service zone 9 m wide behind the end line), Rule 2 (the men's net, top at 2.43 m, the antennas), Rule 3 (the ball: 65-67 cm round, 260-280 g), Rule 8 (ball in and out: the lines belong to the court; a ball that touches an antenna or crosses the net's plane outside the crossing space is out), Rule 10.2 (the ball may touch the net while crossing it), Rule 12.4 (the service: the ball is hit with one hand or any part of the arm after being tossed or released from the hands; one toss only; the server does not touch the court or the floor outside the service zone at the hit; the hit comes within 8 s of the whistle); deviations: Rule 12.4.1 (tossed or released from the hand(s)): the robot's hands are flat palm pads without fingers and without grip; the ball starts resting on the open left palm, turned up, and only its weight and friction keep it there (it rolls off a palm that tilts by more than about 2 degrees or moves sideways). The toss is the arm's own movement throwing the ball up off the palm (or letting it fall from it). The ball has left the hand when it has touched no part of the robot for 0.03 s; the release is the end of its last contact; until then only the hands may touch it. The palm absorbs the ball as a hand does (the palm-ball contact of dunk-realgrasp: a ball thrown at a still palm keeps 0.12 of its speed, in the world's elliptic friction cones); every other contact keeps the ball's rule-book rebound. · Rule 12.4.1 (tossed, then hit): a referee's eye for 'tossed, then hit' is replaced by numbers: after the release the ball must be clear of the robot for at least 0.1 s before the hit, it may move at most 5.0 m/s just before the hit (the speed of a ball that has fallen about 1.3 m: a toss, not a throw), the hit's contacts last at most 0.1 s, and the ball must leave the hit faster than it arrived. · Rule 12.4.3 (the server's feet) is judged at the first contact of the hit, or at the take-off before it when the robot is in the air; the whistle is the start of the episode. · No opponents (nobody receives the serve), no wind. |
 | Stages | toss → hit → over the net → in the court |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1200 control steps (12 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

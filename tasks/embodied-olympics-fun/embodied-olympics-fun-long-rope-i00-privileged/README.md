@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-long-rope-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Jump the long rope: standing in the middle of a rope turned by two turners, jump it 10 times in a row, the rope passing under both your feet while you are in the air, without the rope ever touching you. (EmbodiedOlympics `long-rope`: one Unitree G1 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Jump the long rope: standing in the middle of a rope turned by two turners, jump it 10 times in a row, the rope passing under both your feet while you are in the air, without the rope ever touching you. (Embodied Olympics `long-rope`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Neither built-in gait can jump: the robot must hop again and again, in time with a rope it has to watch, with its feet off the ground at the very moment the rope passes and back on balance before the next turn. Each landing must be absorbed while the next take-off is already being prepared, and any drift out of the middle or a toe left behind catches the rope.

@@ -15,7 +15,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" },
 
 [task]
 name = "embodied-first-exam/embodied-olympics-fun-discus-i00-standard"
-description = "STANDARD MODE (robot as a service, eai-standard/2.1): EmbodiedOlympics discus on the same frozen instance as embodied-olympics-fun-discus-i00-privileged. Throw the discus in your right hand from inside the circle so that it lands inside the sector at least 15.0 m from the circle, then leave the circle from its rear half and stand. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 50 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
+description = "STANDARD MODE (robot as a service, eai-standard/2.1): Embodied Olympics discus on the same frozen instance as embodied-olympics-fun-discus-i00-privileged. Throw the discus in your right hand from inside the circle so that it lands inside the sector at least 15.0 m from the circle, then leave the circle from its rear half and stand. The agent only gets a client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 50 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records the attempt and grades it live with the family's referee (no grading replay)."
 authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-h1-2", "humanoid", "standard-mode", "trajectory", "discus"]
 
@@ -34,7 +34,7 @@ instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 10.0
 oracle = "full"
-oracle_evidence = "Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (EmbodiedOlympics' method, search_technique.py): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit The privileged twin's reference rows (848 control steps, success after 8.48 s) streamed through the client."
+oracle_evidence = "Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (Embodied Olympics' method, search_technique.py): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit The privileged twin's reference rows (848 control steps, success after 8.48 s) streamed through the client."
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)
@@ -106,7 +106,7 @@ timeout_sec = 900
 
 [agent]
 timeout_sec = 7200.0
-# Egress: open (Harbor's default), as `[metadata] network` declares. EmbodiedOlympics lets the agent search for and download
+# Egress: open (Harbor's default), as `[metadata] network` declares. Embodied Olympics lets the agent search for and download
 # public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
 # container holds no simulator, no referee and no instance.
 

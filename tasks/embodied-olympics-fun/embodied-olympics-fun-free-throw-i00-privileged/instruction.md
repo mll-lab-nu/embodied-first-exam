@@ -1,6 +1,6 @@
 # embodied-olympics free-throw — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** Shoot a free throw: from behind the free-throw line, throw the basketball in your right hand so that it enters the basket from above.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

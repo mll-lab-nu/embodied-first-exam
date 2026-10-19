@@ -14,7 +14,7 @@ robot (`meta.messages`) and the operator's answers (`meta.operator`, and `last_o
 object's pose, the scene's contents, the member of the family or the hazard state.
 
 Benchmark additions to the shared layer, made here so that rcb_service.py stays the file every 2.1 benchmark shares
-(precedent: EmbodiedOlympics-Fun' server.py adds to Service.meta):
+(precedent: RoboFunOlympics' server.py adds to Service.meta):
   - an `ee_pose` /submit whose rows are interpolated (dt above one control step, linear) is interpolated the shorter
     way: each row's quaternion is first given the sign of the row before it (`SafetyExam.clip`, rcb_ese.align_quaternions;
     Embodied Safety Exam 0.5.4); the actions saved for the call stay as sent;

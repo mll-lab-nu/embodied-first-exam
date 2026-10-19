@@ -1,6 +1,6 @@
 # embodied-olympics basketball-dribble-realgrasp — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** Dribble the basketball, which starts pressed between your two palms, from the end line across the centre line, 14 m up the court, one palm at a time, without a dribbling or a travelling violation.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

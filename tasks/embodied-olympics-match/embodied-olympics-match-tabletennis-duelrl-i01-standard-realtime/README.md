@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Match |
+| Benchmark | Embodied Olympics - Match |
 | Mode | standard-realtime (`eai-standard-realtime/1.0`) |
-| Twin | — (none: a task EmbodiedOlympics exports with its own service, PROTOCOL §4c) |
+| Twin | — (none: a task Embodied Olympics exports with its own service, PROTOCOL §4c) |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `tabletennis_duel` / seed 8 |
 | Oracle | `partial` — screening (Quest, D = 5): the truth-state reference beats it 15/160 (9 %; it beats level 4 in 2/40), the camera-only reference 3/20 (seed 8, A first: 5:2); mirror RL vs RL 68/120 (57 %, Wilson 48-65 %); simple baselines vs RL: center 4/20, center_truth 3/20, fixed 2/20, random 2/20, short_serve 0/20, no_hit 0/20; same-seed reruns 3/3 identical; 0 refused / rejected commands, fewer joint-velocity reflexes than the reference (74 vs 166 per 40 matches). Realtime play varies run to run, hence partial |
@@ -17,7 +17,7 @@ Table tennis against a built-in opponent player (seat B, builtin_players:RLOppon
 
 ## Difficulty
 Frozen development instance: seed 8, a built-in opponent, slowdown S = 10. Not one of
-the sport's official (hidden) seeds, so results here are previews, not official EmbodiedOlympics results.
+the sport's official (hidden) seeds, so results here are previews, not official Embodied Olympics results.
 
 ## Reference solution
 `solution/`: our camera-only reference player through the same HTTP interface. screening (Quest, D = 5): the truth-state reference beats it 15/160 (9 %; it beats level 4 in 2/40), the camera-only reference 3/20 (seed 8, A first: 5:2); mirror RL vs RL 68/120 (57 %, Wilson 48-65 %); simple baselines vs RL: center 4/20, center_truth 3/20, fixed 2/20, random 2/20, short_serve 0/20, no_hit 0/20; same-seed reruns 3/3 identical; 0 refused / rejected commands, fewer joint-velocity reflexes than the reference (74 vs 166 per 40 matches). Realtime play varies run to run, hence partial.
@@ -41,12 +41,12 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: EmbodiedOlympics' exported matches (scripts/embodied-olympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/embodied-olympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only, real time needs the cores
+- Measured: Embodied Olympics' exported matches (scripts/embodied-olympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/embodied-olympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only, real time needs the cores
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 12 GiB memory. Limits measured: memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
 
 ### Notes
-Source: EmbodiedOlympics task `tabletennis-duel-wallclock-program-standard`, revision `wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2`. The rules, the referee, the scripted
+Source: Embodied Olympics task `tabletennis-duel-wallclock-program-standard`, revision `wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2`. The rules, the referee, the scripted
 opponent, the observation, the review between points and the grader are ours, unchanged; only the seat is
 unmetered (Harbor records the model's usage) and the instance is frozen.

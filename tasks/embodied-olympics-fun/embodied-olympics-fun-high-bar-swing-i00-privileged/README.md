@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-high-bar-swing-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Hanging from the high bar by both hands, do one giant swing: take your extended body in a full circle around the bar, without letting go. (EmbodiedOlympics `high-bar-swing`: one Unitree G1 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Hanging from the high bar by both hands, do one giant swing: take your extended body in a full circle around the bar, without letting go. (Embodied Olympics `high-bar-swing`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Nothing pushes you: the swing has to be pumped up from rest by moving the legs, the waist and the shoulders in time with the pendulum, against motors of 88 N m at the hips and 25 N m in the arms, until the body goes over the top of the bar extended. A simple leg pump is known to stall a little above the horizontal.

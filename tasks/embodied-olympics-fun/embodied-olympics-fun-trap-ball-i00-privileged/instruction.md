@@ -1,6 +1,6 @@
 # embodied-olympics trap-ball — instance i00
 
-You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the EmbodiedOlympics simulator on MuJoCo)
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
 via Python. **Task:** Trap the pass: take the football that is passed along the ground past you with a foot, and bring it to rest within a metre of you inside three seconds.
 
 This is a *fixed instance*: the same venue and start every time. You may reset and retry as many times as you want.

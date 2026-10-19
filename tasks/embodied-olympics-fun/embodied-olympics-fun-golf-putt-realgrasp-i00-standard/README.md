@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `embodied-olympics-fun-golf-putt-realgrasp-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Hole the 3.0 m putt: with one stroke of the putter held in your right hand's gripper, roll the golf ball that lies on the green into the hole, without letting go of the putter. (EmbodiedOlympics `golf-putt-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
+Hole the 3.0 m putt: with one stroke of the putter held in your right hand's gripper, roll the golf ball that lies on the green into the hole, without letting go of the putter. (Embodied Olympics `golf-putt-realgrasp`; the robot as a service: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
 The hole is two and a half ball widths across and three metres away: the ball must start within about one degree of the line and at a speed between the one that just reaches the hole and the one that jumps it, and there is no second stroke. The club is an adult's, long and heavy for this robot's wrist, and it has to be brought from where it starts to an address beside the ball first. It is held across a two-finger gripper's jaws by friction: tilted towards its toe it turns in the jaws, so it has to be carried with the shaft near the vertical, and the swing rocks it in the jaws, so the face at impact is not quite where the arm put it. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
@@ -46,7 +46,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Category | basketball-and-rackets |
 | Rule book | The Rules of Golf (R&A / USGA, 2023): Definitions "Hole", "Holed", "Stroke", "Line of Play"; Rules 8.1b, 9.4, 10.1a, 10.1b, 10.1c, 11.1, 13.2, 13.3a; the Equipment Rules (2023), Part 2 (clubs) and Part 4 (the ball); the USGA Stimpmeter instructions for the green's speed; deviations: Definition "Hole": the opening is a regular 24-sided polygon inscribed in the 0.108 m circle (flats 0.5 mm inside it, never wider than the official hole) with rigid vertical walls (the liner is only drawn), because the simulator has no cylindrical cavity · Rule 13.2: there is no flagstick (as when the player has it removed) · Rule 10.1 and the Equipment Rules on the grip: the hand is a two-finger gripper, Unitree's Dex1-1 (90 mm stroke, 80 mm jaws, at most 120 N), on the right wrist; the grip lies across its jaws, at right angles to the forearm (as a fist holds a hammer), and the putter is held by their friction alone; "in the hand" is defined by contact: the grip touches both jaws, and a break of up to 0.05 s is not a release. The stroke is made with that hand (a one-handed stroke is legal); the left hand may hold the grip too. The club itself is not scaled to the 1.32 m robot · Rule 10.1b (anchoring): the club may touch nothing of the player but the hands (stricter than the Rule, which allows the club against a forearm) · the start: the club is not level at your right side but hangs from your right hand held out ahead (a two-finger gripper cannot carry a level putter across its jaws: it turns in them under its own weight); one hand, not two: on this model the robot cannot put both hands on the grip at the address · Rule 10.1a (a fair strike; an accidental double hit is one stroke): the referee needs numbers: every contact of the head with the ball must fall within 0.2 s of the first, and the contacts together may last at most 0.03 s (the simulated impact of a clean putt lasts 0.012 s, a real one 0.0005 s: the ball's contact is softer than a real ball's so that the simulator's 1 ms step resolves it) · Rules 9.4, 11.1 and 3.3 (penalty strokes, replaying, counting strokes): a single attempt: anything that would cost a penalty or need a second stroke ends it as a failure · Rule 13.3a (waiting for a ball that overhangs the hole): a ball that has been at rest for 1.0 s is final · the green: perfectly flat and uniform, no grain, no wind; its speed (stimp 10) is the ball's rolling resistance, calibrated so that a ball rolling at 1.83 m/s stops after 3.05 m |
 | Stages | stroke → holed |
-| Service | `environment/sim/server.py` (the EmbodiedOlympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
+| Service | `environment/sim/server.py` (the Embodied Olympics adapter) on `rcb_service.py` (eai-standard/2.1), `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 3000 control steps (30 s at 100 Hz); 50 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

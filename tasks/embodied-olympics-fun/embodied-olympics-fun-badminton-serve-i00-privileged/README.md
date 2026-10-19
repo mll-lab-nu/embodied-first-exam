@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-badminton-serve-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Serve: standing in your right service court, let the shuttle go from your left hand and hit it with the racket in your right hand, base first and below 1.15 m, over the net into the receiver's service court diagonally opposite. (EmbodiedOlympics `badminton-serve`: one Unitree G1 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Serve: standing in your right service court, let the shuttle go from your left hand and hit it with the racket in your right hand, base first and below 1.15 m, over the net into the receiver's service court diagonally opposite. (Embodied Olympics `badminton-serve`: one Unitree G1 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 The shuttle must leave the strings at about 9 m/s or more, 40 to 55 degrees upwards, to clear a 1.52 m net 2 m away from a hit below 1.15 m, and the G1 meets it only in the lower part of a swing whose racket is held by friction in a parallel gripper; the left gripper's reach and the racket's path barely overlap, and the shuttle falls through it in a few hundredths of a second. The swing must leave the feet where they stand and the robot on them, on a stand without balance feedback.

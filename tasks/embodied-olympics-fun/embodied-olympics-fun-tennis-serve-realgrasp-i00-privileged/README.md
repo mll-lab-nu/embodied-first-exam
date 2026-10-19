@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-tennis-serve-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-Serve: from behind your baseline, release the tennis ball from your left gripper, strike it with the racket held in your right gripper before it reaches the ground, and send it over the net into the service box diagonally opposite. (EmbodiedOlympics `tennis-serve-realgrasp`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+Serve: from behind your baseline, release the tennis ball from your left gripper, strike it with the racket held in your right gripper before it reaches the ground, and send it over the net into the service box diagonally opposite. (Embodied Olympics `tennis-serve-realgrasp`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Nothing is fixed to the hands: the swing that gives a ball well over 10 m/s through a free 0.30 kg racket must not twist it out of two jaws that hold it by friction, the left gripper has to let go of the ball cleanly while the arm rises, and the strings must meet the falling ball within a few tenths of a second, aimed into a box 6.4 m deep beyond a net 11.9 m away. All of it on a body that stands without a balance controller and may not move its feet.

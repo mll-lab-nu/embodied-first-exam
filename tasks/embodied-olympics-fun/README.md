@@ -1,4 +1,4 @@
-# EmbodiedOlympics-Fun
+# Embodied Olympics - Fun
 
 Sixty single-robot sports for a humanoid, in their official settings: one Unitree G1 or H1-2 sprints 50 m, hurdles,
 jumps rope, takes a penalty against a keeper, serves over a 2.43 m net, shoots at a 3.05 m ring, returns a real table-tennis
@@ -17,24 +17,24 @@ Every image is public: Harbor pulls it.
 
 **Names.** The image is `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-<images/embodied-olympics-fun/VERSION>` (the same image as the earlier tag `efe:robofunolympics-<VERSION>`, which stays). The internal module names (`rfo/`, `rcb_rfo.py`) and the image's paths (`/opt/roboolympics`) keep their names.
 
-**Two benchmarks** (owner, 2026-10-18, board 0160). This page is **EmbodiedOlympics-Fun**: the 79 single-robot sports
+**Two benchmarks** (owner, 2026-10-18, board 0160). This page is **Embodied Olympics - Fun**: the 79 single-robot sports
 families above and below, built here (privileged, standard, and
-standard-realtime twins of the dynamic families). The tasks EmbodiedOlympics exports itself with its own service inside
+standard-realtime twins of the dynamic families). The tasks Embodied Olympics exports itself with its own service inside
 (PROTOCOL §3), matches and two turn-based fencing bouts listed in `ci_checks/benchmarks/embodied-olympics-match/exported.toml`, and their
-privileged twins are the benchmark **EmbodiedOlympics-Match** ([../embodied-olympics-match/README.md](../embodied-olympics-match/README.md)). Each has its
+privileged twins are the benchmark **Embodied Olympics - Match** ([../embodied-olympics-match/README.md](../embodied-olympics-match/README.md)). Each has its
 task-name prefix: `embodied-olympics-fun-` here, `embodied-olympics-match-` there (`scripts/task_conventions.py` `BENCHMARKS`).
 The families here are dashed English event names (`table-tennis-return`, `penalty-kick`), the exported tasks the
-sport's EmbodiedOlympics id and a format (`tabletennis-match`, `soccerssl-match`). The standard-realtime twins of the
+sport's Embodied Olympics id and a format (`tabletennis-match`, `soccerssl-match`). The standard-realtime twins of the
 dynamic families are `embodied-olympics-fun-<family>-i00-standard-realtime`.
 
 | | |
 |---|---|
-| origin | built here on the simulator of [EmbodiedOlympics](https://github.com/CHIGUI0/roboolympics) (MIT; private): its robot library `bodies/` (the Unitree G1 at revision g1-4 and the Unitree H1-2 at h1-4, the one limit and servo path, the joint-group arbiter, and the G1's optional FALCON and AGILE walking policies) and its athletics running policy, commit `7df999b`, unchanged, in the image. Parts of single families come from EmbodiedOlympics' sports (the athletics start procedure and hurdle, the bowling lane and oil zones, the tennis ball's fitted lift, DeepMind's system-identified table-tennis ball and table and the serve library). The list of sports follows the owner's survey of humanoid sports tasks |
-| simulator | MuJoCo 3.3.7 on the CPU (1 ms physics, 10 ms control), OSMesa rendering, no GPU; sunlight with shadows, a painted sky, procedural materials on the venues' surfaces, patterned balls, and round each venue perimeter boards, stepped grandstands with a seated crowd, a roof, floodlight towers, a scoreboard and a line of trees, merged into one mesh per colour (`embodied_first_exam/benchmarks/embodied-olympics-fun/rfo/looks.py`, after the venues of EmbodiedOlympics' throws and beach volleyball: looks only, no effect on the physics or the state hash); air at sea-level density (drag and Magnus lift on balls and implements); `simulator = "mujoco"` |
+| origin | built here on the simulator of [Embodied Olympics](https://github.com/CHIGUI0/roboolympics) (MIT; private): its robot library `bodies/` (the Unitree G1 at revision g1-4 and the Unitree H1-2 at h1-4, the one limit and servo path, the joint-group arbiter, and the G1's optional FALCON and AGILE walking policies) and its athletics running policy, commit `7df999b`, unchanged, in the image. Parts of single families come from Embodied Olympics' sports (the athletics start procedure and hurdle, the bowling lane and oil zones, the tennis ball's fitted lift, DeepMind's system-identified table-tennis ball and table and the serve library). The list of sports follows the owner's survey of humanoid sports tasks |
+| simulator | MuJoCo 3.3.7 on the CPU (1 ms physics, 10 ms control), OSMesa rendering, no GPU; sunlight with shadows, a painted sky, procedural materials on the venues' surfaces, patterned balls, and round each venue perimeter boards, stepped grandstands with a seated crowd, a roof, floodlight towers, a scoreboard and a line of trees, merged into one mesh per colour (`embodied_first_exam/benchmarks/embodied-olympics-fun/rfo/looks.py`, after the venues of Embodied Olympics' throws and beach volleyball: looks only, no effect on the physics or the state hash); air at sea-level density (drag and Magnus lift on balls and implements); `simulator = "mujoco"` |
 | robots | `unitree-g1` (1.32 m, 33 kg, 29 joints; three walking policies and a running policy) and `unitree-h1-2` (1.78 m, 67 kg, 27 joints; a walking policy) where the official venue needs an adult-size body; real joint, speed and torque limits, motor torque-speed curves (the H1-2's are estimates), self-collision; fist pads with a switchable grip; in 25 families no weld at all: bare or open palms that hold a ball by friction (eleven), or Unitree Dex1-1 two-finger grippers (fourteen) |
 | actions | views of one sim row per control step: `stand`, `walk`, `joints`, `lowcmd` (Unitree's LowCmd: q, dq, tau, kp, kd per joint), and on the G1 `run`, `run_arms`; every row ends with `grip_left`, `grip_right` |
 | score | the referee's verdict: every stage latched in order, no rule broken, within the time limit; binary. `progress` (stages reached) and the family's metrics (a distance, a speed, a count) are reported beside it |
-| tasks | 79 families × 2 modes: `tasks/embodied-olympics-fun/embodied-olympics-fun-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 158 task directories, plus the 21 dynamic families' `-standard-realtime` twins (`eai-standard/2.3`), 179 in all (the tasks EmbodiedOlympics exports itself: [EmbodiedOlympics-Match](../embodied-olympics-match/README.md)) |
+| tasks | 79 families × 2 modes: `tasks/embodied-olympics-fun/embodied-olympics-fun-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 158 task directories, plus the 21 dynamic families' `-standard-realtime` twins (`eai-standard/2.3`), 179 in all (the tasks Embodied Olympics exports itself: [Embodied Olympics - Match](../embodied-olympics-match/README.md)) |
 | image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` (with libglvnd's EGL loader and the NVIDIA EGL manifest, for the realtime twins' GPU rendering) (`images/embodied-olympics-fun/`, about 600 MB) |
 | files image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.1.0` (files only, public; `images/embodied-olympics-fun-files/FILES.json` pins it by digest; `scripts/files_image.py`): the tooling `rcb_rfo.py`, the `rfo` package's core (`rfo/*.py` without `rfo/tasks/`), the privileged grader `grade.py` and the standard grader `standard/grade.py`, built from their one source `embodied_first_exam/benchmarks/embodied-olympics-fun/`. The privileged tasks' `environment/Dockerfile` (to `/opt/tools/`) and `tests/Dockerfile` (to `/tests/`) and the standard and standard-realtime `tests/Dockerfile` (`/tests/grade.py`) take them with `COPY --from`, at the paths a copy in the task had; a task dir holds only the family's `rfo_task.py`, the instance and its own files, and the standard sidecars' `environment/sim/` keep their copies |
 | task files | the task directories are the deliverable; the tooling that built them is kept outside this repository. The frozen instances and standard reference rows are in the task dirs (`environment/instance.json` of the privileged task, `solution/rows.npz` of the standard task); a family is one module, each task's `rfo_task.py` |
@@ -49,14 +49,14 @@ dynamic families are `embodied-olympics-fun-<family>-i00-standard-realtime`.
 | 79 tasks, one robot each, each with a success check; an oracle where there is one, none otherwise | `oracle = "full"` only where a real controller succeeds in the official setting, `"none"` + human review elsewhere; every family has a referee test with a positive example and negative controls |
 | both modes | every family as `-privileged` and `-standard` on one frozen instance |
 | the agent may go online and download ready-made policies, and is encouraged to look for tools | open egress and the benchmark's own `## External material` paragraph; the action interface takes what public humanoid controllers produce: Unitree's SDK joint order, `lowcmd` rows with per-joint gains and feed-forward torques at 100 Hz |
-| the simulator is EmbodiedOlympics' | the image holds EmbodiedOlympics' robot library and running policy unchanged (`images/embodied-olympics-fun/roboolympics/SOURCE.md`, sha256 manifest); the venues, the action layer and the referees are this benchmark's own code (`embodied_first_exam/benchmarks/embodied-olympics-fun/`; the tasks take it from the files image above, the standard sidecars from their `environment/sim/` copies) |
-| **real settings, not an easy one** (nothing scaled to the G1 so that reference solutions exist) | official rule-book dimensions, equipment masses and ball physics in every family; a family names its rule book and lists each deviation with its reason (EmbodiedOlympics' convention), and a deviation is never "easier"; a success line is the rule book's (a goal, a legal serve, a strike, a cleared bar) or a named human school / club mark, never what a controller reaches |
+| the simulator is Embodied Olympics' | the image holds Embodied Olympics' robot library and running policy unchanged (`images/embodied-olympics-fun/roboolympics/SOURCE.md`, sha256 manifest); the venues, the action layer and the referees are this benchmark's own code (`embodied_first_exam/benchmarks/embodied-olympics-fun/`; the tasks take it from the files image above, the standard sidecars from their `environment/sim/` copies) |
+| **real settings, not an easy one** (nothing scaled to the G1 so that reference solutions exist) | official rule-book dimensions, equipment masses and ball physics in every family; a family names its rule book and lists each deviation with its reason (Embodied Olympics' convention), and a deviation is never "easier"; a success line is the rule book's (a goal, a legal serve, a strike, a cleared bar) or a named human school / club mark, never what a controller reaches |
 | all humanoid; the bigger H1-2 where the G1 cannot reach the official size | `Task.robot`; 32 families on the G1, 47 on the H1-2 |
 | single actions, not matches | one attempt of one skill per episode; a feeder, a server or a keeper is scripted and deterministic |
 | standard reset budget 50; agent budget 2 h; the track events are the indoor 50 m and 50 m hurdles (four hurdles), not 100 m and 110 m: "we are not the Olympics in full, we show what a robot can do" | each task's `reset_budget` and `[agent] timeout_sec`; the `rfo_task.py` of `sprint` and `hurdles`. Where an official event is long only by repetition, the family takes its shortest official form |
-| every task keeps the 2-hour limit; "pre-install frameworks like FALCON and AGILE for the model" (they are released weights, no training needed); "put them all in, the H1 may use them too"; adopt EmbodiedOlympics' scenery ("pingyue's backgrounds are very good") | the image holds FALCON's and AGILE's G1 policies (from EmbodiedOlympics' robot library, unchanged, with their licences), the `walk_falcon` / `walk_agile` action types on the G1; on the H1-2 the G1 policies were tried and do not walk it (reported, not offered); the grandstands of `looks.py` rebuilt after EmbodiedOlympics' venues |
+| every task keeps the 2-hour limit; "pre-install frameworks like FALCON and AGILE for the model" (they are released weights, no training needed); "put them all in, the H1 may use them too"; adopt Embodied Olympics' scenery ("pingyue's backgrounds are very good") | the image holds FALCON's and AGILE's G1 policies (from Embodied Olympics' robot library, unchanged, with their licences), the `walk_falcon` / `walk_agile` action types on the G1; on the H1-2 the G1 policies were tried and do not walk it (reported, not offered); the grandstands of `looks.py` rebuilt after Embodied Olympics' venues |
 | real holding (no hand glued to the ball): ten more families, the existing ones kept, a variant named with a suffix | `dunk-realgrasp`, `dunk-between-legs`: the ball held only by pressing it between the bare palms (no grip, nothing grippable); `tennis-return-realgrasp`, `tennis-serve-realgrasp`, `badminton-serve`, `jump-rope`: the racket, the ball, the shuttle or the rope's handles held by friction in a Unitree Dex1-1 gripper (`rfo/realhand.py`); `hurdles-freestanding`: free hurdles that slide and topple; `juggling-feet`, `juggling-head`, `long-rope`. And a `-realgrasp` variant of every other family that held its object with the switchable grip (19; the base families unchanged): the same sport, robot, rule book and success line, the object held by palms or a Dex1-1 gripper by friction only |
-| "use pingyue's method" (EmbodiedOlympics' throws: whole-body key poses searched offline by CMA-ES) for reference solutions | an offline key-pose search (not run by CI): reference solutions for `shot-put`, `discus`, `javelin`, `volleyball-serve`, `volleyball-bump` and `volleyball-set` (the last two: arm key poses on the walking policy, the bump after a walk), each open loop on its frozen start |
+| "use pingyue's method" (Embodied Olympics' throws: whole-body key poses searched offline by CMA-ES) for reference solutions | an offline key-pose search (not run by CI): reference solutions for `shot-put`, `discus`, `javelin`, `volleyball-serve`, `volleyball-bump` and `volleyball-set` (the last two: arm key poses on the walking policy, the bump after a walk), each open loop on its frozen start |
 
 <!-- families:begin -->
 ## The 79 families
@@ -153,7 +153,7 @@ dynamic families are `embodied-olympics-fun-<family>-i00-standard-realtime`.
 
 ## The robot and its actions
 
-One control step is 10 ms: ten physics steps of 1 ms, as in EmbodiedOlympics. Every joint target is clipped into the joint's
+One control step is 10 ms: ten physics steps of 1 ms, as in Embodied Olympics. Every joint target is clipped into the joint's
 range and moves at most the joint's speed limit per step; every motor torque goes through the robot library's output
 stage (the motor's torque-speed curve, then its torque limit). A sim row is `[mode, vx, vy, wz, q × n, dq × n,
 tau × n, kp × n, kd × n, grip_left, grip_right]` with n the robot's joint count (G1: 29 joints, 151 floats; H1-2: 27
@@ -162,9 +162,9 @@ joints, 141 floats); the list of sim rows is the whole record of an episode, and
 | type | the row | who drives the joints |
 |---|---|---|
 | `stand` | waist + arm joint targets (G1: 3 + 14; H1-2: 1 + 14) | the platform holds the legs in the stance (stand gains, gravity support); no balance controller |
-| `walk` | vx, vy, wz + waist + arms | Unitree's own walking policy (unitree_rl_gym's pretrained G1 or H1-2 policy, 50 Hz) on the legs, through EmbodiedOlympics' arbiter (the handover blend and the stability wait included): about 0.6 m/s on the G1, 0.7 m/s on the H1-2 |
-| `walk_falcon`, `walk_agile` (G1 only) | as `walk` | the G1's optional walking policies of EmbodiedOlympics' robot library: numpy ports of the released FALCON G1 policy (LeCAR-Lab, MIT; trained with arm motions and hand forces; it also adds a small wrist residual) and of NVIDIA WBC-AGILE's G1 velocity-height policy (Apache-2.0; trained while the arms and the waist moved), 50 Hz, their 12 leg targets on their own leg gains; the waist and the arms are the agent's. Both hold still and track the command better than `walk` while the arms move or carry something (EmbodiedOlympics' comparison); AGILE barely turns on the spot below about 0.7 rad/s. They take the legs at once (no blend); straight to `stand` from them usually falls (through `walk` at rest it does not). On the H1-2 (joints matched by name) they keep the robot upright but do not walk it, so the H1-2 does not offer them |
-| `run` (G1 only) | vx, vy, wz | EmbodiedOlympics' athletics running policy (C1801SYQ/g1_running, Apache-2.0) on all 29 joints: stable to about 4 m/s. The H1-2 has no running policy |
+| `walk` | vx, vy, wz + waist + arms | Unitree's own walking policy (unitree_rl_gym's pretrained G1 or H1-2 policy, 50 Hz) on the legs, through Embodied Olympics' arbiter (the handover blend and the stability wait included): about 0.6 m/s on the G1, 0.7 m/s on the H1-2 |
+| `walk_falcon`, `walk_agile` (G1 only) | as `walk` | the G1's optional walking policies of Embodied Olympics' robot library: numpy ports of the released FALCON G1 policy (LeCAR-Lab, MIT; trained with arm motions and hand forces; it also adds a small wrist residual) and of NVIDIA WBC-AGILE's G1 velocity-height policy (Apache-2.0; trained while the arms and the waist moved), 50 Hz, their 12 leg targets on their own leg gains; the waist and the arms are the agent's. Both hold still and track the command better than `walk` while the arms move or carry something (Embodied Olympics' comparison); AGILE barely turns on the spot below about 0.7 rad/s. They take the legs at once (no blend); straight to `stand` from them usually falls (through `walk` at rest it does not). On the H1-2 (joints matched by name) they keep the robot upright but do not walk it, so the H1-2 does not offer them |
+| `run` (G1 only) | vx, vy, wz | Embodied Olympics' athletics running policy (C1801SYQ/g1_running, Apache-2.0) on all 29 joints: stable to about 4 m/s. The H1-2 has no running policy |
 | `run_arms` (G1 only) | vx, vy, wz + arms 14 | the running policy on the legs and the waist |
 | `joints` | n joint targets | the agent; default gains |
 | `lowcmd` | n × (q, dq, tau, kp, kd) | the agent: Unitree's LowCmd, the interface public G1 and H1-2 controllers are deployed through |
@@ -199,7 +199,7 @@ walks at 0.6 m/s and runs at 4 m/s (50 m in about 15 s); the H1-2 walks at 0.7 m
 open-loop squat jump leaves the ground at 2.7 m/s on the G1 and 1.8 m/s on the H1-2; a straight-arm swing of the H1-2
 releases a 0.62 kg basketball at 7.5 m/s (11 m/s with the elbow fired late), an 800 g javelin at 4.3 m/s from above the
 shoulder, the 7.26 kg shot at 2.6 m/s. Whole-body techniques found offline (key poses searched by CMA-ES in the task's
-own world, EmbodiedOlympics' method) put the shot at 8.1 m/s, throw the
+own world, Embodied Olympics' method) put the shot at 8.1 m/s, throw the
 discus at 12.9 m/s and the javelin at 15.0 m/s, serve a volleyball at 11.4 m/s, pass a serve into the setter's
 target and set a toss into the hitter's: these six are reference solutions.
 
@@ -281,7 +281,7 @@ volleyball-set, volleyball-spike.
 
 ## Network: open
 
-EmbodiedOlympics-Fun's tasks set no `[agent]` network policy, so the agent's egress is Harbor's default: open. The
+Embodied Olympics - Fun's tasks set no `[agent]` network policy, so the agent's egress is Harbor's default: open. The
 instruction says so and encourages the agent to look for existing tools, robot models and pretrained controllers and
 to adapt them; it asks only not to look up a ready-made solution to the task, such as this benchmark's reference
 solutions (an honour rule; reading the benchmark's installed source is allowed; trials are reviewed). The reasons: a public G1 controller is fair equipment for a sport, as a published walking
@@ -296,7 +296,7 @@ measure. What follows:
   review.
 - Results are not comparable with a closed-network run of the same tasks and are reported as open-network results.
 - Nothing an agent can reach holds a solution: the image holds the robot library and the two built-in policies; the
-  reference controllers are under `solution/` only; EmbodiedOlympics' repository and this one are private.
+  reference controllers are under `solution/` only; Embodied Olympics' repository and this one are private.
 - Trial artifacts stay private for the same reason: an instance is frozen, so a passing `trajectory.npz` (or a
   standard run's recorded rows) is a complete solution of the privileged task and, streamed through the client, of its
   standard twin. A results site publishes scores, videos and notes, not the rows.
@@ -348,7 +348,7 @@ bounds: in review round 2 random full-torque rows released objects two to four t
 discus at 15 m/s, a shot at 7 m/s, a baseball at 23 m/s; all within the torque limits, none of them a legal attempt).
 Whether those tasks are possible on this hardware is open, and results should be read per family. Two review rounds are not a proof that no referee can be gamed: most
 families' cheap exits were tried from reading the code and with trivial policies, some with probes in the simulator; no
-reviewer built a full controller for a family without a reference solution. The H1-2's motor curves are EmbodiedOlympics' estimates, and every such gap
+reviewer built a full controller for a family without a reference solution. The H1-2's motor curves are Embodied Olympics' estimates, and every such gap
 depends on them. The rule-book article numbers in the families' texts were written from memory and have not been
 checked against the books; the dimensions and masses are the standard ones. Resource numbers are estimates.
 
@@ -468,15 +468,15 @@ Build the image: `scripts/build_images.sh` (context `images/embodied-olympics-fu
 After a change to a file the files image carries (`images/embodied-olympics-fun-files/FILES.json`): bump `images/embodied-olympics-fun-files/VERSION`, `python3 scripts/files_image.py build embodied-olympics-fun-files`, push, `python3
 scripts/files_image.py pin embodied-olympics-fun-files <digest>`, then point the tasks' `COPY --from` lines at the new digest.
 
-## Tasks exported by EmbodiedOlympics (its own service inside the task; PROTOCOL §3)
+## Tasks exported by Embodied Olympics (its own service inside the task; PROTOCOL §3)
 
-Since 2026-10-18 the benchmark [EmbodiedOlympics-Match](../embodied-olympics-match/README.md): the matches EmbodiedOlympics exports with its
+Since 2026-10-18 the benchmark [Embodied Olympics - Match](../embodied-olympics-match/README.md): the matches Embodied Olympics exports with its
 own service, listed in `ci_checks/benchmarks/embodied-olympics-match/exported.toml`, and their privileged twins. Their notes (the tasks, what
 differs from the 2.x tasks, grading by the live match, the low-level matches, the images) are on that page.
 
 ## Licences
 
-This benchmark's code: MIT (the repository's). EmbodiedOlympics (the robot library, the running policy's port): MIT. Unitree
+This benchmark's code: MIT (the repository's). Embodied Olympics (the robot library, the running policy's port): MIT. Unitree
 G1 model and meshes: MuJoCo Menagerie, BSD-3-Clause. Unitree's walking policy (unitree_rl_gym): BSD-3-Clause. The
 running policy (C1801SYQ/g1_running): Apache-2.0. FALCON's G1 policy (LeCAR-Lab/FALCON): MIT. WBC-AGILE's G1
 velocity-height policy (nvidia-isaac/WBC-AGILE): Apache-2.0. Every licence file is next to its files in the image

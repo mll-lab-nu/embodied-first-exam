@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| Benchmark | EmbodiedOlympics-Fun |
+| Benchmark | Embodied Olympics - Fun |
 | Mode | privileged |
 | Twin | `embodied-olympics-fun-dunk-between-legs-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
 ## Task
-From the top of the key, with the basketball pressed between your two palms, dribble it, make one of its bounces pass between your legs, gather it in both hands, and with at most two steps dunk it: force it down through the ring from above with your hands on it, then land on your feet. (EmbodiedOlympics `dunk-between-legs`: one Unitree H1-2 on the EmbodiedOlympics simulator, judged by a referee of events, geometry and contact rules.)
+From the top of the key, with the basketball pressed between your two palms, dribble it, make one of its bounces pass between your legs, gather it in both hands, and with at most two steps dunk it: force it down through the ring from above with your hands on it, then land on your feet. (Embodied Olympics `dunk-between-legs`: one Unitree H1-2 on the Embodied Olympics simulator, judged by a referee of events, geometry and contact rules.)
 
 ## Difficulty
 Every touch of the dribble has to push the ball down with a flat palm, and one bounce has to go through the narrow gap between the robot's own feet and come out where a hand can meet it, without touching a leg; then both palms have to catch the moving ball and squeeze it, with only the arms' force holding it. After at most two steps the 67 kg body has to rise about a metre with the ball pressed overhead and bring it down into a ring only 0.21 m wider than the ball, and land; the robot has a walking gait (which steps on the spot even at a zero command) and nothing that jumps or lands.
