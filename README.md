@@ -86,14 +86,11 @@ upstream experts and the contents of the base images keep their own licenses.
 
 ## Citation
 
-Kangrui Wang\*§, Changhe Chen\*§, Qineng Wang\*§, Pingyue Zhang\*§, Chi Gui\*§, Feishi Wang§, Canyu Chen§, Wenli Xiao§, Xiaoyu Huang§, Tonghe Zhang§, Linjie (Lindsey) Li§, Yiyou Sun, Mingkai Deng, Jinyu Hou, Xiangyi Li, Eric P. Xing, Huaxiu Yao, Zhiwen Fan, Yuejiang Liu, Jiajun Wu, Yuke Zhu, Guanya Shi†, Ruohan Zhang†, Manling Li†
-
-<sub>\* Equal contribution · § Core contributor · † Equal advising</sub>
-
 ```bibtex
 @misc{embodiedfirstexam2026,
   title        = {Embodied First Exam},
-  author       = {Kangrui Wang and Changhe Chen and Qineng Wang and Pingyue Zhang and Chi Gui and Feishi Wang and Canyu Chen and Wenli Xiao and Xiaoyu Huang and Tonghe Zhang and Linjie Li and Yiyou Sun and Mingkai Deng and Jinyu Hou and Xiangyi Li and Eric P. Xing and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Jiajun Wu and Yuke Zhu and Guanya Shi and Ruohan Zhang and Manling Li},
+  author       = {Kangrui Wang*§ and Changhe Chen*§ and Qineng Wang*§ and Pingyue Zhang*§ and Chi Gui*§ and Feishi Wang§ and Canyu Chen§ and Wenli Xiao§ and Xiaoyu Huang§ and Tonghe Zhang§ and Linjie (Lindsey) Li§ and Yiyou Sun and Mingkai Deng and Jinyu Hou and Xiangyi Li and Eric P. Xing and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Jiajun Wu and Yuke Zhu and Guanya Shi† and Ruohan Zhang† and Manling Li†},
+  note         = {* Equal contribution, § Core contributor, † Equal advising},
   year         = {2026},
   url          = {https://github.com/mll-lab-nu/embodied-first-exam}
 }
