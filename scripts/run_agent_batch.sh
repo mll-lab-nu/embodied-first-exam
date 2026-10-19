@@ -73,8 +73,8 @@
 # append-only into ${JOBS}_mirror/ (scripts/log_mirror.py; root-owned: neither the agent nor the host user can delete it),
 # and scripts/mem_guard.py keeps 2 GiB of host memory available. After each job: a key scan with redaction
 # (scripts/scan_secrets.py), the task results, the summary table $JOBS/<batch>.summary.md, and a lane stop on structured
-# model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log; in a browser, every trial's
-# state (pending / running / done) with scripts/live_board.py --jobs $JOBS.
+# model-account failures (scripts/account_failure_check.py). Progress: $JOBS/<batch>.log; the batch's plan (every job, pending until it
+# starts): $JOBS/.plan/<batch>.json.
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 [ $# -ge 2 ] || { sed -n 2,40p "$0"; exit 2; }
@@ -142,7 +142,7 @@ LOG="$JOBS/$batch.log"
 log() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
 if [ -n "$ENV_FILE" ] && [ ! -f "$ENV_FILE" ]; then log "no env file $ENV_FILE"; exit 2; fi
 log "runner $$: $AGENT $MODEL effort $EFFORT, run id $RUN_ID, modes $MODES, web search $WEB_SEARCH"
-# the batch's plan, for scripts/live_board.py: every job this command runs, "pending" there until it starts
+# the batch's plan: every job this command runs, "pending" there until it starts
 mkdir -p "$JOBS/.plan"
 python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
 import json, os, pathlib, sys

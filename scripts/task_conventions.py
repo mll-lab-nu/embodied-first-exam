@@ -52,6 +52,7 @@ import tomllib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "images/monitor"))   # the monitor image's source (rcb_monitor/)
 from rcb_monitor import inject as rcb_monitor_inject  # noqa: E402
 
 CLIENT_ASSERT_OLD = 'assert str(self._spec.get("protocol", "")).startswith("rcb-limited/2."), self._spec.get("protocol")'
@@ -85,19 +86,19 @@ BENCHMARKS = [  # (directory prefix, label)
     ("bigym2-", "BiGym 2.0"),
     ("yamlab-", "YAMLab"),
     ("robodojo-", "RoboDojo"),
-    ("roboolympics-fun-", "RoboOlympics-Fun"),      # the single-humanoid sports families (scripts/roboolympics/families.json)
+    ("roboolympics-fun-", "RoboOlympics-Fun"),      # the single-humanoid sports families
     ("roboolympics-match-", "RoboOlympics-Match"),  # the matches RoboOlympics exports with its own service, and their twins
     ("rsb-", "RoboSafeBench"),    # formerly `cell-` (renamed in 0.5.4, the authors); an agent can read its task name
     ("pandadyn-", "Panda Dynamic Scenes"),
     ("ambench-", "AM-Bench"),
     ("ispatialgym-", "iSpatialGym"),
     ("ikea-", "IKEA MuJoCo"),
-    ("roboengineer-", "roboEngineer"),   # its own multi-round runtime eai-policy/1.x (scripts/roboengineer/exported.toml)
+    ("roboengineer-", "roboEngineer"),   # its own multi-round runtime eai-policy/1.x (ci_checks/benchmarks/roboengineer/exported.toml)
 ]
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
-# RoboOlympics' exported tasks (PROTOCOL v1 §4c; scripts/roboolympics/exported.toml) have a cutoff note of their own
+# RoboOlympics' exported tasks (PROTOCOL v1 §4c; ci_checks/benchmarks/roboolympics-match/exported.toml) have a cutoff note of their own
 # (CUTOFF_NOTE_TASK below):
 RO_EXPORTED_TASKS = ("roboolympics-match-badminton-match-i01-standard-realtime",
                      "roboolympics-match-badminton-duelrl-i01-standard-realtime",
@@ -220,7 +221,7 @@ _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` ab
 # owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
 # high and stopped early; every agent gets the same way to know it (a command, not a guess).
 # robot_coding_bench #231 (10-15): a sentence asking for `date` was not enough (agents still guessed); the resource
-# monitor now shows the clock itself (scripts/rcb_monitor/monitor.py clock(): from the trial environment's start, so it
+# monitor now shows the clock itself (images/monitor/rcb_monitor/monitor.py clock(): from the trial environment's start, so it
 # never overstates the time left; `monitor.py beacon` keeps it on runners that cannot run the monitor).
 _CUTOFF_CLOCK = (" Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few "
                  "seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a "
@@ -258,7 +259,7 @@ _CUTOFF_NOTE_OWN_CLOCK = (
     "moment. The service's `time_left_s` is its own count of this limit, from the service's start or from "
     "your first request, so it can differ from the time you really have left." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note; RoboARC's (then RoboTangle's) entry went with its MuJoCo release (2026-10-13)
-# roboEngineer (#329): its own multi-round runtime (scripts/roboengineer/exported.toml) grades a deployed policy, not an
+# roboEngineer (#329): its own multi-round runtime (ci_checks/benchmarks/roboengineer/exported.toml) grades a deployed policy, not an
 # episode that stands at the cutoff, and its service reports a deadline, not `time_left_s`
 CUTOFF_NOTE_OWN[("roboEngineer", "standard")] = (
     "This is wall-clock time from the start of your session; the time you wait for the deployment service counts, "
@@ -895,16 +896,16 @@ def normalize_instruction(task: Path) -> None:
 
 
 def _shared_sources() -> set[bytes]:
-    """Contents of the files generators copy unchanged from scripts/eai_standard/ (the eai-standard/2.2 layer, and the 2.4
+    """Contents of the files generators copy unchanged from embodied_first_exam/standard/ (the eai-standard/2.2 layer, and the 2.4
     layer in v2_4/; D9): their copies must stay byte-identical to the source (check-tooling-identity.sh), so normalize never
     rewrites them."""
-    src = Path(__file__).resolve().parent / "eai_standard"
+    src = Path(__file__).resolve().parents[1] / "embodied_first_exam/standard"
     shared = {p.read_bytes() for p in src.rglob("*") if p.is_file() and "__pycache__" not in p.parts} if src.is_dir() else set()
-    return shared | rcb_monitor_inject.generated_sources()     # the resource monitor's copies (scripts/rcb_monitor/)
+    return shared | rcb_monitor_inject.generated_sources()     # the resource monitor's copies (images/monitor/rcb_monitor/)
 
 
 def _is_layer_copy(f: Path) -> bool:
-    """A copy of some version of scripts/eai_standard/rcb_limited.py or v2_4/rcb_limited.py (its PROTOCOL line and COMPAT
+    """A copy of some version of embodied_first_exam/standard/rcb_limited.py or v2_4/rcb_limited.py (its PROTOCOL line and COMPAT
     list): board 0151 changed the layer, and the tasks of each benchmark move onto the new bytes only when it regenerates."""
     t = read_text(f) or ""
     return bool(re.search(r'(?m)^PROTOCOL = "eai-standard/2\.\d"', t)) and bool(re.search(r"(?m)^COMPAT = \[", t))

@@ -12,9 +12,9 @@ benchmark here, search for and download public tools and pretrained controllers.
 **Names.** The image keeps the name `eai-robofunolympics`, as do the internal module names (`rfo/`, `rcb_rfo.py`).
 
 **Two benchmarks** (owner, 2026-10-18, board 0160). This page is **RoboOlympics-Fun**: the 60 single-robot sports
-families above and below, generated here (`scripts/roboolympics/gen_tasks.py`; privileged, standard, and
+families above and below, built here (privileged, standard, and
 standard-realtime twins of the dynamic families). The tasks RoboOlympics exports itself with its own service inside
-(PROTOCOL §3), matches and two turn-based fencing bouts listed in `scripts/roboolympics/exported.toml`, and their
+(PROTOCOL §3), matches and two turn-based fencing bouts listed in `ci_checks/benchmarks/roboolympics-match/exported.toml`, and their
 privileged twins are the benchmark **RoboOlympics-Match** ([roboolympics-match.md](roboolympics-match.md)). Each has its
 task-name prefix: `roboolympics-fun-` here, `roboolympics-match-` there (`scripts/task_conventions.py` `BENCHMARKS`).
 The families here are dashed English event names (`table-tennis-return`, `penalty-kick`), the exported tasks the
@@ -31,7 +31,7 @@ dynamic families are `roboolympics-fun-<family>-i00-standard-realtime`.
 | tasks | 60 families × 2 modes: `tasks/roboolympics-fun-<family>-i00-privileged` and `-standard` (`eai-standard/2.1`), 120 task directories, plus the 16 dynamic families' `-standard-realtime` twins (`eai-standard/2.3`), 136 in all (the tasks RoboOlympics exports itself: [RoboOlympics-Match](roboolympics-match.md)) |
 | image | `ghcr.io/mll-lab-nu/eai-robofunolympics:0.2.1` (with libglvnd's EGL loader and the NVIDIA EGL manifest, for the realtime twins' GPU rendering) (`images/robofunolympics/`, about 600 MB) |
 | files image | `ghcr.io/mll-lab-nu/eai-roboolympics-fun-files:0.1.0` (files only, public; `images/roboolympics-fun-files/FILES.json` pins it by digest; `scripts/files_image.py`): the tooling `rcb_rfo.py`, the `rfo` package's core (`rfo/*.py` without `rfo/tasks/`), the privileged grader `grade.py` and the standard grader `standard/grade.py`, built from their one source `embodied_first_exam/benchmarks/roboolympics-fun/`. The privileged tasks' `environment/Dockerfile` (to `/opt/tools/`) and `tests/Dockerfile` (to `/tests/`) and the standard and standard-realtime `tests/Dockerfile` (`/tests/grade.py`) take them with `COPY --from`, at the paths a copy in the task had; a task dir holds only the family's `rfo_task.py`, the instance and its own files, and the standard sidecars' `environment/sim/` keep their copies |
-| generator | `scripts/roboolympics/gen_tasks.py render` / `check` from `families.json`, `embodied_first_exam/benchmarks/roboolympics-fun/`, `templates/`, `oracles/` and the frozen instances and standard reference rows, whose one committed copy is in the task dirs (`environment/instance.json` of the privileged task, `solution/rows.npz` of the standard task; read back by the generator); a family is one module, `embodied_first_exam/benchmarks/roboolympics-fun/rfo/tasks/<family>.py` (`scripts/roboolympics/AUTHORING.md`, `FAMILIES.md`) |
+| task files | the task directories are the deliverable; the tooling that built them is kept outside this repository. The frozen instances and standard reference rows are in the task dirs (`environment/instance.json` of the privileged task, `solution/rows.npz` of the standard task); a family is one module, each task's `rfo_task.py` |
 | oracle | full on the families that have a real controller in the official setting, none on the rest (table below), with a referee test and human review |
 | agent budget | 7200 s in both modes (each task's own `[agent] timeout_sec`: the tasks ask the agent to find, download and adapt controllers, or to build one, which an hour does not hold); standard mode: 50 resets, the last attempt graded |
 | network | open (`[metadata] network = "open"`, below) |
@@ -47,10 +47,10 @@ dynamic families are `roboolympics-fun-<family>-i00-standard-realtime`.
 | **real settings, not an easy one** (nothing scaled to the G1 so that reference solutions exist) | official rule-book dimensions, equipment masses and ball physics in every family; a family names its rule book and lists each deviation with its reason (RoboOlympics' convention), and a deviation is never "easier"; a success line is the rule book's (a goal, a legal serve, a strike, a cleared bar) or a named human school / club mark, never what a controller reaches |
 | all humanoid; the bigger H1-2 where the G1 cannot reach the official size | `Task.robot`; 25 families on the G1, 35 on the H1-2 |
 | single actions, not matches | one attempt of one skill per episode; a feeder, a server or a keeper is scripted and deterministic |
-| standard reset budget 50; agent budget 2 h; the track events are the indoor 50 m and 50 m hurdles (four hurdles), not 100 m and 110 m: "we are not the Olympics in full, we show what a robot can do" | `RESET_BUDGET` and `CUTOFF_SEC` in `gen_tasks.py`; `sprint.py`, `hurdles.py`. Where an official event is long only by repetition, the family takes its shortest official form |
+| standard reset budget 50; agent budget 2 h; the track events are the indoor 50 m and 50 m hurdles (four hurdles), not 100 m and 110 m: "we are not the Olympics in full, we show what a robot can do" | each task's `reset_budget` and `[agent] timeout_sec`; the `rfo_task.py` of `sprint` and `hurdles`. Where an official event is long only by repetition, the family takes its shortest official form |
 | every task keeps the 2-hour limit; "pre-install frameworks like FALCON and AGILE for the model" (they are released weights, no training needed); "put them all in, the H1 may use them too"; adopt RoboOlympics' scenery ("pingyue's backgrounds are very good") | the image holds FALCON's and AGILE's G1 policies (from RoboOlympics' robot library, unchanged, with their licences), the `walk_falcon` / `walk_agile` action types on the G1; on the H1-2 the G1 policies were tried and do not walk it (reported, not offered); the grandstands of `looks.py` rebuilt after RoboOlympics' venues |
 | real holding (no hand glued to the ball): ten more families, the existing ones kept, a variant named with a suffix | `dunk-realgrasp`, `dunk-between-legs`: the ball held only by pressing it between the bare palms (no grip, nothing grippable); `tennis-return-realgrasp`, `tennis-serve-realgrasp`, `badminton-serve`, `jump-rope`: the racket, the ball, the shuttle or the rope's handles held by friction in a Unitree Dex1-1 gripper (`rfo/realhand.py`); `hurdles-freestanding`: free hurdles that slide and topple; `juggling-feet`, `juggling-head`, `long-rope` |
-| "use pingyue's method" (RoboOlympics' throws: whole-body key poses searched offline by CMA-ES) for reference solutions | `search_technique.py` (offline, not run by CI): reference solutions for `shot-put`, `discus`, `javelin`, `volleyball-serve`, `volleyball-bump` and `volleyball-set` (the last two: arm key poses on the walking policy, the bump after a walk), each open loop on its frozen start |
+| "use pingyue's method" (RoboOlympics' throws: whole-body key poses searched offline by CMA-ES) for reference solutions | an offline key-pose search (not run by CI): reference solutions for `shot-put`, `discus`, `javelin`, `volleyball-serve`, `volleyball-bump` and `volleyball-set` (the last two: arm key poses on the walking policy, the bump after a walk), each open loop on its frozen start |
 
 <!-- families:begin -->
 ## The 60 families
@@ -174,7 +174,7 @@ walks at 0.6 m/s and runs at 4 m/s (50 m in about 15 s); the H1-2 walks at 0.7 m
 open-loop squat jump leaves the ground at 2.7 m/s on the G1 and 1.8 m/s on the H1-2; a straight-arm swing of the H1-2
 releases a 0.62 kg basketball at 7.5 m/s (11 m/s with the elbow fired late), an 800 g javelin at 4.3 m/s from above the
 shoulder, the 7.26 kg shot at 2.6 m/s. Whole-body techniques found offline (key poses searched by CMA-ES in the task's
-own world, RoboOlympics' method: `scripts/roboolympics/search_technique.py`) put the shot at 8.1 m/s, throw the
+own world, RoboOlympics' method) put the shot at 8.1 m/s, throw the
 discus at 12.9 m/s and the javelin at 15.0 m/s, serve a volleyball at 11.4 m/s, pass a serve into the setter's
 target and set a toss into the hitter's: these six are reference solutions.
 
@@ -231,7 +231,7 @@ general helpers unchanged (`bodies/control/kinematics.py`: forward and inverse k
 jerk-limited joint trajectories); a privileged agent may import them, the tooling does not wrap them.
 
 ## Standard-realtime (`eai-standard/2.3`)
-The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`, the generator's `DYNAMIC_FAMILIES`; a ball
+The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`; a ball
 launched, served, thrown or released on the venue's clock, or a keeper driven after the kick) get a
 `-standard-realtime` twin: catch, catch-and-shoot, header, juggle-three, juggling-head, long-rope, paddle-bounce,
 penalty-kick, table-tennis-return, tennis-return, tennis-return-realgrasp, trap-ball, volley-shot, volleyball-bump,
@@ -263,7 +263,7 @@ solutions (an honour rule; reading the benchmark's installed source is allowed; 
 controller is for a real G1, and whether an agent can find, vet and adapt existing work is part of what these tasks
 measure. What follows:
 
-- Every generated task declares it, `[metadata] network = "open"` (PROTOCOL Appendix H.6: the author's choice), and its `## External material` paragraph is the generator's `EXTERNAL`;
+- Every task declares it, `[metadata] network = "open"` (PROTOCOL Appendix H.6: the author's choice), and states it in its `## External material` paragraph;
   `scripts/run_agent_batch.sh` and the scheduler do not narrow these tasks' copies to the usage gateway (the model API still goes through it).
 - With open egress the gateway is not the only road to a model provider (the provider key is in the agent's
   container): its token accounting and its budget (docs/protocol/running.md "Official runs") bind only what the harness itself sends,
@@ -294,7 +294,6 @@ start is checked on the live simulator. `server.py`'s build() refuses a world th
 `t0.state_sha` (InstanceMismatch), and `start_sha` makes the layer void a graded attempt begun by a reset that did not
 return there; both are `instance_mismatch`, `infra_error 1` (a reset returns to that hash bit-exactly). `/tests/grade.py` reads `final.json`. A crash
 resumes the same attempt from the journal (`rcb_service.py`, shared with HumanoidBench, KinDER, VLABench and BiGym 2.0).
-`scripts/roboolympics/tests/test_live_adapter.py` (numpy, no image) tests the adapter's part.
 
 Across CPUs: the image pins the numerical kernels the policies run on (`OPENBLAS_CORETYPE`, numpy's CPU dispatch) so
 that hosts with and without AVX-512 compute the same; a trial is still graded on the host it ran on. The standard
@@ -304,14 +303,14 @@ twins' reference solutions are recorded rows streamed open loop, so they depend 
 
 | check | result |
 |---|---|
-| referee tests (`scripts/roboolympics/tests/run_all.sh`): per family a positive example, negative controls, the do-nothing agent, the same hash on a replay | 60 / 60 pass, and `test_real_hand.py` (the gripper on both robots) |
-| do-nothing agent (`nop_table.py` → `nop.json`) | fails in all 60 families |
-| reference solutions (`make_oracles.py`): live success, replay success, the same final hash | `sprint` (50 m in 15.84 s), `paddle-bounce` (20 counted bounces, 14.53 s), `golf-putt` (holed, 17.18 s), `boxing` (16.8 N s, 4.04 s), `high-bar-swing` (one giant swing, 23.62 s), `toes-to-bar` (5 repetitions, 7.78 s), `shot-put` (8.20 m, 6.08 s), `discus` (15.87 m, 8.48 s), `javelin` (21.58 m, 15.33 s), `volleyball-serve` (in the court, 3.28 s), `volleyball-bump` (0.13 m from the target's centre, 5.81 s), `volleyball-set` (0.28 m from the target's centre, 5.87 s), `long-rope` (10 jumps, landed and standing, 10.85 s), `tennis-return-realgrasp` (returned with the racket held by friction, 6.05 s), `tennis-serve-realgrasp` (underarm, in the box, 3.50 s), `badminton-serve` (hit at 0.48 m, in the service court, 3.45 s): 16 / 16 |
+| referee tests: per family a positive example, negative controls, the do-nothing agent, the same hash on a replay | 60 / 60 pass, and the gripper's test on both robots |
+| do-nothing agent | fails in all 60 families |
+| reference solutions: live success, replay success, the same final hash | `sprint` (50 m in 15.84 s), `paddle-bounce` (20 counted bounces, 14.53 s), `golf-putt` (holed, 17.18 s), `boxing` (16.8 N s, 4.04 s), `high-bar-swing` (one giant swing, 23.62 s), `toes-to-bar` (5 repetitions, 7.78 s), `shot-put` (8.20 m, 6.08 s), `discus` (15.87 m, 8.48 s), `javelin` (21.58 m, 15.33 s), `volleyball-serve` (in the court, 3.28 s), `volleyball-bump` (0.13 m from the target's centre, 5.81 s), `volleyball-set` (0.28 m from the target's centre, 5.87 s), `long-rope` (10 jumps, landed and standing, 10.85 s), `tennis-return-realgrasp` (returned with the racket held by friction, 6.05 s), `tennis-serve-realgrasp` (underarm, in the box, 3.50 s), `badminton-serve` (hit at 0.48 m, in the service court, 3.45 s): 16 / 16 |
 | Harbor oracle, separate verifier, the 12 families × 2 modes; the 4 newer ones × 2 modes and the realtime twins of `long-rope` and `tennis-return-realgrasp` | 24 / 24 and 10 / 10 reward 1, deterministic |
 | Harbor nop, 8 tasks (`hurdles`, `shot-put` ×2, `tennis-serve`, `penalty-kick`, `balance-board`, `free-throw`, `clean-and-jerk`) and 6 of the newer (`dunk-realgrasp`, `jump-rope`, `hurdles-freestanding`, `juggling-head` realtime, `dunk-between-legs`, `juggling-feet`) | 8 / 8 and 6 / 6 reward 0 |
-| `gen_tasks.py check`, `task_conventions.py --check tasks/roboolympics-fun-*/`, `check-dataset-manifest.sh` | no difference |
+| `task_conventions.py --check tasks/roboolympics-fun-*/`, `check-dataset-manifest.sh` | no difference |
 | independent review, round 1 (two fresh reviewers, 25 families each, looking for a success without the sport) | one exploit demonstrated with actions alone (`juggle-three`: balls carried hand to hand counted as throws) and one shown by injection (`high-jump`: the three plane crossings credited one at a time outside the jump; a rigid bar that carries the robot); weaker points in `long-jump` / `triple-jump` (a cavity under the ground slabs), `hurdles`, `paddle-bounce` (passive rebounds counted), the basketball families (a shuffle without a lift was not travelling), `clean-and-jerk` (overhead by height alone), `juggling`, `pole-vault`, `volleyball-spike`, `boxing` / `kick-target` (the meter's lever arm). All fixed; the reviewers' probes now fail; the tests, instances, oracles and tasks were regenerated |
-| independent review, round 2 (three fresh reviewers at cc6bb8fc5: the framework and the trust boundary; 25 athletics, gymnastics and strength families; 25 ball families; each with probes in the simulator) | no success without the sport and no break of the trust boundary found (hostile rows to ±1e308, forged and oversized trajectory files, the standard sidecar's budget, crash recovery and graded episode all held). Found and fixed: `backflip` rejected a legitimate salto (330 degrees in the air demanded; now 300, measured about a horizontal axis); `triple-jump` let hops shorter than a flight cover the distance between phases (by injection; now the landing foot stays within 0.30 m); `volleyball-serve`'s 0.1 s toss grace did not exist in the referee (real tosses failed); the instructions of 7 families with preset arms named a start row that was not the one in force (`gen_tasks.py` now prints the instance's own row; the standard `/spec` carries `start_command`); smaller: a touch of the own court right after the strike was not seen (`table-tennis-return`, `tennis-return`), `tennis-serve` had no toss speed limit, rules judged but not written (`vertical-jump`, `basketball-dribble`), unlisted deviations, the grip's speed test read the step before, a success could stand in the control step of a physics blow-up, H1-2 instructions carried G1 text, the extra venue cameras were not named. Left as they are and why: `high-jump` at 1.00 m can be stepped over by a 1.78 m robot with a small one-foot hop (a legal scissors; the remedy would be a higher bar), `clean-and-jerk` accepts a wide straddle, `pole-vault`'s hang is judged by grip and plant, the `header` / `volley` strike stage can latch on a graze (the goal still decides), a robot propped on a gripped object counts as airborne (no family found where it helps) |
+| independent review, round 2 (three fresh reviewers at cc6bb8fc5: the framework and the trust boundary; 25 athletics, gymnastics and strength families; 25 ball families; each with probes in the simulator) | no success without the sport and no break of the trust boundary found (hostile rows to ±1e308, forged and oversized trajectory files, the standard sidecar's budget, crash recovery and graded episode all held). Found and fixed: `backflip` rejected a legitimate salto (330 degrees in the air demanded; now 300, measured about a horizontal axis); `triple-jump` let hops shorter than a flight cover the distance between phases (by injection; now the landing foot stays within 0.30 m); `volleyball-serve`'s 0.1 s toss grace did not exist in the referee (real tosses failed); the instructions of 7 families with preset arms named a start row that was not the one in force (they now print the instance's own row; the standard `/spec` carries `start_command`); smaller: a touch of the own court right after the strike was not seen (`table-tennis-return`, `tennis-return`), `tennis-serve` had no toss speed limit, rules judged but not written (`vertical-jump`, `basketball-dribble`), unlisted deviations, the grip's speed test read the step before, a success could stand in the control step of a physics blow-up, H1-2 instructions carried G1 text, the extra venue cameras were not named. Left as they are and why: `high-jump` at 1.00 m can be stepped over by a 1.78 m robot with a small one-foot hop (a legal scissors; the remedy would be a higher bar), `clean-and-jerk` accepts a wide straddle, `pole-vault`'s hang is judged by grip and plant, the `header` / `volley` strike stage can latch on a graze (the goal still decides), a robot propped on a gripped object counts as airborne (no family found where it helps) |
 | independent review of the ten newer families (three rounds of fresh reviewers: the gripper core and the generator; the families, with probes in the simulator; the 50 older families compared with main step by step: identical) | no success with actions alone found. Each hole they showed by state injection has a negative test: only a free body counts as held by a gripper (a gripper closed on the venue holds nothing); `hurdles-freestanding` fails a robot a hurdle carries (climbing or sitting over it) and a clearance that is not one flight (from the first of the pelvis' and the feet's crossings to the last the robot touches nothing but that hurdle's top bar: a leg swung over from the ground, or a step over a hurdle already knocked down, fails); `dunk-between-legs` takes the ball's own speed through the leg gate (rocking the pelvis over a still ball is not a pass); `jump-rope` takes the rope nodes' own velocities; `tennis-serve-realgrasp` counts a toss only once the ball touches nothing (not resting on the spare ball or the cup); the two rope families end with land and stand; a juggling contact lasts at most 0.05 s. The base `tennis-serve` probably has the same tee as its real-grasp twin; the existing families are kept as they are |
 
 What this evidence does not show. Forty-four families have no reference solution, and their positive example is an
@@ -331,7 +330,7 @@ checked against the books; the dimensions and masses are the standard ones. Reso
 <!-- evidence:begin -->
 ### Per family: the positive example and the do-nothing agent
 
-The human-review table of PROTOCOL §2.7. "By injection" means the referee test (`scripts/roboolympics/tests/test_<family>.py`) sets the simulator's state by hand so that the sport's events really happen in physics; it shows that the referee says yes to the right thing, not that a controller exists. The do-nothing agent holds the starting command to the end of the episode (`nop.json`).
+The human-review table of PROTOCOL §2.7. "By injection" means the referee test sets the simulator's state by hand so that the sport's events really happen in physics; it shows that the referee says yes to the right thing, not that a controller exists. The do-nothing agent holds the starting command to the end of the episode.
 
 | family | positive example and negative controls | do-nothing agent |
 |---|---|---|
@@ -418,24 +417,17 @@ a batch has been measured (`scripts/task_resources.toml`).
 ## Run
 
 ```bash
-python3 scripts/roboolympics/gen_tasks.py check
 harbor run -p tasks/roboolympics-fun-sprint-i00-privileged -a oracle        # or -a nop: scores 0
 harbor run -p tasks/roboolympics-fun-penalty-kick-i00-standard -a codex -m openai/gpt-6-luna --env-file .env
-scripts/roboolympics/tests/run_all.sh                                   # every family's referee test, in the image
 ```
-Build the image: `scripts/build_images.sh` (context `images/robofunolympics/`). Regenerate after a change to a family:
-`RFO_RW=1 scripts/roboolympics/dev.sh /rfo/make_instances.py`, `RFO_RW=1 scripts/roboolympics/dev.sh
-/rfo/make_oracles.py`, `python3 scripts/roboolympics/gen_tasks.py render`, `cd tasks && harbor add --scan .`, then delete
-the files the two scripts wrote that the task dirs now hold (`scripts/roboolympics/instances/`,
-`scripts/roboolympics/oracles/*/standard_rows.npz`; while they exist the generator reads them instead of the task dirs).
+Build the image: `scripts/build_images.sh` (context `images/robofunolympics/`).
 After a change to a file the files image carries (`images/roboolympics-fun-files/FILES.json`): bump `images/roboolympics-fun-files/VERSION`, `python3 scripts/files_image.py build roboolympics-fun-files`, push, `python3
-scripts/files_image.py pin roboolympics-fun-files <digest>`, then point the tasks' `COPY --from` lines at the new digest
-(`files_image.py check` fails until the image matches the sources).
+scripts/files_image.py pin roboolympics-fun-files <digest>`, then point the tasks' `COPY --from` lines at the new digest.
 
 ## Tasks exported by RoboOlympics (its own service inside the task; PROTOCOL §3)
 
 Since 2026-10-18 the benchmark [RoboOlympics-Match](roboolympics-match.md): the matches RoboOlympics exports with its
-own service, listed in `scripts/roboolympics/exported.toml`, and their privileged twins. Their notes (the tasks, what
+own service, listed in `ci_checks/benchmarks/roboolympics-match/exported.toml`, and their privileged twins. Their notes (the tasks, what
 differs from the 2.x tasks, grading by the live match, the low-level matches, the images) are on that page.
 
 ## Licences

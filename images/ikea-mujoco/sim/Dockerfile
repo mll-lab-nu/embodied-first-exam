@@ -3,7 +3,7 @@
 # unchanged: the physics process) + what the robot-as-a-service layer needs to render and encode:
 #   - Nyx, RoboARC's renderer, in its OWN interpreter environment, the venv /opt/nyx (python 3.12 of the base, separate
 #     site-packages): gs-nyx 0.1.3 needs numpy < 2.4, the physics keeps numpy 2.5.4, so the sim service renders every RGB
-#     image in a separate render process (scripts/ikea_mujoco/standard/ikea_nyx.py) fed the scene once and per-frame poses
+#     image in a separate render process (each task's environment/sim/ikea_nyx.py) fed the scene once and per-frame poses
 #     over a pipe. The venv's packages are RoboARC's exact versions and wheel hashes (nyx-requirements.txt, from
 #     requirements/difficulty-eval-runtime.lock): gs-nyx 0.1.3, numpy 2.3.5, scipy 1.17.1, trimesh 5.1.0, mujoco 3.14.0 (stock wheel,
 #     only to read the compiled scene's visual geometry; it never steps physics), nvidia-cuda-nvrtc-cu12 12.8.93;

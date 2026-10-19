@@ -22,12 +22,12 @@ import task_conventions as tc  # noqa: E402  (the mode registry, PROTOCOL §2.16
 # standard-realtime 2.3 (the realtime capability, §4b), privileged none
 MODE_PROTOCOLS = {m: set(d["protocols"]) for m, d in tc.MODE_REGISTRY.items()}
 # Tasks a benchmark exports with its own service inside (PROTOCOL §4c): each such benchmark keeps a manifest,
-# scripts/<bench>/exported.toml, that lists the directories (`[[tasks]] name`) and the protocol(s) each mode serves
+# ci_checks/benchmarks/<bench>/exported.toml, that lists the directories (`[[tasks]] name`) and the protocol(s) each mode serves
 # (`[protocols]`, a string or a list); a listed directory may declare one of its manifest's protocols for its mode. No
 # per-benchmark table here.
 def _own_protocols() -> dict[str, dict[str, set[str]]]:
     out: dict[str, dict[str, set[str]]] = {}
-    for man in sorted((ROOT / "scripts").glob("*/exported.toml")):
+    for man in sorted((ROOT / "ci_checks/benchmarks").glob("*/exported.toml")):
         d = tomllib.loads(man.read_text())
         protos = {m: {p} if isinstance(p, str) else set(p) for m, p in d.get("protocols", {}).items()}
         for t in d.get("tasks", []):

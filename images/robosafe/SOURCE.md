@@ -27,11 +27,11 @@ without this simulator package or its reference methods. Generated oracle plans 
 trusted validation sidecars remain outside the generated task directories. This source provenance
 statement is not a substitute for the final image's isolation and installed-runtime checks.
 
-The `realism_v3` pack's `.png` / `.obj` files are not committed (`images/robosafe/.gitignore`): `python3 scripts/robosafe/assets.py fetch` restores them from the Hugging Face dataset pinned in `scripts/robosafe/assets.json` (`MLL-Lab/robosafe-assets`, public) before a build. After a context refresh, `assets.py export <dir>` lays them out for upload and `assets.py pin <dir> <revision>` records the new revision.
+The `realism_v3` pack's `.png` / `.obj` files are not committed (`images/robosafe/.gitignore`): `python3 images/robosafe/assets.py fetch` restores them from the Hugging Face dataset pinned in `images/robosafe/assets.json` (`MLL-Lab/robosafe-assets`, public) before a build. After a context refresh, `assets.py export <dir>` lays them out for upload and `assets.py pin <dir> <revision>` records the new revision.
 
 To move to another RoboSafeBench commit: set `ROBOSAFEBENCH_COMMIT` and `ROBOSAFEBENCH_VERSION` in `source.env`, bump `VERSION`,
-run `fetch_context.sh <clone>` (needs a clone with that commit) and rebuild; the tasks are a frozen release
-(`scripts/robosafe/check_release.py`): new tasks for another commit come from RoboSafeBench's release tooling. Never
+run `fetch_context.sh <clone>` (needs a clone with that commit) and rebuild; the tasks are a frozen release:
+new tasks for another commit come from RoboSafeBench's release tooling. Never
 rebuild a tag that trials have used.
 
 The native `robosafebench/client/remote.py` client and `verify.verify_in_subprocess`

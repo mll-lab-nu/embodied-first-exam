@@ -134,8 +134,7 @@ checked by `ci_checks/check-resources.py`).
 ## Agent logs and timelines
 Harbor keeps, per trial, `agent/codex.txt` (every message, command and output), `agent/trajectory.json` and the raw
 Codex session (`agent/sessions/`). Run Codex with `--ak reasoning_summary=detailed` to also keep reasoning summaries
-(otherwise reasoning is stored encrypted). `scripts/agent_timeline.py <trial_dir>` merges the agent's messages,
-reasoning summaries, tool calls, images and token use with the robot service's log into one `analysis/timeline.md`.
+(otherwise reasoning is stored encrypted).
 
 ## Recordings
 
@@ -168,12 +167,10 @@ from a tree whose files share mtimes (a git checkout, `git archive`, tar, `cp -r
 task's equal-size file in its image, silently, with `--no-cache` too (issue #258; rootless podman builds are not
 affected). **Never build a task image from a tree without stamping it:** `scripts/stamp_mtimes.py` gives every file a
 mtime derived from its content, so different files never share one (content, modes and DIGEST unchanged; git ignores
-mtimes). `scripts/run_agent_batch.sh`, `/validate`, `scripts/task_seed.py materialize`, the benchmarks' kill tests and
-RoboARC's `regrade.py --replay` build from stamped copies. For a bare `harbor run` or `harbor trial regrade`:
+mtimes). `scripts/run_agent_batch.sh`, `/validate` and `scripts/task_seed.py materialize` build from stamped copies. For a bare `harbor run` or `harbor trial regrade`:
 ```bash
 c=$(python3 scripts/stamp_mtimes.py stage tasks/<benchmark>/<task> "$(mktemp -d)") && harbor run -p "$c" -a oracle ...   # a stamped copy
 python3 scripts/stamp_mtimes.py tasks           # or stamp the checkout in place (again after every pull: --check tells)
-python3 scripts/check_image_files.py <image> <context dir>   # after building an image yourself: it holds the context's files
 ```
 
 ## Running a two-mode batch (privileged + standard)
@@ -209,13 +206,8 @@ results site with `scripts/write_task_results.py --out` outside the repository (
 next to the checkout, gets `<batch>/<task>/<run id>/`; `RESULTS=` skips it), updates `$JOBS/<batch>.summary.md`, and
 stops its lane when a trial shows a model-account failure.
 
-To watch a batch live: `scripts/live_board.py --jobs <JOBS>` (repeatable; stdlib only) serves a page on 127.0.0.1 that
-refreshes every 5 s. It shows every trial as pending, setup, running (agent time against the task's limit), verifying,
-success or failed, with live tokens when the usage gateway runs, the reward, the videos and the tail of the agent's
-output. Pending trials come from `$JOBS/.plan/<batch>.json`, which the runner writes when it starts. Reach the page from
-another machine with `ssh -N -L 8765:127.0.0.1:<port> <host>`; it shows the agent's output, so keep it off public
-addresses. It has no login (every user of a shared host can open it) and serves a running trial's files before the
-runner's secret scan has redacted them.
+Each batch's plan (every job, pending until it starts) is `$JOBS/.plan/<batch>.json`, which the runner writes when
+it starts.
 
 Runner-side tools (they run on the host, never in a task): `scripts/log_mirror.py` (in the `rcb-log-mirror` container: an
 append-only copy of every trial's `agent/` record that neither the agent nor the host user can delete),
@@ -246,8 +238,7 @@ above); it materializes a seed per trial once a benchmark allows more than one.
 
 ## The agent's time (the cutoff)
 Every task gives the agent a fixed wall-clock time, its cutoff: Harbor's `[agent] timeout_sec` in the task's own
-`task.toml`, set by the task's author in the pull request that adds or changes the task (a generated benchmark keeps it
-as a constant of its generator, `CUTOFF_SEC` / `CUTOFF`). `ci_checks/check-cutoffs.py` checks per task: a whole number
+`task.toml`, set by the task's author in the pull request that adds or changes the task  `ci_checks/check-cutoffs.py` checks per task: a whole number
 of seconds, at most 14400 (`CUTOFF_CAP`), 3600 unless the pull request justifies another; the instruction's closing
 `## Time limit`, the README's `Agent time budget` row and, in the standard modes, the sim service's `RCB_WALL_CLOCK_S`
 state the same number; nothing else in the instruction states the limit as a duration. A task's privileged and
@@ -273,8 +264,7 @@ the trial is graded as it stands: a result, not an infrastructure failure, never
 last thing the agent reads. `--agent-setup-timeout-multiplier` (slow harness
 installs) is fine: set-up is not the agent's time.
 
-**Changing a cutoff** (the author's decision): set the new `[agent] timeout_sec` (or the generator's constant, then
-re-render) in both twins, run `python3 scripts/task_conventions.py tasks/<benchmark>/<task> ...` (it rewrites the closing section, the
+**Changing a cutoff** (the author's decision): set the new `[agent] timeout_sec` in both twins, run `python3 scripts/task_conventions.py tasks/<benchmark>/<task> ...` (it rewrites the closing section, the
 README row, `RCB_WALL_CLOCK_S` and `DIGEST`), and state old -> new and why in the change (label `cutoff-change`). The task
 changes in place and keeps its name; results under another cutoff are a different configuration (`config_key`). Not
 derived from the cutoff: the token budget, the resource limits, reset budgets, step caps, verifier timeouts. When

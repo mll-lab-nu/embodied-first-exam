@@ -3,7 +3,7 @@
 # downloaded with the builder's own BlenderKit API key and converted / re-centred with Blender 5.1 exactly as RoboWits'
 # assets/setup_assets.sh does, plus two fixes below. The models are licensed to whoever downloads them and must not be
 # redistributed as files (images/robowits/NOTICE): this build exports them to a host folder, never into an image.
-# Run: scripts/robowits/fetch_blenderkit.sh <dir> (the key is a BuildKit secret: never in a layer, the history or the log).
+# Run: images/robowits/fetch_blenderkit.sh <dir> (the key is a BuildKit secret: never in a layer, the history or the log).
 ARG BASE=ghcr.io/mll-lab-nu/eai-robowits:0.1.1
 FROM ${BASE} AS base
 

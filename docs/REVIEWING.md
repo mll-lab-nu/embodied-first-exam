@@ -9,11 +9,13 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
    mode after it, twins with different cutoffs, the scope of its static checks, and its labels (`new-task`, `task-fix`,
    `shared`, `cutoff-change`; a wrong label is removed by hand).
 1. **Scope.** One benchmark per pull request; shared files (protocol, taxonomy, CI, shared scripts, README) only in a
-   separate pull request. Ask for a split otherwise.
+   separate pull request. Ask for a split otherwise. The deliverable is the tasks (PROTOCOL §1, "What a contribution
+   delivers"): ask the author to remove task-generation code (generators, oracle searches, instance freezers, release
+   builders); shared code belongs in the benchmark's image (recommended) or `embodied_first_exam/benchmarks/<benchmark>/`.
 2. **Static checks.** The required job `invariants` (`ci_checks/run_invariants.sh`, PROTOCOL Appendix H) must pass;
    advisory findings are conventions: ask the author to fix them or to say why the task departs.
-3. **Generator.** For generated tasks, read the generator and the shared sources, not 500 copies. Re-run it and check
-   that `git diff tasks/` is empty.
+3. **Shared files.** For many similar tasks, read the shared files once (`check-tooling-identity.sh` holds the copies
+   identical within a benchmark), then the per-task differences.
 4. **Sample tasks.** Read at least two tasks per mode the benchmark ships in this order: `instruction.md` → `tests/` → `solution/` →
    `environment/` → `task.toml`.
 5. **Runs.** Comment `/validate` on the pull request: the oracle (where `oracle = "full"`) and `nop` on every task it adds
@@ -57,8 +59,7 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
   entry, and a stated cutoff relation (`same_cutoff_as`, or free)? Is the runner side (batch_eval_live, the results
   site) told the new suffix? A new mode is an owner-visible protocol change: one pull request of its own, shared files
   only, merged before the benchmark that uses it.
-- Time cutoff (PROTOCOL §2): does every task set its own `[agent] timeout_sec` (a generated benchmark: the
-  generator's constant), 3600 s unless the pull request justifies another number, at most 14400 s, the same for a task's
+- Time cutoff (PROTOCOL §2): does every task set its own `[agent] timeout_sec` , 3600 s unless the pull request justifies another number, at most 14400 s, the same for a task's
   privileged and standard versions and, unless the pull request says why, for all the benchmark's tasks of a mode (the
   pull request's overview lists the numbers)? Does `instruction.md` end with the rendered `## Time limit` section and
   state the limit nowhere else? Does the benchmark's own text say what the cutoff costs here (simulator start-up, what
@@ -74,7 +75,7 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
   `measured` cite real peaks (and say where there are none)? Do the caps leave the margin protocol/running.md "Resources" names above the limits?
 
 ## Human review (oracle `partial` or `none`)
-Review per family (same generator and predicate), at least two instances per family:
+Review per family (same scene template and predicate), at least two instances per family:
 1. **Solvable** — a positive example (successful model trial, upstream policy or RL rollout, or a hand-built
    trajectory or state) that the verifier scores 1.
 2. **Correct predicate** — the grader matches the instruction and cannot be satisfied trivially.
