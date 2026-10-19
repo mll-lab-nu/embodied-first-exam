@@ -1,6 +1,6 @@
 {
  "image": "ghcr.io/mll-lab-nu/eai-robopaint-files:0.1.0@sha256:e97f8e066284e7490b3dc8bc24f9b634761f95396e8236bced1ff445c271355f",
- "source": "embodied_first_exam/robopaint",
+ "source": "embodied_first_exam/benchmarks/robopaint",
  "files": {
   "privileged/grade.py": "d7919a39a4e480619aa8512838cab445482f720a7361b567c428f4c03d6515ed",
   "rcb_brush.py": "0daaec6b6af784eb24154c8dce32b9a24aacff61af777a953d7f646fe613e338",

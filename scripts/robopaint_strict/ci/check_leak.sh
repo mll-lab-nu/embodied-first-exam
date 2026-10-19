@@ -6,7 +6,7 @@
 #  2. every Dockerfile COPY/ADD source is whitelisted (no wildcards, no sidecar paths); a COPY --from names the pinned
 #     files-only image (images/robopaint-files/FILES.json) and one of its whitelisted agent-side files;
 #  3. environment/instance.json (the agent's copy) has only scene / rule keys: no truth, no target geometry, masks or counts;
-#  4. the agent-visible tooling (environment/rcb_brush.py, and its source in embodied_first_exam/robopaint/ when the
+#  4. the agent-visible tooling (environment/rcb_brush.py, and its source in embodied_first_exam/benchmarks/robopaint/ when the
 #     Dockerfile takes it from the files-only image: that source must hash to FILES.json) carries no grader code (target
 #     parsing, scoring);
 #  5. instruction.md, README.md, the task.toml description and the standard service's spec texts use none of the words that

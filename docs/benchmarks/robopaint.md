@@ -111,10 +111,10 @@ What still limits the copy:
   - The oracle label is `partial` on all 86 tasks (see Oracle evidence).
   - The generator writes each task's `oracle_evidence` from `scripts/robopaint_strict/rules.json`.
 - CI:
-  - `python3 scripts/files_image.py check robopaint-files`: `embodied_first_exam/robopaint/` still hashes to
+  - `python3 scripts/files_image.py check robopaint-files`: `embodied_first_exam/benchmarks/robopaint/` still hashes to
     `images/robopaint-files/FILES.json` (the pinned files-only image);
   - `scripts/robopaint_strict/ci/advisory-tooling.sh` keeps every copy of the shared files left in task dirs (the sidecars'),
-    `rcb_brush_strict.py` included, byte-identical to `embodied_first_exam/robopaint/`, within a family and across the families;
+    `rcb_brush_strict.py` included, byte-identical to `embodied_first_exam/benchmarks/robopaint/`, within a family and across the families;
   - `scripts/robopaint_strict/ci/invariant-leak.sh` (PROTOCOL Appendix H.2) admits the rule keys in the agent's copy of the
     instance, and in the agent's Dockerfile a `COPY --from` only of the pinned files-only image and only for an allowed
     agent-side file (`rcb_brush.py`: its source must hash to FILES.json and, like a task dir's copy, carry no grader code).
@@ -235,7 +235,7 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
   - It is built from the repository root: `docker build -f images/robopaint/Dockerfile .`.
 - `images/robopaint-files/` is the files-only image of the shared tooling and graders,
   `ghcr.io/mll-lab-nu/eai-robopaint-files:<VERSION>@<digest>` (`FILES.json`), public like the base image: `FROM scratch` with
-  the files of `embodied_first_exam/robopaint/` (checkout modes, content-derived mtimes). A change to one of them needs a new
+  the files of `embodied_first_exam/benchmarks/robopaint/` (checkout modes, content-derived mtimes). A change to one of them needs a new
   version: bump `VERSION`, `python3 scripts/files_image.py build robopaint-files`, push, `python3 scripts/files_image.py pin
   robopaint-files <digest>`, then the tasks' `COPY --from` lines name the new digest.
 - Every simulator container needs an NVIDIA GPU: SAPIEN needs a Vulkan device to build the scene and to render. Physics
@@ -513,7 +513,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
 | — | `rcb_brush_strict.py` (the process rules, graders' side only): `/tests/` (privileged, from the files-only image), `environment/scorer/` (privileged), `environment/sim/` (standard) |
 
 `rcb_brush.py`, `rcb_brush_score.py`, `rcb_brush_strict.py` and the two `grade.py` (`privileged/`, `standard/`) live once, in
-`embodied_first_exam/robopaint/`. The images take them from the pinned files-only image `images/robopaint-files/` with
+`embodied_first_exam/benchmarks/robopaint/`. The images take them from the pinned files-only image `images/robopaint-files/` with
 `COPY --from=<image@digest>` (`scripts/files_image.py`), at the paths above: the privileged agent image `rcb_brush.py` at
 `/opt/tools/`, the privileged verifier image the four graders' files at `/tests/`, the standard verifier image `grade.py`
 at `/tests/`; no task dir carries them. The sidecar dirs `environment/scorer/` and `environment/sim/` are bind-mounted at
