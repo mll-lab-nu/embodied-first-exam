@@ -10,7 +10,20 @@
 <p align="center">Code agents have passed many exams in the digital world.<br>
 <b>What is their first exam to enter the physical world?</b></p>
 
-<p align="center"><a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro.mp4"><img src="docs/assets/intro.gif" alt="Embodied First Exam: intro video" width="600"></a></p>
+<p align="center">
+  <a href="https://www.embodied-first-exam.ai/suite/?id=metaworldplus"><img src="docs/assets/suites/metaworldplus.gif" alt="MetaWorld+" title="MetaWorld+" width="24%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=robopaint"><img src="docs/assets/suites/robopaint.gif" alt="RoboPaint" title="RoboPaint" width="24%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=roboarc"><img src="docs/assets/suites/roboarc.gif" alt="RoboARC" title="RoboARC" width="24%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=pandadyn"><img src="docs/assets/suites/pandadyn.gif" alt="RoboDynamicExam" title="RoboDynamicExam" width="24%"></a>
+</p>
+<p align="center">
+  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-fun"><img src="docs/assets/suites/embodied-olympics-fun.gif" alt="Embodied Olympics - Fun" title="Embodied Olympics - Fun" width="24%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-match"><img src="docs/assets/suites/embodied-olympics-match.gif" alt="Embodied Olympics - Match" title="Embodied Olympics - Match" width="24%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=dexhand"><img src="docs/assets/suites/dexhand.gif" alt="DexHandExam" title="DexHandExam" width="24%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=roboengineer"><img src="docs/assets/suites/roboengineer.gif" alt="RoboEngineer" title="RoboEngineer" width="24%"></a>
+</p>
+
+<p align="center"><sub>Our eight original suites: MetaWorld+ · RoboPaint · RoboARC · RoboDynamicExam · Embodied Olympics - Fun · Embodied Olympics - Match · DexHandExam · RoboEngineer. <a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro.mp4">▶ Watch the intro video</a></sub></p>
 
 ## News
 
