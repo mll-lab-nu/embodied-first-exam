@@ -248,7 +248,7 @@ def podman_copies(pick: list[str], out: str) -> dict[str, str]:
     NVIDIA GPU, with those requests in CDI form (cdi_compose; device EFE_PODMAN_GPUS, default nvidia.com/gpu=all: a
     CDI spec of the host's GPUs, docs/protocol/running.md). The task dirs in the repository are not changed. Returns
     {task name: copy}."""
-    import stamp_mtimes
+    stamp_mtimes = _Scripts("stamp_mtimes")
     device = os.environ.get("EFE_PODMAN_GPUS") or "nvidia.com/gpu=all"
     copies = {}
     for t in pick:
