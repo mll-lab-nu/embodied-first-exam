@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:vlabench-sim-files-0.1.1@sha256:4ce340b3f112eb9d029ac98e787305ba138dc0f1e109986522e88d08d776c60b",
+ "source": "embodied_first_exam/benchmarks/vlabench",
+ "files": {
+  "privileged/environment/vlb_tool.py": "1395c145e38a166301937a9d78308c522058433a30822b44c0e3ed757f19f8d4",
+  "sim/rcb_service.py": "1922d10837215e2d63a7b704f86b0e72918c61402fc8f5000d7bbcc78ef18054",
+  "sim/server.py": "4a4d884e60570bf2d3da79649cb14900a4f38be6e112d750bd5fa084fe4c4a0b"
+ }
+}

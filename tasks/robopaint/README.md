@@ -223,8 +223,8 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
   are not in git; they are in the public Hugging Face dataset `MLL-Lab/embodied-first-exam-public` (folder `robopaint/`, each
   with its licence notice), pinned by commit and sha256 in its `FILES.json` (`python3 scripts/files_image.py fetch
   robopaint-pictures-files`, no login). The agent image (`/app/target.png`) and the privileged verifier (`/tests/target.png`)
-  take the task's picture with `COPY --from`; the bind-mounted sidecar directories (`environment/sim/`, `environment/scorer/`)
-  keep their own copy.
+  take the task's picture with `COPY --from`, and so do the sidecars (built from `environment/sim/` or
+  `environment/scorer/`, their `Dockerfile`: the picture at `/srv/target.png`).
 - Every simulator container needs an NVIDIA GPU: SAPIEN needs a Vulkan device to build the scene and to render. Physics
   and the brush models run on the CPU.
 - A standard twin's agent container and verifier use the one client base of every standard task
@@ -492,9 +492,9 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
 `embodied_first_exam/benchmarks/robopaint/`. The images take them from the pinned files-only image `images/robopaint-files/` with
 `COPY --from=<image@digest>` (`scripts/files_image.py`), at the paths above: the privileged agent image `rcb_brush.py` at
 `/opt/tools/`, the privileged verifier image the four graders' files at `/tests/`, the standard verifier image `grade.py`
-at `/tests/`; no task dir carries them. The sidecar dirs `environment/scorer/` and `environment/sim/` are bind-mounted at
-`/srv`, not built, so they keep copies; every copy is byte-identical to the source
-(`ci_checks/benchmarks/robopaint/advisory-tooling.sh`). The 2.2 layer is byte-identical to `embodied_first_exam/standard/`
+at `/tests/`; no task dir carries them. The sidecars are built from `environment/scorer/` and `environment/sim/` (their
+`Dockerfile`: the directory at `/srv`) and take their shared files, these among them, from `images/robopaint-sim-files/`
+(`ci_checks/check-tooling-identity.sh` counts those copies). The 2.2 layer is byte-identical to `embodied_first_exam/standard/`
 (`ci_checks/check-tooling-identity.sh`).
 
 ## Declarations

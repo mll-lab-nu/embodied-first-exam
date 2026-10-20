@@ -1,0 +1,8 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:metaworldplus-sim-files-0.1.1@sha256:2a820951d5ebabaa0f534bbe36786519b6c3bd8be14bd00e7091e45e356b53e3",
+ "source": "embodied_first_exam/benchmarks/metaworldplus",
+ "files": {
+  "privileged/environment/mw_tool.py": "899cf5f04443f20043648804f6dfb5f6cc1879f54b8fd95916497818b203e316",
+  "sim/server_mw.py": "4b3a1e5cbf8b1672142396821093f6aaa0e3f77d553f52caa97e3fb6b0690eb1"
+ }
+}

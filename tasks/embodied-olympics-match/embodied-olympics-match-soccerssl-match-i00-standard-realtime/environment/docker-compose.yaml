@@ -12,10 +12,11 @@ services:
     depends_on: [sim]
     cap_drop: [NET_RAW]
   sim:
-    image: ghcr.io/mll-lab-nu/efe:olympiad-0.1.0
+    build:   # environment/sim/Dockerfile: the base image, sim/ at /srv, the files shared with other tasks
+      context: sim
+      dockerfile: Dockerfile
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
     working_dir: /srv
     command: python3 /srv/core/launch.py
     cpus: 6

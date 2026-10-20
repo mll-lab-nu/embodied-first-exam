@@ -23,7 +23,6 @@ services:
       cache_from: ["ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.0"]
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
       - rcb_yamlab_cache_trusted:/cache
     working_dir: /tmp
     command: sh /srv/run.sh

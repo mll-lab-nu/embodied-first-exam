@@ -26,3 +26,18 @@ RUN apt-get -o Acquire::Retries=10 update --snapshot 20260920T090000Z && \
     rm -rf /var/lib/apt/lists/* /tmp/dpkg.state && mkdir -p /app/output /cache/appdata /data
 WORKDIR /app
 # <<< images/behavior/Dockerfile
+# The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above, this directory at /srv, and at
+# their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
+# FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
+COPY . /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:behavior-1k-sim-files-0.1.1@sha256:a5322d190f92e2994d19a4ef95aa6bb19dc2dbe0c734a8a0049b1ebc1472f4a2 \
+     /sim/finalize.sh \
+     /r1pro_primitives_eval.yaml \
+     /rcb_behavior.py \
+     /sim/server.py \
+     /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-sim-files-0.1.1@sha256:d9a4e130a67056d0fb47594562ac303b2f000c5f48fbe5ec235593bef0f3543f \
+     /rcb1.py \
+     /rcb_limited.py \
+     /run.sh \
+     /srv/

@@ -1,0 +1,13 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:roboarc-sim-files-0.1.1@sha256:7e522acee959c50962eb05653be58ecfea1bb123712b286d8f9e6b3b50228802",
+ "source": "embodied_first_exam/benchmarks/roboarc",
+ "files": {
+  "nyx_direct.py": "4809c45a7a5cd7725f95f9e49e55a1dc9d184d2b2b59e780aac19cdaf98fac20",
+  "rcb_topogym.py": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "render_bridge.py": "0e04db54feded2929769443e183e2db1e6138eaec62701070fbd462925d8a2b0",
+  "sim/run.sh": "5a3fb29ea050a005cb0e441f9129b347fa0af5d536d9d210178b1398df032f64",
+  "standard/sim/finalize.sh": "3e7833b175f12c0fc158d14d9fc6ff36c6883cc697868ed0b420a13987f10d55",
+  "standard/sim/replay.py": "e47113baefede32dcd1ce0a72b08037e9e634de243849718ac03d57786404741",
+  "standard/sim/server.py": "993284d12180fc63b836f103d9b4273059ec521f061148d16a4c4bae98ab3642"
+ }
+}

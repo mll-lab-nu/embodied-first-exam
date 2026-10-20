@@ -10,10 +10,11 @@ services:
     cpus: 4   # rcb-monitor
     mem_limit: 6144m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0
+    build:   # environment/sim/Dockerfile: the base image, sim/ at /srv, the files shared with other tasks
+      context: sim
+      dockerfile: Dockerfile
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
     working_dir: /srv
     command: python -m scripts.control_transfer.trusted.service
     environment:

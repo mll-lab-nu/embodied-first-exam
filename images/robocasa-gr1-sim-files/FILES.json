@@ -1,0 +1,8 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:robocasa-gr1-sim-files-0.1.1@sha256:78683e4934958f003961a37d9f3da2d37b2f8fa0d091fc0aa90be496466768fb",
+ "source": "embodied_first_exam/benchmarks/robocasa-gr1",
+ "files": {
+  "sim/finalize.sh": "5d962167951ecc53bf38fe3f2e0636ddeff12c967dc82e0218836a152a811595",
+  "sim/server_casa.py": "2dbd820247f5818c5df0f9736c91e54b4585b4ee8eab26404ed64e4b639debe7"
+ }
+}

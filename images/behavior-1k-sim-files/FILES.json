@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:behavior-1k-sim-files-0.1.1@sha256:a5322d190f92e2994d19a4ef95aa6bb19dc2dbe0c734a8a0049b1ebc1472f4a2",
+ "source": "embodied_first_exam/benchmarks/behavior-1k",
+ "files": {
+  "r1pro_primitives_eval.yaml": "b47a29b68ad5a5600d129c639be5d9dd14b2a85929de2204adc23d5b979345f8",
+  "rcb_behavior.py": "68e66449a09ffa012f6ce7e0f43b1fb6c15b73830623b014f09df0f426b632a4",
+  "sim/finalize.sh": "d6aaea7cf17f1769d149a590f09c0b5f9f064f9302d69fa1422d889147d96752",
+  "sim/server.py": "5d323496acdf93fea895d45a00da55691dc12236a7743bf294fc38b329ee77ff"
+ }
+}

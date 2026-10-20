@@ -24,7 +24,6 @@ services:
       cache_from: ["ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0"]
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
       - rcb_ambench_cache_trusted:/cache
     working_dir: /tmp
     command: sh /srv/run.sh

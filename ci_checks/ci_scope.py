@@ -77,10 +77,12 @@ UNITS: dict[str, list[str]] = {
                          "images/control-transfer/", "images/control-transfer-anycar-files/", "images/quadrotor-landing/",
                          "images/roboengineer-files/"),
 }
-# the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md), and its CI
-# hooks, ci_checks/benchmarks/<folder>/: the folder of its task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)
+# the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md), its CI
+# hooks, ci_checks/benchmarks/<folder>/, and its sidecars' files-only image, images/<folder>-sim-files/: the folder of its
+# task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)
 for _label, _folder in tc.BENCHMARK_DIRS.items():
-    UNITS.setdefault(_label, []).extend([f"embodied_first_exam/benchmarks/{_folder}/", f"ci_checks/benchmarks/{_folder}/"])
+    UNITS.setdefault(_label, []).extend([f"embodied_first_exam/benchmarks/{_folder}/", f"ci_checks/benchmarks/{_folder}/",
+                                         f"images/{_folder}-sim-files/"])   # its sidecars' files-only image
 # changes that no check reads: they need only the repo-level checks (which always run). Everything not listed here and
 # not a benchmark's own path runs the full suite.
 NO_TASK_EFFECT = ("README.md", "CONTRIBUTING.md", "AGENTS.md", "CLAUDE.md", "LICENSE", "SECURITY.md", "CODE_OF_CONDUCT.md", "docs/protocol/running.md",

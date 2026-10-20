@@ -8,7 +8,8 @@
 #    - the graders, tests/grade.py (one version per mode).
 #    A file a task's Dockerfile takes from a files-only image (`COPY --from=<image@digest> /<file> <dest>`, images/<name>/
 #    FILES.json, scripts/files_image.py) counts as a copy at <context>/<basename of dest> with FILES.json's sha256, and
-#    the line must name the image FILES.json pins.
+#    the line must name the image FILES.json pins (contexts: environment/, tests/ and a sidecar's own environment/sim/ or
+#    environment/scorer/).
 #    A change to one of them is rolled out to every task of the benchmark at once. Same approach as ci_checks/benchmarks/robopaint/advisory-tooling.sh.
 #    Tasks the benchmark's own exporter wrote (task.toml [metadata] exporter: Embodied Olympics, PROTOCOL §4c) are a group of their own,
 #    one per exporter and [metadata] skill_in_loop.
@@ -84,13 +85,16 @@ for fj in sorted(Path(images).glob("*/FILES.json")):
 
 def from_files_image(task_dir: str) -> dict:
     """{<context>/<basename of dest>: sha} of the files the task's Dockerfiles take from a files-only image (FILES.json's
-    sha256 of each: what the pinned image holds); a line files_image.copied_from cannot resolve is a failure."""
+    sha256 of each: what the pinned image holds); a line files_image.copied_from cannot resolve is a failure. A sidecar
+    built from its own directory (environment/sim/, environment/scorer/: its Dockerfile, the directory at /srv) counts
+    at environment/<dir>/<its path under /srv>: where the directory's copy would be."""
     got = {}
-    for ctx in ("environment", "tests"):
+    for ctx in ("environment", "tests", "environment/sim", "environment/scorer"):
         out, problems = files_image.copied_from(Path(task_dir) / ctx / "Dockerfile")
         bad.extend(f"{os.path.basename(task_dir)}: {p} (regenerate the task)" for p in problems)
         for dest, f in out.items():
-            got[f"{ctx}/{os.path.basename(dest)}"] = PINNED[f][:16]
+            side = ctx.count("/") and dest.startswith("/srv/")
+            got[f"{ctx}/{dest[len('/srv/'):] if side else os.path.basename(dest)}"] = PINNED[f][:16]
     return got
 
 
@@ -181,9 +185,13 @@ for t in sorted(TDIR):
                 seen[fam][role].setdefault(h, f"{t}/{rel}")
                 if rel in src_sha and h != src_sha[rel]:
                     bad.append(f"{t}: {rel} differs from {FAMILY_SOURCE[rel][0]} (the service has one source: change it there and regenerate)")
-        for rel, h in sorted(img.items()):   # copies the image build puts in place (e.g. the standard grader)
-            if rel in FAMILY_SHARED:
+        for rel, h in sorted(img.items()):     # the copies the image builds put in place (a sidecar's from its Dockerfile)
+            if module and os.path.basename(rel) == module:
+                seen[own_fam][module].setdefault(h, f"{t}/{rel} (files image)")
+            elif rel in FAMILY_SHARED and rel not in BY_NAME.get((fam, mode), ()):
                 seen[fam][f"{mode} {rel}"].setdefault(h, f"{t}/{rel} (files image)")
+                if rel in src_sha and h != src_sha[rel][:16]:
+                    bad.append(f"{t}: {rel} (from a files-only image) differs from {FAMILY_SOURCE[rel][0]} (the service has one source)")
     if bench not in MODULE:
         continue
     module = MODULE[bench]

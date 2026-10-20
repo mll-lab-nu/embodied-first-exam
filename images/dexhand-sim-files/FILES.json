@@ -1,0 +1,29 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:dexhand-sim-files-0.1.1@sha256:676fccc44be31a72ac06e4b1f59f59d05671bc68e141cdfe80fa5aee25cb3df5",
+ "source": "embodied_first_exam/benchmarks/dexhand",
+ "files": {
+  "privileged/environment/arm_rig.py": "5b9e26e313c7a935dfbf04b34aec8047bd713677c638622b8baeaf09453c5a3a",
+  "privileged/environment/checker.py": "a198b5d058818f82c8db955fc9eb6343e9dd3ac32682204364faf6a3cd0466b6",
+  "privileged/environment/essential.py": "57c1a2bcc81eb964d4ea7f6206faa4392a8ae4466ea174698154873e6773dc2f",
+  "privileged/environment/essential_articulated.py": "f5538598e8464d1f882ddd9c3abd3494b272e12ae6037578d40eeb9085b2db91",
+  "privileged/environment/essential_held_joystick_scene.py": "25bed2087fe336f3d5a8c82c20dd7ca3f7e3b06e7202bc28df4145765e9a0384",
+  "privileged/environment/essential_inhand.py": "d74ad4f31dfef11eaf6a5baaa58e711217ff6ee8e602b32e4273865c8876306e",
+  "privileged/environment/essential_pen_regrasp_scene.py": "09735392a4abc83606efbc2e5d6b95ab631a6d4aeb2b7c59dec73ece68b50f65",
+  "privileged/environment/essential_rotary_gait_scene.py": "ce60a49621388857a8bafb62b22643ca6e62768fd94c156156f70af1e06623df",
+  "privileged/environment/essential_rotary_multi.py": "e454625c288667f7216e95dd0d2c4b4193fcd1bd80f9dd04f6bdfcf6c4e99167",
+  "privileged/environment/essential_two_object_scene.py": "23e5c050e4bd24e53ceb18368e0834a207443bd39301258d9823414281e2b8ca",
+  "privileged/environment/essential_visual.py": "5ad7c29ab913de92a41fbcd403644777104ae0c31c162b12bd26eebcb02030cf",
+  "privileged/environment/hands.py": "b469369f582d27b56bd58a911ddaa3ff9b104af1f219476441ea3b04a35b3666",
+  "privileged/environment/replay.py": "3ebc9dfdc755539773ae6dd8bde064f6cbb1d83dc212597b8747d1138f438c71",
+  "privileged/environment/runtime.py": "da80940b841a3f5de89a262029ba832bb7fe11a5ac6b973bc6c3c38bf674210b",
+  "privileged/environment/scene.py": "5a21a77f68ef5dc1cc20e1c286e9a3396f630ee0e7c79e6a1bb0a286f731ad85",
+  "sim/essential_assets.py": "6327cb949e18a2096ed22248c10e1dc4e53ae3416fbaf18f91ef78d916e00c0d",
+  "sim/essential_cube_layer_scene.py": "f401df79c0f6a0945bc5b60bb1fd459edebc02ced7d79f4d145ba7b91d1b8774",
+  "sim/essential_cube_reorient_scene.py": "a03a96e1045180abb910370a51888fcdbb1232a52a447acef0bbf4760ff2dff4",
+  "sim/essential_registry.json": "8b1b515e7d3a40be186af32ed34e85abd91fd22b985fc2a41aba311bbdc182b7",
+  "sim/finalize.py": "e9f0ae2cb3f816614a164a0ceb2d87f5f8c0c5265a7504433a9f7abd113df8bd",
+  "sim/finalize.sh": "7c347b83c53411c1c010b8a3fb5c2b27869ec597b5231ca125ebb72702a4ef38",
+  "sim/rcb_dexhand.py": "3e1bd8364414fa26e2b83710665c44152a6c7d199851f6fab361a31aeb3b9742",
+  "sim/server.py": "eceadd7bb63916cc0e0d7bb0f338a07740bbffc787748b502ee84a2b394977d3"
+ }
+}

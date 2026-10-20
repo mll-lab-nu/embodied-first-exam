@@ -1,0 +1,12 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-files-0.1.1@sha256:803b86ace64a8a7587e9a9bed6d0cc1879dc17b8c55e2bdb00201ae55f94977d",
+ "source": "embodied_first_exam/benchmarks/ikea-mujoco",
+ "files": {
+  "privileged/environment/rcb_ikea.py": "8a18f209c9074b7efe688c896adc2d5fcb4efd23acc947bd0d80e01d17a28a1b",
+  "sim/finalize.sh": "0b736dc1cfeb34d680d8f08ce6720f8d82459bb48137c9b3b1c5a06707a0695a",
+  "sim/ikea_nyx.py": "b9f4e5658f9911110034aa2cb1a25209309328a897ac2e3c1be039c7f4c048e0",
+  "sim/ikea_rig.py": "631262556e694a41d658d46b89254564658a9619f14168703c550872d8a5b923",
+  "sim/rig.json": "0eb3db6f98f139437ccb41e3271bff938e2bd99432a8fb14713db0dfbf169af2",
+  "sim/server.py": "fb27220077a60386445c8ea35eaf0046495e3fd1a389530bac60e9601caf167b"
+ }
+}

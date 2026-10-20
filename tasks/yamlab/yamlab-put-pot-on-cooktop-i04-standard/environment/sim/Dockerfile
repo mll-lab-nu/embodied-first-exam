@@ -78,3 +78,18 @@ RUN mkdir -p /cache/ov-cache /cache/ov-data /cache/ov-logs /root/.cache /root/.l
     ln -s /cache/ov-cache /root/.cache/ov && ln -s /cache/ov-data /root/.local/share/ov && ln -s /cache/ov-logs /root/.nvidia-omniverse/logs
 WORKDIR /app
 # <<< images/yamlab/Dockerfile
+# The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above, this directory at /srv, and at
+# their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
+# FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
+COPY . /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:yamlab-sim-files-0.1.1@sha256:af6c39fffb0bd7efa57e8ea0997444ac5633cc47d77623bf9f0f1dd4a6606d7c \
+     /sim/finalize.sh \
+     /sim/live_video.py \
+     /privileged/environment/rcb_yamlab.py \
+     /sim/server.py \
+     /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-sim-files-0.1.1@sha256:d9a4e130a67056d0fb47594562ac303b2f000c5f48fbe5ec235593bef0f3543f \
+     /rcb1.py \
+     /rcb_limited.py \
+     /run.sh \
+     /srv/

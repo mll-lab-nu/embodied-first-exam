@@ -2,17 +2,18 @@
 # ManiGuard only (tasks/maniguard-*): ManiGuard publishes 40 scripted safe demonstrations per task, its data generator
 # (scripted skeletons, grasp annotations) and its policy servers. None of it may be in reach of the agent (PROTOCOL §2.7):
 #  1. the agent's build context environment/ holds only the files the generator writes there (privileged: the Dockerfile,
-#     compose file, the tooling and the frozen instance; standard: the client, its pins and the sim/ sidecar, which compose
-#     mounts into the sidecar only, with the sidecar's Dockerfile);
-#  2. nothing the agent reads (instruction.md, environment/ text files) names the demonstrations, the generator or the
-#     grasp annotations;
+#     compose file, the tooling and the frozen instance; standard: the client, its pins and the sim/ sidecar, the build
+#     context of the sidecar's own image (its Dockerfile, .dockerignore));
+#  2. nothing the agent reads (instruction.md, environment/ text files, and the files the sidecar takes from a files-only
+#     image) names the demonstrations, the generator or the grasp annotations;
 #  3. the frozen instance is exactly ManiGuard-Bench's two files plus our instance.json and NOTICE.
 # Usage: check_leak.sh tasks/<task-dir>   (moved from ci_checks/check-maniguard-leak.sh; run by invariant-leak.sh)
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"
 case "$n" in maniguard-*) ;; *) exit 0 ;; esac
-python3 - "$t" <<'PY'
+python3 - "$t" "$(cd "$(dirname "$0")/../../.." && pwd)" <<'PY'
 import os, re, sys
+from pathlib import Path
 t = sys.argv[1]; name = os.path.basename(t); env = os.path.join(t, "environment"); bad = []
 INSTANCE = {"scene_ep1.json", "diagnostics.jsonl", "instance.json", "NOTICE"}
 if name.endswith("-privileged"):
@@ -21,7 +22,8 @@ if name.endswith("-privileged"):
 else:
     allowed = {"Dockerfile", "docker-compose.yaml", "client-requirements.txt", "rcb_client.py", "rcb1.py"}
     dirs = {"sim": {"server.py", "finalize.sh", "run.sh", "rcb_limited.py", "rcb1.py", "rcb_maniguard.py", "live_video.py", "instance",
-             "Dockerfile"}}   # the sidecar's image: images/maniguard/Dockerfile (the recipe, normalize writes it)
+             "Dockerfile", ".dockerignore"}}   # the sidecar's image: images/maniguard/Dockerfile (the recipe, normalize writes it),
+                                               # then sim/ at /srv and its shared files from files-only images
 dirs["rcb_monitor"] = {"limits.json"}   # the resource monitor sidecar's limits, mounted only into it (its code is in the image; check-monitor.py)
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)
@@ -44,6 +46,11 @@ for dp, dns, fns in os.walk(env):
     for f in fns:
         if f.endswith((".py", ".md", ".txt", ".yaml", ".sh", "Dockerfile")) and f not in ("rcb_limited.py", "rcb_client.py", "rcb1.py", "run.sh"):
             texts.append(os.path.join(dp, f))
+sys.path.insert(0, os.path.join(sys.argv[2], "scripts")); import files_image   # noqa: E402
+got, problems = files_image.copied_from(Path(env) / "sim" / "Dockerfile")   # the sidecar's files from a files-only image
+bad.extend(f"environment/sim/Dockerfile: {x}" for x in problems)
+texts += [str(src) for dest, src in sorted(got.items()) if dest.endswith((".py", ".md", ".txt", ".yaml", ".sh"))
+          and os.path.basename(dest) not in ("rcb_limited.py", "rcb_client.py", "rcb1.py", "run.sh")]
 for p in texts:
     s = open(p, encoding="utf-8", errors="replace").read()
     for m in LEAK.finditer(s):

@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:robocasa365-sim-files-0.1.1@sha256:ffacc587b362ea68d9cf58620e6a5a262d96dc17fe586628aee19a14bfa00228",
+ "source": "embodied_first_exam/benchmarks/robocasa365",
+ "files": {
+  "privileged/environment/casa_tool.py": "c7224ba5a63370d29f6631fd2475c0a1b2fdb66e8c4d55580ebcf2b7272b1d47",
+  "sim/finalize.sh": "5d962167951ecc53bf38fe3f2e0636ddeff12c967dc82e0218836a152a811595",
+  "sim/rcb_service.py": "1922d10837215e2d63a7b704f86b0e72918c61402fc8f5000d7bbcc78ef18054",
+  "sim/server_casa.py": "2dbd820247f5818c5df0f9736c91e54b4585b4ee8eab26404ed64e4b639debe7"
+ }
+}

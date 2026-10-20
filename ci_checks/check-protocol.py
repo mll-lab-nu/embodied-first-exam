@@ -66,7 +66,8 @@ def commands(path: Path) -> list[str]:
 
 def image_refs(task: Path) -> list[str]:
     refs = []
-    for f in [task / "environment/Dockerfile", task / "tests/Dockerfile"]:
+    for f in [task / "environment/Dockerfile", task / "tests/Dockerfile",                    # and a sidecar built from its own dir
+              task / "environment/sim/Dockerfile", task / "environment/scorer/Dockerfile"]:
         if f.is_file():
             refs += re.findall(r"^FROM\s+(\S+)", f.read_text(), re.M)
     for f in [task / "environment/docker-compose.yaml", task / "tests/docker-compose.yaml"]:

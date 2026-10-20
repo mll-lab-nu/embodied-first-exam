@@ -19,10 +19,11 @@ services:
     cpus: 2   # rcb-monitor
     mem_limit: 7168m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe:robopaint-0.2.0
+    build:   # environment/scorer/Dockerfile: the base image, scorer/ at /srv, the files shared with other tasks
+      context: scorer
+      dockerfile: Dockerfile
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./scorer:/srv:ro
     working_dir: /tmp
     command: sh /srv/run.sh
     restart: on-failure:6          # the service keeps no state a request needs: a restarted one replays the next request from the reset

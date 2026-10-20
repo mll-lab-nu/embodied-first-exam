@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:ispatialgym-sim-files-0.1.1@sha256:6980e5ea2dfb8f8461abd93bcc228f7c7ae08526dc6dfc05f0b62c199ec5b7c4",
+ "source": "embodied_first_exam/benchmarks/ispatialgym",
+ "files": {
+  "privileged/environment/rcb_ispatialgym.py": "c0e239bebf689f12df76704f447e339ef0041178a4f356753b20e43a2d38ca4b",
+  "sim/finalize.sh": "67242510294227dcc286f859cd62b16c4c89392c056c7e113d82e2762a0543a2",
+  "sim/server.py": "2c48ace0c79be3ff28fde766609cb3f2436adf67e9423f296e5ecdd48d3803fc",
+  "sim/task_text.txt": "eb15bd10ca5fc78b43babbc3d949ae947acb09e3d4e88af520a18bb3950c8d59"
+ }
+}

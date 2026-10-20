@@ -1,0 +1,13 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:embodied-safety-exam-sim-files-0.1.1@sha256:61c160e5550140242fd4660bafd2b42852590ede2859ee390aa8fd6ac7615a41",
+ "source": "embodied_first_exam/benchmarks/embodied-safety-exam",
+ "files": {
+  "realtime/rcb_ese_rt.py": "a5e6b6536514289bae042d7b9bb483ae3eacbeb2edfd1eaa0adad2f1c78785bb",
+  "standard/candidate_identity.py": "1b992481b159c717be27bed5337b0f2cebaa08c01c15127d19a2796383334fdd",
+  "standard/picture_delivery.py": "0e3db4880897e3de6072d4d961c60c70d0d808af943a603a79348ec35fe67aee",
+  "standard/rcb_ese.py": "509efa1592d64f14d55fc52c06cca7ea8cab97443b9a1371d94734883a7a844b",
+  "standard/rcb_service.py": "1922d10837215e2d63a7b704f86b0e72918c61402fc8f5000d7bbcc78ef18054",
+  "standard/replay.py": "6e764b0ee3691625d70704d4ac50913ee8c46db75ff91f6d263d0dfaa0cfe70c",
+  "standard/server.py": "995b395ca7628517ff72704e1ed300da42ce09ad73b263898e3d682626d9970d"
+ }
+}

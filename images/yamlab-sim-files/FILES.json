@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:yamlab-sim-files-0.1.1@sha256:af6c39fffb0bd7efa57e8ea0997444ac5633cc47d77623bf9f0f1dd4a6606d7c",
+ "source": "embodied_first_exam/benchmarks/yamlab",
+ "files": {
+  "privileged/environment/rcb_yamlab.py": "440aef4408313422ba37b37a27c73dd0f25319ca67118516eb9d4ae82330ed5e",
+  "sim/finalize.sh": "221598ffa01aafe967afa8c60f101c759c44b386ab82241c3216a7965dd513a7",
+  "sim/live_video.py": "70ecc92d43fcf2bc6e2ac9d37ca88cb17db17c11678f939bc33540746f8d115b",
+  "sim/server.py": "08c52679beca4c8a77c2f7bfe2732e307cba40afeeced863cd1b73e1d0eab9d8"
+ }
+}

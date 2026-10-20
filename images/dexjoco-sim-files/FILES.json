@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:dexjoco-sim-files-0.1.1@sha256:1ddd0c270ea7162462b584677e6ec3cc76ec912d7d2531fd90446aa8c8e4ff6a",
+ "source": "embodied_first_exam/benchmarks/dexjoco",
+ "files": {
+  "privileged/environment/rcb_dexjoco.py": "2e94afd6a98ab14ae20e15ef9d99a9cf676a541e37c84b5c9ccc09acfcd3aa85",
+  "sim/finalize.sh": "b89c0c798381ef7138d69c39bc9aa89dd14b94398a0629b7b5167fc969bf35f2",
+  "sim/server.py": "89eb91770d82c4ede357992b718f671856e04ea20ffd125dc859d6200cb8e579",
+  "sim/video.py": "0476ac61e16d1a5afc95bf604b20123f738b5184d742cf29f475d6da4b573e46"
+ }
+}

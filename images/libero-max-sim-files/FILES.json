@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:libero-max-sim-files-0.1.1@sha256:95dabd7ce0735d4d620cc4d1133abc3c7fc65b7628bd3ff2995184c07367df5e",
+ "source": "embodied_first_exam/benchmarks/libero-max",
+ "files": {
+  "privileged/environment/lmx_tool.py": "4209d8c52596622e9220fa09c0d3b0317574b9e60823e479b14340e35dff5f7b",
+  "sim/finalize.sh": "6be0b0f5ccc70af14d52a2c45a6efbb44bf8813838f68f3524ac710d47312a4f",
+  "sim/rcb_service.py": "1922d10837215e2d63a7b704f86b0e72918c61402fc8f5000d7bbcc78ef18054",
+  "sim/server.py": "b99f0acc62a21626960fb9b6c7e651f2ae89ea0cc2f60538eee8a08ae2624757"
+ }
+}

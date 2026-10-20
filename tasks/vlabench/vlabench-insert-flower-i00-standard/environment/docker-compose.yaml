@@ -17,7 +17,6 @@ services:
       cache_from: ["ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0"]   # the prebuilt vlabench-base layers: pulled when the runner can, else built
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
     command: python /srv/server.py
     restart: on-failure:6                               # a crash resumes the same episode, never a reset (rcb_service.py)
     environment:

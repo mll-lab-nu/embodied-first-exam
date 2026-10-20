@@ -1,0 +1,8 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:dextoolbench-sim-files-0.1.1@sha256:ebc574bacb4303980f67ab72f04a7df170066292e0f0b5bc21e54860054c3a9d",
+ "source": "embodied_first_exam/benchmarks/dextoolbench",
+ "files": {
+  "privileged/environment/rcb_dtb.py": "3f86a2bd4af19ab3d2cac656b689bca84a596f5d7e4ce56a14b4989d143f0180",
+  "sim/server_mj.py": "9a3f2eaa5e9a619bddea7e0ab5ce29603450c07b9a386dfead62518d0acd7e57"
+ }
+}

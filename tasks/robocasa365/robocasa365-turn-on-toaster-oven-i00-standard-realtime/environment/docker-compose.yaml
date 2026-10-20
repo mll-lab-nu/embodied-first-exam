@@ -16,10 +16,11 @@ services:
     cpus: 6   # rcb-monitor
     mem_limit: 14336m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0
+    build:   # environment/sim/Dockerfile: the base image, sim/ at /srv, the files shared with other tasks
+      context: sim
+      dockerfile: Dockerfile
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
     working_dir: /tmp
     command: python /srv/rcb_realtime.py
     restart: on-failure:6          # a resume continues the episode, paused

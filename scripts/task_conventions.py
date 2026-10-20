@@ -1045,6 +1045,10 @@ def image_of(task: Path) -> str:
         imgs = [i for i in re.findall(r"^\s*image:\s*(\S+)", c, re.M) if not re.search(r"/(?:eai|efe)-monitor[:@]|/efe:monitor-", i)]   # not the monitor's
         if imgs:
             return imgs[0]
+        for sub in ("sim", "scorer"):   # a sidecar built from its own directory: the base image of its Dockerfile
+            m = re.search(r"^FROM\s+(\S+)", read_text(task / "environment" / sub / "Dockerfile") or "", re.M)
+            if m:
+                return m.group(1)
     d = read_text(task / "environment/Dockerfile") or ""
     m = re.search(r"^FROM\s+(\S+)", d, re.M)
     return m.group(1) if m else ""

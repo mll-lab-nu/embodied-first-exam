@@ -18,10 +18,11 @@ services:
     cpus: 4   # rcb-monitor
     mem_limit: 8192m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe:myosuite-0.1.1
+    build:   # environment/sim/Dockerfile: the base image, sim/ at /srv, the files shared with other tasks
+      context: sim
+      dockerfile: Dockerfile
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
     working_dir: /tmp
     command: python /srv/rcb_realtime.py
     restart: on-failure:6          # N >= 3 (PROTOCOL §4.1); a resume continues the episode, paused

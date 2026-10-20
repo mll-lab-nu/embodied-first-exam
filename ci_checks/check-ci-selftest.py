@@ -90,6 +90,14 @@ def append(text: str):
     return lambda s: s + text
 
 
+def sidecar_drift(name: str, file: str, text: str = "# drift\n") -> dict:
+    """A drifted copy of a file the task's sidecar takes from a files-only image (environment/sim/Dockerfile), put back
+    into environment/sim/: the copies of a shared file must still be one version."""
+    import files_image
+    src = files_image.copied(tc.task_dir(name) / "environment/sim/Dockerfile")["/srv/" + file]
+    return {"+environment/sim/" + file: lambda _: src.read_text() + text}
+
+
 def npz_text(member: str, text: str) -> bytes:
     """A numpy archive (no numpy needed) whose one member is a 0-d unicode array holding `text`, as np.savez writes it."""
     import io, zipfile
@@ -327,19 +335,19 @@ MUTATIONS = [
     ("DexToolBench: one task's grader is another file of the files image", DTB, TEST_DF,
      sub(r" /standard/tests/grade\.py /tests/grade\.py$", " /privileged/tests/grade.py /tests/grade.py"), IDENTITY,
      "dextoolbench: 2 versions of standard tests/grade.py"),
-    ("... its service", DTB, "environment/sim/server_mj.py", append("# drift\n"), IDENTITY, "environment/sim/server_mj.py differs from images/mujoco/limited/server_mj.py"),
+    ("... its service", DTB, None, sidecar_drift(DTB, "server_mj.py"), IDENTITY, "environment/sim/server_mj.py differs from images/mujoco/limited/server_mj.py"),
     ("... its client (from the standard client image, another digest)", DTB, "environment/Dockerfile",
      sub(r"(efe:standard-files-\S+@sha256:)[0-9a-f]{64}( /rcb1\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY, "not the pinned"),
     ("... its tooling module (from the files image, another digest)", DTB_P, TEST_DF,
      sub(r"(efe:dextoolbench-files-\S+@sha256:)[0-9a-f]{64}( /privileged/environment/rcb_dtb\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
      "not the pinned"),
     ("... tests/test.sh without the resource step", DTB_P, TEST_SH, NO_TRAP, IDENTITY, "dextoolbench: 2 versions of privileged tests/test.sh"),
-    ("MuJoCo Playground (ALOHA): the same service edited", MJ, "environment/sim/server_mj.py", append("# drift\n"), IDENTITY, "dextoolbench: 2 versions of standard environment/sim/server_mj.py"),
-    ("MetaWorld+: one task's service edited", MWP, "environment/sim/server_mw.py", append("# drift\n"), IDENTITY, "environment/sim/server_mw.py differs from images/metaworld/standard/server_mw.py"),
+    ("MuJoCo Playground (ALOHA): the same service edited", MJ, None, sidecar_drift(MJ, "server_mj.py"), IDENTITY, "dextoolbench: 2 versions of standard environment/sim/server_mj.py"),
+    ("MetaWorld+: one task's service edited", MWP, None, sidecar_drift(MWP, "server_mw.py"), IDENTITY, "environment/sim/server_mw.py differs from images/metaworld/standard/server_mw.py"),
     ("... its grader (from the files image, another digest)", MWP_P, TEST_DF,
      sub(r"(efe:metaworldplus-files-\S+@sha256:)[0-9a-f]{64}( /privileged/environment/mw_tool\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
      "not the pinned"),
-    ("... its tooling module", MWP, "environment/sim/mw_tool.py", append("# drift\n"), IDENTITY, "metaworldplus: 2 versions of mw_tool.py"),
+    ("... its tooling module", MWP, None, sidecar_drift(MWP, "mw_tool.py"), IDENTITY, "metaworldplus: 2 versions of mw_tool.py"),
     ("... tests/test.sh without the resource step", MWP, TEST_SH, NO_TRAP, IDENTITY, "metaworldplus: 2 versions of standard tests/test.sh"),
     ("RoboTwin: a privileged task's tests/test.sh without the resource step", TWIN_P, TEST_SH, NO_TRAP, IDENTITY, "robotwin_2_0: 2 versions of privileged tests/test.sh"),
     ("... its grader", TWIN_P, "tests/grade.py", append("# drift\n"), IDENTITY, "robotwin_2_0: 2 versions of privileged tests/grade.py"),
@@ -347,8 +355,10 @@ MUTATIONS = [
     ("Embodied Olympics - Fun: a verifier takes its grader from an image other than the pinned files image", FUN_P, TEST_DF,
      sub(r"(efe:embodied-olympics-fun-files-\S+@sha256:)[0-9a-f]{64}( /grade\.py )", r"\g<1>" + "0" * 64 + r"\2"), IDENTITY,
      "not the pinned"),
-    ("... a standard sidecar's tooling edited (compared with the files image's)", OPEN, "environment/sim/rcb_rfo.py",
-     append("# drift\n"), IDENTITY, "embodied-olympics: 2 versions of rcb_rfo.py"),
+    ("... a standard sidecar's tooling edited (compared with the files image's)", OPEN, None,
+     sidecar_drift(OPEN, "rcb_rfo.py"), IDENTITY, "embodied-olympics: 2 versions of rcb_rfo.py"),
+    ("... a sidecar takes its shared files from an image other than the pinned files image", OPEN, "environment/sim/Dockerfile",
+     sub(r"(efe:embodied-olympics-fun-sim-files-\S+@sha256:)[0-9a-f]{64}", r"\g<1>" + "0" * 64), IDENTITY, "not the pinned"),
     # ---- caps and minimums (PROTOCOL §2.10)
     ("a sidecar's memory cap below the verifier phase's declared minimum (the kernel would kill it at a cap the task itself says is too low)",
      HEAVY, None, {TOML: sub(r"^(sim = \{ cpus = [0-9.]+, memory_gb = )[0-9.]+", r"\g<1>20.0"),

@@ -558,18 +558,30 @@ def agent_clock_starts_at_the_first_request_and_survives_a_resume():
 
 @case
 def every_adapter_reports_the_agents_clock():
-    """Each eai-standard/2.2 adapter (tasks/<benchmark>/<task>/environment/sim/server.py next to a copy of this layer) computes meta
-    time_s and time_left_s from the agent's first request: from rcb_limited.agent_time (or the first-request time the
-    layer keeps in E["t_first"]), never from the service's start or the episode's own t0."""
+    """Each eai-standard/2.2 adapter (tasks/<benchmark>/<task>/environment/sim/server.py next to a copy of this layer, in
+    the directory or taken by the sidecar's Dockerfile from a files-only image) computes meta time_s and time_left_s from
+    the agent's first request: from rcb_limited.agent_time (or the first-request time the layer keeps in E["t_first"]),
+    never from the service's start or the episode's own t0."""
     import glob, hashlib, re
-    tasks = os.path.join(os.path.dirname(os.path.dirname(HERE)), "tasks")
+    from pathlib import Path
+    root = os.path.dirname(os.path.dirname(HERE))
+    tasks = os.path.join(root, "tasks")
+    sys.path.insert(0, os.path.join(root, "scripts"))
+    import files_image
+
+    def served(sim: str, name: str) -> str:
+        """The file the sidecar serves at /srv/<name>: the directory's copy, else the one its Dockerfile copies in."""
+        p = os.path.join(sim, name)
+        if os.path.isfile(p) or not os.path.isfile(os.path.join(sim, "Dockerfile")):
+            return p
+        return str(files_image.copied(Path(sim) / "Dockerfile").get("/srv/" + name, p))
     # a copy of this layer: the same PROTOCOL line (not the same bytes: a layer change reaches the tasks through each
     # benchmark's own regeneration, and the adapters' clock does not depend on it)
     proto = next(x for x in open(os.path.join(HERE, "rcb_limited.py"), encoding="utf-8") if x.startswith("PROTOCOL ="))
     seen, bad = {}, []
-    for f in sorted(glob.glob(os.path.join(tasks, "*", "*", "environment", "sim", "server.py"))):
-        lay = os.path.join(os.path.dirname(f), "rcb_limited.py")
-        if not os.path.isfile(lay) or proto not in open(lay, encoding="utf-8").read().splitlines(keepends=True):
+    for sim in sorted(glob.glob(os.path.join(tasks, "*", "*", "environment", "sim"))):
+        f, lay = served(sim, "server.py"), served(sim, "rcb_limited.py")
+        if not os.path.isfile(f) or not os.path.isfile(lay) or proto not in open(lay, encoding="utf-8").read().splitlines(keepends=True):
             continue                               # another protocol's service
         src = open(f, encoding="utf-8").read(); h = hashlib.sha256(src.encode()).hexdigest()
         if h in seen:

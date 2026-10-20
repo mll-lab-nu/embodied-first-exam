@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:maniguard-sim-files-0.1.1@sha256:98022c4de53a373b988d7a0237d577428e9d25d05eab6bea209535d6696240b0",
+ "source": "embodied_first_exam/benchmarks/maniguard",
+ "files": {
+  "privileged/environment/rcb_maniguard.py": "ab479550a5c89a7732245680b306c645672a100ed92340d4e8db0e3eba75b1a2",
+  "sim/finalize.sh": "5223c1b23e4ff791a9f1f8f6a4dc3be1ea90cd0108531415f9278d5e39bd9835",
+  "sim/live_video.py": "70ecc92d43fcf2bc6e2ac9d37ca88cb17db17c11678f939bc33540746f8d115b",
+  "sim/server.py": "8fb2e0a5ef3d21da50e2164f75c38955e1919e25c0abf04cfafcbd2965adf278"
+ }
+}

@@ -15,10 +15,11 @@ services:
     cpus: 4   # rcb-monitor
     mem_limit: 11264m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe:robowits-0.1.1
+    build:   # environment/sim/Dockerfile: the base image, sim/ at /srv, the files shared with other tasks
+      context: sim
+      dockerfile: Dockerfile
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
       - ${RCB_ROBOWITS_BLENDERKIT:?set RCB_ROBOWITS_BLENDERKIT to your BlenderKit model folder (images/robowits/NOTICE)}:/opt/robowits/assets/blender_kit:ro
     working_dir: /tmp
     command: sh /srv/run.sh

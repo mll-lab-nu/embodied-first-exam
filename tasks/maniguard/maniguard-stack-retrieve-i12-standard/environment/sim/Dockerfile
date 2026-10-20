@@ -135,3 +135,18 @@ RUN mkdir -p /opt/locks && \
     for l in dpkg conda pip; do if [ -s "/tmp/locks/$l.lock" ]; then diff "/opt/locks/$l.lock" "/tmp/locks/$l.lock" || { echo "$l.lock differs"; exit 1; }; fi; done && rm -rf /tmp/locks
 WORKDIR /app
 # <<< images/maniguard/Dockerfile
+# The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above, this directory at /srv, and at
+# their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
+# FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
+COPY . /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:maniguard-sim-files-0.1.1@sha256:98022c4de53a373b988d7a0237d577428e9d25d05eab6bea209535d6696240b0 \
+     /sim/finalize.sh \
+     /sim/live_video.py \
+     /privileged/environment/rcb_maniguard.py \
+     /sim/server.py \
+     /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-sim-files-0.1.1@sha256:d9a4e130a67056d0fb47594562ac303b2f000c5f48fbe5ec235593bef0f3543f \
+     /rcb1.py \
+     /rcb_limited.py \
+     /run.sh \
+     /srv/

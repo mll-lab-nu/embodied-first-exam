@@ -1,0 +1,12 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:myosuite-sim-files-0.1.1@sha256:ad012d5c44ddd6231c2f4b23c9f9c2003729623cee70802630d7d5a515d815a1",
+ "source": "embodied_first_exam/benchmarks/myosuite",
+ "files": {
+  "privileged/environment/rcb_myosuite.py": "feb6df7d50875eeaff309a61b62f0dcfe91d9e897307f612d2ff39d09f9a70ff",
+  "sim/finalize.sh": "91c8f7bed912fc66147090b6d0de3fbdcdf93719a02b4cb864521e4ea98eab5d",
+  "sim/rcb_service.py": "1922d10837215e2d63a7b704f86b0e72918c61402fc8f5000d7bbcc78ef18054",
+  "sim/server.py": "c9b2b7881a57bdda91d3bc1f3e3631464717d347837f02531622acc9dbcf503b",
+  "sim/task.json": "8cd3c36cd7bddc42676fefd0fbc698f2d2ad426a37e6c1959c95284c113f26dd",
+  "sim/video.py": "3c91ab66932205353f68341b2f5172861d88678c3516b0bf8f548ccaba9c656d"
+ }
+}

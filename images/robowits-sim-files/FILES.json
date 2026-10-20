@@ -1,0 +1,8 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:robowits-sim-files-0.1.1@sha256:d3f0dc9e6570930b42914f10afff89151129842b9ca0e7a49000da41f04d8250",
+ "source": "embodied_first_exam/benchmarks/robowits",
+ "files": {
+  "privileged/tests/rcb_robowits.py": "47c0256cef2af5222496fca462f0e2d13b98455bb5ae53a220d42574599d46ba",
+  "sim/server.py": "298952ecf36c3c1d660521b3de34be629d2b1a9f20b212513f8e6aee2e152f0b"
+ }
+}

@@ -2,7 +2,8 @@
 # RoboPaint only (tasks/robopaint/robopaint-*): the agent's container may hold nothing derived from the target except target.png
 # (lead, 2026-09-28), and the task texts describe the target as the picture only.
 #  1. environment/ (the agent image's build context) holds only whitelisted files; sidecar dirs (sim/, scorer/) are mounted into
-#     their own services by docker-compose.yaml and never COPYed by the Dockerfile;
+#     their own services by docker-compose.yaml, or are the build context of the service's own image (its Dockerfile there),
+#     and never COPYed by the agent's Dockerfile;
 #  2. every Dockerfile COPY/ADD source is whitelisted (no wildcards, no sidecar paths); a COPY --from names the pinned
 #     files-only image (images/robopaint-files/FILES.json) and one of its whitelisted agent-side files, or the pinned
 #     pictures image (images/robopaint-pictures-files/FILES.json) and this task's own /<task>/target.png to /app/target.png;
@@ -19,6 +20,7 @@ case "$n" in robopaint-*) ;; *) exit 0 ;; esac
 root="$(cd "$(dirname "$0")/../../.." && pwd)"
 python3 - "$t" "$root" <<'PY'
 import hashlib, json, os, re, sys
+from pathlib import Path
 t, root = sys.argv[1:3]; name = os.path.basename(t); env = os.path.join(t, "environment"); bad = []
 FILES = json.load(open(os.path.join(root, "images", "robopaint-files", "FILES.json")))   # the files-only image (scripts/files_image.py)
 STD = json.load(open(os.path.join(root, "images", "standard-files", "FILES.json")))       # the standard client (rcb_client.py, rcb1.py)
@@ -66,11 +68,12 @@ for m in re.finditer(r"^\s*(COPY|ADD)\s+(.+)$", df, re.M):
     for src in parts[:-1]:
         if src not in ALLOWED or any(c in src for c in "*?[") or "/" in src:
             bad.append(f"Dockerfile: {m.group(1)} {src} is not an allowed agent-side file")
-# 1b. sidecar dirs are mounted by compose (and only there)
+# 1b. sidecar dirs are mounted by compose, or built into a sidecar's own image (and only there)
 dc = open(os.path.join(env, "docker-compose.yaml")).read()
 for d in SIDECARS:
-    if os.path.isdir(os.path.join(env, d)) and f"./{d}:/srv" not in dc:
-        bad.append(f"environment/{d}/ exists but docker-compose.yaml does not mount it into a sidecar")
+    built = re.search(rf"^      context: (\./)?{d}/?\s*$", dc, re.M) and os.path.isfile(os.path.join(env, d, "Dockerfile"))
+    if os.path.isdir(os.path.join(env, d)) and f"./{d}:/srv" not in dc and not built:
+        bad.append(f"environment/{d}/ exists but docker-compose.yaml neither mounts it into a sidecar nor builds a sidecar from it")
 # 3. the agent's copy of the instance
 TOP_OK = {"task", "family", "medium", "target", "palette", "canvas", "sheets", "wells", "brush", "robot_qpos", "robot_base", "control_hz",
           "sim_hz", "max_steps", "instance_sha", "frida_learned", "frida_adapted", "versions", "scorer_urls"}
@@ -115,6 +118,11 @@ texts = {"instruction.md": open(os.path.join(t, "instruction.md")).read(), "READ
 tm = re.search(r'^description\s*=\s*"(.*)"\s*$', open(os.path.join(t, "task.toml")).read(), re.M)
 texts["task.toml description"] = tm.group(1) if tm else ""
 sp = os.path.join(env, "sim", "server.py")
+if not os.path.exists(sp):                   # the sidecar built from sim/ takes it from a files-only image (its Dockerfile)
+    sys.path.insert(0, os.path.join(root, "scripts")); import files_image
+    got, problems = files_image.copied_from(Path(env) / "sim" / "Dockerfile")
+    bad.extend(f"environment/sim/Dockerfile: {x}" for x in problems)
+    sp = str(got.get("/srv/server.py", sp))
 if os.path.exists(sp):                       # the limited service's /spec texts: every string literal of server.py
     import ast
     lits = [n.value for n in ast.walk(ast.parse(open(sp).read())) if isinstance(n, ast.Constant) and isinstance(n.value, str)]

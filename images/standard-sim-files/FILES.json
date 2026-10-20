@@ -1,0 +1,11 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:standard-sim-files-0.1.1@sha256:d9a4e130a67056d0fb47594562ac303b2f000c5f48fbe5ec235593bef0f3543f",
+ "source": "embodied_first_exam/standard",
+ "files": {
+  "rcb1.py": "a930d8eb6619b669908aff12a33c7dea19b0eb33c5b73138f0b5371bf3fe5040",
+  "rcb_limited.py": "17659896aa7bdf98c20d134cc87ab6a6c0424f3d9ab9b37b63ef808bdcd799a9",
+  "realtime/rcb_realtime.py": "77feb4327480a90e6cfec7f97a2b80161c1ce3d836449b6d11c35407085fcdbf",
+  "run.sh": "5a3fb29ea050a005cb0e441f9129b347fa0af5d536d9d210178b1398df032f64",
+  "v2_4/rcb_limited.py": "75206f255e8d1d3c7a3232ecfa0b78ad15918e6f57413d973e077f30893286ca"
+ }
+}

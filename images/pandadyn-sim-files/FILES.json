@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:pandadyn-sim-files-0.1.1@sha256:37ec3c93b816b464dc58c7daa1a22a72c22ca7a09687122124496358dabb9ef6",
+ "source": "embodied_first_exam/benchmarks/pandadyn",
+ "files": {
+  "privileged/environment/rcb_pandadyn.py": "69dd3863863a85574be96bdbd170865bee563427b6cfa4e68baa7577576f1813",
+  "sim/rcb_service.py": "1922d10837215e2d63a7b704f86b0e72918c61402fc8f5000d7bbcc78ef18054",
+  "sim/server.py": "7c6e67174290488557223e84e6d60a78601e390d1917435a1a461a6b41bf957c",
+  "sim/variants/727bef3b2d/server.py": "727bef3b2df41855c362b2564aca69e29ba742c6201b233a143a8db0b9870826"
+ }
+}

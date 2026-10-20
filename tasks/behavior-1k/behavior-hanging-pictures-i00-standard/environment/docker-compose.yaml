@@ -22,7 +22,6 @@ services:
       cache_from: ["ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2"]   # our prebuilt image: its layers are reused when you can pull it, else Docker builds the recipe
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
       - ${RCB_BEHAVIOR_DATA:?set RCB_BEHAVIOR_DATA to the directory holding your licensed BEHAVIOR dataset (tasks/behavior-1k/README.md)}:/data:ro
       - rcb_behavior_cache_trusted:/cache
     working_dir: /tmp

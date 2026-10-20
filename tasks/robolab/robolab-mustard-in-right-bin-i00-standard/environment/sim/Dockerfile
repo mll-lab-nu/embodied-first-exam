@@ -50,3 +50,18 @@ ADD --chmod=644 --checksum=sha256:c4ae7e62d3d7285e26218e9aec8d5cd8c92fe3d2c1f81d
 RUN python /opt/robolab/mirror_remote_assets.py /opt/robolab/assets /opt/robolab/assets/_remote --check /opt/robolab/remote_assets.sha256
 WORKDIR /app
 # <<< images/robolab/Dockerfile
+# The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above, this directory at /srv, and at
+# their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
+# FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
+COPY . /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:robolab-sim-files-0.1.1@sha256:9f1e403e8751df326980d3e62625e31cc416b33894bdcb90c3cb79fde383dfbb \
+     /sim/finalize.sh \
+     /sim/live_video.py \
+     /rcb_robolab.py \
+     /sim/server.py \
+     /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-sim-files-0.1.1@sha256:d9a4e130a67056d0fb47594562ac303b2f000c5f48fbe5ec235593bef0f3543f \
+     /rcb1.py \
+     /rcb_limited.py \
+     /run.sh \
+     /srv/

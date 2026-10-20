@@ -69,3 +69,18 @@ ENV OMNI_KIT_ACCEPT_EULA=YES HDF5_USE_FILE_LOCKING=FALSE HF_HUB_OFFLINE=1 \
     OMNIGIBSON_TRACK_STATE_UPDATES=1 OMNIGIBSON_CHANGE_DETECTION_NUMPY=1 OMP_NUM_THREADS=1 NUMPY_MADVISE_HUGEPAGE=0 \
     PYTHONHASHSEED=0
 # <<< images/ispatialgym/Dockerfile
+# The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above, this directory at /srv, and at
+# their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
+# FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
+COPY . /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-sim-files-0.1.1@sha256:6980e5ea2dfb8f8461abd93bcc228f7c7ae08526dc6dfc05f0b62c199ec5b7c4 \
+     /sim/finalize.sh \
+     /privileged/environment/rcb_ispatialgym.py \
+     /sim/server.py \
+     /sim/task_text.txt \
+     /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-sim-files-0.1.1@sha256:d9a4e130a67056d0fb47594562ac303b2f000c5f48fbe5ec235593bef0f3543f \
+     /rcb1.py \
+     /rcb_limited.py \
+     /run.sh \
+     /srv/

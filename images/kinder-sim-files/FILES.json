@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:kinder-sim-files-0.1.1@sha256:94e9b8779d2fd9b856d88a138d3c42952f0985b437be6c4d3f71c853548803b4",
+ "source": "embodied_first_exam/benchmarks/kinder",
+ "files": {
+  "privileged/environment/rcb_kinder.py": "3ea76496fe64a3b2c670a0688fdb44f5ff59c76ddc900accf02ffc02d14fa8d2",
+  "sim/rcb_service.py": "1922d10837215e2d63a7b704f86b0e72918c61402fc8f5000d7bbcc78ef18054",
+  "sim/server.py": "1b038eb2b5fb4e1d9c39d015cd63efbc68f367e136ca0eb936c4548c08dbd00c"
+ }
+}

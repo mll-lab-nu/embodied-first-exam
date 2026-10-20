@@ -1,0 +1,20 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:robopaint-sim-files-0.1.1@sha256:41107bf4b3121b8fbe30fb3eba96deab112bf76e219cda2ea72860a23f630e3c",
+ "source": "embodied_first_exam/benchmarks/robopaint",
+ "files": {
+  "rcb_brush.py": "0daaec6b6af784eb24154c8dce32b9a24aacff61af777a953d7f646fe613e338",
+  "rcb_brush_score.py": "89211e30ceb054d8257a4b0409a88fc10d4a695d824be40a497fdba98b96e31e",
+  "rcb_brush_strict.py": "faf0973dbd9b8354368b2f1586fba68575de4179f43ba650f6455e7c0d27eebd",
+  "sim/ARPHICPL.TXT": "3a5e90c0957524a89e48203febcd4492ca4393678abaa7e5b4d70f3ff32b386d",
+  "sim/NOTICE-exemplar.md": "87c5097c51ab51a6323b42501d410a68205c8b361566d8a739fd54ab2ee06683",
+  "sim/finalize.sh": "23e3ed4c77a37f1f2c5e9ee703fc340332bd3ac2dc9b4d71414a97c1adbb0a6d",
+  "sim/rcb_scorer.py": "90869361c9fd3fe6472aded81c64632eb2e9738273374c481e33f6a55c269c17",
+  "sim/run.sh": "87ea1409a7bba77efb90ee29b24660e1fc59ef850d363660a7dbe19c641bc140",
+  "sim/server.py": "71aa9bf47d31a4cbb2e67a9008b0329437aba1b9d84299bfb960847a91356247",
+  "sim/variants/055fb18b90/NOTICE-exemplar.md": "055fb18b90e5e0a953b4e96c0bd0448f93137153628aca2755c88bb8e9ef6788",
+  "sim/variants/16c0bbe684/NOTICE-exemplar.md": "16c0bbe684dc9ab9515ee9e5dfba9f2c310a53723be1b996f631be621ad0baf6",
+  "sim/variants/49c8421692/NOTICE-exemplar.md": "49c8421692baba9efe9754d424aa4de8f49939e753f0db186374b86cf9659143",
+  "sim/variants/d6118d094a/NOTICE-exemplar.md": "d6118d094a7cfb695f19e9d9f6acfd8c4ce19cb6ce185fd5e5938636e158dc0a",
+  "sim/variants/f948360d71/NOTICE-exemplar.md": "f948360d71aa09c39e49f19f774867e7fb437b9939cf4661f54618d87434b57d"
+ }
+}

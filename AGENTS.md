@@ -19,7 +19,7 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   `embodied_first_exam/benchmarks/<benchmark>/` (the same folder name as `tasks/<benchmark>/`; tooling, graders, service
   adapter; `embodied_first_exam/README.md`). Its tasks get it from a files-only image (`scripts/files_image.py`,
   `images/<name>/FILES.json`): the tasks' Dockerfiles `COPY --from=<image@digest>` each file to the path a copy would have
-  had.
+  had (a sidecar's too: built from its own `environment/sim/Dockerfile`, which puts the directory and those files at `/srv`).
 - `images/<sim>/Dockerfile`: simulator base images, tagged from `images/<sim>/VERSION` if present else
   `images/VERSION`; `scripts/build_images.sh`. MuJoCo tasks (`dextoolbench_*`, `mujoco_playground_*`) use `images/mujoco/`
   (run `prepare_assets.sh` first); notes in `tasks/<benchmark>/README.md`.

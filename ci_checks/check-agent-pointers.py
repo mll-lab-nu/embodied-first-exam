@@ -58,13 +58,16 @@ ALLOW = [
 ]
 
 
-SOURCES = {ROOT / files_image.spec(f.parent.name)["source"]: f.parent.name for f in sorted((ROOT / "images").glob("*/FILES.json"))}
+# (source directory, image name, its files): several images may share one source directory (a benchmark's files image and
+# its sidecars' image); a file is reported under the first that lists it, sidecar images last
+SOURCES = [(ROOT / s["source"], f.parent.name, set(s["files"])) for f in sorted((ROOT / "images").glob("*/FILES.json"),
+           key=lambda f: (f.parent.name.endswith("-sim-files"), f.parent.name)) for s in [files_image.spec(f.parent.name)]]
 
 
 def files_name(src: pathlib.Path) -> str:
     """How a file from a files-only image is reported: `files:<image name>/<file>`."""
-    d = next(d for d in SOURCES if d in src.parents)
-    return f"files:{SOURCES[d]}/{src.relative_to(d).as_posix()}"
+    d, name = next((d, n) for d, n, fs in SOURCES if d in src.parents and src.relative_to(d).as_posix() in fs)
+    return f"files:{name}/{src.relative_to(d).as_posix()}"
 
 
 def copies_itself(df: pathlib.Path) -> bool:

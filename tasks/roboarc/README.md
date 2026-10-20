@@ -29,7 +29,8 @@ Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and
 - the privileged images (agent `/opt/tools/`, verifier `/tests/`) take `rcb_topogym.py`, `render_bridge.py` and
   `nyx_direct.py` from the files-only image `ghcr.io/mll-lab-nu/efe:roboarc-files-<version>` (`images/roboarc-files/`, built
   from `embodied_first_exam/benchmarks/roboarc/`; `FILES.json` pins its digest and the files' sha256) with
-  `COPY --from=<image@digest>`: the privileged task dirs carry no copy. The standard sim service keeps its copies in `environment/sim/` (bind-mounted);
+  `COPY --from=<image@digest>`: the privileged task dirs carry no copy. The standard sim service is built from `environment/sim/` (its `Dockerfile`)
+  and takes them, and the rest of the files it shares with other tasks, at `/srv` from `images/roboarc-sim-files/`;
 - the texts state what the tooling grades: the contact-review values come from `CONTACT_RULE`, and the grasping rule is
   `Session.grasp_rules()` of the instance (the weld's slip force over 20 ms, 60 N ALOHA / 65 N Robotiq, and the
   Robotiq's release after 0.2 s without finger contact).

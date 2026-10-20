@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:humanoidbench-sim-files-0.1.1@sha256:72c7bb82b590dfcc70bea5840f72110687b4fed51dbfe93129d50758b1e2d785",
+ "source": "embodied_first_exam/benchmarks/humanoidbench",
+ "files": {
+  "privileged/environment/rcb_hb.py": "52d982c6ff29d8d1f8bc80739c98283ffebec6963dae8549fae36048a4c91405",
+  "privileged/tests/rcb_rewards.py": "a90e12a68d2ca9865139313de36a39dc7d99d5dfc681cc1072cb31f5a13c78b5",
+  "sim/rcb_service.py": "1922d10837215e2d63a7b704f86b0e72918c61402fc8f5000d7bbcc78ef18054",
+  "sim/server.py": "dbe15920088ca096f62b9c1a6e1a100014e6431f5793c86e7cc0015d0800aaae"
+ }
+}

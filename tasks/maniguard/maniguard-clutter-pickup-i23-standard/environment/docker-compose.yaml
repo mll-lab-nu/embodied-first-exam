@@ -24,7 +24,6 @@ services:
       cache_from: ["ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.0"]
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
       - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by images/maniguard/prep_data.py (tasks/maniguard/README.md)}:/data:ro
       - rcb_maniguard_cache_trusted:/cache
     working_dir: /tmp

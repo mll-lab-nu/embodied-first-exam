@@ -19,10 +19,11 @@ services:
     cpus: 8   # rcb-monitor
     mem_limit: 12288m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe:roboarc-0.2.0
+    build:   # environment/sim/Dockerfile: the base image, sim/ at /srv, the files shared with other tasks
+      context: sim
+      dockerfile: Dockerfile
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
     working_dir: /tmp
     # The frozen instance comes from the image (images/roboarc/assets.json): the entrypoint stages it next to a copy of
     # runtime_binding.json and checks it (images/roboarc/stage_instance.py), then runs the command.

@@ -21,10 +21,11 @@ services:
               count: 1
               capabilities: [gpu]
   sim:
-    image: ghcr.io/mll-lab-nu/efe:olympiad-soccer-0.1.0
+    build:   # environment/sim/Dockerfile: the base image, sim/ at /srv, the files shared with other tasks
+      context: sim
+      dockerfile: Dockerfile
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
     working_dir: /srv
     command: python3 /srv/core/launch.py
     cpus: 6
@@ -66,10 +67,11 @@ services:
       PLAYER_MODE_A: "unmetered"
       RCB_WALL_CLOCK_S: "14400"
   practice:
-    image: ghcr.io/mll-lab-nu/efe:olympiad-soccer-0.1.0
+    build:   # environment/sim/Dockerfile: the base image, sim/ at /srv, the files shared with other tasks
+      context: sim
+      dockerfile: Dockerfile
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
-      - ./sim:/srv:ro
       - ./practice:/practice:ro
     working_dir: /srv
     command: python3 /practice/practice_server.py

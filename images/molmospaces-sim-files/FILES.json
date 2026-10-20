@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:molmospaces-sim-files-0.1.1@sha256:aadd84485f7930ebd448e07f0d287432e148f029ea05ad5ac24499dc8102a226",
+ "source": "embodied_first_exam/benchmarks/molmospaces",
+ "files": {
+  "privileged/environment/rcb_molmospaces.py": "f58e2bf6e212edc0d59b24fd91c5620a31abf57cfc126424a97fbbb091e47709",
+  "sim/finalize.sh": "cd4145aaaf8592f3fad772dd201b78064233514e5a4ebb9fd685392ce94d5da9",
+  "sim/server.py": "24702d6e64e4f35b4a318622dd728eee69edf61f487af800d6ef6f48636662e6"
+ }
+}

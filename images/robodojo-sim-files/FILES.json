@@ -1,0 +1,10 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:robodojo-sim-files-0.1.1@sha256:f2171b513c3ab24cc6fb706dddbae994903106c1e4100ce679bb08c6495efed0",
+ "source": "embodied_first_exam/benchmarks/robodojo",
+ "files": {
+  "privileged/environment/rcb_robodojo.py": "a2e5a38e9a0aee87d7c63990e772e15fd90cc60cc971c8f496c0e5fc2335d7fb",
+  "sim/finalize.sh": "4777811a66c2de58f88cf6f4b7e39c1abde961a4e2452abfb93c972223f2a61a",
+  "sim/live_video.py": "70ecc92d43fcf2bc6e2ac9d37ca88cb17db17c11678f939bc33540746f8d115b",
+  "sim/server.py": "2e3aefee54cb11c36d27d39258f38a0698cda55b679a38c9cddbf45eb5baee61"
+ }
+}

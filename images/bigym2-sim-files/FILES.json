@@ -1,0 +1,9 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:bigym2-sim-files-0.1.1@sha256:dedb3cd8899cc48855a4ffc7921cab816e0ac7e88030cc7637b851a1c06ce2f2",
+ "source": "embodied_first_exam/benchmarks/bigym2",
+ "files": {
+  "privileged/environment/rcb_bigym2.py": "ef2345f5ec8806584617600edae10a9764ef9ad386bfc301b93d077e7f2cd636",
+  "sim/rcb_service.py": "1922d10837215e2d63a7b704f86b0e72918c61402fc8f5000d7bbcc78ef18054",
+  "sim/server.py": "066c91719b5a97c84da41f0dfa79ae2d98baee606b9539ab49f29c7afca5e56a"
+ }
+}
