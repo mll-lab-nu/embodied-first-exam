@@ -54,6 +54,12 @@ uv tool install --force -e . --with-executables-from harbor
 cp .env.example .env
 ```
 
+```bash
+# or without a clone: install from PyPI (or pip install embodied-first-exam);
+# the tasks are cloned on first use; API keys: in the shell or a .env in the working directory
+uv tool install embodied-first-exam --with-executables-from harbor
+```
+
 ### 2. Run
 
 ```bash
