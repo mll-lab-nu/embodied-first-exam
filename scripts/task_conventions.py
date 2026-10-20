@@ -1529,7 +1529,9 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
         "- **API keys** for the agent's model in `.env` (step 1), or a subscription (step 3).", "",
         "These benchmarks need a step by hand, or build their image on their first run because it may not be "
         "redistributed. That build accepts the licences of what it installs on your behalf: read them in the linked "
-        "section. Organization members logged in to ghcr.io pull the prebuilt layers instead.", "",
+        "section. Organization members logged in to ghcr.io pull the prebuilt layers instead (on podman, after "
+        "`podman login ghcr.io`, `harbor run -e podman` pulls the prebuilt image and uses it in place of the recipe; "
+        "[docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).", "",
         "| Benchmark | By hand, once | First run |", "|---|---|---|", *rows, "",
         "### 1. Install", "",
         block("# clone with the submodules; install Harbor 0.23.0 with this repository's flags",
