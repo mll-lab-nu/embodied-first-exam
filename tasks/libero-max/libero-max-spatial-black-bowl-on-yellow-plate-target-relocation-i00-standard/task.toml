@@ -44,7 +44,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "verifier 1.6 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)"
+measured = "verifier 1.6 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -93,7 +93,7 @@ timeout_sec = 30
 
 # Then the episode ends: environment/sim/finalize.sh sends SIGUSR1 to the service (re-sent every 30 s, in case it was
 # restarting), which ends the episode and writes the verdict, the live episode's, within seconds (nothing is replayed to
-# grade it; board 0151). Then one video-only replay of the trajectory in a fresh process, which can neither change nor
+# grade it). Then one video-only replay of the trajectory in a fresh process, which can neither change nor
 # cost the verdict; for a long episode on a busy host it takes over an hour: the hook waits up to 5400 s in
 # all (9000 steps at 0.5 s + 180 s to build the scene + 240 s of frames = 4920 s); timeout_sec = 180 s for the
 # service's PID file + 5400 s + 120 s (tasks/libero-max/README.md, "Grading (standard mode)").

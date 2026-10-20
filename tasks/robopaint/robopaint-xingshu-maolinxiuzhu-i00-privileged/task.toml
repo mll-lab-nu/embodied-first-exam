@@ -16,7 +16,7 @@ family = "robopaint_xingshu_maolinxiuzhu"
 mode = "privileged"               # privileged (exact sheets, brush state, reset, scoring service) | standard (RGB only: the -standard twin)
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
-oracle_evidence = "Reference solution in solution/, re-made on 2026-10-09 by the calligraphy planner of solution/README.md (README, Change Log; tasks/robopaint/README.md, Targets). The verifier scores it 1 under the process rules (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1412 and mark_width_mm 2.79, against the colouring-in limits 3160 mm and 1.12 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (ws3, 2026-10-09): tasks/robopaint/README.md (Validation)."
+oracle_evidence = "Reference solution in solution/, re-made on 2026-10-09 by the calligraphy planner of solution/README.md (README, Change Log; tasks/robopaint/README.md, Targets). The verifier scores it 1 under the process rules (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 1412 and mark_width_mm 2.79, against the colouring-in limits 3160 mm and 1.12 mm. Harbor oracle 1 and nop 0 on both modes of this pair on its current files (2026-10-09): tasks/robopaint/README.md (Validation)."
 instance_seed = 0                 # scene = environment/instance.json (agent's copy: sheets, brush, ink stone, start joints, the rule, instance_sha)
 expert_time_estimate_hours = 4.0
 difficulty = "extreme"          # RoboPaint tiers: line easy; xingshu singles hard, works extreme
@@ -36,7 +36,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate"
+measured = "GPU 0.25-0.5 GB, evaluation-pool GPU profile (per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -52,7 +52,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 5.0
 trial_max_memory_gb = 21.0
-measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "GPU: 0.5 GiB (the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.0 GiB over 73 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)); the scorer service is the benchmark's own (recorded only, not in the limits), the whole trial's expected peak adds 5 GiB for it; processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

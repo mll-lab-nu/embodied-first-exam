@@ -12,7 +12,7 @@
 #     parsing, scoring);
 #  5. instruction.md, README.md, the task.toml description and the standard service's spec texts use none of the words that
 #     describe the target as anything but a picture (vector, SVG, centre line, skeleton, outline, median, stroke order, ...).
-# Usage: check_leak.sh tasks/robopaint/<task-dir>   (moved from ci_checks/check-robopaint-leak.sh, board 0124; run by invariant-leak.sh)
+# Usage: check_leak.sh tasks/robopaint/<task-dir>   (moved from ci_checks/check-robopaint-leak.sh; run by invariant-leak.sh)
 set -uo pipefail
 t="${1%/}"; n="$(basename "$t")"
 case "$n" in robopaint-*) ;; *) exit 0 ;; esac

@@ -7,7 +7,7 @@
 },
 "frame":"the opponent's (server at y > 0, receiver at y < 0); the ball's state at the strike (pos m, vel m/s, spin rad/s in the world frame)",
 "sources":[
-"re-screen 2026-10-12: olympiad_review/screening/tt_realism_data/out/E/{lab_0,lab_1,serve_ext_0,serve_ext_1}.json (the serve grid and extension under the realistic restitution)"
+"re-screen 2026-10-12: the Embodied Olympics screening notes (the serve grid and extension under the realistic restitution)"
 ],
 "serve_min_depth":0.2,
 "made_by":"prototypes/tabletennis_serve/build_library.py",

@@ -31,7 +31,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 2.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "verifier 1.6 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)"
+measured = "verifier 1.6 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); the rest author estimate (robosuite, CPU-only, 256x256 OSMesa cameras)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

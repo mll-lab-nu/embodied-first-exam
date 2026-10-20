@@ -1,7 +1,7 @@
 """Standard-mode verifier (MolmoSpaces): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's result and the crash-recovery fields), /data/trajectory.npz, /data/replay.mp4.
 success = the live episode's success: upstream judge_success() on the state at the episode's end, judged by the service;
-nothing replays it (owner 2026-10-17, board 0150/0151). The video is rendered after the verdict and never decides it.
+nothing replays it (owner 2026-10-17). The video is rendered after the verdict and never decides it.
 Numeric-only reward.json; a reward is always written.
 
 infra_error = 1 means no verdict on the agent (success is 0, the trial is not the agent's failure). The agent can reach

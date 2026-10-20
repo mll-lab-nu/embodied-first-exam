@@ -15,7 +15,7 @@ calibration, the robot's own proprioception (the standard twin's columns: joints
 velocities, apertures, motor torques, the targets in force) and the `joint_position` action (per arm 7 absolute joint
 targets + the total aperture, clipped to the limits). Nothing about objects or fixtures leaves this process.
 
-The verdict is the live episode's (owner, 2026-10-17, board 0151; docs/benchmarks/pandadyn.md "Grading"): the task's
+The verdict is the live episode's (owner, 2026-10-17; docs/benchmarks/pandadyn.md "Grading"): the task's
 own check as the graded episode ended in this process, judged by rcb_service after the agent's container is gone; nothing
 is replayed to grade it. The task's check is the episode's end (the first control step where it succeeded or failed), so
 there is no settle window to add (live_verdict below only records the phase and the end reason). The frozen start is

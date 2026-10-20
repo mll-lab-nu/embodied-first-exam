@@ -115,7 +115,7 @@ def train(
     os.environ["MUJOCO_GL"] = "egl"
     os.environ["XDG_CACHE_HOME"] = str(out / "cache")
     # no CPU pinning: the container's CPU quota bounds it, and pinning to the first four host CPUs put every
-    # trial on a host on the same cores (board 0165); the thread counts above / below bound the parallelism
+    # trial on a host on the same cores; the thread counts above / below bound the parallelism
     import torch
     import warp as wp
 

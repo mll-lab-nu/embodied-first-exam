@@ -468,7 +468,7 @@ def _write_json(path: str, obj: dict) -> None:
 
 def final_verdict(data: str) -> dict | None:
     """final.json if it already holds a verdict that nothing may overwrite: the grading result (finalized: the live
-    episode's, `graded_by` = "live", board 0151; before 2026-10-17 a replay's, with `deterministic`) or the end of an
+    episode's, `graded_by` = "live"; before 2026-10-17 a replay's, with `deterministic`) or the end of an
     episode the service gave up after crashes (`gave_up`)."""
     fin = _read_json(os.path.join(data, "final.json"))
     if fin.get("finalized") and (fin.get("gave_up") or fin.get("graded_by") == "live"

@@ -54,7 +54,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 1 GB | 1 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU with Vulkan (RTX 4090 / L4).
-- Measured: 50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, efe:pandadyn-0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene, rebuilt on every reset and once after the verdict to film the graded episode in the same process (board 0153; until 2026-10-17 a second scene in the collect hook, before it two fresh-process replays); CPU: one core per scene + one for the agent
+- Measured: 50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, efe:pandadyn-0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB; the sim service is one scene, rebuilt on every reset and once after the verdict to film the graded episode in the same process (until 2026-10-17 a second scene in the collect hook, before it two fresh-process replays); CPU: one core per scene + one for the agent
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 4 GiB GPU memory, 14 GiB memory. Limits measured: memory: the agent container holds only Python and the client (0.03 GiB in the oracle trials): max(1.5 x peak, peak + 4, 8) -> 8 GiB; whole trial: + the sim service's 6 GiB (one scene, 1.3 GiB, with its frames and the video pass's scene); GPU 0.25 GiB in the sim service (50 oracle trials, 25 per mode (rcb_monitor samples every 5 s, efe:pandadyn-0.1.0, RTX 4090, 2026-10-13): privileged trial peak 0.79 GiB (anon + shmem), GPU 0.05 GiB; standard sim service peak 0.94 GiB, GPU 0.35 GiB, agent container 0.03 GiB; CPU p90 about 1 core per container; one filmed scene (render_video, S12 and D07): RSS 1.2-1.3 GiB, GPU 0.25 GiB); processes 512 and disk 10 GiB: design defaults, not yet measured.
 
 ## Details
@@ -68,11 +68,11 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Generator | `scripts/pandadyn/mk_tasks.py` (`RESETS`, `template/standard/`, the adapter `template/realtime/environment/sim/server.py`, `scripts/humanoidbench/shared/standard/`); tasks/pandadyn/README.md |
 
 ### Change Log
-- 2026-10-17 (owner, board 0150/0151): standard mode graded by the live episode; no grading replay (until then: two
+- 2026-10-17 (owner): standard mode graded by the live episode; no grading replay (until then: two
   fresh-process replays, success = live ∧ replay ∧ deterministic); the frozen start is checked when the service builds
   the scene; the video by one filming pass after the verdict; the collect hooks now stop the agent's programs first
   (`kill -9 -1` in its container). Instance, scene, success check and the agent's side are unchanged.
-- 2026-10-17 (owner, board 0153): aligned with the benchmark's standard-realtime twins: 3 resets (until then
+- 2026-10-17 (owner): aligned with the benchmark's standard-realtime twins: 3 resets (until then
   none), and their adapter on the shared standard service layer (`eai-standard/2.1`, until then 2.2 with an adapter of its own), so
   the two modes share the action, the control granularity (rows `dt` apart, a multiple of 0.01 s, up to 10 s per chunk;
   watches up to 30 s; up to 30 frames per second) and the observations, and differ only in the clock. Gone with the 2.2

@@ -13,7 +13,7 @@ TASK = "pancake_serve"
 # Six wrist-stage targets followed by the selected hand's native finger actuators.
 WIDTHS = {"sharpa": 58, "wuji": 54}  # Marvin rig: 14 arm targets, then left and right hand fingers
 MAX_ROWS = 3000
-VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget: longer episodes are filmed at a larger stride
 MAX_BYTES = 64_000_000  # the archive file and its expanded members (tests/grade.py: the same 64 MB)
 
 
@@ -90,7 +90,7 @@ def replay(path, video=None, camera="overview", fps=25, trusted_service=False, e
         writer = imageio.get_writer(video, fps=fps, codec="libx264", quality=8, macro_block_size=16)
     stride = max(1, round(1 / (session.control_dt * fps)))
     if video:
-        # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+        # At most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
         # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
         stride = max(stride, -(-len(actions) // VIDEO_MAX_FRAMES))
     timeline = []

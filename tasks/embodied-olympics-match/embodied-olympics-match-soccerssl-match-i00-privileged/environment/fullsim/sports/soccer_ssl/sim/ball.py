@@ -1,5 +1,5 @@
 """The ball: a standard orange golf ball on the SSL carpet (proposal §4.1-4.2; checked with
-olympiad_review/screening/soccer_ssl_data/ball_roll.py and sports/soccer_ssl/tests/test_ball.py).
+the Embodied Olympics screening notes and sports/soccer_ssl/tests/test_ball.py).
 
 Shared by the world (B) and the overhead cameras (C): `add_ball(spec)` puts the ball into a mujoco.MjSpec,
 `BallState` reads and writes it in a compiled model.

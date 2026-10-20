@@ -20,7 +20,7 @@ scripts/humanoidbench/shared/realtime/) are used unchanged; this module adds wha
   The journal row is rcb_ese's ([type index, values, note id]) with two columns more: the agent calls answered since
   the previous tick, without and with images. A replay (crash recovery, the video, an offline re-check) registers
   them before the tick exactly as the live run did.
-- The verdict is the live episode's (owner, 2026-10-17, board 0151): server.SafetyExam.live_verdict judges the episode
+- The verdict is the live episode's (owner, 2026-10-17): server.SafetyExam.live_verdict judges the episode
   this process ran, nothing is replayed to grade it; verdict.json adds `clock_hook`.
 - An `ee_pose` /submit with dt above one control step is interpolated the shorter way: from the target in force just
   before `at`, each row's quaternion first takes the sign of the row before it (server.SafetyExam.clip; Embodied Safety Exam

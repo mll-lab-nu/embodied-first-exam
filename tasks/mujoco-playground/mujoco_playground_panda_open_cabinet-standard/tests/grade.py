@@ -1,5 +1,5 @@
 """Standard-mode verifier for the MuJoCo tasks: reads what the sim service (which the agent could not touch) wrote.
-/data/final.json holds the live episode's verdict (graded_by = "live": owner, 2026-10-17, board 0151; nothing is
+/data/final.json holds the live episode's verdict (graded_by = "live": owner, 2026-10-17; nothing is
 replayed): DexToolBench, every goal reached; Playground, the task's check of the final state. reward.txt = success (1/0);
 DexToolBench's task progress (goals reached / goals) is in reward.json. infra_error = 1: no verdict on the agent (final.json missing, unreadable or
 without a verdict: the service never got that far, gave up after crashes between calls (sim_crashed, resume_failed),

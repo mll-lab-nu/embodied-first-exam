@@ -467,7 +467,7 @@ def tally(tot: dict, rec: dict) -> None:
     unreachable, the gateway's 502; its stream broken off mid-way; an HTTP 5xx from the provider) counts in
     "upstream_failures", and "failures_in_a_row" is how many model calls in a row up to the latest one failed so (0 after
     a call that came back whole; refusals leave it as it is): scripts/account_failure_check.py reads a trial whose last
-    model calls failed so as an infrastructure failure, not the agent's 0 (board 0121 M4)."""
+    model calls failed so as an infrastructure failure, not the agent's 0."""
     u = rec.get("usage") or {}
     if rec.get("refused") == "path_not_allowed":
         tot["refused_paths"] = tot.get("refused_paths", 0) + 1
@@ -697,7 +697,7 @@ class Handler(BaseHTTPRequestHandler):
             r = conn.getresponse()
         except Exception as exc:  # noqa: BLE001 -- the agent sees an upstream error, as it would without the gateway
             log(f"upstream {host[:253]}: {type(exc).__name__}")        # not the message: it can hold the request's URL
-            # recorded (board 0121 M4): a trial whose model calls end like this is an infrastructure failure
+            # recorded: a trial whose model calls end like this is an infrastructure failure
             record(trial or TRIALS.lookup(ip), {
                 "ts": round(t0, 3), "dur_s": round(time.time() - t0, 2), "client_ip": ip, "host": host, "method": self.command,
                 "path": path.split("?")[0], "status": 502, "model": None, "usage": {}, "usage_raw": {}, "request_bytes": len(body),

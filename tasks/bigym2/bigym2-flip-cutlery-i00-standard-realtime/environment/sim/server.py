@@ -10,7 +10,7 @@ Settings come from environment/docker-compose.yaml:
   RCB_EPISODE      what ends an episode, for /spec (the instruction's words)
   RCB_IMAGE_HW     the side of every onboard camera's square image, pixels (default 84, upstream's)
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA, RCB_SLOWDOWN   the service's own
-The verdict is the live episode's (board 0151): step() reports upstream's is_success (the task's success held for 1 s,
+The verdict is the live episode's: step() reports upstream's is_success (the task's success held for 1 s,
 no fall) and the episode ends where upstream ends it, so nothing is replayed to grade it; render_video() re-runs the
 trajectory once, after the verdict, to film it. The frozen start is checked when the scene is built (instance_check: the
 instance's t0 state exactly, or within upstream's tolerance on another CPU): a scene that does not rebuild it is

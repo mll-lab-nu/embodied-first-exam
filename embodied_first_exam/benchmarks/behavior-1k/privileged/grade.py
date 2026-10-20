@@ -37,7 +37,7 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # had not finished when the old flat 3600 s ran out (< 3.5 control steps/s). Allowance: REPLAY_STARTUP_S for the start plus
 # a worst case of REPLAY_MIN_RATE control steps/s, never below the old 3600 s, at most REPLAY_CAP_S;
 # task.toml's [verifier] timeout_sec fits two capped replays plus overhead.
-# 2026-10-14 (board 0121; owner: a trajectory the grader accepts always gets a verdict): the grader accepts at most
+# 2026-10-14 (owner: a trajectory the grader accepts always gets a verdict): the grader accepts at most
 # MAX_ROWS rows (was the tooling's runaway guard, 200,000, which no replay limit covered), and REPLAY_CAP_S is the time of
 # MAX_ROWS rows at the worst rate. The basis, from the pool's privileged trials (2026-10-09..14, 484 graded): the longest
 # successful trajectory had 25,404 rows (median of 113 successes 4,675), the frozen instances' challenge timeouts reach

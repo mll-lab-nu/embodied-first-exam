@@ -33,5 +33,5 @@
  "nav": {
   "repel": 1.0
  },
- "note": "match-objective ES (12 seeds/candidate, 28 gens, Quest), validated on seeds 301-330: GD -1.73 [-2.70,-0.73] vs L1, realistic motors (5 s)"
+ "note": "match-objective ES (12 seeds/candidate, 28 gens, a CPU cluster), validated on seeds 301-330: GD -1.73 [-2.70,-0.73] vs L1, realistic motors (5 s)"
 }

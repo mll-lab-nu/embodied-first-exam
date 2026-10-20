@@ -9,7 +9,7 @@ pushes, termination rule and success check as the standard twin's eai-standard/2
 finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the HumanoidBench sources
 (ci_checks/check-tooling-identity.sh).
 
-Grading: the live episode's verdict (owner, 2026-10-17, board 0151; nothing is replayed): step() reports the task's
+Grading: the live episode's verdict (owner, 2026-10-17; nothing is replayed): step() reports the task's
 check on the live simulator after every control step (rcb_quadruped.Session.check(): getup's 25 upright steps and the
 stands' 100-step hold are inside it; a joystick episode passes only at the horizon), which is the rule the replay of the
 recorded episode applied, so no live_verdict() is needed. `start_sha` is the frozen instance's recorded state hash:

@@ -118,7 +118,7 @@ class _SortedGlob:
     place_a2b_right, place_object_scale, place_object_stand: envs/<task>.py load_actors) list an object's model files
     with glob.glob and then draw one with the seeded np.random.choice; glob returns the file system's directory order,
     which differs between hosts (and image layers), so one seed built a different object on another host and the frozen
-    instance's hash check failed there (board 0086 claim 5; never rebuilt off the reference workstation). Sorted, the
+    instance's hash check failed there (never rebuilt off the reference workstation). Sorted, the
     draw depends on the seed alone. No other task of ours lists files while it builds its scene."""
 
     def __enter__(self):

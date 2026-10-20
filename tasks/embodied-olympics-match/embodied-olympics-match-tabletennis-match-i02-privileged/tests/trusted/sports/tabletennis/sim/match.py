@@ -802,7 +802,7 @@ class Match(rally.Rally):
     # ------------------------------------------------------------------ paddle-level stroke (scheme B)
     PADDLE_SCATTER = dict(pos=0.01, ang_deg=1.5, speed=0.05)   # execution scatter of the paddle state at contact
     # (revision 14: 1 cm / 1.5 deg / 5 %, was 4 mm / 0.6 deg / 2 %: the nominal-model absolute error of a Panda is 3-10 mm
-    # (Franzese 2026), high-speed tracking <= 5 mm (TiPToP); olympiad_review/screening/tt_realism_zh.md section 2.3)
+    # (Franzese 2026), high-speed tracking <= 5 mm (TiPToP); the Embodied Olympics screening notes section 2.3)
 
     def _contact_state(self, pos, normal, v_p, base, n_avail, prev=None, M=None, serve=False):
         """The limits-aware planner's contact configuration: (q, qd, residual). A re-plan of the same ball (prev = the

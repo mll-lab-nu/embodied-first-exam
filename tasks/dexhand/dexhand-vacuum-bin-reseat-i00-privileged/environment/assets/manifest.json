@@ -1,5 +1,5 @@
 {
-  "source": "robot_coding_bench/scripts/scene_expansion/tasks/vacuum_dustbin/meta_delivery_trajectory_r1/assets (T19, accepted scene-expansion delivery; authored Bosch UniversalVac18 reduced geometry, no manufacturer CAD)",
+  "source": "scene_expansion/tasks/vacuum_dustbin/meta_delivery_trajectory_r1/assets (T19, accepted scene-expansion delivery; authored Bosch UniversalVac18 reduced geometry, no manufacturer CAD)",
   "files": {
     "vacuum_scene.xml": {
       "sha256": "834dbc8f49c71679ac885a3b0c43e4eed8999b73ff0102c4ca995a4a8453c012",

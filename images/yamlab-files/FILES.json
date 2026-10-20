@@ -1,9 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:yamlab-files-0.2.0@sha256:dcf2cdbd2b6dc96201e6c66f15fdb65a44098e8e27abc7a316375ceb1168cf85",
+ "image": "ghcr.io/mll-lab-nu/efe:yamlab-files-0.2.1@sha256:2091f6916300b8add3992398acdacb798267b860b5daa0459f958278b92e9125",
  "source": "embodied_first_exam/benchmarks/yamlab",
  "files": {
   "privileged/environment/rcb_yamlab.py": "440aef4408313422ba37b37a27c73dd0f25319ca67118516eb9d4ae82330ed5e",
   "privileged/tests/grade.py": "18d5759cbe251fd881e8fe578e1dfc83a2679345d775899d7306a0ee44c556fb",
-  "standard/tests/grade.py": "8b331172d6436a79e342fb200e5e89f54e2a8f1e311a9c6d8ae4e2bd88dbde3a"
+  "standard/tests/grade.py": "00c79e82d915a19c241a0f2bd4b53a44d3be7f98f7e0aaf3fc386e8f2facb1a9"
  }
 }

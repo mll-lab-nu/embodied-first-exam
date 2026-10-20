@@ -1,4 +1,4 @@
-"""rcb_panda — MuJoCo Playground's Franka Panda tasks in plain MuJoCo for robot_coding_bench (the instance's "env").
+"""rcb_panda — MuJoCo Playground's Franka Panda tasks in plain MuJoCo for Embodied First Exam (the instance's "env").
 
 Scenes = MuJoCo Playground's `manipulation/franka_emika_panda/xmls` (Apache-2.0, @4057c14) with the Panda from MuJoCo
 Menagerie (@1b86ece, the commit Playground pins): 7 joint position actuators + 1 finger actuator (0 = closed ..

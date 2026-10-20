@@ -104,11 +104,11 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which judges the live
-# episode (nothing is replayed to grade it; board 0151) and writes the verdict ("finalized": true) at once, before any
+# episode (nothing is replayed to grade it) and writes the verdict ("finalized": true) at once, before any
 # video is rendered. The loops run on the clock, inside timeout_sec. The verdict wait (until 4080 s) is for a service
 # that is restarting: up to 120 s to come up, then a crash-resume replays the journal, the live episode's rows and
 # picture checks (at most about the agent's 3600 s). Then the hook waits for the video ("video_pending") until 5280 s:
-# the recorded rows run once more without the picture checks, filmed (board 0136: with 870 s, every episode of more
+# the recorded rows run once more without the picture checks, filmed (with 870 s, every episode of more
 # than ~17,000 control steps lost its video). A video not ready by then is lost, the verdict is not.
 [[verifier.collect]]
 service = "sim"

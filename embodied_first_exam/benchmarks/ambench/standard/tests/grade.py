@@ -1,6 +1,6 @@
 """Standard-mode verifier (AM-Bench): reads what the sim service (which the agent could not touch) wrote: /data/final.json
 (the LIVE episode's result and the crash-recovery fields), /data/trajectory.npz, /data/replay.mp4 (the film pass: an
-illustration). The trial is graded by its live episode (owner 2026-10-17, board 0150/0151; no grading replay): success =
+illustration). The trial is graded by its live episode (owner 2026-10-17; no grading replay): success =
 the live episode's success (AM-Bench's success check held at a control step of the episode the agent ran) and no
 infrastructure failure. The same rule for every task (one task, "determinism": "verdict", was graded so before; the
 others by live success AND two fresh-process replays that succeed and agree on the outcome). Numeric-only reward.json; a reward is written whatever final.json holds.

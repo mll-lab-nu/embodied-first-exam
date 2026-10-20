@@ -467,7 +467,7 @@ class Session:
             self.done, self.reason = True, "failure: " + _FAILURE.get(self.task, "task terminated")
         # Baoding's targets come from a precomputed trajectory of 1000 points (baoding_v1.create_goal_trajectory,
         # "assumes that it's greater than env horizon"): with MyoSuite's step budget lifted, step 1001 would index past
-        # it (IndexError, board 0086). The episode ends there instead, as a failure unless it succeeded on that step.
+        # it (IndexError). The episode ends there instead, as a failure unless it succeeded on that step.
         n_goal = len(getattr(self.base, "goal", ())) if self.task == "baoding" else 0
         if not self.done and n_goal and self.steps >= n_goal:
             self.done, self.reason = True, f"failure: the targets' trajectory ends after {n_goal} control steps"

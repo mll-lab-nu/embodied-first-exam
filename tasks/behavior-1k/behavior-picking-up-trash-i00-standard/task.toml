@@ -29,7 +29,7 @@ mode = "standard"                  # robot as a service: RGB-D + proprioception,
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "partial"
-oracle_evidence = "solution/ streams the privileged oracle's joint targets (oracle_qpos.npy, 5115 rows) through the client. Recorded Harbor oracle runs: 3 of 3 scored 1 on ws3 (job v22-ws3-oracle-picking-up-trash-1741, best behavior-picking-up-trash-i00-li__eg8GdNj) on the dev/qineng 9eb18edf version of this task (rcb-limited/2.2, no crash recovery); 2026-09-25 behavior-picking-up-trash-i00-li__fyYUXt4 (laptop, an older version) scored 1 with live_matches_replay 1. The sim service, collect hook, grader and oracle client changed since (crash recovery); not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (board 0067 oracle sweep, AWS L40S host rcb-gpu11): scored 1 (5114 control steps; live, both replays and deterministic 1) once the oracle waited long enough for the service (the simulator took 620-682 s to start on those hosts, longer than the client's 600 s default wait at the time, which gave two 0-step runs; the default is 3600 s since)."
+oracle_evidence = "solution/ streams the privileged oracle's joint targets (oracle_qpos.npy, 5115 rows) through the client. Recorded Harbor oracle runs: 3 of 3 scored 1 on an RTX 4090 workstation (job v22-oracle-picking-up-trash-1741, best behavior-picking-up-trash-i00-li__eg8GdNj) on the dev/qineng 9eb18edf version of this task (rcb-limited/2.2, no crash recovery); 2026-09-25 behavior-picking-up-trash-i00-li__fyYUXt4 (laptop, an older version) scored 1 with live_matches_replay 1. The sim service, collect hook, grader and oracle client changed since (crash recovery); not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (AWS L40S host rcb-gpu11): scored 1 (5114 control steps; live, both replays and deterministic 1) once the oracle waited long enough for the service (the simulator took 620-682 s to start on those hosts, longer than the client's 600 s default wait at the time, which gave two 0-step runs; the default is 3600 s since)."
 instance_seed = 301
 expert_time_estimate_hours = 4.0
 
@@ -44,7 +44,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 6.0
 verifier_min_memory_gb = 15.0
 verifier_min_gpu_memory_gb = 10.5
-measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (batch_eval_live vram override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + 4090-ws1, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (board 0048, ps); author: 13-16 GB of RAM per Isaac process"
+measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (evaluation-pool GPU-memory override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 cloud GPU hosts + an RTX 4090 workstation, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (ps); author: 13-16 GB of RAM per Isaac process"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -60,7 +60,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 16.0
 trial_max_memory_gb = 49.0
-measured = "GPU: 9.0 GiB with RCB_TEXTURE_BUDGET=0.1, now the tasks' default (live sampler (cgroup anon, 13 AWS hosts + 4090-ws1, 10-10); uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container docker peak 2.5 GiB over 1 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 24 GiB cap; whole trial: + the sim service's 41 GiB (docker peak 27.0 GiB, 39 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 9.0 GiB with RCB_TEXTURE_BUDGET=0.1, now the tasks' default (live sampler (cgroup anon, 13 cloud GPU hosts + an RTX 4090 workstation, 10-10); uncapped trials reached 29.0 GiB on 48 GB cards, the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: agent container docker peak 2.5 GiB over 1 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 24 GiB cap; whole trial: + the sim service's 41 GiB (docker peak 27.0 GiB, 39 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

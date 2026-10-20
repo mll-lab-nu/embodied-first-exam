@@ -1,4 +1,4 @@
-"""rcb_aloha — MuJoCo Playground's ALOHA tasks in plain MuJoCo for robot_coding_bench: `AlohaSinglePegInsertion`
+"""rcb_aloha — MuJoCo Playground's ALOHA tasks in plain MuJoCo for Embodied First Exam: `AlohaSinglePegInsertion`
 (below) and `AlohaHandOver` (see ENVS; the instance's "env" picks one).
 
 AlohaHandOver = Playground's `mjx_hand_over.xml`: a red box (4 x 3 x 6 cm) starts on the left arm's side, shifted by

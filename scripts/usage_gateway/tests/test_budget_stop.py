@@ -44,7 +44,7 @@ class BudgetStop(unittest.TestCase):
 
 
 class CachedInputCounts(unittest.TestCase):
-    """Cached input counts toward the input budget in full (owner 2026-10-17, board 0150): every provider's usage is
+    """Cached input counts toward the input budget in full (owner 2026-10-17): every provider's usage is
     normalized so that `input` includes the cached tokens, and over_budget compares that `input`."""
     def setUp(self):
         self.saved = getattr(gateway, "ARGS", None)

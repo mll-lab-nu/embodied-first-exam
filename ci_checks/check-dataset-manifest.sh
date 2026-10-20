@@ -17,7 +17,7 @@ if git -C "$root" ls-files --error-unmatch tasks/dataset.toml >/dev/null 2>&1; t
 fi
 # Every directory tasks/<benchmark>/<dir>/ that holds a tracked file is a task: it has its task.toml (a benchmark
 # folder holds task dirs and its own pages, tasks/<benchmark>/*.md, which are files, not dirs). Every other check skips a directory without one, so a half-deleted task (36
-# DIGEST-only dirs were left on main by a merge, board 0121 m3) would pass them all. Always over the whole of tasks/
+# DIGEST-only dirs were left on main by a merge) would pass them all. Always over the whole of tasks/
 # (git's index: cheap).
 orphans=$(git -C "$root" ls-files -- tasks | python3 -c 'import sys
 files = {l.rstrip("\n") for l in sys.stdin}

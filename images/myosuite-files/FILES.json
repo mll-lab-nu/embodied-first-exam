@@ -1,9 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:myosuite-files-0.1.0@sha256:cd14933231bb0ae0b84658a2980a3adfe24a19fdcff0ce157f870f4a030fcdf4",
+ "image": "ghcr.io/mll-lab-nu/efe:myosuite-files-0.1.1@sha256:2fc94e243fc4965cc3cffe132c7d29141e3db691887b420ef6c3b6e9b11dd30f",
  "source": "embodied_first_exam/benchmarks/myosuite",
  "files": {
-  "privileged/environment/rcb_myosuite.py": "25598d53e8a1f130670cfe513697ba9e2beb56096fc0dc80aea9e0b7e19ba69c",
+  "privileged/environment/rcb_myosuite.py": "feb6df7d50875eeaff309a61b62f0dcfe91d9e897307f612d2ff39d09f9a70ff",
   "privileged/tests/grade.py": "a0df2d378cf40058daf0e64062f0ed2241aafcbebfd817dc1e8089c720633d68",
-  "standard/tests/grade.py": "654bc2cb01d020596718d511f85a499098c6d18eec1fd0bdc3b7ad66becc45ae"
+  "standard/tests/grade.py": "39b1c8071c515ff4f19318b1dda6717f9ebfbfa19a100e00c233dc81764d5378"
  }
 }

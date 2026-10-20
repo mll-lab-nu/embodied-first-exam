@@ -2,7 +2,7 @@
 every robot sees only through its own forward-looking camera (no overhead vision, no absolute pose). Line "onboard"
 of the SSL build; the overhead mode is sim/camera.py (line C) and stays the main mode.
 
-What a robot carries in this mode (report: olympiad_review/screening/soccer_ssl_onboard_zh.md):
+What a robot carries in this mode (report: the Embodied Olympics screening notes):
   - one front camera (this module: mount, pose on the chassis, field of view, resolution);
   - wheel odometry and a yaw gyro with realistic drift (prototype: docs/screening/soccer_ssl/onboard/sensors.py);
   - the break beam across the dribbler opening (line A's rig.state()["ball_in_beam"]).

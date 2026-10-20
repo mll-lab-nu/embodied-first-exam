@@ -56,6 +56,6 @@
 1.4139495229274655
 ],
 "policy": "tt_es_v1",
-"trained": "2026-10-16, OpenAI-ES in the frozen wallclock-15 simulator (Quest), run q1 generation 17: 49 policies x 6 matches per generation, half match vs L4, half duel vs reference_truth / center_truth; fitness = point share (+ 0.5 own return rate from gen 12)",
-"report": "olympiad_review read/?doc=rltt"
+"trained": "2026-10-16, OpenAI-ES in the frozen wallclock-15 simulator (a CPU cluster), run q1 generation 17: 49 policies x 6 matches per generation, half match vs L4, half duel vs reference_truth / center_truth; fitness = point share (+ 0.5 own return rate from gen 12)",
+"report": "outside the repository"
 }

@@ -434,7 +434,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
   - The journal rows are the 7 joint targets of each control step.
   - The adapter persists its last `ee_pose` tip target (the start of the next `ee_pose` line).
   - Compose: `restart: on-failure:6`, `command: sh /srv/run.sh`.
-- `RCB_STARTUP_TIMEOUT_S = 600` on every standard task. In 285 standard trials of the brush families (ws, ws3, lab, up to
+- `RCB_STARTUP_TIMEOUT_S = 600` on every standard task. In 285 standard trials of the brush families (two workstations, up to
   50 concurrent lanes), the episode started at most 126 s after Harbor began the environment setup (median about 30 s).
   The Session build alone took at most 106 s. That makes 600 s more than four times the slowest measured start.
 - The collect hook is `rcb_limited.py end --wait-key video_done`. A verdict the service already wrote (its live verdict,
@@ -539,4 +539,4 @@ Measured scene builds (episode `start` minus the end of Harbor's environment set
 
 | benchmark | measured | build | note |
 |---|---|---|---|
-| RoboPaint | brush families, 285 standard trials on ws, ws3 and lab (up to 50 at once) | episode start at most 126 s after Harbor's environment setup began (median ~30 s); the Session build alone at most 106 s | `RCB_STARTUP_TIMEOUT_S` = 600 (≥ 4× the slowest start) |
+| RoboPaint | brush families, 285 standard trials on three workstations (up to 50 at once) | episode start at most 126 s after Harbor's environment setup began (median ~30 s); the Session build alone at most 106 s | `RCB_STARTUP_TIMEOUT_S` = 600 (≥ 4× the slowest start) |

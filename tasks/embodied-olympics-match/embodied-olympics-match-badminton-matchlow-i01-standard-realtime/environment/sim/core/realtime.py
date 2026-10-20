@@ -82,7 +82,7 @@ class RealtimeService(Service):
         return {"timing": {"slowdown": self.slowdown, "control_dt": self.m.dt, "period_s": self.period,
                            "policy": "report_only", "effect_delay_steps": self.delay,
                            "reaction_delay_steps": self.react,
-                           # EFE patch (board 0121): the review window, and what missing it costs (timeout() below)
+                           # EFE patch: the review window, and what missing it costs (timeout() below)
                            "review_timeout_s": float(os.environ.get("READY_TIMEOUT_S", "60")),
                            "review_timeout_rule": "after every unit the world stays frozen until each due player sends "
                                                   "ready; a side that has not sent it within review_timeout_s seconds "
@@ -410,7 +410,7 @@ class RealtimeService(Service):
                 with self.cond:
                     if self.phase != "running":
                         continue
-                    try:                                # Embodied First Exam (board 0151): the control step itself
+                    try:                                # Embodied First Exam: the control step itself
                         self.apply_pending()
                         events = self.m.step()
                     except Exception as exc:  # noqa: BLE001

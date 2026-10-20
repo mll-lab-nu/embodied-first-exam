@@ -13,7 +13,7 @@ whose model calls had all answered 200 and that ended at its time budget):
            usage limit / Too Many Requests / Missing environment variable;
   claude   the LAST root-level event of <trial>/agent/claude-code.txt is Claude Code's result with is_error set and a text
            that names the same failures (or an invalid key, a low credit balance, a needed login).
-  gateway  (GATEWAY=1, board 0121 M4) the usage gateway's <trial>/gateway/totals.json: the trial's last model calls failed
+  gateway  (GATEWAY=1) the usage gateway's <trial>/gateway/totals.json: the trial's last model calls failed
            on the way (failures_in_a_row: the upstream unreachable, the gateway's 502; a stream broken off; a provider
            5xx). One or more: the trial is an infrastructure failure ("infra"; write_task_results.py: not a result, not
            the agent's 0); STOP_AFTER or more in a row: the upstream is down for the lane too ("stop"). Also "infra": the
@@ -147,7 +147,7 @@ def selftest() -> int:
         "claude_ok": (dict(claude=[{"type": "assistant"}, {"type": "result", "subtype": "success", "is_error": False, "result": "done"}]), False),
         "claude_tool_429_then_ok": (dict(claude=[{"type": "user", "message": "HTTP 429 from a tool"}, {"type": "result", "is_error": False,
                                                                                                          "result": "finished"}]), False),
-        # board 0121 M4: the gateway's upstream unreachable / a stream broken off / a provider 5xx at the end of the trial
+        # the gateway's upstream unreachable / a stream broken off / a provider 5xx at the end of the trial
         "gateway_502_x5": (dict(codex=[{"type": "turn.failed", "error": {"message": "stream disconnected before completion: "
                                 "error sending request for url (http://172.17.0.1:4000/u/api.openai.com/v1/responses)"}}],
                                 totals=tot(5)), True, True),

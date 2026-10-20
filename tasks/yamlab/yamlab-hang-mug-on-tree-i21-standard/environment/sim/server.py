@@ -20,7 +20,7 @@ Differences from the RoboLab service, all from the robot and the simulator:
   never steps physics); depth from the same renders; /kinematics from numpy models of both arms;
 - the episode ends at the first control step where YAMLab's success check (evaluation thresholds) has latched every stage,
   or when a task object falls off the table (YAMLab's own termination), or when the time is up;
-- the episode is graded as it ran (owner 2026-10-17, board 0150/0151: no grading replay): when it ends the service writes
+- the episode is graded as it ran (owner 2026-10-17: no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: YAMLab's success check, latched stage by
   stage after every control step; the end-state hash); the collect hook's SIGUSR1 makes it exit, and
   environment/sim/finalize.sh writes final.json from it;

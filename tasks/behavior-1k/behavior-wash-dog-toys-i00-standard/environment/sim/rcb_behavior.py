@@ -1140,7 +1140,7 @@ class _QueuePolicy:
 
 # Videos are fragmented MP4: an index up front and a fragment per keyframe, so a file whose writer never closed (the
 # replay of an episode that crashed the simulator crashes again; a process killed at a timeout) still plays up to its
-# last fragment. A plain MP4 keeps its index at the end and is unplayable without it (board 0051, 10-09: 17 BEHAVIOR
+# last fragment. A plain MP4 keeps its index at the end and is unplayable without it (10-09: 17 BEHAVIOR
 # replay videos had frames but no index).
 MP4_FRAGMENTED = "frag_keyframe+empty_moov+default_base_moof"
 

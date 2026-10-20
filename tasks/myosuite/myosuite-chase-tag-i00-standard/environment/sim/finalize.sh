@@ -4,7 +4,7 @@
 #      agent had not (reason "timeout"), writes trajectory.npz + episode.json (the live verdict, the final-state hash)
 #      and exits. It exits 2 when final.json already holds the verdict (the service gave up: after crashes, or at the
 #      start on a scene that is not the frozen instance): that verdict stays.
-#   2. the verdict is the live episode's (owner, 2026-10-17, board 0151): episode.json's success, the task's rule as the
+#   2. the verdict is the live episode's (owner, 2026-10-17): episode.json's success, the task's rule as the
 #      service applied it to the steps it ran (its hold / track windows are part of that rule). Nothing is replayed to
 #      grade it. final.json gets graded_by = "live", replays = 0, finalized = true: the only thing the verifier grades.
 #   3. ONE render pass of the trajectory from the frozen instance in a fresh process (video.py) draws replay.mp4, after

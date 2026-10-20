@@ -1,5 +1,5 @@
 {
-  "source": "scene-expansion T36 'Align and staple paper documents' (robot_coding_bench/scripts/scene_expansion/repairs/stapler_meta_delivery_polish_r1_trajectory_r1/legacy_geometry.py + scene.py); authored NOVUS B2 envelope estimate, not manufacturer CAD",
+  "source": "scene-expansion T36 'Align and staple paper documents' (scene_expansion/repairs/stapler_meta_delivery_polish_r1_trajectory_r1/legacy_geometry.py + scene.py); authored NOVUS B2 envelope estimate, not manufacturer CAD",
   "generator": "tools/export_assets.py",
   "files": {
     "anvil_wall_left.obj": {

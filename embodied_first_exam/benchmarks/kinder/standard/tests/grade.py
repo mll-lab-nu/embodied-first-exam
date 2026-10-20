@@ -1,6 +1,6 @@
 """Standard-mode verifier (eai-standard/2.1): grades what the sim service -- which the agent could not touch -- wrote.
 
-/data/final.json holds the verdict of the live episode (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): the sim
+/data/final.json holds the verdict of the live episode (docs/protocol/README.md H.4; owner, 2026-10-17): the sim
 service judged the episode it ran by the task's rule, after the agent's container was stopped; nothing is replayed.
 success = final.json's success (the live episode's, "graded_by": "live"; a benchmark's live_rule, such as a settle
 window on the live simulator, can only take it away) AND not infra.

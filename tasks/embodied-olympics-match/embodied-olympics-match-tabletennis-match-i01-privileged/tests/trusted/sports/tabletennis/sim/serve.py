@@ -58,7 +58,7 @@ LET_LIMIT = 3                     # the server's 3rd service let since the last 
 SERVE_MIN_DEPTH = 0.2             # m: the service's bounce on the receiver's court must be at least this far from the net
                                   # (the ball's centre at the contact; deviation D13, revision wallclock-14 / duel-wallclock-11):
                                   # under the real restitution no robot body returns >= 90 % of the legal services that bounce
-                                  # closer (B9, olympiad_review/screening/tt_realism_zh.md section 2.6); the value is set by the
+                                  # closer (B9, the Embodied Olympics screening notes section 2.6); the value is set by the
                                   # re-screen (0.2 or 0.3 m); the scripted opponent's serve library obeys it too
 
 

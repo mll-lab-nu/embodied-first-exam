@@ -4,11 +4,11 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 [task]
 name = "embodied-first-exam/robotwin_2_0_move_pillbottle_pad-privileged"
 description = "RoboTwin 2.0 move_pillbottle_pad (ALOHA-AgileX dual arm, SAPIEN): produce one replayable trajectory. Use one arm to pick the pillbottle and place it onto the pad. Frozen scene instance (RoboTwin seed 60417)."
-authors = [{ name = "kangrui" }]
+authors = [{ name = "Kangrui Wang" }]
 keywords = ["robotics", "robotwin", "sapien", "aloha-agilex", "dual-arm", "code-as-policy", "trajectory", "move_pillbottle_pad"]
 
 [metadata]
-author_name = "kangrui"
+author_name = "Kangrui Wang"
 task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
 simulator = "robotwin"            # RoboTwin 2.0 = SAPIEN 3 / PhysX + CuRobo
 robot = "aloha-agilex"
@@ -30,7 +30,7 @@ recommended_gpu = "RTX 4090 24GB / L4 24GB"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 6.0
 verifier_min_gpu_memory_gb = 8.0
-measured = "GPU 6.9 GB oracle peak on RTX 4090, 5.8 GB L4, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 3.2 GB, privileged agent container p90 6.4 GB, verifier 4.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate"
+measured = "GPU 6.9 GB oracle peak on RTX 4090, 5.8 GB L4, evaluation-pool GPU profile (per-trial GPU peaks, 10-03..10); memory: sim p90 3.2 GB, privileged agent container p90 6.4 GB, verifier 4.2 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -46,7 +46,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 13.0
 trial_max_memory_gb = 16.0
-measured = "GPU: 8.6 GiB on a 48 GB card, 6.9 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 7.7 GiB over 13 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "GPU: 8.6 GiB on a 48 GB card, 6.9 on 24 GB (the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 7.7 GiB over 13 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

@@ -5,7 +5,7 @@
 # credential here (Harbor records the model's usage). CPU only (MuJoCo, OSMesa). cap_drop NET_RAW: no raw
 # sockets and no SO_MARK, which could bypass the egress proxy's mark.
 # Low level: the agent serves its own skill from its own container (`game skill serve`, core 0.2.34); the
-# sim calls it at 127.0.0.1:8765 over the shared loopback. No agent code runs in the sim (option c, board 0152
+# sim calls it at 127.0.0.1:8765 over the shared loopback. No agent code runs in the sim (option c
 # decision 28: RCB_SKILL_REMOTE_ONLY; step() one bounded synchronous call per due control step: TIMING sync).
 services:
   main:

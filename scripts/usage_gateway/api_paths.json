@@ -1,6 +1,6 @@
 {
  "_comment": [
-  "The model-API requests the usage gateway forwards (PROTOCOL §2.11, D11; owner 2026-10-10, board 0072). Default deny: a",
+  "The model-API requests the usage gateway forwards (PROTOCOL §2.11, D11; owner 2026-10-10). Default deny: a",
   "request is forwarded only if its host matches a provider here and its method and path are in that provider's list;",
   "anything else is answered 403 and recorded (method and path, no body). A path is matched without its query string,",
   "segment by segment (`*` = exactly one segment). The lists are what Codex and Claude Code sent in 738,826 recorded",

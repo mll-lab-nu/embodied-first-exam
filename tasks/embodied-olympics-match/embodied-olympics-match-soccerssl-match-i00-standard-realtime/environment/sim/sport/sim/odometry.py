@@ -1,6 +1,6 @@
 """The onboard perception mode's internal sensors (formats *_onboard): wheel odometry (4 omni wheels with encoders)
 and a yaw gyro, with drift. Taken unchanged in its model and numbers from the onboard line's prototype
-(docs/screening/soccer_ssl/onboard/sensors.py, report olympiad_review/screening/soccer_ssl_onboard_zh.md §1.3);
+(docs/screening/soccer_ssl/onboard/sensors.py, report the Embodied Olympics screening notes §1.3);
 sim/world.py runs one per robot when the world is built with onboard=True, its random numbers from a core.rng stream
 per robot ("odometry:<team><number>").
 

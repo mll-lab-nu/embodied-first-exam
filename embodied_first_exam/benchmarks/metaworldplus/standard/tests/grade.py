@@ -1,7 +1,7 @@
 """MetaWorld+ standard-mode verifier (separate sandbox, no network): grades what the sim service wrote.
 
 The agent never touched the service. /data/final.json holds the service's verdict on the live episode (owner
-2026-10-17, board 0150/0151; graded_by "live", nothing replayed): success = Meta-World's success check on the live
+2026-10-17; graded_by "live", nothing replayed): success = Meta-World's success check on the live
 simulator's state after the last executed control step (live_success). The check is a predicate on that one state
 (no hold or settle window), the same rule the privileged verifier applies to its replay.
 

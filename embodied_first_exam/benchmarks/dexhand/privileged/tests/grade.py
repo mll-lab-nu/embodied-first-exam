@@ -5,7 +5,7 @@ writes a JSON verdict; an invalid archive is reported by replay.py as `bad_traje
 unreadable verdict is an infrastructure error. Reward 1 needs both replays to succeed with identical final hashes.
 
 After reward.json is written, a third fresh replay renders the replay video (replay.mp4, its record in video.json) in
-the verifier's remaining time (board 0136). The video is evidence for people: it never changes the verdict, and a
+the verifier's remaining time. The video is evidence for people: it never changes the verdict, and a
 render that fails or runs out of time only leaves no video.
 """
 

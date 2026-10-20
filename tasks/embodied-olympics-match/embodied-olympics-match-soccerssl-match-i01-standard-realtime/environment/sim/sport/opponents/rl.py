@@ -1,5 +1,5 @@
 """L-RL: the wheeled 5 v 5 team trained by reinforcement learning (an extra opponent tier above the scripted levels;
-olympiad_review task RLSSL, report site_root_8042/read/docs/rlssl_zh.md).
+task RLSSL).
 
 What it is. The scripted L3 team (opponents.Scripted, level 3: man marking, a blocker, passes, the reference's
 shooting rule) is the low level; a small fixed-weight network chooses, every 0.2 s of game time while the ball is in
@@ -18,7 +18,7 @@ RL tier reads exactly what the top scripted level reads and is compared with it 
 
 Inference: numpy, float64, argmax (deterministic): the same seed replays the same match. The weights are
 `sports/soccer_ssl/rl/<policy>/policy.npz` (obs mean / std, two tanh layers, the option heads); the training code is not part of the
-repository (olympiad_review/handoff/rlssl.md).
+repository (the Embodied Olympics handoff notes).
 """
 from __future__ import annotations
 

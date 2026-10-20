@@ -1,4 +1,4 @@
-"""rcb_molmospaces.py -- MolmoSpaces tooling for robot coding bench (docs/benchmarks/molmospaces.md).
+"""rcb_molmospaces.py -- MolmoSpaces tooling for Embodied First Exam (docs/benchmarks/molmospaces.md).
 
 One module, copied unchanged into every MolmoSpaces task: the privileged environment (`Session`), both verifiers
 (`replay`) and the standard-mode sim service (`Episode`, driven by environment/sim/server.py). Everything that decides

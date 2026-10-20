@@ -15,7 +15,7 @@ The interface (both hosts):
     status() -> {sha256, loaded, functions, load_error}
     close()
 
-Isolation (docs: olympiad_review screening/skill_in_loop_design_zh.md §3): the skill runs from a private copy made of
+Isolation (the Embodied Olympics screening notes §3): the skill runs from a private copy made of
 regular files only (no symlink is followed, FIFOs and devices are skipped, at most MAX_BYTES / MAX_FILES), in its own
 process (python -I, a scrubbed environment, resource limits, `nobody` when the host runs as root); in a generated
 task the host itself runs in the seat's skill container (no network, read-only root, no simulator directory).
@@ -147,7 +147,7 @@ class SkillHost:
         self.timeouts, self.load_timeout_s = dict(timeouts or {}), float(load_timeout_s)
 
     def refresh(self, unit) -> dict | None:
-        # robot_coding_bench (option c): the live server checks at every call; the files are hashed only when a file's
+        # Embodied First Exam (option c): the live server checks at every call; the files are hashed only when a file's
         # path, size or mtime changed (a stat walk of the skill directory per call, about a millisecond for a few files)
         sig = _stat_sig(self.src)
         if self.proc is not None and self.proc.alive and sig is not None and sig == getattr(self, "_sig", None):
@@ -326,7 +326,7 @@ def serve(sock_path: str, src: str, copy_to: str | None = None, once: bool = Fal
             p.unlink(missing_ok=True)
 
 
-# robot_coding_bench (board 0146, #300 review): the agent serves its own skill (core 0.2.34): the simulator reads only the fields it needs from
+# Embodied First Exam (#300 review): the agent serves its own skill (core 0.2.34): the simulator reads only the fields it needs from
 # its answers, each of its own type, so no answer of the agent's server can raise inside the control step (a world_step
 # technical error) or put an unhashable value in the call log (tests/fexam_reward.py); anything else is no status.
 _LOAD_KEYS = ("unit", "sha256", "ok", "error", "wall_s", "host_error", "live", "k")
@@ -361,7 +361,7 @@ def _clean_load(rec, unit):
 class RemoteHost:
     """The simulator's side of `serve`: the same interface over the seat's socket (unix:PATH). A broken connection is
     reopened at the next refresh; meanwhile calls raise SkillError("host", ...). live ("tcp:127.0.0.1:PORT", the
-    agent's own skill server in the agent's container; robot_coding_bench (board 0152 decision 28, option c)): the server is the player's, so
+    agent's own skill server in the agent's container; Embodied First Exam (option c)): the server is the player's, so
     every failure of it (not started, refused, closed, slow, malformed) is the player's: the call lowers to the no-op,
     never a technical failure; each call waits at most `wait_s` (the caller's bound: one control period for step()) or
     the function's time limit + LIVE_MARGIN_S, after which the connection is dropped (its late answer can never be
@@ -445,7 +445,7 @@ class RemoteHost:
             self._drop()
             self.host_errors += 1
             raise SkillError(bad, "the skill server closed the connection")
-        if not isinstance(r, dict):                    # robot_coding_bench (board 0146, #300 review)
+        if not isinstance(r, dict):                    # Embodied First Exam (#300 review)
             self._drop()
             self.host_errors += 1
             raise SkillError(bad, "the skill server's answer is not a JSON object")
@@ -488,7 +488,7 @@ class RemoteHost:
         except SkillError as e:
             self._status = {"sha256": None, "loaded": False, "functions": [], "load_error": str(e)}
             return {"unit": unit, "sha256": None, "ok": False, "error": str(e), "wall_s": 0.0, "host_error": True}
-        self._status = _clean_status(r.get("status"), self._status)     # robot_coding_bench (board 0146, #300 review)
+        self._status = _clean_status(r.get("status"), self._status)     # Embodied First Exam (#300 review)
         return _clean_load(r.get("load"), unit)
 
     def has(self, fn: str) -> bool:
@@ -529,7 +529,7 @@ class RemoteHost:
                       float(self.timeouts.get(fn, 5.0)) + 10.0,
                       STEP_LINE_MAX if (self.live and wait_s is not None) else None)
         if isinstance(r.get("status"), dict):          # live: the version this call ran with
-            self._status = _clean_status(r["status"], self._status)     # robot_coding_bench (board 0146, #300 review)
+            self._status = _clean_status(r["status"], self._status)     # Embodied First Exam (#300 review)
         if r.get("ok"):
             return r.get("ret")
         if r.get("kind") in ("timeout", "dead"):

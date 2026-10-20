@@ -3,7 +3,7 @@ episode's result and the crash-recovery record), /out/trajectory.npz, the video 
 episode, or /out/replay.mp4 from the video-only render). success = the live episode's success: the tooling's success
 rule (the BDDL goal held 1 s, released and at rest), judged by the service on the live simulator, including the settle
 window it runs after the agent's phase when the agent's episode was still running (`settled_success`). Nothing replays
-the episode (owner 2026-10-17, board 0150/0151). Numeric-only reward.json (docs/protocol/README.md Appendix H).
+the episode (owner 2026-10-17). Numeric-only reward.json (docs/protocol/README.md Appendix H).
 
 infra_error = 1 means no verdict on the agent: final.json is the trusted sidecar's own file, so when it is missing (the
 service never came up, or its container was gone), unreadable, or not finalized (the collect hook did not finish), the 0

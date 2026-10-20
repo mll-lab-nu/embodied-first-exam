@@ -16,7 +16,7 @@ family = "cover_with_lid"
 mode = "privileged"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
-oracle_evidence = "No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-cover-with-lid-i00__Jb7Zzve (robowits-lunaxh-0925-2042, privileged) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7). Re-graded with the 2026-10-14 grader (AMD hosts ws / ws3; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited privileged robowits-cover-with-lid-i00__Jb7Zzve fails the earlier grader on AMD as well (inconclusive); the standard __EZUPqSQ passes the earlier grader but fails the 2026-10-14 one: the large lid is still held. No positive confirmed under the 2026-10-14 grader yet (the 10-14 privileged A trials of Gemini and DeepSeek released the lid; their trajectories are not in our hands)."
+oracle_evidence = "No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-cover-with-lid-i00__Jb7Zzve (robowits-lunaxh-0925-2042, privileged) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7). Re-graded with the 2026-10-14 grader (two AMD workstations; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited privileged robowits-cover-with-lid-i00__Jb7Zzve fails the earlier grader on AMD as well (inconclusive); the standard __EZUPqSQ passes the earlier grader but fails the 2026-10-14 one: the large lid is still held. No positive confirmed under the 2026-10-14 grader yet (the 10-14 privileged A trials of Gemini and DeepSeek released the lid; their trajectories are not in our hands)."
 instance_seed = 0                 # scene = environment/instance.json (entry 0 of RoboWits' eval_dataset_50/13.json + expected state hash); identity = dataset.toml digest
 expert_time_estimate_hours = 1.0
 
@@ -31,7 +31,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 2.0
-measured = "GPU 0.5-1.4 GB (physics on the CPU, GPU renders the cameras), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 4.5 GB, privileged container p90 4.7 GB, verifier 2.4 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate (single-threaded Genesis CPU backend)"
+measured = "GPU 0.5-1.4 GB (physics on the CPU, GPU renders the cameras), evaluation-pool GPU profile (per-trial GPU peaks, 10-03..10); memory: sim p90 4.5 GB, privileged container p90 4.7 GB, verifier 2.4 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU author estimate (single-threaded Genesis CPU backend)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -47,7 +47,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 6.0
 trial_max_memory_gb = 16.0
-measured = "GPU: 1.4 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 5.1 GiB over 10 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "GPU: 1.4 GiB (the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 5.1 GiB over 10 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

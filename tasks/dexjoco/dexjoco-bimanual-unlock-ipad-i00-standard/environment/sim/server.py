@@ -19,7 +19,7 @@ Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU rep
 every executed row is journaled; after a crash the service rebuilds the instance and replays the journal (a resume, not
 a grading replay). When the episode ends the service writes /data/trajectory.npz + /data/episode.json with the live
 verdict (DexJoCo's own success check on the episode it ran); the collect hook (finalize.sh) makes it exit, writes that
-verdict into final.json (nothing is replayed to grade it: owner, 2026-10-17, board 0151) and renders the video from the
+verdict into final.json (nothing is replayed to grade it: owner, 2026-10-17) and renders the video from the
 trajectory. The frozen instance is checked when the episode begins: a scene that does not rebuild to the instance's
 recorded state hash gets no episode (instance_mismatch, an infrastructure failure)."""
 

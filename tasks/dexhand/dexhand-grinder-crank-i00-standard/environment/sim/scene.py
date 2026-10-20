@@ -90,7 +90,7 @@ def sharpa_folder(asset_dir=None) -> Path:
     if os.environ.get("DEXHAND_ASSET_DIR"):
         return Path(os.environ["DEXHAND_ASSET_DIR"])
     candidates = [Path("/opt/dexhand/hand")]
-    if len(HERE.parents) > 4:  # repository checkout: robot_coding_bench/images/dexhand/assets/hand
+    if len(HERE.parents) > 4:  # repository checkout: images/dexhand/assets/hand
         candidates.append(HERE.parents[4] / "images/dexhand/assets/hand")
     for candidate in candidates:
         if (candidate / "right_hand.xml").is_file():

@@ -38,7 +38,7 @@ player_mode = "unmetered"
 official = false
 expert_time_estimate_hours = 0.5
 oracle = "partial"
-oracle_evidence = "RLBM 2026-10-16, policy bm_cem_v1 with the true shuttle state (v1.1; the shipped policy has no swing option): on this instance (seed 1001, vanilla Harbor 0.23.0) our camera-only reference lost 1:11 (valid, deterministic) and an Azure Astra precheck was 5:5 when Astra forfeited by ready_timeout; live service batch (built-in RL on B, camera reference over HTTP on A, seeds 1-10 x both first servers): reference 0/20 (16 valid, 40:176); in-process (truth, S = 20): mirror RL vs RL seat A 21/40, first server 15/40; as seat A of match-wallclock it beat level 3 in 19 of 20 seeds (217:124) and levels 4 and 5 in 20 of 20; against it on seat B the truth reference won 1/20, short-random, centre, random and nop 0/20; replays identical; limits as the reference; report :8042/read/?doc=rlbm"
+oracle_evidence = "RLBM 2026-10-16, policy bm_cem_v1 with the true shuttle state (v1.1; the shipped policy has no swing option): on this instance (seed 1001, vanilla Harbor 0.23.0) our camera-only reference lost 1:11 (valid, deterministic) and an Azure Astra precheck was 5:5 when Astra forfeited by ready_timeout; live service batch (built-in RL on B, camera reference over HTTP on A, seeds 1-10 x both first servers): reference 0/20 (16 valid, 40:176); in-process (truth, S = 20): mirror RL vs RL seat A 21/40, first server 15/40; as seat A of match-wallclock it beat level 3 in 19 of 20 seeds (217:124) and levels 4 and 5 in 20 of 20; against it on seat B the truth reference won 1/20, short-random, centre, random and nop 0/20; replays identical; limits as the reference"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)
@@ -50,7 +50,7 @@ gpu_class = "none"
 verifier_min_cpus = 7.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "Embodied Olympics' exported matches (scripts/embodied-olympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/embodied-olympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only, real time needs the cores"
+measured = "Embodied Olympics' exported matches (scripts/embodied-olympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/embodied-olympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU-only, real time needs the cores"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -66,7 +66,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 12.0
-measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
@@ -97,9 +97,9 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay,
-# board 0151). Badminton declares no spectator camera or scene (core/spectator.py renders nothing): the replay
-# video is drawn with the players' cameras by spectator/sport_video.py (Embodied First Exam, board 0136), after the verdict.
+# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay)
+# Badminton declares no spectator camera or scene (core/spectator.py renders nothing): the replay
+# video is drawn with the players' cameras by spectator/sport_video.py (Embodied First Exam), after the verdict.
 [[verifier.collect]]
 service = "sim"
 command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_SPORT_VIDEO = x1 ] && timeout ${RCB_VIDEO_TIMEOUT_S:-1800} python3 /srv/spectator/sport_video.py /srv/sport/plugin.py /data > /dev/null 2>&1; cat /data/final.json | head -c 2000"

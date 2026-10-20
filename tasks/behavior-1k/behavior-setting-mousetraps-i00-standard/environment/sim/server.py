@@ -13,7 +13,7 @@ Differences from the RoboTwin service, all from the simulator:
 - the head and wrist cameras move with the robot: every frame carries the pose it was rendered with (the renderer's
   frames lag the physics by 2 control steps while the robot moves); depth is OmniGibson's depth_linear (z-depth),
   attached before the episode starts; /kinematics is the tooling's stateless FK / IK on the robot's own articulation;
-- the verdict is the LIVE episode's (owner 2026-10-17, board 0150/0151): nothing replays it. When the episode ends the
+- the verdict is the LIVE episode's (owner 2026-10-17): nothing replays it. When the episode ends the
   service writes /out/trajectory.npz + /out/episode.json (live result, end-state hash); the collect hook's SIGUSR1 ends
   the agent's phase and the service exits; environment/sim/finalize.sh writes /out/final.json from episode.json;
 - the episode ends on the tooling's success rule (2026-10-14: the BDDL goal has held for 1 s of simulated time with no

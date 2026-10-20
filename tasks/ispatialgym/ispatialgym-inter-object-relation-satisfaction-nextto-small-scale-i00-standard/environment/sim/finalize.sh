@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container. The verdict is
-# the live episode's (owner 2026-10-17, board 0150/0151): nothing is replayed.
+# the live episode's (owner 2026-10-17): nothing is replayed.
 #   1. end the episode with the shared first half (rcb_limited.py end, docs/protocol/standard_mode.md §13.3): it waits through a
 #      resume, SIGUSR1s the service, and returns 0 once the service has written trajectory.npz + episode.json, closed
 #      the live video (live.mp4) and exited (releasing the GPU); 2 when final.json already holds the verdict (a give-up:

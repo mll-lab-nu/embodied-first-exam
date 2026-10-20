@@ -20,7 +20,7 @@ r["gpu_tier"] = 0
 r["replay_video"] = int((DATA / "replay.mp4").exists())
 # The rule "no walking or balancing policy you did not build" (instruction): the sim's collect hook ran
 # policy_fingerprint.py on the replayed match (does the released Booster walking policy fit the seat's rows?), only
-# when the seat won the live match (board 0151: no replay otherwise; fingerprint.json is then absent).
+# when the seat won the live match (no replay otherwise; fingerprint.json is then absent).
 try:
     fp = json.loads((DATA / "fingerprint.json").read_text())
 except (OSError, ValueError):

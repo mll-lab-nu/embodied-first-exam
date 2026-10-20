@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.2.0@sha256:ef781f64782ba358796690541cee410d3fa50f1d33af9e39247011a668b35065",
+ "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.2.1@sha256:093737b0eb56d3f157606377c7bd6f31cd30f4cc7bf2044bb5a799238714b927",
  "source": "embodied_first_exam/benchmarks/ikea-mujoco",
  "files": {
   "privileged/environment/rcb_ikea.py": "8a18f209c9074b7efe688c896adc2d5fcb4efd23acc947bd0d80e01d17a28a1b",
-  "privileged/tests/grade.py": "7c1ed085e2cc6790b7479a850c91c8399660229d5428cab72c6eb8e10e48e284",
-  "privileged/tests/render_video.py": "81f51e04a736b7763c84896b716043d544f83f5f44e7440b8b220824839f9cb0",
-  "standard/tests/grade.py": "6491f13234ee4931d623c3bbb3e18028e55f952919cd5d01ed4990bb6d791637"
+  "privileged/tests/grade.py": "e2386cfb5fcdfebc048a3b8bbdc91a624a4dccf738d2fc99f4c5e3d210322492",
+  "privileged/tests/render_video.py": "262191b750873950cc849a5526cdf9b9a216a261d3909ab90e250a34fbac3797",
+  "standard/tests/grade.py": "e1aa3f4f53ac33609e694f182078bd8979f8ca570d5a36d800ee82f55a683cdd"
  }
 }

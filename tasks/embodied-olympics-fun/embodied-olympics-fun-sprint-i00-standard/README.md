@@ -22,7 +22,7 @@ The gun has to be seen, not guessed: moving early disqualifies and waiting costs
 
 ## Verification
 The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
 infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
 `/data/final.json`: pass iff the live attempt succeeded. The
 rules: World Athletics rules for the straight sprint. The lane runs along +x, 1.22 m wide, centred on y = 0. The start line is 0.05 m wide; its far edge is x = 0 and the finish line's near edge is x = 50.0 m. The start: "on your marks" at t = 0, "set" 2.0 s later, the gun between 1.2 and 2.2 s after "set" (fixed for this task, not announced). Your start movement is the first moment your pelvis is more than 0.05 m from where it was at "set", or the front end of a foot reaches the start line (x > -0.05 m, on the ground or in the air). A start movement before the gun, or earlier than 0.1 s after it, is a false start; so is a foot reaching the start line before "set". From the gun on you must keep your lane: your pelvis may not be more than half the lane's width from y = 0. You finish at the moment the leading point of your torso (not the head, arms, legs or feet) reaches the finish line; the time counts from the gun. You succeed with a valid finish within 30.0 s of robot time after the gun. A fall does not end the race: you are down while your pelvis is below 0.4 m, you may get up and run on, but 10.0 s down in a row end it. You fail on a false start, on leaving the lane, when down for 10.0 s, or when 30.0 s after the gun have passed.
@@ -37,7 +37,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
+- Measured: author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default.
 
 ## Details

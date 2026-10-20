@@ -41,7 +41,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only; CPU author estimate"
+measured = "memory: privileged container median 6.2 GB, sim p90 1.4 GB, verifier 1.4 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU-only; CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

@@ -1,5 +1,5 @@
 <!--
-  Robot badminton scene for robot_coding_bench (generated; see the task README).
+  Robot badminton scene for Embodied First Exam (generated; see the task README).
   * World frame: floor z = 0, the court's long axis is y, the net is the plane y = 0 (top 1.524 m, BWF Law 1.10). The robot's half
     is y < 0, the opponent's y > 0. Singles court |x| <= 1.295, |y| <= 3.35 (doubles side lines drawn at 1.525; the BWF court x 0.5).
   * Robot: a Franka Panda arm (MuJoCo Menagerie panda_nohand, Apache-2.0, assets/LICENSE.menagerie-franka) on a

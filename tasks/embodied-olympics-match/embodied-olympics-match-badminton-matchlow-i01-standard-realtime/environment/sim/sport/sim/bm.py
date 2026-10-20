@@ -141,7 +141,7 @@ ACC_SHARE = 0.90                # the swing's duration keeps the planned joint a
 COUPLING_FF = True
 RESYNC = 0.02                   # rad: a joint farther than this from its setpoint pulls the setpoint along (no wind-up)
 # The joint-velocity rule (revision wallclock-12 / duel-14; the user's decision of 2026-10-13, the rule table tennis took
-# on 10-12, olympiad_review/screening/tt_jointvel_zh.md): the setpoints never exceed the velocity limits, but the
+# on 10-12, the Embodied Olympics screening notes): the setpoints never exceed the velocity limits, but the
 # physical joints overshoot a setpoint that runs at the limit (PD tracking, the torque-rate limit, the base's
 # acceleration through the arm-base coupling), and a real Franka answers a joint faster than its limit with its
 # velocity reflex (libfranka joint_velocity_violation). So (1) the arm's setpoint generator and the stroke controller

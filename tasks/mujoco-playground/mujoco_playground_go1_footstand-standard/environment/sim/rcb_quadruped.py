@@ -1,4 +1,4 @@
-"""rcb_quadruped — MuJoCo Playground's quadruped locomotion tasks in plain MuJoCo for robot_coding_bench.
+"""rcb_quadruped — MuJoCo Playground's quadruped locomotion tasks in plain MuJoCo for Embodied First Exam.
 
 Scenes = MuJoCo Playground's `locomotion/<robot>/xmls` (Apache-2.0, @4057c14) with the robots from MuJoCo Menagerie
 (@1b86ece, the commit Playground pins), assembled the way Playground's `get_assets()` does; joint drive gains as

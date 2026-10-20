@@ -1,5 +1,5 @@
 name: release
-# A release of the dataset (board 0120; as Terminal-Bench's release-prebuilt.yml): a GitHub release published from a tag
+# A release of the dataset (as Terminal-Bench's release-prebuilt.yml): a GitHub release published from a tag
 # `v<semver>` gets the task list and Harbor's manifest of the tagged commit as assets (tasks.json, TASKS.md,
 # dataset.toml), generated from the tasks (scripts/dataset_manifest.py list), never committed. `harbor publish` of the
 # dataset stays a maintainer's step (credentials), run from the tagged commit with that dataset.toml.

@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:behavior-files-0.2.0@sha256:e2594de8dd89711e917968ab5dc01d13f614f6e9844f05263ae67736109f3f85",
+ "image": "ghcr.io/mll-lab-nu/efe:behavior-files-0.2.1@sha256:9d94348fe2d0f8944b12c4e85206be77e0da5cde24d070e82309c780e9b803d0",
  "source": "embodied_first_exam/benchmarks/behavior-1k",
  "files": {
-  "privileged/grade.py": "221b1382853ec5f312689c734bdc1e64b8b75d6593a480ba335e750b8b09aaf5",
+  "privileged/grade.py": "4268c571040cc7c894e0868438c431144f49312495c0e645c33c1bfef3f15894",
   "r1pro_primitives_eval.yaml": "b47a29b68ad5a5600d129c639be5d9dd14b2a85929de2204adc23d5b979345f8",
-  "rcb_behavior.py": "027a6dccb086c4638d631d24f88f893dcab22a186ade04087a9b3695729b622f",
-  "standard/grade.py": "e071834560da9fa7e8567a79663570b2c13b88f1bb445c89ccb3c4d73c09220f"
+  "rcb_behavior.py": "68e66449a09ffa012f6ce7e0f43b1fb6c15b73830623b014f09df0f426b632a4",
+  "standard/grade.py": "b0d5625ede7a6328f6139df97166e0022c2ab06d965a3bf3ee9973a1f949154f"
  }
 }

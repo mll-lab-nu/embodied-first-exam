@@ -35,7 +35,7 @@ class _NoReplay(Exception):
 
 
 def verdict_replay() -> bool:
-    """Embodied First Exam (owner 2026-10-17, board 0151): standard and standard-realtime are graded by the sim
+    """Embodied First Exam (owner 2026-10-17): standard and standard-realtime are graded by the sim
     sidecar's live record only. RO_VERDICT_REPLAY=0 (the task's compose file): no fresh-process grading replay; the
     verdict (valid_trial, winner) is the live match's; final.json says so (verdict_replay false, deterministic null).
     Unset or 1: RoboOlympics' own rule (the replay must agree)."""
@@ -376,7 +376,7 @@ class Service:
         player's own problem; API and infrastructure failures are Harbor agent errors, rerun, not handled here. Before
         the start the session end is a no-show (Service.no_show_at_collect, core rule 5, core 0.2.7). True = the side
         lost."""
-        # Embodied First Exam (board 0146, 2026-10-16): a built-in seat (RO_BUILTIN_SEATS, core/builtin_seat.py) never ends
+        # Embodied First Exam (2026-10-16): a built-in seat (RO_BUILTIN_SEATS, core/builtin_seat.py) never ends
         # a session, so a duel against one is a single side here: the HTTP side that leaves after the start loses
         # "abandoned", as against a scripted opponent (before: "collected", an unfinished match, not a valid trial).
         from .builtin_seat import parse as builtin_parse
@@ -504,7 +504,7 @@ class Service:
                      "video": bool(self.video_info.get("video")), "video_info": self.video_info, "elapsed_s": round(time.monotonic() - self.t0, 1), **v, **self.extra_final(),
                      "continuous": cont, "seed_proof": self.seed_proof(),
                      "sport_fields": sport}
-            if live:                             # the protocol's own fields (board 0151): graded by the live match
+            if live:                             # the protocol's own fields: graded by the live match
                 final.update(graded_by="live", replays=0)
             compat = {k: v for k, v in sport.items() if k not in final}     # see COMPAT below
             if "score" not in final and "score" not in compat:

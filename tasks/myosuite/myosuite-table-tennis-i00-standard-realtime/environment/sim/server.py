@@ -8,7 +8,7 @@ rule as the standard twin's eai-standard/2.2 service (environment/sim/server.py 
 clock, the plan, the episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged
 copies of the HumanoidBench sources (ci_checks/check-tooling-identity.sh).
 
-Grading (owner, 2026-10-17, board 0151): the verdict is the live episode's, judged by the layer from step(): the task's
+Grading (owner, 2026-10-17): the verdict is the live episode's, judged by the layer from step(): the task's
 rule as Session.step applies it to the steps this service ran (table_tennis: MyoChallenge's own success event; any hold
 or track window of a family is part of that rule, so the episode only ends in success once it is complete). There is no
 live_verdict(): nothing is left that a replay applied and the live run did not. Nothing is replayed to grade it; the

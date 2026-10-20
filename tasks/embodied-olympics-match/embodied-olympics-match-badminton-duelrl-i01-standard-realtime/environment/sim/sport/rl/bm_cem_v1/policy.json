@@ -1,6 +1,6 @@
 {
  "policy": "bm_cem_v1",
- "method": "CEM (cross-entropy method) policy search, 7 generations x 40 candidates on Quest (2026-10-16, RLBM); fitness from generation 4: 0.5 x point share against the scripted level 3 (match-wallclock) + 0.5 x duel point share against the truth-reading Reference; chosen: generation 4 candidate 20 (validation, 12 + 12 fresh seeds: level 3 share 0.476, 5/12 wins; duel vs the truth Reference share 0.564, 9/12 wins)",
+ "method": "CEM (cross-entropy method) policy search, 7 generations x 40 candidates on a CPU cluster (2026-10-16, RLBM); fitness from generation 4: 0.5 x point share against the scripted level 3 (match-wallclock) + 0.5 x duel point share against the truth-reading Reference; chosen: generation 4 candidate 20 (validation, 12 + 12 fresh seeds: level 3 share 0.476, 5/12 wins; duel vs the truth Reference share 0.564, 9/12 wins)",
  "names": [
   "w_margin",
   "w_time",

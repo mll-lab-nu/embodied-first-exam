@@ -3,7 +3,7 @@
 # time): every FROM of a Dockerfile under environment/ or tests/ (every stage) is a registry image with an explicit,
 # non-`latest` tag or digest, and so is every compose `image:` (environment/ and tests/); every `COPY --from=<image>`
 # (files-only images, the monitor's code) names its image by digest. Moved here from
-# check-verifier-isolation.sh (board 0124): a pin is reproducibility, not the trust boundary.
+# check-verifier-isolation.sh: a pin is reproducibility, not the trust boundary.
 t="$1"; python3 - "$t" <<'PY'
 import pathlib, re, sys
 t = pathlib.Path(sys.argv[1]); rc = 0

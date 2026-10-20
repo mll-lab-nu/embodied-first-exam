@@ -2,7 +2,7 @@
 # the frozen instance. Nothing the agent did in its container reaches this one: Harbor uploads only /app/output/.
 FROM ghcr.io/mll-lab-nu/efe:bigym2-0.1.1
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:bigym2-files-0.1.0@sha256:358c32344fa7a9ce1988e2ecfbfe7dd6e932e7827c465b96d21b276a49853fc0 /privileged/environment/rcb_bigym2.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:bigym2-files-0.1.1@sha256:d5271aad879a7f11e6646d59ca368028c87ae723a8904050ba14b5e9f82c1f86 /privileged/environment/rcb_bigym2.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

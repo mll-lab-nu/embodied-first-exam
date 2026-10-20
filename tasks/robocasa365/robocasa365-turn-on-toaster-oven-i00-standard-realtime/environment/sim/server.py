@@ -6,7 +6,7 @@ The simulator-specific half only: `RoboCasa` implements rcb_service.Sim (the con
 one frozen instance on the benchmark's own tooling module, casa_tool.Session -- the same scene, native controller
 command and success check (`_check_success`, twice per control step) as the standard twin's service
 (environment/sim/server_casa.py of `-standard`) and the privileged verifier. The verdict is the live episode's
-(docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): live_verdict() adds the standard twin's rule that the scene was
+(docs/protocol/README.md H.4; owner, 2026-10-17): live_verdict() adds the standard twin's rule that the scene was
 not solved at the episode's start, and start_sha (RCB_START_SHA, the frozen instance's starting state) is checked when
 the first episode begins; nothing is replayed to grade it, and the video is rendered from the trajectory afterwards. The protocol, the clock, the plan, the
 episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the

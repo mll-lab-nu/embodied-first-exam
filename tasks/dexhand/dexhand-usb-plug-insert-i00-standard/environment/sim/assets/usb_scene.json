@@ -1,5 +1,5 @@
 {
- "source": "robot_coding_bench/scripts/scene_expansion/repairs/usb_cable_meta_delivery_trajectory_r1/mechanism.py (sha256 ed2d7b10f44e12c1561ce3f7d353cee7e5870ab580b4898d71b1bb8fe68d631b): original authored real-scale approximations of an Anker-style 4-port hub and a StarTech-style 0.5 m USB-A-to-B cable; procedural primitives only (no meshes or textures).",
+ "source": "scene_expansion/repairs/usb_cable_meta_delivery_trajectory_r1/mechanism.py (sha256 ed2d7b10f44e12c1561ce3f7d353cee7e5870ab580b4898d71b1bb8fe68d631b): original authored real-scale approximations of an Anker-style 4-port hub and a StarTech-style 0.5 m USB-A-to-B cable; procedural primitives only (no meshes or textures).",
  "materials": [
   [
    "usb_black",

@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-paddle-bounce-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `paddle_bounce` / seed 0 |
-| Oracle | `full` — Reference: the paddle kept level under the ball and tapped up at each bounce, closed loop on the ball's state: 20 bounces, each back to the drop height; 11 of 11 perturbations when it was written. A still blade gets 6 to 13 bounces of the 0.15 m rise alone, which is why each bounce must also reach the drop height. In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S (board 0112). |
+| Oracle | `full` — Reference: the paddle kept level under the ball and tapped up at each bounce, closed loop on the ball's state: 20 bounces, each back to the drop height; 11 of 11 perturbations when it was written. A still blade gets 6 to 13 bounces of the 0.15 m rise alone, which is why each bounce must also reach the drop height. In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
@@ -25,7 +25,7 @@ Every bounce needs an upward hit of the right strength at the right instant, wit
 The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with the standard twin's
 `server.py`) runs the attempt on its clock and its referee judges it live; every control step the simulator applied is
 recorded, and the live referee's call on the last attempt is the verdict (`final.json`: `graded_by` live, `replays` 0; no
-grading replay, owner 2026-10-17, board 0151); the video is rendered from the recorded attempt afterwards.
+grading replay, owner 2026-10-17); the video is rendered from the recorded attempt afterwards.
 `/tests/grade.py` reads `/data/final.json`: pass iff the live attempt succeeded. The clock's record
 (`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the attempt never starts (its
 clock starts at the first submit), reward 0. The
@@ -41,7 +41,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 1 GB | 1 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any NVIDIA GPU with EGL (RTX 4090 / L4).
-- Measured: as the standard twin; the GPU renders the cameras over EGL (board 0112, 2026-10-14): author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
+- Measured: as the standard twin; the GPU renders the cameras over EGL (2026-10-14): author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 4 GiB GPU memory, 16 GiB memory. Limits measured: author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default.
 
 ## Details
@@ -51,7 +51,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Rule book | ITTF Handbook 2024, The Laws of Table Tennis, for the equipment: 2.3 (the ball), 2.4 (the racket). Bouncing the ball on the racket is a ball-control drill, not an event with a rule book: the number of consecutive bounces asked for is this benchmark's line; deviations: 2.4 (the racket): the blade is a rigid 15 cm square, 1.5 cm thick, 0.14 kg with its handle (legal: the Laws set no size, shape or weight); its covering is one contact law on both faces (Embodied Olympics' ball-paddle pair, hand-picked, not identified), and it is fixed to the right hand, because the robot's fist cannot hold a handle · the start: nobody hands the robot a ball; it hangs at rest in front of the robot and is let go at 2.0 s · a bounce is a hit: so that the rebounds of one strong hit off a still blade are not counted, the ball must leave a counted bounce with at least 0.98 of the speed it reached the blade with (both taken at the height of the touch; a still blade returns about 0.95); a bounce that does not is not counted, and is not a fault |
 | Stages | bounce 1 → bounce 2 → bounce 3 → bounce 4 → bounce 5 → bounce 6 → bounce 7 → bounce 8 → bounce 9 → bounce 10 → bounce 11 → bounce 12 → bounce 13 → bounce 14 → bounce 15 → bounce 16 → bounce 17 → bounce 18 → bounce 19 → bounce 20 |
 | Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/2.3) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
-| Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 3.74 with the clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 attempts; 4090-ws1, 4 CPUs, board 0112, 2026-10-14); PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF) |
+| Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 3.74 with the clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 attempts; an RTX 4090 workstation, 4 CPUs, 2026-10-14); PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 2000 control steps (20 s at 100 Hz); 10 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

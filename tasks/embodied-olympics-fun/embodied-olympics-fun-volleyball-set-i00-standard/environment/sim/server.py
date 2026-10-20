@@ -3,7 +3,7 @@
 The simulator-specific half only: `RoboFun` implements rcb_service.Sim for one frozen instance, through rcb_rfo.Episode
 (the RoboOlympics Unitree G1 in the family's venue, with the family's referee). The protocol, the episode, crash recovery
 and the finalize live in rcb_service.py, which imports no simulator.
-Grading (owner, 2026-10-17, board 0150/0151): the live episode's referee call is the verdict; nothing is replayed to grade
+Grading (owner, 2026-10-17): the live episode's referee call is the verdict; nothing is replayed to grade
 it. The referee latches a success the moment it happens and ends the attempt, so the live rule is the one the replay
 applied (no hold, no settle window). The frozen start is checked on the live simulator: build() refuses an image whose
 world does not start at the instance's recorded state hash (InstanceMismatch), and `start_sha` makes the service void a

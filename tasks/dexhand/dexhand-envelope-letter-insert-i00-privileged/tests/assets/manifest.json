@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Offline assets of the envelope_letter_insert scene (T38). All geometry is procedural in scene.py (dimensions from the approved T38 scene: robot_coding_bench/scripts/scene_expansion/repairs/envelope_meta_delivery/materials.py and contact_v2_trajectory_r1/export.py).",
+  "description": "Offline assets of the envelope_letter_insert scene (T38). All geometry is procedural in scene.py (dimensions from the approved T38 scene: scene_expansion/repairs/envelope_meta_delivery/materials.py and contact_v2_trajectory_r1/export.py).",
   "files": {
     "letter.png": {
       "sha256": "b7162af289048d5b969585cce66f672f5f608afce719bf7e7aab5362983bae90",

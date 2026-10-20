@@ -1,4 +1,4 @@
-"""Replay video of a privileged trajectory (PROTOCOL §4, board 0136: every graded trial leaves a replay video).
+"""Replay video of a privileged trajectory (PROTOCOL §4: every graded trial leaves a replay video).
 
     python /tests/render_video.py --task lack --traj /app/output/trajectory.npz --out /logs/verifier/replay.mp4
 

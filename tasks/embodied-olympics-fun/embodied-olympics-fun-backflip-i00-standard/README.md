@@ -22,7 +22,7 @@ None (as `embodied-olympics-fun-backflip-i00-privileged`).
 
 ## Verification
 The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
 infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
 `/data/final.json`: pass iff the live attempt succeeded. The
 rules: The flip is one flight phase (nothing of you touches the ground) of at least 0.2 s that starts from your feet (at lift-off the last things on the ground were your feet, nothing else); shorter hops are ignored, and your first flight of at least 0.2 s is your attempt. The turn is measured on your pelvis: the angle it rotates backwards (head going back, feet coming forward) about the horizontal axis that was its left-right axis at lift-off, added up from lift-off while you are in the air; a rotation on the ground and a twist about the vertical do not count. It must reach 300.0 degrees before anything touches the ground (a full turn less the backward lean a standing take-off already has when the feet leave the ground and the lean a salto still has when its feet touch down: the landing and the stand have to finish the turn). The first touch after the flight must be with the feet only. You then stand for 2.0 s without a break: only your feet on the ground, your torso within 20.0 degrees of vertical, your pelvis slower than 0.35 m/s. You fail if the attempt did not start from the feet alone, if it lands with less than 300.0 degrees turned, if it lands on anything but the feet, if you fall at any time (a fall is: a part of you other than a foot touches the ground, or your pelvis is lower than 0.2 m; a crouch above that is not a fall), or after 20 s. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
@@ -37,7 +37,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
+- Measured: author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default.
 
 ## Details

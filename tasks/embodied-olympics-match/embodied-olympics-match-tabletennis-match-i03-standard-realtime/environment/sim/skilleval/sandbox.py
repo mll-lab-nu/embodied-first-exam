@@ -13,7 +13,7 @@ cannot read the simulator, the evaluator or the hidden requests (those are reada
 owns the clock: a call that does not answer within its limit is a time-out, the process is ended and the skill gives
 nothing more in this run. Every answer is logged (`log`) for the determinism probe.
 
-Nothing the skill starts outlives it (Embodied First Exam, board 0111: a detached child of the skill could otherwise
+Nothing the skill starts outlives it (Embodied First Exam: a detached child of the skill could otherwise
 rewrite the report after the evaluation): the parent is the subreaper of its process tree (PR_SET_CHILD_SUBREAPER), so a
 process the skill detaches (double fork, setsid) is re-parented to it, and close() ends the skill's session and then every
 process below the parent that runs as the sandbox user, until none is left (`end_sandbox_processes`). RLIMIT_NPROC

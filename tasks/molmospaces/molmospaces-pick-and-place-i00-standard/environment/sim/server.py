@@ -12,7 +12,7 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
 and writes final.json from episode.json.
 
-The verdict is the live episode's (owner 2026-10-17, board 0150/0151): upstream's judge_success() on the state at the
+The verdict is the live episode's (owner 2026-10-17): upstream's judge_success() on the state at the
 episode's end, as upstream's evaluation and the privileged verifier's replay judge it; nothing replays it. The frozen
 start is checked when the scene is built, before the agent is served: a start state whose hash is not the instance's
 recorded t = 0 hash gives up as `instance_mismatch` (infra_error)."""

@@ -24,7 +24,7 @@ The rules (InLoopLayer; sport.toml [modes.low.inloop], skilleval/declare.py):
                 e.g. no ball in play; the 2-argument form raw_allowed(seat, match) is accepted too); otherwise
                 refused (409): the core skill cannot be bypassed with joint commands
   step()        every step_every control steps (the core's per-step `tick`), with the seat's state
-  sync          timing "sync" (Embodied First Exam (board 0152 decision 28, option c)): step() is ONE synchronous call at
+  sync          timing "sync" (Embodied First Exam (option c)): step() is ONE synchronous call at
                 each due control step: the world waits for its answer at most step_wait_s = min(the step() time limit,
                 one control period S x control_dt; spec timing.step_wait_s) and applies it at that step; no answer in
                 time, an error, None or an invalid answer = no command at that step (counted; the player's, never a

@@ -25,7 +25,7 @@ None (as `bigym2-dishwasher-load-plates-i00-privileged`).
 ## Verification
 The sim sidecar judges the live episode with BiGym's own success check (`is_success`: the task's success held for 1 s,
 no fall) and writes that verdict to `/data/final.json` (`graded_by = "live"`); nothing is replayed to grade it (owner,
-2026-10-17, board 0151). The scene's start is checked against the frozen instance (`instance.json`'s `t0`) when an
+2026-10-17). The scene's start is checked against the frozen instance (`instance.json`'s `t0`) when an
 episode begins (a mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads `final.json`: pass iff the
 live episode succeeded. The video (`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and
 never changes it. Success condition: each of the two plates stands on edge in the dishwasher's lower rack: its face toward your left or right (its axis within 20 degrees of the robot's left or right at the start), touching the lower rack, held by neither gripper; both plates at once. A plate touching the floor ends the episode as a failure. No oracle; human review in PR #123 (PROTOCOL §2.7).
@@ -40,8 +40,8 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 1.5 GB | 1.5 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
-- Measured: GPU 0.7-1.2 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 6 GiB GPU memory, 16 GiB memory. Limits measured: GPU: 1.2 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 8 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
+- Measured: GPU 0.7-1.2 GB, evaluation-pool GPU profile (per-trial GPU peaks, 10-03..10); memory: privileged container 3.0 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU author estimate (MuJoCo + two ONNX policies on the CPU)
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 6 GiB GPU memory, 16 GiB memory. Limits measured: GPU: 1.2 GiB (the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: no samples of the agent's container; floor 8 GiB (at most the 16 GiB cap); whole trial: + the sim service's 8 GiB (from the minimum: no samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
@@ -58,7 +58,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   tasks/bigym2/README.md): one episode, which the practice and the graded attempt share; the instruction says there
   is no reset. The scene, instance, pass rule and verifier are unchanged, so the task keeps its name; runs recorded
   with 10 resets are reported separately.
-- 2026-10-17 (owner, board 0150/0151): graded by the live episode: `success` = BiGym's own `is_success` in the episode
+- 2026-10-17 (owner): graded by the live episode: `success` = BiGym's own `is_success` in the episode
   the sim service ran (the same rule, judged as it ran), and no grading replay runs (no `replay_success` /
   `deterministic` any more; `final.json` has `graded_by = "live"`, `replays = 0`, `reward.json` `graded_by_live = 1`).
   The video is one render pass over the trajectory after the verdict, as before. The scene's start is checked when an

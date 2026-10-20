@@ -24,7 +24,7 @@ Differences from the YAMLab service, all from the robot and the simulator:
 - the airframe is free-flying: /kinematics is the arm on its base (frame `base`, or world with `base_pose`);
 - the episode ends at the first control step where AM-Bench's success check holds, or at the task's own time-out (its
   episode length), or when the time is up;
-- the episode is graded as it ran (owner 2026-10-17, board 0150/0151: no grading replay): when it ends the service writes
+- the episode is graded as it ran (owner 2026-10-17: no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result and the end-state hash); the collect hook's
   SIGUSR1 makes it exit, and environment/sim/finalize.sh writes final.json from it, then films the rows once (an
   illustration, never a verdict);

@@ -73,5 +73,5 @@
 ],
 "policy": "tt_es_v2",
 "note": "shot and serve choices = tt_es_v1 (ES, run q1 gen 17); swing outputs at their initial values (base_share 0.5, overdrive 1.0), not trained yet; the swing itself: rl/fast_swing.py",
-"report": "olympiad_review read/?doc=rltt"
+"report": "outside the repository"
 }

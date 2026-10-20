@@ -1,5 +1,5 @@
 """Video-only pass of a TopoGym standard-mode episode, run by environment/sim/finalize.sh after the service exited and
-after final.json holds the live episode's verdict (owner 2026-10-17, board 0150/0151: no grading replay).
+after final.json holds the live episode's verdict (owner 2026-10-17: no grading replay).
 
     python /srv/replay.py --data /data --task <family> --instance /srv/instance.json --video /data/replay.mp4
 

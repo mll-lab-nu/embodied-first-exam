@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "source": "robot_coding_bench/scripts/scene_expansion/repairs/stool_meta_delivery_trajectory_r1/assets (T27, task-authored procedural pine grain)",
+  "source": "scene_expansion/repairs/stool_meta_delivery_trajectory_r1/assets (T27, task-authored procedural pine grain)",
   "files": {
     "pine-grain.png": {
       "bytes": 29260,

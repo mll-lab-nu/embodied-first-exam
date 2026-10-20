@@ -15,7 +15,7 @@ The interface (both hosts):
     status() -> {sha256, loaded, functions, load_error}
     close()
 
-Isolation (docs: olympiad_review screening/skill_in_loop_design_zh.md §3): the skill runs from a private copy made of
+Isolation (the Embodied Olympics screening notes §3): the skill runs from a private copy made of
 regular files only (no symlink is followed, FIFOs and devices are skipped, at most MAX_BYTES / MAX_FILES), in its own
 process (python -I, a scrubbed environment, resource limits, `nobody` when the host runs as root); in a generated
 task the host itself runs in the seat's skill container (no network, read-only root, no simulator directory).

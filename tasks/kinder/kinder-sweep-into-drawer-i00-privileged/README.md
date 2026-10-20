@@ -40,8 +40,8 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: GPU 1.2-1.3 GB (oracle 1.2 GB on RTX 4090), vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.8 GB, sim 1.1 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.7 GiB over 6 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured.
+- Measured: GPU 1.2-1.3 GB (oracle 1.2 GB on RTX 4090), evaluation-pool GPU profile (per-trial GPU peaks, 10-03..10); memory: privileged container p90 2.8 GB, sim 1.1 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU author estimate
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), every container of the trial: no GPU, 16 GiB memory, 512 processes, 10 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 3.7 GiB over 6 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured.
 
 ## Details
 

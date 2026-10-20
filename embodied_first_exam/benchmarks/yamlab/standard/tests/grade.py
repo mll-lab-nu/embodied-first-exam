@@ -1,6 +1,6 @@
 """Standard-mode verifier: reads what the sim service (which the agent could not touch) wrote: /data/final.json (the
 LIVE episode's result and the crash-recovery fields), /data/trajectory.npz, /data/live.mp4. The trial is graded by its
-live episode (owner 2026-10-17, board 0150/0151; no grading replay): success = the live episode's success (YAMLab's
+live episode (owner 2026-10-17; no grading replay): success = the live episode's success (YAMLab's
 success check latched every stage at a control step of the episode the agent ran) and no infrastructure failure. Numeric-only reward.json; a reward is written whatever final.json holds.
 
 infra_error = 1 (no verdict on the agent, PROTOCOL §2.6): final.json is missing (the service never came up, or its

@@ -15,7 +15,7 @@ up; Playground episodes run until the agent phase ends and the final state is gr
 
 Evidence under /data: episode.jsonl (every call), calls/NNNNNN/ (meta + actions), and at the end trajectory.npz
 ((T, N) per control step), final.json and replay.mp4. The verdict is the live episode's (docs/protocol/README.md H.4; owner,
-2026-10-17, board 0151; graded_by = "live", replays = 0): the task's own rule on the episode this service ran
+2026-10-17; graded_by = "live", replays = 0): the task's own rule on the episode this service ran
 (DexToolBench: every goal reached, the goal tracker running every live control step; Playground: the tooling's check() of
 the live final state); nothing is replayed to grade it. The collect hook ends the episode with SIGUSR1. final.json is
 `finalized` as soon as the verdict is in it; the video is then rendered from the trajectory in one pass and never
@@ -587,7 +587,7 @@ def do_reset(q: dict):
 
 
 def finalize() -> None:
-    """The verdict: the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151). The graded episode (every
+    """The verdict: the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17). The graded episode (every
     control step since the last reset) is saved as the trajectory, and the task's rule is read off the live simulator:
     DexToolBench, every goal reached (the goal tracker ran on every executed control step, as the privileged replay runs
     it); Playground, the tooling's check() of the final state. Nothing is replayed to grade it. final.json is finalized

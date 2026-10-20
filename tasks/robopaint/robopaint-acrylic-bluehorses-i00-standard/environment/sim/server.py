@@ -12,7 +12,7 @@ Differences from the RoboLab service, all from the task:
   target at the 20 Hz control rate, one IK solve per control step (SAPIEN's Pinocchio CLIK, no collision checking), at most
   0.25 m/s (a faster row is slowed down and reported);
 - painting has no terminal state: the episode ends only when the agent phase ends (the collect hook) or on a simulator error;
-- the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): when the collect hook ends the episode
+- the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): when the collect hook ends the episode
   (environment/sim/finalize.sh, after the agent's container is stopped) this service commits a stroke still pressed, scores its
   live main sheet with the graders' scorer and rules (rcb_brush_strict.py: the picture rule and the process rules, the same
   Session.score() the privileged verifier's replays use) and writes final.json at once ("graded_by": "live"); nothing is

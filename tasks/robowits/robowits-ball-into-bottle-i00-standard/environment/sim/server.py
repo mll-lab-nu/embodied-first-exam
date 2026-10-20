@@ -4,7 +4,7 @@ unchanged into every RoboWits standard task as environment/sim/server.py by scri
 Owns the scene. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1
 responses: videos / frames / depth / proprio / per-frame step, time and camera poses as raw blobs, never base64), POST
 /kinematics (stateless FK / IK on the robot's own model). Logs every call to /data/episode.jsonl, keeps /data/final.json
-current, and grades the live episode (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): success = the settle window
+current, and grades the live episode (docs/protocol/README.md H.4; owner, 2026-10-17): success = the settle window
 that ended the episode passed on this simulator (inside the agent's last call, or after its last command when its phase
 is over: Session.settle_check), nothing replayed. The verdict goes to final.json first ("finalized", "graded_by":
 "live"); then the recorded (T, 16) trajectory, the deliverable, is rendered once into /data/replay.mp4 for people
@@ -141,7 +141,7 @@ def logged_final_window():
 
 
 def video_ok(path: str) -> bool:
-    """The video decodes (ffprobe reads at least one frame), not merely exists (board 0051)."""
+    """The video decodes (ffprobe reads at least one frame), not merely exists."""
     import subprocess
     try:
         r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-count_packets", "-show_entries",

@@ -1,9 +1,9 @@
 {
- "source": "robot_coding_bench/scripts/scene_expansion/repairs/usb_cable_meta_delivery_trajectory_r1 (T24, kinematic demo; mechanism.py sha256 ed2d7b10f44e12c1561ce3f7d353cee7e5870ab580b4898d71b1bb8fe68d631b, scene.py sha256 26db39807a5bbd0cbfb1d9f5f695dfa30714f99ff9feb8918ed6277451685bf2). Procedural primitives and PBR materials only; no meshes or textures exist in the source.",
+ "source": "scene_expansion/repairs/usb_cable_meta_delivery_trajectory_r1 (T24, kinematic demo; mechanism.py sha256 ed2d7b10f44e12c1561ce3f7d353cee7e5870ab580b4898d71b1bb8fe68d631b, scene.py sha256 26db39807a5bbd0cbfb1d9f5f695dfa30714f99ff9feb8918ed6277451685bf2). Procedural primitives and PBR materials only; no meshes or textures exist in the source.",
  "files": {
   "usb_scene.json": {
-   "sha256": "b2355bf56b995f6e0b68b41104ca2f9b22fca53dabe7768a6e2abc2e51b290ae",
-   "bytes": 2547
+   "sha256": "cd16e9b4916bd35710547e52174d48098952044de456ebf6dc34f533e65d9f09",
+   "bytes": 2520
   }
  }
 }

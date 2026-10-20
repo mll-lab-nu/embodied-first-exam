@@ -206,7 +206,7 @@ OBJECTS: dict[str, dict[str, tuple[str, str]]] = {
 }
 
 
-# Success checks robot_coding_bench tightens on top of DexJoCo's own (DexJoCo's check still has to pass; its task
+# Success checks Embodied First Exam tightens on top of DexJoCo's own (DexJoCo's check still has to pass; its task
 # failures still end the episode). water_plant: upstream only asks for the nozzle near the plant while the trigger is
 # pulled, which a bottle lying on the table and spraying away from the plant satisfies (two Opus 5.5 runs did exactly
 # that, spraying 84 and 114 degrees away). We also require the spray to point at the plant.
@@ -396,7 +396,7 @@ class Session:
         self.success = False
         self.reason: str | None = None
         self.last_info: dict[str, Any] = {}
-        self._rcb_count = 0                           # robot_coding_bench's own hold counter (tightened checks)
+        self._rcb_count = 0                           # Embodied First Exam's own hold counter (tightened checks)
 
     def reset(self) -> None:
         """Back to the frozen instance state (unlimited). Starts a new episode."""

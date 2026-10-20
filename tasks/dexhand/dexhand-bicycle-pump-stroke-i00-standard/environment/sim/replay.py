@@ -23,7 +23,7 @@ from scene import hands
 
 WIDTHS = {"sharpa": 58, "wuji": 54}  # 14 Marvin arm targets + the left and the right hand's finger actuators
 MAX_ROWS = 5000
-VIDEO_MAX_FRAMES = 300   # the replay video's frame budget (board 0136): longer episodes are filmed at a larger stride
+VIDEO_MAX_FRAMES = 300   # the replay video's frame budget: longer episodes are filmed at a larger stride
 
 
 def load(path, trusted: bool, hand_arg: str | None):
@@ -132,7 +132,7 @@ def main() -> int:
         session.reset()
         every = max(1, round(1.0 / (session.control_dt * args.fps)))
         if args.video:
-            # Board 0136: at most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
+            # At most VIDEO_MAX_FRAMES filmed steps, so the longest archive the row limit allows is filmed
             # within the grader's time. Frames only read the scene: physics, verdict and state hash are unchanged.
             every = max(every, -(-len(actions) // VIDEO_MAX_FRAMES))
         label = session.hand_info["model"]

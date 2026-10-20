@@ -196,7 +196,7 @@ camera_seeds = 5                       # seeds 1-5 at level 1
 [fairness]
 # The reference in both seats (style team, the same deterministic program): the seats are point-symmetric through the
 # table centre; the seed places the ball at every restart. Realtime: a wide interval only warns. Official evidence
-# (revision v2 with the fixed Tracker, 2026-10-12, Quest; accepted by Chi Gui as the fairness evidence): seeds 1-200 x
+# (revision v2 with the fixed Tracker, 2026-10-12, a CPU cluster; accepted by Chi Gui as the fairness evidence): seeds 1-200 x
 # first kick-off A/B, N = 400: first kick-off 208/400, +2.0 pp [-2.9, +6.9]; seat A 182/400, -4.5 pp [-9.4, +0.4]: no
 # significant bias found (neither interval lies outside +-5 pp; neither proves the bias is within +-5 pp). Measured
 # with the 20 ms command latency of the contract. A duel takes about 240-300 CPU s in process, so the 400

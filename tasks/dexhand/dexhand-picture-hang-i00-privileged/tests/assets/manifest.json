@@ -4,7 +4,7 @@
     "water-lilies.png": {
       "bytes": 1325250,
       "sha256": "2622a192ec6c3bcf56f2718f83317229f6fee6a84c0aaade5aafc840c2440b3e",
-      "source": "robot_coding_bench/scripts/scene_expansion/repairs/picture_sharpa/meta_delivery_trajectory_r1/assets/water-lilies.png",
+      "source": "scene_expansion/repairs/picture_sharpa/meta_delivery_trajectory_r1/assets/water-lilies.png",
       "license": "CC0-1.0 / public domain: Claude Monet, Water Lilies (1906), Art Institute of Chicago 1933.1157"
     }
   }

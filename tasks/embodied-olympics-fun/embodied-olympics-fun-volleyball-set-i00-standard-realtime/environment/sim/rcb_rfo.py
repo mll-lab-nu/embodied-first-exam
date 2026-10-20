@@ -1,4 +1,4 @@
-"""rcb_rfo.py -- RoboOlympics tooling for robot coding bench (docs/benchmarks/roboolympics.md).
+"""rcb_rfo.py -- RoboOlympics tooling for Embodied First Exam (docs/benchmarks/roboolympics.md).
 
 One module, copied unchanged into every RoboOlympics task: the privileged environment (`Session`), the privileged
 verifier (`replay`) and the standard sim service (`Episode`, driven by sim/server.py). The world is the `rfo` package

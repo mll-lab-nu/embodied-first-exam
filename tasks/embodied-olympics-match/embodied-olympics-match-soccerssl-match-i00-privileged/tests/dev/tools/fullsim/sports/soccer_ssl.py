@@ -39,7 +39,7 @@ RESOURCES = {
     "min_memory_gb": 6.0,
     "verifier_min_cpus": 4.0,
     "verifier_min_memory_gb": 8.0,
-    "measured": "author estimate (RoboOlympics, 4090-ws1, 2026-10-15): CPU-only MuJoCo 3.3.7, no cameras; one "
+    "measured": "author estimate (RoboOlympics, an RTX 4090 workstation, 2026-10-15): CPU-only MuJoCo 3.3.7, no cameras; one "
     "world about 0.4 GB, a whole match 4-8 CPU minutes in process; the verifier holds the service, the policy (2 GiB "
     "address space) and two fresh replays",
 }

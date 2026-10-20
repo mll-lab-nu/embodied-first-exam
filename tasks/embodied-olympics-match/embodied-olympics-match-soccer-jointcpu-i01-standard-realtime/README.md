@@ -27,7 +27,7 @@ Frozen development instance: seed 101, a learned opponent team at the joint leve
 through the same HTTP interface, after a short check of the practice service. soccer-2v2-11, level 5 = our joint-level RL team (sports/soccer/rl/joint/v2: an omnidirectional gait trained with PPO at the joint level, about 1e9 steps, and an RL-trained strategy layer). The three frozen GPU-tier programs of GPT-6 Astra from our v5 pilot (developed on soccer-2v2-10 against level 2, unchanged) win 30 % of 90 practice matches against level 5 v2 (40 % against v1; against v1 on further seeds 48/150 = 32 % and 43 % of 150); a mirror match of v1 is even (24/50); scripted levels 2 and 3 never beat it (0/20, 0/40). Our joint-level reference team (the oracle) lost to level 5 v1 0:10 in both tasks on vanilla Harbor 0.23.0 (valid, replay identical, replay.mp4).
 
 ## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17, board 0151): the sim service records the
+Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
 match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
 `replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
 the validity rule
@@ -45,7 +45,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: Embodied Olympics' joint-level soccer pilot v5 (4090-ws1/2, 2026-10-15/17, docker stats): the agent's container uses its 6 cores (drills, CPU-parallel rollouts, practice matches), the sim up to its 6 cores (the world, the opponent, the cameras), the practice service up to 4 worlds on its 4 cores; CPU tier: no GPU
+- Measured: Embodied Olympics' joint-level soccer pilot v5 (two RTX 4090 workstations, 2026-10-15/17, docker stats): the agent's container uses its 6 cores (drills, CPU-parallel rollouts, practice matches), the sim up to its 6 cores (the world, the opponent, the cameras), the practice service up to 4 worlds on its 4 cores; CPU tier: no GPU
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 13 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 32 GiB memory. Limits measured: the v5 pilot's seat caps (6 cores, 16 GB, processes 512: design default); whole trial: + the sim's and the practice service's 8 GB caps; provisional.
 
 ## Details

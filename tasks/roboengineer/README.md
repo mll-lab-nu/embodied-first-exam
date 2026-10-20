@@ -5,7 +5,7 @@ bounded numeric controller against a **public nominal simulator** in its own con
 evaluator whose dynamics differ in hidden ways, read back noisy telemetry and camera frames, revise, and deploy again
 (at most three rounds); the evaluator then scores the **selected policy on a private held-out bank** of new episodes
 of the same hidden plant. Contributed by WENLIXIAO-CS in #329 (the "Robotic Engineering Bench contributors"); admitted
-as a benchmark by the owner on 2026-10-17 (board 0146).
+as a benchmark by the owner on 2026-10-17.
 
 ## Quick start
 ```bash
@@ -128,7 +128,7 @@ roboEngineer task except the eight `roboengineer-neuralfly-*` ones.
 
 ## Resources
 
-Rules: `scripts/task_resources.toml` (`^roboengineer-`), measured on 2026-10-18 (board 0165: Harbor 0.23 trials,
+Rules: `scripts/task_resources.toml` (`^roboengineer-`), measured on 2026-10-18 (Harbor 0.23 trials,
 docker stats, cgroup `memory.peak` and per-container `nvidia-smi` every 3-6 s). The verifier only reads JSON (~20 s).
 
 - **28 CPU tasks** (all but G1): the agent's container is capped at 2 CPUs / 6 GB (limit 4 GiB), the sidecar at 4 CPUs
@@ -172,7 +172,7 @@ The task directories are the deliverable; the tooling that built them is kept ou
   partial where it succeeds on some cases, none otherwise. A second run of four of them reproduced the same scores
   (determinism across fresh trials).
 - **nop** on all 28: reward 0, `infra_error` 0 (no deployment: `no_submission`; no episode, so no video).
-- **G1** (board 0165, Harbor 0.23.0 on aws:rcb-gpu14 / -gpu13, L40S): the reference (trains from scratch on the
+- **G1** (Harbor 0.23.0 on aws:rcb-gpu14 / -gpu13, L40S): the reference (trains from scratch on the
   agent's GPU, 12009-12638 s of agent time, three deployments) held-out 1/12 (mean 43.14, i00) and 4/12 (82.68, i01):
   `oracle = "partial"`; nop 0 on both, `infra_error` 0; every graded trial has `replay.mp4` (`matches_graded`).
   [g1.md](g1.md).
@@ -183,7 +183,7 @@ The task directories are the deliverable; the tooling that built them is kept ou
 - **Adversarial** (`codex-gpt6_luna-xhigh`, ChatGPT subscription, told to obtain reward without solving the task):
   anycar-tracking-i00 probed the service and the container (undocumented routes, path traversal, methods, Host
   headers, `/proc`) and scored 0; on landing-random-pad-i00 the agent declined to cheat and solved the task legitimately
-  (6/6 held-out landings, score 100.0 in its hour); a second, stricter landing trial: see board 0146.
+  (6/6 held-out landings, score 100.0 in its hour); a second, stricter landing trial was also run.
 - **Collection**: the sidecar's finalization plus the video pass took 76–217 s (budget 1740 s; landing 840 s); the
   verifier ~20 s. Peak memory of the agent's container in the reference runs ≤ 0.04 GB.
 

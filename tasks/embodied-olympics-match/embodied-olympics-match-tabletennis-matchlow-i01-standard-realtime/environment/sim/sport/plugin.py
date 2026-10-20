@@ -757,7 +757,7 @@ class TableTennis:
                                "step your call arrived); the reply's skill field has the call's sha256, wall_s, "
                                "k_call, ok / error and status (loaded version, load error)"),
                     "reload": "at the start of every point, if the skill's files changed"}
-                if layer.timing == "sync":         # Embodied First Exam (board 0152 decision 28, option c)
+                if layer.timing == "sync":         # Embodied First Exam (option c)
                     out["skill_in_loop"].update(
                         timing=("hit: computed while the world runs (your skill's compute counts in match time), its "
                                 "command takes effect at the first control step after it returns, at most "

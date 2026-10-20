@@ -53,7 +53,7 @@ SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/s
 LAYER = {"environment/rcb_client.py": "rcb_client.py", "environment/rcb1.py": "rcb1.py", "environment/sim/rcb_limited.py": "rcb_limited.py",
          "environment/sim/rcb1.py": "rcb1.py", "environment/sim/run.sh": "run.sh"}
 sha = lambda p: hashlib.sha256(open(p, "rb").read()).hexdigest()[:16]  # noqa: E731
-# board 0151 (2026-10-17): the layer before final_verdict accepted a live verdict; its copies stay valid while each
+# 2026-10-17: the layer before final_verdict accepted a live verdict; its copies stay valid while each
 # benchmark's pull request regenerates its tasks onto the new layer (remove this once none is left)
 PREV_LIMITED = {"2.2": "064e29250cc1b14d", "2.4": "aab663c695d49fd5"}
 # 4. (label, tooling module) by directory prefix; a task that serves

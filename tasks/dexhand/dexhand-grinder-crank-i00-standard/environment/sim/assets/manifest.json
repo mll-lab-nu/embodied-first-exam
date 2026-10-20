@@ -15,8 +15,8 @@
     }
   },
   "provenance": {
-    "source/hario_mechanism.py": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_grinder/mechanism.py (byte-identical copy; T15 scene source, read-only)",
-    "source/ASSET_PROVENANCE.md": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_grinder/ASSET_PROVENANCE.md (byte-identical copy)",
-    "source/SHARPA-APACHE-2.0.txt": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_grinder/licenses/SHARPA-APACHE-2.0.txt"
+    "source/hario_mechanism.py": "scene_expansion/repairs/sharpa_grinder/mechanism.py (byte-identical copy; T15 scene source, read-only)",
+    "source/ASSET_PROVENANCE.md": "scene_expansion/repairs/sharpa_grinder/ASSET_PROVENANCE.md (byte-identical copy)",
+    "source/SHARPA-APACHE-2.0.txt": "scene_expansion/repairs/sharpa_grinder/licenses/SHARPA-APACHE-2.0.txt"
   }
 }

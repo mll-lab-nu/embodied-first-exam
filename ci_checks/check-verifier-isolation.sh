@@ -30,7 +30,7 @@
 # - the file's top level holds `services:` and `volumes:` only, and a top-level volume is a bare name: `name:`,
 #   `external:` and `driver_opts:` alias one volume under two names or bind a path, `secrets:` / `configs:` /
 #   `include:` hand a container files of the task;
-# - H.6 for the verifier (owner 10-17, board 0157): [verifier] network_mode = "no-network" on every task, no other policy in
+# - H.6 for the verifier (owner 10-17): [verifier] network_mode = "no-network" on every task, no other policy in
 #   [verifier.environment], and no service of tests/docker-compose.yaml with `networks` or a `network_mode` other than none;
 # - a service takes no `secrets`, `configs` or `env_file` (the same files by another road); `build` only as BUILD_KEYS
 #   allows (main: `cache_from`; a sidecar: a Dockerfile of environment/ and `cache_from`), none in tests/.

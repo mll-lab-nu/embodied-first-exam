@@ -1,6 +1,6 @@
 """Standard-mode verifier (eai-standard/2.1): grades what the sim service -- which the agent could not touch -- wrote.
 
-The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): /data/final.json holds the
+The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): /data/final.json holds the
 episode the service ran and its verdict, nothing is replayed. success = the live episode ended in LIBERO's success
 (`live_success`; the service ends the episode the moment the success check holds) and the service graded it live
 (`graded_by = "live"`, its `success`). Writes /logs/verifier/reward.txt (1/0) and a numeric-only reward.json, and copies

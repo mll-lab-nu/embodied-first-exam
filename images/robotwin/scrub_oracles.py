@@ -21,8 +21,8 @@ Importable (scripts/robotwin_mk_task.py uses LEAKS): the scrub runs only as a sc
 import ast, pathlib, re, shutil, sys
 
 KEEP = {"setup_demo", "load_actors", "check_success", "__init__"}
-# Attributes the kept methods set that only the scrubbed expert reads (AST scan of the 50 upstream task files,
-# board 0100). Poses the expert moves to or places at, and the pouring action list.
+# Attributes the kept methods set that only the scrubbed expert reads (AST scan of the 50 upstream task files).
+# Poses the expert moves to or places at, and the pouring action list.
 LEAKS = {
     "adjust_bottle": ["left_target_pose", "right_target_pose"],
     "blocks_ranking_rgb": ["block1_target_pose", "block2_target_pose", "block3_target_pose"],

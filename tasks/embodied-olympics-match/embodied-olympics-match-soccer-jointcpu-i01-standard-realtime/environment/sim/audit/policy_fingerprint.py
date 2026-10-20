@@ -32,7 +32,7 @@ LAGS = 4                 # #328 review: the row may answer a state up to LAGS - 
 
 
 def seat_won(episode: str, seat: str) -> bool:
-    """Embodied First Exam (board 0151: the standard modes are graded by the live match, no replay to grade it): the audit
+    """Embodied First Exam (the standard modes are graded by the live match, no replay to grade it): the audit
     can only take a win away (tests/fexam_reward.py), so it replays the match only when the live verdict in final.json
     (next to episode.jsonl) is a win of the seat's side; an unreadable final.json is audited as a win."""
     try:

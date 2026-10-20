@@ -31,7 +31,7 @@ are pulled by their full name if missing (prepull). With -e podman, the picked t
 import fnmatch, json, os, re, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
-# --- the task tree (board 0209): where the tasks and their scripts/ come from -------------------------------------------
+# --- the task tree: where the tasks and their scripts/ come from -------------------------------------------
 REPO_URL = "https://github.com/mll-lab-nu/embodied-first-exam.git"
 _ROOT: list[Path] = []
 

@@ -20,7 +20,7 @@ RoboDojo specifics:
 - the episode ends as RoboDojo's does: at the first action where the task's check passes, or when a check fails for good;
   or when the time is up. RoboDojo's per-task step limit (a policy's episode length in its evaluation; no check reads it)
   is not applied: no step caps (PROTOCOL D1), only a runaway guard;
-- the episode is graded as it ran (owner 2026-10-17, board 0150/0151: no grading replay): when it ends the service writes
+- the episode is graded as it ran (owner 2026-10-17: no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: RoboDojo's check after every action; the
   end-state hash), the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh writes final.json from it;
 - the start state is checked before the agent is served: the rebuilt layout's state hash against the frozen instance's

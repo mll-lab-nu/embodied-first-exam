@@ -18,7 +18,7 @@ r["steps"] = int(f.get("steps") or 0)
 def _rows(p):
     try:
         rows = [json.loads(x) for x in p.read_text().splitlines() if x.strip()]
-        return [x for x in rows if isinstance(x, dict)]   # Embodied First Exam (board 0146, #300 review)
+        return [x for x in rows if isinstance(x, dict)]   # Embodied First Exam (#300 review)
     except (OSError, ValueError):
         return []
 calls = [c for c in _rows(DATA / "inloop_A.jsonl") if c.get("op") == "call"]

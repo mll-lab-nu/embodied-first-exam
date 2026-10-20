@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-volleyball-set-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `volleyball_set` / seed 0 |
-| Oracle | `full` — Reference: raised fists driven up through the falling toss on the walking policy, from a technique found offline by CMA-ES (Embodied Olympics' method, search_technique.py): 6.6 m/s in, 6.95 m/s out upward, up to 4.02 m, down 0.28 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S (board 0112). |
+| Oracle | `full` — Reference: raised fists driven up through the falling toss on the walking policy, from a technique found offline by CMA-ES (Embodied Olympics' method, search_technique.py): 6.6 m/s in, 6.95 m/s out upward, up to 4.02 m, down 0.28 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: still fists (the ball leaves slower), before the apex, leaving the front zone, not overhead, a forearm, too low, outside the target, a second touch, held In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
@@ -25,7 +25,7 @@ The hands (rubber fists) have to meet a 7 m/s ball above the head and drive it a
 The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with the standard twin's
 `server.py`) runs the attempt on its clock and its referee judges it live; every control step the simulator applied is
 recorded, and the live referee's call on the last attempt is the verdict (`final.json`: `graded_by` live, `replays` 0; no
-grading replay, owner 2026-10-17, board 0151); the video is rendered from the recorded attempt afterwards.
+grading replay, owner 2026-10-17); the video is rendered from the recorded attempt afterwards.
 `/tests/grade.py` reads `/data/final.json`: pass iff the live attempt succeeded. The clock's record
 (`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the attempt never starts (its
 clock starts at the first submit), reward 0. The
@@ -41,7 +41,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 1 GB | 1 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any NVIDIA GPU with EGL (RTX 4090 / L4).
-- Measured: as the standard twin; the GPU renders the cameras over EGL (board 0112, 2026-10-14): author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
+- Measured: as the standard twin; the GPU renders the cameras over EGL (2026-10-14): author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 4 GiB GPU memory, 16 GiB memory. Limits measured: author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default.
 
 ## Details
@@ -51,7 +51,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Rule book | FIVB Official Volleyball Rules 2025-2028: Rule 1 (the court 18 m x 9 m, the front zone between the centre line and the attack line 3 m from it), Rule 2 (the men's net, top at 2.43 m, the antennas), Rule 3 (the ball: 65-67 cm round, 260-280 g), Rule 9.2 (the hit: not caught or thrown, one contact), Rule 11 (no contact with the net, the foot not wholly beyond the centre line); deviations: The pass is a scripted launch: a ball tossed without spin from the back court, the same in every attempt, instead of a team-mate. · Rule 9.2 (the overhead pass with the fingers): the robot has no fingers, so the set is one contact of the hands (the parts beyond the wrists) with the ball's centre above the top of the robot's head (0.76 m above its waist joint along the trunk, about 1.80 m when it stands). 'Not caught or thrown' is a contact of at most 0.1 s (the ball cannot be gripped). · A set is judged by numbers instead of a referee's eye: the ball must leave the hands moving upward and at least 1.0 times as fast as it arrived (hands held still in the ball's path return it at no more than three quarters of its speed: that is a rebound, not a set); it must be played after it has passed its highest point, by a setter who has stayed in the front zone. · Nobody attacks the set: a good set is defined as volleyball coaching grades it, a ball that rises at least 1.0 m above the net and comes down in the outside hitter's target, a circle of 1.0 m radius at position 4, judged where the ball first touches the floor. · No team-mates or opponents, no wind. |
 | Stages | set → above the net → in the target |
 | Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/2.3) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
-| Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 2.62 with the clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 attempts; 4090-ws1, 4 CPUs, board 0112, 2026-10-14); PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF) |
+| Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 2.62 with the clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 attempts; an RTX 4090 workstation, 4 CPUs, 2026-10-14); PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1000 control steps (10 s at 100 Hz); 10 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

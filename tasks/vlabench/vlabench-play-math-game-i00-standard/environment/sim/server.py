@@ -12,7 +12,7 @@ Settings come from environment/docker-compose.yaml:
   RCB_IMAGE_HW            the side of every camera's image in pixels (320)
   RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_DATA   the service's own (rcb_service.main)
 
-The verdict is the live episode's (board 0151): step() reports VLABench's own success check (the task's termination
+The verdict is the live episode's: step() reports VLABench's own success check (the task's termination
 condition) at every control step and the episode ends there, so nothing is replayed to grade it; render_video() re-runs
 the trajectory once, after the verdict, to film it. The frozen start: vlb_tool.Session refuses a scene whose initial
 state or compiled model differs from instance.json (InstanceMismatch here), and start_sha (the instance's

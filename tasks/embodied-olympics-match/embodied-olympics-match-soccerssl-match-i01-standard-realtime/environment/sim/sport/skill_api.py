@@ -1,6 +1,6 @@
 """soccer_ssl's skill API (docs/framework_zh.md §6.3; docs/construction_zh.md step 3, P1-P6; skilleval/contract.py):
 the high level's three skills `move`, `kick` and `dribble` as SkillContracts, the robot handler's `substitute`
-command and the `batch` envelope. Proposal: olympiad_review/screening/soccer_ssl_proposal_zh.md §5.
+command and the `batch` envelope. Proposal: the Embodied Olympics screening notes §5.
 
   high  Agent as Athlete: each command IS the skill; the platform executes it on the robot (sim/world.py
         World.execute -> bodies/ssl_robot Rig: set_base_target / kick / dribble, the shared servo path
@@ -58,8 +58,7 @@ Not provided (and why, proposal §5.1): pass(teammate) / shoot(): results, not a
 intercept(): the controller would read and predict the ball (P2); move with obstacle avoidance or move_to_ball: the
 controller would read the world (P2).
 
-The scripted opponents and the built-in players use the SAME commands (olympiad_review/screening/
-soccer_ssl_interfaces_zh.md §9): a scripted team is an object with act(truth) -> [command, ...] (the act bodies below,
+The scripted opponents and the built-in players use the SAME commands (the Embodied Olympics screening notes §9): a scripted team is an object with act(truth) -> [command, ...] (the act bodies below,
 with `entity`), called by the plugin every control step while the world runs, its commands checked against the same
 schema (plugin.check_act) and executed through the same World.execute at the same boundary as a player's; it reads
 the truth of World.truth_view(team) (team frame, no images) and draws random numbers only from the generator it is

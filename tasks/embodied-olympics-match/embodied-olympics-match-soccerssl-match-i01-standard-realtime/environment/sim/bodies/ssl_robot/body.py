@@ -11,7 +11,7 @@
     SSL.step_world(model, data, [rig])                       # one 10 ms control step: rig.step, then per 1 ms
                                                              # physics step rig.substep + mujoco.mj_step
 
-The interface of docs olympiad_review/screening/soccer_ssl_interfaces_zh.md section 3, plus `substep`: the servo,
+The interface of the Embodied Olympics screening notes section 3, plus `substep`: the servo,
 the dribbler's motor and the kicker's break beam run every 1 ms physics step (the real robot's 1 kHz loops, S1, S3);
 `step` runs once per 10 ms control step. A world that cannot call substep gets a coarse fallback (see Rig.step).
 

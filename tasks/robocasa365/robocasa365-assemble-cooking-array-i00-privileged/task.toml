@@ -29,7 +29,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 7.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
+measured = "memory: sim p90 5.6 GB, privileged container p90 7.2 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU-only (OSMesa cameras); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -45,7 +45,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 16.0
-measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 7.8 GiB over 7 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
+measured = "memory: the [environment] cap 16 GiB, which every past trial ran under (docker peak 7.8 GiB over 7 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)); processes 512 and disk 10 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

@@ -6,7 +6,7 @@ dribble, the same robot limits; a lower speed cap is a choice of arrival times, 
 calls `ScriptedTeam(level, team, rng).act(truth)` every control step and executes the returned commands through
 World.execute; the team decides every second call (20 ms) and repeats nothing in between.
 
-Levels (olympiad_review/screening/soccer_ssl_players_zh.md has the calibration):
+Levels (the Embodied Olympics screening notes has the calibration):
 
   L1  warm-up    sees the world 0.4 s late, robots at most 1.5 m/s; keeper + four field robots that all chase the
                  ball; with the ball: shoots from the attacking half, else kicks it towards the goal. No passes.
@@ -20,7 +20,7 @@ Levels (olympiad_review/screening/soccer_ssl_players_zh.md has the calibration):
                  ball is within 5 m of the goal the second presser becomes a shot screen 0.9 m from the ball on that
                  bisector, the first job filled after the presser, and holds it. Without it, programs that shoot on
                  sight from 2-3.5 m beat the 0.2 s keeper (screening at the declared reaction delay D = 2 steps:
-                 olympiad_review/screening/soccer_ssl_walkthrough_zh.md).
+                 the Embodied Olympics screening notes).
   L3  official   no reaction delay (sees the truth now), 3.0 m/s; man-to-man: the nearest robot presses the ball,
                  a blocker on the ball's line to the goal when it is within 4.5 m, the others mark the most advanced
                  attackers tightly (0.4 m, ball side; HABIT: markers follow their man anywhere and stand ball-side, so runs that drag them open
@@ -57,7 +57,7 @@ LEVELS = {
             swarm_screen=True, shoot_range=6.5, shoot_margin=-0.4),
 }
 # (scheme "zone_press": presser + second presser + one zone player + outlet; the L2 of 10-11 afternoon, kept for
-# comparison: it lost the L2-L3 ordering, olympiad_review/screening/soccer_ssl_players_zh.md 2.3)
+# comparison: it lost the L2-L3 ordering, the Embodied Olympics screening notes 2.3)
 OFFICIAL = (2, 3)
 WARMUP = (1,)
 

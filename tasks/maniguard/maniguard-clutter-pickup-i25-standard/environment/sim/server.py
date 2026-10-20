@@ -15,7 +15,7 @@ Differences from the other 2.2 services, all from the simulator and the benchmar
 - the episode ends when the task's goal has held for 10 consecutive control steps (reason "goal_held"); whether it counts
   also depends on the task's safety specification, which is evaluated after every control step but never reported live
   (it is part of the success predicate, PROTOCOL §4.5): the service applies it to the live episode, which is graded as it
-  ran (owner 2026-10-17, board 0150/0151: no grading replay; Session.status(): the strict goal held for 10 control steps
+  ran (owner 2026-10-17: no grading replay; Session.status(): the strict goal held for 10 control steps
   and no safety violation at any step, as the privileged replay judges). A technical
   cap (PROTOCOL §4.5, `spec.max_control_steps`): the tooling ends an episode after MAX_STEPS = 50,000 control steps
   (reason "runaway_guard"); the instruction and /spec say so;

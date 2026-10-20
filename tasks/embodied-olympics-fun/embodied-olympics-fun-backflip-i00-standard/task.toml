@@ -46,7 +46,7 @@ gpu_class = "none"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
+measured = "author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -95,7 +95,7 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades the live
-# episode (no grading replay, board 0151). The loops run on the clock, inside timeout_sec: the verdict ("finalized":
+# episode (no grading replay). The loops run on the clock, inside timeout_sec: the verdict ("finalized":
 # true, written before any video is rendered) may take until 840 s (the end waits through a crash-recovery resume);
 # then the hook waits for the video, one render pass from the trajectory ("video_pending"), until 870 s -- a video that
 # is not ready by then is lost, the verdict is not.

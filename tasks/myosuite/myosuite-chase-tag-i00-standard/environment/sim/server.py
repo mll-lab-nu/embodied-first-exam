@@ -18,7 +18,7 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 the committed resets did (their journal rows are checkpointed, `persist`). When the episode ends the service writes
 /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit and writes the verdict.
 
-The verdict is the live episode's (owner, 2026-10-17, board 0151): `success` in episode.json is the task's rule as
+The verdict is the live episode's (owner, 2026-10-17): `success` in episode.json is the task's rule as
 Session.step applied it to the steps this service ran (MyoSuite's goal held for the family's hold time, the challenge's
 own success event, or the MyoDex track over the whole reference: the windows are part of the rule, so the episode only
 ends in success once its window is complete). Nothing is replayed to grade it. The frozen initial state is checked when

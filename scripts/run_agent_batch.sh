@@ -49,7 +49,7 @@
 #                <trial>/gateway/ (usage.jsonl, totals.json). Before each job the runner checks that the gateway answers
 #                (/_gateway/health) and restarts it on its port, or stops the lane; a job during which it died gets
 #                <job>/gateway_down.json, and a trial whose last model calls failed at the gateway (upstream unreachable,
-#                stream broken off, provider 5xx) is published as "not a result", never the agent's 0 (board 0121 M4)
+#                stream broken off, provider 5xx) is published as "not a result", never the agent's 0
 #   GATEWAY_RAW  1 (default, takes effect with GATEWAY=1) = the gateway also keeps every request and response body
 #                (<trial>/gateway/raw.jsonl.xz, deduplicated, see scripts/usage_gateway/rawlog.py; private: it holds the
 #                whole conversation); 0 = token usage only
@@ -196,7 +196,7 @@ if [ "$GATEWAY" = 1 ]; then
     local _; for _ in $(seq $((GATEWAY_START_WAIT * 5))); do [ -s "$ready" ] && return 0; kill -0 "$gw_pid" 2>/dev/null || return 1; sleep 0.2; done
     [ -s "$ready" ]
   }
-  gw_alive() {  # the gateway process runs and answers its health check (board 0121 M4: it was started once, never checked)
+  gw_alive() {  # the gateway process runs and answers its health check (it was started once, never checked)
     kill -0 "$gw_pid" 2>/dev/null && python3 -c 'import sys, urllib.request as u
 u.build_opener(u.ProxyHandler({})).open(sys.argv[1], timeout=15).read()' "$GW/_gateway/health" 2>/dev/null
   }
@@ -256,7 +256,7 @@ u.build_opener(u.ProxyHandler({})).open(sys.argv[1], timeout=15).read()' "$GW/_g
 fi
 
 gateway_check() {  # before a job is claimed (GATEWAY=1): the gateway answers, else it is restarted on its port; 1 = it is
-  # down for good and the lane stops (every trial would end as an infrastructure failure, board 0121 M4)
+  # down for good and the lane stops (every trial would end as an infrastructure failure)
   [ "$GATEWAY" = 1 ] || return 0
   gw_alive && return 0
   log "usage gateway $GW (pid $gw_pid) does not answer; restarting it on port $gw_port"

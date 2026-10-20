@@ -111,12 +111,12 @@ def submit(service, cmds):
 
 
 def agent_sim_error(final: dict) -> bool:
-    """#282 review (docs/protocol/running.md "Infrastructure failures", as in the standard-realtime twins, board 0151): simulator
+    """#282 review (docs/protocol/running.md "Infrastructure failures", as in the standard-realtime twins): simulator
     errors of the control step itself (every errors[] entry where "world_step") after the program's first applied
     command are the program's result (a 0), never infrastructure; any other error of the trusted record stays infra."""
     # (#282 review round 4) the "replay" entry the service adds when its fresh-process replay of the journal fails (it
     # re-runs a failing command, not the failing step) and a "continuous_score" one follow from the program's error and
-    # do not make it infrastructure (board 0151's rule for the live twins: a world_step error after the first command)
+    # do not make it infrastructure (the rule for the live twins: a world_step error after the first command)
     errs = [e for e in (final.get("errors") or [])
             if not (isinstance(e, dict) and e.get("where") in ("replay", "continuous_score"))]
     applied = int(((final.get("seats") or {}).get("A") or {}).get("applied") or 0)

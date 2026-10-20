@@ -37,7 +37,7 @@ player_mode = "unmetered"
 official = false
 expert_time_estimate_hours = 0.5
 oracle = "partial"
-oracle_evidence = "the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, 4090-ws1; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial"
+oracle_evidence = "the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, an RTX 4090 workstation; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)
@@ -49,7 +49,7 @@ gpu_class = "none"
 verifier_min_cpus = 7.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "Embodied Olympics' exported matches (scripts/embodied-olympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/embodied-olympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU-only, real time needs the cores"
+measured = "Embodied Olympics' exported matches (scripts/embodied-olympics/exported.toml): the values of the matches it measured on the 2.3 adapter (tasks/embodied-olympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU-only, real time needs the cores"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -65,7 +65,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 12.0
-measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "memory: agent container docker peak 2.2 GiB over 6 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 4 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 0.7 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
@@ -96,8 +96,8 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay,
-# board 0151), then the spectator video.
+# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay)
+# then the spectator video.
 [[verifier.collect]]
 service = "sim"
 command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 180); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 720); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"

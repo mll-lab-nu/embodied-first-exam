@@ -1,4 +1,4 @@
-"""rcb_dtb — DexToolBench (SimToolReal) tasks in plain MuJoCo for robot_coding_bench.
+"""rcb_dtb — DexToolBench (SimToolReal) tasks in plain MuJoCo for Embodied First Exam.
 
 Scene = SimToolReal's MuJoCo sim2sim scene (github.com/tylerlum/simtoolreal, MIT, deployment/mujoco/mujoco_sim.py),
 rebuilt here without its training stack: KUKA iiwa 14 (MuJoCo Menagerie) + left Sharpa HA4 hand attached at the iiwa

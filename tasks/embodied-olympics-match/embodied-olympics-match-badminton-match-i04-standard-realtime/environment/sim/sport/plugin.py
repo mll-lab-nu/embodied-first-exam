@@ -65,7 +65,7 @@ TRAJ_MAX = 600                              # joint targets in one low-level tra
 # after its own stroke (2 m/s, its base's top speed) and kills in 70 % of its attacks (level 2: 50 %, level 3: 90 %);
 # level 2's reach (0.85 m). Calibration (TOPBM, perception-free players, S = 20, seeds 1001-1040): the reference's
 # machinery placing every shot short to a random front corner wins 17 of 40, the reference itself none; every simple
-# baseline loses the majority (olympiad_review handoff fexam_top_tiers.md).
+# baseline loses the majority (the Embodied Olympics handoff notes).
 # Level 5 (2026-10-16, after Astra won the level-4 instance 11:9): level 4 with kills in 90 % of its attacks (level
 # 3's share); the short-random program wins 5 of 40 (seeds 1001-1040), every other policy none.
 EXPORT_LEVELS = {4: (2, {"reaction_s": 0.22, "recover": 2.0, "kill": 0.7}),

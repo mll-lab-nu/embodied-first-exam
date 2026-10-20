@@ -1,4 +1,4 @@
-"""chopping_wood (board 0178): the simulator's state can be dumped right after a log is split.
+"""chopping_wood: the simulator's state can be dumped right after a log is split.
 
 An object a transition rule creates in a control step (here: the two halves of a log the axe splits, OmniGibson's
 SlicingRule) is initialized by OmniGibson only at the NEXT simulator step, and until then USDObject.dump_state asserts

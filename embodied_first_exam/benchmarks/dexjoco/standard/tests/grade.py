@@ -1,6 +1,6 @@
 """Standard-mode verifier (DexJoCo): reads what the sim service (which the agent could not touch) wrote: /data/final.json
 (the live episode's verdict, crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. success = the live episode
-ended in success under DexJoCo's own check (graded_by = "live": owner, 2026-10-17, board 0151; nothing is replayed to
+ended in success under DexJoCo's own check (graded_by = "live": owner, 2026-10-17; nothing is replayed to
 grade it), the episode having started in the instance's frozen state. Numeric-only reward.json.
 
 No verdict on the agent is an infrastructure failure, never the agent's 0 (PROTOCOL §2.6, infra_error = 1):

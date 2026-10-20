@@ -35,7 +35,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 6.0
 verifier_min_memory_gb = 21.0
 verifier_min_gpu_memory_gb = 10.5
-measured = "one standard trial: sim anon memory 17.5 GB, start-up CPU bursts to 29 cores, GPU 3.6 GB 15 min in, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + 4090-ws1, 10-10); GPU memory and CPU from BEHAVIOR-1K (same OmniGibson / Isaac Sim stack) until more trials are measured; verifier 15.8 GB docker memory, mem_guard (docker memory per container, 4090-ws1, 10-02..10)"
+measured = "one standard trial: sim anon memory 17.5 GB, start-up CPU bursts to 29 cores, GPU 3.6 GB 15 min in, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 cloud GPU hosts + an RTX 4090 workstation, 10-10); GPU memory and CPU from BEHAVIOR-1K (same OmniGibson / Isaac Sim stack) until more trials are measured; verifier 15.8 GB docker memory, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -51,7 +51,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 30.0
 trial_max_memory_gb = 25.0
-measured = "GPU: 19.4 GiB on a 48 GB card, 18.1 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); no texture budget in its tooling) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 19.4 GiB on a 48 GB card, 18.1 on 24 GB (the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10); no texture budget in its tooling) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (no samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

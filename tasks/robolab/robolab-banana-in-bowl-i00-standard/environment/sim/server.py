@@ -17,7 +17,7 @@ Differences from the RoboTwin service, all from the simulator:
 - the wrist camera moves: every frame carries each camera's pose (the wrist one from the gripper link's measured pose and
   the camera's fixed mount), depth comes from the same renders as the RGB, /kinematics from a numpy model of the arm
   (rcb_robolab: camera_info, render_depth, proprio, kinematics: the privileged tooling's own calls);
-- the episode is graded as it ran (owner 2026-10-17, board 0150/0151: no grading replay). When it ends the service
+- the episode is graded as it ran (owner 2026-10-17: no grading replay). When it ends the service
   writes /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: RoboLab's success term, checked
   after every control step and through the hold of the last command after the agent's phase; the end-state hash); the
   collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh writes /data/final.json from it;

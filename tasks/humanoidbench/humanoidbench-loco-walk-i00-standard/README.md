@@ -35,7 +35,7 @@ pass), the evidence that the task has a solution (`oracle_evidence` in task.toml
 `success` = live success: the episode the sim service ran reached the pass mark (HumanoidBench's own rule,
 judged on the live simulator; the episode ends there), for the last episode (the one after the last reset;
 earlier episodes are in `trajectory_live.f64` and `episode.jsonl`, not graded). Nothing is replayed to grade
-it (owner, 2026-10-17, board 0151). The scene's start is checked against the frozen instance's recorded state
+it (owner, 2026-10-17). The scene's start is checked against the frozen instance's recorded state
 when an episode begins (a mismatch is `instance_mismatch`, infrastructure). `tests/grade.py` reads
 `/data/final.json` and copies the evidence to `/logs/verifier/`: `trajectory.npz` (the deliverable,
 replayable) and `replay.mp4`, rendered from it in one pass after the verdict (a lost video never changes the
@@ -54,8 +54,8 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 3 GB | 3 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
-- Measured: GPU 1.1-2.3 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate
-- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 7 GiB GPU memory, 13 GiB memory. Limits measured: GPU: 2.3 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.3 GiB over 10 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
+- Measured: GPU 1.1-2.3 GB, evaluation-pool GPU profile (per-trial GPU peaks, 10-03..10); memory: privileged container median 2.2 GB (p90 11 GB when agents run parallel rollouts), sim 0.7 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU author estimate
+- Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 7 GiB GPU memory, 13 GiB memory. Limits measured: GPU: 2.3 GiB (the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 2.3 GiB over 10 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 5 GiB (docker peak 0.7 GiB, 3 samples); processes 512 and disk 20 GiB: design defaults, not yet measured.
 
 ## Details
 | | |
@@ -87,7 +87,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   frame budget, which could exhaust its memory), and a service that has given up on the episode (it could not
   resume it after its crashes) answers every request with 409 and the reason instead of not listening. The
   scene, instance, pass rule and every verdict reached before are unchanged, so the task keeps its name.
-- 2026-10-17 (owner, board 0150/0151): graded by the live episode: `success` = the episode the sim service ran
+- 2026-10-17 (owner): graded by the live episode: `success` = the episode the sim service ran
   reached the pass mark (the same rule, judged as it ran), and no grading replay runs (no `replay_success` /
   `deterministic` any more; `final.json` has `graded_by = "live"`, `replays = 0`, `reward.json`
   `graded_by_live = 1`). The video is one render pass over the trajectory after the verdict, as before. The

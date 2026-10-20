@@ -1,6 +1,6 @@
 FROM ghcr.io/mll-lab-nu/efe:mujoco-0.1.2
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.1.0@sha256:d3aae70562661fe171078e8ae59abc91c4b2d2c70c0f361b90052150f0359b7e /privileged/environment/rcb_panda.py /opt/tools/rcb_panda.py
+COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.1.1@sha256:fbd7136fbe91fbbb5458c7c4354ec2abb744ce55e230e8251cba8a9e85399435 /privileged/environment/rcb_panda.py /opt/tools/rcb_panda.py
 ENV PYTHONPATH=/opt/tools
 RUN mkdir -p /app/output
 WORKDIR /app

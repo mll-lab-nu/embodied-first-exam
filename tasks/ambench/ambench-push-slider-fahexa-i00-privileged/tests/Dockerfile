@@ -100,7 +100,7 @@ WORKDIR /app
 # the verdict.
 FROM ambench-base
 COPY instance.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:ambench-files-0.2.0@sha256:416a555923062b9c999765a50688889dfb5a1e5525c5fdf8471ec3bd4c1e4061 /privileged/environment/rcb_ambench.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:ambench-files-0.2.1@sha256:0e73d1d0e615c2d6dd0e039c36d8c69217c7a8fabd7eadef48de514505045d7b /privileged/environment/rcb_ambench.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

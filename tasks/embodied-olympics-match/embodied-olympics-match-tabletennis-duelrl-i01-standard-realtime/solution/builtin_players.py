@@ -1187,7 +1187,7 @@ class Idle:
 
 
 # ================================================================================================ the RL opponent
-# RLTT (2026-10-16, olympiad_review read/?doc=rltt): a built-in opponent whose shot choices were trained by evolution
+# RLTT (2026-10-16): a built-in opponent whose shot choices were trained by evolution
 # strategies in this simulator (the match against the scripted opponent L4 and the duel against the truth-perception
 # reference). It sees the ball's true position (view["truth"], given only to an in-process seat; the screening variant
 # `rl` passes the same through screen/hooks.py) and plays the high level: every stroke is planned and executed by the

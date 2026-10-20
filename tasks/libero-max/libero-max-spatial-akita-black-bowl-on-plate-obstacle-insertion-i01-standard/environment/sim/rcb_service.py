@@ -28,7 +28,7 @@ Evidence under DATA, never visible to the agent:
   trajectory.npz       the graded episode (the deliverable: every control step since the last reset, as executed)
   replay.mp4, replay.last.png   the episode's video, rendered from trajectory.npz after the verdict (for people only)
 
-The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): success = the episode this
+The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): success = the episode this
 service ran ended in success under the task's rule (the adapter's step()), judged here, after the agent's container is
 gone; nothing is replayed to grade it. An adapter may add its benchmark's own record of the live episode with
 live_verdict(rows, success) -> dict, e.g. a settle window run on the live simulator: its "success" can only take a
@@ -355,7 +355,7 @@ class Service:
                  max_chunk_s: float = 10.0, max_watch_s: float = 30.0, max_frames_per_call: int = MAX_FRAMES_PER_CALL,
                  max_resumes: int = 2):
         if callable(getattr(sim, "verify", None)) and not getattr(sim, "replay_free", False):
-            # A grading replay of its own is no longer called (board 0151): an adapter that still has one would lose
+            # A grading replay of its own is no longer called: an adapter that still has one would lose
             # whatever its replay applied, silently. It moves that rule to step() / live_verdict(), or says it has done
             # so (replay_free = True).
             raise TypeError(f"{type(sim).__name__} defines verify(), which this service never calls: move its rule "
@@ -545,7 +545,7 @@ class Service:
         if cp["ev"] == "end" and cp["reason"] == "reset":
             # The process died inside a reset, after the abandoned episode's end and before the new episode began: a
             # reset lost with its call never happened (as in server_mj.py), so that episode runs on and the reset is
-            # not charged; the agent may reset again (board 0121; before, every call was a 409 until it did).
+            # not charged; the agent may reset again (before, every call was a 409 until it did).
             self.done, self.reason, self.success = False, None, False
         self.t0 = next((e["t0"] for e in ev if e["ev"] == "first_request"), None)
         if self.done:

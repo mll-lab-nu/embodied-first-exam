@@ -521,8 +521,7 @@ class SkillLayer:
 
 # ---------------------------------------------------------------------------------------------- onboard mode
 class SSLOnboardMatch(SSLMatch):
-    """The second perception mode (formats *_onboard; line "onboard", olympiad_review/screening/
-    soccer_ssl_onboard_zh.md): no overhead cameras; every robot sees through its own front camera (sim/onboard.py:
+    """The second perception mode (formats *_onboard; line "onboard", the Embodied Olympics screening notes): no overhead cameras; every robot sees through its own front camera (sim/onboard.py:
     0.13 m high, 15 deg down, 90 deg wide, 640 x 480, a frame every ONBOARD_PERIOD control steps, 40 ms late), and
     knows its wheel odometry and gyro (sim/odometry.py) and the poses the robot handlers told it, not its global pose.
     The images are the sport's own (camera_job): a camera definition holds the robot's world pose, so /spec, which

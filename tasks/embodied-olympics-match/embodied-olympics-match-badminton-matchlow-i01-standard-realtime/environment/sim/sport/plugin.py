@@ -1238,7 +1238,7 @@ def inloop_layer():
         from skilleval.inloop import InLoop, InLoopLayer, timing_spec
         lo = _decl()["modes"]["low"]
         tl = {k: float(v) for k, v in (lo["deliverable"].get("time_limits_s") or {}).items()}
-        # Embodied First Exam (board 0152 decision 28, option c): RCB_SKILL_INLOOP_TIMING (the task: sync): step() one
+        # Embodied First Exam (option c): RCB_SKILL_INLOOP_TIMING (the task: sync): step() one
         # bounded synchronous call per due control step, act calls off the world's lock (their compute counts)
         srcs = [os.environ.get(f"RCB_SKILL_INLOOP_{s}") or (os.environ.get("RCB_SKILL_INLOOP") if s == "A" else None)
                 for s in SEATS2]

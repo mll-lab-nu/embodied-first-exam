@@ -16,7 +16,7 @@ What the agent gets: camera RGB (+ depth) with each camera's calibration, the ro
 positions and last command, and the task's instruction. Never an object's pose, the scene layout or the success check.
 The episode runs until the agent's time is up; the state after the last executed control step is graded.
 
-The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): the environment's own success
+The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): the environment's own success
 check on the state after the last control step this service executed, not already solved at the start, and the
 episode not ended by a simulator error. Nothing is replayed to grade it. The frozen initial state is checked when the
 episode begins (the instance file's hash, RCB_INSTANCE_SHA, and the start state's hash, RCB_START_SHA, both from the
@@ -680,7 +680,7 @@ def _render_video(A: np.ndarray) -> None:
 
 
 def finalize() -> None:
-    """The episode is over: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151).
+    """The episode is over: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17).
     success = the environment's success check (`_check_success`, as the live episode last ran it) holds on the state
     after the last executed control step, the scene was not solved at the start, and the episode did not end on a
     simulator error (whose state is the partial step's, not the last executed one). Nothing is replayed to grade it.

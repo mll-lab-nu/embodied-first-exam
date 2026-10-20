@@ -3,7 +3,7 @@
 #   1. Wait for the verdict. As soon as the service's PID file exists, send SIGUSR1 (again every 30 s, in case the
 #      service was restarting): the service ends the episode ("timeout" unless it ended already) and writes the live
 #      episode's verdict with "finalized": true into final.json, in one atomic step (server_casa.py finalize; nothing is
-#      replayed to grade it, board 0151). That takes a second; the wait is long only for a service that crashed late
+#      replayed to grade it). That takes a second; the wait is long only for a service that crashed late
 #      in the episode: it resumes the SAME episode by replaying its journal first (crash recovery, at most the
 #      episode's own physics), and a wait cut short there would turn a live result into an infrastructure failure.
 #      Given up earlier only if the service never started an episode at all (no episode.jsonl after

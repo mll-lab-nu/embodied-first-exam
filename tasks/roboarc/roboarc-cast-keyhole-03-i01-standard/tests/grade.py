@@ -3,7 +3,7 @@
 /data/startup_binding.json (the frozen instance the live episode was built from), /data/trajectory.npz (the deliverable),
 /data/replay.mp4 (the video). Adapted from Embodied First Exam's RoboWits standard grader.
 
-The live episode is the verdict (owner 2026-10-17, board 0150/0151): success = the live success (the task predicate on the
+The live episode is the verdict (owner 2026-10-17): success = the live success (the task predicate on the
 live simulator with the instance's own thresholds, including its confirmation window) and no infrastructure failure.
 Nothing is replayed to grade; the video-only pass of finalize.sh never changes the verdict (a missing video is not an
 error here). An instance the live service could not reconstruct (its startup check, final.json instance_mismatch) or a

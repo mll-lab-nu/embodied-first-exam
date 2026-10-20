@@ -1,5 +1,5 @@
 """Overhead cameras of the wheeled 5 v 5 soccer (RoboCup SSL division B), C line of the SSL build
-(interfaces: olympiad_review/screening/soccer_ssl_interfaces_zh.md §5, outside the repository).
+(interfaces: the Embodied Olympics screening notes §5, outside the repository).
 
 Real setup: the SSL shared vision looks at the field from a camera bar 4 m above the playing surface, four cameras
 for the 9 x 6 m field (RoboCup 2022 SSL page: "four cameras that are attached to a camera bar located 4 m above the

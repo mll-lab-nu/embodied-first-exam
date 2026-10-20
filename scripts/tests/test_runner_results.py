@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Runner-side tools of board 0105 (F-M2), standard library and bash only:
+"""Runner-side tools (F-M2), standard library and bash only:
 
 - scripts/write_task_results.py publishes a trial the verifier never graded (no reward.json), one Harbor ended with an
   exception other than the agent's cutoff (AgentTimeoutError), or one stopped by a model-account failure as "not a
@@ -9,7 +9,7 @@
 - scripts/run_agent_batch.sh runs every job from its own copy of the task, every file stamped with its content's mtime
   (scripts/stamp_mtimes.py, issue #258), with a CPU cap above HOST_CPUS clamped in that copy (a stand-in `harbor` on
   PATH records what it was given), removes the copy afterwards, and leaves tasks/ unchanged;
-- (board 0121 M4) a trial whose last model calls failed at the usage gateway, or whose job the gateway died in, is not a
+- a trial whose last model calls failed at the usage gateway, or whose job the gateway died in, is not a
   result; with GATEWAY=1 the runner restarts a dead gateway before the next job."""
 import functools
 import json
@@ -89,7 +89,7 @@ def test_results():
             ("over the budget without a reward", {}, None, {"over_token_budget": True}, None, "over the token budget"),
             ("over the budget, infra_error", {}, {"success": 0, "infra_error": 1}, {"over_token_budget": True}, None, "not a result"),
         ]
-        # board 0121 M4: the model API unreachable through the usage gateway at the end of the trial: not the agent's 0
+        # the model API unreachable through the usage gateway at the end of the trial: not the agent's 0
         gw = lambda n, last="unreachable: ConnectionRefusedError": {"requests": 3, "input": 10, "output": 2, "upstream_failures": n + 1,
                                                                     "failures_in_a_row": n, "last_upstream_failure": last}
         cases += [
@@ -448,7 +448,7 @@ if not os.path.exists(os.environ["FAKE_HARBOR_OUT"] + ".killed"):     # the firs
 
 
 def test_gateway_restart():
-    """Board 0121 M4: GATEWAY=1, the gateway killed during the first job: that job gets gateway_down.json (its trials are
+    """GATEWAY=1, the gateway killed during the first job: that job gets gateway_down.json (its trials are
     not results), the runner restarts the gateway on its port before the next job, and the next job runs."""
     with tempfile.TemporaryDirectory() as td:
         td = Path(td)

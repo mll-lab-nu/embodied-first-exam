@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container. The verdict is
-# the live episode's (owner 2026-10-17, board 0150/0151): nothing is replayed to grade it.
+# the live episode's (owner 2026-10-17): nothing is replayed to grade it.
 #   1. `rcb_limited.py end` (docs/protocol/standard_mode.md §13.3): SIGUSR1 to the service, which ends the episode if the
 #      agent had not (reason "timeout"), writes trajectory.npz + episode.json (live verdict, final-state hash) and exits.
 #      It exits 2 when final.json already holds the verdict (a give-up: after crashes, or a frozen start that did not

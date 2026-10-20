@@ -34,7 +34,7 @@ gpu_class = "none"
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "Harbor 0.23 oracle on aws:rcb-cpu3 (2026-10-18, board 0165; docker stats + cgroup memory.peak every 3-6 s): the sidecar holds its 4-CPU cap through the reference search before the agent (~480 s, the agent's container idle) and the finalization (136 s), peak 1.18 GiB; the sidecar 1-2 cores during deployments; the agent's container 0.06 GiB. Minimum = the agent's 6 GB cap (its 4 GiB limit is recorded, not enforced, by default) + the sidecar's peak x 1.2 + the monitor's 0.25 GB; CPU = the sidecar's 4 (never at the same time as the agent's work: the agent waits for its health check, and is stopped before finalization), the agent's 2-core cap + ~2 during deployments; verifier phase = the sidecar's collect hook (4 cores, <= 2.13 GiB x 1.2 + the monitor); the verifier itself only reads JSON (~20 s)"
+measured = "Harbor 0.23 oracle on aws:rcb-cpu3 (2026-10-18; docker stats + cgroup memory.peak every 3-6 s): the sidecar holds its 4-CPU cap through the reference search before the agent (~480 s, the agent's container idle) and the finalization (136 s), peak 1.18 GiB; the sidecar 1-2 cores during deployments; the agent's container 0.06 GiB. Minimum = the agent's 6 GB cap (its 4 GiB limit is recorded, not enforced, by default) + the sidecar's peak x 1.2 + the monitor's 0.25 GB; CPU = the sidecar's 4 (never at the same time as the agent's work: the agent waits for its health check, and is stopped before finalization), the agent's 2-core cap + ~2 during deployments; verifier phase = the sidecar's collect hook (4 cores, <= 2.13 GiB x 1.2 + the monitor); the verifier itself only reads JSON (~20 s)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -50,7 +50,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 0.0
 trial_max_memory_gb = 12.0
-measured = "the reference runs (2026-10-18, board 0165) peaked at 0.23 GiB in the agent's container; 4 GiB (the author's budget) leaves room for an agent's own nominal training; processes / disk: design defaults"
+measured = "the reference runs (2026-10-18) peaked at 0.23 GiB in the agent's container; 4 GiB (the author's budget) leaves room for an agent's own nominal training; processes / disk: design defaults"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

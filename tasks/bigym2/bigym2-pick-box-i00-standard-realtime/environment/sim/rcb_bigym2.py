@@ -1,4 +1,4 @@
-"""rcb_bigym2.py -- BiGym 2.0 tooling for robot coding bench (docs/benchmarks/bigym2.md).
+"""rcb_bigym2.py -- BiGym 2.0 tooling for Embodied First Exam (docs/benchmarks/bigym2.md).
 
 One module, copied unchanged into every BiGym 2.0 task: the privileged environment (`Session`), the privileged
 verifier (`replay`) and the standard / standard-realtime sim service (`Episode`, driven by sim/server.py). Everything

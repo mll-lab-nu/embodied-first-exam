@@ -1,6 +1,6 @@
 """Standard-mode verifier: reads what the sim service (which the agent could not touch) wrote: /data/final.json (the
 LIVE episode's result and the crash-recovery fields), /data/trajectory.npz, /data/live.mp4. The trial is graded by its
-live episode (owner 2026-10-17, board 0150/0151; no grading replay): success = the live episode's success (RoboLab's
+live episode (owner 2026-10-17; no grading replay): success = the live episode's success (RoboLab's
 success term held at a control step of the episode the agent ran, the hold of the last command after the agent's phase
 included) and no infrastructure failure. Numeric-only reward.json; a reward is written whatever final.json holds.
 

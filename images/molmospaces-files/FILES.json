@@ -1,9 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:molmospaces-files-0.1.0@sha256:75e95b38326e03705b89d95bdfb2dafcaf2b9105e9e52d4ac2d65bc3f568a93d",
+ "image": "ghcr.io/mll-lab-nu/efe:molmospaces-files-0.1.1@sha256:6a9e3baaf42a25af19d5969171a86ba3cb3a5eea01e9d3e23f49f252049514b6",
  "source": "embodied_first_exam/benchmarks/molmospaces",
  "files": {
-  "privileged/environment/rcb_molmospaces.py": "221d6d0ca0a8ae701428e45150c5ba0f09c8f030768da16cffa33617001231b7",
+  "privileged/environment/rcb_molmospaces.py": "f58e2bf6e212edc0d59b24fd91c5620a31abf57cfc126424a97fbbb091e47709",
   "privileged/tests/grade.py": "27ca312e456c7ea1eab991fde4eca90c02e493a451a269f955f4ad00eb96f776",
-  "standard/tests/grade.py": "a2aa71867905227f07135d9e226204a4b1855d8f0169380908f293d8e81601ef"
+  "standard/tests/grade.py": "577f5b16516c81cf127fc985e12d855397323a0cdc231726c549f1a2dd931487"
  }
 }

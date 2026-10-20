@@ -75,7 +75,7 @@ HORIZON = int(round(HORIZON_S / CONTROL_DT))   # 250 control steps
 ARM_LIM = AL.load("franka_panda")
 ARM_VEL = ARM_LIM.vel.copy()       # rad/s: 2.175 x4, 2.61 x3
 # The joint-velocity rule (revision wallclock-15 / duel-wallclock-12, the user's decision of 2026-10-12, option A;
-# olympiad_review/screening/tt_jointvel_zh.md): the physical joints of a real Franka overshoot a setpoint that runs at the
+# the Embodied Olympics screening notes): the physical joints of a real Franka overshoot a setpoint that runs at the
 # velocity limit (the tracking error and the blade hitting the table: 37 % of B9 strokes up to 2.2 x for ~60 ms), and the
 # real robot answers with its velocity reflex. So (1) the setpoint generator and the stroke planner (rally.ARM_LIM) run
 # at VMARGIN of the velocity limits, and (2) a physical arm joint faster than REFLEX x its limit triggers the reflex:
@@ -89,8 +89,7 @@ ARM_LIM_OP = __import__("dataclasses").replace(ARM_LIM, vel=ARM_LIM.vel * VMARGI
 # pressing on the table with more than COLLISION_REFLEX_N (the Franka's default collision threshold, 20 N) stops the
 # robot exactly as the velocity reflex does (hold the pose for REFLEX_RECOVER_S, then resume from rest). Touching the
 # table stays legal by the rules (D4); this is the robot's own protection. A planning clearance was measured and did
-# not help (the contacts come from the swing's real path, not its targets): olympiad_review/screening/
-# tabletennis_rescreen_zh.md.
+# not help (the contacts come from the swing's real path, not its targets): the Embodied Olympics screening notes.
 COLLISION_REFLEX_N = 20.0
 COLLISION_REARM_STEPS = 100        # physics steps (0.1 s) off the table before the collision reflex re-arms
 ARM_ACC = ARM_LIM.acc.copy()       # rad/s^2: 15, 7.5, 10, 12.5, 15, 20, 20

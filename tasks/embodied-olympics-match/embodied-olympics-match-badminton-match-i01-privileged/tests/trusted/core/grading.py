@@ -97,7 +97,7 @@ def grade(d, r, contract, evaluate, audits=None):
     seats = d["cfg"]["seats"]
     side = d.get("sides") or {s: s for s in seats}
     cont = (d.get("continuous") or {}).get("by_side")
-    live = d.get("verdict_replay") is False    # live grading (robot_coding_bench, owner 2026-10-17): no replay
+    live = d.get("verdict_replay") is False    # live grading (Embodied First Exam, owner 2026-10-17): no replay
     replay = bool(d.get("deterministic") and r.get("state_sha") == d["state_sha"] and r.get("scores") == d["scores"]
                   and r.get("winner") == d["match_winner"] and r.get("commands_sha") == d["commands_sha"]
                   and r.get("source_sha") == d["source_sha"] and r.get("k") == d["steps"]
@@ -108,7 +108,7 @@ def grade(d, r, contract, evaluate, audits=None):
     complete = d.get("reason") in COMPLETE and (single or d.get("match_winner") in side.values())
     errors = bool(d.get("errors") or any(d["meter_error"].values()) or any(d["proxy_error"].values()))
     valid = bool(d.get("valid_trial") and d.get("finalized") and (replay or live) and complete and not errors)
-    # robot_coding_bench (board 0151; STANDARD_MODE Part 3): in a real-time match graded live and finalized, a simulator
+    # Embodied First Exam (STANDARD_MODE Part 3): in a real-time match graded live and finalized, a simulator
     # error of the control step itself (every errors[] entry where "world_step": the agent's commands applied, then the
     # world's step; core/realtime.py) after the agent's first applied act is the agent's 0, never a technical failure (a
     # free retry); before it, any other technical error (bookkeeping, rendering, metering) or an unfinalized record stays
@@ -168,7 +168,7 @@ def grade(d, r, contract, evaluate, audits=None):
     if live:                                   # no grading replay ran: the sport's replay_* fields would read as errors
         for k in [k for k in out if k.startswith("replay_")]:
             del out[k]
-        out.update(graded_by_live=1, replays=0, agent_sim_error=int(agent_sim_error))   # board 0151
+        out.update(graded_by_live=1, replays=0, agent_sim_error=int(agent_sim_error))
     if (contract.get("official") or {}).get("hidden_seeds"):
         # core 0.2.19: once the sport registered a hidden seed set (frozen), only a match on a registered hidden seed of
         # its cell is official, whatever the sport's own official_config says (its legacy public-seed rule); the

@@ -21,7 +21,7 @@ Odometry is kept in the frame the base starts in, so no world coordinate reaches
 frame and are turned into KinDER's world-frame action here (to_sim). The journal, the trajectory and the video are in
 KinDER's own (world) frame; calls/NNNNNN/actions.npy has what the agent sent.
 
-The verdict is the live episode's (board 0151): step() reports KinDER's own goal check (`terminated`) at every control
+The verdict is the live episode's: step() reports KinDER's own goal check (`terminated`) at every control
 step and the episode ends there, so nothing is replayed to grade it; render_video() re-runs the trajectory once, after
 the verdict, to film it. start_sha is the frozen instance's recorded scene_sha (the state hash right after reset), which
 rcb_service checks when an episode begins; a KinDER that no longer builds the instance is InstanceMismatch.

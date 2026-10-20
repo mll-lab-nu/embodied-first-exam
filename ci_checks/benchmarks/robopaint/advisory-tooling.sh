@@ -9,7 +9,7 @@
 # embodied_first_exam/benchmarks/robopaint/: the task images take them from the pinned files-only image (images/robopaint-files/; the
 # generator's check ties the sources to FILES.json), and the copies left in task dirs (the bind-mounted sidecars
 # environment/scorer/ and environment/sim/) must be byte-identical to that source.
-# ADVISORY hook of RoboPaint (moved from ci_checks/check-robopaint-tooling.sh, board 0124): ci_checks/run_all.sh runs every
+# ADVISORY hook of RoboPaint (moved from ci_checks/check-robopaint-tooling.sh): ci_checks/run_all.sh runs every
 # ci_checks/benchmarks/*/advisory-* hook with the task directories in scope; this one checks the folder the first RoboPaint
 # task among them is in (none among them: the repository's tasks/robopaint/).
 # Usage: advisory-tooling.sh [task dirs]   (default: the repository's tasks/robopaint/)

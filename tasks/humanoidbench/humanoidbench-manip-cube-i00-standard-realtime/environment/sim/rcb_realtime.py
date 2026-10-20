@@ -26,7 +26,7 @@ and finalize. Only the time model differs. In standard mode time moves only insi
   and returns what the cameras saw. It never changes the plan.
 - `cameras = []` asks for no images at all (in 2.1 an empty list means every camera): a controller's proprio-only call.
 
-Grading is 2.1's: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17, board 0151), judged by
+Grading is 2.1's: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17), judged by
 this service, nothing replayed. Every executed control step's sim row is journaled (trajectory_live.f64) and the graded
 episode's rows are saved as the trajectory: the rows the simulator applied, not what was submitted, so the trajectory
 reproduces the live run however the timing went (the video is rendered from it). Evidence added (never visible to the agent):

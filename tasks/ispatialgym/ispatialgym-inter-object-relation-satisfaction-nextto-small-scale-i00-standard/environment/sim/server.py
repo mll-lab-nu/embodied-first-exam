@@ -11,7 +11,7 @@ As BEHAVIOR-1K's service (the same robot on the same simulator), except:
   policy budget, reason "failed: the episode's control steps ran out"), on the collect hook's signal (timeout) or on a
   simulator error (error); there is no fall rule (upstream has none);
 - every pose leaves in the odometry frame (the robot's base at the start of the episode), never in the world frame;
-- the verdict is the live episode's (owner 2026-10-17, board 0150/0151): upstream's success under settle-eval, judged
+- the verdict is the live episode's (owner 2026-10-17): upstream's success under settle-eval, judged
   at every control step the episode runs, is `success`; nothing replays it. When it ends the service writes
   /out/trajectory.npz + /out/episode.json, and the collect hook's SIGUSR1 makes it close the video and exit;
   finalize.sh then writes final.json from episode.json;

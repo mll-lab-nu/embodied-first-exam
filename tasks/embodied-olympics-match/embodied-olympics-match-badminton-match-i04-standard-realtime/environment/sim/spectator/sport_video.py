@@ -1,5 +1,5 @@
 """Spectator replay video for a sport that draws its own players' images (plugin.Views) and declares no spectator
-camera or scene, so core/spectator.py renders nothing (robot_coding_bench, board 0136, 2026-10-16; not upstream).
+camera or scene, so core/spectator.py renders nothing (Embodied First Exam, 2026-10-16; not upstream).
 
     python3 /srv/spectator/sport_video.py /srv/sport/plugin.py /data      # -> /data/replay.mp4 + /data/video.json
 
@@ -8,7 +8,7 @@ draws the players' cameras (sport.worker_init("render"): the Views the match ser
 own MuJoCo model and data) from a read-only snapshot of the match. Nothing here is read back by the match, the replay
 or the grader, and this directory is not part of the match's source_sha (core/ and sport/ are): the replay check and
 the verdict are those of the unchanged service. video.json records whether this replay ended in the live match's
-recorded state (final.json state_sha, scores, steps; board 0151: no verdict replay). Written as replay.part.mp4 and renamed when complete.
+recorded state (final.json state_sha, scores, steps; no verdict replay). Written as replay.part.mp4 and renamed when complete.
 """
 from __future__ import annotations
 
@@ -63,7 +63,7 @@ def render(plugin: str, data: Path, fps: int = 10) -> dict:
     finally:
         w.close()
     part.replace(out)
-    try:                                    # robot_coding_bench (board 0151): the live record, no verdict replay
+    try:                                    # Embodied First Exam: the live record, no verdict replay
         fin = json.loads((Path(data) / "final.json").read_text())
     except (OSError, ValueError):
         fin = {}

@@ -25,7 +25,7 @@ None (as `embodied-olympics-fun-penalty-kick-i00-privileged`).
 The sim sidecar (`rcb_realtime.py` + `rcb_service.py`, the shared eai-standard/2.3 layer, with the standard twin's
 `server.py`) runs the attempt on its clock and its referee judges it live; every control step the simulator applied is
 recorded, and the live referee's call on the last attempt is the verdict (`final.json`: `graded_by` live, `replays` 0; no
-grading replay, owner 2026-10-17, board 0151); the video is rendered from the recorded attempt afterwards.
+grading replay, owner 2026-10-17); the video is rendered from the recorded attempt afterwards.
 `/tests/grade.py` reads `/data/final.json`: pass iff the live attempt succeeded. The clock's record
 (`stalls`, `max_lag_s`, ...) is copied into `reward.json` and decides nothing. `nop`: the attempt never starts (its
 clock starts at the first submit), reward 0. The
@@ -41,7 +41,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 1 GB | 1 GB |
 
 - GPU: required, any NVIDIA GPU; recommended: any NVIDIA GPU with EGL (RTX 4090 / L4).
-- Measured: as the standard twin; the GPU renders the cameras over EGL (board 0112, 2026-10-14): author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
+- Measured: as the standard twin; the GPU renders the cameras over EGL (2026-10-14): author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 4 GiB GPU memory, 16 GiB memory. Limits measured: author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default.
 
 ## Details
@@ -51,7 +51,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Rule book | IFAB Laws of the Game 2025/26: Law 1 (the goal 7.32 m x 2.44 m with posts and crossbar 12 cm wide, the penalty mark 11 m from the goal line, the penalty area, the goal area and the penalty arc), Law 2 (a size-5 ball: 68-70 cm round, 410-450 g), Law 14 (the penalty kick: the ball at rest on the mark, kicked forward, the goalkeeper on the goal line between the posts until the kick), Law 10 (kicks from the penalty mark: one kick, which is over when the ball stops moving or goes out of play; the kicker may not play the ball a second time) and the glossary (a kick is a contact with the foot or the ankle); deviations: Law 14 (the goalkeeper): the goalkeeper is a dummy, a rigid board 1.9 m high and 0.6 m wide standing on the goal line. It starts at the centre and, from 0.25 s after the kick, slides along the line at up to 3.0 m/s towards the point where the ball's velocity of that moment would take it over the goal line; it stays between the posts and neither dives, jumps nor uses hands. An opponent cannot be simulated otherwise. · Law 14 (the kick): the referee takes every contact of a foot with the ball within 0.15 s of the first as the one kick; any later contact is a second touch. A referee's eye is replaced by this number. · Law 14 says the ball is kicked; the Laws do not name the part of the leg. Here the kick is made with a foot or an ankle (the parts below the shin): a contact of the ball with a shin or any other part is a failure. · Law 1: only the goal end of the field is there (the penalty area, the goal area, the mark and the arc are painted); the goal's net is a rigid cage 2.0 m deep; there is no wind and no other player. |
 | Stages | kick → goal |
 | Service | `environment/sim/rcb_realtime.py` (the shared realtime layer, eai-standard/2.3) with the standard twin's `server.py` on `rcb_service.py`, `rcb_rfo.py`, `rfo/`, `rfo_task.py`, `instance.json` (= the privileged twin's); EGL rendering on the GPU |
-| Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 3.89 with the clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 attempts; 4090-ws1, 4 CPUs, board 0112, 2026-10-14); PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF) |
+| Slowdown | S = 1 (`RCB_SLOWDOWN`'s default): RTF 3.89 with the clock flat out (RCB_SLOWDOWN = 0.01, physics only, 4 attempts; an RTX 4090 workstation, 4 CPUs, 2026-10-14); PROTOCOL §4b: S = 1 when RTF >= 3, else ceil(1.5 / RTF) |
 | Observations | `head_left`, `head_right` (RGB 270 × 480, depth on `head_left`), `venue` (fixed); proprioception: joints, torques, targets, two IMUs, grip state |
 | Episode | 1500 control steps (15 s at 100 Hz); 10 resets, the last attempt graded |
 | Network | open: agents may search for and download public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md) |

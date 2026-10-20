@@ -313,7 +313,7 @@ ACTION_DIM = 16
 CONTROL_HZ = 30
 # Videos are fragmented MP4 (index up front, a fragment per keyframe): a file whose writer never closed (a replay killed
 # at a timeout or crashing) still plays up to its last fragment; a plain MP4 is unplayable without its trailing index
-# (board 0051, 10-09).
+# (10-09).
 MP4_FRAGMENTED = "frag_keyframe+empty_moov+default_base_moof"
 MAX_STEPS = 200_000        # no step budget (the wall clock is); this only stops a runaway trajectory (~1.9 h of sim time)
 TABLE_Z = 0.76

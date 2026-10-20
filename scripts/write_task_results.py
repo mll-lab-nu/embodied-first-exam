@@ -43,7 +43,7 @@ NOT_A_RESULT = "**not a result** — infrastructure error ({}): run it again; it
 def not_a_result(trial, r, rw):
     """Why a trial that is not a success is no result either (PROTOCOL §2.6, §2.12: an infrastructure failure is neither a
     success nor the agent's 0; only the agent's own end, its deliverable or the cutoff, AgentTimeoutError, is a result),
-    or None. Board 0105 F-M2: a trial whose verifier never ran (no reward.json: `docker compose up` failed, e.g. a CPU
+    or None. A trial whose verifier never ran (no reward.json: `docker compose up` failed, e.g. a CPU
     cap above the host's; the verifier timed out) was published as the agent's 0."""
     if rw.get("infra_error") or rw.get("grader_error"):
         return "`infra_error` / `grader_error` in the verifier line"
@@ -56,7 +56,7 @@ def not_a_result(trial, r, rw):
         chk = account_failure_check.check(str(trial))
         if chk.get("stop") and not any(w.startswith("gateway:") for w in chk.get("why", [])):
             return "a model-account or configuration failure (scripts/account_failure_check.py)"
-        # board 0121 M4: the usage gateway died, or the trial's last model calls failed on the way (upstream unreachable,
+        # the usage gateway died, or the trial's last model calls failed on the way (upstream unreachable,
         # a stream broken off, a provider 5xx): the agent could not reach its model
         gw = [w for w in chk.get("infra", []) if w.startswith("gateway:")]
         if gw:

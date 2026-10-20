@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Every graded trial leaves a video (docs/protocol/README.md §4, board 0136): the task must render one and the runner must be
+"""Every graded trial leaves a video (docs/protocol/README.md §4): the task must render one and the runner must be
 able to collect it. Advisory: a video is evidence for people and never the verdict, and a static scan cannot
 tell whether a render finishes in time (the runner flags a graded trial without a video at run time, docs/protocol/running.md
 "Recordings"). For every task:

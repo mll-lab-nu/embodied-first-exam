@@ -14,7 +14,7 @@ act(observation) player (a `batch` act per call).
   AllChase, Fixed, ShootOnly, Random, Idle   simple baselines (class docstrings).
 
 Physical numbers are the published ones the world uses (rulebook §2.1; bodies/ssl_robot/body.toml) as any team would
-know them; the ball's two-phase model was measured in the world (olympiad_review/screening/soccer_ssl_players_zh.md).
+know them; the ball's two-phase model was measured in the world (the Embodied Olympics screening notes).
 """
 from __future__ import annotations
 
@@ -1087,7 +1087,7 @@ class Reference(TeamBase):
         # an extra shooting rule: shoot from within shoot_range m whenever the best goal point's margin exceeds
         # shoot_margin (s; negative = the keeper could just reach it). 0 = off. Default 6.5 m / -0.4 s: shooting
         # often pays here (rebounds, a keeper that moved); 200 seeds on L3: +2.12 goals/match vs +0.55 without it
-        # (olympiad_review/screening/soccer_ssl_players_zh.md 2.4)
+        # (the Embodied Olympics screening notes 2.4)
         self.shoot_range, self.shoot_margin = float(shoot_range), float(shoot_margin)
         self.getter = None
         self.pass_ = None

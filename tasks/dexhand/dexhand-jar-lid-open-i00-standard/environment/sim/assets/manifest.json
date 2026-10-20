@@ -7,27 +7,27 @@
     "continuous-glass.obj": {
       "sha256": "a5fbbe911f81ce047f42a0cbf793a6f280202e64c3070f1300a64b144de1840f",
       "bytes": 199141,
-      "source": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/continuous-glass.obj"
+      "source": "scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/continuous-glass.obj"
     },
     "label.obj": {
       "sha256": "88a31cc61bc93207f0b482a477cd346c19614ad2f88e51abe3a4c8facd9de603",
       "bytes": 34085,
-      "source": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/label.obj"
+      "source": "scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/label.obj"
     },
     "label.png": {
       "sha256": "001a7b155505f385534a8d4e87cd4c91cba26a1f9de60284429ec27b7660711c",
       "bytes": 21077,
-      "source": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/label.png"
+      "source": "scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/label.png"
     },
     "material.mtl": {
       "sha256": "0970339adfd3fb1f14eaf5e6c2b09c2b49768fe0536c4a4b9bff4c266a5700a6",
       "bytes": 162,
-      "source": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/material.mtl"
+      "source": "scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/material.mtl"
     },
     "material_0.png": {
       "sha256": "f92e59802f90e74177bee426f17c6f594452d54579158f1ff008a4cc07703d1c",
       "bytes": 77,
-      "source": "robot_coding_bench/scripts/scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/material_0.png"
+      "source": "scene_expansion/repairs/sharpa_jar/trajectory_r1/assets/material_0.png"
     }
   }
 }

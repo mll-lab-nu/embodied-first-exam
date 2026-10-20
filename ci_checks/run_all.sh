@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Every check, in two tiers (board 0124; docs/protocol/README.md: only Appendix H binds):
+# Every check, in two tiers (docs/protocol/README.md: only Appendix H binds):
 #   1. the invariants: ci_checks/run_invariants.sh (the required CI job `invariants`); a failure fails this run (exit 1);
 #   2. the advisory checks (the CI job `advisories`): ci_checks/parallel.py --advisory, findings are warnings (exit 3).
 # Exit 0: everything clean; 1: an invariant failed (or the invariant run was incomplete); 3: advisory findings only.
@@ -100,10 +100,10 @@ add python3 ci_checks/check-cutoffs.py"$targs"
 add python3 ci_checks/check-seeds.py"$pargs"
 # PROTOCOL §4b: a standard-realtime task states its slowdown S ([metadata] slowdown, the instruction) and allows resets
 add python3 ci_checks/check-realtime.py"$pargs"
-# PROTOCOL §4 (board 0136): every task renders a video and the runner can collect it; a declared video time bound is not
+# PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)
 add python3 ci_checks/check-video.py"$targs"
-# PROTOCOL H.4 (board 0151): the standard modes' graders transcribe the live episode's verdict (graded_by_live), no replay
+# PROTOCOL H.4: the standard modes' graders transcribe the live episode's verdict (graded_by_live), no replay
 # decides, and agent-caused ends are never infrastructure failures (synthetic records through each distinct grade.py)
 add python3 ci_checks/check-live-verdict.py"$targs"
 # The task protocol (docs/protocol/README.md): the protocol version per mode, oracle fields, the image registry, no results/, no personal paths

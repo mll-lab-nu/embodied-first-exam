@@ -38,9 +38,9 @@ success or at a breakdown, and journals every executed control step; at the end 
 episode that ends otherwise (timeout) is judged as it stands by the same two checks. Before the episode the service checks
 the scene file by file against `runtime_binding.json` and by its initial-state hash (`instance_mismatch`, infrastructure).
 The verifier (`tests/grade.py`, separate sandbox, no network, the shared client base) transcribes `final.json`: pass iff
-the live episode succeeded (`graded_by_live` 1, `replays` 0). No grading replay runs (owner, 2026-10-17, board 0151).
+the live episode succeeded (`graded_by_live` 1, `replays` 0). No grading replay runs (owner, 2026-10-17).
 
-Before 2026-10-17 (graded then by the verifier's two replays; history, not re-run since): Harbor checks on ws3 (4090-ws3: Ryzen 9 7950X, RTX 4090; shared, loaded) (oracle), ws2 (nop), Harbor 0.23.0, image 0.3.0 sha256:ed950d079b63 / -sim 0.4.0 (Nyx RGB; built per host from one context: ws2 a466a594c463, ws3 53d8800bfa22, ws 3f9218fb9864); the live, replay and settled hashes equal the 0.3.0 (EGL) run's (2026-10-16): `oracle` scored 1 (sim 0.4.0 (Nyx): live settled success at control step 70210 (18 calls), both replays pass final_check() and end in the live state (live_matches_replay 1, deterministic 1), live end hash = the 0.3.0 run's; live service time 351 s, verifier replays 243 s); `nop` scored 0.
+Before 2026-10-17 (graded then by the verifier's two replays; history, not re-run since): Harbor checks on workstation C (Ryzen 9 7950X, RTX 4090; shared, loaded) (oracle), workstation B (nop), Harbor 0.23.0, image 0.3.0 sha256:ed950d079b63 / -sim 0.4.0 (Nyx RGB; built per host from one context: B a466a594c463, C 53d8800bfa22, A 3f9218fb9864); the live, replay and settled hashes equal the 0.3.0 (EGL) run's (2026-10-16): `oracle` scored 1 (sim 0.4.0 (Nyx): live settled success at control step 70210 (18 calls), both replays pass final_check() and end in the live state (live_matches_replay 1, deterministic 1), live end hash = the 0.3.0 run's; live service time 351 s, verifier replays 243 s); `nop` scored 0.
 
 ## Compute resources
 Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.resources]` in `task.toml`). The agent phase counts every container of the trial at once (the agent's, and in standard modes the simulator sidecar); the verifier phase runs after it.
@@ -75,7 +75,7 @@ episode with reason `timeout` when it runs out; that count never runs out before
 ### Deviations
 - `ee_pose` is not offered (only `joint_position`, the scene's actuator layout); `/kinematics` gives FK / IK.
 - Graded by the live episode (the settled check on the live simulator); no grading replay, in the sidecar or the
-  verifier (owner, 2026-10-17, board 0150/0151).
+  verifier (owner, 2026-10-17).
 
 ### Goal
 Build the EKET cabinet frame: slide the two side panels into the top panel, then the back panel into its grooves, then the bottom panel onto the sides, and leave the cabinet standing on the table on its own.

@@ -44,7 +44,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 8.0
 verifier_min_memory_gb = 20.0
 verifier_min_gpu_memory_gb = 8.0
-measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replayed camera-free (1.2 GiB) and then filmed through the render worker (4.6 GiB) until 2026-10-17; since then (board 0151) it only films, through the render worker (4.6 GiB)"
+measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replayed camera-free (1.2 GiB) and then filmed through the render worker (4.6 GiB) until 2026-10-17; since then it only films, through the render worker (4.6 GiB)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

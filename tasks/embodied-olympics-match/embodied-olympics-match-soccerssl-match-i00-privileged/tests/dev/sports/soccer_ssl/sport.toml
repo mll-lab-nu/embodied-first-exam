@@ -1,8 +1,8 @@
 # soccer_ssl: wheeled robot soccer 5 v 5 after the RoboCup Small Size League (Division B), built in parallel lines
-# (olympiad_review/screening/soccer_ssl_interfaces_zh.md): A the robot (bodies/ssl_robot), B the field, ball, world and
+# (the Embodied Olympics screening notes): A the robot (bodies/ssl_robot), B the field, ball, world and
 # referee (sim/), C the overhead cameras (sim/camera.py), E the plugin, the skill contract (skill_api.py), the
 # observation and the tasks (this file, plugin.py), D the scripted opponents and the reference player
-# (builtin_players.py, opponents/). Proposal: olympiad_review/screening/soccer_ssl_proposal_zh.md.
+# (builtin_players.py, opponents/). Proposal: the Embodied Olympics screening notes.
 
 [sport]
 name = "soccer_ssl"

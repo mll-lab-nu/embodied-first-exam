@@ -57,7 +57,7 @@ recommended_gpu = "RTX 4090 24GB / L4 24GB / L40S 48GB"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 2.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "Embodied Olympics' joint-level soccer pilot v5 (4090-ws1, 2026-10-15/16, nvidia-smi every 30 s): the agents trained with rsl_rl on the GPU worlds at 3-10 GB of GPU memory (one RTX 4090); the sim and the practice service as the CPU tier"
+measured = "Embodied Olympics' joint-level soccer pilot v5 (an RTX 4090 workstation, 2026-10-15/16, nvidia-smi every 30 s): the agents trained with rsl_rl on the GPU worlds at 3-10 GB of GPU memory (one RTX 4090); the sim and the practice service as the CPU tier"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -105,8 +105,8 @@ service = "main"
 command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
-# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay,
-# board 0151), then the spectator video (replay.mp4), then the walking-policy audit (sim/audit/policy_fingerprint.py),
+# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay)
+# then the spectator video (replay.mp4), then the walking-policy audit (sim/audit/policy_fingerprint.py),
 # which replays the match only when seat A won it live: it can only take a win away (tests/fexam_reward.py).
 [[verifier.collect]]
 service = "sim"

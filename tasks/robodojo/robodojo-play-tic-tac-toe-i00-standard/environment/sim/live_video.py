@@ -1,4 +1,4 @@
-"""The live video of a standard-mode episode (board 0151, owner 2026-10-17: the standard modes are graded by the live
+"""The live video of a standard-mode episode (owner 2026-10-17: the standard modes are graded by the live
 episode, so no replay films the trial any more): the sim service keeps frames of the episode it actually runs, from
 images its simulator renders anyway, and the collect hook encodes them into live.mp4 after the verdict is written.
 Nothing here decides anything: a frame that cannot be taken or written stops the video, never the control step, and an

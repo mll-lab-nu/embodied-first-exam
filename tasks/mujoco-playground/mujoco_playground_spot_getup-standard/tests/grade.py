@@ -1,6 +1,6 @@
 """Standard-mode verifier (MuJoCo Playground quadrupeds): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict, crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. success =
-the task's check on the live episode passed (graded_by = "live": owner, 2026-10-17, board 0151; nothing is replayed to
+the task's check on the live episode passed (graded_by = "live": owner, 2026-10-17; nothing is replayed to
 grade it), the episode having started in the instance's t = 0 state. Numeric-only reward.json.
 infra_error = 1: there is no verdict on the agent (final.json missing or unreadable; not finalized, or neither the live
 verdict nor a give-up: the collect hook never ran or was cut short before it wrote the verdict; the service gave up

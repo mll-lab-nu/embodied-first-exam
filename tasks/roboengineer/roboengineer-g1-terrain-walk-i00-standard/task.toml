@@ -33,7 +33,7 @@ recommended_gpu = "L40S 48GB (all measurements; a 24 GB card fits the memory but
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
-measured = "Harbor 0.23 oracle (the reference: 4096 environments, 12638 s of training and deployments) and smoke trials on aws:rcb-gpu14 / -gpu13 (L40S, 2026-10-18, board 0165; docker stats + cgroup memory.peak + nvidia-smi per container every 3-6 s): the agent's container 16.1 GiB (16492 MiB) of GPU memory, 5.3 GiB memory (5.6 GiB cgroup peak, growing over the 3.5 h run), 1.0-1.6 cores (one Python thread drives the GPU); the public trainer's default 256 environments 1.8 GB, its cap of 1024 4.7 GB; the sidecar 2.2-2.6 cores during deployments (OSMesa), its 4-CPU cap during finalization (12 held-out cases x 2 + video: 419 s), peak 2.06 GiB. Minimum: GPU = 16.1 GiB x 1.15 = 18.5, raised to 20 (headroom for the pool's VRAM reservation); memory = the agent's 12 GB cap + the sidecar's peak x 1.2 + the monitor; CPU = the sidecar's ~2.5 during deployments + the training's 1.6, rounded up to leave the agent's 4-core cap some room; the monitor: <= 0.86 GiB of new files, <= 6 processes"
+measured = "Harbor 0.23 oracle (the reference: 4096 environments, 12638 s of training and deployments) and smoke trials on aws:rcb-gpu14 / -gpu13 (L40S, 2026-10-18; docker stats + cgroup memory.peak + nvidia-smi per container every 3-6 s): the agent's container 16.1 GiB (16492 MiB) of GPU memory, 5.3 GiB memory (5.6 GiB cgroup peak, growing over the 3.5 h run), 1.0-1.6 cores (one Python thread drives the GPU); the public trainer's default 256 environments 1.8 GB, its cap of 1024 4.7 GB; the sidecar 2.2-2.6 cores during deployments (OSMesa), its 4-CPU cap during finalization (12 held-out cases x 2 + video: 419 s), peak 2.06 GiB. Minimum: GPU = 16.1 GiB x 1.15 = 18.5, raised to 20 (headroom for the pool's VRAM reservation); memory = the agent's 12 GB cap + the sidecar's peak x 1.2 + the monitor; CPU = the sidecar's ~2.5 during deployments + the training's 1.6, rounded up to leave the agent's 4-core cap some room; the monitor: <= 0.86 GiB of new files, <= 6 processes"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -49,7 +49,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 20.0
 trial_max_memory_gb = 16.0
-measured = "the reference (4096 environments) peaked at 16.1 GiB of GPU memory and 5.6 GiB of memory in the agent's container (board 0165); 20 GiB of GPU memory = the declared minimum (enough for ~4900 environments); 10 GiB of memory leaves room for an agent's own CPU rollouts; trial = the agent's 10 GiB + the sidecar's 6 GB cap (its peak 2.1 GiB); disk 0.86 GiB and 6 processes in the reference, within the design defaults"
+measured = "the reference (4096 environments) peaked at 16.1 GiB of GPU memory and 5.6 GiB of memory in the agent's container; 20 GiB of GPU memory = the declared minimum (enough for ~4900 environments); 10 GiB of memory leaves room for an agent's own CPU rollouts; trial = the agent's 10 GiB + the sidecar's 6 GB cap (its peak 2.1 GiB); disk 0.86 GiB and 6 processes in the reference, within the design defaults"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

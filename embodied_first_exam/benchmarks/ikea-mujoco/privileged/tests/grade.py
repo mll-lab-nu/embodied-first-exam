@@ -10,7 +10,7 @@ rest and no breakdown at the end of the rows and again after the SETTLE_S hold o
 succeeds and all end in the same state hashes, before and after the hold (`deterministic`; MuJoCo on the CPU is
 bit-deterministic).
 Writes /logs/verifier/reward.txt (1/0), reward.json (numbers only) and verdict.json (the replays' reports).
-Replay video (PROTOCOL §4, board 0136; evidence only, never the verdict): a third process, render_video.py, replays the
+Replay video (PROTOCOL §4; evidence only, never the verdict): a third process, render_video.py, replays the
 same rows at the same time and writes /logs/verifier/replay.mp4 (+ replay.last.png, replay.json); the verdict is written
 first, then `video_rendered` is set once the video exists, waiting for it at most as long again as the verdict replays
 took plus 600 s and never past the verifier's limit (--budget-s); a video that fails or is late changes nothing else. No

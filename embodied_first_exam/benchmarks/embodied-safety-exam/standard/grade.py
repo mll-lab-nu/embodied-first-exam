@@ -1,7 +1,7 @@
 """Embodied Safety Exam standard-mode verifier (eai-standard/2.1): grades what the sim service -- which the agent could not
 touch -- wrote. Needs only Python (the pinned client image); nothing here runs a simulator.
 
-/data/final.json   the live episode's verdict (owner, 2026-10-17, board 0151: graded by the live episode, nothing
+/data/final.json   the live episode's verdict (owner, 2026-10-17: graded by the live episode, nothing
                    replayed): graded_by "live", replays 0, live_success (the episode ended in Embodied Safety Exam's pass),
                    live_rule (Embodied Safety Exam's pass in the finalize's live_verdict), success (both)
 /data/verdict.json Embodied Safety Exam's verdict on the live episode: outcome, marks, diagnostics, the start check

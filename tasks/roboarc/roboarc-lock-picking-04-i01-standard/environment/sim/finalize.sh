@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container.
-# The live episode is the verdict (owner 2026-10-17, board 0150/0151): no grading replay runs.
+# The live episode is the verdict (owner 2026-10-17): no grading replay runs.
 #   1. `rcb_limited.py end` (the shared first half, docs/protocol/standard_mode.md §13.3): SIGUSR1 to the service, which ends
 #      the episode (judged as it stands), writes trajectory.npz + episode.json (the live verdict, its review / forcing /
 #      instability evidence, final-state hash, live_rows) and exits, releasing its GPU. It waits through a crash-recovery

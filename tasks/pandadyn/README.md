@@ -125,7 +125,7 @@ CPU PhysX with `enable_enhanced_determinism`, one simulated scene per process, o
   between two replays of the same rollout (226 rollouts replayed at least twice);
 - a seed reset alone rebuilds the recorded start (`initial_state.pkl` of the bank adds nothing), and rendering, the render
   backend (`render_backend="cpu"`, below) and the cameras do not change the physics (same hashes);
-- across hosts (board 0153, 2026-10-17): S06's arm start comes from the IK fallback (scipy `least_squares`: Pinocchio's
+- across hosts (2026-10-17): S06's arm start comes from the IK fallback (scipy `least_squares`: Pinocchio's
   IK does not converge there, joint 4 ends on its bound), whose last bits follow the BLAS kernel OpenBLAS picks for the
   CPU. Frozen under the AVX-512 kernel, its start never rebuilt on the pool's AVX2 hosts (AWS EPYC 7R13, cluster EPYC 7402,
   cluster EPYC 7763; 4 joints differ in the last float32 bit: `instance_mismatch`). Its containers now pin the kernel
@@ -225,7 +225,7 @@ them moves by itself) get a `-standard-realtime` twin, sharing the standard twin
   into the episode from step 0, 10 s per chunk, each chunk at its own step (`at`), so every row runs at its recorded
   control step whatever the wall clock does: `oracle = "full"`.
 - **Slowdown S per family.** CPU PhysX at 1000 Hz with two servos in Python runs slower than real time here, so no
-  family runs at S = 1. Measured on 4090-ws1 (32 cores, the service capped at 4 CPUs): the
+  family runs at S = 1. Measured on an RTX 4090 workstation (32 cores, the service capped at 4 CPUs): the
   realtime service with its clock flat out (`RCB_SLOWDOWN=0.01`, the oracle's first 10 s planned from step 0; host load
   18-80) and the bare physics loop (`Session.step` over the oracle's first 8 s; load 39-47). S = ceil(1.5 / RTF) with
   the lower of the two (PROTOCOL §2; a busy pool host is slower still: the same service ran 1.4-1.9 x faster at load

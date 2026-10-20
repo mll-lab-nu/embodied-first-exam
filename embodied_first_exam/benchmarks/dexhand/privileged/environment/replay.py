@@ -113,7 +113,7 @@ def main() -> None:
     if args.video:
         import imageio.v2 as imageio
 
-        # Every 2nd step, but at most VIDEO_MAX_FRAMES frames (board 0136): a 640x480 OSMesa frame costs ~0.3 s on
+        # Every 2nd step, but at most VIDEO_MAX_FRAMES frames: a 640x480 OSMesa frame costs ~0.3 s on
         # one core, so a 28k-step episode took over an hour to film. Rendering only reads the scene; the verdict above
         # is already written and this pass is a separate replay from the reset.
         steps = int(result.get("steps") or len(actions))   # the verdict pass's executed steps (an episode may end early)

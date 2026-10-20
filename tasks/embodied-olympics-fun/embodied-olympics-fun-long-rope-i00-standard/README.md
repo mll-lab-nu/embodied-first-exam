@@ -22,7 +22,7 @@ Neither built-in gait can jump: the robot must hop again and again, in time with
 
 ## Verification
 The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
 infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
 `/data/final.json`: pass iff the live attempt succeeded. The
 rules: Two turners stand 3.6 m apart, one on each side of you (on the y axis, at y = -1.8 and +1.8 m); they turn a 6.0 m rope, 0.01 m thick, holding it 1.4 m from each end, at a steady 1.0 revolutions per second: each hand goes round a vertical circle of 0.4 m radius, 1.0 m above the floor, 0.4 m in front of its turner. The rope goes over your head from behind you to the front, down in front of you and under you towards your back; it is already turning at the start. A jump counts when the rope passes under both your feet while nothing of you touches the ground (at the moment it passes under each foot), after it has passed over your head since the last counted jump (one jump per turn of the rope). You succeed when, after 10 counted jumps, the first contact with the floor is your feet only and you then stand still for 0.5 s (only your feet on the floor, your torso within about 20 degrees of vertical, your pelvis slower than 0.35 m/s): the turners keep turning, so this has to be done before the rope comes round again, and it must not touch you until then. You fail at once if the rope touches any part of you (a miss: the turners do not stop), if your pelvis leaves the centre zone (within 0.5 m of the rope's axis forwards and backwards and 0.5 m of the middle between the turners sideways), if the rope passes under a foot that is on the ground or through you, on a fall (your pelvis lower than 0.35 m, or any part of you other than your feet on the ground), on a landing that is not on the feet after the last jump, or after 20 s.
@@ -37,7 +37,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
+- Measured: author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default.
 
 ## Details

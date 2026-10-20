@@ -16,7 +16,7 @@ family = "putting_shoes_on_rack"
 mode = "privileged"               # privileged state, unlimited resets, thin primitives (docs/protocol/README.md §3)
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 oracle = "partial"
-oracle_evidence = "Reference solution solution/oracle_putting_shoes_on_rack.py on the frozen task-level primitives solution/rcb_behavior_ref.py. Recorded Harbor oracle run (laptop, a pre-v1.0 uncommitted tree): 2026-09-24 behavior-putting-shoes-on-rack-i__LkouR9y (job behavior-putting-shoes-on-rack-i00-oracle-0924-234514) scored 1 (6283 control steps, deterministic 1, instance_exact 1), 1 of 1. Model trial behavior-putting-shoes-on-rack-i__KozJnde (behavior-lunaxh-0925-2057, ws) scored 1. The tooling and verifier files changed since; not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (board 0067 oracle sweep, AWS 8-vCPU L40S host rcb-gpu13, Harbor oracle agent, once): the reference solution's own run ended without success (q_score 0.8, 8921 control steps against the recorded 6283); the frozen scene rebuilt there within tolerance but not bit-exactly (instance_exact 0), so the solution's online planning took another path: this reference solution does not succeed on that host class."
+oracle_evidence = "Reference solution solution/oracle_putting_shoes_on_rack.py on the frozen task-level primitives solution/rcb_behavior_ref.py. Recorded Harbor oracle run (laptop, a pre-v1.0 uncommitted tree): 2026-09-24 behavior-putting-shoes-on-rack-i__LkouR9y (job behavior-putting-shoes-on-rack-i00-oracle-0924-234514) scored 1 (6283 control steps, deterministic 1, instance_exact 1), 1 of 1. Model trial behavior-putting-shoes-on-rack-i__KozJnde (behavior-lunaxh-0925-2057) scored 1. The tooling and verifier files changed since; not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (AWS 8-vCPU L40S host rcb-gpu13, Harbor oracle agent, once): the reference solution's own run ended without success (q_score 0.8, 8921 control steps against the recorded 6283); the frozen scene rebuilt there within tolerance but not bit-exactly (instance_exact 0), so the solution's online planning took another path: this reference solution does not succeed on that host class."
 instance_seed = 301               # scene = environment/instance.json (2026 challenge public_test instance 301 + its state hash); identity = dataset.toml digest
 expert_time_estimate_hours = 3.0
 
@@ -31,7 +31,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 6.0
 verifier_min_memory_gb = 16.0
 verifier_min_gpu_memory_gb = 10.5
-measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (batch_eval_live vram override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + 4090-ws1, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (board 0048, ps); author: 13-16 GB of RAM per Isaac process"
+measured = "GPU 9 GB with RCB_TEXTURE_BUDGET=0.1 (evaluation-pool GPU-memory override; live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 cloud GPU hosts + an RTX 4090 workstation, 10-10): 8.3-9.0 GB); CPU 6-9 cores per trial (ps); author: 13-16 GB of RAM per Isaac process"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -47,7 +47,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 24.0
 trial_max_memory_gb = 24.0
-measured = "GPU: 15.1 GiB held for most of the episode by the reference solution alone on a 48 GB card (L40S) with RCB_TEXTURE_BUDGET=0.1, the tasks' default (the tasks' own monitor, three oracle runs of two tasks on two hosts, 10-10: 15.14-15.15 GiB; the 9.0 GiB of the live sampler (nvidia-smi every 30 s, 13 AWS hosts + 4090-ws1) was below that; uncapped trials reached 29.0 GiB on 48 GB cards, batch_eval_live vram_profile) -> max(1.5 x peak, peak + 4) rounded up to 24 (was 16: 5 % above the reference solution's own use); memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.8 GiB over 5 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 15.1 GiB held for most of the episode by the reference solution alone on a 48 GB card (L40S) with RCB_TEXTURE_BUDGET=0.1, the tasks' default (the tasks' own monitor, three oracle runs of two tasks on two hosts, 10-10: 15.14-15.15 GiB; the 9.0 GiB of the live sampler (nvidia-smi every 30 s, 13 cloud GPU hosts + an RTX 4090 workstation) was below that; uncapped trials reached 29.0 GiB on 48 GB cards, the evaluation pool's GPU profile) -> max(1.5 x peak, peak + 4) rounded up to 24 (was 16: 5 % above the reference solution's own use); memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.8 GiB over 5 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

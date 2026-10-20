@@ -5,7 +5,7 @@
 #      steps the service executed, the final-state hash) and exits. It exits 2 when final.json already holds the verdict
 #      (the service gave up: after crashes, or at the start, a scene that did not build to the frozen instance): that
 #      verdict stays.
-#   2. write final.json from episode.json: the verdict is the live episode's (owner, 2026-10-17, board 0151; graded_by
+#   2. write final.json from episode.json: the verdict is the live episode's (owner, 2026-10-17; graded_by
 #      = "live", replays = 0). Nothing is replayed to grade it: the check is rcb_quadruped.Session.check(), which the
 #      service runs on the live simulator when the episode ends, the one the replay ran (its holds -- getup's 25 upright
 #      steps, the stands' 100 -- and joystick's full horizon are inside it).

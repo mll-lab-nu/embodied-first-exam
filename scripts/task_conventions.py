@@ -97,7 +97,7 @@ BENCHMARKS = [  # (directory prefix, label)
 ]
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
-# no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
+# no_twin_reason() reads it back, so no list of such tasks is kept here.
 # Embodied Olympics' exported tasks (PROTOCOL §4c) have a cutoff note of their own (CUTOFF_NOTE_TASK below): the
 # directories its manifest ci_checks/benchmarks/embodied-olympics-match/exported.toml lists in a mode that serves its own
 # protocol (its [protocols] table: their session talks to its own service). The privileged twins listed there
@@ -174,7 +174,7 @@ ENFORCE_ENV = "RCB_LIMITS_ENFORCE"   # §2.10: run-time switch (compose default 
 EMERGENCY_GPU_FACTOR = 1.5           # §2.10: host protection in enforced runs (the same value: rcb_monitor/monitor.py)
 LIMIT_SCOPES = {m: d["limit_scope"] for m, d in MODE_REGISTRY.items()}   # §2.10: who the limits bind
 LIMITS_HEADING = "## Resource limits"
-# PROTOCOL §2.11 (owner, 2026-10-11, board 0072; relaxed 2026-10-14, board 0107 E4): an honour rule, the same words in
+# PROTOCOL §2.11 (owner, 2026-10-11; relaxed 2026-10-14): an honour rule, the same words in
 # every task's instruction.md, just before `## Resource limits` (generator-owned: edit it here, never in a task;
 # ci_checks/check-resources.py compares). Installing packages and reading whatever is installed in the container (the
 # simulator's and the benchmark's own source included) are fine; searching the web for, or downloading, a ready-made
@@ -186,7 +186,7 @@ EXTERNAL_TEXT = (
     "for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, "
     "or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and "
     "the package registries (PyPI, Debian / Ubuntu archives) only.")
-# Open network (PROTOCOL §2, Appendix H.6; owner 2026-10-14, board 0124): the task author's choice, declared as
+# Open network (PROTOCOL §2, Appendix H.6; owner 2026-10-14): the task author's choice, declared as
 # `[metadata] network = "open"` in task.toml. Such a task carries its own `## External material` paragraph (the author
 # says what may be used); normalize keeps it, and writes EXTERNAL_TEXT_OPEN where it has none.
 EXTERNAL_TEXT_OPEN = (
@@ -210,7 +210,7 @@ CUTOFF_RE = (r"You have (\d+) seconds to complete this task\. Do not cheat by us
 CUTOFF_HEADING = "## Time limit"
 CUTOFF_REF = "the time limit (`## Time limit`)"    # how a benchmark's own text names the limit: never a duration
 _CUTOFF_CLOSE = " Installing packages is not cheating (`## External material` above)."
-# owner 2026-10-13 (board 0086): agents without a clock in their tool output guessed their elapsed time 2-7 times too
+# owner 2026-10-13: agents without a clock in their tool output guessed their elapsed time 2-7 times too
 # high and stopped early; every agent gets the same way to know it (a command, not a guess).
 # #231 (10-15): a sentence asking for `date` was not enough (agents still guessed); the resource
 # monitor now shows the clock itself (images/monitor/rcb_monitor/monitor.py clock(): from the trial environment's start, so it
@@ -253,7 +253,7 @@ CUTOFF_NOTE_OWN[("roboEngineer", "standard")] = (
     "is not graded. The service's own deadline counts the same limit from your first request to it, so it never runs "
     "out before your time does." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
 # Embodied Olympics' exported tasks (PROTOCOL §4c): their own service reports no `time_left_s` and does not read
-# RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode (board 0121 m4)
+# RCB_WALL_CLOCK_S (its clocks are the game's own), and a skill task has no episode
 CUTOFF_NOTE_TASK = {n: (
     "This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When "
     "it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The "
@@ -906,7 +906,7 @@ def _shared_sources() -> set[bytes]:
 
 def _is_layer_copy(f: Path) -> bool:
     """A copy of some version of embodied_first_exam/standard/rcb_limited.py or v2_4/rcb_limited.py (its PROTOCOL line and COMPAT
-    list): board 0151 changed the layer, and the tasks of each benchmark move onto the new bytes only when it regenerates."""
+    list): the layer changed on 2026-10-17, and the tasks of each benchmark move onto the new bytes only when it regenerates."""
     t = read_text(f) or ""
     return bool(re.search(r'(?m)^PROTOCOL = "eai-standard/2\.\d"', t)) and bool(re.search(r"(?m)^COMPAT = \[", t))
 
@@ -1294,7 +1294,7 @@ def normalize_slowdown(task: Path) -> None:
 
 
 # ---------------------------------------------------------------------------------------------------------------------
-# PROTOCOL v2.0 §2 (owner, 2026-10-14, board 0124): the settings a task declares, and the effective configuration of a
+# PROTOCOL v2.0 §2 (owner, 2026-10-14): the settings a task declares, and the effective configuration of a
 # trial, recorded with every result so that results are ranked only within one comparable configuration (docs/protocol/running.md
 # "Results"). Standard library only: scripts/write_task_results.py, scripts/dataset_manifest.py and the scheduler's run
 # policy (the evaluation pool's) read these.

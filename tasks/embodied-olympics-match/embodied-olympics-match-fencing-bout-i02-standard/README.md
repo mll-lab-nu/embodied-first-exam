@@ -22,7 +22,7 @@ the sport's official (hidden) seeds, so results here are previews, not official 
 `solution/`: our camera-only reference player through the same HTTP interface. in process (fencing-7): the oracle beats level 2 on this seed 15:13; over 40 player seeds the reference wins this instance 42.5 %, the equilibrium mix 50 % (fresh-seed means 48.0 %, 53.9 %); none of the nine constant intentions nor a random player wins it; live on vanilla Harbor 0.23.0 (2026-10-15, the exported task) the oracle won 15:13 in 32 phrases, replay identical (the world is deterministic).
 
 ## Verification
-Separate sandbox, no network. The match is graded live (owner, 2026-10-17, board 0151): the sim service records the
+Separate sandbox, no network. The match is graded live (owner, 2026-10-17): the sim service records the
 match's scores, winner and reason as it plays it and nothing replays it to grade it (`final.json` `graded_by` live,
 `replays` 0; the replay video is drawn after the verdict). The verifier (`tests/grade.py`, our core's grader) applies
 the validity rule
@@ -40,7 +40,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: vanilla Harbor 0.23.0 on 4090-ws3 (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: Embodied Olympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only
+- Measured: vanilla Harbor 0.23.0 on an RTX 4090 workstation (32 cores), 2026-10-15, oracle and nop of both tasks, docker stats every 5 s: the sim peaks at 4.0 CPUs (its cap) and 0.71 GiB (the replay in a fresh process and the video after the bout; a bout is about 20 s of service time), the oracle's container under 0.1 GiB (a model's harness needs more: Embodied Olympics' agent default); turn-based, so fewer CPUs only slow it down; CPU only
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 4 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 12 GiB memory. Limits measured: design defaults of Embodied Olympics' exported matches (the agent 4 GiB under its 6 GiB cap; whole trial: + the sim's 8 GiB cap); measured peaks 2026-10-15: sim 0.71 GiB, oracle container under 0.1 GiB.
 
 ## Details

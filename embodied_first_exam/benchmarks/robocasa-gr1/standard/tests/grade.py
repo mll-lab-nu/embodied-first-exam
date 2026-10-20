@@ -1,7 +1,7 @@
 """RoboCasa-series standard-mode verifier (separate sandbox, no network): grades what the sim service wrote.
 
 The agent never touched the service. /data/final.json holds the service's verdict on the live episode (graded_by
-"live"; docs/protocol/README.md H.4; owner, 2026-10-17, board 0151): success = the environment's success check holds on the
+"live"; docs/protocol/README.md H.4; owner, 2026-10-17): success = the environment's success check holds on the
 state after the last executed control step (live_success), the scene was not solved at the start, and the episode did
 not end on a simulator error. Nothing is replayed (replays = 0).
 

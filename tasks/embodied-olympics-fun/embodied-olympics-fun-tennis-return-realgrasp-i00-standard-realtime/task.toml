@@ -36,7 +36,7 @@ instance_seed = 0
 reset_budget = 10
 expert_time_estimate_hours = 14.0
 oracle = "full"
-oracle_evidence = "reference solution: walks 0.7 m on the walking policy, backswing while walking, a one-handed backhand at zero command with the free 0.30 kg racket held only by the right Dex1-1 at 120 N (head 7.1 m/s, ball 14.7 in -> 15.1 out, 44 deg; the racket turns 51 deg in the grip and stays); frozen start + 9/10 perturbed starts (4 cm, 0.03 rad) succeed, replay bit-exact. Second positive: a real stand-mode forehand with only the robot's place injected (19.5 m/s out, 12 deg). Negatives: two bounces, racket dropped / thrown / out of the hand in the ball's path, ball on the gripper and on the forearm, volley, double hit, carry, own side, long, wide, net, through the net, line in/out, racket on the net post, body at the net, far side, racket on the waiting ball, a fall. Held-racket impacts measured: e_app 0.47 at 15 m/s, 0.39 at 30; an 8 cm off-axis hit turns the racket 47 deg (15 m/s) / 137 deg (30 m/s) about its handle In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S (board 0112)."
+oracle_evidence = "reference solution: walks 0.7 m on the walking policy, backswing while walking, a one-handed backhand at zero command with the free 0.30 kg racket held only by the right Dex1-1 at 120 N (head 7.1 m/s, ball 14.7 in -> 15.1 out, 44 deg; the racket turns 51 deg in the grip and stays); frozen start + 9/10 perturbed starts (4 cm, 0.03 rad) succeed, replay bit-exact. Second positive: a real stand-mode forehand with only the robot's place injected (19.5 m/s out, 12 deg). Negatives: two bounces, racket dropped / thrown / out of the hand in the ball's path, ball on the gripper and on the forearm, volley, double hit, carry, own side, long, wide, net, through the net, line in/out, racket on the net post, body at the net, far side, racket on the waiting ball, a fall. Held-racket impacts measured: e_app 0.47 at 15 m/s, 0.39 at 30; an 8 cm off-axis hit turns the racket 47 deg (15 m/s) / 137 deg (30 m/s) about its handle In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S."
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)
@@ -49,7 +49,7 @@ recommended_gpu = "any NVIDIA GPU with EGL (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "as the standard twin; the GPU renders the cameras over EGL (board 0112, 2026-10-14): author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
+measured = "as the standard twin; the GPU renders the cameras over EGL (2026-10-14): author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -98,7 +98,7 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades the live
-# episode (no grading replay, board 0151). The loops run on the clock, inside timeout_sec: the verdict ("finalized":
+# episode (no grading replay). The loops run on the clock, inside timeout_sec: the verdict ("finalized":
 # true, written before any video is rendered) may take until 840 s (the end waits through a crash-recovery resume);
 # then the hook waits for the video, one render pass from the trajectory ("video_pending"), until 870 s -- a video that
 # is not ready by then is lost, the verdict is not.

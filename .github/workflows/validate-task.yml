@@ -2,7 +2,7 @@ name: validate-task
 # Runtime validation on a self-hosted GPU runner: oracle scores 1 on every task whose task.toml says oracle = "full",
 # and the nop agent scores 0 on every task. Tasks with a partial or no oracle are human-reviewed (docs/protocol/README.md §4)
 # and only get the nop check.
-# Triggers (board 0120; as Terminal-Bench's validate-task.yml): a maintainer's comment `/validate` on a pull request
+# Triggers (as Terminal-Bench's validate-task.yml): a maintainer's comment `/validate` on a pull request
 # (author association OWNER / MEMBER / COLLABORATOR) runs it on the tasks the pull request adds or changes, at its head
 # commit, and answers with a comment of the results; a manual run (workflow_dispatch) takes task dirs (default: all) and
 # optionally a pull request number. Never on every push: a trial builds images and takes a GPU.

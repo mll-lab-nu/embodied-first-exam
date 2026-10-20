@@ -22,7 +22,7 @@ None (as `embodied-olympics-fun-balance-board-i00-privileged`).
 
 ## Verification
 The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
 infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
 `/data/final.json`: pass iff the live attempt succeeded. The
 rules: The board is a rigid deck 0.76 m long (left to right), 0.38 m wide and 0.018 m thick, 2.7 kg, lying loose on a roller: a free cylinder of 0.085 m radius, 0.46 m long, 1.8 kg, whose axis points fore-aft and which rolls on the floor to your left and right. Nothing holds the deck to the roller or the roller to the floor but contact and friction (coefficient 1.0); there is no spring. A stop 0.02 m high and 0.03 m long under each end of the deck keeps the roller from rolling out from under it. You succeed when 30.0 s have passed from the start without a failure. You fail the moment any part of the deck (an end or a stop) touches the floor, any part of you touches the floor or the roller, any part of you other than a foot touches the deck (a fall on the board), or neither of your feet has touched the deck for more than 1.0 s (you have left the board). With the roller in the middle, an end of the deck meets the floor at a tilt of about 24 degrees. No oracle; human review in the pull request that adds the benchmark (PROTOCOL §2.7).
@@ -37,7 +37,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
+- Measured: author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default.
 
 ## Details

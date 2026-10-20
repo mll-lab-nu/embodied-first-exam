@@ -12,7 +12,7 @@ files this check refuses:
   3. the name of a demonstration or dataset file (FILES): `*.hdf5`, `*.mcap`, `*.parquet`, `*.rlds`, a Hugging Face
      `datasets/<org>/<name>` id;
   4. a key that names the demonstration or episode a file was made from (IDS): `"demo": "<demo id>"`, `demo_id`,
-     `episode_id`, `source_demo`, ... (board 0105: DexJoCo's instance.npz `meta` named the demonstration whose actions
+     `episode_id`, `source_demo`, ... (DexJoCo's instance.npz `meta` named the demonstration whose actions
      are the reference solution).
 Files the agent's image takes from a files-only image (`COPY --from=<image>` in environment/Dockerfile, the image pinned
 by an images/<name>/FILES.json, scripts/files_image.py) are scanned from their one source in the repository, reported as
@@ -21,7 +21,7 @@ Binary files are skipped except numpy archives (`.npz`, a zip of `.npy` members)
 any text member are read and scanned like a text file (the members' names are reported as `file.npz[member]`); numeric
 members are not read past their header. Images and other binaries are skipped.
 A legitimate mention (a licence notice that must name its source) is listed in ALLOW with its reason. The egress
-allowlist is what stops a download; this check keeps the address out of the task. Board 0072: RoboTangle's
+allowlist is what stops a download; this check keeps the address out of the task. RoboTangle's
 `reference_scene.json` carried `source_url` of the upstream demonstration, and one trial downloaded and replayed it.
 That file was in the simulator image, which this check cannot read: an image's own files are reviewed when the image
 is built (docs/protocol/leakage.md).

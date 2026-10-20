@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ADVISORY. task.toml: name matches folder, required metadata (docs/protocol/README.md §1, §2, docs/TAXONOMY.md), deliverable
-# dir, the task's declared scene dynamics (no central table, board 0124). The agent's timeout: check-cutoffs.py.
+# dir, the task's declared scene dynamics (no central table). The agent's timeout: check-cutoffs.py.
 t="$1"; python3 - "$t" "$(cd "$(dirname "$0")/.." && pwd)" <<'PY'
 import sys, tomllib, pathlib
 t = pathlib.Path(sys.argv[1]); d = tomllib.load(open(t / "task.toml", "rb")); rc = 0

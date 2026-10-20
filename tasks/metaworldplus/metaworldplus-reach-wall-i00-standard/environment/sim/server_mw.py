@@ -22,7 +22,7 @@ What the agent gets: camera RGB (+ depth) with each camera's calibration, the ro
 opening, mocap target, arm and finger joints, last command) and the task's target point. Never an object's pose.
 The episode runs until the agent's time is up; the state after the last executed control step is graded.
 
-Grading (owner 2026-10-17, board 0150/0151; docs/benchmarks/metaworldplus.md "Grading"): the verdict is the live
+Grading (owner 2026-10-17; docs/benchmarks/metaworldplus.md "Grading"): the verdict is the live
 episode's. When the episode ends, Meta-World's own success check (`evaluate_state`, the one the privileged verifier
 applies; mw_tool.Session.check()) is read on the live simulator's state after the last executed control step, and
 that is `success`: nothing is replayed to grade it. The check has no hold or settle window (it is a predicate on one

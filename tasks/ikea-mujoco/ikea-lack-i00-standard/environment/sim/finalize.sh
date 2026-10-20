@@ -6,7 +6,7 @@
 #      episode.json (the live verdict, final-state hash, live_rows), closes the live video and exits. It waits through a
 #      crash-recovery resume and exits 2 when final.json already holds the verdict (the service gave up after crashes,
 #      or the instance mismatched at start).
-#   2. final.json = episode.json + finalized, graded by the live episode (owner, 2026-10-17, board 0150/0151). No
+#   2. final.json = episode.json + finalized, graded by the live episode (owner, 2026-10-17). No
 #      grading replay runs, here or in the verifier; the video is the live recording (live.mp4, cam_high).
 set -u
 DATA="${RCB_DATA:-/data}"

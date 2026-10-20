@@ -1,7 +1,7 @@
 """Standard-mode verifier (RoboPaint brush tasks): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict: the service scored its live main sheet against the exemplar with the graders'
 rcb_brush_strict.py, the picture rule and the process rules, after the agent's container was stopped; "graded_by": "live",
-nothing replayed: docs/protocol/README.md H.4; owner, 2026-10-17, board 0151), plus the video and sheet pictures. success = the live
+nothing replayed: docs/protocol/README.md H.4; owner, 2026-10-17), plus the video and sheet pictures. success = the live
 sheet meets the task's rule. Numeric-only reward.json; every metric of the live sheet is reported (final_reward = its
 final_reward), with the crash-recovery evidence (sim_startups, resumes, resume_state_mismatch, ...; docs/protocol/standard_mode.md §13.2)
 and infra_error.

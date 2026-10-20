@@ -1,6 +1,6 @@
 """Standard-mode verifier: reads what the sim service (which the agent could not touch) wrote: /data/final.json (the
 LIVE episode's result and the crash-recovery fields), /data/trajectory.npz, /data/live.mp4. The trial is graded by its
-live episode (owner 2026-10-17, board 0150/0151; no grading replay): success = the live episode's success (RoboDojo's
+live episode (owner 2026-10-17; no grading replay): success = the live episode's success (RoboDojo's
 check passed at an action of the episode the agent ran) and no infrastructure failure. The same rule for every task; a
 task whose physics does not replay bit for bit (instance.json "determinism": "verdict", `determinism_verdict_mode`) was
 graded so before, with a replay recorded that no longer runs. Until 2026-10-17 the other tasks were graded by

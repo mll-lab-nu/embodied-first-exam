@@ -16,7 +16,7 @@ family = "put_two_mugs_on_shelf"
 mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/protocol/README.md §3)
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 oracle = "none"
-oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-put-two-mugs-on-shelf-i0__AMuARWT (robolab-put-two-mugs-on-shelf-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws3). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7)."
+oracle_evidence = "No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-put-two-mugs-on-shelf-i0__AMuARWT (robolab-put-two-mugs-on-shelf-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7)."
 instance_seed = 0                 # scene = environment/instance.json (the full scene state after the seeded reset + its hash); identity = dataset.toml digest
 expert_time_estimate_hours = 1.0
 
@@ -31,7 +31,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 4.0
 verifier_min_memory_gb = 13.0
 verifier_min_gpu_memory_gb = 6.5
-measured = "GPU 4.0-5.5 GB per trial (one simulator), anon memory 7.6-10.3 GB, CPU p90 2.4-8 cores over 7 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 AWS hosts + 4090-ws1, 10-10); vram_profile peaks 14.5-15.7 GB include agents' extra simulator processes and Isaac's card-sized pools; author: one Isaac simulator per 32 GB of host RAM"
+measured = "GPU 4.0-5.5 GB per trial (one simulator), anon memory 7.6-10.3 GB, CPU p90 2.4-8 cores over 7 trials, live sampler (docker stats + cgroup anon + nvidia-smi every 30 s, 13 cloud GPU hosts + an RTX 4090 workstation, 10-10); evaluation-pool GPU profile peaks 14.5-15.7 GB include agents' extra simulator processes and Isaac's card-sized pools; author: one Isaac simulator per 32 GB of host RAM"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -47,7 +47,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 24.0
 trial_max_memory_gb = 24.0
-measured = "GPU: 15.7 GiB on a 48 GB card, 15.3 on 24 GB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10); includes agents' extra simulators) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.4 GiB over 4 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 15.7 GiB on a 48 GB card, 15.3 on 24 GB (the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10); includes agents' extra simulators) -> max(1.5 x peak, peak + 4), at least 16 for Isaac Sim; memory: the [environment] cap 24 GiB, which every past trial ran under (docker peak 23.4 GiB over 4 samples, mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

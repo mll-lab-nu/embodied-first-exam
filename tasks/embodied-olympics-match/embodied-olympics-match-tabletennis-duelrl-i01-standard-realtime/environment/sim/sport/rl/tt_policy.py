@@ -1,6 +1,6 @@
 """The RL opponent's shot policy (version 1, high level): a small deterministic policy over the shot choices of the
 reference's stroke pipeline, trained by evolution strategies against the scripted opponent and in self-play
-(training code outside the repository; report olympiad_review read/?doc=rltt).
+(training code and report outside the repository).
 
 Inputs (per incoming ball, the ball's true state): the predicted contact point and the ball's velocity there, where
 the opponent stands (the ball's first frames after its hit). Outputs: the aim on the opponent's half (|x|, y), the

@@ -17,7 +17,7 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 the committed resets did (their journal rows are checkpointed, `persist`; a resume, not a grading replay). When the
 episode ends the service writes /data/trajectory.npz + /data/episode.json with the live verdict (the task's check, run on
 this simulator when the episode ends); the collect hook (finalize.sh) makes it exit, writes that verdict into final.json
-(nothing is replayed to grade it: owner, 2026-10-17, board 0151) and renders the video from the trajectory. The frozen
+(nothing is replayed to grade it: owner, 2026-10-17) and renders the video from the trajectory. The frozen
 instance is checked when the service builds it: a scene whose start state does not hash to the instance's recorded
 `state_sha` gets no episode (instance_mismatch, an infrastructure failure)."""
 
@@ -608,7 +608,7 @@ def resume_sha() -> str:
 RESUMED = EP.begin(state=E, step=replay_row, state_sha=resume_sha, proprio=proprio_row, spec=SPEC, on_end=end_from_signal,
                    start_event={"env": S.env, "seed": S.inst.get("seed"), "cameras": CAMS})
 if RESUMED:  # Episode.begin looks for an "end" of any episode: only the current one's counts, never a lost reset's
-    # (a crash inside the first reset, too: the abandoned episode runs on, board 0121)
+    # (a crash inside the first reset, too: the abandoned episode runs on)
     _ends = [e for e in EP.events() if e.get("ev") == "end" and int(e.get("episode") or 1) == E["resets"] + 1
              and e.get("reason") != "reset" and int(e.get("journal_rows") or 0) <= EP.rows]
     if _ends:

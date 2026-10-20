@@ -2,7 +2,7 @@
 # ADVISORY helper (docs/protocol/README.md §5: world-frame information in the texts is decided per benchmark, consistent within
 # it). A benchmark that declares "no world coordinates in the standard tasks' texts" (its tasks/<benchmark>/README.md,
 # "World-frame information") runs this from its own hook, ci_checks/benchmarks/<bench>/advisory-world-frame.sh, with its directory
-# prefix; shared CI names no benchmark (board 0124). Such a benchmark's standard tasks never say WHERE things are in the
+# prefix; shared CI names no benchmark. Such a benchmark's standard tasks never say WHERE things are in the
 # world: no object poses or positions and no world coordinates of workspace items (table / sheet heights, sheet or well
 # centres, a pixel-to-world formula, a camera's distance to the scene), in anything that describes the task:
 # instruction.md, README.md, the task.toml description. Names, inventories, categories, sizes, colours and a detailed goal

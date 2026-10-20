@@ -1,7 +1,7 @@
 """Grade the trusted sidecar's record of the live episode (final.json); no agent-produced success claim is read.
 
 success = the live episode's success under the task's predicate, judged by the sim service (graded_by = "live"; owner,
-2026-10-17, board 0151): nothing is replayed. No verdict on the agent is an infrastructure failure (infra_error = 1),
+2026-10-17): nothing is replayed. No verdict on the agent is an infrastructure failure (infra_error = 1),
 never the agent's 0: final.json missing, unreadable or not finalized; the service did not end and dump its episode in
 time; it gave up after crashes that were not all inside the agent's calls (sim_crashed, resume_failed); the frozen
 instance did not build at the episode's start (instance_mismatch); a hand the task does not offer. A crash inside the

@@ -1,14 +1,14 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.1.0@sha256:d3aae70562661fe171078e8ae59abc91c4b2d2c70c0f361b90052150f0359b7e",
+ "image": "ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.1.1@sha256:fbd7136fbe91fbbb5458c7c4354ec2abb744ce55e230e8251cba8a9e85399435",
  "source": "embodied_first_exam/benchmarks/mujoco-playground",
  "files": {
-  "privileged/environment/rcb_aloha.py": "d81d625d02f41dafaecd7834eb76f6f3f25c3e426de941ad939c9cd20b8fbadf",
-  "privileged/environment/rcb_panda.py": "9a3405676b2d9cb521220bf73cc526cce94d6b3efc1112fba1aaca4f89eefb75",
-  "privileged/environment/rcb_quadruped.py": "4a8a21cc3121f68e02d14257b6fff04a183f16be9a1d17c14239b54815fea441",
+  "privileged/environment/rcb_aloha.py": "228b6031b655c6503bda2f8a3d5758df2337c6f89c954ab8cba4c6435e803275",
+  "privileged/environment/rcb_panda.py": "fb5906690e122c082cb7f9ff0292f647ef54c33b9160d8c9429bc059635fbdb1",
+  "privileged/environment/rcb_quadruped.py": "acc78e0527e41892e9cadb8ab0c76c36513f20677c75aa98dcad60daffc24dc9",
   "privileged/tests/grade.py": "541c4ea89ddf535134645c856212ae1087968c41ce70ba14831d4da487ae8d5c",
   "privileged/tests/variants/72df271117/grade.py": "72df2711178c9aa2b2c7dc300c6f137d589a33bf3ada359b09e22a718c902329",
   "privileged/tests/variants/c5bde2d42e/grade.py": "c5bde2d42e9c8bedbc90da9fdf9fed7fa0d018fe33e3467c653d6bb580cc9226",
-  "standard/tests/grade.py": "fe5fcb8f64cb30cb2ffbd7e471e267f018826d1fcb5259c14cb837de27f0a934",
-  "standard/tests/variants/b119382881/grade.py": "b119382881b1bb7a644f6782c699f893e55bc73ab353f06c81685e5c5ef77aff"
+  "standard/tests/grade.py": "9a8d47d07fbf0c77d404f581802fe7d790959ddbe8e01f57e33fb6c29e4be405",
+  "standard/tests/variants/a655b71efb/grade.py": "a655b71efb81d750a1131030a39d8266028bae2da578b7333f8070566257535a"
  }
 }

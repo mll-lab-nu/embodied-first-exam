@@ -30,7 +30,7 @@ mode = "standard"                  # camera RGB + proprioception only; no sheet 
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
 protocol = "eai-standard/2.2"
 oracle = "partial"                # solution/: the privileged oracle's joint targets, streamed through the client
-oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: tasks/robopaint/README.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet) (ws3, 2026-10-05): path_mm 17225 of the 51700 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: tasks/robopaint/README.md (Validation)."
+oracle_evidence = "Reference solution in solution/ (streams the privileged reference's joint targets), unchanged from the earlier version of this task (the picture score only; its Harbor oracle and nop runs, and what changed since: tasks/robopaint/README.md, Oracle evidence). The same trajectory scores 1 under the process rules in the verifier (the graders' rcb_brush_strict.py, with which the sim service also scores the live sheet) (2026-10-05): path_mm 17225 of the 51700 mm budget; its strokes are sweeps. Harbor oracle and nop runs on one pair per family: tasks/robopaint/README.md (Validation)."
 instance_seed = 0
 expert_time_estimate_hours = 6.0
 difficulty = "hard"             # RoboPaint tiers: acrylic stroke copy hard, oil paint-from-reference extreme
@@ -55,7 +55,7 @@ recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "GPU 0.25-0.5 GB, vram_profile (batch_eval_live per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, 4090-ws1, 10-02..10); CPU author estimate"
+measured = "GPU 0.25-0.5 GB, evaluation-pool GPU profile (per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU author estimate"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -71,7 +71,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 5.0
 trial_max_memory_gb = 17.0
-measured = "GPU: 0.5 GiB (batch_eval_live vram_profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 5.0 GiB over 83 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, 4090-ws1, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 3.4 GiB, 36 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: 0.5 GiB (the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 5.0 GiB over 83 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 3.4 GiB, 36 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

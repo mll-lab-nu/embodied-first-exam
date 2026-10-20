@@ -1,5 +1,5 @@
 """One fresh-process replay of a recorded Embodied Safety Exam episode: an offline re-check (re-judging recorded trials, a
-host comparison). Not part of grading: the verdict is the live episode's (server.py live_verdict; board 0151).
+host comparison). Not part of grading: the verdict is the live episode's (server.py live_verdict).
 
     python replay.py INSTANCE.json ROWS.npy NOTES.json OUT.json [PICTURE_EVENTS.json]
 

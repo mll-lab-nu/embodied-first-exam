@@ -11,7 +11,7 @@ compose restarts the container (`restart: on-failure:6`) and this service rebuil
 up to the last checkpoint and continues the SAME episode, never a reset; a hash mismatch is recorded, not fatal, unless a
 TCP is more than RCB_RESUME_MAX_DEV_M from its checkpoint.
 
-Episode end and grading (the live episode is the verdict; owner 2026-10-17, board 0150/0151: no grading replay): when the
+Episode end and grading (the live episode is the verdict; owner 2026-10-17: no grading replay): when the
 episode ends (success, the task's failure predicate, the wall clock, an error) the service writes /data/trajectory.npz and
 /data/episode.json (the live verdict: the task predicate on the live simulator with the instance's own thresholds, its
 review / forcing / instability evidence, the final-state hash, `live_rows`: the rows the live episode executed). The

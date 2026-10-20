@@ -779,7 +779,7 @@ From image `efe:ese-0.5.6` the simulator is built from Embodied Safety Exam 0.5.
   old one;
 - the task side: `rcb_ese.py`, `rcb_ese_rt.py`, class `SafetyExam`, metadata `ese_*`, schemas `ese.public-*`, and
   reward.json's `ese_calls` / `ese_pass`;
-- the files-only image `ese-files-0.3.0` carries the `standard` and `realtime` layers.
+- the files-only image `ese-files-0.3.1` carries the `standard` and `realtime` layers.
 
 The Hugging Face dataset of the asset binaries is `MLL-Lab/embodied-safety-exam-assets` (formerly
 `MLL-Lab/robosafe-assets`, which redirects). Results recorded under the earlier task prefix `rsb-` compare with the

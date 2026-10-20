@@ -22,7 +22,7 @@ Throw the discus in your right hand from inside the circle so that it lands insi
 
 ## Verification
 The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;
-no grading replay, owner 2026-10-17, board 0151); the frozen start is checked on the live simulator (`instance_mismatch`:
+no grading replay, owner 2026-10-17); the frozen start is checked on the live simulator (`instance_mismatch`:
 infrastructure), and the video is rendered from the recorded attempt afterwards. `/tests/grade.py` reads
 `/data/final.json`: pass iff the live attempt succeeded. The
 rules: The men's discus (2.0 kg, 0.22 m across, 0.045 m thick at its centre) starts gripped flat against your right palm. The circle is 2.5 m across inside its rim; the ground outside is 0.02 m higher than its inside. The sector opens from the circle's centre, 34.92 degrees wide, symmetric about the direction you face at the start. The throw: you let go of the discus (once: it cannot be gripped again). Its first touch of the ground must be inside the sector lines (on a line is out); the throw is measured from that point to the inside of the rim along the line through the circle's centre. You succeed when a valid throw measures at least 15.0 m and you have then left the circle correctly and stood for 1.0 s. Leaving correctly: after the discus has landed, your first touch of the rim's top or of the ground outside the circle is behind the line through the circle's centre across the throwing direction (the rear half). Standing: only your feet on the ground, the torso within about 20 degrees of upright, the pelvis slower than 0.35 m/s. You fail if any part of you touches the rim's top (its top inside edge included) or the ground outside the circle before the discus has landed, or in the front half before you have left correctly; if the discus lands outside the sector or short of 15.0 m; if any part of you touches it after the release (your right arm may still brush it during the first 0.2 s); if you fall (your pelvis lower than 0.5 m above the circle's floor, or any part of you other than your feet on the ground); or after 60 s. Where you touch the ground is judged on the points of contact; a contact within 0.003 m of the rim's top counts as on it.
@@ -37,7 +37,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | GPU memory | 0 GB | 0 GB |
 
 - GPU: not needed.
-- Measured: author estimate (4090-ws1, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
+- Measured: author estimate (an RTX 4090 workstation, 2026-10-11): CPU-only; the sim sidecar steps and renders on one or two cores (under 1 GB), the agent's container holds the harness and the client
 - Limits in the agent phase (docs/protocol/README.md §2.10; `[metadata.resources.limits]`, shown to the agent in `instruction.md`; always measured and reported, and exceeding one fails the trial only when the run sets `RCB_LIMITS_ENFORCE=1`), the agent's container: no GPU, 8 GiB memory, 512 processes, 20 GiB of new files under `/app`, `/tmp`, `/root`; 60 s within 120 s. Expected peak of the whole trial: 0 GiB GPU memory, 16 GiB memory. Limits measured: author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default.
 
 ## Details

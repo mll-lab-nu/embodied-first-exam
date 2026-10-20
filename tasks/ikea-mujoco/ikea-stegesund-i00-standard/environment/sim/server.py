@@ -6,7 +6,7 @@ Adapted from the RoboTangle / RoboARC standard services.
 Physics: the scene's own runtime (rcb_ikea.Session, the privileged twin's tooling, copied unchanged): MuJoCo 3.14.0 on
 the CPU, float64; one control step = data.ctrl[:] = row, then 4 physics steps of the scene (S.step: physics + the
 scene's mechanism + its success monitor). Exactly what the privileged grader replays; in this mode the live episode
-itself is graded (owner, 2026-10-17, board 0150/0151: no grading replay).
+itself is graded (owner, 2026-10-17: no grading replay).
 HTTP (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1), POST /kinematics (stateless FK / IK on
 a scratch copy of the robot's MuJoCo model). Nothing about the furniture parts ever leaves this process.
 

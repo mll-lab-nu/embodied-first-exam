@@ -10,7 +10,7 @@ passes. A mutation that passes is a blind rule: fix the check, not this list.
 
     python3 ci_checks/check-ci-selftest.py [--tier invariants|advisory|all]    # default: all. Standard library only.
 
-Two tiers (board 0124). `--tier invariants` (the required CI job `invariants`, ci_checks/run_invariants.sh): the
+Two tiers. `--tier invariants` (the required CI job `invariants`, ci_checks/run_invariants.sh): the
 mutations of the rules that enforce docs/protocol/README.md Appendix H; each must FAIL its check. `--tier advisory` (the job
 `advisories`): the mutations of the advisory rules; each must still be reported (a finding, not blocking).
 """
@@ -182,7 +182,7 @@ MUTATIONS = [
      OPEN, TOML, sub(r'^network = "open".*\n', ""), ISOLATION, '[agent].network_mode must be "allowlist"'),
     ("a network declaration that is neither the allowlist nor open",
      OPEN, TOML, sub(r'^network = "open"', 'network = "any"'), ISOLATION, "[metadata] network = 'any'"),
-    # ---- Appendix H.6, the verifier has no network (board 0157): without [verifier] network_mode Harbor leaves the
+    # ---- Appendix H.6, the verifier has no network: without [verifier] network_mode Harbor leaves the
     # separate verifier on its environment's baseline, public
     ("a privileged verifier with the network (no [verifier] network_mode)",
      PRIV, TOML, sub(r'^(\[verifier\]\n(?:(?!\[).*\n)*?)network_mode = "no-network".*\n', r"\1"), ISOLATION,
@@ -208,7 +208,7 @@ MUTATIONS = [
     ("... names the demonstration its scene was restored from (the reference replays that demonstration's actions)",
      PRIV, "environment/instance.json", sub(r"^\{", '{"demo": "boxing_books_demo_17", ', count=1, flags=0),
      POINTERS, "id `demo` locates upstream material"),
-    ("... in a string member of a numpy archive the agent reads (DexJoCo's instance.npz `meta`, board 0105)",
+    ("... in a string member of a numpy archive the agent reads (DexJoCo's instance.npz `meta`)",
      PRIV, "+environment/extra.npz", lambda s: npz_text("meta.npy", '{"source": "x", "demo": "water_plant_demo_10_2026"}'),
      POINTERS, "environment/extra.npz[meta.npy]:1: id `demo`"),
     ("a step with a network policy of its own (Harbor would let it override [agent])",
@@ -413,7 +413,7 @@ MUTATIONS = [
     ("a standard-realtime service that declares no reset budget",
      "humanoidbench-loco-walk-i00-standard-realtime", COMPOSE, sub(r"^\s*RCB_RESET_BUDGET:.*\n", ""), REALTIME,
      "must declare its reset budget"),
-    # PROTOCOL §4 (board 0136): every graded trial leaves a replay video
+    # PROTOCOL §4: every graded trial leaves a replay video
     ("a privileged verifier that renders no video", TWIN_P, None,
      {"tests/grade.py": sub(r"\.mp4\b", ".bin", count=0), "tests/rcb_traj.py": sub(r"\.mp4\b", ".bin", count=0)}, VIDEO,
      "its verifier renders no replay video"),

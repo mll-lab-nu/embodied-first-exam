@@ -32,7 +32,7 @@ dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.
 slowdown = 1                      # standard-realtime: the world runs at 1/S of real speed (docs/protocol/README.md §4b); RCB_SLOWDOWN's default
 protocol = "eai-standard/2.3"
 oracle = "none"
-oracle_evidence = "a successful episode of the privileged twin (GPT-6 Luna xhigh, trial `myosuite-table-tennis-i00-privil__SMNgbHk`, 82 rows) planned from step 0 in one `submit(..., at=0)` at S = 1 succeeds live and in the fresh replay, with no stall (board 0112, 2026-10-14); the standard twin's evidence holds for the same instance and rule; human review in PR #201"
+oracle_evidence = "a successful episode of the privileged twin (GPT-6 Luna xhigh, trial `myosuite-table-tennis-i00-privil__SMNgbHk`, 82 rows) planned from step 0 in one `submit(..., at=0)` at S = 1 succeeds live and in the fresh replay, with no stall (2026-10-14); the standard twin's evidence holds for the same instance and rule; human review in PR #201"
 instance_seed = 0                 # myoChallengeTableTennisP1-v0: seed(0), then reset(seed=0)
 expert_time_estimate_hours = 6.0
 
@@ -47,7 +47,7 @@ recommended_gpu = "any NVIDIA GPU with EGL (RTX 4090 / L4)"
 verifier_min_cpus = 2.0
 verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 1.0
-measured = "as the standard twin (sim 1.2-1.4 GB, docker stats, board 0112); the GPU only renders the cameras over EGL (5 ms a frame; board 0112, 2026-10-14, 4090-ws1); the sim keeps the GPU through the collect hook (the video render; no replay since 2026-10-17)"
+measured = "as the standard twin (sim 1.2-1.4 GB, docker stats); the GPU only renders the cameras over EGL (5 ms a frame, 2026-10-14, an RTX 4090 workstation); the sim keeps the GPU through the collect hook (the video render; no replay since 2026-10-17)"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
@@ -63,7 +63,7 @@ sustain_sec = 60.0
 window_sec = 120.0
 trial_max_gpu_memory_gb = 4.0
 trial_max_memory_gb = 14.0
-measured = "GPU: EGL rendering only, under 1 GiB (board 0112) -> peak + 4; memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
+measured = "GPU: EGL rendering only, under 1 GiB -> peak + 4; memory: no samples of the agent's container; floor 8 GiB (at most the 8 GiB cap); whole trial: + the sim service's 6 GiB (docker peak 1.4 GiB, 5 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [metadata.resources.caps]
 # docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)

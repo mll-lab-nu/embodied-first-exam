@@ -564,7 +564,7 @@ def every_adapter_reports_the_agents_clock():
     import glob, hashlib, re
     tasks = os.path.join(os.path.dirname(os.path.dirname(HERE)), "tasks")
     # a copy of this layer: the same PROTOCOL line (not the same bytes: a layer change reaches the tasks through each
-    # benchmark's own regeneration, board 0151, and the adapters' clock does not depend on it)
+    # benchmark's own regeneration, and the adapters' clock does not depend on it)
     proto = next(x for x in open(os.path.join(HERE, "rcb_limited.py"), encoding="utf-8") if x.startswith("PROTOCOL ="))
     seen, bad = {}, []
     for f in sorted(glob.glob(os.path.join(tasks, "*", "*", "environment", "sim", "server.py"))):

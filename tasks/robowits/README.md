@@ -98,13 +98,13 @@ has a positive; their frozen instances are in dev/qineng 9eb18edf.
 
 ## Hosts: one CPU vendor
 Genesis' CPU backend is bit-exact only within one CPU vendor. The instances were frozen on Intel (the laptop). On AMD
-hosts (ws, ws3, lab) the rebuilt instance's state hash differs; the grader's tolerance check (every object and joint
+hosts (two workstations) the rebuilt instance's state hash differs; the grader's tolerance check (every object and joint
 pose within tolerance) still accepts it, except for differentiate_cubes and ball_into_jar (not in the repository), which
 run on Intel hosts only. stand_bulb's instance is its dataset scene simulated on until both objects are at rest (the dataset
 entry overlaps the ring and the tall object, which were still moving after RoboWits' 10 settle steps and drifted by up to
 12 mm between hosts), so it rebuilds within tolerance on either vendor. A trajectory recorded on one vendor can fail on the other, so a positive is
 re-graded on the vendor it was graded on: the Intel laptop for every positive in the review table except stack_bowls,
-which was graded on ws (AMD, with `instance_exact = 1`).
+which was graded on an AMD workstation (with `instance_exact = 1`).
 - **Machine-readable:** a task bound to one vendor carries `host_cpu_vendor = "GenuineIntel"` in `[metadata]` of `task.toml`
   (a RoboWits field, docs/TAXONOMY.md; no task in the repository needs it now), and
   its README a `Host CPU` row. A scheduler runs such a task only on a host whose `/proc/cpuinfo` `vendor_id` equals

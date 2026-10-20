@@ -378,7 +378,7 @@ class Broken(BaseHTTPRequestHandler):
 
 
 class UpstreamFailures(unittest.TestCase):
-    """Board 0121 M4: a model call that fails on the way (the upstream unreachable: 502; a stream broken off; a provider
+    """A model call that fails on the way (the upstream unreachable: 502; a stream broken off; a provider
     5xx) is recorded as an upstream_failure, and totals.json counts the failures in a row up to the latest call."""
 
     def test_tally(self):

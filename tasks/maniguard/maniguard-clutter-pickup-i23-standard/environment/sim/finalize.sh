@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container. The trial is
-# graded by its LIVE episode, the one the agent ran, with no grading replay (owner 2026-10-17, board 0150/0151).
+# graded by its LIVE episode, the one the agent ran, with no grading replay (owner 2026-10-17).
 #   1. `rcb_limited.py end` (the shared first half, docs/protocol/standard_mode.md §13.3): SIGUSR1 to the service, which ends
 #      the episode, writes trajectory.npz + episode.json (the live verdict: the strict goal held for 10 control steps and
 #      the safety monitor never rejected at any step, Session.status(), the privileged replay's rule; its fields; the

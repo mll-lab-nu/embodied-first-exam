@@ -2,7 +2,7 @@
 
 The simulator-specific half only: `HumanoidBench` implements rcb_service.Sim for one frozen instance. The protocol,
 the episode, crash recovery and the finalize live in rcb_service.py, which imports no simulator. The verdict is the live
-episode's (board 0151): step() reports HumanoidBench's own rule (the episode's return reached the pass mark) and the
+episode's: step() reports HumanoidBench's own rule (the episode's return reached the pass mark) and the
 episode ends there, so nothing is replayed to grade it; render_video() re-runs the trajectory once, after the verdict, to
 film it. start_sha is the frozen instance's starting state as instance.npz records it, checked when an episode begins.
 Settings come from environment/docker-compose.yaml:

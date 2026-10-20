@@ -44,7 +44,7 @@ recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 verifier_min_cpus = 8.0
 verifier_min_memory_gb = 19.0
 verifier_min_gpu_memory_gb = 11.0
-measured = "heaviest scene (pour_liquid_into_cup_random), a client driving 12 joint_position chunks, then the collect hook's two fresh-process replays (the first filmed): sim sidecar docker peak 16.0 GiB (anon 14.9), GPU 9.5 GiB, up to 16 cores while Isaac starts; agent container under 0.1 GiB; per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10 (the verifier phase then replayed as the privileged verifier does: docker peak 15.7 GiB, GPU 9.6 GiB); since 2026-10-17 (board 0151) the collect hook replays nothing: after the service exits it only encodes the live video on the CPU, so the sidecar's peak is the live service's"
+measured = "heaviest scene (pour_liquid_into_cup_random), a client driving 12 joint_position chunks, then the collect hook's two fresh-process replays (the first filmed): sim sidecar docker peak 16.0 GiB (anon 14.9), GPU 9.5 GiB, up to 16 cores while Isaac starts; agent container under 0.1 GiB; per-container sampler (docker stats, cgroup anon, nvidia-smi every 10 s), RTX 4090, 10-10 (the verifier phase then replayed as the privileged verifier does: docker peak 15.7 GiB, GPU 9.6 GiB); since 2026-10-17 the collect hook replays nothing: after the service exits it only encodes the live video on the CPU, so the sidecar's peak is the live service's"
 
 [metadata.resources.limits]
 # agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;

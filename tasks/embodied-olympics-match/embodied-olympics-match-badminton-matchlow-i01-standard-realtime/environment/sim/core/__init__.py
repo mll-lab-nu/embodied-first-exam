@@ -10,7 +10,7 @@ VERSION = "0.2.34"   # 0.2.34: the skill in the loop served from the agent's own
 # version plays from the next call, its sha256 logged); a missing server is the player's error (the call lowers
 # to the no-op); no agent code runs next to the simulator (hub H.3)
 # 0.2.32: the skill upload (POST /<seat>/skill, an UploadHost running the skill in the sim's own jail): removed in
-# Embodied First Exam's copy (Embodied First Exam (board 0152 decision 28, option c)): the skill runs only in the agent's own container
+# Embodied First Exam's copy (Embodied First Exam (option c)): the skill runs only in the agent's own container
 # (0.2.34's `game skill serve`); step() is one bounded synchronous call per due control step (skilleval/inloop.py
 # timing "sync"); every version of the skill that played is an episode row skill_load.
 # 0.2.31: built-in seats (RO_BUILTIN_SEATS, core/builtin_seat.py): a seat played by a built-in player in the
