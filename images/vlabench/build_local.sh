@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build vlabench from images/vlabench/Dockerfile with an existing assets checkout instead of the 11 GB Git LFS fetch
-# (identical pinned files, checked here). Run from anywhere; the build context is the repository root.
+# (identical pinned files, checked here; the layers differ from the published build cache). Run from anywhere.
 #   bash images/vlabench/build_local.sh /path/to/vlabench-assets   # git checkout of lerobot/vlabench-assets @ 08d7a44
 set -euo pipefail
 root="$(cd "$(dirname "$0")/../.." && pwd)"

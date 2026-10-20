@@ -7,26 +7,41 @@ on one frozen scene instance, in both modes: 36 instances, 72 tasks.
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/vlabench -a codex -m openai/gpt-6-astra
 ```
-Some images are not on a public registry: build them first ([Getting the images](#getting-the-images)).
+Nothing to build by hand: the first task to run on a machine builds the VLABench image from public sources, and every
+later task reuses it ([Getting the images](#getting-the-images)).
+
+## What you need before running
+- **Docker** with BuildKit and Compose v2 (Docker Engine 29 refuses a buildx plugin older than 0.13: update it if
+  `docker buildx version` is older). CPU only, no GPU.
+- **Disk**: about 40 GB free in Docker's data root for the first build (35 GB measured with Docker 29's containerd
+  store; ~22 GB when the prebuilt layers are pulled). The image is ~15 GB, 12 GB of it VLABench's assets; one image
+  serves all 72 tasks.
+- **First run**: the build fetches Debian packages (snapshot.debian.org), PyPI wheels, two GitHub repositories and the
+  Hugging Face dataset `lerobot/vlabench-assets` (~12 GB, anonymous): 5 to 20 minutes on a fast connection (4.5 minutes
+  measured on an idle machine, 18 on a busy one; the task allows 3600 s). Later tasks on the same machine start in
+  seconds.
+- **Members of the mll-lab-nu organization** (`docker login ghcr.io` with a token that can read its packages): the build
+  pulls the prebuilt layers of `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` (~7 GB) instead: 1 to 10 minutes.
+- Nothing else to do by hand: no licence to accept, no login needed.
 
 ## Getting the images
 
-All 72 tasks (privileged and standard) use the simulator image `ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0`, which
-is not published (VLABench's asset set has no licence that allows redistributing it). Build it locally from public
-sources (GitHub, PyPI and the Hugging Face dataset `lerobot/vlabench-assets` @ `08d7a44`, anonymous, ~12 GB, checked by
-`git lfs fsck`); the files image `efe:vlabench-files` is public and pulled by the task builds.
-
-```bash
-docker build -f images/vlabench/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION) .
-harbor run -d embodied-first-exam@all -p tasks/vlabench -a codex -m openai/gpt-6-astra
-```
+All 72 tasks (privileged and standard) run on the VLABench image, which is not published (VLABench's asset set has no
+licence that allows redistributing it). Each task builds it itself: its Dockerfiles (privileged: `environment/` and
+`tests/`; standard: the sim service's `environment/sim/Dockerfile`) start with the recipe `images/vlabench/Dockerfile`
+as the stage `vlabench-base`, and compose `build.cache_from` names `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0`, the
+same recipe prebuilt with BuildKit's inline cache. A runner that can pull it takes its layers; any other runner gets a
+warning that the cache cannot be read and builds the layers from public sources (GitHub, PyPI, snapshot.debian.org and
+the Hugging Face dataset `lerobot/vlabench-assets` @ `08d7a44`, checked by `git lfs fsck`). Both give the same image.
+The files images `efe:vlabench-files` (the tasks' tooling) and `efe:vlabench-build-files` (the recipe's
+`requirements.txt` and `strip_experts.py`) are public. The verifier's build reuses the agent environment's layers.
 
 | | |
 |---|---|
 | upstream | VLABench @ `cf588fe60c0c7282174fe979f5913170cfe69017` (MIT), assets `lerobot/vlabench-assets` @ `08d7a44`, MuJoCo 3.2.2, dm_control 1.0.22 |
 | tasks | `tasks/vlabench/vlabench-<task>-i00-privileged` and `tasks/vlabench/vlabench-<task>-i00-standard` |
 | metadata | `simulator = "vlabench"`, `robot = "franka-panda"`, `family = "vlabench/<task>"`, `oracle = "full"` |
-| image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0` (`images/vlabench/`), CPU only, ~15 GB (12 GB assets) |
+| image | built by each task from `images/vlabench/Dockerfile` (stage `vlabench-base`), build cache `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0`; CPU only, ~15 GB (12 GB assets) |
 | standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + each standard task's `environment/sim/server.py` |
 | standard client | the shared client base and exact pins of `embodied_first_exam/standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
 | instances | the instances and references, imported from PR #4 @ ad3c510, committed only in the privileged tasks (`environment/instance.json`, `solution/oracle.npy`). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
@@ -85,8 +100,9 @@ benchmark re-verifies on its frozen instance and whose instruction identifies th
   DexToolBench do).
 
 ## Image
-`images/vlabench/Dockerfile` is the full, pinned recipe: Python 3.10.18 by digest, pinned pip
-(`requirements.txt`), VLABench and rrt-algorithms at fixed commits, the assets at a fixed commit with `git lfs fsck`,
+`images/vlabench/Dockerfile` is the full, pinned recipe and needs no build context: Python 3.10.18 by digest, Debian
+packages from snapshot.debian.org at 2026-10-02 00:00 UTC (the image's apt sources are restored afterwards), pinned pip
+(`requirements.txt`, from `efe:vlabench-build-files`), VLABench and rrt-algorithms at fixed commits, the assets at a fixed commit with `git lfs fsck`,
 then `strip_experts.py`, which removes every `get_expert_skill_sequence`, `configs/task2code.json` (a per-task skill
 sequence; no runtime code reads it), the evaluation code and configs, the source tree's `.git` and `scripts/`.
 VLABench's general skills and its success predicates stay: the privileged mode offers the skills, the verifier grades
@@ -120,10 +136,16 @@ actuators' bounds, holding the last targets while watching, the frozen start's h
 agent's client and the verifier (`grade.py`: `success = live_success`) are main's copies too.
 
 ## Rebuilding
+The build cache (maintainers; `images/vlabench/BUILD_ONLY`):
 ```bash
-docker build -t ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION) \
-    -f images/vlabench/Dockerfile .                  # from the repository root; ~15 GB
-python3 scripts/task_conventions.py --check tasks/vlabench/vlabench-*
+docker build --build-arg BUILDKIT_INLINE_CACHE=1 \
+    -t ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION) images/vlabench   # ~15 GB
+docker push ghcr.io/mll-lab-nu/efe-private:vlabench-$(cat images/vlabench/VERSION)
+```
+A change to the recipe is a new `VERSION` and a new tag in every task's `build.cache_from`; `normalize` copies the
+recipe into the tasks' Dockerfiles:
+```bash
+python3 scripts/task_conventions.py tasks/vlabench/vlabench-*
 bash ci_checks/run_all.sh tasks/vlabench/vlabench-*
 ```
 
@@ -133,6 +155,8 @@ model and initial-state hashes and is not solved at the start; `reset()` is bit-
 task's success at its last step; two replays in fresh processes end in the live state's hash and succeed. The 3
 tasks dropped in review verified the same way; the 3 whose PR #4 references are recorded failures did not (their
 frozen inputs are not kept).
+
+The image built from `images/vlabench/Dockerfile` has the same Debian and pip packages and the same VLABench, rrt-algorithms and asset files as the image the tasks ran on before (`efe-private:vlabench-0.1.0`; only git's own timestamps under `/opt/rrt-algorithms/.git` differ). On fresh Docker 29 daemons, `-a oracle` scores 1 both when the task builds the image from public sources (no registry login: add_condiment, select_fruit, friction_qa privileged; heat_food, texas_holdem, friction_qa standard) and when it pulls the build cache (login: add_condiment, select_fruit privileged; heat_food, texas_holdem, friction_qa standard); `-a nop` scores 0 (select_fruit, heat_food).
 
 Harbor runs: `-a oracle` scores 1 on every privileged task and on 8 standard tasks (heat_food, texas_holdem,
 take_out_cool_drink, book_rearrange, find_unseen_object, select_painting, friction_qa, select_fruit_common_sense);

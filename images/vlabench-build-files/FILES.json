@@ -1,0 +1,8 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:vlabench-build-files-0.1.0@sha256:ccdaaf2d32c7010013f6c33444452015d252d8cafc2cc39470bb6307fdc7655d",
+ "source": "images/vlabench",
+ "files": {
+  "requirements.txt": "8573472cbe67e8eb9cb78316d1f4adfec9fed153a2b082d6b72810dd97d02d68",
+  "strip_experts.py": "3965236b5116ba5090db775989f1e09b7f748d6ae2d46aea58283810c7bb0f6f"
+ }
+}

@@ -11,7 +11,10 @@ services:
     cpus: 4   # rcb-monitor
     mem_limit: 15360m   # rcb-monitor
     pids_limit: 8192   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0
+    build:   # the VLABench image: environment/sim/Dockerfile
+      context: ./sim
+      dockerfile: Dockerfile
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0"]   # the prebuilt vlabench-base layers: pulled when the runner can, else built
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro

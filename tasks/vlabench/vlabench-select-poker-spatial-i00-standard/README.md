@@ -9,7 +9,7 @@
 | Family / instance | `vlabench/select_poker_spatial` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0` |
 
 ## Task
 VLABench's `select_poker_spatial` as a robot service: a Franka Panda arm at a table, instructed **"Please pick up the 4th poker card from left to right (as seen from the robot) and hold it up (grasped, lifted to z >= 0.9 m)."**
@@ -59,3 +59,4 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 ### Change Log
 - 2026-10-16 (board 0136): the sim collect hook waits for the replay video until 2880 s after the episode ends (was 1470 s; `timeout_sec` 1500 -> 2910); the verdict keeps its 1440 s bound. The video replays the graded episode once more after the verdict, so a slow verdict left it no time. Video only: the verdict, the physics and the pass rule are unchanged, so results from before this date stay valid.
 - 2026-10-17 (owner, board 0150/0151): graded by the live episode: `success` = VLABench's own success check reached in the episode the sim service ran (the same rule, judged as it ran), and no grading replay runs (no `replay_success` / `deterministic` any more; `final.json` has `graded_by = "live"`, `replays = 0`, `reward.json` `graded_by_live = 1`). The video is one render pass over the trajectory after the verdict, as before. The scene's start is checked when the episode begins: a scene that does not rebuild the frozen instance gives up as infrastructure (`instance_mismatch`). The scene, instance, pass rule, step cap and the agent's interface are unchanged, so the task keeps its name; archived verdicts are the same under the live rule, except 5 trials whose old video render ran out of time (recorded `infra_error`), which the live rule grades (all 0).
+- 2026-10-19 (in place: a new DIGEST, PROTOCOL H.8): the VLABench image is built by the task itself when the runner cannot pull it. The sim service's Dockerfile (`environment/sim/Dockerfile`) start with its recipe (`images/vlabench/Dockerfile`, stage `vlabench-base`) and compose `build.cache_from` names `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0`, the same recipe prebuilt (Debian packages from a dated snapshot, the same package versions as before); the environment's build time limit is 3600 s (was 1800 s). The scene, the frozen instance, VLABench's code and assets, the grading and the time limit are unchanged.
