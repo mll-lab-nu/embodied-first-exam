@@ -16,8 +16,7 @@ One manual step, the dataset (the same directory as BEHAVIOR-1K's: skip it if yo
 itself.
 
 1. **Host.** Linux x86_64 with Docker (BuildKit, Docker 23 or later), the NVIDIA Container Toolkit and an RTX-class NVIDIA
-   GPU (Isaac Sim needs one even headless). Disk: about 50 GB for the image (with Docker's build cache) and 40 GB for the
-   dataset.
+   GPU (Isaac Sim needs one even headless). Disk: about 31 GB for the image in Docker's storage and 40 GB for the dataset.
 2. **The dataset (licence: no redistribution; once per host).** BEHAVIOR-1K's own downloader, run in the public
    BEHAVIOR-1K base image, prints the BEHAVIOR Data Bundle licence and asks you to accept it (type `y`), then fetches the
    data anonymously from the public Hugging Face dataset `behavior-1k/zipped-datasets` and installs the decryption key. No
@@ -35,11 +34,12 @@ itself.
 3. **The simulator image: nothing to do.** The tasks' Dockerfiles hold its recipe (`images/ispatialgym/Dockerfile`:
    BEHAVIOR-1K's recipe, then iSpatialGym and its BEHAVIOR-1K fork fetched from GitHub by commit, pip versions fixed).
    The first trial on a host builds it: the 14.7 GB base from Docker Hub, ffmpeg from a dated Ubuntu snapshot, the two
-   repositories and a few pip packages, about 15 min on a 1 Gbit/s link (2 min on a host that already built BEHAVIOR-1K's
-   image: those layers are shared); later trials reuse it. Building it accepts the NVIDIA Isaac Sim / Omniverse licence
+   repositories and a few pip packages (measured: 20 min on a busy lab host; about 1 min more on a host that already built
+   BEHAVIOR-1K's image, whose layers it shares); later trials reuse it. Building it accepts the NVIDIA Isaac Sim / Omniverse licence
    terms of the official image. With pull access to our prebuilt copy
    (`ghcr.io/mll-lab-nu/efe-private:ispatialgym-<images/ispatialgym/VERSION>`, `docker login ghcr.io`), Docker takes its
-   layers instead (compose `build.cache_from`); without access it prints a warning about the cache and builds.
+   layers instead (compose `build.cache_from`); without access the build logs that it could not fetch the cache and goes
+   on from public sources.
 
 | | |
 |---|---|

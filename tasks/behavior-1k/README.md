@@ -16,8 +16,8 @@ harbor run -d embodied-first-exam@all -p tasks/behavior-1k -a codex -m openai/gp
 One manual step, the dataset; the simulator image builds itself.
 
 1. **Host.** Linux x86_64 with Docker (BuildKit, Docker 23 or later), the NVIDIA Container Toolkit and an RTX-class NVIDIA
-   GPU (Isaac Sim needs one even headless; one GPU and 13-16 GB of RAM per Isaac process). Disk: about 45 GB for the image
-   (with Docker's build cache) and 40 GB for the dataset.
+   GPU (Isaac Sim needs one even headless; one GPU and 13-16 GB of RAM per Isaac process). Disk: about 30 GB for the image
+   in Docker's storage and 40 GB for the dataset.
 2. **The dataset (licence: no redistribution; once per host).** BEHAVIOR-1K's own downloader, run in the public base
    image, prints the BEHAVIOR Data Bundle licence and asks you to accept it (type `y`), then fetches the data anonymously
    from the public Hugging Face dataset `behavior-1k/zipped-datasets` (about 32 GB) and installs the decryption key. No
@@ -35,11 +35,11 @@ One manual step, the dataset; the simulator image builds itself.
    `docker compose` refuses to start a BEHAVIOR task without it, with a message that points here.
 3. **The simulator image: nothing to do.** The tasks' Dockerfiles hold its recipe (`images/behavior/Dockerfile`: the
    official `stanfordvl/behavior:3.9.2` by digest + ffmpeg from a dated Ubuntu snapshot). The first trial on a host
-   builds it: it pulls the 14.7 GB base from Docker Hub and installs ffmpeg, about 15 min on a 1 Gbit/s link (most of it
-   the base pull); later trials on the host reuse it (seconds). Building it accepts the NVIDIA Isaac Sim / Omniverse
+   builds it: it pulls the 14.7 GB base from Docker Hub and installs ffmpeg (measured: 20 min on a busy lab host, most of it
+   the base pull and its unpacking); later trials on the host reuse it (seconds). Building it accepts the NVIDIA Isaac Sim / Omniverse
    licence terms of the official image. With pull access to our prebuilt copy (`ghcr.io/mll-lab-nu/efe-private:behavior-<images/behavior/VERSION>`,
-   `docker login ghcr.io`), Docker takes its layers instead (compose `build.cache_from`); without access it prints a
-   warning about the cache and builds.
+   `docker login ghcr.io`), Docker takes its layers instead (compose `build.cache_from`; measured: 8 min); without
+   access the build logs that it could not fetch the cache and goes on from public sources.
 
 ## Prerequisites (every BEHAVIOR run)
 - **The image**: `ghcr.io/mll-lab-nu/efe-private:behavior-<images/behavior/VERSION>`, the official
