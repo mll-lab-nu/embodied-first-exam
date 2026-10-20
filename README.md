@@ -65,7 +65,7 @@ harbor run -d embodied-first-exam@all -p tasks/roboarc -a codex -m openai/gpt-6-
 harbor run -d embodied-first-exam@all -p tasks/<benchmark>/<task> -a oracle
 ```
 
-Some benchmarks' images are not public: build them first as the benchmark's README in `tasks/<benchmark>/` describes (e.g. [tasks/ambench](tasks/ambench)).
+Some benchmarks' images are not public: build them first as the benchmark's README in `tasks/<benchmark>/` describes (e.g. [tasks/ambench](tasks/ambench)). No Docker, e.g. on a Slurm cluster: rootless podman with `-e podman` ([docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).
 
 ### 3. Or use a subscription instead of an API key
 
