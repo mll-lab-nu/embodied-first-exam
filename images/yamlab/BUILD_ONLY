@@ -33,9 +33,9 @@ Data
 Host
   Linux x86_64, Docker with the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 5.1 supports (Isaac
   renders with RTX even headless; PhysX runs on the CPU). Checked on an RTX 4090 (AMD Ryzen 9 7950X, driver 580.159).
-  Build: ~60 GB of free disk during the build (the image is ~26.6 GB), network access to github.com, astral.sh,
-  pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co and omniverse-content-production.s3*.amazonaws.com,
-  about 25-40 min. Run: one Isaac simulator per ~16 GB of host RAM (a YAMLab process peaks at ~11 GB; the standard sidecar
+  Build: ~60 GB of free disk during the build (the image is ~26.8 GB), network access to Docker Hub, snapshot.ubuntu.com,
+  github.com, pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co and omniverse-content-production.s3*.amazonaws.com;
+  about 12 min alone on that host, 20-30 min as a task's first build on a clean daemon (2026-10-19). Run: one Isaac simulator per ~16 GB of host RAM (a YAMLab process peaks at ~11 GB; the standard sidecar
   and its replays run one at a time) and ~1-3 GB of GPU memory per simulator while it starts (the RTX renderer's
   initialisation fails when the GPU runs out of memory: start fewer at once on a shared GPU).
 

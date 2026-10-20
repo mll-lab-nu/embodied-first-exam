@@ -11,7 +11,7 @@ standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/maniguard -a codex -m openai/gpt-6-astra
 ```
-Read [Before you run](#before-you-run) first: the tasks need a BEHAVIOR-1K 3.7.2 data root that you prepare once, and the first run builds the simulator image ({COLD}).
+Read [Before you run](#before-you-run) first: the tasks need a BEHAVIOR-1K 3.7.2 data root that you prepare once, and the first run builds the simulator image (about 20 min on a fast link).
 
 ## Before you run
 - **Licences (your decisions).** The simulator image contains NVIDIA Isaac Sim 4.5 / Omniverse Kit, which NVIDIA licenses
@@ -26,9 +26,9 @@ Read [Before you run](#before-you-run) first: the tasks need a BEHAVIOR-1K 3.7.2
   supported (Other hosts, below).
 - **Disk.** About 50 GB free for the first build (the image is about 17-26 GB depending on Docker's image store), plus
   3.4 GB for the data root.
-- **First run: the image builds itself (about {COLD}).** Harbor builds the simulator image from public sources only (Docker
+- **First run: the image builds itself (about 20 min on a fast link).** Harbor builds the simulator image from public sources only (Docker
   Hub `nvidia/cuda`, snapshot.ubuntu.com, github.com, conda-forge, pypi.org, download.pytorch.org, pypi.nvidia.com, NVIDIA's
-  Kit extension CDN), once per machine: every later ManiGuard task reuses its layers. The tasks allow {BUILD} for the build
+  Kit extension CDN), once per machine: every later ManiGuard task reuses its layers. The tasks allow 90 min for the build
   (`[environment] build_timeout_sec`); on a slow link raise it with `--environment-build-timeout-multiplier`. Organization
   members who can read `ghcr.io/mll-lab-nu/efe-private` (`docker login ghcr.io`) pull the prebuilt layers instead (compose
   `cache_from`); without that access the build prints a warning that it cannot read the cache image and goes on building:

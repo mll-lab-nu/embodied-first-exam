@@ -39,9 +39,9 @@ Data
 Host
   Linux x86_64, Docker with the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 5.1 supports (Isaac
   renders with RTX even headless, and AM-Bench runs PhysX on the GPU). Checked on an RTX 4090 (AMD Ryzen 9 7950X, driver
-  580.159). Build: ~60 GB of free disk during the build (the image is ~21.5 GB), network access to github.com, astral.sh,
-  pypi.org, download.pytorch.org, pypi.nvidia.com and omniverse-content-production.s3*.amazonaws.com, about 30-45 min (acados
-  compiles). Run: a camera-free simulator (the default, and the grader's replays) takes ~3 GB of host RAM and ~3 GB of GPU
+  580.159). Build: ~60 GB of free disk during the build (the image is ~22.4 GB), network access to Docker Hub, snapshot.ubuntu.com,
+  github.com, pypi.org, download.pytorch.org, pypi.nvidia.com and omniverse-content-production.s3*.amazonaws.com; about 12 min
+  alone on that host, 24 min as a task's first build on a clean daemon beside other builds (2026-10-19; acados compiles). Run: a camera-free simulator (the default, and the grader's replays) takes ~3 GB of host RAM and ~3 GB of GPU
   memory; with the two onboard cameras on (Session(cameras=True), the verifier's filmed illustration) ~13 GB and ~6.5 GB
   (Isaac's initialisation fails when the GPU runs out of memory: start fewer at once on a shared GPU). Physics runs on the
   GPU, so the recorded state hashes are those of this GPU model; another GPU model may need its own reference run (Check a

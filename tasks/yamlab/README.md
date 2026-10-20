@@ -11,7 +11,7 @@ manipulation with two I2RT YAM arms (6 joints each, parallel two-finger grippers
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/yamlab -a codex -m openai/gpt-6-astra
 ```
-Read [Before you run](#before-you-run) first: the first run builds the simulator image ({COLD}).
+Read [Before you run](#before-you-run) first: the first run builds the simulator image (about 25 min on a fast link).
 
 ## Before you run
 - **Licence (your decision).** The simulator image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit, which NVIDIA licenses for use
@@ -22,12 +22,12 @@ Read [Before you run](#before-you-run) first: the first run builds the simulator
 - **Host.** Linux x86_64, Docker with BuildKit (the `buildx` plugin) and the NVIDIA Container Toolkit, one RTX-class NVIDIA
   GPU (Isaac renders with RTX even headless) with a driver Isaac Sim 5.1 supports (checked: 580.159 on an RTX 4090).
 - **Disk.** About 60 GB free for the first build (the image is about 27 GB, plus BuildKit's cache while it builds).
-- **First run: the image builds itself (about {COLD}).** Harbor builds the simulator image from public sources only
+- **First run: the image builds itself (about 25 min on a fast link).** Harbor builds the simulator image from public sources only
   (Docker Hub `nvidia/cuda`, snapshot.ubuntu.com, github.com, pypi.org, download.pytorch.org,
   pypi.nvidia.com, the public Hugging Face dataset `yamlab/yamlab_datasets`, NVIDIA's public asset bucket on S3), once per machine: every later YAMLab task reuses its layers and
-  starts in seconds. The tasks allow {BUILD} for the build (`[environment] build_timeout_sec`); on a slow link raise it with
+  starts in seconds. The tasks allow 90 min for the build (`[environment] build_timeout_sec`); on a slow link raise it with
   `--environment-build-timeout-multiplier`. Organization members who can read `ghcr.io/mll-lab-nu/efe-private` (`docker
-  login ghcr.io`) pull the prebuilt layers instead (compose `cache_from`); without that access the build prints a warning
+  login ghcr.io`) pull the prebuilt layers instead (compose `cache_from`, about 8 min for 22-27 GB); without that access the build prints a warning
   that it cannot read the cache image and goes on building: expected. To build ahead of a batch:
   `docker build --target yamlab-base tasks/yamlab/yamlab-put-pot-on-cooktop-i00-privileged/environment` (the layers every task then reuses).
 - **Nothing to download or accept by hand** beyond the licence above: the first run builds everything.
