@@ -2,7 +2,7 @@
 """scripts/stamp_mtimes.py (issue #258: BuildKit reuses another build's same-name context file when size and mtime match).
 Standard library only, no docker:
 
-- the stamp is the evaluation pool's function exactly (reference values from batch_eval_live/exec/stamp_mtimes.py);
+- the stamp is the evaluation pool's function exactly (reference values from the pool's stamp_mtimes.py);
 - different content of equal size -> different mtimes; equal content -> one stable mtime in any directory; a second run
   changes nothing; a file rewritten after stamping is restamped (fast path), --full rehashes, --check counts;
 - `stage` makes a stamped copy and leaves the source's mtimes alone; the task's DIGEST (paths and contents only) is the
@@ -47,7 +47,7 @@ def fake_task(d: Path, x: bytes) -> Path:
 
 def test_function():
     ref = {b"": 1477501576348643552, b"AAAA\n": 1147780229802288549, b"BBBB\n": 1024681898181870675,
-           b"x" * 1000: 1144639656614804944}       # batch_eval_live/exec/stamp_mtimes.py stamp_of, 2026-10-15
+           b"x" * 1000: 1144639656614804944}       # the pool's stamp_mtimes.py stamp_of, 2026-10-15
     for content, want in ref.items():
         got = sm.stamp_of(hashlib.sha256(content).digest())
         check(got == want, f"stamp_of({content[:8]!r}) = {got}, the pool's function gives {want}")

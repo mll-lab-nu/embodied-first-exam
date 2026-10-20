@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""RoboARC's large files (the frozen MuJoCo instances; images/roboarc/assets.py with this directory's pins): the private Hugging Face dataset eai-v2-internal/robotangle-assets, pinned by commit and
+"""RoboARC's large files (the frozen MuJoCo instances; images/roboarc/assets.py with this directory's pins): the private RoboARC asset dataset on Hugging Face (organization members only), pinned by commit and
 by the sha256 of every file in images/roboarc/assets.json. They are kept out of git (CONTRIBUTING: no files > 2 MB).
 
 usage:
@@ -16,7 +16,7 @@ The dataset holds:
   image/uipc-prebuilt/                                 the audited libuipc wheel and its uipc-build.json
   image/uipc-sm86/                                     the sm_86 libuipc build of the same recipe and its uipc-build.json
                                                        (since image 0.2.21; release.json uipc_builds)
-Access: a member of eai-v2-internal, logged in with `hf auth login` or with HF_TOKEN in the environment. The token is
+Access: a member of the organization that owns the dataset, logged in with `hf auth login` or with HF_TOKEN in the environment. The token is
 never printed. fetch needs huggingface_hub (pip install huggingface_hub); check and pin use the standard library only.
 """
 from __future__ import annotations
@@ -70,7 +70,7 @@ def fetch(d: pathlib.Path, pin: dict) -> None:
                           allow_patterns=["instances/**", "image/**", "SHA256SUMS", "README.md"])
     except Exception as e:  # noqa: BLE001  the message names the repository, never the token
         sys.exit(f"download of {pin['repo']}@{pin['revision'][:12]} failed ({type(e).__name__}): this needs read access "
-                 "to the private dataset (a member of eai-v2-internal; `hf auth login` or HF_TOKEN)")
+                 "to the private dataset (organization members only; `hf auth login` or HF_TOKEN)")
 
 
 def pin_from(d: pathlib.Path, rev: str) -> dict:

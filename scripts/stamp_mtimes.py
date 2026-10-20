@@ -15,7 +15,7 @@ copies stay correct. Content, modes and DIGESTs are not touched (DIGEST hashes p
 mtimes (its index refreshes once).
 
 The mtime: sha256(content) -> seconds from its first 29 bits in 2001-09 .. 2018-07 (1e9 .. 1e9 + 2**29), nanoseconds
-from the next 30 bits mod 1e9 (the same function as the evaluation pool's batch_eval_live/exec/stamp_mtimes.py). No
+from the next 30 bits mod 1e9 (the same function as the evaluation pool's own stamp_mtimes.py). No
 checkout, sed or cp writes a mtime in that range, so a file already in it is taken as stamped (fast path) unless
 --full; every write of new content sets a current-time mtime, outside the range. --check only counts the files whose
 mtime is not their stamp (exit 1 if any). `stage` copies one task dir (symlinks kept, as `cp -a`) into a new directory

@@ -2,7 +2,7 @@
 
 Part of the task protocol ([README](README.md); its Appendix H binds every run): how runs are configured, and what
 makes a run official. The sections "Official runs" to "Results" below are the runner's rules:
-`scripts/run_agent_batch.sh` applies them by default, and the scheduler (batch_eval_live `run_policy.py`, called from
+`scripts/run_agent_batch.sh` applies them by default, and the evaluation pool's scheduler (its run policy, called from
 the dispatcher's launch and retry paths) refuses a launch that breaks one.
 
 ## Official runs
@@ -42,11 +42,11 @@ The rule is PROTOCOL Appendix H.5; how the runner applies it:
   `infra_error` / `grader_error`, no `reward.json`, a Harbor exception other than the agent's cutoff, a model-account or
   usage-gateway failure (`scripts/account_failure_check.py`). The agent's own end, its cutoff and its token budget are
   results and are never retried.
-- The voided attempt's directory is moved aside (batch_eval_live: `_superseded/`) and never counted; the retry starts
+- The voided attempt's directory is moved aside (in the evaluation pool: `_superseded/`) and never counted; the retry starts
   from a new environment with the first attempt's recorded configuration. A failed retry keeps the default handling
   (it stays an infrastructure failure, reported as such). A launch that never started a trial is no attempt.
 - One implementation of the rule, `scripts/retry_policy.py` (`decide`, `check_attempts`), tested by the required CI
-  job; batch_eval_live's `run_policy.py` uses it. `write_task_results.py` keeps every attempt of a task x run id in
+  job; the evaluation pool's scheduler uses it. `write_task_results.py` keeps every attempt of a task x run id in
   `attempts.json` and flags a sequence that breaks the rule (`attempts_over_cap`).
 - In-trial crash recovery (a sidecar that replays its journal and resumes the episode, standard_mode.md) is the shared
   layers' implementation, not a rule; a crash it cannot recover is an infrastructure failure, unless every crash was

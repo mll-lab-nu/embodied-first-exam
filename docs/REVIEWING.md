@@ -56,7 +56,7 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
   its own PROTOCOL section (what the agent gets, what is graded, the time and reset rules, which failures are
   infrastructure and which the agent's), the `MODE_REGISTRY` entry and `CUTOFF_NOTE`, CI support keyed on the registry
   (no new hard-coded list of mode names anywhere) with a self-test case, at least one benchmark using it, the TAXONOMY
-  entry, and a stated cutoff relation (`same_cutoff_as`, or free)? Is the runner side (batch_eval_live, the results
+  entry, and a stated cutoff relation (`same_cutoff_as`, or free)? Is the runner side (the evaluation pool, the results
   site) told the new suffix? A new mode is an owner-visible protocol change: one pull request of its own, shared files
   only, merged before the benchmark that uses it.
 - Time cutoff (PROTOCOL §2): does every task set its own `[agent] timeout_sec` , 3600 s unless the pull request justifies another number, at most 14400 s, the same for a task's

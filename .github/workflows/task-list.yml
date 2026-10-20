@@ -5,7 +5,7 @@ name: task-list
 # manifest dataset.toml. Nothing in main lists the tasks (docs/core_set.toml is a reporting list, not the task list), so pull requests that change different tasks share no file.
 #   scripts/dataset_manifest.py list --out DIR    the same files locally
 # The branch holds one commit (the list of the latest main); its message names main's commit. Readers: the task-list
-# site, batch_eval_live, anyone: `git fetch origin task-list && git show origin/task-list:TASKS.md`.
+# site, the evaluation pool, anyone: `git fetch origin task-list && git show origin/task-list:TASKS.md`.
 on:
   push:
     branches: [main]

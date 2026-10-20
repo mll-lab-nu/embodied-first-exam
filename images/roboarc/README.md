@@ -11,8 +11,8 @@ it. Maintainers push it with `scripts/push_images.sh` after validating a build.
 
 - **Nyx.** The image contains Genesis AI's Nyx renderer (the `gs-nyx` wheels on PyPI). The benchmark owner has permission to
   redistribute it in this image.
-- **Build source.** The build context comes from the private Hugging Face dataset `eai-v2-internal/robotangle-assets`. It is
-  internal and is never made public; only the built image is public. It holds, at the revision and sha256s pinned in
+- **Build source.** The build context comes from the private RoboARC asset dataset on Hugging Face (organization members
+  only). It is never made public; only the built image is public, and running the tasks needs only that image. It holds, at the revision and sha256s pinned in
   `images/roboarc/assets.json`:
   - `image/release-<commit>.tar.gz`: the release tree (`images/roboarc/release.json` `release_commit`), the paths
     `images/topogym/Dockerfile` copies;
@@ -23,7 +23,7 @@ it. Maintainers push it with `scripts/push_images.sh` after validating a build.
   - `instances/`: every task's frozen instance. `stage_instance.py` copies a task's instance next to its
     `runtime_binding.json` and checks it (privileged `environment/` and `tests/` images; the standard `sim` entrypoint).
 
-  Access: a member of `eai-v2-internal`, logged in with `hf auth login`, or `HF_TOKEN` in the environment (never printed).
+  Access: a member of the organization that owns the dataset, logged in with `hf auth login`, or `HF_TOKEN` in the environment (never printed).
 
 ## Host
 
