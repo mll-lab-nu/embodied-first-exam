@@ -167,6 +167,52 @@ c=$(python3 scripts/stamp_mtimes.py stage tasks/<benchmark>/<task> "$(mktemp -d)
 python3 scripts/stamp_mtimes.py tasks           # or stamp the checkout in place (again after every pull: --check tells)
 ```
 
+## Without Docker: rootless podman (e.g. a Slurm cluster)
+Harbor runs the tasks on podman with `-e podman`, through podman's Docker-compatible API and the docker-compose plugin.
+Tested with the oracle on cgroup v1 and v2 nodes without root, `/etc/subuid` entries or a user systemd session. Run
+everything inside an allocation on the compute node, with `HOME`, `XDG_RUNTIME_DIR`, `XDG_CONFIG_HOME` and `TMPDIR` on
+node-local scratch (podman's storage does not work on most network file systems):
+
+1. podman: the cluster's, or a static build (github.com/mgoltzsche/podman-static; 5.8.x on cgroup v1, which 6.x refuses),
+   and the docker-compose v2 binary in `~/.docker/cli-plugins/docker-compose`.
+2. `~/.config/containers/containers.conf`, for a static build unpacked into `$P`:
+   ```toml
+   [engine]
+   helper_binaries_dir = ["$P/usr/local/lib/podman"]
+   conmon_path = ["$P/usr/local/lib/podman/conmon"]
+   cgroup_manager = "cgroupfs"        # no user systemd session
+   events_logger = "file"
+   [engine.runtimes]
+   crun = ["$P/usr/local/bin/crun"]
+   [network]
+   firewall_driver = "none"           # only on a node without iptables
+   ```
+   plus `policy.json` (the build's `etc/containers/policy.json`), `registries.conf` with
+   `unqualified-search-registries = ["docker.io"]` and `short-name-mode = "permissive"` (Harbor's egress sidecar is
+   built `FROM` a short image name, and without a terminal podman refuses to ask), and, without `/etc/subuid` entries,
+   `storage.conf` with `[storage.options.overlay] ignore_chown_errors = "true"`.
+3. Without a user systemd session netavark cannot start aardvark-dns through `systemd-run`; a `systemd-run` early on
+   `PATH` that drops its options and execs the command works.
+4. Start the API and run:
+   ```bash
+   podman system service --time=0 &
+   export DOCKER_HOST=unix://$XDG_RUNTIME_DIR/podman/podman.sock
+   harbor run -e podman -d embodied-first-exam@all -p tasks/<benchmark>/<task> -a oracle -y -o $PWD/jobs
+   ```
+5. GPU tasks: podman ignores compose's `driver: nvidia` device request, and the task's processes then find no driver
+   (`Found no NVIDIA driver`, `libnvidia-ml.so.1: cannot open shared object file`). Generate a CDI spec for the
+   allocation's GPUs (`nvidia-ctk cdi generate --output=<dir>/nvidia.yaml`, and `cdi_spec_dirs = ["<dir>"]` under
+   `[engine]`), and run a stamped copy whose compose files ask for the CDI device instead (both
+   `environment/docker-compose.yaml` and `tests/docker-compose.yaml`):
+   ```bash
+   c=$(python3 scripts/stamp_mtimes.py stage tasks/<benchmark>/<task> "$(mktemp -d)")
+   find "$c" -name docker-compose.yaml -exec sed -i -e 's/- driver: nvidia/- driver: cdi/' \
+     -e 's/^\( *\)count: 1$/\1device_ids: ["nvidia.com\/gpu=all"]/' {} +
+   harbor run -e podman -p "$c" -a oracle -y -o $PWD/jobs
+   ```
+6. The `rcb_monitor` sidecar can stay "Stopping" after a trial under rootless podman on cgroup v2; stop its container
+   (or the `monitor.py` process) by hand. On cgroup v1 the resource caps are not applied (`RCB_LIMITS_ENFORCE` stays 0).
+
 ## Running a two-mode batch (privileged + standard)
 ```bash
 python3 scripts/stamp_mtimes.py tasks                   # first ("Building task images" above)

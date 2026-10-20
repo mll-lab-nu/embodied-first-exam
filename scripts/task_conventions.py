@@ -1431,7 +1431,8 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
         block("# one task (-y skips Harbor's confirmation prompt, e.g. in a script)",
               f"{d}@all -p tasks/<benchmark>/<task> -a oracle"),
         "Some benchmarks' images are not public: build them first as the benchmark's README in `tasks/<benchmark>/` "
-        "describes (e.g. [tasks/ambench](tasks/ambench)).", "",
+        "describes (e.g. [tasks/ambench](tasks/ambench)). No Docker, e.g. on a Slurm cluster: rootless podman with "
+        "`-e podman` ([docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).", "",
         "### 3. Or use a subscription instead of an API key", "",
         block("# ChatGPT: log in once", "codex login", f"CODEX_FORCE_AUTH_JSON=1 {d} {m}"),
         block("# Claude: put the token it prints in .env as CLAUDE_CODE_OAUTH_TOKEN", "claude setup-token",
