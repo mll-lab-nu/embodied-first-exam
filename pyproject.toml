@@ -2,19 +2,48 @@
 name = "embodied-first-exam"
 version = "0.1.0"
 description = "Embodied First Exam on Harbor: `harbor run --core|--all|--privileged|--standard|--standard-realtime`, or `efe run`"
+readme = { content-type = "text/markdown", text = """
+# Embodied First Exam
+
+Code agents program robots in simulation: [embodied-first-exam.ai](https://www.embodied-first-exam.ai),
+[github.com/mll-lab-nu/embodied-first-exam](https://github.com/mll-lab-nu/embodied-first-exam).
+
+```bash
+# needs git and Docker with Compose; GPU tasks also need an NVIDIA GPU and the NVIDIA Container Toolkit
+uv tool install embodied-first-exam --with-executables-from harbor
+# your API keys: in the shell, or in a .env file in the working directory
+# the core set; the tasks are cloned on first use (a clone you run from, or $EFE_ROOT, is used instead)
+harbor run -d embodied-first-exam -a codex -m openai/gpt-6-astra
+```
+
+This installs Harbor 0.23.0 with the benchmark's flags on `harbor run` and the `efe` command. The tasks are not in
+the package: see the repository's README.
+""" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.12,<3.15"   # Harbor's dependency fastuuid has no wheel for newer Pythons yet
 dependencies = ["harbor==0.23.0"]
+
+[project.urls]
+Homepage = "https://www.embodied-first-exam.ai"
+Repository = "https://github.com/mll-lab-nu/embodied-first-exam"
 
 [project.scripts]
 efe = "efe:main"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
+# The wheel: scripts/efe.py, efe_harbor_hook.py and efe-harbor.pth, nothing else (the tasks are found at run time,
+# scripts/efe.py find_root). An editable install (`uv tool install -e .`) puts scripts/ on the path instead.
 [tool.hatch.build.targets.wheel]
-bypass-selection = true
+only-include = ["scripts/efe.py", "scripts/efe_harbor_hook.py"]
+sources = ["scripts"]
 dev-mode-dirs = ["scripts"]
 
 [tool.hatch.build.targets.wheel.force-include]
 "scripts/efe-harbor.pth" = "efe-harbor.pth"
+
+[tool.hatch.build.targets.sdist]
+only-include = ["scripts/efe.py", "scripts/efe_harbor_hook.py", "scripts/efe-harbor.pth", "LICENSE"]

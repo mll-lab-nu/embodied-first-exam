@@ -1,0 +1,47 @@
+name: publish
+# The PyPI package embodied-first-exam (`pip install embodied-first-exam`: Harbor with this repository's flags and `efe`;
+# the tasks are not in it, scripts/efe.py find_root). Built from the release's tag and uploaded with PyPI Trusted
+# Publishing (OIDC): no token is stored anywhere. Run by hand without a tag, it builds the branch it is started on.
+# PyPI's trusted publisher is this repository, workflow publish.yml, environment pypi.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "a release tag, e.g. v0.1.0 (empty: the branch the run is started on)"
+        required: false
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ env.TAG || github.ref }}", persist-credentials: false }
+      - uses: astral-sh/setup-uv@v6
+      - name: The tag is v<the package version>
+        if: env.TAG != ''
+        run: |
+          ver=$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          [ "$TAG" = "v$ver" ] || { echo "FAIL tag $TAG, but pyproject.toml has version $ver (tag v$ver)"; exit 1; }
+      - run: uv build
+      - run: uvx twine check --strict dist/*
+      - uses: actions/upload-artifact@v4
+        with: { name: dist, path: dist/ }
+  pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/p/embodied-first-exam
+    permissions:
+      id-token: write       # PyPI Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: dist, path: dist/ }
+      - uses: pypa/gh-action-pypi-publish@release/v1
