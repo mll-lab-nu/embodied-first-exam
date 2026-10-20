@@ -98,27 +98,21 @@ BENCHMARKS = [  # (directory prefix, label)
 # Modes (PROTOCOL §3, owner 2026-10-14): a benchmark ships any subset of the modes. A standard or standard-realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here (board 0124).
-# Embodied Olympics' exported tasks (PROTOCOL v1 §4c; ci_checks/benchmarks/embodied-olympics-match/exported.toml) have a cutoff note of their own
-# (CUTOFF_NOTE_TASK below):
-RO_EXPORTED_TASKS = ("embodied-olympics-match-badminton-match-i01-standard-realtime",
-                     "embodied-olympics-match-badminton-duelrl-i01-standard-realtime",
-                     "embodied-olympics-match-badminton-match-i02-standard-realtime",
-                     "embodied-olympics-match-badminton-match-i04-standard-realtime",
-                     "embodied-olympics-match-fencing-bout-i01-standard",
-                     "embodied-olympics-match-fencing-bout-i02-standard",
-                     "embodied-olympics-match-foosball-match-i01-standard-realtime",
-                     "embodied-olympics-match-soccer-match-i00-standard-realtime",
-                     "embodied-olympics-match-soccer-jointcpu-i01-standard-realtime",
-                     "embodied-olympics-match-soccer-jointgpu-i01-standard-realtime",
-                     "embodied-olympics-match-soccerssl-match-i00-standard-realtime",
-                     "embodied-olympics-match-soccerssl-match-i01-standard-realtime",
-                     "embodied-olympics-match-tabletennis-duelrl-i01-standard-realtime",
-                     "embodied-olympics-match-badminton-matchlow-i01-standard-realtime",
-                     "embodied-olympics-match-tabletennis-matchlow-i01-standard-realtime",
-                     "embodied-olympics-match-tabletennis-match-i01-standard-realtime",
-                     "embodied-olympics-match-tabletennis-match-i02-standard-realtime",
-                     "embodied-olympics-match-tabletennis-match-i03-standard-realtime",
-                     "embodied-olympics-match-tabletennis-match-i04-standard-realtime")
+# Embodied Olympics' exported tasks (PROTOCOL §4c) have a cutoff note of their own (CUTOFF_NOTE_TASK below): the
+# directories its manifest ci_checks/benchmarks/embodied-olympics-match/exported.toml lists in a mode that serves its own
+# protocol (its [protocols] table: their session talks to its own service). The privileged twins listed there
+# (`kind = "fullsim-policy"`) run no service: they keep their mode's note.
+RO_EXPORTED_FILE = Path(__file__).resolve().parents[1] / "ci_checks/benchmarks/embodied-olympics-match/exported.toml"
+
+
+def _ro_exported_tasks() -> tuple[str, ...]:
+    d = tomllib.loads(RO_EXPORTED_FILE.read_text())
+    own = d.get("protocols", {})              # mode -> the protocol its own service serves
+    mode = lambda n: max((m for m in (*own, "privileged") if n.endswith("-" + m)), key=len, default=None)
+    return tuple(t["name"] for t in d.get("tasks", []) if mode(t["name"]) in own)
+
+
+RO_EXPORTED_TASKS = _ro_exported_tasks()
 # PROTOCOL §2.16 (owner, 2026-10-14): THE registry of modes. A mode's name is the whole suffix of its task directories
 # (`<base>-<mode>`) and its `[metadata] mode`; everything that parses or branches on a mode reads this table (mode_of,
 # base_of, the twins' equal cutoffs, the limits' scope, the checks under ci_checks/, which get it once per run through
@@ -159,7 +153,9 @@ RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
 # service's `RCB_SLOWDOWN` default (environment/docker-compose.yaml); its reset budget is the `RCB_RESET_BUDGET` default
 # there (same rules: ci_checks/check-realtime.py)
 SLOWDOWN_RE = re.compile(r'RCB_SLOWDOWN:\s*"?\$\{RCB_SLOWDOWN:-([0-9.]+)\}"?')
-RESET_RE = re.compile(r'RCB_RESET_BUDGET:\s*"?\$\{RCB_RESET_BUDGET:-([0-9]+)\}"?')
+# RCB_RESET_BUDGET's default: overridable (`"${RCB_RESET_BUDGET:-N}"`) or fixed (`"N"`); the one rule for the README,
+# the recorded configuration (reset_budget_of) and ci_checks/check-realtime.py
+RESET_DECL_RE = re.compile(r'^\s*RCB_RESET_BUDGET:\s*"?(?:\$\{RCB_RESET_BUDGET:-([0-9]+)\}|([0-9]+))"?\s*(?:#.*)?$', re.M)
 # a task a benchmark exports with its own service (PROTOCOL §4c) sets S its own way: Embodied Olympics `RO_SLOWDOWN: "10"`
 OWN_SLOWDOWN_RE = re.compile(r'^\s*RO_SLOWDOWN:\s*"?([0-9.]+)"?\s*$', re.M)
 RESOURCE_KEYS = {  # key -> type; recommended_gpu is optional when gpu_required is false
@@ -1263,10 +1259,10 @@ def realtime_of(task: Path) -> tuple[float, int | None] | None:
     if mode_of(task) != "standard-realtime":
         return None
     c = read_text(task / "environment/docker-compose.yaml") or ""
-    m, r = SLOWDOWN_RE.search(c) or OWN_SLOWDOWN_RE.search(c), RESET_RE.search(c)
+    m, r = SLOWDOWN_RE.search(c) or OWN_SLOWDOWN_RE.search(c), RESET_DECL_RE.search(c)
     if not m:
         return None
-    return float(m.group(1)), (int(r.group(1)) if r else None)
+    return float(m.group(1)), (int(r.group(1) or r.group(2)) if r else None)
 
 
 def slowdown_var(task: Path) -> str:
@@ -1303,7 +1299,6 @@ def normalize_slowdown(task: Path) -> None:
 # "Results"). Standard library only: scripts/write_task_results.py, scripts/dataset_manifest.py and the scheduler's run
 # policy (batch_eval_live) read these.
 PROTOCOL_VERSION = "2.0"                         # docs/protocol/README.md
-RESET_DECL_RE = re.compile(r'^\s*RCB_RESET_BUDGET:\s*"?(?:\$\{RCB_RESET_BUDGET:-([0-9]+)\}|([0-9]+))"?\s*(?:#.*)?$', re.M)
 
 
 def metadata_of(task: Path) -> dict:

@@ -9,7 +9,7 @@
 | Family / instance | `c02` / seed 0 |
 | Oracle | `full` — The native reference and do-nothing control for Embodied Safety Exam 0.5.4 were checked, including one independent reference replay: the reference passes and doing nothing fails. Other baselines, including done_at_once, are NOT_RUN. Public compiled execution is checked separately. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default) (PROTOCOL §4b) |
+| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 0 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/efe:ese-0.5.6` |
 
 ## Task
