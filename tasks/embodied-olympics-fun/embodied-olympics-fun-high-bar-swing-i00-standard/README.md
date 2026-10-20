@@ -18,7 +18,7 @@ Hanging from the high bar by both hands, do one giant swing: take your extended 
 Nothing pushes you: the swing has to be pumped up from rest by moving the legs, the waist and the shoulders in time with the pendulum, against motors of 88 N m at the hips and 25 N m in the arms, until the body goes over the top of the bar extended. A simple leg pump is known to stall a little above the horizontal. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
 
 ## Reference solution
-`solution/oracle_replay.py` streams the privileged twin's reference solution, row by row, through the client (`solution/rows.npz`, recorded by scripts/embodied-olympics/make_oracles.py). Reference: from the dead hang a leg pump that tucks on the way up and extends elsewhere takes the extended body over the top: one full giant swing at 23.6 s; 8 of 8 parameter sets (24 to 35 s) when it was written. The privileged twin's reference rows (2362 control steps, success after 23.62 s) streamed through the client.
+`solution/oracle_replay.py` streams the privileged twin's reference solution, row by row, through the client (`solution/rows.npz`, recorded at generation time). Reference: from the dead hang a leg pump that tucks on the way up and extends elsewhere takes the extended body over the top: one full giant swing at 23.6 s; 8 of 8 parameter sets (24 to 35 s) when it was written. The privileged twin's reference rows (2362 control steps, success after 23.62 s) streamed through the client.
 
 ## Verification
 The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;

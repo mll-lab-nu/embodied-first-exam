@@ -58,7 +58,7 @@ instance each (PR #4's `i00`; its other 9 instances of the same environments are
   while the IK's posture term may still move the waist and elbows by a few hundredths of a radian.
 
 ## Standard-mode service
-`images/robocasa-gr1/standard/server_casa.py`, the same service as the RoboCasa benchmark's: derived from
+`images/robocasa/standard/server_casa.py`, the RoboCasa benchmark's service: derived from
 `images/mujoco/limited/server_mj.py`, `eai-standard/2.1`, crash recovery, collect hooks. The collect hook is
 each standard task's `environment/sim/finalize.sh`; both files are RoboCasa's byte for byte (`tasks/robocasa/README.md`:
 graded by the live episode, nothing replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`,

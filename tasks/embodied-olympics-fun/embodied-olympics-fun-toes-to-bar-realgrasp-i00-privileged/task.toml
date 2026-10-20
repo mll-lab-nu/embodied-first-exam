@@ -15,13 +15,13 @@ robot = "unitree-g1"
 family = "toes_to_bar_realgrasp"
 category = "parkour-apparatus-balance"
 mode = "privileged"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 5.0
 oracle = "full"
-oracle_evidence = "Reference: a slow strict toes-to-bar (3 s fold, gentle touch, 5.5 s leg return, swing damped between reps) within the Dex1-1's 238 N-per-hand friction: 5 repetitions in 39.2 s; 9 of 10 perturbed starts (37-40 s). The base's kipped snap tears the bar out of the jaws. Measured (make_oracles.py): success after 39.17 s of the 60 s limit, live and in a fresh replay, ending in the same state."
+oracle_evidence = "Reference: a slow strict toes-to-bar (3 s fold, gentle touch, 5.5 s leg return, swing damped between reps) within the Dex1-1's 238 N-per-hand friction: 5 repetitions in 39.2 s; 9 of 10 perturbed starts (37-40 s). The base's kipped snap tears the bar out of the jaws. Measured: success after 39.17 s of the 60 s limit, live and in a fresh replay, ending in the same state."
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

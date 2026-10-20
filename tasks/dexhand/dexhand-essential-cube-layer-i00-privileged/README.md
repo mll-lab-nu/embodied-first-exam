@@ -7,7 +7,7 @@
 | Twin | `dexhand-essential-cube-layer-i00-standard` |
 | Simulator / robot | `mujoco` / `sharpa-wave-floating` |
 | Family / instance | `essential_cube_layer` |
-| Oracle | `full` — solution/trajectory.npz is the validated Sharpa Wave actuator trajectory of this frozen instance (450 controls at 50 Hz, physical contact only). The privileged oracle hands it in; the standard oracle submits the same rows as float64 through the client's request path (the service executes the validated targets bit for bit). Both replay to success in two fresh processes with identical final state hashes (scripts/dexhand/verify_oracles.py); float32-rounded copies of all six oracles also score 1. Human solvability review is pending; release status stays provisional. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (940 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
+| Oracle | `full` — solution/trajectory.npz is the validated Sharpa Wave actuator trajectory of this frozen instance (450 controls at 50 Hz, physical contact only). The privileged oracle hands it in; the standard oracle submits the same rows as float64 through the client's request path (the service executes the validated targets bit for bit). Both replay to success in two fresh processes with identical final state hashes; float32-rounded copies of all six oracles also score 1. Human solvability review is pending; release status stays provisional. solution/wuji/trajectory.npz is a validated Wuji Hand 2.2 trajectory of this instance (940 controls, motor targets only, physical contact only); the oracle uses it when the run selects wuji (privileged: DEXHAND_HAND=wuji; standard: the sim service's hand), and it replays to success in two fresh processes with identical state hashes. |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
 
@@ -20,7 +20,7 @@ The scene uses free_cube_passive_top and independently controlled fingers with t
 a terminal hold must be reached through contact alone.
 
 ## Reference solution
-`solution/trajectory.npz` is the validated Sharpa Wave actuator trajectory of this frozen instance: 450 finger-target rows at 50 Hz (9.0 s) with the six wrist targets locked, executed through physical contact only. `solve.sh` hands it in unchanged as `/app/output/trajectory.npz`. It was derived offline by authoring controllers (not part of the repository) and is bound to the validated evidence by `scripts/dexhand/verify_oracles.py` (byte-identical trajectory, model hash, two fresh-process replays with the validated final state hash). Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (940 rows of motor targets, physical contact only). With `DEXHAND_HAND=wuji` set for the oracle, `solve.sh` hands it in instead of the Sharpa Wave rows; the verifier replays it with the Wuji Hand 2.2.
+`solution/trajectory.npz` is the validated Sharpa Wave actuator trajectory of this frozen instance: 450 finger-target rows at 50 Hz (9.0 s) with the six wrist targets locked, executed through physical contact only. `solve.sh` hands it in unchanged as `/app/output/trajectory.npz`. It was derived offline by authoring controllers (not part of the repository) and is bound to the validated evidence (byte-identical trajectory, model hash, two fresh-process replays with the validated final state hash). Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (940 rows of motor targets, physical contact only). With `DEXHAND_HAND=wuji` set for the oracle, `solve.sh` hands it in instead of the Sharpa Wave rows; the verifier replays it with the Wuji Hand 2.2.
 
 ## Verification
 The separate verifier replays the submitted numeric rows twice in fresh processes, with the hand recorded in the archive.
@@ -28,8 +28,8 @@ Reward 1 needs every ordered stage and the terminal hold with no invariant or gu
 state hashes. Invariants and guards are checked at every 2 ms
 physics substep and fail the episode immediately (a dropped, slipped or knocked-away object ends it as a failure);
 partial completion fails. Rows of the wrong width for the recorded hand, a forged or unknown hand label, non-finite
-or out-of-range targets and wrist motion are rejected with reward 0. `scripts/dexhand/tests/test_essential_strict.py`
-covers the oracle, no-op, truncated, dropped-object, forged-metadata and wrong-width cases for both hands.
+or out-of-range targets and wrist motion are rejected with reward 0. The verifier is tested
+on the oracle, no-op, truncated, dropped-object, forged-metadata and wrong-width cases for both hands.
 Release status is provisional until independent solvability review.
 
 ## Compute resources
@@ -48,7 +48,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 ## Details
 
 ### Notes
-Source: `scripts/dexhand/` (task folder `task_library/essential_cube_layer/`); the image recipe is `images/dexhand/`. Both
+Source: the DexHand essential task `essential_cube_layer`; the image recipe is `images/dexhand/`. Both
 modes use the identical frozen `instance.json`. The Sharpa Wave model and meshes are pinned to MuJoCo Menagerie commit
 `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0). Wuji Hand 2.2 is the manufacturer's `hand2/hand2_2` model
 from `wuji-technology/wuji-description` commit `829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT), mounted unchanged in

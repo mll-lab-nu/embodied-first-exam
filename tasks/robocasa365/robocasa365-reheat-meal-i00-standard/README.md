@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robocasa365-0.1.0` |
 
 ## Task
-Standard mode (robot as a service, `eai-standard/2.1`) of `robocasa365-reheat-meal-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar (`images/robocasa365/standard/server_casa.py`, tool module `casa_tool`), which records the episode and judges it live (nothing is replayed); the verifier grades the sidecar's record in a container of its own. The agent sees the robot's cameras (RGB-D, calibrated), its own joints and end effector, and the instruction.
+Standard mode (robot as a service, `eai-standard/2.1`) of `robocasa365-reheat-meal-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar (`images/robocasa/standard/server_casa.py`, tool module `casa_tool`), which records the episode and judges it live (nothing is replayed); the verifier grades the sidecar's record in a container of its own. The agent sees the robot's cameras (RGB-D, calibrated), its own joints and end effector, and the instruction.
 
 ## Difficulty
 The agent has to find the fixtures and objects in the robot's camera images, drive a mobile manipulator with its native controller, and finish in one episode without a reset.

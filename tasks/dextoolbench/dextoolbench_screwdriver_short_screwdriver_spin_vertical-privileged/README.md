@@ -18,7 +18,7 @@ DexToolBench task `screwdriver / short_screwdriver / spin_vertical` (SimToolReal
 Dexterous tool use: a KUKA iiwa 14 arm with a 22-DoF Sharpa HA4 hand (29 position-controlled joints) must carry the tool along DexToolBench's goal trajectory, every goal within 1.5 cm on all keypoints, and success needs every goal. SimToolReal's pretrained policy reaches 36/76 goals here.
 
 ## Reference solution
-`solution/`: SimToolReal's pretrained policy run in this exact scene (scripts/dtb_mk_oracle.py), recorded targets replayed: **36/76 goals** in 1486 control steps (the policy's own sim2sim progress; a task's reference, not a ceiling); nop 0/76
+`solution/`: SimToolReal's pretrained policy run in this exact scene, recorded targets replayed: **36/76 goals** in 1486 control steps (the policy's own sim2sim progress; a task's reference, not a ceiling); nop 0/76
 
 ## Verification
 DexToolBench task progress: goal reached when all 8 grasp-box keypoints are within 1.5 cm; 30 s per goal (upstream 10 s); `reward.txt` = 1 iff every goal is reached (both replays agreeing); `progress` = goals / 76 in `reward.json`

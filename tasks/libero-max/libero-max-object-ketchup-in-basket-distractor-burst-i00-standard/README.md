@@ -65,7 +65,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   solution and the pass rule are unchanged, so the task keeps its name. With 0.1.0 the start state did not rebuild on
   Intel Xeon 8488C hosts (the Session refused with a hash mismatch): the OpenBLAS 0.3.18 bundled with numpy and scipy
   does not know that CPU and fell back to its generic Prescott kernels, while the instances were frozen with its Zen
-  kernels (AMD 7950X). 0.1.1 pins the Zen kernels; same Python packages and sources. `scripts/libero-max/rebuild_check.sh`
+  kernels (AMD 7950X). 0.1.1 pins the Zen kernels; same Python packages and sources. The rebuild check
   (start-state hash and reference replay of all 64 instances): 8488C 0/64 with 0.1.0, 64/64 with 0.1.1; 7950X 64/64.
 - 2026-10-10: the replay video can no longer cost a verdict (`environment/sim/lmx_tool.py`, `server.py`, `finalize.sh`);
   the instance, the reference solution and the pass rule are unchanged, so the task keeps its name.

@@ -25,7 +25,7 @@ simulator = "robolab"
 robot = "franka-robotiq-2f85"
 family = "banana_in_bowl"
 mode = "standard"                  # robot as a service: RGB, depth + proprioception only; no object poses, no success predicate, no reset
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 protocol = "eai-standard/2.2"
 oracle = "full"
 oracle_evidence = "solution/oracle_replay.py scored 1 under Harbor -a oracle on this version (2026-10-14): trial robolab-banana-in-bowl-i01-stand__BtrYwAj (2026-10-14, on these files under a temporary -i01 name: they differ from it only in that name in the resource-limit files and in one comment line of rcb_robolab.py; live 1, replay 1, deterministic 1, live_matches_replay 1, 177 control steps). Earlier versions: solution/oracle_replay.py scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the same verdict formula (success = live, replay and deterministic), the latest robolab-banana-in-bowl-i00-limit__vABaxSX (job eq-oracle-banana-in-bowl, 2026-09-29, the dev/qineng 9eb18edf version); not re-run on this version (crash recovery, the collect hook's `end`, one-second chunks): static validation only, 2026-10-01. Human review per family (PROTOCOL §2.7)."

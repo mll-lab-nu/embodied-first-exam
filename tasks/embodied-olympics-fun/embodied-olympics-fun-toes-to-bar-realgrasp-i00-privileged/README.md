@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-toes-to-bar-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `toes_to_bar_realgrasp` / seed 0 |
-| Oracle | `full` — Reference: a slow strict toes-to-bar (3 s fold, gentle touch, 5.5 s leg return, swing damped between reps) within the Dex1-1's 238 N-per-hand friction: 5 repetitions in 39.2 s; 9 of 10 perturbed starts (37-40 s). The base's kipped snap tears the bar out of the jaws. Measured (make_oracles.py): success after 39.17 s of the 60 s limit, live and in a fresh replay, ending in the same state. |
+| Oracle | `full` — Reference: a slow strict toes-to-bar (3 s fold, gentle touch, 5.5 s leg return, swing damped between reps) within the Dex1-1's 238 N-per-hand friction: 5 repetitions in 39.2 s; 9 of 10 perturbed starts (37-40 s). The base's kipped snap tears the bar out of the jaws. Measured: success after 39.17 s of the 60 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
@@ -18,7 +18,7 @@ Hanging from the high bar by the two grippers that are your hands, do five toes-
 The grippers' friction holds about 1.4 times your weight in all, and the bar never slides back in: a kip or a quick snap of the legs, and the feet striking the bar, pull harder than that, so the feet have to be brought up and lowered with little more than your weight on the bar. The bar is 0.84 m above your pelvis and your legs are 0.75 m long: hip flexion alone does not bring the toes to the bar, the trunk has to lean back as well, against shoulders of 25 N m, five times within the time.
 
 ## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: a slow strict toes-to-bar (3 s fold, gentle touch, 5.5 s leg return, swing damped between reps) within the Dex1-1's 238 N-per-hand friction: 5 repetitions in 39.2 s; 9 of 10 perturbed starts (37-40 s). The base's kipped snap tears the bar out of the jaws. Measured (make_oracles.py): success after 39.17 s of the 60 s limit, live and in a fresh replay, ending in the same state.
+`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: a slow strict toes-to-bar (3 s fold, gentle touch, 5.5 s leg return, swing damped between reps) within the Dex1-1's 238 N-per-hand friction: 5 repetitions in 39.2 s; 9 of 10 perturbed starts (37-40 s). The base's kipped snap tears the bar out of the jaws. Measured: success after 39.17 s of the 60 s limit, live and in a fresh replay, ending in the same state.
 
 ## Verification
 `/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in two fresh processes (`rcb_rfo.py replay`:

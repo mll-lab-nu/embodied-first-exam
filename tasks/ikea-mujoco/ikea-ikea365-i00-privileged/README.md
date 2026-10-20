@@ -20,7 +20,7 @@ Bimanual furniture assembly with physical grasps (no assist), 16-D actuator acti
 (222.8 s of simulated time).
 
 ## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `d32ff622ac43e114…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): a closed-loop reference built on the final physics by `scripts/ikea_mujoco/oracles/ikea365/build_ref.py`: the demo through the clamp as the phase guide; the right hand threads the returned screw itself before releasing it; the screwdriver is centred on the true screw axis, spins with a 5-15 N axial push and goes torque-free at the seat so the welds engage on an unloaded screw; guide tracks (damped-least-squares IK) steer the hands onto member B, the turned stand and the bowl; the rows are the targets executed after the joint-speed clamp. It never trips the joint-speed clamp.
+`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `d32ff622ac43e114…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): a closed-loop reference built on the final physics: the demo through the clamp as the phase guide; the right hand threads the returned screw itself before releasing it; the screwdriver is centred on the true screw axis, spins with a 5-15 N axial push and goes torque-free at the seat so the welds engage on an unloaded screw; guide tracks (damped-least-squares IK) steer the hands onto member B, the turned stand and the bowl; the rows are the targets executed after the joint-speed clamp. It never trips the joint-speed clamp.
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from the scene's initial state in two fresh processes at the same time
@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | Grasping | physical (finger friction), no assist |
 | Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), at the end of the rows and after a 1.0 s hold |
-| Scene | `/opt/ikea/scenes/ikea365/` in the image; digest `25535efa33fd5d80…` (scripts/ikea_mujoco/assets.json) |
+| Scene | `/opt/ikea/scenes/ikea365/` in the image; digest `25535efa33fd5d80…` (images/ikea-mujoco/assets.json) |
 | Initial state | sha256 `4e9e040022202b3e…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
@@ -69,4 +69,4 @@ The M4 x 0.5 thread is exact convex pieces: the screw advances only by being tur
 - Scene and demo: the IKEA MuJoCo tree (`scenes/ikea365/`, `demos/ikea365/actions.npz`), MuJoCo 3.14.0, RoboARC rigid settings
   (timestep 0.625 ms, Newton, 100 iterations, elliptic cones).
 - The scene files are not in this repository: the image carries them (`images/ikea-mujoco/README.md`, build context from
-  `scripts/ikea_mujoco/stage_context.py`, pinned by `scripts/ikea_mujoco/assets.json`).
+  `images/ikea-mujoco/stage_context.py`, pinned by `images/ikea-mujoco/assets.json`).

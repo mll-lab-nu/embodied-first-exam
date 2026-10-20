@@ -24,7 +24,7 @@ simulator = "robowits"
 robot = "marvin-bimanual"
 family = "hold_cup"
 mode = "standard"                  # RGB + proprioception only; no object poses, no reset
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-hold-cup-i00-limited__BiMATyh (robowits-lunaxh-limited-0929, standard) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §2.7). Re-graded with the 2026-10-14 grader (two AMD workstations; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited __BiMATyh fails the earlier grader on AMD as well (inconclusive); the privileged __dRwmoiY passes the 2026-10-14 grader."

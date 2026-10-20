@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-discus-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `discus` / seed 0 |
-| Oracle | `full` — Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (Embodied Olympics' method, search_technique.py): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit Measured (make_oracles.py): success after 8.48 s of the 60 s limit, live and in a fresh replay, ending in the same state. |
+| Oracle | `full` — Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (Embodied Olympics' method): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit Measured: success after 8.48 s of the 60 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
@@ -18,7 +18,7 @@ Throw the discus in your right hand from inside the circle so that it lands insi
 15.0 m needs a release at about 12 m/s near 35 to 40 degrees with the discus flat to its flight and spinning, or the air turns it over. The H1-2's arm motors give 40 N m at the shoulder, so the speed has to come from the trunk's turn, inside a circle of 2.5 m that the robot may not leave until the discus is down.
 
 ## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (Embodied Olympics' method, search_technique.py): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit Measured (make_oracles.py): success after 8.48 s of the 60 s limit, live and in a fresh replay, ending in the same state.
+`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (Embodied Olympics' method): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit Measured: success after 8.48 s of the 60 s limit, live and in a fresh replay, ending in the same state.
 
 ## Verification
 `/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in two fresh processes (`rcb_rfo.py replay`:

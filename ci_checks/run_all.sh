@@ -116,6 +116,10 @@ add python3 ci_checks/check-build-stamps.py
 add python3 scripts/task_conventions.py core-set --check
 # every task dir has its benchmark label and sits in its benchmark's folder, tasks/<folder>/<task>/ (BENCHMARK_DIRS)
 add python3 scripts/task_conventions.py benchmarks --check
+# README.md's quick start is the one task_conventions.readme_quick_start() renders
+add python3 scripts/task_conventions.py readme --check
+# every files-only image's sources still hash to its FILES.json (the checks read the sources for what the pinned image holds)
+add python3 scripts/files_image.py check
 
 t0=$SECONDS
 printf %s "$cmds" | python3 "$root/ci_checks/parallel.py" --advisory; rc=$?

@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-juggling-realgrasp-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `juggling_realgrasp` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_juggling_realgrasp.py: positive by injection after a real drop (the arms roll apart and the ball falls from between the palms; after it the ball is put over the head and each head touch sends it up at 2.6 m/s, one toe touch too); the start squeeze, about 6.6 N per palm, holds the ball 30 s (2.7 mm creep), without it the ball slips out at once; negatives: holding it, the ground, a weak squeeze, held against a forearm, pressed back between the palms (re-grip), a still head, low touches, a hand after the drop, the trunk, a ball resting on the robot; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
+| Oracle | `none` — no reference solution; the referee is tested: positive by injection after a real drop (the arms roll apart and the ball falls from between the palms; after it the ball is put over the head and each head touch sends it up at 2.6 m/s, one toe touch too); the start squeeze, about 6.6 N per palm, holds the ball 30 s (2.7 mm creep), without it the ball slips out at once; negatives: holding it, the ground, a weak squeeze, held against a forearm, pressed back between the palms (re-grip), a still head, low touches, a hand after the drop, the trunk, a ball resting on the robot; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 

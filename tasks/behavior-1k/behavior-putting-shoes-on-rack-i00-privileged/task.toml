@@ -14,7 +14,7 @@ simulator = "behavior"            # BEHAVIOR-1K v3.9.2 = OmniGibson 3.9.2 on Isa
 robot = "r1pro"
 family = "putting_shoes_on_rack"
 mode = "privileged"               # privileged state, unlimited resets, thin primitives (docs/protocol/README.md §3)
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 oracle = "partial"
 oracle_evidence = "Reference solution solution/oracle_putting_shoes_on_rack.py on the frozen task-level primitives solution/rcb_behavior_ref.py. Recorded Harbor oracle run (laptop, a pre-v1.0 uncommitted tree): 2026-09-24 behavior-putting-shoes-on-rack-i__LkouR9y (job behavior-putting-shoes-on-rack-i00-oracle-0924-234514) scored 1 (6283 control steps, deterministic 1, instance_exact 1), 1 of 1. Model trial behavior-putting-shoes-on-rack-i__KozJnde (behavior-lunaxh-0925-2057) scored 1. The tooling and verifier files changed since; not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (AWS 8-vCPU L40S host rcb-gpu13, Harbor oracle agent, once): the reference solution's own run ended without success (q_score 0.8, 8921 control steps against the recorded 6283); the frozen scene rebuilt there within tolerance but not bit-exactly (instance_exact 0), so the solution's online planning took another path: this reference solution does not succeed on that host class."
 instance_seed = 301               # scene = environment/instance.json (2026 challenge public_test instance 301 + its state hash); identity = dataset.toml digest

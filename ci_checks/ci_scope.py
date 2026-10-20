@@ -45,7 +45,7 @@ def _own(d: str, *extra: str) -> list[str]:
 UNITS: dict[str, list[str]] = {
     "RoboTwin 2.0": _own("robotwin"),
     "DexToolBench": ["images/mujoco/"],   # serves server_mj.py
-    "MuJoCo Playground": _own("mujoco-playground", "images/mujoco/"),
+    "MuJoCo Playground": _own("mujoco-playground", "images/mujoco/", "embodied_first_exam/benchmarks/dextoolbench/standard/"),   # ALOHA / Panda: DexToolBench's grader
     "KinDER": _own("kinder"),
     "HumanoidBench": _own("humanoidbench"),
     "MetaWorld+": _own("metaworldplus", "images/metaworld/"),
@@ -59,9 +59,9 @@ UNITS: dict[str, list[str]] = {
     "DexJoCo": _own("dexjoco"),
     "DexHand": _own("dexhand"),
     "VLABench": _own("vlabench"),
-    "RoboCasa-GR1": _own("robocasa-gr1"),
+    "RoboCasa-GR1": _own("robocasa-gr1", "images/robocasa/standard/", "embodied_first_exam/benchmarks/robocasa/"),   # RoboCasa's service, tooling, graders
     "RoboCasa": _own("robocasa"),
-    "RoboCasa365": _own("robocasa365"),
+    "RoboCasa365": _own("robocasa365", "images/robocasa/standard/", "embodied_first_exam/benchmarks/robocasa/"),   # RoboCasa's service and graders
     "LIBERO-MAX": _own("libero-max"),
     "RoboARC": _own("roboarc", "images/roboarc-files/"),
     "Embodied Olympics - Fun": _own("embodied-olympics-fun", "images/embodied-olympics-fun-files/"),

@@ -27,14 +27,14 @@ robot = "unitree-h1-2"
 family = "shot_put_realgrasp"
 category = "throwing-catching-striking"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 12.0
 oracle = "full"
-oracle_evidence = "Reference: a standing put from a technique found offline by CMA-ES in this family's physics (search_technique.py's method; start keys: a crouch, then the legs' drive with the arm on a path along the palm's normal): the shot, resting on the open palm against the neck (no grip), leaves the palm at 7.5 m/s from 1.92 m, pushed (0.952), 6.65 m (the line is 6 m), then out of the rear half and standing. Open loop on the frozen start; the put lands 6.6-6.7 m under +-3% gains but the walk-out after it falls in 6 of 9 variations. Referee test: nop holds the shot the full minute (time); it drops when the arm's command stops carrying it (grips at 1: no weld) or the palm turns; positives: the reference solution and an injection; negatives: arm swung down, behind the shoulders, a sling, the other hand, left on the trunk, touched after the release, out early, toes on the board, outside the sector, short, a front-half exit, a fall The privileged twin's reference rows (602 control steps, success after 6.02 s) streamed through the client."
+oracle_evidence = "Reference: a standing put from a technique found offline by CMA-ES in this family's physics (Embodied Olympics' method; start keys: a crouch, then the legs' drive with the arm on a path along the palm's normal): the shot, resting on the open palm against the neck (no grip), leaves the palm at 7.5 m/s from 1.92 m, pushed (0.952), 6.65 m (the line is 6 m), then out of the rear half and standing. Open loop on the frozen start; the put lands 6.6-6.7 m under +-3% gains but the walk-out after it falls in 6 of 9 variations. Referee test: nop holds the shot the full minute (time); it drops when the arm's command stops carrying it (grips at 1: no weld) or the palm turns; positives: the reference solution and an injection; negatives: arm swung down, behind the shoulders, a sling, the other hand, left on the trunk, touched after the release, out early, toes on the board, outside the sector, short, a front-half exit, a fall The privileged twin's reference rows (602 control steps, success after 6.02 s) streamed through the client."
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

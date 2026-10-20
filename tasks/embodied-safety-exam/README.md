@@ -754,13 +754,13 @@ The repository's headline statistics count the tasks listed in `docs/core_set.to
 were exported by Embodied Safety Exam's release tooling, which this repository does not carry, and are not re-rendered here. The task directories are the deliverable; the tooling
 that built them is kept outside this repository.
 The benchmark's shared task code
-is `embodied_first_exam/benchmarks/embodied-safety-exam/<layer>/` (layers: `standard`, a paused task's service, client, standard grader,
-oracle driver and public observation helpers; `realtime`, the realtime clock's own files); the layers other benchmarks share keep their source in `embodied_first_exam/standard/` (`rcb1.py`; the
-realtime clock and client: `realtime/`). The files outside `environment/sim/` that many
-tasks share are not in the task directories: the paused standard client (`rcb_client.py`), the graders
-(`tests/grade.py`, the realtime tasks' `tests/grade_ese.py`). They are built into the files-only image
+is `embodied_first_exam/benchmarks/embodied-safety-exam/<layer>/` (layers: `standard`, a paused task's service, standard grader,
+oracle driver and public observation helpers; `realtime`, the realtime clock's own files); the layers other benchmarks share keep their source in `embodied_first_exam/standard/` (`rcb1.py` and the paused
+standard client `v2_1/rcb_client.py`, in the files-only image `standard-files`; the realtime clock and client: `realtime/`). The files outside `environment/sim/` that many
+tasks share are not in the task directories: the graders
+(`tests/grade.py`, the realtime tasks' `tests/grade_ese.py`) are built into the files-only image
 `images/ese-files/` (`ghcr.io/mll-lab-nu/efe:ese-files-<version>`, public like the simulator image;
-`scripts/files_image.py`), and each task's `environment/Dockerfile` and `tests/Dockerfile` take them with
+`scripts/files_image.py`), and each task's `environment/Dockerfile` and `tests/Dockerfile` take them and the client with
 `COPY --from=<image@digest>` to the same container paths (`/opt/tools/`, `/tests/`). `images/ese-files/FILES.json` pins the image and its files' sha256.
 
 ### Finalize bounds
@@ -779,7 +779,7 @@ From image `efe:ese-0.5.6` the simulator is built from Embodied Safety Exam 0.5.
   old one;
 - the task side: `rcb_ese.py`, `rcb_ese_rt.py`, class `SafetyExam`, metadata `ese_*`, schemas `ese.public-*`, and
   reward.json's `ese_calls` / `ese_pass`;
-- the files-only image `ese-files-0.3.1` carries the `standard` and `realtime` layers.
+- the files-only image `ese-files-0.4.0` carries the `standard` and `realtime` graders.
 
 The Hugging Face dataset of the asset binaries is `MLL-Lab/embodied-safety-exam-assets` (formerly
 `MLL-Lab/robosafe-assets`, which redirects). Results recorded under the earlier task prefix `rsb-` compare with the

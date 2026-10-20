@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.1.1@sha256:cd57e8b4f15cbd6f27e3c2e76d1ed266cf01c9ec1fc0099e6af8c3c8fa0df958",
+ "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.2.0@sha256:491577fd2d835ce931c6a4d45cdaed3eab7411a4a210c5db848f93a16b1e1739",
  "source": "embodied_first_exam/benchmarks/embodied-olympics-fun",
  "files": {
   "grade.py": "45a72043fe35b6de3c201d7b08bc04a18905de504daf43cdd3e7640bd2319730",
@@ -10,7 +10,6 @@
   "rfo/referee.py": "35a421e79fc0f3adc2365b857a5e4e7f39f5af5d43df0a13ec428db5af4316e8",
   "rfo/scene.py": "fb3e8931379e09c9669708105303b76e98960cf0c62c0f85517cb1cc3f917b0e",
   "rfo/task.py": "82875f202fdcca6385f930f756cf2e11373dd75d10b9461505baec5c1aad7d50",
-  "rfo/world.py": "050ebff8b756500109a086744907b1434396529429674249a257c57b7283bbd9",
-  "standard/grade.py": "605bb1492c21639dfcbc0fb98a40501961600e6441d83065e5a9896594450003"
+  "rfo/world.py": "050ebff8b756500109a086744907b1434396529429674249a257c57b7283bbd9"
  }
 }

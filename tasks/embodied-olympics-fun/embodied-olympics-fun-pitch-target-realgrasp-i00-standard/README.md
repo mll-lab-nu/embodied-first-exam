@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-pitch-target-realgrasp-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `pitch_target_realgrasp` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_pitch_target_realgrasp.py: positive by injection (a real release by opening the right Dex1 gripper on the plate, then 22 m/s: a strike; a 14.5 m/s lob too); real overhand swings release at 3-8 m/s (too early: back onto the robot; 0.25 s in: 1.4 m ahead on the mound); a 5 N clamp loses the ball in the swing, 10 N keeps it; negatives: held past the pitch timer, dropped, no foot on the plate, a bounce, high, wide, held again, touched after the release, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
+| Oracle | `none` — no reference solution; the referee is tested: positive by injection (a real release by opening the right Dex1 gripper on the plate, then 22 m/s: a strike; a 14.5 m/s lob too); real overhand swings release at 3-8 m/s (too early: back onto the robot; 0.25 s in: 1.4 m ahead on the mound); a 5 N clamp loses the ball in the swing, 10 N keeps it; negatives: held past the pitch timer, dropped, no foot on the plate, a bounce, high, wide, held again, touched after the release, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 

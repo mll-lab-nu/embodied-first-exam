@@ -18,11 +18,11 @@ instance_seed = 8
 opponent_level = 2
 source_commits = ["0d7f680cc049"]
 source_task = "roboolympics/badminton-match-wallclock-program-standard"
-exporter = "roboolympics tools.fullsim.export"
+exporter = "Embodied Olympics full-simulator exporter"
 official = false
 expert_time_estimate_hours = 1.0
 oracle = "partial"
-oracle_evidence = "full-state reference program (solution/): the camera-only reference player's planner fed the true state; its results on this instance and across the levels are in the Embodied Olympics privileged report (tools/fullsim/calibrate.py); not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false)"
+oracle_evidence = "full-state reference program (solution/): the camera-only reference player's planner fed the true state; its results on this instance and across the levels are in the Embodied Olympics privileged report; not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false)"
 validated = false
 
 [metadata.resources]

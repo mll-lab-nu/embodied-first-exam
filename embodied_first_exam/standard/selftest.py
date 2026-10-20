@@ -5,8 +5,8 @@ Runs toy_server.py under run.sh the way a task's `sim` sidecar runs, with a smal
 `restart: on-failure:6` (it restarts run.sh when it exits non-zero, keeping the record dir), and drives it with the
 shipped client. Needs numpy + requests; no simulator, no GPU, no Docker. About 1-2 minutes.
 
-    python3 scripts/eai_standard/selftest.py            # every case
-    python3 scripts/eai_standard/selftest.py watchdog   # the cases whose name contains "watchdog"
+    python3 embodied_first_exam/standard/selftest.py            # every case
+    python3 embodied_first_exam/standard/selftest.py watchdog   # the cases whose name contains "watchdog"
 """
 from __future__ import annotations
 import contextlib, io, json, os, signal, socket, subprocess, sys, tempfile, threading, time, traceback

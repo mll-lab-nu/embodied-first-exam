@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe:robocasa-gr1-0.1.0` |
 
 ## Task
-Standard mode (robot as a service, `eai-standard/2.1`) of `robocasa-gr1-placemat-to-bowl-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar (`images/robocasa-gr1/standard/server_casa.py`, tool module `casa_tool`), which records the episode and judges it live (nothing is replayed); the verifier grades the sidecar's record in a container of its own. The agent sees the robot's cameras (RGB-D, calibrated), its own joints and end effector, and the instruction.
+Standard mode (robot as a service, `eai-standard/2.1`) of `robocasa-gr1-placemat-to-bowl-i00-privileged`: the same frozen instance and success check, served by the `sim` sidecar (`images/robocasa/standard/server_casa.py`, tool module `casa_tool`), which records the episode and judges it live (nothing is replayed); the verifier grades the sidecar's record in a container of its own. The agent sees the robot's cameras (RGB-D, calibrated), its own joints and end effector, and the instruction.
 
 ## Difficulty
 The agent has to find the objects in the humanoid's camera images, coordinate two arms and two dexterous hands through the IK controller, and finish in one episode without a reset.

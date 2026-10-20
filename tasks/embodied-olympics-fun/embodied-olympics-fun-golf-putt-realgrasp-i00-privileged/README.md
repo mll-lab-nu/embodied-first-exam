@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-golf-putt-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `golf_putt_realgrasp` / seed 0 |
-| Oracle | `full` — one Dex1-1 across the grip; club starts hanging (level it turns 23-25 deg in the jaws); two-hand address unreachable by IK; reference carries the club shaft-vertical and swings by wrist roll: holed at 17.3 s, 10/12 perturbations Measured (make_oracles.py): success after 17.3 s of the 30 s limit, live and in a fresh replay, ending in the same state. |
+| Oracle | `full` — one Dex1-1 across the grip; club starts hanging (level it turns 23-25 deg in the jaws); two-hand address unreachable by IK; reference carries the club shaft-vertical and swings by wrist roll: holed at 17.3 s, 10/12 perturbations Measured: success after 17.3 s of the 30 s limit, live and in a fresh replay, ending in the same state. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 
@@ -18,7 +18,7 @@ Hole the 3.0 m putt: with one stroke of the putter held in your right hand's gri
 The hole is two and a half ball widths across and three metres away: the ball must start within about one degree of the line and at a speed between the one that just reaches the hole and the one that jumps it, and there is no second stroke. The club is an adult's, long and heavy for this robot's wrist, and it has to be brought from where it starts to an address beside the ball first. It is held across a two-finger gripper's jaws by friction: tilted towards its toe it turns in the jaws, so it has to be carried with the shaft near the vertical, and the swing rocks it in the jaws, so the face at impact is not quite where the arm put it.
 
 ## Reference solution
-`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). one Dex1-1 across the grip; club starts hanging (level it turns 23-25 deg in the jaws); two-hand address unreachable by IK; reference carries the club shaft-vertical and swings by wrist roll: holed at 17.3 s, 10/12 perturbations Measured (make_oracles.py): success after 17.3 s of the 30 s limit, live and in a fresh replay, ending in the same state.
+`solution/oracle.py` drives the robot through the task's own tooling, closed loop on the privileged state, and writes the trajectory (`solution/solve.sh`). one Dex1-1 across the grip; club starts hanging (level it turns 23-25 deg in the jaws); two-hand address unreachable by IK; reference carries the club shaft-vertical and swings by wrist roll: holed at 17.3 s, 10/12 perturbations Measured: success after 17.3 s of the 30 s limit, live and in a fresh replay, ending in the same state.
 
 ## Verification
 `/tests/grade.py` replays `/app/output/trajectory.npz` from the frozen start in two fresh processes (`rcb_rfo.py replay`:

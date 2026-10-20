@@ -27,14 +27,14 @@ robot = "unitree-g1"
 family = "juggling_feet_realgrasp"
 category = "football-and-volleyball"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 13.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_juggling_feet_realgrasp.py: positive by injection after a real drop: real right-foot strikes by the robot's own motors (lowcmd, toe up at 0.8 m/s, in and out about 3 m/s), the standing leg a ghost and the ball put back over the toe after every touch (the G1 has no single-leg balance); the start squeeze holds, without it the ball slips out; negatives: holding it, the ground, a weak squeeze, held against the body, a re-grip, a still foot, low strikes, shin, thigh, trunk, head, hands, trapped between the feet, resting on a foot, leaving the grid, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection after a real drop: real right-foot strikes by the robot's own motors (lowcmd, toe up at 0.8 m/s, in and out about 3 m/s), the standing leg a ghost and the ball put back over the toe after every touch (the G1 has no single-leg balance); the start squeeze holds, without it the ball slips out; negatives: holding it, the ground, a weak squeeze, held against the body, a re-grip, a still foot, low strikes, shin, thigh, trunk, head, hands, trapped between the feet, resting on a foot, leaving the grid, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

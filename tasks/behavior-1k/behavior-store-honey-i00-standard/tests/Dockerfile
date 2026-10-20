@@ -1,5 +1,5 @@
 # Separate verifier sandbox: grades the sim service's own artifacts; needs nothing but python (the shared eai-standard
-# client base, scripts/eai_standard/client.env; it installs nothing). The grader comes from the files-only image
+# client base, embodied_first_exam/standard/client.env; it installs nothing). The grader comes from the files-only image
 # eai-behavior-files (images/behavior-files/, pinned by digest).
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/test.sh

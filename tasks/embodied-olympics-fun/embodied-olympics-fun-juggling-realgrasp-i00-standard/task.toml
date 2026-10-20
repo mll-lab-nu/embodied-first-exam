@@ -27,14 +27,14 @@ robot = "unitree-g1"
 family = "juggling_realgrasp"
 category = "football-and-volleyball"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 11.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_juggling_realgrasp.py: positive by injection after a real drop (the arms roll apart and the ball falls from between the palms; after it the ball is put over the head and each head touch sends it up at 2.6 m/s, one toe touch too); the start squeeze, about 6.6 N per palm, holds the ball 30 s (2.7 mm creep), without it the ball slips out at once; negatives: holding it, the ground, a weak squeeze, held against a forearm, pressed back between the palms (re-grip), a still head, low touches, a hand after the drop, the trunk, a ball resting on the robot; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection after a real drop (the arms roll apart and the ball falls from between the palms; after it the ball is put over the head and each head touch sends it up at 2.6 m/s, one toe touch too); the start squeeze, about 6.6 N per palm, holds the ball 30 s (2.7 mm creep), without it the ball slips out at once; negatives: holding it, the ground, a weak squeeze, held against a forearm, pressed back between the palms (re-grip), a still head, low touches, a hand after the drop, the trunk, a ball resting on the robot; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

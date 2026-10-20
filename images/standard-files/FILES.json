@@ -1,10 +1,11 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.1.0@sha256:9c2e0818bfffddb463167566942af946862a60bf260f1400468f0d6f3ffd32b1",
+ "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.2.0@sha256:f8ebfef83b723e4a1cc2ab7b7aa5bc1edbcefcc09d44b0506c070460854be064",
  "source": "embodied_first_exam/standard",
  "files": {
   "rcb1.py": "a930d8eb6619b669908aff12a33c7dea19b0eb33c5b73138f0b5371bf3fe5040",
   "rcb_client.py": "236d2ac02dd145cdc91f421a2f2dce5557243f04256b9bf615baea990f9049cc",
   "realtime/rcb_client.py": "b6c08ca8d2b196dd44ed660d1f30b3181f419d38faa728b4fb72b25b15cce8f2",
+  "v2_1/grade.py": "605bb1492c21639dfcbc0fb98a40501961600e6441d83065e5a9896594450003",
   "v2_1/rcb_client.py": "4a3097258fe55cdd58961f63967ce93a4568ce23a50d7d0b5b0b3763f4e59064",
   "v2_1/variants/042c4ff1e4/rcb_client.py": "042c4ff1e41a475039cebabe648242fd5d7aa00368a8b67e10bdb6aa527dee46",
   "v2_1/variants/62def5e7ce/rcb_client.py": "62def5e7ce8f0006521bd3d1bacf185aeecdcf093c7411d9a790d99b77dce647",

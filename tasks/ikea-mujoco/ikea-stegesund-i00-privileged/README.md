@@ -20,7 +20,7 @@ Bimanual furniture assembly with physical grasps (no assist), 16-D actuator acti
 (893.05 s of simulated time).
 
 ## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `2181d216a5559c98…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): the author's speed-limited demo (`stegesund_vlim`), unchanged (`scripts/ikea_mujoco/oracles/stegesund/`): every row is within the joint-speed limits (from the keyframe ctrl; the largest step is the limit itself), so the clamp never changes a row, and it passes the terminal rules as sent (it ends released and at rest). It never trips the joint-speed clamp.
+`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `2181d216a5559c98…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): the author's speed-limited demo (`stegesund_vlim`), unchanged: every row is within the joint-speed limits (from the keyframe ctrl; the largest step is the limit itself), so the clamp never changes a row, and it passes the terminal rules as sent (it ends released and at rest). It never trips the joint-speed clamp.
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from the scene's initial state in two fresh processes at the same time
@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | Grasping | physical (finger friction), no assist |
 | Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), at the end of the rows and after a 1.0 s hold |
-| Scene | `/opt/ikea/scenes/stegesund/` in the image; digest `4e0cbabcd4c7f692…` (scripts/ikea_mujoco/assets.json) |
+| Scene | `/opt/ikea/scenes/stegesund/` in the image; digest `4e0cbabcd4c7f692…` (images/ikea-mujoco/assets.json) |
 | Initial state | sha256 `917b2bc63ab1ec62…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
@@ -68,4 +68,4 @@ Each bolt's coarse right-hand thread (2.5 mm pitch) is a capsule helix against a
 - Scene and demo: the IKEA MuJoCo tree (`scenes/stegesund/`, `demos/stegesund_vlim/actions.npz`), MuJoCo 3.14.0, RoboARC rigid settings
   (timestep 0.625 ms, Newton, 100 iterations, elliptic cones).
 - The scene files are not in this repository: the image carries them (`images/ikea-mujoco/README.md`, build context from
-  `scripts/ikea_mujoco/stage_context.py`, pinned by `scripts/ikea_mujoco/assets.json`).
+  `images/ikea-mujoco/stage_context.py`, pinned by `images/ikea-mujoco/assets.json`).

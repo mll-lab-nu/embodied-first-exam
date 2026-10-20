@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-catch-and-shoot-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-h1-2` |
 | Family / instance | `catch_and_shoot` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_catch_and_shoot.py: the catch is real (an open palm on the pass line takes the 7.2 m/s ball and the robot stays up); the shot is an injection (8.7 m/s at 52 degrees set at the release); negatives: not caught, touched before the pass, a leg, the pivot foot, a third step, touched again, the floor, from below, held, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
+| Oracle | `none` — no reference solution; the referee is tested: the catch is real (an open palm on the pass line takes the 7.2 m/s ball and the robot stays up); the shot is an injection (8.7 m/s at 52 degrees set at the release); negatives: not caught, touched before the pass, a leg, the pivot foot, a third step, touched again, the floor, from below, held, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
@@ -16,7 +16,7 @@
 Catch and shoot: catch the chest pass that comes to you from the left wing, then shoot from where you stand so that the ball enters the basket from above. (Embodied Olympics `catch-and-shoot`; the robot as a service on a clock that does not stop, slowdown S = 1: its head cameras, joint sensors and IMUs, and the venue's fixed camera only.)
 
 ## Difficulty
-The pass arrives faster than the grip can take it: the hand has to be on the ball's path and moving with it. Then a 0.62 kg ball must leave that hand at about 9 m/s on a steep arc towards a ring 5.8 m away, from a body that may not take a step. The built-in walking gait steps on the spot even at a zero command, so while the ball is in your hand its steps are counted like any others. The scene is dynamic (`scripts/task_dynamics.toml`: A machine throws the chest pass at a fixed time.), and in standard-realtime mode time does not stop: once an attempt's clock starts the venue's timed events happen whatever the agent does, so it has to plan or stream the robot's rows from a program of its own, with no simulator and no state, and 10 resets (only the last attempt is graded).
+The pass arrives faster than the grip can take it: the hand has to be on the ball's path and moving with it. Then a 0.62 kg ball must leave that hand at about 9 m/s on a steep arc towards a ring 5.8 m away, from a body that may not take a step. The built-in walking gait steps on the spot even at a zero command, so while the ball is in your hand its steps are counted like any others. The scene is dynamic (A machine throws the chest pass at a fixed time.), and in standard-realtime mode time does not stop: once an attempt's clock starts the venue's timed events happen whatever the agent does, so it has to plan or stream the robot's rows from a program of its own, with no simulator and no state, and 10 resets (only the last attempt is graded).
 
 ## Reference solution
 None (as `embodied-olympics-fun-catch-and-shoot-i00-privileged`).

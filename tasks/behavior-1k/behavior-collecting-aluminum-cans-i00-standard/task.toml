@@ -26,7 +26,7 @@ simulator = "behavior"
 robot = "r1pro"
 family = "collecting_aluminum_cans"
 mode = "standard"                  # robot as a service: RGB-D + proprioception, no object poses, no success predicate, no reset
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 protocol = "eai-standard/2.2"
 oracle = "none"
 oracle_evidence = "No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-collecting-aluminum-can__VRvxwLv (behavior-lunaxh-t8-0927, the privileged twin behavior-collecting-aluminum-cans-i00-privileged on the same frozen instance and BDDL goal) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 20a382a8; grader verdict and frozen instance unchanged since); not re-run on this version (static validation only). Human review per family (protocol §2.7)."

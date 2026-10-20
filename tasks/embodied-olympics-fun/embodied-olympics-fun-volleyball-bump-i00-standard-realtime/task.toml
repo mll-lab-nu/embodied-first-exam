@@ -29,7 +29,7 @@ robot = "unitree-h1-2"
 family = "volleyball_bump"
 category = "football-and-volleyball"
 mode = "standard-realtime"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 slowdown = 1                      # standard-realtime: the world runs at 1/S of real speed (docs/protocol/README.md §4b); RCB_SLOWDOWN's default
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.3"
@@ -37,7 +37,7 @@ instance_seed = 0
 reset_budget = 10
 expert_time_estimate_hours = 10.0
 oracle = "full"
-oracle_evidence = "Reference: a walk to where the serve comes down, then a forearm platform on the walking policy, from a technique found offline by CMA-ES (Embodied Olympics' method, search_technique.py): 11.4 m/s in, 7.3 m/s out, up to 3.08 m, down 0.13 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: the passive rebound, below net height, the body, a second touch, held, under the net, a net touch, over the centre line In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S."
+oracle_evidence = "Reference: a walk to where the serve comes down, then a forearm platform on the walking policy, from a technique found offline by CMA-ES (Embodied Olympics' method): 11.4 m/s in, 7.3 m/s out, up to 3.08 m, down 0.13 m from the target's centre. Open loop on the frozen start, not robust. Referee test negatives: the passive rebound, below net height, the body, a second touch, held, under the net, a net touch, over the centre line In standard-realtime mode the privileged twin's reference rows, each run of one action type planned at the control step where it ran (`submit(..., at=step)`), succeed at the task's S."
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

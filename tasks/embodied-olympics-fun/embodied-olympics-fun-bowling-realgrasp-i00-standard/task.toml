@@ -27,14 +27,14 @@ robot = "unitree-h1-2"
 family = "bowling_realgrasp"
 category = "throwing-catching-striking"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 10.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_bowling_realgrasp.py: positive by injection after a real release: the ball pressed between the two bare palms, the arms open and it drops free; then laid on the lane 0.35 m past the foul line at 8 m/s on a 0.8-degree line into the pocket (this world's elliptic cones change the pin action: bowling's 1.2-degree line leaves a pin); roll, pins and count by the simulator; nop holds the ball the whole episode, without the squeeze it slips out; negatives: carried against the chest, over the foul line with the ball, gutter, head pin with pins standing, touched after the release (re-grip), a foul after delivery, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection after a real release: the ball pressed between the two bare palms, the arms open and it drops free; then laid on the lane 0.35 m past the foul line at 8 m/s on a 0.8-degree line into the pocket (this world's elliptic cones change the pin action: bowling's 1.2-degree line leaves a pin); roll, pins and count by the simulator; nop holds the ball the whole episode, without the squeeze it slips out; negatives: carried against the chest, over the foul line with the ball, gutter, head pin with pins standing, touched after the release (re-grip), a foul after delivery, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

@@ -27,14 +27,14 @@ robot = "unitree-h1-2"
 family = "layup_realgrasp"
 category = "basketball-and-rackets"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 12.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_layup_realgrasp.py: positive by injection (a real two-palm squeeze raised overhead in stand mode and carried through two real walking steps, robot and ball teleported together and given the same 2.6 m/s ghost take-off, the palms really opened at the apex (release judged by contact), a toss set once the ball is clear of both palms); negatives: a third step, the same foot twice, a release/slip from the floor (no squeeze: out in 0.03 s; one palm: 0.09 s), in the air without a take-off, too far, a miss, caught again, from below, held ball on the floor, held against the chest, a shuffle, a fall; grip columns do nothing. The H1-2 has no jump; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection (a real two-palm squeeze raised overhead in stand mode and carried through two real walking steps, robot and ball teleported together and given the same 2.6 m/s ghost take-off, the palms really opened at the apex (release judged by contact), a toss set once the ball is clear of both palms); negatives: a third step, the same foot twice, a release/slip from the floor (no squeeze: out in 0.03 s; one palm: 0.09 s), in the air without a take-off, too far, a miss, caught again, from below, held ball on the floor, held against the chest, a shuffle, a fall; grip columns do nothing. The H1-2 has no jump; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

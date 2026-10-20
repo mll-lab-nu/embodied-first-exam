@@ -3,8 +3,8 @@
 watchdog's evidence and the physics-tick ledger, and of the HTTP layer's answer to malformed bodies (400, never a 500).
 No simulator, no GPU, no Docker; needs numpy. About 15 seconds.
 
-    python3 scripts/eai_standard/v2_4/selftest.py           # every case
-    python3 scripts/eai_standard/v2_4/selftest.py watchdog  # the cases whose name contains "watchdog"
+    python3 embodied_first_exam/standard/v2_4/selftest.py           # every case
+    python3 embodied_first_exam/standard/v2_4/selftest.py watchdog  # the cases whose name contains "watchdog"
 
 Each case drives Episode in child processes that end the way a sim service ends (os._exit after a "crash", the watchdog's
 own exit, an idle give-up), with the record directory kept between them, as compose's `restart: on-failure` keeps /data.
@@ -187,7 +187,7 @@ def case_malformed_bodies_are_400():
 
 
 def case_give_up_is_answered_and_a_repeated_camera_is_one():
-    """What the 2.4 layer shares with 2.2 (scripts/eai_standard/selftest.py has the full cases): a service that gave up
+    """What the 2.4 layer shares with 2.2 (embodied_first_exam/standard/selftest.py has the full cases): a service that gave up
     answers 409 to every request and the client raises EpisodeOver at once (before: nothing listened, and Robot() waited
     out its timeout, an hour by default); the recorder renders and returns a camera named N times once, not N * N times."""
     import socket

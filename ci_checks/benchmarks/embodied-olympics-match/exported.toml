@@ -1,7 +1,6 @@
-# Embodied Olympics tasks exported by Embodied Olympics' own exporter (CHIGUI0/roboolympics tools/export_fexam.py; private, MIT):
+# Embodied Olympics tasks exported by Embodied Olympics' own exporter (CHIGUI0/roboolympics; private, MIT):
 # its simulator service runs unchanged inside each task (PROTOCOL §4c; tasks/embodied-olympics-match/README.md:
-# the benchmark Embodied Olympics - Match). They are not rendered by gen_tasks.py, which skips the directories listed here (and fails one that
-# is missing); written by `python3 tools/export_fexam.py --hub <this checkout> <this checkout>/tasks` in Embodied Olympics,
+# the benchmark Embodied Olympics - Match). Written by that exporter on this checkout,
 # then `python3 scripts/task_conventions.py` on them (seeds, resources, README; the cutoff is each task's own `[agent]
 # timeout_sec`, which a re-export must keep: 7200 s, 14400 s for soccerssl-match-i00 / i01, badminton-match-i01 / i02 /
 # i04, badminton-duelrl-i01 and foosball-match-i01).
@@ -78,7 +77,7 @@ patched = ["instruction.md", "environment/sim/core/realtime.py",   # 2026-10-14,
 name = "embodied-olympics-match-soccer-jointcpu-i01-standard-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
 revision = "soccer-2v2-11"
-source_commits = ["7ae66874c32e"]   # pilots/soccer_joint/export_fexam_pair.py (the joint-level resource-tier pair; v5 pilot rules)
+source_commits = ["7ae66874c32e"]   # the soccer pilot exporter (the joint-level resource-tier pair; v5 pilot rules)
 patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py",   # 2026-10-17 (#328 review): the walking-policy audit
            "task.toml", "solution/solve.sh"]   # replays the match only after a live win of seat A, samples the row in effect at every
                                                # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
@@ -87,7 +86,7 @@ patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py
 name = "embodied-olympics-match-soccer-jointgpu-i01-standard-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
 revision = "soccer-2v2-11"
-source_commits = ["7ae66874c32e"]   # pilots/soccer_joint/export_fexam_pair.py (the joint-level resource-tier pair; v5 pilot rules)
+source_commits = ["7ae66874c32e"]   # the soccer pilot exporter (the joint-level resource-tier pair; v5 pilot rules)
 patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py",   # 2026-10-17 (#328 review): the walking-policy audit
            "task.toml", "solution/solve.sh"]   # replays the match only after a live win of seat A, samples the row in effect at every
                                                # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win

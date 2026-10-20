@@ -39,7 +39,7 @@ picture is one the pen can make:
   hairline joins, loops and flourishes as much as the shades.
 
 ## Reference solution
-Generated once on the graders' copy (`solution/ref_lettering.py` via `plan_oracle.py`): every contact of `solution/plans.json` (one
+Generated once on the graders' copy: every contact of the plan (one
 writing route per connected piece of the exemplar's ink, going back along a stroke where it has to, with the tines' spread at every
 point) written with the pen turned to the exemplar's spread axis, the press depth of each point from the spread, one dip, a vertical
 touch-down and lift, 2 cm/s (slower around sharp turns), lag feed-forward and iterative learning control, the arm parked at the end.
@@ -89,7 +89,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 service (GPU for SAPIEN, no ports published). `Session.score()` in the agent's container posts the actions executed since the last
 reset; the service replays them on its copy (the same deterministic simulation) and returns the metrics of the tooling's
 `agent_metrics()` — never images or target data. The agent's container holds nothing derived from the target except `target.png`
-(`ci_checks/check-robopaint-leak.sh`).
+(`ci_checks/benchmarks/robopaint/invariant-leak.sh`).
 
 ### Licences
 The exemplar is a public-domain engraved copybook plate, re-drawn by RoboPaint with the task's pen: `environment/NOTICE-exemplar.md`.

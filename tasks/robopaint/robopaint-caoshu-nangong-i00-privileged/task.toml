@@ -14,7 +14,7 @@ simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the
 robot = "franka-panda"            # PandaStick with a Chinese brush: rigid handle + 30 mm collision-free tuft, TCP = the tuft's tip
 family = "robopaint_caoshu_nangong"
 mode = "privileged"               # privileged (exact sheets, brush state, reset, scoring service) | standard (RGB only: the -standard twin)
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
 oracle_evidence = "Reference solution in solution/ (a new family, generated on 2026-10-09 with the current tooling): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 890 and mark_width_mm 3.11, against the colouring-in limits 2680 mm and 0.93 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Caoshu)."
 instance_seed = 0                 # scene = environment/instance.json (agent's copy: sheets, brush, ink stone, start joints, the rule, instance_sha)

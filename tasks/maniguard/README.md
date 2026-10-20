@@ -134,7 +134,7 @@ never copied into the task and not replayed here.
 - Every task dir (both modes) carries the tooling (`environment/rcb_maniguard.py`), the task's instance files in
   `environment/instance/` (ManiGuard-Bench's `scene_ep1.json` + `diagnostics.jsonl` at revision `af09438ceb`, unchanged,
   CC BY-NC 4.0 per the `NOTICE` next to them, and our `instance.json`, made with `rcb_maniguard.py make-instance`), and the
-  privileged task its reference solution (`solution/oracle_trajectory.npz`, `oracle_gen.py`). Every text that is in the
+  privileged task its reference solution (`solution/oracle_trajectory.npz`). Every text that is in the
   task files (prompt, goal region and conditions, the LTL specification and its thresholds) is rendered from the instance
   files, so the instruction states what the verifier checks. The task directories are the deliverable; the tooling that
   built them is kept outside this repository.
@@ -235,20 +235,19 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
 ## Positive examples (the oracle)
 ManiGuard publishes 40 scripted demonstrations per task (`IDEAS-Lab-Northwestern/datagen-<family>-v1-joint-5cam`, LeRobot,
 30 Hz, CC BY-NC 4.0), recorded by its data generator in a scene built object by object. A privileged task's reference
-trajectory is one of them, time-resampled to the evaluator's 20 Hz: the privileged task's `solution/oracle_gen.py`
-fetches the pinned episode (sha256-checked), reads the generator's commanded joint targets at the midpoint of each control
-step and appends 40 rows holding the last one; `oracle_trajectory.npz` is its output,
-the task README's reference solution its record. The generator re-samples each episode's placements (the sponge, the dust, the cap), so a
+trajectory is one of them, time-resampled to the evaluator's 20 Hz: the privileged task's `solution/oracle_trajectory.npz`
+is the pinned episode (sha256-checked) with the generator's commanded joint targets read at the midpoint of each control
+step and 40 rows appended holding the last one; the task README's reference solution is its record. The generator re-samples each episode's placements (the sponge, the dust, the cap), so a
 demonstration replays only approximately in the frozen scene: per task, its demonstrations are replayed in order until one
 reaches the strict goal (the README says which failed and why). Where none can, the oracle keeps the demonstration and
 redoes the failing step on the tooling: `lid_transport/task_0016`, whose four demonstrations tried never get the cap welded
 to the jug (it falls off when the jug is lifted, though ManiGuard's own evaluator counts them as successes), lowers the cap
-with its attachment point over the jug's until OmniGibson welds it; its `oracle_gen.py` runs in two steps (host resampling,
+with its attachment point over the jug's until OmniGibson welds it; it is built in two steps (host resampling,
 then `rcb_maniguard.py run-oracle` in the image). `lid_transport/task_0007`, whose demonstrations carry the jar by its welded
 lid (the evaluator counts only a grasp of the jar itself as holding it), keeps the demonstration up to the welded lid and
-then takes the jar by its wall and carries it (the same two-step `oracle_gen.py`). `cabinet_pickup/task_0020` and `task_0022`, whose demonstrations
+then takes the jar by its wall and carries it (built in the same two steps). `cabinet_pickup/task_0020` and `task_0022`, whose demonstrations
 push the drawer only just inside the closed tolerance (0.7 mm and 0.06 mm), end that push 2 cm deeper so the drawer
-shuts fully (the same two-step `oracle_gen.py`). Both go to `solution/` only (the oracle agent's mount; the leak check keeps them and the
+shuts fully (built in the same two steps). The trajectories are in `solution/` only (the oracle agent's mount; the leak check keeps them and the
 dataset's name out of everything the agent reads). A task's `oracle` becomes `full` only once Harbor's oracle run scores 1.
 The standard twin's oracle streams the same rows through its service (`solution/oracle_replay.py`: one-second
 `joint_position` chunks, `interpolate="hold"`, one row per control step) and is `full` once Harbor's oracle run of the twin

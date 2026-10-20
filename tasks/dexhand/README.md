@@ -877,7 +877,7 @@ re-saves the family's rows to `/app/output/trajectory.npz`; standard `solve.sh` 
 through the client's request path (`hold`, dt = 1 / control rate, chunks of at most 250 rows or 10 s) and resumes after
 a service restart. Rows above the repository's 2 MB file limit are stored as `trajectory.json` + `trajectory.partNN.npz`
 (`solution/solution_parts.py`) and concatenated and sha256-checked before use. A family with a per-hand
-solution gets `solution/<hand>/` and the `*_by_hand.sh` runner (Wuji reference solutions, above).
+solution gets `solution/<hand>/`, which its `solve.sh` picks for the run's hand (Wuji reference solutions, above).
 
 **Harbor results** (Harbor 0.23, `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0`, CPU only, `RCB_LIMITS_ENFORCE=0`):
 

@@ -1,9 +1,8 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:kinder-files-0.1.1@sha256:bda6642064225d59d7be3c1640dfdd86ebbab1ec54357c7dcbe723850d3a8128",
+ "image": "ghcr.io/mll-lab-nu/efe:kinder-files-0.2.0@sha256:008137c8694c3137cf2d14a5204d1ad8ea204515c820e6dacef4ccdaa20d99e9",
  "source": "embodied_first_exam/benchmarks/kinder",
  "files": {
   "privileged/environment/rcb_kinder.py": "3ea76496fe64a3b2c670a0688fdb44f5ff59c76ddc900accf02ffc02d14fa8d2",
-  "privileged/tests/grade.py": "cb6c7deb6d961f5176be1b29a5fcd858319f3e9faf4ae2a13777db45ba617444",
-  "standard/tests/grade.py": "605bb1492c21639dfcbc0fb98a40501961600e6441d83065e5a9896594450003"
+  "privileged/tests/grade.py": "cb6c7deb6d961f5176be1b29a5fcd858319f3e9faf4ae2a13777db45ba617444"
  }
 }

@@ -62,8 +62,8 @@ the scripted levels compiled) and a single-T1 GPU environment. The pair measures
 worth to an agent that builds a robot controller.
 
 ### Notes
-Source: Embodied Olympics joint-level soccer pilot v5 (`pilots/soccer_joint/make_v5_tasks.py` on task `soccer-match-wallclock-program-lowlevel-standard`), physics revision
+Source: Embodied Olympics joint-level soccer pilot v5 (task `soccer-match-wallclock-program-lowlevel-standard`), physics revision
 `soccer-2v2-11` (near-rigid foot-turf contact). The rules, the referee, the opponent, the observation, the reviews and
 the grader are ours, unchanged; the seat is unmetered (Harbor records the model's usage), the instance is frozen, and the
 session is the hub's 4 h (v5 had 9 h with 30 min reviews). The agent image is the v5 seat image, prebuilt
-(`pilots/soccer_joint/make_v5_tasks.py`'s Dockerfile; `environment/Dockerfile` pins it by digest).
+(built by the pilot; `environment/Dockerfile` pins it by digest).

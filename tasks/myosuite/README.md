@@ -121,7 +121,7 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
     `hand_top` / `hand_side_inter` sit on the forearm and turn with pronation), or a MuJoCo tracking camera;
   - **scene cameras give images only.** A camera whose body (or target
     body) is not the agent's own -- a mocap body, or a body behind a joint that is not one of the body's (`scene_camera`
-    in `server.py`, decided from the model, not by name; `make_facts.py` records the same list as `scene_cameras`) --
+    in `server.py`, decided from the model, not by name; the instance facts record the same list as `scene_cameras`) --
     has no published mount, no `extrinsic_cv` / `cam2world_gl` (null in `meta["cameras"]`, NaN rows per frame) and its
     body is not a `/kinematics` link: its pose is that body's position plus a constant, which PROTOCOL H.3 forbids.
     In the 22 families that is `opponent_view` (chase_tag, a `trackcom` camera on the mocap body `opponent`) and
@@ -228,7 +228,7 @@ servos that move an 82 kg subtree (the whole body model sits on the slide joints
 lower limit and the reference's lifts must come from rotations; both models reported this. MyoDex's own policies were
 trained on these envs, so the tasks are not known to be impossible, but no trajectory here reaches them yet.
 
-Negative controls besides `nop`: `make_facts.py` checks that the relaxed body (every command at -1 for 400 control
+Negative controls besides `nop`: the relaxed body (every command at -1 for 400 control
 steps) succeeds in no family; the float32-rounded baoding, chase_tag and osl_run trajectories are wrong trajectories
 that score 0; an apple_lift trajectory that leaves the apple on the table scores 0.
 

@@ -28,7 +28,7 @@ joint space while carrying the plug (the pick and the insertion under the desk e
 configurations), turns it polarity-up in front of the desk edge, aligns it with port 4 in closed loop on the plug pose,
 inserts it about 11.9 of 12 mm, releases it (index up, thumb down, then open) and withdraws. In standard mode the oracle
 submits the same rows through `rcb_client` in 250-row chunks. The authoring controller that produced the rows
-(`scripts/dexhand/families/usb_plug_insert/tools/arm_author.py`, closed loop on the simulator state) computes robot
+(closed loop on the simulator state) computes robot
 motor targets only; it never drives an object pose or applies an object force, and it is never copied into the agent's
 environment or image.
 

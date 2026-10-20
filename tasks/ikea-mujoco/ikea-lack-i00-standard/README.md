@@ -25,7 +25,7 @@ time).
 ## Reference solution
 `solution/solve.sh` runs `solution/oracle_replay.py`: it submits the control steps of `solution/oracle_actions.npz` through
 the client as `joint_position` chunks of 10 s, `hold`, one control step per row, as float64 (the client's transport;
-`Robot.submit` sends float32), so the service executes exactly those rows. The rows are the privileged twin's reference trajectory brought within the joint-speed rule by `scripts/ikea_mujoco/standard/std_reference.py` (`make --method clamp`: target glitches of one to a few control steps, which the servos never followed, replaced by the running median (0 rows); then clamp (63697 control steps)),
+`Robot.submit` sends float32), so the service executes exactly those rows. The rows are the privileged twin's reference trajectory brought within the joint-speed rule (method `clamp`: target glitches of one to a few control steps, which the servos never followed, replaced by the running median (0 rows); then clamp (63697 control steps)),
 so the service's speed limiter never has to act (`n_clipped` 0).
 
 ## Verification

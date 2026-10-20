@@ -20,7 +20,7 @@ Bimanual furniture assembly with physical grasps (no assist), 16-D actuator acti
 (159.2 s of simulated time).
 
 ## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `2943cd2c15536c0c…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): the robot demo of the IKEA MuJoCo tree (`demos/lack/actions.npz`), time-dilated to the robots' real joint-speed limits by `scripts/ikea_mujoco/standard/std_reference.py`, so the joint-speed clamp never changes a row. The demo itself commands faster than the limits and fails under the clamp.
+`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `2943cd2c15536c0c…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): the robot demo of the IKEA MuJoCo tree (`demos/lack/actions.npz`), time-dilated to the robots' real joint-speed limits, so the joint-speed clamp never changes a row. The demo itself commands faster than the limits and fails under the clamp.
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from the scene's initial state in two fresh processes at the same time
@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | Grasping | physical (finger friction), no assist |
 | Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), at the end of the rows and after a 1.0 s hold |
-| Scene | `/opt/ikea/scenes/lack/` in the image; digest `b8e0348698b0a26d…` (scripts/ikea_mujoco/assets.json) |
+| Scene | `/opt/ikea/scenes/lack/` in the image; digest `b8e0348698b0a26d…` (images/ikea-mujoco/assets.json) |
 | Initial state | sha256 `0bddce57c9bcaf34…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
@@ -67,4 +67,4 @@ The M16 x 2 right-hand threads are exact convex pieces: a leg advances only by b
 - Scene and demo: the IKEA MuJoCo tree (`scenes/lack/`, `demos/lack/actions.npz`), MuJoCo 3.14.0, RoboARC rigid settings
   (timestep 0.625 ms, Newton, 100 iterations, elliptic cones).
 - The scene files are not in this repository: the image carries them (`images/ikea-mujoco/README.md`, build context from
-  `scripts/ikea_mujoco/stage_context.py`, pinned by `scripts/ikea_mujoco/assets.json`).
+  `images/ikea-mujoco/stage_context.py`, pinned by `images/ikea-mujoco/assets.json`).

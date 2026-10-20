@@ -27,14 +27,14 @@ robot = "unitree-h1-2"
 family = "catch_and_shoot_realgrasp"
 category = "basketball-and-rackets"
 mode = "standard"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 12.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_catch_and_shoot_realgrasp.py: catch by injection (the real pass flies to the robot; at 0.6 m to its left the ball is put at rest between the open palms, which really close and hold it by friction); no real two-palm catch of the 7.2 m/s pass was found (the arms give way, the ball slides off the first palm within 0.1 s, also when slowed to 30 %). Shot by injection as in free-throw-realgrasp (real swing and release, velocity set at the release). Negatives: nop (the pass knocks the resting right palm and drops), a tap shorter than the catch time, a too-weak squeeze, the squeeze eased after the catch, held against the chest, walking with the ball, the pivot foot dragged, a third step after a catch in the air, touched before the pass, a pass off the thigh, the shot short or wide, touched again, from below, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle_evidence = "no reference solution; the referee is tested: catch by injection (the real pass flies to the robot; at 0.6 m to its left the ball is put at rest between the open palms, which really close and hold it by friction); no real two-palm catch of the 7.2 m/s pass was found (the arms give way, the ball slides off the first palm within 0.1 s, also when slowed to 30 %). Shot by injection as in free-throw-realgrasp (real swing and release, velocity set at the release). Negatives: nop (the pass knocks the resting right palm and drops), a tap shorter than the catch time, a too-weak squeeze, the squeeze eased after the catch, held against the chest, walking with the ball, the pivot foot dragged, a third step after a catch in the air, touched before the pass, a pass off the thigh, the shot short or wide, touched again, from below, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

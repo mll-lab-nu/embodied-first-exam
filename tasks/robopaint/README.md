@@ -28,26 +28,35 @@ person does, not coloured in (Process rules).
 
 **麟鳳龜龍** (the four auspicious creatures of the 禮記) is the densest work: 71 strokes, an exemplar of 8036 mm², strokes
 about 4.2 mm wide (the exemplar's area per stroke length), and 麟 alone has 23 strokes. Like the other kaishu targets it comes from Make Me a Hanzi's `graphics.txt` @ bddc96d
-(Arphic Public License); its reference writer uses `--entry diagonal`.
+(Arphic Public License); its reference writer uses the diagonal entry.
 
-**The reference writer's entry (`--entry`).** The default writer stops above each stroke's start, presses straight down
+**The reference writer's entry.** The default writer stops above each stroke's start, presses straight down
 and lifts straight up. At the stop the arm rebounds a fraction of a millimetre, and the brush takes the rebound as its
 direction of travel (in the air θ follows any motion faster than 1 cm/s): on about a quarter of the strokes the drag tail
 meets the paper turned against the stroke and sweeps a disc. Dense works have many short, thin strokes, where these discs
-fall outside the exemplar and fail the stray-ink limit. With `solution/opt_calli.py --entry diagonal` (recorded in the
-pair's `plans.json`) the brush enters and leaves the paper on straight 8 mm lines along the stroke, without a stop, in the
-robot-free optimisation and on the robot alike. The default is the vertical touch-down.
+fall outside the exemplar and fail the stray-ink limit. With the diagonal entry the brush enters and leaves the paper on
+straight 8 mm lines along the stroke, without a stop, in the robot-free optimisation and on the robot alike. The default is
+the vertical touch-down.
 
 **The reference solutions.** A copy should look like its exemplar, "like a print". All ten kaishu and xingshu pairs have
-references from `solution/opt_calli.py --profile print` (its `solution/README.md` has the method; the per-stroke planner
-stays its default):
-- the brush enters the paper along the stroke and leaves it back onto its own root (回锋), with a minimum press inside a
-  contact, so no disc is swept at a start, no needle is drawn at an end, and no contact splits in two;
-- per contact, several paths through its ink are tried and the best is kept. One of them walks each region's ink branch by
-  branch, so a region whose given centre line covers only part of it is written in full;
-- control points about every 6 mm, ink more than 1 mm from the exemplar weighted up, regions under 0.92 optimised again;
-- the robot step runs with 3 and 5 passes of iterative learning control and keeps the better result (`plans.json`
-  `ilc_passes`).
+references from the calligraphy planner's "print" profile, made at generation time on the graders' copy of the instance
+(whose `truth` holds the exemplar's ink; the agent's copy does not):
+- a robot-free trajectory optimisation against the task's brush model, one brush contact at a time (kaishu: an exemplar
+  stroke; xingshu: a contact of the connected-stroke plan): control points (x, y, press) about every 6 mm along the contact's
+  centre path, initialised by inverting the brush's trailing dynamics, fitted by least squares on the rendered contact against
+  its ink (a 512 px grid; the other contacts' ink does not count; ink more than 1 mm from the exemplar weighted 1.5x);
+  deterministic (one BLAS thread);
+- the brush enters the paper along the stroke and leaves it back onto its own root (回锋), with a press of at least 0.6 mm
+  inside a contact, so no disc is swept at a start, no needle is drawn at an end, and no contact splits in two;
+- per contact, three centre paths are tried and the lowest residual is kept: the regions' medians; a walk over each region's
+  skeleton that covers every branch (rings round, side branches out and back), so a region whose given centre line covers
+  only part of it is written in full; and the medians with out-and-back excursions into lobes they leave uncovered;
+- two more rounds for the contacts holding a region covered under 0.92, with missing and stray ink weighted 3x;
+- on the robot: a dip before every contact, travel, the entry line, the contact at 2 cm/s and the return exit; each control
+  step commands the inverse kinematics of the desired tip 0.125 s ahead (feed-forward for the arm's PD lag), and passes of
+  iterative learning control correct the commanded path by the realized tip error. The robot step runs with 3 and 5 passes
+  and keeps the result with the larger worst margin against IoU 0.92, boundary F 0.90, every region 0.90 and stray 0.01;
+  the final pass is recorded as `solution/oracle_qpos.npy`, which `solution/solve.sh` replays (`solution/oracle_paint.py`).
 
 The process limits are set from the first references' `path_mm` and mark width. The references' verifier metrics:
 
@@ -79,8 +88,8 @@ What still limits the copy:
   `instruction.md` (after "Target and score"), `README.md` and the `task.toml` description. "strict" survives in internal
   names only: `rcb_brush_strict.py`, `RCB_TOOL_MODULE=rcb_brush_strict` and the `reward.json` key `strict_ok` (the process
   rules).
-- The oil rule is calibrated on the reference solution's own execution (`solution/calibration.json`), and the oil texts
-  state the calibrated thresholds.
+- The oil rule is calibrated on the reference solution's own execution (the thresholds per painting: Oil: the pointed
+  brush), and the oil texts state them.
 - Every task follows `normalize()` of `scripts/task_conventions.py` (the repository's conventions; `--check`
   passes on every RoboPaint task).
 - Benchmark-specific metadata: `difficulty`, `medium`, `stroke_count`, `structure`, `characters` (TAXONOMY).
@@ -131,15 +140,15 @@ the scroll as written, its characters sharing one 210 mm frame so the ligatures 
   neighbouring character is cut explicitly (`cut`) and a stroke of the neighbouring column is excluded explicitly (`exclude`). A
   dashed hairline that the threshold breaks up is bridged along its own trace (`bridge_lines`), a dry stroke (飛白) is closed
   within its own area only (`close_regions`), and the edge is smoothed on the signed distance with hairlines kept at their width.
-  The skeleton graph is split into trails by good continuation at junctions (one trail = one brush contact = `--max-strokes`),
+  The skeleton graph is split into trails by good continuation at junctions (one trail = one brush contact of the cap),
   and every trail is cut into regions of at most 30 mm of centre path, so the region coverage holds along a long stroke and on
   its hairlines.
-- Reference solution: `cs_plan.py`, one plan per contact (opt_calli's optimiser over the contact's regions, control points every
-  4 mm, 3 mm where refined), with a press floor of 0.4 mm (`--zmin`: a contact that touches at zero press breaks into two on the
-  robot) and, in the works, at most 1 mm of press at the touch-down and the lift (`--z0max`, `--zendmax`: the arm sways there
-  and a deeper press leaves a blot); nangong's longest contact keeps its control points within 6 mm of their start
-  (`--leash-mm`: with a press floor the optimiser otherwise parked surplus path off the sheet, outside the residual's window).
-  The robot execution is the kaishu one (`ref_calli.py`; three ILC passes, more made the tracking worse). Scoring, thresholds and process rules are those of kaishu
+- Reference solution: one plan per contact (the calligraphy optimiser over the contact's regions, control points every
+  4 mm, 3 mm where refined), with a press floor of 0.4 mm (a contact that touches at zero press breaks into two on the
+  robot) and, in the works, at most 1 mm of press at the touch-down and the lift (the arm sways there and a deeper press
+  leaves a blot); nangong's longest contact keeps its control points within 6 mm of their start (with a press floor the
+  optimiser otherwise parked surplus path off the sheet, outside the residual's window).
+  The robot execution is the kaishu one (three ILC passes, more made the tracking worse). Scoring, thresholds and process rules are those of kaishu
   and xingshu.
 - Robot-free checks of the rule on the reference plans: one press for the whole sheet, a lift at every region
   boundary or in the middle of every contact, a missing contact, presses ×0.8 or ×1.2 and the naive plan fail on all six; one
@@ -180,7 +189,7 @@ a Man respected."), `commendation` ("Commendation animates the mind.") and `dili
 - **Rule**: IoU ≥ 0.85, boundary F ≥ 0.80, every region covered ≥ 0.75, stray ≤ 0.04, the cap, the 5 mm registration (the
   family's rule; a lower region coverage, 0.70, would let one constant press per contact pass `commendation`), plus the
   process rules.
-- **Reference solution** (`solution/plans.json`: the routes; `solution/ref_lettering.py`): the pen at the spread axis, the press
+- **Reference solution**: one planned route per contact, written with the pen at the spread axis, the press
   from the spread, 5 mm/s (slower at sharp turns), lag feed-forward and eight passes of iterative learning control; the recorded
   pass is the best one (every contact one stroke, the smallest tracking error).
 - **Rule study** (robot-free: the plan drawn with the pen's ideal mark and scored by the unchanged scorer), all six
@@ -371,9 +380,9 @@ it counts once (Luna's genuine 2.98 × retrace sets that margin), unless its bac
   over the brush's base radius at any pressure). It is frozen as `brush.preset_json` and stays CC0.
   - Straight strokes at 40 mm/s are about 2 mm wide at a 1.25 mm press, 2.5 mm at 1.5 mm, 3 mm at 2 mm, 4.2 mm at 3 mm, 6 mm at
     4 mm, 8 mm at 5 mm and 11 mm from 6 mm on.
-- **The reference solutions.** Each is a stroke program from the layered painter (`program.json` `optimiser`): a ground of
+- **The reference solutions.** Each is a stroke program from the layered painter: a ground of
   rows at a 7 mm press, then 4 layers of curved strokes at 4, 2.5, 1.6 and 1.3 mm presses (marks of about 6, 3.6, 2.6 and 2.1 mm).
-  - `solution/ref_oil.py` executes it with the program's `motion`: a 6 mm hover between strokes, quick dips and short holds.
+  - The robot executes it with the program's motion settings: a 6 mm hover between strokes, quick dips and short holds.
   - 1316–1697 strokes and 49.7k–62.0k control steps: 41–52 of the episode's 60 simulated minutes (the 72000-step guard).
 - **The rule.** It is calibrated on that execution, with an SSIM margin of 0.04 (with 0.03 the reference
   painted 50 % faster misses on Pearl Earring; with 0.04 no coarse painting passes). The stroke cap is 1.5 × and the path

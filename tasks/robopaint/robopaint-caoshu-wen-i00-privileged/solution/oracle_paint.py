@@ -1,6 +1,6 @@
 # Oracle for the RoboPaint brush tasks, executed by `rcb_brush.py run-oracle` with `s` (Session) and `p` (primitives) in scope.
 # The agent's copy of the instance holds only the scene and the picture, so the oracle replays the joint targets that the reference
-# planner (solution/plan_oracle.py, run at generation time on the graders' copy) recorded. The metrics the scoring service returns for
+# planner (run at generation time on the graders' copy) recorded. The metrics the scoring service returns for
 # them go to /app/output/scorer_metrics.json (validation: they must equal the verifier's).
 import json, os
 import numpy as np

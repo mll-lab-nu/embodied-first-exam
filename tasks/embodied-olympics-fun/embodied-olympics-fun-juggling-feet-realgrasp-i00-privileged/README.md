@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-juggling-feet-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `juggling_feet_realgrasp` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_juggling_feet_realgrasp.py: positive by injection after a real drop: real right-foot strikes by the robot's own motors (lowcmd, toe up at 0.8 m/s, in and out about 3 m/s), the standing leg a ghost and the ball put back over the toe after every touch (the G1 has no single-leg balance); the start squeeze holds, without it the ball slips out; negatives: holding it, the ground, a weak squeeze, held against the body, a re-grip, a still foot, low strikes, shin, thigh, trunk, head, hands, trapped between the feet, resting on a foot, leaving the grid, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
+| Oracle | `none` — no reference solution; the referee is tested: positive by injection after a real drop: real right-foot strikes by the robot's own motors (lowcmd, toe up at 0.8 m/s, in and out about 3 m/s), the standing leg a ghost and the ball put back over the toe after every touch (the G1 has no single-leg balance); the start squeeze holds, without it the ball slips out; negatives: holding it, the ground, a weak squeeze, held against the body, a re-grip, a still foot, low strikes, shin, thigh, trunk, head, hands, trapped between the feet, resting on a foot, leaving the grid, a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 

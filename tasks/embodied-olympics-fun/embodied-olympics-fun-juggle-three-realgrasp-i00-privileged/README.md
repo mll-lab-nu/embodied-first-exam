@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-juggle-three-realgrasp-i00-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `juggle_three_realgrasp` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_juggle_three_realgrasp.py: positive: throws injected (jaws opened by command, ball put on an arc to the other jaws), all 10 catches real (the ball falls between the open jaws pointing up; the jaws close at 5 cm and the pads clamp for 0.05 s). Negatives: back into / clamped by its own gripper, low pass, never closes, closes too early (ball on the tips), waiting ball pushed, onto the head, held ball pressed on the upper arm, weak clamp slips (jaws 33 deg down: 3.3 N holds, ~1.5 N falls), a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
+| Oracle | `none` — no reference solution; the referee is tested: positive: throws injected (jaws opened by command, ball put on an arc to the other jaws), all 10 catches real (the ball falls between the open jaws pointing up; the jaws close at 5 cm and the pads clamp for 0.05 s). Negatives: back into / clamped by its own gripper, low pass, never closes, closes too early (ball on the tips), waiting ball pushed, onto the head, held ball pressed on the upper arm, weak clamp slips (jaws 33 deg down: 3.3 N holds, ~1.5 N falls), a fall; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 

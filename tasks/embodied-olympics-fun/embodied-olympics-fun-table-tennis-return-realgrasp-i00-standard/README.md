@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-fun-table-tennis-return-realgrasp-i00-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
 | Family / instance | `table_tennis_return_realgrasp` / seed 0 |
-| Oracle | `none` — no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_table_tennis_return_realgrasp.py: positive by injection (robot put at the end line) with a real stroke holding the free paddle at 120 N: returned 0.73 m past the net, 9/10 placements; negatives as table-tennis-return plus racket dropped/thrown/out of hand, held by the blade, against the thigh, racket in the net; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
+| Oracle | `none` — no reference solution; the referee is tested: positive by injection (robot put at the end line) with a real stroke holding the free paddle at 120 N: returned 0.73 m past the net, 9/10 placements; negatives as table-tennis-return plus racket dropped/thrown/out of hand, held by the blade, against the thigh, racket in the net; human review in the pull request that adds the benchmark (PROTOCOL §2.7) |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1` |
 

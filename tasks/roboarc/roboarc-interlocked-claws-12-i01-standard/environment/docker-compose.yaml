@@ -24,7 +24,7 @@ services:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro
     working_dir: /tmp
-    # The frozen instance comes from the image (scripts/roboarc/assets.json): the entrypoint stages it next to a copy of
+    # The frozen instance comes from the image (images/roboarc/assets.json): the entrypoint stages it next to a copy of
     # runtime_binding.json and checks it (images/roboarc/stage_instance.py), then runs the command.
     entrypoint: ["sh", "-c", "python /opt/robotangle/stage_instance.py interlocked-claws-12-i01 /tmp/robotangle-instance --binding /srv/runtime_binding.json && exec \"$$@\"", "stage"]
     command: sh /srv/run.sh

@@ -15,13 +15,13 @@ robot = "unitree-h1-2"
 family = "volley_shot"
 category = "football-and-volleyball"
 mode = "privileged"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_volley_shot.py: positive by injection (the real cross onto the foot, the ball's velocity set at the contact: in at 11.7, out at 18.4 m/s, into the goal); negatives: a still leg (the ball leaves slower than it came), a body contact, carried, wide, at the keeper, a second touch, too close, in without a volley; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection (the real cross onto the foot, the ball's velocity set at the contact: in at 11.7, out at 18.4 m/s, into the goal); negatives: a still leg (the ball leaves slower than it came), a body contact, carried, wide, at the keeper, a second touch, too close, in without a volley; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

@@ -55,7 +55,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | Upstream | molmo-spaces 0.2.9, benchmark `molmospaces-bench-v2/20260415`, package `ithor/FrankaCloseHardBench/FrankaCloseHardBench_20260206_json_benchmark` (FrankaCloseHardBench: upstream's Hard configuration of Close, not in its evaluation docs), episode 346 |
 | World-frame information | none in the texts: object names and the goal only; the robot's own pose and the camera calibration come from the service (tasks/molmospaces/README.md) |
-| Generator | `scripts/molmospaces/mk_tasks.py`; tasks/molmospaces/README.md |
+| Benchmark notes | tasks/molmospaces/README.md |
 
 ### Change Log
 - 2026-10-10: how a trial that could not be graded is recorded, and request checks; the frozen episode, upstream's success rule and the pass rule are unchanged, so the task keeps its name. `tests/grade.py`: a missing, unreadable or unfinished `final.json` (the collect hook never wrote its verdict) is `infra_error = 1` (was the agent's 0, or no reward at all); a reward is always written. `environment/sim/finalize.sh`: `final.json` is written whole and renamed into place, and a replay is ended at its limit (500 s, never past the hook's deadline; a replay without a result was and is `infra_error`). `environment/sim/server.py`: a null or wrongly typed request field (`dt`, `seconds`, `cameras`, `note`) is a 400 before anything moves (was a 500 that ended the episode); `get_obs(seconds=...)` reports the seconds it ran (whole control steps), not the seconds asked for. A pass before this change is a pass after it; results recorded before it may hold infrastructure failures counted as the agent's 0.

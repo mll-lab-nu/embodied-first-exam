@@ -53,7 +53,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | RoboLab task | `PickGlassesTask`; the frozen instance (the full scene state after RoboLab's canonical seed-0 reset, with its hash) is `environment/instance.json` |
 | Image | built locally on every host (`images/robolab/BUILD_ONLY`: it contains Isaac Sim); needs an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`) |
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); out of it, every Python process pays ~2 min of Isaac Sim launch + scene build (tasks/robolab/README.md) |
-| Generator | `scripts/robolab/mk_tasks.py` (`scripts/robolab/families.json`, `template/privileged/`, `embodied_first_exam/robolab/`); tasks/robolab/README.md |
+| Benchmark notes | tasks/robolab/README.md |
 
 ### Change Log
 - 2026-10-10: grading robustness and time limits; the scene, the frozen instance and the pass rule are

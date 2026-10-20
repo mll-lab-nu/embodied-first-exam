@@ -7,21 +7,12 @@ Embodied Safety Exam's source repository is not public yet: the snapshot in `con
 repository builds from, and `fetch_context.sh --check <clone>` lets a maintainer with access compare it with the
 repository.
 
-**The rename.** Embodied Safety Exam (ESE) is the benchmark formerly named RoboSafeBench (RSB). Its image was
-`eai-robosafe` (`images/robosafe/`, tag `robosafe-0.5.4`; #387 gave that same image the tag `ese-0.5.4`). Tag
-`ese-0.5.5` (#389) was built from RoboSafeBench `2c6360ccca8132bdfdf2f18bf0f16112d04b1b0a` renamed (commit
-`e2c431f6ff4932089adc0b5ff5ecc0b16447fe14`, package `embodied_safety_exam/`, environment `ESE_*`), with its asset data
-left byte-identical and 56 private source locators in 20 asset JSON files replaced at context preparation by a
-metadata projection. Tag `ese-0.5.6` is built from Embodied Safety Exam 0.5.6, where the rename is finished in the
-source itself: the asset data keys (`ese_bbox`, `ese_colors.json`, ...), credits and provenance, the MJCF classes
-(`ese_visual`, ...), the legacy guard on the former environment names removed, and the same public provenance
-identifiers (`historical-source://...`) committed in place of the private locators. The context is therefore the
-source as committed, with no projection step. Scenes, physics, rules, verdicts and every task's start state are those
-of 0.5.4; the realism_v3 visual revision and physics catalogue are unchanged, the asset manifest hash is new
-(`9df4b0248d271b5e59009a1e806d153a1f1733f9a24ead7d41a8bcb2700f4785`: the renamed metadata; every texture and mesh
-has its old bytes). The Hugging Face dataset holding the realism_v3 binaries was renamed from `MLL-Lab/robosafe-assets`
-to `MLL-Lab/embodied-safety-exam-assets` (the old name redirects). The source keeps the old names only where they
-record history: its README's "formerly RoboSafeBench" sentence and the audit's list of benchmark names to catch.
+**Names.** Embodied Safety Exam (ESE) is the benchmark formerly named RoboSafeBench; the source keeps the old name only
+in its README's "formerly RoboSafeBench" sentence and in the audit's list of benchmark names to catch. Its package is
+`embodied_safety_exam/`, its environment variables `ESE_*`, and its public provenance identifiers are
+`historical-source://...`. Scenes, physics, rules, verdicts and every task's start state are those of the 0.5.4 release;
+the asset manifest hash is `9df4b0248d271b5e59009a1e806d153a1f1733f9a24ead7d41a8bcb2700f4785`. The realism_v3 binaries
+are in the Hugging Face dataset `MLL-Lab/embodied-safety-exam-assets`.
 Inside the image the package is installed from `/opt/ese`; the build's checksums and manifests are in `/opt/ese-image`.
 
 | Part | Source | How it is checked |

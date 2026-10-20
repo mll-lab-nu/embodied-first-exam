@@ -62,9 +62,9 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 35 s of robot time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
 | Action space | `submit` chunks of `joint_position` (16: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or a watch window; binary RCB1 responses |
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request, rendered by SAPIEN on the sidecar's GPU |
-| Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`scripts/eai_standard/client.env`) |
+| Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
 | Crash recovery | the shared realtime layer's: a checkpoint every second of robot time, `restart: on-failure:6`, the service resumes the same episode, paused |
-| Generator | `scripts/pandadyn/mk_tasks.py` (`REALTIME`, `template/realtime/`, `scripts/humanoidbench/shared/{realtime,standard}/`); tasks/pandadyn/README.md |
+| Benchmark notes | tasks/pandadyn/README.md |
 
 ### Change Log
 - 2026-10-14 (owner): added. The family's scene is dynamic (PROTOCOL §2.14), so it gets a standard-realtime

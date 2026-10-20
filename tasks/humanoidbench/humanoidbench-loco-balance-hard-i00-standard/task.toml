@@ -1,5 +1,4 @@
-# Standard-mode twin of humanoidbench-loco-balance-hard-i00-privileged. Generated from scripts/humanoidbench/templates/standard/task.toml -- edit
-# subset.toml or the template, not this.
+# Standard-mode twin of humanoidbench-loco-balance-hard-i00-privileged.
 schema_version = "1.3"
 artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
   { source = "/data/final.json", service = "sim" },
@@ -27,7 +26,7 @@ simulator = "humanoidbench"
 robot = "unitree-h1"
 family = "balance_hard"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 protocol = "eai-standard/2.1"
 instance_seed = 0
 expert_time_estimate_hours = 8.0

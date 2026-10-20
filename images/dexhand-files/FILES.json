@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.1.1@sha256:5da16fab7b26a7cdd7433ef32b8ead9286a9cf31da833d006f7b4d3e565e1ac9",
+ "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.2.0@sha256:972cfacca6dbd5cac0d2f18799076c830efeb384928663e44b8fdcacdc57b89c",
  "source": "embodied_first_exam/benchmarks/dexhand",
  "files": {
   "privileged/environment/arm_rig.py": "5b9e26e313c7a935dfbf04b34aec8047bd713677c638622b8baeaf09453c5a3a",
@@ -342,7 +342,6 @@
   "privileged/environment/assets/rosle-bowl-original.obj": "d20e884a856f123e5a598708408981a9ec43b0835cfba4bdd667f5692f72ec73",
   "privileged/environment/assets/rosle-whisk-wires-original.obj": "a33651ce0362dc116b57de85f49e53ae25e0e0986d5e015584cd02d6db4f7854",
   "privileged/environment/assets/sharpa_bimanual_hands.xml": "e93b7a4fab51baa978e62233db1ad93ecbf2a76076904af4d48150fc35f86ca9",
-  "privileged/environment/assets/source/ASSET_PROVENANCE.md": "e74aa85dc271f5a1615ac1578223de5316d76a37a5e4cb594ae407741f954d85",
   "privileged/environment/assets/source/SHARPA-APACHE-2.0.txt": "8d3d877d33afe58c5146e4304db9cc01e7550f843b025a461ea2804e90a3c6d3",
   "privileged/environment/assets/source/hario_mechanism.py": "dcadf7ac83a3981fc122218e65ecb6863ac8dafa372022a91549de87710155d3",
   "privileged/environment/assets/spoon.obj": "1ae5762b9c16564ce8031889c80143c8f6be1e47ada2179aa4facb09938f1601",

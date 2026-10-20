@@ -20,7 +20,7 @@ Bimanual furniture assembly with physical grasps (no assist), 16-D actuator acti
 (175.5 s of simulated time).
 
 ## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `a55a377945679794…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): a closed-loop reference built on the final physics by `scripts/ikea_mujoco/oracles/eket/build_ref.py`: the demo as the phase guide, each held panel servoed onto the unclamped demo's recorded relative-pose track (damped-least-squares Jacobian IK on the TCP) and paused at each slide until its gate accepts; the rows are the targets executed after the joint-speed clamp. It never trips the joint-speed clamp.
+`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `a55a377945679794…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): a closed-loop reference built on the final physics: the demo as the phase guide, each held panel servoed onto the unclamped demo's recorded relative-pose track (damped-least-squares Jacobian IK on the TCP) and paused at each slide until its gate accepts; the rows are the targets executed after the joint-speed clamp. It never trips the joint-speed clamp.
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from the scene's initial state in two fresh processes at the same time
@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | Grasping | physical (finger friction), no assist |
 | Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), at the end of the rows and after a 1.0 s hold |
-| Scene | `/opt/ikea/scenes/eket/` in the image; digest `22795734d50cdce9…` (scripts/ikea_mujoco/assets.json) |
+| Scene | `/opt/ikea/scenes/eket/` in the image; digest `22795734d50cdce9…` (images/ikea-mujoco/assets.json) |
 | Initial state | sha256 `9815e6dc4b4a9856…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
@@ -69,4 +69,4 @@ Mitres, keyholes, dowels and back grooves are contact. The four frame joints (we
 - Scene and demo: the IKEA MuJoCo tree (`scenes/eket/`, `demos/eket_vlim/actions.npz`), MuJoCo 3.14.0, RoboARC rigid settings
   (timestep 0.625 ms, Newton, 100 iterations, elliptic cones).
 - The scene files are not in this repository: the image carries them (`images/ikea-mujoco/README.md`, build context from
-  `scripts/ikea_mujoco/stage_context.py`, pinned by `scripts/ikea_mujoco/assets.json`).
+  `images/ikea-mujoco/stage_context.py`, pinned by `images/ikea-mujoco/assets.json`).

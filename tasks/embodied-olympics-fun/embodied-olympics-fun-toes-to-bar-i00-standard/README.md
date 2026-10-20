@@ -18,7 +18,7 @@ Hanging from the high bar by both hands, do five toes-to-bar: bring both feet up
 The bar is 0.80 m above your pelvis and your legs are 0.75 m long: hip flexion alone does not bring the toes to the bar, the trunk has to lean back or swing as well, against shoulders of 25 N m, and the legs have to come all the way down again, five times within the time. In standard mode the agent has no simulator and no state: it sees through the robot's cameras, acts through the client, and has 50 resets (only the last attempt is graded).
 
 ## Reference solution
-`solution/oracle_replay.py` streams the privileged twin's reference solution, row by row, through the client (`solution/rows.npz`, recorded by scripts/embodied-olympics/make_oracles.py). Reference: a knee-tuck snap with bent elbows, timed on the back-swing: 5 repetitions in 7.8 s; 12 of 12 variants when it was written. The privileged twin's reference rows (778 control steps, success after 7.78 s) streamed through the client.
+`solution/oracle_replay.py` streams the privileged twin's reference solution, row by row, through the client (`solution/rows.npz`, recorded at generation time). Reference: a knee-tuck snap with bent elbows, timed on the back-swing: 5 repetitions in 7.8 s; 12 of 12 variants when it was written. The privileged twin's reference rows (778 control steps, success after 7.78 s) streamed through the client.
 
 ## Verification
 The sim sidecar's referee judges the live attempt, and that is the verdict (`final.json`: `graded_by` live, `replays` 0;

@@ -1,9 +1,8 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:vlabench-files-0.2.1@sha256:c59fcf690504148bc5873b80ae864cddd969a572ef5d5cde5b5353656fd16efd",
+ "image": "ghcr.io/mll-lab-nu/efe:vlabench-files-0.3.0@sha256:44da3b5283e51867a637439e4ae9503c660eb2d89d3677be488ae5b4501c57c2",
  "source": "embodied_first_exam/benchmarks/vlabench",
  "files": {
   "privileged/environment/vlb_tool.py": "1395c145e38a166301937a9d78308c522058433a30822b44c0e3ed757f19f8d4",
-  "privileged/tests/grade.py": "3b4ea37c3e591c0cfed323b2e188b37af7ca33494b7b64b091168751fd7e8230",
-  "standard/tests/grade.py": "605bb1492c21639dfcbc0fb98a40501961600e6441d83065e5a9896594450003"
+  "privileged/tests/grade.py": "3b4ea37c3e591c0cfed323b2e188b37af7ca33494b7b64b091168751fd7e8230"
  }
 }

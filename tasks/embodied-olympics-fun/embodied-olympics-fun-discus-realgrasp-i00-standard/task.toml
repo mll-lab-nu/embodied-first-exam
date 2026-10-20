@@ -27,14 +27,14 @@ robot = "unitree-h1-2"
 family = "discus_realgrasp"
 category = "throwing-catching-striking"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 12.0
 oracle = "full"
-oracle_evidence = "Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES in this family's physics (search_technique.py's Discus space): the discus, clamped by its rim in the right Dex1-1 gripper, pulls out of the jaws at 12.5 m/s (the clamp's friction gives way 0.14 s before the jaws open), 15.95 m (the line is 15 m), then out of the rear half and standing; 9/9 under +-3% gains x release-time variations. Referee test: nop holds it the full minute; a light clamp drops it; a 150 N pull is held, 300 N pulls it out; positive: the reference solution; negatives: walking out with it, discus on the thigh, on the chest, carried on the hand without the hold, gripped again, touched after the release, out early, outside the sector, short, a front-half exit, a fall The privileged twin's reference rows (811 control steps, success after 8.11 s) streamed through the client."
+oracle_evidence = "Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES in this family's physics (Embodied Olympics' Discus search space): the discus, clamped by its rim in the right Dex1-1 gripper, pulls out of the jaws at 12.5 m/s (the clamp's friction gives way 0.14 s before the jaws open), 15.95 m (the line is 15 m), then out of the rear half and standing; 9/9 under +-3% gains x release-time variations. Referee test: nop holds it the full minute; a light clamp drops it; a 150 N pull is held, 300 N pulls it out; positive: the reference solution; negatives: walking out with it, discus on the thigh, on the chest, carried on the hand without the hold, gripped again, touched after the release, out early, outside the sector, short, a front-half exit, a fall The privileged twin's reference rows (811 control steps, success after 8.11 s) streamed through the client."
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

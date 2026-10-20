@@ -19,11 +19,11 @@ opponent_level = 3
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["0d7f680cc049"]
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
-exporter = "roboolympics tools.tt_fullsim.export"
+exporter = "Embodied Olympics table-tennis simulator exporter"
 official = false
 expert_time_estimate_hours = 1.0
 oracle = "partial"
-oracle_evidence = "full-state reference program (solution/): the camera-only reference player's serve and stroke planner fed the true ball state; its wins on this instance and across levels 1-4 are in the Embodied Olympics privileged report (tools/tt_fullsim/calibrate.py); not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false)"
+oracle_evidence = "full-state reference program (solution/): the camera-only reference player's serve and stroke planner fed the true ball state; its wins on this instance and across levels 1-4 are in the Embodied Olympics privileged report; not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false)"
 validated = false
 
 [metadata.resources]

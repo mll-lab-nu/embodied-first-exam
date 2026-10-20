@@ -7,7 +7,8 @@
   What is specific to one task (its frozen instance, reference solution, texts, Dockerfiles, compose file) stays in
   `tasks/<benchmark>/<task>/`.
 - `standard/`: the standard-mode client and service layers every benchmark's standard tasks copy unchanged
-  (eai-standard/2.2 at the top, `v2_4/`, the realtime layer in `realtime/`; docs/protocol/standard_mode.md).
+  (eai-standard/2.2 at the top, `v2_1/` with the 2.1 client and the standard grader most 2.1 and realtime tasks share,
+  `v2_4/`, the realtime layer in `realtime/`; docs/protocol/standard_mode.md).
 
 A task's build gets a benchmark's files from a pinned files-only image built from its folder (`scripts/files_image.py`,
 `images/<name>/FILES.json`): its Dockerfiles `COPY --from=<image@digest>` each file to the same container path a copy in

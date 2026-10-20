@@ -15,13 +15,13 @@ robot = "unitree-h1-2"
 family = "discus"
 category = "throwing-catching-striking"
 mode = "privileged"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 # scene = environment/instance.json (the family's parameters + its t = 0 state hash); identity = the dataset.toml digest
 instance_seed = 0
 expert_time_estimate_hours = 8.0
 oracle = "full"
-oracle_evidence = "Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (Embodied Olympics' method, search_technique.py): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit Measured (make_oracles.py): success after 8.48 s of the 60 s limit, live and in a fresh replay, ending in the same state."
+oracle_evidence = "Reference: a standing throw by the trunk's turn from a technique found offline by CMA-ES over whole-body key poses (Embodied Olympics' method): 12.9 m/s from 1.82 m, 15.87 m (the line is 15 m), then out of the rear half and standing. Open loop on the frozen start, not robust. Referee test negatives: walking out with it, out early, outside the sector, short, touched after the release, a front-half exit Measured: success after 8.48 s of the 60 s limit, live and in a fresh replay, ending in the same state."
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

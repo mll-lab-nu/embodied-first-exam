@@ -14,7 +14,7 @@ simulator = "maniguard"           # ManiGuard on BEHAVIOR-1K v3.7.2 (OmniGibson 
 robot = "franka-panda-longfinger"
 family = "jar_transport"
 mode = "privileged"               # privileged state, resets and thin primitives through the tooling (docs/protocol/README.md §3)
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 oracle = "full"
 instance_seed = 2                 # = the ManiGuard-Bench task index (jar_transport/task_0002/base); scene = environment/instance/; identity = dataset.toml digest
 expert_time_estimate_hours = 2.0

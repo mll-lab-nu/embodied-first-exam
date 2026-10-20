@@ -72,7 +72,7 @@ benchmark's tooling, until the group's slots are filled. One candidate was skipp
   are hidden.
 
 ## Standard-mode service
-`images/robocasa365/standard/server_casa.py` and the collect hook `environment/sim/finalize.sh`, the same
+`images/robocasa/standard/server_casa.py` and the collect hook `environment/sim/finalize.sh`, the same
 service and hook as RoboCasa's, byte for byte (`tasks/robocasa/README.md`: graded by the live episode, nothing
 replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RCB_START_SHA` in
 each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one render pass after the

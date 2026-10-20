@@ -20,7 +20,7 @@ Bimanual furniture assembly with physical grasps (no assist), 14-D actuator acti
 (173.5 s of simulated time).
 
 ## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `699f86e5075b74eb…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): the robot demo of the IKEA MuJoCo tree (`demos/svallet/actions.npz`), time-dilated to the robots' real joint-speed limits by `scripts/ikea_mujoco/standard/std_reference.py`, so the joint-speed clamp never changes a row. The demo itself commands faster than the limits and fails under the clamp.
+`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `699f86e5075b74eb…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): the robot demo of the IKEA MuJoCo tree (`demos/svallet/actions.npz`), time-dilated to the robots' real joint-speed limits, so the joint-speed clamp never changes a row. The demo itself commands faster than the limits and fails under the clamp.
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from the scene's initial state in two fresh processes at the same time
@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | Grasping | physical (finger friction), no assist |
 | Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), at the end of the rows and after a 1.0 s hold |
-| Scene | `/opt/ikea/scenes/svallet/` in the image; digest `0ac62b72465133c4…` (scripts/ikea_mujoco/assets.json) |
+| Scene | `/opt/ikea/scenes/svallet/` in the image; digest `0ac62b72465133c4…` (images/ikea-mujoco/assets.json) |
 | Initial state | sha256 `22360c69fb8a50ef…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
@@ -68,4 +68,4 @@ The shade's barb cams a spring jaw (a slide joint with a spring, 1200 N/m) open 
 - Scene and demo: the IKEA MuJoCo tree (`scenes/svallet/`, `demos/svallet/actions.npz`), MuJoCo 3.14.0, RoboARC rigid settings
   (timestep 0.625 ms, Newton, 100 iterations, elliptic cones).
 - The scene files are not in this repository: the image carries them (`images/ikea-mujoco/README.md`, build context from
-  `scripts/ikea_mujoco/stage_context.py`, pinned by `scripts/ikea_mujoco/assets.json`).
+  `images/ikea-mujoco/stage_context.py`, pinned by `images/ikea-mujoco/assets.json`).

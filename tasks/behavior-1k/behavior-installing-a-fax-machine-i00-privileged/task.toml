@@ -14,7 +14,7 @@ simulator = "behavior"            # BEHAVIOR-1K v3.9.2 = OmniGibson 3.9.2 on Isa
 robot = "r1pro"
 family = "installing_a_fax_machine"
 mode = "privileged"               # privileged state, unlimited resets, thin primitives (docs/protocol/README.md §3)
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 oracle = "none"
 oracle_evidence = "No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (136 s on average); demonstration video (148 s): https://www.youtube.com/embed/v1CrUuIN0lY (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #75 (protocol §2.7)."
 instance_seed = 301               # scene = environment/instance.json (2026 challenge public_test instance 301 + its state hash); identity = dataset.toml digest

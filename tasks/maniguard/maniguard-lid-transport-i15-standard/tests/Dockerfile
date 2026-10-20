@@ -1,5 +1,5 @@
 # Separate verifier sandbox: grades the sim service's own artifacts; needs nothing but python (the shared eai-standard
-# client base, scripts/eai_standard/client.env; it installs nothing).
+# client base, embodied_first_exam/standard/client.env; it installs nothing).
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/test.sh
 COPY --from=ghcr.io/mll-lab-nu/efe:maniguard-files-0.2.1@sha256:72e1f77bd8c051f9dba4c4ba4bde9fc0075ff9194815ddd252af2e442be779a4 /standard/tests/grade.py /tests/grade.py

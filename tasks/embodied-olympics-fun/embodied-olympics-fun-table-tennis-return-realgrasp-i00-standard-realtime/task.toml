@@ -29,7 +29,7 @@ robot = "unitree-g1"
 family = "table_tennis_return_realgrasp"
 category = "basketball-and-rackets"
 mode = "standard-realtime"
-dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 slowdown = 1                      # standard-realtime: the world runs at 1/S of real speed (docs/protocol/README.md §4b); RCB_SLOWDOWN's default
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.3"
@@ -37,7 +37,7 @@ instance_seed = 0
 reset_budget = 10
 expert_time_estimate_hours = 13.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_table_tennis_return_realgrasp.py: positive by injection (robot put at the end line) with a real stroke holding the free paddle at 120 N: returned 0.73 m past the net, 9/10 placements; negatives as table-tennis-return plus racket dropped/thrown/out of hand, held by the blade, against the thigh, racket in the net; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection (robot put at the end line) with a real stroke holding the free paddle at 120 N: returned 0.73 m past the net, 9/10 placements; negatives as table-tennis-return plus racket dropped/thrown/out of hand, held by the blade, against the thigh, racket in the net; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

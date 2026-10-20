@@ -27,14 +27,14 @@ robot = "unitree-h1-2"
 family = "basketball_dribble_realgrasp"
 category = "basketball-and-rackets"
 mode = "standard"
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 network = "open"                 # the agent's egress (docs/protocol/README.md §2): open, the author's choice
 protocol = "eai-standard/2.1"
 instance_seed = 0
 reset_budget = 50
 expert_time_estimate_hours = 12.0
 oracle = "none"
-oracle_evidence = "no reference solution; the referee is tested by scripts/embodied-olympics/tests/test_basketball_dribble_realgrasp.py: positive by injection (the palms really open before a foot lifts, a real 14 m walk in 20 s with 40 real floor bounces and palm touches; each push is the ball's velocity set at the real touch, since the palm absorbs the ball); negatives: walking with the held ball, held ball on the floor / against the chest, resting on the palm, a double touch, caught in both palms again, a leg touch, thrown ahead, walked away from, out of bounds (ball, robot), dribbling on the spot, a fall; nop holds 60 s; the hold slips without the squeeze (0.06 s) or with one palm (0.12 s). A real palm push was not attempted; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
+oracle_evidence = "no reference solution; the referee is tested: positive by injection (the palms really open before a foot lifts, a real 14 m walk in 20 s with 40 real floor bounces and palm touches; each push is the ball's velocity set at the real touch, since the palm absorbs the ball); negatives: walking with the held ball, held ball on the floor / against the chest, resting on the palm, a double touch, caught in both palms again, a leg touch, thrown ahead, walked away from, out of bounds (ball, robot), dribbling on the spot, a fall; nop holds 60 s; the hold slips without the squeeze (0.06 s) or with one palm (0.12 s). A real palm push was not attempted; human review in the pull request that adds the benchmark (PROTOCOL §2.7)"
 
 [metadata.resources]
 # minimum compute to run this task (docs/protocol/README.md §2.9)

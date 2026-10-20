@@ -14,7 +14,7 @@ simulator = "maniskill"           # ManiSkill 3.0.1 / SAPIEN 3.0.3 (PhysX on the
 robot = "franka-panda"            # PandaStick with a dip pen: rigid holder + a collision-free 6 mm flexible point; TCP = the point
 family = "robopaint_lettering_virtue"
 mode = "privileged"               # privileged (exact sheets, pen state, reset, scoring service) | standard (RGB only: the -standard twin)
-dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): scripts/task_dynamics.toml
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 oracle = "partial"                # solution/solve.sh replays the frozen reference plan; its recorded scores: oracle_evidence
 oracle_evidence = "Reference solution in solution/ (the lettering family redesigned on 2026-10-09: 臨摹 of engraved round hand; generated with the current tooling on the native efe:robopaint-0.2.0 runtime): the generator's self-test replayed it on the graders' copy and through the scoring service (equal metrics, success); under the process rules the verifier scores it 1 (tests/grade.py with rcb_brush_strict.py, two fresh replays): path_mm 2288 and mark_width_mm 0.42, against the colouring-in limits 6870 mm and 0.12 mm. Harbor oracle and nop runs: tasks/robopaint/README.md (Lettering)."
 instance_seed = 0                 # scene = environment/instance.json (agent's copy: sheets, pen, ink well, start joints, the rule, instance_sha)

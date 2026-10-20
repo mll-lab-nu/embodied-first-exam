@@ -7,7 +7,7 @@
 | Twin | `embodied-olympics-match-soccerssl-match-i00-standard-realtime` |
 | Simulator / robot | `mujoco` / `ssl-robot` |
 | Family / instance | `soccer_ssl_match` / seed 7 |
-| Oracle | `partial` — full-state reference program (solution/): the sport's reference team (the camera-only reference player's decision code) fed the true state; its formal S = 10 results and its results across levels 1-3 against the camera reference are in the Embodied Olympics privileged report (tools/fullsim/calibrate.py); not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false) |
+| Oracle | `partial` — full-state reference program (solution/): the sport's reference team (the camera-only reference player's decision code) fed the true state; its formal S = 10 results and its results across levels 1-3 against the camera reference are in the Embodied Olympics privileged report; not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false) |
 | Agent time budget | 14400 s; tokens: protocol default (PROTOCOL §5) |
 | Base image | `ghcr.io/mll-lab-nu/efe:olympiad-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |
 

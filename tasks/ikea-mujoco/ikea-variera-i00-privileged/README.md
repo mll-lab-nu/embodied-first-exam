@@ -20,7 +20,7 @@ Bimanual furniture assembly with physical grasps (no assist), 16-D actuator acti
 (579.8 s of simulated time).
 
 ## Reference solution
-`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `a2653e570ce4be2c…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): the robot demo of the IKEA MuJoCo tree (`demos/variera/actions.npz`), then a release tail of our own appended (`scripts/ikea_mujoco/tails/variera.npy`): both grippers open and the arms hold for 0.6 s (240 rows): the demo ended with the left hand still closed on the screwdriver, which the terminal rules' release check refuses, time-dilated to the robots' real joint-speed limits by `scripts/ikea_mujoco/standard/std_reference.py`, so the joint-speed clamp never changes a row. The demo itself commands faster than the limits and fails under the clamp.
+`solution/solve.sh` copies `solution/trajectory.npz` (sha256 `a2653e570ce4be2c…`) to `/app/output/`: the task's one reference, shared with the standard twin (its `solution/oracle_actions.npz`, the same rows): the robot demo of the IKEA MuJoCo tree (`demos/variera/actions.npz`), then a release tail of our own appended: both grippers open and the arms hold for 0.6 s (240 rows): the demo ended with the left hand still closed on the screwdriver, which the terminal rules' release check refuses, time-dilated to the robots' real joint-speed limits, so the joint-speed clamp never changes a row. The demo itself commands faster than the limits and fails under the clamp.
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from the scene's initial state in two fresh processes at the same time
@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 |---|---|
 | Grasping | physical (finger friction), no assist |
 | Success rule | the scene's `success.py` + the terminal rules (released, at rest, no breakdown), at the end of the rows and after a 1.0 s hold |
-| Scene | `/opt/ikea/scenes/variera/` in the image; digest `869e1978078a13ae…` (scripts/ikea_mujoco/assets.json) |
+| Scene | `/opt/ikea/scenes/variera/` in the image; digest `869e1978078a13ae…` (images/ikea-mujoco/assets.json) |
 | Initial state | sha256 `067105ad8f8329ec…` of the mjSTATE_INTEGRATION vector |
 
 ### Goal
@@ -68,4 +68,4 @@ Screw threads and receivers are non-convex SDF meshes (0.5 mm pitch, right-hand)
 - Scene and demo: the IKEA MuJoCo tree (`scenes/variera/`, `demos/variera/actions.npz`), MuJoCo 3.14.0, RoboARC rigid settings
   (timestep 0.625 ms, Newton, 100 iterations, elliptic cones).
 - The scene files are not in this repository: the image carries them (`images/ikea-mujoco/README.md`, build context from
-  `scripts/ikea_mujoco/stage_context.py`, pinned by `scripts/ikea_mujoco/assets.json`).
+  `images/ikea-mujoco/stage_context.py`, pinned by `images/ikea-mujoco/assets.json`).

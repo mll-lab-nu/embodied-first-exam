@@ -25,7 +25,7 @@ time).
 ## Reference solution
 `solution/solve.sh` runs `solution/oracle_replay.py`: it submits the control steps of `solution/oracle_actions.npz` through
 the client as `joint_position` chunks of 10 s, `hold`, one control step per row, as float64 (the client's transport;
-`Robot.submit` sends float32), so the service executes exactly those rows. The rows are the task's one reference, the same file as the privileged twin's `solution/trajectory.npz`: the author's speed-limited demo (`stegesund_vlim`), unchanged (`scripts/ikea_mujoco/oracles/stegesund/`): every row is within the joint-speed limits (from the keyframe ctrl; the largest step is the limit itself), so the clamp never changes a row, and it passes the terminal rules as sent (it ends released and at rest),
+`Robot.submit` sends float32), so the service executes exactly those rows. The rows are the task's one reference, the same file as the privileged twin's `solution/trajectory.npz`: the author's speed-limited demo (`stegesund_vlim`), unchanged: every row is within the joint-speed limits (from the keyframe ctrl; the largest step is the limit itself), so the clamp never changes a row, and it passes the terminal rules as sent (it ends released and at rest),
 so the service's speed limiter never has to act (`n_clipped` 0).
 
 ## Verification
