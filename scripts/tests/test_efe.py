@@ -4,9 +4,14 @@
 - qualified() gives a Docker Hub short name its registry and leaves a ref that names one alone;
 - engine_of() reads -e / --env: docker by default, podman, None for any other environment;
 - prepull() asks the engine for each ref, pulls only the missing ones by that name, reports a failed pull, and does
-  nothing for an environment that is not docker or podman."""
+  nothing for an environment that is not docker or podman;
+- podman_copies() copies a GPU task with its compose files' NVIDIA device requests in CDI form, stamped, leaves the
+  task in the repository and a task without a GPU request alone, and config_file() points at the copy."""
 import contextlib
 import io
+import json
+import os
+import tempfile
 import subprocess
 import sys
 from pathlib import Path
@@ -87,7 +92,31 @@ try:   # with Harbor installed: the probe image on docker, the probe image and t
 except ImportError:
     print("note: Harbor is not installed; short_name_images() not checked")
 
+GPU = "robotwin_2_0_stack_blocks_two-privileged"
+CPU = next(t.name for t in efe.tc.iter_tasks() if not any(
+    "driver: nvidia" in f.read_text() for f in t.rglob("docker-compose*.yaml")))
+src = efe.tc.task_dir(GPU)
+before = {f: f.read_bytes() for f in src.rglob("docker-compose*.yaml")}
+check(before and all(b"driver: nvidia" in b for b in before.values()), f"{GPU}: requests an NVIDIA GPU")
+with tempfile.TemporaryDirectory() as out:
+    os.environ["EFE_PODMAN_GPUS"] = "nvidia.com/gpu=0"
+    where = efe.podman_copies([GPU, CPU], out)
+    check(set(where) == {GPU}, f"only the GPU task is copied: {where}")
+    dst = Path(where.get(GPU, out))
+    check(dst.parent.name == src.parent.name, f"the copy is under its benchmark folder: {dst}")
+    for f, b in before.items():
+        c = (dst / f.relative_to(src)).read_text()
+        check("driver: nvidia" not in c and "- driver: cdi" in c and '["nvidia.com/gpu=0"]' in c and "count:" not in c,
+              f"{f.relative_to(src)}: CDI request in the copy")
+        check(f.read_bytes() == b, f"{f}: the task in the repository is unchanged")
+    import stamp_mtimes
+    check(stamp_mtimes.stamp_tree(str(dst), check=True)["bad"] == 0, "the copy is stamped after the rewrite")
+    cfg = efe.config_file([GPU, CPU], where)
+    ds = {d["path"]: d["task_names"] for d in json.load(open(cfg))["datasets"]}
+    os.unlink(cfg)
+    check(ds.get(str(dst.parent)) == [GPU] and ds.get(str(efe.tc.task_dir(CPU).parent)) == [CPU], f"datasets: {ds}")
+
 if fails:
-    print("FAIL test_efe_prepull.py:\n  " + "\n  ".join(fails))
+    print("FAIL test_efe.py:\n  " + "\n  ".join(fails))
     sys.exit(1)
-print("ok test_efe_prepull.py")
+print("ok test_efe.py")

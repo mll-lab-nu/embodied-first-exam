@@ -25,8 +25,9 @@ are stamped in place (scripts/stamp_mtimes.py) and handed to Harbor as one datas
 local datasets are not searched recursively). A
 `harbor run` that names its own tasks (-p, -d, -t, -c) and none of these flags is Harbor's, unchanged; so is every other
 subcommand. Before any `harbor run` on docker or podman (-e), the images Harbor's egress allowlist pulls by a short name
-are pulled by their full name if missing (prepull)."""
-import fnmatch, json, os, shutil, subprocess, sys, tempfile
+are pulled by their full name if missing (prepull). With -e podman, the picked GPU tasks run from stamped copies whose
+compose files request the GPU as a CDI device (podman_copies; podman ignores `driver: nvidia`)."""
+import fnmatch, json, os, re, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
 # --- the task tree (board 0209): where the tasks and their scripts/ come from -------------------------------------------
@@ -233,12 +234,43 @@ def stamp(pick: list[str]) -> bool:
     return not err
 
 
-def config_file(pick: list[str]) -> str:
-    """A Harbor job config (-c) with the picked task dirs: one local dataset per benchmark folder, its task_names the
-    picked dirs. Harbor reads it when the job is built; the caller removes it afterwards."""
+GPU_REQUEST = re.compile(r"^(\s*)- driver: nvidia\n(\s*)count: \d+\n", re.M)
+
+
+def cdi_compose(text: str, device: str) -> str:
+    """A compose file's NVIDIA device requests (`- driver: nvidia` / `count: N`) as CDI device requests of `device`:
+    podman ignores the first form, so the task's processes find no driver."""
+    return GPU_REQUEST.sub(lambda m: f'{m[1]}- driver: cdi\n{m[2]}device_ids: ["{device}"]\n', text)
+
+
+def podman_copies(pick: list[str], out: str) -> dict[str, str]:
+    """For -e podman: a stamped copy under <out>/<benchmark folder>/ of each picked task whose compose files request an
+    NVIDIA GPU, with those requests in CDI form (cdi_compose; device EFE_PODMAN_GPUS, default nvidia.com/gpu=all: a
+    CDI spec of the host's GPUs, docs/protocol/running.md). The task dirs in the repository are not changed. Returns
+    {task name: copy}."""
+    import stamp_mtimes
+    device = os.environ.get("EFE_PODMAN_GPUS") or "nvidia.com/gpu=all"
+    copies = {}
+    for t in pick:
+        src = tc.task_dir(t)
+        composes = [f for f in src.rglob("docker-compose*.y*ml") if "driver: nvidia" in f.read_text(errors="replace")]
+        if not composes:
+            continue
+        dst = Path(stamp_mtimes.stage(str(src), os.path.join(out, src.parent.name)))
+        for f in composes:
+            c = dst / f.relative_to(src)
+            c.write_text(cdi_compose(c.read_text(), device))
+        stamp_mtimes.stamp_tree(str(dst), full=True)
+        copies[t] = str(dst)
+    return copies
+
+
+def config_file(pick: list[str], where: dict[str, str] | None = None) -> str:
+    """A Harbor job config (-c) with the picked task dirs (or their copies, `where`): one local dataset per benchmark
+    folder, its task_names the picked dirs. Harbor reads it when the job is built; the caller removes it afterwards."""
     by: dict[str, list[str]] = {}
     for t in pick:
-        by.setdefault(str(tc.task_dir(t).parent), []).append(t)
+        by.setdefault(str(Path((where or {}).get(t) or tc.task_dir(t)).parent), []).append(t)
     cfg = {"datasets": [{"path": d, "task_names": names} for d, names in sorted(by.items())]}
     fd, path = tempfile.mkstemp(prefix="efe-job-", suffix=".json")
     with os.fdopen(fd, "w") as f:
@@ -344,12 +376,21 @@ def run(argv: list[str], app=None) -> int:
         print("\n".join(pick)); return 0
     if not stamp(pick):
         return 2
-    prepull(engine_of(rest))
-    cfg = config_file(pick)
+    engine = engine_of(rest)
+    prepull(engine)
+    staged = tempfile.mkdtemp(prefix="efe-podman-") if engine == "podman" else None
     try:
-        return harbor(["run", "-c", cfg, *rest], app)
+        where = podman_copies(pick, staged) if staged else {}
+        if where:
+            print(f"{len(where)} GPU task(s) run from copies with CDI device requests (podman)", file=sys.stderr)
+        cfg = config_file(pick, where)
+        try:
+            return harbor(["run", "-c", cfg, *rest], app)
+        finally:
+            os.unlink(cfg)
     finally:
-        os.unlink(cfg)
+        if staged:
+            shutil.rmtree(staged, ignore_errors=True)
 
 
 def main() -> int:
