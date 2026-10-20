@@ -32,11 +32,12 @@ Data
   directories.
 
 Host
-  Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 5.1
-  supports (Isaac renders with RTX even headless; PhysX runs on the CPU). Checked on RTX 4090 and RTX PRO 6000. Build:
-  ~60 GB of free disk, network access to github.com (+ its LFS), ghcr.io, snapshot.ubuntu.com, pypi.org, pypi.nvidia.com,
-  download.pytorch.org and NVIDIA's Omniverse content bucket (omniverse-content-production.s3.us-west-2.amazonaws.com and its
-  s3-us-west-2 spelling); a cold build takes 30-60 min. Run: one Isaac simulator per 32 GB of host RAM.
+  Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim
+  5.1 supports (Isaac renders with RTX even headless; PhysX runs on the CPU). Checked on RTX 4090 and RTX PRO 6000.
+  Build: ~60 GB of free disk, network access to github.com (+ its LFS), ghcr.io, snapshot.ubuntu.com, pypi.org,
+  pypi.nvidia.com, download.pytorch.org and NVIDIA's Omniverse content bucket
+  (omniverse-content-production.s3.us-west-2.amazonaws.com and its s3-us-west-2 spelling); a cold build takes 20-60 min
+  (22 min on a 32-core host). Run: one Isaac simulator per 32 GB of host RAM.
 
 Build and publish (maintainers; from the repository root)
   RCB_PUSH_PRIVATE=1 scripts/build_images.sh builds every image (this one with BuildKit's inline cache); alone:

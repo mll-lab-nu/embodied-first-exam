@@ -41,15 +41,16 @@ Data
   evaluation layouts) live in the task directories.
 
 Host
-  Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim 5.1
-  supports (Isaac renders with RTX even headless, and RoboDojo runs PhysX with GPU dynamics). Checked on an RTX 4090 (24 GB).
-  Build: ~150 GB of free disk during the build (the image is ~75 GB), network access to github.com, ghcr.io,
-  snapshot.ubuntu.com, pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co (+ its LFS / Xet storage), NVIDIA's
-  extension registry (ovextensionsprod.blob.core.windows.net, dw290v42wisod.cloudfront.net) and
-  omniverse-content-production.s3*.amazonaws.com; a cold build takes 60-90 min, most of it the 41 GB download. Run: ~5-10 GB
-  of GPU memory and up to ~16 GB of memory per Isaac simulator (scripts/task_resources.toml). Isaac does not exit when the
-  GPU runs out of memory (it waits on a crash dialog): on a shared GPU start fewer at once; an agent's own sessions, the
-  standard sidecar and the verifier's replays each need one.
+  Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU with a driver Isaac Sim
+  5.1 supports (Isaac renders with RTX even headless, and RoboDojo runs PhysX with GPU dynamics). Checked on an RTX 4090
+  (24 GB). Build: ~150 GB of free disk during the build (the image is ~75 GB), network access to github.com, ghcr.io,
+  snapshot.ubuntu.com, pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co (+ its LFS / Xet storage),
+  NVIDIA's extension registry (ovextensionsprod.blob.core.windows.net, dw290v42wisod.cloudfront.net) and
+  omniverse-content-production.s3*.amazonaws.com; a cold build takes 30-90 min (32 min on a 32-core host), most of it
+  the 41 GB download. Run: ~5-10 GB of GPU memory and up to ~16 GB of memory per Isaac simulator
+  (scripts/task_resources.toml). Isaac does not exit when the GPU runs out of memory (it waits on a crash dialog): on a
+  shared GPU start fewer at once; an agent's own sessions, the standard sidecar and the verifier's replays each need
+  one.
 
 Build and publish (maintainers; from the repository root)
   RCB_PUSH_PRIVATE=1 scripts/build_images.sh builds every image (this one with BuildKit's inline cache); alone:
