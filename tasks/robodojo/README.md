@@ -29,6 +29,15 @@ locally under the tags the tasks name; the tasks then run unchanged. Run every c
    docker build -f images/robodojo/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robodojo-$(cat images/robodojo/VERSION) .
    ```
    (With RoboDojo's `Assets/` already on disk at the pinned revision, add `--build-context robodojo-assets=<dir containing Assets/>`.)
+   The build fetches the assets' ~15,000 files anonymously, and Hugging Face may answer `429 Too Many Requests`, which
+   fails the build. Download them first with the `hf` CLI, which waits and retries (about 50 min anonymously; faster after
+   `hf auth login`), then build from that folder:
+   ```bash
+   HF_HUB_DISABLE_XET=1 hf download RoboDojo-Benchmark/RoboDojo --repo-type dataset \
+     --revision 35efbc7dedfdbeeb6e95fb749bd885d73d483e41 --include 'Assets/*' --local-dir ~/robodojo-assets
+   docker build -f images/robodojo/Dockerfile --build-context robodojo-assets=$HOME/robodojo-assets \
+     -t ghcr.io/mll-lab-nu/efe-private:robodojo-$(cat images/robodojo/VERSION) .
+   ```
 3. Run:
    ```bash
    harbor run -d embodied-first-exam@all -p tasks/robodojo -a codex -m openai/gpt-6-astra
