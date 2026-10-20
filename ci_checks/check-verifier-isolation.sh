@@ -32,7 +32,8 @@
 #   `include:` hand a container files of the task;
 # - H.6 for the verifier (owner 10-17, board 0157): [verifier] network_mode = "no-network" on every task, no other policy in
 #   [verifier.environment], and no service of tests/docker-compose.yaml with `networks` or a `network_mode` other than none;
-# - a service takes no `secrets`, `configs`, `env_file` or `build` (the same files by another road; images are pinned).
+# - a service takes no `secrets`, `configs` or `env_file` (the same files by another road); `build` only as BUILD_KEYS
+#   allows (main: `cache_from`; a sidecar: a Dockerfile of environment/ and `cache_from`), none in tests/.
 t="$1"; python3 - "$t" "$(cd "$(dirname "$0")/.." && pwd)" <<'PY'
 import sys, tomllib, pathlib, re
 t = pathlib.Path(sys.argv[1]); root = pathlib.Path(sys.argv[2]); rc = 0
@@ -114,12 +115,14 @@ LONG_KEYS = r"(type|source|target|read_only|bind|volume|tmpfs|consistency)"
 
 
 def compose_services(compose: pathlib.Path):
-    """({service: {"keys": {key: inline value}, "mounts": [(kind, source, rest)]}}, [what could not be read]).
+    """({service: {"keys": {key: inline value}, "mounts": [(kind, source, rest)], "build": {key: value}}}, [what could not
+    be read]).
     kind: "volume" (a named volume) or "bind"; rest: target and mode of the short form (`/cache:ro`), or "ro" / "" for
     the long form. Indentation-based (2 spaces a level, as images/monitor/rcb_monitor/inject.py writes and requires), no YAML
     dependency; whatever it does not understand inside `services:` is reported, never skipped."""
     out, bad = {}, []
     svc, in_services, in_vols, item, top, first = None, False, False, None, None, False
+    in_build = False
 
     def close():
         nonlocal item
@@ -161,7 +164,7 @@ def compose_services(compose: pathlib.Path):
             m = re.match(r"""^['"]?([A-Za-z0-9_.-]+)['"]?\s*:\s*$""", text)
             if not m:
                 bad.append(f"line {n}: `{text}` is not a service line"); svc = None; continue
-            svc = m.group(1); out[svc] = {"keys": {}, "mounts": []}; first = True
+            svc = m.group(1); out[svc] = {"keys": {}, "mounts": [], "build": {}}; first = True
             continue
         if svc is not None and first and ind != 4:      # a service whose keys sit deeper would be read as having none
             bad.append(f"line {n}: service {svc}: `{text}` at an unexpected indentation (a service's keys are indented 4 spaces)"); svc = None; continue
@@ -169,12 +172,15 @@ def compose_services(compose: pathlib.Path):
         if svc is None or ind < 4 or ind == 3:
             bad.append(f"line {n}: `{text}` at an unexpected indentation"); continue
         if ind == 4:
-            close(); in_vols = False
+            close(); in_vols = False; in_build = False
             m = re.match(r"""^['"]?([A-Za-z0-9_.<-]+)['"]?\s*:\s*(.*)$""", text)
             if not m:
                 bad.append(f"line {n}: service {svc}: `{text}` is not a key"); continue
             key, val = m.group(1), m.group(2).strip()
             out[svc]["keys"][key] = val
+            if key == "build":
+                if val: bad.append(f"line {n}: service {svc}: build `{val}` (use the block form, one key a line)")
+                in_build = True
             if key == "volumes":
                 if not val: in_vols = True
                 elif val.startswith("[") and val.endswith("]"):
@@ -184,6 +190,11 @@ def compose_services(compose: pathlib.Path):
                         out[svc]["mounts"].append(("bind" if src.startswith(BIND) else "volume", src, rest))
                 else: bad.append(f"line {n}: service {svc}: volumes `{val}` not understood")
             continue
+        if in_build:                                # build's keys: one `key: value` a line, read for BUILD_KEYS below
+            m = re.match(r"""^([A-Za-z_]+)\s*:\s*(.*)$""", text)
+            if ind != 6 or not m:
+                bad.append(f"line {n}: service {svc}: `{text}` inside build not understood (one `key: value` a line)"); continue
+            out[svc]["build"][m.group(1)] = m.group(2).strip(); continue
         if not in_vols: continue                    # deeper lines of other keys (environment, deploy, ...)
         if text.startswith("-"):
             close()
@@ -229,9 +240,34 @@ WIDEN = ("privileged", "cap_add", "security_opt", "devices", "device_cgroup_rule
 # A service with its own network setting is not routed through Harbor's egress control: the task's allowlist would not
 # apply to it (harbor 0.23, docker.py _egress_controlled_service_names).
 OWN_NETWORK = ("network_mode", "networks")
-# Files of the task or the host handed to a container by another road than `volumes:`; `build` replaces Harbor's own
-# build of main (context: environment/) or a sidecar's pinned image.
-HANDS_FILES = ("secrets", "configs", "env_file", "build")
+# Files of the task or the host handed to a container by another road than `volumes:`.
+HANDS_FILES = ("secrets", "configs", "env_file")
+# `build`: main is built by Harbor from environment/Dockerfile, so its `build` may only add `cache_from` (a prebuilt image
+# whose layers the build may take: a base stage the task builds itself when the image cannot be pulled,
+# scripts/task_conventions.py normalize_base_stages); a sidecar may be built from a Dockerfile of the task's
+# environment/ directory (relative paths, no `..`), with `cache_from`. Each cache_from entry is a registry image
+# reference: no `type=local,src=<host path>`, no variable. Nothing else (args, secrets, ssh, additional_contexts,
+# network, a context outside the task).
+BUILD_KEYS = {"main": ("cache_from",), "*": ("context", "dockerfile", "cache_from")}
+IMAGE_REF = re.compile(r"^[a-z0-9.-]+(:\d+)?/[A-Za-z0-9._/-]+(:[A-Za-z0-9._-]+)?(@sha256:[0-9a-f]{64})?$")
+
+
+def build_problems(svc: str, build: dict) -> list[str]:
+    allowed = BUILD_KEYS.get(svc, BUILD_KEYS["*"])
+    out = [f"service {svc}: `build` is not allowed beyond {', '.join(allowed)} (`{k}`)" for k in build if k not in allowed]
+    for k in ("context", "dockerfile"):
+        v = build.get(k, "").strip("'\"")
+        if k in build and (not v or v.startswith(("/", "~", "$")) or "$" in v or ".." in pathlib.PurePosixPath(v).parts or ":" in v):
+            out.append(f"service {svc}: `build` {k} `{v}` must be a relative path inside environment/ (no `..`, no variable)")
+    if "cache_from" in build:
+        v = build["cache_from"]
+        refs = [x.strip().strip("'\"") for x in v[1:-1].split(",") if x.strip()] if v.startswith("[") and v.endswith("]") else None
+        if refs is None:
+            out.append(f"service {svc}: `build` cache_from `{v}` (an inline list of registry image references)")
+        for r in refs or []:
+            if not IMAGE_REF.match(r):
+                out.append(f"service {svc}: `build` cache_from `{r}` is not a registry image reference (no type=, no host path, no variable)")
+    return out
 # the mode registry (PROTOCOL §2.16): RCB_MODES_TABLE from run_all.sh, "<mode> <sidecar 0|1> <twin>" longest first
 import os
 _table = os.environ.get("RCB_MODES_TABLE", "")
@@ -250,7 +286,9 @@ if env_c.is_file():
         for k in OWN_NETWORK:
             if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (Harbor's egress control skips a service with its own network setting: the allowlist would not apply; a sidecar is reached on localhost only, PROTOCOL §4.1)")
         for k in HANDS_FILES:
-            if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (it hands the container files of the task or the host outside `volumes:`, or replaces the pinned image)")
+            if k in info["keys"]: fail(f"service {svc}: `{k}` is not allowed (it hands the container files of the task or the host outside `volumes:`)")
+        if "build" in info["keys"]:
+            for b in build_problems(svc, info["build"]): fail(b)
         if svc != "main":
             for k in ("ports", "expose"):
                 if k in info["keys"]: fail(f"sidecar {svc}: `{k}` is not allowed (the agent reaches a sidecar on localhost only, PROTOCOL §4.1)")
@@ -283,7 +321,7 @@ if test_c.is_file():
     for v in named_volumes(services).get("main", []):
         if not v.endswith("_trusted"): fail(f"the verifier mounts {v}, which is not a *_trusted volume")
     for svc, info in services.items():
-        for k in WIDEN + HANDS_FILES:
+        for k in WIDEN + HANDS_FILES + ("build",):
             if k in info["keys"]: fail(f"tests/docker-compose.yaml: service {svc}: `{k}` is not allowed")
         # Appendix H.6: Harbor's deny-all reaches only the services without a network setting of their own (docker.py
         # _egress_controlled_service_names); `network_mode: none` is the one setting that keeps a verifier service offline

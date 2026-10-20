@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ADVISORY (docs/protocol/README.md §1: images pinned for reproducibility; the frozen instance's hash check backs it up at run
-# time): every FROM of environment/Dockerfile and tests/Dockerfile (every stage) is a registry image with an explicit,
+# time): every FROM of a Dockerfile under environment/ or tests/ (every stage) is a registry image with an explicit,
 # non-`latest` tag or digest, and so is every compose `image:` (environment/ and tests/); every `COPY --from=<image>`
 # (files-only images, the monitor's code) names its image by digest. Moved here from
 # check-verifier-isolation.sh (board 0124): a pin is reproducibility, not the trust boundary.
@@ -10,10 +10,8 @@ t = pathlib.Path(sys.argv[1]); rc = 0
 PINNED = re.compile(r"^[\w.\-]+(:\d+)?/.+[:@].+")
 def fail(m):
     global rc; print(f"FAIL {t}: {m}"); rc = 1
-for rel in ("environment/Dockerfile", "tests/Dockerfile"):
-    df = t / rel
-    if not df.is_file():
-        continue
+for df in sorted(p for sub in ("environment", "tests") if (t / sub).is_dir() for p in (t / sub).rglob("Dockerfile")):
+    rel = df.relative_to(t).as_posix()
     froms = re.findall(r"^FROM\s+(?:--\S+\s+)*(\S+)(?:\s+AS\s+(\S+))?", df.read_text(), re.M | re.I) or [("", "")]
     for k, (frm, _) in enumerate(froms):
         if frm in [a for _, a in froms[:k] if a]: continue     # an earlier stage of this file

@@ -936,6 +936,30 @@ def normalize_text_files(task: Path) -> None:
         write_if_changed(f, t)
 
 
+# A base image a task builds itself when it cannot pull it: the task's Dockerfile (environment/, tests/, or a sidecar's
+# under environment/) starts with the image's recipe between `# >>> images/<name>/Dockerfile` and
+# `# <<< images/<name>/Dockerfile` (its first FROM names the stage, `... AS <name>-base`, and later stages are
+# `FROM <name>-base`), and the compose service's `build.cache_from` names the prebuilt image. normalize writes the current
+# images/<name>/Dockerfile into the block byte for byte: the build's cache keys are then the prebuilt image's, so a
+# runner that can pull it takes its layers and any other runner builds the same recipe from public sources.
+BASE_STAGE_RE = re.compile(r"(?ms)^# >>> (images/[A-Za-z0-9_.-]+/Dockerfile)\n.*?^# <<< \1\n")
+
+
+def normalize_base_stages(task: Path) -> None:
+    root = Path(__file__).resolve().parents[1]
+    for df in sorted(p for sub in ("environment", "tests") if (task / sub).is_dir() for p in (task / sub).rglob("Dockerfile")):
+        s = read_text(df)
+        if s is None or "# >>> images/" not in s:
+            continue
+        def block(m: "re.Match[str]") -> str:
+            src = root / m.group(1)
+            if not src.is_file():
+                raise ValueError(f"{df}: base stage {m.group(1)}: no such file")
+            body = src.read_text()
+            return f"# >>> {m.group(1)}\n{body}{'' if body.endswith(chr(10)) else chr(10)}# <<< {m.group(1)}\n"
+        write_if_changed(df, BASE_STAGE_RE.sub(block, s))
+
+
 def normalize_grader(t: str) -> str:
     """reward.txt = success (1/0); partial progress only in reward.json; no string fields in reward.json."""
     t = t.replace('open(f"{LOG}/reward.txt", "w").write(f"{reward:.4f}\\n")',
@@ -1017,8 +1041,11 @@ def parse_readme(s: str) -> tuple[str, list[tuple[str, str]], list[tuple[str, st
 
 
 def image_of(task: Path) -> str:
+    c = read_text(task / "environment/docker-compose.yaml") or ""
+    m = re.search(r"""^\s*cache_from:\s*(?:\[\s*|\n\s*-\s*)["']?([^"',\]\s]+)""", c, re.M)
+    if m:                       # the prebuilt image of a base stage the task builds when it cannot pull it (normalize_base_stages)
+        return m.group(1)
     if mode_of(task) in SIDECAR_MODES:
-        c = read_text(task / "environment/docker-compose.yaml") or ""
         imgs = [i for i in re.findall(r"^\s*image:\s*(\S+)", c, re.M) if not re.search(r"/(?:eai|efe)-monitor[:@]|/efe:monitor-", i)]   # not the monitor's
         if imgs:
             return imgs[0]
@@ -1539,6 +1566,7 @@ def normalize(task: Path) -> None:
     normalize_main_cap(task)
     normalize_verifier_network(task)
     normalize_text_files(task)
+    normalize_base_stages(task)
     normalize_instruction(task)
     normalize_test_sh(task)
     write_if_changed(task / "README.md", render_readme(task))

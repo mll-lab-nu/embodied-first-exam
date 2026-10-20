@@ -21,7 +21,10 @@ for dir in images/*/; do
     CTX="$dir$(cat "$dir/BUILD_CONTEXT")"; [ -d "$CTX" ] || { echo "skip $name: $CTX missing (prepared by a script: see the docs in $dir)"; continue; }
   fi
   # a base image from images/, not a task dir: no scripts/stamp_mtimes.py stamp needed (issue #258 is about task contexts)
-  cmd="docker build -t $REG/$P:$name-$VER -t $REG/$P:$name-latest -f $dir/Dockerfile $CTX"
+  # a private image is the build cache of tasks that build its recipe themselves when they cannot pull it (compose
+  # build.cache_from, scripts/task_conventions.py normalize_base_stages): it carries BuildKit's inline cache metadata
+  IC=""; [ "$P" = efe-private ] && IC="--build-arg BUILDKIT_INLINE_CACHE=1"
+  cmd="docker build $IC -t $REG/$P:$name-$VER -t $REG/$P:$name-latest -f $dir/Dockerfile $CTX"
   echo "+ $cmd"; if [ "$D" = docker ]; then eval "$cmd"; else sg docker -c "$cmd"; fi
   for sub in "$dir"*/; do
     [ -f "$sub/Dockerfile" ] && [ -f "$sub/VERSION" ] || continue

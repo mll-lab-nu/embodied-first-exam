@@ -77,7 +77,15 @@ A new benchmark's shared-files change adds its label to `scripts/task_convention
    into the compose file; a cap your compose file sets itself must be the declared value (`check-resources.py`).
 4. Base images: `images/<sim>/Dockerfile`, versioned in `images/<sim>/VERSION`, built and pushed with
    `scripts/build_images.sh` / `scripts/push_images.sh`. Images that cannot be published carry `images/<sim>/BUILD_ONLY`
-   and build instructions.
+   and build instructions. A task on a private image builds it itself when the runner cannot pull it: its Dockerfile
+   starts with the recipe between `# >>> images/<sim>/Dockerfile` and `# <<< images/<sim>/Dockerfile` (the recipe's
+   first `FROM ... AS <sim>-base`, the task's own stage `FROM <sim>-base`; `normalize` writes the current recipe there),
+   and its compose service names the private image in `build.cache_from` (main: `build:` with `cache_from` only; a
+   sidecar: `build:` with `context` / `dockerfile` inside environment/ and `cache_from`). The recipe needs no build
+   context: every file it takes comes from a public files-only image (`COPY --from=<image@digest>`) or a public URL
+   (`ADD --checksum`), system packages from a dated snapshot (e.g. snapshot.debian.org). The private image is that
+   recipe built with BuildKit's inline cache (`scripts/build_images.sh` adds it to every BUILD_ONLY image): a runner
+   that can pull it takes its layers, any other runner builds the same layers from public sources.
 5. Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`, …). No adapters, and no gateway that
    holds credentials or changes requests; the optional usage gateway that only records token usage is allowed (docs/protocol/running.md "Official runs").
 
