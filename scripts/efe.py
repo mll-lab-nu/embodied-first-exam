@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-"""Embodied First Exam runs on Harbor. `uv tool install --force -e . --with-executables-from harbor` installs `harbor` (Harbor 0.23.0, plus the
-flags below on `harbor run`) and `efe` (the same, `efe run ...`). Run from anywhere; the tasks are this clone's.
+"""Embodied First Exam runs on Harbor. `uv tool install --force -e . --with-executables-from harbor` (in a clone) or
+`pip install embodied-first-exam` installs `harbor` (Harbor 0.23.0, plus the flags below on `harbor run`) and `efe` (the
+same, `efe run ...`). Run from anywhere. The tasks: $EFE_ROOT, else the clone that contains the working directory, else
+the clone of an editable install, else a shallow clone of the release tag v<version> made on first use in
+~/.cache/embodied-first-exam/<version> (find_root).
 
   harbor run -a codex -m openai/gpt-6-astra            # core: each core task in its default mode (the default)
   harbor run --core --privileged -a codex -m openai/gpt-6-astra   # the core tasks in another mode (also --standard, --standard-realtime)
@@ -22,12 +25,88 @@ are stamped in place (scripts/stamp_mtimes.py) and handed to Harbor as one datas
 local datasets are not searched recursively). A
 `harbor run` that names its own tasks (-p, -d, -t, -c) and none of these flags is Harbor's, unchanged; so is every other
 subcommand."""
-import fnmatch, json, os, sys, tempfile
+import fnmatch, json, os, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
-import task_conventions as tc  # noqa: E402
+# --- the task tree (board 0209): where the tasks and their scripts/ come from -------------------------------------------
+REPO_URL = "https://github.com/mll-lab-nu/embodied-first-exam.git"
+_ROOT: list[Path] = []
+
+
+def is_tree(d: Path) -> bool:
+    """A checkout of this repository: the core set, the tasks and the scripts that read them."""
+    return (d / "docs/core_set.toml").is_file() and (d / "tasks").is_dir() and (d / "scripts/task_conventions.py").is_file()
+
+
+def cache_dir() -> Path:
+    from importlib.metadata import PackageNotFoundError, version
+    try:
+        ver = version("embodied-first-exam")
+    except PackageNotFoundError:
+        ver = "main"
+    return Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "embodied-first-exam" / ver
+
+
+def cached_clone(d: Path) -> Path:
+    """`git clone --depth 1` of the tag v<version> (main when there is no such tag) into d, once; SystemExit(2) on failure."""
+    tag = "main" if d.name == "main" else f"v{d.name}"
+    try:
+        r = subprocess.run(["git", "ls-remote", "--exit-code", "--tags", REPO_URL, f"refs/tags/{tag}"], capture_output=True)
+    except FileNotFoundError:
+        print("efe: the tasks need git (no clone here, no EFE_ROOT)", file=sys.stderr); raise SystemExit(2)
+    if r.returncode not in (0, 2):
+        print(f"efe: cannot reach {REPO_URL} (git ls-remote exit {r.returncode}); clone it and run from there, or set "
+              "EFE_ROOT", file=sys.stderr); raise SystemExit(2)
+    if tag != "main" and r.returncode == 2:
+        print(f"efe: {REPO_URL} has no tag {tag}: using main instead (delete {d} to clone again later)", file=sys.stderr)
+        tag = "main"
+    print(f"efe: no clone here and no EFE_ROOT: cloning the tasks ({tag}) into {d}, once", file=sys.stderr)
+    d.parent.mkdir(parents=True, exist_ok=True)
+    tmp = tempfile.mkdtemp(prefix=f".{d.name}-", dir=d.parent)
+    try:
+        if subprocess.run(["git", "clone", "--depth", "1", "--branch", tag, REPO_URL, tmp]).returncode:
+            print(f"efe: git clone of {tag} failed", file=sys.stderr); raise SystemExit(2)
+        if not is_tree(d):
+            os.rename(tmp, d)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return d
+
+
+def find_root(clone: bool = True) -> Path | None:
+    """The task tree: $EFE_ROOT; else the checkout that contains the working directory; else the checkout this file is in
+    (`uv tool install -e .`); else the cached clone (made here on first use when clone; None when not)."""
+    if _ROOT:
+        return _ROOT[0]
+    cwd = Path.cwd().resolve()
+    if os.environ.get("EFE_ROOT"):
+        d = Path(os.environ["EFE_ROOT"]).expanduser().resolve()
+        if not is_tree(d):
+            print(f"EFE_ROOT={d}: not a checkout of {REPO_URL}", file=sys.stderr); raise SystemExit(2)
+    else:
+        d = next((p for p in (cwd, *cwd.parents, Path(__file__).resolve().parents[1], cache_dir()) if is_tree(p)), None)
+        if d is None and clone:
+            d = cached_clone(cache_dir())
+    if d is not None:
+        _ROOT.append(d)
+    return d
+
+
+class _Scripts:
+    """The task tree's own scripts/<name>.py (task_conventions, stamp_mtimes), imported on first use."""
+    def __init__(self, name: str):
+        self._name = name
+
+    def __getattr__(self, attr: str):
+        import importlib
+        d = str(find_root() / "scripts")
+        if d not in sys.path:
+            sys.path.insert(0, d)
+        return getattr(importlib.import_module(self._name), attr)
+
+
+tc = _Scripts("task_conventions")
+# ------------------------------------------------------------------------------------------------------------------------
 
 MODES = {"--privileged": "privileged", "--privilege": "privileged", "--standard": "standard",
          "--standard-realtime": "standard-realtime", "--standard_realtime": "standard-realtime"}
@@ -58,10 +137,10 @@ def under(paths: list[str]) -> set[str] | None:
     out: set[str] = set()
     for a in paths:
         d = Path(a).expanduser()
-        if not d.is_dir() and not d.is_absolute() and (ROOT / d).is_dir():
-            d = ROOT / d
+        if not d.is_dir() and not d.is_absolute() and (find_root() / d).is_dir():
+            d = find_root() / d
         if not d.is_dir():
-            print(f"-p {a}: no such directory (here or in {ROOT})", file=sys.stderr)
+            print(f"-p {a}: no such directory (here or in {find_root()})", file=sys.stderr)
             raise SystemExit(2)
         d = d.resolve()
         if (d / "task.toml").is_file():
@@ -75,7 +154,7 @@ def stamp(pick: list[str]) -> bool:
     """Give the picked task dirs' files their content-derived mtimes in place before Harbor builds any image from them
     (scripts/stamp_mtimes.py, issue #258: a checkout's shared mtimes let BuildKit put another task's file in an image).
     Files already stamped are skipped. False: a file could not be stamped."""
-    import stamp_mtimes
+    stamp_mtimes = _Scripts("stamp_mtimes")
     err = sum(stamp_mtimes.stamp_tree(str(tc.task_dir(t)))["err"] for t in pick)
     if err:
         print(f"stamp_mtimes: {err} file(s) could not be stamped; no image is built from an unstamped task "
@@ -97,11 +176,14 @@ def config_file(pick: list[str]) -> str:
 
 
 def load_env() -> None:
-    """The clone's .env (cp .env.example .env) into the environment: its non-empty keys the shell does not set."""
+    """The working directory's and the clone's .env (cp .env.example .env) into the environment: their non-empty keys
+    the shell does not set (no clone is made for it)."""
     from dotenv import dotenv_values
-    for k, v in dotenv_values(ROOT / ".env").items() if (ROOT / ".env").is_file() else ():
-        if v and not v.startswith("#") and k not in os.environ:   # `KEY=   # note`: dotenv reads the note as the value
-            os.environ[k] = v
+    root = find_root(clone=False)
+    for f in dict.fromkeys([Path.cwd() / ".env", *([root / ".env"] if root else [])]):
+        for k, v in dotenv_values(f).items() if f.is_file() else ():
+            if v and not v.startswith("#") and k not in os.environ:   # `KEY=   # note`: dotenv reads the note as the value
+                os.environ[k] = v
 
 
 def dataset_sets(argv: list[str]) -> list[str] | None:
