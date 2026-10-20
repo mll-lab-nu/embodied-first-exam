@@ -12,7 +12,7 @@
 # ghcr.io/mll-lab-nu/efe-private:yamlab-<images/yamlab/VERSION> (private: NVIDIA Isaac Sim may be used but not redistributed) is
 # the tasks' compose `cache_from`: with read access its layers are pulled instead of built. Every input is pinned: the base
 # image by digest, Ubuntu packages by the snapshot.ubuntu.com date, uv and Python by version, git checkouts by commit, this
-# repository's files by commit and sha256 (ADD --checksum), downloads by sha256. Built alone (it reads nothing from the build context):
+# repository's files by sha256 at a tagged commit (ADD --checksum), downloads by sha256. Built alone (it reads nothing from the build context):
 #   docker build --target yamlab-base -t ghcr.io/mll-lab-nu/efe-private:yamlab-$(cat images/yamlab/VERSION) images/yamlab
 # images/yamlab/BUILD_ONLY has the licences, the host and the checks. A change here is copied into every task (and VERSION bumped).
 FROM docker.io/nvidia/cuda:12.8.1-base-ubuntu22.04@sha256:001469ea0f3dec85a1ca929aeea3b58ae369d4c11228b10aec1f642bb6ca7a6f AS yamlab-base
@@ -55,8 +55,8 @@ RUN python -c "from huggingface_hub import snapshot_download as d; d('yamlab/yam
 # otherwise fetched from NVIDIA's asset bucket at run time. The tasks run with closed egress, so they are baked in, each
 # checked against its sha256 (images/yamlab/web_assets.txt); rcb_yamlab points the scene's ground at its copy, and
 # localize_assets.py rewrites the workstation USDs' material URLs to theirs (same files: same look; physics never reads them).
-ADD --checksum=sha256:ab0e55b75ebc83357d64d5217e14563e3572855a566dcebf073bd1fce22c13b7 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/yamlab/web_assets.txt /opt/isaac-assets/web_assets.txt
-ADD --checksum=sha256:21cff62b1612284183b2581bc0ac6184dd1cdcf7394f1c279418fd30c343f6b9 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/yamlab/localize_assets.py /opt/isaac-assets/localize_assets.py
+ADD --checksum=sha256:ab0e55b75ebc83357d64d5217e14563e3572855a566dcebf073bd1fce22c13b7 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/yamlab/web_assets.txt /opt/isaac-assets/web_assets.txt
+ADD --checksum=sha256:21cff62b1612284183b2581bc0ac6184dd1cdcf7394f1c279418fd30c343f6b9 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/yamlab/localize_assets.py /opt/isaac-assets/localize_assets.py
 RUN set -e; grep -v '^#' /opt/isaac-assets/web_assets.txt | while read -r sha url dst; do \
       mkdir -p "$(dirname "$dst")"; curl -sSfL -o "$dst" "$url"; echo "$sha  $dst" | sha256sum -c --quiet -; done; \
     python /opt/isaac-assets/localize_assets.py https://omniverse-content-production.s3.us-west-2.amazonaws.com/Materials/2023_1/ \
@@ -68,7 +68,7 @@ RUN set -e; grep -v '^#' /opt/isaac-assets/web_assets.txt | while read -r sha ur
 # the lock (editable checkouts aside: Isaac Lab, LeRobot and YAMLab at the commits above).
 # Packages an unpinned upstream install step pulls in today but the lock does not list are removed first, so a fresh
 # build still ends at exactly the lock.
-ADD --checksum=sha256:07b214001963999c18509c943b8cab82e4fd77620cbba34265ebf95ab6356546 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/yamlab/requirements.lock /opt/requirements.lock
+ADD --checksum=sha256:07b214001963999c18509c943b8cab82e4fd77620cbba34265ebf95ab6356546 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/yamlab/requirements.lock /opt/requirements.lock
 RUN uv pip install --no-deps --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cu128 \
       --extra-index-url https://pypi.nvidia.com -r /opt/requirements.lock && rm -rf /root/.cache/uv && \
     uv pip freeze --exclude-editable | grep -vxFf /opt/requirements.lock | sed 's/[ =@].*//' | xargs -r uv pip uninstall && \

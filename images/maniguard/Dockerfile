@@ -13,7 +13,7 @@
 # ghcr.io/mll-lab-nu/efe-private:maniguard-<images/maniguard/VERSION> (private: NVIDIA Isaac Sim may be used but not redistributed) is
 # the tasks' compose `cache_from`: with read access its layers are pulled instead of built. Every input is pinned: the base
 # image by digest, Ubuntu packages by the snapshot.ubuntu.com date, uv and Python by version, git checkouts by commit, this
-# repository's files by commit and sha256 (ADD --checksum), downloads by sha256. Built alone (it reads nothing from the build context):
+# repository's files by sha256 at a tagged commit (ADD --checksum), downloads by sha256. Built alone (it reads nothing from the build context):
 #   docker build --target maniguard-base -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) images/maniguard
 # images/maniguard/BUILD_ONLY has the licences, the host and the checks. A change here is copied into every task (and VERSION bumped).
 # Locks: the build writes the installed package sets to /opt/locks/{dpkg,conda,pip}.lock and fails unless they equal the
@@ -39,9 +39,9 @@ RUN rm -f /etc/apt/sources.list.d/cuda*.list && \
 
 # The committed locks of the reference build (images/maniguard/*.lock), which the steps below install from and the
 # last step checks against; removed there.
-ADD --checksum=sha256:edf82448f7c2cc5c98c331db06082b7ef4396f573dd6f31ec67fef5a84dedfe4 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/maniguard/dpkg.lock /tmp/locks/dpkg.lock
-ADD --checksum=sha256:c45b0c50cbe65d870fda4cef1228ffd2be291da7a69e5054966fdc1ffe2d41a5 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/maniguard/conda.lock /tmp/locks/conda.lock
-ADD --checksum=sha256:77865f2d1a97887ecd5d42cde15aa2de2cb6feef334fb4f1dc5abac49155591c https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/maniguard/pip.lock /tmp/locks/pip.lock
+ADD --checksum=sha256:edf82448f7c2cc5c98c331db06082b7ef4396f573dd6f31ec67fef5a84dedfe4 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/maniguard/dpkg.lock /tmp/locks/dpkg.lock
+ADD --checksum=sha256:c45b0c50cbe65d870fda4cef1228ffd2be291da7a69e5054966fdc1ffe2d41a5 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/maniguard/conda.lock /tmp/locks/conda.lock
+ADD --checksum=sha256:77865f2d1a97887ecd5d42cde15aa2de2cb6feef334fb4f1dc5abac49155591c https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/maniguard/pip.lock /tmp/locks/pip.lock
 
 # Python 3.10 in a conda env named `behavior`, as setup.sh --new-env makes it, from conda-forge only (Miniforge: no Anaconda
 # channels, so no Anaconda terms apply), the installer verified by its sha256. The env is created from the explicit lock
@@ -73,7 +73,7 @@ RUN git init -q /opt/behavior-1k && cd /opt/behavior-1k && git remote add origin
 # setup.sh's Isaac Sim 4.5.0.0: the same 26 wheels from pypi.nvidia.com, each verified by its sha256 (isaacsim-4.5.0.0.sha256,
 # from the index's own hashes), installed together; then setup.sh's websockets fix and its cffi 1.17.1 reinstall. Downloaded
 # and removed in one layer.
-ADD --checksum=sha256:c44b6e384e2cefb7fedd8d9df155c083791a9e9223ebdc74a1b2faa35c9d4fc9 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/maniguard/isaacsim-4.5.0.0.sha256 /tmp/isaacsim.sha256
+ADD --checksum=sha256:c44b6e384e2cefb7fedd8d9df155c083791a9e9223ebdc74a1b2faa35c9d4fc9 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/maniguard/isaacsim-4.5.0.0.sha256 /tmp/isaacsim.sha256
 RUN mkdir /tmp/isaac && cd /tmp/isaac && \
     while read -r sha f; do pkg="$(echo "$f" | cut -d- -f1 | tr _ -)"; curl -fsSL --retry 5 -o "$f" "https://pypi.nvidia.com/$pkg/$f" || exit 1; done < /tmp/isaacsim.sha256 && \
     sha256sum -c --quiet /tmp/isaacsim.sha256 && pip install --no-cache-dir ./*.whl && cd / && rm -rf /tmp/isaac /tmp/isaacsim.sha256 && \
@@ -89,7 +89,7 @@ RUN pip install --no-cache-dir av==16.0.1 && \
     python -c "import numpy, spot; from spot import buddy; assert numpy.__version__ < '2', numpy.__version__; assert all(hasattr(spot, a) for a in ('formula', 'translate', 'atomic_prop_collect')); print('numpy', numpy.__version__, 'spot ok')"
 
 # ManiGuard's evaluator at the pinned commit: only the files of images/maniguard/maniguard-keep.txt, on the env's path
-ADD --checksum=sha256:200abd97ef23584ec77526861b540c9adff2e3dca20fcd8ddd786b0ff8faa6a8 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/maniguard/maniguard-keep.txt /tmp/maniguard-keep.txt
+ADD --checksum=sha256:200abd97ef23584ec77526861b540c9adff2e3dca20fcd8ddd786b0ff8faa6a8 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/maniguard/maniguard-keep.txt /tmp/maniguard-keep.txt
 RUN git clone -q --filter=blob:none --no-checkout https://github.com/NU-IDEAS-Lab/ManiGuard.git /tmp/mg && cd /tmp/mg && \
     keep="$(grep -v '^#' /tmp/maniguard-keep.txt)" && git checkout -q a1b6444b3d17b2f9e4118c406824d36af6b24187 -- $keep && \
     mkdir -p /opt/maniguard && for f in $keep; do test -f "$f" || exit 1; mkdir -p "/opt/maniguard/$(dirname "$f")"; cp "$f" "/opt/maniguard/$f"; done && \

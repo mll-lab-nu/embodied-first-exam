@@ -13,7 +13,7 @@
 # ghcr.io/mll-lab-nu/efe-private:ambench-<images/ambench/VERSION> (private: NVIDIA Isaac Sim may be used but not redistributed) is
 # the tasks' compose `cache_from`: with read access its layers are pulled instead of built. Every input is pinned: the base
 # image by digest, Ubuntu packages by the snapshot.ubuntu.com date, uv and Python by version, git checkouts by commit, this
-# repository's files by commit and sha256 (ADD --checksum), downloads by sha256. Built alone (it reads nothing from the build context):
+# repository's files by sha256 at a tagged commit (ADD --checksum), downloads by sha256. Built alone (it reads nothing from the build context):
 #   docker build --target ambench-base -t ghcr.io/mll-lab-nu/efe-private:ambench-$(cat images/ambench/VERSION) images/ambench
 # images/ambench/BUILD_ONLY has the licences, the host and the checks. A change here is copied into every task (and VERSION bumped).
 # The layers up to Isaac Lab are YAMLab's (images/yamlab/Dockerfile), the same Isaac Sim / Isaac Lab stack.
@@ -63,8 +63,8 @@ ENV JAX_PLATFORMS=cpu ACADOS_SOURCE_DIR=/opt/ambench/ext/acados \
 # Isaac's asset root to /opt/isaac-assets/Assets/Isaac/5.1 (the ground, the wall's material, NDT's warehouse scene), and
 # localize_assets.py rewrites the URLs thirteen of AM-Bench's USDs load from the buckets (objects' payloads and materials, the
 # robot's paint) to the copies. The USD rewrite uses a throwaway usd-core: Isaac Sim's own pxr loads only inside Kit.
-ADD --checksum=sha256:dacaa158ac8ff757e54e60d6d399bfa3a2ace6844afc49167cf2957e34ee1e0b https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/ambench/web_assets.txt /opt/isaac-assets/web_assets.txt
-ADD --checksum=sha256:4789d62d6c5d4ee9021a102892c71f0849560da85342c11ea132cf539545d66f https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/ambench/localize_assets.py /opt/isaac-assets/localize_assets.py
+ADD --checksum=sha256:dacaa158ac8ff757e54e60d6d399bfa3a2ace6844afc49167cf2957e34ee1e0b https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/ambench/web_assets.txt /opt/isaac-assets/web_assets.txt
+ADD --checksum=sha256:4789d62d6c5d4ee9021a102892c71f0849560da85342c11ea132cf539545d66f https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/ambench/localize_assets.py /opt/isaac-assets/localize_assets.py
 RUN set -e; grep -v '^#' /opt/isaac-assets/web_assets.txt | xargs -P 16 -L 1 sh -c \
       'mkdir -p "$(dirname "$2")" && curl -sSfL --retry 5 -o "$2" "$1" && echo "$0  $2" | sha256sum -c --quiet -' && \
     A=/opt/ambench/source/ambench/ambench/assets; \
@@ -84,7 +84,7 @@ RUN set -e; grep -v '^#' /opt/isaac-assets/web_assets.txt | xargs -P 16 -L 1 sh 
 # (editable checkouts aside: Isaac Lab, Pyroki, acados_template and AM-Bench at the commits above).
 # Packages an unpinned upstream install step pulls in today but the lock does not list are removed first, so a fresh
 # build still ends at exactly the lock.
-ADD --checksum=sha256:7d98ddd003b962660b8e77d284c6cde8d1da935592666ca85e21cbadd8bceb29 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/6dd49ce85584ba00f5459f0c85bd34fb09e626e2/images/ambench/requirements.lock /opt/requirements.lock
+ADD --checksum=sha256:7d98ddd003b962660b8e77d284c6cde8d1da935592666ca85e21cbadd8bceb29 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/ambench/requirements.lock /opt/requirements.lock
 RUN uv pip install --no-deps --index-strategy unsafe-best-match --extra-index-url https://download.pytorch.org/whl/cu128 \
       --extra-index-url https://pypi.nvidia.com -r /opt/requirements.lock && rm -rf /root/.cache/uv && \
     uv pip freeze --exclude-editable | grep -vxFf /opt/requirements.lock | sed 's/[ =@].*//' | xargs -r uv pip uninstall && \
