@@ -6,7 +6,10 @@
 - prepull() asks the engine for each ref, pulls only the missing ones by that name, reports a failed pull, and does
   nothing for an environment that is not docker or podman;
 - podman_copies() copies a GPU task with its compose files' NVIDIA device requests in CDI form, stamped, leaves the
-  task in the repository and a task without a GPU request alone, and config_file() points at the copy."""
+  task in the repository and a task without a GPU request alone, and config_file() points at the copy;
+- from_prebuilt() replaces a base image's recipe stage with `FROM <the prebuilt image> AS <stage>`, and podman_copies()
+  does that in the copy (environment/, environment/sim/, tests/) only when podman has or can pull the image, never with
+  EFE_PODMAN_BUILD_FROM_SOURCE=1."""
 import contextlib
 import io
 import json
@@ -94,7 +97,8 @@ except ImportError:
 
 GPU = "robotwin_2_0_stack_blocks_two-privileged"
 CPU = next(t.name for t in efe.tc.iter_tasks() if not any(
-    "driver: nvidia" in f.read_text() for f in t.rglob("docker-compose*.yaml")))
+    "driver: nvidia" in f.read_text() for f in t.rglob("docker-compose*.yaml"))
+    and not any("# >>> images/" in f.read_text() for f in t.rglob("Dockerfile")))
 src = efe.tc.task_dir(GPU)
 before = {f: f.read_bytes() for f in src.rglob("docker-compose*.yaml")}
 check(before and all(b"driver: nvidia" in b for b in before.values()), f"{GPU}: requests an NVIDIA GPU")
@@ -115,6 +119,62 @@ with tempfile.TemporaryDirectory() as out:
     ds = {d["path"]: d["task_names"] for d in json.load(open(cfg))["datasets"]}
     os.unlink(cfg)
     check(ds.get(str(dst.parent)) == [GPU] and ds.get(str(efe.tc.task_dir(CPU).parent)) == [CPU], f"datasets: {ds}")
+
+# --- pull-first on podman: a base image's recipe stage becomes FROM the prebuilt image ---------------------------------
+R = "ghcr.io/mll-lab-nu/efe-private:sim-0.1.0"
+D = ("# head\n# >>> images/sim/Dockerfile\n# recipe\nFROM docker.io/library/debian:12 AS sim-base\nRUN make\n"
+     "# <<< images/sim/Dockerfile\nFROM sim-base\nCOPY a /a\n")
+out = efe.from_prebuilt(D, {"sim": R})
+check(out.startswith("# head\n# images/sim/Dockerfile: the prebuilt image") and f"\nFROM {R} AS sim-base\nFROM sim-base\nCOPY a /a\n"
+      in out and "RUN make" not in out and "# >>>" not in out, f"the stage is FROM the prebuilt image: {out!r}")
+check(efe.from_prebuilt(D, {}) == D and efe.from_prebuilt(D, {"other": R}) == D, "no image for the stage: unchanged")
+TWO = D.replace("RUN make\n", "RUN make\nFROM sim-base AS sim2-base\nRUN more\n").replace("FROM sim-base\nCOPY", "FROM sim2-base\nCOPY")
+check(f"FROM {R} AS sim2-base\nFROM sim2-base\n" in efe.from_prebuilt(TWO, {"sim": R}), "two stages: FROM the image AS the last")
+USED = TWO + "COPY --from=sim-base /x /x\n"
+check(efe.from_prebuilt(USED, {"sim": R}) == USED, "an inner stage used later: the recipe is kept")
+
+VLB = "vlabench-add-condiment-i00-privileged"
+VLS = "vlabench-add-condiment-i00-standard"
+ref = efe.cache_refs(efe.tc.task_dir(VLB)).get("vlabench", "")
+check(ref.startswith("ghcr.io/mll-lab-nu/efe-private:vlabench-"), f"cache_refs: {ref}")
+real_which = efe.shutil.which
+efe.shutil.which = lambda name: "/usr/bin/" + name
+srcs = {t: efe.tc.task_dir(t) for t in (VLB, VLS, GPU)}
+before = {f: f.read_bytes() for d in srcs.values() for f in d.rglob("*") if f.is_file()}
+try:
+    with tempfile.TemporaryDirectory() as out, contextlib.redirect_stderr(io.StringIO()):
+        e = Engine(have=(), bad=())
+        where = efe.podman_copies([VLB, VLS, GPU], out, run=e)
+        check(set(where) == {VLB, VLS, GPU}, f"pull works: the base-stage tasks are copied too: {sorted(where)}")
+        check(e.calls == [["image", "inspect", ref], ["pull", "-q", ref]], f"one image, asked and pulled once: {e.calls}")
+        for t, subs in ((VLB, ("environment/Dockerfile", "tests/Dockerfile")), (VLS, ("environment/sim/Dockerfile",))):
+            for sub in subs:
+                c = (Path(where.get(t, out)) / sub).read_text() if t in where else ""
+                check(f"\nFROM {ref} AS vlabench-base\n" in c and "# >>> images/" not in c and "pip install" not in c,
+                      f"{t}/{sub}: FROM the prebuilt image")
+        check(stamp_mtimes.stamp_tree(where.get(VLB, out), check=True)["bad"] == 0, "the rewritten copy is stamped")
+        g = (Path(where.get(GPU, out)) / "environment/Dockerfile").read_text() if GPU in where else ""
+        check(g == (srcs[GPU] / "environment/Dockerfile").read_text(), "a task without a base stage: Dockerfile as is")
+    with tempfile.TemporaryDirectory() as out, contextlib.redirect_stderr(err):
+        e = Engine(bad={ref})
+        where = efe.podman_copies([VLB, VLS, GPU], out, run=e)
+        check(set(where) == {GPU}, f"pull fails: no copy for a CPU task, built from source: {sorted(where)}")
+        check(e.calls == [["image", "inspect", ref], ["pull", "-q", ref]], f"a failed pull is not retried: {e.calls}")
+        check("building its recipe from source" in err.getvalue(), "a failed pull says so")
+    with tempfile.TemporaryDirectory() as out:
+        e = Engine(have={ref})
+        os.environ["EFE_PODMAN_BUILD_FROM_SOURCE"] = "1"
+        try:
+            where = efe.podman_copies([VLB, VLS, GPU], out, run=e)
+        finally:
+            del os.environ["EFE_PODMAN_BUILD_FROM_SOURCE"]
+        check(set(where) == {GPU} and not e.calls, f"EFE_PODMAN_BUILD_FROM_SOURCE=1: no pull, no rewrite: {e.calls}")
+    with tempfile.TemporaryDirectory() as out:
+        where = efe.podman_copies([VLB], out, run=Engine(have={ref}))
+        check(set(where) == {VLB}, "an image already present is used without a pull")
+finally:
+    efe.shutil.which = real_which
+check(all(f.read_bytes() == b for f, b in before.items()), "the tasks in the repository are unchanged")
 
 if fails:
     print("FAIL test_efe.py:\n  " + "\n  ".join(fails))

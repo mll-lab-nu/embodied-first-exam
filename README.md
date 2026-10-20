@@ -48,7 +48,7 @@ A coding agent writes code, runs the robot and sees the result, in a frozen scen
 - **Disk:** a benchmark's public images take 1-30 GB, pulled on its first run; a benchmark that builds its image needs the free disk its row below states.
 - **API keys** for the agent's model in `.env` (step 1), or a subscription (step 3).
 
-These benchmarks need a step by hand, or build their image on their first run because it may not be redistributed. That build accepts the licences of what it installs on your behalf: read them in the linked section. Organization members logged in to ghcr.io pull the prebuilt layers instead.
+These benchmarks need a step by hand, or build their image on their first run because it may not be redistributed. That build accepts the licences of what it installs on your behalf: read them in the linked section. Organization members logged in to ghcr.io pull the prebuilt layers instead (on podman, after `podman login ghcr.io`, `harbor run -e podman` pulls the prebuilt image and uses it in place of the recipe; [docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).
 
 | Benchmark | By hand, once | First run |
 |---|---|---|

@@ -214,9 +214,21 @@ node-local scratch (podman's storage does not work on most network file systems)
    python3 scripts/stamp_mtimes.py "$c"
    harbor run -e podman -p "$c" -a oracle -y -o $PWD/jobs
    ```
-6. The `rcb_monitor` sidecar can stay "Stopping" after a trial under rootless podman on cgroup v2; stop its container
+6. Base images built from their recipe (AM-Bench, BEHAVIOR-1K, iSpatialGym, ManiGuard, RoboDojo, RoboLab, VLABench,
+   YAMLab): their tasks' Dockerfiles start with the recipe of `efe-private:<name>-<version>` (the stage between
+   `# >>> images/<name>/Dockerfile` and `# <<< images/<name>/Dockerfile`) and name that image as `build.cache_from`.
+   Docker's BuildKit takes the image's layers from that cache; podman ignores `cache_from` and would build the whole
+   recipe on every host (20-90 min, up to 150 GB). `harbor run -e podman` with this repository's set flags therefore
+   asks podman for the image first (`podman image inspect`, else `podman pull`, once per image and job; the private
+   images need `podman login ghcr.io` with a token that can read the organization's packages) and, when it has it, runs
+   the task from a stamped copy whose `environment/Dockerfile`, `environment/sim/Dockerfile` and `tests/Dockerfile`
+   say `FROM <the image> AS <the stage>` instead of the recipe. When the pull fails it says so and the task builds the
+   recipe from source, as before. `EFE_PODMAN_BUILD_FROM_SOURCE=1` turns this off (always the recipe). For a bare
+   `harbor run -p`, the same copy by hand: `podman pull` the image, stage a copy as in 5., replace the block with that
+   `FROM` line and stamp the copy again.
+7. The `rcb_monitor` sidecar can stay "Stopping" after a trial under rootless podman on cgroup v2; stop its container
    (or the `monitor.py` process) by hand. On cgroup v1 the resource caps are not applied (`RCB_LIMITS_ENFORCE` stays 0).
-7. On cgroup v2 the containers' CPU caps need the `cpu` controller delegated to your user: when
+8. On cgroup v2 the containers' CPU caps need the `cpu` controller delegated to your user: when
    `/sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.controllers` lacks `cpu` (systemd
    delegates only `memory pids` by default on some distributions), every container fails to start with
    ``crun: controller `cpu` is not available``. An administrator enables it (systemd `Delegate=cpu cpuset io memory

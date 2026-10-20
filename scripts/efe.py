@@ -25,8 +25,9 @@ are stamped in place (scripts/stamp_mtimes.py) and handed to Harbor as one datas
 local datasets are not searched recursively). A
 `harbor run` that names its own tasks (-p, -d, -t, -c) and none of these flags is Harbor's, unchanged; so is every other
 subcommand. Before any `harbor run` on docker or podman (-e), the images Harbor's egress allowlist pulls by a short name
-are pulled by their full name if missing (prepull). With -e podman, the picked GPU tasks run from stamped copies whose
-compose files request the GPU as a CDI device (podman_copies; podman ignores `driver: nvidia`)."""
+are pulled by their full name if missing (prepull). With -e podman, the picked tasks run from stamped copies where needed
+(podman_copies): GPU requests as CDI devices (podman ignores `driver: nvidia`), and a base image's recipe stage as
+`FROM` the prebuilt image when podman can pull it (podman ignores `cache_from`; EFE_PODMAN_BUILD_FROM_SOURCE=1: off)."""
 import fnmatch, json, os, re, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
@@ -243,23 +244,95 @@ def cdi_compose(text: str, device: str) -> str:
     return GPU_REQUEST.sub(lambda m: f'{m[1]}- driver: cdi\n{m[2]}device_ids: ["{device}"]\n', text)
 
 
-def podman_copies(pick: list[str], out: str) -> dict[str, str]:
-    """For -e podman: a stamped copy under <out>/<benchmark folder>/ of each picked task whose compose files request an
-    NVIDIA GPU, with those requests in CDI form (cdi_compose; device EFE_PODMAN_GPUS, default nvidia.com/gpu=all: a
-    CDI spec of the host's GPUs, docs/protocol/running.md). The task dirs in the repository are not changed. Returns
-    {task name: copy}."""
+BASE_STAGE = re.compile(r"(?ms)^# >>> images/([A-Za-z0-9_.-]+)/Dockerfile\n(.*?)^# <<< images/\1/Dockerfile\n")
+STAGE_FROM = re.compile(r"(?im)^\s*FROM\s+(?:--\S+\s+)*\S+\s+AS\s+(\S+)\s*$")
+CACHE_FROM = re.compile(r"(?m)^\s*cache_from:\s*\[([^\]]*)\]")
+
+
+def cache_refs(task: Path) -> dict[str, str]:
+    """The prebuilt base images a task's compose files name as build cache (`build.cache_from`), by image name:
+    {"vlabench": "ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0"} (the tag is <name>-<version>)."""
+    refs = {}
+    for f in task.rglob("docker-compose*.y*ml"):
+        for inner in CACHE_FROM.findall(f.read_text(errors="replace")):
+            for r in re.findall(r"[^\s\"',]+", inner):
+                m = re.search(r":([A-Za-z0-9_.-]+?)-(\d[A-Za-z0-9_.-]*)$", r.split("@", 1)[0])
+                if m:
+                    refs.setdefault(m[1], r)
+    return refs
+
+
+def from_prebuilt(text: str, refs: dict[str, str]) -> str:
+    """A Dockerfile with each base stage (`# >>> images/<name>/Dockerfile` ... `# <<< ...`, the recipe of the image
+    efe-private:<name>-<version>) whose image is in `refs` replaced by `FROM <that image> AS <its last stage>`: the
+    image is that stage, built. A block whose other stages are used after it is kept (it is not the image alone)."""
+    def block(m: "re.Match[str]") -> str:
+        ref, stages = refs.get(m[1]), STAGE_FROM.findall(m[2])
+        if not ref or not stages:
+            return m[0]
+        rest = text[m.end():]
+        for s in set(stages[:-1]) - {stages[-1]}:
+            if re.search(rf"(?im)^\s*FROM\s+(?:--\S+\s+)*{re.escape(s)}(\s|$)|--from={re.escape(s)}(\s|$)", rest):
+                return m[0]
+        return (f"# images/{m[1]}/Dockerfile: the prebuilt image, pulled (scripts/efe.py from_prebuilt; "
+                f"EFE_PODMAN_BUILD_FROM_SOURCE=1 builds the recipe instead)\nFROM {ref} AS {stages[-1]}\n")
+    return BASE_STAGE.sub(block, text)
+
+
+def pulled(ref: str, have: dict[str, bool], run=subprocess.run) -> bool:
+    """podman has `ref` (already, or after `podman pull`; the private images need a `podman login ghcr.io`). Asked once
+    per ref (`have`)."""
+    if ref not in have:
+        ok = False
+        try:
+            ok = run(["podman", "image", "inspect", ref], capture_output=True, timeout=60).returncode == 0
+            if not ok:
+                print(f"pulling {ref} (podman: the prebuilt base image instead of its recipe)", file=sys.stderr)
+                ok = run(["podman", "pull", "-q", ref], capture_output=True, stdin=subprocess.DEVNULL).returncode == 0
+                if not ok:
+                    print(f"could not pull {ref}: building its recipe from source (`podman pull {ref}` tells why)",
+                          file=sys.stderr)
+        except (OSError, subprocess.SubprocessError):
+            ok = False
+        have[ref] = ok
+    return have[ref]
+
+
+def podman_copies(pick: list[str], out: str, run=subprocess.run) -> dict[str, str]:
+    """For -e podman: a stamped copy under <out>/<benchmark folder>/ of each picked task that (a) requests an NVIDIA GPU
+    in its compose files, with those requests in CDI form (cdi_compose; device EFE_PODMAN_GPUS, default
+    nvidia.com/gpu=all: a CDI spec of the host's GPUs, docs/protocol/running.md), or (b) builds a base image's recipe
+    (a `# >>> images/<name>/Dockerfile` stage with `build.cache_from` efe-private:<name>-<version>) that podman can pull:
+    those stages become `FROM <the image>` (from_prebuilt; podman ignores cache_from and would rebuild the recipe). Not
+    (b) with EFE_PODMAN_BUILD_FROM_SOURCE=1 or when the pull fails. The task dirs in the repository are not changed.
+    Returns {task name: copy}."""
     stamp_mtimes = _Scripts("stamp_mtimes")
     device = os.environ.get("EFE_PODMAN_GPUS") or "nvidia.com/gpu=all"
+    pull_first = os.environ.get("EFE_PODMAN_BUILD_FROM_SOURCE", "") in ("", "0") and bool(shutil.which("podman"))
+    have: dict[str, bool] = {}
     copies = {}
     for t in pick:
         src = tc.task_dir(t)
         composes = [f for f in src.rglob("docker-compose*.y*ml") if "driver: nvidia" in f.read_text(errors="replace")]
-        if not composes:
+        stages: dict[Path, str] = {}
+        if pull_first:
+            refs = cache_refs(src)
+            for sub in ("environment", "tests"):
+                for df in sorted((src / sub).rglob("Dockerfile")) if (src / sub).is_dir() else ():
+                    text = df.read_text(errors="replace")
+                    names = sorted({m[1] for m in BASE_STAGE.finditer(text)} & refs.keys())
+                    usable = {n: refs[n] for n in names if pulled(refs[n], have, run)}
+                    new = from_prebuilt(text, usable) if usable else text
+                    if new != text:
+                        stages[df] = new
+        if not composes and not stages:
             continue
         dst = Path(stamp_mtimes.stage(str(src), os.path.join(out, src.parent.name)))
         for f in composes:
             c = dst / f.relative_to(src)
             c.write_text(cdi_compose(c.read_text(), device))
+        for f, new in stages.items():
+            (dst / f.relative_to(src)).write_text(new)
         stamp_mtimes.stamp_tree(str(dst), full=True)
         copies[t] = str(dst)
     return copies
@@ -382,7 +455,8 @@ def run(argv: list[str], app=None) -> int:
     try:
         where = podman_copies(pick, staged) if staged else {}
         if where:
-            print(f"{len(where)} GPU task(s) run from copies with CDI device requests (podman)", file=sys.stderr)
+            print(f"{len(where)} task(s) run from copies (podman): GPU requests in CDI form, prebuilt base images "
+                  "pulled instead of their recipes", file=sys.stderr)
         cfg = config_file(pick, where)
         try:
             return harbor(["run", "-c", cfg, *rest], app)
