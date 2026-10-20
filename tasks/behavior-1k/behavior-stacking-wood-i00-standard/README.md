@@ -9,7 +9,7 @@
 | Family / instance | `stacking_wood` / seed 301 |
 | Oracle | `none` — No reference solution: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance. Solvable: model trial behavior-stacking-wood-i00__48hThC9 (behavior-lunaxh-t8-0927, the privileged twin behavior-stacking-wood-i00-privileged on the same frozen instance and BDDL goal) graded success=1, deterministic=1 by the separate verifier on a pre-v1.0 version of this task (dev/qineng 912567fa; grader verdict and frozen instance unchanged since); not re-run on this version (static validation only). Human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-stacking-wood-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Six logs lie spread out on the driveway in the garden; stack them so that every log touches at least one other log.

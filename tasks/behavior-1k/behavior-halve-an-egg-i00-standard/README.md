@@ -9,7 +9,7 @@
 | Family / instance | `halve_an_egg` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (213 s on average); demonstration video (212 s): https://www.youtube.com/embed/c1YJezdD7oM (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #75 (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-halve-an-egg-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Halve the egg. A hard-boiled egg is inside the kitchen refrigerator; a chopping board with a carving knife on it and a plate lie on the countertop, and there is a sink in the kitchen. Cut the egg in half, put both halves on the plate and put the carving knife into the sink.

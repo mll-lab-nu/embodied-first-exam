@@ -9,7 +9,7 @@
 | Family / instance | `alignment_axial` / seed 0 |
 | Oracle | `none` — upstream's goal image of this instance is the last frame of a successful replay of upstream's own demonstration of it (kmy17518/ispatialgym-eval-data@15cb9a7, ispatialgym-eval-instances/README.md, Goal images) |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.1` |
 
 ## Task
 iSpatialGym `alignment_axial` (family `alignment`), upstream subtask `alignment_axial_board_game`, instance 0 (house_single_floor): An object on a table or desk starts yawed 20–70° away; push it until its long axis lines up with the table edges. The task is given
@@ -50,7 +50,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 ## Details
 | | |
 |---|---|
-| Agent's container | efe-private:ispatialgym with every BDDL problem, the eval data's repository id and folder names, the project URLs, tests and docs removed at build; the build fails if any is left or if a scripted expert, sampler, task spec or eval-data file is in the image (the public release ships none) (`environment/scrub/scrub.sh`); this task's start-only BDDL problem is written from the image's own copy |
+| Agent's container | the ispatialgym image with every BDDL problem, the eval data's repository id and folder names, the project URLs, tests and docs removed at build; the build fails if any is left or if a scripted expert, sampler, task spec or eval-data file is in the image (the public release ships none) (`environment/scrub/scrub.sh`); this task's start-only BDDL problem is written from the image's own copy |
 | Action space | `s.step(a)`: 23 floats (base velocity command, trunk, both arms, one command per gripper; iSpatialGym's JoyLo action), one 30 Hz control step |
 | Goal | `/app/goal.png` (from the files-only image `ispatialgym-goals-files`): upstream's goal image of this instance, the head camera at 1080×1080 |
 | Instance | `environment/instance.json` = `tests/instance.json`: the start only (scene, template keys the loader reads, start-only TRO, objects without upstream's role names); start-state hash b7b9f7f047f87caf |

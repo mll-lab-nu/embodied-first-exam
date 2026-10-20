@@ -15,7 +15,10 @@ services:
     cpus: 12   # rcb-monitor
     mem_limit: 32768m   # rcb-monitor
     pids_limit: 16384   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0
+    build:
+      context: ./sim
+      dockerfile: Dockerfile
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.1"]   # our prebuilt image: its layers are reused when you can pull it, else Docker builds the recipe
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro

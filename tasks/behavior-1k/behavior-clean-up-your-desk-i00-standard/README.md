@@ -9,7 +9,7 @@
 | Family / instance | `clean_up_your_desk` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (714 s on average); demonstration video (714 s): https://player.vimeo.com/video/1114059839 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-clean-up-your-desk-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Clean up the desk in the child's room. A folder, a pencil, two pens, two paperback books and a pencil box lie on the desk; the other folder lies on the chair, the stapler is inside the bookcase, and the open laptop lies on the bed. Put both folders and both paperback books into the bookcase and the pencil and both pens into the pencil box, which stays on the desk; take the stapler out of the bookcase and put it on the desk; and put the laptop on the desk, closed.

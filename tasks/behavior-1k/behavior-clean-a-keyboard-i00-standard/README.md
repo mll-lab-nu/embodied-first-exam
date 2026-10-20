@@ -9,7 +9,7 @@
 | Family / instance | `clean_a_keyboard` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (129 s on average); demonstration video (142 s): https://www.youtube.com/embed/yEV3cFqyu-4 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #75 (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-clean-a-keyboard-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Clean the keyboard. A dusty keyboard and a pipe cleaner lie on the desk in the private office; remove every bit of dust from the keyboard.

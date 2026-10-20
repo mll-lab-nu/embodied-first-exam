@@ -9,7 +9,7 @@
 | Family / instance | `cook_bacon` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (256 s on average); demonstration video (256 s): https://player.vimeo.com/video/1114061497 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-07); human review in PR #75 (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-cook-bacon-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Cook the bacon. A tray with six slices of bacon is inside the kitchen refrigerator and a frying pan stands on the stove; cook all six slices and leave the refrigerator closed.

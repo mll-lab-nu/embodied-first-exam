@@ -9,7 +9,7 @@
 | Family / instance | `inter_object_relation_satisfaction_under_small_scale` / seed 0 |
 | Oracle | `none` — upstream's goal image of this instance is the last frame of a successful replay of upstream's own demonstration of it (kmy17518/ispatialgym-eval-data@15cb9a7, ispatialgym-eval-instances/README.md, Goal images) |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.1` |
 
 ## Task
 iSpatialGym `inter_object_relation_satisfaction_under_small_scale` (family `inter_object_relation_satisfaction`), upstream subtask `inter_object_relation_satisfaction_under_small_scale_teacup_saucer`, instance 0 (house_single_floor): Set the target down centred on the partner, so that the partner, such as a coaster or saucer, ends under it. The task is given

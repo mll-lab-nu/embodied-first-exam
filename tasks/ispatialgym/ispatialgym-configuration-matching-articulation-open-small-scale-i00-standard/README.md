@@ -9,7 +9,7 @@
 | Family / instance | `configuration_matching_articulation_open_small_scale` / seed 0 |
 | Oracle | `none` — upstream's goal image of this instance is the last frame of a successful replay of upstream's own demonstration of it (kmy17518/ispatialgym-eval-data@15cb9a7, ispatialgym-eval-instances/README.md, Goal images) |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.1` |
 
 ## Task
 iSpatialGym `configuration_matching_articulation_open_small_scale` (family `configuration_matching`), upstream subtask `configuration_matching_articulation_open_small_scale_blender`, instance 0 (house_single_floor): Open a small articulated object, such as a blender or carton, to the goal angle while the other arm braces it. The task is given

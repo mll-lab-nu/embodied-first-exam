@@ -9,7 +9,7 @@
 | Family / instance | `camera_relocalization_obstructed` / seed 0 |
 | Oracle | `none` — upstream's goal image of this instance is the last frame of a successful replay of upstream's own demonstration of it (kmy17518/ispatialgym-eval-data@15cb9a7, ispatialgym-eval-instances/README.md, Goal images) |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.1` |
 
 ## Task
 iSpatialGym `camera_relocalization_obstructed` (family `camera_relocalization`), upstream subtask `camera_relocalization_obstructed_hamper_1`, instance 0 (house_single_floor): As in Standard, but an obstacle on the shortest path forces a different route. The task is given

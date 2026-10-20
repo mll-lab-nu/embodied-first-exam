@@ -9,7 +9,7 @@
 | Family / instance | `cook_brussels_sprouts` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (522 s on average); demonstration video (687 s): https://www.youtube.com/embed/9XPaPQmWAgI (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-cook-brussels-sprouts-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Roast the halved brussels sprouts. Four brussels sprouts are in a tupperware inside the kitchen refrigerator; a chopping board with a carving knife on it and a cookie sheet lie on the countertop, and there is an oven in the kitchen. Cut every sprout in half, cook all eight halves in the oven and leave them inside it, and close the oven and the refrigerator.

@@ -9,7 +9,7 @@
 | Family / instance | `chopping_wood` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (358 s on average); demonstration video (358 s): https://player.vimeo.com/video/1114061262 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-chopping-wood-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Chop the firewood. Four logs, an axe and a chopping block lie on the driveway in the garden; split all four logs in half.

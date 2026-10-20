@@ -8,6 +8,8 @@
 services:
   main:
     pids_limit: 16384   # rcb-monitor
+    build:
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2"]   # our prebuilt image: its layers are reused when you can pull it, else Docker builds the recipe
     environment:
       OMP_NUM_THREADS: "8"   # thread pools capped (PyTorch sizes its pool to the host: 128 on a 256-core
       MKL_NUM_THREADS: "8"   # host, spinning on every small tensor op); user 2026-09-27

@@ -9,7 +9,7 @@
 | Family / instance | `picking_up_trash` / seed 301 |
 | Oracle | `partial` — solution/ streams the privileged oracle's joint targets (oracle_qpos.npy, 5115 rows) through the client. Recorded Harbor oracle runs: 3 of 3 scored 1 on ws3 (job v22-ws3-oracle-picking-up-trash-1741, best behavior-picking-up-trash-i00-li__eg8GdNj) on the dev/qineng 9eb18edf version of this task (rcb-limited/2.2, no crash recovery); 2026-09-25 behavior-picking-up-trash-i00-li__fyYUXt4 (laptop, an older version) scored 1 with live_matches_replay 1. The sim service, collect hook, grader and oracle client changed since (crash recovery); not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (board 0067 oracle sweep, AWS L40S host rcb-gpu11): scored 1 (5114 control steps; live, both replays and deterministic 1) once the oracle waited long enough for the service (the simulator took 620-682 s to start on those hosts, longer than the client's 600 s default wait at the time, which gave two 0-step runs; the default is 3600 s since). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-picking-up-trash-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Put the three cans of soda from the living room inside the trash can in the kitchen.

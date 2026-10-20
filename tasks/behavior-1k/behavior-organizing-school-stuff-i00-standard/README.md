@@ -9,7 +9,7 @@
 | Family / instance | `organizing_school_stuff` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (486 s on average); demonstration video (426 s): https://www.youtube.com/embed/GO2Bw-0OY7M (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-organizing-school-stuff-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Pack the school things in the bedroom. A pencil, a book and a folder lie on the bed; a pen, a calculator and the carryall are on the floor. Put all five things into the carryall and put the carryall on the bed.

@@ -9,7 +9,7 @@
 | Family / instance | `sorting_household_items` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (527 s on average); demonstration video (527 s): https://player.vimeo.com/video/1114059574 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-sorting-household-items-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Sort the household items into the bathroom. Two baskets stand on the bedroom floor: one holds two bottles of detergent and a box of sanitary napkins, the other a soap dispenser, a tube of toothpaste and a toothbrush; a cup stands on the bathroom sink. Put both detergent bottles under the bathroom sink, next to each other; the box of sanitary napkins on the bathroom shelf; the soap dispenser on the sink; the toothbrush into the cup, which stays on the sink; and the toothpaste next to the cup.

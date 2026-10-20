@@ -9,7 +9,7 @@
 | Family / instance | `configuration_matching_block_design` / seed 0 |
 | Oracle | `none` — upstream's goal image of this instance is the last frame of a successful replay of upstream's own demonstration of it (kmy17518/ispatialgym-eval-data@15cb9a7, ispatialgym-eval-instances/README.md, Goal images) |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.1` |
 
 ## Task
 iSpatialGym `configuration_matching_block_design` (family `configuration_matching`), upstream subtask `configuration_matching_block_design_block_4`, instance 0 (house_single_floor): Arrange four identical Kohs blocks so that their top faces form the goal 2×2 pattern. The task is given

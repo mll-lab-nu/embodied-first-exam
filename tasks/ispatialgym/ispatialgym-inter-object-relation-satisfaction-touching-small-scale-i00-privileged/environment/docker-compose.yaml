@@ -4,6 +4,8 @@
 services:
   main:
     pids_limit: 16384   # rcb-monitor
+    build:
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.1"]   # our prebuilt image: its layers are reused when you can pull it, else Docker builds the recipe
     volumes:
       - rcb_limits:/run/rcb-limits:ro   # rcb-monitor
       - ${RCB_BEHAVIOR_DATA:?set RCB_BEHAVIOR_DATA to the directory holding your licensed BEHAVIOR dataset (tasks/ispatialgym/README.md)}:/bdata:ro

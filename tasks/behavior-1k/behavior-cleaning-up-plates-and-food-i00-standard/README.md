@@ -9,7 +9,7 @@
 | Family / instance | `cleaning_up_plates_and_food` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (457 s on average); demonstration video (457 s): https://player.vimeo.com/video/1114054554 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-cleaning-up-plates-and-food-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Clean up after the meal in the kitchen. On the breakfast table stand two plates, each with a pizza on it, and two bowls. Put both pizzas, each still on its own plate, into the same refrigerator, put both bowls into the same sink, and leave every kitchen refrigerator closed.

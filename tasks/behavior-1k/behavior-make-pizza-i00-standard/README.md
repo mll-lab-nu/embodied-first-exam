@@ -9,7 +9,7 @@
 | Family / instance | `make_pizza` / seed 301 |
 | Oracle | `none` — No reference solution and no verified positive example yet: BEHAVIOR-1K ships no expert or planner that replays on this frozen instance, and no model trial has solved this task. Solvable by a human with this robot: the 2026 BEHAVIOR Challenge publishes 200 teleoperated demonstrations of this activity on the R1Pro in this scene model (640 s on average); demonstration video (640 s): https://player.vimeo.com/video/1114061917 (challenge task list https://behavior.stanford.edu/challenge/tasks/index.html). Supplementary task (added 2026-10-04); human review per family (protocol §2.7). |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Standard-mode twin of `behavior-make-pizza-i00-privileged` on the same frozen instance (2026 BEHAVIOR Challenge public_test instance 301): Make a pizza in the kitchen. The pizza dough lies on the cookie sheet on the countertop; in the refrigerator are three tupperwares, one filled with grated cheese, one holding four pepperoni slices and one holding two mushrooms; a Vidalia onion lies on the chopping board, and a carving knife and a bowl lie on the countertop. Top the dough with the cheese, the pepperoni, the mushrooms cut in half and the diced onion, and bake it in the oven until it turns into a pizza; leave the pizza on the cookie sheet.

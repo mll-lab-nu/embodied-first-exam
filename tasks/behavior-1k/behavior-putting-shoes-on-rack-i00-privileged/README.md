@@ -9,7 +9,7 @@
 | Family / instance | `putting_shoes_on_rack` / seed 301 |
 | Oracle | `partial` — Reference solution solution/oracle_putting_shoes_on_rack.py on the frozen task-level primitives solution/rcb_behavior_ref.py. Recorded Harbor oracle run (laptop, a pre-v1.0 uncommitted tree): 2026-09-24 behavior-putting-shoes-on-rack-i__LkouR9y (job behavior-putting-shoes-on-rack-i00-oracle-0924-234514) scored 1 (6283 control steps, deterministic 1, instance_exact 1), 1 of 1. Model trial behavior-putting-shoes-on-rack-i__KozJnde (behavior-lunaxh-0925-2057, ws) scored 1. The tooling and verifier files changed since; not re-run on this version (static validation only). Measured 2026-10-10 on main 332bf8080 (board 0067 oracle sweep, AWS 8-vCPU L40S host rcb-gpu13, Harbor oracle agent, once): the reference solution's own run ended without success (q_score 0.8, 8921 control steps against the recorded 6283); the frozen scene rebuilt there within tolerance but not bit-exactly (instance_exact 0), so the solution's online planning took another path: this reference solution does not succeed on that host class. |
 | Agent time budget | 7200 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` |
 
 ## Task
 Put both pairs of shoes on the hall tree in the corridor.
@@ -47,7 +47,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | | |
 |---|---|
 | Instance | 2026 BEHAVIOR Challenge public_test instance 301 (scene `house_double_floor_lower`), state hash in `environment/instance.json` |
-| Image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1` = `stanfordvl/behavior:3.9.2` + ffmpeg; BUILD_ONLY, built on every host (`images/behavior/`) |
+| Image | `ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2` = `stanfordvl/behavior:3.9.2` + ffmpeg (`images/behavior/`): the task builds it from public sources, or reuses our prebuilt copy when you can pull it |
 | Dataset | the licensed BEHAVIOR dataset, mounted read-only from `$RCB_BEHAVIOR_DATA` (a precondition), never baked in |
 | GPU | an RTX-class NVIDIA GPU (`environment/docker-compose.yaml`, `count: 1`) |
 | Budget | the agent's time (the `Agent time budget` row; the number is this task's `[agent] timeout_sec`): every Python process pays ~3 min of Isaac Sim + scene load out of it; ~7-11 control steps/s (tasks/behavior-1k/README.md) |

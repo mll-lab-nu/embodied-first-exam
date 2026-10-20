@@ -16,7 +16,10 @@ services:
     cpus: 12   # rcb-monitor
     mem_limit: 51200m   # rcb-monitor
     pids_limit: 16384   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:behavior-0.1.1
+    build:
+      context: ./sim
+      dockerfile: Dockerfile
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:behavior-0.1.2"]   # our prebuilt image: its layers are reused when you can pull it, else Docker builds the recipe
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro
