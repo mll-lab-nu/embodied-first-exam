@@ -9,7 +9,7 @@
 | Family / instance | `put_pot_on_cooktop` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` |
 
 ## Task
 Standard-mode twin of `yamlab-put-pot-on-cooktop-i04-privileged` (same frozen instance: YAMLab's objects `pot` = `Pot/pot_004` and `cooktop` = `Cooktop/cooktop_004` as placed in teleoperation

@@ -9,7 +9,7 @@
 | Family / instance | `put_pot_on_cooktop` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` |
 
 ## Task
 Two I2RT YAM arms on a workstation table lift a pot together (both grippers must hold it) and put it down upright on a cooktop, then let go: YAMLab's PutPotOnCooktop. Instance i08: YAMLab's objects `pot` = `Pot/pot_008` and `cooktop` = `Cooktop/cooktop_008`, placed as in YAMLab teleoperation demonstration

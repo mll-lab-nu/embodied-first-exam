@@ -9,7 +9,7 @@
 | Family / instance | `play_stacking_toy` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-mode twin of `robodojo-play-stacking-toy-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/play_stacking_toy_0.json`). Put all ten stacking-toy blocks onto the base's four pegs (pole 0: 4 blocks, pole 1: 3, pole 2: 2, pole 3: 1), exactly centred on the pegs, then return both arms to the start pose. (RoboDojo's `play_stacking_toy`). The agent drives the

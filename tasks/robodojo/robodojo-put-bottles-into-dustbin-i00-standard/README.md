@@ -9,7 +9,7 @@
 | Family / instance | `put_bottles_into_dustbin` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-mode twin of `robodojo-put-bottles-into-dustbin-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/put_bottles_into_dustbin_0.json`). Pick up all four bottles from the table and throw/put them into the dustbin standing beside the table (use a handover between the two hands when a bottle is out of reach), then return the arms to their start pose. (RoboDojo's `put_bottles_into_dustbin`). The agent drives the

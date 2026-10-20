@@ -70,7 +70,7 @@ cannot hold under the handle arch; replaced by `lid_transport/task_0007`). The o
 |---|---|---|---|
 | `maniguard-jar-transport-i14` | `jar_transport/task_0014` | `5d235d1b51a76116` | 599 |
 | `maniguard-cabinet-pickup-i19` | `cabinet_pickup/task_0019` | `d2191aa0e0587eb3` | 2240 |
-| `maniguard-dusty-transfer-i03` | `dusty_transfer/task_0003` | `885424f9128af320` | 946 |
+| `maniguard-dusty-transfer-i03` | `dusty_transfer/task_0003` | `885424f9128af320` | 948 |
 | `maniguard-stack-retrieve-i21` | `stack_retrieve/task_0021` | `188ff9254232eb3f` | 1474 |
 | `maniguard-dusty-transfer-i24` | `dusty_transfer/task_0024` | `547e404cadce1203` | 972 |
 | `maniguard-stack-retrieve-i10` | `stack_retrieve/task_0010` | `54fd5209a5c360c5` | 1560 |
@@ -368,10 +368,12 @@ with the same locks:
   far). Cabinets 19, 20 and 22, jars 2, 13 and 14 and lids 7, 12 and 16 load to their recorded hashes exactly; dusty 3 and 24
   and stacks 8, 10 and 21 load within the tolerance (`instance_ok`, not `instance_exact`). Every replay on that host is
   deterministic (fresh replays agree with each other and with the live run). 13 of the 14 oracles score 1 and reach their
-  strict goals at the laptop's control steps (dusty 24: step 969 instead of 972); every `nop` scores 0. The exception is
-  dusty 3: its structured state dump differs from the laptop's in two leaves only (the desk's y position by 5.7e-6 m, the
-  tupperware's orientation by about 7e-9), and from that start the laptop-made open-loop oracle (wipe, then pour) misses
-  its strict goal (reward 0 in both modes). The 16 variety tasks were frozen on that host; `nop` spot checks score 0.
+  strict goals at the laptop's control steps (dusty 24: step 969 instead of 972); every `nop` scores 0. Dusty 3 is the
+  sensitive one: its structured state dump differs from the laptop's in two leaves only (the desk's y position by 5.7e-6 m,
+  the tupperware's orientation by about 7e-9), and from that start the demonstration that reaches the goal on the laptop
+  (episode 122) misses it. Its oracle is therefore episode 123, chosen on an RTX 4090 host that also loads the instance
+  within the tolerance (`instance_ok`), where Harbor's oracle runs score 1 in both modes (the task README). The 16 variety
+  tasks were frozen on the RTX PRO 6000 host; `nop` spot checks score 0.
 - **torch.** torch 2.6.0+cu124 has no sm_120 kernels; the dry tasks never use torch on the GPU (no CUDA error anywhere), so
   the tooling, the oracles and the replays run unchanged. GPU-dynamics (liquid) tasks would need a cu128 build.
 - **Rendering.** Isaac Sim 4.5's real-time RTX mode renders heavy per-pixel noise there (mean |Laplacian| of a static camera

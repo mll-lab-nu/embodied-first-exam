@@ -9,7 +9,7 @@
 | Family / instance | `pack_objects_into_box` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Put the car, electric toothbrush, hammer and shoe into the box, each oriented with its front facing the same way (left), with the box upright and aligned, then return both arms to the start pose. (RoboDojo's `pack_objects_into_box`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout

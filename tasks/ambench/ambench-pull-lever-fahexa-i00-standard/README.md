@@ -9,7 +9,7 @@
 | Family / instance | `pull_lever_fahexa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
 
 ## Task
 Standard-only task (no privileged twin: its physics does not replay bit for bit, so an open-loop trajectory of it cannot be graded reproducibly; the frozen instance: AM-Bench environment `PullLever-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed

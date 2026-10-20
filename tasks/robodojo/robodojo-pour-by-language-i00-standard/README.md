@@ -9,7 +9,7 @@
 | Family / instance | `pour_by_language` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-only task (no privileged twin: its physics does not replay bit for bit, so an open-loop trajectory cannot be graded reproducibly; RoboDojo's `arx_x5/0/pour_by_language_0.json`). Following the sentence, pour the liquid of each named bottle into its named bowl, in the order first, second, third, then return the arms to their start pose. (RoboDojo's `pour_by_language`). The agent drives the

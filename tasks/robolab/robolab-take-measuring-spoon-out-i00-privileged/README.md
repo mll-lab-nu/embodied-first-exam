@@ -9,7 +9,7 @@
 | Family / instance | `take_measuring_spoon_out` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-take-measuring-spoon-out__vK2T2MY (robolab-take-measuring-spoon-out-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038); robolab-take-measuring-spoon-out__3KikKcU (robolab-take-measuring-spoon-out-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928). Re-graded with the 2026-10-14 term (one fresh process per trajectory and tooling version): the cited robolab-take-measuring-spoon-out__vK2T2MY passes the 2026-10-14 term too (success at control step 131 instead of 130: the spoon released by both fingers and supported by the table). Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.1` |
 
 ## Task
 Take the white colored measuring spoon out of the red bowl and put it on the table.

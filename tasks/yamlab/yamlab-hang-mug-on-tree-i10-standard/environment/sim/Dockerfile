@@ -76,6 +76,11 @@ RUN uv pip install --no-deps --index-strategy unsafe-best-match --extra-index-ur
 # Kit caches (shaders, extension registry, user data) live under /cache so a task's compose can keep them in a volume
 RUN mkdir -p /cache/ov-cache /cache/ov-data /cache/ov-logs /root/.cache /root/.local/share /root/.nvidia-omniverse /app/output && \
     ln -s /cache/ov-cache /root/.cache/ov && ln -s /cache/ov-data /root/.local/share/ov && ln -s /cache/ov-logs /root/.nvidia-omniverse/logs
+# apt read the Ubuntu archive snapshot above, so the build's packages stay pinned; the image itself points apt back at the
+# Ubuntu archive (the base image's sources.list, byte for byte): an `apt-get update` at run time is fast and reliable
+RUN sed -i -e '/ jammy-security /s|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|http://security.ubuntu.com/ubuntu/|' \
+           -e 's|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|http://archive.ubuntu.com/ubuntu/|' /etc/apt/sources.list && \
+    echo "15a39563d491def84446c8a5304e873a6b6509d56e2b54edce8eea154e1290a0  /etc/apt/sources.list" | sha256sum -c -
 WORKDIR /app
 # <<< images/yamlab/Dockerfile
 # The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above, this directory at /srv, and at

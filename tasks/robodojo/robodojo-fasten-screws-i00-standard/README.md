@@ -9,7 +9,7 @@
 | Family / instance | `fasten_screws` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-mode twin of `robodojo-fasten-screws-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/fasten_screws_0.json`). Pick up each of the three nuts and screw/place it onto the bolt of the same colour (same model index), so each nut sits upright and centred on its bolt, then open the gripper and return the arm home. (RoboDojo's `fasten_screws`). The agent drives the

@@ -9,7 +9,7 @@
 | Family / instance | `hang_mugs` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Hang all three mugs by their handles on the mug rack (cup_holder), then bring both arms back to where they started. (RoboDojo's `hang_mugs`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout

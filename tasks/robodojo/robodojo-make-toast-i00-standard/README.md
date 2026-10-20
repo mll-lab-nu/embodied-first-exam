@@ -9,7 +9,7 @@
 | Family / instance | `make_toast` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-mode twin of `robodojo-make-toast-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/make_toast_0.json`). Put two slices of bread from the bread shelf into the two toaster slots, press the toaster lever down, and return both arms to their start pose. (RoboDojo's `make_toast`). The agent drives the

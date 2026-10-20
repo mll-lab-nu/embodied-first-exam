@@ -19,7 +19,7 @@ services:
     build:
       context: ./sim
       dockerfile: Dockerfile
-      cache_from: ["ghcr.io/mll-lab-nu/efe-private:robolab-0.2.0"]   # our prebuilt image: its layers are reused when you can pull it, else Docker builds the recipe
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:robolab-0.2.1"]   # our prebuilt image: its layers are reused when you can pull it, else Docker builds the recipe
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - rcb_robolab_cache_trusted:/cache

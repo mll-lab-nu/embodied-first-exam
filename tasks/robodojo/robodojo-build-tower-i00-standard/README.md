@@ -9,7 +9,7 @@
 | Family / instance | `build_tower` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-mode twin of `robodojo-build-tower-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/build_tower_0.json`). Stack the wooden blocks and boards into a three-level tower: two pillar blocks (one on the left, one on the right) with a long board across them, two more blocks standing on that board with a second board on top, and finally the two top pieces stacked on the second board; then send the arm home. (RoboDojo's `build_tower`). The agent drives the

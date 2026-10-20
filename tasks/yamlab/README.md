@@ -211,7 +211,7 @@ the world origin on any axis or a zero quaternion are 400s that execute nothing.
   dataset. Renaming the instances would change every task's identity; it is left as it is.
 
 ## Image and host
-`images/yamlab/` → `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.0` (~26.8 GB): YAMLab, Isaac Lab, Isaac Sim 5.1, the LeRobot fork
+`images/yamlab/` → `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` (~26.8 GB): YAMLab, Isaac Lab, Isaac Sim 5.1, the LeRobot fork
 YAMLab's recorder imports, and the two tasks' object assets (~3 GB). It contains Isaac Sim: **BUILD_ONLY**, so every task
 builds it as its `yamlab-base` stage when it cannot pull it (Before you run; `images/yamlab/BUILD_ONLY` has the licences
 and the check of a build). Needs an RTX-class GPU (PhysX on

@@ -21,7 +21,7 @@ services:
     # image its layers are pulled instead (cache_from)
     build:
       context: sim
-      cache_from: ["ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.0"]
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.1"]
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by images/maniguard/prep_data.py (tasks/maniguard/README.md)}:/data:ro

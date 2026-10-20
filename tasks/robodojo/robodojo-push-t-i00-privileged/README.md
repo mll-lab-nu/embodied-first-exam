@@ -9,7 +9,7 @@
 | Family / instance | `push_T` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Push the T-shaped block (without lifting it) until it lies exactly on top of the gray T-shaped pad, with the same position and orientation, then return the arms to their start pose. (RoboDojo's `push_T`). RoboDojo capability dimension: Generalization. Instance i00 is RoboDojo's own evaluation layout

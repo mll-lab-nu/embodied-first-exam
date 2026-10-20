@@ -10,7 +10,7 @@ services:
     # maniguard-base (the first stage of the Dockerfile) is built from public sources; with read access to the prebuilt
     # image its layers are pulled instead (cache_from)
     build:
-      cache_from: ["ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.0"]
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.1"]
     environment:
       OMP_NUM_THREADS: "8"   # thread pools capped (PyTorch sizes its pool to the host; uncapped it spins on large hosts)
       MKL_NUM_THREADS: "8"

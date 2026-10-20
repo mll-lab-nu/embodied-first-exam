@@ -21,7 +21,7 @@ services:
     # image its layers are pulled instead (cache_from)
     build:
       context: sim
-      cache_from: ["ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0"]
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1"]
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - rcb_ambench_cache_trusted:/cache

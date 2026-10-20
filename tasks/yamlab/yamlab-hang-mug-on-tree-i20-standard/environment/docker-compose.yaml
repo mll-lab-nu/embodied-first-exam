@@ -20,7 +20,7 @@ services:
     # image its layers are pulled instead (cache_from)
     build:
       context: sim
-      cache_from: ["ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.0"]
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1"]
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - rcb_yamlab_cache_trusted:/cache

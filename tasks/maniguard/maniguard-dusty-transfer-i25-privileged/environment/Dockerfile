@@ -131,6 +131,11 @@ RUN mkdir -p /opt/locks && \
     conda list -n behavior --explicit --md5 | grep -v '^#' | LC_ALL=C sort > /opt/locks/conda.lock && \
     pip list --format=freeze | LC_ALL=C sort > /opt/locks/pip.lock && \
     for l in dpkg conda pip; do if [ -s "/tmp/locks/$l.lock" ]; then diff "/opt/locks/$l.lock" "/tmp/locks/$l.lock" || { echo "$l.lock differs"; exit 1; }; fi; done && rm -rf /tmp/locks
+# apt read the Ubuntu archive snapshot above, so the build's packages stay pinned; the image itself points apt back at the
+# Ubuntu archive (the base image's sources.list, byte for byte): an `apt-get update` at run time is fast and reliable
+RUN sed -i -e '/ jammy-security /s|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|http://security.ubuntu.com/ubuntu/|' \
+           -e 's|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|http://archive.ubuntu.com/ubuntu/|' /etc/apt/sources.list && \
+    echo "15a39563d491def84446c8a5304e873a6b6509d56e2b54edce8eea154e1290a0  /etc/apt/sources.list" | sha256sum -c -
 WORKDIR /app
 # <<< images/maniguard/Dockerfile
 # Base image = ManiGuard on its pinned stack (images/maniguard/: BEHAVIOR-1K v3.7.2 + Isaac Sim 4.5; BUILD_ONLY, every host

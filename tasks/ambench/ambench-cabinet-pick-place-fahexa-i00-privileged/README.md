@@ -9,7 +9,7 @@
 | Family / instance | `cabinet_pick_place_fahexa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
 
 ## Task
 A tall wooden cabinet stands ahead of the hovering aerial manipulator, and a small soda can stands inside one of its shelf compartments, behind a closed sliding door. Get the can onto the top of the cabinet: AM-Bench counts success when the can's centre is less than 5 cm above a fixed height just below the cabinet's top surface (there is no horizontal condition) while the can moves slower than 0.1 m/s. AM-Bench environment `CabinetPickPlace-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID

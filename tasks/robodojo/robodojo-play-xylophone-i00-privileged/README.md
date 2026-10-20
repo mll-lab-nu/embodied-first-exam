@@ -9,7 +9,7 @@
 | Family / instance | `play_Xylophone` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Pick up the mallet from its stand and strike the 8 xylophone keys one after another, from left to right, lifting the mallet clear of the keys between strikes. (RoboDojo's `play_Xylophone`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout

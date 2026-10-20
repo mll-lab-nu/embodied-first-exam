@@ -26,7 +26,7 @@ The first task builds the simulator image from public sources (below); later tas
   first task builds it with Docker from public sources: about 20-60 min, network access to github.com (+ LFS),
   snapshot.ubuntu.com, pypi.org, pypi.nvidia.com, download.pytorch.org and NVIDIA's public Omniverse content bucket on S3.
   Every task's Dockerfile starts with that recipe (`images/robolab/Dockerfile`), so the build runs once per Docker host and
-  later tasks take it from Docker's build cache. Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.0`
+  later tasks take it from Docker's build cache. Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.1`
   get its layers instead (compose `build.cache_from`). To build it ahead of the run, run one task first
   (`harbor run -p tasks/robolab/robolab-banana-in-bowl-i00-privileged -a oracle`, reward 1).
 

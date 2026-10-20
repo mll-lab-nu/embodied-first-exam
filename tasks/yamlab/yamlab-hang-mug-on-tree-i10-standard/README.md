@@ -9,7 +9,7 @@
 | Family / instance | `hang_mug_on_tree` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.1` |
 
 ## Task
 Standard-mode twin of `yamlab-hang-mug-on-tree-i10-privileged` (same frozen instance: YAMLab's objects `mug` = `Mug/mug_010` and `mug_tree` = `MugTree/mug_tree_010` as placed in teleoperation

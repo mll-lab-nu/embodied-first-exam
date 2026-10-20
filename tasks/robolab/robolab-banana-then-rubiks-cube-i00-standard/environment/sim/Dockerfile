@@ -48,6 +48,11 @@ RUN mkdir -p /cache/ov-cache /cache/ov-data /cache/ov-logs /root/.cache /root/.l
 ADD --chmod=644 --checksum=sha256:05492bd92e016b68d00a4bcf7e0530964480f430e271970f330ca2bea8908694 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/robolab/mirror_remote_assets.py /opt/robolab/mirror_remote_assets.py
 ADD --chmod=644 --checksum=sha256:c4ae7e62d3d7285e26218e9aec8d5cd8c92fe3d2c1f81d6d931c536a8550f998 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/robolab/remote_assets.sha256 /opt/robolab/remote_assets.sha256
 RUN python /opt/robolab/mirror_remote_assets.py /opt/robolab/assets /opt/robolab/assets/_remote --check /opt/robolab/remote_assets.sha256
+# apt read the Ubuntu archive snapshot above, so the build's packages stay pinned; the image itself points apt back at the
+# Ubuntu archive (the base image's sources.list, byte for byte): an `apt-get update` at run time is fast and reliable
+RUN sed -i -e '/ jammy-security /s|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|http://security.ubuntu.com/ubuntu/|' \
+           -e 's|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|http://archive.ubuntu.com/ubuntu/|' /etc/apt/sources.list && \
+    echo "15a39563d491def84446c8a5304e873a6b6509d56e2b54edce8eea154e1290a0  /etc/apt/sources.list" | sha256sum -c -
 WORKDIR /app
 # <<< images/robolab/Dockerfile
 # The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above, this directory at /srv, and at

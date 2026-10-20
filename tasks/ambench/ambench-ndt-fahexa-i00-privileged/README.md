@@ -9,7 +9,7 @@
 | Family / instance | `ndt_fahexa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
 
 ## Task
 The hovering aerial manipulator starts outside a large warehouse building, facing one of its long walls, and high up on that wall a small rectangle is marked out with yellow-and-black hazard tape. Carry out a non-destructive-testing style inspection: bring the end effector to the fixed inspection point in front of the marked rectangle (see the goal geometry) and keep it there for 100 consecutive control steps (0.83 s). AM-Bench environment `NDT-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID

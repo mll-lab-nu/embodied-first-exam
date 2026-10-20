@@ -9,7 +9,7 @@
 | Family / instance | `deposit_coin` |
 | Oracle | `none` — positive example: a model trial solved this task (Codex + GPT-6 Luna, effort xhigh, run `codex-gpt6_luna-xhigh`, 2026-10-10; 491 actions, graded by this verifier); no reference solution (RoboDojo releases no expert); human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Pick the coin up from the vertical coin holder and drop it into the piggy bank (coin bank) through its slot, then return the arm home. (RoboDojo's `deposit_coin`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout

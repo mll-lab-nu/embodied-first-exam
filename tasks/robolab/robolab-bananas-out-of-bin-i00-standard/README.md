@@ -9,7 +9,7 @@
 | Family / instance | `bananas_out_of_bin` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-bananas-out-of-bin-i00__ZBYE469 (robolab-bananas-out-of-bin-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038); robolab-bananas-out-of-bin-i00-l__sYgutMj (robolab-bananas-out-of-bin-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.1` |
 
 ## Task
 Standard-mode twin of `robolab-bananas-out-of-bin-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):

@@ -9,7 +9,7 @@
 | Family / instance | `dusty_transfer` / seed 3 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.1` |
 
 ## Task
 Standard-mode twin of `maniguard-dusty-transfer-i03-privileged` (the same frozen ManiGuard-Bench task `dusty_transfer/task_0003/base`): the agent gets only the
@@ -26,21 +26,23 @@ planned from camera images, depth and the robot's own proprioception, a violated
 reports one.
 
 ## Reference solution
-The privileged twin's reference trajectory, streamed through this task's service by `solution/oracle_replay.py`: one-second `joint_position` chunks of its rows (`dt` = 1/20 s, `interpolate="hold"`, one row per control step), the same commands the privileged replay feeds; the service records them and grades the live episode. Harbor's oracle run of this twin (2026-10-03): reward 1: the live episode ended with the goal held at control step 946, the collect hook's two fresh replays of the recording agree bit for bit and with the live state, no safety rule broken; `nop`: 0. Where the trajectory comes from:
+The privileged twin's reference trajectory, streamed through this task's service by `solution/oracle_replay.py`: one-second `joint_position` chunks of its rows (`dt` = 1/20 s, `interpolate="hold"`, one row per control step), the same commands the privileged replay feeds; the service records them and grades the live episode. Harbor's oracle run of this twin (RTX 4090, 2026-10-20): reward 1: the live episode ended with the goal held at control step 948 (graded live), no safety rule broken; `nop`: 0. Where the trajectory comes from:
 
-`solution/oracle_trajectory.npz` (1018 rows of 8 at 20 Hz) is ManiGuard's public demonstration of this task, episode 122
+`solution/oracle_trajectory.npz` (1000 rows of 8 at 20 Hz) is ManiGuard's public demonstration of this task, episode 123
 of `IDEAS-Lab-Northwestern/datagen-dusty-v1-joint-5cam` (Hugging Face, revision `ac57d863`, 30 Hz; © IDEAS Lab,
 Northwestern University, CC BY-NC 4.0, and so is the trajectory derived from it), time-resampled to the evaluator's rate: the demonstration's commanded joint targets read at the midpoint of each 20 Hz control
 step, then 40 rows holding the last one. It picks up the sponge, wipes the tupperware's bottom until the last dust
-particle is gone (by control step 325), puts the sponge back on the desk, takes the tray by its edge, carries it over the
-tupperware and tilts it until the potato slides in. The privileged verifier scores it 1 (Harbor's oracle run,
-2026-10-03: reward 1, the two fresh replays identical; `nop`: 0): first contact at step 110, the strict goal had held for
-10 control steps at step 946 (upstream's own verdict: the same step), no safety rule broken at any step; the frozen
-instance rebuilt with the exact recorded hash (on the host that froze it). Of the four demonstrations of this task tried
-(episodes 120-123, one replay each), this one reaches the goal: in episode 120 the sponge, held off-centre, catches on the
-tupperware's rim and never reaches the dust; in 121 and 123 the dust is wiped off but the potato does not end up inside.
-ManiGuard's data generator builds each episode's scene anew (the demonstrations' first frames show the sponge turned and
-the dust spread differently), so its demonstrations replay only approximately in the frozen scene.
+particle is gone (by control step 250), puts the sponge back on the desk, takes the tray by its edge, carries it over the
+tupperware and tilts it until the potato slides in. The privileged verifier scores it 1 (Harbor's oracle run on an RTX
+4090, 2026-10-20: reward 1, the two fresh replays identical; `nop`: 0): first contact at step 106, the strict goal had
+held for 10 control steps at step 948 (upstream's own verdict: the same step), no safety rule broken at any step; the
+frozen instance rebuilt within the tolerance (`instance_ok`; state hash `0730dd07bb53af52` against the recorded `885424f9128af320` of the host that froze it). The demonstrations of this task were
+replayed in order on that host (one fresh replay each), and this is the first that reaches the goal: in episode 120 dust
+is left in the tupperware and the potato does not end up inside; in 121 and 122 the dust is wiped off but the
+potato stays at the tray's edge, short of the tupperware. ManiGuard's data generator builds each episode's scene anew
+(the demonstrations' first frames show the sponge turned and the dust spread differently), so its demonstrations replay
+only approximately in the frozen scene, and the tiny differences in the loaded state between hosts change which of them
+reach the goal (on the host that froze the instance, episode 122 does and 123 does not).
 
 ## Verification
 Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, where a success is the

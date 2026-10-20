@@ -9,7 +9,7 @@
 | Family / instance | `stack_blocks_by_language` |
 | Oracle | `none` — positive example: a model trial solved this task (Codex + GPT-6 Luna, effort xhigh, run `codex-gpt6_luna-xhigh`, 2026-10-10; 1616 actions, graded by this verifier); no reference solution (RoboDojo releases no expert); human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Stack the three coloured cubes into a tower in the bottom-to-top colour order given by the instruction, then return the robot arm(s) to the start pose. (RoboDojo's `stack_blocks_by_language`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout

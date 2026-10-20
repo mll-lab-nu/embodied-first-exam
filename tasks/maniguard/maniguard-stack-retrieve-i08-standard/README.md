@@ -9,7 +9,7 @@
 | Family / instance | `stack_retrieve` / seed 8 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.1` |
 
 ## Task
 Standard-mode twin of `maniguard-stack-retrieve-i08-privileged` (the same frozen ManiGuard-Bench task `stack_retrieve/task_0008/base`): the agent gets only the

@@ -9,7 +9,7 @@
 | Family / instance | `align_blocks` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-mode twin of `robodojo-align-blocks-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/align_blocks_0.json`). Use the set square (triangular prism) to push three blocks (cubes) into a straight, aligned row on the table, without picking any block up, then return the robot arm to its start pose. (RoboDojo's `align_blocks`). The agent drives the

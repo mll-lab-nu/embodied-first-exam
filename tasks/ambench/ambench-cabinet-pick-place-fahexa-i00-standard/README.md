@@ -9,7 +9,7 @@
 | Family / instance | `cabinet_pick_place_fahexa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
 
 ## Task
 Standard-mode twin of `ambench-cabinet-pick-place-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `CabinetPickPlace-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed

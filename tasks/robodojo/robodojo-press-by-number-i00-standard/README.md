@@ -9,7 +9,7 @@
 | Family / instance | `press_by_number` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-mode twin of `robodojo-press-by-number-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/press_by_number_0.json`). Read the two number cards, press the first red button as many times as the first card says, then press the blue button, then press the second red button as many times as the second card says, then press the blue button again, and bring the arms home. (RoboDojo's `press_by_number`). The agent drives the

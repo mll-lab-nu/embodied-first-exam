@@ -9,7 +9,7 @@
 | Family / instance | `pour_balls_into_vase` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Pick up the cup containing 7 balls, pour all the balls into the vase, put the cup back upright and bring the arms home. (RoboDojo's `pour_balls_into_vase`). RoboDojo capability dimension: Precision. Instance i00 is RoboDojo's own evaluation layout

@@ -9,7 +9,7 @@
 | Family / instance | `general_pickup` |
 | Oracle | `none` — positive example: a model trial solved this task (Codex + GPT-6 Luna, effort xhigh, run `codex-gpt6_luna-xhigh`, 2026-10-10; 67 actions, graded by this verifier); no reference solution (RoboDojo releases no expert); human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Pick up the named target object from the table and lift it 10 cm. (RoboDojo's `general_pickup`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout

@@ -9,7 +9,7 @@
 | Family / instance | `classify_objects` |
 | Oracle | `none` — no positive example yet (a model trial failed (Codex + GPT-6 Luna, effort xhigh, run `codex-gpt6_luna-xhigh`, 2026-10-10)); no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Sort the small objects on the table by category into the three baskets: all objects of one category go into one basket, and the three categories go into the three different baskets. Then put the arm back home. (RoboDojo's `classify_objects`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout

@@ -9,7 +9,7 @@
 | Family / instance | `jar_transport` / seed 14 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.1` |
 
 ## Task
 Standard-mode twin of `maniguard-jar-transport-i14-privileged` (the same frozen ManiGuard-Bench task `jar_transport/task_0014/base`): the agent gets only the

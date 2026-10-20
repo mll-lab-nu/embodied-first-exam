@@ -9,7 +9,7 @@
 | Family / instance | `match_and_pick_from_conveyor` |
 | Oracle | `none` — no positive example yet (the privileged twin has a positive example (Codex + GPT-6 Luna, effort xhigh, run `codex-gpt6_luna-xhigh`, 2026-10-10)); no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-mode twin of `robodojo-match-and-pick-from-conveyor-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/match_and_pick_from_conveyor_0.json`). Watch the first object that appears on the conveyor, remember it, and pick up the identical object when it shows up again (lift it more than 10 cm). (RoboDojo's `match_and_pick_from_conveyor`). The agent drives the

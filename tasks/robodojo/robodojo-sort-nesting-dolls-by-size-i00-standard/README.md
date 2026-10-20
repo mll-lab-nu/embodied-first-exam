@@ -9,7 +9,7 @@
 | Family / instance | `sort_nesting_dolls_by_size` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
 Standard-mode twin of `robodojo-sort-nesting-dolls-by-size-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/sort_nesting_dolls_by_size_0.json`). Arrange the five nesting dolls upright in a straight row, ordered by size from the smallest at the smallest world x to the largest at the largest world x, and return the arms to their start pose. (RoboDojo's `sort_nesting_dolls_by_size`). The agent drives the

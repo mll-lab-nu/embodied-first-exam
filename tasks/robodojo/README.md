@@ -32,7 +32,7 @@ The first task builds the simulator image from public sources (below); later tas
   github.com, snapshot.ubuntu.com, pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co (+ its LFS storage),
   NVIDIA's extension registry and its asset bucket. Every task's Dockerfile starts with that recipe
   (`images/robodojo/Dockerfile`), so the build runs once per Docker host and later tasks take it from Docker's build cache.
-  Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` get its layers instead (compose
+  Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` get its layers instead (compose
   `build.cache_from`). The tasks have no reference solution (Oracle, below); to build the image ahead of the run, run one
   task with `-a nop` (reward 0).
 

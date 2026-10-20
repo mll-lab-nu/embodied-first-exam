@@ -9,7 +9,7 @@
 | Family / instance | `push_slider_fahexa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.1` |
 
 ## Task
 A wall stands in front of the hovering aerial manipulator, with a horizontal slider mounted on its front face: a straight rail about 1 m long and a red knob that slides along it. The knob starts at the rail's left end (as seen from the robot facing the wall) and must be pushed along the rail until it is within 5 cm of the right end of its travel, i.e. at least 0.95 m along its 1 m travel. AM-Bench environment `PushSlider-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID

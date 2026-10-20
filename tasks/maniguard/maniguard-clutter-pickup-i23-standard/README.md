@@ -9,7 +9,7 @@
 | Family / instance | `clutter_pickup` / seed 23 |
 | Oracle | `none` — No positive example yet (oracle = "none": the 16 ManiGuard tasks added on 2026-10-04 for variety ship without one, user decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 920-959 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-clutter-v1-joint-5cam (revision e92c75fb, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this task's service and none is copied into the task. The frozen instance (state sha 021f30c779dc2819) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §2.7). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.1` |
 
 ## Task
 Standard-mode twin of `maniguard-clutter-pickup-i23-privileged` (the same frozen ManiGuard-Bench task `clutter_pickup/task_0023/base`): the agent gets only the

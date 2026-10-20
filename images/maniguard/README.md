@@ -1,6 +1,6 @@
 # maniguard: ManiGuard on BEHAVIOR-1K 3.7.2 / Isaac Sim 4.5
 
-`efe-private:maniguard-0.2.0` (`VERSION`) runs ManiGuard's evaluator on exactly the stack ManiGuard pins: its `behavior-1k`
+`efe-private:maniguard-0.2.1` (`VERSION`) runs ManiGuard's evaluator on exactly the stack ManiGuard pins: its `behavior-1k`
 submodule is BEHAVIOR-1K tag **v3.7.2** (`88454bd04f75`), installed the way that release's `setup.sh` installs it. It is
 NOT the BEHAVIOR-1K 3.9.2 stack of `behavior` (Isaac Sim 5.1): ManiGuard's frozen scenes are 3.7.2 snapshots, its
 runtime patches target 3.7.2, and upstream abandoned its own port to a newer Isaac.
@@ -8,7 +8,7 @@ runtime patches target 3.7.2, and upstream abandoned its own port to a newer Isa
 | | |
 |---|---|
 | Base | `nvidia/cuda:12.4.1-base-ubuntu22.04` by digest (`sha256:0f6bfcbf…`, 91.8 MB compressed) |
-| System | Ubuntu 22.04 packages from the archive snapshot of 2026-10-01 (Isaac Sim's X / Vulkan / EGL libraries); NVIDIA Vulkan and EGL loader entries |
+| System | Ubuntu 22.04 packages from the archive snapshot of 2026-10-01 (Isaac Sim's X / Vulkan / EGL libraries; the image's apt sources are restored to the Ubuntu archive afterwards); NVIDIA Vulkan and EGL loader entries |
 | Python | Miniforge 26.7.2-0 (sha256-checked), conda env `behavior`: Python 3.10.21 (conda-forge) |
 | PyTorch | torch 2.6.0, torchvision 0.21.0, torchaudio 2.6.0, CUDA 12.4 wheels (setup.sh's default) |
 | BEHAVIOR-1K | v3.7.2 sparse checkout (`OmniGibson/`, `bddl3/`), editable installs: OmniGibson 3.7.2, bddl 3.7.0 (no extras) |
