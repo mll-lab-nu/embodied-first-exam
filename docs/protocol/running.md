@@ -187,10 +187,10 @@ node-local scratch (podman's storage does not work on most network file systems)
    [network]
    firewall_driver = "none"           # only on a node without iptables
    ```
-   plus `policy.json` (the build's `etc/containers/policy.json`), `registries.conf` with
-   `unqualified-search-registries = ["docker.io"]` and `short-name-mode = "permissive"` (Harbor's egress sidecar is
-   built `FROM` a short image name, and without a terminal podman refuses to ask), and, without `/etc/subuid` entries,
-   `storage.conf` with `[storage.options.overlay] ignore_chown_errors = "true"`.
+   plus `policy.json` (the build's `etc/containers/policy.json`) and, without `/etc/subuid` entries, `storage.conf` with
+   `[storage.options.overlay] ignore_chown_errors = "true"`. Harbor's egress sidecar is built `FROM` a short image name,
+   which podman's enforcing short-name mode refuses without a terminal; this repository's `harbor run` pulls it (and the
+   allowlist probe's alpine) by its full `docker.io/` name first, so `registries.conf` needs no change.
 3. Without a user systemd session netavark cannot start aardvark-dns through `systemd-run`; a `systemd-run` early on
    `PATH` that drops its options and execs the command works.
 4. Start the API and run:
@@ -335,6 +335,9 @@ places where solutions are published out of reach). Both installs work with and 
 usage gateway (Debian 12 and 13, Ubuntu 22.04 images).
 In the Ubuntu images built on NVIDIA's CUDA base, `apt-get update` warns about NVIDIA's own repository
 (developer.download.nvidia.com is not on the list) and goes on; the Ubuntu archives answer.
+Before it applies an allowlist, Harbor checks the host kernel once per job by running a small alpine image, and gives
+the pull and run 30 s: a slower pull reads as "allowlist unsupported" for the whole job. On docker and podman this
+repository's `harbor run` (`scripts/efe.py`) pulls that image first when it is missing.
 
 The list is the one switch.
 - Another host for every task: add it to `HOSTS` (to `PACKAGE_HOSTS` too if a run through the gateway should reach it

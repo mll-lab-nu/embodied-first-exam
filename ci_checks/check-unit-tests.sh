@@ -32,7 +32,8 @@ run() {   # run <timeout s> <test path in the repository> [arguments of the test
 }
 for t in scripts/usage_gateway/tests/test_rawlog.py scripts/usage_gateway/tests/test_paths.py \
          scripts/usage_gateway/tests/test_budget_stop.py scripts/tests/test_codex_tools_off.py scripts/tests/test_task_seed.py \
-         scripts/tests/test_runner_results.py scripts/tests/test_retry_policy.py scripts/tests/test_stamp_mtimes.py; do
+         scripts/tests/test_runner_results.py scripts/tests/test_retry_policy.py scripts/tests/test_stamp_mtimes.py \
+         scripts/tests/test_efe_prepull.py; do
   run 300 "$t"
 done
 run 120 scripts/account_failure_check.py --selftest
