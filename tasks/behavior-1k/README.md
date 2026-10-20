@@ -8,56 +8,53 @@ supplementary tasks for harder testing (below), which have neither yet.
 
 ## Quick start
 ```bash
+export RCB_BEHAVIOR_DATA=/path/to/behavior-data   # the licensed dataset: once, see "Before you run"
 harbor run -d embodied-first-exam@all -p tasks/behavior-1k -a codex -m openai/gpt-6-astra
 ```
-Some images are not on a public registry: build them first ([Getting the images](#getting-the-images)).
 
-## Getting the images
+## Before you run
+One manual step, the dataset; the simulator image builds itself.
 
-All BEHAVIOR-1K tasks (privileged and standard) need the simulator image, which is not on a public registry
-(the official `stanfordvl/behavior:3.9.2` plus ffmpeg: NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to
-redistribute), and the licensed BEHAVIOR dataset on the host. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
-
-1. Licences: building the image accepts the NVIDIA Isaac Sim / Omniverse terms of the official image; the dataset step
-   asks you to accept the BEHAVIOR Data Bundle licence (no redistribution). No account, login or token is needed: the
-   base image is on Docker Hub, the dataset on the public Hugging Face dataset `behavior-1k/zipped-datasets`. About 15 GB to
-   pull for the image, about 32 GB to download and 40 GB on disk for the dataset.
-2. Build the simulator image (the files image is public: the task builds pull it):
-   ```bash
-   docker build -f images/behavior/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) .
-   ```
-3. Download the dataset into `RCB_BEHAVIOR_DATA` with BEHAVIOR-1K's own downloader (in the image just built, no GPU
-   needed; it prints the licence and asks you to accept it, then installs the decryption key). The directory ends up with
-   `omnigibson-robot-assets/` (3.8.2), `behavior-1k-assets/` (3.9.0), `2026-challenge-task-instances/` and
-   `omnigibson.key`:
+1. **Host.** Linux x86_64 with Docker (BuildKit, Docker 23 or later), the NVIDIA Container Toolkit and an RTX-class NVIDIA
+   GPU (Isaac Sim needs one even headless; one GPU and 13-16 GB of RAM per Isaac process). Disk: about 45 GB for the image
+   (with Docker's build cache) and 40 GB for the dataset.
+2. **The dataset (licence: no redistribution; once per host).** BEHAVIOR-1K's own downloader, run in the public base
+   image, prints the BEHAVIOR Data Bundle licence and asks you to accept it (type `y`), then fetches the data anonymously
+   from the public Hugging Face dataset `behavior-1k/zipped-datasets` (about 32 GB) and installs the decryption key. No
+   account, login, token or GPU is needed:
    ```bash
    export RCB_BEHAVIOR_DATA=/path/to/behavior-data && mkdir -p "$RCB_BEHAVIOR_DATA"
    docker run --rm -it -e OMNIGIBSON_DATA_PATH=/data -v "$RCB_BEHAVIOR_DATA":/data \
-     ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) python -m omnigibson.utils.asset_utils \
+     docker.io/stanfordvl/behavior:3.9.2@sha256:2702900192741904e69a573aa7869ea51c592586f9791050796efc37faa893fb \
+     python -m omnigibson.utils.asset_utils \
      --download_omnigibson_robot_assets --download_behavior_1k_assets --download_2026_challenge_task_instances
    ```
-4. Run (the tasks mount `$RCB_BEHAVIOR_DATA` read-only and refuse to start without it):
-   ```bash
-   harbor run -d embodied-first-exam@all -p tasks/behavior-1k -a codex -m openai/gpt-6-astra
-   ```
+   The directory then holds `omnigibson-robot-assets/` (3.8.2), `behavior-1k-assets/` (3.9.0),
+   `2026-challenge-task-instances/` and `omnigibson.key`. Export `RCB_BEHAVIOR_DATA` in every shell that runs
+   `harbor run`: every service that runs the simulator mounts it read-only at `/data` (`${RCB_BEHAVIOR_DATA:?…}`), so
+   `docker compose` refuses to start a BEHAVIOR task without it, with a message that points here.
+3. **The simulator image: nothing to do.** The tasks' Dockerfiles hold its recipe (`images/behavior/Dockerfile`: the
+   official `stanfordvl/behavior:3.9.2` by digest + ffmpeg from a dated Ubuntu snapshot). The first trial on a host
+   builds it: it pulls the 14.7 GB base from Docker Hub and installs ffmpeg, about 15 min on a 1 Gbit/s link (most of it
+   the base pull); later trials on the host reuse it (seconds). Building it accepts the NVIDIA Isaac Sim / Omniverse
+   licence terms of the official image. With pull access to our prebuilt copy (`ghcr.io/mll-lab-nu/efe-private:behavior-<images/behavior/VERSION>`,
+   `docker login ghcr.io`), Docker takes its layers instead (compose `build.cache_from`); without access it prints a
+   warning about the cache and builds.
 
 ## Prerequisites (every BEHAVIOR run)
-- **The image**, built on the host: `ghcr.io/mll-lab-nu/efe-private:behavior-<images/behavior/VERSION>`
-  is the official `stanfordvl/behavior:3.9.2` **by digest** plus a snapshot-pinned ffmpeg layer. It contains NVIDIA
-  Isaac Sim and Omniverse Kit (no redistribution) and a 13.7 GB layer above ghcr.io's per-layer limit: **BUILD_ONLY**,
-  never pushed. `images/behavior/BUILD_ONLY` has the build command, the licences and the data it needs.
+- **The image**: `ghcr.io/mll-lab-nu/efe-private:behavior-<images/behavior/VERSION>`, the official
+  `stanfordvl/behavior:3.9.2` **by digest** plus a snapshot-pinned ffmpeg layer (the package state checked by sha256 against
+  `images/behavior/dpkg.lock`). It contains NVIDIA Isaac Sim and Omniverse Kit (no public copy): it is pushed only to the
+  organization's private package, as the tasks' build cache. Every task Dockerfile that runs the simulator (privileged
+  `environment/` and `tests/`, standard `environment/sim/`) carries the recipe between `# >>> images/behavior/Dockerfile`
+  and `# <<< images/behavior/Dockerfile` and builds `FROM behavior-base`; `images/behavior/BUILD_ONLY` has the licences
+  and the data it needs.
 - **The files image** `ghcr.io/mll-lab-nu/efe:behavior-files-<version>` (`images/behavior-files/FILES.json` pins it by digest;
   public, pulled by the task builds; `python3 scripts/files_image.py build behavior-files` also writes it from the
   repository with that very digest): the
   tooling and the graders (Tasks and generator), which the agent and verifier Dockerfiles take with `COPY --from`.
-- **The licensed dataset**, `RCB_BEHAVIOR_DATA`: the host directory with the BEHAVIOR Data Bundle
-  (`omnigibson-robot-assets/`, `behavior-1k-assets/`, `2026-challenge-task-instances/`, `omnigibson.key`), downloaded after
-  accepting its licence, which forbids redistribution: BEHAVIOR-1K's own downloader (`python -m
-  omnigibson.utils.asset_utils`, run in the image) fetches it anonymously from the public Hugging Face dataset
-  `behavior-1k/zipped-datasets` and installs the key once the licence is accepted. It is never in an image: every compose service that runs the
-  simulator (privileged `main` and verifier, standard `sim`) mounts it read-only at `/data` as
-  `${RCB_BEHAVIOR_DATA:?…}`, so `docker compose` refuses to start a BEHAVIOR task without it. Export it before
-  `harbor run`.
+- **The licensed dataset**, `RCB_BEHAVIOR_DATA` ([Before you run](#before-you-run)): never in an image; every compose
+  service that runs the simulator (privileged `main` and verifier, standard `sim`) mounts it read-only at `/data`.
 - **One RTX-class NVIDIA GPU per Isaac process** (Isaac needs one even headless; PhysX runs on the CPU). The compose files
   reserve `count: 1`, which Docker serves with the host's first GPU (GPU 0).
 - About 13-16 GB of RAM per Isaac process: one Isaac simulator at a time on a 32 GB host. torch / OpenMP pools are capped
@@ -351,7 +348,8 @@ sidecar files is byte-identical across the benchmark, the files image's included
 
 ## Licences
 BEHAVIOR-1K code (including the BDDL activity definitions): MIT; the BEHAVIOR Data Bundle: no redistribution (mounted,
-never copied); Isaac Sim 5.1 and Omniverse Kit: NVIDIA proprietary (no redistribution), hence BUILD_ONLY.
+never copied); Isaac Sim 5.1 and Omniverse Kit: NVIDIA proprietary (no public copy), hence the private image and
+the recipe every task builds from public sources.
 
 ## Known issues
 - Privileged agents' containers mount `/behavior-src` and `/opt/tools` read-only (agents that edited OmniGibson and robot

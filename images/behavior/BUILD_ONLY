@@ -1,16 +1,15 @@
-behavior is BUILD_ONLY (PROTOCOL §2.4): it is never pushed to a registry, and every host that runs BEHAVIOR-1K
-tasks builds it locally.
+behavior is private (ghcr.io/mll-lab-nu/efe-private:behavior-<VERSION>): it is the official stanfordvl/behavior:3.9.2
+(BEHAVIOR-1K v3.9.2, the 2026 BEHAVIOR Challenge stack) plus ffmpeg, and it contains NVIDIA Isaac Sim 5.1.0 and Omniverse
+Kit, whose licences forbid a public copy. It is pushed to the organization's private package only, with BuildKit's inline
+cache: it is the build cache of the tasks.
 
-Why: the image is the official stanfordvl/behavior:3.9.2 (BEHAVIOR-1K v3.9.2, the 2026 BEHAVIOR Challenge stack) plus
-ffmpeg. It contains NVIDIA Isaac Sim 5.1.0 and Omniverse Kit, whose licences forbid redistribution, and the base has a
-13.7 GB layer, above ghcr.io's per-layer limit.
-
-Build (from the repository root; Docker with BuildKit, the default since Docker 23; about 15 GB to pull):
-  docker build -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) \
-    -f images/behavior/Dockerfile .
-The tag is the name every BEHAVIOR task uses (environment/Dockerfile, tests/Dockerfile, the standard `sim` service).
-The build pulls the public base by digest and installs ffmpeg from the Ubuntu archive snapshot of 2026-09-20; it fails
-unless the package state equals dpkg.lock. README.md here shows how to check a build against the tested image.
+Nobody has to pull it. Every BEHAVIOR-1K task Dockerfile that runs the simulator holds this recipe verbatim, and its
+compose service names the private image as `build.cache_from`: a runner that can pull it reuses its layers, any other
+runner builds the same layers from public sources (Docker Hub: the base by digest, 14.7 GB; snapshot.ubuntu.com: ffmpeg at
+the versions of dpkg.lock). The recipe needs no build context. To build the image by hand (BuildKit, the default since
+Docker 23):
+  docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) \
+    - < images/behavior/Dockerfile
 
 Licences the builder accepts: the NVIDIA Isaac Sim / Omniverse licence terms of the official image (BEHAVIOR-1K's own
 code is MIT).
@@ -18,10 +17,8 @@ code is MIT).
 Data, needed to run (never in the image): the licensed BEHAVIOR dataset (the BEHAVIOR Data Bundle, downloaded after
 accepting its licence: no redistribution), mounted read-only at run time from $RCB_BEHAVIOR_DATA. The directory holds
 omnigibson-robot-assets/, behavior-1k-assets/, 2026-challenge-task-instances/ and omnigibson.key. BEHAVIOR-1K's own
-downloader, run in this image, fetches them anonymously from the public Hugging Face dataset behavior-1k/zipped-datasets
-and installs the key after you accept the licence (no GPU needed):
-  docker run --rm -it -e OMNIGIBSON_DATA_PATH=/data -v "$RCB_BEHAVIOR_DATA":/data \
-    ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) python -m omnigibson.utils.asset_utils \
-    --download_omnigibson_robot_assets --download_behavior_1k_assets --download_2026_challenge_task_instances
+downloader, run in the public base image, fetches them anonymously from the public Hugging Face dataset
+behavior-1k/zipped-datasets and installs the key after you accept the licence (no GPU needed; tasks/behavior-1k/README.md,
+"Before you run").
 
 GPU: an RTX-class NVIDIA GPU (Isaac Sim needs one even headless) and the NVIDIA container toolkit.

@@ -7,36 +7,39 @@ its goal this way; BEHAVIOR-1K runs the same robot in the same houses with goals
 
 ## Quick start
 ```bash
+export RCB_BEHAVIOR_DATA=/path/to/behavior-data   # the licensed BEHAVIOR dataset: once, see "Before you run"
 harbor run -d embodied-first-exam@all -p tasks/ispatialgym -a codex -m openai/gpt-6-astra
 ```
-Some images are not on a public registry: build them first ([Getting the images](#getting-the-images)).
 
-## Getting the images
+## Before you run
+One manual step, the dataset (the same directory as BEHAVIOR-1K's: skip it if you have that); the simulator image builds
+itself.
 
-All iSpatialGym tasks (privileged and standard) need images that are not on a public registry: the iSpatialGym simulator
-image, built on the BEHAVIOR-1K image (NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute), and the licensed BEHAVIOR dataset on the host. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
-
-1. Licences: building accepts the NVIDIA Isaac Sim / Omniverse terms of the official `stanfordvl/behavior` image; the
-   dataset step asks you to accept the BEHAVIOR Data Bundle licence (no redistribution). No account, login or token is
-   needed: Docker Hub, github.com (iSpatialGym and its BEHAVIOR-1K fork, fetched by commit), pypi.org and the public
-   Hugging Face dataset `behavior-1k/zipped-datasets` are all anonymous.
-2. Build the BEHAVIOR-1K image first (iSpatialGym's Dockerfile starts `FROM` it), then iSpatialGym's (the files image is public: the task builds pull it):
-   ```bash
-   docker build -f images/behavior/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) .
-   docker build -f images/ispatialgym/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ispatialgym-$(cat images/ispatialgym/VERSION) .
-   ```
-3. The dataset, `RCB_BEHAVIOR_DATA` (the same directory BEHAVIOR-1K's tasks use; skip if you have it): BEHAVIOR-1K's own
-   downloader, in the behavior image, no GPU needed; it prints the licence and asks you to accept it:
+1. **Host.** Linux x86_64 with Docker (BuildKit, Docker 23 or later), the NVIDIA Container Toolkit and an RTX-class NVIDIA
+   GPU (Isaac Sim needs one even headless). Disk: about 50 GB for the image (with Docker's build cache) and 40 GB for the
+   dataset.
+2. **The dataset (licence: no redistribution; once per host).** BEHAVIOR-1K's own downloader, run in the public
+   BEHAVIOR-1K base image, prints the BEHAVIOR Data Bundle licence and asks you to accept it (type `y`), then fetches the
+   data anonymously from the public Hugging Face dataset `behavior-1k/zipped-datasets` and installs the decryption key. No
+   account, login, token or GPU is needed:
    ```bash
    export RCB_BEHAVIOR_DATA=/path/to/behavior-data && mkdir -p "$RCB_BEHAVIOR_DATA"
    docker run --rm -it -e OMNIGIBSON_DATA_PATH=/data -v "$RCB_BEHAVIOR_DATA":/data \
-     ghcr.io/mll-lab-nu/efe-private:behavior-$(cat images/behavior/VERSION) python -m omnigibson.utils.asset_utils \
-     --download_omnigibson_robot_assets --download_behavior_1k_assets
+     docker.io/stanfordvl/behavior:3.9.2@sha256:2702900192741904e69a573aa7869ea51c592586f9791050796efc37faa893fb \
+     python -m omnigibson.utils.asset_utils --download_omnigibson_robot_assets --download_behavior_1k_assets
    ```
-4. Run (the tasks mount `$RCB_BEHAVIOR_DATA` read-only and refuse to start without it):
-   ```bash
-   harbor run -d embodied-first-exam@all -p tasks/ispatialgym -a codex -m openai/gpt-6-astra
-   ```
+   iSpatialGym reads `omnigibson-robot-assets/` (3.8.2), `behavior-1k-assets/` (3.9.0) and `omnigibson.key` from it. Export
+   `RCB_BEHAVIOR_DATA` in every shell that runs `harbor run`: the services that run the simulator mount it read-only at
+   `/bdata` (`${RCB_BEHAVIOR_DATA:?…}`), so `docker compose` refuses to start a task without it, with a message that points
+   here.
+3. **The simulator image: nothing to do.** The tasks' Dockerfiles hold its recipe (`images/ispatialgym/Dockerfile`:
+   BEHAVIOR-1K's recipe, then iSpatialGym and its BEHAVIOR-1K fork fetched from GitHub by commit, pip versions fixed).
+   The first trial on a host builds it: the 14.7 GB base from Docker Hub, ffmpeg from a dated Ubuntu snapshot, the two
+   repositories and a few pip packages, about 15 min on a 1 Gbit/s link (2 min on a host that already built BEHAVIOR-1K's
+   image: those layers are shared); later trials reuse it. Building it accepts the NVIDIA Isaac Sim / Omniverse licence
+   terms of the official image. With pull access to our prebuilt copy
+   (`ghcr.io/mll-lab-nu/efe-private:ispatialgym-<images/ispatialgym/VERSION>`, `docker login ghcr.io`), Docker takes its
+   layers instead (compose `build.cache_from`); without access it prints a warning about the cache and builds.
 
 | | |
 |---|---|
@@ -46,7 +49,7 @@ image, built on the BEHAVIOR-1K image (NVIDIA Isaac Sim 5.1 inside, which NVIDIA
 | robot | R1Pro: holonomic base, 4-joint trunk, two 7-joint arms with parallel grippers; iSpatialGym's 23-D JoyLo action at 30 Hz; head and wrist cameras, 1080×1080 RGB |
 | score | upstream's geometric success with its settle-eval on: the BDDL goal and every measured target within the `isg-v2` tolerances × 3 (`run_isg --mode policy`) at every one of the last 45 control steps, the measured objects and the robot at rest over them (`pose_settled`); within max(300, 2 × the demo's length) control steps |
 | tasks | 12 in both modes: `tasks/ispatialgym/ispatialgym-<task>-i00-privileged` and `-standard` (`eai-standard/2.2`), one frozen instance per pair |
-| image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` (`images/ispatialgym/`, BUILD_ONLY: Isaac Sim inside; both upstream repositories are fetched by commit) |
+| image | `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.1` (`images/ispatialgym/`: Isaac Sim inside, so private; the tasks build the same recipe from public sources when they cannot pull it, both upstream repositories fetched by commit) |
 | oracle | none |
 
 ## Tasks: upstream's 23, ours ✅ (12)
@@ -100,7 +103,7 @@ rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the
 | not given | object poses, the world frame, resets, the goal check | the goal, any target, any success check; motion primitives or planners |
 | deliverable, grading | the episode the sidecar records, graded live: the sidecar's success at the episode's end, nothing replayed (Grading) | `/app/output/trajectory.npz` (≤ the step budget); two fresh replays in the verifier, both succeed and agree |
 
-The privileged agent's image is `ghcr.io/mll-lab-nu/efe-private:ispatialgym-0.2.0` with a layer that removes, and the build then asserts gone: every BDDL
+The privileged agent's image is the ispatialgym image (`images/ispatialgym/`) with a layer that removes, and the build then asserts gone: every BDDL
 problem (goals), the docs (they preview the reference demonstrations; the fork's link the authors' pages), tests,
 configs and README, the eval data's repository id and folder names and the project URLs (they locate the
 demonstrations) and bytecode; upstream's public release ships no scripted expert, planner, sampler or task spec, and the
@@ -152,8 +155,8 @@ harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-standard -a nop 
 harbor run -p tasks/ispatialgym/ispatialgym-mental-rotation-i00-privileged -a codex -m openai/gpt-6-astra --env-file .env
 ```
 The dataset is the BEHAVIOR Data Bundle (`omnigibson.utils.asset_utils`: `download_omnigibson_robot_assets()`,
-`download_behavior_1k_assets(accept_license=True)`), the same one BEHAVIOR-1K's tasks mount. Build the image as
-`images/ispatialgym/BUILD_ONLY` says. The task directories are the deliverable; the tooling that built them is kept
+`download_behavior_1k_assets(accept_license=True)`), the same one BEHAVIOR-1K's tasks mount ([Before you run](#before-you-run)).
+The task directories are the deliverable; the tooling that built them is kept
 outside this repository. The frozen instances are kept in the task directories only: the standard twin's
 `environment/sim/` (`instance.json`, `goal.json`, `facts.json`, `upstream.json`). The goal images (upstream's, unchanged,
 MIT) are in the public Hugging Face dataset `MLL-Lab/embodied-first-exam-public` (`ispatialgym/`), pinned in
