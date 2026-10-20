@@ -66,8 +66,12 @@ def cached_clone(d: Path) -> Path:
     try:
         if subprocess.run(["git", "clone", "--depth", "1", "--branch", tag, REPO_URL, tmp]).returncode:
             print(f"efe: git clone of {tag} failed", file=sys.stderr); raise SystemExit(2)
-        if not is_tree(d):
-            os.rename(tmp, d)
+        if not is_tree(d):                                  # else another run made it meanwhile
+            try:
+                os.rename(tmp, d)
+            except OSError as e:
+                print(f"efe: cannot place the clone at {d} ({e}); remove {d} and run again", file=sys.stderr)
+                raise SystemExit(2)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
     return d
