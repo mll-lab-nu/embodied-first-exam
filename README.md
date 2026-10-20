@@ -11,19 +11,22 @@
 <b>What is their first exam to enter the physical world?</b></p>
 
 <p align="center">
-  <a href="https://www.embodied-first-exam.ai/suite/?id=metaworldplus"><img src="docs/assets/suites/metaworldplus.gif" alt="MetaWorld+" title="MetaWorld+" width="24%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=robopaint"><img src="docs/assets/suites/robopaint.gif" alt="RoboPaint" title="RoboPaint" width="24%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=roboarc"><img src="docs/assets/suites/roboarc.gif" alt="RoboARC" title="RoboARC" width="24%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=pandadyn"><img src="docs/assets/suites/pandadyn.gif" alt="RoboDynamicExam" title="RoboDynamicExam" width="24%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=robopaint"><img src="docs/assets/suites/robopaint.gif" alt="RoboPaint" title="RoboPaint" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=roboarc"><img src="docs/assets/suites/roboarc.gif" alt="RoboARC" title="RoboARC" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=pandadyn"><img src="docs/assets/suites/pandadyn.gif" alt="RoboDynamicExam" title="RoboDynamicExam" width="32%"></a>
 </p>
 <p align="center">
-  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-fun"><img src="docs/assets/suites/embodied-olympics-fun.gif" alt="Embodied Olympics - Fun" title="Embodied Olympics - Fun" width="24%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-match"><img src="docs/assets/suites/embodied-olympics-match.gif" alt="Embodied Olympics - Match" title="Embodied Olympics - Match" width="24%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=dexhand"><img src="docs/assets/suites/dexhand.gif" alt="DexHandExam" title="DexHandExam" width="24%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=roboengineer"><img src="docs/assets/suites/roboengineer.gif" alt="RoboEngineer" title="RoboEngineer" width="24%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-fun"><img src="docs/assets/suites/embodied-olympics-fun.gif" alt="Embodied Olympics - Fun" title="Embodied Olympics - Fun" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-match"><img src="docs/assets/suites/embodied-olympics-match.gif" alt="Embodied Olympics - Match" title="Embodied Olympics - Match" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=dexhand"><img src="docs/assets/suites/dexhand.gif" alt="DexHandExam" title="DexHandExam" width="32%"></a>
+</p>
+<p align="center">
+  <a href="https://www.embodied-first-exam.ai/suite/?id=roboengineer"><img src="docs/assets/suites/roboengineer.gif" alt="RoboEngineer" title="RoboEngineer" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-safety-exam"><img src="docs/assets/suites/embodied-safety-exam.gif" alt="Embodied Safety Exam" title="Embodied Safety Exam" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/?id=ispatialgym"><img src="docs/assets/suites/ispatialgym.gif" alt="iSpatialGym" title="iSpatialGym" width="32%"></a>
 </p>
 
-<p align="center"><sub>Our eight original suites: MetaWorld+ · RoboPaint · RoboARC · RoboDynamicExam · Embodied Olympics - Fun · Embodied Olympics - Match · DexHandExam · RoboEngineer. <a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro.mp4">▶ Watch the intro video</a></sub></p>
+<p align="center"><sub>Our nine original suites: RoboPaint · RoboARC · RoboDynamicExam · Embodied Olympics - Fun · Embodied Olympics - Match · DexHandExam · RoboEngineer · Embodied Safety Exam · iSpatialGym. <a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro.mp4">▶ Watch the intro video</a></sub></p>
 
 ## News
 
