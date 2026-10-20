@@ -11,39 +11,49 @@ standard twin `maniguard-<family>-i<NN>-standard` (`eai-standard/2.2`), NN = the
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/maniguard -a codex -m openai/gpt-6-astra
 ```
-Some images are not on a public registry: build them first ([Getting the images](#getting-the-images)).
+Read [Before you run](#before-you-run) first: the tasks need a BEHAVIOR-1K 3.7.2 data root that you prepare once, and the first run builds the simulator image ({COLD}).
 
-## Getting the images
-
-All ManiGuard tasks (privileged and standard) need the simulator image, which is not on a public registry
-(BEHAVIOR-1K 3.7.2 on NVIDIA Isaac Sim 4.5, which NVIDIA does not allow anyone to redistribute), and a BEHAVIOR-1K 3.7.2 data root on the host. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
-
-1. Licences: building accepts the NVIDIA Isaac Sim / Omniverse licence and NVIDIA's terms for the Isaac Sim 4.5 wheels
-   (the Dockerfile sets `OMNI_KIT_ACCEPT_EULA=YES`); the key step asks you to accept the BEHAVIOR Data Bundle licence (no
-   redistribution). No account, login or token is needed: every input (Docker Hub `nvidia/cuda`, github.com, pypi.org,
-   pypi.nvidia.com, download.pytorch.org, conda-forge, snapshot.ubuntu.com, NVIDIA's Kit extension CDN, the public Hugging
-   Face datasets `behavior-1k/zipped-datasets` and `IDEAS-Lab-Northwestern/franka-panda-longfinger`) is anonymous.
-   About 50 GB of free disk for the build.
-2. Build the simulator image (the files image is public: the task builds pull it):
-   ```bash
-   docker build -f images/maniguard/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) .
-   ```
-3. The BEHAVIOR Data Bundle key: if you already have one (e.g. `$RCB_BEHAVIOR_DATA/omnigibson.key` from BEHAVIOR-1K), use
-   it; otherwise BEHAVIOR-1K's own code prints the licence, asks you to accept it and installs the key (no GPU needed):
-   ```bash
-   mkdir -p ~/behavior-key
-   docker run --rm -it -e OMNIGIBSON_DATA_PATH=/k -v ~/behavior-key:/k ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) \
-     python -c "from omnigibson.utils import asset_utils as a; a.print_user_agreement(); assert input('Accept? [y/n] ') == 'y'; a.download_key()"
-   ```
-4. Build the data root `RCB_MANIGUARD_DATA` (the members the tasks load, 3.4 GB, every file checked; `--full` for all of it):
-   ```bash
-   export RCB_MANIGUARD_DATA=/path/to/maniguard-data
-   python3 images/maniguard/prep_data.py --root "$RCB_MANIGUARD_DATA" --key ~/behavior-key/omnigibson.key
-   ```
-5. Run (the tasks mount `$RCB_MANIGUARD_DATA` read-only and refuse to start without it):
-   ```bash
-   harbor run -d embodied-first-exam@all -p tasks/maniguard -a codex -m openai/gpt-6-astra
-   ```
+## Before you run
+- **Licences (your decisions).** The simulator image contains NVIDIA Isaac Sim 4.5 / Omniverse Kit, which NVIDIA licenses
+  for use and not for redistribution, so it is not on a public registry: your first run builds it on your machine. That
+  build accepts, on your behalf, the NVIDIA Isaac Sim / Omniverse licence agreement and NVIDIA's terms for the Isaac Sim 4.5
+  wheels on pypi.nvidia.com and for the two Kit extensions from NVIDIA's extension CDN (the recipe sets
+  `OMNI_KIT_ACCEPT_EULA=YES` and `ACCEPT_EULA=Y`). The data step (below) asks you to accept the BEHAVIOR Data Bundle
+  licence (no redistribution). No account, login or token is needed for either.
+- **Host.** Linux x86_64, Docker with BuildKit (the `buildx` plugin) and the NVIDIA Container Toolkit, one RTX-class NVIDIA
+  GPU with a driver Isaac Sim 4.5 supports (ManiGuard verified 580.x and saw startup segfaults with newer drivers; checked
+  here: 580.159 and 580.178.04), one Isaac simulator per 32 GB of host RAM. Blackwell GPUs need another torch build: not
+  supported (Other hosts, below).
+- **Disk.** About 50 GB free for the first build (the image is about 17-26 GB depending on Docker's image store), plus
+  3.4 GB for the data root.
+- **First run: the image builds itself (about {COLD}).** Harbor builds the simulator image from public sources only (Docker
+  Hub `nvidia/cuda`, snapshot.ubuntu.com, github.com, conda-forge, pypi.org, download.pytorch.org, pypi.nvidia.com, NVIDIA's
+  Kit extension CDN), once per machine: every later ManiGuard task reuses its layers. The tasks allow {BUILD} for the build
+  (`[environment] build_timeout_sec`); on a slow link raise it with `--environment-build-timeout-multiplier`. Organization
+  members who can read `ghcr.io/mll-lab-nu/efe-private` (`docker login ghcr.io`) pull the prebuilt layers instead (compose
+  `cache_from`); without that access the build prints a warning that it cannot read the cache image and goes on building:
+  expected.
+- **Manual step: the data root `RCB_MANIGUARD_DATA`** (once; the tasks refuse to start without it). From the repository
+  root:
+  1. Build the simulator image ahead of the first run (the same layers Harbor then reuses; organization members may
+     `docker pull ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION)` instead):
+     ```bash
+     docker build --target maniguard-base -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) \
+       tasks/maniguard/maniguard-jar-transport-i14-privileged/environment
+     ```
+  2. The BEHAVIOR Data Bundle key: if you already have one (e.g. `$RCB_BEHAVIOR_DATA/omnigibson.key` from BEHAVIOR-1K), use
+     it; otherwise BEHAVIOR-1K's own code prints the licence, asks you to accept it and installs the key (no GPU needed):
+     ```bash
+     mkdir -p ~/behavior-key
+     docker run --rm -it -e OMNIGIBSON_DATA_PATH=/k -v ~/behavior-key:/k ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) \
+       python -c "from omnigibson.utils import asset_utils as a; a.print_user_agreement(); assert input('Accept? [y/n] ') == 'y'; a.download_key()"
+     ```
+  3. Build the data root (the members the tasks load, 3.4 GB, every file checked; `--full` for all of it) and export it
+     where you run Harbor:
+     ```bash
+     export RCB_MANIGUARD_DATA=/path/to/maniguard-data
+     python3 images/maniguard/prep_data.py --root "$RCB_MANIGUARD_DATA" --key ~/behavior-key/omnigibson.key
+     ```
 
 30 tasks, 5 per family in all 6 families: the 14 tasks of the hard shortlist with a `full` oracle
 (below), and 16 tasks added for variety with `oracle = "none"` (second table). Run on an RTX 4090 Laptop GPU and an RTX
@@ -99,8 +109,8 @@ never copied into the task and not replayed here.
 | `maniguard-clutter-pickup-i23` | `clutter_pickup/task_0023` | `021f30c779dc2819` | a top-heavy cocktail glass among a 25 cm vase and a wineglass; a raised sphere |
 
 ## Prerequisites (every ManiGuard run)
-- **The image** `ghcr.io/mll-lab-nu/efe-private:maniguard-<images/maniguard/VERSION>`, built on the host
-  (BUILD_ONLY: NVIDIA Isaac Sim 4.5 inside). `images/maniguard/` has the recipe: BEHAVIOR-1K v3.7.2 installed the way its
+- **The image** `ghcr.io/mll-lab-nu/efe-private:maniguard-<images/maniguard/VERSION>`, which every task builds from
+  public sources when it cannot pull it (BUILD_ONLY: NVIDIA Isaac Sim 4.5 inside). `images/maniguard/` has the recipe: BEHAVIOR-1K v3.7.2 installed the way its
   own `setup.sh --new-env --omnigibson --bddl` does (Python 3.10, torch 2.6.0+cu124, the 26 Isaac Sim 4.5.0.0 wheels,
   sha256-checked), Spot 2.16 from conda-forge, PyAV from PyPI (conda-forge's ffmpeg brings a Vulkan loader and libglvnd
   that crash Isaac's renderer), g++ for OmniGibson's `torch.compile`, and ManiGuard's evaluator at `a1b6444b3` (its import

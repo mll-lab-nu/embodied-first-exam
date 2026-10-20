@@ -1,6 +1,9 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:ambench-<images/ambench/VERSION> is never pushed to a public registry (docs/protocol/README.md §2.4,
-D5). Every evaluation host builds it locally; the AM-Bench tasks reference that tag and Harbor finds it in the local Docker
-image store.
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:ambench-<images/ambench/VERSION> is never pushed to a public registry
+(docs/protocol/README.md §2.4, D5). Every AM-Bench task builds it itself, as its `ambench-base` stage (this Dockerfile without
+its header, copied into the task's environment/Dockerfile and tests/Dockerfile): Harbor builds it on a machine's first
+AM-Bench run from public sources only, and every later task reuses the layers. The organization keeps a prebuilt copy in
+its private package efe-private, pushed with inline cache metadata; the tasks name it as compose `cache_from`, so a
+runner that can read it pulls the layers instead of building them, and one that cannot gets a warning and builds.
 
 Why
   The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the pip wheels of the Isaac stack (from pypi.nvidia.com).
@@ -45,8 +48,8 @@ Host
   build). Camera rendering makes GPU PhysX timing-dependent: only camera-free runs reproduce the hashes
   (tasks/ambench/README.md, Determinism).
 
-Build (from the repository root)
-  docker build -f images/ambench/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:ambench-$(cat images/ambench/VERSION) .
+Build (alone; Harbor does this inside every task's build)
+  docker build --target ambench-base -t ghcr.io/mll-lab-nu/efe-private:ambench-$(cat images/ambench/VERSION) images/ambench
   The build follows AM-Bench's scripts/setup/install.sh (torch 2.7.0+cu128, Isaac Sim 5.1.0, Isaac Lab at YAMLab's commit,
   Pyroki with JAX 0.4.28 on the CPU, acados with qpOASES, AM-Bench), then sets every Python package to
   images/ambench/requirements.lock (the reference build's `uv pip freeze`) without resolving and fails unless the environment
@@ -63,8 +66,7 @@ Check a build
   expects instance_matches true, success true and, from the replay, the end state_sha of the task README's Verification
   section (the oracle's hash; both commands run camera-free). Or run `harbor run -p tasks/ambench/ambench-press-button-fahexa-i00-privileged -a oracle`.
 
-On a CI machine (maintainers)
-  A self-hosted runner with such a GPU builds the image with the command above when images/ambench/ changes, runs the check,
-  and keeps the image in its local Docker store (or in a registry the organization keeps private), never on a public
-  registry. Hosts of the same organization may copy a built image among themselves (docker save ... | zstd, docker load); a
-  new VERSION means a rebuild on every host.
+Publishing the cache copy (maintainers, after a change here and a VERSION bump)
+  Build it as above with --build-arg BUILDKIT_INLINE_CACHE=1, check it (above), push it to
+  ghcr.io/mll-lab-nu/efe-private:ambench-$(cat images/ambench/VERSION) (organization members only, never a public package),
+  and copy the new stage into every task (with the new tag in their compose `cache_from`).

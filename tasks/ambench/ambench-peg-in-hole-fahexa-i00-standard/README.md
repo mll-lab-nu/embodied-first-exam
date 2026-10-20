@@ -9,7 +9,7 @@
 | Family / instance | `peg_in_hole_fahexa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0` |
 
 ## Task
 Standard-mode twin of `ambench-peg-in-hole-fahexa-i00-privileged` (the same frozen instance: AM-Bench environment `PegInHole-Am-FAHexa-Abs-PID-Direct-v0`, its seeded reset with seed

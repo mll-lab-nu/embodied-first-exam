@@ -17,11 +17,15 @@ services:
     cpus: 12   # rcb-monitor
     mem_limit: 43008m   # rcb-monitor
     pids_limit: 16384   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:maniguard-0.1.0
+    # maniguard-base (the first stage of the Dockerfile) is built from public sources; with read access to the prebuilt
+    # image its layers are pulled instead (cache_from)
+    build:
+      context: sim
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.0"]
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro
-      - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by scripts/maniguard/prep_data.py (tasks/maniguard/README.md)}:/data:ro
+      - ${RCB_MANIGUARD_DATA:?set RCB_MANIGUARD_DATA to the host directory prepared by images/maniguard/prep_data.py (tasks/maniguard/README.md)}:/data:ro
       - rcb_maniguard_cache_trusted:/cache
     working_dir: /tmp
     command: sh /srv/run.sh

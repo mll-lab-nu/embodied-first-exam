@@ -1,6 +1,9 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:maniguard-<images/maniguard/VERSION> is never pushed to a
-registry (docs/protocol/README.md §2.4, D5). Every evaluation host builds it locally; the ManiGuard tasks reference that tag and
-Harbor finds it in the local Docker image store.
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:maniguard-<images/maniguard/VERSION> is never pushed to a public registry
+(docs/protocol/README.md §2.4, D5). Every ManiGuard task builds it itself, as its `maniguard-base` stage (this Dockerfile without
+its header, copied into the task's environment/Dockerfile and tests/Dockerfile): Harbor builds it on a machine's first
+ManiGuard run from public sources only, and every later task reuses the layers. The organization keeps a prebuilt copy in
+its private package efe-private, pushed with inline cache metadata; the tasks name it as compose `cache_from`, so a
+runner that can read it pulls the layers instead of building them, and one that cannot gets a warning and builds.
 
 Why
   The image contains NVIDIA Isaac Sim 4.5.0.0 / Omniverse Kit (NVIDIA's pip wheels from pypi.nvidia.com), licensed for use,
@@ -35,8 +38,13 @@ Host
   holds every Kit extension the launch resolves (a standard-mode sidecar runs behind the agent's egress allowlist). Run: one Isaac simulator per 32 GB of host RAM. Tested on an RTX 4090 Laptop GPU (16 GB), driver
   580.178.04: a replay peaks at about 4 GB of VRAM.
 
-Build (from the repository root)
-  docker build -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) -f images/maniguard/Dockerfile .
+Build (alone; Harbor does this inside every task's build)
+  docker build --target maniguard-base -t ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) images/maniguard
 
 Check a build (README.md here): the evaluator imports (the build does it), the locks match (the build does it), and a frozen
 instance loads to its recorded state hash with the long-finger robot.
+
+Publishing the cache copy (maintainers, after a change here and a VERSION bump)
+  Build it as above with --build-arg BUILDKIT_INLINE_CACHE=1, check it (above), push it to
+  ghcr.io/mll-lab-nu/efe-private:maniguard-$(cat images/maniguard/VERSION) (organization members only, never a public package),
+  and copy the new stage into every task (with the new tag in their compose `cache_from`).

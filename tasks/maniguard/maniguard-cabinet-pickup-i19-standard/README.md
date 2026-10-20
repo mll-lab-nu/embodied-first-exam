@@ -9,7 +9,7 @@
 | Family / instance | `cabinet_pickup` / seed 19 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.0` |
 
 ## Task
 Standard-mode twin of `maniguard-cabinet-pickup-i19-privileged` (the same frozen ManiGuard-Bench task `cabinet_pickup/task_0019/base`): the agent gets only the

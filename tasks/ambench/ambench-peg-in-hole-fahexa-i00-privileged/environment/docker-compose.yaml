@@ -5,6 +5,10 @@
 services:
   main:
     pids_limit: 16384   # rcb-monitor
+    # ambench-base (the first stage of the Dockerfile) is built from public sources; with read access to the prebuilt
+    # image its layers are pulled instead (cache_from)
+    build:
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0"]
     shm_size: "8gb"
     volumes:
       - rcb_limits:/run/rcb-limits:ro   # rcb-monitor

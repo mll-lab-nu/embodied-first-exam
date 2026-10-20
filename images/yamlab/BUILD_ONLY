@@ -1,6 +1,9 @@
-BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:yamlab-<images/yamlab/VERSION> is never pushed to a public registry (docs/protocol/README.md §2.4,
-D5). Every evaluation host builds it locally; the YAMLab tasks reference that tag and Harbor finds it in the local Docker
-image store.
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:yamlab-<images/yamlab/VERSION> is never pushed to a public registry
+(docs/protocol/README.md §2.4, D5). Every YAMLab task builds it itself, as its `yamlab-base` stage (this Dockerfile without
+its header, copied into the task's environment/Dockerfile and tests/Dockerfile): Harbor builds it on a machine's first
+YAMLab run from public sources only, and every later task reuses the layers. The organization keeps a prebuilt copy in
+its private package efe-private, pushed with inline cache metadata; the tasks name it as compose `cache_from`, so a
+runner that can read it pulls the layers instead of building them, and one that cannot gets a warning and builds.
 
 Why
   The image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the pip wheels of the Isaac stack (from pypi.nvidia.com).
@@ -36,8 +39,8 @@ Host
   and its replays run one at a time) and ~1-3 GB of GPU memory per simulator while it starts (the RTX renderer's
   initialisation fails when the GPU runs out of memory: start fewer at once on a shared GPU).
 
-Build (from the repository root)
-  docker build -f images/yamlab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:yamlab-$(cat images/yamlab/VERSION) .
+Build (alone; Harbor does this inside every task's build)
+  docker build --target yamlab-base -t ghcr.io/mll-lab-nu/efe-private:yamlab-$(cat images/yamlab/VERSION) images/yamlab
   The build follows YAMLab's install.sh (torch 2.7.0+cu128, Isaac Sim 5.1.0, Isaac Lab at the commit YAMLab pins, LeRobot,
   YAMLab), then sets every Python package to images/yamlab/requirements.lock (the reference build's `uv pip freeze`) without
   resolving and fails unless the environment is exactly the lock.
@@ -54,8 +57,7 @@ Check a build
   expects instance_exact true, success true and the same final state_sha from both runs as the task README's Verification
   section (the oracle's hash). Or run `harbor run -p tasks/yamlab/yamlab-put-pot-on-cooktop-i00-privileged -a oracle`.
 
-On a CI machine (maintainers)
-  A self-hosted runner with such a GPU builds the image with the command above when images/yamlab/ changes, runs the check,
-  and keeps the image in its local Docker store (or in a registry the organization keeps private), never on a public
-  registry. Hosts of the same organization may copy a built image among themselves (docker save ... | zstd, docker load); a
-  new VERSION means a rebuild on every host.
+Publishing the cache copy (maintainers, after a change here and a VERSION bump)
+  Build it as above with --build-arg BUILDKIT_INLINE_CACHE=1, check it (above), push it to
+  ghcr.io/mll-lab-nu/efe-private:yamlab-$(cat images/yamlab/VERSION) (organization members only, never a public package),
+  and copy the new stage into every task (with the new tag in their compose `cache_from`).

@@ -3,7 +3,7 @@
 # (scripted skeletons, grasp annotations) and its policy servers. None of it may be in reach of the agent (PROTOCOL §2.7):
 #  1. the agent's build context environment/ holds only the files the generator writes there (privileged: the Dockerfile,
 #     compose file, the tooling and the frozen instance; standard: the client, its pins and the sim/ sidecar, which compose
-#     mounts into the sidecar only);
+#     mounts into the sidecar only, with the sidecar's Dockerfile);
 #  2. nothing the agent reads (instruction.md, environment/ text files) names the demonstrations, the generator or the
 #     grasp annotations;
 #  3. the frozen instance is exactly ManiGuard-Bench's two files plus our instance.json and NOTICE.
@@ -20,7 +20,8 @@ if name.endswith("-privileged"):
     dirs = {"instance": INSTANCE}
 else:
     allowed = {"Dockerfile", "docker-compose.yaml", "client-requirements.txt", "rcb_client.py", "rcb1.py"}
-    dirs = {"sim": {"server.py", "finalize.sh", "run.sh", "rcb_limited.py", "rcb1.py", "rcb_maniguard.py", "live_video.py", "instance"}}
+    dirs = {"sim": {"server.py", "finalize.sh", "run.sh", "rcb_limited.py", "rcb1.py", "rcb_maniguard.py", "live_video.py", "instance",
+             "Dockerfile"}}   # the sidecar's image: images/maniguard/Dockerfile (the recipe, normalize writes it)
 dirs["rcb_monitor"] = {"limits.json"}   # the resource monitor sidecar's limits, mounted only into it (its code is in the image; check-monitor.py)
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)

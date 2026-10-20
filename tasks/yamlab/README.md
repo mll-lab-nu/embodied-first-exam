@@ -11,26 +11,26 @@ manipulation with two I2RT YAM arms (6 joints each, parallel two-finger grippers
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/yamlab -a codex -m openai/gpt-6-astra
 ```
-Some images are not on a public registry: build them first ([Getting the images](#getting-the-images)).
+Read [Before you run](#before-you-run) first: the first run builds the simulator image ({COLD}).
 
-## Getting the images
-
-All YAMLab tasks (privileged and standard) need the simulator image, which is not on a public registry
-(NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute); the tooling's files image is public. Build the simulator image
-locally under the tags the tasks name; the tasks then run unchanged. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
-
-1. Licence: building the image accepts the NVIDIA Isaac Sim / Omniverse licence and NVIDIA's terms for the isaacsim wheels
-   (the Dockerfile sets `OMNI_KIT_ACCEPT_EULA=YES`). No account, login or token is needed: every input (Docker Hub
-   `nvidia/cuda`, github.com, pypi.org, pypi.nvidia.com, download.pytorch.org, the public Hugging Face dataset
-   `yamlab/yamlab_datasets`, NVIDIA's public asset bucket on S3) is anonymous. About 60 GB of free disk and 25-40 min.
-2. Build the simulator image (the files image is public: the task builds pull it):
-   ```bash
-   docker build -f images/yamlab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:yamlab-$(cat images/yamlab/VERSION) .
-   ```
-3. Run:
-   ```bash
-   harbor run -d embodied-first-exam@all -p tasks/yamlab -a codex -m openai/gpt-6-astra
-   ```
+## Before you run
+- **Licence (your decision).** The simulator image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit, which NVIDIA licenses for use
+  and not for redistribution, so it is not on a public registry: your first run builds it on your machine. That build
+  accepts, on your behalf, the NVIDIA Isaac Sim / Omniverse licence agreement and NVIDIA's terms for the Isaac Sim wheels
+  on pypi.nvidia.com and for the files of NVIDIA's public asset bucket that the image bakes in (the recipe sets `OMNI_KIT_ACCEPT_EULA=YES` and `ACCEPT_EULA=Y`). Read them before you
+  run these tasks. No account, login or token is needed.
+- **Host.** Linux x86_64, Docker with BuildKit (the `buildx` plugin) and the NVIDIA Container Toolkit, one RTX-class NVIDIA
+  GPU (Isaac renders with RTX even headless) with a driver Isaac Sim 5.1 supports (checked: 580.159 on an RTX 4090).
+- **Disk.** About 60 GB free for the first build (the image is about 27 GB, plus BuildKit's cache while it builds).
+- **First run: the image builds itself (about {COLD}).** Harbor builds the simulator image from public sources only
+  (Docker Hub `nvidia/cuda`, snapshot.ubuntu.com, github.com, pypi.org, download.pytorch.org,
+  pypi.nvidia.com, the public Hugging Face dataset `yamlab/yamlab_datasets`, NVIDIA's public asset bucket on S3), once per machine: every later YAMLab task reuses its layers and
+  starts in seconds. The tasks allow {BUILD} for the build (`[environment] build_timeout_sec`); on a slow link raise it with
+  `--environment-build-timeout-multiplier`. Organization members who can read `ghcr.io/mll-lab-nu/efe-private` (`docker
+  login ghcr.io`) pull the prebuilt layers instead (compose `cache_from`); without that access the build prints a warning
+  that it cannot read the cache image and goes on building: expected. To build ahead of a batch:
+  `docker build --target yamlab-base tasks/yamlab/yamlab-put-pot-on-cooktop-i00-privileged/environment` (the layers every task then reuses).
+- **Nothing to download or accept by hand** beyond the licence above: the first run builds everything.
 
 5 frozen instances per family (10), each a privileged task `yamlab-<family>-iNN-privileged` and its standard twin
 `yamlab-<family>-iNN-standard` (`eai-standard/2.2`): 20 task directories. Each instance is a different pair of YAMLab's
@@ -211,9 +211,10 @@ the world origin on any axis or a zero quaternion are 400s that execute nothing.
   dataset. Renaming the instances would change every task's identity; it is left as it is.
 
 ## Image and host
-`images/yamlab/` → `ghcr.io/mll-lab-nu/efe-private:yamlab-0.1.0` (~26.5 GB): YAMLab, Isaac Lab, Isaac Sim 5.1, the LeRobot fork
-YAMLab's recorder imports, and the two tasks' object assets (~3 GB). It contains Isaac Sim: **BUILD_ONLY**
-(`images/yamlab/BUILD_ONLY` has the licences, the build command and the check of a build). Needs an RTX-class GPU (PhysX on
+`images/yamlab/` → `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.0` (~26.8 GB): YAMLab, Isaac Lab, Isaac Sim 5.1, the LeRobot fork
+YAMLab's recorder imports, and the two tasks' object assets (~3 GB). It contains Isaac Sim: **BUILD_ONLY**, so every task
+builds it as its `yamlab-base` stage when it cannot pull it (Before you run; `images/yamlab/BUILD_ONLY` has the licences
+and the check of a build). Needs an RTX-class GPU (PhysX on
 the CPU); one simulator per ~16 GB of RAM. Isaac keeps generated Python in its Kit cache: the verifier and the standard
 sidecar mount their own `*_trusted` cache volumes; every cache volume is scoped to the trial's compose project.
 

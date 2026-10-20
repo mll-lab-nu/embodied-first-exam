@@ -9,7 +9,7 @@
 | Family / instance | `open_door_fahexa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0` |
 
 ## Task
 A free-standing door stands ahead of the hovering aerial manipulator: an oak door panel in a metal frame, hinged on its left edge (as seen from the robot), with a metal lever handle near its right edge on the robot-facing side. Open the door: swing the panel on its hinge, away from the robot, by more than 20 degrees from closed. AM-Bench environment `OpenDoor-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID

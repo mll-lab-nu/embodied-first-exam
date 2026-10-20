@@ -9,7 +9,7 @@
 | Family / instance | `lemon_harvesting_fahexa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0` |
 
 ## Task
 One lemon and six limes are fixed to the front face of a wall in front of the hovering aerial manipulator, and a grey storage tote sits on a small table against the wall to the robot's left. Harvest the lemon: free it from the wall and get it into the tote. Success needs the lemon's reference point (the base of the fruit) inside the tote's nominal box while the gripper is fully open. AM-Bench environment `LemonHarvesting-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID

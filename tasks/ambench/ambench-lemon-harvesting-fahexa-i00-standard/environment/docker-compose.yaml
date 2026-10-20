@@ -17,7 +17,11 @@ services:
     cpus: 16   # rcb-monitor
     mem_limit: 32768m   # rcb-monitor
     pids_limit: 16384   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:ambench-0.2.0
+    # ambench-base (the first stage of the Dockerfile) is built from public sources; with read access to the prebuilt
+    # image its layers are pulled instead (cache_from)
+    build:
+      context: sim
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0"]
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro

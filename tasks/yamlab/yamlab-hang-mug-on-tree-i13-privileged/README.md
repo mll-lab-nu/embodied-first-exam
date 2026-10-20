@@ -9,7 +9,7 @@
 | Family / instance | `hang_mug_on_tree` |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:yamlab-0.2.0` |
 
 ## Task
 Two I2RT YAM arms on a workstation table pass a mug from the left gripper to the right one in the air and hang it on a mug tree: YAMLab's HangMugOnTree. Instance i13: YAMLab's objects `mug` = `Mug/mug_013` and `mug_tree` = `MugTree/mug_tree_013`, placed as in YAMLab teleoperation demonstration

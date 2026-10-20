@@ -9,7 +9,7 @@
 | Family / instance | `press_button_fahexa` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.2.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:ambench-0.3.0` |
 
 ## Task
 A wall stands in front of the hovering aerial manipulator, and a push button is mounted flat on the wall's front face, facing the robot: a red circular plunger in a dark-grey circular housing. Press the button, i.e. push its spring-loaded plunger into the housing, along the wall's normal, until it is depressed by at least 4 mm (40 % of its 10 mm travel). AM-Bench environment `PressButton-Am-FAHexa-Abs-PID-Direct-v0` (the fully actuated hexarotor with the 4-joint arm, AM-Bench's PID

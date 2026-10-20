@@ -1,6 +1,6 @@
 # maniguard: ManiGuard on BEHAVIOR-1K 3.7.2 / Isaac Sim 4.5
 
-`efe-private:maniguard-0.1.0` (`VERSION`) runs ManiGuard's evaluator on exactly the stack ManiGuard pins: its `behavior-1k`
+`efe-private:maniguard-0.2.0` (`VERSION`) runs ManiGuard's evaluator on exactly the stack ManiGuard pins: its `behavior-1k`
 submodule is BEHAVIOR-1K tag **v3.7.2** (`88454bd04f75`), installed the way that release's `setup.sh` installs it. It is
 NOT the BEHAVIOR-1K 3.9.2 stack of `behavior` (Isaac Sim 5.1): ManiGuard's frozen scenes are 3.7.2 snapshots, its
 runtime patches target 3.7.2, and upstream abandoned its own port to a newer Isaac.
@@ -34,7 +34,9 @@ encode or point to reference solutions, which must not be in reach of an agent (
 ## Locks
 Every build writes `/opt/locks/{dpkg,conda,pip}.lock` in the image. `dpkg.lock`, `conda.lock` and `pip.lock` here are
 those of the first tested build (2026-10-03, about 26 GB on disk), and a build fails unless it installs exactly those sets
-(as `behavior`'s `dpkg.lock`).
+(as `behavior`'s `dpkg.lock`). The build also installs from them, so it reproduces them on any later day: Ubuntu packages
+from the archive snapshot of 2026-10-01, the conda env created from `conda.lock` (an explicit list: every package by URL
+and md5), and every pip install constrained to `pip.lock`.
 
 ## Check a build
 ```bash
@@ -47,6 +49,7 @@ docker run --rm --gpus all --shm-size 8g -v "$RCB_MANIGUARD_DATA:/data:ro" -v $P
   --instance /r/tasks/maniguard/maniguard-jar-transport-i14-privileged/environment/instance --out /tmp/i.json
 ```
 
-## Not published: build it (`BUILD_ONLY`)
-NVIDIA Isaac Sim inside (no redistribution). `BUILD_ONLY` has the build command, what the builder accepts, the data it needs
-and the host requirements.
+## Not published: every task builds it (`BUILD_ONLY`)
+NVIDIA Isaac Sim inside (no redistribution). Every ManiGuard task carries this Dockerfile as its `maniguard-base` stage, so
+Harbor builds it from public sources on a machine's first ManiGuard run; the organization's prebuilt copy in efe-private is
+the tasks' compose `cache_from`. `BUILD_ONLY` has what the builder accepts, the data it needs and the host requirements.
