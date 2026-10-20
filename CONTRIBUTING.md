@@ -83,7 +83,8 @@ A new benchmark's shared-files change adds its label to `scripts/task_convention
    and its compose service names the private image in `build.cache_from` (main: `build:` with `cache_from` only; a
    sidecar: `build:` with `context` / `dockerfile` inside environment/ and `cache_from`). The recipe needs no build
    context: every file it takes comes from a public files-only image (`COPY --from=<image@digest>`) or a public URL
-   (`ADD --checksum`), system packages from a dated snapshot (e.g. snapshot.debian.org). The private image is that
+   (`ADD --checksum`; a URL into this repository names a commit that a tag keeps reachable, since main is squashed and
+   GitHub drops unreachable commits), system packages from a dated snapshot (e.g. snapshot.debian.org). The private image is that
    recipe built with BuildKit's inline cache (`scripts/build_images.sh` adds it to every BUILD_ONLY image): a runner
    that can pull it takes its layers, any other runner builds the same layers from public sources.
 5. Run agents with Harbor's native agents only (`-a codex`, `-a claude-code`, …). No adapters, and no gateway that
