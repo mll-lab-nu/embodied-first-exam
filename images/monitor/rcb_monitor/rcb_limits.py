@@ -2,14 +2,14 @@
 """Resource limits (docs/protocol/README.md §2.10): the sustained-violation rule, shared by the monitor sidecar (monitor.py) and
 the verifier step, and the verifier step itself.
 
-Copies of this file live in every task (environment/rcb_monitor/ for the monitor, tests/ for the verifier), byte-identical
-to scripts/rcb_monitor/rcb_limits.py (ci_checks/check-monitor.py). Python 3.8+, standard library only: it runs inside
+The pinned monitor image carries it at /opt/rcb_monitor/ (inject.py IMAGE and CONTENTS), and every task's tests/Dockerfile
+copies it from there to /tests/ (ci_checks/check-monitor.py). Python 3.8+, standard library only: it runs inside
 benchmark verifier images.
 
     python3 /tests/rcb_limits.py verify      # test.sh runs it on exit (trap), after the grader
     python3 /tests/rcb_limits.py sanitize /app/output    # test.sh runs it before the grader (see sanitize())
 
-The session log (robot_coding_bench #233): sanitize() also compares the agent's /app/output/rcb_session_log.jsonl with
+The session log: sanitize() also compares the agent's /app/output/rcb_session_log.jsonl with
 the monitor's append-only copy of it (session_log/ in the record) and, when the agent's file is missing or is not what
 was written (removed, truncated, rewritten), gives the grader the copy instead (session_log_source()); verify() adds
 session_log_tampered (0/1) and session_log_from_monitor (0/1) to reward.json. Only the graders' cost fields read the log.
@@ -292,7 +292,7 @@ def verify(argv=()):
            "resource_host_oom_kills": oom["host"], "resource_service_oom_kills": oom["service"]}
     for v in viol:
         add["over_" + v["metric"]] = 1
-    sl = read_json(os.path.join(log, SESSION_LOG_STATUS))       # sanitize()'s session-log comparison (#233)
+    sl = read_json(os.path.join(log, SESSION_LOG_STATUS))       # sanitize()'s session-log comparison
     if isinstance(sl, dict):
         add["session_log_tampered"] = int(bool(sl.get("tampered")))
         add["session_log_from_monitor"] = int(bool(sl.get("from_monitor")))
@@ -451,7 +451,7 @@ SESSION_LOG_STATUS = "session_log.json"   # in /logs/verifier: what session_log_
 
 
 def session_log_source(log, max_log=MAX_SESSION_LOG, record=None):
-    """The session log the grader reads (#233). The monitor copies what the agent's tooling appends to it, append-only,
+    """The session log the grader reads. The monitor copies what the agent's tooling appends to it, append-only,
     into its record (session_log/<segment>.jsonl; a new segment each time the file was truncated, replaced or
     rewritten). The agent's file stays when it is the copy plus at most what was appended after the last tick; else
     (removed, truncated, rewritten, or the copy has segments) the grader gets the copy: the segments' lines in order,

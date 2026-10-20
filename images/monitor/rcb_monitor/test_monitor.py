@@ -3,7 +3,7 @@
 fake /proc tree and temporary directories: no containers, no GPU, no root. ci_checks/check-monitor.py runs it after
 selftest.py. Not copied into tasks.
 
-    python3 scripts/rcb_monitor/test_monitor.py
+    python3 images/monitor/rcb_monitor/test_monitor.py
 """
 import importlib.util
 import itertools
@@ -870,7 +870,7 @@ def test_default_is_neutral():
 
 
 def test_clock_and_beacon():
-    """#231 / #234: usage.json carries the agent's clock (from the monitor's start, never more time than the agent has),
+    """usage.json carries the agent's clock (from the monitor's start, never more time than the agent has),
     after a failed tick too, and `monitor.py beacon` writes it with `"measured": false` where no monitor can run."""
     c = monitor.clock(1000.0, 400.0, 3600)
     check(c["elapsed_s"] == 600.0 and c["time_left_s"] == 3000.0 and c["time_limit_s"] == 3600, f"clock: {c}")
@@ -906,7 +906,7 @@ def test_clock_and_beacon():
 
 
 def test_session_log_copy():
-    """#233: the monitor copies the agent's session log append-only; the verifier gives the grader that copy when the
+    """The monitor copies the agent's session log append-only; the verifier gives the grader that copy when the
     agent's file is gone or rewritten, and the agent's own file when it is what was written (plus a last tick)."""
     d = tempfile.mkdtemp(prefix="rcb-slog-test-")
     real_rec = monitor.REC
@@ -958,10 +958,48 @@ def test_session_log_copy():
         shutil.rmtree(d, ignore_errors=True)
 
 
+def test_stop_without_cgroup():
+    """A container without a cgroup of its own (rootless podman, the user's cgroup not delegated) shares its parent's
+    (conmon's), and its runtime cannot stop it (`pid: host`: podman signals the cgroup's processes, which are none):
+    the monitor then ends itself after the seal, once the seal hook has read the summary (seal.done), or after the wait."""
+    d = tempfile.mkdtemp(prefix="rcb-stop-test-")
+    real = (monitor.PROC, monitor.REC)
+    try:
+        monitor.PROC, monitor.REC = os.path.join(d, "proc"), os.path.join(d, "rec")
+        os.makedirs(monitor.REC)
+        for who in ("self", str(os.getppid())):
+            os.makedirs(os.path.join(monitor.PROC, who))
+
+        def cg(who, text):
+            with open(os.path.join(monitor.PROC, who, "cgroup"), "w") as f:
+                f.write(text)
+        cg("self", "0::/user/libpod-1234\n")
+        cg(str(os.getppid()), "0::/user/session\n")
+        check(monitor.own_cgroup(), "a cgroup of its own (docker, podman with a delegated cgroup)")
+        cg("self", "0::/user/session\n")
+        check(not monitor.own_cgroup(), "the parent's cgroup: none of its own")
+        os.unlink(os.path.join(monitor.PROC, "self", "cgroup"))
+        check(monitor.own_cgroup(), "unreadable: the runtime's stop is trusted")
+        m = Fake().monitor({"max_memory_gb": 8.0, "tick_sec": 5})
+        t = monitor.now()
+        m.linger(0.6)
+        check(0.5 <= monitor.now() - t < 5, "no seal hook: it ends after the wait")
+        with open(os.path.join(monitor.REC, "summary.json"), "w") as f:
+            json.dump({"sealed": True, "n_samples": 1}, f)
+        check(monitor.seal_cmd(1) == 0 and os.path.exists(os.path.join(monitor.REC, "seal.done")),
+              "the seal hook marks that it has read the summary")
+        t = monitor.now()
+        m.linger(30)
+        check(monitor.now() - t < 2, "after the seal hook: it ends at once")
+    finally:
+        monitor.PROC, monitor.REC = real
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def main():
     for t in (test_classify_race, test_dead_leader_and_zombies, test_disk_walk, test_disk_baseline, test_emergency,
               test_kill_path, test_switch, test_verify_edges, test_oom_watch, test_oom_verdicts, test_sanitize, test_default_is_neutral,
-              test_clock_and_beacon, test_session_log_copy):
+              test_clock_and_beacon, test_session_log_copy, test_stop_without_cgroup):
         t()
     shutil.rmtree(os.environ["RCB_MONITOR_RECORD"], ignore_errors=True)
     print("rcb_monitor test_monitor: ok")

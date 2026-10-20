@@ -2,7 +2,7 @@
 """What the resource monitor can measure where it runs (capabilities(), written into its record), and a self-test of
 the shared violation rule and the verifier step (no containers needed; ci_checks/check-monitor.py runs it):
 
-    python3 scripts/rcb_monitor/selftest.py
+    python3 images/monitor/rcb_monitor/selftest.py
 """
 import json
 import os

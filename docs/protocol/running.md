@@ -226,8 +226,10 @@ node-local scratch (podman's storage does not work on most network file systems)
    recipe from source, as before. `EFE_PODMAN_BUILD_FROM_SOURCE=1` turns this off (always the recipe). For a bare
    `harbor run -p`, the same copy by hand: `podman pull` the image, stage a copy as in 5., replace the block with that
    `FROM` line and stamp the copy again.
-7. The `rcb_monitor` sidecar can stay "Stopping" after a trial under rootless podman on cgroup v2; stop its container
-   (or the `monitor.py` process) by hand. On cgroup v1 the resource caps are not applied (`RCB_LIMITS_ENFORCE` stays 0).
+7. Where podman cannot give each container a cgroup of its own (cgroup v1, or a cgroup v2 node whose cgroup is not
+   delegated to your user, e.g. a Slurm job step), the resource caps are not applied (`RCB_LIMITS_ENFORCE` stays 0), and
+   podman cannot stop the `rcb_monitor` sidecar, which shares the host's PID namespace (podman stops such a container by
+   signalling its cgroup's processes): the monitor then ends itself once its record is sealed.
 8. On cgroup v2 the containers' CPU caps need the `cpu` controller delegated to your user: when
    `/sys/fs/cgroup/user.slice/user-$(id -u).slice/user@$(id -u).service/cgroup.controllers` lacks `cpu` (systemd
    delegates only `memory pids` by default on some distributions), every container fails to start with
