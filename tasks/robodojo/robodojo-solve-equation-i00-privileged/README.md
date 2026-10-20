@@ -9,7 +9,7 @@
 | Family / instance | `solve_equation` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 An arithmetic equation (a op b = result) is laid out on pads with exactly one number or operator missing; pick the correct missing digit or operator tile from the loose tiles on the table, place it on the empty pad, and bring the arms home. (RoboDojo's `solve_equation`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout

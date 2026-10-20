@@ -9,7 +9,7 @@
 | Family / instance | `cover_blocks` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Cover the three coloured blocks with the three cups one after another from left to right, remember which colour is under which cup, then uncover them one at a time in the order red, green, blue, and finally return the arm home. (RoboDojo's `cover_blocks`). RoboDojo capability dimension: Memory. Instance i00 is RoboDojo's own evaluation layout

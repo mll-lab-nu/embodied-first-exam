@@ -9,7 +9,7 @@
 | Family / instance | `rubiks_cube_left_of_bowl` / seed 0 |
 | Oracle | `full` — solution/oracle_replay.py scored 1 under Harbor -a oracle on this version (2026-10-14): trial robolab-rubiks-cube-left-of-bowl__mHPED7Z (ws, 2026-10-14, on these files under a temporary -i01 name: they differ from it only in that name in the resource-limit files and in one comment line of rcb_robolab.py; live 1, replay 1, deterministic 1, live_matches_replay 1, 183 control steps). Earlier versions: solution/oracle_replay.py scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the same verdict formula (success = live, replay and deterministic), the latest robolab-rubiks-cube-left-of-bowl__YZj6yTp (ws3, job eq-ws3-oracle-rubiks-cube-left-of-bowl, 2026-09-29, the dev/qineng 9eb18edf version); not re-run on this version (crash recovery, the collect hook's `end`, one-second chunks): static validation only, 2026-10-01. Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.0` |
 
 ## Task
 Standard-mode twin of `robolab-rubiks-cube-left-of-bowl-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):

@@ -16,7 +16,10 @@ services:
     cpus: 16   # rcb-monitor
     mem_limit: 25600m   # rcb-monitor
     pids_limit: 16384   # rcb-monitor
-    image: ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0
+    build:
+      context: ./sim
+      dockerfile: Dockerfile
+      cache_from: ["ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0"]   # our prebuilt image: its layers are reused when you can pull it, else Docker builds the recipe
     volumes:
       - rcb_observe:/run/rcb-observe:ro   # rcb-monitor
       - ./sim:/srv:ro

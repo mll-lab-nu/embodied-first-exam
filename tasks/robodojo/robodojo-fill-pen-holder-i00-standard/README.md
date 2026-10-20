@@ -9,7 +9,7 @@
 | Family / instance | `fill_pen_holder` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Standard-mode twin of `robodojo-fill-pen-holder-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/fill_pen_holder_0.json`). Use one arm to steady the pen holder and the other arm to drop all four pens (two pens and two oil pens) into it, pen tip down, then leave the holder upright on the table and return the arms home. (RoboDojo's `fill_pen_holder`). The agent drives the

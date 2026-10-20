@@ -9,7 +9,7 @@
 | Family / instance | `white_mug_in_center_of_table` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-white-mug-in-center-of-t__Jf6tksp (robolab-white-mug-in-center-of-table-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928, lab). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.0` |
 
 ## Task
 Put the white mug in the center of the table.

@@ -10,26 +10,25 @@ for a Franka with a Robotiq 2F-85 (DROID joint-position actions). `simulator = "
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/robolab -a codex -m openai/gpt-6-astra
 ```
-Some images are not on a public registry: build them first ([Getting the images](#getting-the-images)).
+The first task builds the simulator image from public sources (below); later tasks reuse it.
 
-## Getting the images
+## Before you run
 
-All RoboLab tasks (privileged and standard) need the simulator image, which is not on a public registry
-(NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute); the tooling's files image is public. Build the simulator image
-locally under the tags the tasks name; the tasks then run unchanged. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
-
-1. Licence: building the image accepts the NVIDIA Isaac Sim / Omniverse licence and NVIDIA's terms for the isaacsim /
-   isaaclab wheels (the Dockerfile sets `OMNI_KIT_ACCEPT_EULA=YES`). No account, login or token is needed: every input
-   (Docker Hub `nvidia/cuda`, RoboLab v0.3.1 and its git LFS asset library on github.com, pypi.org, pypi.nvidia.com,
-   download.pytorch.org, NVIDIA's public asset bucket on S3) is anonymous. About 40 GB of free disk and 45-60 min.
-2. Build the simulator image (the files image is public: the task builds pull it):
-   ```bash
-   docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .
-   ```
-3. Run:
-   ```bash
-   harbor run -d embodied-first-exam@all -p tasks/robolab -a codex -m openai/gpt-6-astra
-   ```
+- **Licence.** The simulator image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the Isaac Lab 2.3.2 wheels from
+  pypi.nvidia.com: building and running it accepts the [NVIDIA Isaac Sim / Omniverse licence](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html)
+  and NVIDIA's terms for those wheels (the recipe sets `OMNI_KIT_ACCEPT_EULA=YES`). Read them before your first run.
+  RoboLab itself and its asset library are Apache-2.0. No account, login or token is needed.
+- **GPU and driver.** Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU (Isaac
+  renders with RTX even headless) with a driver Isaac Sim 5.1 supports (checked on 580.x; RTX 4090 and RTX PRO 6000).
+- **Disk.** About 60 GB free for the first build (the image is ~27 GB).
+- **Data.** None to download by hand: RoboLab's asset library and the remote files it references are baked into the image.
+- **First build.** The image is not on a public registry (NVIDIA does not allow anyone to redistribute Isaac Sim), so the
+  first task builds it with Docker from public sources: about 20-60 min, network access to github.com (+ LFS),
+  snapshot.ubuntu.com, pypi.org, pypi.nvidia.com, download.pytorch.org and NVIDIA's public Omniverse content bucket on S3.
+  Every task's Dockerfile starts with that recipe (`images/robolab/Dockerfile`), so the build runs once per Docker host and
+  later tasks take it from Docker's build cache. Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.0`
+  get its layers instead (compose `build.cache_from`). To build it ahead of the run, run one task first
+  (`harbor run -p tasks/robolab/robolab-banana-in-bowl-i00-privileged -a oracle`, reward 1).
 
 ## Tasks
 - The task directories are the deliverable; the tooling that built them is kept outside this repository. Each family's
@@ -84,18 +83,17 @@ success from firing before the task is done:
 
 ## Image and host
 - `images/robolab/` (Isaac Lab 2.3.2 / Isaac Sim 5.1 from the pinned `uv.lock`, RoboLab's Apache-2.0 asset library baked
-  in, with the remote files of the asset library: Network, below), tagged
-  `ghcr.io/mll-lab-nu/efe-private:robolab-<images/robolab/VERSION>`. It
-  contains NVIDIA Isaac Sim, whose licence forbids redistribution: **BUILD_ONLY**.
-  `images/robolab/BUILD_ONLY` has the licences, the build command
-  (`docker build -f images/robolab/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robolab-$(cat images/robolab/VERSION) .`),
-  the check of a build and how a CI machine builds it.
+  in, with the remote files of the asset library: Network, below): a recipe that needs no build context, copied verbatim
+  into every task's Dockerfile (privileged: environment/ and tests/; standard: the `sim` sidecar's `environment/sim/Dockerfile`)
+  as the stage `robolab-base`. It contains NVIDIA Isaac Sim, whose licence forbids redistribution: **BUILD_ONLY**; the
+  organization's private copy `ghcr.io/mll-lab-nu/efe-private:robolab-<images/robolab/VERSION>` (built with inline cache)
+  is the tasks' `build.cache_from`. `images/robolab/BUILD_ONLY` has the licences, the pinned inputs and the check of a build.
 - `images/robolab-files/`: `ghcr.io/mll-lab-nu/efe:robolab-files-<VERSION>`, files only (`FROM scratch`): the tooling
   `rcb_robolab.py` that the privileged agent and verifier images `COPY --from` (Tooling, below); public, pulled by the task builds.
 - Isaac needs an RTX-class GPU even headless (PhysX runs on the CPU). One Isaac simulator at a time per 32 GB of host RAM.
 - Standard mode: the agent container and the verifier use the one digest-pinned client image of every standard task and
   its exact pip pins (`embodied_first_exam/standard/client.env`, `client-requirements.txt`, copied into `environment/`); only the
-  `sim` sidecar uses `ghcr.io/mll-lab-nu/efe-private:robolab-<images/robolab/VERSION>`.
+  `sim` sidecar runs the simulator image (built from `environment/sim/Dockerfile`).
 - Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount their own `*_trusted` cache
   volumes, never the agent's; every cache volume is scoped to the trial's compose project (no fixed name).
 

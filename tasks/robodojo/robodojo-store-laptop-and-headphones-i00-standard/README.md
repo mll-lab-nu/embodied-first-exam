@@ -9,7 +9,7 @@
 | Family / instance | `store_laptop_and_headphones` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Standard-mode twin of `robodojo-store-laptop-and-headphones-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/store_laptop_and_headphones_0.json`). Hang the headphones on the headphone stand, close the laptop, then put the closed laptop upright into the vertical laptop storage rack, and finally return the arm(s) to the start pose. (RoboDojo's `store_laptop_and_headphones`). The agent drives the

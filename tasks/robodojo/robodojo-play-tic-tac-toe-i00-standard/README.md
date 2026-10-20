@@ -9,7 +9,7 @@
 | Family / instance | `play_tic_tac_toe` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Standard-mode twin of `robodojo-play-tic-tac-toe-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/play_tic_tac_toe_0.json`). Play tic-tac-toe as the first player against the support-arm opponent: place your 5 pieces on the 3x3 board, taking turns with the opponent arm (which places its 4 pieces on random empty cells), until all 9 cells hold a piece. (RoboDojo's `play_tic_tac_toe`). The agent drives the

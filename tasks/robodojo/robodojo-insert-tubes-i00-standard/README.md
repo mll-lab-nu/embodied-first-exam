@@ -9,7 +9,7 @@
 | Family / instance | `insert_tubes` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Standard-mode twin of `robodojo-insert-tubes-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/insert_tubes_0.json`). Insert all three test tubes into the tube rack and return the arms to their start pose. (RoboDojo's `insert_tubes`). The agent drives the

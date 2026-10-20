@@ -9,7 +9,7 @@
 | Family / instance | `sweep_blocks` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Standard-mode twin of `robodojo-sweep-blocks-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/sweep_blocks_0.json`). Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep all the small cubes into the dustpan, then return the arm(s) to the start pose. (RoboDojo's `sweep_blocks`). The agent drives the

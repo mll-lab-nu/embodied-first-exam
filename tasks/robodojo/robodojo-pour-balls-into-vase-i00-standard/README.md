@@ -9,7 +9,7 @@
 | Family / instance | `pour_balls_into_vase` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Standard-mode twin of `robodojo-pour-balls-into-vase-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/pour_balls_into_vase_0.json`). Pick up the cup containing 7 balls, pour all the balls into the vase, put the cup back upright and bring the arms home. (RoboDojo's `pour_balls_into_vase`). The agent drives the

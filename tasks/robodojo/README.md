@@ -11,45 +11,38 @@ tasks over five capability dimensions (Generalization 12, Memory 6, Precision 8,
 ```bash
 harbor run -d embodied-first-exam@all -p tasks/robodojo -a codex -m openai/gpt-6-astra
 ```
-Some images are not on a public registry: build them first ([Getting the images](#getting-the-images)).
+The first task builds the simulator image from public sources (below); later tasks reuse it.
 
-## Getting the images
+## Before you run
 
-All RoboDojo tasks (privileged and standard) need the simulator image, which is not on a public registry
-(NVIDIA Isaac Sim 5.1 inside, which NVIDIA does not allow anyone to redistribute); the tooling's files image is public. Build the simulator image
-locally under the tags the tasks name; the tasks then run unchanged. Run every command from the repository root on a Linux x86_64 host with Docker (BuildKit), the NVIDIA Container Toolkit and an RTX-class NVIDIA GPU.
+- **Licence.** The simulator image contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the Isaac stack's wheels from
+  pypi.nvidia.com, and cuRobo: building and running it accepts the [NVIDIA Isaac Sim / Omniverse licence](https://docs.isaacsim.omniverse.nvidia.com/latest/common/NVIDIA_Omniverse_License_Agreement.html),
+  NVIDIA's terms for those wheels and NVIDIA's cuRobo licence (the recipe sets `OMNI_KIT_ACCEPT_EULA=YES`). Read them before
+  your first run. RoboDojo (MIT), its Isaac Lab fork (BSD-3-Clause) and its assets (Apache-2.0) are open. No account,
+  login or token is needed.
+- **GPU and driver.** Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU (Isaac
+  renders with RTX even headless; RoboDojo runs PhysX on the GPU) with a driver Isaac Sim 5.1 supports (checked on an RTX
+  4090, driver 580.x), ~5-10 GB of GPU memory per Isaac process.
+- **Disk.** About 150 GB free for the first build (the image is ~75 GB, 41 GB of it RoboDojo's assets).
+- **Data.** RoboDojo's assets (Hugging Face dataset `RoboDojo-Benchmark/RoboDojo`, `Assets/` at a pinned revision, 15365
+  files, ~41 GB, Apache-2.0) are downloaded by the image build itself, anonymously through the dataset's git LFS; nothing
+  to download by hand or mount.
+- **First build.** The image is not on a public registry (NVIDIA does not allow anyone to redistribute Isaac Sim), so the
+  first task builds it with Docker from public sources: about 30-90 min (most of it the 41 GB download), network access to
+  github.com, snapshot.ubuntu.com, pypi.org, download.pytorch.org, pypi.nvidia.com, huggingface.co (+ its LFS storage),
+  NVIDIA's extension registry and its asset bucket. Every task's Dockerfile starts with that recipe
+  (`images/robodojo/Dockerfile`), so the build runs once per Docker host and later tasks take it from Docker's build cache.
+  Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` get its layers instead (compose
+  `build.cache_from`). The tasks have no reference solution (Oracle, below); to build the image ahead of the run, run one
+  task with `-a nop` (reward 0).
 
-1. Licence: building the image accepts the NVIDIA Isaac Sim / Omniverse licence and NVIDIA's terms for the isaacsim wheels
-   and cuRobo (the Dockerfile sets `OMNI_KIT_ACCEPT_EULA=YES`). No account, login or token is needed: every input (Docker
-   Hub `nvidia/cuda`, github.com, pypi.org, pypi.nvidia.com, download.pytorch.org, the public Hugging Face dataset
-   `RoboDojo-Benchmark/RoboDojo` (~41 GB of assets), NVIDIA's extension registry and asset bucket) is anonymous. About
-   120 GB of free disk and an hour.
-2. Build the simulator image (the files image is public: the task builds pull it):
-   ```bash
-   docker build -f images/robodojo/Dockerfile -t ghcr.io/mll-lab-nu/efe-private:robodojo-$(cat images/robodojo/VERSION) .
-   ```
-   (With RoboDojo's `Assets/` already on disk at the pinned revision, add `--build-context robodojo-assets=<dir containing Assets/>`.)
-   The build fetches the assets' ~15,000 files anonymously, and Hugging Face may answer `429 Too Many Requests`, which
-   fails the build. Download them first with the `hf` CLI, which waits and retries (about 50 min anonymously; faster after
-   `hf auth login`), then build from that folder:
-   ```bash
-   HF_HUB_DISABLE_XET=1 hf download RoboDojo-Benchmark/RoboDojo --repo-type dataset \
-     --revision 35efbc7dedfdbeeb6e95fb749bd885d73d483e41 --include 'Assets/*' --local-dir ~/robodojo-assets
-   docker build -f images/robodojo/Dockerfile --build-context robodojo-assets=$HOME/robodojo-assets \
-     -t ghcr.io/mll-lab-nu/efe-private:robodojo-$(cat images/robodojo/VERSION) .
-   ```
-3. Run:
-   ```bash
-   harbor run -d embodied-first-exam@all -p tasks/robodojo -a codex -m openai/gpt-6-astra
-   ```
-
+## Tasks
 One frozen instance per task, RoboDojo's own evaluation layout `Assets/Eval_Layout/RoboDojo/arx_x5/0/<task>_0.json`,
 each a privileged task `robodojo-<task>-i00-privileged` and its standard twin `robodojo-<task>-i00-standard`
 (`eai-standard/2.2`), except the six tasks whose physics does not replay bit for bit (Determinism, below): they are
 standard only, graded by the live episode. 48 privileged + 54 standard = 102 task directories. `oracle = "none"` for every
 task (below).
 
-## Tasks
 The task directories are the deliverable; the tooling that built them is kept outside this repository. Each task carries:
 - in its instruction, what the task asks and exactly what its check tests (every predicate, threshold, stage and
   end-of-episode requirement), written from RoboDojo's code (`task/RoboDojo/tasks/<benchmark>/<task>.py`, its config,
@@ -227,8 +220,12 @@ memory (the cap every past trial ran under; an agent may run a second Session); 
 Caps: privileged main 8 CPUs / 39 GiB; standard main 8 CPUs / 16 GiB, sim sidecar 16 CPUs / 25 GiB.
 
 ## Image and host
-`images/robodojo/` → `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` (~74 GB, with RoboDojo's 41 GB of assets). It contains Isaac
-Sim: **BUILD_ONLY** (`images/robodojo/BUILD_ONLY` has the licences, the build command and the check of a build). Needs an
+`images/robodojo/` (~75 GB, with RoboDojo's 41 GB of assets): a recipe that needs no build context, copied verbatim into
+every task's Dockerfile (privileged: environment/ and tests/; standard: the `sim` sidecar's `environment/sim/Dockerfile`)
+as the stage `robodojo-base`. It contains Isaac Sim: **BUILD_ONLY** (`images/robodojo/BUILD_ONLY` has the licences, the
+pinned inputs and the check of a build); the organization's private copy
+`ghcr.io/mll-lab-nu/efe-private:robodojo-<images/robodojo/VERSION>` (built with inline cache) is the tasks'
+`build.cache_from`. Needs an
 RTX-class GPU and ~5-10 GB of GPU memory per Isaac process; Isaac hangs instead of exiting when the GPU runs out of memory,
 so a shared GPU runs few at once. Isaac keeps generated Python in its Kit cache: the verifier and the standard sidecar mount
 their own `*_trusted` cache volumes, scoped to the trial's compose project.

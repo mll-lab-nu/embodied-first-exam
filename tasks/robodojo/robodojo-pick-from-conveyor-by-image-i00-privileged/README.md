@@ -9,7 +9,7 @@
 | Family / instance | `pick_from_conveyor_by_image` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Identify, from the photo on the board, which of the four objects on the moving conveyor is the target, pick it up and put it in the basket, and lift the basket (with the target in it) more than 8 cm. (RoboDojo's `pick_from_conveyor_by_image`). RoboDojo capability dimension: Open. Instance i00 is RoboDojo's own evaluation layout

@@ -9,7 +9,7 @@
 | Family / instance | `stack_blocks` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Standard-mode twin of `robodojo-stack-blocks-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/stack_blocks_0.json`). Stack the three blocks (that differ in texture) on top of each other into one tower, then return the arm(s) to the start pose. (RoboDojo's `stack_blocks`). The agent drives the

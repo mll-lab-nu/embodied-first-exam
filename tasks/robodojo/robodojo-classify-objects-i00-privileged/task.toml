@@ -75,7 +75,7 @@ command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
 timeout_sec = 120
 
 [verifier.environment]
-build_timeout_sec = 1800.0
+build_timeout_sec = 9000.0
 cpus = 8
 memory_mb = 32768
 
@@ -87,7 +87,7 @@ network_mode = "allowlist"
 allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
 
 [environment]
-build_timeout_sec = 3600.0
+build_timeout_sec = 9000.0
 cpus = 8
 memory_mb = 39936
 

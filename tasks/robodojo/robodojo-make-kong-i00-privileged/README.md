@@ -9,7 +9,7 @@
 | Family / instance | `make_kong` |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Wait for the opponent (support arm) to discard a mahjong tile, then declare a kong: flip the three tiles in your row that match the discarded tile and put the extra tile (mahjong9_0) upright at the end of your row, with grippers open. (RoboDojo's `make_kong`). RoboDojo capability dimension: Long-Horizon. Instance i00 is RoboDojo's own evaluation layout

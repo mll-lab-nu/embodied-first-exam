@@ -9,7 +9,7 @@
 | Family / instance | `cooking_clear_plate` / seed 0 |
 | Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-cooking-clear-plate-i00__M9JWo2C (robolab-cooking-clear-plate-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws); robolab-cooking-clear-plate-i00__pjCZgi2 (robolab-cooking-clear-plate-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038, ws; not published: its eai-standard/2.1 batch was withdrawn for the agent's stale wrist-camera pose; grader unaffected). Re-graded with the 2026-10-14 term (ws, one fresh process per trajectory and tooling version): both cited positives pass the earlier term and fail the 2026-10-14 one: in __M9JWo2C the blue scoop (spoon_1) ends on the floor beside the table (z -0.69 m) and the orange cup is not supported by the table, which -i00's object_outside_of counted as outside the plate. No positive confirmed under the 2026-10-14 term yet. Human review per family (PROTOCOL §2.7). |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.1.2` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.0` |
 
 ## Task
 Standard-mode twin of `robolab-cooking-clear-plate-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):

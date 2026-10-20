@@ -9,7 +9,7 @@
 | Family / instance | `deposit_coin` |
 | Oracle | `none` — no positive example yet (the privileged twin has a positive example (Codex + GPT-6 Luna, effort xhigh, run `codex-gpt6_luna-xhigh`, 2026-10-10)); no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); reported separately until one exists; human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.0` |
 
 ## Task
 Standard-mode twin of `robodojo-deposit-coin-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/deposit_coin_0.json`). Pick the coin up from the vertical coin holder and drop it into the piggy bank (coin bank) through its slot, then return the arm home. (RoboDojo's `deposit_coin`). The agent drives the
