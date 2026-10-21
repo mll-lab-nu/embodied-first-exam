@@ -1,0 +1,8 @@
+{
+ "task_text": "Turn every mug right side up. Success: every mug stands upright (its axis within 18 deg of vertical, opening up) with its centre no more than 0.03 m higher than where it started (set back down). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.",
+ "default_cameras": [
+  "top",
+  "left",
+  "right"
+ ]
+}

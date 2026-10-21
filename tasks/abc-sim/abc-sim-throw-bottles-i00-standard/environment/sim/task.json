@@ -1,0 +1,8 @@
+{
+ "task_text": "Get all four plastic bottles into the bin -- throw them in or put them in. Success: all 4 bottles are inside the bin at the same time: each bottle's centre of mass within the bin's inner wall radius of the bin's axis, not below the bin's floor, and at most about one bottle length (~0.11 m) above its rim (a bottle may still be held). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.",
+ "default_cameras": [
+  "top",
+  "left",
+  "right"
+ ]
+}

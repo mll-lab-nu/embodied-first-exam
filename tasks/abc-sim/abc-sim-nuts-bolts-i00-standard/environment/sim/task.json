@@ -1,0 +1,8 @@
+{
+ "task_text": "Sort the parts: the nuts into the teal bin and the bolts into the orange bin. Success: every nut is in one bin and every bolt in the other, at the same time (the rule also accepts the bins swapped); a part is in a bin when its centre is inside the bin's interior region (between its walls, from just above its floor to below its rim). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.",
+ "default_cameras": [
+  "top",
+  "left",
+  "right"
+ ]
+}

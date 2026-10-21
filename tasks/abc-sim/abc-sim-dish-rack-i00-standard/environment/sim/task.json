@@ -1,0 +1,8 @@
+{
+ "task_text": "Load the plate into the dish rack, standing on edge. Success: every plate stands on edge in the rack: its face within 33 deg of vertical, touching the rack, touching neither gripper (released), and within the rack's footprint (with a 0.05 m margin). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.",
+ "default_cameras": [
+  "top",
+  "left",
+  "right"
+ ]
+}

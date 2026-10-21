@@ -1,0 +1,10 @@
+# The filmed replay renders over EGL on the GPU (the verdict's replays need none).
+services:
+  main:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

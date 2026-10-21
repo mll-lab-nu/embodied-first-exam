@@ -1,0 +1,8 @@
+{
+ "task_text": "Pick the three objects off the moving belt and put them in the bin. Success: all three objects' centres are inside the bin's interior (between its walls, below its rim) at the same time. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.",
+ "default_cameras": [
+  "top",
+  "left",
+  "right"
+ ]
+}

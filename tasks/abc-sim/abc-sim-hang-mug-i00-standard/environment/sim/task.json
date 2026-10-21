@@ -1,0 +1,8 @@
+{
+ "task_text": "Hang the mug on the mug tree. Success: the mug's centre is within 0.115 m horizontally of the tree's axis and between the tree's base and 0.05 m above its top, and the mug touches neither the table nor either gripper (it hangs from the tree, released). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.",
+ "default_cameras": [
+  "top",
+  "left",
+  "right"
+ ]
+}

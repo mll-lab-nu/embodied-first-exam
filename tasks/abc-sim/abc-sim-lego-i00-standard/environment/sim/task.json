@@ -1,0 +1,8 @@
+{
+ "task_text": "Sort the blocks into the bins of their colours. Success: every block is in the bin of its colour and no block is in another colour's bin, at the same time; a block is in a bin when its centre is inside the bin's interior region. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.",
+ "default_cameras": [
+  "top",
+  "left",
+  "right"
+ ]
+}

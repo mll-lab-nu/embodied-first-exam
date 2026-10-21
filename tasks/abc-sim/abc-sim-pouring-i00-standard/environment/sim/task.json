@@ -1,0 +1,8 @@
+{
+ "task_text": "Pour the beads from the mug into the cup. Success: at least 9 of the 10 beads are inside the cup (each bead's centre within 1.05 x the cup's inner wall radius of its axis and between its bottom and its rim) while the cup stands upright (tilted at most 60 deg). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.",
+ "default_cameras": [
+  "top",
+  "left",
+  "right"
+ ]
+}
