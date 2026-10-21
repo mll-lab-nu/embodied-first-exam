@@ -78,6 +78,7 @@ UNITS: dict[str, list[str]] = {
     "roboEngineer": _own("roboengineer",
                          "images/control-transfer/", "images/control-transfer-anycar-files/", "images/quadrotor-landing/",
                          "images/roboengineer-files/"),
+    "ABC Sim": _own("abc-sim"),
 }
 # the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md), its CI
 # hooks, ci_checks/benchmarks/<folder>/, and its sidecars' files-only image, images/<folder>-sim-files/: the folder of its

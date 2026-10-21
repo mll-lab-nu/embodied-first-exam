@@ -1016,6 +1016,34 @@ verifier_min_memory_gb = 20.0
 verifier_min_gpu_memory_gb = 8.0
 measured = "RTX 4090, 2026-10-14 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook replayed camera-free (1.2 GiB) and then filmed through the render worker (4.6 GiB) until 2026-10-17; since then it only films, through the render worker (4.6 GiB)"
 
+# abc-sim, privileged: 29 task(s)
+[[rule]]
+match = "^abc-sim-.*-privileged$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any NVIDIA GPU with EGL (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 5.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "oracle trials of all 60 directories, RTX 4090 workstation, 2026-10-21 (docker stats every 3 s; the rcb_monitor's NVML samples): the agent's container 1.9 GB (one Session replaying chess, no rendering), the verifier 3.9 GB (chess: two replays side by side, then the filmed one); a Session rendering three cameras 2.4 GB and 0.9 GiB of GPU memory (the spike, 2026-10-20); CPU 2.6-3.1 cores at peak"
+
+# abc-sim, standard and standard-realtime: 31 task(s)
+[[rule]]
+match = "^abc-sim-.*-standard(-realtime)?$"
+min_cpus = 2.0
+min_memory_gb = 4.0
+min_gpu_memory_gb = 1.5
+gpu_required = true
+gpu_class = "any"
+recommended_gpu = "any NVIDIA GPU with EGL (RTX 4090 / L4)"
+verifier_min_cpus = 2.0
+verifier_min_memory_gb = 4.0
+verifier_min_gpu_memory_gb = 1.5
+measured = "oracle trials of all 60 directories, RTX 4090 workstation, 2026-10-21 (docker stats every 3 s; the rcb_monitor's NVML samples): the sim sidecar 2.1 GB and 0.83 GiB of GPU memory (standard, chess; realtime 0.8 GB and 0.72 GiB), the agent's container (the client) 0.03 GB; the collect hook renders the video inside the sidecar (EGL)"
+
 # ambench, standard
 [[rule]]
 match = "^ambench-.*-standard$"
@@ -1186,6 +1214,36 @@ window_sec = 120.0
 trial_max_gpu_memory_gb = 4.0
 trial_max_memory_gb = 16.0
 measured = "author estimate: no trials yet; the agent's container 8 GiB under its 10 GiB cap; whole trial: + the sim service's 8 GiB cap; disk 20 GiB for downloaded tools and controllers; processes 512: design default"
+
+[[limit]]
+match = "^abc-sim-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 5.0
+max_memory_gb = 12.0
+max_processes = 512
+max_disk_gb = 10.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 5.0
+trial_max_memory_gb = 12.0
+measured = "GPU: max(1.5 x 0.9, 0.9 + 4) GiB (a rendering Session 0.9 GiB); memory: several Sessions at once (2.4 GB each while rendering; the oracle trials' agent container 1.9 GB) under the 16 GiB cap by the monitor's margin; processes 512 and disk 10 GiB: design defaults"
+
+[[limit]]
+match = "^abc-sim-.*-standard(-realtime)?$"
+scope = "agent"
+max_gpu_memory_gb = 0.0
+max_memory_gb = 8.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 5.0
+trial_max_memory_gb = 16.0
+measured = "the agent's container holds Python and the client only (0.03 GB in the oracle trials, no GPU); the whole trial adds the sim sidecar (2.1 GB and 0.83 GiB of GPU memory at most in the oracle trials, 2026-10-21) under its 10 GiB cap; processes 512 and disk 20 GiB: design defaults"
 
 # ---------------------------------------------------------------------------------------------------------------------
 # Resource LIMITS and CAPS (docs/protocol/README.md §2.10, v1.1.5; enforced from v1.2). All sizes in GiB.
@@ -3146,3 +3204,12 @@ sim = { cpus = 16.0, memory_gb = 24.0, pids = 16384 }
 match = "^(labutopia-heat-liquid-i00|labutopia-press-i00|labutopia-shake-i00)-standard$"
 main = { cpus = 8.0, memory_gb = 32.0, pids = 16384 }
 sim = { cpus = 16.0, memory_gb = 32.0, pids = 16384 }
+
+[[cap]]
+match = "^abc-sim-.*-privileged$"
+main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
+
+[[cap]]
+match = "^abc-sim-.*-standard(-realtime)?$"
+main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }

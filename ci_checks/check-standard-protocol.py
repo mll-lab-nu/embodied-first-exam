@@ -32,7 +32,8 @@ SPEC_KEYS_REQ = {"protocol", "protocol_compat", "simulator", "robot", "task_text
                  "cameras", "default_cameras", "action_types", "proprio_layout", "proprio_groups", "static", "world", "budget",
                  "robot_spec", "kinematics", "depth"}
 SPEC_KEYS_OK = SPEC_KEYS_REQ | {"physics_substeps", "physics_hz", "on_service_error", "max_call_wall_s",   # + crash recovery
-                                "episode", "max_control_steps"}                                           # PROTOCOL §4.7, §4.5
+                                "episode", "max_control_steps",                                           # PROTOCOL §4.7, §4.5
+                                "max_frames_per_call"}   # standard_mode.md §12: where the adapter states one
 CAM_KEYS_REQ = {"rgb", "depth", "mounted", "resolution", "intrinsic_cv", "mount"}
 CAM_KEYS_OK = CAM_KEYS_REQ | {"calibration_in_obs", "depth_range_m"}
 ROBOT_KEYS_REQ = {"name", "base", "joints", "grippers", "controller", "tcp"}
