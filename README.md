@@ -129,6 +129,33 @@ CLAUDE_FORCE_OAUTH=1 harbor run -d embodied-first-exam \
 
 See [embodied-first-exam.ai/contribute](https://www.embodied-first-exam.ai/contribute/) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Acknowledgements
+
+The Embodied First Exam stands on the work of many benchmark teams. Nine of its suites were built for this exam; the other 22 adapt existing benchmarks, and their scenes, robots and success criteria are what the exam is built on. We thank their authors. If you use these tasks, please also cite the original benchmarks:
+
+- **[BEHAVIOR-1K](https://behavior.stanford.edu/)**: BEHAVIOR-1K: A Human-Centered, Embodied AI Benchmark with 1,000 Everyday Activities and Realistic Simulation ([paper](https://arxiv.org/abs/2403.09227), [code](https://github.com/StanfordVL/BEHAVIOR-1K))
+- **[RoboLab](https://research.nvidia.com/labs/srl/projects/robolab)**: RoboLab: A High-Fidelity Simulation Benchmark for Analysis of Task Generalist Policies ([paper](https://arxiv.org/abs/2604.09860), [code](https://github.com/NVlabs/RoboLab))
+- **[RoboCasa](https://robocasa.ai)**: RoboCasa: Large-Scale Simulation of Everyday Tasks for Generalist Robots ([paper](https://arxiv.org/abs/2406.02523), [code](https://github.com/robocasa/robocasa))
+- **[RoboCasa365](https://robocasa.ai)**: RoboCasa365: A Large-Scale Simulation Framework for Training and Benchmarking Generalist Robots ([paper](https://arxiv.org/abs/2603.04356), [code](https://github.com/robocasa/robocasa))
+- **[RoboCasa-GR1](https://developer.nvidia.com/isaac/gr00t)**: GR00T N1: An Open Foundation Model for Generalist Humanoid Robots ([paper](https://arxiv.org/abs/2503.14734), [code](https://github.com/robocasa/robocasa-gr1-tabletop-tasks))
+- **[MetaWorld+](https://metaworld.farama.org/)**: Meta-World+: An Improved, Standardized, RL Benchmark ([paper](https://arxiv.org/abs/2505.11289), [code](https://github.com/Farama-Foundation/Metaworld))
+- **[VLABench](https://vlabench.github.io/)**: VLABench: A Large-Scale Benchmark for Language-Conditioned Robotics Manipulation with Long-Horizon Reasoning Tasks ([paper](https://arxiv.org/abs/2412.18194), [code](https://github.com/OpenMOSS/VLABench))
+- **[HumanoidBench](https://humanoid-bench.github.io)**: HumanoidBench: Simulated Humanoid Benchmark for Whole-Body Locomotion and Manipulation ([paper](https://arxiv.org/abs/2403.10506), [code](https://github.com/carlosferrazza/humanoid-bench))
+- **[MolmoSpaces](https://allenai.github.io/molmospaces/)**: MolmoSpaces: A Large-Scale Open Ecosystem for Robot Navigation and Manipulation ([paper](https://arxiv.org/abs/2602.11337), [code](https://github.com/allenai/molmospaces))
+- **[KinDER](https://prpl-group.com/kinder-site/)**: KinDER: A Physical Reasoning Benchmark for Robot Learning and Planning ([paper](https://arxiv.org/abs/2604.25788), [code](https://github.com/Princeton-Robot-Planning-and-Learning/kindergarden))
+- **[RoboTwin 2.0](https://robotwin-platform.github.io/)**: RoboTwin 2.0: A Scalable Data Generator and Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation ([paper](https://arxiv.org/abs/2506.18088), [code](https://github.com/RoboTwin-Platform/RoboTwin))
+- **[MuJoCo Playground](https://playground.mujoco.org/)**: MuJoCo Playground ([paper](https://arxiv.org/abs/2502.08844), [code](https://github.com/google-deepmind/mujoco_playground))
+- **[DexToolBench](https://simtoolreal.github.io/)**: SimToolReal: An Object-Centric Policy for Zero-Shot Dexterous Tool Manipulation ([paper](https://arxiv.org/abs/2602.16863), [code](https://github.com/tylerlum/simtoolreal))
+- **[DexJoCo](https://dexjoco.github.io/)**: DexJoCo: A Benchmark and Toolkit for Task-Oriented Dexterous Manipulation on MuJoCo ([paper](https://arxiv.org/abs/2605.16257), [code](https://github.com/brave-eai/dexjoco))
+- **[MyoSuite](https://www.myosuite.org)**: MyoSuite -- A contact-rich simulation suite for musculoskeletal motor control ([paper](https://arxiv.org/abs/2205.13600), [code](https://github.com/MyoHub/myosuite))
+- **[RoboDojo](https://robodojo-benchmark.com/)**: RoboDojo: A Unified Sim-and-Real Benchmark for Comprehensive Evaluation of Generalist Robot Manipulation Policies ([paper](https://arxiv.org/abs/2607.04434), [code](https://github.com/RoboDojo-Benchmark/RoboDojo))
+- **[BiGym 2.0](https://bigym2.github.io/)**: BiGym 2.0: Benchmarking Learned and Agent-Developed Policies for Humanoid Household Manipulation ([paper](https://arxiv.org/abs/2610.07594), [code](https://github.com/swirl-uk/BiGym2))
+- **[YAMLab](https://github.com/ARISE-Initiative/yamlab)** ([code](https://github.com/ARISE-Initiative/yamlab))
+- **[LIBERO-MAX](https://liberomax.github.io/)**: LIBERO-MAX: Do Robot Policies Adapt When the World Changes? ([paper](https://arxiv.org/abs/2609.36518), [code](https://github.com/liberomax/LIBERO-MAX))
+- **[AM-Bench](https://ambench.github.io/)**: AM-Bench: A Modular Simulation Suite and Benchmark for Aerial Manipulation Policy Learning ([paper](https://arxiv.org/abs/2609.00641), [code](https://github.com/ambench/ambench))
+- **[RoboWits](https://umass-embodied-agi.github.io/RoboWits/)**: RoboWits: Unexpected Challenges for Robotic Creative Problem Solving ([paper](https://arxiv.org/abs/2605.30326), [code](https://github.com/UMass-Embodied-AGI/RoboWits))
+- **[ManiGuard](https://nu-ideas-lab.github.io/ManiGuard/)**: MANIGUARD: A Benchmark and Data Suite for Specification-Grounded Safety Evaluation and Improvement of Robotic Manipulation ([paper](https://arxiv.org/abs/2608.17386), [code](https://github.com/NU-IDEAS-Lab/ManiGuard))
+
 ## License
 
 [MIT](LICENSE) for the code in this repository. Third-party simulators, assets, reference solutions derived from
