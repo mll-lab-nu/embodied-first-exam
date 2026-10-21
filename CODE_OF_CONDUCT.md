@@ -6,5 +6,5 @@ It applies in this repository (issues, pull requests, reviews) and in the projec
 In short: be respectful and constructive, assume good faith, and criticise work, not people. Harassment, personal
 attacks and discriminatory language are not accepted.
 
-Report unacceptable behaviour to the maintainers at **embodied-first-exam@gmail.com**. Reports are handled
+Report unacceptable behaviour to the maintainers at **embodiedfirstexam@gmail.com**. Reports are handled
 confidentially; the maintainers may remove comments, close threads or block participants who break this code.

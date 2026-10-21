@@ -23,7 +23,7 @@ stay outside this repository. Code several tasks share may go in `embodied_first
 recommended place is the benchmark's image (`images/<sim>/`), so the tasks get it from the image.
 
 ## Proposal (new benchmarks)
-Open a benchmark-proposal issue first (or e-mail the proposal to embodied-first-exam@gmail.com, as the
+Open a benchmark-proposal issue first (or e-mail the proposal to embodiedfirstexam@gmail.com, as the
 [contribute page](https://www.embodied-first-exam.ai/contribute/) describes). A good proposal shows that the tasks are:
 - **verifiable** by a program, in a fresh process, without a learned judge;
 - **solvable** — a positive example the verifier (standard modes: the sidecar) scores 1: an oracle, an upstream expert or policy, a successful

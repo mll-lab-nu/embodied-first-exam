@@ -2,7 +2,7 @@
 
 Please do not report security problems in public issues or pull requests.
 
-E-mail **embodied-first-exam@gmail.com** with the subject "Security", or use GitHub's private vulnerability reporting
+E-mail **embodiedfirstexam@gmail.com** with the subject "Security", or use GitHub's private vulnerability reporting
 (the repository's Security tab, "Report a vulnerability"). Include what is affected, how to reproduce it and its impact.
 We answer within a week.
 
