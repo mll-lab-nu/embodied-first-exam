@@ -30,11 +30,12 @@
 
 ## News
 
+- 📦 **2026-10-22**: v1.0.0: `pip install embodied-first-exam`.
 - 🔥 **2026-10-19**: Embodied First Exam is released!
 
 ## Framework
 
-A coding agent writes code, runs the robot and sees the result, in a frozen scene from one of the suites, in each mode.
+In every task, a coding agent writes code, runs it on a robot in a frozen scene from one of the suites, and sees what happens.
 
 <p align="center"><img src="docs/assets/teaser.png" alt="Embodied First Exam: a coding agent programs a robot in a frozen scene, in each mode" width="100%"></p>
 
@@ -131,7 +132,7 @@ See [embodied-first-exam.ai/contribute](https://www.embodied-first-exam.ai/contr
 
 ## Acknowledgements
 
-The Embodied First Exam stands on the work of many benchmark teams. Nine of its suites were built for this exam; the other 22 adapt existing benchmarks, and their scenes, robots and success criteria are what the exam is built on. We thank their authors. If you use these tasks, please also cite the original benchmarks:
+Nine of the suites were written for this exam. The others are adapted from existing benchmarks, and their scenes, robots and success criteria are the ground the exam is built on. We are grateful to their authors:
 
 - **[BEHAVIOR-1K](https://behavior.stanford.edu/)**: BEHAVIOR-1K: A Human-Centered, Embodied AI Benchmark with 1,000 Everyday Activities and Realistic Simulation ([paper](https://arxiv.org/abs/2403.09227), [code](https://github.com/StanfordVL/BEHAVIOR-1K))
 - **[RoboLab](https://research.nvidia.com/labs/srl/projects/robolab)**: RoboLab: A High-Fidelity Simulation Benchmark for Analysis of Task Generalist Policies ([paper](https://arxiv.org/abs/2604.09860), [code](https://github.com/NVlabs/RoboLab))
@@ -166,7 +167,7 @@ upstream experts and the contents of the base images keep their own licenses.
 ```bibtex
 @misc{embodiedfirstexam2026,
   title        = {Embodied First Exam},
-  author       = {Kangrui Wang*§ and Changhe Chen*§ and Qineng Wang*§ and Pingyue Zhang*§ and Chi Gui*§ and Feishi Wang§ and Canyu Chen§ and Wenli Xiao§ and Xiaoyu Huang§ and Tonghe Zhang§ and Linjie Li§ and Yiyou Sun and Mingkai Deng and Jinyu Hou and Han Liu and Eric P. Xing and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Jiajun Wu and Yuke Zhu and Guanya Shi† and Ruohan Zhang† and Manling Li†},
+  author       = {Kangrui Wang*§ and Changhe Chen*§ and Qineng Wang*§ and Pingyue Zhang*§ and Chi Gui*§ and Feishi Wang§ and Canyu Chen§ and Wenli Xiao§ and Xiaoyu Huang§ and Tonghe Zhang§ and Linjie Li§ and Yiyou Sun and Mingkai Deng and Jinyu Hou and Han Liu and Qi Zhu and Eric P. Xing and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Jiajun Wu and Yuke Zhu and Guanya Shi† and Ruohan Zhang† and Manling Li†},
   year         = {2026},
   url          = {https://github.com/mll-lab-nu/embodied-first-exam}
 }
