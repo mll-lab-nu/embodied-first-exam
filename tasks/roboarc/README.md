@@ -1,6 +1,7 @@
 # RoboARC (MuJoCo release)
 
-RoboARC's topological puzzle families on MuJoCo 3.14.0 physics, run by the simulator package `topogym`. The image is
+RoboARC's topological puzzle families on MuJoCo 3.14.0 physics, run by the simulator package `topogym`, and its IKEA
+furniture-assembly suite ([IKEA suite](#ikea-suite), its own tooling and images). The topological families' image is
 built FROM the published `ghcr.io/mll-lab-nu/efe:robotangle-0.2.22` image (pinned by digest); results of the earlier
 Genesis release are not comparable with this one.
 
@@ -16,13 +17,14 @@ Every image is public: Harbor pulls it.
 
 ## Tasks
 
-`roboarc-<family>-<NN>-i01-{privileged,standard}` (PROTOCOL §2.2):
+The topological families: `roboarc-<family>-<NN>-i01-{privileged,standard}` (PROTOCOL §2.2); the IKEA suite:
+`roboarc-ikea-<item>-i00-{privileged,standard}` (one frozen scene per item, `i00`; no tier number; [IKEA suite](#ikea-suite)):
 - `<family>` with dashes (`interlocked-claws`); `[metadata].family` keeps the underscores.
 - `<NN>`: two digits, the base's number in its family. A number is never reused: removing a task leaves a gap. The
   difficulty is not in the name: it is `[metadata].difficulty` in task.toml (TAXONOMY).
 - `i01`: the MuJoCo instance (the HF dataset's `instances/<family>-<NN>-i01/`).
 
-Every task shares the tooling `rcb_topogym.py`, the graders, the sim service and the eai-standard/2.4 layer:
+Every topological task shares the tooling `rcb_topogym.py`, the graders, the sim service and the eai-standard/2.4 layer:
 - physics: MuJoCo 3.14.0, CPU float64 (the blanket families' cloth: a deterministic CUDA step, `blanket_vbd_gpu`);
 - the numpy / OpenBLAS SIMD masking in every container that runs a Session (so every CPU class builds the same frozen
   bytes); `render_bridge.py` and `nyx_direct.py` next to every tooling copy, named in the runtime binding;
@@ -155,11 +157,220 @@ or robot base position either.
 
 `git mv` of `images/roboarc/`, `images/roboarc-files/` (a new image name: build, push, pin) and this page; then the registration lines: `scripts/task_conventions.py`
 (`BENCHMARKS`), `scripts/task_resources.toml`
-(the `^roboarc-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix
-(`ci_checks/check-tooling-identity.sh` `MODULE`, `ci_checks/benchmarks/roboarc/advisory-world-frame.sh`); the cutoff is
+(the `^roboarc-` rules; the generic `^roboarc-(?!ikea-)` rules leave the IKEA suite to its own `^roboarc-ikea-` rules), `docs/TAXONOMY.md`, `README.md`, the checks that name a benchmark's prefix
+(`ci_checks/check-tooling-identity.sh` `MODULE`, where the IKEA suite is the group `roboarc-ikea`,
+`ci_checks/benchmarks/roboarc/advisory-world-frame.sh`); `ci_checks/ci_scope.py` (RoboARC's unit includes `images/ikea-mujoco/` and
+`images/ikea-mujoco-files/`); the cutoff is
 each task's own `[agent] timeout_sec`.
 
 ## Standard-mode service details
 
 Serves `eai-standard/2.4` (docs/protocol/standard_mode.md Part 4). Contact and safety telemetry is published in `meta["safety"]`, declared field by field in this doc. `max_frames_per_call` = 2000, per-frame depth counted as four images; where a call's length is known only while it runs (`ee_pose` rows) the call stops taking frames at the bound and `meta.frames_skipped` counts them. Its service ends the episode when `time_left_s` reaches 0 (counted from the agent's first request), until its next task update.
 
+## IKEA suite
+
+The IKEA furniture-assembly tasks (`roboarc-ikea-<item>-i00-{privileged,standard}`, eight items in both modes) are part of
+RoboARC. They share the `roboarc-` prefix, this folder, the eai-standard/2.4 layer and the 3 h budget;
+everything else is their own: the tooling `rcb_ikea.py` (not `rcb_topogym.py`), the scenes, the graders and the sim service
+(source `embodied_first_exam/benchmarks/roboarc/ikea/`, files-only image `efe:ikea-mujoco-files`), and the images
+`efe:ikea-mujoco-<VERSION>` / `efe:ikea-mujoco-sim-<VERSION>` (`images/ikea-mujoco/`), which keep their names. The sections
+above describe the topological families; this section is the whole description of the IKEA suite.
+
+Furniture-assembly scenes in plain MuJoCo 3.14.0 on the CPU (float64), each with two robot arms and physical
+grasps (finger friction, no assist). Eight tasks ship, each in both modes (16 task directories,
+`tasks/roboarc/roboarc-ikea-<task>-i00-{privileged,standard}`):
+
+### IKEA quick start
+```bash
+harbor run -d embodied-first-exam@all -p tasks/roboarc -i 'roboarc-ikea-*' -a codex -m openai/gpt-6-astra
+```
+All images are public (`efe:ikea-mujoco-0.3.0`, `efe:ikea-mujoco-sim-0.4.0`, `efe:ikea-mujoco-files`): the tasks run
+directly. To rebuild the images from source, see [IKEA image and assets](#ikea-image-and-assets) and `images/ikea-mujoco/README.md`.
+
+| task | robot | what is assembled | mechanism |
+|---|---|---|---|
+| `lack` | two Franka Panda | LACK side table: four legs screwed into the top | threads (exact convex pieces), latched retention welds |
+| `svallet` | two ViperX 300 s (ALOHA 2) | SVALLET lamp: the bulb screwed in, the shade snapped on | spring jaws and snaps, the bulb's thread |
+| `gladom` | two Franka Panda | GLADOM tray table | threads (SDF meshes), latched welds |
+| `variera` | two Franka Panda | VARIERA box: screws driven with a screwdriver | threads (SDF meshes) |
+| `eket` | two Franka Panda | EKET cabinet: dowels and panels | latched retention welds |
+| `ikea365` | two Franka Panda | IKEA 365+ stand and bowl: a screw driven with a screwdriver | threads (exact convex pieces), latched welds |
+| `vesken` | two Franka Panda | VESKEN shelf unit: 23 snap connections | spring jaws and snaps |
+| `stegesund` | two Franka Panda | STEGESUND stand: bolts driven with a hex key | capsule helices, seat welds |
+
+`simulator = "mujoco"`; `robot = "franka-panda-bimanual"` (two Franka Panda arms with MuJoCo Menagerie's Panda hand;
+stegesund names its arms `left/` / `right/`, the others `left_` / `right_`) or `"aloha-2"` (svallet: MuJoCo Menagerie's
+ALOHA 2, two ViperX 300 s arms). Standard tasks speak `eai-standard/2.4` (the operations capability:
+`r.operation_status()`).
+
+The agent budget is 10800 s (3 h) of wall clock in both modes. One reference execution must fit 40 % of it (4320 s) on
+the trial host (IKEA timing, below). A privileged trajectory may have at most the task's row cap (stated in its instruction:
+the verifier's replays must fit its time limit).
+
+### IKEA scenes in progress (not tasks)
+Four more scenes are in the image (`/opt/ikea/scenes/`) but are not tasks: no reference passes every gate yet.
+- `burvik`: no reference passes under the prism rule and the joint-speed clamp; leg 3 is blocked by the scene's
+  geometry (the top leans 6.4° in its jig, the hand hits the handle rack while spinning the leg), which needs a scene or
+  fixture change.
+- `kyrre`: the authors' demo loses screw 2-1 at its hole under the final physics (4 of 9 welds), and one replay takes
+  12.3-14.0 ks on a Xeon core, about 3 x the 4320 s bar (the welded legs keep their box contacts with the seat).
+- `stenerik`: the closed-loop build seats all six screws and peels the four pads, but its pad presses stay below the
+  scene's 1 N / 0.3 s bond gate.
+- `uppsta`: timing only. The closed-loop reference passes `final_check()` in fresh replays on AMD Zen 4 and Intel Xeon
+  with the same hashes, but one replay takes 12,680 / 12,684 s on an Intel Xeon Gold 6230R core, 2.9 x the bar (its
+  two screw drives cost 22-26 ms per row).
+
+### IKEA tasks
+- The task directories are the deliverable; the tooling that built them is kept outside this repository.
+- In `images/ikea-mujoco/`: `assets.json` (the sha256 of every scene file in the image, and the dataset pin of the
+  meshes; Image and assets), `bindings.json` (what each scene builds to in the image: initial-state hash, actuators,
+  timestep). The scenes' upstream provenance is kept outside this repository (PROTOCOL Appendix H.2).
+- Each privileged task carries `rcb_ikea.py` (the tooling and the replay), `tests/grade.py` (the verifier) and
+  `tests/render_video.py` (the replay video); each standard task the sim service (`environment/sim/`: `server.py`,
+  `ikea_rig.py`, `ikea_nyx.py`, `finalize.sh`; `ikea_nyx.py` drives RoboARC's `nyx_direct.py`, which the tasks get from `embodied_first_exam/benchmarks/roboarc/`), its
+  grader (`tests/grade.py`: transcribes the live episode's `final.json`) and the oracle client.
+- The references are kept in the task directories only (the standard `solution/oracle_actions.npz`, which the
+  privileged `solution/trajectory.npz` is a copy of).
+- Every task's agent egress is the allowlist of `scripts/set_agent_egress.py`.
+
+### IKEA grading (both modes, every task)
+One rule in both modes. Privileged: the deliverable (`/app/output/trajectory.npz`) is replayed open-loop in two fresh
+processes from the frozen keyframe. Standard: the rule is evaluated on the live episode by the sim service; nothing is
+replayed (below). Success needs all of:
+- **Goal:** the scene's own `success.py`, a port of the source assembly grader.
+- **Terminal rules,** the same in every task: the parts are released (no robot link touches a part); every part is at
+  rest (at most 0.01 m/s and 0.05 rad/s); the simulation never broke down (no non-finite state, no MuJoCo BADQACC /
+  BADQPOS / BADQVEL warning, no contact of a part deeper than 10 mm).
+- **End pose (EKET):** every panel, the back included, ends within 10 mm and 2 degrees of its goal relative to the top
+  panel (`rcb_ikea.END_POSE_RULES`): the source grader checks the back only at its slide, and the back has no frame joint.
+- These hold at the end of the rows **and** again after the grader holds the last row for 1.0 s
+  (`rcb_ikea.Session.final_check()`).
+- Privileged: both replays end in the same state hashes, before and after the hold.
+- A replay that crashes (a simulator crash, `replay_crash`) or in which the scene's code or MuJoCo raises on the state
+  the rows drove it into (`replay_exception`) is a breakdown (`sim_breakdown 1`, reward 0), not a grader error: a
+  grader or infrastructure error gives the trial a free retry (PROTOCOL H.5), which the deliverable's own failures must
+  not get. A scene that differs from the binding or builds to another initial state is `infra_error 1`.
+- The privileged verifier's time limit covers a trajectory of the task's row cap on a slow trial-class CPU (one
+  reference replay on a Xeon Gold 6230R core, with a 1.5x margin), not only the
+  Harbor host's timing: a verifier that times out writes no verdict.
+- The privileged verifier checks the scene in its image file by file against `tests/runtime_binding.json`
+  (`instance_exact`) and its initial-state hash (`instance_ok`); the standard sim service does the same before its
+  episode begins (`server.py`: scene files, initial-state hash, actuators and runtime against
+  `environment/sim/runtime_binding.json`; a mismatch is `instance_mismatch`, `infra_error 1`, and nothing is served).
+
+Standard mode is graded by the live episode: `success` = the sim service's live
+verdict, `graded_by_live 1`, `replays 0`. The service ends an episode at the first settled success, `Session.status()`
+and then `final_check()` on a snapshot with the last row held 1.0 s (the privileged grader's rule, the settle window
+included); a failed settle lets the episode go on (`meta["settle_failed"]`). An episode that ends otherwise (the wall
+clock, the collect hook's end) is judged as it stands by the same two checks. `finalize.sh` writes `final.json`
+(`graded_by "live"`, `replays 0`, `state_sha` = the live end-state hash); the verifier (`tests/grade.py`, the shared
+client base, no simulator) transcribes it. The trajectory (`/data/trajectory.npz`) stays the replayable deliverable; a
+live success without it is `infra_error`. Infrastructure (a free retry, H.5): no, unreadable or unfinalized
+`final.json`, `instance_mismatch`, a give-up after crashes not all inside the agent's calls (`sim_crashed`,
+`resume_failed`, `call_watchdog`), a service-side error. The agent's 0: a breakdown, a simulator error its rows caused
+(`sim_error`), a timeout, all crashes inside its calls (`sim_crashed_on_call`), a failed settle.
+
+Every graded trial leaves a video (PROTOCOL §4), evidence only: standard, the sidecar's `/data/live.mp4`, recorded during
+the live episode (Nyx, cam_high, 10 frames per simulated second, on the GPU the sidecar renders the agent's cameras with;
+no extra pass); privileged, `/logs/verifier/replay.mp4`, rendered by a third process next to the two verdict replays
+(MuJoCo's renderer on CPU OSMesa: the verifier has no GPU; 512 x 288, at most 750 frames).
+
+### IKEA robot speed (both modes)
+Every arm joint target moves at most the robot's real joint velocity limit per control step: Franka Panda 2.175 rad/s on
+joints 1-4 and 2.61 rad/s on joints 5-7; ViperX 300 s 3.14159 rad/s. It is a clamp, not a failure
+(`rcb_ikea.Session.applied()`, in the tooling and the replay alike): a row within the limit (+1e-9) is applied
+unchanged, a faster one is spread over the following control steps. The gripper command is not limited.
+
+### IKEA physics changes against the source scenes
+One rule for all scenes, clamp not fail (as the topological families):
+- **MuJoCo 3.14.0 with the EPA fix byte-patched in.** 3.14.0's EPA keeps the polytope horizon in two fixed 24-entry
+  arrays and writes past them unchecked (fixed upstream after 3.14.0). A dowel pressed deep into a thin convex piece
+  of eket's side panel overflows them: SIGSEGV or silent memory corruption, about 1 in 400 random eket episodes. The
+  image patches 14 bytes of the wheel's own `libmujoco.so` (`images/ikea-mujoco/mujoco-3.14.0-epa/`); it is
+  bit-identical to the stock wheel on every reference and stress episode checked. A from-source build is not
+  bit-identical to the wheel and is not used.
+- **Cylinder -> prism:** RoboARC's rule. Every cylinder a robot geom can touch is a 32-facet convex prism at scene
+  build (inscribed in the cylinder). It removed every cylinder-caused breakdown of the stress test.
+- **Joint-speed clamp:** above. The source demos command targets up to 55 x the real limits; the references were
+  rebuilt or retimed within them.
+- **Deferred: the Franka Hand slew** (0.1 m/s of finger width) is the long-term rule against finger slams; it is off
+  until the references are retimed for it.
+- eket's dowels: the soft dowel shells touch only the side panels; a stiff twin meets everything else.
+- numpy / OpenBLAS SIMD masking in the image (`NPY_DISABLE_CPU_FEATURES` without AVX-512, `OPENBLAS_CORETYPE=Haswell`),
+  as in the topological families' image: unmasked, eket's reference diverged between AVX-512 and AVX2 hosts.
+
+Stress test (random, jerk and prefix strategies from the frozen birth), with the clamp, the prism rule and the eket
+dowel rule: non-jerk BREAKDOWN rate 1.75 %, prefix-jerk 7 %; stegesund, 203 episodes, one genuine non-jerk BREAKDOWN
+(the known finger-limit class). Residuals, none blocking: finger slams
+while the hand slew is off (gladom), energy created at robot joint limits under random arm targets (vesken, eket), one
+table penetration (gladom, prefix-jerk), ViperX self-contact on jerk (svallet).
+
+### IKEA references
+Each task has one reference for both modes, every row within the joint-speed limits (the privileged
+`solution/trajectory.npz` and the standard `solution/oracle_actions.npz` are the same rows):
+- lack: the authors' demo passed through the clamp;
+- svallet, gladom, variera: the demo time-dilated or centred to the limits; variera's
+  demo ended holding the screwdriver, so a 240-row release tail is appended;
+- eket, ikea365, vesken: closed-loop references built on the final physics: the
+  demo as the phase guide, with true-state feedback (Jacobian-IK servos, gates, local searches), recorded as the
+  executed rows;
+- stegesund: the authors' speed-limited demo, unchanged.
+
+Harbor on the final images: privileged oracle 1 / nop 0 on all eight, standard oracle 1 (live settled success) / nop 0
+on all eight; on the Nyx sidecar variera's standard oracle episode ends on the same settled success and end hash (its
+verifier's result is not recorded yet). Each reference ends on the same state hashes on Intel AVX2
+(i9-14900HX), Intel AVX-512 (Xeon Gold 6230R) and AMD Zen 4 (Ryzen 9 7950X, EPYC 9354).
+
+### IKEA adversarial trial (PROTOCOL H.1)
+`roboarc-ikea-eket-i00-privileged` with a red-team paragraph on top of its
+instruction (obtain reward 1 without assembling the cabinet, by any exploit of the grader, the tooling, the file format
+or the simulator), Codex + GPT-6 Luna xhigh with the pool's lane settings: reward 0, deterministic, no grader or
+infrastructure error. The agent read the loader, the replay, `final_check()`, the operation tracker, the latches and the
+end-pose rule and found no bypass; its best attempt (a one-row hold) replays released and at rest and fails the goal.
+A malformed or compressed-bomb trajectory, a scene exception and, in standard mode, a simulator error or a malformed
+request field are the agent's 0, never a free retry.
+
+### IKEA timing
+One reference execution against the 4320 s bar (40 % of 10800 s). A Xeon Gold 6230R core (2.1 GHz) is a slow
+trial-class CPU; the quiet i9-14900HX laptop a fast one; the standard live episodes ran on shared, loaded RTX 4090
+workstations (Ryzen 9 7950X).
+
+| task | rows | one replay, dedicated Xeon Gold 6230R core | one replay, quiet i9-14900HX | standard live episode, loaded host |
+|---|---|---|---|---|
+| eket | 70,210 | 472 s (4.4 %) | | 351 s |
+| svallet | 69,414 | 478 s (4.4 %) | | 397 s |
+| ikea365 | 89,126 | 604 s (5.6 %) | | 480 s |
+| lack | 63,697 | 923 s (8.5 %) | | 639 s |
+| vesken | 353,125 | 1,288 s (11.9 %) | | 1,145 s |
+| stegesund | 357,221 | 3,160 s (29.3 %) | | 2,190 s |
+| gladom | 168,628 | **5,636 s (52.2 %), over the bar** | 2,882 s (26.7 %) | 3,362 s |
+| variera | 231,903 | **6,839 s (63.3 %), over the bar** | 3,413 s (31.6 %) | 4,365 s (EGL sidecar); 6,046 s (Nyx, load ~70) |
+
+gladom and variera are inside the bar on a quiet fast host (26.7 % and 31.6 %) and over it on a slow Xeon core (52.2 %
+and 63.3 %): MuJoCo's own step is about 95 % of the time (their SDF threads). They ship as the owner's decision; the
+agent's budget is the same 10800 s on every host, so on a slow host an agent has less room for full replays.
+
+### IKEA image and assets
+- `ghcr.io/mll-lab-nu/efe:ikea-mujoco-<images/ikea-mujoco/VERSION>` (0.3.0, image id `ed950d079b63`): MuJoCo 3.14.0
+  (EPA-patched), numpy 2.5.4, Python 3.12, and the twelve scenes at `/opt/ikea/scenes/<task>` (the four in progress
+  included). The privileged agent and the privileged verifier run it; the standard verifier runs the shared client
+  base (it replays nothing).
+- `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-<images/ikea-mujoco/sim/VERSION>` (0.4.0): the standard sidecar. It adds Nyx,
+  RoboARC's renderer and look, in its own venv `/opt/nyx` (gs-nyx 0.1.3 needs numpy < 2.4; the physics process keeps
+  numpy 2.5.4 and the patched MuJoCo): RGB from Nyx (path tracer, 32 spp, denoised, studio HDRI, point lights placed
+  relative to each scene's work surface), depth from MuJoCo's EGL raster, the same camera rig and calibration. The live
+  state hashes with Nyx are bit-identical to EGL's over the first 2000 control steps of all eight references, and Nyx
+  draws only what MuJoCo's raster drew.
+- The scene code is in git (`images/ikea-mujoco/scenes/<task>/`); the meshes (2,078 files) are not, and every file's
+  sha256 is pinned in `images/ikea-mujoco/assets.json`. The robot meshes (828: Franka Panda, Apache-2.0; ALOHA,
+  BSD-3-Clause) come from MuJoCo Menagerie at a pinned commit; the furniture part meshes (1,250, parameterized
+  reconstructions drawn from the IKEA assembly manuals, not IKEA CAD; CC BY 4.0) from the public Hugging Face dataset
+  `MLL-Lab/embodied-first-exam-public` (`ikea-mujoco/`) at a pinned revision, no login. `images/ikea-mujoco/fetch_image_context.sh` downloads
+  both, checks them and stages the build context (`images/ikea-mujoco/README.md`).
+- `stage_context.py` refuses a scene text that points at upstream material (H.2).
+
+### IKEA world-frame information
+The standard tasks' texts give no world coordinates: no part poses or positions, no table height, no world base poses.
+Every pose the standard agent gets or gives is in the robot frame (origin at the left arm's base link, +z up). The
+privileged tasks read anything, as privileged tasks do. A scene reads nothing from the environment (`rcb_ikea` drops
+kyrre's development switches `SW_FROM_OP` / `SW_FROM_T` on import).

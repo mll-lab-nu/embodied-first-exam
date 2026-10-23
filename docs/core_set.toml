@@ -748,38 +748,6 @@ task = "humanoidbench-manip-window-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "ikea-eket-i00"
-default_mode = "standard"
-
-[[task]]
-task = "ikea-gladom-i00"
-default_mode = "standard"
-
-[[task]]
-task = "ikea-ikea365-i00"
-default_mode = "standard"
-
-[[task]]
-task = "ikea-lack-i00"
-default_mode = "standard"
-
-[[task]]
-task = "ikea-stegesund-i00"
-default_mode = "standard"
-
-[[task]]
-task = "ikea-svallet-i00"
-default_mode = "standard"
-
-[[task]]
-task = "ikea-variera-i00"
-default_mode = "standard"
-
-[[task]]
-task = "ikea-vesken-i00"
-default_mode = "standard"
-
-[[task]]
 task = "ispatialgym-alignment-axial-i00"
 default_mode = "standard"
 
@@ -1129,6 +1097,38 @@ default_mode = "standard"
 
 [[task]]
 task = "roboarc-horseshoe-ring-03-i01"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-ikea-eket-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-ikea-gladom-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-ikea-ikea365-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-ikea-lack-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-ikea-stegesund-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-ikea-svallet-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-ikea-variera-i00"
+default_mode = "standard"
+
+[[task]]
+task = "roboarc-ikea-vesken-i00"
 default_mode = "standard"
 
 [[task]]

@@ -1,6 +1,6 @@
 {
  "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-files-0.1.1@sha256:803b86ace64a8a7587e9a9bed6d0cc1879dc17b8c55e2bdb00201ae55f94977d",
- "source": "embodied_first_exam/benchmarks/ikea-mujoco",
+ "source": "embodied_first_exam/benchmarks/roboarc/ikea",
  "files": {
   "privileged/environment/rcb_ikea.py": "8a18f209c9074b7efe688c896adc2d5fcb4efd23acc947bd0d80e01d17a28a1b",
   "sim/finalize.sh": "0b736dc1cfeb34d680d8f08ce6720f8d82459bb48137c9b3b1c5a06707a0695a",

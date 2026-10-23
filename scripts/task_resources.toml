@@ -689,10 +689,10 @@ verifier_min_memory_gb = 4.0
 verifier_min_gpu_memory_gb = 1.0
 measured = "GPU 0.25-0.5 GB, evaluation-pool GPU profile (per-trial GPU peaks, 10-03..10); memory: sim p90 1.7 GB, privileged container p90 2.5 GB + scorer 0.7 GB, mem_guard (docker memory per container, an RTX 4090 workstation, 10-02..10); CPU author estimate"
 
-# roboarc: GPU memory 2 GB for every class (owner 10-17, declared 7-8 GB, measured about 1 GB;
+# roboarc (the topological families; the IKEA suite, roboarc-ikea-*, has its own rules below): GPU memory 2 GB for every class (owner 10-17, declared 7-8 GB, measured about 1 GB;
 # the evaluation pool's GPU profile of roboarc on 24 GB cards: peak 1116 MiB)
 [[rule]]
-match = "^roboarc-.*-privileged$"
+match = "^roboarc-(?!ikea-).*-privileged$"
 min_cpus = 2.0
 min_memory_gb = 7.0
 min_gpu_memory_gb = 2.0
@@ -705,7 +705,7 @@ verifier_min_gpu_memory_gb = 2.0
 measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU); GPU 2 GB: owner 10-17 (evaluation-pool trial peak 1.1 GB on 24 GB cards)"
 
 [[rule]]
-match = "^roboarc-.*-standard$"
+match = "^roboarc-(?!ikea-).*-standard$"
 min_cpus = 2.0
 min_memory_gb = 7.0
 min_gpu_memory_gb = 2.0
@@ -2043,7 +2043,7 @@ trial_max_memory_gb = 17.0
 measured = "GPU: 0.5 GiB (the evaluation pool's GPU profile (per-trial GPU peaks by card, 10-03..10)) -> max(1.5 x peak, peak + 4); memory: agent container docker peak 5.0 GiB over 83 samples (mem_guard (docker memory incl. page cache, top-4 containers every 10 min, an RTX 4090 workstation, 10-02..10)) -> max(1.5 x peak, peak + 4, 8), at most the 16 GiB cap; whole trial: + the sim service's 8 GiB (docker peak 3.4 GiB, 36 samples); processes 512 and disk 20 GiB: design defaults, not yet measured"
 
 [[limit]]
-match = "^roboarc-.*-privileged$"
+match = "^roboarc-(?!ikea-).*-privileged$"
 scope = "trial"
 max_gpu_memory_gb = 16.0
 max_memory_gb = 16.0
@@ -2058,7 +2058,7 @@ trial_max_memory_gb = 16.0
 measured = "the Genesis release's numbers, kept until the MuJoCo release's own peaks are measured (its Harbor runs; MuJoCo physics on the CPU, Nyx on the GPU)"
 
 [[limit]]
-match = "^roboarc-.*-standard$"
+match = "^roboarc-(?!ikea-).*-standard$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -2651,11 +2651,11 @@ main = { cpus = 8.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 
 [[cap]]
-match = "^roboarc-.*-privileged$"
+match = "^roboarc-(?!ikea-).*-privileged$"
 main = { cpus = 4.0, memory_gb = 20.0, pids = 8192 }
 
 [[cap]]
-match = "^roboarc-.*-standard$"
+match = "^roboarc-(?!ikea-).*-standard$"
 main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 
@@ -2914,9 +2914,9 @@ measured = "privileged prototype trials, GPT-6 Luna, RTX 4090, 2026-10-16 (docke
 [[cap]]
 match = "^ispatialgym-.*-privileged$"
 main = { cpus = 12.0, memory_gb = 40.0, pids = 16384 }
-# IKEA MuJoCo, privileged: 8 task(s). MuJoCo on the CPU; the verifier also renders the replay video on the CPU (OSMesa) in a third process.
+# RoboARC's IKEA suite (roboarc-ikea-*), privileged: 8 task(s). MuJoCo on the CPU; the verifier also renders the replay video on the CPU (OSMesa) in a third process.
 [[rule]]
-match = "^ikea-.*-privileged$"
+match = "^roboarc-ikea-.*-privileged$"
 min_cpus = 2.0
 min_memory_gb = 2.0
 min_gpu_memory_gb = 0.0
@@ -2927,10 +2927,10 @@ verifier_min_memory_gb = 3.0
 verifier_min_gpu_memory_gb = 0.0
 measured = "peak RSS of one Session 0.27-0.45 GB per scene (3000 reference rows + final_check, laptop, 2026-10-15); the verifier runs two replays and the video replay at once; x 1.2 and rounded up"
 
-# IKEA MuJoCo, standard: 8 task(s). Physics on the CPU; the sim sidecar renders RGB with Nyx (path tracer, Vulkan) and
+# RoboARC's IKEA suite (roboarc-ikea-*), standard: 8 task(s). Physics on the CPU; the sim sidecar renders RGB with Nyx (path tracer, Vulkan) and
 # depth with MuJoCo's EGL raster on one GPU.
 [[rule]]
-match = "^ikea-.*-standard$"
+match = "^roboarc-ikea-.*-standard$"
 min_cpus = 2.0
 min_memory_gb = 3.0
 min_gpu_memory_gb = 1.0
@@ -2943,7 +2943,7 @@ verifier_min_gpu_memory_gb = 0.0
 measured = "Harbor standard oracle of svallet on an RTX 4090 host, 2026-10-17 (docker stats and nvidia-smi per process every 20 s): the sim sidecar peaked at 1.8 GiB of memory and 0.8 GiB of GPU memory (the Nyx render process), the agent's container (the client) below 0.1 GiB; the privileged verifier of the same task (two replays and the video replay) at 1.6 GiB; x 1.5 and rounded up"
 
 [[limit]]
-match = "^ikea-.*-privileged$"
+match = "^roboarc-ikea-.*-privileged$"
 scope = "trial"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -2958,7 +2958,7 @@ trial_max_memory_gb = 8.0
 measured = "the privileged peaks with room for an agent's own replays (four Sessions at once)"
 
 [[limit]]
-match = "^ikea-.*-standard$"
+match = "^roboarc-ikea-.*-standard$"
 scope = "agent"
 max_gpu_memory_gb = 0.0
 max_memory_gb = 8.0
@@ -2973,11 +2973,11 @@ trial_max_memory_gb = 16.0
 measured = "the sidecar's measured peaks (1.8 GiB, 0.8 GiB of GPU memory, svallet) with room for the longer scenes and an agent's own client processes; the agent's container runs the client only"
 
 [[cap]]
-match = "^ikea-.*-privileged$"
+match = "^roboarc-ikea-.*-privileged$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 
 [[cap]]
-match = "^ikea-.*-standard$"
+match = "^roboarc-ikea-.*-standard$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 8.0, pids = 8192 }
 

@@ -1,6 +1,6 @@
 {
  "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.2.1@sha256:093737b0eb56d3f157606377c7bd6f31cd30f4cc7bf2044bb5a799238714b927",
- "source": "embodied_first_exam/benchmarks/ikea-mujoco",
+ "source": "embodied_first_exam/benchmarks/roboarc/ikea",
  "files": {
   "privileged/environment/rcb_ikea.py": "8a18f209c9074b7efe688c896adc2d5fcb4efd23acc947bd0d80e01d17a28a1b",
   "privileged/tests/grade.py": "e2386cfb5fcdfebc048a3b8bbdc91a624a4dccf738d2fc99f4c5e3d210322492",
