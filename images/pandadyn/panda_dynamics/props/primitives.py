@@ -137,8 +137,10 @@ def tool_shapes(
     side_mount=False,
     height=None,
     vertical_mount=0.0,
+    mount=None,
 ):
     mat = material(mu, restitution)
+    first = len(b.collision_records)
     if kind == "channel":
         add_box(b, [half, 0.036, 0.004], [0, 0, -0.004], mat=mat)
         for sign in (-1, 1):
@@ -190,6 +192,10 @@ def tool_shapes(
         reach = abs(float(side_mount))
         # Route the bridge around the active contact face, not through it.
         edge = 0.02 if kind == "mallet" else 0.04 if kind == "channel" else half
+        y_far = _extent(b.collision_records[first:])[1][1]
+        if edge > y_far:
+            # A tool narrower than `half` (the pusher): the stub meets its end instead of empty space.
+            edge = y_far - 0.006
         add_box(b, [0.06, 0.006, 0.006], [-0.06, side * reach, 0.035], mat=mat)
         add_box(
             b,
@@ -198,7 +204,16 @@ def tool_shapes(
             mat=mat,
         )
         add_box(b, [0.006, 0.006, 0.018], [0, side * edge, 0.018], mat=mat)
+        if mount is not None and mount[2] > 0.041:
+            # A mount above the bar: a riser from the bar's hand end up to the TCP, so the adapter reaches the hand.
+            add_box(
+                b,
+                [0.006, 0.006, (mount[2] - 0.029) / 2],
+                [-abs(mount[0]) + 0.006, side * reach, (mount[2] + 0.029) / 2],
+                mat=mat,
+            )
     else:
+        low, high = _extent(b.collision_records[first:])
         add_box(
             b,
             [0.047, 0.006, 0.006],
@@ -213,6 +228,26 @@ def tool_shapes(
             mat=mat,
             color=[0.25, 0.27, 0.3, 1],
         )
+        # The stub sits at -half, a container's wall. A thin tool (paddle, fork, pusher, peg, mallet) has its back
+        # face much nearer its center: a bridge joins the stub to that face, so the tool is one connected piece.
+        # (The racket's plate is tilted and has no task; it keeps the stub alone.)
+        x_back = low[0]
+        if kind != "racket" and x_back > -half + 0.006:
+            z = min(max(0.015, low[2] + 0.006), high[2] - 0.006)
+            add_box(
+                b,
+                [(x_back + half - 0.006) / 2, 0.006, 0.006],
+                [(x_back - half + 0.006) / 2, 0, z],
+                mat=mat,
+                color=[0.25, 0.27, 0.3, 1],
+            )
+
+
+def _extent(records):
+    """Lower and upper corners of the unrotated box records' bounding box (local tool frame)."""
+    low = np.min([np.asarray(r.pose.p) - np.asarray(r.scale) for r in records], axis=0)
+    high = np.max([np.asarray(r.pose.p) + np.asarray(r.scale) for r in records], axis=0)
+    return low, high
 
 
 def body(actor):

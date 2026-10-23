@@ -9,7 +9,7 @@
 | Family / instance | `d06_moving_bank_relay` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-d06-moving-bank-relay-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A low-friction puck is already sliding toward the right arm at the start, through the first of two gaps in a row of posts across the table. The right Panda's paddle must strike it. The puck must then come back through that same gap and hit the left Panda's paddle, which acts as a rebound board. The right paddle strikes the puck a second time. The puck must then come back through the second gap and hit the left board again, with the board at a clearly different position and angle from the first rebound. Finally the puck must cross a goal line in front of a backstop wall on the right arm's side, without the right paddle touching it as it crosses.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. A low-friction puck is already sliding toward the right arm at the start, through the first of two gaps in a row of posts across the table. The right Panda's paddle must strike it back toward the left. The puck must then come back through that same gap, hit a small bank board that slides back and forth by itself on the left arm's side of the posts, while the board is moving, and then hit the left Panda's paddle. The right paddle strikes the puck back a second time. The puck must then come back through the second gap and hit the left paddle again, with the paddle at a clearly different position and angle from the first rebound. Finally the left paddle must send the same puck back out through the second gap and across a goal line in front of a backstop wall on the right arm's side, with the right paddle not touching it after it passes the gap.
 
 ## Difficulty
 That of `pandadyn-d06-moving-bank-relay-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
@@ -41,7 +41,7 @@ and then renders the video from the graded episode's rows; `tests/grade.py` (sep
 last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
 window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
 the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `5a8e61b8617cdeaf`). `nop`: no control step is executed; the episode ends at
+in the privileged oracle's final state (hash `77a2627f3f260fa0`). `nop`: no control step is executed; the episode ends at
 the collect hook with no phase complete, reward 0.
 
 ## Compute resources
@@ -79,3 +79,10 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
   with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Redesigned: a motor-driven bank board slides
+  back and forth on the left arm's side, and the first return must hit it while it moves; the right arm's strikes must
+  send the puck back at 0.20 m/s or more and the left arm's rebounds need an approach of 0.08 m/s or more; the left
+  arm shoots the final goal out through the second gap. The paddles' adapters are now joined to the paddles by a
+  bridge. The tool's mass is unchanged; its centre of mass and inertia shift slightly. Frozen instance: seed 0,
+  `initial_sha` 4cab3eac66f9ce50; reference rows: 1696 control steps (was seed 0, `initial_sha` 0ff68b124a7db306).
+  Results from before are under the earlier digest and are not ranked with these.

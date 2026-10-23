@@ -6,27 +6,21 @@
     "tool_mass": 0.2,
     "tool_half": 0.07,
     "radius": 0.018,
-    "preview": 0.65,
-    "incoming_speed": 0.35,
-    "fixture_speed": 0.04,
-    "restitution": 0.1,
+    "restitution": 0.08,
     "table_friction": 0.08,
     "tool_friction": 0.3,
     "right_tool_half": 0.14,
     "right_tool_mass": 0.25,
     "ball_offset": 0.015,
-    "outlet_min_speed": 0.0,
+    "outlet_min_speed": 0.1,
     "ball_roll_speed": 0.0
   },
   "difficulty": {
-    "debug": {
-      "preview": 0.9,
-      "incoming_speed": 0.27999999999999997
-    },
+    "debug": {},
     "nominal": {},
     "hard": {
       "ball_offset": 0.03,
-      "outlet_min_speed": 0.1,
+      "outlet_min_speed": 0.25,
       "ball_roll_speed": 0.08
     }
   },
@@ -48,18 +42,6 @@
       2
     ],
     "radius": [
-      0.001,
-      2
-    ],
-    "preview": [
-      0.001,
-      2
-    ],
-    "incoming_speed": [
-      0.001,
-      2
-    ],
-    "fixture_speed": [
       0.001,
       2
     ],
@@ -102,9 +84,6 @@
     "tool_mass": "kg",
     "tool_half": "m",
     "radius": "m",
-    "preview": "s",
-    "incoming_speed": "m/s",
-    "fixture_speed": "m/s",
     "restitution": "dimensionless",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",

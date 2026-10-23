@@ -10,13 +10,13 @@
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 6 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 3 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-realtime twin of `pandadyn-d10-moving-grasp-handover-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d10-moving-grasp-handover-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 6** (one 10 ms control step every 60 ms of wall-clock time), with
-3 resets (only the last episode is graded). A long bar-shaped part is already riding a powered roller conveyor when the episode starts. The left arm must grasp it with its gripper while it is still moving and lift it, then carry it, still moving, through a presentation point. It then hands the part over to the right arm: both grippers hold it at the same time, then the left gripper opens wide and lets go while the right one keeps holding it. Finally the right arm must lay the part into a long open slot that slides back and forth on a rail and let go of it, so that the part lies in the slot while the slot is moving.
+3 resets (only the last episode is graded). A long bar-shaped part is already riding a powered roller conveyor when the episode starts. The left arm must grasp it with its gripper while it is still moving and lift it, then carry it, still moving, through a presentation point. It then hands the part over to the right arm while the part keeps moving: both grippers hold it at the same time, then the left gripper opens wide and lets go while the right one keeps holding it. Finally the right arm must lay the part into a long open slot that slides back and forth on a rail and let go of it while the slot is moving, so that the part lies in the slot while the slot is moving.
 
 ## Difficulty
 That of `pandadyn-d10-moving-grasp-handover-i00-standard`, and the scene no longer waits between calls: once an episode's clock starts, the moving objects and
@@ -76,3 +76,8 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 - 2026-10-17 (owner): graded by the live episode; no grading replay (until then: one fresh-process
   replay, success = live ∧ replay ∧ deterministic); the frozen start is checked when the first episode begins; the video
   is rendered from the graded episode's rows after the verdict. Instance, scene, success check, S and resets are unchanged.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Stricter checks: the part must keep moving
+  (above 0.04 m/s) through the two-hand overlap and the release, and the right hand must let it go into a moving slot
+  (above 0.02 m/s). Unused parameters are gone. Frozen instance: seed 0, `initial_sha` 3bb10643ceecda47; reference
+  rows: 1554 control steps (the same start; new reference rows). Results from before are under the earlier digest and
+  are not ranked with these.

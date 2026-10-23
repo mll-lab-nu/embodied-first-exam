@@ -10,7 +10,7 @@
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 2 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 3 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-realtime twin of `pandadyn-s01-cup-route-delivery-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s01-cup-route-delivery-i00-standard`): the agent gets only
@@ -76,3 +76,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 - 2026-10-17 (owner): graded by the live episode; no grading replay (until then: one fresh-process
   replay, success = live ∧ replay ∧ deterministic); the frozen start is checked when the first episode begins; the video
   is rendered from the graded episode's rows after the verdict. Instance, scene, success check, S and resets are unchanged.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. The environment package moved to its 0.2.0
+  version; nothing of this task changed (scene, checks and texts as before). Frozen instance: seed 0, `initial_sha`
+  b411c3326c4fe10d; reference rows: 1910 control steps (the same start and reference rows as before). Results from
+  before are under the earlier digest and are not ranked with these.

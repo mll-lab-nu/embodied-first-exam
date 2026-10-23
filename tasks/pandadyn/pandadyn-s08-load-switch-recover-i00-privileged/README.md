@@ -9,10 +9,10 @@
 | Family / instance | `s08_load_switch_recover` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-A small cube (the part) rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it, drop it into the moving cart, then push the switch with a finger so that it will steer the cart into the branch selected for this instance (one of the two sides, drawn per instance and given under Goal geometry) before the cart reaches it. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+A small cube (the part) rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it, drop it into the moving cart without stopping the cart, which must keep coasting until the switch is set, then push the switch with a finger so that it will steer the cart into the branch selected for this instance (one of the two sides, drawn per instance and given under Goal geometry) before the cart reaches it. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 8 values per row), graded by the task's own staged success check: 5 phases (`moving_part_pickup`, `load_coasting_cart`, `physical_switch_operation`, `selected_branch`, `payload_recovery`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 
@@ -60,4 +60,11 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
 
 ### Provenance
-Scene description `S08`, frozen instance `S08-LoadSwitchRecover-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`.
+Scene description `S08`, frozen instance `S08-LoadSwitchRecover-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+
+### Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Stricter check: the cart must keep coasting
+  (above 0.03 m/s) until the switch is set. The cart's start is a named parameter (same value); unused parameters are
+  gone; scene and physics are unchanged. Frozen instance: seed 0, `initial_sha` 0a283238d57e5397; reference rows: 2189
+  control steps (the same start and reference rows as before). Results from before are under the earlier digest and
+  are not ranked with these.

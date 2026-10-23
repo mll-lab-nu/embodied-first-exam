@@ -10,7 +10,7 @@
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 2 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 3 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-realtime twin of `pandadyn-s05-sliding-receive-align-deliver-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s05-sliding-receive-align-deliver-i00-standard`): the agent gets only
@@ -76,3 +76,8 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 - 2026-10-17 (owner): graded by the live episode; no grading replay (until then: one fresh-process
   replay, success = live ∧ replay ∧ deterministic); the frozen start is checked when the first episode begins; the video
   is rendered from the graded episode's rows after the verdict. Instance, scene, success check, S and resets are unchanged.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Configuration only: the reset draws are named
+  parameters (`lateral_spread`, `fixture_offset`, `fixture_phase`; same values) and the new `receiver_min_speed` is 0
+  here; unused parameters are gone. Scene, physics and checks are unchanged. Frozen instance: seed 0, `initial_sha`
+  3e8c593a279d9176; reference rows: 1021 control steps (the same start and reference rows as before). Results from
+  before are under the earlier digest and are not ranked with these.

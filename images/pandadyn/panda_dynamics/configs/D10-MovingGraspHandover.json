@@ -2,26 +2,33 @@
   "task": "D10-MovingGraspHandover",
   "common": {
     "horizon": 25.0,
-    "object_mass": 0.035,
-    "tool_mass": 0.2,
-    "tool_half": 0.07,
-    "radius": 0.018,
-    "preview": 0.65,
+    "object_mass": 0.065,
     "incoming_speed": 0.08,
+    "part_y_low": -0.15,
+    "part_y_high": -0.12,
     "fixture_speed": 0.035,
-    "restitution": 0.1,
-    "table_friction": 0.08,
-    "tool_friction": 0.3
+    "fixture_phase": 0.0,
+    "slot_offset_low": -0.06,
+    "slot_offset_high": -0.02,
+    "handover_speed": 0.04,
+    "release_slot_speed": 0.02,
+    "table_friction": 0.08
   },
   "difficulty": {
     "debug": {
-      "preview": 0.9,
       "incoming_speed": 0.064
     },
     "nominal": {},
     "hard": {
-      "preview": 0.55,
-      "incoming_speed": 0.08800000000000001
+      "incoming_speed": 0.11,
+      "part_y_low": -0.17,
+      "part_y_high": -0.13,
+      "fixture_speed": 0.05,
+      "fixture_phase": 3.141592653589793,
+      "slot_offset_low": -0.08,
+      "slot_offset_high": 0.0,
+      "handover_speed": 0.05,
+      "release_slot_speed": 0.03
     }
   },
   "ranges": {
@@ -33,39 +40,43 @@
       0.01,
       0.15
     ],
-    "tool_mass": [
-      0.1,
-      0.4
-    ],
-    "tool_half": [
-      0.001,
-      2
-    ],
-    "radius": [
-      0.001,
-      2
-    ],
-    "preview": [
-      0.001,
-      2
-    ],
     "incoming_speed": [
       0.001,
       2
+    ],
+    "part_y_low": [
+      -0.17,
+      -0.1
+    ],
+    "part_y_high": [
+      -0.17,
+      -0.1
     ],
     "fixture_speed": [
       0.001,
       2
     ],
-    "restitution": [
+    "fixture_phase": [
       0,
-      1
+      3.141592653589793
+    ],
+    "slot_offset_low": [
+      -0.25,
+      0.2
+    ],
+    "slot_offset_high": [
+      -0.25,
+      0.2
+    ],
+    "handover_speed": [
+      0.015,
+      0.2
+    ],
+    "release_slot_speed": [
+      0.0,
+      0.2
     ],
     "table_friction": [
-      0,
-      1
-    ],
-    "tool_friction": [
       0,
       1
     ]
@@ -73,14 +84,15 @@
   "units": {
     "horizon": "s",
     "object_mass": "kg",
-    "tool_mass": "kg",
-    "tool_half": "m",
-    "radius": "m",
-    "preview": "s",
     "incoming_speed": "m/s",
+    "part_y_low": "m",
+    "part_y_high": "m",
     "fixture_speed": "m/s",
-    "restitution": "dimensionless",
-    "table_friction": "dimensionless",
-    "tool_friction": "dimensionless"
+    "fixture_phase": "rad",
+    "slot_offset_low": "m",
+    "slot_offset_high": "m",
+    "handover_speed": "m/s",
+    "release_slot_speed": "m/s",
+    "table_friction": "dimensionless"
   }
 }

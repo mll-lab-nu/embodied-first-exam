@@ -8,8 +8,6 @@
     "radius": 0.018,
     "preview": 0.65,
     "incoming_speed": 0.35,
-    "fixture_speed": 0.04,
-    "restitution": 0.1,
     "table_friction": 0.015,
     "tool_friction": 0.3,
     "latch_friction": 0.012,
@@ -55,14 +53,6 @@
       0.001,
       2
     ],
-    "fixture_speed": [
-      0.001,
-      2
-    ],
-    "restitution": [
-      0,
-      1
-    ],
     "table_friction": [
       0,
       1
@@ -88,8 +78,6 @@
     "radius": "m",
     "preview": "s",
     "incoming_speed": "m/s",
-    "fixture_speed": "m/s",
-    "restitution": "dimensionless",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",
     "latch_friction": "dimensionless PhysX joint friction coefficient",

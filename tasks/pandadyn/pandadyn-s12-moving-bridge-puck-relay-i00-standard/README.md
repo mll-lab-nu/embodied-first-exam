@@ -6,10 +6,10 @@
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `pandadyn-s12-moving-bridge-puck-relay-i00-privileged` |
 | Simulator / robot | `maniskill` / `franka-panda` |
-| Family / instance | `s12_moving_bridge_puck_relay` / seed 1 |
+| Family / instance | `s12_moving_bridge_puck_relay` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-s12-moving-bridge-puck-relay-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. At the start a square puck is sliding along a raised source lane towards the Panda's paddle. Strike it so that it slides onto a platform (the bridge) that spins continuously about a vertical axis, and from the bridge onto an exit lane. Intercept it there with the paddle, strike it again, and send it along the exit lane past a hinged, partly open gate, across a goal line, without the paddle touching it as it crosses and with the gate still open.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. At the start a square puck slides fast along a raised source lane towards the Panda, and the paddle hangs just above its path. Strike the puck while it is still sliding at 0.25 m/s or more so that it slides onto a platform (the bridge) that turns continuously about a vertical axis, and from the bridge onto an exit lane. Intercept it there with the paddle, let it separate, strike it again, and send it along the exit lane through the doorway of a swinging gate that opens and closes by itself, without touching the gate, and on across a goal line, without the paddle touching it as it crosses and with the gate still open.
 
 ## Difficulty
 That of `pandadyn-s12-moving-bridge-puck-relay-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
@@ -41,7 +41,7 @@ and then renders the video from the graded episode's rows; `tests/grade.py` (sep
 last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
 window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
 the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `10a3896b0d286ec7`). `nop`: no control step is executed; the episode ends at
+in the privileged oracle's final state (hash `aa34f0ab3c7134ec`). `nop`: no control step is executed; the episode ends at
 the collect hook with no phase complete, reward 0.
 
 ## Compute resources
@@ -79,3 +79,10 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
   with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Redesigned gate and first strike: the gate is
+  motor-driven and opens and closes on a 2.6 s cycle, and the puck must pass its doorway while it is open without
+  touching it; the puck comes in at 0.55 m/s under the raised paddle and the first strike must meet it at 0.25 m/s or
+  more; the bridge turns clockwise. The paddle's adapter is now joined to the paddle by a bridge. The tool's mass is
+  unchanged; its centre of mass and inertia shift slightly. Frozen instance: seed 0, `initial_sha` 1f6e3cd472270a39;
+  reference rows: 2171 control steps (was seed 1, `initial_sha` 85b2a00bf3ad3644). Results from before are under the
+  earlier digest and are not ranked with these.

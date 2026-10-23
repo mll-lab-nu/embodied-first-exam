@@ -3,7 +3,7 @@
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
 1000 Hz) runs in a service you cannot open, you reach it only through a client, and like the real world it does not wait
 for you: once an episode is running, the scene and the robot move while you think.
-**Task:** A small cube (the part) rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it, drop it into the moving cart, then push the switch with a finger so that it will steer the cart into the branch selected for this instance (one of the two sides, drawn per instance and given under Goal geometry) before the cart reaches it. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch.
+**Task:** A small cube (the part) rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it, drop it into the moving cart without stopping the cart, which must keep coasting until the switch is set, then push the switch with a finger so that it will steer the cart into the branch selected for this instance (one of the two sides, drawn per instance and given under Goal geometry) before the cart reaches it. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch.
 
 **Slowdown: S = 6.** The world runs at 1/S of real speed: one control step (10 ms of robot time) every
 S x 10 ms = 60 ms of wall-clock time (this simulator cannot keep up with real time on the service's CPUs; S is
@@ -42,6 +42,7 @@ failed (`meta["done"]`, `meta["reason"]`: `success` or the failure's name).
 - during physical_switch_operation, the phase's completion condition is not met at a step where the cart touches the switch or the cart's origin is at y > 0.105 (`missed_switch_deadline`);
 - during physical_switch_operation or selected_branch, the part's centre drops below z = 0.018 m (it is lying on the table) (`loaded_cart_spill`);
 - during payload_recovery, the cart's origin reaches |x| > 0.27 or y > 0.43 (`missed_downstream_recovery_window`);
+- during moving_part_pickup, load_coasting_cart or physical_switch_operation, the cart's horizontal speed stays below 0.03 m/s for 0.1 s without interruption: the cart must keep coasting until the switch is set (an undisturbed cart keeps at least 98 % of its launch speed; a dip shorter than 0.1 s, as when the part lands, does not count) (`cart_stalled_before_switch`);
 - the task's horizon is reached: 25 s of simulated time (`timeout`);
 - an object leaves the workspace: its centre falls more than 0.2 m below the table top or gets more than 1.8 m from the
   world's z axis (`out_of_bounds`);

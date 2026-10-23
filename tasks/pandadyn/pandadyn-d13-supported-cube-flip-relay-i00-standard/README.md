@@ -9,7 +9,7 @@
 | Family / instance | `d13_supported_cube_flip_relay` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-d13-supported-cube-flip-relay-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. The left arm holds a large shallow tray with a cube on it, and the right arm holds a small flat pusher. The left arm must first bring the tray to a presentation point. The right arm must then tip the cube over onto an adjacent face. It does so with a short push that sets the cube rotating and ends before the cube is half-way over, so that the cube completes the tip on its own momentum and settles on the tray. The left arm then moves the cube, on the tray, to a new place, and the pusher tips it a second time in the same way, so that the cube's original bottom face ends up on top. Finally the tray must carry the correctly oriented cube to an output point and hold it there. The cube must never leave the tray.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. The left arm holds a large shallow tray with a cube on it, and the right arm holds a small flat pusher. The left arm must first bring the tray to a presentation point. The right arm must then tip the cube over onto an adjacent face while the left arm keeps the tray moving. It does so with a short push that sets the cube rotating and ends before the cube is half-way over, so that the cube completes the tip on its own momentum and settles on the tray. The left arm then moves the cube, on the tray, to a new place, and the pusher tips it a second time in the same way, again with the tray moving, so that the cube's original bottom face ends up on top. Finally the tray must carry the correctly oriented cube to an output point and hold it there. The cube must never leave the tray.
 
 ## Difficulty
 That of `pandadyn-d13-supported-cube-flip-relay-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
@@ -41,7 +41,7 @@ and then renders the video from the graded episode's rows; `tests/grade.py` (sep
 last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
 window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
 the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `b4312b3169d31c97`). `nop`: no control step is executed; the episode ends at
+in the privileged oracle's final state (hash `24aaa8d4c0183120`). `nop`: no control step is executed; the episode ends at
 the collect hook with no phase complete, reward 0.
 
 ## Compute resources
@@ -78,4 +78,10 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   watches up to 30 s; up to 30 frames per second) and the observations, and differ only in the clock. Gone with the 2.2
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
+  with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Stricter check: the tray must be moving (0.08
+  m/s or more) through each flip. The cube's material and start spread are named parameters (same values). The
+  pusher's adapter is now joined to the pusher by a bridge. The tool's mass is unchanged; its centre of mass and
+  inertia shift slightly. Frozen instance: seed 0, `initial_sha` b4bcb558a8692075; reference rows: 883 control steps
+  (was seed 0, `initial_sha` b1830ad75e34ff61). Results from before are under the earlier digest and are not ranked
   with these.

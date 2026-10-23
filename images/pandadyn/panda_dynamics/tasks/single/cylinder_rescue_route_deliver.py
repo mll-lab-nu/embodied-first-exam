@@ -35,7 +35,11 @@ class CylinderRescueRouteDeliver(PandaDynamicEnv):
         "exit_reception",
         "oriented_moving_delivery",
     )
-    INSTRUCTION = "拦截滚动圆柱并制动对齐，放入实体导向重力轨道，在出口接回后按指定轴向交给移动口袋。"
+    INSTRUCTION = (
+        "拦截滚动圆柱，在托盘上制动并保持长轴沿 y 向，从入口端放入近乎水平的实体导轨，"
+        "让它沿导轨滚过出口（越过出口时不碰托盘），在出口外接回后保持该轴向放入往复移动的口袋，"
+        "并在口袋移动中稳定停留。"
+    )
 
     def build_task(self):
         self.objects["cylinder"] = rolling_cylinder(self.scene, self.params["object_mass"])

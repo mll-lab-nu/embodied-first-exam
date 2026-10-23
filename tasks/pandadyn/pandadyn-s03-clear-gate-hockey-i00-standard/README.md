@@ -9,7 +9,7 @@
 | Family / instance | `s03_clear_gate_hockey` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-s03-clear-gate-hockey-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A square puck slides toward the robot over an almost frictionless table at the start. Strike it with the paddle so that it hits a sliding blocker bar that obstructs the way to the goal and pushes it aside along its rail; let the puck come back toward the robot, strike it a second time, and make it bank off the long side rail and then cross the goal line while the blocker is still pushed aside.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. A square puck slides toward the robot over an almost frictionless table at the start. First touch it with the paddle; then strike it so that, sliding free of the paddle, it hits a sliding blocker bar that obstructs the way to the goal fast enough to push it aside along its rail. Let the puck slide back across a recovery line by itself, strike it a second time, and make it bank off the rail designated for this episode (one of two rails, coloured green; the other is grey) without touching the other rail, and then cross the goal line while the blocker is still pushed aside.
 
 ## Difficulty
 That of `pandadyn-s03-clear-gate-hockey-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
@@ -41,7 +41,7 @@ and then renders the video from the graded episode's rows; `tests/grade.py` (sep
 last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
 window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
 the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `386bfe41db2ac45a`). `nop`: no control step is executed; the episode ends at
+in the privileged oracle's final state (hash `0c1d3e2436d6820c`). `nop`: no control step is executed; the episode ends at
 the collect hook with no phase complete, reward 0.
 
 ## Compute resources
@@ -60,7 +60,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 ## Details
 | | |
 |---|---|
-| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of simulated time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance); no step budget, the wall clock is the only budget |
+| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 35 s of simulated time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance); no step budget, the wall clock is the only budget |
 | Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart, a chunk at most 10 s); `observe` frames or a watch window (at most 30 s); binary RCB1 responses |
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request |
 | Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
@@ -79,3 +79,11 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
   with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Harder, stricter checks: one of the two rails
+  is designated per instance (coloured green) and the final shot must bank off it and touch no other rail since its
+  last paddle contact; the blocker counts as hit only by a puck sliding free of the paddle for 0.15 s or more at 0.15
+  m/s or more (an earlier contact fails the task); the puck must slide back across the recovery line by itself; the
+  horizon is 35 s (was 25 s). The paddle's adapter is now joined to the paddle by a bridge. The tool's mass is
+  unchanged; its centre of mass and inertia shift slightly. Frozen instance: seed 0, `initial_sha` bcbfb438eec4fcea;
+  reference rows: 3025 control steps (was seed 0, `initial_sha` 449f78c9e8366697). Results from before are under the
+  earlier digest and are not ranked with these.

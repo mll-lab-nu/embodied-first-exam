@@ -9,7 +9,7 @@
 | Family / instance | `d09_lever_launch_catch_reload` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 A ball starts in the right arm's cup. The right arm must load it into the small basket of a passive see-saw launcher and move its cup away. The left arm, holding a mallet, must strike the lever so that the ball is flung up into free flight, and the right arm must catch it in its cup. The right arm then loads the ball into the basket a second time and clears away, and the left arm launches it again. In the end the ball must come to rest inside an open box that slides back and forth on a rail, while the box is moving. The left arm's mallet must never touch the ball. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
@@ -22,7 +22,7 @@ announced goals), the parameters, unlimited exact resets and snapshots, and self
 targets and kinematics. This mode is the control for the standard twin.
 
 ## Reference solution
-`solution/oracle_actions.npy` (1628 control steps, run by `solution/oracle.py` through the agent's own tooling): a
+`solution/oracle_actions.npy` (1625 control steps, run by `solution/oracle.py` through the agent's own tooling): a
 recorded rollout of this instance by the benchmark's reference controller, which reads the simulator's true state in closed
 loop, replayed open-loop. The reference controllers and their recordings are not in the image, and the agent's network
 reaches only the model APIs and the package registries.
@@ -31,8 +31,8 @@ reaches only the model APIs and the package registries.
 `tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the instance
 (`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in both
 (every phase complete, no failure) and both end in the same state (`deterministic`), plus `/logs/verifier/replay.mp4`
-(overview camera). Oracle: 1628 control steps (16.28 s simulated), success at the last one; the oracle
-run and two fresh-process replays end in the same state (hash `580fb0d6e6c4bcdc`), and the rollout reproduces the physical
+(overview camera). Oracle: 1625 control steps (16.25 s simulated), success at the last one; the oracle
+run and two fresh-process replays end in the same state (hash `08c59a7acb8bb75e`), and the rollout reproduces the physical
 state the benchmark recorded for it after every control step, bit for bit. `nop`: no trajectory, reward 0; a trajectory that
 holds the arm still fails (the benchmark's parked controls never succeeded).
 
@@ -53,11 +53,17 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | | |
 |---|---|
 | Benchmark source | Panda Dynamic Scenes (the environment package `images/pandadyn/panda_dynamics/`, from `images/pandadyn/sync_env.py`); task `PandaMultiStage/D09-LeverLaunchCatchReload-v0` |
-| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` 7adb448e2610e681) |
+| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` 7c84dee30e4f1c20) |
 | Actions | 16 per control step (10 ms): per arm 7 absolute joint targets (rad) + the total aperture (m); a Ruckig + torque servo per arm |
 | Physics | CPU PhysX at 1000 Hz with enhanced determinism (single thread); SAPIEN renders on the GPU only when a frame is asked for |
 | Image | `images/pandadyn/` (public); needs an NVIDIA GPU with Vulkan for SAPIEN (`environment/docker-compose.yaml`) |
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
 
 ### Provenance
-Scene description `D09`, frozen instance `D09-LeverLaunchCatchReload-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`.
+Scene description `D09`, frozen instance `D09-LeverLaunchCatchReload-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+
+### Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. The mallet's side adapter gains a riser to the
+  hand; the checks are unchanged. The tool's mass is unchanged; its centre of mass and inertia shift slightly. Frozen
+  instance: seed 0, `initial_sha` 7c84dee30e4f1c20; reference rows: 1625 control steps (was seed 0, `initial_sha`
+  7adb448e2610e681). Results from before are under the earlier digest and are not ranked with these.

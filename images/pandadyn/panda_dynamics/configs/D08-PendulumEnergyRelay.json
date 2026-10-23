@@ -5,14 +5,16 @@
     "object_mass": 0.075,
     "tool_mass": 0.2,
     "tool_half": 0.07,
-    "restitution": 0.1,
     "table_friction": 0.08,
     "tool_friction": 0.3,
     "length": 0.22,
     "initial_angle_range": 0.015,
     "initial_angular_speed_range": 0.0,
     "minimum_excursion": 0.18,
-    "return_excursion": 0.12
+    "return_excursion": 0.12,
+    "brake_min_speed": 1.0,
+    "brake_energy_drop": 0.6,
+    "brake_window": 0.5
   },
   "difficulty": {
     "debug": {
@@ -44,10 +46,6 @@
       0.001,
       2
     ],
-    "restitution": [
-      0,
-      1
-    ],
     "table_friction": [
       0,
       1
@@ -75,6 +73,18 @@
     "return_excursion": [
       0.1,
       0.25
+    ],
+    "brake_min_speed": [
+      0.45,
+      2.0
+    ],
+    "brake_energy_drop": [
+      0.0,
+      0.95
+    ],
+    "brake_window": [
+      0.05,
+      2.0
     ]
   },
   "units": {
@@ -82,13 +92,15 @@
     "object_mass": "kg",
     "tool_mass": "kg",
     "tool_half": "m",
-    "restitution": "dimensionless",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",
     "length": "m",
     "initial_angle_range": "rad",
     "initial_angular_speed_range": "rad/s",
     "minimum_excursion": "rad",
-    "return_excursion": "rad"
+    "return_excursion": "rad",
+    "brake_min_speed": "rad/s",
+    "brake_energy_drop": "dimensionless",
+    "brake_window": "s"
   }
 }

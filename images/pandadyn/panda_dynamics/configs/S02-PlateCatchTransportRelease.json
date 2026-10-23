@@ -6,7 +6,6 @@
     "tool_mass": 0.2,
     "tool_half": 0.11,
     "radius": 0.018,
-    "preview": 0.65,
     "incoming_speed": 0.08,
     "fixture_speed": 0.04,
     "restitution": 0.1,
@@ -47,10 +46,6 @@
       0.001,
       2
     ],
-    "preview": [
-      0.001,
-      2
-    ],
     "incoming_speed": [
       0.001,
       2
@@ -82,7 +77,6 @@
     "tool_mass": "kg",
     "tool_half": "m",
     "radius": "m",
-    "preview": "s",
     "incoming_speed": "m/s",
     "fixture_speed": "m/s",
     "restitution": "dimensionless",

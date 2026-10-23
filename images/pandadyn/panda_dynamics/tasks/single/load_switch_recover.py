@@ -105,13 +105,16 @@ class LoadSwitchRecover(PandaDynamicEnv):
         self.servo.input.per_dof_synchronization = [Synchronization.TimeIfNecessary]*7 + [Synchronization.No]*2
         self.servo.kd[7:] = 8.0
         # v5: declared seeded instance variation:
-        # receiver phase = cart start along its entry rail (+-10 mm, i.e.
-        # +-0.25 s at 0.04 m/s) and incoming lateral offset of the part on the
-        # roller belt (+-4 mm). Previously only the branch was drawn, so all
-        # seeds collapsed onto two physical instances per difficulty.
-        receiver_phase = self.rng.uniform(-0.01, 0.01)
+        # receiver phase = cart start along its entry rail and incoming lateral
+        # offset of the part on the roller belt (+-4 mm). v6: the cart start
+        # and its spread are config keys (nominal -0.41 +- 0.01 m, the v5
+        # values); hard also draws the part's start along the belt
+        # ("part_phase" > 0 only), so the nominal draw sequence is unchanged.
+        receiver_phase = self.rng.uniform(-self.params["cart_phase"], self.params["cart_phase"])
         lateral = self.rng.uniform(-0.004, 0.004)
-        origin=np.array([0.,-.41+receiver_phase,.045])
+        along = (self.rng.uniform(-self.params["part_phase"], self.params["part_phase"])
+                 if self.params["part_phase"] > 0 else 0.0)
+        origin=np.array([0.,self.params["cart_start_y"]+receiver_phase,.045])
         speed=self.params["fixture_speed"]
         set_initial(self.objects["cart"],origin,[0,speed,0])
         for bearing,offset in self.cart_bearings:
@@ -120,7 +123,7 @@ class LoadSwitchRecover(PandaDynamicEnv):
         self.fixtures["switch"].reset(0, 0)
         set_initial(
             self.objects["part"],
-            [-0.16 + lateral, -0.18, 0.133],
+            [-0.16 + lateral, -0.18 + along, 0.133],
             [0, self.params["incoming_speed"], 0],
         )
         self.events.flags.update(
@@ -180,3 +183,13 @@ class LoadSwitchRecover(PandaDynamicEnv):
                 self.events.physical_success = True
         if self.phase in (2, 3) and p[2] < 0.018:
             self.events.fail("loaded_cart_spill", self.time)
+        # v6: the cart must keep coasting until the switch is set. If its
+        # planar speed stays below coast_min_ratio x its launch speed for
+        # 0.1 s (braking, holding, a slowing push) before stage 3, the run
+        # fails. Brief impact dips while the part lands do not count; an
+        # undisturbed cart keeps >= 98 % of its launch speed.
+        slow = self.phase <= 2 and np.linalg.norm(velocity(self.objects["cart"])[:2]) < (
+            self.params["coast_min_ratio"] * self.params["fixture_speed"]
+        )
+        if self.events.hold("cart_below_coast_speed", slow, self.time, 0.1):
+            self.events.fail("cart_stalled_before_switch", self.time)

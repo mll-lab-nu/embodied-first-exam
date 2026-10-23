@@ -8,18 +8,18 @@
   "object_mass": 0.05,
   "tool_mass": 0.2,
   "tool_half": 0.07,
-  "radius": 0.018,
-  "preview": 0.65,
-  "incoming_speed": 0.35,
-  "fixture_speed": 0.04,
-  "restitution": 0.1,
   "table_friction": 0.08,
   "tool_friction": 0.3,
   "cube_half": 0.022,
-  "friction": 0.65,
   "left_tool_half": 0.12,
   "left_tool_mass": 0.22,
-  "left_tool_friction": 0.65
+  "left_tool_friction": 0.65,
+  "cube_friction": 0.65,
+  "cube_restitution": 0.25,
+  "cube_x_spread": 0.0,
+  "cube_y_spread": 0.003,
+  "cube_yaw_spread": 0.0,
+  "support_min_speed": 0.08
  },
  "physics_hz": 1000,
  "arms": {
@@ -36,5 +36,5 @@
   "second_inertial_flip",
   "oriented_output"
  ],
- "initial_sha": "b1830ad75e34ff61a998a43efe3872acd623be8dbfaf111f324a35793dbdb1d2"
+ "initial_sha": "b4bcb558a86920752584d51f5301f62aa45cf2c27b439caa138fbcec0882ea4a"
 }

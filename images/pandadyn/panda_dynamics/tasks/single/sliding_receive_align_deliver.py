@@ -50,21 +50,50 @@ class SlidingReceiveAlignDeliver(PandaDynamicEnv):
             slider_axis="x",
         )
 
+    # Declared receiver law (DrivenFixture "oscillate", 0.20 m stroke):
+    #   q(t) = offset + 0.20 sin(omega t + phase), omega = fixture_speed / 0.20,
+    #   offset ~ U(+-fixture_offset), phase ~ U(+-fixture_phase).
+    # Nominal has fixture_phase = 0: no extra draw and the original law.
+    RECEIVER_STROKE = 0.20
+
     def reset_task(self):
+        spread = self.params["lateral_spread"]
         set_initial(
             self.objects["block"],
-            [-0.17, self.rng.uniform(-0.01, 0.01), 0.1535],
+            [-0.17, self.rng.uniform(-spread, spread), 0.1535],
             [self.params["incoming_speed"], 0, 0],
         )
-        self.fixtures["receiver"].reset(
-            self.rng.uniform(-0.02, 0.02), self.params["fixture_speed"]
+        receiver = self.fixtures["receiver"]
+        speed = self.params["fixture_speed"]
+        span = self.params["fixture_offset"]
+        offset = self.rng.uniform(-span, span)
+        phase = 0.0
+        if self.params["fixture_phase"] > 0:
+            phase = self.rng.uniform(
+                -self.params["fixture_phase"], self.params["fixture_phase"]
+            )
+            # Clock shift for the receiver's motor law (before_physics); kept
+            # in the event flags so exact snapshots restore it.
+            self.events.flags["receiver_clock_shift"] = phase / (
+                speed / self.RECEIVER_STROKE
+            )
+        receiver.reset(
+            offset + self.RECEIVER_STROKE * np.sin(phase), speed * np.cos(phase)
         )
+        receiver.phase = offset
         self.events.flags.update(
             waypoints=[[0.08, 0.13, 0.22], [0.19, 0.20, 0.22]],
             waypoint_index=0,
             staging=[self.params["target_offset"], 0, 0.018],
         )
         self.events.emit("release", 0.0, object="block")
+
+    def before_physics(self):
+        # Base loop, except the receiver reads its seeded clock shift (absent
+        # in nominal, so its motor targets are bit-for-bit unchanged).
+        shift = self.events.flags.get("receiver_clock_shift", 0.0)
+        for name, fixture in self.fixtures.items():
+            fixture.step(self.time + shift if name == "receiver" else self.time, self.dt)
 
     def update_task(self):
         obj = self.objects["block"]
@@ -135,10 +164,22 @@ class SlidingReceiveAlignDeliver(PandaDynamicEnv):
                     - (f.link._objs[0].entity_pose.p + [0.34, 0, 0.008])
                 )
                 < 0.012
+                and abs(f.v) >= self.params["receiver_min_speed"]
             ):
                 self.advance()
         elif self.phase == 4:
             f = self.fixtures["receiver"]
+            minimum = self.params["receiver_min_speed"]
+            if minimum > 0 and not self.events.has("receiver_touchdown"):
+                # Hard: the hand-off must land on a platform that is moving.
+                # Its speed is read one substep before the first block contact,
+                # so the impact itself cannot change the verdict.
+                if self.contact("block", "receiver") > 0:
+                    speed = flags.get("receiver_speed_before", abs(f.v))
+                    self.events.emit("receiver_touchdown", self.time, speed=speed)
+                    if speed < minimum:
+                        self.events.fail("static_receiver_transfer", self.time)
+                flags["receiver_speed_before"] = abs(f.v)
             relative = p - f.link._objs[0].entity_pose.p
             condition = (
                 self.contact("block", "receiver") > 0

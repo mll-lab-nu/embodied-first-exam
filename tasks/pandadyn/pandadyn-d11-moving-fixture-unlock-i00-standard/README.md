@@ -9,7 +9,7 @@
 | Family / instance | `d11_moving_fixture_unlock` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-d11-moving-fixture-unlock-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. The left gripper starts around the handle of a free, hand-held fixture: a short channel with a ball inside, closed at its front by a spring-loaded latch gate, with a square socket on its side above the latch's push button. The left arm must grip the fixture and move it off its stand. While the fixture is still moving, the right arm must insert its peg into the socket, press the latch button down with the peg until the gate opens, and then pull the peg back out while the left hand keeps holding the fixture. The ball must then leave the fixture, run down a fixed inclined chute and come to rest in a basin at the chute's foot. The fixture must never be dropped.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. The left gripper starts around the handle of a free, hand-held fixture: a short channel with a ball inside, closed at its front by a spring-loaded latch gate, with a square socket on its side above the latch's push button. The left arm must grip the fixture and move it off its stand. While the fixture is still moving, the right arm must insert its peg into the socket, press the latch button down with the peg until the gate opens, and then pull the peg back out while the left hand keeps holding the fixture. The ball must then leave the fixture through its outlet while the outlet is lined up with the top of a fixed inclined chute, run down the chute and come to rest in a basin at the chute's foot. The fixture must never be dropped.
 
 ## Difficulty
 That of `pandadyn-d11-moving-fixture-unlock-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
@@ -41,7 +41,7 @@ and then renders the video from the graded episode's rows; `tests/grade.py` (sep
 last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
 window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
 the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `91737efabfd054bf`). `nop`: no control step is executed; the episode ends at
+in the privileged oracle's final state (hash `617086b28c9e628b`). `nop`: no control step is executed; the episode ends at
 the collect hook with no phase complete, reward 0.
 
 ## Compute resources
@@ -79,3 +79,9 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
   with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Stricter check: the ball must leave the fixture
+  through its outlet while the outlet is lined up with the top of the chute. The ball is configured by parameters
+  (same values). The peg's adapter is now joined to the peg by a bridge. The tool's mass is unchanged; its centre of
+  mass and inertia shift slightly. Frozen instance: seed 0, `initial_sha` 184c99782af79830; reference rows: 1563
+  control steps (was seed 0, `initial_sha` 79aa206c52af2079). Results from before are under the earlier digest and are
+  not ranked with these.

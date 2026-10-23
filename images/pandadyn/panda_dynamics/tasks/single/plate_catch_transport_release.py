@@ -20,7 +20,9 @@ class PlateCatchTransportRelease(PandaDynamicEnv):
         "moving_basin_release",
     )
     INSTRUCTION = (
-        "用无边平板接住来球并回中，经过转弯和制动后恢复残余滚动，再倾斜滚入移动盆。"
+        "用无边平板在空中接住抛来的球并让它在板中心停稳，托着球沿转弯路线依次经过两个固定路点且不让球滚落，"
+        "再让球重新在板中心停稳，最后把球送进往复移动中的盆，"
+        "在盆持续移动时让球在盆中稳住且不再接触平板。"
     )
 
     def build_task(self):

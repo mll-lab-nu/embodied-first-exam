@@ -5,23 +5,34 @@
     "object_mass": 0.035,
     "tool_mass": 0.2,
     "tool_half": 0.05,
-    "radius": 0.018,
-    "preview": 0.65,
     "incoming_speed": 0.35,
-    "fixture_speed": 0.04,
-    "restitution": 0.1,
+    "incoming_offset": 0.014,
+    "incoming_angle": 0.0,
+    "start_x": 0.23,
+    "start_spread": 0.0,
+    "volley_speed": 0.0,
+    "volley_window": 0.0,
+    "diagonal_angle": 0.0,
+    "puck_friction": 0.015,
+    "puck_restitution": 0.55,
     "table_friction": 0.015,
     "tool_friction": 0.3
   },
   "difficulty": {
     "debug": {
-      "preview": 0.9,
       "incoming_speed": 0.27999999999999997
     },
     "nominal": {},
     "hard": {
-      "preview": 0.55,
-      "incoming_speed": 0.385
+      "horizon": 21.0,
+      "incoming_speed": 0.45,
+      "incoming_offset": 0.02,
+      "incoming_angle": 0.06,
+      "start_x": 0.33,
+      "start_spread": 0.12,
+      "volley_speed": 0.2,
+      "volley_window": 0.6,
+      "diagonal_angle": 0.35
     }
   },
   "ranges": {
@@ -41,23 +52,43 @@
       0.001,
       2
     ],
-    "radius": [
-      0.001,
-      2
-    ],
-    "preview": [
-      0.001,
-      2
-    ],
     "incoming_speed": [
       0.001,
       2
     ],
-    "fixture_speed": [
-      0.001,
-      2
+    "incoming_offset": [
+      0,
+      0.03
     ],
-    "restitution": [
+    "incoming_angle": [
+      0,
+      0.15
+    ],
+    "start_x": [
+      0.2,
+      0.45
+    ],
+    "start_spread": [
+      0,
+      0.15
+    ],
+    "volley_speed": [
+      0,
+      1
+    ],
+    "volley_window": [
+      0,
+      5
+    ],
+    "diagonal_angle": [
+      0,
+      0.7
+    ],
+    "puck_friction": [
+      0,
+      1
+    ],
+    "puck_restitution": [
       0,
       1
     ],
@@ -75,11 +106,16 @@
     "object_mass": "kg",
     "tool_mass": "kg",
     "tool_half": "m",
-    "radius": "m",
-    "preview": "s",
     "incoming_speed": "m/s",
-    "fixture_speed": "m/s",
-    "restitution": "dimensionless",
+    "incoming_offset": "m",
+    "incoming_angle": "rad",
+    "start_x": "m",
+    "start_spread": "m",
+    "volley_speed": "m/s",
+    "volley_window": "s",
+    "diagonal_angle": "rad",
+    "puck_friction": "dimensionless",
+    "puck_restitution": "dimensionless",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless"
   }
