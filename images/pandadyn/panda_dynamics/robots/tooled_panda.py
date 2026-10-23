@@ -53,6 +53,7 @@ class TooledPanda(Panda):
                 side_mount=spec["side_mount"],
                 height=spec.get("height"),
                 vertical_mount=vertical,
+                mount=mount,
             )
         self.robot = builder.build()
         self.robot_link_names = [l.name for l in self.robot.get_links()]

@@ -8,13 +8,12 @@
   "object_mass": 0.035,
   "tool_mass": 0.2,
   "tool_half": 0.05,
-  "radius": 0.018,
-  "preview": 0.65,
   "incoming_speed": 0.35,
-  "fixture_speed": 0.04,
-  "restitution": 0.1,
+  "fixture_speed": 0.06,
+  "fixture_phase": 0.0,
   "table_friction": 0.015,
-  "tool_friction": 0.3
+  "tool_friction": 0.3,
+  "bank_clock": 0.0
  },
  "physics_hz": 1000,
  "arms": {
@@ -31,5 +30,5 @@
   "left_changed_rebound",
   "terminal_goal"
  ],
- "initial_sha": "0ff68b124a7db306ff01b700af876fd8717e2ca2379dff28686e475fff04bfe2"
+ "initial_sha": "4cab3eac66f9ce50f084202789335d436b443a114bf9c1577698614cc465b679"
 }

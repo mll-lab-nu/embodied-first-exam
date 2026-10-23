@@ -3,7 +3,7 @@
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
 1000 Hz) runs in a service you cannot open, you reach it only through a client, and like the real world it does not wait
 for you: once an episode is running, the scene and the robot move while you think.
-**Task:** A carrier rests on two small ledges between the gripper's open fingers. It is a short bar with a pendulum (a rod ending in a ball) hanging from a hinge under it, and the pendulum is already swinging. Grip the bar with both fingers and damp the swing. Carry the carrier, still gripped, through two waypoints without letting the carrier or its pendulum touch a block obstacle, and damp the residual swing again. Finally lower it until the pendulum's ball rests centred in a dock, with the swing settled and the bar still gripped.
+**Task:** A carrier rests on two small ledges between the gripper's open fingers. It is a short bar with a pendulum (a rod ending in a ball) hanging from a hinge under it, and the pendulum is already swinging. Grip the bar with both fingers and damp the swing. Carry the carrier, still gripped, through two waypoints without letting the carrier or its pendulum touch a block obstacle, brake to rest at the second waypoint, and damp the residual swing again. Finally lower it slowly until the pendulum's ball rests centred in a dock, with the swing settled and the bar still gripped.
 
 **Slowdown: S = 2.** The world runs at 1/S of real speed: one control step (10 ms of robot time) every
 S x 10 ms = 20 ms of wall-clock time (this simulator cannot keep up with real time on the service's CPUs; S is
@@ -31,7 +31,7 @@ The task has 5 phases. They are checked after every physics step (1 ms) and must
 (a phase is checked only once the previous one is complete, and a completed phase stays complete):
 1. **grasp_settle_and_damp**: Both fingers grip the bar (bilateral grip: the left finger or its pad and the right finger or its pad both in contact with the bar at that step), and the swing is settled: the pendulum's hinge angle relative to the bar is less than 0.07 rad in magnitude and its hinge rate is below 0.18 rad/s. This must hold for 0.35 s without interruption.
 2. **obstacle_transit**: With the bar gripped by both fingers, the bar's centre (the carrier's root origin) comes within 3.5 cm of waypoint A = (-0.05, 0.04, 0.38).
-3. **turn_and_brake**: With the bar gripped by both fingers, the bar's centre comes within 3.5 cm of waypoint B = (0.0, 0.15, 0.37).
+3. **turn_and_brake**: With the bar gripped by both fingers, the bar's centre is within 3.5 cm of waypoint B = (0.0, 0.15, 0.37) and the bar moves slower than `brake_speed` = 0.025 m/s, for 0.2 s without interruption. The bar's speed here is its centre's displacement over the last 50 ms divided by that time.
 4. **residual_swing_cancel**: Bar gripped by both fingers and swing settled (|hinge angle| < 0.07 rad, |hinge rate| < 0.18 rad/s), for 0.5 s without interruption.
 5. **load_dock**: Bar gripped by both fingers and swing settled (as above). The pendulum (rod or bob) has touched the dock within the last 10 ms. The bob's centre is within 3.5 cm horizontally of the dock's centre, and within 3 mm of the height at which the bob rests on the dock floor (bob centre 22 mm above the floor's top surface). All of this must hold for 0.5 s without interruption. This completes the task.
 
@@ -41,6 +41,7 @@ failed (`meta["done"]`, `meta["reason"]`: `success` or the failure's name).
 **The task fails** (the episode ends, reward 0) as soon as any of these happens:
 - at any time the carrier bar or the pendulum (rod or bob) touches the obstacle block (`obstacle_collision`);
 - at any time the bar's centre drops below z = 0.16 m (with the bob resting in the dock and the bar held above it, the bar's centre is at about 0.199 m) (`carrier_grasp_lost`);
+- until the task has succeeded, at a step where the ball's lowest point is below the dock's rim and its centre is within the dock's outer walls plus the ball's radius horizontally (|dx| < 0.079 m, |dy| < 0.077 m from the dock's centre), the ball's speed (its centre's displacement over the last 50 ms divided by that time) is above `dock_entry_speed` = 0.05 m/s (`dock_entry_too_fast`);
 - the task's horizon is reached: 25 s of simulated time (`timeout`);
 - an object leaves the workspace: its centre falls more than 0.2 m below the table top or gets more than 1.8 m from the
   world's z axis (`out_of_bounds`);

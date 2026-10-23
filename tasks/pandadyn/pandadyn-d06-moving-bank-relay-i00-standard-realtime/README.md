@@ -10,13 +10,13 @@
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 3 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 3 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-realtime twin of `pandadyn-d06-moving-bank-relay-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d06-moving-bank-relay-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 3** (one 10 ms control step every 30 ms of wall-clock time), with
-3 resets (only the last episode is graded). A low-friction puck is already sliding toward the right arm at the start, through the first of two gaps in a row of posts across the table. The right Panda's paddle must strike it. The puck must then come back through that same gap and hit the left Panda's paddle, which acts as a rebound board. The right paddle strikes the puck a second time. The puck must then come back through the second gap and hit the left board again, with the board at a clearly different position and angle from the first rebound. Finally the puck must cross a goal line in front of a backstop wall on the right arm's side, without the right paddle touching it as it crosses.
+3 resets (only the last episode is graded). A low-friction puck is already sliding toward the right arm at the start, through the first of two gaps in a row of posts across the table. The right Panda's paddle must strike it back toward the left. The puck must then come back through that same gap, hit a small bank board that slides back and forth by itself on the left arm's side of the posts, while the board is moving, and then hit the left Panda's paddle. The right paddle strikes the puck back a second time. The puck must then come back through the second gap and hit the left paddle again, with the paddle at a clearly different position and angle from the first rebound. Finally the left paddle must send the same puck back out through the second gap and across a goal line in front of a backstop wall on the right arm's side, with the right paddle not touching it after it passes the gap.
 
 ## Difficulty
 That of `pandadyn-d06-moving-bank-relay-i00-standard`, and the scene no longer waits between calls: once an episode's clock starts, the moving objects and
@@ -76,3 +76,10 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 - 2026-10-17 (owner): graded by the live episode; no grading replay (until then: one fresh-process
   replay, success = live ∧ replay ∧ deterministic); the frozen start is checked when the first episode begins; the video
   is rendered from the graded episode's rows after the verdict. Instance, scene, success check, S and resets are unchanged.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Redesigned: a motor-driven bank board slides
+  back and forth on the left arm's side, and the first return must hit it while it moves; the right arm's strikes must
+  send the puck back at 0.20 m/s or more and the left arm's rebounds need an approach of 0.08 m/s or more; the left
+  arm shoots the final goal out through the second gap. The paddles' adapters are now joined to the paddles by a
+  bridge. The tool's mass is unchanged; its centre of mass and inertia shift slightly. Frozen instance: seed 0,
+  `initial_sha` 4cab3eac66f9ce50; reference rows: 1696 control steps (was seed 0, `initial_sha` 0ff68b124a7db306).
+  Results from before are under the earlier digest and are not ranked with these.

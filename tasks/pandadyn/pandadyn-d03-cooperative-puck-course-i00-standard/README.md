@@ -9,7 +9,7 @@
 | Family / instance | `d03_cooperative_puck_course` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-d03-cooperative-puck-course-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -41,7 +41,7 @@ and then renders the video from the graded episode's rows; `tests/grade.py` (sep
 last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
 window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
 the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `0ca6c576ff70f5e3`). `nop`: no control step is executed; the episode ends at
+in the privileged oracle's final state (hash `fbde9d4cdafdf4c7`). `nop`: no control step is executed; the episode ends at
 the collect hook with no phase complete, reward 0.
 
 ## Compute resources
@@ -79,3 +79,9 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
   with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Configuration only: the puck's start and
+  material are named parameters (same values), and the new checks of the hard difficulty are off here. The paddles'
+  adapters are now joined to the paddles by a bridge. The tool's mass is unchanged; its centre of mass and inertia
+  shift slightly. Frozen instance: seed 0, `initial_sha` ee8fe5e580e4888c; reference rows: 2278 control steps (was
+  seed 0, `initial_sha` 5c3eeb99c4c93426). Results from before are under the earlier digest and are not ranked with
+  these.

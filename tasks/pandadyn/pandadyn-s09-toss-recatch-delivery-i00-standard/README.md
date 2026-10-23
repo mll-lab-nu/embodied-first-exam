@@ -9,7 +9,7 @@
 | Family / instance | `s09_toss_recatch_delivery` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-s09-toss-recatch-delivery-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -79,3 +79,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
   with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. The environment package moved to its 0.2.0
+  version; nothing of this task changed. Frozen instance: seed 0, `initial_sha` f5d85574581dd770; reference rows: 1241
+  control steps (the same start and reference rows as before). Results from before are under the earlier digest and
+  are not ranked with these.

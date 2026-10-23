@@ -9,7 +9,7 @@
 | Family / instance | `d09_lever_launch_catch_reload` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-d09-lever-launch-catch-reload-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -41,7 +41,7 @@ and then renders the video from the graded episode's rows; `tests/grade.py` (sep
 last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
 window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
 the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `580fb0d6e6c4bcdc`). `nop`: no control step is executed; the episode ends at
+in the privileged oracle's final state (hash `08c59a7acb8bb75e`). `nop`: no control step is executed; the episode ends at
 the collect hook with no phase complete, reward 0.
 
 ## Compute resources
@@ -79,3 +79,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
   with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. The mallet's side adapter gains a riser to the
+  hand; the checks are unchanged. The tool's mass is unchanged; its centre of mass and inertia shift slightly. Frozen
+  instance: seed 0, `initial_sha` 7c84dee30e4f1c20; reference rows: 1625 control steps (was seed 0, `initial_sha`
+  7adb448e2610e681). Results from before are under the earlier digest and are not ranked with these.

@@ -9,15 +9,15 @@
   "tool_mass": 0.2,
   "tool_half": 0.08,
   "radius": 0.018,
-  "preview": 0.65,
-  "incoming_speed": 0.35,
-  "fixture_speed": 0.04,
-  "restitution": 0.1,
   "table_friction": 0.08,
   "tool_friction": 0.05,
   "friction": 0.05,
-  "target_offset": 0.035,
-  "target_tolerance": 0.014
+  "receiver_min_speed": 0.2,
+  "match_tolerance": 0.05,
+  "rest_speed": 0.02,
+  "brake_window": 1.5,
+  "start_spread_x": 0.0,
+  "start_spread_y": 0.004
  },
  "physics_hz": 1000,
  "arms": {

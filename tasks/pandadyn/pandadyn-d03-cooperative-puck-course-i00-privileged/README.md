@@ -9,7 +9,7 @@
 | Family / instance | `d03_cooperative_puck_course` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 A low-friction puck is already sliding across the table toward the left arm when the episode starts. The two Pandas each hold a paddle and must hit the same puck in turn: left, right, left, right. After each of the first three hits the puck must pass through a different gap in a row of posts standing across the table between the arms. First it goes toward the right arm through the gap at the -y end. Then it goes back toward the left arm through the gap at the +y end, next to a side rail. Then it goes toward the right arm again through the middle gap. The right arm's final hit must send the puck across a goal line in front of a backstop wall on the right arm's side. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
@@ -22,7 +22,7 @@ announced goals), the parameters, unlimited exact resets and snapshots, and self
 targets and kinematics. This mode is the control for the standard twin.
 
 ## Reference solution
-`solution/oracle_actions.npy` (2261 control steps, run by `solution/oracle.py` through the agent's own tooling): a
+`solution/oracle_actions.npy` (2278 control steps, run by `solution/oracle.py` through the agent's own tooling): a
 recorded rollout of this instance by the benchmark's reference controller, which reads the simulator's true state in closed
 loop, replayed open-loop. The reference controllers and their recordings are not in the image, and the agent's network
 reaches only the model APIs and the package registries.
@@ -31,8 +31,8 @@ reaches only the model APIs and the package registries.
 `tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the instance
 (`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in both
 (every phase complete, no failure) and both end in the same state (`deterministic`), plus `/logs/verifier/replay.mp4`
-(overview camera). Oracle: 2261 control steps (22.61 s simulated), success at the last one; the oracle
-run and two fresh-process replays end in the same state (hash `0ca6c576ff70f5e3`), and the rollout reproduces the physical
+(overview camera). Oracle: 2278 control steps (22.78 s simulated), success at the last one; the oracle
+run and two fresh-process replays end in the same state (hash `fbde9d4cdafdf4c7`), and the rollout reproduces the physical
 state the benchmark recorded for it after every control step, bit for bit. `nop`: no trajectory, reward 0; a trajectory that
 holds the arm still fails (the benchmark's parked controls never succeeded).
 
@@ -53,11 +53,19 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | | |
 |---|---|
 | Benchmark source | Panda Dynamic Scenes (the environment package `images/pandadyn/panda_dynamics/`, from `images/pandadyn/sync_env.py`); task `PandaMultiStage/D03-CooperativePuckCourse-v0` |
-| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` 5c3eeb99c4c93426) |
+| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` ee8fe5e580e4888c) |
 | Actions | 16 per control step (10 ms): per arm 7 absolute joint targets (rad) + the total aperture (m); a Ruckig + torque servo per arm |
 | Physics | CPU PhysX at 1000 Hz with enhanced determinism (single thread); SAPIEN renders on the GPU only when a frame is asked for |
 | Image | `images/pandadyn/` (public); needs an NVIDIA GPU with Vulkan for SAPIEN (`environment/docker-compose.yaml`) |
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
 
 ### Provenance
-Scene description `D03`, frozen instance `D03-CooperativePuckCourse-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`.
+Scene description `D03`, frozen instance `D03-CooperativePuckCourse-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+
+### Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Configuration only: the puck's start and
+  material are named parameters (same values), and the new checks of the hard difficulty are off here. The paddles'
+  adapters are now joined to the paddles by a bridge. The tool's mass is unchanged; its centre of mass and inertia
+  shift slightly. Frozen instance: seed 0, `initial_sha` ee8fe5e580e4888c; reference rows: 2278 control steps (was
+  seed 0, `initial_sha` 5c3eeb99c4c93426). Results from before are under the earlier digest and are not ranked with
+  these.

@@ -6,10 +6,6 @@
     "tool_mass": 0.12,
     "tool_half": 0.035,
     "radius": 0.018,
-    "preview": 0.65,
-    "incoming_speed": 0.35,
-    "fixture_speed": 0.04,
-    "restitution": 0.1,
     "table_friction": 0.08,
     "tool_friction": 0.3,
     "disturbance_impulse": 0.007
@@ -44,22 +40,6 @@
       0.001,
       2
     ],
-    "preview": [
-      0.001,
-      2
-    ],
-    "incoming_speed": [
-      0.001,
-      2
-    ],
-    "fixture_speed": [
-      0.001,
-      2
-    ],
-    "restitution": [
-      0,
-      1
-    ],
     "table_friction": [
       0,
       1
@@ -79,10 +59,6 @@
     "tool_mass": "kg",
     "tool_half": "m",
     "radius": "m",
-    "preview": "s",
-    "incoming_speed": "m/s",
-    "fixture_speed": "m/s",
-    "restitution": "dimensionless",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",
     "disturbance_impulse": "N s"

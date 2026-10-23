@@ -52,7 +52,10 @@ class SharedTrayTransportDischarge(PandaDynamicEnv):
         "exit_alignment",
         "natural_discharge",
     )
-    INSTRUCTION = "两臂通过真实有限力接触共同托住载球盘，转弯运输并恢复外力扰动，再协同倾斜卸入盆中。"
+    INSTRUCTION = (
+        "两臂只靠叉托接触共同托住载球托盘，并在共同支撑下依次经过两个路点、在小球受突然推力后让它回到盘心附近稳住、"
+        "再把托盘移到盆边，最后让小球离开托盘落入盆中静止，托盘全程不得掉落。"
+    )
 
     def build_task(self):
         builder = self.scene.create_actor_builder()

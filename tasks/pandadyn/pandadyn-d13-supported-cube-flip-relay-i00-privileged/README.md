@@ -9,20 +9,20 @@
 | Family / instance | `d13_supported_cube_flip_relay` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
-The left arm holds a large shallow tray with a cube on it, and the right arm holds a small flat pusher. The left arm must first bring the tray to a presentation point. The right arm must then tip the cube over onto an adjacent face. It does so with a short push that sets the cube rotating and ends before the cube is half-way over, so that the cube completes the tip on its own momentum and settles on the tray. The left arm then moves the cube, on the tray, to a new place, and the pusher tips it a second time in the same way, so that the cube's original bottom face ends up on top. Finally the tray must carry the correctly oriented cube to an output point and hold it there. The cube must never leave the tray. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
+The left arm holds a large shallow tray with a cube on it, and the right arm holds a small flat pusher. The left arm must first bring the tray to a presentation point. The right arm must then tip the cube over onto an adjacent face while the left arm keeps the tray moving. It does so with a short push that sets the cube rotating and ends before the cube is half-way over, so that the cube completes the tip on its own momentum and settles on the tray. The left arm then moves the cube, on the tray, to a new place, and the pusher tips it a second time in the same way, again with the tray moving, so that the cube's original bottom face ends up on top. Finally the tray must carry the correctly oriented cube to an output point and hold it there. The cube must never leave the tray. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
 16 values per row), graded by the task's own staged success check: 5 phases (`support_presentation`, `first_inertial_flip`, `second_contact_geometry`, `second_inertial_flip`, `oriented_output`), in order,
 with no failure event and no safety-limit violation, within the task's horizon of 25 s.
 
 ## Difficulty
-Each flip must be a short impulse that ends while the cube is still well below 45 deg yet leaves it enough rotation to tip over by itself, with no second touch allowed once a qualifying release has happened. The cube then has to settle on the correct face on a tray that the other arm holds, and between and after the flips the tray must carry it without letting it slide out. Privileged mode gives the full simulator state (every object's pose and velocity, the fixtures, the
+Each flip must be a short impulse that ends while the cube is still well below 45 deg yet leaves it enough rotation to tip over by itself, with no second touch allowed once a qualifying release has happened. The cube then has to settle on the correct face on a tray that the other arm holds and keeps moving through each flip, and between and after the flips the tray must carry it without letting it slide out. Privileged mode gives the full simulator state (every object's pose and velocity, the fixtures, the
 announced goals), the parameters, unlimited exact resets and snapshots, and self-replay; the tooling offers only joint
 targets and kinematics. This mode is the control for the standard twin.
 
 ## Reference solution
-`solution/oracle_actions.npy` (703 control steps, run by `solution/oracle.py` through the agent's own tooling): a
+`solution/oracle_actions.npy` (883 control steps, run by `solution/oracle.py` through the agent's own tooling): a
 recorded rollout of this instance by the benchmark's reference controller, which reads the simulator's true state in closed
 loop, replayed open-loop. The reference controllers and their recordings are not in the image, and the agent's network
 reaches only the model APIs and the package registries.
@@ -31,8 +31,8 @@ reaches only the model APIs and the package registries.
 `tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the instance
 (`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in both
 (every phase complete, no failure) and both end in the same state (`deterministic`), plus `/logs/verifier/replay.mp4`
-(overview camera). Oracle: 703 control steps (7.03 s simulated), success at the last one; the oracle
-run and two fresh-process replays end in the same state (hash `b4312b3169d31c97`), and the rollout reproduces the physical
+(overview camera). Oracle: 883 control steps (8.83 s simulated), success at the last one; the oracle
+run and two fresh-process replays end in the same state (hash `24aaa8d4c0183120`), and the rollout reproduces the physical
 state the benchmark recorded for it after every control step, bit for bit. `nop`: no trajectory, reward 0; a trajectory that
 holds the arm still fails (the benchmark's parked controls never succeeded).
 
@@ -53,11 +53,19 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | | |
 |---|---|
 | Benchmark source | Panda Dynamic Scenes (the environment package `images/pandadyn/panda_dynamics/`, from `images/pandadyn/sync_env.py`); task `PandaMultiStage/D13-SupportedCubeFlipRelay-v0` |
-| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` b1830ad75e34ff61) |
+| Instance | difficulty `nominal`, seed 0, the resolved parameters and the start's state hash in `environment/instance.json` (`initial_sha` b4bcb558a8692075) |
 | Actions | 16 per control step (10 ms): per arm 7 absolute joint targets (rad) + the total aperture (m); a Ruckig + torque servo per arm |
 | Physics | CPU PhysX at 1000 Hz with enhanced determinism (single thread); SAPIEN renders on the GPU only when a frame is asked for |
 | Image | `images/pandadyn/` (public); needs an NVIDIA GPU with Vulkan for SAPIEN (`environment/docker-compose.yaml`) |
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
 
 ### Provenance
-Scene description `D13`, frozen instance `D13-SupportedCubeFlipRelay-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`.
+Scene description `D13`, frozen instance `D13-SupportedCubeFlipRelay-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+
+### Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Stricter check: the tray must be moving (0.08
+  m/s or more) through each flip. The cube's material and start spread are named parameters (same values). The
+  pusher's adapter is now joined to the pusher by a bridge. The tool's mass is unchanged; its centre of mass and
+  inertia shift slightly. Frozen instance: seed 0, `initial_sha` b4bcb558a8692075; reference rows: 883 control steps
+  (was seed 0, `initial_sha` b1830ad75e34ff61). Results from before are under the earlier digest and are not ranked
+  with these.

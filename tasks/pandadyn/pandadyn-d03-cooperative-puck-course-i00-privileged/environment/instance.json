@@ -8,11 +8,16 @@
   "object_mass": 0.035,
   "tool_mass": 0.2,
   "tool_half": 0.05,
-  "radius": 0.018,
-  "preview": 0.65,
   "incoming_speed": 0.35,
-  "fixture_speed": 0.04,
-  "restitution": 0.1,
+  "incoming_offset": 0.014,
+  "incoming_angle": 0.0,
+  "start_x": 0.23,
+  "start_spread": 0.0,
+  "volley_speed": 0.0,
+  "volley_window": 0.0,
+  "diagonal_angle": 0.0,
+  "puck_friction": 0.015,
+  "puck_restitution": 0.55,
   "table_friction": 0.015,
   "tool_friction": 0.3
  },
@@ -30,5 +35,5 @@
   "left_diagonal_pass",
   "right_terminal_shot"
  ],
- "initial_sha": "5c3eeb99c4c934269320d3d1bf12731f62a39e322d5dba96d3ba3fec761ec42c"
+ "initial_sha": "ee8fe5e580e4888c1339f5dda3fb6746d026fb78b74ba05391dfb0565901d6db"
 }

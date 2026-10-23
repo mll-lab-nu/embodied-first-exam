@@ -10,7 +10,9 @@ class CupRouteDelivery(PandaDynamicEnv):
     TASK = "S01-CupRouteDelivery"
     NAMESPACE = "PandaMultiStage"
     INSTRUCTION = (
-        "接住橙球，倒入指定 A/B 重力轨道，在出口反弹后再接住同一球，最后交给移动小车。"
+        "用杯接住飞来的橙球，倒入本回合指定的那条轨道（碰到另一条即失败），"
+        "球沿轨道滚出并撞上出口下方的反弹板后，在空中再用杯接住同一个球，"
+        "最后放进往复移动中的小车盒，在小车持续移动时让球在盒中稳住。"
     )
     PHASES = (
         "incoming_catch",

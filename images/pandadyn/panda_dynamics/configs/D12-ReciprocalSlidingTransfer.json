@@ -6,15 +6,15 @@
     "tool_mass": 0.2,
     "tool_half": 0.08,
     "radius": 0.018,
-    "preview": 0.65,
-    "incoming_speed": 0.35,
-    "fixture_speed": 0.04,
-    "restitution": 0.1,
     "table_friction": 0.08,
     "tool_friction": 0.05,
     "friction": 0.05,
-    "target_offset": 0.035,
-    "target_tolerance": 0.014
+    "receiver_min_speed": 0.2,
+    "match_tolerance": 0.05,
+    "rest_speed": 0.02,
+    "brake_window": 1.5,
+    "start_spread_x": 0.0,
+    "start_spread_y": 0.004
   },
   "difficulty": {
     "debug": {
@@ -24,7 +24,11 @@
     "nominal": {},
     "hard": {
       "friction": 0.06,
-      "tool_friction": 0.06
+      "tool_friction": 0.06,
+      "receiver_min_speed": 0.25,
+      "brake_window": 1.0,
+      "start_spread_x": 0.008,
+      "start_spread_y": 0.008
     }
   },
   "ranges": {
@@ -48,22 +52,6 @@
       0.001,
       2
     ],
-    "preview": [
-      0.001,
-      2
-    ],
-    "incoming_speed": [
-      0.001,
-      2
-    ],
-    "fixture_speed": [
-      0.001,
-      2
-    ],
-    "restitution": [
-      0,
-      1
-    ],
     "table_friction": [
       0,
       1
@@ -76,13 +64,29 @@
       0.045,
       0.1
     ],
-    "target_offset": [
-      0.001,
-      2
+    "receiver_min_speed": [
+      0.05,
+      1.0
     ],
-    "target_tolerance": [
-      0.001,
-      2
+    "match_tolerance": [
+      0.005,
+      0.2
+    ],
+    "rest_speed": [
+      0.005,
+      0.1
+    ],
+    "brake_window": [
+      0.2,
+      5.0
+    ],
+    "start_spread_x": [
+      0.0,
+      0.012
+    ],
+    "start_spread_y": [
+      0.0,
+      0.012
     ]
   },
   "units": {
@@ -91,14 +95,14 @@
     "tool_mass": "kg",
     "tool_half": "m",
     "radius": "m",
-    "preview": "s",
-    "incoming_speed": "m/s",
-    "fixture_speed": "m/s",
-    "restitution": "dimensionless",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",
     "friction": "dimensionless",
-    "target_offset": "m",
-    "target_tolerance": "m"
+    "receiver_min_speed": "m/s",
+    "match_tolerance": "m/s",
+    "rest_speed": "m/s",
+    "brake_window": "s",
+    "start_spread_x": "m",
+    "start_spread_y": "m"
   }
 }

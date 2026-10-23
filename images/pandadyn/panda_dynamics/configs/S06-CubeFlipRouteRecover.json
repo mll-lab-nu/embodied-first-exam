@@ -5,14 +5,10 @@
     "object_mass": 0.05,
     "tool_mass": 0.2,
     "tool_half": 0.07,
-    "radius": 0.018,
     "incoming_speed": 0.33,
-    "fixture_speed": 0.04,
-    "restitution": 0.1,
     "table_friction": 0.08,
     "tool_friction": 0.3,
     "cube_half": 0.022,
-    "friction": 0.65,
     "chute_friction": 0.47,
     "free_slide": 0.12,
     "start_jitter_x": 0.0,
@@ -49,21 +45,9 @@
       0.001,
       2
     ],
-    "radius": [
-      0.001,
-      2
-    ],
     "incoming_speed": [
       0.001,
       2
-    ],
-    "fixture_speed": [
-      0.001,
-      2
-    ],
-    "restitution": [
-      0,
-      1
     ],
     "table_friction": [
       0,
@@ -76,10 +60,6 @@
     "cube_half": [
       0.001,
       2
-    ],
-    "friction": [
-      0,
-      1
     ],
     "chute_friction": [
       0.38,
@@ -103,14 +83,10 @@
     "object_mass": "kg",
     "tool_mass": "kg",
     "tool_half": "m",
-    "radius": "m",
     "incoming_speed": "m/s",
-    "fixture_speed": "m/s",
-    "restitution": "dimensionless",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",
     "cube_half": "m",
-    "friction": "dimensionless",
     "chute_friction": "dimensionless",
     "free_slide": "m",
     "start_jitter_x": "m",

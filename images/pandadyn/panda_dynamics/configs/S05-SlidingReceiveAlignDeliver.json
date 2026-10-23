@@ -5,11 +5,12 @@
     "object_mass": 0.035,
     "tool_mass": 0.2,
     "tool_half": 0.09,
-    "radius": 0.018,
-    "preview": 0.65,
     "incoming_speed": 0.58,
+    "lateral_spread": 0.01,
     "fixture_speed": 0.04,
-    "restitution": 0.1,
+    "fixture_offset": 0.02,
+    "fixture_phase": 0.0,
+    "receiver_min_speed": 0.0,
     "table_friction": 0.08,
     "tool_friction": 0.05,
     "friction": 0.05,
@@ -19,13 +20,15 @@
   },
   "difficulty": {
     "debug": {
-      "preview": 0.9,
       "incoming_speed": 0.55
     },
     "nominal": {},
     "hard": {
-      "preview": 0.55,
-      "incoming_speed": 0.62
+      "incoming_speed": 0.9,
+      "lateral_spread": 0.025,
+      "fixture_speed": 0.16,
+      "fixture_phase": 3.141592653589793,
+      "receiver_min_speed": 0.08
     }
   },
   "ranges": {
@@ -45,25 +48,29 @@
       0.001,
       2
     ],
-    "radius": [
-      0.001,
-      2
-    ],
-    "preview": [
-      0.001,
-      2
-    ],
     "incoming_speed": [
       0.001,
       1.0
+    ],
+    "lateral_spread": [
+      0,
+      0.03
     ],
     "fixture_speed": [
       0.001,
       2
     ],
-    "restitution": [
+    "fixture_offset": [
       0,
-      1
+      0.05
+    ],
+    "fixture_phase": [
+      0,
+      3.141592653589793
+    ],
+    "receiver_min_speed": [
+      0,
+      0.2
     ],
     "table_friction": [
       0,
@@ -95,11 +102,12 @@
     "object_mass": "kg",
     "tool_mass": "kg",
     "tool_half": "m",
-    "radius": "m",
-    "preview": "s",
     "incoming_speed": "m/s",
+    "lateral_spread": "m",
     "fixture_speed": "m/s",
-    "restitution": "dimensionless",
+    "fixture_offset": "m",
+    "fixture_phase": "rad",
+    "receiver_min_speed": "m/s",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",
     "friction": "dimensionless",

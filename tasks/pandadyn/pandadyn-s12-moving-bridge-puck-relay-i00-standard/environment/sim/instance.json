@@ -2,17 +2,25 @@
  "task": "S12-MovingBridgePuckRelay",
  "env_id": "PandaMultiStage/S12-MovingBridgePuckRelay-v0",
  "difficulty": "nominal",
- "seed": 1,
+ "seed": 0,
  "parameters": {
   "horizon": 32.0,
   "object_mass": 0.035,
   "tool_mass": 0.2,
   "tool_half": 0.05,
-  "radius": 0.018,
-  "preview": 0.65,
-  "incoming_speed": 0.35,
-  "fixture_speed": 0.04,
-  "restitution": 0.1,
+  "incoming_speed": 0.55,
+  "incoming_lateral": 0.012,
+  "strike_min_speed": 0.25,
+  "bridge_rate": 0.35,
+  "bridge_angle_spread": 0.15,
+  "gate_period": 2.6,
+  "gate_open_angle": 1.45,
+  "gate_ramp": 0.3,
+  "gate_hold": 0.6,
+  "gate_close": 0.6,
+  "gate_phase_spread": 0.0,
+  "gate_pass_angle": 1.0,
+  "gate_torque": 0.2,
   "table_friction": 0.015,
   "tool_friction": 0.3
  },
@@ -30,5 +38,5 @@
   "second_strike",
   "closing_gate_goal"
  ],
- "initial_sha": "85b2a00bf3ad36444016fbe14017df038991df404ef6b2958a78760915fb64cc"
+ "initial_sha": "1f6e3cd472270a39de9047e5343d41da832719203db006837d982b4607c809fe"
 }

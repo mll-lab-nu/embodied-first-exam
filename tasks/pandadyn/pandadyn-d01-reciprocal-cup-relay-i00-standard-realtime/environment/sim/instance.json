@@ -15,7 +15,9 @@
   "restitution": 0.1,
   "table_friction": 0.08,
   "tool_friction": 0.3,
-  "tool_height": 0.028
+  "tool_height": 0.028,
+  "receiver_min_speed": 0.15,
+  "release_radius": 0.035
  },
  "physics_hz": 1000,
  "arms": {
