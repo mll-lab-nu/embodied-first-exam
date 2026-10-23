@@ -26,7 +26,7 @@
   <a href="https://www.embodied-first-exam.ai/suite/?id=ispatialgym"><img src="docs/assets/suites/ispatialgym.gif" alt="iSpatialGym" title="iSpatialGym" width="32%"></a>
 </p>
 
-<p align="center"><sub>Our nine original suites: RoboPaint · RoboARC · RoboDynamicExam · Embodied Olympics - Fun · Embodied Olympics - Match · DexHandExam · RoboEngineer · Embodied Safety Exam · iSpatialGym. <a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro.mp4">▶ Watch the intro video</a></sub></p>
+<p align="center"><b>Our nine original suites:</b> <b>RoboPaint</b> · <b>RoboARC</b> · <b>RoboDynamicExam</b> · <b>Embodied Olympics - Fun</b> · <b>Embodied Olympics - Match</b> · <b>DexHandExam</b> · <b>RoboEngineer</b> · <b>Embodied Safety Exam</b> · <b>iSpatialGym</b><br><a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-media/resolve/main/site/blog/efe-intro.mp4"><b>▶ Watch the intro video</b></a></p>
 
 ## News
 
@@ -37,6 +37,50 @@
 In every task, a coding agent writes code, runs it on a robot in a frozen scene from one of the suites, and sees what happens.
 
 <p align="center"><img src="docs/assets/teaser.png" alt="Embodied First Exam: a coding agent programs a robot in a frozen scene, in each mode" width="100%"></p>
+
+## Original suites
+
+Nine of the suites were written for this exam:
+
+<table>
+<tr><th>Suite</th><th>Description</th></tr>
+<tr>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=robopaint">RoboPaint</a></b></td>
+<td><b>Tests fine tool control.</b> A robot arm reproduces a given picture with a brush or pen, from Chinese calligraphy to oil painting.</td>
+</tr>
+<tr>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=roboarc">RoboARC</a></b></td>
+<td><b>Tests manipulation of tangled, deformable and multi-part objects.</b> Robot arms take apart metal wire puzzles, tie and thread ropes, fold cloth and assemble IKEA furniture.</td>
+</tr>
+<tr>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=pandadyn">RoboDynamicExam</a></b></td>
+<td><b>Tests handling of moving objects.</b> One or two robot arms catch, strike, carry and hand over objects in motion: tossed balls, sliding pucks, swinging loads.</td>
+</tr>
+<tr>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-fun">Embodied Olympics - Fun</a></b></td>
+<td><b>Tests humanoid motor skills with fun sports-inspired tasks.</b> The agent gets a humanoid robot to perform moves taken from many sports.</td>
+</tr>
+<tr>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-match">Embodied Olympics - Match</a></b></td>
+<td><b>Tests competitive play against an opponent.</b> Robots play full matches of table tennis, badminton, soccer, foosball and fencing against scripted or learned opponents.</td>
+</tr>
+<tr>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=dexhand">DexHandExam</a></b></td>
+<td><b>Tests dexterous hand manipulation.</b> Five-finger robot hands turn book pages, open jars, stir coffee, plug in a USB stick, fold paper and build a hamburger.</td>
+</tr>
+<tr>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=roboengineer">RoboEngineer</a></b></td>
+<td><b>Tests the sim-to-real engineering loop.</b> The agent builds a controller in a public simulator, deploys it to one with hidden dynamics, and fixes it from what the deployment shows.</td>
+</tr>
+<tr>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=embodied-safety-exam">Embodied Safety Exam</a></b></td>
+<td><b>Tests safety.</b> The robot must carry out safe requests, refuse requests that would harm people, and explain the risk.</td>
+</tr>
+<tr>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=ispatialgym">iSpatialGym</a></b></td>
+<td><b>Tests spatial reasoning from images.</b> The goal is given only as a picture: a mobile two-armed robot rearranges the room, or moves itself, until its camera view matches it.</td>
+</tr>
+</table>
 
 ## Quick start
 
