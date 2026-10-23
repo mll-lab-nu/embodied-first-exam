@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Shared-source rules (PROTOCOL §2.1, D9: copies of shared sources are byte-identical). Two parts:
-# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, DexHand, RoboARC, BiGym 2.0, YAMLab, RoboDojo, Panda Dynamic Scenes, AM-Bench, IKEA MuJoCo, LabUtopia and AutoBio: within one benchmark, every mode, every copy of a shared file is byte-identical
+# 1. BEHAVIOR-1K, RoboLab, RoboWits, ManiGuard, MolmoSpaces, MyoSuite, DexJoCo, DexHand, RoboARC, BiGym 2.0, YAMLab, RoboDojo, Panda Dynamic Scenes, AM-Bench, LabUtopia and AutoBio: within one benchmark (RoboARC's IKEA suite, roboarc-ikea-*, is a group of its own), every mode, every copy of a shared file is byte-identical
 #    (one source per benchmark, copied unchanged):
 #    - the tooling module rcb_<sim>.py wherever it sits (privileged environment/ and tests/, standard environment/sim/);
 #    - the standard agent side environment/rcb_client.py + rcb1.py and the sim service environment/sim/ (server.py,
@@ -18,7 +18,7 @@
 #    run.sh are byte-identical to their source in embodied_first_exam/standard/ (docs/protocol/standard_mode.md), and the sidecar is
 #    set up for crash recovery: `command: sh /srv/run.sh` (run.sh exits non-zero when the service crashes) and
 #    `restart: on-failure:N` with N >= 3 (PROTOCOL §4.1, §4.7).
-#    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC, IKEA MuJoCo) is held to the same rules, with rcb_limited.py and
+#    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC, its IKEA suite included) is held to the same rules, with rcb_limited.py and
 #    rcb_client.py from embodied_first_exam/standard/v2_4/ (docs/protocol/standard_mode.md) and 2.2's rcb1.py and run.sh.
 # 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, BiGym 2.0
 #    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
@@ -48,7 +48,7 @@ MODULE = {"behavior": "rcb_behavior.py", "robolab": "rcb_robolab.py", "robowits"
           "embodied-olympics": "rcb_rfo.py",
           "pandadyn": "rcb_pandadyn.py",
           "ambench": "rcb_ambench.py", "ispatialgym": "rcb_ispatialgym.py",
-          "ikea": "rcb_ikea.py",   # IKEA MuJoCo
+          "roboarc-ikea": "rcb_ikea.py",   # RoboARC's IKEA suite (roboarc-ikea-*)
           "ese": "rcb_ese.py"}   # ese-: Embodied Safety Exam
 SHARED = {"environment/rcb_client.py", "environment/rcb1.py", "environment/sim/server.py", "environment/sim/finalize.sh",
           "environment/sim/run.sh", "environment/sim/rcb1.py", "environment/sim/rcb_limited.py", "tests/grade.py"}
@@ -128,7 +128,9 @@ for t in sorted(TDIR):
     tt = os.path.join(TDIR[t], "task.toml")
     if not os.path.isfile(tt):
         continue
-    bench = "embodied-olympics" if t.startswith("embodied-olympics-") else t.split("-")[0]   # a two-word prefix
+    bench = ("embodied-olympics" if t.startswith("embodied-olympics-")   # a two-word prefix
+             else "roboarc-ikea" if t.startswith("roboarc-ikea-")         # RoboARC's IKEA suite: its own sources (rcb_ikea.py)
+             else t.split("-")[0])
     meta = tomllib.load(open(tt, "rb")).get("metadata", {})
     proto = str(meta.get("protocol", ""))
     v24 = proto == "eai-standard/2.4"

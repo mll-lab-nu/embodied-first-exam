@@ -63,7 +63,7 @@ UNITS: dict[str, list[str]] = {
     "RoboCasa": _own("robocasa"),
     "RoboCasa365": _own("robocasa365", "images/robocasa/standard/", "embodied_first_exam/benchmarks/robocasa/"),   # RoboCasa's service and graders
     "LIBERO-MAX": _own("libero-max"),
-    "RoboARC": _own("roboarc", "images/roboarc-files/"),
+    "RoboARC": _own("roboarc", "images/roboarc-files/", "images/ikea-mujoco/", "images/ikea-mujoco-files/"),   # the IKEA suite's images keep their name
     "Embodied Olympics - Fun": _own("embodied-olympics-fun", "images/embodied-olympics-fun-files/"),
     "Embodied Olympics - Match": ["images/olympiad/", "images/embodied-olympics-match-files/"],   # the olympiad image: built from Embodied Olympics' tree, not here
     "BiGym 2.0": _own("bigym2"),
@@ -74,7 +74,6 @@ UNITS: dict[str, list[str]] = {
     "Panda Dynamic Scenes": _own("pandadyn"),
     "AM-Bench": _own("ambench"),
     "iSpatialGym": _own("ispatialgym"),
-    "IKEA MuJoCo": _own("ikea-mujoco", "images/ikea-mujoco-files/", "embodied_first_exam/benchmarks/roboarc/nyx_direct.py"),   # its standard tasks copy it
     "roboEngineer": _own("roboengineer",
                          "images/control-transfer/", "images/control-transfer-anycar-files/", "images/quadrotor-landing/",
                          "images/roboengineer-files/"),

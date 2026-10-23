@@ -2,8 +2,8 @@
 
 `ghcr.io/mll-lab-nu/efe:ikea-mujoco-<images/ikea-mujoco/VERSION>`: MuJoCo 3.14.0 (the PyPI wheel with the EPA
 horizon-overflow fix byte-patched in, `mujoco-3.14.0-epa/` here; CPU, float64; numpy 2.5.4, Python 3.12) and the IKEA
-furniture scenes of the IKEA MuJoCo tasks (`tasks/ikea-mujoco/ikea-<task>-i00-{privileged,standard}`;
-tasks/ikea-mujoco/README.md). Each scene is
+furniture scenes of RoboARC's IKEA suite (`tasks/roboarc/roboarc-ikea-<task>-i00-{privileged,standard}`;
+tasks/roboarc/README.md, "IKEA suite"). Each scene is
 self-contained: `scene.py` (`load()` returns the scene: `S.model`, `S.data`, `S.step(n)` = n physics steps plus the
 scene's mechanism, `S.success()`), `scene.xml` with the two arms, the scene's mechanism and success modules,
 `task.json`, `layout.json`, `assets/` (meshes). The image holds no task code: the tooling (`rcb_ikea.py`) and the
@@ -11,7 +11,7 @@ graders are copied by each task, and no robot demo or direct-force reference is 
 
 The image carries twelve scenes. Eight are tasks (lack, svallet, gladom, variera, eket, ikea365, vesken, stegesund);
 burvik, kyrre, stenerik and uppsta are in the image but are not tasks (work in progress: no reference passes every gate
-yet; tasks/ikea-mujoco/README.md). Keeping them in the image keeps the image the one the tasks were validated on.
+yet; tasks/roboarc/README.md, "IKEA suite"). Keeping them in the image keeps the image the one the tasks were validated on.
 
 `sim/` is the standard tasks' sidecar image, `ghcr.io/mll-lab-nu/efe:ikea-mujoco-sim-<images/ikea-mujoco/sim/VERSION>`:
 this image unchanged as the physics process, plus Nyx (RoboARC's renderer) in its own venv `/opt/nyx`
