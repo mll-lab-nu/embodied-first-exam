@@ -1,6 +1,6 @@
 [project]
 name = "embodied-first-exam"
-version = "1.0.0"
+version = "1.0.0-beta"
 description = "Embodied First Exam on Harbor: `harbor run --core|--all|--privileged|--standard|--standard-realtime`, or `efe run`"
 readme = { content-type = "text/markdown", text = """
 # Embodied First Exam

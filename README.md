@@ -30,7 +30,7 @@
 
 ## News
 
-- 📦 **2026-10-22**: v1.0.0: `pip install embodied-first-exam`.
+- 📦 **2026-10-22**: v1.0.0-beta: `pip install embodied-first-exam`.
 - 🔥 **2026-10-19**: Embodied First Exam is released!
 
 ## Framework
