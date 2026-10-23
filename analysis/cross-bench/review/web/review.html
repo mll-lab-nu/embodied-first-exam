@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trial Review</title>
+<link rel="stylesheet" href="kit.css">
+<style>
+:root{--k-end:#5b6b80;--k-progress:#1f8a4c;--k-primary:#d23a2c;--k-failure:#e0645a;--k-no_return:#2b2f36;--k-understand:#2a78d6;
+--k-method:#7a55d6;--k-plan:#e8710a;--k-check:#0f9d9a;--k-adapt:#c2378f;--k-decision:#e8710a;--k-time:#b98900;--k-fix:#4b5bd6;--k-style:#737a83}
+html,body{height:100%}body{overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+select,input{font:inherit;font-size:13.5px;padding:6px 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--fg)}
+.top{display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--line);background:var(--surface);height:56px}
+.top b{font-size:16px;white-space:nowrap;margin-right:6px}.top .sp{flex:1}
+.nav{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+.pos{font-size:13px;color:var(--mute);white-space:nowrap;font-variant-numeric:tabular-nums}.pos .track{display:inline-block;width:90px;height:6px;border-radius:9px;background:var(--surface2);vertical-align:middle;margin-left:8px;overflow:hidden}.pos .track i{display:block;height:100%;background:var(--done)}
+.wrap{display:grid;grid-template-columns:minmax(360px,1fr) minmax(0,1.15fr) minmax(380px,1fr);grid-template-areas:"media proc right";height:calc(100vh - 56px)}
+.col{overflow-y:auto;padding:16px 18px 80px;min-height:0}.right{border-left:1px solid var(--line);background:color-mix(in srgb,var(--surface2) 40%,var(--bg))}
+#media{grid-area:media}#proc{grid-area:proc;border-left:1px solid var(--line)}#right{grid-area:right}
+.proc .tabs{position:sticky;top:-16px;z-index:2;background:var(--surface);margin:-14px -16px 6px;padding:6px 16px 0;border-radius:14px 14px 0 0}
+@media (max-width:1400px){.wrap{grid-template-columns:minmax(0,1.3fr) minmax(380px,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"media right" "proc right"}
+  #media{max-height:60vh;padding-bottom:6px}#proc{border-left:none;border-top:1px solid var(--line);padding-top:10px}}
+@media (max-width:1050px){body{overflow:auto}.wrap{display:block;height:auto}.col{overflow:visible;max-height:none!important}.right,#proc{border-left:none}
+  #media{position:sticky;top:0;z-index:4;background:var(--bg);max-height:55vh!important;overflow:auto!important;border-bottom:1px solid var(--line)}}
+.card0{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px;margin-bottom:14px}
+.h4{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:0 0 10px;font-size:15px;font-weight:700}.h4 .ic{width:24px;height:24px;border-radius:7px;background:var(--fg);color:var(--bg);display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+.h4 .r{margin-left:auto;font-weight:400;font-size:12.5px;color:var(--mute)}
+.title{font-size:24px;font-weight:700;line-height:1.2;margin:2px 0 10px;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.task{font-size:16px;line-height:1.55}.res{display:flex;gap:10px;align-items:baseline;margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:14px;line-height:1.55}
+.res .chip{flex:none}
+details.full summary{cursor:pointer;color:var(--acc);font-size:13px;margin-top:8px}
+details.full pre{white-space:pre-wrap;font-size:12.5px;max-height:340px;overflow:auto;background:var(--surface2);padding:10px;border-radius:8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;height:auto;margin:0;gap:0}.seg button{border:0;background:var(--surface);padding:4px 10px;font-size:12.5px}
+.seg button.on{background:var(--fg);color:var(--bg)}.seg button:disabled{opacity:.4;cursor:default}
+video{width:100%;max-height:42vh;background:#000;border-radius:10px;display:block}
+.vnote{font-size:12px;color:var(--mute);margin:6px 0 2px}
+video{cursor:pointer}
+.vctl{display:flex;align-items:center;gap:8px;margin-top:6px}.vctl button{border:1px solid var(--line);background:var(--surface);border-radius:8px;width:32px;height:28px;font-size:12px}
+#vbar{flex:1;height:8px;border-radius:9px;background:var(--surface2);cursor:pointer;overflow:hidden}#vbar i{display:block;height:100%;width:0;background:var(--acc)}
+#vt{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cap{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--surface2);font-size:13px;line-height:1.5;min-height:58px}
+.cap .r{display:flex;gap:6px;align-items:baseline}.cap .r b{flex:none;color:var(--mute);font-weight:600}.cap .r span{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.cap .mk{display:inline-block;margin-top:4px;padding:2px 8px;border-radius:7px;color:#fff;background:var(--c);font-size:12.5px}
+#tl svg{display:block;width:100%;cursor:pointer}#tl text{font-size:11px;fill:var(--mute)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11.5px;color:var(--mute);margin-top:2px}.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:4px;vertical-align:-1px}
+.tabs{display:flex;gap:4px;align-items:center;border-bottom:1px solid var(--line);margin:-4px 0 6px}
+.tabs button{border:0;background:none;padding:8px 10px;font-size:14px;color:var(--mute);border-bottom:2px solid transparent}.tabs button.on{color:var(--fg);font-weight:700;border-bottom-color:var(--fg)}
+.tabs .n{font-size:11.5px;background:var(--surface2);border-radius:99px;padding:1px 7px;margin-left:4px}
+.tabs input{margin-left:auto;width:min(280px,45%)}
+.turn{display:flex;gap:12px;padding:10px 2px;border-top:1px solid var(--line);scroll-margin:120px}.turn:first-child{border-top:0}
+.turn.now{background:color-mix(in srgb,var(--acc) 6%,transparent);border-radius:8px}
+.ico{flex:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;background:var(--k-end)}
+.ico.message{background:var(--acc)}.ico.shell{background:#3b7f63}.ico.image{background:#2a78d6}.ico.write{background:#7a55d6}.ico.thought{background:var(--mute)}
+.tb{flex:1;min-width:0}
+.tmeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--mute)}.tmeta .st{background:var(--surface2);border-radius:6px;padding:1px 7px;color:var(--fg);font-weight:600}
+.ttl{font-size:14px;line-height:1.5;margin:3px 0 0;overflow-wrap:anywhere;cursor:pointer}.ttl.msg{font-weight:600}
+.tag{font-size:11px;padding:1px 7px;border-radius:99px;background:var(--surface2)}.tag.err{background:var(--blocked-bg);color:var(--blocked)}
+.tag.submit{background:var(--done-bg);color:var(--done)}.tag.reset{background:var(--review-bg);color:var(--review)}
+.cite{font-size:11px;padding:1px 7px;border-radius:99px;color:#fff;background:var(--c)}
+.dt{display:none;margin-top:8px;flex-direction:column;gap:6px}.turn.open .dt{display:flex}
+.ev{border-radius:9px;padding:7px 10px;background:var(--surface2);position:relative}
+.ev .h{font-size:11.5px;color:var(--mute);margin-bottom:3px;display:flex;gap:6px;flex-wrap:wrap}
+.ev .txt{white-space:pre-wrap;font-size:13.5px;line-height:1.55}.ev.think .txt{color:var(--mute);font-size:13px}
+pre.code{margin:0;white-space:pre-wrap;word-break:break-word;font:12px/1.45 ui-monospace,Menlo,monospace;max-height:240px;overflow:auto}
+.ev details summary{cursor:pointer;font-size:12px;color:var(--mute);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev details pre{margin:4px 0 0;white-space:pre-wrap;word-break:break-word;font:12px/1.45 ui-monospace,Menlo,monospace;background:var(--surface);padding:6px 8px;border-radius:6px;max-height:320px;overflow:auto}
+.more{font-size:12px;color:var(--acc);background:none;border:0;padding:2px 0}
+.imgs{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.imgs img{height:92px;border-radius:6px;border:1px solid var(--line);cursor:zoom-in}
+.gap{font-size:12.5px;color:var(--mute);padding:7px 0 7px 42px;border-top:1px dashed var(--line);cursor:pointer}.gap:hover{color:var(--fg)}
+.log.keymode .turn.hid{display:none}.log.keymode .turn.hid.show{display:flex}.log:not(.keymode) .gap{display:none}
+.flash{animation:fl 1.8s}@keyframes fl{0%,40%{box-shadow:0 0 0 3px color-mix(in srgb,#f5b400 70%,transparent)}100%{box-shadow:none}}
+.hit .ttl,.ev.hit{outline:2px solid color-mix(in srgb,#f5b400 75%,transparent);border-radius:6px}
+/* right */
+.rhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}.rhead b{font-size:16px}.rhead .r{margin-left:auto;font-size:13px;color:var(--mute)}
+.sec{display:flex;align-items:center;gap:8px;margin:18px 0 8px;font-size:13px;font-weight:700;color:var(--mute)}.sec .n{font-weight:400}
+.sec .sub{font-weight:400;font-size:12px}
+.cd{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--c);border-radius:12px;padding:11px 13px;margin-bottom:10px;box-shadow:var(--shadow);outline:none}
+.cd.focus{box-shadow:0 0 0 2px color-mix(in srgb,var(--c) 45%,transparent)}.cd.bad{opacity:.72;border-style:dashed}
+.cd .ch{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.cd .t{font-weight:700;color:var(--c);font-size:14.5px}
+.cd .st{margin-left:auto;font-size:12px;color:var(--mute);white-space:nowrap}.cd .st.v{color:var(--c);font-weight:700}
+.cd .x{font-size:14px;line-height:1.6;margin:6px 0 4px;overflow-wrap:anywhere}.cd .nt{font-size:12.5px;color:var(--mute);line-height:1.5;margin:4px 0}
+.cd .pb{font-size:12.5px;color:var(--blocked);margin:4px 0}
+.facts{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+.sl{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface2);border-radius:9px;padding:6px 9px;margin:6px 0}
+.sl:hover{border-color:var(--c)}.sl .m{font-size:11.5px;color:var(--mute);display:flex;gap:6px;align-items:center}.sl .m b{color:var(--fg);font-weight:600}
+.sl .q{display:block;font:12.5px/1.45 ui-monospace,Menlo,monospace;overflow-wrap:anywhere;margin-top:2px}.sl.no{border-color:var(--blocked)}.sl.no .m b{color:var(--blocked)}
+.ladder{display:flex;gap:3px;margin:8px 0}.ladder i{flex:1;height:8px;border-radius:4px;background:var(--surface2)}.ladder i.on{background:var(--k-progress)}
+.act{display:flex;gap:6px;align-items:center;margin-top:9px;flex-wrap:wrap}
+.act button{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:5px 11px;font-size:13px}
+.act button.on[data-v="正确"]{background:var(--done);border-color:var(--done);color:#fff}.act button.on[data-v="不认同"]{background:var(--blocked);border-color:var(--blocked);color:#fff}
+.act button.on[data-v="证据不足"]{background:var(--review);border-color:var(--review);color:#fff}
+.act input{flex:1;min-width:120px}
+.unclear li{font-size:12.5px;color:var(--mute);line-height:1.55;margin:4px 0}
+.help{font-size:12px;color:var(--mute);line-height:1.6;margin-top:22px}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:9px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;z-index:30;cursor:zoom-out}#lb img{max-width:92vw;max-height:90vh;border-radius:8px}
+</style></head>
+<body>
+<div class="top">
+  <b>Trial Review</b>
+  <select id="fa"><option value="">全部模型</option></select>
+  <select id="fo"><option value="">全部结果</option><option value="0">失败</option><option value="1">成功</option></select>
+  <select id="fs"><option value="">全部状态</option><option value="todo">没评完</option><option value="done">已评完</option></select>
+  <span class="sp"></span>
+  <span class="pos" id="pos"></span>
+  <button class="nav" id="prev" title="上一个（←）">‹</button><button class="nav" id="next" title="下一个（→）">›</button>
+  <input id="rev" placeholder="评审人" size="8">
+</div>
+<div class="wrap"><div class="col" id="media"></div><div class="col" id="proc"></div><div class="col right" id="right"></div></div>
+<div id="toast"></div><div id="lb"><img alt=""></div>
+<script>
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const mmss = t => t == null ? "--:--" : `${String(Math.floor(t)).padStart(2, "0")}:${String(Math.floor((t % 1) * 60)).padStart(2, "0")}`;
+const store = {get: k => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} }};
+const api = async (u, o) => { const r = await fetch(u, o); if (!r.ok) throw new Error(r.status); return r.json(); };
+const S = {trials: [], page: null, judg: {}, focus: null, since: Date.now(), t: {}, mode: store.get("mode") || "key", vmode: "full"};
+const KC = k => `var(--k-${k})`;
+const VERD = ["正确", "不认同", "证据不足"];
+const SECT = [["end", "结局"], ["progress", "进展"], ["failure", "失败"], ["no_return", "不可挽回点"], ["decision", "背后的决定"], ["time", "时间与计划"], ["fix", "补救（推断）"], ["style", "做事方式"]];
+const ICON = {message: "说", shell: ">_", image: "看", write: "写", read: "读", thought: "想", other: "·", plan: "计"};
+function toast(m) { const t = $("#toast"); t.textContent = m; t.style.opacity = 1; clearTimeout(t._h); t._h = setTimeout(() => t.style.opacity = 0, 1800); }
+
+/* ---------- trial list ---------- */
+async function init() {
+  $("#rev").value = store.get("rev");
+  $("#rev").onchange = async () => { store.set("rev", $("#rev").value.trim()); await loadJudg(); renderRight(); renderTop(); };
+  S.trials = await api("api/trials");
+  $("#fa").innerHTML += [...new Set(S.trials.map(t => t.agent))].map(a => `<option>${esc(a)}</option>`).join("");
+  ["#fa", "#fo", "#fs"].forEach(s => $(s).onchange = () => { const l = list(); if (l.length && !l.some(t => t.key === S.page?.key)) location.hash = l[0].key; renderTop(); });
+  $("#prev").onclick = () => step(-1); $("#next").onclick = () => step(1);
+  window.onhashchange = route; route();
+}
+function judged(t) { const j = S.judg[t.key] || {}; return t.cards.filter(c => j[c]?.verdict).length; }
+function list() {
+  return S.trials.filter(t => (!$("#fa").value || t.agent === $("#fa").value) && (!$("#fo").value || String(+t.success) === $("#fo").value) &&
+    (!$("#fs").value || ($("#fs").value === "done") === (judged(t) >= t.cards.length)));
+}
+function step(d) { const l = list(); if (!l.length) return; const i = l.findIndex(t => t.key === S.page?.key); location.hash = l[(i + d + l.length) % l.length].key; }
+function renderTop() {
+  const l = list(), i = l.findIndex(t => t.key === S.page?.key), all = S.trials.reduce((a, t) => a + t.cards.length, 0), done = S.trials.reduce((a, t) => a + judged(t), 0);
+  $("#pos").innerHTML = `${i + 1} / ${l.length} · 已评 ${done}/${all}<span class="track"><i style="width:${all ? done / all * 100 : 0}%"></i></span>`;
+}
+async function route() {
+  const k = decodeURIComponent(location.hash.slice(1)) || S.trials[0].key;
+  S.page = await api("api/page/" + encodeURIComponent(k));
+  S.t = {}; S.page.turns.forEach(tn => tn.events.forEach(e => S.t[e.id] = e.t));
+  S.focus = null; S.since = Date.now(); S.vmode = S.page.full ? "full" : "replay";
+  await loadJudg(); renderTop(); renderLeft(); renderRight();
+}
+async function loadJudg() { const r = $("#rev").value.trim(); S.judg = r ? await api("api/judgments?reviewer=" + encodeURIComponent(r)) : {}; }
+
+/* ---------- left ---------- */
+function renderLeft() {
+  const p = S.page;
+  const rw = Object.entries(p.reward || {}).filter(([k, v]) => typeof v !== "object" && String(v).length < 24).slice(0, 8)
+    .map(([k, v]) => `<span class="chip">${esc(k)} ${esc(typeof v === "number" ? +v.toFixed(3) : v)}</span>`).join("");
+  $("#media").innerHTML = `
+  <div class="card0">
+    <div class="m">${esc(p.bench)} · ${esc(p.mode)}</div>
+    <div class="title">${esc(p.task)}</div>
+    <div class="chips"><span class="chip s ${p.success ? "good" : "bad"}">${p.success ? "✓ 成功" : "✗ 失败"}</span><span class="chip">${esc(p.agent)}</span>
+      <span class="chip">用时 ${p.used_min ?? "?"} / ${p.budget_min ?? "?"} 分钟</span><span class="chip">${p.turns.length} 回合</span>
+      <span class="chip">reset ${p.resets?.used ?? 0}${p.resets?.budget != null ? " / " + p.resets.budget : ""} · submit ${p.submits ?? 0}</span><span class="chip">进展第 ${p.level} 级</span></div>
+  </div>
+  <div class="card0"><div class="h4"><span class="ic">▶</span>视频
+      <span class="seg" id="sp">${[0.5, 1, 2, 4].map(r => `<button data-r="${r}" class="${r === 1 ? "on" : ""}">${r}×</button>`).join("")}</span></div>
+    <video id="vid" muted preload="metadata" playsinline></video>
+    <div class="vctl"><button id="pp" title="播放 / 暂停">▶</button><div id="vbar"><i></i></div><span id="vt">0:00 / 0:00</span><button id="fs" title="全屏">⛶</button></div>
+    <div class="cap" id="cap"></div>
+    <div class="vnote" id="vnote"></div>
+    <div id="tl"></div>
+    <div class="legend"><span><i style="--c:var(--k-progress)"></i>进展</span><span><i style="--c:var(--k-primary)"></i>失败</span><span><i style="--c:var(--k-plan)"></i>决定</span>
+      <span><i style="--c:var(--k-no_return)"></i>不可挽回</span><span><i style="--c:var(--k-time)"></i>空等</span><span>竖线：agent 的每个回合（红 = 报错）· 点一下，视频和日志一起跳</span></div>
+  </div>
+  <div class="card0"><div class="h4"><span class="ic">任</span>任务</div>
+    <div class="task">${esc(p.task_zh)}</div>
+    <div class="res"><span class="chip s ${p.success ? "good" : "bad"}">${p.success ? "成功" : "失败"}</span><span>${esc(p.result_zh)}</span></div>
+    <details class="full"><summary>任务原文 · 评分结果</summary><pre>${esc(p.task_text)}</pre><div class="chips" style="margin-top:6px">${rw}</div></details>
+  </div>`;
+  $("#proc").innerHTML = `
+  <div class="card0 proc">
+    <div class="tabs" id="tabs"><button data-m="key">关键过程<span class="n" id="nk"></span></button><button data-m="all">全部日志<span class="n">${p.turns.length}</span></button>
+      <input id="q" placeholder="全文搜索（含完整输出），回车"></div>
+    <div class="m" id="qn"></div>
+    <div class="log" id="log"></div>
+  </div>`;
+  $$("#tabs button").forEach(b => b.onclick = () => { S.mode = b.dataset.m; store.set("mode", S.mode); setMode(); });
+  $("#q").onkeydown = e => { if (e.key === "Enter") search(e.target.value); };
+  $("#pp").onclick = () => { const v = $("#vid"); v.paused ? v.play() : v.pause(); };
+  $("#vid").onclick = $("#pp").onclick;
+  $("#vbar").onclick = e => { const v = $("#vid"), r = e.currentTarget.getBoundingClientRect(); if (v.duration) v.currentTime = (e.clientX - r.left) / r.width * v.duration; };
+  $("#fs").onclick = () => $("#vid").requestFullscreen?.();
+  $$("#sp button").forEach(b => b.onclick = () => { $("#vid").playbackRate = +b.dataset.r; $$("#sp button").forEach(x => x.classList.toggle("on", x === b)); });
+  renderLog(); setMode(); setVideo(); drawTimeline();
+}
+function setMode() { $("#log").classList.toggle("keymode", S.mode === "key"); $$("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.m === S.mode)); }
+function isKey(tn) { return tn.events.some(e => e.kind === "message" || e.cited.length || e.tags.length || e.imgs.length); }
+function citeChips(e) {
+  const nm = {end: "结局", progress: "进展", primary: "主因", failure: "失败", no_return: "不可挽回", understand: "理解错", method: "方法错", plan: "计划错", check: "查证错", adapt: "调整错", time: "时间", fix: "补救", style: "方式"};
+  return e.cited.filter(c => c !== "style" && c !== "end").map(c => `<span class="cite" style="--c:${KC(c)}">${nm[c] || c}</span>`).join("");
+}
+function evHTML(e) {
+  const k = S.page.key, head = `<div class="h"><span>${esc(e.label)}</span><span>${e.id}</span>${e.tags.map(t => `<span class="tag ${t}">${{err: "报错", submit: "submit", reset: "reset"}[t]}</span>`).join("")}${citeChips(e)}</div>`;
+  const imgs = e.imgs.length ? `<div class="imgs">${e.imgs.map(n => `<img loading="lazy" src="look/${encodeURIComponent(k)}/${n}" alt="agent 看到的画面">`).join("")}</div>` : "";
+  if (e.kind === "message") return `<div class="ev" id="ev-${e.id}">${head}<div class="txt">${esc(e.text)}</div></div>`;
+  if (e.kind === "thought") return `<div class="ev think" id="ev-${e.id}">${head}<details><summary>推理 · ${esc(e.text.slice(0, 140))}</summary><div class="txt">${esc(e.text)}</div></details></div>`;
+  const lines = e.text.split("\n"), more = lines.length > 12 || e.cut ? `<button class="more" data-full="${e.id}">展开全部（${lines.length} 行${e.cut ? "，已截断" : ""}）</button>` : "";
+  const first = (e.out.split("\n").find(l => l.trim()) || "").slice(0, 140);
+  const out = e.out ? `<details><summary>输出 · ${e.out_len.toLocaleString()} 字 · ${esc(first)}</summary><pre>${esc(e.out)}</pre>${e.out_len > e.out.length + 20 ? `<button class="more" data-out="${e.id}">看完整输出</button>` : ""}</details>` : "";
+  return `<div class="ev" id="ev-${e.id}">${head}<pre class="code">${esc(lines.slice(0, 12).join("\n"))}</pre>${more}${imgs}${out}</div>`;
+}
+function turnHTML(tn, key, g) {
+  const main = tn.events.find(e => e.kind === "message") || tn.events.find(e => e.kind !== "thought") || tn.events[0];
+  const tags = [...new Set(tn.events.flatMap(e => e.tags))].map(t => `<span class="tag ${t}">${{err: "报错", submit: "submit", reset: "reset"}[t]}</span>`).join("");
+  const cites = [...new Set(tn.events.flatMap(e => e.cited))].filter(c => c !== "style" && c !== "end").map(c => citeChips({cited: [c]})).join("");
+  const nimg = tn.events.reduce((a, e) => a + e.imgs.length, 0);
+  return `<div class="turn ${key ? "" : "hid"}" id="turn-${tn.n}" ${key ? "" : `data-g="${g}"`}>
+    <div class="ico ${main.kind}">${ICON[main.kind] || "·"}</div>
+    <div class="tb"><div class="tmeta"><span class="st">回合 ${tn.n}</span><span>${mmss(tn.t)}</span><span>${tn.events.length} 条事件${nimg ? ` · ${nimg} 张图` : ""}</span>${tags}${cites}</div>
+      <div class="ttl ${main.kind === "message" ? "msg" : ""}">${esc(tn.title)}</div>
+      <div class="dt">${tn.events.map(evHTML).join("")}</div></div></div>`;
+}
+function renderLog() {
+  const html = []; let g = 0, gap = null, nk = 0;
+  const flush = () => { if (gap) { html.splice(gap.at, 0, `<div class="gap" data-g="${gap.id}">▸ ${gap.n} 个回合 · ${mmss(gap.t0)}–${mmss(gap.t1)}（点开）</div>`); gap = null; } };
+  for (const tn of S.page.turns) {
+    const key = isKey(tn); nk += key;
+    if (key) flush(); else if (!gap) gap = {id: "g" + (++g), at: html.length, n: 0, t0: tn.t};
+    if (!key) { gap.n++; gap.t1 = tn.t; }
+    html.push(turnHTML(tn, key, gap?.id));
+  }
+  flush();
+  $("#log").innerHTML = html.join(""); $("#nk").textContent = nk;
+  $("#log").onclick = async ev => {
+    const t = ev.target;
+    if (t.classList.contains("gap")) { $$(`.turn[data-g="${t.dataset.g}"]`).forEach(x => x.classList.toggle("show")); t.textContent = t.textContent.replace(/^[▸▾]/, m => m === "▸" ? "▾" : "▸"); return; }
+    if (t.tagName === "IMG") { $("#lb img").src = t.src; $("#lb").style.display = "flex"; return; }
+    if (t.dataset.full || t.dataset.out) {
+      const d = await api(`api/event/${encodeURIComponent(S.page.key)}/${t.dataset.full || t.dataset.out}`);
+      t.previousElementSibling.textContent = (t.dataset.full ? d.text : d.out).slice(0, 300000); t.remove(); return;
+    }
+    const ttl = t.closest(".ttl,.ico,.tmeta"); if (ttl) { const tn = ttl.closest(".turn"); tn.classList.toggle("open"); seek(S.t[tn.querySelector(".ev").id.slice(3)]); }
+  };
+}
+$("#lb").onclick = () => $("#lb").style.display = "none";
+function reveal(el) { const tn = el.closest(".turn"); if (!tn) return; if (tn.classList.contains("hid")) tn.classList.add("show"); tn.classList.add("open"); el.querySelectorAll("details").forEach(d => d.open = true); }
+function jumpTo(id, doSeek = true) {
+  const el = document.getElementById("ev-" + id); if (!el) { toast("日志里没有 " + id); return; }
+  reveal(el); el.scrollIntoView({block: "center", behavior: "smooth"}); el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+  if (doSeek) seek(S.t[id]); cursor(S.t[id]); if (S.t[id] != null) caption(S.t[id]);
+}
+function jumpNear(t, scroll = true) {
+  const tn = S.page.turns.reduce((a, b) => Math.abs((b.t ?? 1e9) - t) < Math.abs((a.t ?? 1e9) - t) ? b : a);
+  $$(".turn.now").forEach(x => x.classList.remove("now"));
+  const el = $("#turn-" + tn.n); if (!el) return;
+  el.classList.add("now"); if (el.classList.contains("hid")) el.classList.add("show");
+  if (scroll) el.scrollIntoView({block: "center", behavior: "smooth"});
+}
+async function search(q) {
+  $$(".hit").forEach(x => x.classList.remove("hit"));
+  if (!q.trim()) { $("#qn").textContent = ""; return; }
+  const ids = await api(`api/search/${encodeURIComponent(S.page.key)}?q=${encodeURIComponent(q)}`);
+  ids.forEach(id => { const el = document.getElementById("ev-" + id); if (el) { el.classList.add("hit"); el.closest(".turn").classList.add("hit"); reveal(el); } });
+  S.hits = ids; S.hitAt = 0;
+  $("#qn").innerHTML = `${ids.length} 条命中${ids.length ? ` · <a href="#" onclick="nextHit();return false">下一条 ↓</a>` : ""}`;
+  if (ids.length) jumpTo(ids[0], false);
+}
+function nextHit() { if (!S.hits?.length) return; S.hitAt = (S.hitAt + 1) % S.hits.length; jumpTo(S.hits[S.hitAt], false); }
+
+/* ---------- video: two sources, one wall clock ---------- */
+function setVideo() {
+  const p = S.page, v = $("#vid");
+  v.src = S.vmode === "full" ? `full/${encodeURIComponent(p.key)}` : `video/${encodeURIComponent(p.key)}`;
+  v.poster = `poster/${encodeURIComponent(p.key)}/${S.vmode}`;
+  v.playbackRate = +($("#sp .on")?.dataset.r || 1);
+  $("#vnote").textContent = S.vmode === "full" ? "全程视频：评分回放的画面按 agent 的真实时间排列，思考时画面停住、停顿压缩；画面下方是标注。播放时日志和时间轴跟着走。"
+    : p.replay_map ? "评分回放（仿真时间，没有标注）：能跟日志对齐。" : "评分回放（仿真时间，没有标注）：这条还没有服务端记录，所以没有全程视频，也不能跟日志对齐。";
+  v.ontimeupdate = () => { tick(); const w = wallAt(v.currentTime); if (w == null) return; cursor(w); caption(w); if (!v.paused) jumpNear(w, true); };
+  v.onplay = v.onpause = () => $("#pp").textContent = v.paused ? "▶" : "❚❚";
+  v.onloadedmetadata = tick;
+  $("#cap").innerHTML = `<div class="r"><b>此刻</b><span>${wallAt(0) == null ? "这段视频不能和日志对齐，没有字幕" : "播放或点证据后，这里显示 agent 此刻说的话、在做的事和复盘标记"}</span></div>`;
+}
+function tick() { const v = $("#vid"), f = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`; if (!v.duration) return;
+  $("#vbar i").style.width = `${v.currentTime / v.duration * 100}%`; $("#vt").textContent = `${f(v.currentTime)} / ${f(v.duration)}`; }
+function caption(w) {
+  const ts = S.page.turns, i = Math.max(0, ts.findLastIndex(tn => (tn.t ?? 0) <= w)), tn = ts[i];
+  const said = ts.slice(0, i + 1).reverse().flatMap(t => t.events).find(e => e.kind === "message");
+  const doing = tn.events.find(e => e.kind !== "message" && e.kind !== "thought");
+  const near = marks().filter(m => m.t != null && Math.abs(m.t - w) <= 0.4).sort((a, b) => Math.abs(a.t - w) - Math.abs(b.t - w))[0];
+  const line = x => esc((x?.text || "").split("\n").find(l => l.trim()) || "");
+  $("#cap").innerHTML = `<div class="r"><b>${mmss(w)}</b><span>回合 ${tn.n}</span></div>${said ? `<div class="r"><b>说</b><span>${esc(said.text.replace(/\s+/g, " "))}</span></div>` : ""}` +
+    `${doing ? `<div class="r"><b>做</b><span>${line(doing)}</span></div>` : ""}${near ? `<span class="mk" style="--c:${KC(near.k)}">${esc(near.tip)}</span>` : ""}`;
+}
+function wallAt(s) {
+  const p = S.page;
+  if (S.vmode === "full" && p.full) { const b = p.full.beats.find(b => s >= b[0] && s < b[1]) || p.full.beats.at(-1); return b[2] + (b[3] - b[2]) * Math.min(1, (s - b[0]) / Math.max(1e-6, b[1] - b[0])); }
+  const vm = p.replay_map; if (!vm) return null;
+  let w = vm.points[0][0]; for (const [a, x] of vm.points) { if (x <= s) w = a; else break; } return (w - vm.agent_t0_abs) / 60;
+}
+function videoAt(t) {
+  const p = S.page; if (t == null) return null;
+  if (S.vmode === "full" && p.full) { const b = p.full.beats.find(b => t >= b[2] && t <= b[3]); if (!b) return t <= p.full.beats[0][2] ? 0 : p.full.duration - 0.05; return b[0] + (b[1] - b[0]) * ((t - b[2]) / Math.max(1e-6, b[3] - b[2])); }
+  const vm = p.replay_map; if (!vm) return null;
+  const abs = vm.agent_t0_abs + t * 60; if (abs < vm.episode_start_abs) return null;
+  let s = 0; for (const [w, x] of vm.points) { if (w <= abs) s = x; else break; } return s;
+}
+function seek(t) {
+  const v = $("#vid"), s = videoAt(t);
+  if (s == null) { if (S.vmode === "replay" && !S.page.replay_map) return; toast("这一刻不在这个视频里"); return; }
+  v.pause(); v.currentTime = s;
+}
+
+/* ---------- timeline ---------- */
+function marks() {
+  const out = [];
+  for (const c of S.page.cards) {
+    if (c.section === "progress") c.ladder.forEach(x => x.slot && out.push({t: x.slot.t, id: x.slot.id, k: "progress", tip: `第 ${x.level} 级 · ${x.what}`, lv: x.level}));
+    if (c.section === "failure") c.slots.filter(s => s.label === "出事").forEach(s => out.push({t: s.t, id: s.id, k: c.kind, tip: `${c.title} · ${c.text}`, big: c.kind === "primary"}));
+    if (c.section === "decision" && c.ok) c.slots.filter(s => s.label === "决定").forEach(s => out.push({t: s.t, id: s.id, k: c.kind, tip: `${c.title} · ${c.text}`, dia: 1}));
+    if (c.section === "no_return") c.slots.forEach(s => out.push({t: s.t, id: s.id, k: "no_return", tip: `${c.title} · ${c.text}`, sq: 1}));
+    if (c.id === "time-idle-wait") out.push({span: c.slots.map(s => s.t), k: "time", tip: c.text});
+  }
+  return out.filter(m => m.t != null || m.span);
+}
+function drawTimeline() {
+  const p = S.page, box = $("#tl"), W = box.clientWidth || 700, L = 64, R = 10;
+  const T = Math.max(p.budget_min || 0, p.used_min || 0, p.turns.at(-1)?.t || 1), x = m => L + (W - L - R) * m / T;
+  const y1 = 8, y2 = y1 + 44, y3 = y2 + 26, ax = y3 + 26, H = ax + 18, ms = marks();
+  const o = [`<svg viewBox="0 0 ${W} ${H}" height="${H}">`, `<text x="2" y="${y1 + 26}">进展</text><text x="2" y="${y2 + 15}">复盘</text><text x="2" y="${y3 + 13}">回合</text>`];
+  const pr = ms.filter(m => m.k === "progress").sort((a, b) => a.t - b.t);
+  let pts = `${x(0)},${y1 + 40}`, lv = 0;
+  pr.forEach(m => { pts += ` ${x(m.t)},${y1 + 40 - lv * 8} ${x(m.t)},${y1 + 40 - m.lv * 8}`; lv = m.lv; });
+  pts += ` ${x(p.used_min || T)},${y1 + 40 - lv * 8}`;
+  o.push(`<line x1="${L}" x2="${W - R}" y1="${y1 + 40}" y2="${y1 + 40}" stroke="var(--line)"/><polyline points="${pts}" fill="none" stroke="var(--k-progress)" stroke-width="2"/>`);
+  pr.forEach(m => o.push(`<circle cx="${x(m.t)}" cy="${y1 + 40 - m.lv * 8}" r="4" fill="var(--k-progress)" data-id="${m.id}"><title>${esc(m.tip)}</title></circle>`));
+  for (const m of ms.filter(m => m.span)) o.push(`<rect x="${x(m.span[0])}" y="${y3}" width="${Math.max(2, x(m.span.at(-1)) - x(m.span[0]))}" height="18" fill="var(--k-time)" opacity=".25"><title>${esc(m.tip)}</title></rect>`);
+  for (const tn of p.turns) {
+    if (tn.t == null) continue;
+    const tags = new Set(tn.events.flatMap(e => e.tags)), col = tags.has("err") ? "var(--k-primary)" : tags.has("submit") ? "var(--k-progress)" : tags.has("reset") ? "var(--k-plan)" : "var(--mute)";
+    o.push(`<line x1="${x(tn.t)}" x2="${x(tn.t)}" y1="${y3 + 2}" y2="${y3 + 16}" stroke="${col}" opacity="${col === "var(--mute)" ? .4 : .9}"/>`);
+  }
+  for (const m of ms.filter(m => !m.span && m.k !== "progress")) {
+    const X = x(m.t), Y = y2 + 10, c = KC(m.k);
+    o.push(m.dia ? `<path d="M${X} ${Y - 7} l7 7 l-7 7 l-7 -7z" fill="${c}" data-id="${m.id}"><title>${esc(m.tip)}</title></path>`
+      : m.sq ? `<rect x="${X - 6}" y="${Y - 6}" width="12" height="12" fill="${c}" data-id="${m.id}"><title>${esc(m.tip)}</title></rect>`
+      : `<circle cx="${X}" cy="${Y}" r="${m.big ? 7 : 5}" fill="${c}" data-id="${m.id}"><title>${esc(m.tip)}</title></circle>`);
+  }
+  const st = T <= 20 ? 2 : T <= 40 ? 5 : T <= 90 ? 10 : T <= 150 ? 15 : 30;
+  o.push(`<line x1="${L}" x2="${W - R}" y1="${ax}" y2="${ax}" stroke="var(--line)"/>`);
+  for (let m = 0; m <= T + 0.01; m += st) o.push(`<text x="${x(m)}" y="${ax + 14}" text-anchor="middle">${m}′</text>`);
+  if (p.budget_min) o.push(`<line x1="${x(p.budget_min)}" x2="${x(p.budget_min)}" y1="0" y2="${ax}" stroke="var(--k-primary)" stroke-dasharray="3 3" opacity=".5"><title>时限</title></line>`);
+  o.push(`<line id="cur" x1="-9" x2="-9" y1="0" y2="${ax}" stroke="var(--acc)" stroke-width="2"/></svg>`);
+  box.innerHTML = o.join("");
+  box.querySelector("svg").onclick = ev => {
+    const id = ev.target.dataset?.id; if (id) { jumpTo(id); return; }
+    const r = box.getBoundingClientRect(), m = (ev.clientX - r.left - L) / (W - L - R) * T; seek(m); cursor(m); caption(m); jumpNear(m);
+  };
+  S.tx = x;
+}
+function cursor(t) { const c = $("#cur"); if (c && t != null && S.tx) { c.setAttribute("x1", S.tx(t)); c.setAttribute("x2", S.tx(t)); } }
+window.onresize = () => { if (S.page) drawTimeline(); };
+
+/* ---------- right: recap cards ---------- */
+function verdict(id) { return (S.judg[S.page.key] || {})[id] || {}; }
+function slotHTML(s) {
+  const bad = !s.ok, why = s.late ? "晚于决定" : bad ? "日志里找不到这段原文" : "";
+  return `<button class="sl ${bad ? "no" : ""}" data-id="${esc(s.id || "")}"><span class="m"><b>${esc(s.label)}</b>${s.id === "task" ? "任务原文" : `${mmss(s.t)} · ${esc(s.src)} · ${esc(s.id)}`}${why ? ` · ${why}` : ""}</span>${s.text ? `<span class="q">“${esc(s.text)}”</span>` : ""}</button>`;
+}
+function cardHTML(c) {
+  const j = verdict(c.id), lad = c.ladder ? `<div class="ladder">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= S.page.level ? "on" : ""}"></i>`).join("")}</div>` +
+    c.ladder.map(x => `<div class="nt"><b>第 ${x.level} 级 · ${esc(x.name)}</b>：${esc(x.what)}</div>${x.slot ? slotHTML(x.slot) : ""}`).join("") : "";
+  return `<div class="cd ${c.ok ? "" : "bad"} ${S.focus === c.id ? "focus" : ""}" id="cd-${c.id}" data-id="${c.id}" style="--c:${KC(c.kind)}" tabindex="0">
+    <div class="ch"><span class="t">${esc(c.title)}</span>${c.tag ? `<span class="chip">${esc(c.tag)}</span>` : ""}<span class="st ${j.verdict ? "v" : ""}">${j.verdict ? "已判断：" + esc(j.verdict) : "待判断"}</span></div>
+    ${c.text ? `<div class="x">${esc(c.text)}</div>` : ""}
+    ${c.facts.length ? `<div class="facts">${c.facts.map(f => `<span class="chip">${esc(f)}</span>`).join("")}</div>` : ""}
+    ${c.problems.length ? `<div class="pb">程序核对没通过：${c.problems.map(esc).join("；")}</div>` : ""}
+    ${lad}${c.slots.map(slotHTML).join("")}${c.note ? `<div class="nt">理由：${esc(c.note)}</div>` : ""}
+    <div class="act">${VERD.map((v, i) => `<button data-v="${v}" class="${j.verdict === v ? "on" : ""}" title="快捷键 ${i + 1}">${["✓", "✗", "?"][i]} ${v}</button>`).join("")}<input placeholder="意见（可空，回车保存）" value="${esc(j.comment || "")}"></div></div>`;
+}
+function renderRight() {
+  const p = S.page, need = p.cards.filter(c => c.section !== "style"), done = need.filter(c => verdict(c.id).verdict).length;
+  const sec = SECT.map(([s, n]) => {
+    const cs = p.cards.filter(c => c.section === s);
+    if (!cs.length) return s === "no_return" || s === "decision" ? `<div class="sec">${n} <span class="n">· 无</span></div>` : "";
+    return `<div class="sec">${n} <span class="n">· ${cs.length}</span>${s === "decision" ? `<span class="sub">每条都要有「决定」和更早的「当时已知」</span>` : ""}${s === "time" ? `<span class="sub">脚本算出</span>` : ""}</div>${cs.map(cardHTML).join("")}`;
+  }).join("");
+  $("#right").innerHTML = `<div class="rhead"><b>复盘 · 评审</b><span class="r">本条已判断 ${done} / ${need.length}</span></div>
+    <div class="m">标注模型提出的每一条都在下面；程序核对没通过的用虚线框标出，并写明原因。</div>${sec}
+    ${p.unclear.length ? `<div class="sec">标注模型看不清的地方 <span class="n">· ${p.unclear.length}</span></div><ul class="unclear">${p.unclear.map(u => `<li>${esc(u)}</li>`).join("")}</ul>` : ""}
+    <div class="help">点任何一段原文：日志定位并展开，视频跳到那一刻。点时间轴：视频和日志一起跳。快捷键：1 正确 · 2 不认同 · 3 证据不足（作用于选中的卡片）· j / k 换卡片 · ← → 换 trial。</div>`;
+  $("#right").onclick = e => {
+    const s = e.target.closest(".sl"); if (s && s.dataset.id && s.dataset.id !== "task") jumpTo(s.dataset.id);
+    const card = e.target.closest(".cd"); if (card) focus(card.dataset.id, false);
+    const b = e.target.closest(".act button"); if (b) save(card.dataset.id, b.dataset.v, card.querySelector(".act input").value);
+  };
+  $("#right").onkeydown = e => { if (e.target.matches(".act input") && e.key === "Enter") { const card = e.target.closest(".cd"); save(card.dataset.id, verdict(card.dataset.id).verdict || "", e.target.value); e.target.blur(); } };
+}
+function focus(id, scroll = true) { S.focus = id; $$("#right .cd").forEach(c => c.classList.toggle("focus", c.dataset.id === id)); if (scroll) document.getElementById("cd-" + id)?.scrollIntoView({block: "nearest", behavior: "smooth"}); }
+async function save(id, v, comment) {
+  const rev = $("#rev").value.trim();
+  if (!rev) { toast("先在右上角填评审人"); $("#rev").focus(); return; }
+  if (!v && !comment) return;
+  await api("api/judge", {method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({reviewer: rev, key: S.page.key, claim: id, verdict: v, comment, seconds: (Date.now() - S.since) / 1000})});
+  S.since = Date.now(); (S.judg[S.page.key] ||= {})[id] = {verdict: v, comment};
+  const sc = $("#right").scrollTop; renderRight(); renderTop(); $("#right").scrollTop = sc;
+  toast(v ? `已保存：${v}` : "已保存意见");
+  const next = S.page.cards.find(c => c.section !== "style" && !verdict(c.id).verdict);
+  focus(next && v ? next.id : id);
+}
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input,textarea,select") || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "ArrowLeft") return step(-1);
+  if (e.key === "ArrowRight") return step(1);
+  const cs = $$("#right .cd"), i = cs.findIndex(c => c.dataset.id === S.focus);
+  if (e.key === "j" || e.key === "k") { const n = cs[Math.min(cs.length - 1, Math.max(0, i + (e.key === "j" ? 1 : -1)))]; if (n) focus(n.dataset.id); }
+  if ("123".includes(e.key) && S.focus) save(S.focus, VERD[+e.key - 1], document.getElementById("cd-" + S.focus).querySelector(".act input").value);
+});
+init();
+</script>
+</body></html>

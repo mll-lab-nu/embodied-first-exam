@@ -1,5 +1,9 @@
 # viz: annotated replays of agent trials
 
+The general version (every harness and bench with a service log, wall-clock aligned, recap marks) is
+`../../review/pipeline/fullvideo.py` (`../../review/docs/video.md`); this directory keeps the prototype and the
+high-resolution re-render.
+
 Status (2026-10-19): a working prototype on one trial (codex · GPT-6 Astra · RoboTwin put_bottles_dustbin, standard,
 `…__YdHsp73`). The generic modules under "Next" are not written yet.
 

@@ -1,0 +1,551 @@
+{
+ "level": {
+  "0": {
+   "name": "还没控制住",
+   "def": "还在读说明、搭环境，或每次尝试都报错"
+  },
+  "1": {
+   "name": "能动或能看",
+   "def": "机器人已按 agent 的控制动起来，或感知已能用（如第一次动成功、找到物体）"
+  },
+  "2": {
+   "name": "到了目标区",
+   "def": "已到目标区域或接近完成（如夹爪到了杯子上方、人形站稳开始走）"
+  },
+  "3": {
+   "name": "关键动作做成一次",
+   "def": "关键接触或关键动作成功过一次（如抓起并抬起杯子、第一个稳定步态、击中球）"
+  },
+  "4": {
+   "name": "大部分完成",
+   "def": "任务大部分已做完，只差最后一部分（如杯子搬到架子却没放下、4 件收好 3 件）"
+  },
+  "5": {
+   "name": "做成",
+   "def": "在 agent 看到的一次运行里达到了任务要求"
+  }
+ },
+ "end": {
+  "goal-done": {
+   "name": "达成目标",
+   "def": "任务目标已达到"
+  },
+  "time-out": {
+   "name": "超时",
+   "def": "时限到时工作还在进行"
+  },
+  "resets-used": {
+   "name": "reset 用完",
+   "def": "用掉了最后一次 reset 或尝试"
+  },
+  "deliverable": {
+   "name": "交了交付物",
+   "def": "agent 提交或存下交付物后停下"
+  },
+  "agent-stopped": {
+   "name": "自己停下",
+   "def": "agent 没有交付物就停下或放弃"
+  },
+  "crash": {
+   "name": "外部中断",
+   "def": "会话被外部原因打断：请求被模型的过滤器拦截、token 用到上限、会话或仿真器坏了"
+  }
+ },
+ "no_return": {
+  "fall": {
+   "name": "摔倒",
+   "def": "机器人摔倒或翻倒、起不来，也没有 reset 可以撤销"
+  },
+  "out-of-reach": {
+   "name": "够不到",
+   "def": "物体掉落、滚走或卡住，再也用不上，也没有 reset 可以撤销"
+  },
+  "terminated": {
+   "name": "违规或被终止",
+   "def": "碰撞、越限或违反安全规则：任务结束了这一局，或记下了无法撤销的违规（安全类任务里目标之后仍可能达成，但已判负）"
+  },
+  "none": {
+   "name": "无不可挽回点",
+   "def": "没有这样的事件；reset 或重试还能补救的挫折不算"
+  }
+ },
+ "nr_after": {
+  "stopped": {
+   "name": "停下",
+   "def": "不可挽回点之后不再尝试，收尾或结束会话"
+  },
+  "kept-trying": {
+   "name": "继续做无用功",
+   "def": "不可挽回点之后继续朝通过努力，但已经不可能通过"
+  },
+  "n/a": {
+   "name": "不适用",
+   "def": "不可挽回点之后一分钟内会话就结束了"
+  }
+ },
+ "cause_group": {
+  "understanding": "理解",
+  "interface": "接口",
+  "perception": "感知",
+  "control": "动作",
+  "planning": "步骤",
+  "method": "方法",
+  "verification": "查证",
+  "time": "时间",
+  "metacognition": "自我调节",
+  "deliverable": "交付",
+  "external": "外部"
+ },
+ "cause": {
+  "misread-goal": {
+   "name": "读错目标",
+   "def": "把任务目标或及格线理解错了",
+   "group": "understanding"
+  },
+  "wrong-metric": {
+   "name": "优化错指标",
+   "def": "优化的量和评分用的不是一个",
+   "group": "understanding"
+  },
+  "constraint-ignored": {
+   "name": "忽略约束",
+   "def": "没遵守指令写明的限制",
+   "group": "understanding"
+  },
+  "api-misuse": {
+   "name": "接口用错",
+   "def": "调用接口或客户端的方式不对",
+   "group": "interface"
+  },
+  "action-space": {
+   "name": "动作格式用错",
+   "def": "发给机器人的动作维度、尺度或顺序不对",
+   "group": "interface"
+  },
+  "frame-convention": {
+   "name": "坐标或符号错",
+   "def": "坐标系、轴向、单位或正负号弄错",
+   "group": "interface"
+  },
+  "control-rate": {
+   "name": "控制频率错",
+   "def": "时间步长、控制频率或分块不对",
+   "group": "interface"
+  },
+  "reset-semantics": {
+   "name": "误解 reset",
+   "def": "误解 reset 会恢复什么或要花多少",
+   "group": "interface"
+  },
+  "spec-misread": {
+   "name": "读错机器人说明",
+   "def": "读错机器人规格、相机位姿或范围",
+   "group": "interface"
+  },
+  "localization": {
+   "name": "定位错",
+   "def": "物体或目标的位置判断错",
+   "group": "perception"
+  },
+  "camera-model": {
+   "name": "相机参数用错",
+   "def": "相机内参（焦距、中心点）或外参（相机位姿）用错",
+   "group": "perception"
+  },
+  "depth": {
+   "name": "深度用错",
+   "def": "深度图用错",
+   "group": "perception"
+  },
+  "brittle-segmentation": {
+   "name": "抠图不稳",
+   "def": "从图里分出物体的方法在实际画面里失效",
+   "group": "perception"
+  },
+  "no-perception": {
+   "name": "不看就用写死的位置",
+   "def": "该观察的地方用了事先写死的坐标",
+   "group": "perception"
+  },
+  "grasp-contact": {
+   "name": "抓取/接触失败",
+   "def": "抓空、合手时推走、抬起或搬运时滑脱、放下出错、工具没碰对",
+   "group": "control"
+  },
+  "balance-fall": {
+   "name": "摔倒",
+   "def": "平衡没保持住",
+   "group": "control"
+  },
+  "instability": {
+   "name": "控制不稳",
+   "def": "振荡或发散",
+   "group": "control"
+  },
+  "ik-limits": {
+   "name": "IK 或关节限位",
+   "def": "IK 解不出、走不到或顶到关节限位",
+   "group": "control"
+  },
+  "collision": {
+   "name": "碰撞",
+   "def": "撞到物体、环境或自身",
+   "group": "control"
+  },
+  "precision": {
+   "name": "精度不够",
+   "def": "差一点到位",
+   "group": "control"
+  },
+  "dynamic-timing": {
+   "name": "动态时机错",
+   "def": "动态任务里时机或速度不对",
+   "group": "control"
+  },
+  "no-safety-guard": {
+   "name": "没设安全中止",
+   "def": "危险信号已打印却没触发中止",
+   "group": "control"
+  },
+  "sequencing": {
+   "name": "步骤顺序错",
+   "def": "步骤顺序错或漏了一步",
+   "group": "planning"
+  },
+  "long-horizon": {
+   "name": "长任务中途出错",
+   "def": "长任务里中途某一步出错，没有发现",
+   "group": "planning"
+  },
+  "no-recovery": {
+   "name": "出错后不补救",
+   "def": "出了偏差或意外后没有设法挽回",
+   "group": "planning"
+  },
+  "open-loop-misuse": {
+   "name": "该看反馈却没看",
+   "def": "需要边做边看反馈的地方，用了事先算好、执行中不看反馈的脚本",
+   "group": "planning"
+  },
+  "unsuited-paradigm": {
+   "name": "方法不合适",
+   "def": "整体做法不适合这个任务",
+   "group": "method"
+  },
+  "stuck-tweaking": {
+   "name": "只调不换",
+   "def": "同一方法上反复调参，不换思路",
+   "group": "method"
+  },
+  "over-engineering": {
+   "name": "系统搭得太大",
+   "def": "花大量时间搭复杂系统，没时间试",
+   "group": "method"
+  },
+  "no-verification": {
+   "name": "没验证",
+   "def": "交之前没检查",
+   "group": "verification"
+  },
+  "overfit-resets": {
+   "name": "只在试过的条件下成立",
+   "def": "方案只对试过的那几局有效",
+   "group": "verification"
+  },
+  "own-check-differs": {
+   "name": "自检和评分不一致",
+   "def": "自己的检查说过线，评分说没过",
+   "group": "verification"
+  },
+  "replay-mismatch": {
+   "name": "回放和现场不一致",
+   "def": "交付物重放出来的结果和 agent 现场看到的不同",
+   "group": "verification"
+  },
+  "no-clock": {
+   "name": "不看时钟",
+   "def": "从不查已用或剩余时间",
+   "group": "time"
+  },
+  "no-time-plan": {
+   "name": "没有时间计划",
+   "def": "没按剩余时间安排每一步要花多久",
+   "group": "time"
+  },
+  "late-deliverable": {
+   "name": "很晚才存交付物",
+   "def": "第一个能被评分的文件到很晚才存，来不及检查或改进",
+   "group": "time"
+  },
+  "overlong-command": {
+   "name": "命令比剩余时间长",
+   "def": "启动了一个比剩余时间还长的命令",
+   "group": "time"
+  },
+  "idle-wait": {
+   "name": "长时间空等",
+   "def": "长时间等后台任务，期间什么也不做",
+   "group": "time"
+  },
+  "misjudged-time": {
+   "name": "误判剩余时间",
+   "def": "以为剩下的时间比实际多或少",
+   "group": "time"
+  },
+  "early-stop": {
+   "name": "时间还多就收工",
+   "def": "还有大量时间、也还有进展可能时就结束",
+   "group": "time"
+  },
+  "timeout-no-deliverable": {
+   "name": "到点时没有交付物",
+   "def": "时限到时，还没存下任何能被评分的文件",
+   "group": "time"
+  },
+  "budget-exhausted": {
+   "name": "reset 或 token 用完",
+   "def": "可用的 reset 次数或 token 提前用光",
+   "group": "time"
+  },
+  "early-give-up": {
+   "name": "过早放弃",
+   "def": "还有可行路线就放弃",
+   "group": "metacognition"
+  },
+  "looping": {
+   "name": "原地打转",
+   "def": "重复同样的动作或推理",
+   "group": "metacognition"
+  },
+  "ignored-errors": {
+   "name": "忽略报错",
+   "def": "看到错误没处理",
+   "group": "metacognition"
+  },
+  "hallucinated-result": {
+   "name": "虚报结果",
+   "def": "声称做成了实际没做成的事",
+   "group": "metacognition"
+  },
+  "context-loss": {
+   "name": "上下文丢失",
+   "def": "上下文被压缩或遗忘后，丢了时间、约定或进度",
+   "group": "metacognition"
+  },
+  "instruction-drift": {
+   "name": "偏离指令",
+   "def": "做着做着偏离了指令",
+   "group": "metacognition"
+  },
+  "invalid-deliverable": {
+   "name": "交付物无效",
+   "def": "格式或内容不符合要求",
+   "group": "deliverable"
+  },
+  "not-saved": {
+   "name": "没存",
+   "def": "成功过但没存下来",
+   "group": "deliverable"
+  },
+  "regression": {
+   "name": "改坏了",
+   "def": "后来的改动把可用版本改坏",
+   "group": "deliverable"
+  },
+  "grader-nondeterministic": {
+   "name": "评分不确定",
+   "def": "评分回放本身不稳定",
+   "group": "external"
+  },
+  "spec-conflict": {
+   "name": "指令与环境不符",
+   "def": "指令写的和环境实际不一致",
+   "group": "external"
+  },
+  "infra-loss": {
+   "name": "基础设施问题",
+   "def": "API、过滤器或仿真崩溃",
+   "group": "external"
+  }
+ },
+ "decision_group": {
+  "understand": {
+   "name": "理解错",
+   "def": "读错任务，或对机器人、场景、物理有错误假设又没去验证",
+   "kinds": [
+    "task-reading",
+    "world-model"
+   ]
+  },
+  "method": {
+   "name": "方法错",
+   "def": "选的做法在这里行不通：该看反馈却没看、路线做不到、系统大到来不及测",
+   "kinds": [
+    "strategy"
+   ]
+  },
+  "plan": {
+   "name": "计划错",
+   "def": "步骤或时间没安排：没按剩余时间和 reset 分配、很晚才存交付物、顺序错或漏步",
+   "kinds": [
+    "planning"
+   ]
+  },
+  "check": {
+   "name": "查证错",
+   "def": "没核实就依赖结果或结束，或看到失败却查错原因、改错地方",
+   "kinds": [
+    "self-check",
+    "diagnosis"
+   ]
+  },
+  "adapt": {
+   "name": "调整错",
+   "def": "该换时不换（原路微调），或还有路、还有时间就放弃",
+   "kinds": [
+    "persistence",
+    "giving-up"
+   ]
+  }
+ },
+ "decision_kind": {
+  "task-reading": {
+   "name": "读错任务",
+   "def": "目标、及格线、约束或交付格式理解错"
+  },
+  "world-model": {
+   "name": "想错世界",
+   "def": "对机器人、场景或物理有错误假设且没去验证（坐标、轴向、单位、可达性、物体尺寸、reset 的作用）"
+  },
+  "strategy": {
+   "name": "方法选错",
+   "def": "选的做法在这里行不通（该闭环却开环、走不通的路线、来不及测试的大系统）"
+  },
+  "planning": {
+   "name": "没有计划",
+   "def": "步骤或时间没安排：没按剩余时间分配、很晚才存交付物、步骤顺序错或漏步"
+  },
+  "diagnosis": {
+   "name": "归错原因",
+   "def": "看到失败却判断错原因，于是改错了地方"
+  },
+  "persistence": {
+   "name": "不换思路",
+   "def": "证据已表明此路不通，仍在原路微调或重复"
+  },
+  "self-check": {
+   "name": "自查不足",
+   "def": "没核实就依赖结果或结束：没检查、检查了错的信号，或宣称了没核实的成功"
+  },
+  "giving-up": {
+   "name": "过早放弃",
+   "def": "还有可行路线和时间就宣布做不到或收工"
+  }
+ },
+ "fix": {
+  "time-plan": {
+   "name": "按时钟规划",
+   "def": "看着时钟按预算排进度，先存一份能评分的交付物，没到时限不收工"
+  },
+  "grasp-choice": {
+   "name": "选对抓法",
+   "def": "按物体尺寸、夹爪开口和重心选抓的位置和方式"
+  },
+  "pivot": {
+   "name": "换方法",
+   "def": "同一方法几次无进展就换方法或重新检验前提"
+  },
+  "path-check": {
+   "name": "先查路径",
+   "def": "撤手、移底盘和探测之前先查整条路径的间隙"
+  },
+  "debug-own-code": {
+   "name": "先查自己的代码",
+   "def": "怪物理之前先用小实验查辅助函数、单位、坐标和符号"
+  },
+  "grasp-check": {
+   "name": "试抬再搬",
+   "def": "抓起后先试抬、读开度再搬；松手前先看下面有没有支撑"
+  },
+  "perception-check": {
+   "name": "凑近再确认",
+   "def": "认不清就换视角或凑近再看，确认物体和标签之后再动手"
+  },
+  "verify-real": {
+   "name": "在真环境核对",
+   "def": "交评分局之前先在真环境里对照一次自建的模型或交付物"
+  },
+  "closed-loop": {
+   "name": "分段闭环",
+   "def": "大动作拆成小段，每段后读状态再发下一段"
+  },
+  "read-spec": {
+   "name": "读准指令",
+   "def": "动手前把目标、约束、单位和交付格式逐条对上"
+  },
+  "hand-geometry": {
+   "name": "量清手的几何",
+   "def": "第一次抓之前量清指尖在哪、朝哪个方向合"
+  },
+  "reset-plan": {
+   "name": "规划 reset",
+   "def": "把 reset 当实验预算，给最后完整的一局留余量"
+  },
+  "safety-guard": {
+   "name": "越线就停",
+   "def": "已打印的倾角、力或开度一越线就停下"
+  },
+  "feasibility-recheck": {
+   "name": "再试一种再放弃",
+   "def": "判「做不到」之前再试一种不同的接触或策略"
+  },
+  "skill-gap": {
+   "name": "需要更强的控制能力",
+   "def": "步态、动态操作、手内操作这类能力，一处小改动补不上"
+  },
+  "harness-process": {
+   "name": "harness：进程与提示",
+   "def": "后台进程、结束提示、被杀的子进程、阻塞命令"
+  },
+  "harness-context": {
+   "name": "harness：上下文",
+   "def": "压缩上下文后丢了时间、约定或进度"
+  },
+  "task-side": {
+   "name": "任务侧",
+   "def": "评分、指令或环境的问题，不是 agent 的问题"
+  }
+ },
+ "would_pass": {
+  "likely": "很可能",
+  "maybe": "可能",
+  "unlikely": "不太可能"
+ },
+ "who": {
+  "agent": "agent 自己",
+  "harness": "harness",
+  "task": "任务方"
+ },
+ "claim": {
+  "correct-success": {
+   "name": "如实说成功",
+   "def": "说做成了，评分也通过"
+  },
+  "false-success": {
+   "name": "声称成功但失败",
+   "def": "说或暗示做成了，评分没过"
+  },
+  "knows-failed": {
+   "name": "如实说失败",
+   "def": "说没做成"
+  },
+  "no-claim": {
+   "name": "没有明确说法",
+   "def": "最终消息没说成没成"
+  },
+  "matches-live": {
+   "name": "和现场一致",
+   "def": "说法和 agent 现场看到的一致，但评分程序不同意"
+  }
+ }
+}
