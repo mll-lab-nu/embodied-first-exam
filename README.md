@@ -30,6 +30,7 @@
 
 ## News
 
+- 🔥 **2026-10-23**: [AutoBio](https://www.embodied-first-exam.ai/suite/?id=autobio) joins the exam: nine biology-lab tasks (thermal cycler, thermal mixer, centrifuge, screw caps, pipette), with videos and results on the website.
 - 🔥 **2026-10-19**: Embodied First Exam is released!
 
 ## Framework
