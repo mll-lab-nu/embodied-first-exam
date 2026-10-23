@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/pandadyn-s12-moving-bridge-puck-relay-i00-privileged"
-description = "Panda Dynamic Scenes S12 Spinning bridge puck relay and goal (one Franka Panda, ManiSkill 3 / SAPIEN, CPU PhysX at 1000 Hz): produce one replayable trajectory of 100 Hz joint-target actions. Task: At the start a square puck is sliding along a raised source lane towards the Panda's paddle. Strike it so that it slides onto a platform (the bridge) that spins continuously about a vertical axis, and from the bridge onto an exit lane. Intercept it there with the paddle, strike it again, and send it along the exit lane past a hinged, partly open gate, across a goal line, without the paddle touching it as it crosses and with the gate still open. Frozen scene instance i00 (nominal parameters, seed 1); graded by the task's own staged success check in two fresh-process replays."
+description = "Panda Dynamic Scenes S12 Spinning bridge puck relay and goal (one Franka Panda, ManiSkill 3 / SAPIEN, CPU PhysX at 1000 Hz): produce one replayable trajectory of 100 Hz joint-target actions. Task: At the start a square puck slides fast along a raised source lane towards the Panda, and the paddle hangs just above its path. Strike the puck while it is still sliding at 0.25 m/s or more so that it slides onto a platform (the bridge) that turns continuously about a vertical axis, and from the bridge onto an exit lane. Intercept it there with the paddle, let it separate, strike it again, and send it along the exit lane through the doorway of a swinging gate that opens and closes by itself, without touching the gate, and on across a goal line, without the paddle touching it as it crosses and with the gate still open. Frozen scene instance i00 (nominal parameters, seed 0); graded by the task's own staged success check in two fresh-process replays."
 authors = [{ name = "Changhe Chen" }]
 keywords = ["robotics", "pandadyn", "maniskill", "sapien", "franka-panda", "single-arm", "dynamic-manipulation", "code-as-policy", "trajectory", "privileged"]
 
@@ -17,7 +17,7 @@ family = "s12_moving_bridge_puck_relay"
 mode = "privileged"
 dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
 oracle = "full"
-instance_seed = 1
+instance_seed = 0
 expert_time_estimate_hours = 3.0
 
 [metadata.resources]
@@ -56,9 +56,9 @@ main = { cpus = 8.0, memory_gb = 20.0, pids = 8192 }
 [metadata.seeds]
 # the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
 # from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
-default = 1
-allowed = [1]
-oracle = [1]
+default = 0
+allowed = [0]
+oracle = [0]
 
 [verifier]
 timeout_sec = 3000.0              # two fresh-process replays at tests/grade.py's limit (300 s + rows / 10: 650 s for the

@@ -9,7 +9,7 @@
 | Family / instance | `d02_strike_catch_merge` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Two small balls wait behind closed shutters near the top of two parallel inclined lanes. The shutters open by themselves, the first shortly after the start and the second a few seconds later, and each released ball rolls down its lane and flies off the open lower end. The left Panda's paddle must touch each ball after the ball has flown free. The right Panda's cup must catch the first ball and carry it away from the catch point without losing it. The cup must then catch the second ball while still holding the first, and finally put both balls into a fixed basin, where they must come to rest with the cup no longer touching them. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
@@ -60,4 +60,10 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
 
 ### Provenance
-Scene description `D02`, frozen instance `D02-StrikeCatchMerge-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`.
+Scene description `D02`, frozen instance `D02-StrikeCatchMerge-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+
+### Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Configuration only: the balls' mass is the
+  `object_mass` parameter (same value); unused parameters are gone. Scene, physics and checks are unchanged. Frozen
+  instance: seed 0, `initial_sha` 5af2753df0137ee5; reference rows: 1755 control steps (the same start and reference
+  rows as before). Results from before are under the earlier digest and are not ranked with these.

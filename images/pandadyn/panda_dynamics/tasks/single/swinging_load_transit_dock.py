@@ -21,7 +21,17 @@ class SwingingLoadTransitDock(PandaDynamicEnv):
         "residual_swing_cancel",
         "load_dock",
     )
-    INSTRUCTION = "用真实夹爪握住载架，抑制被动悬挂载荷的初始摆动，绕障碍转弯制动，再将载荷低速放入码头。"
+    INSTRUCTION = "用真实夹爪握住载架并抑制被动悬挂载荷的初始摆动，带它经过障碍块旁的路径点且不碰障碍块，在转弯处的第二个路径点制动停稳并消除残余摆动，再将载荷低速放入码头。"
+    # v6: "brake" and "slowly into the dock" are checked. Speeds are 50 ms
+    # displacement averages (immune to per-substep grip-contact chatter, same
+    # meaning at 1000 and 2000 Hz).
+    SPEED_WINDOW = 0.05
+    BRAKE_HOLD = 0.2
+    DOCK_CENTER = (0.07, 0.19)
+    # Outer wall half-extents (opening half + 5 mm wall), rim top z, bob radius.
+    DOCK_OUTER_HALF = (0.057, 0.055)
+    DOCK_RIM_Z = 0.07
+    BOB_RADIUS = 0.022
 
     def build_task(self):
         self.fixtures["carrier"] = hanging_carrier(
@@ -66,10 +76,28 @@ class SwingingLoadTransitDock(PandaDynamicEnv):
             goal=[0.07, 0.19, self.params["length"] + 0.049],
         )
 
+    def _window_speeds(self, root, bob):
+        """Mean carrier-root and bob-centre speeds over the last SPEED_WINDOW s."""
+        track = self.events.flags.setdefault("speed_track", [])
+        track.append([float(self.time), *map(float, root), *map(float, bob)])
+        while len(track) > 1 and self.time - track[1][0] >= self.SPEED_WINDOW - 1e-9:
+            track.pop(0)
+        span = self.time - track[0][0]
+        if span <= 0:
+            return 0.0, 0.0
+        old = np.asarray(track[0][1:])
+        return (
+            float(np.linalg.norm(root - old[:3]) / span),
+            float(np.linalg.norm(bob - old[3:]) / span),
+        )
+
     def update_task(self):
         f = self.fixtures["carrier"]
         grip = bilateral_grip(self, "carrier")
         root = position(self.objects["carrier"])
+        load = body(self.objects["load"])
+        bob = (load.entity_pose * sapien.Pose([0, 0, -f.length])).p
+        carrier_speed, bob_speed = self._window_speeds(root, bob)
         settled = abs(f.q) < 0.07 and abs(f.v) < 0.18
         if self.phase == 0:
             self.phase_hold(grip and settled, 0.35)
@@ -80,16 +108,18 @@ class SwingingLoadTransitDock(PandaDynamicEnv):
             ):
                 self.advance()
         elif self.phase == 2:
-            if (
+            # Turn point reached AND braked: the carrier must stay below
+            # brake_speed for BRAKE_HOLD s inside the waypoint ball.
+            self.phase_hold(
                 grip
                 and np.linalg.norm(root - self.events.flags["waypoints"][1]) < 0.035
-            ):
-                self.advance()
+                and carrier_speed < self.params["brake_speed"],
+                self.BRAKE_HOLD,
+                carrier_speed=carrier_speed,
+            )
         elif self.phase == 3:
             self.phase_hold(grip and settled, 0.5)
         elif self.phase == 4:
-            load = body(self.objects["load"])
-            bob = (load.entity_pose * sapien.Pose([0, 0, -f.length])).p
             if self.phase_hold(
                 grip
                 and settled
@@ -99,6 +129,20 @@ class SwingingLoadTransitDock(PandaDynamicEnv):
                 0.5,
             ):
                 self.events.physical_success = True
+        # Slow dock entry: once the ball's bottom is below the dock rim within
+        # reach of the dock walls (every possible ball-dock contact lies in
+        # this zone), its speed must stay below dock_entry_speed.
+        if (
+            not self.events.physical_success
+            and abs(bob[0] - self.DOCK_CENTER[0]) < self.DOCK_OUTER_HALF[0] + self.BOB_RADIUS
+            and abs(bob[1] - self.DOCK_CENTER[1]) < self.DOCK_OUTER_HALF[1] + self.BOB_RADIUS
+            and bob[2] - self.BOB_RADIUS < self.DOCK_RIM_Z
+        ):
+            if "dock_entry" not in self.events.flags:
+                self.events.flags["dock_entry"] = self.time
+                self.events.emit("dock_entry", self.time, speed=bob_speed)
+            if bob_speed > self.params["dock_entry_speed"]:
+                self.events.fail("dock_entry_too_fast", self.time)
         if self.contact("load", "obstacle") or self.contact("carrier", "obstacle"):
             self.events.fail("obstacle_collision", self.time)
         # A valid docked grasp is below 0.20 m; distinguish it from a drop.

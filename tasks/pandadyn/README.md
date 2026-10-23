@@ -21,31 +21,31 @@ task directories.
 
 | Code | Task | Arms | Phases | Seed (i00) | Oracle |
 |---|---|---|---|---|---|
-| D01 | Reciprocal two-cup air relay (`ReciprocalCupRelay`) | 2 | 6: left_initial_catch, left_to_right_flight, right_catch, second_region, right_to_left_flight, left_catch_and_deliver | 0 | 1478 rows, 14.78 s of 25 s |
+| D01 | Reciprocal two-cup air relay (`ReciprocalCupRelay`) | 2 | 6: left_initial_catch, left_to_right_flight, right_catch, second_region, right_to_left_flight, left_catch_and_deliver | 0 | 1560 rows, 15.6 s of 25 s |
 | D02 | Strike, catch and merge two balls (`StrikeCatchMerge`) | 2 | 6: first_redirect, first_catch, loaded_cup_relocation, second_redirect, second_catch, both_delivery | 0 | 1755 rows, 17.55 s of 25 s |
-| D03 | Cooperative puck course (`CooperativePuckCourse`) | 2 | 4: left_first_pass, right_return_route, left_diagonal_pass, right_terminal_shot | 0 | 2261 rows, 22.61 s of 25 s |
+| D03 | Cooperative puck course (`CooperativePuckCourse`) | 2 | 4: left_first_pass, right_return_route, left_diagonal_pass, right_terminal_shot | 0 | 2278 rows, 22.78 s of 25 s |
 | D04 | Shared tray transport and discharge (`SharedTrayTransportDischarge`) | 2 | 5: shared_support, transport_turn, disturbance_recovery, exit_alignment, natural_discharge | 1 | 560 rows, 5.6 s of 25 s |
-| D05 | Moving ramp relay (`MovingRampRelay`) | 2 | 6: first_channel_entry, first_moving_exit, first_catch, second_channel_entry, second_moving_exit, second_catch_and_delivery | 0 | 2365 rows, 23.65 s of 25 s |
-| D06 | Moving bank relay (`MovingBankRelay`) | 2 | 5: right_first_strike, left_first_rebound, right_recovery_strike, left_changed_rebound, terminal_goal | 0 | 2014 rows, 20.14 s of 25 s |
-| D07 | Spring gate switchyard (`SpringGateSwitchyard`) | 2 | 5: left_gate_open, right_loop_shot, gate_reconfiguration, return_interception, final_gate_shot | 0 | 2434 rows, 24.34 s of 35 s |
-| D08 | Pendulum energy relay (`PendulumEnergyRelay`) | 2 | 5: left_excitation, right_braking, right_return_impulse, left_recovery, low_energy_hold | 0 | 487 rows, 4.87 s of 25 s |
-| D09 | Lever launch, catch and reload (`LeverLaunchCatchReload`) | 2 | 6: physical_loading, first_launch, right_catch, reload_and_clear, second_launch, moving_receptacle_retention | 0 | 1628 rows, 16.28 s of 25 s |
-| D10 | Moving grasp handover (`MovingGraspHandover`) | 2 | 5: moving_pickup, moving_presentation, overlapping_grips, donor_release, receiver_slot_delivery | 0 | 1316 rows, 13.16 s of 25 s |
-| D11 | Moving fixture unlock (`MovingFixtureUnlock`) | 2 | 5: moving_fixture_presentation, relative_pin_insertion, mechanical_latch_open, follow_and_withdraw, gravity_delivery | 0 | 1558 rows, 15.58 s of 25 s |
-| D12 | Reciprocal sliding transfer (`ReciprocalSlidingTransfer`) | 2 | 5: left_inertial_slip, right_receive_and_brake, reverse_geometry, left_receive_and_brake, final_support_deposit | 0 | 1726 rows, 17.26 s of 25 s |
-| D13 | Supported cube flip relay (`SupportedCubeFlipRelay`) | 2 | 5: support_presentation, first_inertial_flip, second_contact_geometry, second_inertial_flip, oriented_output | 0 | 703 rows, 7.03 s of 25 s |
+| D05 | Moving ramp relay (`MovingRampRelay`) | 2 | 6: first_channel_entry, first_moving_exit, first_catch, second_channel_entry, second_moving_exit, second_catch_and_delivery | 0 | 2393 rows, 23.93 s of 25 s |
+| D06 | Moving bank relay (`MovingBankRelay`) | 2 | 5: right_first_strike, left_first_rebound, right_recovery_strike, left_changed_rebound, terminal_goal | 0 | 1696 rows, 16.96 s of 25 s |
+| D07 | Spring gate switchyard (`SpringGateSwitchyard`) | 2 | 5: left_gate_open, right_loop_shot, gate_reconfiguration, return_interception, final_gate_shot | 0 | 2526 rows, 25.26 s of 35 s |
+| D08 | Pendulum energy relay (`PendulumEnergyRelay`) | 2 | 5: left_excitation, right_braking, right_return_impulse, left_recovery, low_energy_hold | 0 | 565 rows, 5.65 s of 25 s |
+| D09 | Lever launch, catch and reload (`LeverLaunchCatchReload`) | 2 | 6: physical_loading, first_launch, right_catch, reload_and_clear, second_launch, moving_receptacle_retention | 0 | 1625 rows, 16.25 s of 25 s |
+| D10 | Moving grasp handover (`MovingGraspHandover`) | 2 | 5: moving_pickup, moving_presentation, overlapping_grips, donor_release, receiver_slot_delivery | 0 | 1554 rows, 15.54 s of 25 s |
+| D11 | Moving fixture unlock (`MovingFixtureUnlock`) | 2 | 5: moving_fixture_presentation, relative_pin_insertion, mechanical_latch_open, follow_and_withdraw, gravity_delivery | 0 | 1563 rows, 15.63 s of 25 s |
+| D12 | Reciprocal sliding transfer (`ReciprocalSlidingTransfer`) | 2 | 5: left_inertial_slip, right_receive_and_brake, reverse_geometry, left_receive_and_brake, final_support_deposit | 0 | 1251 rows, 12.51 s of 25 s |
+| D13 | Supported cube flip relay (`SupportedCubeFlipRelay`) | 2 | 5: support_presentation, first_inertial_flip, second_contact_geometry, second_inertial_flip, oriented_output | 0 | 883 rows, 8.83 s of 25 s |
 | S01 | Cup catch, route pour, rebound recatch and cart delivery (`CupRouteDelivery`) | 1 | 5: incoming_catch, selected_route_entry, track_and_rebound, downstream_catch, moving_cart_delivery | 0 | 1910 rows, 19.1 s of 25 s |
 | S02 | Plate catch, transport and release (`PlateCatchTransportRelease`) | 1 | 5: airborne_plate_catch, recenter, turning_transport, rolling_recovery, moving_basin_release | 0 | 1118 rows, 11.18 s of 25 s |
-| S03 | Clear the blocker, recover and bank into the goal (`ClearGateHockey`) | 1 | 5: first_strike, clear_blocker, recover_deflection, second_strike, bank_and_goal | 0 | 1805 rows, 18.05 s of 25 s |
+| S03 | Clear the blocker, recover and bank into the goal (`ClearGateHockey`) | 1 | 5: first_strike, clear_blocker, recover_deflection, second_strike, bank_and_goal | 0 | 3025 rows, 30.25 s of 35 s |
 | S04 | Impact release, interception and passage relay (`ImpactReleaseRelay`) | 1 | 5: cue_strike, mechanical_unlatch, payload_interception, passage_redirection, payload_braking | 0 | 441 rows, 4.41 s of 25 s |
 | S05 | Sliding receive, inertial staging and moving hand-off (`SlidingReceiveAlignDeliver`) | 1 | 5: source_to_tray, inertial_staging, transport_turn, match_receiver, support_transfer | 0 | 1021 rows, 10.21 s of 25 s |
-| S06 | Inertial cube flip, chute run and pocket recovery (`CubeFlipRouteRecover`) | 1 | 4: momentum_face_flip, oriented_chute_entry, downstream_intercept, pocket_delivery | 0 | 1297 rows, 12.97 s of 25 s |
-| S07 | Conveyor pick, carriage load, braking and dock unload (`ConveyorLoadBrakeUnload`) | 1 | 5: moving_acquisition, loaded_carriage_release, handle_braking, payload_regrasp, dock_deposit | 0 | 2050 rows, 20.5 s of 25 s |
+| S06 | Inertial cube flip, chute run and pocket recovery (`CubeFlipRouteRecover`) | 1 | 4: momentum_face_flip, oriented_chute_entry, downstream_intercept, pocket_delivery | 0 | 1295 rows, 12.95 s of 25 s |
+| S07 | Conveyor pick, carriage load, braking and dock unload (`ConveyorLoadBrakeUnload`) | 1 | 5: moving_acquisition, loaded_carriage_release, handle_braking, payload_regrasp, dock_deposit | 0 | 1303 rows, 13.03 s of 25 s |
 | S08 | Load a coasting cart, throw the switch, recover the part (`LoadSwitchRecover`) | 1 | 5: moving_part_pickup, load_coasting_cart, physical_switch_operation, selected_branch, payload_recovery | 0 | 2189 rows, 21.89 s of 25 s |
 | S09 | Catch, self-toss, recatch and deliver (`TossRecatchDelivery`) | 1 | 5: initial_catch, launch_region, self_toss, displaced_recatch, moving_receiver_delivery | 0 | 1241 rows, 12.41 s of 25 s |
-| S10 | Swinging load transit and dock (`SwingingLoadTransitDock`) | 1 | 5: grasp_settle_and_damp, obstacle_transit, turn_and_brake, residual_swing_cancel, load_dock | 0 | 2107 rows, 21.07 s of 25 s |
+| S10 | Swinging load transit and dock (`SwingingLoadTransitDock`) | 1 | 5: grasp_settle_and_damp, obstacle_transit, turn_and_brake, residual_swing_cancel, load_dock | 0 | 1456 rows, 14.56 s of 25 s |
 | S11 | Cylinder rescue, guide route and oriented delivery (`CylinderRescueRouteDeliver`) | 1 | 5: rolling_interception, axial_alignment, guide_rail_traverse, exit_reception, oriented_moving_delivery | 0 | 1782 rows, 17.82 s of 25 s |
-| S12 | Spinning bridge puck relay and goal (`MovingBridgePuckRelay`) | 1 | 5: incoming_strike, physical_bridge_transfer, exit_interception, second_strike, closing_gate_goal | 1 | 3074 rows, 30.74 s of 32 s |
+| S12 | Spinning bridge puck relay and goal (`MovingBridgePuckRelay`) | 1 | 5: incoming_strike, physical_bridge_transfer, exit_interception, second_strike, closing_gate_goal | 0 | 2171 rows, 21.71 s of 32 s |
 
 ## Instances
 An instance is the benchmark's own: one task at difficulty `nominal` (the task's configuration, `common` updated by its
@@ -56,7 +56,7 @@ seed reset is exact; `instance.json` holds the task, the resolved parameters, th
 
 The benchmark keeps a bank of verified instances (20 nominal + 10 hard per task), each with a recorded rollout of its
 reference controller and an independent action replay. For each task, the frozen instance is the lowest-seed
-nominal instance of the bank whose rollout passes here, in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`:
+nominal instance of the bank whose rollout passes here, in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`:
 1. the instance rebuilt from its parameters and seed;
 2. the rollout replayed here reproduces the physical state it recorded after **every** control step, bit for bit (joint
    positions and velocities of every arm, every object's pose and velocities, every fixture's joint): this image's
@@ -66,10 +66,11 @@ These rows, float64 as recorded, are the oracle of both twins.
 
 Seeds (PROTOCOL §2): every task allows its frozen instance's seed only (`[metadata.seeds]`: default = allowed = oracle =
 the instance's seed, written by `normalize`). The bank holds 19 more verified nominal seeds per task with their reference
-rows, so `allowed` can grow by freezing them under `tests/seeds/<seed>/` (the same three checks); S01's designated channel
-and S08's selected branch are drawn per seed and named in the instruction, so those two need an instruction per seed first.
+rows, so `allowed` can grow by freezing them under `tests/seeds/<seed>/` (the same three checks); S01's designated channel,
+S03's designated rail and S08's selected branch are drawn per seed and named in the instruction, so those three need an
+instruction per seed first.
 
-All 25 tasks passed with their first candidate: seed 0, except D04 and S12 (seed 1, the lowest seed their bank holds). `instance.json`, which the agent reads in privileged mode, names no rollout.
+All 25 tasks passed with their first candidate: seed 0, except D04 (seed 1, the lowest nominal seed its bank holds). `instance.json`, which the agent reads in privileged mode, names no rollout.
 
 ## Tasks
 Every instance has both twins; the instance files live only in the tasks (privileged: `environment/instance.json`,
@@ -91,7 +92,7 @@ load, ...), a forbidden contact (an arm touching the other arm, itself, the tabl
 touch; a tool touching a fixture the task does not allow; an interpenetration deeper than 4 mm), a safety-limit violation
 (the Panda's joint position, speed, acceleration and jerk limits, its Cartesian speed and acceleration limits at the TCP,
 its torque and torque-rate limits, measured and in the servo's reference; checked every 1 ms), an object leaving the
-workspace, or the task's horizon (25 s of simulated time; 32 s for S12, 35 s for D07). Every instruction lists all of them with their
+workspace, or the task's horizon (25 s of simulated time; 32 s for S12, 35 s for S03 and D07). Every instruction lists all of them with their
 numbers.
 
 ## Oracle (PROTOCOL §4)
@@ -104,7 +105,7 @@ standard-realtime: planned from step 0, `solution/oracle_plan.py`) hold the same
 repository and not published; only the rows of the 25 frozen instances are, under `solution/`.
 
 `nop`: privileged, no trajectory (reward 0); standard, no control step runs (reward 0). The benchmark's parked controls
-(the arms holding their start pose, 1,588 runs over its bank) never succeeded.
+(the arms holding their start pose, one run per verified instance of its bank, 750 runs) never succeeded.
 
 ## Tooling (`rcb_pandadyn.py`)
 `Session(instance=...)`: builds the scene and resets it to the frozen instance; `step(row)` (one 10 ms control step),
@@ -115,21 +116,23 @@ repository and not published; only the rows of the 25 frozen instances are, unde
 `run-actions` are the freezing steps. Thin wrappers only: joint targets, kinematics and state; catching, striking,
 carrying and timing are the agent's (Declarations).
 
-## Determinism (measured on one host: AMD Ryzen 9 7950X, RTX 4090, driver 580.159.03; efe:pandadyn-0.1.0)
+## Determinism (measured on one host: AMD Ryzen 9 7950X, RTX 4090, driver 580.159.03; efe:pandadyn-0.2.0 unless noted)
 CPU PhysX with `enable_enhanced_determinism`, one simulated scene per process, one thread for every numeric library
 (`OMP_NUM_THREADS=1`, set in the image), the scene rebuilt on every reset. Measured:
 - all 25 frozen instances: the benchmark's recorded rollout, replayed here, reproduces the physical state it recorded after
-  every control step bit for bit (25/25, largest difference 0), so this image (with torch's CPU build) runs the physics the
-  bank was verified on; the oracle run and two fresh-process replays end in the same state hash (25/25);
-- the benchmark's own record: 3,177 independent replays of its bank with zero state error, and no verdict that changed
-  between two replays of the same rollout (226 rollouts replayed at least twice);
+  every control step bit for bit (24/25, largest difference 0), so this image (with torch's CPU build) runs the physics the
+  bank was verified on; the 25th, S06, is frozen with the BLAS kernel its containers pin (below), under which its start
+  differs from the bank's recording in the last bits, and its rows succeed here. The oracle run and two fresh-process
+  replays end in the same state hash (25/25);
+- the benchmark's own record: every verified instance of its bank (20 nominal + 10 hard per task) has an independent
+  action replay with zero state error and the same events and outcome;
 - a seed reset alone rebuilds the recorded start (`initial_state.pkl` of the bank adds nothing), and rendering, the render
   backend (`render_backend="cpu"`, below) and the cameras do not change the physics (same hashes);
-- across hosts (2026-10-17): S06's arm start comes from the IK fallback (scipy `least_squares`: Pinocchio's
+- across hosts (measured for pandadyn 0.1.0, 2026-10-17; not repeated for 0.2.0): S06's arm start comes from the IK fallback (scipy `least_squares`: Pinocchio's
   IK does not converge there, joint 4 ends on its bound), whose last bits follow the BLAS kernel OpenBLAS picks for the
   CPU. Frozen under the AVX-512 kernel, its start never rebuilt on the pool's AVX2 hosts (AWS EPYC 7R13, cluster EPYC 7402,
   cluster EPYC 7763; 4 joints differ in the last float32 bit: `instance_mismatch`). Its containers now pin the kernel
-  (`OPENBLAS_CORETYPE=Haswell`; frozen with it): the start and the oracle's final state are
+  (`OPENBLAS_CORETYPE=Haswell`; frozen with it, in 0.2.0 too): the start and the oracle's final state are
   the same on a Ryzen 9 7950X and an EPYC 7R13. The other 24 starts come from Pinocchio's IK and rebuild on both
   (all 25 checked on aws:rcb-gpu8), and every oracle succeeds on both; 6 oracles (D03, D08, D10, D13, S05, S07) end in
   another state hash there than the README's (measured here): a trajectory and its grading replay always run on one
@@ -139,7 +142,7 @@ CPU PhysX with `enable_enhanced_determinism`, one simulated scene per process, o
   the same state hash (Crash recovery).
 
 The tasks are sensitive to the last bits of the actions: the oracle rows rounded to float32 (a relative change of about
-1e-7) fail on 4 of the 13 instances tried (D04 seed 1, D07, D09, D11: a limit violation or an episode that no longer
+1e-7) failed on 4 of the 13 pandadyn 0.1.0 instances tried (D04 seed 1, D07, D09, D11: a limit violation or an episode that no longer
 completes), and the benchmark measured that the same rows do not succeed at a 2000 Hz physics step either. Grading
 therefore never accepts an approximate replay; the standard oracle sends its rows as float64 (the service executes the
 rows it receives as float64; the shipped client's `submit` rounds to float32, which costs an agent nothing, since its own
@@ -244,12 +247,14 @@ them moves by itself) get a `-standard-realtime` twin, sharing the standard twin
 | S01 CupRouteDelivery | 1.49, 1.22 | 2 | | S12 MovingBridgePuckRelay | 0.68, – | 3 |
 | S02 PlateCatchTransportRelease | 1.41, 1.24 | 2 | |  | |  |
 
-- **Checked at the task's S** (one container at a time, 4 CPUs, GPU for SAPIEN): in every one of the 19 twins,
+- **Checked at the task's S** (pandadyn 0.1.0; one container at a time, 4 CPUs, GPU for SAPIEN): in every one of the 19 twins,
   three aborted attempts (the oracle's first second planned from step 0, then `reset`) and then the oracle planned
   from step 0 in the fourth episode: live success, the same final state in a fresh-process replay, `late_steps` 0; the clock kept time with no stall in 17 of them (largest lag 0.01-0.49 s) and stalled 3 times in D07
   (2.3 s dropped, largest lag 1.1 s) and once in S08 (0.5 s), at host load 24-71; nop (no request): `timeout`, not a
   success, in all 19. A first oracle run of S04 at S = 2 showed one 0.6 s step (a stall) at step 310: the clock re-anchors
-  and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing.
+  and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing. For 0.2.0
+  the oracle (planned from step 0) and nop were rerun with Harbor on S03 (S = 2) and D06 (S = 3): live success with
+  `late_steps` 0, and reward 0.
 - **Reset budget: 3**, in both standard modes (below the standard-realtime mode's default of
   10, the benchmark's choice). Every reset
   restores the same frozen start, and the client lets a program plan up to 10 s ahead (`at`), so the budget is the
@@ -281,25 +286,38 @@ them moves by itself) get a `-standard-realtime` twin, sharing the standard twin
 ## Notes on the tasks' checks
 The instructions describe each check exactly as the task's code implements it (written from
 the code alone, never from the reference controllers). Writing them brought up properties of the benchmark's own checks
-that a reader of results should know; none was changed here (a change would be a new benchmark source and new instances):
+that a reader of results should know. pandadyn 0.2.0 (a new source and new instances) tightened several of them (the
+tasks' Change Logs say what changed): D05's moving outlet must now move at 0.10 m/s or more, D07's gate must be held by its
+handle at every judged moment, D08's braking is a catch at 1 rad/s or more that takes 60 % of the energy out, and S12's
+gate opens and closes and must be passed through its doorway. What remains:
 - some phase conditions are looser than their names: D02's redirects need only a paddle touch after a free flight; D04's
-  first phase (shared support) holds from the start; D05's channel exit is a half-space test and its moving-outlet speed
-  threshold is 0 at the nominal parameters; S05's speed match is met by a tray held still while the platform passes;
-  several crossings (D06, D07, S12) check the tool's contact only at the moment of crossing; D08's braking needs one touch
-  while the pendulum is slow;
+  first phase (shared support) holds from the start; D05's channel exit is a half-space test; S05's speed match is met
+  by a tray held still while the platform passes; the goal crossings of D06, D07 and S12 check the paddle's contact only
+  at the moment of crossing;
 - S11's moving pocket rests against the side of the raised lane for about 1.5-14.3 s, which leaves 14.3-20.9 s for the
   delivery; S08's docks lie beyond its failure line (only the branch and the recovery count);
-- S01's designated channel and S08's selected branch are drawn at reset and nothing in the scene marks them: both
-  instructions name this instance's choice (by direction, not by coordinates).
-No task is satisfied without completing every phase in order; the benchmark's own acceptance lists its stage-wise shortcut
-diagnostics as unfinished.
+- S01's designated channel and S08's selected branch are drawn at reset and nothing in the scene marks them; S03's
+  designated rail is drawn per seed and coloured green. All three instructions name this instance's choice (by
+  direction, not by coordinates).
+No task is satisfied without completing every phase in order; the benchmark's own acceptance withholds each stage in
+turn (stage-withholding diagnostics on the current source) and found no shortcut (a passive last stage, such as D11's
+gravity delivery, completes by itself once the stage before it is done, and is not counted).
 
 ## Image and host
-`images/pandadyn/` → `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` (~2.4 GB): Python 3.11.16, ManiSkill 3.0.1, SAPIEN 3.0.3,
+`images/pandadyn/` → `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` (~2.4 GB): Python 3.11.16, ManiSkill 3.0.1, SAPIEN 3.0.3,
 torch 2.14.1 (CPU build), Ruckig 0.12.2 (`requirements.lock`, the versions of the benchmark's own lock file; torch is its
 CPU build, which reproduces the bank's physics bit for bit), and the environment package. Public (every component is
 redistributable). SAPIEN needs a Vulkan device to build a scene and render, so every container that builds one reserves
-an NVIDIA GPU (`gpu_class = "any"`); physics runs on one CPU core. Measured over the 50 oracle trials (rcb_monitor samples every 5 s, RTX 4090 host): privileged, the whole trial at most 0.79 GiB of memory and 0.05 GiB of GPU memory; standard, the sim service at most 0.94 GiB and 0.35 GiB (its cameras), the agent's container 0.03 GiB; about one core per container (p90). One filmed scene (`render_video`): 1.2-1.3 GiB RSS, 0.25 GiB of GPU memory. The limits (`scripts/task_resources.toml`) leave room for an agent that runs several scenes at once: privileged 16 GiB and 5 GiB of GPU memory for the trial, standard 8 GiB for the agent's container.
+an NVIDIA GPU (`gpu_class = "any"`); physics runs on one CPU core. Measured for 0.1.0 over the 50 oracle trials (rcb_monitor samples every 5 s, RTX 4090 host): privileged, the whole trial at most 0.79 GiB of memory and 0.05 GiB of GPU memory; standard, the sim service at most 0.94 GiB and 0.35 GiB (its cameras), the agent's container 0.03 GiB; about one core per container (p90). One filmed scene (`render_video`): 1.2-1.3 GiB RSS, 0.25 GiB of GPU memory. The limits (`scripts/task_resources.toml`) leave room for an agent that runs several scenes at once: privileged 16 GiB and 5 GiB of GPU memory for the trial, standard 8 GiB for the agent's container.
+
+## Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0` (the environment package as of 2026-10-22). Every
+  task changed in place (new DIGEST; its README's Change Log says what): stricter or redesigned checks in S03, S07, S08,
+  S10, S12, D01, D05, D06, D07, D08, D10, D11, D12 and D13 (S03 also has a designated rail per instance and a 35 s horizon);
+  the thin tools' adapters are now joined to the tools (S03, S06, S12, D03, D06, D07, D08, D09, D11, D13); unused
+  configuration parameters are gone from the instances; the instructions say that closing a tool arm's gripper touches its
+  adapter (`self_collision`). Re-frozen from the benchmark's re-verified bank by the same rule (Instances): S12 is now
+  seed 0 (was 1), and 16 instances have new reference rows (the other 9 keep theirs). Results from 0.1.0 are under the earlier digests.
 
 ## Licences
 ManiSkill 3 (and its Panda model): Apache-2.0. SAPIEN: MIT. Ruckig (community version): MIT. PyTorch: BSD-3-Clause.
@@ -310,6 +328,8 @@ The Panda Dynamic Scenes environment package: MLL Lab, released with this reposi
 Serves `eai-standard/2.1` with the optional reset capability (3 resets). Resume by journal replay to the logged state hash (ManiSkill / SAPIEN, CPU PhysX with enhanced determinism, one thread; every reset rebuilds the scene; ten physics steps per control step).
 
 ## Screening
+
+The screening below ran on pandadyn 0.1.0 (task digests from before 2026-10-23). 0.2.0 changed every task (new digests; results are attributed by digest), so it describes 0.1.0 and has not been rerun yet.
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and

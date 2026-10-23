@@ -10,7 +10,7 @@ S x 10 ms = 20 ms of wall-clock time (this simulator cannot keep up with real ti
 the task's, from its measured speed). `spec()["timing"]["slowdown"]` states it.
 
 ## Scene
-One Panda, base at (-0.55, 0, 0) facing +x. Its hand carries a rigid square plate with no rim, 0.22 m x 0.22 m at this instance (2 x `tool_half`), 8 mm thick, mounted under the hand by a fixed adapter; the tool frame is the centre of the plate's top surface (z up out of the plate). At the start the plate is level, its centre at (0.01, -0.055, 0.22).
+One Panda, base at (-0.55, 0, 0) facing +x. Its hand carries a rigid square plate with no rim, 0.22 m x 0.22 m at this instance (2 x `tool_half`), 8 mm thick, mounted under the hand by a fixed adapter; the tool frame is the centre of the plate's top surface (z up out of the plate). At the start the plate is level, its centre at (0.01, -0.055, 0.22). The tool's adapter runs between the gripper's fingertips: closing the gripper to less than about 12 mm of aperture makes the fingers touch the adapter, which ends the episode as `self_collision` (the gripper starts fully open, at 0.08 m).
 
 A small orange ball (radius 18 mm) is thrown upwards beside the plate at the start and falls back down. A basin (an open box, 0.15 m x 0.15 m inside, 0.06 m deep) slides back and forth along a straight rail on the table (along the world's y axis), driven the whole episode: slowly, and slowest where it turns around. The table top is the world's z = 0 plane.
 

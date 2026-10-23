@@ -22,7 +22,8 @@ class TossRecatchDelivery(PandaDynamicEnv):
         "moving_receiver_delivery",
     )
     INSTRUCTION = (
-        "接住来球后到达发射区，用同一浅杯自然抛起、侧移并再接住，最后释放到经过的容器。"
+        "接住来球后到达发射区，用同一浅杯自然抛起、侧移并再接住，最后把球放入沿导轨往复移动的容器，"
+        "并在容器移动中让球稳定留在其中。"
     )
 
     def build_task(self):

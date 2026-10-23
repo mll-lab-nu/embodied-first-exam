@@ -9,7 +9,7 @@
 | Family / instance | `s05_sliding_receive_align_deliver` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 At the start a small cube slides along a raised, slippery lane toward its open end. Receive it in the shallow tray the Panda holds (open on one side) once it has left the lane and let it settle; then, keeping the tray level, make the cube slide inside the tray by moving the tray (tilting is not allowed) until it rests at a staging point; carry it through two waypoints; bring the tray to a pose at a fixed offset from a platform that slides slowly back and forth on a rail while matching its velocity; finally get the cube onto that platform, where it must ride along at rest without touching the tray. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
@@ -60,4 +60,11 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
 
 ### Provenance
-Scene description `S05`, frozen instance `S05-SlidingReceiveAlignDeliver-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`.
+Scene description `S05`, frozen instance `S05-SlidingReceiveAlignDeliver-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+
+### Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Configuration only: the reset draws are named
+  parameters (`lateral_spread`, `fixture_offset`, `fixture_phase`; same values) and the new `receiver_min_speed` is 0
+  here; unused parameters are gone. Scene, physics and checks are unchanged. Frozen instance: seed 0, `initial_sha`
+  3e8c593a279d9176; reference rows: 1021 control steps (the same start and reference rows as before). Results from
+  before are under the earlier digest and are not ranked with these.

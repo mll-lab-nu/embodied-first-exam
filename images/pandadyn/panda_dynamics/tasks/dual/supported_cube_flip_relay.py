@@ -42,7 +42,7 @@ class SupportedCubeFlipRelay(PandaDynamicEnv):
         "second_inertial_flip",
         "oriented_output",
     )
-    INSTRUCTION = "左盘提供移动支撑，右推杆两次短促施加角动量完成相邻面翻转，左盘缓冲并把正确朝向的方块运到输出区。"
+    INSTRUCTION = "左盘托住方块，在两次翻转时都保持移动、两次之间带方块换位；右推杆每次短促推击并在方块越过平衡棱前离开，使方块靠惯性翻到相邻面、最终原底面朝上；左盘再把方块运到输出区停稳。"
 
     def build_task(self):
         h = self.params["cube_half"]
@@ -52,27 +52,75 @@ class SupportedCubeFlipRelay(PandaDynamicEnv):
             [h] * 3,
             [0.06, -0.035, 0.23 + h],
             mass=self.params["object_mass"],
-            mu=0.65,
-            restitution=0.25,
+            mu=self.params["cube_friction"],
+            restitution=self.params["cube_restitution"],
         )
 
     def reset_task(self):
         # v5: cube starts 20 mm toward the pusher side of the 0.12 m tray, so
         # two adjacent-face pivots toward -x (2 x 44 mm) end clear of the tray
         # adapter bar that overhangs the -x wall by 12 mm.
+        # v6: seeded start spread is configurable (hard: wider x/y and a yaw);
+        # nominal keeps the single y draw U(-0.038, -0.032) and x = 0.06.
+        p = self.params
+        y = self.rng.uniform(
+            round(-0.035 - p["cube_y_spread"], 6), round(-0.035 + p["cube_y_spread"], 6)
+        )
+        x = 0.06
+        if p["cube_x_spread"] > 0:
+            x += self.rng.uniform(-p["cube_x_spread"], p["cube_x_spread"])
+        q = (1, 0, 0, 0)
+        if p["cube_yaw_spread"] > 0:
+            yaw = self.rng.uniform(-p["cube_yaw_spread"], p["cube_yaw_spread"])
+            q = (np.cos(yaw / 2), 0, 0, np.sin(yaw / 2))
         set_initial(
             self.objects["cube"],
-            [
-                0.06,
-                self.rng.uniform(-0.038, -0.032),
-                0.23 + self.params["cube_half"] + 0.0005,
-            ],
+            [x, y, 0.23 + p["cube_half"] + 0.0005],
+            q=q,
         )
         self.events.flags.update(
             target=[0.08, 0.015, 0.23],
             goal=[-0.04, 0.16, 0.25],
             first_cube_position=None,
         )
+
+    def moving_support(self, key):
+        """v6: the left tray must be moving while it supports each flip.
+
+        A push segment starts at the first pusher-cube contact after a contact
+        gap > 20 ms (the release gap used by inertial_flip). From that onset
+        until the cube passes the balance edge, the measured tray speed must
+        never drop below support_min_speed; otherwise the run fails with
+        static_support_flip. Call before inertial_flip on every step.
+        """
+        flags = self.events.flags
+        if flags.get(key + ":support_judged"):
+            return
+        speed = float(np.linalg.norm(self.arms["panda-0"].tool_body.linear_velocity))
+        if self.contact("cube", "right_tool") > 0:
+            last = flags.get(key + ":push_last_contact")
+            if last is None or self.time - last > 0.02:
+                flags[key + ":push_onset"] = self.time
+                flags[key + ":support_min_speed"] = speed
+            flags[key + ":push_last_contact"] = self.time
+        if key + ":push_onset" in flags:
+            flags[key + ":support_min_speed"] = min(flags[key + ":support_min_speed"], speed)
+
+    def judge_support(self, key):
+        flags = self.events.flags
+        if flags.get(key + ":support_judged") or not self.events.has(key + ":inertial_crossing"):
+            return
+        flags[key + ":support_judged"] = True
+        minimum = flags.get(key + ":support_min_speed", 0.0)
+        self.events.once(
+            key + ":moving_support",
+            self.time,
+            min_tray_speed=minimum,
+            push_onset=flags.get(key + ":push_onset"),
+            required=self.params["support_min_speed"],
+        )
+        if minimum < self.params["support_min_speed"]:
+            self.events.fail("static_support_flip", self.time)
 
     def update_task(self):
         left = self.arms["panda-0"]
@@ -88,9 +136,11 @@ class SupportedCubeFlipRelay(PandaDynamicEnv):
         ):
             self.advance()
         elif self.phase == 1:
+            self.moving_support("first")
+            flipped = inertial_flip(self, "cube", "right_tool", "first", [1, 0, 0])
+            self.judge_support("first")
             if self.phase_hold(
-                inertial_flip(self, "cube", "right_tool", "first", [1, 0, 0])
-                and supported(self, "cube", "left_tool"),
+                flipped and supported(self, "cube", "left_tool"),
                 0.25,
             ):
                 self.events.flags["first_cube_position"] = position(obj).tolist()
@@ -105,16 +155,18 @@ class SupportedCubeFlipRelay(PandaDynamicEnv):
             ):
                 self.advance()
         elif self.phase == 3:
+            self.moving_support("second")
+            flipped = inertial_flip(
+                self,
+                "cube",
+                "right_tool",
+                "second",
+                [0, 0, -1],
+                balance_axis=[1, 0, 0],
+            )
+            self.judge_support("second")
             self.phase_hold(
-                inertial_flip(
-                    self,
-                    "cube",
-                    "right_tool",
-                    "second",
-                    [0, 0, -1],
-                    balance_axis=[1, 0, 0],
-                )
-                and supported(self, "cube", "left_tool"),
+                flipped and supported(self, "cube", "left_tool"),
                 0.25,
             )
         elif self.phase == 4:

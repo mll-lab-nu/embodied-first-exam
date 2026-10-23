@@ -3,7 +3,7 @@
 You control one simulated **Franka Panda** arm (7 joints, its standard hand, and the task's tool where it has one) **as if it were real hardware**: the simulator (ManiSkill 3 / SAPIEN, rigid-body physics at
 1000 Hz) runs in a service you cannot open, you reach it only through a client, and like the real world it does not wait
 for you: once an episode is running, the scene and the robot move while you think.
-**Task:** At the start a small cube (the part) rides along a powered roller conveyor, and a shallow carriage is already coasting along a frictionless rail. Grasp the part with the gripper while it is moving and lift it; set it on the moving carriage and let go while the carriage is still moving; then grip the carriage (it has a vertical handle) and bring it to a stop with the part still on it; grasp the part again and lift it off the carriage; finally set it down in a fixed dock and leave it there at rest.
+**Task:** At the start a small cube (the part) rides along a powered roller conveyor, and a shallow carriage is already coasting along a frictionless rail. Grasp the part with the gripper while it is moving and lift it; set it on the moving carriage and let go while the carriage is still moving; then grip the carriage's vertical handle with both fingers and bring the carriage to a stop, with the part still on it, before it reaches the end of its rail; grasp the part again and lift it off the carriage; finally set it down in a fixed dock and leave it there at rest.
 
 **Slowdown: S = 4.** The world runs at 1/S of real speed: one control step (10 ms of robot time) every
 S x 10 ms = 40 ms of wall-clock time (this simulator cannot keep up with real time on the service's CPUs; S is
@@ -24,14 +24,14 @@ simulator runs one control step (10 ms of robot time) every 40 ms of wall-clock 
 anything, until the episode ends. Between your commands each arm executes what you planned, then holds its last targets;
 nothing pauses for you, not your thinking, not your tool calls. The episode lasts at most **25 s of robot time**
 (the task's horizon, 2500 control steps, about 100 s of wall-clock time): when it is reached
-before the task is complete, the task has failed. At t = 0 the part is already travelling along the conveyor toward its end, and the carriage is already coasting along its rail; neither stops by itself (the carriage only at the end of its rail, the part by falling off the conveyor's end).
+before the task is complete, the task has failed. At t = 0 the part is already travelling along the conveyor toward its end, and the carriage is already coasting along its rail; neither stops by itself (the part falls off the conveyor's end; the carriage reaching the end of its rail fails the task).
 
 ## Success
 The task has 5 phases. They are checked after every physics step (1 ms) and must be completed **in this order**
 (a phase is checked only once the previous one is complete, and a completed phase stays complete):
 1. **moving_acquisition**: at some step both fingers (left and right) touch the part while the part moves faster than 0.025 m/s; then, with both fingers still touching it, the part's centre is above world z = 0.20 m.
-2. **loaded_carriage_release**: the part touches the carriage's moving body, is not held by both fingers (at most one finger touches it), and the carriage moves along its rail faster than 0.025 m/s, all at the same step.
-3. **handle_braking**: both fingers touch the carriage's moving body (any part of it counts: handle, walls or floor), the carriage moves slower than 0.012 m/s, the part's centre is within 0.07 m of the carriage centre along both carriage-frame x and y (the carriage frame is world-aligned), and the part touches the carriage, for 0.25 s without interruption.
+2. **loaded_carriage_release**: the part touches the carriage's moving body, is not held by both fingers (at most one finger touches it), and the carriage moves along its rail faster than `release_min_speed` = 0.025 m/s, all at the same step.
+3. **handle_braking**: both fingers grip the carriage's handle, the carriage moves slower than 0.012 m/s, the part's centre is within 0.07 m of the carriage centre along both carriage-frame x and y (the carriage frame is world-aligned), and the part touches the carriage, for 0.25 s without interruption. Gripping the handle means, at each physics step: both fingers (each with its pad) touch the carriage's moving body, and every finger-carriage contact point of that step lies on the handle (within 2 mm of the handle block, the tall 28 x 36 x 76 mm box at the carriage's +x end), with both fingers pressing on it (a summed handle impulse above 1e-7 N s each). A finger touching the carriage's walls or floor at that step (a contact point carrying an impulse of at least 1e-9 N s) breaks the grip.
 4. **payload_regrasp**: both fingers touch the part, its centre is above world z = 0.20 m, and it does not touch the carriage.
 5. **dock_deposit**: the part is not held by both fingers, touches the dock, its centre is within 0.04 m (horizontal distance) of the dock's centre, and it moves slower than 0.03 m/s, for 0.5 s without interruption. This completes the task.
 
@@ -40,6 +40,7 @@ failed (`meta["done"]`, `meta["reason"]`: `success` or the failure's name).
 
 **The task fails** (the episode ends, reward 0) as soon as any of these happens:
 - during handle_braking or payload_regrasp, the part's centre drops below world z = 0.09 m (`payload_spill`);
+- during moving_acquisition, loaded_carriage_release or handle_braking, the carriage comes within 5 mm of either end of its rail travel: it must be stopped by the grip on its handle, not by an end stop (`carriage_hit_end_stop`);
 - the task's horizon is reached: 25 s of simulated time (`timeout`);
 - an object leaves the workspace: its centre falls more than 0.2 m below the table top or gets more than 1.8 m from the
   world's z axis (`out_of_bounds`);

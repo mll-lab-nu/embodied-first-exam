@@ -1,28 +1,34 @@
 {
   "task": "S03-ClearGateHockey",
   "common": {
-    "horizon": 25.0,
+    "horizon": 35.0,
     "object_mass": 0.035,
     "tool_mass": 0.2,
     "tool_half": 0.05,
-    "radius": 0.018,
-    "preview": 0.65,
     "incoming_speed": 0.35,
-    "fixture_speed": 0.04,
-    "restitution": 0.1,
+    "start_y_min": -0.14,
+    "start_y_max": -0.1,
+    "incoming_angle": 0.0,
     "table_friction": 0.004,
     "tool_friction": 0.3,
-    "blocker_friction": 0.003
+    "blocker_friction": 0.003,
+    "blocker_density": 250,
+    "strike_free": 0.15,
+    "strike_min_speed": 0.15,
+    "recover_free": 0.15,
+    "bank_free": 0.1
   },
   "difficulty": {
     "debug": {
-      "preview": 0.9,
       "incoming_speed": 0.27999999999999997
     },
     "nominal": {},
     "hard": {
-      "preview": 0.55,
-      "incoming_speed": 0.385
+      "incoming_speed": 0.45,
+      "start_y_min": -0.145,
+      "start_y_max": -0.085,
+      "incoming_angle": 0.04,
+      "strike_min_speed": 0.2
     }
   },
   "ranges": {
@@ -42,25 +48,21 @@
       0.001,
       2
     ],
-    "radius": [
-      0.001,
-      2
-    ],
-    "preview": [
-      0.001,
-      2
-    ],
     "incoming_speed": [
       0.001,
       2
     ],
-    "fixture_speed": [
-      0.001,
-      2
+    "start_y_min": [
+      -0.17,
+      -0.06
     ],
-    "restitution": [
+    "start_y_max": [
+      -0.17,
+      -0.06
+    ],
+    "incoming_angle": [
       0,
-      1
+      0.2
     ],
     "table_friction": [
       0,
@@ -73,6 +75,26 @@
     "blocker_friction": [
       0,
       0.05
+    ],
+    "blocker_density": [
+      50,
+      2000
+    ],
+    "strike_free": [
+      0,
+      2
+    ],
+    "strike_min_speed": [
+      0,
+      2
+    ],
+    "recover_free": [
+      0,
+      2
+    ],
+    "bank_free": [
+      0,
+      2
     ]
   },
   "units": {
@@ -80,13 +102,17 @@
     "object_mass": "kg",
     "tool_mass": "kg",
     "tool_half": "m",
-    "radius": "m",
-    "preview": "s",
     "incoming_speed": "m/s",
-    "fixture_speed": "m/s",
-    "restitution": "dimensionless",
+    "start_y_min": "m",
+    "start_y_max": "m",
+    "incoming_angle": "rad",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",
-    "blocker_friction": "dimensionless PhysX joint friction coefficient"
+    "blocker_friction": "dimensionless PhysX joint friction coefficient",
+    "blocker_density": "kg/m^3",
+    "strike_free": "s",
+    "strike_min_speed": "m/s",
+    "recover_free": "s",
+    "bank_free": "s"
   }
 }

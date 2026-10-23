@@ -9,7 +9,7 @@
 | Family / instance | `s08_load_switch_recover` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-s08-load-switch-recover-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A small cube (the part) rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it, drop it into the moving cart, then push the switch with a finger so that it will steer the cart into the branch selected for this instance (one of the two sides, drawn per instance and given under Goal geometry) before the cart reaches it. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. A small cube (the part) rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it, drop it into the moving cart without stopping the cart, which must keep coasting until the switch is set, then push the switch with a finger so that it will steer the cart into the branch selected for this instance (one of the two sides, drawn per instance and given under Goal geometry) before the cart reaches it. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch.
 
 ## Difficulty
 That of `pandadyn-s08-load-switch-recover-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
@@ -79,3 +79,8 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
   with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Stricter check: the cart must keep coasting
+  (above 0.03 m/s) until the switch is set. The cart's start is a named parameter (same value); unused parameters are
+  gone; scene and physics are unchanged. Frozen instance: seed 0, `initial_sha` 0a283238d57e5397; reference rows: 2189
+  control steps (the same start and reference rows as before). Results from before are under the earlier digest and
+  are not ranked with these.

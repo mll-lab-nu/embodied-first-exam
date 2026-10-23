@@ -39,11 +39,19 @@ class MovingRampRelay(PandaDynamicEnv):
         "second_moving_exit",
         "second_catch_and_delivery",
     )
-    INSTRUCTION = "左杯将球倒入右臂斜槽，右臂调整坡度和出口，左杯去出口接回；换路线再来一次，最后交付同一球。"
+    INSTRUCTION = (
+        "左杯把球倒进右臂斜槽的入口一侧，球离开出口的瞬间出口须在移动（nominal ≥0.10 m/s，hard ≥0.25 m/s），"
+        "球腾空后落回左杯并稳住；斜槽转到与第一次至少相差 0.3 rad 的朝向再来一次，"
+        "最后左杯把同一球倒入高架方盆，球不碰杯、停稳 0.7 s。"
+    )
 
     def build_task(self):
         self.objects["ball"] = ball(
-            self.scene, "ball", self.params["radius"], self.params["object_mass"], 0.08
+            self.scene,
+            "ball",
+            self.params["radius"],
+            self.params["object_mass"],
+            self.params["restitution"],
         )
         self.basin = container(
             self.scene,
@@ -106,8 +114,9 @@ class MovingRampRelay(PandaDynamicEnv):
                 self.advance(entry_local=local.tolist())
         elif self.phase in (1, 4):
             if local[0] > 0.13 and not self.contact("ball", "right_tool"):
-                # "Moving outlet": hard requires the outlet end of the channel
-                # to be moving when the ball leaves it (nominal minimum 0).
+                # "Moving outlet": the outlet end of the channel must be moving
+                # at >= outlet_min_speed when the ball leaves it (both
+                # difficulties; hard demands a faster outlet).
                 speed = self.outlet_speed(right)
                 if speed < self.params["outlet_min_speed"]:
                     self.events.fail("static_outlet_exit", self.time)

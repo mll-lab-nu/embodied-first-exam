@@ -42,7 +42,10 @@ class StrikeCatchMerge(PandaDynamicEnv):
         "second_catch",
         "both_delivery",
     )
-    INSTRUCTION = "左臂依次将两个闸门放出的球击向不同接收区，右杯接住并保留第一球，再接第二球，最后一起交付。"
+    INSTRUCTION = (
+        "两个闸门先后放出两球，每个球离开滑道腾空后都要被左臂球拍击中；右杯接住第一球后载着它移离接球位置，"
+        "再把第二球接进同一杯中；最后两球都要落入盆中，同时稳定停留且不碰杯子。"
+    )
 
     LANE_X = (-0.22, 0.06)
     LANE_START_Z = 0.37
@@ -74,7 +77,10 @@ class StrikeCatchMerge(PandaDynamicEnv):
         self.lane_end = [self.params["lane_end_z"] + float(r) for r in drop]
         for i, y in enumerate((-0.09, 0.09)):
             name = f"ball{i + 1}"
-            self.objects[name] = ball(self.scene, name, 0.016, 0.025, 0.1)
+            # v6: ball mass now comes from the config (object_mass 0.025 kg, the
+            # value hard-coded here before); radius 0.016 m and restitution 0.1
+            # stay fixed in code (config "radius" is read only by cup_catch).
+            self.objects[name] = ball(self.scene, name, 0.016, self.params["object_mass"], 0.1)
             gravity_channel(
                 self.scene,
                 f"lane{i}",

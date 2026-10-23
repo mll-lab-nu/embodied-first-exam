@@ -8,14 +8,10 @@
   "object_mass": 0.05,
   "tool_mass": 0.2,
   "tool_half": 0.07,
-  "radius": 0.018,
   "incoming_speed": 0.33,
-  "fixture_speed": 0.04,
-  "restitution": 0.1,
   "table_friction": 0.08,
   "tool_friction": 0.3,
   "cube_half": 0.022,
-  "friction": 0.65,
   "chute_friction": 0.47,
   "free_slide": 0.12,
   "start_jitter_x": 0.0,
@@ -34,5 +30,5 @@
   "downstream_intercept",
   "pocket_delivery"
  ],
- "initial_sha": "a6d725da345513d24f8d40592027f45e7711d6c0f198ebb2385be33dbc2827d1"
+ "initial_sha": "4511f6c2f6be99c481bc7288a1cb2da7df83392f88f7736110c93c037fa167ca"
 }

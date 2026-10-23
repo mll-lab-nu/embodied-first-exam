@@ -9,7 +9,7 @@
 | Family / instance | `s10_swinging_load_transit_dock` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-mode twin of `pandadyn-s10-swinging-load-transit-dock-i00-privileged` (same frozen instance and success check): the agent gets only the `eai-standard/2.1`
@@ -18,7 +18,7 @@ client (docs/protocol/standard_mode.md Part 1, with the optional reset capabilit
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
 episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
-privileged task to measure the cost of losing privileged state, free resets and self-replay. A carrier rests on two small ledges between the gripper's open fingers. It is a short bar with a pendulum (a rod ending in a ball) hanging from a hinge under it, and the pendulum is already swinging. Grip the bar with both fingers and damp the swing. Carry the carrier, still gripped, through two waypoints without letting the carrier or its pendulum touch a block obstacle, and damp the residual swing again. Finally lower it until the pendulum's ball rests centred in a dock, with the swing settled and the bar still gripped.
+privileged task to measure the cost of losing privileged state, free resets and self-replay. A carrier rests on two small ledges between the gripper's open fingers. It is a short bar with a pendulum (a rod ending in a ball) hanging from a hinge under it, and the pendulum is already swinging. Grip the bar with both fingers and damp the swing. Carry the carrier, still gripped, through two waypoints without letting the carrier or its pendulum touch a block obstacle, brake to rest at the second waypoint, and damp the residual swing again. Finally lower it slowly until the pendulum's ball rests centred in a dock, with the swing settled and the bar still gripped.
 
 ## Difficulty
 That of `pandadyn-s10-swinging-load-transit-dock-i00-privileged` (its README), without object poses or the success signal and with 3 resets: the moving objects
@@ -41,7 +41,7 @@ and then renders the video from the graded episode's rows; `tests/grade.py` (sep
 last episode ended in the task's success (every phase in order, no failure: the episode's end, so there is no settle
 window to add). The frozen start is checked when the first episode begins and after every reset (the state hash against
 the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure failure). Oracle: the last episode ends
-in the privileged oracle's final state (hash `b715d1bf1b8c03ac`). `nop`: no control step is executed; the episode ends at
+in the privileged oracle's final state (hash `8c1ac08180026dd0`). `nop`: no control step is executed; the episode ends at
 the collect hook with no phase complete, reward 0.
 
 ## Compute resources
@@ -79,3 +79,8 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
   layer: `/kinematics` (FK / IK), per-frame camera poses and the depth modes, which the realtime twins never had. Instance,
   scene, success check and cutoff are unchanged; results from before are a different configuration and are not ranked
   with these.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Stricter checks: the carrier must brake to rest
+  at the second waypoint (below 0.025 m/s for 0.2 s), and the ball must enter the dock slowly (0.05 m/s at most).
+  Unused parameters are gone. Frozen instance: seed 0, `initial_sha` be10a4a14935d0d0; reference rows: 1456 control
+  steps (the same start; new reference rows). Results from before are under the earlier digest and are not ranked with
+  these.

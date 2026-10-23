@@ -10,18 +10,18 @@
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 2 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 3 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-realtime twin of `pandadyn-s03-clear-gate-hockey-i00-privileged` (same frozen instance and success check as it and as `pandadyn-s03-clear-gate-hockey-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of wall-clock time), with
-3 resets (only the last episode is graded). A square puck slides toward the robot over an almost frictionless table at the start. Strike it with the paddle so that it hits a sliding blocker bar that obstructs the way to the goal and pushes it aside along its rail; let the puck come back toward the robot, strike it a second time, and make it bank off the long side rail and then cross the goal line while the blocker is still pushed aside.
+3 resets (only the last episode is graded). A square puck slides toward the robot over an almost frictionless table at the start. First touch it with the paddle; then strike it so that, sliding free of the paddle, it hits a sliding blocker bar that obstructs the way to the goal fast enough to push it aside along its rail. Let the puck slide back across a recovery line by itself, strike it a second time, and make it bank off the rail designated for this episode (one of two rails, coloured green; the other is grey) without touching the other rail, and then cross the goal line while the blocker is still pushed aside.
 
 ## Difficulty
 That of `pandadyn-s03-clear-gate-hockey-i00-standard`, and the scene no longer waits between calls: once an episode's clock starts, the moving objects and
 the robot's servos run whatever the agent does, so the agent has to plan or stream the targets from a program of its own
-(the task's horizon is 25 s of robot time, about 50 s of wall-clock time at S = 2), and
+(the task's horizon is 35 s of robot time, about 70 s of wall-clock time at S = 2), and
 learn the scene from 4 real attempts.
 
 ## Reference solution
@@ -59,7 +59,7 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 ## Details
 | | |
 |---|---|
-| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 25 s of robot time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
+| Episode | it ends at the first control step where the task has succeeded or failed (the task's horizon, 35 s of robot time, is a failure), when the agent's time is up, or on a simulator error; 3 resets (`POST /reset`: the scene rebuilt from the frozen instance, paused) |
 | Action space | `submit` chunks of `joint_position` (8: per arm 7 joint targets + the aperture, one row per 10 ms control step or `dt` apart) planned from step `at`; `observe` now or a watch window; binary RCB1 responses |
 | Cameras | `overview` and `closeup` (static), 640×480 RGB, z-depth on request, rendered by SAPIEN on the sidecar's GPU |
 | Images | the `sim` sidecar runs efe:pandadyn (`images/pandadyn/`); the agent container and the verifier run the shared client image with its pip pins (`embodied_first_exam/standard/client.env`) |
@@ -76,3 +76,11 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 - 2026-10-17 (owner): graded by the live episode; no grading replay (until then: one fresh-process
   replay, success = live ∧ replay ∧ deterministic); the frozen start is checked when the first episode begins; the video
   is rendered from the graded episode's rows after the verdict. Instance, scene, success check, S and resets are unchanged.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Harder, stricter checks: one of the two rails
+  is designated per instance (coloured green) and the final shot must bank off it and touch no other rail since its
+  last paddle contact; the blocker counts as hit only by a puck sliding free of the paddle for 0.15 s or more at 0.15
+  m/s or more (an earlier contact fails the task); the puck must slide back across the recovery line by itself; the
+  horizon is 35 s (was 25 s). The paddle's adapter is now joined to the paddle by a bridge. The tool's mass is
+  unchanged; its centre of mass and inertia shift slightly. Frozen instance: seed 0, `initial_sha` bcbfb438eec4fcea;
+  reference rows: 3025 control steps (was seed 0, `initial_sha` 449f78c9e8366697). Results from before are under the
+  earlier digest and are not ranked with these.

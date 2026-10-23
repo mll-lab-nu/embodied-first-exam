@@ -76,6 +76,25 @@ def unlock_fixture(scene, name, origin):
 from panda_dynamics.props.mechanisms import gravity_channel
 from panda_dynamics.tasks.predicates import bilateral_grip, containment
 
+# v6: chute end points (world) and the outlet-alignment check. The fixture's
+# outlet is the downstream face of the latch gate on the channel floor
+# (fixture-local (0.03, 0, 0)). The ball counts as having left through the
+# outlet when its centre passes fixture-local x = 0.035. At that instant the
+# outlet must be lined up with the upper end of the chute (all difficulties):
+# |lateral offset from the chute centre line| <= 8 mm, along-chute position of
+# the outlet within the first 60 mm of the chute floor, outlet at most 70 mm
+# above the chute floor plane, and the channel axis within 15 deg of the chute
+# direction (horizontal projection). Any other exit (over a side wall, the top
+# or the back) also fails as outlet_misaligned.
+CHUTE_START = np.array([0.15, 0.13, 0.205])
+CHUTE_END = np.array([0.33, 0.13, 0.08])
+OUTLET_LOCAL = np.array([0.03, 0.0, 0.0])
+EXIT_X = 0.035
+OUTLET_LATERAL = 0.008
+OUTLET_ALONG = (0.0, 0.06)
+OUTLET_HEIGHT = 0.07
+OUTLET_HEADING_DEG = 15.0
+
 
 class MovingFixtureUnlock(PandaDynamicEnv):
     TASK = "D11-MovingFixtureUnlock"
@@ -108,7 +127,7 @@ class MovingFixtureUnlock(PandaDynamicEnv):
         "follow_and_withdraw",
         "gravity_delivery",
     )
-    INSTRUCTION = "左手真实握持并移动夹具，右销跟踪插入并压开实体闩锁；左手对准出口，右销退出，让原有球沿滑道交付。"
+    INSTRUCTION = "左手夹住夹具并移动，右手插销在夹具运动中插入插孔并压开弹簧闩锁；球从出口滚出时出口须对准滑道上端，插销须在球滚离滑道前退出，最后球沿滑道滚入收集盆并停稳。"
 
     def build_task(self):
         self.fixtures["fixture"] = unlock_fixture(
@@ -130,10 +149,24 @@ class MovingFixtureUnlock(PandaDynamicEnv):
             [0.0, 0, 0.247],
             static=True,
         )
-        self.objects["ball"] = ball(self.scene, "ball", 0.016, 0.025, 0.05)
-        gravity_channel(
-            self.scene, "chute", [0.15, 0.13, 0.205], [0.33, 0.13, 0.08], width=0.033
+        # v6: ball size/mass/restitution come from the config (values unchanged:
+        # 0.016 m, 0.025 kg, 0.05).
+        self.objects["ball"] = ball(
+            self.scene,
+            "ball",
+            self.params["radius"],
+            self.params["object_mass"],
+            self.params["restitution"],
         )
+        gravity_channel(
+            self.scene, "chute", CHUTE_START.tolist(), CHUTE_END.tolist(), width=0.033
+        )
+        d = CHUTE_END - CHUTE_START
+        self.chute_axis = d / np.linalg.norm(d)
+        horizontal = np.array([d[0], d[1], 0.0]) / np.linalg.norm(d[:2])
+        self.chute_heading = horizontal
+        self.chute_lateral = np.array([-horizontal[1], horizontal[0], 0.0])
+        self.chute_normal = np.cross(self.chute_axis, self.chute_lateral)
         # v5: interior x half 0.075 -> 0.065 m. The delivery predicate below
         # accepts |local x| < 0.0528 m, so a ball resting against the old +x
         # wall (|local x| = 0.059 m) could never count as delivered.
@@ -152,9 +185,13 @@ class MovingFixtureUnlock(PandaDynamicEnv):
         f.reset()
         # v5: seeded ball start on the fixture floor (+-6 mm along the channel,
         # +-4 mm across), so seeds give physically distinct instances.
+        # v6: half-ranges read from the config (same values, all difficulties;
+        # a larger along-channel spread would put the ball under the regrasping
+        # fingers at the handle).
+        sx, sy = self.params["ball_spread_x"], self.params["ball_spread_y"]
         set_initial(
             self.objects["ball"],
-            [-0.008 + self.rng.uniform(-0.006, 0.006), self.rng.uniform(-0.004, 0.004), 0.277],
+            [-0.008 + self.rng.uniform(-sx, sx), self.rng.uniform(-sy, sy), 0.277],
         )
         left = self.arms["panda-0"]
         q = left.robot.qpos.copy()
@@ -196,12 +233,20 @@ class MovingFixtureUnlock(PandaDynamicEnv):
                 grip
                 and aligned
                 and 0.01 < depth < 0.035
-                and np.linalg.norm(root.linear_velocity) > 0.003,
+                # v6: config insert_min_speed (nominal 0.003 as before, hard 0.06)
+                and np.linalg.norm(root.linear_velocity) > self.params["insert_min_speed"],
                 0.06,
                 insertion_depth=depth,
             )
         elif self.phase == 2:
-            if f.q < -0.017 and self.contact("right_tool", "fixture_latch") > 0:
+            # v6: config latch_min_speed (nominal 0 as before, hard 0.06): the
+            # latch must be pressed open while the fixture is moving.
+            speed = float(np.linalg.norm(root.linear_velocity))
+            if (
+                f.q < -0.017
+                and self.contact("right_tool", "fixture_latch") > 0
+                and speed >= self.params["latch_min_speed"]
+            ):
                 self.advance(latch_displacement=f.q)
         elif self.phase == 3:
             if (
@@ -211,11 +256,64 @@ class MovingFixtureUnlock(PandaDynamicEnv):
             ):
                 self.advance()
         elif self.phase == 4:
-            if self.contact("ball", "chute"):
+            if self.contact("ball", "chute") and "outlet_exit" in self.events.flags:
                 self.events.once("released_ball_chute", self.time)
             if self.events.has("released_ball_chute") and self.phase_hold(
-                containment(self, "ball", self.basin, 0.06, 0.04, 0.016), 0.7
+                containment(self, "ball", self.basin, 0.06, 0.04, self.params["radius"]), 0.7
             ):
                 self.events.physical_success = True
+        if "outlet_exit" not in self.events.flags:
+            self.check_outlet_exit(root)
         if root.entity_pose.p[2] < 0.18:
             self.events.fail("fixture_grasp_drop", self.time)
+
+    def check_outlet_exit(self, root):
+        """v6: once, when the ball leaves the fixture, check outlet alignment.
+
+        Only task flags are written on an aligned exit (no extra event), so a
+        successful run's event history is unchanged. A misaligned exit fails
+        with outlet_misaligned.
+        """
+        pose = root.entity_pose
+        ball = body(self.objects["ball"]).entity_pose.p
+        local = (pose.inv() * sapien.Pose(ball)).p
+        through_outlet = local[0] > EXIT_X
+        left_otherwise = (
+            abs(local[1]) > 0.045 or local[2] > 0.08 or local[2] < -0.05 or local[0] < -0.11
+        )
+        if not (through_outlet or left_otherwise):
+            return
+        outlet = (pose * sapien.Pose(OUTLET_LOCAL)).p - CHUTE_START
+        along = float(outlet @ self.chute_axis)
+        lateral = float(outlet @ self.chute_lateral)
+        height = float(outlet @ self.chute_normal)
+        axis = pose.to_transformation_matrix()[:3, 0]
+        heading = float(
+            np.degrees(
+                np.arctan2(
+                    axis[0] * self.chute_heading[1] - axis[1] * self.chute_heading[0],
+                    axis[0] * self.chute_heading[0] + axis[1] * self.chute_heading[1],
+                )
+            )
+        )
+        speed = float(np.linalg.norm(root.linear_velocity))
+        aligned = bool(
+            through_outlet
+            and not left_otherwise
+            and abs(lateral) <= OUTLET_LATERAL
+            and OUTLET_ALONG[0] <= along <= OUTLET_ALONG[1]
+            and 0.0 < height <= OUTLET_HEIGHT
+            and abs(heading) <= OUTLET_HEADING_DEG
+        )
+        self.events.flags["outlet_exit"] = dict(
+            time=self.time,
+            through_outlet=bool(through_outlet and not left_otherwise),
+            along=along,
+            lateral=lateral,
+            height=height,
+            heading_deg=heading,
+            fixture_speed=speed,
+            aligned=aligned,
+        )
+        if not aligned:
+            self.events.fail("outlet_misaligned", self.time)

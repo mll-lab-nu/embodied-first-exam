@@ -9,7 +9,7 @@
 | Family / instance | `s01_cup_route_delivery` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 An orange ball is thrown upward at the start and comes back down near the robot. Catch it in the open cup the Panda holds, pour it into the designated one of two raised gravity channels, let it roll down that channel by itself, drop off its end and bounce off the tilted rebound plate below it, catch it in the cup again while it flies, and finally put it into a cart that slides back and forth on a rail, where it must rest while the cart is still moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
@@ -60,4 +60,10 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
 
 ### Provenance
-Scene description `S01`, frozen instance `S01-CupRouteDelivery-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`.
+Scene description `S01`, frozen instance `S01-CupRouteDelivery-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+
+### Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. The environment package moved to its 0.2.0
+  version; nothing of this task changed (scene, checks and texts as before). Frozen instance: seed 0, `initial_sha`
+  b411c3326c4fe10d; reference rows: 1910 control steps (the same start and reference rows as before). Results from
+  before are under the earlier digest and are not ranked with these.

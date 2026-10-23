@@ -9,7 +9,7 @@
 | Family / instance | `s02_plate_catch_transport_release` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds, settle it at the plate's centre, carry it through two waypoints (a turn) without letting it roll off, settle it again, then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
@@ -60,4 +60,10 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
 
 ### Provenance
-Scene description `S02`, frozen instance `S02-PlateCatchTransportRelease-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`.
+Scene description `S02`, frozen instance `S02-PlateCatchTransportRelease-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+
+### Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. An unused configuration parameter (`preview`)
+  is gone, so the instance's parameter list is shorter; scene, physics and checks are unchanged. Frozen instance: seed
+  0, `initial_sha` 7e652620c9b1c253; reference rows: 1118 control steps (the same start and reference rows as before).
+  Results from before are under the earlier digest and are not ranked with these.

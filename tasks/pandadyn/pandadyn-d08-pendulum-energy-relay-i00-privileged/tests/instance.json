@@ -8,14 +8,16 @@
   "object_mass": 0.075,
   "tool_mass": 0.2,
   "tool_half": 0.07,
-  "restitution": 0.1,
   "table_friction": 0.08,
   "tool_friction": 0.3,
   "length": 0.22,
   "initial_angle_range": 0.015,
   "initial_angular_speed_range": 0.0,
   "minimum_excursion": 0.18,
-  "return_excursion": 0.12
+  "return_excursion": 0.12,
+  "brake_min_speed": 1.0,
+  "brake_energy_drop": 0.6,
+  "brake_window": 0.5
  },
  "physics_hz": 1000,
  "arms": {
@@ -32,5 +34,5 @@
   "left_recovery",
   "low_energy_hold"
  ],
- "initial_sha": "b2c32c50362ed036eca9a600db16db5963bed4c3a185214d5907f85f0d35411a"
+ "initial_sha": "31ce63f7ddc669b05f2d995848c07a74d2fa39da6a4bfa465bd4a7403e179207"
 }

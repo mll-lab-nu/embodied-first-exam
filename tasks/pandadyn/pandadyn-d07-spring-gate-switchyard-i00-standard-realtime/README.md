@@ -10,13 +10,13 @@
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
 | Real time | slowdown S = 3 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 3 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §4b) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 Standard-realtime twin of `pandadyn-d07-spring-gate-switchyard-i00-privileged` (same frozen instance and success check as it and as `pandadyn-d07-spring-gate-switchyard-i00-standard`): the agent gets only
 the realtime client (`eai-standard/2.3`, docs/protocol/standard_mode.md Part 3); the simulator runs in the `sim` sidecar on a clock
 that does not stop, at slowdown **S = 3** (one 10 ms control step every 30 ms of wall-clock time), with
-3 resets (only the last episode is graded). A low-friction puck slides inside a U-shaped pen of bouncy rails that is open toward the right arm, and a spring-loaded swinging gate stands inside the pen. The left Panda has a bare gripper. It must take hold of the gate with both fingers and swing it open one way. The right Panda's paddle must then hit the puck so that it travels deep into the pen. While the puck runs round, the left hand, still gripping, must swing the gate the other way: at the moment the puck hits the upper (+y) rail, the gate must be at that opposite angle. The right paddle then intercepts the puck. Finally the puck must cross a goal line in front of a backstop on the right arm's side while the gate is still deflected well away from its rest position and the paddle is not touching the puck.
+3 resets (only the last episode is graded). A low-friction puck slides inside a U-shaped pen of bouncy rails that is open toward the right arm, and a spring-loaded swinging gate stands inside the pen. The left Panda has a bare gripper. It must take hold of the gate's handle (the block on the gate's free end) with both fingers, swing the gate open one way, and keep holding the handle with the gate well open whenever a later phase is judged. The right Panda's paddle must then hit the puck so that it travels deep into the pen. While the puck runs round, the left hand, still gripping, must swing the gate the other way: at the moment the puck hits the upper (+y) rail, the gate must be at that opposite angle. The right paddle then intercepts the puck. Finally the puck must cross a goal line in front of a backstop on the right arm's side while the left hand still holds the handle with the gate deflected well away from its rest position and the paddle is not touching the puck.
 
 ## Difficulty
 That of `pandadyn-d07-spring-gate-switchyard-i00-standard`, and the scene no longer waits between calls: once an episode's clock starts, the moving objects and
@@ -76,3 +76,9 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 - 2026-10-17 (owner): graded by the live episode; no grading replay (until then: one fresh-process
   replay, success = live ∧ replay ∧ deterministic); the frozen start is checked when the first episode begins; the video
   is rendered from the graded episode's rows after the verdict. Instance, scene, success check, S and resets are unchanged.
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Stricter checks: the left hand must hold the
+  gate by its handle (both fingers on the handle block) at every judged moment, the final crossing included. The
+  paddle's adapter is now joined to the paddle by a bridge. The tool's mass is unchanged; its centre of mass and
+  inertia shift slightly. Frozen instance: seed 0, `initial_sha` 09f02cb9cf2b1779; reference rows: 2526 control steps
+  (was seed 0, `initial_sha` 09fa46e74fcf5ec6). Results from before are under the earlier digest and are not ranked
+  with these.

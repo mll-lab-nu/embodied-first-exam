@@ -4,18 +4,22 @@
  "difficulty": "nominal",
  "seed": 0,
  "parameters": {
-  "horizon": 25.0,
+  "horizon": 35.0,
   "object_mass": 0.035,
   "tool_mass": 0.2,
   "tool_half": 0.05,
-  "radius": 0.018,
-  "preview": 0.65,
   "incoming_speed": 0.35,
-  "fixture_speed": 0.04,
-  "restitution": 0.1,
+  "start_y_min": -0.14,
+  "start_y_max": -0.1,
+  "incoming_angle": 0.0,
   "table_friction": 0.004,
   "tool_friction": 0.3,
-  "blocker_friction": 0.003
+  "blocker_friction": 0.003,
+  "blocker_density": 250,
+  "strike_free": 0.15,
+  "strike_min_speed": 0.15,
+  "recover_free": 0.15,
+  "bank_free": 0.1
  },
  "physics_hz": 1000,
  "arms": {
@@ -23,7 +27,7 @@
  },
  "action_dim": 8,
  "control_hz": 100,
- "horizon_s": 25.0,
+ "horizon_s": 35.0,
  "phases": [
   "first_strike",
   "clear_blocker",
@@ -31,5 +35,5 @@
   "second_strike",
   "bank_and_goal"
  ],
- "initial_sha": "449f78c9e83666979aecde084931c8cfc76c99035e3e1cb01338cfa3e6ee9ed5"
+ "initial_sha": "bcbfb438eec4fceae70f69eed3e3c9a0a0745582dfa6387be88b2f4ef8269ecb"
 }

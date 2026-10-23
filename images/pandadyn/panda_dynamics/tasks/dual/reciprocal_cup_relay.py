@@ -5,6 +5,9 @@ from panda_dynamics.props.primitives import ball, set_initial, position
 from panda_dynamics.props.fixtures import single_axis
 from panda_dynamics.tasks.predicates import cup_catch, free_interval, containment
 
+# Second transfer region (carry target); the throw-back must also start above it.
+SECOND_REGION = np.array([0.13, 0.15, 0.24])
+
 
 class ReciprocalCupRelay(PandaDynamicEnv):
     TASK = "D01-ReciprocalCupRelay"
@@ -37,7 +40,8 @@ class ReciprocalCupRelay(PandaDynamicEnv):
         "left_catch_and_deliver",
     )
     INSTRUCTION = (
-        "左杯接球后抛给移动的右杯，右杯在第二转移区抛回左杯，左杯接住并送入运动容器。"
+        "左杯接住来球后把球抛向右杯，右杯须在水平移动中接住，再把球带到第二转移区并从该区正上方抛回，"
+        "左杯再次接住后把球送入运动中的容器。"
     )
 
     def build_task(self):
@@ -71,8 +75,6 @@ class ReciprocalCupRelay(PandaDynamicEnv):
         )
         self.events.flags.update(
             target=[0.03, y, 0.22],
-            transfer_a=[0.14, 0.02, 0.22],
-            transfer_b=[0.0, 0.11, 0.22],
             left_start=self.arms["panda-0"].tool_pose.p.tolist(),
             right_start=self.arms["panda-1"].tool_pose.p.tolist(),
         )
@@ -92,25 +94,56 @@ class ReciprocalCupRelay(PandaDynamicEnv):
                 and position(obj)[2] > 0.30
             ):
                 self.advance(launch_position=position(obj).tolist())
-        elif self.phase == 2 and cup_catch(self, "ball", "panda-1", "right_receive"):
-            displacement = float(
-                np.linalg.norm(right.tool_pose.p - self.events.flags["right_start"])
-            )
-            if displacement > 0.04:
-                self.advance(receiver_relocation=displacement)
+        elif self.phase == 2:
+            caught = cup_catch(self, "ball", "panda-1", "right_receive")
+            flags = self.events.flags
+            if self.events.has("right_receive:entry") and "right_entry_speed" not in flags:
+                # Receiver motion at the instant the ball enters the right cup.
+                speed = float(np.linalg.norm(right.tool_body.linear_velocity[:2]))
+                flags["right_entry_speed"] = speed
+                self.events.emit("right_receive:motion", self.time, horizontal_speed=speed)
+            if caught:
+                displacement = float(
+                    np.linalg.norm(right.tool_pose.p - flags["right_start"])
+                )
+                if flags["right_entry_speed"] < self.params["receiver_min_speed"]:
+                    self.events.fail("right_cup_not_moving_at_catch", self.time)
+                elif displacement > 0.04:
+                    self.advance(
+                        receiver_relocation=displacement,
+                        receiver_entry_speed=flags["right_entry_speed"],
+                    )
         elif self.phase == 3:
             if np.linalg.norm(
-                right.tool_pose.p - [0.13, 0.15, 0.24]
+                right.tool_pose.p - SECOND_REGION
             ) < 0.035 and containment(
                 self, "ball", right.tool, 0.06, 0.028, self.params["radius"]
             ):
                 self.advance()
         elif self.phase == 4:
+            touching = [pair for pair in self.contacts if "ball" in pair]
+            if touching:
+                # Ball position at its last contact; kept only if that contact
+                # was the right cup alone (the throw-back starts from it).
+                self.events.flags["reverse_release"] = (
+                    position(obj).tolist()
+                    if all(right.contact_name in pair for pair in touching)
+                    else None
+                )
             if (
                 free_interval(self, "ball", "reverse_transfer_air") > 0.045
                 and position(obj)[2] > 0.31
             ):
-                self.advance()
+                release = self.events.flags.get("reverse_release")
+                offset = (
+                    float(np.linalg.norm(np.asarray(release)[:2] - SECOND_REGION[:2]))
+                    if release is not None
+                    else float("inf")
+                )
+                if offset > self.params["release_radius"]:
+                    self.events.fail("throw_back_outside_second_region", self.time)
+                else:
+                    self.advance(release_position=release, release_offset=offset)
         elif self.phase == 5:
             if cup_catch(self, "ball", "panda-0", "left_receive"):
                 self.events.once("reverse_catch", self.time)

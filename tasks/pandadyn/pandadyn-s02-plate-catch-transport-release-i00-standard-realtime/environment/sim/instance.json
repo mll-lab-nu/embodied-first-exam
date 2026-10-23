@@ -9,7 +9,6 @@
   "tool_mass": 0.2,
   "tool_half": 0.11,
   "radius": 0.018,
-  "preview": 0.65,
   "incoming_speed": 0.08,
   "fixture_speed": 0.04,
   "restitution": 0.1,

@@ -5,28 +5,29 @@
     "object_mass": 0.05,
     "tool_mass": 0.2,
     "tool_half": 0.07,
-    "radius": 0.018,
-    "preview": 0.65,
-    "incoming_speed": 0.35,
-    "fixture_speed": 0.04,
-    "restitution": 0.1,
     "table_friction": 0.08,
     "tool_friction": 0.3,
     "cube_half": 0.022,
-    "friction": 0.65,
     "left_tool_half": 0.12,
     "left_tool_mass": 0.22,
-    "left_tool_friction": 0.65
+    "left_tool_friction": 0.65,
+    "cube_friction": 0.65,
+    "cube_restitution": 0.25,
+    "cube_x_spread": 0.0,
+    "cube_y_spread": 0.003,
+    "cube_yaw_spread": 0.0,
+    "support_min_speed": 0.08
   },
   "difficulty": {
     "debug": {
-      "preview": 0.9,
-      "incoming_speed": 0.27999999999999997
+      "support_min_speed": 0.0
     },
     "nominal": {},
     "hard": {
-      "preview": 0.55,
-      "incoming_speed": 0.385
+      "support_min_speed": 0.15,
+      "cube_x_spread": 0.005,
+      "cube_y_spread": 0.012,
+      "cube_yaw_spread": 0.15
     }
   },
   "ranges": {
@@ -46,26 +47,6 @@
       0.001,
       2
     ],
-    "radius": [
-      0.001,
-      2
-    ],
-    "preview": [
-      0.001,
-      2
-    ],
-    "incoming_speed": [
-      0.001,
-      2
-    ],
-    "fixture_speed": [
-      0.001,
-      2
-    ],
-    "restitution": [
-      0,
-      1
-    ],
     "table_friction": [
       0,
       1
@@ -78,10 +59,6 @@
       0.001,
       2
     ],
-    "friction": [
-      0,
-      1
-    ],
     "left_tool_half": [
       0.001,
       1.0
@@ -93,6 +70,30 @@
     "left_tool_friction": [
       0,
       1
+    ],
+    "cube_friction": [
+      0,
+      1
+    ],
+    "cube_restitution": [
+      0,
+      1
+    ],
+    "cube_x_spread": [
+      0,
+      0.008
+    ],
+    "cube_y_spread": [
+      0,
+      0.02
+    ],
+    "cube_yaw_spread": [
+      0,
+      0.3
+    ],
+    "support_min_speed": [
+      0,
+      0.5
     ]
   },
   "units": {
@@ -100,17 +101,17 @@
     "object_mass": "kg",
     "tool_mass": "kg",
     "tool_half": "m",
-    "radius": "m",
-    "preview": "s",
-    "incoming_speed": "m/s",
-    "fixture_speed": "m/s",
-    "restitution": "dimensionless",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",
     "cube_half": "m",
-    "friction": "dimensionless",
     "left_tool_half": "m",
     "left_tool_mass": "kg",
-    "left_tool_friction": "dimensionless"
+    "left_tool_friction": "dimensionless",
+    "cube_friction": "dimensionless",
+    "cube_restitution": "dimensionless",
+    "cube_x_spread": "m",
+    "cube_y_spread": "m",
+    "cube_yaw_spread": "rad",
+    "support_min_speed": "m/s"
   }
 }

@@ -9,7 +9,7 @@
 | Family / instance | `d04_shared_tray_transport_discharge` / seed 1 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (PROTOCOL §5) |
-| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0` |
 
 ## Task
 The two Pandas hold one tray between them. Each arm's small open fork cradles a tab on one end of the tray, and an orange ball lies loose in the tray. Working together, the arms must first hold the tray steadily. They then carry it through two waypoints that make a turn. When the environment pushes the ball, they must bring it back to rest near the tray centre. Next they bring the tray to an exit position beside a fixed basin, and finally they tip the ball out so that it settles in the basin. Both forks must support the tray during the transport phases, the ball must not leave the tray before the discharge, and the tray must never drop low. The deliverable is one replayable trajectory of 100 Hz joint-target actions (`/app/output/trajectory.npz`,
@@ -60,4 +60,10 @@ Minimum allocation for one trial (docs/protocol/README.md §2.9; `[metadata.reso
 | Budget | the agent's cutoff is the `Agent time budget` row above (this task's `[agent] timeout_sec`); a scene builds in ~5-15 s |
 
 ### Provenance
-Scene description `D04`, frozen instance `D04-SharedTrayTransportDischarge-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.1.0`.
+Scene description `D04`, frozen instance `D04-SharedTrayTransportDischarge-i00`, chosen and frozen in `ghcr.io/mll-lab-nu/efe:pandadyn-0.2.0`.
+
+### Change Log
+- 2026-10-23 (owner): pandadyn 0.2.0, base image `efe:pandadyn-0.2.0`. Unused configuration parameters are gone;
+  scene, physics and checks are unchanged. Frozen instance: seed 1, `initial_sha` 6c202dbdc4b8f2a6; reference rows:
+  560 control steps (the same start and reference rows as before). Results from before are under the earlier digest
+  and are not ranked with these.

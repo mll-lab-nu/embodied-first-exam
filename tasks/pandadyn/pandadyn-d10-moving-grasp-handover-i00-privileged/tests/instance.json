@@ -5,16 +5,17 @@
  "seed": 0,
  "parameters": {
   "horizon": 25.0,
-  "object_mass": 0.035,
-  "tool_mass": 0.2,
-  "tool_half": 0.07,
-  "radius": 0.018,
-  "preview": 0.65,
+  "object_mass": 0.065,
   "incoming_speed": 0.08,
+  "part_y_low": -0.15,
+  "part_y_high": -0.12,
   "fixture_speed": 0.035,
-  "restitution": 0.1,
-  "table_friction": 0.08,
-  "tool_friction": 0.3
+  "fixture_phase": 0.0,
+  "slot_offset_low": -0.06,
+  "slot_offset_high": -0.02,
+  "handover_speed": 0.04,
+  "release_slot_speed": 0.02,
+  "table_friction": 0.08
  },
  "physics_hz": 1000,
  "arms": {

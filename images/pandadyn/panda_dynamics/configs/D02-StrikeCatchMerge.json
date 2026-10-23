@@ -2,14 +2,10 @@
   "task": "D02-StrikeCatchMerge",
   "common": {
     "horizon": 25.0,
-    "object_mass": 0.035,
+    "object_mass": 0.025,
     "tool_mass": 0.2,
     "tool_half": 0.07,
     "radius": 0.016,
-    "preview": 0.65,
-    "incoming_speed": 0.35,
-    "fixture_speed": 0.04,
-    "restitution": 0.1,
     "table_friction": 0.08,
     "tool_friction": 0.3,
     "first_release": 0.25,
@@ -20,10 +16,7 @@
     "lane_end_jitter": 0.0
   },
   "difficulty": {
-    "debug": {
-      "preview": 0.9,
-      "incoming_speed": 0.27999999999999997
-    },
+    "debug": {},
     "nominal": {},
     "hard": {
       "lane_end_z": 0.22,
@@ -54,22 +47,6 @@
     "radius": [
       0.001,
       1.0
-    ],
-    "preview": [
-      0.001,
-      2
-    ],
-    "incoming_speed": [
-      0.001,
-      2
-    ],
-    "fixture_speed": [
-      0.001,
-      2
-    ],
-    "restitution": [
-      0,
-      1
     ],
     "table_friction": [
       0,
@@ -110,10 +87,6 @@
     "tool_mass": "kg",
     "tool_half": "m",
     "radius": "m",
-    "preview": "s",
-    "incoming_speed": "m/s",
-    "fixture_speed": "m/s",
-    "restitution": "dimensionless",
     "table_friction": "dimensionless",
     "tool_friction": "dimensionless",
     "first_release": "s",
