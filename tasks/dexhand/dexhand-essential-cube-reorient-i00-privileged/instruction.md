@@ -2,6 +2,8 @@
 
 With the wrist fixed, rotate the free marked sphere +90 degrees around palm-local Y, then +90 degrees around palm-local X from that pose, then return to its exact initial orientation. Maintain hand contact and avoid any external support throughout; stabilize each ordered checkpoint with at least two fingertips.
 
+Palm-local axes belong to a frame fixed to the palm; with the wrist locked it is aligned with the world axes: +X points from the wrist toward the fingertips (world +x), +Y points across the palm from the thumb side toward the little-finger side (world +y), and +Z points out of the palm, which faces up (world +z). In the simulator it has the orientation of the `wrist_stage` body (the identity quaternion while the wrist is locked), not that of the palm link `right_hand_C_MC`, whose own axes are rotated relative to it. A turn about a palm-local axis is about that palm-fixed axis (it does not turn with the object), and a positive angle follows the right-hand rule: counterclockwise when seen from the positive end of the axis looking back toward the palm. So +90 degrees about Y carries the side of the sphere that faces up toward the fingertips, and +90 degrees about X carries the side that faces up toward the thumb side.
+
 You control one dexterous hand on a six-DoF wrist positioning stage: a Sharpa Wave hand with 22 independently
 actuated finger joints (the default) or a Wuji Hand 2.2 with 20 (see Hands).
 The wrist stage is position actuated in the physics engine; grasping and manipulating require physical contact.
