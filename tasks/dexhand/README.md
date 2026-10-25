@@ -488,8 +488,9 @@ above its closed height, within 4 mm of the jar axis) its unwrapped counter-cloc
 s) the lid rests on the worktop touching neither hand nor jar, upright within 0.15 rad, at least 90 mm from the jar
 axis, slower than 0.02 m/s and 0.3 rad/s, while the jar stands untouched, upright within 0.10 rad and slower than 0.02
 m/s. **Immediate failure**, after every 2 ms substep: jar tilt above 15 degrees, slide above 30 mm or lift above 15 mm;
-the lid touching the worktop before stage 2; the lid touching nothing while falling faster than 0.3 m/s (or falling
-faster than 1.0 m/s at any time); floor contact or leaving the worktop or workspace; the lid leaving the thread upward
+the lid touching the worktop before stage 2; the lid in the air (lowest point more than 10 mm above the worktop)
+touching nothing while falling faster than 0.3 m/s, or falling faster than 1.0 m/s whatever it touches (a lid tipping
+over on the worktop has not dropped); floor contact or leaving the worktop or workspace; the lid leaving the thread upward
 outside the ramp gaps; unstable physics; 3,000 controls. The lid is lightly closed (no vacuum, seal adhesion or
 preload); the jam is part of the jar's rigid mass. Not restored, with evidence in the family README: a second hand
 holding the jar (on the 67 mm body just above the worktop the holding palm could not be placed: forearm and wrist
