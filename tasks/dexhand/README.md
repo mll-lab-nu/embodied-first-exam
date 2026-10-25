@@ -683,8 +683,8 @@ floor z = 0 beside the counter's -y edge, facing +y; the left arm parked); any r
 touching anything fails at once. A rubber boot (Poly Haven, CC0) stands sole-up on a fixed boot-rack peg in a collection
 tray; six loose 1 g soil clods lie lodged in its tread (gravity and friction only; the source scene's cohesive bond is
 not simulated); a shoe brush lies bristles-down on the counter. **Success**, in order: (1) the brush's bristle pad
-touches the boot while the hand holds the brush off the counter, at least 10 controls in total; (2) every clod touched
-by the bristle pad (not the wooden back) while near the sole, and every clod inside the tray walls; (3) for 50
+touches the boot while the hand holds the brush off the counter, at least 10 controls in total; (2) every clod inside
+the tray walls, however it left the sole (swept, pushed by the brush's back or knocked off by another clod); (3) for 50
 consecutive controls (1 s) all clods in the tray at <= 0.05 m/s while the brush touches neither boot nor clods and is
 withdrawn. **Immediate failure**, after every 2 ms substep: the boot moved more than 0.03 m or tilted more than 0.35
 rad; a clod touching the counter or floor, below the counter top or outside the workspace box; any hand geometry

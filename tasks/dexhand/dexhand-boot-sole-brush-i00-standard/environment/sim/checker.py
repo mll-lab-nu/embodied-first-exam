@@ -14,9 +14,10 @@ Fail-fast (checked after every 2 ms physics substep; the first one is permanent)
 Ordered stages (evaluated after every control):
   1 brush_on_sole     the bristle pad touches the boot while the hand touches the brush and the brush is off the
                       counter, for at least ``brush_contact_controls`` controls (cumulative)
-  2 debris_in_tray    after stage 1: every clod was touched by the bristle pad while still up on the boot (centre
-                      at most on_boot_band_m below the sole plane) and every clod lies in the tray (centre inside the
-                      tray walls, below the wall top)
+  2 debris_in_tray    after stage 1: every clod lies in the tray (centre inside the tray walls, below the wall top),
+                      however it got there (brushed by the bristles, pushed by the brush back or knocked off by another
+                      clod); the per-clod brushed flags (bristle pad touched it while it was up on the boot, centre at
+                      most on_boot_band_m below the sole plane) are reported, not required
   3 withdrawn_hold    after stage 2: every clod in the tray and at rest, the brush touches neither boot nor clods and
                       is withdrawn (pad centre >= 0.04 m above the sole plane or >= 0.18 m horizontally from the sole
                       centre), boot within tolerance; continuously for ``hold_controls`` controls -> success
@@ -256,7 +257,7 @@ class BrushChecker:
             self.brush_contact_controls += 1
         if self.stage == 0 and self.brush_contact_controls >= self.p["brush_contact_controls"]:
             self.stage = 1
-        all_in = f["clods_in_tray"] == n and f["clods_brushed"] == n
+        all_in = f["clods_in_tray"] == n   # a clean sole: every clod in the tray, however it got off the boot
         if self.stage == 1 and all_in:
             self.stage = 2
         terminal = (self.stage >= 2 and all_in and f["brush_withdrawn"]
