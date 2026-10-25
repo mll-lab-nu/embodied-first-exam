@@ -5,13 +5,13 @@
  "task": "flip_over",
  "text": "Pick up the flat spatula and move it through the demonstrated motion (flipping something over): bring it to each goal pose in order (the green marker shows the current goal).",
  "start_pose": [
-  0.09248568018426495,
-  0.05355371562126787,
-  0.5508237114298127,
-  0.03446977055457573,
-  -0.9987702624665962,
-  -0.0005223555338989761,
-  0.035630392574571505
+  0.09034473935297553,
+  0.055795850120749425,
+  0.5704359334240338,
+  0.031024624553323905,
+  -0.991561219942405,
+  0.11134141753290491,
+  0.0587103782939438
  ],
  "goals": [
   [

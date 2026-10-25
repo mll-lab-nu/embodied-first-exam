@@ -7,7 +7,7 @@
 | Twin | `dextoolbench_spatula_flat_spatula_flip_over-privileged` |
 | Simulator / robot | `mujoco` / `kuka-iiwa14-sharpa-ha4` |
 | Family / instance | `dextoolbench/spatula/flat_spatula/flip_over` / seed 0 |
-| Oracle | `partial` — SimToolReal's pretrained policy, replayed in this scene, reaches 7/45 goals (solution/; README of dextoolbench_spatula_flat_spatula_flip_over-privileged) |
+| Oracle | `partial` — SimToolReal's pretrained policy, replayed in this scene, reaches 22/45 goals (solution/; README of dextoolbench_spatula_flat_spatula_flip_over-privileged) |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |
 

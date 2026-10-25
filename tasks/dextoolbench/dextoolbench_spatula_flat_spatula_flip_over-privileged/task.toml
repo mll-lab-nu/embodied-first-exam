@@ -13,7 +13,7 @@ robot = "kuka-iiwa14-sharpa-ha4"
 family = "dextoolbench/spatula/flat_spatula/flip_over"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 oracle = "partial"
-oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 7/45 goals (solution/; README of dextoolbench_spatula_flat_spatula_flip_over-privileged)"
+oracle_evidence = "SimToolReal's pretrained policy, replayed in this scene, reaches 22/45 goals (solution/; README of dextoolbench_spatula_flat_spatula_flip_over-privileged)"
 instance_seed = 0                 # DexToolBench fixes the start pose and goals (from a human demo); no randomization
 expert_time_estimate_hours = 4.0
 
