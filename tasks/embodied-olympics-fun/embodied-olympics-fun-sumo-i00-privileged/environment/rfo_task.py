@@ -192,6 +192,7 @@ class Task(TaskBase):
         stand_z = importlib.import_module("bodies.unitree_g1.body").STAND_Z
         rig.place(d, rig.rest, pos=(self.d0, 0.0, p["mound_height_m"] + stand_z), yaw=math.pi)
         a.reset(d)                                         # its legs on the walking policy (zero command), arms held
+        a.act.reset()                                      # its motors' last torque (in the state hash) to zero
 
     # ------------------------------------------------------------------ the opponent's policy
     def _opp_pose(self, w):
