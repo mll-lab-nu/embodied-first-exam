@@ -1,0 +1,71 @@
+name: cable_route_channel
+max_steps: 7200
+table_z: 1.102
+scene:
+  right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  fixture_physics: true
+soft:
+  settle_ticks: 45
+  solver: {substeps: 10, iterations: 5}
+  pinch_overlap: 0.00075
+  penetration_fail: true
+  pad_mu: 1.0
+success: {hold: 25}
+world:
+  n_seg: 40
+  length: 0.4
+  radius: 0.0035
+  pinned_segments: [0, 1]
+  slot_start: [-0.15, -0.05]
+  slot_heading_deg: 0.0
+  slot_width: 0.034
+  rail_width: 0.02
+  rail_height: 0.005
+  rail_mu: 0.5
+  straight: 0.23
+  start_offset: 0.07
+  blend: 0.05
+  start_lead: 0.03
+  rest_straight: true
+  ridge_h: 0.022
+  ridge_x0: -0.01
+  ridge_x1: 0.08
+  ridge_side: 1.0
+  support: clips
+  support_mu: 0.5
+  clip_spacing: 0.055
+  clip_x0: 0.01
+  clip_len: 0.008
+  clip_post_w: 0.012
+  clip_wall_h: 0.012
+  clip_wall_t: 0.0015
+  clip_slack: 0.001
+  clip_fence: both
+  far_clip_x: 0.15
+  far_clip_seat: 0.05
+  far_clip_wall_h: 0.012
+  far_clip_len: 0.01
+  pick_in: 0.02
+  pick_step: 0.04
+  place_x_max: 0.12
+  pick_z_min: 0.019
+  fixture_overlap_fail: true
+  fixture_overlap_tol: 0.0002
+  route_len: 0.2
+  open_gap: 0.02
+  rest_speed: 0.01
+  dx: -0.005
+  dy: 0.0
+  table_mu: 0.7
+  cable:
+    radius: 0.0035
+    density: 900.0
+    stretch_stiffness: 20000.0
+    stretch_damping: 0.1
+    bend_stiffness: 0.0525
+    bend_damping: 0.01
+    mu: 0.8
+    color: [0.95, 0.75, 0.1]
+tactile: {enabled: true}

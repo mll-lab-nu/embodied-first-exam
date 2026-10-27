@@ -1,0 +1,86 @@
+# dough_fill_tray: pick the scraper out of its rack and spread the dough heap over the tray.  Nominal scene.
+name: dough_fill_tray
+scene:
+  gel: {stiffness: 1000.0, damping: 0.5, friction: 2.0}
+  robot: {gripper_close: 0.038}
+task:
+  kind: fill
+  direct_pads: false            # a tool task: the scraper (PhysX rigid body) is the MPM collider
+  anchor: [0.0, 0.0, 1.112]     # env frame: tray floor top centre (table top 1.102 + a 10 mm floor)
+  tool_name: scraper_tool
+  tool_kind: scraper_tool
+  tool_usd: objects/dough/scraper_tool.usd
+  tool_mass: 0.04
+  tool_friction: 0.8
+  eef_to_grip: [0.0, 0.0, 0.177]  # grip point of the gel pads in the end-effector frame
+  tool_yaw_deg: 0.0
+  tool_pickup: true             # the gripper picks the scraper out of the rack (no teleported pre-grasp)
+  rack:                         # three static blocks next to the tray: a base with a 6 mm groove between two rails
+    xy: [-0.02, 0.135]
+    base_size: [0.05, 0.10, 0.03]
+    rail_size: [0.012, 0.10, 0.01]
+    groove_w: 0.006
+    friction: 0.85
+  tool_rest_gap: 0.0005         # the blade's bottom edge rests this far above the groove floor
+  # dough (implicit MPM)
+  material: dough
+  voxel: 0.004
+  collider_margin: 0.004
+  substeps: 1
+  iterations: 40
+  mpm_every: 2
+  async_mpm: true
+  reaction_gain: 0.25           # fraction of the dough force fed back to the PhysX scraper (the full reaction slid the tool in the grip)
+  # tray and heap
+  tray_inner: [0.16, 0.10]
+  wall_h: 0.03
+  wall_t: 0.006
+  tray_friction: 0.85
+  side: 1.0                     # heap on the +x side
+  init_frac: 0.7                # the heap covers 70 % of the tray length
+  blob_height: 0.02
+  blob_width_frac: 0.9
+  # surface mesh (cameras)
+  visual_sigma: 1.0
+  visual_level: 0.3             # the scraped floor keeps a thin low-density layer that 0.5 would drop
+  mesh_voxel: 0.002
+  dough_color: [0.74, 0.52, 0.26]
+  # expert geometry
+  blade_z: 0.013                # scraper bottom edge while pushing
+  passes: 2
+  start_margin: 0.014
+  end_margin: 0.024
+  return_pass: false
+  pickup_hover: 0.06
+  pickup_lift: 0.04
+  # success (fill_report)
+  check_every: 8
+  clear_z: 0.045
+  coverage_min: 0.55
+  min_h_frac: 0.35
+  under_min: 0.25
+  flat_min: 0.8
+  flat_band: [0.5, 1.5]
+  surface_tol: 0.0
+  outside_tol: 0.02
+  success_hold: 20
+  max_steps: 3600
+  settle_ticks: 30
+policy:
+  init_limit: 30
+  settle_ticks: 120
+  hover: 0.045
+  dwell_ticks: 20
+  lift_z: 0.07
+  reach_tol: 0.012
+  max_retries: 2
+  grip_tol_mm: 15.0
+  grip_tol_deg: 12.0
+  move: {steps: 60, speed: 0.07, tol: [0.002, 0.01], timeout: 900, stall_patience: 20, stall_move_thresh: 0.0005}
+  gripper: {timeout: 40, settle_threshold: 0.0001}
+sidecar:
+  min_free_mib: 3000
+  gpu_wait_s: 600.0
+  call_timeout: 900.0
+tactile:
+  enable: true

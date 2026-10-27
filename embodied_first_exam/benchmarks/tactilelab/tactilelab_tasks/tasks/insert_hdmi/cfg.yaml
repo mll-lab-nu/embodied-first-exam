@@ -1,0 +1,31 @@
+name: insert_hdmi
+max_steps: 4000
+success_hold: 1
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+  - name: hdmi_slot
+    usd: objects/insertion/HDMISlot/Object.usd
+    pos: [-0.04, -0.09, 1.1083]
+    ori_deg: [0.0, 0.0, 0.0]
+    static: true
+    friction: 0.5
+  - name: hdmi
+    usd: objects/insertion/HDMI/Object.usd
+    pos: [-0.04, 0.0, 1.1175]
+    ori_deg: [0.0, 0.0, 0.0]
+    mass: 0.005
+    friction: 0.5
+parts:
+- {held: hdmi, target: hdmi_slot, slot: hole, screw: false}
+success: {assembled_margin: 0.005, assembled_lateral: 0.006, assembled_axis_deg: 15.0, release_clear: 0.15, jaw_open_width: 0.09,
+  require_grasp_latch: true, grasp_lift_thresh: 0.02, grasp_hold_thresh: 0.3, end_on_release: false, drop_z: 0.95, carry_lost: 0.45,
+  target_move: 0.05}
+tactile:
+  enabled: true
+  targets: [hdmi]

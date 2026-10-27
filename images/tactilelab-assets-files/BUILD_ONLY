@@ -1,0 +1,4 @@
+BUILD_ONLY: the tactilelab-assets-files image carries the X-Trainer robot files and the GelSight Mini calibration arrays under
+their own licences (images/tactilelab-files/ASSET_LICENSES.md) and stays in the private package.
+Every tactilelab task's Dockerfile starts with the sim image's recipe (images/tactilelab/Dockerfile, copied in by
+scripts/task_conventions.py normalize), so a runner that cannot pull a prebuilt copy builds the same layers from public sources.

@@ -1,0 +1,50 @@
+name: lamp_bulb
+max_steps: 12000
+success_hold: 1
+home_ref_azimuth_deg: 8.8
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+  - name: lamp_base
+    usd: objects/assembly/lamp_base/Object.usd
+    pos: [-0.004, -0.166, 1.12]
+    ori_deg: [180.0, 0.0, 0.0]
+    static: true
+    friction: 0.15
+  - name: lamp_bulb
+    usd: objects/assembly/lamp_bulb/Object.usd
+    pos: [-0.003, 0.077, 1.158]
+    mass: 0.03847
+    friction: 0.15
+  - name: lamp_hood
+    usd: objects/assembly/lamp_hood/Object.usd
+    pos: [-0.08, 0.249, 1.154]
+    mass: 0.05
+    friction: 0.15
+parts:
+- held: lamp_bulb
+  target: lamp_base
+  slot: socket
+  screw: true
+  grasp:
+    label_sample: 4
+    pad_center_local: [0.0, 0.0, 0.038]
+    pad_center_tol: 0.02
+  insert: {insert_stop_depth: 0.0045, release_min_depth: 0.004, retract_height: 0.0}
+  screw_params: {grip_hand_local: 0.233, recenter_mps: 0.08}
+- held: lamp_hood
+  target: lamp_base
+  slot: hood_seat
+  screw: false
+  grasp: {label_sample: 4, part: null}
+  insert: {preinsert_clearance: 0.07, insert_stop_depth: 0.007, release_min_depth: 0.0, retract_height: 0.12, finish_wait_release: true}
+success: {assembled_margin: 0.005, assembled_lateral: 0.008, assembled_axis_deg: 15.0, require_grasp_latch: true, end_on_release: true,
+  release_open_mm: 10.0, release_settle_steps: 60, assembled_clear: 0.35, grasp_lift_thresh: 0.04, grasp_hold_thresh: 0.3}
+tactile:
+  enabled: true
+  targets: [lamp_bulb, lamp_hood, lamp_base]

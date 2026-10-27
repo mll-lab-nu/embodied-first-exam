@@ -1,0 +1,63 @@
+name: dough_target_shape
+scene:
+  gel: {stiffness: 1000.0, damping: 0.5, friction: 2.0}
+  robot: {gripper_close: 0.038}
+task:
+  kind: pinch
+  direct_pads: true
+  colliders:
+  - name: pad_left
+    link: gsmini_left
+    half: [0.0105, 0.008, 0.002]
+    offset: [0.0, 0.0, 0.002]
+    mu: 1.0
+  - name: pad_right
+    link: gsmini_right
+    half: [0.0105, 0.008, 0.002]
+    offset: [0.0, 0.0, 0.002]
+    mu: 1.0
+  anchor: [0.08, 0.0, 1.112]
+  plate_half: [0.12, 0.12]
+  plate_friction: 0.05
+  material: {preset: dough, yield_stress: 2500.0}
+  voxel: 0.0025
+  collider_margin: 0.001
+  substeps: 2
+  iterations: 200
+  mpm_every: 2
+  async_mpm: true
+  ridge_w: 0.018
+  ridge_len: 0.11
+  ridge_h: 0.026
+  trough_h: 0.008
+  trough_t: 0.004
+  blob_center: [0.0, 0.0]
+  center_jitter: 0.0
+  slots: [-0.032, 0.0, 0.032]
+  pinch_offsets: [-0.032, 0.032]
+  keep_offsets: [0.0]
+  keep_min: 0.014
+  visual_sigma: 1.0
+  visual_level: 0.5
+  mesh_voxel: 0.001
+  tactile_inset: 0.0015
+  dough_color: [0.74, 0.52, 0.26]
+  pinch_z: 0.022
+  closing_yaw: -1.5707963267948966
+  hold_ticks: 20
+  check_every: 8
+  clear_z: 0.05
+  zone_half: 0.005
+  band: [0.016, 0.024]
+  target_thickness: 0.009
+  thickness_tol: 0.003
+  loose_target_thickness: 0.008
+  loose_thickness_tol: 0.004
+  flatness_tol: 0.0035
+  workspace_radius: 0.09
+  outside_tol: 0.03
+  success_hold: 20
+  max_steps: 3600
+  settle_ticks: 30
+sidecar: {min_free_mib: 3000, gpu_wait_s: 600.0, call_timeout: 900.0}
+tactile: {enable: true}

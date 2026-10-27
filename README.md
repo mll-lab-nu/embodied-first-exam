@@ -88,7 +88,7 @@ Nine of the suites were written for this exam:
 ### Before you run
 
 - **Host:** Linux x86_64 with git, [uv](https://docs.astral.sh/uv/) (it fetches a Python 3.12-3.14 for Harbor if needed) and Docker Engine with Compose v2 and BuildKit (the `buildx` plugin). Without Docker, e.g. on a Slurm cluster: rootless podman with `-e podman` ([docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).
-- **GPU:** the NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for every task that uses a GPU. An RTX-class GPU (with RT cores; not A100 or H100): AM-Bench, BEHAVIOR-1K, iSpatialGym, LabUtopia, ManiGuard, RoboARC, RoboDojo, RoboLab, YAMLab. Any NVIDIA GPU: ABC Sim, BiGym 2.0, DexToolBench, MolmoSpaces, Panda Dynamic Scenes, RoboPaint, RoboTwin 2.0, RoboWits. Some tasks: Embodied Olympics - Fun, Embodied Olympics - Match, HumanoidBench, KinDER, MuJoCo Playground, MyoSuite, roboEngineer. No GPU: AutoBio, DexHand, DexJoCo, Embodied Safety Exam, LIBERO-MAX, MetaWorld+, RoboCasa, RoboCasa-GR1, RoboCasa365, VLABench.
+- **GPU:** the NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for every task that uses a GPU. An RTX-class GPU (with RT cores; not A100 or H100): AM-Bench, BEHAVIOR-1K, iSpatialGym, LabUtopia, ManiGuard, RoboARC, RoboDojo, RoboLab, TactileLab, YAMLab. Any NVIDIA GPU: ABC Sim, BiGym 2.0, DexToolBench, MolmoSpaces, Panda Dynamic Scenes, RoboPaint, RoboTwin 2.0, RoboWits. Some tasks: Embodied Olympics - Fun, Embodied Olympics - Match, HumanoidBench, KinDER, MuJoCo Playground, MyoSuite, roboEngineer. No GPU: AutoBio, DexHand, DexJoCo, Embodied Safety Exam, LIBERO-MAX, MetaWorld+, RoboCasa, RoboCasa-GR1, RoboCasa365, VLABench.
 - **Disk:** a benchmark's public images take 1-30 GB, pulled on its first run; a benchmark that builds its image needs the free disk its row below states.
 - **API keys** for the agent's model in `.env` (step 1), or a subscription (step 3).
 
@@ -141,7 +141,7 @@ harbor run -d embodied-first-exam --privileged -a codex -m openai/gpt-6-astra
 ```
 
 ```bash
-# every task: 2224 task dirs (1137 tasks in their modes, 34 benchmarks)
+# every task: 2244 task dirs (1157 tasks in their modes, 35 benchmarks)
 harbor run -d embodied-first-exam@all -a codex -m openai/gpt-6-astra
 ```
 

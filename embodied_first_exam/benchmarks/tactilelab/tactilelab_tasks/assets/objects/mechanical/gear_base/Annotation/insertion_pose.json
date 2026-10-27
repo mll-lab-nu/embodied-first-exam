@@ -1,0 +1,19 @@
+{
+  "slots": {
+    "slot_small": {
+      "slot_center_local": [0.05075, 0.0, 0.005],
+      "hole_bottom_local": [0.05075, 0.0, 0.005],
+      "hole_top_local": [0.05075, 0.0, 0.025]
+    },
+    "slot_medium": {
+      "slot_center_local": [0.02025, 0.0, 0.005],
+      "hole_bottom_local": [0.02025, 0.0, 0.005],
+      "hole_top_local": [0.02025, 0.0, 0.025]
+    },
+    "slot_large": {
+      "slot_center_local": [-0.03025, 0.0, 0.005],
+      "hole_bottom_local": [-0.03025, 0.0, 0.005],
+      "hole_top_local": [-0.03025, 0.0, 0.025]
+    }
+  }
+}

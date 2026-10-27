@@ -1,0 +1,21 @@
+name: cloth_edge_feed
+table_z: 1.102
+max_steps: 6000
+scene:
+  fixture_physics: true
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+soft:
+  settle_ticks: 45
+  solver: {substeps: 10, iterations: 5}
+  pinch_overlap: 0.00025
+  penetration_fail: true
+  pad_mu: 0.45
+world: {overhang: 0.045, edge_ke: 32.0}
+success:
+  hold: 15
+  feed_min: 0.03
+  corner_zone: [0.0085, 0.0075, 0.01]
+  drag_max: 0.015
+  lost_max: 25
+  min_contacts: 1
+  pinch_gap: 0.0105

@@ -1,0 +1,149 @@
+# lamp_bulb: screw the glass bulb into the lamp-base socket, then drop the hood onto the
+# base (plain insert and release). The base is spawned upside down (ori 180 deg about X)
+# so its socket opens upward; the annotations are written for that pose.
+name: lamp_bulb
+max_steps: 12000
+success_hold: 1
+home_ref_azimuth_deg: 8.8
+
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+    - name: lamp_base
+      usd: objects/assembly/lamp_base/Object.usd
+      pos: [-0.004, -0.166, 1.12]
+      ori_deg: [180.0, 0.0, 0.0]
+      static: true
+      friction: 0.15
+    - name: lamp_bulb
+      usd: objects/assembly/lamp_bulb/Object.usd
+      pos: [-0.003, 0.077, 1.158]
+      mass: 0.03847
+      friction: 0.15
+    - name: lamp_hood
+      usd: objects/assembly/lamp_hood/Object.usd
+      pos: [-0.080, 0.249, 1.154]
+      mass: 0.05
+      friction: 0.15
+
+parts:
+  - held: lamp_bulb
+    target: lamp_base
+    slot: socket
+    screw: true
+    grasp:
+      label_sample: 4
+      pad_center_local: [0.0, 0.0, 0.038]   # pads on the glass sphere equator
+      pad_center_tol: 0.02
+    insert:
+      insert_stop_depth: 0.0045
+      release_min_depth: 0.004
+      retract_height: 0.0
+    screw_params:
+      grip_hand_local: 0.233
+      recenter_mps: 0.08
+  - held: lamp_hood
+    target: lamp_base
+    slot: hood_seat
+    screw: false
+    grasp:
+      label_sample: 4
+      part: null                            # the hood library has a single synthetic ring
+    insert:
+      preinsert_clearance: 0.07             # skirt clears the globe during the descent
+      insert_stop_depth: 0.007              # release after 7 mm of travel; gravity seats it
+      release_min_depth: 0.0
+      retract_height: 0.12
+      finish_wait_release: true
+
+plan: {rehome: true, rehome_finish: true}
+
+grasp:
+  part: body
+  pre_grasp_offset: 0.15
+  retrieval_offset: 0.3
+  close_settle: 30
+
+insert:
+  preinsert_clearance: 0.025
+  preinsert_max_steps: 400
+  lateral_follow: true
+  lateral_follow_alpha: 0.05
+  yaw_follow_alpha: 0.02
+  unlock_sweep: true
+  unlock_e: 0.0004
+  unlock_sweep_dps: -30.0
+  unlock_break: 0.0005
+  unlock_max_sweeps: 2.0
+  erode_jam: 0.0008
+  slip_jam: 0.006
+  grip_slip_comp: true
+  seat_margin: 0.006
+  insert_max_steps: 3000
+  insert_descent_substeps: 80
+  insert_yaw_offset_deg: 0.0
+  end_held: true
+  end_held_release: true
+  release_vel_limit: 0.025
+  align_tol_deg: 6.0
+  axis_abort_deg: 15.0
+  align_max_steps: 300
+  hold_centered_steps: 8
+  lateral_gain: 0.6
+  lateral_step_max: 0.004
+  lateral_deadband: 0.0015
+  servo_track_thresh: 0.03
+  hold_decay: 0.9
+  press_allowance: 0.003
+  lateral_freeze_depth: 0.002
+
+screw:
+  pitch: 0.0092
+  yaw_rate_deg: 0.4
+  tighten_sign: 1
+  assembled_margin: 0.005
+  max_steps: 12000
+  engage_press: 0.002
+  erode_regrasp: 0.003
+  yaw_bias_deg: 4.0
+  max_turn_deg: 300
+  handoff_steps: 120
+  finish_wait_release: true
+  rewind_enable: true
+  rewind_wrist_joint: J1_6_joint
+  rewind_dps: 90.0
+  rewind_min_depth: 0.006        # a part standing deeper than the insert release line can be re-gripped
+  grip_source: label
+  pad_tip_local: 0.195
+  rewind_lift_mps: 0.05
+  rewind_abort_tilt_deg: 15.0
+  rewind_close_steps: 100
+  max_rewinds: 6
+  max_thread_jumps: 1
+  rewind_max_sink: 0.006
+  entry_acquire: true
+  finger_vel_limit: 0.025
+  finger_effort_limit: 10.0
+  finish_rise: 0.0
+  sym_order: 4
+
+success:
+  assembled_margin: 0.005
+  assembled_lateral: 0.008
+  assembled_axis_deg: 15.0
+  require_grasp_latch: true
+  end_on_release: true
+  release_open_mm: 10.0
+  release_settle_steps: 60    # let the hood settle in its seat
+  assembled_clear: 0.35
+  grasp_lift_thresh: 0.04
+  grasp_hold_thresh: 0.3
+
+tactile:
+  enabled: true
+  targets: [lamp_bulb, lamp_hood, lamp_base]

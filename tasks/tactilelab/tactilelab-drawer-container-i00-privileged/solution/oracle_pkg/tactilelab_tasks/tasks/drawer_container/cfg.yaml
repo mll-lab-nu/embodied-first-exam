@@ -1,0 +1,143 @@
+# drawer_container: drawer assembly. Two containers (bottom first, then top) are
+# grasped by a side wall, slid horizontally into the box's lower / upper rail pairs
+# (slide axis world +x) and each is pushed to its back stop. Fixed nominal scene.
+# Units: metres, degrees (extrinsic XYZ), env frame.
+name: drawer_container
+max_steps: 12000
+success_hold: 1
+
+scene:
+  settle_ticks: 150
+  gel: {stiffness: 1000.0, damping: 0.5, friction: 5.0}   # thin-wall grip working point
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.041          # the gel faces meet (4.5 mm container wall)
+  objects:
+    - name: drawer_box
+      usd: objects/assembly/drawer_box/Object.usd
+      pos: [0.16, -0.03, 1.1443]
+      ori_deg: [0.0, 0.0, 90.0]     # opening toward -x: the containers slide in along +x
+      static: true
+      friction: 0.15
+    - name: drawer_container_top    # parked behind the bottom container, joins at the second insert
+      usd: objects/assembly/drawer_container_top/Object.usd
+      pos: [-0.14, -0.03, 1.129]
+      ori_deg: [0.0, 0.0, 90.0]
+      mass: 0.05937
+      friction: 0.5
+    - name: drawer_container_bottom # in front of the box opening, same orientation as the slide-in
+      usd: objects/assembly/drawer_container_bottom/Object.usd
+      pos: [-0.02, -0.03, 1.129]
+      ori_deg: [0.0, 0.0, 90.0]
+      mass: 0.05937
+      friction: 0.5
+
+parts:                              # working order; the judge needs every part seated
+  - held: drawer_container_bottom
+    target: drawer_box
+    slot: slot_lower
+    screw: false
+    push: true                      # pushed to its own back stop before the top container is inserted
+    push_target: 0.165              # box x 0.16 + 0.005: past the stops, so the stall dwell ends every stroke
+  - held: drawer_container_top
+    target: drawer_box
+    slot: slot_upper
+    screw: false
+    push: true
+    push_target: 0.165
+    joint_approach: true            # the push approach in joint space: after this grasp the wrist sits at its -2pi
+                                    # limit and a straight end-effector move jams the arm 0.1 m short of the staging
+
+success:
+  assembled_margin: 0.012           # per part: slide depth >= rail length (0.089) - margin
+  assembled_lateral: 0.006
+  assembled_axis_deg: 12.0
+  settle_ticks: 30                  # ... and the depth moved less than settle_eps over this window
+  settle_eps: 0.0005
+  assembled_clear: 0.0              # the judge fires with the arm frozen at the last pose
+  require_grasp_latch: true
+  grasp_lift_thresh: 0.04
+  grasp_hold_thresh: 0.3
+  end_on_release: false
+
+tactile:
+  enabled: true
+  targets: [drawer_container_bottom, drawer_container_top]
+
+plan: {rehome: true, rehome_first: true, rehome_finish: false}
+
+# Scripted expert (policy.py): reach -> grasp -> horizontal insert per container, then the
+# staged push of the top container (the bottom one rides on the same fist plane).
+grasp:
+  part: body
+  pre_grasp_offset: 0.15
+  retrieval_offset: 0.15
+  close_settle: 30
+  closing_axis_local: [1.0, 0.0, 0.0]
+  finger_stiffness: 10000.0         # constant-force jaw emulation (saturates the 20 N drive)
+  finger_damping: 200.0
+  finger_vel_limit: 0.03
+  finger_open_q: 0.009
+
+insert:
+  preinsert_clearance: 0.025
+  preinsert_max_steps: 900
+  insert_stop_depth: [0.035, 0.037] # per part
+  fingertip_stop_axial: 0.018
+  eef_stop_axial: 0.028
+  seat_margin: 0.002
+  retract_height: 0.08
+  release_at_stop: true
+  release_dwell_steps: 10
+  release_seated_free: true
+  insert_max_steps: 2000
+  insert_descent_substeps: 80
+  align_tol_deg: 6.0
+  align_max_steps: 300
+  hold_centered_steps: 8
+  lateral_gain: 0.6
+  lateral_step_max: 0.004
+  lateral_deadband: 0.003
+  lateral_deadband_inbore: 0.0015
+  lateral_freeze_depth: 0.020
+  servo_cutoff_depth: 0.005
+  straighten_tol_deg: 2.0
+  straighten_every: 15
+  mouth_gate_lat: 0.002
+  mouth_gate_max: 300
+  descent_ease_pow: 2.0
+  yaw_follow_alpha: 0.02
+  servo_track_thresh: 0.03
+  hold_decay: 0.9
+  press_allowance: 0.003
+  release_min_depth: 0.004
+  axis_abort_deg: 8.0
+  slip_jam: 0.006
+  erode_jam: 0.0008
+  grip_slip_comp: true
+  end_held: false
+  seat_margin_success: 0.012        # seated check = the task's per-part gate
+  success_xy: 0.006
+  success_axis_deg: 12.0
+
+push:                               # single-container push to the back stop, once per part
+  # The open fingers straddle the handle and press the front wall.
+  # One stroke per part: the bottom container is pushed home while nothing blocks the fist, then
+  # the top container with the pad 29 mm above the bottom's rim. A single dual-contact push of the
+  # top (fist on the rim / floor seam) stops when the top reaches its back stop; with the two front
+  # walls flush under one flat fist the bottom then sits 1-2 mm short of its 77 mm gate.
+  axis: 0                           # world x
+  start_local: [0.0, 0.0555, 0.189]
+  axis_local: [0.0, -1.0, 0.0]
+  yaw_world_deg: 0.0
+  base_quat: [0.0, 0.7071068, 0.7071068, 0.0]
+  pre_push_offset: 0.015
+  approach_raise: 0.07              # the top container's 0.12 staging (z 1.48) is out of reach of the arm
+  approach_back: 0.02
+  lead_max: 0.008
+  done_tol: 0.008
+  max_rounds: 1
+  stages:
+    - {start_local: [0.0, 0.0555, 0.189], gripper: 0.0, direction: object_axis, speed: 0.0004, steps: 1800,
+       stall_ticks: 30, stall_min_coord: 0.114, done_retreat: 0.06, done_lift: 0.12}

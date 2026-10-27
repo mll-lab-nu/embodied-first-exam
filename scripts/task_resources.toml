@@ -3213,3 +3213,38 @@ main = { cpus = 4.0, memory_gb = 16.0, pids = 8192 }
 match = "^abc-sim-.*-standard(-realtime)?$"
 main = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
 sim = { cpus = 4.0, memory_gb = 10.0, pids = 8192 }
+
+# tactilelab, privileged (author estimate on the Isaac Sim 5.1 stack; to be re-measured)
+[[rule]]
+match = "^tactilelab-.*-privileged$"
+min_cpus = 4.0
+min_memory_gb = 13.0
+min_gpu_memory_gb = 6.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 13.0
+verifier_min_gpu_memory_gb = 6.5
+measured = "author estimate: one Isaac Sim 5.1 process (PhysX on the GPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; to be re-measured"
+
+# tactilelab, privileged (author estimate on the Isaac Sim 5.1 stack; to be re-measured)
+[[limit]]
+match = "^tactilelab-.*-privileged$"
+scope = "trial"
+max_gpu_memory_gb = 24.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 24.0
+trial_max_memory_gb = 24.0
+measured = "author estimate: one Isaac Sim 5.1 process (PhysX on the GPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; to be re-measured"
+
+# tactilelab, privileged (author estimate on the Isaac Sim 5.1 stack; to be re-measured)
+[[cap]]
+match = "^tactilelab-.*-privileged$"
+main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }

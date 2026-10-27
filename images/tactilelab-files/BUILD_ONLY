@@ -1,0 +1,3 @@
+BUILD_ONLY: the tactilelab-files image carries third-party assets under their own licences (ASSET_LICENSES.md) and stays in the private package.
+Every tactilelab task's Dockerfile starts with this recipe (images/tactilelab/Dockerfile, copied in by scripts/task_conventions.py
+normalize), so a runner that cannot pull a prebuilt copy builds the same layers from public sources.

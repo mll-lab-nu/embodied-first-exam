@@ -1,0 +1,48 @@
+name: square_table
+max_steps: 24000
+success_hold: 1
+home_ref_azimuth_deg: 2.0
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+  - name: square_table_top
+    usd: objects/assembly/square_table_top/Object.usd
+    pos: [-0.062, -0.181, 1.115]
+    ori_deg: [0.0, 0.0, -30.0]
+    static: true
+    friction: 0.15
+  - name: square_table_leg1
+    usd: objects/assembly/Square_table_leg/Object.usd
+    pos: [-0.045, 0.016, 1.162]
+    mass: 0.0231
+    friction: 0.15
+  - name: square_table_leg2
+    usd: objects/assembly/square_table_leg2/Object.usd
+    pos: [-0.071, 0.107, 1.162]
+    mass: 0.0231
+    friction: 0.15
+  - name: square_table_leg3
+    usd: objects/assembly/square_table_leg3/Object.usd
+    pos: [-0.122, 0.188, 1.162]
+    mass: 0.0231
+    friction: 0.15
+  - name: square_table_leg4
+    usd: objects/assembly/square_table_leg4/Object.usd
+    pos: [-0.192, 0.251, 1.162]
+    mass: 0.0231
+    friction: 0.15
+parts:
+- {held: square_table_leg1, target: square_table_top, slot: corner_pn, screw: true}
+- {held: square_table_leg2, target: square_table_top, slot: corner_nn, screw: true}
+- {held: square_table_leg3, target: square_table_top, slot: corner_pp, screw: true}
+- {held: square_table_leg4, target: square_table_top, slot: corner_np, screw: true}
+success: {assembled_margin: 0.005, final_margin: 0.003, assembled_lateral: 0.008, assembled_axis_deg: 15.0, require_grasp_latch: true,
+  end_on_release: true, release_open_mm: 10.0, release_settle_steps: 0, assembled_clear: 0.35, grasp_lift_thresh: 0.04, grasp_hold_thresh: 0.3}
+tactile:
+  enabled: true
+  targets: [square_table_leg1, square_table_leg2, square_table_leg3, square_table_leg4, square_table_top]

@@ -1,0 +1,8 @@
+{
+  "slots": {
+    "hole": {
+      "hole_top_local":    [0.0, 0.0, 0.025],
+      "hole_bottom_local": [0.0, 0.0, -0.0248]
+    }
+  }
+}

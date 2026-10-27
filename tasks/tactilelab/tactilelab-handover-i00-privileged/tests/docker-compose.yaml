@@ -1,0 +1,16 @@
+# The verifier replays in Isaac Sim, which needs the GPU. Its Kit cache is a TRUSTED volume: Isaac keeps generated
+# Python there that Kit imports at startup, so a cache the agent could write must never reach the grader.
+services:
+  main:
+    shm_size: "8gb"
+    volumes:
+      - rcb_tactilelab_cache_trusted:/cache
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+volumes:
+  rcb_tactilelab_cache_trusted:

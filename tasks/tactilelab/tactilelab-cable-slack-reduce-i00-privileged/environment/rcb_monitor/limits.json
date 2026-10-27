@@ -1,0 +1,34 @@
+{
+ "agent_timeout_sec": 3600,
+ "caps": {
+  "main": {
+   "cpus": 8.0,
+   "memory_gb": 29.0,
+   "pids": 16384
+  }
+ },
+ "disk_exclude": [],
+ "disk_paths": [
+  "/app",
+  "/tmp",
+  "/root"
+ ],
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/1",
+ "gpu": true,
+ "max_disk_gb": 20.0,
+ "max_gpu_memory_gb": 24.0,
+ "max_memory_gb": 24.0,
+ "max_processes": 512,
+ "mode": "privileged",
+ "scope": "trial",
+ "scope_services": [
+  "main"
+ ],
+ "sustain_sec": 60.0,
+ "task": "tactilelab-cable-slack-reduce-i00-privileged",
+ "tick_sec": 5,
+ "trial_max_gpu_memory_gb": 24.0,
+ "trial_max_memory_gb": 24.0,
+ "window_sec": 120.0
+}

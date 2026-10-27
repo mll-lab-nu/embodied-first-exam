@@ -1,0 +1,91 @@
+# nut_thread: the M16 nut starts engaged on the bolt (about 2.4 mm); grasp it in place and
+# turn it one full turn (pitch 2 mm) with the screw followers, re-gripping when the wrist
+# wind budget is spent. No insert stage.
+name: nut_thread
+max_steps: 12000
+success_hold: 1
+
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+    - name: bolt_m16
+      usd: objects/mechanical/bolt_m16/Object.usd
+      pos: [-0.06, -0.08, 1.103]
+      static: true
+      friction: 0.75
+    - name: nut_m16
+      usd: objects/mechanical/nut_m16/Object.usd
+      pos: [-0.06, -0.08, 1.1425]
+      ori_deg: [0.0, 0.0, 172.7]
+      mass: 0.03
+      friction: 0.01                 # smooth threading
+
+parts:
+  - held: nut_m16
+    target: bolt_m16
+    slot: slot_0
+    screw: true
+    skip_lift: true                  # grasp in place, no retrieval
+    skip_insert: true
+
+plan: {rehome: false, rehome_finish: false}
+
+grasp:
+  part: body
+  label_sample: 0
+  pre_grasp_offset: 0.15
+  close_settle: 30
+
+screw:
+  success_angle_deg: 360.0           # one full turn
+  success_angle_tol_deg: 3.0
+  finish_wait_release: true
+  pitch: 0.002
+  yaw_rate_deg: 0.8
+  tighten_sign: 1
+  slow_rewind_wind_deg: 120.0
+  slow_rewind_eps_deg: 8.0
+  slow_rewind_window: 180
+  rewind_min_depth: 0.001
+  drive_deeper: true
+  label_sym_snap: true
+  sym_order: 6
+  assembled_margin: 0.021
+  max_steps: 12000
+  engage_press: 0.002
+  max_turn_deg: 300
+  yaw_bias_deg: 10.0
+  rewind_enable: true
+  rewind_dps: 45.0
+  rewind_dps_cartesian: 45.0
+  rewind_close_steps: 100
+  max_rewinds: 32
+  rewind_lift_mps: 0.05
+  rewind_abort_tilt_deg: 25.0
+  rewind_max_sink: 0.006
+  handoff_steps: 120
+  entry_acquire: false
+  grip_source: label
+  grip_hand_local: 0.192
+  finish_rise: 0.0
+  finger_vel_limit: 0.025
+  finger_effort_limit: 10.0
+
+success:
+  assembled_margin: 0.0215           # deep latch 3.5 mm below the thread top
+  assembled_lateral: 0.008
+  assembled_axis_deg: 15.0
+  require_grasp_latch: false         # the nut never lifts off the bolt
+  end_on_release: true
+  release_open_mm: 10.0
+  release_settle_steps: 30
+  assembled_clear: 0.35
+
+tactile:
+  enabled: true
+  targets: [nut_m16, bolt_m16]

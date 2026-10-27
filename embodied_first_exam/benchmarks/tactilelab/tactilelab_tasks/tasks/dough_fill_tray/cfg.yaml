@@ -1,0 +1,64 @@
+name: dough_fill_tray
+scene:
+  gel: {stiffness: 1000.0, damping: 0.5, friction: 2.0}
+  robot: {gripper_close: 0.038}
+task:
+  kind: fill
+  direct_pads: false
+  anchor: [0.0, 0.0, 1.112]
+  tool_name: scraper_tool
+  tool_kind: scraper_tool
+  tool_usd: objects/dough/scraper_tool.usd
+  tool_mass: 0.04
+  tool_friction: 0.8
+  eef_to_grip: [0.0, 0.0, 0.177]
+  tool_yaw_deg: 0.0
+  tool_pickup: true
+  rack:
+    xy: [-0.02, 0.135]
+    base_size: [0.05, 0.1, 0.03]
+    rail_size: [0.012, 0.1, 0.01]
+    groove_w: 0.006
+    friction: 0.85
+  tool_rest_gap: 0.0005
+  material: dough
+  voxel: 0.004
+  collider_margin: 0.004
+  substeps: 1
+  iterations: 40
+  mpm_every: 2
+  async_mpm: true
+  reaction_gain: 0.25
+  tray_inner: [0.16, 0.1]
+  wall_h: 0.03
+  wall_t: 0.006
+  tray_friction: 0.85
+  side: 1.0
+  init_frac: 0.7
+  blob_height: 0.02
+  blob_width_frac: 0.9
+  visual_sigma: 1.0
+  visual_level: 0.3
+  mesh_voxel: 0.002
+  dough_color: [0.74, 0.52, 0.26]
+  blade_z: 0.013
+  passes: 2
+  start_margin: 0.014
+  end_margin: 0.024
+  return_pass: false
+  pickup_hover: 0.06
+  pickup_lift: 0.04
+  check_every: 8
+  clear_z: 0.045
+  coverage_min: 0.55
+  min_h_frac: 0.35
+  under_min: 0.25
+  flat_min: 0.8
+  flat_band: [0.5, 1.5]
+  surface_tol: 0.0
+  outside_tol: 0.02
+  success_hold: 20
+  max_steps: 3600
+  settle_ticks: 30
+sidecar: {min_free_mib: 3000, gpu_wait_s: 600.0, call_timeout: 900.0}
+tactile: {enable: true}

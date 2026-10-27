@@ -1,0 +1,55 @@
+name: cable_slack_reduce
+max_steps: 6000
+table_z: 1.102
+scene:
+  right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  fixture_physics: true
+soft:
+  settle_ticks: 45
+  solver: {substeps: 10, iterations: 5}
+  pinch_overlap: 0.0005
+  penetration_fail: true
+  pad_mu: 1.025
+success: {hold: 20}
+world:
+  n_seg: 26
+  length: 0.26
+  radius: 0.0035
+  fixed_xy: [-0.17, -0.06]
+  chord: 0.208
+  chord_yaw_deg: 0.0
+  shape: bump
+  side: -1.0
+  pinned_segments: [0, 1, 2]
+  clamp_half: [0.016, 0.022, 0.008]
+  clamp_mu: 0.8
+  slack_target: 0.03
+  slip_max: 0.012
+  stretch_max: 1.06
+  lost_max: 25
+  min_contacts: 1
+  pinch_gap: 0.0105
+  ridge_h: 0.01582
+  ridge_w: 0.003
+  ridge_lip_h: 0.0013
+  ridge_lip_w: 0.0006
+  ridge_mu: 0.5
+  ridge_x: [0.11, 0.23]
+  tail_len: 0.07
+  dx: 0.002
+  dy: -0.005
+  yaw_deg: 0.0
+  fixture_overlap_fail: true
+  fixture_overlap_tol: 0.0002
+  cable:
+    radius: 0.0035
+    density: 900.0
+    stretch_stiffness: 20000.0
+    stretch_damping: 0.1
+    bend_stiffness: 0.2
+    bend_damping: 0.0001
+    mu: 0.8
+    color: [0.9, 0.45, 0.1]
+tactile: {enabled: true}

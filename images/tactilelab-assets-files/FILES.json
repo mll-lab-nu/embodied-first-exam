@@ -1,0 +1,19 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe-private:tactilelab-assets-files-0.1.0@sha256:d58c3a36a5f5ea031d65f14b95c3c4f7c68268f5d9977dd1b963ce286bd6bcd7",
+ "source": "images/tactilelab-assets-files/context",
+ "hf": {
+  "repo": "luhr/tactilelab-assets",
+  "revision": "648d23036cabb3c1ee99867c46c163e3e401a23c",
+  "path": "tactilelab"
+ },
+ "files": {
+  "tactilelab_tasks/assets/robots/xtrainer_gsmini/meshes/J1_5.STL": "8a91ed3061e6a7557c188ace4221591d2697f913d071e7e36418cc91d679c261",
+  "tactilelab_tasks/assets/robots/xtrainer_gsmini/meshes/J1_6.STL": "272a8dd3182cfd23b05b89881b0c9ceb64484bb8df5955540b539ba3d0c094b7",
+  "tactilelab_tasks/assets/robots/xtrainer_gsmini/meshes/J2_5.STL": "463d688f4c3dd7b2d7ae9c3517e2a89e19548f5b22599016655dfec683743834",
+  "tactilelab_tasks/assets/robots/xtrainer_gsmini/meshes/J2_6.STL": "a383ed342d2e9389be7e4c9b83ad5193597e6f1350099bc4ce692a8e066a2e61",
+  "tactilelab_tasks/assets/robots/xtrainer_gsmini/meshes/base_link.STL": "b7c269a471d1338db9dadb05fbd0cfeb9bc8d6b5844759fec48e734284cf9787",
+  "tactilelab_tasks/assets/robots/xtrainer_gsmini/usd/xtrainer.usd": "36232b3f6bbc26d2c3f829dc7c7c4a2ad405aef1db6642a0b2c4a75d698cf77e",
+  "tactilelab_tasks/tactile/calib/gsmini/gelmap.npy": "410054cb740feea28d73924eba71f057e709cc801ab800e62d3f80f019f1a31b",
+  "tactilelab_tasks/tactile/calib/gsmini/polycalib.npz": "596341551a4eb3927b19d14bc1a3fe5e5ff5ac95207b8064c090442e1e294b56"
+ }
+}

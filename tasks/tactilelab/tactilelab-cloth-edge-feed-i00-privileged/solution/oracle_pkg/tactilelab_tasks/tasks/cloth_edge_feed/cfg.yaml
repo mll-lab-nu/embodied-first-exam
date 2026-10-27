@@ -1,0 +1,38 @@
+# cloth_edge_feed: feed the gripper along the overhanging cloth edge to its corner and clamp it (nominal scene).
+name: cloth_edge_feed
+table_z: 1.102
+max_steps: 6000
+scene:
+  fixture_physics: true          # shelf and clamp bar are PhysX colliders (the arm is stopped by them)
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+soft:
+  settle_ticks: 45
+  solver: {substeps: 10, iterations: 5}
+  pinch_overlap: 0.00025         # m per gel: the close squeezes the 6.4 mm sheet to a 5.9 mm gel-face gap
+  penetration_fail: true
+  pad_mu: 0.45                   # gel pad friction in the soft world
+world:                           # overrides of softbody_geom.soft_scenes.CLOTH_EDGE_FEED (none: the nominal scene)
+  overhang: 0.045
+  edge_ke: 32.0
+success:
+  hold: 15
+  feed_min: 0.03
+  corner_zone: [0.0085, 0.0075, 0.01]
+  drag_max: 0.015
+  lost_max: 25
+  min_contacts: 1
+  pinch_gap: 0.0105
+policy:
+  init_limit: 5
+  final_hold: 30
+  reach_tol: 0.004
+  max_refine: 2
+  settle_ticks_move: 25
+  move: {steps: 120, speed: 0.04, tol: [0.002, 0.02], timeout: 300}
+  pre_mode: 2                    # 2 = converging interpolation, 1 = planned move
+  pre_dx: 0.05
+  in_dx: 0.006
+  in_idle: 120
+  start_frac: 0.375
+  end_dx: 0.003
+  end_margin: 0.0

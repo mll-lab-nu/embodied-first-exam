@@ -1,0 +1,75 @@
+# fem_plug_insert: the gel pads pinch a compliant rubber plug, carry it and seat it in a press-fit hole.  Nominal scene.
+name: fem_plug_insert
+scene:
+  gel: {stiffness: 1000.0, damping: 0.5, friction: 2.0}
+  robot: {gripper_close: 0.038}
+task:
+  kind: plug_pads
+  direct_pads: true             # the gel pads pinch the plug themselves: no carrier, no reaction force
+  colliders:
+  - {name: pad_left, link: gsmini_left, half: [0.0105, 0.008, 0.002], offset: [0.0, 0.0, 0.002], mu: 1.0}
+  - {name: pad_right, link: gsmini_right, half: [0.0105, 0.008, 0.002], offset: [0.0, 0.0, 0.002], mu: 1.0}
+  anchor: [0.08, 0.0, 1.122]    # env frame: the hole plate's top face (table top 1.102 + 20 mm)
+  # FEM plug (tetrahedral VBD) and the plate with the pick socket and the target hole
+  plug_size: [0.008, 0.016, 0.034]   # 8 mm along the closing axis (1.5 mm of squeeze at the closed pads), 16 mm along the gel, 34 mm long
+  cell: 0.002
+  density: 1100.0
+  k_mu: 3.0e5
+  k_lambda: 9.0e5
+  k_damp: 0.01
+  substeps: 20
+  iterations: 10
+  fps: 30
+  particle_radius: 0.0005
+  interference: 0.0002          # real squeeze of the plug in the target hole [m]
+  socket_play: 0.0
+  hole_depth: 0.010
+  wall: 0.03
+  floor: 0.010
+  pad_mu: 6.0                   # shape friction of the pads in the FEM world (VBD averages it with the plug's 0.2)
+  plate_mu: 0.05                # slippery plate: the plug must slide into the press fit
+  plug_mu: 0.2
+  lead_in: 0.006                # 45 degree funnel at the target hole (sidecar world; drawn in Isaac)
+  pick_x: -0.03
+  target_x: 0.03
+  mpm_every: 2                  # control ticks per FEM step (the world runs at 30 Hz)
+  async_mpm: false              # the plug surface must not trail the pads by one step
+  # tactile target
+  tactile_inflate: 0.0005       # the FEM surface runs through the particle centres: push it out by the contact radius
+  tactile_extrapolate: true     # between sidecar steps the target is carried on with its bulk velocity
+  tactile_velocity: true
+  plug_color: [0.85, 0.25, 0.20]
+  # expert geometry (pad-pair frame)
+  grip_h: 0.021                 # pad centre above the plate at the pick and the seat (the fingertips clear the plate)
+  grip_bias: 0.001
+  lift_h: 0.06
+  hold_ticks: 20
+  dwell_ticks: 15
+  seat_z: 0.0
+  closing_yaw: -1.5707963267948966
+  # success (plug_pad_report)
+  check_every: 8
+  clear_z: 0.04
+  seated_min: 0.85
+  compression_range: [0.0, 0.30]
+  tilt_max_deg: 10.0
+  xy_tol: 0.004
+  success_hold: 20
+  max_steps: 3600
+  settle_ticks: 30
+policy:
+  init_limit: 30
+  settle_ticks: 120
+  hover: 0.045
+  dwell_ticks: 20
+  lift_z: 0.07
+  reach_tol: 0.012
+  max_retries: 2
+  move: {steps: 60, speed: 0.07, tol: [0.002, 0.01], timeout: 900, stall_patience: 20, stall_move_thresh: 0.0005}
+  gripper: {timeout: 40, settle_threshold: 0.0001}
+sidecar:
+  min_free_mib: 3000
+  gpu_wait_s: 600.0
+  call_timeout: 900.0
+tactile:
+  enable: true

@@ -1,0 +1,48 @@
+name: cable_needle_thread
+max_steps: 6000
+table_z: 1.102
+scene:
+  right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 3.141592653589793]
+  left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  fixture_physics: true
+soft:
+  settle_ticks: 30
+  solver: {substeps: 10, iterations: 5}
+  pinch_overlap: 0.00075
+  penetration_fail: true
+  pad_mu: 1.0
+success: {hold: 20}
+world:
+  n_seg: 21
+  length: 0.21
+  radius: 0.0035
+  tip_len: 0.1025
+  home_mid: [-0.154, -0.117, 1.338]
+  wall_dx: 0.15
+  wall_thickness: 0.012
+  wall_half: [0.2, 0.2]
+  hole: [0.031, 0.031]
+  hole_dy: 0.0
+  hole_dz: -0.0325
+  wall_mu: 0.4
+  pass_len: 0.035
+  stretch_max: 1.05
+  stand:
+    clips: [0.25, 0.75]
+    slot: 0.014
+    wall: 0.006
+    depth: 0.012
+    lip: 0.004
+    drop: 0.13
+    mu: 0.5
+  cable:
+    radius: 0.0035
+    density: 922.5
+    stretch_stiffness: 20000.0
+    stretch_damping: 0.1
+    bend_stiffness: 0.22
+    bend_damping: 0.001
+    mu: 0.65
+    color: [0.15, 0.55, 0.85]
+tactile: {enabled: true}

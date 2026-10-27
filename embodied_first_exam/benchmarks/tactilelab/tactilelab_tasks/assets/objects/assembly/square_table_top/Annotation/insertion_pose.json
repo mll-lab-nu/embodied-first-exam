@@ -1,0 +1,20 @@
+{
+  "slots": {
+    "corner_pp": {
+      "hole_top_local":    [0.05625, 0.05625, 0.0156],
+      "hole_bottom_local": [0.05625, 0.05625, -0.0116]
+    },
+    "corner_pn": {
+      "hole_top_local":    [0.05625, -0.05625, 0.0156],
+      "hole_bottom_local": [0.05625, -0.05625, -0.0116]
+    },
+    "corner_np": {
+      "hole_top_local":    [-0.05625, 0.05625, 0.0156],
+      "hole_bottom_local": [-0.05625, 0.05625, -0.0116]
+    },
+    "corner_nn": {
+      "hole_top_local":    [-0.05625, -0.05625, 0.0156],
+      "hole_bottom_local": [-0.05625, -0.05625, -0.0116]
+    }
+  }
+}

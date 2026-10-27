@@ -1,0 +1,14 @@
+{
+  "thread_pitch": 0.002,
+  "insertion_axis": {
+    "tail_local": [0.0, 0.0, 0.0],
+    "head_local": [0.0, 0.0, 0.035]
+  },
+  "slots": {
+    "slot_0": {
+      "slot_center_local": [0.0, 0.0, 0.010],
+      "hole_bottom_local": [0.0, 0.0, 0.010],
+      "hole_top_local": [0.0, 0.0, 0.035]
+    }
+  }
+}

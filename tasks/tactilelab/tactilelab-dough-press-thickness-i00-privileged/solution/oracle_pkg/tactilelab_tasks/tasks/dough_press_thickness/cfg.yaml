@@ -1,0 +1,72 @@
+# dough_press_thickness: the gel pads pinch a dough ridge (direct-sensor task, no tool).  Nominal scene, no randomisation.
+name: dough_press_thickness
+scene:
+  gel: {stiffness: 1000.0, damping: 0.5, friction: 2.0}   # compliant gel contact of the dough tasks
+  robot: {gripper_close: 0.038}
+task:
+  kind: pinch
+  direct_pads: true             # the gel pads are the MPM colliders: no tool, no hold fixture, no reaction force
+  colliders:                    # the two gel pads (box half extents in the gel frame, offset = box centre; the gel face is at z 0.004)
+  - {name: pad_left, link: gsmini_left, half: [0.0105, 0.008, 0.002], offset: [0.0, 0.0, 0.002], mu: 1.0}
+  - {name: pad_right, link: gsmini_right, half: [0.0105, 0.008, 0.002], offset: [0.0, 0.0, 0.002], mu: 1.0}
+  anchor: [0.08, 0.0, 1.112]    # env frame: plate top centre (table top 1.102 + a 10 mm plate)
+  plate_half: [0.12, 0.12]
+  plate_friction: 0.05
+  # dough (implicit MPM)
+  material: {preset: dough, yield_stress: 2500.0}   # a stiffer paste than the preset: the 26 mm ridge stands and keeps the neck
+  voxel: 0.0025                 # the closed gel faces are 6.5 mm apart: >= 2.5 cells
+  collider_margin: 0.001        # ~ the particle radius
+  substeps: 2
+  iterations: 150
+  mpm_every: 2                  # control ticks per MPM step (world dt = 2 x 1/60 s)
+  async_mpm: true
+  # dough ridge along y on the plate
+  ridge_w: 0.018
+  ridge_len: 0.09
+  ridge_h: 0.026
+  trough_h: 0.008               # two low rails (sidecar world only, drawn in Isaac) hold the base of the ridge
+  trough_t: 0.004
+  blob_center: [0.0, 0.0]
+  center_jitter: 0.0
+  # surface mesh (cameras) and tactile target
+  visual_sigma: 1.0
+  visual_level: 0.5
+  mesh_voxel: 0.001             # splat grid of the surface mesh: 1 mm (a coarser mesh is ~2 mm too thick between the pads)
+  tactile_inset: 0.0015         # the tactile target is inset by this (the MPM contact keeps ~1 voxel of paste between collider and particles)
+  dough_color: [0.74, 0.52, 0.26]
+  # expert geometry
+  pinch_z: 0.022                # planned pad-pair centre above the plate
+  pinch_offsets: [-0.018, 0.018]  # pinch centres along the ridge (> 30 mm apart)
+  closing_yaw: -1.5707963267948966  # closing axis along +x (across the ridge)
+  hold_ticks: 20
+  # success (pinch_report), judged every check_every MPM steps once the pads are clear_z above the plate
+  check_every: 8
+  clear_z: 0.05
+  zone_half: 0.005
+  band: [0.016, 0.024]
+  target_thickness: 0.009
+  thickness_tol: 0.003
+  loose_target_thickness: 0.008 # informational metric thickness_loose_ok only
+  loose_thickness_tol: 0.004
+  flatness_tol: 0.0035
+  workspace_radius: 0.09
+  outside_tol: 0.03
+  success_hold: 20
+  max_steps: 3600
+  settle_ticks: 30
+policy:                         # DoughScriptPolicy settings + script parameters (override the task block's)
+  init_limit: 30
+  settle_ticks: 120
+  hover: 0.045
+  dwell_ticks: 20
+  lift_z: 0.07
+  reach_tol: 0.012
+  max_retries: 2
+  move: {steps: 60, speed: 0.07, tol: [0.002, 0.01], timeout: 900, stall_patience: 20, stall_move_thresh: 0.0005}
+  gripper: {timeout: 40, settle_threshold: 0.0001}
+sidecar:
+  min_free_mib: 3000
+  gpu_wait_s: 600.0
+  call_timeout: 900.0
+tactile:
+  enable: true

@@ -1,0 +1,64 @@
+name: fem_plug_insert
+scene:
+  gel: {stiffness: 1000.0, damping: 0.5, friction: 2.0}
+  robot: {gripper_close: 0.038}
+task:
+  kind: plug_pads
+  direct_pads: true
+  colliders:
+  - name: pad_left
+    link: gsmini_left
+    half: [0.0105, 0.008, 0.002]
+    offset: [0.0, 0.0, 0.002]
+    mu: 1.0
+  - name: pad_right
+    link: gsmini_right
+    half: [0.0105, 0.008, 0.002]
+    offset: [0.0, 0.0, 0.002]
+    mu: 1.0
+  anchor: [0.08, 0.0, 1.122]
+  plug_size: [0.008, 0.016, 0.034]
+  cell: 0.002
+  density: 1100.0
+  k_mu: 3.0e5
+  k_lambda: 9.0e5
+  k_damp: 0.01
+  substeps: 20
+  iterations: 10
+  fps: 30
+  particle_radius: 0.0005
+  interference: 0.0002
+  socket_play: 0.0
+  hole_depth: 0.01
+  wall: 0.03
+  floor: 0.01
+  pad_mu: 6.0
+  plate_mu: 0.05
+  plug_mu: 0.2
+  lead_in: 0.006
+  pick_x: -0.03
+  target_x: 0.03
+  mpm_every: 2
+  async_mpm: false
+  tactile_inflate: 0.0005
+  tactile_extrapolate: true
+  tactile_velocity: true
+  plug_color: [0.85, 0.25, 0.2]
+  grip_h: 0.021
+  grip_bias: 0.001
+  lift_h: 0.06
+  hold_ticks: 20
+  dwell_ticks: 15
+  seat_z: 0.0
+  closing_yaw: -1.5707963267948966
+  check_every: 8
+  clear_z: 0.04
+  seated_min: 0.85
+  compression_range: [0.0, 0.3]
+  tilt_max_deg: 10.0
+  xy_tol: 0.004
+  success_hold: 20
+  max_steps: 3600
+  settle_ticks: 30
+sidecar: {min_free_mib: 3000, gpu_wait_s: 600.0, call_timeout: 900.0}
+tactile: {enable: true}

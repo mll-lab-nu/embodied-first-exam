@@ -1,0 +1,28 @@
+{
+  "slots": {
+    "socket": {
+      "hole_top_local": [
+        0.0,
+        0.0,
+        -0.0415
+      ],
+      "hole_bottom_local": [
+        0.0,
+        0.0,
+        -0.0148
+      ]
+    },
+    "hood_seat": {
+      "hole_top_local": [
+        0.0,
+        0.0,
+        -0.086
+      ],
+      "hole_bottom_local": [
+        0.0,
+        0.0,
+        -0.0397
+      ]
+    }
+  }
+}

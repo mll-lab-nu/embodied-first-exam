@@ -1,0 +1,40 @@
+# sleeve_pull_on_forearm: pinch the pull tab of a pre-donned sleeve and pull it along the posed left forearm (nominal scene).
+name: sleeve_pull_on_forearm
+table_z: 1.102
+max_steps: 6000
+scene:
+  left_arm_q0: [0.0, 2.0, -2.0, 0.0, -1.578, -1.932]   # the left forearm horizontal in front of the robot
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+soft:
+  settle_ticks: 150
+  solver: {substeps: 10, iterations: 6}
+  pinch_overlap: 0.0005
+  penetration_fail: true
+  pad_mu: 1.0                    # the forearm cylinder (link J2_3) is inserted after the two gel pads
+world:                           # overrides of tasks.sleeve_pull_on_forearm.task.SLEEVE_PINCH (none: the nominal scene)
+  pinch_tilt_deg: 25.0
+success:
+  hold: 30
+  band_tol: 0.030
+  pen_tol: 0.004
+  bunch_tol: 0.5
+  open_gap: 0.05
+  rest_speed: 0.01
+  min_contacts: 1
+policy:
+  init_limit: 5
+  final_hold: 30
+  reach_tol: 0.004
+  max_refine: 2
+  settle_ticks_move: 25
+  move: {steps: 120, speed: 0.04, tol: [0.002, 0.02], timeout: 300}
+  pre_mode: 2
+  pre_dist: 0.14
+  pre_idle: 200
+  pinch_depth: 0.008
+  in_idle: 200
+  pull_steps: 8
+  pull_max: 0.025
+  pinch_overpull: -0.005         # release 5 mm short of the band: the stretched sleeve springs on when the pads let go
+  retreat: 0.09
+  final_settle: 240

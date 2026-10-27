@@ -1,0 +1,73 @@
+# handover: bimanual fixed-pose handover. The right arm carries a pre-grasped rod into the
+# open left gripper, the left gripper closes, the right gripper opens and retracts. Both
+# arms work in the plane y = -0.1175 with the grippers pointing down and the jaws closing
+# along y; the rod (24 x 2.5 x 2.5 cm bar, axis along world x) hangs 0.2 m above the worktop.
+# Fixed nominal scene. Units: metres, degrees (extrinsic XYZ), env frame.
+name: handover
+max_steps: 4000
+success_hold: 15
+
+scene:
+  settle_ticks: 2
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    # right arm: pad centre (-0.25, -0.1175, 1.30), approach tilted 30 deg back, jaws closed on the rod
+    right_arm_q0: [0.0, 0.8366, 1.0204, -0.7074, 0.0, 0.0]
+    right_finger_q0: [-0.028, 0.028]
+    # left arm (fixed for the whole task): pad centre (0.10, -0.1175, 1.30), approach tilted 30 deg away, jaws open
+    left_arm_q0: [0.0, 0.1439, 0.4755, 1.1431, 0.0, 0.0]
+    left_finger_q0: [0.01, -0.01]
+    initial_gripper: [1, 0]    # [right, left] command at reset: right closed on the rod, left open
+    close_magnitude: 0.038
+  objects:
+    - name: rod
+      shape: cuboid
+      dims: [0.025, 0.025, 0.24]   # local z = the bar's length
+      pos: [-0.17, -0.1175, 1.30]
+      ori_deg: [0.0, 90.0, 0.0]    # local z along world x
+      mass: 0.05
+      friction: 1.0
+      color: [0.85, 0.35, 0.15]
+
+handover:
+  rod: rod
+  gravity_on_after_closed_ticks: 50   # the rod is a weightless fixture until the right jaws have been commanded closed this long
+  tcp_offset: 0.1777                  # wrist link -> pad centre along the wrist +z axis
+
+success:                              # handover judge; every term must hold for success_hold ticks
+  rod_radius: 0.0125
+  rod_length: 0.24
+  table_top_z: 1.102
+  support_clearance: 0.05             # rod's lowest point above the table top: carried, not supported
+  hold_radius: 0.02                   # left pad centre on the rod axis
+  closed_gap_tol: 0.012               # left gap within this of the rod diameter (+ gap_offset)
+  gap_offset: 0.0
+  right_open_gap: 0.09                # right gripper open
+  right_away: 0.10                    # right pad centre clear of the rod axis
+  max_speed: 0.03                     # rod at rest (m/s)
+  max_rate: 0.5                       # rod at rest (rad/s)
+  workspace_xy: 0.9                   # rod farther than this from the env origin = truncated
+  drop_margin: 0.02                   # rod's lowest point under table top + margin = dropped -> truncated
+
+tactile:
+  enabled: true
+  targets: [rod]
+  left_gripper: true                  # also sense the left gripper's pads (keys tactile_j2_*)
+
+policy:
+  hold_offset: 0.03                   # left pad centre this far ahead (+x) of the final rod centre
+  pre_insert_dist: 0.10
+  retract_dist: 0.20
+  settle_ticks: 20
+  rest_ticks: 15
+  refine_tol: 0.004
+  refine_tries: 3
+  move:
+    interp_steps: 60
+    speed: 0.10
+    translation_tol: 0.004
+    rotation_tol: 0.06
+    timeout: 400
+  gripper:
+    timeout: 30
+    settle_threshold: 0.001

@@ -1,0 +1,112 @@
+# insert_tube: grasp the test tube standing in its rack (vertical bore), pull it straight
+# out and insert it into the TestTubeSlot's bore (inclined 30 deg toward the slot's local
+# -x, entry on the slanted face, 8.2 cm long, 2.1 cm bore vs 2.0 cm tube), release, freeze.
+# Fixed nominal scene. Units: metres, degrees (extrinsic XYZ), env frame.
+name: insert_tube
+max_steps: 4000
+success_hold: 1
+
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+    - name: tube_slot
+      usd: objects/insertion/TestTubeSlot/Object.usd
+      pos: [0.26, 0.03, 1.1525]
+      ori_deg: [0.0, 0.0, 0.0]
+      static: true
+      friction: 0.5
+    - name: tube_base               # the rack: vertical through-bore, the tube rests about 2.8 mm above its floor
+      usd: objects/insertion/TestTubeBase/Object.usd
+      pos: [-0.04, 0.15, 1.1275]
+      ori_deg: [0.0, 0.0, 0.0]
+      static: true
+      friction: 0.5
+    - name: tube
+      usd: objects/insertion/TestTube/Object.usd
+      pos: [-0.04, 0.15, 1.1705]
+      ori_deg: [0.0, 0.0, 0.0]
+      mass: 0.01
+      friction: 0.5
+
+parts:
+  - held: tube
+    target: tube_slot
+    slot: hole
+    screw: false
+
+extract:                            # the rack bore the tube is pulled out of first (reverse stroke)
+  target: tube_base
+  slot: hole
+  clearance: 0.01                   # careful-phase exit: tip this far above the rack entry
+  retrieve: 0.10                    # fast lift after clearing
+  substeps: 300
+
+success:
+  assembled_margin: 0.042           # success depth = bore length (0.0822) - margin = 4.0 cm
+  assembled_lateral: 0.01           # tip within this of the bore axis
+  assembled_axis_deg: 8.0           # tube axis within this of the bore axis
+  release_clear: 0.15               # hand this far from the tube after the release
+  jaw_open_width: 0.09              # and the jaws open (width = 0.082 + q7 - q8)
+  require_grasp_latch: true
+  grasp_lift_thresh: 0.04
+  grasp_hold_thresh: 0.3
+  end_on_release: false             # the judge below replaces the assembly release gate
+  drop_z: 0.95                      # diagnostics (metrics only)
+  carry_lost: 0.45
+  target_move: 0.05
+
+tactile:
+  enabled: true
+  targets: [tube]
+
+plan: {rehome: false, rehome_first: true, rehome_finish: false}
+
+# Scripted expert (policy.py): reach -> grasp in place -> extract -> insert -> release.
+grasp:
+  part: body
+  label_sample: 0                   # deterministic label (lowest cost): the extraction needs the wrist-natural grasp
+  pad_center_local: [0.0, 0.0, 0.045] # pads on the exposed upper body (tube centre is 18 mm above the rack top;
+  pad_center_tol: 0.025             # lower labels would clamp the rack)
+  pre_grasp_offset: 0.15
+  retrieval_offset: 0.3
+  retrieval_mode: interp            # slow straight lift out of the rack bore
+  close_settle: 0
+  finger_vel_limit: 0.025           # episode-wide gentle jaws (the 10 g tube)
+  finger_effort_limit: 5.0
+
+insert:
+  preinsert_clearance: 0.025
+  preinsert_max_steps: 900
+  insert_stop_depth: 0.043
+  seat_margin: 0.039
+  insert_descent_substeps: 80
+  insert_max_steps: 9000               # the CPU pipeline pushes the tube down the bore slowly (about 0.3 mm per second)
+  lateral_follow: true
+  lateral_follow_alpha: 0.05
+  align_tol_deg: 6.0
+  align_max_steps: 400
+  hold_centered_steps: 8
+  lateral_gain: 0.6
+  lateral_step_max: 0.004
+  lateral_deadband: 0.0015
+  lateral_freeze_depth: 0.012
+  lateral_deadband_inbore: 0.0003
+  servo_track_thresh: 0.03
+  hold_decay: 0.9
+  press_allowance: 0.003
+  press_effort: 20.0                # finger effort cap during the press (the drive limit)
+  press_effort_rest: 5.0
+  release_min_depth: 0.004
+  axis_abort_deg: 8.0
+  slip_jam: 0.006
+  erode_jam: 0.0008
+  retract_height: 0.0               # freeze after the release
+  end_held: false
+  seat_margin_success: 0.042        # release gate = the task's seated flag (depth >= bore - 0.042, lateral, axis)
+  success_xy: 0.01
+  success_axis_deg: 8.0

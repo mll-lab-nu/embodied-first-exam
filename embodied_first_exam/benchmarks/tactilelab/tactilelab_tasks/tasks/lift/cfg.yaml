@@ -1,0 +1,49 @@
+name: lift
+max_steps: 10000
+success_hold: 20
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+  - name: bottle_5
+    usd: objects/bottle/bottle_5_xtrainer/Object.usd
+    pos: [-0.04, 0.018, 1.1373]
+    ori_deg: [-90.0, 0.0, 0.0]
+    mass: 0.1
+    friction: 1.0
+  - name: place_cube
+    shape: cuboid
+    dims: [0.2, 0.2, 0.01]
+    pos: [0.03, 0.12, 1.112]
+    static: true
+    color: [0.2, 0.8, 0.2]
+  - name: cradle_bar_left
+    shape: cuboid
+    dims: [0.015, 0.06, 0.022]
+    pos: [-0.0855, -0.09, 1.113]
+    static: true
+    friction: 0.5
+    color: [0.5, 0.5, 0.55]
+  - name: cradle_bar_right
+    shape: cuboid
+    dims: [0.015, 0.06, 0.022]
+    pos: [0.0055, -0.09, 1.113]
+    static: true
+    friction: 0.5
+    color: [0.5, 0.5, 0.55]
+  - name: cradle_end_wall
+    shape: cuboid
+    dims: [0.106, 0.015, 0.022]
+    pos: [-0.04, -0.1275, 1.113]
+    static: true
+    friction: 0.5
+    color: [0.5, 0.5, 0.55]
+lift: {bottle: bottle_5, pad: place_cube, release_clearance: 0.005}
+success: {xy: 0.1, z: 0.06, jaw_open_width: 0.09, eef_away: 0.0, eef_z_max: 1.8, drop_below_table: 0.3}
+tactile:
+  enabled: true
+  targets: [bottle_5]

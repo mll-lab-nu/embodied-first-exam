@@ -1,0 +1,29 @@
+name: nut_thread
+max_steps: 12000
+success_hold: 1
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+  - name: bolt_m16
+    usd: objects/mechanical/bolt_m16/Object.usd
+    pos: [-0.06, -0.08, 1.103]
+    static: true
+    friction: 0.75
+  - name: nut_m16
+    usd: objects/mechanical/nut_m16/Object.usd
+    pos: [-0.06, -0.08, 1.1425]
+    ori_deg: [0.0, 0.0, 172.7]
+    mass: 0.03
+    friction: 0.01
+parts:
+- {held: nut_m16, target: bolt_m16, slot: slot_0, screw: true, skip_lift: true, skip_insert: true}
+success: {assembled_margin: 0.0215, assembled_lateral: 0.008, assembled_axis_deg: 15.0, require_grasp_latch: false, end_on_release: true,
+  release_open_mm: 10.0, release_settle_steps: 30, assembled_clear: 0.35}
+tactile:
+  enabled: true
+  targets: [nut_m16, bolt_m16]

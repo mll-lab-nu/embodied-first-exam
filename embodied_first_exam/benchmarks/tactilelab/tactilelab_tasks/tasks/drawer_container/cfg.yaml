@@ -1,0 +1,37 @@
+name: drawer_container
+max_steps: 12000
+success_hold: 1
+scene:
+  settle_ticks: 150
+  gel: {stiffness: 1000.0, damping: 0.5, friction: 5.0}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.041
+  objects:
+  - name: drawer_box
+    usd: objects/assembly/drawer_box/Object.usd
+    pos: [0.16, -0.03, 1.1443]
+    ori_deg: [0.0, 0.0, 90.0]
+    static: true
+    friction: 0.15
+  - name: drawer_container_top
+    usd: objects/assembly/drawer_container_top/Object.usd
+    pos: [-0.14, -0.03, 1.129]
+    ori_deg: [0.0, 0.0, 90.0]
+    mass: 0.05937
+    friction: 0.5
+  - name: drawer_container_bottom
+    usd: objects/assembly/drawer_container_bottom/Object.usd
+    pos: [-0.02, -0.03, 1.129]
+    ori_deg: [0.0, 0.0, 90.0]
+    mass: 0.05937
+    friction: 0.5
+parts:
+- {held: drawer_container_bottom, target: drawer_box, slot: slot_lower, screw: false, push: true, push_target: 0.165}
+- {held: drawer_container_top, target: drawer_box, slot: slot_upper, screw: false, push: true, push_target: 0.165, joint_approach: true}
+success: {assembled_margin: 0.012, assembled_lateral: 0.006, assembled_axis_deg: 12.0, settle_ticks: 30, settle_eps: 0.0005,
+  assembled_clear: 0.0, require_grasp_latch: true, grasp_lift_thresh: 0.04, grasp_hold_thresh: 0.3, end_on_release: false}
+tactile:
+  enabled: true
+  targets: [drawer_container_bottom, drawer_container_top]

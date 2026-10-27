@@ -1,0 +1,18 @@
+name: cloth_fold_half
+table_z: 1.102
+max_steps: 6000
+scene:
+  fixture_physics: true
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+soft:
+  settle_ticks: 45
+  solver: {substeps: 10, iterations: 5}
+  pinch_overlap: 0.00035
+  penetration_fail: true
+  pad_mu: 1.0
+world:
+  layout:
+    yaw_deg: 90.0
+    root_xy: [0.1, -0.15]
+success: {hold: 30, align_y: 0.008, align_edge: 0.03, over_dz: 0.002, rest_speed: 0.006, open_gap: 0.016, min_contacts: 1,
+  attach_columns: 2}

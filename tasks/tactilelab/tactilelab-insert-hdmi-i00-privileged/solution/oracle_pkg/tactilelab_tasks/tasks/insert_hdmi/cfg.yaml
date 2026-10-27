@@ -1,0 +1,106 @@
+# insert_hdmi: grasp the HDMI connector standing on the worktop and press it into the
+# HDMISlot's vertical trapezoid port (12.5 mm plate, port 9.9 mm deep), release, freeze.
+# Fixed nominal scene. Units: metres, degrees (extrinsic XYZ), env frame.
+name: insert_hdmi
+max_steps: 4000
+success_hold: 1
+
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+    - name: hdmi_slot
+      usd: objects/insertion/HDMISlot/Object.usd
+      pos: [-0.04, -0.09, 1.1083]
+      ori_deg: [0.0, 0.0, 0.0]
+      static: true
+      friction: 0.5
+    - name: hdmi
+      usd: objects/insertion/HDMI/Object.usd
+      pos: [-0.04, 0.0, 1.1175]
+      ori_deg: [0.0, 0.0, 0.0]
+      mass: 0.005
+      friction: 0.5
+
+parts:
+  - held: hdmi
+    target: hdmi_slot
+    slot: hole
+    screw: false
+
+success:
+  assembled_margin: 0.005           # success depth = port depth (0.0099) - margin
+  assembled_lateral: 0.006          # tip within this of the port axis
+  assembled_axis_deg: 15.0
+  release_clear: 0.15
+  jaw_open_width: 0.09
+  require_grasp_latch: true
+  grasp_lift_thresh: 0.02
+  grasp_hold_thresh: 0.3
+  end_on_release: false
+  drop_z: 0.95
+  carry_lost: 0.45
+  target_move: 0.05
+
+tactile:
+  enabled: true
+  targets: [hdmi]
+
+plan: {rehome: false, rehome_first: true, rehome_finish: false}
+
+# Scripted expert (policy.py): reach -> grasp -> insert -> release at the stop depth.
+grasp:
+  part: body
+  label_sample: 4
+  pre_grasp_offset: 0.12
+  retrieval_offset: 0.15
+  close_settle: 0
+
+insert:
+  preinsert_clearance: 0.03
+  preinsert_max_steps: 900
+  insert_stop_depth: 0.0099
+  seat_margin: 0.001
+  insert_descent_substeps: 480
+  descent_ease_pow: 2.0
+  insert_max_steps: 2400
+  align_tol_deg: 6.0
+  align_max_steps: 400
+  hold_centered_steps: 8
+  lateral_gain: 0.3
+  lateral_step_max: 0.001
+  lateral_deadband: 0.001
+  lateral_freeze_depth: 0.006
+  lateral_deadband_inbore: 0.0003
+  pre_entry_fine: 0.005
+  servo_track_thresh: 0.03
+  hold_decay: 0.9
+  press_allowance: 0.0015
+  press_effort: 20.0                # drive limit
+  press_effort_rest: 10.0
+  release_min_depth: 0.003
+  release_at_stop: true
+  release_dwell_steps: 30
+  axis_abort_deg: 15.0
+  servo_cutoff_depth: 0.005
+  straighten_tol_deg: 2.0
+  straighten_every: 5
+  press_test_steps: 45
+  adjust_trigger_steps: 5
+  adjust_align_steps: 20
+  adjust_backoff: 0.001
+  adjust_ori_slew_deg: 0.3
+  adjust_step_max: 0.0002
+  adjust_progress_eps: 0.00005
+  adjust_max: 30
+  slip_jam: 0.006
+  erode_jam: 0.002
+  retract_height: 0.0
+  end_held: false
+  seat_margin_success: 0.005        # release gate = the task's seated flag (depth >= port - 0.005, lateral, axis)
+  success_xy: 0.006
+  success_axis_deg: 15.0

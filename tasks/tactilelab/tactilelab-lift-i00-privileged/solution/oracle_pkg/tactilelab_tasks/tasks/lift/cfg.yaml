@@ -1,0 +1,81 @@
+# lift: grasp a LYING bottle from its cradle with a side grasp, reorient it upright in
+# mid-air (hops of 30 deg about the bottle centre) and place it standing on the pad.
+# Fixed nominal scene. Units: metres, degrees (extrinsic XYZ), env frame.
+name: lift
+max_steps: 10000
+success_hold: 20               # ticks the bottle must hold the pad pose with the jaws open
+
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+    - name: bottle_5
+      usd: objects/bottle/bottle_5_xtrainer/Object.usd
+      pos: [-0.04, 0.018, 1.1373]
+      ori_deg: [-90.0, 0.0, 0.0]     # part +z (cap) -> world +y, the base end sits in the cradle pocket
+      mass: 0.1
+      friction: 1.0
+    - name: place_cube                # the place pad: 0.2 x 0.2 x 0.01 m board, top face at z = 1.117
+      shape: cuboid
+      dims: [0.2, 0.2, 0.01]
+      pos: [0.03, 0.12, 1.112]
+      static: true
+      color: [0.2, 0.8, 0.2]
+    # U-cradle that chocks the bottle base so the grasp cannot roll it: the BottleCradle
+    # asset (bars 0.06 x 0.015 x 0.022 at local y = +-0.0455, end wall 0.015 x 0.106 x 0.022
+    # at local x = -0.0375, pocket opening along local +x) placed at (-0.04, -0.09, 1.102)
+    # with yaw 90 deg, written out as three static boxes in the env frame.
+    - {name: cradle_bar_left, shape: cuboid, dims: [0.015, 0.06, 0.022], pos: [-0.0855, -0.09, 1.113], static: true, friction: 0.5, color: [0.5, 0.5, 0.55]}
+    - {name: cradle_bar_right, shape: cuboid, dims: [0.015, 0.06, 0.022], pos: [0.0055, -0.09, 1.113], static: true, friction: 0.5, color: [0.5, 0.5, 0.55]}
+    - {name: cradle_end_wall, shape: cuboid, dims: [0.106, 0.015, 0.022], pos: [-0.04, -0.1275, 1.113], static: true, friction: 0.5, color: [0.5, 0.5, 0.55]}
+
+lift:
+  bottle: bottle_5
+  pad: place_cube
+  release_clearance: 0.005     # object contact face above the pad top at release
+
+success:
+  xy: 0.10                     # bottle origin within this radius of the place target
+  z: 0.06                      # and within this height band
+  jaw_open_width: 0.09         # right gripper released (width = 0.082 + q7 - q8)
+  eef_away: 0.0                # > 0: also require the hand this far from the bottle (e.g. 0.35 with a retreat)
+  eef_z_max: 1.8               # hand above this height = arm flailing -> episode truncated
+  drop_below_table: 0.3        # bottle this far under the table top = dropped -> truncated
+
+tactile:
+  enabled: true
+  targets: [bottle_5]
+
+policy:
+  init_hold: 30                # ticks before the first move
+  grasp:
+    standoff: 0.18             # wrist to bottle axis, radially outward
+    bands: [-0.045, 0.0, 0.045]  # grasp heights along the bottle axis (part z)
+    band: 0.0                  # band used (closest entry of `bands`)
+    closing_sign: auto         # +1 / -1 jaw direction along the bottle's diametral axis; auto = least wrist rotation
+    pre_grasp_offset: 0.06     # back along the hand z axis
+    retrieval_offset: 0.3      # lift after the close (world +z)
+    settle_ticks: 30
+  move:
+    interp_steps: 120
+    speed: 0.1                 # m/s cap of the retrieval / pre-place moves
+    translation_tol: 0.002
+    rotation_tol: 0.005
+    timeout: 120
+    descend_steps: 60
+  gripper:
+    timeout: 30
+    settle_threshold: 0.001
+  reorient:
+    step_deg: 30.0             # at most this much rotation per planned hop (re-measured each hop)
+    done_deg: 5.0              # measured tilt below this = upright
+    hold_ticks: 20
+    max_hops: 12
+  place:
+    pre_place_offset: 0.12     # hover above the place pose (world +z)
+    settle: 15                 # ticks after the release
+    retreat_offset: 0.0        # 0 = freeze at the release pose

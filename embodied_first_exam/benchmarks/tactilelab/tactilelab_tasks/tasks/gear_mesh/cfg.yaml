@@ -1,0 +1,38 @@
+name: gear_mesh
+max_steps: 6000
+success_hold: 1
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+  - name: gear_base
+    usd: objects/mechanical/gear_base/Object.usd
+    pos: [-0.06, -0.08, 1.103]
+    static: true
+    friction: 0.75
+  - name: gear_small
+    usd: objects/mechanical/gear_small/Object.usd
+    pos: [-0.06, -0.08, 1.104]
+    mass: 0.019
+    friction: 0.75
+  - name: gear_large
+    usd: objects/mechanical/gear_large/Object.usd
+    pos: [-0.06, -0.08, 1.104]
+    mass: 0.019
+    friction: 0.75
+  - name: gear_medium
+    usd: objects/mechanical/gear_medium/Object.usd
+    pos: [-0.02, 0.155, 1.1175]
+    mass: 0.012
+    friction: 0.75
+parts:
+- {held: gear_medium, target: gear_base, slot: slot_medium, screw: false}
+success: {assembled_margin: 0.004, assembled_lateral: 0.008, assembled_axis_deg: 15.0, require_grasp_latch: true, end_on_release: true,
+  release_open_mm: 10.0, release_settle_steps: 30, assembled_clear: 0.3, grasp_lift_thresh: 0.04, grasp_hold_thresh: 0.3}
+tactile:
+  enabled: true
+  targets: [gear_medium, gear_base, gear_small, gear_large]

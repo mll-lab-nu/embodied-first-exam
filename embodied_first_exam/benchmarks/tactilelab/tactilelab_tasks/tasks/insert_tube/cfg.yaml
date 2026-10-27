@@ -1,0 +1,38 @@
+name: insert_tube
+max_steps: 4000
+success_hold: 1
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+  - name: tube_slot
+    usd: objects/insertion/TestTubeSlot/Object.usd
+    pos: [0.26, 0.03, 1.1525]
+    ori_deg: [0.0, 0.0, 0.0]
+    static: true
+    friction: 0.5
+  - name: tube_base
+    usd: objects/insertion/TestTubeBase/Object.usd
+    pos: [-0.04, 0.15, 1.1275]
+    ori_deg: [0.0, 0.0, 0.0]
+    static: true
+    friction: 0.5
+  - name: tube
+    usd: objects/insertion/TestTube/Object.usd
+    pos: [-0.04, 0.15, 1.1705]
+    ori_deg: [0.0, 0.0, 0.0]
+    mass: 0.01
+    friction: 0.5
+parts:
+- {held: tube, target: tube_slot, slot: hole, screw: false}
+extract: {target: tube_base, slot: hole, clearance: 0.01, retrieve: 0.1, substeps: 300}
+success: {assembled_margin: 0.042, assembled_lateral: 0.01, assembled_axis_deg: 8.0, release_clear: 0.15, jaw_open_width: 0.09,
+  require_grasp_latch: true, grasp_lift_thresh: 0.04, grasp_hold_thresh: 0.3, end_on_release: false, drop_z: 0.95, carry_lost: 0.45,
+  target_move: 0.05}
+tactile:
+  enabled: true
+  targets: [tube]

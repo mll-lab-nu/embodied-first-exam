@@ -1,0 +1,89 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
+
+[task]
+name = "embodied-first-exam/tactilelab-insert-tube-i00-privileged"
+description = "TactileLab insert_tube (dual-arm X-Trainer whose right gripper carries two GelSight Mini tactile sensors, Isaac Lab 2.3 / Isaac Sim 5.1, PhysX on the GPU): produce one replayable trajectory. Pull the test tube out of its rack and insert it into the inclined bore of the tube slot. Frozen scene instance (the fixed nominal scene, seed 0)."
+authors = [{ name = "Haoran Lu" }]
+keywords = ["robotics", "tactilelab", "isaac-lab", "isaac-sim", "x-trainer", "tactile", "gelsight-mini", "code-as-policy", "trajectory", "insert_tube"]
+
+[metadata]
+author_name = "Haoran Lu"
+task_type = "trajectory"          # trajectory | policy   (see docs/protocol/README.md)
+simulator = "tactilelab"              # TactileLab tasks on Isaac Lab 2.3.2 / Isaac Sim 5.1 (PhysX on the GPU, RTX rendering, Taxim tactile images)
+robot = "xtrainer-gsmini"
+family = "insert_tube"
+mode = "privileged"               # privileged state, resets and primitives through the tooling (docs/protocol/README.md §3)
+dynamics = "static"               # scene dynamics (docs/protocol/README.md §2.14): the task's own declaration
+oracle = "full"
+oracle_evidence = "solution/: the scripted demonstration policy of this task, recorded through the Session; graded 1 by the fresh-process replays."
+instance_seed = 0                 # scene = environment/instance.json (the scene state after reset + its hash); identity = dataset.toml digest
+expert_time_estimate_hours = 1.0
+
+[metadata.resources]
+# minimum compute to run this task (docs/protocol/README.md §2.9)
+min_cpus = 4.0
+min_memory_gb = 13.0
+min_gpu_memory_gb = 6.5
+gpu_required = true
+gpu_class = "rtx"
+recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+verifier_min_cpus = 4.0
+verifier_min_memory_gb = 13.0
+verifier_min_gpu_memory_gb = 6.5
+measured = "author estimate: one Isaac Sim 5.1 process (PhysX on the GPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; to be re-measured"
+
+[metadata.resources.limits]
+# agent-phase limits in GiB (docs/protocol/README.md §2.10); scope: trial = every container, agent = the agent's container;
+# enforced from protocol v1.2 when RCB_LIMITS_ENFORCE=1 (a violation fails the trial), otherwise recorded only
+scope = "trial"
+max_gpu_memory_gb = 24.0
+max_memory_gb = 24.0
+max_processes = 512
+max_disk_gb = 20.0
+disk_paths = ["/app", "/tmp", "/root"]
+disk_exclude = []
+sustain_sec = 60.0
+window_sec = 120.0
+trial_max_gpu_memory_gb = 24.0
+trial_max_memory_gb = 24.0
+measured = "author estimate: one Isaac Sim 5.1 process (PhysX on the GPU, RTX rendering) took 8-10 GB of host memory and 4-6 GB of GPU memory in the author's runs; to be re-measured"
+
+[metadata.resources.caps]
+# docker caps per compose service, applied from protocol v1.2 (docs/protocol/README.md §2.10)
+main = { cpus = 8.0, memory_gb = 29.0, pids = 16384 }
+
+[metadata.seeds]
+# the instances this task may run from (docs/protocol/README.md §2.13): the default, the ones a runner may draw
+# from (a list, { from = A, to = B } or "any"), and the ones the reference solution under solution/ is for
+default = 0
+allowed = [0]
+oracle = [0]
+
+[verifier]
+timeout_sec = 17400.0             # two fresh-process replays at tests/grade.py's limit for the longest accepted trajectory
+                                  # (replay_timeout(30,000 rows) = 900 s + rows / 4 = 8,400 s each) + 600 s
+environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
+network_mode = "no-network"       # PROTOCOL H.6: the verifier has no network
+
+# Resource limits (docs/protocol/README.md §2.10): seal the monitor's record first, before any other sidecar ends the episode.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+[agent]
+timeout_sec = 3600.0              # TactileLab budget (tasks/tactilelab/README.md): every Python process pays ~1 min of Isaac Sim launch + scene build
+network_mode = "allowlist"      # model APIs and package registries (scripts/set_agent_egress.py); PROTOCOL §2.11
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 5400.0
+cpus = 8
+memory_mb = 29696
+
+[verifier.environment]
+build_timeout_sec = 5400.0
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

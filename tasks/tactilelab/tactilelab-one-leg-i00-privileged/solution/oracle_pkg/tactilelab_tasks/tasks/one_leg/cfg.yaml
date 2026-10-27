@@ -1,0 +1,126 @@
+# one_leg: grasp a square-table leg, insert its threaded stud into one corner bore of the
+# table top and screw it in until it stops. Fixed nominal scene (centre of the
+# randomisation ranges). Units: metres, degrees (extrinsic XYZ), env frame.
+name: one_leg
+max_steps: 6000
+success_hold: 1
+
+scene:
+  settle_ticks: 60
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    left_arm_q0: [0.776, 0.144, -0.157, -0.013, 0.0, -0.224]
+    close_magnitude: 0.038
+  objects:
+    - name: square_table_top
+      usd: objects/assembly/square_table_top/Object.usd
+      pos: [-0.02, -0.155, 1.115]
+      ori_deg: [0.0, 0.0, -30.0]
+      static: true
+      friction: 0.15
+    - name: square_table_leg
+      usd: objects/assembly/Square_table_leg/Object.usd
+      pos: [-0.02, 0.16, 1.162]
+      ori_deg: [0.0, 0.0, 0.0]
+      mass: 0.0231
+      friction: 0.15
+
+parts:
+  - held: square_table_leg
+    target: square_table_top
+    slot: corner_pn
+    screw: true
+
+plan: {rehome: false, rehome_finish: false}
+
+grasp:
+  part: body
+  label_sample: 4            # random subset of 4 labels per episode (seeded)
+  axis_offset_max: 0.0085    # jaw-axis clearance filter
+  pre_grasp_offset: 0.15
+  retrieval_offset: 0.3
+  close_settle: 30
+
+insert:
+  preinsert_clearance: 0.025
+  preinsert_max_steps: 900
+  insert_stop_depth: 0.0065  # release here and let the screw take over
+  lateral_follow: true
+  lateral_follow_alpha: 0.05
+  yaw_follow_alpha: 0.02
+  unlock_sweep: true
+  unlock_e: 0.0004
+  unlock_sweep_dps: -30.0
+  unlock_break: 0.0005
+  unlock_max_sweeps: 2.0
+  release_min_depth: 0.004
+  erode_jam: 0.0008
+  slip_jam: 0.006
+  grip_slip_comp: true
+  seat_margin: 0.006
+  retract_height: 0.0        # open jaws stay caged around the standing leg
+  insert_max_steps: 3000
+  insert_descent_substeps: 80
+  insert_yaw_offset_deg: 0.0
+  end_held: true
+  end_held_release: true
+  release_vel_limit: 0.025
+  align_tol_deg: 6.0
+  axis_abort_deg: 15.0
+  align_max_steps: 300
+  hold_centered_steps: 8
+  lateral_gain: 0.6
+  lateral_step_max: 0.004
+  lateral_deadband: 0.0015
+  servo_track_thresh: 0.03
+  hold_decay: 0.9
+  press_allowance: 0.003
+  lateral_freeze_depth: 0.002
+
+screw:
+  pitch: 0.0092
+  yaw_rate_deg: 0.4
+  tighten_sign: 1
+  assembled_margin: 0.005
+  max_steps: 6000
+  engage_press: 0.002
+  yaw_bias_deg: 4.0
+  max_turn_deg: 300
+  handoff_steps: 120
+  finish_wait_release: true
+  rewind_enable: true
+  rewind_wrist_joint: J1_6_joint
+  erode_regrasp: 0.003
+  rewind_dps: 90.0
+  rewind_min_depth: 0.006        # a part standing deeper than the insert release line can be re-gripped
+  grip_source: label
+  pad_tip_local: 0.195
+  rewind_lift_mps: 0.05
+  rewind_abort_tilt_deg: 15.0
+  rewind_close_steps: 100
+  max_rewinds: 6
+  max_thread_jumps: 1
+  rewind_max_sink: 0.006
+  entry_acquire: true
+  grip_hand_local: 0.195
+  finger_vel_limit: 0.025
+  finger_effort_limit: 10.0
+  finish_rise: 0.0
+  sym_order: 4
+
+success:
+  assembled_margin: 0.005
+  assembled_lateral: 0.008
+  assembled_axis_deg: 15.0
+  require_grasp_latch: true
+  end_on_release: true
+  release_open_mm: 10.0
+  release_settle_steps: 0
+  assembled_clear: 0.35
+  grasp_lift_thresh: 0.04
+  grasp_hold_thresh: 0.3
+
+tactile:
+  enabled: true
+  targets: [square_table_leg, square_table_top]

@@ -1,0 +1,29 @@
+name: handover
+max_steps: 4000
+success_hold: 15
+scene:
+  settle_ticks: 2
+  gel: {stiffness: 650.0, damping: 0.5, friction: 1.5}
+  robot:
+    right_arm_q0: [0.0, 0.8366, 1.0204, -0.7074, 0.0, 0.0]
+    right_finger_q0: [-0.028, 0.028]
+    left_arm_q0: [0.0, 0.1439, 0.4755, 1.1431, 0.0, 0.0]
+    left_finger_q0: [0.01, -0.01]
+    initial_gripper: [1, 0]
+    close_magnitude: 0.038
+  objects:
+  - name: rod
+    shape: cuboid
+    dims: [0.025, 0.025, 0.24]
+    pos: [-0.17, -0.1175, 1.3]
+    ori_deg: [0.0, 90.0, 0.0]
+    mass: 0.05
+    friction: 1.0
+    color: [0.85, 0.35, 0.15]
+handover: {rod: rod, gravity_on_after_closed_ticks: 50, tcp_offset: 0.1777}
+success: {rod_radius: 0.0125, rod_length: 0.24, table_top_z: 1.102, support_clearance: 0.05, hold_radius: 0.02, closed_gap_tol: 0.012,
+  gap_offset: 0.0, right_open_gap: 0.09, right_away: 0.1, max_speed: 0.03, max_rate: 0.5, workspace_xy: 0.9, drop_margin: 0.02}
+tactile:
+  enabled: true
+  targets: [rod]
+  left_gripper: true
