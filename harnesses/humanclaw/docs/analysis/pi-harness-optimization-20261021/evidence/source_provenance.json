@@ -1,0 +1,369 @@
+{
+  "humanclaw_r2_commit": "d18b41dd0df221409a72b8a554b0341fa64743d5",
+  "pi_release": "1.3.0",
+  "pi_release_commit": "71023aec1546d6d677a65669c5665c0927ce0dd0",
+  "codex_release": "0.145.0",
+  "codex_release_commit": "1635de866c61d1b76e50b31928ee6d61482435a8",
+  "files": [
+    {
+      "id": "HC1",
+      "source_snapshot": "humanclaw-r2",
+      "path": "src/humanclaw_bench/harnesses/environment.py",
+      "sha256": "b7d6d6c72b863f983f4676d362e842b671e1199b248eda32f4add8c26ed797d6",
+      "line_count": 215,
+      "excerpt_ranges": [
+        [
+          27,
+          66
+        ],
+        [
+          103,
+          123
+        ],
+        [
+          157,
+          224
+        ]
+      ]
+    },
+    {
+      "id": "HC2",
+      "source_snapshot": "humanclaw-r2",
+      "path": "src/humanclaw_bench/harnesses/runtime.py",
+      "sha256": "d62984b6b457c4ba7b59aea8f74a941debc2bf3b7f0bf28fa9cbe14897c48bbb",
+      "line_count": 574,
+      "excerpt_ranges": [
+        [
+          69,
+          80
+        ],
+        [
+          410,
+          418
+        ],
+        [
+          468,
+          492
+        ],
+        [
+          542,
+          560
+        ]
+      ]
+    },
+    {
+      "id": "HC3",
+      "source_snapshot": "humanclaw-r2",
+      "path": "src/humanclaw_bench/harnesses/services.py",
+      "sha256": "4a54e34181e8d08b9e65ed49f740bd76c0cc73de61feb7da23d7cdbc6e476217",
+      "line_count": 407,
+      "excerpt_ranges": [
+        [
+          49,
+          84
+        ],
+        [
+          224,
+          252
+        ]
+      ]
+    },
+    {
+      "id": "HC4",
+      "source_snapshot": "humanclaw-r2",
+      "path": "src/humanclaw_bench/agent/skills.py",
+      "sha256": "2c46901ca65d31d13d8e6453ceabaa2e3da25e200f67cba61368db89473fa5be",
+      "line_count": 174,
+      "excerpt_ranges": [
+        [
+          89,
+          141
+        ],
+        [
+          148,
+          169
+        ]
+      ]
+    },
+    {
+      "id": "HC5",
+      "source_snapshot": "local",
+      "path": "src/humanclaw_bench/evaluation/metrics/episode.py",
+      "sha256": "9285e410ec2fd35ce7a6af98c44c392c40f1c2e6bb3a48da89900242f5d10a39",
+      "line_count": 382,
+      "excerpt_ranges": [
+        [
+          140,
+          161
+        ],
+        [
+          198,
+          206
+        ]
+      ]
+    },
+    {
+      "id": "HC6",
+      "source_snapshot": "local",
+      "path": "src/humanclaw_bench/envs/find_nav_interact_env.py",
+      "sha256": "9e544c05ad74a25de5b6555034a2366a4320a0a46b06a34ccc150bd8ac3bcf80",
+      "line_count": 445,
+      "excerpt_ranges": [
+        [
+          393,
+          421
+        ]
+      ]
+    },
+    {
+      "id": "PI1",
+      "source_snapshot": "pi-1.3.0",
+      "path": "packages/coding-agent/src/core/system-prompt.ts",
+      "sha256": "5e28c82634113d0cca7ff5da6fa94e27aaae80e461cd5664ced9dbcef6f89089",
+      "line_count": 229,
+      "excerpt_ranges": [
+        [
+          128,
+          175
+        ],
+        [
+          212,
+          229
+        ]
+      ]
+    },
+    {
+      "id": "PI2",
+      "source_snapshot": "pi-1.3.0",
+      "path": "packages/coding-agent/src/core/sdk.ts",
+      "sha256": "61f398403c7510bec849583b2c46272df11ac5aa8d2e24b4ded97a108dd55b28",
+      "line_count": 487,
+      "excerpt_ranges": [
+        [
+          65,
+          88
+        ],
+        [
+          372,
+          378
+        ],
+        [
+          412,
+          448
+        ]
+      ]
+    },
+    {
+      "id": "PI3",
+      "source_snapshot": "pi-1.3.0",
+      "path": "packages/agent/src/agent.ts",
+      "sha256": "7024a3145a6ebc951a0f030164adb1dfb12d33d6e0dbbac15ef0efda49c87457",
+      "line_count": 613,
+      "excerpt_ranges": [
+        [
+          113,
+          144
+        ],
+        [
+          231,
+          254
+        ]
+      ]
+    },
+    {
+      "id": "PI4",
+      "source_snapshot": "pi-1.3.0",
+      "path": "packages/agent/src/agent-loop.ts",
+      "sha256": "28a2b03e34a7e32f004aa851e54d3b5be9dad71c392205614cbc9abdf3a9020a",
+      "line_count": 949,
+      "excerpt_ranges": [
+        [
+          260,
+          301
+        ],
+        [
+          381,
+          405
+        ],
+        [
+          505,
+          534
+        ],
+        [
+          708,
+          763
+        ],
+        [
+          859,
+          903
+        ]
+      ]
+    },
+    {
+      "id": "PI5",
+      "source_snapshot": "pi-1.3.0",
+      "path": "packages/coding-agent/src/core/agent-session.ts",
+      "sha256": "e0fa206e8c49a98c024708068df39c0e4944f4251633425fc083b2fbb5ec0ac6",
+      "line_count": 4428,
+      "excerpt_ranges": [
+        [
+          380,
+          380
+        ],
+        [
+          649,
+          724
+        ],
+        [
+          887,
+          915
+        ],
+        [
+          3274,
+          3287
+        ]
+      ]
+    },
+    {
+      "id": "PI6",
+      "source_snapshot": "pi-1.3.0",
+      "path": "packages/coding-agent/src/core/extensions/types.ts",
+      "sha256": "cb54c7a4fedb3473bb995694bbc1f2988c144fb0b802bfd1b656816bc25d0f25",
+      "line_count": 2304,
+      "excerpt_ranges": [
+        [
+          1444,
+          1463
+        ],
+        [
+          1478,
+          1505
+        ],
+        [
+          1772,
+          1803
+        ]
+      ]
+    },
+    {
+      "id": "PI7",
+      "source_snapshot": "pi-1.3.0",
+      "path": "packages/coding-agent/src/extensions/mcp/tools.ts",
+      "sha256": "cd3245946deb3cb3df2e7b521a07837525f886d281c5e4600527eb2aed95e2ac",
+      "line_count": 391,
+      "excerpt_ranges": [
+        [
+          291,
+          299
+        ],
+        [
+          311,
+          355
+        ]
+      ]
+    },
+    {
+      "id": "PI8",
+      "source_snapshot": "pi-1.3.0",
+      "path": "packages/ai/src/api/openai-responses-shared.ts",
+      "sha256": "f940a1539a3ca03fbee79b2c848999e0b51c74f7cceb45484d3d52bc2303de3c",
+      "line_count": 834,
+      "excerpt_ranges": [
+        [
+          72,
+          88
+        ],
+        [
+          156,
+          177
+        ],
+        [
+          385,
+          425
+        ]
+      ]
+    },
+    {
+      "id": "PI9",
+      "source_snapshot": "pi-1.3.0",
+      "path": "packages/ai/src/utils/validation.ts",
+      "sha256": "e4b8029c184bd6df830e0ee2cb7034a39d49b5ecb8c068c26af9564c20246594",
+      "line_count": 353,
+      "excerpt_ranges": [
+        [
+          317,
+          370
+        ]
+      ]
+    },
+    {
+      "id": "C1",
+      "source_snapshot": "codex-rust-v0.145.0",
+      "path": "codex-rs/models-manager/src/model_info.rs",
+      "sha256": "da02554f893b208cbf74684ba2cac5144c0921b2347b0b21b3688bd4bafe3eeb",
+      "line_count": 191,
+      "excerpt_ranges": [
+        [
+          49,
+          55
+        ],
+        [
+          124,
+          157
+        ]
+      ]
+    },
+    {
+      "id": "C2",
+      "source_snapshot": "codex-rust-v0.145.0",
+      "path": "codex-rs/tools/src/json_schema.rs",
+      "sha256": "ccfc96787883f2c1c3d51a61c36db34ec2d371fc1e029bef4c42683d5069748d",
+      "line_count": 804,
+      "excerpt_ranges": [
+        [
+          29,
+          83
+        ]
+      ]
+    },
+    {
+      "id": "C3",
+      "source_snapshot": "codex-rust-v0.145.0",
+      "path": "codex-rs/tools/src/responses_api.rs",
+      "sha256": "e746442baf7f78b035b44001edcb7fccf0947004ad991d7d0860ff5cb76a2182",
+      "line_count": 140,
+      "excerpt_ranges": [
+        [
+          126,
+          139
+        ]
+      ]
+    },
+    {
+      "id": "C4",
+      "source_snapshot": "codex-rust-v0.145.0",
+      "path": "codex-rs/core/src/tools/context.rs",
+      "sha256": "84ae66534c3d1ac747f197c699d80bf98057df8ae4cedf72a9f3b33009f9eb61",
+      "line_count": 541,
+      "excerpt_ranges": [
+        [
+          105,
+          145
+        ]
+      ]
+    },
+    {
+      "id": "C5",
+      "source_snapshot": "codex-rust-v0.145.0",
+      "path": "codex-rs/core/src/mcp_tool_call.rs",
+      "sha256": "3df6fee0dd8bb0f99b8476b570e8f7ed94e1b99563db878341f8c7779f60a1b1",
+      "line_count": 2226,
+      "excerpt_ranges": [
+        [
+          118,
+          154
+        ]
+      ]
+    }
+  ]
+}

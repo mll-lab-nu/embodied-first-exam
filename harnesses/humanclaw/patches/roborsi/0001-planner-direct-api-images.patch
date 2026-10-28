@@ -1,0 +1,29 @@
+diff --git a/roborsi/agents/sessions/persistent_agent.py b/roborsi/agents/sessions/persistent_agent.py
+index 5773993..c3fa0b2 100644
+--- a/roborsi/agents/sessions/persistent_agent.py
++++ b/roborsi/agents/sessions/persistent_agent.py
+@@ -240,8 +240,23 @@ def run_role(role: str, task: str, user_block: str, *,
+                 encoding="utf-8")
+         except OSError as audit_error:
+             print("[planner-input-capture] " + type(audit_error).__name__)
++    # The direct-API path cannot open local paths mentioned in user_block.
++    # Preserve the same camera evidence the native-session path receives.
++    user_content = user_block
++    if images:
++        import base64
++        import mimetypes
++        from pathlib import Path
++
++        user_content = [{"type": "text", "text": user_block}]
++        for image_path in images:
++            path = Path(image_path)
++            media_type = mimetypes.guess_type(path.name)[0] or "image/png"
++            encoded = base64.b64encode(path.read_bytes()).decode("ascii")
++            user_content.append({"type": "image_url", "image_url": {
++                "url": f"data:{media_type};base64,{encoded}"}})
+     messages = [{"role": "system", "content": system_prompt},
+-                {"role": "user", "content": user_block}]
++                {"role": "user", "content": user_content}]
+     resp = _call_vlm_tools(model, messages, [], thinking_budget=0, tool_choice="none")
+     content = getattr(resp, "content", "") or ""
+     if isinstance(content, list):

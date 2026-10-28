@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-26",
+  "cohort": "adaptive-pilot-20261026-v2",
+  "cohort_status": "stopped at user request; no automatic restart",
+  "root_causes": {
+    "review_503": "Inherited outbound HTTP proxy did not bypass 127.0.0.1; review never reached the metered gateway",
+    "rate_limit": "Azure rate_limit_exceeded was delivered in HTTP 200 SSE; the batch audit only inspected HTTP status and SDK retries waited seconds",
+    "content_filter": "Provider response.incomplete/content_filter; retained as non-retryable provider failure"
+  },
+  "changes": [
+    "Direct loopback opener only for independent review; upstream proxy preserved",
+    "Provider Retry-After or token-rate cooldown before actual retry, preserving request and effort",
+    "Review infrastructure failure is inconclusive and stops the task; framework gate checks review health",
+    "Classify terminal SSE errors; earlier transient failures cannot authorize retry of later content filters or deadlines",
+    "Stopped cohorts reject resubmission and new task admission"
+  ],
+  "policy_sha256": "f2f31ff1a94df7631b5df2d1228d69571ea087ce1e65ff7c0da54b184e2f4607",
+  "local_tests": {
+    "passed": 529,
+    "skipped": 5
+  },
+  "server_validation": {
+    "status": "passed",
+    "code_revision": "e04365c7028efb6fe8d1e0cc873bc99cf315d38c",
+    "python_tests_passed": 65,
+    "python_tests_skipped": 2,
+    "test_setup": "64 tests passed initially; restored the tracked resources directory in sparse checkout, then the remaining test passed.",
+    "node": "22.19.0",
+    "controlled_real_provider": {
+      "case": "policy",
+      "passed": true,
+      "checks": {
+        "runtime_ok": true,
+        "trace_valid": true,
+        "candidate_created": true,
+        "validated": true,
+        "activated": true,
+        "fresh_independent_review": true,
+        "prediction_error_recorded": true,
+        "fresh_environment_result": true,
+        "execution_after_activation": true
+      },
+      "model_requests": 17,
+      "trace": "/gscratch/stf/hengyil6/adaptive-repair-validation-20261026-r2/policy/experiment_runs/run_6285eb215bbf4133a63acc5e863a3489",
+      "synthetic_environment": true,
+      "real_provider": true
+    },
+    "candidate_creations": 1,
+    "candidate_activations": 1,
+    "independent_review_attempts": 1,
+    "model_request_statuses": {
+      "completed": 16,
+      "failed": 1
+    },
+    "recovered_rate_limit_exceeded": true,
+    "original_proxy_configuration_preserved": true,
+    "inherited_loopback_proxy_bypass": false,
+    "initial_startup_attempt": {
+      "path": "/gscratch/stf/hengyil6/adaptive-repair-validation-20261026",
+      "model_requests": 0,
+      "error": "Sparse checkout needed explicit release root; retained STARTUP_FAILURE.json"
+    }
+  },
+  "restarted_humanclaw_tasks": false,
+  "stop_record": "outputs/adaptive-pilot-20261026-v2-STOPPED.json",
+  "validation_scope": "Real Azure model in a controlled text fixture exercises review, activation and execution after activation. The stopped HumanCLAW cohort was not rerun."
+}

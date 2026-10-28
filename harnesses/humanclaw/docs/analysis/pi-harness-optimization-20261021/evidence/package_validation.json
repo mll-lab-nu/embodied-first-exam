@@ -1,0 +1,23 @@
+{
+  "task_cards": 1218,
+  "episodes": 9742,
+  "scenes": 41,
+  "executed_environment_actions": 387141,
+  "normalized_model_requests": 403219,
+  "explicit_substitutions": 1937,
+  "verified_pi_terminal_replies": 4821,
+  "unexecuted_pi_error_response_proposals": 77,
+  "markdown_links_checked": 31217,
+  "missing_links": [],
+  "data_checks": {
+    "episodes": 9742,
+    "tasks": 1218,
+    "all_metrics_unchanged": true,
+    "all_status_ok": true,
+    "native_actions_equal_metric_steps": true,
+    "physical_chain_equals_native_applied": true,
+    "chain_disagreements": [],
+    "all_call_proposals_accounted_for": true
+  },
+  "scope": "Documentation and derived evidence only; no runtime code, rollout or inference changes."
+}

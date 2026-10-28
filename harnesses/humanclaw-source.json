@@ -1,0 +1,11 @@
+{
+  "project": "HumanCLAW",
+  "source_branch": "harness-improving",
+  "source_commit": "f7defc43cb295bda7142112a6a40a39aac2e1a45",
+  "source_tree": "f60d71a04c79411089fc5e606322b96f61cad8dd",
+  "destination": "harnesses/humanclaw",
+  "tracked_files": 15125,
+  "tracked_bytes": 98975187,
+  "scope": "All files tracked at the source commit, with original contents and executable modes",
+  "excluded_from_snapshot": "Untracked and ignored local files; private Git history"
+}

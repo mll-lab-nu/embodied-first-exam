@@ -1,0 +1,13 @@
+{
+  "codex_command": ["codex", "app-server"],
+  "pi_command": ["pi"],
+  "responses_base_url_env": "MAGPIE_BASE_URL",
+  "api_key_env": "MAGPIE_API_KEY",
+  "auth": "bearer",
+  "allow_http": true,
+  "reasoning_effort": "medium",
+  "context_window": 131072,
+  "timeout_seconds": 900,
+  "request_timeout_seconds": 180,
+  "startup_timeout_seconds": 180
+}

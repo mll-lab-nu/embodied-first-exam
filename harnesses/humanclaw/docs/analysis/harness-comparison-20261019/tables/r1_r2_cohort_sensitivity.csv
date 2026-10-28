@@ -1,0 +1,13 @@
+harness,r1_cohort,task_type,n,r1_success,r2_success,difference_pp,r1_one_sit,r2_one_sit
+codex,original,all,905,392,534,15.69060773480663,369,16
+codex,original,navigation,499,375,383,1.6032064128256511,5,14
+codex,original,interaction,406,17,151,33.004926108374384,364,2
+codex,imgwin50,all,313,68,135,21.405750798722046,131,27
+codex,imgwin50,navigation,122,60,67,5.737704918032787,8,14
+codex,imgwin50,interaction,191,8,68,31.413612565445025,123,13
+pi,original,all,915,403,564,17.595628415300546,362,8
+pi,original,navigation,505,398,413,2.9702970297029703,3,6
+pi,original,interaction,410,5,151,35.609756097560975,359,2
+pi,imgwin50,all,303,62,112,16.5016501650165,115,16
+pi,imgwin50,navigation,116,57,58,0.8620689655172413,6,4
+pi,imgwin50,interaction,187,5,54,26.203208556149733,109,12

@@ -1,0 +1,10 @@
+label,recorded_attempts,canonical,archived,status_counts,recorded_model_calls,recorded_failed_model_calls,recorded_wall_hours,input_tokens_known,output_tokens_known
+psv_r1,1386,1218,4,"{""completed"": 1223, ""running"": 127, ""failed"": 35, ""None"": 1}",134007,62,501.9103472299515,347717864,32642216
+codex_r1,2105,1218,9,"{""failed"": 610, ""completed"": 1228, ""interrupted"": 137, ""running"": 124, ""unknown"": 6}",76573,682,374.7680550941301,1632330375,6691466
+pi_r1,1719,1218,0,"{""failed"": 398, ""completed"": 1220, ""running"": 97, ""unknown"": 2, ""None"": 2}",65684,540,295.8030705984768,825137246,5685024
+codex_r2,1226,1218,4,"{""completed"": 1222, ""running"": 4}",52444,11,215.78056645351043,1205993947,4738056
+pi_r2,1221,1218,0,"{""completed"": 1218, ""running"": 3}",51641,46,197.27723018250742,707126200,4606737
+codex_r3,1260,1218,4,"{""completed"": 1225, ""running"": 28, ""interrupted"": 6, ""failed"": 1}",56957,387,390.8588333296737,1528213355,12631970
+pi_r3,1241,1218,0,"{""completed"": 1218, ""running"": 22, ""failed"": 1}",57993,361,327.7324340458411,868003663,10578526
+codex_gemini,1342,1217,114,"{""completed"": 1329, ""running"": 9, ""failed"": 4}",54674,2516,286.7533893225033,1639242453,4818104
+pi_gemini,1497,1217,267,"{""completed"": 1477, ""running"": 16, ""failed"": 4}",60387,6158,312.13884385133593,1148234497,5109095

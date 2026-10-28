@@ -1,0 +1,11 @@
+left,right,paired,left_only,right_only,instruction_hash_mismatch,init_hash_mismatch,goals_hash_mismatch,profile_hash_mismatch,seed_mismatch,model_config_mismatch
+codex_r1,pi_r1,1218,0,0,0,0,0,0,0,0
+codex_r2,pi_r2,1218,0,0,0,0,0,0,0,0
+codex_r3,pi_r3,1218,0,0,0,0,0,0,0,0
+codex_gemini,pi_gemini,1217,0,0,0,0,0,0,0,0
+codex_r1,codex_r2,1218,0,0,0,0,0,0,0,0
+pi_r1,pi_r2,1218,0,0,0,0,0,0,0,0
+codex_r2,codex_r3,1218,0,0,0,0,0,0,0,0
+pi_r2,pi_r3,1218,0,0,0,0,0,0,0,0
+psv_r1,codex_r1,1218,0,0,0,0,0,0,0,0
+psv_r1,pi_r1,1218,0,0,0,0,0,0,0,0

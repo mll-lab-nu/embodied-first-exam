@@ -1,0 +1,16 @@
+{
+  "backend": "openai_compatible",
+  "model": "codex/gpt-6-astra",
+  "model_env": "MAGPIE_MODEL",
+  "base_url_env": "MAGPIE_BASE_URL",
+  "api_key_env": "MAGPIE_API_KEY",
+  "require_api_key": true,
+  "max_tokens": 4096,
+  "send_max_tokens": false,
+  "temperature": 0.0,
+  "send_temperature": false,
+  "reasoning_effort": "medium",
+  "request_timeout_seconds": 180,
+  "max_retries": 0,
+  "response_format": {"type": "json_object"}
+}

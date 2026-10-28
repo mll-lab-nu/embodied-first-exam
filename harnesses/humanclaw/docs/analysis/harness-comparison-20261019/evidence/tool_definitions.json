@@ -1,0 +1,2114 @@
+{
+  "codex_r1": {
+    "sample_runs": 23,
+    "unique_definitions": {
+      "c3f783f40b78cb79dc7efbf7cf0bc870a2c0aa901ec1c50498bd7b068e4443a7": 23
+    },
+    "definitions": {
+      "side_walk": {
+        "type": "function",
+        "name": "mcp__humanclaw__side_walk",
+        "description": "Execute one HumanCLAW action: Side step<left|right><distance> (clamped to 0.10\u20130.50 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Side step<left|right><distance> (clamped to 0.10\u20130.50 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "sit": {
+        "type": "function",
+        "name": "mcp__humanclaw__sit",
+        "description": "Execute one HumanCLAW action: Sit down<height> (height clamped to 0.15\u20130.85 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Sit down<height> (height clamped to 0.15\u20130.85 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "stand": {
+        "type": "function",
+        "name": "mcp__humanclaw__stand",
+        "description": "Execute one HumanCLAW action: Stop/Stand (finish at the current pose; no generated motion). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Stop/Stand (finish at the current pose; no generated motion)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_back": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_back",
+        "description": "Execute one HumanCLAW action: Step back<distance> (clamped to 0.10\u20130.60 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Step back<distance> (clamped to 0.10\u20130.60 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_climb_down": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_down",
+        "description": "Execute one HumanCLAW action: Walk downstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Walk downstairs<normal>"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_climb_up": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_up",
+        "description": "Execute one HumanCLAW action: Climb upstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Climb upstairs<normal>"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "turn": {
+        "type": "function",
+        "name": "mcp__humanclaw__turn",
+        "description": "Execute one HumanCLAW action: Turn<left|right><degrees> (clamped to 10\u2013120 degrees). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Turn<left|right><degrees> (clamped to 10\u2013120 degrees)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "walk_forward": {
+        "type": "function",
+        "name": "mcp__humanclaw__walk_forward",
+        "description": "Execute one HumanCLAW action: Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "pi_r1": {
+    "sample_runs": 23,
+    "unique_definitions": {
+      "4b4b80afb219a2331782f8d4d98eceb6f90676abb43d245aaf0d0a6346a33e0d": 23
+    },
+    "definitions": {
+      "walk_forward": {
+        "type": "function",
+        "name": "mcp__humanclaw__walk_forward",
+        "description": "Execute one HumanCLAW action: Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "stand": {
+        "type": "function",
+        "name": "mcp__humanclaw__stand",
+        "description": "Execute one HumanCLAW action: Stop/Stand (finish at the current pose; no generated motion). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Stop/Stand (finish at the current pose; no generated motion)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "turn": {
+        "type": "function",
+        "name": "mcp__humanclaw__turn",
+        "description": "Execute one HumanCLAW action: Turn<left|right><degrees> (clamped to 10\u2013120 degrees). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Turn<left|right><degrees> (clamped to 10\u2013120 degrees)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_climb_up": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_up",
+        "description": "Execute one HumanCLAW action: Climb upstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Climb upstairs<normal>"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "sit": {
+        "type": "function",
+        "name": "mcp__humanclaw__sit",
+        "description": "Execute one HumanCLAW action: Sit down<height> (height clamped to 0.15\u20130.85 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Sit down<height> (height clamped to 0.15\u20130.85 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_back": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_back",
+        "description": "Execute one HumanCLAW action: Step back<distance> (clamped to 0.10\u20130.60 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Step back<distance> (clamped to 0.10\u20130.60 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "side_walk": {
+        "type": "function",
+        "name": "mcp__humanclaw__side_walk",
+        "description": "Execute one HumanCLAW action: Side step<left|right><distance> (clamped to 0.10\u20130.50 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Side step<left|right><distance> (clamped to 0.10\u20130.50 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_climb_down": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_down",
+        "description": "Execute one HumanCLAW action: Walk downstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Walk downstairs<normal>"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      }
+    }
+  },
+  "pi_r2": {
+    "sample_runs": 23,
+    "unique_definitions": {
+      "96285f383c8e45ed3a42521a3ddb17eb417e20ce2edf7361e4814aabe25e190b": 23
+    },
+    "definitions": {
+      "walk_forward": {
+        "type": "function",
+        "name": "mcp__humanclaw__walk_forward",
+        "description": "Execute one HumanCLAW action: Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "stand": {
+        "type": "function",
+        "name": "mcp__humanclaw__stand",
+        "description": "Execute one HumanCLAW action: Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "turn": {
+        "type": "function",
+        "name": "mcp__humanclaw__turn",
+        "description": "Execute one HumanCLAW action: Turn<left|right><degrees> (clamped to 10\u2013120 degrees). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Turn<left|right><degrees> (clamped to 10\u2013120 degrees)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_climb_up": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_up",
+        "description": "Execute one HumanCLAW action: Climb upstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Climb upstairs<normal>"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "sit": {
+        "type": "function",
+        "name": "mcp__humanclaw__sit",
+        "description": "Execute one HumanCLAW action: Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_back": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_back",
+        "description": "Execute one HumanCLAW action: Step back<distance> (clamped to 0.10\u20130.60 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Step back<distance> (clamped to 0.10\u20130.60 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "side_walk": {
+        "type": "function",
+        "name": "mcp__humanclaw__side_walk",
+        "description": "Execute one HumanCLAW action: Side step<left|right><distance> (clamped to 0.10\u20130.50 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Side step<left|right><distance> (clamped to 0.10\u20130.50 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_climb_down": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_down",
+        "description": "Execute one HumanCLAW action: Walk downstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Walk downstairs<normal>"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      }
+    }
+  },
+  "codex_r2": {
+    "sample_runs": 24,
+    "unique_definitions": {
+      "49cd3c72a5be8e3708f2b9cd1f438b2f455fb2b5ce486ce49964eb0866b2f6fb": 24
+    },
+    "definitions": {
+      "side_walk": {
+        "type": "function",
+        "name": "mcp__humanclaw__side_walk",
+        "description": "Execute one HumanCLAW action: Side step<left|right><distance> (clamped to 0.10\u20130.50 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Side step<left|right><distance> (clamped to 0.10\u20130.50 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "sit": {
+        "type": "function",
+        "name": "mcp__humanclaw__sit",
+        "description": "Execute one HumanCLAW action: Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "stand": {
+        "type": "function",
+        "name": "mcp__humanclaw__stand",
+        "description": "Execute one HumanCLAW action: Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_back": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_back",
+        "description": "Execute one HumanCLAW action: Step back<distance> (clamped to 0.10\u20130.60 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Step back<distance> (clamped to 0.10\u20130.60 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_climb_down": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_down",
+        "description": "Execute one HumanCLAW action: Walk downstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Walk downstairs<normal>"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_climb_up": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_up",
+        "description": "Execute one HumanCLAW action: Climb upstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Climb upstairs<normal>"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "turn": {
+        "type": "function",
+        "name": "mcp__humanclaw__turn",
+        "description": "Execute one HumanCLAW action: Turn<left|right><degrees> (clamped to 10\u2013120 degrees). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Turn<left|right><degrees> (clamped to 10\u2013120 degrees)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "walk_forward": {
+        "type": "function",
+        "name": "mcp__humanclaw__walk_forward",
+        "description": "Execute one HumanCLAW action: Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "codex_r3": {
+    "sample_runs": 23,
+    "unique_definitions": {
+      "49cd3c72a5be8e3708f2b9cd1f438b2f455fb2b5ce486ce49964eb0866b2f6fb": 23
+    },
+    "definitions": {
+      "side_walk": {
+        "type": "function",
+        "name": "mcp__humanclaw__side_walk",
+        "description": "Execute one HumanCLAW action: Side step<left|right><distance> (clamped to 0.10\u20130.50 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Side step<left|right><distance> (clamped to 0.10\u20130.50 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "sit": {
+        "type": "function",
+        "name": "mcp__humanclaw__sit",
+        "description": "Execute one HumanCLAW action: Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "stand": {
+        "type": "function",
+        "name": "mcp__humanclaw__stand",
+        "description": "Execute one HumanCLAW action: Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_back": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_back",
+        "description": "Execute one HumanCLAW action: Step back<distance> (clamped to 0.10\u20130.60 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Step back<distance> (clamped to 0.10\u20130.60 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_climb_down": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_down",
+        "description": "Execute one HumanCLAW action: Walk downstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Walk downstairs<normal>"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_climb_up": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_up",
+        "description": "Execute one HumanCLAW action: Climb upstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Climb upstairs<normal>"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "turn": {
+        "type": "function",
+        "name": "mcp__humanclaw__turn",
+        "description": "Execute one HumanCLAW action: Turn<left|right><degrees> (clamped to 10\u2013120 degrees). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Turn<left|right><degrees> (clamped to 10\u2013120 degrees)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "walk_forward": {
+        "type": "function",
+        "name": "mcp__humanclaw__walk_forward",
+        "description": "Execute one HumanCLAW action: Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "pi_r3": {
+    "sample_runs": 23,
+    "unique_definitions": {
+      "96285f383c8e45ed3a42521a3ddb17eb417e20ce2edf7361e4814aabe25e190b": 23
+    },
+    "definitions": {
+      "walk_forward": {
+        "type": "function",
+        "name": "mcp__humanclaw__walk_forward",
+        "description": "Execute one HumanCLAW action: Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "stand": {
+        "type": "function",
+        "name": "mcp__humanclaw__stand",
+        "description": "Execute one HumanCLAW action: Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "turn": {
+        "type": "function",
+        "name": "mcp__humanclaw__turn",
+        "description": "Execute one HumanCLAW action: Turn<left|right><degrees> (clamped to 10\u2013120 degrees). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Turn<left|right><degrees> (clamped to 10\u2013120 degrees)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_climb_up": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_up",
+        "description": "Execute one HumanCLAW action: Climb upstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Climb upstairs<normal>"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "sit": {
+        "type": "function",
+        "name": "mcp__humanclaw__sit",
+        "description": "Execute one HumanCLAW action: Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_back": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_back",
+        "description": "Execute one HumanCLAW action: Step back<distance> (clamped to 0.10\u20130.60 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Step back<distance> (clamped to 0.10\u20130.60 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "side_walk": {
+        "type": "function",
+        "name": "mcp__humanclaw__side_walk",
+        "description": "Execute one HumanCLAW action: Side step<left|right><distance> (clamped to 0.10\u20130.50 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Side step<left|right><distance> (clamped to 0.10\u20130.50 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_climb_down": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_down",
+        "description": "Execute one HumanCLAW action: Walk downstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Walk downstairs<normal>"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      }
+    }
+  },
+  "codex_gemini": {
+    "sample_runs": 23,
+    "unique_definitions": {
+      "49cd3c72a5be8e3708f2b9cd1f438b2f455fb2b5ce486ce49964eb0866b2f6fb": 23
+    },
+    "definitions": {
+      "side_walk": {
+        "type": "function",
+        "name": "mcp__humanclaw__side_walk",
+        "description": "Execute one HumanCLAW action: Side step<left|right><distance> (clamped to 0.10\u20130.50 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Side step<left|right><distance> (clamped to 0.10\u20130.50 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "sit": {
+        "type": "function",
+        "name": "mcp__humanclaw__sit",
+        "description": "Execute one HumanCLAW action: Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "stand": {
+        "type": "function",
+        "name": "mcp__humanclaw__stand",
+        "description": "Execute one HumanCLAW action: Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_back": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_back",
+        "description": "Execute one HumanCLAW action: Step back<distance> (clamped to 0.10\u20130.60 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Step back<distance> (clamped to 0.10\u20130.60 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_climb_down": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_down",
+        "description": "Execute one HumanCLAW action: Walk downstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Walk downstairs<normal>"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "step_climb_up": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_up",
+        "description": "Execute one HumanCLAW action: Climb upstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Climb upstairs<normal>"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "turn": {
+        "type": "function",
+        "name": "mcp__humanclaw__turn",
+        "description": "Execute one HumanCLAW action: Turn<left|right><degrees> (clamped to 10\u2013120 degrees). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Turn<left|right><degrees> (clamped to 10\u2013120 degrees)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "walk_forward": {
+        "type": "function",
+        "name": "mcp__humanclaw__walk_forward",
+        "description": "Execute one HumanCLAW action: Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "strict": false,
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "action_name": {
+              "type": "string",
+              "description": "Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres)"
+            },
+            "observation_id": {
+              "type": "integer"
+            },
+            "request_id": {
+              "type": "string"
+            },
+            "visible_state": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "pi_gemini": {
+    "sample_runs": 23,
+    "unique_definitions": {
+      "96285f383c8e45ed3a42521a3ddb17eb417e20ce2edf7361e4814aabe25e190b": 23
+    },
+    "definitions": {
+      "walk_forward": {
+        "type": "function",
+        "name": "mcp__humanclaw__walk_forward",
+        "description": "Execute one HumanCLAW action: Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Walk<forward><slow|normal|fast> (0.2/0.4/0.6 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "stand": {
+        "type": "function",
+        "name": "mcp__humanclaw__stand",
+        "description": "Execute one HumanCLAW action: Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Stop/Stand (submits the current pose as the final pose and ends the episode; no further motion is generated)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "turn": {
+        "type": "function",
+        "name": "mcp__humanclaw__turn",
+        "description": "Execute one HumanCLAW action: Turn<left|right><degrees> (clamped to 10\u2013120 degrees). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Turn<left|right><degrees> (clamped to 10\u2013120 degrees)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_climb_up": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_up",
+        "description": "Execute one HumanCLAW action: Climb upstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Climb upstairs<normal>"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "sit": {
+        "type": "function",
+        "name": "mcp__humanclaw__sit",
+        "description": "Execute one HumanCLAW action: Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Sit down<height> (height clamped to 0.15\u20130.85 metres; one call moves for only about 0.5 s and may not complete sitting down)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_back": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_back",
+        "description": "Execute one HumanCLAW action: Step back<distance> (clamped to 0.10\u20130.60 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Step back<distance> (clamped to 0.10\u20130.60 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "side_walk": {
+        "type": "function",
+        "name": "mcp__humanclaw__side_walk",
+        "description": "Execute one HumanCLAW action: Side step<left|right><distance> (clamped to 0.10\u20130.50 metres). Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Side step<left|right><distance> (clamped to 0.10\u20130.50 metres)"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      },
+      "step_climb_down": {
+        "type": "function",
+        "name": "mcp__humanclaw__step_climb_down",
+        "description": "Execute one HumanCLAW action: Walk downstairs<normal>. Use the latest observation_id. Describe the CURRENT image in visible_state, including whether the task target is visible. Return includes a new image. Call actions sequentially; reuse request_id only when retrying the same action.",
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "request_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "observation_id": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "action_name": {
+              "type": "string",
+              "description": "Walk downstairs<normal>"
+            },
+            "visible_state": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "request_id",
+            "observation_id",
+            "action_name",
+            "visible_state"
+          ]
+        }
+      }
+    }
+  }
+}

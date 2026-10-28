@@ -1,0 +1,12 @@
+label,path,selection_hash,shards,done,failure_files,archived_failure_files
+codex_r1,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-codex-copilot-astra-fullval-20261017,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,905,447,23
+codex_r1,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-codex-copilot-astra-fullval-20261017-imgwin50,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,313,153,6
+codex_r2,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-codex-copilot-astra-fullval-r2-20261018,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,1218,0,0
+codex_r3,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-codex-copilot-astra-fullval-r3-max-20261018,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,1218,7,0
+codex_gemini,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-codex-copilot-gemini-argon-fullval-r2-20261018,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,1217,2,0
+pi_r1,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,915,324,0
+pi_r1,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,303,63,3
+pi_r2,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,1218,0,0
+pi_r3,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,1218,1,0
+pi_gemini,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-gemini-argon-fullval-r2-20261018,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,1217,2,0
+psv_r1,/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-psv-copilot-astra-fullval-20261017,478b1df27672d4fbd37d372c079ca79f2041032ca5f4e18cafa382329ce1179a,1218,1218,40,0

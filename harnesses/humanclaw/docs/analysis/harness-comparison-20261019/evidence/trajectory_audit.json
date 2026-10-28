@@ -1,0 +1,18 @@
+{
+  "episodes": 10960,
+  "coordinate_corrections": 10960,
+  "issues": [],
+  "trace_checks": 209,
+  "trace_mismatches": [],
+  "terminal_inferences": {
+    "codex_gemini:terminal_stand_inferred": 1180,
+    "codex_r1:terminal_stand_inferred": 1218,
+    "codex_r2:terminal_stand_inferred": 1217,
+    "codex_r3:terminal_stand_inferred": 1217,
+    "pi_gemini:terminal_stand_inferred": 1165,
+    "pi_r1:terminal_stand_inferred": 1218,
+    "pi_r2:terminal_stand_inferred": 1218,
+    "pi_r3:terminal_stand_inferred": 1218,
+    "psv_r1:terminal_stand_inferred": 842
+  }
+}

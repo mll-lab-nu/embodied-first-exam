@@ -1,0 +1,1381 @@
+{
+  "schema": "libero_acceptance_audit_v1",
+  "scope": "One paired small-budget framework check per arm; not a success-rate estimate",
+  "identity_match": {
+    "catalog": true,
+    "framework": true,
+    "initial_snapshot": true,
+    "initial_index": true,
+    "knowledge": true,
+    "scene": true
+  },
+  "identities": {
+    "bare": {
+      "catalog": "4ed764936d17aef94966eccc6ac0ab3dadb0b78ac7388655f6110740af04a42c",
+      "framework": "067974a38acdf769fb58b304ce2804034b9d4f390e77a0f3bc3a074cd03df17f",
+      "initial_snapshot": "f14d7bb137610280e6c19e4cd2aa3712f61c688bed0c943f664cf876ebdba2f1",
+      "initial_index": 0,
+      "knowledge": "cf0642d8aecffd2974fde0546863fa342e8312bf573022016bd0828042fdfedb",
+      "scene": "5c9f27bbf00a69d186ad977a89cc1408bc03b2986cc17a00856174075dd1f81c"
+    },
+    "codex": {
+      "catalog": "4ed764936d17aef94966eccc6ac0ab3dadb0b78ac7388655f6110740af04a42c",
+      "framework": "067974a38acdf769fb58b304ce2804034b9d4f390e77a0f3bc3a074cd03df17f",
+      "initial_snapshot": "f14d7bb137610280e6c19e4cd2aa3712f61c688bed0c943f664cf876ebdba2f1",
+      "initial_index": 0,
+      "knowledge": "cf0642d8aecffd2974fde0546863fa342e8312bf573022016bd0828042fdfedb",
+      "scene": "5c9f27bbf00a69d186ad977a89cc1408bc03b2986cc17a00856174075dd1f81c"
+    },
+    "pi": {
+      "catalog": "4ed764936d17aef94966eccc6ac0ab3dadb0b78ac7388655f6110740af04a42c",
+      "framework": "067974a38acdf769fb58b304ce2804034b9d4f390e77a0f3bc3a074cd03df17f",
+      "initial_snapshot": "f14d7bb137610280e6c19e4cd2aa3712f61c688bed0c943f664cf876ebdba2f1",
+      "initial_index": 0,
+      "knowledge": "cf0642d8aecffd2974fde0546863fa342e8312bf573022016bd0828042fdfedb",
+      "scene": "5c9f27bbf00a69d186ad977a89cc1408bc03b2986cc17a00856174075dd1f81c"
+    },
+    "roborsi": {
+      "catalog": "4ed764936d17aef94966eccc6ac0ab3dadb0b78ac7388655f6110740af04a42c",
+      "framework": "067974a38acdf769fb58b304ce2804034b9d4f390e77a0f3bc3a074cd03df17f",
+      "initial_snapshot": "f14d7bb137610280e6c19e4cd2aa3712f61c688bed0c943f664cf876ebdba2f1",
+      "initial_index": 0,
+      "knowledge": "cf0642d8aecffd2974fde0546863fa342e8312bf573022016bd0828042fdfedb",
+      "scene": "5c9f27bbf00a69d186ad977a89cc1408bc03b2986cc17a00856174075dd1f81c"
+    }
+  },
+  "runs": {
+    "bare": {
+      "run_directory": "/gscratch/stf/hengyil6/libero-bench/outputs/smoke-42022817-r2/bare/experiment_runs/run_b6e03614701d4b698a32910394a1912f",
+      "run_id": "run_b6e03614701d4b698a32910394a1912f",
+      "outcome": {
+        "benchmark_success": true,
+        "infrastructure_error": false,
+        "termination_reason": "agent_done",
+        "control_steps": 107,
+        "environment_calls": 1,
+        "model_requests": 11
+      },
+      "model_requests": 11,
+      "usage_coverage": 1.0,
+      "tokens": {
+        "input_tokens": 27281,
+        "cached_input_tokens": 9774,
+        "output_tokens": 1429,
+        "reasoning_tokens": 783,
+        "total_tokens": 28710
+      },
+      "known_token_subtotals": {
+        "input_tokens": 27281,
+        "cached_input_tokens": 9774,
+        "output_tokens": 1429,
+        "reasoning_tokens": 783,
+        "total_tokens": 28710
+      },
+      "cost_usd": null,
+      "timing_ms": {
+        "episode.startup": 69553.135553,
+        "episode.decision": 330989.758782
+      },
+      "motion": {
+        "recorded_steps": 107,
+        "unfinished_steps": 0,
+        "environment_step_ms": 1828.621288
+      },
+      "unfinished_span_ids": [],
+      "tool_catalog_size": 39,
+      "all_recorded_controls_are_8d": true,
+      "all_recorded_controls_complete": true,
+      "raw_native_events": 0,
+      "isolation_verified": false,
+      "roles": {
+        "roborsi.planner": 0,
+        "roborsi.engineer": 0,
+        "roborsi.reviewer": 0
+      },
+      "model_wire_checks": [
+        {
+          "span_id": "span_629dbcffd13f4153aa50459ffe37efa6",
+          "ancestry": [
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_837dc45f4edf446cbb42a8e4592780b9",
+          "ancestry": [
+            "perception.vlm",
+            "skill.grasp_object",
+            "visual_pick_place",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_3b22fa7acd454e4399f743636f545ae8",
+          "ancestry": [
+            "skill.place_object_in",
+            "visual_pick_place",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 0,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_5b83ebd995104a1d98b0e0fd946fb92e",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_9f32ff07d29647f4aad8712bd671d8eb",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_53ed52974d884fc4932b60f75a738c3b",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_1bfe5d97265a41cea3412787c1f9464a",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_d98f4c86e2be4ca6a8b53fdda1e2d236",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_c571f645d0fb45bd8b3b5797d9e3f870",
+          "ancestry": [
+            "perception.vlm",
+            "roborsi.perception.vlm_point",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_aff20ba8aa6c4230a93b825bea7ccad1",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_f3b8bc62b53546f09bc035bf63ad9358",
+          "ancestry": [
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 4,
+          "status": "completed",
+          "has_usage": true
+        }
+      ],
+      "log_replay_exists": true
+    },
+    "codex": {
+      "run_directory": "/gscratch/stf/hengyil6/libero-bench/outputs/smoke-42022817-r2/codex/experiment_runs/run_25f9e4c465ab46a0bfabd4b4049a211c",
+      "run_id": "run_25f9e4c465ab46a0bfabd4b4049a211c",
+      "outcome": {
+        "benchmark_success": true,
+        "infrastructure_error": false,
+        "termination_reason": "agent_done",
+        "control_steps": 106,
+        "environment_calls": 1,
+        "model_requests": 17
+      },
+      "model_requests": 17,
+      "usage_coverage": 0.9411764705882353,
+      "tokens": {
+        "input_tokens": null,
+        "cached_input_tokens": null,
+        "output_tokens": null,
+        "reasoning_tokens": null,
+        "total_tokens": null
+      },
+      "known_token_subtotals": {
+        "input_tokens": 78405,
+        "cached_input_tokens": 46253,
+        "output_tokens": 1363,
+        "reasoning_tokens": 561,
+        "total_tokens": 79768
+      },
+      "cost_usd": null,
+      "timing_ms": {
+        "episode.startup": 89262.951691,
+        "episode.decision": 154627.107593,
+        "native.startup": 220859.952606,
+        "episode.harness_including_startup": 375515.501858
+      },
+      "motion": {
+        "recorded_steps": 106,
+        "unfinished_steps": 0,
+        "environment_step_ms": 1845.632245
+      },
+      "unfinished_span_ids": [],
+      "tool_catalog_size": 39,
+      "all_recorded_controls_are_8d": true,
+      "all_recorded_controls_complete": true,
+      "raw_native_events": 58,
+      "isolation_verified": true,
+      "roles": {
+        "roborsi.planner": 0,
+        "roborsi.engineer": 0,
+        "roborsi.reviewer": 0
+      },
+      "model_wire_checks": [
+        {
+          "span_id": "span_6226c47dd7b04c7c987473babc50fc2d",
+          "ancestry": [
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium",
+            "summary": "auto"
+          },
+          "stream": true,
+          "image_count": 2,
+          "status": "failed",
+          "has_usage": false
+        },
+        {
+          "span_id": "span_358a917c170d48b4b5afbd44791ee14a",
+          "ancestry": [
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium",
+            "summary": "auto"
+          },
+          "stream": true,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_94ceed3b57ff4016b91eba5bc28467ca",
+          "ancestry": [
+            "skill.find_by_pointing",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 0,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_00c092ab7c7141239cb42e7f8424a14a",
+          "ancestry": [
+            "perception.vlm",
+            "skill.find_by_pointing",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_4554134b73e54e84846855fbfe41ab91",
+          "ancestry": [
+            "perception.vlm",
+            "skill.find_by_pointing",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_a7e8587dc927411384b22d248f6b2d98",
+          "ancestry": [
+            "perception.vlm",
+            "skill.find_by_pointing",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_a7e256b4f59b411d8fba83a60923c6c7",
+          "ancestry": [
+            "perception.vlm",
+            "roborsi.perception.vlm_point",
+            "skill.find_by_pointing",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_bd074b84dd0d462bbcb6d8c26d6660df",
+          "ancestry": [
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 0,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_2a2bee45d7cf4649b66fa8ad8631c444",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_4d2decc271a243609f768658340f1839",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_e58ad473931345a9a2425efbdc59cdc3",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_54cadf3f1ecb41e9b5fb145664ff5173",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_9d6347663a914cc6a3a881bd06ecd79a",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_74aa65871e0a4be8bd061a492fb798b2",
+          "ancestry": [
+            "perception.vlm",
+            "roborsi.perception.vlm_point",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_4ae8c9047b1b45c18b2adee75486ed13",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_fab931bc9cfc425bacf18e09db69f9f6",
+          "ancestry": [
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium",
+            "summary": "auto"
+          },
+          "stream": true,
+          "image_count": 4,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_8d63fd84d12d41199360bdc9093717e7",
+          "ancestry": [
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium",
+            "summary": "auto"
+          },
+          "stream": true,
+          "image_count": 6,
+          "status": "completed",
+          "has_usage": true
+        }
+      ],
+      "log_replay_exists": true
+    },
+    "pi": {
+      "run_directory": "/gscratch/stf/hengyil6/libero-bench/outputs/smoke-42022817-r2/pi/experiment_runs/run_606f6b1d38c649acb8fa494fb49e79fc",
+      "run_id": "run_606f6b1d38c649acb8fa494fb49e79fc",
+      "outcome": {
+        "benchmark_success": true,
+        "infrastructure_error": false,
+        "termination_reason": "agent_done",
+        "control_steps": 107,
+        "environment_calls": 1,
+        "model_requests": 13
+      },
+      "model_requests": 13,
+      "usage_coverage": 1.0,
+      "tokens": {
+        "input_tokens": 54408,
+        "cached_input_tokens": 36358,
+        "output_tokens": 1376,
+        "reasoning_tokens": 577,
+        "total_tokens": 55784
+      },
+      "known_token_subtotals": {
+        "input_tokens": 54408,
+        "cached_input_tokens": 36358,
+        "output_tokens": 1376,
+        "reasoning_tokens": 577,
+        "total_tokens": 55784
+      },
+      "cost_usd": null,
+      "timing_ms": {
+        "episode.startup": 85647.515926,
+        "episode.decision": 136246.173775,
+        "native.startup": 70354.33019,
+        "episode.harness_including_startup": 206639.891556
+      },
+      "motion": {
+        "recorded_steps": 107,
+        "unfinished_steps": 0,
+        "environment_step_ms": 2208.591083
+      },
+      "unfinished_span_ids": [],
+      "tool_catalog_size": 39,
+      "all_recorded_controls_are_8d": true,
+      "all_recorded_controls_complete": true,
+      "raw_native_events": 192,
+      "isolation_verified": true,
+      "roles": {
+        "roborsi.planner": 0,
+        "roborsi.engineer": 0,
+        "roborsi.reviewer": 0
+      },
+      "model_wire_checks": [
+        {
+          "span_id": "span_8742f4b9e18d45ffb98f57267d7e34a2",
+          "ancestry": [
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium",
+            "summary": "auto"
+          },
+          "stream": true,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_a04938482ef84e339ba71b60cc2aac08",
+          "ancestry": [
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium",
+            "summary": "auto"
+          },
+          "stream": true,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_3527907ac1484d4eb272431c52e82854",
+          "ancestry": [
+            "perception.vlm",
+            "skill.grasp_object",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_0212281e40ec4702843e5f774622c231",
+          "ancestry": [
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 0,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_808a90b15e6b4be09d866def8af2d439",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_dd301efe99cf415da6d219e245066cf5",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_c7c81089b608400bb6afb06138a3395b",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_8fe8bf57110740e0a2cf9f668227f087",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_4d2c86d132134cc5b00793a581d12fe8",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_43844abde834468799960f7fbfd9d31a",
+          "ancestry": [
+            "perception.vlm",
+            "roborsi.perception.vlm_point",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_dd9b4d015be84e9e93ea6112cdd593ef",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_e525bfb5df73434483582eff406b2314",
+          "ancestry": [
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium",
+            "summary": "auto"
+          },
+          "stream": true,
+          "image_count": 4,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_ef7b9c5ace4942dda8be80c171d4c651",
+          "ancestry": [
+            "harness.session",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium",
+            "summary": "auto"
+          },
+          "stream": true,
+          "image_count": 6,
+          "status": "completed",
+          "has_usage": true
+        }
+      ],
+      "log_replay_exists": true
+    },
+    "roborsi": {
+      "run_directory": "/gscratch/stf/hengyil6/libero-bench/outputs/smoke-42022817-r2/roborsi/experiment_runs/run_f2fd730cb7e245c88dd47c8276287ac3",
+      "run_id": "run_f2fd730cb7e245c88dd47c8276287ac3",
+      "outcome": {
+        "benchmark_success": true,
+        "infrastructure_error": false,
+        "termination_reason": "roborsi_completed",
+        "control_steps": 106,
+        "environment_calls": 7,
+        "model_requests": 23
+      },
+      "model_requests": 23,
+      "usage_coverage": 1.0,
+      "tokens": {
+        "input_tokens": 139067,
+        "cached_input_tokens": 98175,
+        "output_tokens": 3343,
+        "reasoning_tokens": 798,
+        "total_tokens": 142410
+      },
+      "known_token_subtotals": {
+        "input_tokens": 139067,
+        "cached_input_tokens": 98175,
+        "output_tokens": 3343,
+        "reasoning_tokens": 798,
+        "total_tokens": 142410
+      },
+      "cost_usd": null,
+      "timing_ms": {
+        "episode.startup": 83164.520183,
+        "episode.decision": 179718.737731
+      },
+      "motion": {
+        "recorded_steps": 106,
+        "unfinished_steps": 0,
+        "environment_step_ms": 2422.201356
+      },
+      "unfinished_span_ids": [],
+      "tool_catalog_size": 39,
+      "all_recorded_controls_are_8d": true,
+      "all_recorded_controls_complete": true,
+      "raw_native_events": 0,
+      "isolation_verified": false,
+      "roles": {
+        "roborsi.planner": 1,
+        "roborsi.engineer": 1,
+        "roborsi.reviewer": 1
+      },
+      "model_wire_checks": [
+        {
+          "span_id": "span_d5e1e7ed28ed41928f5de0d0b440e921",
+          "ancestry": [
+            "roborsi.planner",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_dc714873d6d644cebc8d6a1723ebe9e7",
+          "ancestry": [
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 0,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_1ce5769f8f694180be2e34e30ac65707",
+          "ancestry": [
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_13b93573cf4649a98e4238a7af24fdb3",
+          "ancestry": [
+            "find_pixel",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 0,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_2746385bd6d244d4854022187bf6be34",
+          "ancestry": [
+            "perception.vlm",
+            "find_pixel",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_95aff84f8aad4bbd9a3efcd8ee548323",
+          "ancestry": [
+            "perception.vlm",
+            "find_pixel",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_32ccbb38ed614f6c868ed94a5321231e",
+          "ancestry": [
+            "perception.vlm",
+            "find_pixel",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_ec271d8c642345209f8ec369256be481",
+          "ancestry": [
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_d83dd1ecbe11400f92e3de455f58b5f8",
+          "ancestry": [
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_11c0cc6c91d14836b2acd7d35341b58f",
+          "ancestry": [
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_d7a9e2d4e8b245a3b2c29730cd7090be",
+          "ancestry": [
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 2,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_641d7ba45b68446fbbe3103c153b03f9",
+          "ancestry": [
+            "skill.place_object_in",
+            "visual_pick_place",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 0,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_00d5ce0750ad44c292755a984f82f047",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_c10197c905cb4e8f85977e9768b4d915",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_e1a52344d2aa4a8b8cf281e660297163",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_1285ad1d6f4c4cfba6040135315d7a98",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_a725ddb94f2543aca05e47e8c90e8a9d",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_e16626fbccb34e81a22be3811ac53bb7",
+          "ancestry": [
+            "perception.vlm",
+            "roborsi.perception.vlm_point",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_1dfb914fa13949a593b4b0eb11833517",
+          "ancestry": [
+            "perception.vlm",
+            "skill.place_object_in",
+            "visual_pick_place",
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 1,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_53609c59fb81410ebbb85f7958d08e13",
+          "ancestry": [
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 4,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_b44a348b05b840ba81761f7037936def",
+          "ancestry": [
+            "roborsi.engineer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 6,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_09091e8a227244248a272559d385305f",
+          "ancestry": [
+            "roborsi.reviewer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 3,
+          "status": "completed",
+          "has_usage": true
+        },
+        {
+          "span_id": "span_aaa48384394b495c896147035227d544",
+          "ancestry": [
+            "roborsi.reviewer",
+            "episode.decision"
+          ],
+          "model": "gpt-6-astra",
+          "reasoning": {
+            "effort": "medium"
+          },
+          "stream": false,
+          "image_count": 3,
+          "status": "completed",
+          "has_usage": true
+        }
+      ],
+      "log_replay_exists": true
+    }
+  },
+  "physical_replay": {
+    "mode": "physics_replay",
+    "model_requests": 0,
+    "control_steps": 107,
+    "replay_framework_source_sha256": "b78ab57452d557a72a5520127e9c92d9c5802005197f0dc455d775c2354ad1d5",
+    "tolerance": 1e-06,
+    "max_absolute_error": {
+      "qpos": 0.0,
+      "qvel": 0.0,
+      "act": 0.0
+    },
+    "state_consistent": true,
+    "original_success": true,
+    "replay_success": true,
+    "success_consistent": true,
+    "configuration_drift": {},
+    "note": "Tolerance comparison, not a bitwise-reproducibility guarantee across machines/dependencies.",
+    "run_directory": "/gscratch/stf/hengyil6/libero-bench/outputs/smoke-42022817-r2/bare/experiment_runs/run_b6e03614701d4b698a32910394a1912f",
+    "replay_directory": "/gscratch/stf/hengyil6/libero-bench/outputs/smoke-42022817-r2/bare/experiment_runs/run_b6e03614701d4b698a32910394a1912f/physics_replays/2a8437fa1d0842668ce673ce995c29a9"
+  },
+  "physical_replay_initial": {
+    "mode": "physics_replay",
+    "model_requests": 0,
+    "control_steps": 107,
+    "tolerance": 1e-06,
+    "max_absolute_error": {
+      "qpos": 0.00011894853672525518,
+      "qvel": 0.05890689924214457,
+      "act": 0.0
+    },
+    "state_consistent": false,
+    "original_success": true,
+    "replay_success": true,
+    "success_consistent": true,
+    "configuration_drift": {},
+    "note": "Tolerance comparison, not a bitwise-reproducibility guarantee across machines/dependencies.",
+    "run_directory": "/gscratch/stf/hengyil6/libero-bench/outputs/smoke-42022817-r2/bare/experiment_runs/run_b6e03614701d4b698a32910394a1912f",
+    "replay_directory": "/gscratch/stf/hengyil6/libero-bench/outputs/smoke-42022817-r2/bare/experiment_runs/run_b6e03614701d4b698a32910394a1912f/physics_replays/cef3eecce7d041968b24d2f9ad0d2aca"
+  },
+  "replay_fix": "Restore saved integration inputs after sim.forward and public observation refresh. Existing actions and state journals are unchanged."
+}

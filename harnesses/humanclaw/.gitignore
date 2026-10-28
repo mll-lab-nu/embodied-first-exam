@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+*.egg-info/
+data/
+outputs/
+running/
+gemini31_final_queue/
+weights/*
+!weights/paper_fullval_v1/
+weights/paper_fullval_v1/*
+!weights/paper_fullval_v1/README.md
+!weights/paper_fullval_v1/README_zh.md
+*.log
+.env
+.env.*
+!.env.example
+node_modules/
+
+# Full Pi analysis evidence is archived on Klone; see the package's ARCHIVE.md.
+/docs/analysis/pi-harness-optimization-20261021/tasks/
+/docs/analysis/pi-harness-optimization-20261021/tables/
+/docs/analysis/pi-harness-optimization-20261021/evidence/native_transcripts.jsonl.gz

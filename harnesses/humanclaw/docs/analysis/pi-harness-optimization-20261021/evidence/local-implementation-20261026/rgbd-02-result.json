@@ -1,0 +1,1098 @@
+{
+  "family": "rgbd",
+  "mode": "autonomous_model",
+  "start": "cold",
+  "human_interventions": [],
+  "declared_scope": [
+    "observation",
+    "bounded_action_receipt"
+  ],
+  "scheduled_trials": 1,
+  "bootstrap": {
+    "schema": "bootstrap-v1",
+    "task": "Use the public instrument to reach position_mm=4, then obtain a confirming public sample. Complete the task after adapting the interface. Do not claim private evaluator success. Also retrieve the original RGB-D arrays and public calibration, use a scientific Python dependency to compute all valid depth pixels in world coordinates in metres, and save the point list as JSON in world-points.json in the scientific workspace outputs.",
+    "entries": [
+      "http://127.0.0.1:65128/public/manual.md"
+    ],
+    "source_roots": [
+      "http://127.0.0.1:65128/public"
+    ],
+    "internet": false,
+    "transports": [
+      {
+        "id": "instrument",
+        "kind": "http",
+        "root": "http://127.0.0.1:65128/api"
+      }
+    ],
+    "max_actions": 8
+  },
+  "failure_stage": null,
+  "native_result": {
+    "harness": "pi",
+    "native_directory": "/Users/hengyil6/Projects/HumanCLAW/outputs/autonomous-interface-local-20261026/rgbd-02/experiment_runs/run_cb83de4b71ec47c9abe8852428ec311a/native",
+    "identity": {
+      "command": [
+        "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+        "--experimental-strip-types",
+        "/Users/hengyil6/Projects/HumanCLAW/harnesses/pi-adaptive/src/runner.ts"
+      ],
+      "executable_sha256": "08dad0581f00a0cabf4d49ec92ca1f25fdfd01c2c18fa8e92b35f04d4c24c164",
+      "version": "1.3.0",
+      "profile": "pi-adaptive-v1",
+      "packages": {
+        "pi-coding-agent": "1.3.0",
+        "pi-agent-core": "1.3.0",
+        "pi-ai": "1.3.0",
+        "pi-mcp": "1.3.0"
+      },
+      "policy_files_sha256": {
+        "package.json": "b79f142cfb54f2001a776281048693e80b20f3abf96d4da5775bc20509daaa4a",
+        "package-lock.json": "253b972de2e4fc8b09401dcf93741015bc1e06997fc3bc2fae5107e8d9eb75ba",
+        "src/adaptation.ts": "e8db93d6857f6864a7cee37e38a29175fcce4ef14e2b0e70f075d45f9cd68403",
+        "src/context.ts": "e77eabb6934d49b6ba6b911baf3a709a5652640ad1be9cb9dd8f57b68d5ecb75",
+        "src/execution-boundary.ts": "01cc88f356457cb103fe55c9c171eee2df51a835dec8bfa6098c23261329abbf",
+        "src/runner.ts": "581b3dd84f6f3eaeda627a26ed7601c07d794fc7febde455b52a12fc8d1d9e69",
+        "prompts/adaptive.md": "fdd2a108c020c32cfe62e58e78e903629f69c40cc7f1a2ce9b26afb4819d6536",
+        "python/__init__.py": "6e623a8b318c6a7d3d063627322862f8ce5f2989dc0a212a9d42572d2ea89863",
+        "python/adapters.py": "5505432ee6667bc616575babadaa3eefcfc0944759ae2e8934710e56329c4e33",
+        "python/bindings.py": "303eb3db3fca129a8f2d1dea99bb8cd375655b8c24664385e658862801e5f144",
+        "python/bootstrap.py": "db044e674b50498108b15c93de500bd561111554fb517d956f7a4ad903cd7205",
+        "python/broker.py": "0877b3f4bc91f91366031e14121bacd0b88f25e1d286c1408e480f3f57ef3ed6",
+        "python/discovery.py": "3bb31f1df5a1ad2325c3f6eadbc418d501ea0040a94f86b1fc526a72f82a3d55",
+        "python/lifecycle.py": "360d4b25b3243773ddcefcc67fa6598d694f1e3f1db9e0b0f1e2548282fa281e",
+        "python/programs.py": "ee361bb497c6d819a2e5660a2ef09c49dbe8ca28956cc2b925752c61db063dfd",
+        "python/reviewer.py": "f975f54c9326886175d9b46e125f37c572389e53372d40b16a0fbc0b9c134f81",
+        "python/run.py": "67338f825124868c623e86cb45490f3729dc0bb25d3f2d16ad7046ba51afb97b",
+        "python/sandbox.py": "83ef14d3a4b43523c450cb33772343f59a0548dd2dc4c9eac7c50666ce030906",
+        "python/service.py": "82f49a7b097ab185dc3c7aadb7bd8b531fcff543ee54b550218a14ca7b7d3d65",
+        "python/smoke.py": "1152724c0589afe2311bf1f037a99d7c90b27fa7a9da89f179b0f7f2a5dd39eb",
+        "python/state.py": "2c83fa8d3bf1bc8cb87d06070134a83f58aa9c74fe9a94cd5a344a68bcd15340",
+        "python/transports.py": "df36727b3176d4c6646c0f947bcbee09c50f82719e8f1f86e226dad14f732c07",
+        "python/workspace.py": "aab41be7e16463c2de398240676e865f25bf50bd19f940eb62060a5008be3601",
+        "host/pi_adaptive.py": "aec8265a367eafb2d01e1627034739e12343bb7da4b727c9c3488ad11142b4ae",
+        "host/runtime.py": "d70f17f38fcfbead30a9aa18c99a957a5ff0f2ffe6caf0e7bc34215fe79fd0b5",
+        "host/services.py": "f2ba684998aae05c23684d683af9cc545e361892f22ef6f1900cb97ee32f4ab3",
+        "host/provider_errors.py": "372b643748f9245642089b8c590201224532fe3c1273501e5f7fc8d50d3db658"
+      },
+      "policy_sha256": "29b65357bc2a09f70ff1cab1b780f844150404639e97ba001ac64a7da98f9fa0"
+    },
+    "model_requests": 23,
+    "steps": 2,
+    "raw_model_usage": [
+      {
+        "input_tokens": 2314,
+        "input_tokens_details": {
+          "cache_write_tokens": 2311,
+          "cached_tokens": 0
+        },
+        "output_tokens": 95,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 2409
+      },
+      {
+        "input_tokens": 6227,
+        "input_tokens_details": {
+          "cache_write_tokens": 6224,
+          "cached_tokens": 0
+        },
+        "output_tokens": 508,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 6735
+      },
+      {
+        "input_tokens": 14286,
+        "input_tokens_details": {
+          "cache_write_tokens": 12514,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 324,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 14610
+      },
+      {
+        "input_tokens": 17125,
+        "input_tokens_details": {
+          "cache_write_tokens": 15353,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 1555,
+        "output_tokens_details": {
+          "reasoning_tokens": 169
+        },
+        "total_tokens": 18680
+      },
+      {
+        "input_tokens": 20224,
+        "input_tokens_details": {
+          "cache_write_tokens": 18452,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 1417,
+        "output_tokens_details": {
+          "reasoning_tokens": 29
+        },
+        "total_tokens": 21641
+      },
+      {
+        "input_tokens": 26542,
+        "input_tokens_details": {
+          "cache_write_tokens": 26539,
+          "cached_tokens": 0
+        },
+        "output_tokens": 65,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26607
+      },
+      {
+        "input_tokens": 26684,
+        "input_tokens_details": {
+          "cache_write_tokens": 26681,
+          "cached_tokens": 0
+        },
+        "output_tokens": 295,
+        "output_tokens_details": {
+          "reasoning_tokens": 36
+        },
+        "total_tokens": 26979
+      },
+      {
+        "input_tokens": 28372,
+        "input_tokens_details": {
+          "cache_write_tokens": 26596,
+          "cached_tokens": 1773
+        },
+        "output_tokens": 1586,
+        "output_tokens_details": {
+          "reasoning_tokens": 96
+        },
+        "total_tokens": 29958
+      },
+      {
+        "input_tokens": 10489,
+        "input_tokens_details": {
+          "cache_write_tokens": 8714,
+          "cached_tokens": 1772
+        },
+        "output_tokens": 66,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 10555
+      },
+      {
+        "input_tokens": 8591,
+        "input_tokens_details": {
+          "cache_write_tokens": 8588,
+          "cached_tokens": 0
+        },
+        "output_tokens": 601,
+        "output_tokens_details": {
+          "reasoning_tokens": 454
+        },
+        "total_tokens": 9192
+      },
+      {
+        "input_tokens": 16421,
+        "input_tokens_details": {
+          "cache_write_tokens": 16418,
+          "cached_tokens": 0
+        },
+        "output_tokens": 213,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 16634
+      },
+      {
+        "input_tokens": 21735,
+        "input_tokens_details": {
+          "cache_write_tokens": 21732,
+          "cached_tokens": 0
+        },
+        "output_tokens": 259,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 21994
+      },
+      {
+        "input_tokens": 27004,
+        "input_tokens_details": {
+          "cache_write_tokens": 25119,
+          "cached_tokens": 1882
+        },
+        "output_tokens": 291,
+        "output_tokens_details": {
+          "reasoning_tokens": 60
+        },
+        "total_tokens": 27295
+      },
+      {
+        "input_tokens": 26972,
+        "input_tokens_details": {
+          "cache_write_tokens": 25087,
+          "cached_tokens": 1882
+        },
+        "output_tokens": 78,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27050
+      },
+      {
+        "input_tokens": 27788,
+        "input_tokens_details": {
+          "cache_write_tokens": 27785,
+          "cached_tokens": 0
+        },
+        "output_tokens": 397,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 28185
+      },
+      {
+        "input_tokens": 25934,
+        "input_tokens_details": {
+          "cache_write_tokens": 25931,
+          "cached_tokens": 0
+        },
+        "output_tokens": 213,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26147
+      },
+      {
+        "input_tokens": 28508,
+        "input_tokens_details": {
+          "cache_write_tokens": 26630,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 290,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 28798
+      },
+      {
+        "input_tokens": 26089,
+        "input_tokens_details": {
+          "cache_write_tokens": 24211,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 60,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26149
+      },
+      {
+        "input_tokens": 23427,
+        "input_tokens_details": {
+          "cache_write_tokens": 21549,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 24,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 23451
+      },
+      {
+        "input_tokens": 27193,
+        "input_tokens_details": {
+          "cache_write_tokens": 25315,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 1225,
+        "output_tokens_details": {
+          "reasoning_tokens": 178
+        },
+        "total_tokens": 28418
+      },
+      {
+        "input_tokens": 25491,
+        "input_tokens_details": {
+          "cache_write_tokens": 23613,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 1040,
+        "output_tokens_details": {
+          "reasoning_tokens": 176
+        },
+        "total_tokens": 26531
+      },
+      {
+        "input_tokens": 25105,
+        "input_tokens_details": {
+          "cache_write_tokens": 23227,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 704,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 25809
+      },
+      {
+        "input_tokens": 27242,
+        "input_tokens_details": {
+          "cache_write_tokens": 25364,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 190,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27432
+      }
+    ],
+    "termination_reason": "agent_completed",
+    "tools_exposed": [
+      "pi.adaptive__activate",
+      "pi.adaptive__adapter",
+      "pi.adaptive__candidate",
+      "pi.adaptive__compute",
+      "pi.adaptive__discard",
+      "pi.adaptive__discover",
+      "pi.adaptive__evidence",
+      "pi.adaptive__execute",
+      "pi.adaptive__memory",
+      "pi.adaptive__receipt",
+      "pi.adaptive__registry",
+      "pi.adaptive__validate",
+      "pi.adaptive__workspace"
+    ],
+    "synthetic": false,
+    "interface": {
+      "schema": "interface-trial-v1",
+      "local_adaptation_status": "pass",
+      "adaptation_status": "inconclusive",
+      "acceptance_note": "Independent scope/task checks are supplied by the evaluation runner, not the binding",
+      "interaction_scope": {
+        "observation": true,
+        "bounded_action_receipt": true,
+        "lifecycle": true
+      },
+      "task_outcome": "unscorable",
+      "human_interventions": [],
+      "adapter_origin": "public_client",
+      "active_adapter": "adapter:e1abfd812b8f3d8a0798c5b118ad5fa6966a666273bdfaff69bba5b18f1098a4",
+      "adapters": [
+        "adapter:b5230f92a88a8c4ccabf254d463b1c99b953ea0b4541347f787fa5e474b1d738",
+        "adapter:e1abfd812b8f3d8a0798c5b118ad5fa6966a666273bdfaff69bba5b18f1098a4"
+      ],
+      "sources": {
+        "entries": [
+          "http://127.0.0.1:65128/public/manual.md"
+        ],
+        "sources": [
+          "source:900ed91632072e67c309e5d8db4a4e6293ac5c367f16ec4cadb1a2eaa6c32a30",
+          "source:e187c1c0d3bea05cc8252460bdc40c04b6ccf27763458315862753791f5fec4a",
+          "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+          "source:a81f0aa640a7f2509a191774eb24daba4ea87d139813076f9985cc99c45455d7"
+        ],
+        "records": [
+          {
+            "id": "source:900ed91632072e67c309e5d8db4a4e6293ac5c367f16ec4cadb1a2eaa6c32a30",
+            "uri": "http://127.0.0.1:65128/public/manual.md",
+            "sha256": "1f89a99d21fbe84f89c1ae57ffbf9cfcc02eeccc1d04f5ede06ce2867c17b46a",
+            "question": "Read public instrument interface, operations and RGB-D resource/calibration declarations."
+          },
+          {
+            "id": "source:e187c1c0d3bea05cc8252460bdc40c04b6ccf27763458315862753791f5fec4a",
+            "uri": "http://127.0.0.1:65128/public/client.py",
+            "sha256": "4e6880d2a3ff1669b4db9483b4007771de32f7dbd137a0eaa87a980c526011d1",
+            "question": "Inspect the original pure client encoder/decoder, argument constraints, response types and status encoding."
+          },
+          {
+            "id": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+            "uri": "http://127.0.0.1:65128/public/examples.json",
+            "sha256": "b519571cb497129c01c38147445fe2714cba2e9270f23c6e13599e7c2aff6467",
+            "question": "Read independent request and response examples for adapter validation."
+          },
+          {
+            "id": "source:a81f0aa640a7f2509a191774eb24daba4ea87d139813076f9985cc99c45455d7",
+            "uri": "http://127.0.0.1:65128/public/resources.json",
+            "sha256": "122c530015b9755a07b0484eb5207402979e78b59eefc87f0bae24dd2011d8f7",
+            "question": "Read original RGB and depth resources, calibration, units, invalid depth values, coordinate conventions and timestamps."
+          }
+        ]
+      },
+      "registered_scope": [
+        "instrument.advance",
+        "instrument.sample",
+        "instrument.status"
+      ],
+      "settled": true,
+      "time_to_first_observation_seconds": 188.19098416599445,
+      "time_to_first_action_seconds": 194.88601274997927,
+      "elapsed_seconds": 302.38262712513097,
+      "phase_seconds": {
+        "source_reads": 0.0649695408064872,
+        "dependency_setup": 0.3137659579515457,
+        "programs_and_validation_codecs": 0.8229687071871012
+      },
+      "validation_reports": {
+        "adapter:b5230f92a88a8c4ccabf254d463b1c99b953ea0b4541347f787fa5e474b1d738": {
+          "schema": "adapter-validation-v1",
+          "adapter": "adapter:b5230f92a88a8c4ccabf254d463b1c99b953ea0b4541347f787fa5e474b1d738",
+          "status": "fail",
+          "checks": [
+            {
+              "check": "contract",
+              "status": "fail",
+              "error": "Operation is outside the declared transport root"
+            }
+          ],
+          "review": {
+            "status": "inconclusive",
+            "reason": "No independent reviewer connected"
+          },
+          "local_probe_eligible": false,
+          "publication_eligible": false
+        },
+        "adapter:e1abfd812b8f3d8a0798c5b118ad5fa6966a666273bdfaff69bba5b18f1098a4": {
+          "schema": "adapter-validation-v1",
+          "adapter": "adapter:e1abfd812b8f3d8a0798c5b118ad5fa6966a666273bdfaff69bba5b18f1098a4",
+          "status": "pass",
+          "checks": [
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.sample",
+                "phase": "encode",
+                "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+                "input_pointer": "/sample/args",
+                "expected_pointer": "/sample/wire"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.sample",
+                "phase": "decode",
+                "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+                "input_pointer": "/sample/response",
+                "expected_pointer": "/sample/response"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.advance",
+                "phase": "encode",
+                "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+                "input_pointer": "/advance/args",
+                "expected_pointer": "/advance/wire"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.advance",
+                "phase": "decode",
+                "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+                "input_pointer": "/advance/response",
+                "expected_pointer": "/advance/response"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.status",
+                "phase": "encode",
+                "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+                "input_pointer": "/status/args",
+                "expected_pointer": "/status/wire"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.status",
+                "phase": "decode",
+                "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+                "input_pointer": "/status/response",
+                "expected_pointer": "/status/response"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "syntax_schemas_transport_scope",
+              "status": "pass"
+            }
+          ],
+          "review": {
+            "status": "pass",
+            "reason": "The public manual, inspected client and independent examples support all three operations\u2019 endpoints, schemas, effects, costs, units, rail frame, timing and lifecycle. Encoding actually reuses the pure public client, maps delta directly to delta_mm and uses the broker request_id for advances; transport remains host-dispatched. Advances require a current observation and return a fresh sample. Status is correctly non-current evidence and resolves uncertain execution without replay. Public cases exercise encoding and decoding for every operation, and all supplied deterministic checks pass. Unspecified revision increments are not assumed. This verdict validates the adapter only; task completion and private success remain unestablished.",
+            "attempts": 1
+          },
+          "local_probe_eligible": true,
+          "publication_eligible": false
+        }
+      },
+      "invalidations": {}
+    }
+  },
+  "adaptation_status": "pass",
+  "task_outcome": "success",
+  "independent_checks": {
+    "public_sample": true,
+    "bounded_actions": true,
+    "physical_actions": 2,
+    "final_position_mm": 4,
+    "world_points": [
+      [
+        1.0,
+        0.0,
+        1.0
+      ],
+      [
+        2.0,
+        0.0,
+        2.0
+      ],
+      [
+        3.0,
+        2.0,
+        4.0
+      ]
+    ],
+    "task_success": true,
+    "registered": true
+  },
+  "interface": {
+    "schema": "interface-trial-v1",
+    "local_adaptation_status": "pass",
+    "adaptation_status": "inconclusive",
+    "acceptance_note": "Independent scope/task checks are supplied by the evaluation runner, not the binding",
+    "interaction_scope": {
+      "observation": true,
+      "bounded_action_receipt": true,
+      "lifecycle": true
+    },
+    "task_outcome": "unscorable",
+    "human_interventions": [],
+    "adapter_origin": "public_client",
+    "active_adapter": "adapter:e1abfd812b8f3d8a0798c5b118ad5fa6966a666273bdfaff69bba5b18f1098a4",
+    "adapters": [
+      "adapter:b5230f92a88a8c4ccabf254d463b1c99b953ea0b4541347f787fa5e474b1d738",
+      "adapter:e1abfd812b8f3d8a0798c5b118ad5fa6966a666273bdfaff69bba5b18f1098a4"
+    ],
+    "sources": {
+      "entries": [
+        "http://127.0.0.1:65128/public/manual.md"
+      ],
+      "sources": [
+        "source:900ed91632072e67c309e5d8db4a4e6293ac5c367f16ec4cadb1a2eaa6c32a30",
+        "source:e187c1c0d3bea05cc8252460bdc40c04b6ccf27763458315862753791f5fec4a",
+        "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+        "source:a81f0aa640a7f2509a191774eb24daba4ea87d139813076f9985cc99c45455d7"
+      ],
+      "records": [
+        {
+          "id": "source:900ed91632072e67c309e5d8db4a4e6293ac5c367f16ec4cadb1a2eaa6c32a30",
+          "uri": "http://127.0.0.1:65128/public/manual.md",
+          "sha256": "1f89a99d21fbe84f89c1ae57ffbf9cfcc02eeccc1d04f5ede06ce2867c17b46a",
+          "question": "Read public instrument interface, operations and RGB-D resource/calibration declarations."
+        },
+        {
+          "id": "source:e187c1c0d3bea05cc8252460bdc40c04b6ccf27763458315862753791f5fec4a",
+          "uri": "http://127.0.0.1:65128/public/client.py",
+          "sha256": "4e6880d2a3ff1669b4db9483b4007771de32f7dbd137a0eaa87a980c526011d1",
+          "question": "Inspect the original pure client encoder/decoder, argument constraints, response types and status encoding."
+        },
+        {
+          "id": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+          "uri": "http://127.0.0.1:65128/public/examples.json",
+          "sha256": "b519571cb497129c01c38147445fe2714cba2e9270f23c6e13599e7c2aff6467",
+          "question": "Read independent request and response examples for adapter validation."
+        },
+        {
+          "id": "source:a81f0aa640a7f2509a191774eb24daba4ea87d139813076f9985cc99c45455d7",
+          "uri": "http://127.0.0.1:65128/public/resources.json",
+          "sha256": "122c530015b9755a07b0484eb5207402979e78b59eefc87f0bae24dd2011d8f7",
+          "question": "Read original RGB and depth resources, calibration, units, invalid depth values, coordinate conventions and timestamps."
+        }
+      ]
+    },
+    "registered_scope": [
+      "instrument.advance",
+      "instrument.sample",
+      "instrument.status"
+    ],
+    "settled": true,
+    "time_to_first_observation_seconds": 188.19098416599445,
+    "time_to_first_action_seconds": 194.88601274997927,
+    "elapsed_seconds": 302.3842751251068,
+    "phase_seconds": {
+      "source_reads": 0.0649695408064872,
+      "dependency_setup": 0.3137659579515457,
+      "programs_and_validation_codecs": 0.8229687071871012
+    },
+    "validation_reports": {
+      "adapter:b5230f92a88a8c4ccabf254d463b1c99b953ea0b4541347f787fa5e474b1d738": {
+        "schema": "adapter-validation-v1",
+        "adapter": "adapter:b5230f92a88a8c4ccabf254d463b1c99b953ea0b4541347f787fa5e474b1d738",
+        "status": "fail",
+        "checks": [
+          {
+            "check": "contract",
+            "status": "fail",
+            "error": "Operation is outside the declared transport root"
+          }
+        ],
+        "review": {
+          "status": "inconclusive",
+          "reason": "No independent reviewer connected"
+        },
+        "local_probe_eligible": false,
+        "publication_eligible": false
+      },
+      "adapter:e1abfd812b8f3d8a0798c5b118ad5fa6966a666273bdfaff69bba5b18f1098a4": {
+        "schema": "adapter-validation-v1",
+        "adapter": "adapter:e1abfd812b8f3d8a0798c5b118ad5fa6966a666273bdfaff69bba5b18f1098a4",
+        "status": "pass",
+        "checks": [
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.sample",
+              "phase": "encode",
+              "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+              "input_pointer": "/sample/args",
+              "expected_pointer": "/sample/wire"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.sample",
+              "phase": "decode",
+              "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+              "input_pointer": "/sample/response",
+              "expected_pointer": "/sample/response"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.advance",
+              "phase": "encode",
+              "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+              "input_pointer": "/advance/args",
+              "expected_pointer": "/advance/wire"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.advance",
+              "phase": "decode",
+              "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+              "input_pointer": "/advance/response",
+              "expected_pointer": "/advance/response"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.status",
+              "phase": "encode",
+              "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+              "input_pointer": "/status/args",
+              "expected_pointer": "/status/wire"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.status",
+              "phase": "decode",
+              "source": "source:d74e3253681bbe4084e27cb2fd38b2887c4b8e3a51fea0841e1c97942a815890",
+              "input_pointer": "/status/response",
+              "expected_pointer": "/status/response"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "syntax_schemas_transport_scope",
+            "status": "pass"
+          }
+        ],
+        "review": {
+          "status": "pass",
+          "reason": "The public manual, inspected client and independent examples support all three operations\u2019 endpoints, schemas, effects, costs, units, rail frame, timing and lifecycle. Encoding actually reuses the pure public client, maps delta directly to delta_mm and uses the broker request_id for advances; transport remains host-dispatched. Advances require a current observation and return a fresh sample. Status is correctly non-current evidence and resolves uncertain execution without replay. Public cases exercise encoding and decoding for every operation, and all supplied deterministic checks pass. Unspecified revision increments are not assumed. This verdict validates the adapter only; task completion and private success remain unestablished.",
+          "attempts": 1
+        },
+        "local_probe_eligible": true,
+        "publication_eligible": false
+      }
+    },
+    "invalidations": {},
+    "model_requests": 23,
+    "raw_model_usage": [
+      {
+        "input_tokens": 2314,
+        "input_tokens_details": {
+          "cache_write_tokens": 2311,
+          "cached_tokens": 0
+        },
+        "output_tokens": 95,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 2409
+      },
+      {
+        "input_tokens": 6227,
+        "input_tokens_details": {
+          "cache_write_tokens": 6224,
+          "cached_tokens": 0
+        },
+        "output_tokens": 508,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 6735
+      },
+      {
+        "input_tokens": 14286,
+        "input_tokens_details": {
+          "cache_write_tokens": 12514,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 324,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 14610
+      },
+      {
+        "input_tokens": 17125,
+        "input_tokens_details": {
+          "cache_write_tokens": 15353,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 1555,
+        "output_tokens_details": {
+          "reasoning_tokens": 169
+        },
+        "total_tokens": 18680
+      },
+      {
+        "input_tokens": 20224,
+        "input_tokens_details": {
+          "cache_write_tokens": 18452,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 1417,
+        "output_tokens_details": {
+          "reasoning_tokens": 29
+        },
+        "total_tokens": 21641
+      },
+      {
+        "input_tokens": 26542,
+        "input_tokens_details": {
+          "cache_write_tokens": 26539,
+          "cached_tokens": 0
+        },
+        "output_tokens": 65,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26607
+      },
+      {
+        "input_tokens": 26684,
+        "input_tokens_details": {
+          "cache_write_tokens": 26681,
+          "cached_tokens": 0
+        },
+        "output_tokens": 295,
+        "output_tokens_details": {
+          "reasoning_tokens": 36
+        },
+        "total_tokens": 26979
+      },
+      {
+        "input_tokens": 28372,
+        "input_tokens_details": {
+          "cache_write_tokens": 26596,
+          "cached_tokens": 1773
+        },
+        "output_tokens": 1586,
+        "output_tokens_details": {
+          "reasoning_tokens": 96
+        },
+        "total_tokens": 29958
+      },
+      {
+        "input_tokens": 10489,
+        "input_tokens_details": {
+          "cache_write_tokens": 8714,
+          "cached_tokens": 1772
+        },
+        "output_tokens": 66,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 10555
+      },
+      {
+        "input_tokens": 8591,
+        "input_tokens_details": {
+          "cache_write_tokens": 8588,
+          "cached_tokens": 0
+        },
+        "output_tokens": 601,
+        "output_tokens_details": {
+          "reasoning_tokens": 454
+        },
+        "total_tokens": 9192
+      },
+      {
+        "input_tokens": 16421,
+        "input_tokens_details": {
+          "cache_write_tokens": 16418,
+          "cached_tokens": 0
+        },
+        "output_tokens": 213,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 16634
+      },
+      {
+        "input_tokens": 21735,
+        "input_tokens_details": {
+          "cache_write_tokens": 21732,
+          "cached_tokens": 0
+        },
+        "output_tokens": 259,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 21994
+      },
+      {
+        "input_tokens": 27004,
+        "input_tokens_details": {
+          "cache_write_tokens": 25119,
+          "cached_tokens": 1882
+        },
+        "output_tokens": 291,
+        "output_tokens_details": {
+          "reasoning_tokens": 60
+        },
+        "total_tokens": 27295
+      },
+      {
+        "input_tokens": 26972,
+        "input_tokens_details": {
+          "cache_write_tokens": 25087,
+          "cached_tokens": 1882
+        },
+        "output_tokens": 78,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27050
+      },
+      {
+        "input_tokens": 27788,
+        "input_tokens_details": {
+          "cache_write_tokens": 27785,
+          "cached_tokens": 0
+        },
+        "output_tokens": 397,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 28185
+      },
+      {
+        "input_tokens": 25934,
+        "input_tokens_details": {
+          "cache_write_tokens": 25931,
+          "cached_tokens": 0
+        },
+        "output_tokens": 213,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26147
+      },
+      {
+        "input_tokens": 28508,
+        "input_tokens_details": {
+          "cache_write_tokens": 26630,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 290,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 28798
+      },
+      {
+        "input_tokens": 26089,
+        "input_tokens_details": {
+          "cache_write_tokens": 24211,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 60,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26149
+      },
+      {
+        "input_tokens": 23427,
+        "input_tokens_details": {
+          "cache_write_tokens": 21549,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 24,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 23451
+      },
+      {
+        "input_tokens": 27193,
+        "input_tokens_details": {
+          "cache_write_tokens": 25315,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 1225,
+        "output_tokens_details": {
+          "reasoning_tokens": 178
+        },
+        "total_tokens": 28418
+      },
+      {
+        "input_tokens": 25491,
+        "input_tokens_details": {
+          "cache_write_tokens": 23613,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 1040,
+        "output_tokens_details": {
+          "reasoning_tokens": 176
+        },
+        "total_tokens": 26531
+      },
+      {
+        "input_tokens": 25105,
+        "input_tokens_details": {
+          "cache_write_tokens": 23227,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 704,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 25809
+      },
+      {
+        "input_tokens": 27242,
+        "input_tokens_details": {
+          "cache_write_tokens": 25364,
+          "cached_tokens": 1875
+        },
+        "output_tokens": 190,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27432
+      }
+    ],
+    "usage_coverage": {
+      "requests": 23,
+      "with_usage": 23
+    },
+    "runtime_identity": {
+      "command": [
+        "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+        "--experimental-strip-types",
+        "/Users/hengyil6/Projects/HumanCLAW/harnesses/pi-adaptive/src/runner.ts"
+      ],
+      "executable_sha256": "08dad0581f00a0cabf4d49ec92ca1f25fdfd01c2c18fa8e92b35f04d4c24c164",
+      "version": "1.3.0",
+      "profile": "pi-adaptive-v1",
+      "packages": {
+        "pi-coding-agent": "1.3.0",
+        "pi-agent-core": "1.3.0",
+        "pi-ai": "1.3.0",
+        "pi-mcp": "1.3.0"
+      },
+      "policy_files_sha256": {
+        "package.json": "b79f142cfb54f2001a776281048693e80b20f3abf96d4da5775bc20509daaa4a",
+        "package-lock.json": "253b972de2e4fc8b09401dcf93741015bc1e06997fc3bc2fae5107e8d9eb75ba",
+        "src/adaptation.ts": "e8db93d6857f6864a7cee37e38a29175fcce4ef14e2b0e70f075d45f9cd68403",
+        "src/context.ts": "e77eabb6934d49b6ba6b911baf3a709a5652640ad1be9cb9dd8f57b68d5ecb75",
+        "src/execution-boundary.ts": "01cc88f356457cb103fe55c9c171eee2df51a835dec8bfa6098c23261329abbf",
+        "src/runner.ts": "581b3dd84f6f3eaeda627a26ed7601c07d794fc7febde455b52a12fc8d1d9e69",
+        "prompts/adaptive.md": "fdd2a108c020c32cfe62e58e78e903629f69c40cc7f1a2ce9b26afb4819d6536",
+        "python/__init__.py": "6e623a8b318c6a7d3d063627322862f8ce5f2989dc0a212a9d42572d2ea89863",
+        "python/adapters.py": "5505432ee6667bc616575babadaa3eefcfc0944759ae2e8934710e56329c4e33",
+        "python/bindings.py": "303eb3db3fca129a8f2d1dea99bb8cd375655b8c24664385e658862801e5f144",
+        "python/bootstrap.py": "db044e674b50498108b15c93de500bd561111554fb517d956f7a4ad903cd7205",
+        "python/broker.py": "0877b3f4bc91f91366031e14121bacd0b88f25e1d286c1408e480f3f57ef3ed6",
+        "python/discovery.py": "3bb31f1df5a1ad2325c3f6eadbc418d501ea0040a94f86b1fc526a72f82a3d55",
+        "python/lifecycle.py": "360d4b25b3243773ddcefcc67fa6598d694f1e3f1db9e0b0f1e2548282fa281e",
+        "python/programs.py": "ee361bb497c6d819a2e5660a2ef09c49dbe8ca28956cc2b925752c61db063dfd",
+        "python/reviewer.py": "f975f54c9326886175d9b46e125f37c572389e53372d40b16a0fbc0b9c134f81",
+        "python/run.py": "67338f825124868c623e86cb45490f3729dc0bb25d3f2d16ad7046ba51afb97b",
+        "python/sandbox.py": "83ef14d3a4b43523c450cb33772343f59a0548dd2dc4c9eac7c50666ce030906",
+        "python/service.py": "82f49a7b097ab185dc3c7aadb7bd8b531fcff543ee54b550218a14ca7b7d3d65",
+        "python/smoke.py": "1152724c0589afe2311bf1f037a99d7c90b27fa7a9da89f179b0f7f2a5dd39eb",
+        "python/state.py": "2c83fa8d3bf1bc8cb87d06070134a83f58aa9c74fe9a94cd5a344a68bcd15340",
+        "python/transports.py": "df36727b3176d4c6646c0f947bcbee09c50f82719e8f1f86e226dad14f732c07",
+        "python/workspace.py": "aab41be7e16463c2de398240676e865f25bf50bd19f940eb62060a5008be3601",
+        "host/pi_adaptive.py": "aec8265a367eafb2d01e1627034739e12343bb7da4b727c9c3488ad11142b4ae",
+        "host/runtime.py": "d70f17f38fcfbead30a9aa18c99a957a5ff0f2ffe6caf0e7bc34215fe79fd0b5",
+        "host/services.py": "f2ba684998aae05c23684d683af9cc545e361892f22ef6f1900cb97ee32f4ab3",
+        "host/provider_errors.py": "372b643748f9245642089b8c590201224532fe3c1273501e5f7fc8d50d3db658"
+      },
+      "policy_sha256": "29b65357bc2a09f70ff1cab1b780f844150404639e97ba001ac64a7da98f9fa0"
+    },
+    "synthetic": false
+  },
+  "elapsed_seconds": 302.6989688749891,
+  "cost": {
+    "decision_steps": 2,
+    "vlm_calls": 23,
+    "token_source": "provider_exact",
+    "input_tokens": 489763,
+    "visible_output_tokens": 10298,
+    "reasoning_tokens": 1198,
+    "cached_input_tokens": 25741,
+    "total_tokens": 501259,
+    "input_tokens_per_step": 244881.5,
+    "visible_output_tokens_per_step": 5149.0
+  }
+}

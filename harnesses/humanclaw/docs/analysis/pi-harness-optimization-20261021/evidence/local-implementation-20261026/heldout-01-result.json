@@ -1,0 +1,1147 @@
+{
+  "family": "heldout",
+  "mode": "autonomous_model",
+  "start": "cold",
+  "human_interventions": [],
+  "declared_scope": [
+    "observation",
+    "bounded_action_receipt"
+  ],
+  "scheduled_trials": 1,
+  "bootstrap": {
+    "schema": "bootstrap-v1",
+    "task": "Open both supply valves, leave the drain closed, and obtain a confirming public sample. Use the public interface documentation.",
+    "entries": [
+      "http://127.0.0.1:64711/public/guide.md"
+    ],
+    "source_roots": [
+      "http://127.0.0.1:64711/public"
+    ],
+    "internet": false,
+    "transports": [
+      {
+        "id": "switchboard",
+        "kind": "http",
+        "root": "http://127.0.0.1:64711/v2"
+      }
+    ],
+    "max_actions": 8
+  },
+  "failure_stage": null,
+  "native_result": {
+    "harness": "pi",
+    "native_directory": "/Users/hengyil6/Projects/HumanCLAW/outputs/autonomous-interface-local-20261026/heldout-01/experiment_runs/run_1913a48e170d47f0a094fc86b89efa6e/native",
+    "identity": {
+      "command": [
+        "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+        "--experimental-strip-types",
+        "/Users/hengyil6/Projects/HumanCLAW/harnesses/pi-adaptive/src/runner.ts"
+      ],
+      "executable_sha256": "08dad0581f00a0cabf4d49ec92ca1f25fdfd01c2c18fa8e92b35f04d4c24c164",
+      "version": "1.3.0",
+      "profile": "pi-adaptive-v1",
+      "packages": {
+        "pi-coding-agent": "1.3.0",
+        "pi-agent-core": "1.3.0",
+        "pi-ai": "1.3.0",
+        "pi-mcp": "1.3.0"
+      },
+      "policy_files_sha256": {
+        "package.json": "b79f142cfb54f2001a776281048693e80b20f3abf96d4da5775bc20509daaa4a",
+        "package-lock.json": "253b972de2e4fc8b09401dcf93741015bc1e06997fc3bc2fae5107e8d9eb75ba",
+        "src/adaptation.ts": "e8db93d6857f6864a7cee37e38a29175fcce4ef14e2b0e70f075d45f9cd68403",
+        "src/context.ts": "e77eabb6934d49b6ba6b911baf3a709a5652640ad1be9cb9dd8f57b68d5ecb75",
+        "src/execution-boundary.ts": "01cc88f356457cb103fe55c9c171eee2df51a835dec8bfa6098c23261329abbf",
+        "src/runner.ts": "581b3dd84f6f3eaeda627a26ed7601c07d794fc7febde455b52a12fc8d1d9e69",
+        "prompts/adaptive.md": "fdd2a108c020c32cfe62e58e78e903629f69c40cc7f1a2ce9b26afb4819d6536",
+        "python/__init__.py": "6e623a8b318c6a7d3d063627322862f8ce5f2989dc0a212a9d42572d2ea89863",
+        "python/adapters.py": "2f8822999e26dba2edc71a6529200b0d1204ddb3a94dedaed28df014e16f8467",
+        "python/bindings.py": "303eb3db3fca129a8f2d1dea99bb8cd375655b8c24664385e658862801e5f144",
+        "python/bootstrap.py": "db044e674b50498108b15c93de500bd561111554fb517d956f7a4ad903cd7205",
+        "python/broker.py": "0877b3f4bc91f91366031e14121bacd0b88f25e1d286c1408e480f3f57ef3ed6",
+        "python/discovery.py": "3bb31f1df5a1ad2325c3f6eadbc418d501ea0040a94f86b1fc526a72f82a3d55",
+        "python/lifecycle.py": "360d4b25b3243773ddcefcc67fa6598d694f1e3f1db9e0b0f1e2548282fa281e",
+        "python/programs.py": "ee361bb497c6d819a2e5660a2ef09c49dbe8ca28956cc2b925752c61db063dfd",
+        "python/reviewer.py": "f975f54c9326886175d9b46e125f37c572389e53372d40b16a0fbc0b9c134f81",
+        "python/run.py": "67338f825124868c623e86cb45490f3729dc0bb25d3f2d16ad7046ba51afb97b",
+        "python/sandbox.py": "83ef14d3a4b43523c450cb33772343f59a0548dd2dc4c9eac7c50666ce030906",
+        "python/service.py": "82f49a7b097ab185dc3c7aadb7bd8b531fcff543ee54b550218a14ca7b7d3d65",
+        "python/smoke.py": "1152724c0589afe2311bf1f037a99d7c90b27fa7a9da89f179b0f7f2a5dd39eb",
+        "python/state.py": "2c83fa8d3bf1bc8cb87d06070134a83f58aa9c74fe9a94cd5a344a68bcd15340",
+        "python/transports.py": "df36727b3176d4c6646c0f947bcbee09c50f82719e8f1f86e226dad14f732c07",
+        "python/workspace.py": "aab41be7e16463c2de398240676e865f25bf50bd19f940eb62060a5008be3601",
+        "host/pi_adaptive.py": "aec8265a367eafb2d01e1627034739e12343bb7da4b727c9c3488ad11142b4ae",
+        "host/runtime.py": "d70f17f38fcfbead30a9aa18c99a957a5ff0f2ffe6caf0e7bc34215fe79fd0b5",
+        "host/services.py": "f2ba684998aae05c23684d683af9cc545e361892f22ef6f1900cb97ee32f4ab3",
+        "host/provider_errors.py": "372b643748f9245642089b8c590201224532fe3c1273501e5f7fc8d50d3db658"
+      },
+      "policy_sha256": "60de3322fd5c3d1a85157f5887e48ff011b0e19f3348ff835b8e8f10d0a857c7"
+    },
+    "model_requests": 21,
+    "steps": 1,
+    "raw_model_usage": [
+      {
+        "input_tokens": 2261,
+        "input_tokens_details": {
+          "cache_write_tokens": 2258,
+          "cached_tokens": 0
+        },
+        "output_tokens": 63,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 2324
+      },
+      {
+        "input_tokens": 3920,
+        "input_tokens_details": {
+          "cache_write_tokens": 3917,
+          "cached_tokens": 0
+        },
+        "output_tokens": 96,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 4016
+      },
+      {
+        "input_tokens": 7340,
+        "input_tokens_details": {
+          "cache_write_tokens": 5568,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 406,
+        "output_tokens_details": {
+          "reasoning_tokens": 21
+        },
+        "total_tokens": 7746
+      },
+      {
+        "input_tokens": 8536,
+        "input_tokens_details": {
+          "cache_write_tokens": 6764,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 325,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 8861
+      },
+      {
+        "input_tokens": 10931,
+        "input_tokens_details": {
+          "cache_write_tokens": 9159,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 882,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 11813
+      },
+      {
+        "input_tokens": 14988,
+        "input_tokens_details": {
+          "cache_write_tokens": 14985,
+          "cached_tokens": 0
+        },
+        "output_tokens": 65,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 15053
+      },
+      {
+        "input_tokens": 17611,
+        "input_tokens_details": {
+          "cache_write_tokens": 17608,
+          "cached_tokens": 0
+        },
+        "output_tokens": 162,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 17773
+      },
+      {
+        "input_tokens": 21260,
+        "input_tokens_details": {
+          "cache_write_tokens": 19484,
+          "cached_tokens": 1773
+        },
+        "output_tokens": 927,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 22187
+      },
+      {
+        "input_tokens": 24612,
+        "input_tokens_details": {
+          "cache_write_tokens": 22837,
+          "cached_tokens": 1772
+        },
+        "output_tokens": 62,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 24674
+      },
+      {
+        "input_tokens": 5362,
+        "input_tokens_details": {
+          "cache_write_tokens": 5359,
+          "cached_tokens": 0
+        },
+        "output_tokens": 1618,
+        "output_tokens_details": {
+          "reasoning_tokens": 906
+        },
+        "total_tokens": 6980
+      },
+      {},
+      {
+        "input_tokens": 26059,
+        "input_tokens_details": {
+          "cache_write_tokens": 26056,
+          "cached_tokens": 0
+        },
+        "output_tokens": 216,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26275
+      },
+      {
+        "input_tokens": 27492,
+        "input_tokens_details": {
+          "cache_write_tokens": 27489,
+          "cached_tokens": 0
+        },
+        "output_tokens": 412,
+        "output_tokens_details": {
+          "reasoning_tokens": 69
+        },
+        "total_tokens": 27904
+      },
+      {
+        "input_tokens": 27370,
+        "input_tokens_details": {
+          "cache_write_tokens": 27367,
+          "cached_tokens": 0
+        },
+        "output_tokens": 296,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27666
+      },
+      {
+        "input_tokens": 25011,
+        "input_tokens_details": {
+          "cache_write_tokens": 23232,
+          "cached_tokens": 1776
+        },
+        "output_tokens": 73,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 25084
+      },
+      {},
+      {},
+      {},
+      {
+        "input_tokens": 25758,
+        "input_tokens_details": {
+          "cache_write_tokens": 23986,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 257,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26015
+      },
+      {
+        "input_tokens": 28345,
+        "input_tokens_details": {
+          "cache_write_tokens": 28342,
+          "cached_tokens": 0
+        },
+        "output_tokens": 484,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 28829
+      },
+      {
+        "input_tokens": 27509,
+        "input_tokens_details": {
+          "cache_write_tokens": 27506,
+          "cached_tokens": 0
+        },
+        "output_tokens": 88,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27597
+      }
+    ],
+    "termination_reason": "agent_completed",
+    "tools_exposed": [
+      "pi.adaptive__activate",
+      "pi.adaptive__adapter",
+      "pi.adaptive__candidate",
+      "pi.adaptive__compute",
+      "pi.adaptive__discard",
+      "pi.adaptive__discover",
+      "pi.adaptive__evidence",
+      "pi.adaptive__execute",
+      "pi.adaptive__memory",
+      "pi.adaptive__receipt",
+      "pi.adaptive__registry",
+      "pi.adaptive__validate",
+      "pi.adaptive__workspace"
+    ],
+    "synthetic": false,
+    "interface": {
+      "schema": "interface-trial-v1",
+      "local_adaptation_status": "pass",
+      "adaptation_status": "inconclusive",
+      "acceptance_note": "Independent scope/task checks are supplied by the evaluation runner, not the binding",
+      "interaction_scope": {
+        "observation": true,
+        "bounded_action_receipt": true,
+        "lifecycle": false
+      },
+      "task_outcome": "unscorable",
+      "human_interventions": [],
+      "adapter_origin": "public_client",
+      "active_adapter": "adapter:c51292b811a0a8a1d8056415827f3cf6a9ce63e097295645615005f908d96de5",
+      "adapters": [
+        "adapter:bff4b36d2df6e94e9a057d92e0c44a8658f878495fdc867dc5f60da356ce00ed",
+        "adapter:c51292b811a0a8a1d8056415827f3cf6a9ce63e097295645615005f908d96de5"
+      ],
+      "sources": {
+        "entries": [
+          "http://127.0.0.1:64711/public/guide.md"
+        ],
+        "sources": [
+          "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86",
+          "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719"
+        ],
+        "records": [
+          {
+            "id": "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86",
+            "uri": "http://127.0.0.1:64711/public/guide.md",
+            "sha256": "e322dcf83c15120da78dd5810a6fabbc7a4e87628ef918aef40dccb7d65e1287",
+            "question": "Read public interface documentation and references for sampling and setting supply/drain valves."
+          },
+          {
+            "id": "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+            "uri": "http://127.0.0.1:64711/public/client.py",
+            "sha256": "09c70a7e1fb4629a3b09cd4235204d2c4d33ec7ec25bb13e9266e30b4d8e1683",
+            "question": "Inspect pure encoding/decoding client, dependencies, and apply settling semantics."
+          }
+        ]
+      },
+      "registered_scope": [
+        "valves.apply",
+        "valves.view"
+      ],
+      "settled": true,
+      "time_to_first_observation_seconds": 102.36253145802766,
+      "time_to_first_action_seconds": 117.40562283294275,
+      "elapsed_seconds": 155.6590575000737,
+      "phase_seconds": {
+        "source_reads": 0.0212762919254601,
+        "dependency_setup": 0,
+        "programs_and_validation_codecs": 0.32447399804368615
+      },
+      "validation_reports": {
+        "adapter:bff4b36d2df6e94e9a057d92e0c44a8658f878495fdc867dc5f60da356ce00ed": {
+          "schema": "adapter-validation-v1",
+          "adapter": "adapter:bff4b36d2df6e94e9a057d92e0c44a8658f878495fdc867dc5f60da356ce00ed",
+          "status": "fail",
+          "checks": [
+            {
+              "check": "contract",
+              "status": "fail",
+              "error": "Operation is outside the declared transport root"
+            }
+          ],
+          "review": {
+            "status": "inconclusive",
+            "reason": "No independent reviewer connected"
+          },
+          "local_probe_eligible": false,
+          "publication_eligible": false
+        },
+        "adapter:c51292b811a0a8a1d8056415827f3cf6a9ce63e097295645615005f908d96de5": {
+          "schema": "adapter-validation-v1",
+          "adapter": "adapter:c51292b811a0a8a1d8056415827f3cf6a9ce63e097295645615005f908d96de5",
+          "status": "pass",
+          "checks": [
+            {
+              "check": "syntax_schemas_transport_scope",
+              "status": "pass"
+            },
+            {
+              "check": "independent_source_case",
+              "case": {
+                "operation": "valves.view",
+                "phase": "encode",
+                "input": {},
+                "expected": {
+                  "body": {
+                    "verb": "view"
+                  },
+                  "query": {}
+                },
+                "evidence": [
+                  "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+                  "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+                ]
+              },
+              "status": "pass"
+            },
+            {
+              "check": "independent_source_case",
+              "case": {
+                "operation": "valves.view",
+                "phase": "decode",
+                "input": {
+                  "slots": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "sequence": 0
+                },
+                "expected": {
+                  "slots": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "sequence": 0
+                },
+                "evidence": [
+                  "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+                ]
+              },
+              "status": "pass"
+            },
+            {
+              "check": "independent_source_case",
+              "case": {
+                "operation": "valves.apply",
+                "phase": "encode",
+                "input": {
+                  "slots": [
+                    1,
+                    0,
+                    0
+                  ],
+                  "ticket": "any-unique-id"
+                },
+                "expected": {
+                  "body": {
+                    "verb": "apply",
+                    "slots": [
+                      1,
+                      0,
+                      0
+                    ],
+                    "ticket": "any-unique-id"
+                  },
+                  "query": {}
+                },
+                "evidence": [
+                  "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+                  "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+                ]
+              },
+              "status": "pass"
+            },
+            {
+              "check": "independent_source_case",
+              "case": {
+                "operation": "valves.apply",
+                "phase": "decode",
+                "input": {
+                  "ack": "any-unique-id",
+                  "sequence": 1
+                },
+                "expected": {
+                  "ack": "any-unique-id",
+                  "sequence": 1
+                },
+                "evidence": [
+                  "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+                ]
+              },
+              "status": "pass"
+            }
+          ],
+          "review": {
+            "status": "pass",
+            "reason": "The adapter matches the documented endpoint, JSON codec, valve ordering and codes, effects, action costs, observation requirements, 50 ms settling time, and lifecycle. It actually reuses the inspected pure client and leaves transport to the host. Apply acknowledgments remain distinct from observations; undocumented replay and status guarantees are not assumed. The supplied deterministic check passes. These source-derived cases cover all missing codec mappings; sequence 1 is a decode fixture, not an inferred increment guarantee. No live execution or completion is established: the host must obtain a current sample before admitting apply and a fresh sample afterward before confirming valve positions.",
+            "attempts": 1,
+            "reference_cases": [
+              {
+                "operation": "valves.view",
+                "phase": "encode",
+                "input": {},
+                "expected": {
+                  "body": {
+                    "verb": "view"
+                  },
+                  "query": {}
+                },
+                "evidence": [
+                  "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+                  "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+                ]
+              },
+              {
+                "operation": "valves.view",
+                "phase": "decode",
+                "input": {
+                  "slots": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "sequence": 0
+                },
+                "expected": {
+                  "slots": [
+                    1,
+                    1,
+                    1
+                  ],
+                  "sequence": 0
+                },
+                "evidence": [
+                  "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+                ]
+              },
+              {
+                "operation": "valves.apply",
+                "phase": "encode",
+                "input": {
+                  "slots": [
+                    1,
+                    0,
+                    0
+                  ],
+                  "ticket": "any-unique-id"
+                },
+                "expected": {
+                  "body": {
+                    "verb": "apply",
+                    "slots": [
+                      1,
+                      0,
+                      0
+                    ],
+                    "ticket": "any-unique-id"
+                  },
+                  "query": {}
+                },
+                "evidence": [
+                  "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+                  "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+                ]
+              },
+              {
+                "operation": "valves.apply",
+                "phase": "decode",
+                "input": {
+                  "ack": "any-unique-id",
+                  "sequence": 1
+                },
+                "expected": {
+                  "ack": "any-unique-id",
+                  "sequence": 1
+                },
+                "evidence": [
+                  "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+                ]
+              }
+            ]
+          },
+          "local_probe_eligible": true,
+          "publication_eligible": false
+        }
+      },
+      "invalidations": {}
+    }
+  },
+  "adaptation_status": "pass",
+  "task_outcome": "success",
+  "independent_checks": {
+    "public_sample": true,
+    "bounded_actions": true,
+    "physical_actions": 1,
+    "final_slots": [
+      1,
+      0,
+      0
+    ],
+    "task_success": true,
+    "registered": true
+  },
+  "interface": {
+    "schema": "interface-trial-v1",
+    "local_adaptation_status": "pass",
+    "adaptation_status": "inconclusive",
+    "acceptance_note": "Independent scope/task checks are supplied by the evaluation runner, not the binding",
+    "interaction_scope": {
+      "observation": true,
+      "bounded_action_receipt": true,
+      "lifecycle": false
+    },
+    "task_outcome": "unscorable",
+    "human_interventions": [],
+    "adapter_origin": "public_client",
+    "active_adapter": "adapter:c51292b811a0a8a1d8056415827f3cf6a9ce63e097295645615005f908d96de5",
+    "adapters": [
+      "adapter:bff4b36d2df6e94e9a057d92e0c44a8658f878495fdc867dc5f60da356ce00ed",
+      "adapter:c51292b811a0a8a1d8056415827f3cf6a9ce63e097295645615005f908d96de5"
+    ],
+    "sources": {
+      "entries": [
+        "http://127.0.0.1:64711/public/guide.md"
+      ],
+      "sources": [
+        "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86",
+        "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719"
+      ],
+      "records": [
+        {
+          "id": "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86",
+          "uri": "http://127.0.0.1:64711/public/guide.md",
+          "sha256": "e322dcf83c15120da78dd5810a6fabbc7a4e87628ef918aef40dccb7d65e1287",
+          "question": "Read public interface documentation and references for sampling and setting supply/drain valves."
+        },
+        {
+          "id": "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+          "uri": "http://127.0.0.1:64711/public/client.py",
+          "sha256": "09c70a7e1fb4629a3b09cd4235204d2c4d33ec7ec25bb13e9266e30b4d8e1683",
+          "question": "Inspect pure encoding/decoding client, dependencies, and apply settling semantics."
+        }
+      ]
+    },
+    "registered_scope": [
+      "valves.apply",
+      "valves.view"
+    ],
+    "settled": true,
+    "time_to_first_observation_seconds": 102.36253145802766,
+    "time_to_first_action_seconds": 117.40562283294275,
+    "elapsed_seconds": 155.66056500002742,
+    "phase_seconds": {
+      "source_reads": 0.0212762919254601,
+      "dependency_setup": 0,
+      "programs_and_validation_codecs": 0.32447399804368615
+    },
+    "validation_reports": {
+      "adapter:bff4b36d2df6e94e9a057d92e0c44a8658f878495fdc867dc5f60da356ce00ed": {
+        "schema": "adapter-validation-v1",
+        "adapter": "adapter:bff4b36d2df6e94e9a057d92e0c44a8658f878495fdc867dc5f60da356ce00ed",
+        "status": "fail",
+        "checks": [
+          {
+            "check": "contract",
+            "status": "fail",
+            "error": "Operation is outside the declared transport root"
+          }
+        ],
+        "review": {
+          "status": "inconclusive",
+          "reason": "No independent reviewer connected"
+        },
+        "local_probe_eligible": false,
+        "publication_eligible": false
+      },
+      "adapter:c51292b811a0a8a1d8056415827f3cf6a9ce63e097295645615005f908d96de5": {
+        "schema": "adapter-validation-v1",
+        "adapter": "adapter:c51292b811a0a8a1d8056415827f3cf6a9ce63e097295645615005f908d96de5",
+        "status": "pass",
+        "checks": [
+          {
+            "check": "syntax_schemas_transport_scope",
+            "status": "pass"
+          },
+          {
+            "check": "independent_source_case",
+            "case": {
+              "operation": "valves.view",
+              "phase": "encode",
+              "input": {},
+              "expected": {
+                "body": {
+                  "verb": "view"
+                },
+                "query": {}
+              },
+              "evidence": [
+                "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+                "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+              ]
+            },
+            "status": "pass"
+          },
+          {
+            "check": "independent_source_case",
+            "case": {
+              "operation": "valves.view",
+              "phase": "decode",
+              "input": {
+                "slots": [
+                  1,
+                  1,
+                  1
+                ],
+                "sequence": 0
+              },
+              "expected": {
+                "slots": [
+                  1,
+                  1,
+                  1
+                ],
+                "sequence": 0
+              },
+              "evidence": [
+                "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+              ]
+            },
+            "status": "pass"
+          },
+          {
+            "check": "independent_source_case",
+            "case": {
+              "operation": "valves.apply",
+              "phase": "encode",
+              "input": {
+                "slots": [
+                  1,
+                  0,
+                  0
+                ],
+                "ticket": "any-unique-id"
+              },
+              "expected": {
+                "body": {
+                  "verb": "apply",
+                  "slots": [
+                    1,
+                    0,
+                    0
+                  ],
+                  "ticket": "any-unique-id"
+                },
+                "query": {}
+              },
+              "evidence": [
+                "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+                "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+              ]
+            },
+            "status": "pass"
+          },
+          {
+            "check": "independent_source_case",
+            "case": {
+              "operation": "valves.apply",
+              "phase": "decode",
+              "input": {
+                "ack": "any-unique-id",
+                "sequence": 1
+              },
+              "expected": {
+                "ack": "any-unique-id",
+                "sequence": 1
+              },
+              "evidence": [
+                "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+              ]
+            },
+            "status": "pass"
+          }
+        ],
+        "review": {
+          "status": "pass",
+          "reason": "The adapter matches the documented endpoint, JSON codec, valve ordering and codes, effects, action costs, observation requirements, 50 ms settling time, and lifecycle. It actually reuses the inspected pure client and leaves transport to the host. Apply acknowledgments remain distinct from observations; undocumented replay and status guarantees are not assumed. The supplied deterministic check passes. These source-derived cases cover all missing codec mappings; sequence 1 is a decode fixture, not an inferred increment guarantee. No live execution or completion is established: the host must obtain a current sample before admitting apply and a fresh sample afterward before confirming valve positions.",
+          "attempts": 1,
+          "reference_cases": [
+            {
+              "operation": "valves.view",
+              "phase": "encode",
+              "input": {},
+              "expected": {
+                "body": {
+                  "verb": "view"
+                },
+                "query": {}
+              },
+              "evidence": [
+                "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+                "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+              ]
+            },
+            {
+              "operation": "valves.view",
+              "phase": "decode",
+              "input": {
+                "slots": [
+                  1,
+                  1,
+                  1
+                ],
+                "sequence": 0
+              },
+              "expected": {
+                "slots": [
+                  1,
+                  1,
+                  1
+                ],
+                "sequence": 0
+              },
+              "evidence": [
+                "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+              ]
+            },
+            {
+              "operation": "valves.apply",
+              "phase": "encode",
+              "input": {
+                "slots": [
+                  1,
+                  0,
+                  0
+                ],
+                "ticket": "any-unique-id"
+              },
+              "expected": {
+                "body": {
+                  "verb": "apply",
+                  "slots": [
+                    1,
+                    0,
+                    0
+                  ],
+                  "ticket": "any-unique-id"
+                },
+                "query": {}
+              },
+              "evidence": [
+                "source:2fb84891e57d133ed20e1954d03e1c447984df34fe4d13213a1c05d3cca71719",
+                "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+              ]
+            },
+            {
+              "operation": "valves.apply",
+              "phase": "decode",
+              "input": {
+                "ack": "any-unique-id",
+                "sequence": 1
+              },
+              "expected": {
+                "ack": "any-unique-id",
+                "sequence": 1
+              },
+              "evidence": [
+                "source:ef9de9da59a49616a948d6472aea833e239607923134307a7de2d8eb72de3f86"
+              ]
+            }
+          ]
+        },
+        "local_probe_eligible": true,
+        "publication_eligible": false
+      }
+    },
+    "invalidations": {},
+    "model_requests": 21,
+    "raw_model_usage": [
+      {
+        "input_tokens": 2261,
+        "input_tokens_details": {
+          "cache_write_tokens": 2258,
+          "cached_tokens": 0
+        },
+        "output_tokens": 63,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 2324
+      },
+      {
+        "input_tokens": 3920,
+        "input_tokens_details": {
+          "cache_write_tokens": 3917,
+          "cached_tokens": 0
+        },
+        "output_tokens": 96,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 4016
+      },
+      {
+        "input_tokens": 7340,
+        "input_tokens_details": {
+          "cache_write_tokens": 5568,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 406,
+        "output_tokens_details": {
+          "reasoning_tokens": 21
+        },
+        "total_tokens": 7746
+      },
+      {
+        "input_tokens": 8536,
+        "input_tokens_details": {
+          "cache_write_tokens": 6764,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 325,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 8861
+      },
+      {
+        "input_tokens": 10931,
+        "input_tokens_details": {
+          "cache_write_tokens": 9159,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 882,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 11813
+      },
+      {
+        "input_tokens": 14988,
+        "input_tokens_details": {
+          "cache_write_tokens": 14985,
+          "cached_tokens": 0
+        },
+        "output_tokens": 65,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 15053
+      },
+      {
+        "input_tokens": 17611,
+        "input_tokens_details": {
+          "cache_write_tokens": 17608,
+          "cached_tokens": 0
+        },
+        "output_tokens": 162,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 17773
+      },
+      {
+        "input_tokens": 21260,
+        "input_tokens_details": {
+          "cache_write_tokens": 19484,
+          "cached_tokens": 1773
+        },
+        "output_tokens": 927,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 22187
+      },
+      {
+        "input_tokens": 24612,
+        "input_tokens_details": {
+          "cache_write_tokens": 22837,
+          "cached_tokens": 1772
+        },
+        "output_tokens": 62,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 24674
+      },
+      {
+        "input_tokens": 5362,
+        "input_tokens_details": {
+          "cache_write_tokens": 5359,
+          "cached_tokens": 0
+        },
+        "output_tokens": 1618,
+        "output_tokens_details": {
+          "reasoning_tokens": 906
+        },
+        "total_tokens": 6980
+      },
+      {},
+      {
+        "input_tokens": 26059,
+        "input_tokens_details": {
+          "cache_write_tokens": 26056,
+          "cached_tokens": 0
+        },
+        "output_tokens": 216,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26275
+      },
+      {
+        "input_tokens": 27492,
+        "input_tokens_details": {
+          "cache_write_tokens": 27489,
+          "cached_tokens": 0
+        },
+        "output_tokens": 412,
+        "output_tokens_details": {
+          "reasoning_tokens": 69
+        },
+        "total_tokens": 27904
+      },
+      {
+        "input_tokens": 27370,
+        "input_tokens_details": {
+          "cache_write_tokens": 27367,
+          "cached_tokens": 0
+        },
+        "output_tokens": 296,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27666
+      },
+      {
+        "input_tokens": 25011,
+        "input_tokens_details": {
+          "cache_write_tokens": 23232,
+          "cached_tokens": 1776
+        },
+        "output_tokens": 73,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 25084
+      },
+      {},
+      {},
+      {},
+      {
+        "input_tokens": 25758,
+        "input_tokens_details": {
+          "cache_write_tokens": 23986,
+          "cached_tokens": 1769
+        },
+        "output_tokens": 257,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 26015
+      },
+      {
+        "input_tokens": 28345,
+        "input_tokens_details": {
+          "cache_write_tokens": 28342,
+          "cached_tokens": 0
+        },
+        "output_tokens": 484,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 28829
+      },
+      {
+        "input_tokens": 27509,
+        "input_tokens_details": {
+          "cache_write_tokens": 27506,
+          "cached_tokens": 0
+        },
+        "output_tokens": 88,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27597
+      }
+    ],
+    "usage_coverage": {
+      "requests": 21,
+      "with_usage": 21
+    },
+    "runtime_identity": {
+      "command": [
+        "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+        "--experimental-strip-types",
+        "/Users/hengyil6/Projects/HumanCLAW/harnesses/pi-adaptive/src/runner.ts"
+      ],
+      "executable_sha256": "08dad0581f00a0cabf4d49ec92ca1f25fdfd01c2c18fa8e92b35f04d4c24c164",
+      "version": "1.3.0",
+      "profile": "pi-adaptive-v1",
+      "packages": {
+        "pi-coding-agent": "1.3.0",
+        "pi-agent-core": "1.3.0",
+        "pi-ai": "1.3.0",
+        "pi-mcp": "1.3.0"
+      },
+      "policy_files_sha256": {
+        "package.json": "b79f142cfb54f2001a776281048693e80b20f3abf96d4da5775bc20509daaa4a",
+        "package-lock.json": "253b972de2e4fc8b09401dcf93741015bc1e06997fc3bc2fae5107e8d9eb75ba",
+        "src/adaptation.ts": "e8db93d6857f6864a7cee37e38a29175fcce4ef14e2b0e70f075d45f9cd68403",
+        "src/context.ts": "e77eabb6934d49b6ba6b911baf3a709a5652640ad1be9cb9dd8f57b68d5ecb75",
+        "src/execution-boundary.ts": "01cc88f356457cb103fe55c9c171eee2df51a835dec8bfa6098c23261329abbf",
+        "src/runner.ts": "581b3dd84f6f3eaeda627a26ed7601c07d794fc7febde455b52a12fc8d1d9e69",
+        "prompts/adaptive.md": "fdd2a108c020c32cfe62e58e78e903629f69c40cc7f1a2ce9b26afb4819d6536",
+        "python/__init__.py": "6e623a8b318c6a7d3d063627322862f8ce5f2989dc0a212a9d42572d2ea89863",
+        "python/adapters.py": "2f8822999e26dba2edc71a6529200b0d1204ddb3a94dedaed28df014e16f8467",
+        "python/bindings.py": "303eb3db3fca129a8f2d1dea99bb8cd375655b8c24664385e658862801e5f144",
+        "python/bootstrap.py": "db044e674b50498108b15c93de500bd561111554fb517d956f7a4ad903cd7205",
+        "python/broker.py": "0877b3f4bc91f91366031e14121bacd0b88f25e1d286c1408e480f3f57ef3ed6",
+        "python/discovery.py": "3bb31f1df5a1ad2325c3f6eadbc418d501ea0040a94f86b1fc526a72f82a3d55",
+        "python/lifecycle.py": "360d4b25b3243773ddcefcc67fa6598d694f1e3f1db9e0b0f1e2548282fa281e",
+        "python/programs.py": "ee361bb497c6d819a2e5660a2ef09c49dbe8ca28956cc2b925752c61db063dfd",
+        "python/reviewer.py": "f975f54c9326886175d9b46e125f37c572389e53372d40b16a0fbc0b9c134f81",
+        "python/run.py": "67338f825124868c623e86cb45490f3729dc0bb25d3f2d16ad7046ba51afb97b",
+        "python/sandbox.py": "83ef14d3a4b43523c450cb33772343f59a0548dd2dc4c9eac7c50666ce030906",
+        "python/service.py": "82f49a7b097ab185dc3c7aadb7bd8b531fcff543ee54b550218a14ca7b7d3d65",
+        "python/smoke.py": "1152724c0589afe2311bf1f037a99d7c90b27fa7a9da89f179b0f7f2a5dd39eb",
+        "python/state.py": "2c83fa8d3bf1bc8cb87d06070134a83f58aa9c74fe9a94cd5a344a68bcd15340",
+        "python/transports.py": "df36727b3176d4c6646c0f947bcbee09c50f82719e8f1f86e226dad14f732c07",
+        "python/workspace.py": "aab41be7e16463c2de398240676e865f25bf50bd19f940eb62060a5008be3601",
+        "host/pi_adaptive.py": "aec8265a367eafb2d01e1627034739e12343bb7da4b727c9c3488ad11142b4ae",
+        "host/runtime.py": "d70f17f38fcfbead30a9aa18c99a957a5ff0f2ffe6caf0e7bc34215fe79fd0b5",
+        "host/services.py": "f2ba684998aae05c23684d683af9cc545e361892f22ef6f1900cb97ee32f4ab3",
+        "host/provider_errors.py": "372b643748f9245642089b8c590201224532fe3c1273501e5f7fc8d50d3db658"
+      },
+      "policy_sha256": "60de3322fd5c3d1a85157f5887e48ff011b0e19f3348ff835b8e8f10d0a857c7"
+    },
+    "synthetic": false
+  },
+  "elapsed_seconds": 155.87561712507159,
+  "cost": {
+    "decision_steps": 1,
+    "vlm_calls": 21,
+    "token_source": "provider_partial",
+    "input_tokens": null,
+    "visible_output_tokens": null,
+    "reasoning_tokens": null,
+    "cached_input_tokens": null,
+    "total_tokens": null,
+    "input_tokens_per_step": null,
+    "visible_output_tokens_per_step": null
+  }
+}

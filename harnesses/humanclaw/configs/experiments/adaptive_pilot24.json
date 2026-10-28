@@ -1,0 +1,503 @@
+{
+  "schema": "humanclaw-adaptive-pilot-v1",
+  "selection_seed": 20261025,
+  "source_csv_sha256": "57942daf3985925d8179fc8b674e52a09e4cd39dc86e827e2b740dbbaa87cc48",
+  "historical_provider": "Copilot gpt-6-astra via Magpie",
+  "new_provider": "Azure gpt-6-astra",
+  "attribution": "Diagnostic pilot; provider changed, no harness-only causal attribution.",
+  "profile": "paper_fullval_v1",
+  "seed": 0,
+  "instruction_version": "v1",
+  "max_actions": 100,
+  "episode_timeout_seconds": 7200,
+  "max_concurrent_gpu_jobs": 2,
+  "normal_failure_retries": 0,
+  "infrastructure_retries": 1,
+  "cross_task_publication": false,
+  "gate_shards": [
+    "shard-0362",
+    "shard-1056"
+  ],
+  "episodes": [
+    {
+      "shard": "shard-0362",
+      "group": "navigation_success",
+      "scene_id": "104348010_171512832",
+      "episode_id": "6",
+      "object_category": "potted_plant",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "True",
+        "endpoint_class": "success",
+        "steps": "19",
+        "model_calls": "20",
+        "wall_seconds": "285.632406701982",
+        "input_tokens_known": "134664",
+        "output_tokens_known": "1883",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0362/104348010_171512832_ep6_potted_plant/rollout_00/experiment_runs/run_15f72762f5204985ac1d34c71c134efd",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-1056",
+      "group": "interaction_success",
+      "scene_id": "107734287_176000160",
+      "episode_id": "16",
+      "object_category": "bed",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "True",
+        "endpoint_class": "success",
+        "steps": "72",
+        "model_calls": "73",
+        "wall_seconds": "1183.887002902001",
+        "input_tokens_known": "1234587",
+        "output_tokens_known": "6875",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1056/107734287_176000160_ep16_bed/rollout_00/experiment_runs/run_43cf1234a97a44bcb9b0bd8971063cca",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0089",
+      "group": "interaction_no_sit",
+      "scene_id": "102344529",
+      "episode_id": "29",
+      "object_category": "toilet",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "interaction_no_sit",
+        "steps": "95",
+        "model_calls": "96",
+        "wall_seconds": "1357.1125020810068",
+        "input_tokens_known": "1916708",
+        "output_tokens_known": "9178",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0089/102344529_ep29_toilet/rollout_00/experiment_runs/run_ddae696bf9dd4f4fb6588199619b5ad3",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0098",
+      "group": "interaction_success",
+      "scene_id": "102815835",
+      "episode_id": "8",
+      "object_category": "couch",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "True",
+        "endpoint_class": "success",
+        "steps": "37",
+        "model_calls": "38",
+        "wall_seconds": "433.4391665800214",
+        "input_tokens_known": "395051",
+        "output_tokens_known": "3501",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0098/102815835_ep8_couch/rollout_00/experiment_runs/run_6a793b068fd649ac84cd8ce2c7df143e",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0161",
+      "group": "interaction_no_sit",
+      "scene_id": "102816114",
+      "episode_id": "11",
+      "object_category": "bed",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "interaction_no_sit",
+        "steps": "89",
+        "model_calls": "90",
+        "wall_seconds": "1269.501345854014",
+        "input_tokens_known": "1696886",
+        "output_tokens_known": "7949",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0161/102816114_ep11_bed/rollout_00/experiment_runs/run_c42c7b48018647eb9f6ef0f36c48de8e",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0247",
+      "group": "navigation_success",
+      "scene_id": "102817140",
+      "episode_id": "9",
+      "object_category": "chair",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "True",
+        "endpoint_class": "success",
+        "steps": "16",
+        "model_calls": "17",
+        "wall_seconds": "183.54301861199735",
+        "input_tokens_known": "102789",
+        "output_tokens_known": "1378",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0247/102817140_ep9_chair/rollout_00/experiment_runs/run_37261307b56b4e0ea4376795d24c7387",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0291",
+      "group": "interaction_no_sit",
+      "scene_id": "103997586_171030666",
+      "episode_id": "23",
+      "object_category": "couch",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "interaction_no_sit",
+        "steps": "87",
+        "model_calls": "88",
+        "wall_seconds": "1367.2558123840095",
+        "input_tokens_known": "1632330",
+        "output_tokens_known": "7299",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0291/103997586_171030666_ep23_couch/rollout_00/experiment_runs/run_7b474a102919439bab82670dc7440aa2",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0345",
+      "group": "interaction_terminal_regression",
+      "scene_id": "103997895_171031182",
+      "episode_id": "19",
+      "object_category": "toilet",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "interaction_historical_sit_contact_but_terminal_failure",
+        "steps": "64",
+        "model_calls": "65",
+        "wall_seconds": "1013.0344434930087",
+        "input_tokens_known": "995707",
+        "output_tokens_known": "6025",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0345/103997895_171031182_ep19_toilet/rollout_00/experiment_runs/run_da9586f027ed4e108b13a756f4142aeb",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0410",
+      "group": "interaction_no_valid_contact",
+      "scene_id": "104348028_171512877",
+      "episode_id": "24",
+      "object_category": "toilet",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "interaction_no_valid_sit_contact_recorded",
+        "steps": "87",
+        "model_calls": "88",
+        "wall_seconds": "1200.3264912309944",
+        "input_tokens_known": "1649781",
+        "output_tokens_known": "7450",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0410/104348028_171512877_ep24_toilet/rollout_00/experiment_runs/run_9a9675ede46241f799b1a8935e4322a7",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0475",
+      "group": "interaction_success",
+      "scene_id": "104348361_171513414",
+      "episode_id": "29",
+      "object_category": "bed",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "True",
+        "endpoint_class": "success",
+        "steps": "36",
+        "model_calls": "37",
+        "wall_seconds": "373.97984084302186",
+        "input_tokens_known": "375360",
+        "output_tokens_known": "3360",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0475/104348361_171513414_ep29_bed/rollout_00/experiment_runs/run_5dde88d4ca8d4393ae2b91227a4284ed",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0486",
+      "group": "navigation_far_stop",
+      "scene_id": "104862384_172226319",
+      "episode_id": "10",
+      "object_category": "chair",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "navigation_stopped_outside_threshold",
+        "steps": "9",
+        "model_calls": "10",
+        "wall_seconds": "100.75325662699342",
+        "input_tokens_known": "46768",
+        "output_tokens_known": "987",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0486/104862384_172226319_ep10_chair/rollout_00/experiment_runs/run_8ce4dac7e3e349e5b76be613bba6c5dc",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0515",
+      "group": "interaction_terminal_regression",
+      "scene_id": "104862417_172226382",
+      "episode_id": "9",
+      "object_category": "couch",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "interaction_historical_sit_contact_but_terminal_failure",
+        "steps": "53",
+        "model_calls": "54",
+        "wall_seconds": "916.4869858460129",
+        "input_tokens_known": "747694",
+        "output_tokens_known": "5966",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0515/104862417_172226382_ep9_couch/rollout_00/experiment_runs/run_8fba01651e6a49ffbb6223f7ed5ddd9f",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0605",
+      "group": "interaction_no_valid_contact",
+      "scene_id": "105515211_173104185",
+      "episode_id": "11",
+      "object_category": "bed",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "interaction_no_valid_sit_contact_recorded",
+        "steps": "30",
+        "model_calls": "31",
+        "wall_seconds": "346.4570423479974",
+        "input_tokens_known": "277828",
+        "output_tokens_known": "2957",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0605/105515211_173104185_ep11_bed/rollout_00/experiment_runs/run_287334b334cf4b5da05f69c9743bc62c",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0645",
+      "group": "navigation_stalled",
+      "scene_id": "105515379_173104395",
+      "episode_id": "21",
+      "object_category": "tv",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "navigation_stopped_outside_threshold",
+        "steps": "97",
+        "model_calls": "98",
+        "wall_seconds": "1777.6617697259783",
+        "input_tokens_known": "1932680",
+        "output_tokens_known": "8618",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0645/105515379_173104395_ep21_tv/rollout_00/experiment_runs/run_86dde7740ba34e2f923e4cbabead60d6",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0683",
+      "group": "navigation_far_stop",
+      "scene_id": "106366104_174226332",
+      "episode_id": "29",
+      "object_category": "potted_plant",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "navigation_stopped_outside_threshold",
+        "steps": "100",
+        "model_calls": "101",
+        "wall_seconds": "1314.9970941329896",
+        "input_tokens_known": "2032844",
+        "output_tokens_known": "8640",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0683/106366104_174226332_ep29_potted_plant/rollout_00/experiment_runs/run_60ce71a5927f48928eadd6710c728a84",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0696",
+      "group": "navigation_success",
+      "scene_id": "106366386_174226770",
+      "episode_id": "12",
+      "object_category": "tv",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "True",
+        "endpoint_class": "success",
+        "steps": "34",
+        "model_calls": "35",
+        "wall_seconds": "411.8837115150094",
+        "input_tokens_known": "343975",
+        "output_tokens_known": "3088",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0696/106366386_174226770_ep12_tv/rollout_00/experiment_runs/run_96072d061fe542a290918abc27cdbaf2",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0758",
+      "group": "navigation_far_stop",
+      "scene_id": "106878858_174886965",
+      "episode_id": "14",
+      "object_category": "chair",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "navigation_stopped_outside_threshold",
+        "steps": "88",
+        "model_calls": "89",
+        "wall_seconds": "1300.9306838809848",
+        "input_tokens_known": "1673388",
+        "output_tokens_known": "8647",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0758/106878858_174886965_ep14_chair/rollout_00/experiment_runs/run_965c43f41f994849a19275b498aa83b5",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0795",
+      "group": "navigation_stalled",
+      "scene_id": "106878867_174886977",
+      "episode_id": "21",
+      "object_category": "tv",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "navigation_stopped_outside_threshold",
+        "steps": "80",
+        "model_calls": "81",
+        "wall_seconds": "1276.1355067720115",
+        "input_tokens_known": "1453533",
+        "output_tokens_known": "7603",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0795/106878867_174886977_ep21_tv/rollout_00/experiment_runs/run_f89ccc088be54750b4b99e486fe33b52",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0804",
+      "group": "navigation_far_stop",
+      "scene_id": "106878915_174887025",
+      "episode_id": "0",
+      "object_category": "chair",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "navigation_stopped_outside_threshold",
+        "steps": "14",
+        "model_calls": "15",
+        "wall_seconds": "131.40788914000987",
+        "input_tokens_known": "85440",
+        "output_tokens_known": "1356",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0804/106878915_174887025_ep0_chair/rollout_00/experiment_runs/run_8c9ef5d3913c4c28b0b82c1dede24b4f",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0905",
+      "group": "navigation_stalled",
+      "scene_id": "106879080_174887211",
+      "episode_id": "13",
+      "object_category": "tv",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "navigation_stopped_outside_threshold",
+        "steps": "52",
+        "model_calls": "53",
+        "wall_seconds": "791.4924861819744",
+        "input_tokens_known": "698452",
+        "output_tokens_known": "4418",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0905/106879080_174887211_ep13_tv/rollout_00/experiment_runs/run_d05acece0cab47fab9ba57df22508339",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-0953",
+      "group": "navigation_success",
+      "scene_id": "107734056_175999839",
+      "episode_id": "3",
+      "object_category": "potted_plant",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "True",
+        "endpoint_class": "success",
+        "steps": "42",
+        "model_calls": "43",
+        "wall_seconds": "574.2378749670088",
+        "input_tokens_known": "488373",
+        "output_tokens_known": "4292",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0953/107734056_175999839_ep3_potted_plant/rollout_00/experiment_runs/run_e2ee9062cd124ee8b50a592563b6edf8",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-1007",
+      "group": "interaction_success",
+      "scene_id": "107734176_176000019",
+      "episode_id": "27",
+      "object_category": "toilet",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "True",
+        "endpoint_class": "success",
+        "steps": "31",
+        "model_calls": "32",
+        "wall_seconds": "363.1608221350014",
+        "input_tokens_known": "293896",
+        "output_tokens_known": "2857",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1007/107734176_176000019_ep27_toilet/rollout_00/experiment_runs/run_ed1d7f0ddc38415fb99f0649702e59b7",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-1102",
+      "group": "navigation_stalled",
+      "scene_id": "108736689_177263340",
+      "episode_id": "2",
+      "object_category": "potted_plant",
+      "task_type": "navigation",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "navigation_stopped_outside_threshold",
+        "steps": "77",
+        "model_calls": "78",
+        "wall_seconds": "1110.7186061549783",
+        "input_tokens_known": "1369758",
+        "output_tokens_known": "7965",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1102/108736689_177263340_ep2_potted_plant/rollout_00/experiment_runs/run_70964db627a243988f3414ff9cc21062",
+        "metrics_revalidated": "True"
+      }
+    },
+    {
+      "shard": "shard-1203",
+      "group": "interaction_no_valid_contact",
+      "scene_id": "108736884_177263634",
+      "episode_id": "15",
+      "object_category": "couch",
+      "task_type": "interaction",
+      "historical": {
+        "label": "pi_r2",
+        "success": "False",
+        "endpoint_class": "interaction_no_valid_sit_contact_recorded",
+        "steps": "31",
+        "model_calls": "32",
+        "wall_seconds": "341.38785246700047",
+        "input_tokens_known": "291385",
+        "output_tokens_known": "2699",
+        "run": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1203/108736884_177263634_ep15_couch/rollout_00/experiment_runs/run_7a69ad24a3be48c2bea32d4e7bef341d",
+        "metrics_revalidated": "True"
+      }
+    }
+  ]
+}

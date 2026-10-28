@@ -1,0 +1,10 @@
+label,runs,requests,failed_requests,first_input_tokens_median,system_chars_median,native_tool_chars_median,env_tool_chars_median,first_text_chars_median,last_text_chars_median,max_images,image_eviction_requests,image_block_exposures_dropped,max_native_images,latest_observation_absent,efforts
+codex_r1,23,900,0,11283,25475,20328,5824,28358,44312,50,173,3490,101,0,"{""medium"": 900}"
+pi_r1,23,942,1,2743,2890,2784,6152,3667,18002,50,223,5071,101,0,"{""medium"": 942}"
+pi_r2,23,1015,1,2802,2891,2784,6390,3670,22234,50,224,4181,101,0,"{""medium"": 1015}"
+codex_r2,24,1062,0,11344.0,25448.0,20328.0,6062.0,28324.0,47585.5,50,253,5192,101,0,"{""medium"": 1062}"
+codex_r3,23,1291,2,11351,25469,20328,6062,28372,49926,50,471,11539,101,0,"{""max"": 1291}"
+pi_r3,23,1130,4,2802,2896,2784,6390,3663,18635,50,358,8477,101,0,"{""xhigh"": 1130}"
+codex_gemini,23,798,19,14513,25487,20328,6062,28408,45929,10,557,13563,101,0,"{""medium"": 798}"
+pi_gemini,23,897,63,4329,2897,2784,6390,3668,16403,10,609,16324,101,0,"{""medium"": 897}"
+psv_r1,24,2224,2,1996.0,1.0,0.0,0.0,7508.0,2464.0,1,0,0,0,0,"{""null"": 2224}"

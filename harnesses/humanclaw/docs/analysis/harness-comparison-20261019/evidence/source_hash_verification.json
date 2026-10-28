@@ -1,0 +1,107 @@
+[
+  {
+    "commit": "d1fed52a052a99745c6230f2e48cb3b10e1a2653",
+    "path": "src/humanclaw_bench/harnesses/environment.py",
+    "sha256": "713eca9edd89eaf5b3527742759d49dc3c1ff775456cf6a4e150413de72890f2",
+    "matching_run_hashes": 3038,
+    "checked_runs": 3038
+  },
+  {
+    "commit": "d1fed52a052a99745c6230f2e48cb3b10e1a2653",
+    "path": "src/humanclaw_bench/harnesses/services.py",
+    "sha256": "04632944b58a95c01d256152f47ce0cd2af2578de3f820c65ea50f04228cc134",
+    "matching_run_hashes": 3038,
+    "checked_runs": 3038
+  },
+  {
+    "commit": "d1fed52a052a99745c6230f2e48cb3b10e1a2653",
+    "path": "src/humanclaw_bench/harnesses/runtime.py",
+    "sha256": "8746cb5db427f92087d2309952f20f89302132fcc5717cdea9cb10b3bd6f74cd",
+    "matching_run_hashes": 3038,
+    "checked_runs": 3038
+  },
+  {
+    "commit": "d1fed52a052a99745c6230f2e48cb3b10e1a2653",
+    "path": "src/humanclaw_bench/agent/planner.py",
+    "sha256": "82752e00192ade05ac625aece7c20076bc5d9c251c08c069b9394a59b8ee4fb1",
+    "matching_run_hashes": 3038,
+    "checked_runs": 3038
+  },
+  {
+    "commit": "d1fed52a052a99745c6230f2e48cb3b10e1a2653",
+    "path": "src/humanclaw_bench/agent/prompts/v4.py",
+    "sha256": "e0402759aa05c9003dde5562b0b0ea8d458c760e654ec954853fa39f2ef0c780",
+    "matching_run_hashes": 3038,
+    "checked_runs": 3038
+  },
+  {
+    "commit": "d1fed52a052a99745c6230f2e48cb3b10e1a2653",
+    "path": "src/humanclaw_bench/evaluation/metrics/episode.py",
+    "sha256": "9285e410ec2fd35ce7a6af98c44c392c40f1c2e6bb3a48da89900242f5d10a39",
+    "matching_run_hashes": 3038,
+    "checked_runs": 3038
+  },
+  {
+    "commit": "45fc836fcac3ad60c178060287cfe21da679110a",
+    "path": "src/humanclaw_bench/harnesses/environment.py",
+    "sha256": "713eca9edd89eaf5b3527742759d49dc3c1ff775456cf6a4e150413de72890f2",
+    "matching_run_hashes": 616,
+    "checked_runs": 616
+  },
+  {
+    "commit": "45fc836fcac3ad60c178060287cfe21da679110a",
+    "path": "src/humanclaw_bench/harnesses/services.py",
+    "sha256": "91b2625bec0594335db58e1bec18e011e85b73444147751ff0d93d1abfe6eb82",
+    "matching_run_hashes": 616,
+    "checked_runs": 616
+  },
+  {
+    "commit": "45fc836fcac3ad60c178060287cfe21da679110a",
+    "path": "src/humanclaw_bench/harnesses/runtime.py",
+    "sha256": "33ae5dd473f7ec2cd7f255515c18a79507fc1ad12d7e6f38e56fa98a9ad3254d",
+    "matching_run_hashes": 616,
+    "checked_runs": 616
+  },
+  {
+    "commit": "d18b41dd0df221409a72b8a554b0341fa64743d5",
+    "path": "src/humanclaw_bench/harnesses/environment.py",
+    "sha256": "b7d6d6c72b863f983f4676d362e842b671e1199b248eda32f4add8c26ed797d6",
+    "matching_run_hashes": 4866,
+    "checked_runs": 4866
+  },
+  {
+    "commit": "d18b41dd0df221409a72b8a554b0341fa64743d5",
+    "path": "src/humanclaw_bench/harnesses/services.py",
+    "sha256": "4a54e34181e8d08b9e65ed49f740bd76c0cc73de61feb7da23d7cdbc6e476217",
+    "matching_run_hashes": 4866,
+    "checked_runs": 4866
+  },
+  {
+    "commit": "d18b41dd0df221409a72b8a554b0341fa64743d5",
+    "path": "src/humanclaw_bench/harnesses/runtime.py",
+    "sha256": "d62984b6b457c4ba7b59aea8f74a941debc2bf3b7f0bf28fa9cbe14897c48bbb",
+    "matching_run_hashes": 4866,
+    "checked_runs": 4866
+  },
+  {
+    "commit": "96934326c03b04b436e34227e0511f71bd2f6ead",
+    "path": "src/humanclaw_bench/harnesses/environment.py",
+    "sha256": "b7d6d6c72b863f983f4676d362e842b671e1199b248eda32f4add8c26ed797d6",
+    "matching_run_hashes": 2431,
+    "checked_runs": 2431
+  },
+  {
+    "commit": "96934326c03b04b436e34227e0511f71bd2f6ead",
+    "path": "src/humanclaw_bench/harnesses/services.py",
+    "sha256": "b3ffbc4f93113dd3b4de075c7f08f25e4324abe1a22986ae809640ae85f46a4e",
+    "matching_run_hashes": 2431,
+    "checked_runs": 2431
+  },
+  {
+    "commit": "96934326c03b04b436e34227e0511f71bd2f6ead",
+    "path": "src/humanclaw_bench/harnesses/runtime.py",
+    "sha256": "3096f2cae30ea77c76819d74d1bbeab74985c8807c48963d3197ac256762905b",
+    "matching_run_hashes": 2431,
+    "checked_runs": 2431
+  }
+]

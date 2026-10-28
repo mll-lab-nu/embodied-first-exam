@@ -1,0 +1,22 @@
+{
+  "pi_profile": "adaptive-v1",
+  "responses_base_url": "https://ai-thopo-9134.services.ai.azure.com/openai/v1",
+  "api_key_env": "AZURE_OPENAI_API_KEY",
+  "auth": "azure",
+  "context_window": 131072,
+  "timeout_seconds": 7200,
+  "request_timeout_seconds": 600,
+  "startup_timeout_seconds": 120,
+  "pi_adaptive": {
+    "recent_exchanges": 8,
+    "trim_at_exchanges": 16,
+    "model_capabilities": {
+      "model": "gpt-6-astra",
+      "api": "openai-responses",
+      "effort_map": {"medium": "medium", "high": "high"},
+      "max_images": 20,
+      "image_token_reserve": 4096,
+      "max_input_tokens": 110000
+    }
+  }
+}

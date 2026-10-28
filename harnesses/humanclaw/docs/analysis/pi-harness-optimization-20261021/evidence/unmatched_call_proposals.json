@@ -1,0 +1,695 @@
+[
+  {
+    "label": "pi_gemini",
+    "shard": "shard-0687",
+    "tool": "walk_forward",
+    "call_id": "call_MHxQR1ozUHVObURqemZHYXpKbVQ",
+    "native_line": 54,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-gemini-argon-fullval-r2-20261018/results/shard-0687/106366386_174226770_ep3_bed/rollout_00/experiment_runs/run_dd96d7e262064f7495d90a2a64780a0b/native/sessions/2026-10-19T15-07-15-763Z_01a154b3-dbb3-734d-8809-8958b17d0adc.jsonl"
+  },
+  {
+    "label": "pi_gemini",
+    "shard": "shard-1024",
+    "tool": "side_walk",
+    "call_id": "call_MHwyYlhLd2xYQ3JnVGRtbXN6WGE",
+    "native_line": 42,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-gemini-argon-fullval-r2-20261018/results/shard-1024/107734254_176000121_ep14_couch/rollout_00/experiment_runs/run_d05c9f2f194c45c7bcfa4757f82e33c5/native/sessions/2026-10-18T23-40-20-021Z_01a15163-3ab4-7241-b272-053df79bcce5.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0038",
+    "tool": "walk_forward",
+    "call_id": "call_kNxxlt7Jkb53jVTZRfpVqClk",
+    "native_line": 56,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0038/102344094_ep8_tv/rollout_00/experiment_runs/run_e149d5af24a84041abfb362addf9a032/native/sessions/2026-10-17T18-41-03-589Z_01a14b2a-e065-7369-8185-a0d9b9b461c4.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0103",
+    "tool": "turn",
+    "call_id": "call_Stye0FwdvmncmMXnmPCyJVWU",
+    "native_line": 10,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0103/102815835_ep13_potted_plant/rollout_00/experiment_runs/run_3f0cb67cc145415cbca173d719ea45e6/native/sessions/2026-10-18T03-36-16-805Z_01a14d14-e2a5-71c2-adb1-441713123a4c.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0126",
+    "tool": "turn",
+    "call_id": "call_xEHpo3VGI4Q5dkLI9gGt0i2k",
+    "native_line": 16,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0126/102816036_ep6_chair/rollout_00/experiment_runs/run_d27736aa1bda410bb7fbb35bd1c08f4e/native/sessions/2026-10-17T19-17-09-450Z_01a14b4b-ecca-77a0-94bc-09cd921fa2db.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0248",
+    "tool": "walk_forward",
+    "call_id": "call_sXOjySLY2V3NCwDlfAPMpEAt",
+    "native_line": 16,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0248/102817140_ep10_chair/rollout_00/experiment_runs/run_91d50b8b3edc4b94a20023678529bf77/native/sessions/2026-10-17T20-06-48-315Z_01a14b79-60fb-7059-abd3-c6797c19a4bd.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0286",
+    "tool": "walk_forward",
+    "call_id": "call_fOE3hYEjGoG6LxSIx8y3bMVF",
+    "native_line": 44,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0286/103997586_171030666_ep18_chair/rollout_00/experiment_runs/run_a60e40db278b451ead586f36fa2e663f/native/sessions/2026-10-17T20-27-35-580Z_01a14b8c-691c-7153-8ecf-658dd9131a73.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0328",
+    "tool": "walk_forward",
+    "call_id": "call_sIjWj3xSsGYFkP0zkcYHxcym",
+    "native_line": 12,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0328/103997895_171031182_ep2_chair/rollout_00/experiment_runs/run_fcfc2573ea0e4bf597c5c01f5a08b094/native/sessions/2026-10-18T04-56-47-004Z_01a14d5e-969b-7438-9a17-0b30e9115b6b.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0354",
+    "tool": "stand",
+    "call_id": "call_szDM278npZoWXuRu1DdXNfrO",
+    "native_line": 158,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0354/103997895_171031182_ep28_couch/rollout_00/experiment_runs/run_f3064d6b9c494e8098b7b58ed5f35b32/native/sessions/2026-10-18T04-58-36-302Z_01a14d60-418e-730b-b1fa-a902725a6538.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0350",
+    "tool": "side_walk",
+    "call_id": "call_uMM1wWQNZbX9GVeIGyhFyr6F",
+    "native_line": 74,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0350/103997895_171031182_ep24_couch/rollout_00/experiment_runs/run_19e5aa0345f346afaa70303de9f76f75/native/sessions/2026-10-18T04-57-45-411Z_01a14d5f-7ac3-70ad-8365-ebd0680b1ef1.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0536",
+    "tool": "walk_forward",
+    "call_id": "call_l3sl5MYJAuNialW652GnNSnQ",
+    "native_line": 116,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0536/104862501_172226556_ep0_bed/rollout_00/experiment_runs/run_088e37c124f349d4967a2aea92bcd1e1/native/sessions/2026-10-18T06-06-02-951Z_01a14d9e-00c7-72f0-881c-3307a7c7371f.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0540",
+    "tool": "walk_forward",
+    "call_id": "call_Gxonji1gzpI3qFeWEyeP2332",
+    "native_line": 22,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0540/104862501_172226556_ep4_bed/rollout_00/experiment_runs/run_312ef0b0f7dc475d9df025208cc7ac24/native/sessions/2026-10-18T05-31-00-594Z_01a14d7d-ec72-7195-a600-9c7245bc7894.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0537",
+    "tool": "walk_forward",
+    "call_id": "call_PgOkorLTGHeRqKSvw7W7JV7l",
+    "native_line": 44,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0537/104862501_172226556_ep1_bed/rollout_00/experiment_runs/run_d8bb6d4b3a2041f2934061bae4ca2c2e/native/sessions/2026-10-17T22-55-36-100Z_01a14c13-eaa4-7603-bbaf-a8191dac3cc0.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0578",
+    "tool": "walk_forward",
+    "call_id": "call_e1l3mon1bE62RwTOtGcd18Ws",
+    "native_line": 22,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0578/105515184_173104128_ep12_chair/rollout_00/experiment_runs/run_80aefd8cff3a480f94854e931f3c182d/native/sessions/2026-10-17T23-12-12-043Z_01a14c23-1d0b-72b6-bd58-1f8152d8338d.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0554",
+    "tool": "turn",
+    "call_id": "call_oo2J6gEpzbAYgAOG9SMQVSG4",
+    "native_line": 8,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0554/104862501_172226556_ep18_chair/rollout_00/experiment_runs/run_57317aa178a54be1b6d8fed345485e07/native/sessions/2026-10-17T23-03-34-324Z_01a14c1b-36b4-72be-88db-21031be872e9.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0564",
+    "tool": "walk_forward",
+    "call_id": "call_UBGYzSApklSvZK6up7HvLu16",
+    "native_line": 138,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0564/104862501_172226556_ep28_tv/rollout_00/experiment_runs/run_813cb681fda54b1b9d5537cceae0072e/native/sessions/2026-10-18T05-44-29-409Z_01a14d8a-43e1-7076-9908-ed71fd992970.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0643",
+    "tool": "walk_forward",
+    "call_id": "call_mtFRbXHJfSCRewFW2Y2IyUrS",
+    "native_line": 28,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0643/105515379_173104395_ep19_tv/rollout_00/experiment_runs/run_a5ebd434e6ff4514829925826e85ae0d/native/sessions/2026-10-18T06-14-28-915Z_01a14da5-b933-7472-ad0c-f82c64d2b8ba.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0678",
+    "tool": "walk_forward",
+    "call_id": "call_ZLNWwL7l2AA1mYs3NwwRu8YT",
+    "native_line": 58,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0678/106366104_174226332_ep24_bed/rollout_00/experiment_runs/run_39fa7a9617fc4ba399609792c4160b0a/native/sessions/2026-10-18T06-16-48-524Z_01a14da7-da8b-76ef-873f-717ab0f15225.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0700",
+    "tool": "turn",
+    "call_id": "call_fIsKN6jedzzRQZYrJQ7llgLg",
+    "native_line": 6,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0700/106366386_174226770_ep16_chair/rollout_00/experiment_runs/run_4942c867bf224126b2f0f2e2cdc666ee/native/sessions/2026-10-18T00-56-45-400Z_01a14c82-d658-7459-ac2c-3520a8382c7c.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0694",
+    "tool": "stand",
+    "call_id": "call_rp5zeiCcP9Mdgy0hB8p2X3Rj",
+    "native_line": 102,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0694/106366386_174226770_ep10_tv/rollout_00/experiment_runs/run_0706ad47e0964ef991254fdc2ffb5d74/native/sessions/2026-10-18T00-53-37-537Z_01a14c7f-f880-704b-9382-b522542d917c.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0723",
+    "tool": "turn",
+    "call_id": "call_2ZNbvPZaCXGjAPhv9aZWmpdK",
+    "native_line": 18,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0723/106366410_174226806_ep9_chair/rollout_00/experiment_runs/run_1bd3b38824bc4f7bba4c968f459f27d8/native/sessions/2026-10-18T01-14-10-645Z_01a14c92-c955-7083-8459-6503d1cb86e6.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0783",
+    "tool": "walk_forward",
+    "call_id": "call_NSZFUenA9n6LKVHaJ2imldy0",
+    "native_line": 10,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-0783/106878867_174886977_ep9_chair/rollout_00/experiment_runs/run_bad61cb205b84533bffdc42bf199d3af/native/sessions/2026-10-18T05-46-37-657Z_01a14d8c-38d8-759c-899d-a1bc814e88d3.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-0808",
+    "tool": "turn",
+    "call_id": "call_uo7kimvVcNS5paIRhqpTZjkh",
+    "native_line": 50,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-0808/106878915_174887025_ep4_chair/rollout_00/experiment_runs/run_875bb2fca01447828b8355e7db783151/native/sessions/2026-10-18T02-19-07-930Z_01a14cce-411a-772c-abb8-04a28a21514c.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-1083",
+    "tool": "turn",
+    "call_id": "call_oVjQiLuSlpLL5njmrydjuOer",
+    "native_line": 8,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-1083/107734338_176000244_ep13_tv/rollout_00/experiment_runs/run_c3b6c5dd79624f309f989aeee302d3b3/native/sessions/2026-10-18T06-32-07-385Z_01a14db5-dfd9-71d2-beab-a7dd0df80364.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-1068",
+    "tool": "turn",
+    "call_id": "call_vSRP1MifoOMp8eWSigrNzQ3d",
+    "native_line": 200,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-1068/107734287_176000160_ep28_tv/rollout_00/experiment_runs/run_513725c96c1749578b99b9e2a0600125/native/sessions/2026-10-18T06-47-53-078Z_01a14dc4-4df6-7030-9e54-f49122b3e268.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-1100",
+    "tool": "walk_forward",
+    "call_id": "call_FNXSeAceXE5pnJAtHuYDPCnQ",
+    "native_line": 54,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-1100/108736689_177263340_ep0_potted_plant/rollout_00/experiment_runs/run_7b19b9a8ce1d491fbd451b725d9bd26e/native/sessions/2026-10-18T07-16-50-379Z_01a14dde-d04a-775a-8332-e215702b8a3d.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-1154",
+    "tool": "turn",
+    "call_id": "call_ugExDdAQtB6vO9QcjEU6Djqs",
+    "native_line": 34,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-1154/108736779_177263484_ep24_bed/rollout_00/experiment_runs/run_6cbf6052f6c54ca1b3fbd653552ebeb7/native/sessions/2026-10-18T07-26-05-492Z_01a14de7-48b3-749d-b473-907710a6d226.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-1156",
+    "tool": "walk_forward",
+    "call_id": "call_spokWpwc0pBKubsnwSSVOBn7",
+    "native_line": 114,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-1156/108736779_177263484_ep26_bed/rollout_00/experiment_runs/run_791197fe8d814d8eb6e08adea933324c/native/sessions/2026-10-18T07-51-43-288Z_01a14dfe-bfb7-774b-a809-41edd0b04d96.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-1173",
+    "tool": "walk_forward",
+    "call_id": "call_OsagLO3M2DdH4hXypxSm6hhc",
+    "native_line": 42,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017-imgwin50/results/shard-1173/108736800_177263517_ep15_bed/rollout_00/experiment_runs/run_c74349d1e7d4458ba7074146dd48c6d9/native/sessions/2026-10-18T07-50-35-844Z_01a14dfd-b843-7227-8218-769710892528.jsonl"
+  },
+  {
+    "label": "pi_r1",
+    "shard": "shard-1184",
+    "tool": "walk_forward",
+    "call_id": "call_eHfdiPKvrXRk8LaFiPbId467",
+    "native_line": 78,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-20261017/results/shard-1184/108736800_177263517_ep26_couch/rollout_00/experiment_runs/run_f29aaa7cf4db420a8443afa3744278b5/native/sessions/2026-10-18T07-19-00-943Z_01a14de0-ce4f-72c5-a1e8-2ea3afd64ec3.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0004",
+    "tool": "step_climb_up",
+    "call_id": "call_LAuFguCmqQkbhpZSio5guQQN",
+    "native_line": 84,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0004/102343992_ep4_bed/rollout_00/experiment_runs/run_2c5305606bf441ed902972e538337063/native/sessions/2026-10-18T12-26-06-220Z_01a14ef9-f40c-754c-8921-5d708c4c0d20.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0132",
+    "tool": "step_climb_up",
+    "call_id": "call_3BvQXjGq6Uxxq6uhSRmIq8SG",
+    "native_line": 142,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0132/102816036_ep12_tv/rollout_00/experiment_runs/run_42e6106fc1224a40a28b8bf45482df3d/native/sessions/2026-10-18T13-39-36-447Z_01a14f3d-3f7f-772d-9308-44faa5f61df7.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0250",
+    "tool": "sit",
+    "call_id": "call_xb1r3SyqMa0kQ8OLMMBv95Mm",
+    "native_line": 92,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0250/102817140_ep12_couch/rollout_00/experiment_runs/run_7370956534eb47e68bd9148cab7c5f69/native/sessions/2026-10-18T19-53-30-991Z_01a15093-926c-704a-a5ef-716f33dc44dd.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0266",
+    "tool": "walk_forward",
+    "call_id": "call_RASNoFei2OFvIS8B0lVcI8qZ",
+    "native_line": 56,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0266/102817140_ep28_tv/rollout_00/experiment_runs/run_754dc5e7209e403c9b968cbd20563f86/native/sessions/2026-10-18T17-49-44-390Z_01a15022-4046-76a2-8a5e-522572acf62a.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0329",
+    "tool": "walk_forward",
+    "call_id": "call_AumAGqeo4A8sV4s0v39NPi7I",
+    "native_line": 28,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0329/103997895_171031182_ep3_chair/rollout_00/experiment_runs/run_2ee90c0615294866853bf8aa5b83031e/native/sessions/2026-10-18T20-13-58-742Z_01a150a6-4e56-728a-ac4a-772489f36370.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0335",
+    "tool": "side_walk",
+    "call_id": "call_e2NOTzLsDYTQj15CByhpr1sN",
+    "native_line": 14,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0335/103997895_171031182_ep9_bed/rollout_00/experiment_runs/run_7802054b7ecf48ec9f1c7c29ea816fbf/native/sessions/2026-10-18T19-21-14-524Z_01a15076-061c-74d0-a8ed-68ed099fb870.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0339",
+    "tool": "turn",
+    "call_id": "call_EtRuTYFOvmNXqOxr9qRK2F7z",
+    "native_line": 6,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0339/103997895_171031182_ep13_potted_plant/rollout_00/experiment_runs/run_cfe447556c424895972a46211d8ee4bd/native/sessions/2026-10-18T20-22-22-813Z_01a150ad-ff5c-7248-b55b-59622e5f689d.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0321",
+    "tool": "turn",
+    "call_id": "call_K7gKyPP3AZllAvylplgSKFd8",
+    "native_line": 28,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0321/103997586_171030669_ep25_bed/rollout_00/experiment_runs/run_2c9cacc9266f4a11ab9c81b4f901517a/native/sessions/2026-10-18T19-11-01-644Z_01a1506c-ac0c-7182-9b5e-fb632c7188f3.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0367",
+    "tool": "walk_forward",
+    "call_id": "call_WtV1TQr6fT9AxZipRFUCyEgU",
+    "native_line": 40,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0367/104348010_171512832_ep11_tv/rollout_00/experiment_runs/run_c707221640e741d49289db3f11187c41/native/sessions/2026-10-18T19-01-24-669Z_01a15063-de3d-7484-883d-05784933ee35.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0354",
+    "tool": "walk_forward",
+    "call_id": "call_HO3c0v8sBN34yaVpQM3E8mNg",
+    "native_line": 138,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0354/103997895_171031182_ep28_couch/rollout_00/experiment_runs/run_97c5b7ae0cc245759d9aa9fe68d1344f/native/sessions/2026-10-18T20-04-15-822Z_01a1509d-694e-71f9-b82a-5c46ede70836.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0409",
+    "tool": "walk_forward",
+    "call_id": "call_pVllW9ZTZRbqFPtWeK4AvFFt",
+    "native_line": 14,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0409/104348028_171512877_ep23_toilet/rollout_00/experiment_runs/run_4c5d13b289dd4cd8b6d2b5bbe681e819/native/sessions/2026-10-18T19-24-22-567Z_01a15078-e4a7-768a-bcbe-57c7e49359f6.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0443",
+    "tool": "turn",
+    "call_id": "call_RVK0V40f9ewS3zMY1ZeDE9ln",
+    "native_line": 32,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0443/104348328_171513363_ep27_couch/rollout_00/experiment_runs/run_dc3c5acc70d943bcbf25fc00ccc8414b/native/sessions/2026-10-18T16-44-04-348Z_01a14fe6-217b-7474-81be-5655fc5a9c28.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0538",
+    "tool": "side_walk",
+    "call_id": "call_cMPBN51mTwK6TaHmuXYWqfkR",
+    "native_line": 52,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0538/104862501_172226556_ep2_bed/rollout_00/experiment_runs/run_6fdc3f15de394e099289502401074deb/native/sessions/2026-10-18T19-25-57-850Z_01a1507a-58da-7171-92d1-bf95ce0cffdb.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0552",
+    "tool": "walk_forward",
+    "call_id": "call_fIqW15LmHIgrt4KPfTzLUVLg",
+    "native_line": 96,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0552/104862501_172226556_ep16_potted_plant/rollout_00/experiment_runs/run_dcba0d993d314476847b30c85f7c89b7/native/sessions/2026-10-18T21-42-33-517Z_01a150f7-672d-766f-852f-c28e7edd2743.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0573",
+    "tool": "walk_forward",
+    "call_id": "call_LQja6P4VKNzR3GEl2SZTim8l",
+    "native_line": 28,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0573/105515184_173104128_ep7_chair/rollout_00/experiment_runs/run_9e3c9a31598b4f928f7e7f0173212dfd/native/sessions/2026-10-18T19-28-25-545Z_01a1507c-99c8-72cf-ace4-36794025baec.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0532",
+    "tool": "turn",
+    "call_id": "call_qdqLjd7yINBpIf9LKSHHc6fW",
+    "native_line": 30,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0532/104862417_172226382_ep26_bed/rollout_00/experiment_runs/run_51769b28029a4093aef47339a91f06b7/native/sessions/2026-10-18T18-32-07-323Z_01a15049-0d9b-7109-844c-9ec672bde518.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0587",
+    "tool": "walk_forward",
+    "call_id": "call_GmLarA1SuZkJT4R22pjjxwf5",
+    "native_line": 102,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0587/105515184_173104128_ep21_bed/rollout_00/experiment_runs/run_97b4ea8d62f34d9f99ef4c2c4dcad4b2/native/sessions/2026-10-18T18-40-56-916Z_01a15051-2254-7177-8c5e-834ac3b6c771.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0646",
+    "tool": "walk_forward",
+    "call_id": "call_EBNG06ogLnPVnjKjrr2FAGro",
+    "native_line": 196,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0646/105515379_173104395_ep22_tv/rollout_00/experiment_runs/run_883f7a4529574c5d81271d961ef9d7fa/native/sessions/2026-10-18T18-24-05-809Z_01a15041-b4b1-703c-877a-dffcc672d73d.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0672",
+    "tool": "turn",
+    "call_id": "call_X3vAvVpd5n1ZLe87j9CxvuEC",
+    "native_line": 28,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0672/106366104_174226332_ep18_toilet/rollout_00/experiment_runs/run_e85fae861a3a4207afe7cfc029e11f5d/native/sessions/2026-10-18T21-52-13-782Z_01a15100-41d6-73fe-a883-639876b15530.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0715",
+    "tool": "walk_forward",
+    "call_id": "call_5rdYybAR2EmToWNb81jECmGB",
+    "native_line": 52,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0715/106366410_174226806_ep1_potted_plant/rollout_00/experiment_runs/run_77cce6a10ff94f7b8b0d3435cfc96707/native/sessions/2026-10-18T18-50-57-293Z_01a1505a-4b8c-7086-a5d0-400695f8bf83.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0733",
+    "tool": "walk_forward",
+    "call_id": "call_UtTmfZYRagd8NetQ5yjKo2Nn",
+    "native_line": 72,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0733/106366410_174226806_ep19_tv/rollout_00/experiment_runs/run_e90c4e660b47408290f2e6bdeed77f31/native/sessions/2026-10-18T18-42-09-791Z_01a15052-3eff-71cd-b90b-0d22dfb906c2.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0779",
+    "tool": "sit",
+    "call_id": "call_C7r8gkVj6VBkZbN6C67Lr9cZ",
+    "native_line": 112,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0779/106878867_174886977_ep5_bed/rollout_00/experiment_runs/run_fd97b56b4b2a431c92017e4fc648ef39/native/sessions/2026-10-18T19-58-44-908Z_01a15098-5cab-70ef-915d-c88876ba82be.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0812",
+    "tool": "walk_forward",
+    "call_id": "call_tsjyfkcSR9dnCWqcXr6A4RhH",
+    "native_line": 40,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0812/106878915_174887025_ep8_tv/rollout_00/experiment_runs/run_f0b862e2e7ac4e9a862b73965afda917/native/sessions/2026-10-18T19-26-23-556Z_01a1507a-bd44-76b2-b1c1-a4096d77b0d6.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0843",
+    "tool": "walk_forward",
+    "call_id": "call_WrxKLmuU6TJJLRe34y8L71JJ",
+    "native_line": 32,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0843/106878960_174887073_ep9_chair/rollout_00/experiment_runs/run_25c0a4063ae54d939ff1c8795d2b5ca6/native/sessions/2026-10-18T19-37-41-434Z_01a15085-153a-765e-aa14-b4076bf045d1.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0876",
+    "tool": "stand",
+    "call_id": "call_uyNQT5RFanHL5wrxZjofbe5h",
+    "native_line": 22,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0876/106879005_174887124_ep12_chair/rollout_00/experiment_runs/run_25ebba0326034e3783db454f2fa60193/native/sessions/2026-10-18T18-39-01-933Z_01a1504f-612d-7749-8f8f-4218994bf688.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0916",
+    "tool": "walk_forward",
+    "call_id": "call_Z0h2y2zbOiAE5vsqnK5gDPKW",
+    "native_line": 16,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0916/106879080_174887211_ep24_bed/rollout_00/experiment_runs/run_13c8315591794147af9c16287ba785e1/native/sessions/2026-10-18T15-28-52-958Z_01a14fa1-4ade-762e-bd67-2d27fbb6cd70.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-0954",
+    "tool": "walk_forward",
+    "call_id": "call_o1rrJUr2hRZlkFBrTkJT9Ytj",
+    "native_line": 12,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0954/107734056_175999839_ep4_potted_plant/rollout_00/experiment_runs/run_98a3267063904bd2a684441eb892a06d/native/sessions/2026-10-18T19-29-23-578Z_01a1507d-7c7a-7071-a144-90061de56adb.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-1047",
+    "tool": "walk_forward",
+    "call_id": "call_Po2aabeAgc5f8u0p7HO5ZT7O",
+    "native_line": 86,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1047/107734287_176000160_ep7_couch/rollout_00/experiment_runs/run_5f6fe662cd744e0bb97ffa25b265456b/native/sessions/2026-10-18T15-55-01-247Z_01a14fb9-38ff-72c9-9ff5-d994ffcade83.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-1061",
+    "tool": "stand",
+    "call_id": "call_DY2uzYxxQFPYmYNu0Ljlx6iN",
+    "native_line": 16,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1061/107734287_176000160_ep21_chair/rollout_00/experiment_runs/run_a7495d79f41c468693427bfd8d62279b/native/sessions/2026-10-18T19-38-09-196Z_01a15085-81ac-7731-a789-ad418f87c620.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-1063",
+    "tool": "turn",
+    "call_id": "call_rHb9Bej7BKIh4I2zNbntNrB5",
+    "native_line": 16,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1063/107734287_176000160_ep23_chair/rollout_00/experiment_runs/run_8499829ef8c74e109f74db044ee40b82/native/sessions/2026-10-18T14-32-05-347Z_01a14f6d-4be3-7725-871b-41348d2a0df3.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-1040",
+    "tool": "walk_forward",
+    "call_id": "call_kuqnIfKalB0cj8Zaaeme3lX9",
+    "native_line": 68,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1040/107734287_176000160_ep0_potted_plant/rollout_00/experiment_runs/run_31ce0202123e427b96534fd1d33ccea6/native/sessions/2026-10-18T16-50-29-600Z_01a14fec-025f-756f-ac38-8ed5bda39d95.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-1105",
+    "tool": "side_walk",
+    "call_id": "call_cjpJQTXtVosCiD22gPgEXbht",
+    "native_line": 30,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1105/108736689_177263340_ep5_toilet/rollout_00/experiment_runs/run_648cb20907ad4cf1bc3f271aba848540/native/sessions/2026-10-18T20-46-52-317Z_01a150c4-6b9d-76c5-bc29-cc45b93bfa5e.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-1134",
+    "tool": "turn",
+    "call_id": "call_uhdrD80M09rv1ylPqNPTGHMD",
+    "native_line": 74,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1134/108736779_177263484_ep4_chair/rollout_00/experiment_runs/run_24b15dee513745f58ca650cd26bb7032/native/sessions/2026-10-18T20-35-33-694Z_01a150ba-10be-76d7-b838-b6a07de5c88a.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-1167",
+    "tool": "turn",
+    "call_id": "call_RAA4CHbz94ZkQ5dL0gvHydzA",
+    "native_line": 54,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1167/108736800_177263517_ep9_chair/rollout_00/experiment_runs/run_4443855172c94837a27f5e7c2c8940eb/native/sessions/2026-10-18T21-49-58-766Z_01a150fe-326d-74f3-bffb-489d57d4fa52.jsonl"
+  },
+  {
+    "label": "pi_r2",
+    "shard": "shard-1167",
+    "tool": "stand",
+    "call_id": "call_LRgNvrBCHKUcuXfxikNm0beq",
+    "native_line": 84,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-1167/108736800_177263517_ep9_chair/rollout_00/experiment_runs/run_4443855172c94837a27f5e7c2c8940eb/native/sessions/2026-10-18T21-49-58-766Z_01a150fe-326d-74f3-bffb-489d57d4fa52.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-0263",
+    "tool": "walk_forward",
+    "call_id": "call_ARuZ9hGSQ1vOkWCyHKMLSLXp",
+    "native_line": 32,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-0263/102817140_ep25_tv/rollout_00/experiment_runs/run_7f8db628a8db41df9005484352149ffe/native/sessions/2026-10-19T03-55-18-679Z_01a1524c-ab16-73f5-b20e-a4d9d5629985.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-0467",
+    "tool": "walk_forward",
+    "call_id": "call_tFLjqrIeoR405lOvLAnF8qov",
+    "native_line": 26,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-0467/104348361_171513414_ep21_couch/rollout_00/experiment_runs/run_9e0169953f6349539fc60426f1fc4fbd/native/sessions/2026-10-19T01-16-15-530Z_01a151bb-0d2a-736a-8f8d-865172339299.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-0526",
+    "tool": "walk_forward",
+    "call_id": "call_vkipIsc3PD0UZn9CDjEoPXKn",
+    "native_line": 96,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-0526/104862417_172226382_ep20_toilet/rollout_00/experiment_runs/run_cd25dfea4f704872a3193e3a8317a2e8/native/sessions/2026-10-19T02-57-58-538Z_01a15218-2d0a-730b-acf8-5f96d52a462a.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-0745",
+    "tool": "sit",
+    "call_id": "call_QTi7hSSVBFlFZWsCBDnstrMn",
+    "native_line": 148,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-0745/106878858_174886965_ep1_bed/rollout_00/experiment_runs/run_69a6357cb3b64f04b0e0a76b1fa92e80/native/sessions/2026-10-19T01-29-53-941Z_01a151c7-8a15-72b7-846e-d1c3658a9681.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-0709",
+    "tool": "walk_forward",
+    "call_id": "call_IbUezHgs6DLv7eDJVtOWR7yu",
+    "native_line": 142,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-0709/106366386_174226770_ep25_toilet/rollout_00/experiment_runs/run_bc365953e42a47a6bc24f626270e385f/native/sessions/2026-10-19T01-29-18-317Z_01a151c6-feec-745f-863b-86817cb0d172.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-0851",
+    "tool": "turn",
+    "call_id": "call_BejDNj7XNyCjLsBt94a5PoDC",
+    "native_line": 52,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-0851/106878960_174887073_ep17_couch/rollout_00/experiment_runs/run_9c3d25bdcfe049739459d1dbfd85fc79/native/sessions/2026-10-19T02-46-04-817Z_01a1520d-4911-753d-bbfe-114743615687.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-0879",
+    "tool": "step_back",
+    "call_id": "call_0OeiRScc0d0c2F5Apx7dV660",
+    "native_line": 80,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-0879/106879005_174887124_ep15_couch/rollout_00/experiment_runs/run_babcd445a8a3425aa3dc111f993795a3/native/sessions/2026-10-19T01-54-37-588Z_01a151de-2d94-7222-afc3-7807bdd5d481.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-0883",
+    "tool": "walk_forward",
+    "call_id": "call_QxiUDKHZQ9dfm8EuOhKn3kUo",
+    "native_line": 38,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-0883/106879005_174887124_ep19_couch/rollout_00/experiment_runs/run_c905ae93ee744040a3c98fe009bbf83f/native/sessions/2026-10-19T01-38-36-478Z_01a151cf-833d-744e-9b11-7da4d84801fd.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-1102",
+    "tool": "walk_forward",
+    "call_id": "call_7yTdEUbKAsRcpQvte7m2kUYe",
+    "native_line": 32,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-1102/108736689_177263340_ep2_potted_plant/rollout_00/experiment_runs/run_94ed8e7f1a4a4176bda21c0b64ea7b94/native/sessions/2026-10-19T02-13-10-809Z_01a151ef-2a19-7733-9ae9-7d4c064061c0.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-1106",
+    "tool": "turn",
+    "call_id": "call_pgCm38Qnzfx60RdMVloF6Wk2",
+    "native_line": 6,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-1106/108736689_177263340_ep6_toilet/rollout_00/experiment_runs/run_caefee75355248d79afef846b738c0b1/native/sessions/2026-10-19T07-59-59-485Z_01a1532c-adfd-71eb-ad95-28682a422311.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-1161",
+    "tool": "sit",
+    "call_id": "call_25zqqgll8It73KGPj833VVqa",
+    "native_line": 98,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-1161/108736800_177263517_ep3_potted_plant/rollout_00/experiment_runs/run_65a4554ed9c4483cad34597db8f06b80/native/sessions/2026-10-19T01-32-02-458Z_01a151c9-801a-747f-a3c7-e7f94fc2ccaa.jsonl"
+  },
+  {
+    "label": "pi_r3",
+    "shard": "shard-1187",
+    "tool": "walk_forward",
+    "call_id": "call_TDfsSiYcbFAUs0QRN5F1b80c",
+    "native_line": 44,
+    "model_stop_reason": "error",
+    "source": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r3-xhigh-20261018/results/shard-1187/108736800_177263517_ep29_couch/rollout_00/experiment_runs/run_2d864682b32d4187bcd3f5fa3ccc6b16/native/sessions/2026-10-19T01-46-41-114Z_01a151d6-e85a-7098-a1ec-81d424e31e1e.jsonl"
+  }
+]

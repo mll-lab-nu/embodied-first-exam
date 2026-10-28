@@ -1,0 +1,1026 @@
+{
+  "family": "client",
+  "mode": "autonomous_model",
+  "start": "cold",
+  "human_interventions": [],
+  "declared_scope": [
+    "observation",
+    "bounded_action_receipt"
+  ],
+  "scheduled_trials": 1,
+  "bootstrap": {
+    "schema": "bootstrap-v1",
+    "task": "Use the public instrument to reach position_mm=4, then obtain a confirming public sample. Complete the task after adapting the interface. Do not claim private evaluator success.",
+    "entries": [
+      "http://127.0.0.1:64121/public/manual.md"
+    ],
+    "source_roots": [
+      "http://127.0.0.1:64121/public"
+    ],
+    "internet": false,
+    "transports": [
+      {
+        "id": "instrument",
+        "kind": "http",
+        "root": "http://127.0.0.1:64121/api"
+      }
+    ],
+    "max_actions": 8
+  },
+  "failure_stage": null,
+  "native_result": {
+    "harness": "pi",
+    "native_directory": "/Users/hengyil6/Projects/HumanCLAW/outputs/autonomous-interface-local-20261026/client-01/experiment_runs/run_5157906e52774e9c87bdba1bab6f1f98/native",
+    "identity": {
+      "command": [
+        "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+        "--experimental-strip-types",
+        "/Users/hengyil6/Projects/HumanCLAW/harnesses/pi-adaptive/src/runner.ts"
+      ],
+      "executable_sha256": "08dad0581f00a0cabf4d49ec92ca1f25fdfd01c2c18fa8e92b35f04d4c24c164",
+      "version": "1.3.0",
+      "profile": "pi-adaptive-v1",
+      "packages": {
+        "pi-coding-agent": "1.3.0",
+        "pi-agent-core": "1.3.0",
+        "pi-ai": "1.3.0",
+        "pi-mcp": "1.3.0"
+      },
+      "policy_files_sha256": {
+        "package.json": "b79f142cfb54f2001a776281048693e80b20f3abf96d4da5775bc20509daaa4a",
+        "package-lock.json": "253b972de2e4fc8b09401dcf93741015bc1e06997fc3bc2fae5107e8d9eb75ba",
+        "src/adaptation.ts": "e8db93d6857f6864a7cee37e38a29175fcce4ef14e2b0e70f075d45f9cd68403",
+        "src/context.ts": "90c38445d3ab4664d4113dd047af5016e7306d1f68dbd1ca5226bc6db93a4900",
+        "src/execution-boundary.ts": "01cc88f356457cb103fe55c9c171eee2df51a835dec8bfa6098c23261329abbf",
+        "src/runner.ts": "581b3dd84f6f3eaeda627a26ed7601c07d794fc7febde455b52a12fc8d1d9e69",
+        "prompts/adaptive.md": "fdd2a108c020c32cfe62e58e78e903629f69c40cc7f1a2ce9b26afb4819d6536",
+        "python/__init__.py": "6e623a8b318c6a7d3d063627322862f8ce5f2989dc0a212a9d42572d2ea89863",
+        "python/adapters.py": "3eddb7392c364ef787b913d4731132b9732bfcaa34fafce1f234bfb0b29e3b0a",
+        "python/bindings.py": "303eb3db3fca129a8f2d1dea99bb8cd375655b8c24664385e658862801e5f144",
+        "python/bootstrap.py": "db044e674b50498108b15c93de500bd561111554fb517d956f7a4ad903cd7205",
+        "python/broker.py": "0877b3f4bc91f91366031e14121bacd0b88f25e1d286c1408e480f3f57ef3ed6",
+        "python/discovery.py": "120c833ebd034211eb2dfb0408a3f2d85e2c808f9fabd2b94d96d872bc742773",
+        "python/lifecycle.py": "360d4b25b3243773ddcefcc67fa6598d694f1e3f1db9e0b0f1e2548282fa281e",
+        "python/programs.py": "ee361bb497c6d819a2e5660a2ef09c49dbe8ca28956cc2b925752c61db063dfd",
+        "python/reviewer.py": "f975f54c9326886175d9b46e125f37c572389e53372d40b16a0fbc0b9c134f81",
+        "python/sandbox.py": "83ef14d3a4b43523c450cb33772343f59a0548dd2dc4c9eac7c50666ce030906",
+        "python/service.py": "7906da5b1ec897644176e5250ff1c808cee711fcf334e8075702e073f9f8839c",
+        "python/smoke.py": "1152724c0589afe2311bf1f037a99d7c90b27fa7a9da89f179b0f7f2a5dd39eb",
+        "python/state.py": "2c83fa8d3bf1bc8cb87d06070134a83f58aa9c74fe9a94cd5a344a68bcd15340",
+        "python/transports.py": "df36727b3176d4c6646c0f947bcbee09c50f82719e8f1f86e226dad14f732c07",
+        "python/workspace.py": "0bc3a321ce6c3725d5dfd996dd8c963ba5f81bc6fecbcdf688421b8046f4ba45",
+        "host/pi_adaptive.py": "aec8265a367eafb2d01e1627034739e12343bb7da4b727c9c3488ad11142b4ae",
+        "host/runtime.py": "d70f17f38fcfbead30a9aa18c99a957a5ff0f2ffe6caf0e7bc34215fe79fd0b5",
+        "host/services.py": "f2ba684998aae05c23684d683af9cc545e361892f22ef6f1900cb97ee32f4ab3",
+        "host/provider_errors.py": "372b643748f9245642089b8c590201224532fe3c1273501e5f7fc8d50d3db658"
+      },
+      "policy_sha256": "011278f79d94bf6127964560010b78a388e3d228169de7037f6560da3cc75749"
+    },
+    "model_requests": 21,
+    "steps": 2,
+    "raw_model_usage": [
+      {
+        "input_tokens": 2239,
+        "input_tokens_details": {
+          "cache_write_tokens": 2236,
+          "cached_tokens": 0
+        },
+        "output_tokens": 90,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 2329
+      },
+      {
+        "input_tokens": 5848,
+        "input_tokens_details": {
+          "cache_write_tokens": 5845,
+          "cached_tokens": 0
+        },
+        "output_tokens": 503,
+        "output_tokens_details": {
+          "reasoning_tokens": 12
+        },
+        "total_tokens": 6351
+      },
+      {
+        "input_tokens": 12149,
+        "input_tokens_details": {
+          "cache_write_tokens": 10406,
+          "cached_tokens": 1740
+        },
+        "output_tokens": 452,
+        "output_tokens_details": {
+          "reasoning_tokens": 88
+        },
+        "total_tokens": 12601
+      },
+      {
+        "input_tokens": 13722,
+        "input_tokens_details": {
+          "cache_write_tokens": 11979,
+          "cached_tokens": 1740
+        },
+        "output_tokens": 186,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 13908
+      },
+      {
+        "input_tokens": 15035,
+        "input_tokens_details": {
+          "cache_write_tokens": 13292,
+          "cached_tokens": 1740
+        },
+        "output_tokens": 172,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 15207
+      },
+      {
+        "input_tokens": 17181,
+        "input_tokens_details": {
+          "cache_write_tokens": 15438,
+          "cached_tokens": 1740
+        },
+        "output_tokens": 1580,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 18761
+      },
+      {
+        "input_tokens": 23608,
+        "input_tokens_details": {
+          "cache_write_tokens": 23605,
+          "cached_tokens": 0
+        },
+        "output_tokens": 64,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 23672
+      },
+      {
+        "input_tokens": 23879,
+        "input_tokens_details": {
+          "cache_write_tokens": 23876,
+          "cached_tokens": 0
+        },
+        "output_tokens": 293,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 24172
+      },
+      {
+        "input_tokens": 23985,
+        "input_tokens_details": {
+          "cache_write_tokens": 22238,
+          "cached_tokens": 1744
+        },
+        "output_tokens": 1751,
+        "output_tokens_details": {
+          "reasoning_tokens": 53
+        },
+        "total_tokens": 25736
+      },
+      {
+        "input_tokens": 25639,
+        "input_tokens_details": {
+          "cache_write_tokens": 23893,
+          "cached_tokens": 1743
+        },
+        "output_tokens": 68,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 25707
+      },
+      {
+        "input_tokens": 7924,
+        "input_tokens_details": {
+          "cache_write_tokens": 7921,
+          "cached_tokens": 0
+        },
+        "output_tokens": 630,
+        "output_tokens_details": {
+          "reasoning_tokens": 464
+        },
+        "total_tokens": 8554
+      },
+      {
+        "input_tokens": 15950,
+        "input_tokens_details": {
+          "cache_write_tokens": 15947,
+          "cached_tokens": 0
+        },
+        "output_tokens": 258,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 16208
+      },
+      {
+        "input_tokens": 21191,
+        "input_tokens_details": {
+          "cache_write_tokens": 21188,
+          "cached_tokens": 0
+        },
+        "output_tokens": 359,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 21550
+      },
+      {
+        "input_tokens": 27019,
+        "input_tokens_details": {
+          "cache_write_tokens": 27016,
+          "cached_tokens": 0
+        },
+        "output_tokens": 266,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27285
+      },
+      {
+        "input_tokens": 27125,
+        "input_tokens_details": {
+          "cache_write_tokens": 25269,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 163,
+        "output_tokens_details": {
+          "reasoning_tokens": 40
+        },
+        "total_tokens": 27288
+      },
+      {
+        "input_tokens": 27894,
+        "input_tokens_details": {
+          "cache_write_tokens": 26038,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 276,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 28170
+      },
+      {
+        "input_tokens": 23034,
+        "input_tokens_details": {
+          "cache_write_tokens": 21178,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 201,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 23235
+      },
+      {
+        "input_tokens": 22532,
+        "input_tokens_details": {
+          "cache_write_tokens": 20676,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 108,
+        "output_tokens_details": {
+          "reasoning_tokens": 50
+        },
+        "total_tokens": 22640
+      },
+      {
+        "input_tokens": 27230,
+        "input_tokens_details": {
+          "cache_write_tokens": 25374,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 208,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27438
+      },
+      {
+        "input_tokens": 27238,
+        "input_tokens_details": {
+          "cache_write_tokens": 25382,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 388,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27626
+      },
+      {
+        "input_tokens": 23244,
+        "input_tokens_details": {
+          "cache_write_tokens": 21388,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 92,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 23336
+      }
+    ],
+    "termination_reason": "agent_completed",
+    "tools_exposed": [
+      "pi.adaptive__activate",
+      "pi.adaptive__adapter",
+      "pi.adaptive__candidate",
+      "pi.adaptive__compute",
+      "pi.adaptive__discard",
+      "pi.adaptive__discover",
+      "pi.adaptive__evidence",
+      "pi.adaptive__execute",
+      "pi.adaptive__memory",
+      "pi.adaptive__receipt",
+      "pi.adaptive__registry",
+      "pi.adaptive__validate",
+      "pi.adaptive__workspace"
+    ],
+    "synthetic": false,
+    "interface": {
+      "schema": "interface-trial-v1",
+      "local_adaptation_status": "pass",
+      "adaptation_status": "inconclusive",
+      "acceptance_note": "Independent scope/task checks are supplied by the evaluation runner, not the binding",
+      "interaction_scope": {
+        "observation": true,
+        "bounded_action_receipt": true,
+        "lifecycle": false
+      },
+      "task_outcome": "unscorable",
+      "human_interventions": [],
+      "adapter_origin": "public_client",
+      "active_adapter": "adapter:bc7a42c3e7dd5605a10711a41c980211afdb6158d6b9aed8d4beea7c3a0cc3ce",
+      "adapters": [
+        "adapter:d3d6c25100e63caf233cabf93af94a10eae8b1c0b37a59265dedfeaf2e49a516",
+        "adapter:bc7a42c3e7dd5605a10711a41c980211afdb6158d6b9aed8d4beea7c3a0cc3ce"
+      ],
+      "sources": {
+        "entries": [
+          "http://127.0.0.1:64121/public/manual.md"
+        ],
+        "sources": [
+          "source:fa00ce71dcb7e2aded6b89f27a619fbed7bf2d07c3a08a94f87667d9cafc73c4",
+          "source:c508997b9f57177bf724e18dd350b40ffd99712240c079ac2222d263c0ef9358",
+          "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+          "source:5d1b833876d78f1cd7eda3ae0787d26e6f51aaa5aa6444c4654bcdd5b3463e1e"
+        ],
+        "records": [
+          {
+            "id": "source:fa00ce71dcb7e2aded6b89f27a619fbed7bf2d07c3a08a94f87667d9cafc73c4",
+            "uri": "http://127.0.0.1:64121/public/manual.md",
+            "sha256": "1f89a99d21fbe84f89c1ae57ffbf9cfcc02eeccc1d04f5ede06ce2867c17b46a",
+            "question": "Read public instrument manual and linked interface schemas and clients."
+          },
+          {
+            "id": "source:c508997b9f57177bf724e18dd350b40ffd99712240c079ac2222d263c0ef9358",
+            "uri": "http://127.0.0.1:64121/public/client.py",
+            "sha256": "4e6880d2a3ff1669b4db9483b4007771de32f7dbd137a0eaa87a980c526011d1",
+            "question": "Read pure request encoder, dependencies, operation mappings and any response decoding."
+          },
+          {
+            "id": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+            "uri": "http://127.0.0.1:64121/public/examples.json",
+            "sha256": "b519571cb497129c01c38147445fe2714cba2e9270f23c6e13599e7c2aff6467",
+            "question": "Read independent public encode/decode examples for sample, advance, and status."
+          },
+          {
+            "id": "source:5d1b833876d78f1cd7eda3ae0787d26e6f51aaa5aa6444c4654bcdd5b3463e1e",
+            "uri": "http://127.0.0.1:64121/public/resources.json",
+            "sha256": "d156827fbe76fd16d670e12bef03fdb83111206033c8092d9f705b09dd7af8af",
+            "question": "Read declared public resources and relevant instrument interface evidence."
+          }
+        ]
+      },
+      "registered_scope": [
+        "instrument.advance",
+        "instrument.sample"
+      ],
+      "settled": true,
+      "time_to_first_observation_seconds": 115.49949054094031,
+      "time_to_first_action_seconds": 129.83200524980202,
+      "elapsed_seconds": 171.36332733300515,
+      "phase_seconds": {
+        "source_reads": 0.06257700081914663,
+        "programs_and_validation_codecs": 0.3701725017745048
+      },
+      "validation_reports": {
+        "adapter:d3d6c25100e63caf233cabf93af94a10eae8b1c0b37a59265dedfeaf2e49a516": {
+          "schema": "adapter-validation-v1",
+          "adapter": "adapter:d3d6c25100e63caf233cabf93af94a10eae8b1c0b37a59265dedfeaf2e49a516",
+          "status": "fail",
+          "checks": [
+            {
+              "check": "contract",
+              "status": "fail",
+              "error": "Operation is outside the declared transport root"
+            }
+          ],
+          "review": {
+            "status": "inconclusive",
+            "reason": "No independent reviewer connected"
+          },
+          "local_probe_eligible": false,
+          "publication_eligible": false
+        },
+        "adapter:bc7a42c3e7dd5605a10711a41c980211afdb6158d6b9aed8d4beea7c3a0cc3ce": {
+          "schema": "adapter-validation-v1",
+          "adapter": "adapter:bc7a42c3e7dd5605a10711a41c980211afdb6158d6b9aed8d4beea7c3a0cc3ce",
+          "status": "pass",
+          "checks": [
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.sample",
+                "phase": "encode",
+                "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+                "input_pointer": "/sample/args",
+                "expected_pointer": "/sample/wire"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.sample",
+                "phase": "decode",
+                "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+                "input_pointer": "/sample/response",
+                "expected_pointer": "/sample/response"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.advance",
+                "phase": "encode",
+                "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+                "input_pointer": "/advance/args",
+                "expected_pointer": "/advance/wire"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.advance",
+                "phase": "decode",
+                "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+                "input_pointer": "/advance/response",
+                "expected_pointer": "/advance/response"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.status",
+                "phase": "encode",
+                "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+                "input_pointer": "/status/args",
+                "expected_pointer": "/status/wire"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "public_reference",
+              "case": {
+                "operation": "instrument.status",
+                "phase": "decode",
+                "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+                "input_pointer": "/status/response",
+                "expected_pointer": "/status/response"
+              },
+              "status": "pass"
+            },
+            {
+              "check": "syntax_schemas_transport_scope",
+              "status": "pass"
+            }
+          ],
+          "review": {
+            "status": "pass",
+            "reason": "The documented endpoints, methods, input/output fields, millimetre units, rail frame, action costs, timing and lifecycle match the adapter. Advance requires a current observation, costs one native action and returns a fresh sample; status is correctly treated as historical execution evidence, not a fresh observation or task success. The encoder actually reuses the inspected dependency-free public client, constructs requests without dispatching transport, preserves broker request IDs and enforces the documented movement bound. All six public reference cases exercise their claimed operation and codec phase, and all supplied deterministic checks pass. Unspecified revision evolution is not relied upon. This verdict concerns adapter validity only: broker admission must still enforce observation freshness, and no live execution or target completion is established.",
+            "attempts": 1
+          },
+          "local_probe_eligible": true,
+          "publication_eligible": false
+        }
+      },
+      "invalidations": {}
+    }
+  },
+  "adaptation_status": "pass",
+  "task_outcome": "success",
+  "independent_checks": {
+    "public_sample": true,
+    "bounded_actions": true,
+    "registered": true,
+    "final_position_mm": 4,
+    "physical_actions": 2
+  },
+  "interface": {
+    "schema": "interface-trial-v1",
+    "local_adaptation_status": "pass",
+    "adaptation_status": "inconclusive",
+    "acceptance_note": "Independent scope/task checks are supplied by the evaluation runner, not the binding",
+    "interaction_scope": {
+      "observation": true,
+      "bounded_action_receipt": true,
+      "lifecycle": false
+    },
+    "task_outcome": "unscorable",
+    "human_interventions": [],
+    "adapter_origin": "public_client",
+    "active_adapter": "adapter:bc7a42c3e7dd5605a10711a41c980211afdb6158d6b9aed8d4beea7c3a0cc3ce",
+    "adapters": [
+      "adapter:d3d6c25100e63caf233cabf93af94a10eae8b1c0b37a59265dedfeaf2e49a516",
+      "adapter:bc7a42c3e7dd5605a10711a41c980211afdb6158d6b9aed8d4beea7c3a0cc3ce"
+    ],
+    "sources": {
+      "entries": [
+        "http://127.0.0.1:64121/public/manual.md"
+      ],
+      "sources": [
+        "source:fa00ce71dcb7e2aded6b89f27a619fbed7bf2d07c3a08a94f87667d9cafc73c4",
+        "source:c508997b9f57177bf724e18dd350b40ffd99712240c079ac2222d263c0ef9358",
+        "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+        "source:5d1b833876d78f1cd7eda3ae0787d26e6f51aaa5aa6444c4654bcdd5b3463e1e"
+      ],
+      "records": [
+        {
+          "id": "source:fa00ce71dcb7e2aded6b89f27a619fbed7bf2d07c3a08a94f87667d9cafc73c4",
+          "uri": "http://127.0.0.1:64121/public/manual.md",
+          "sha256": "1f89a99d21fbe84f89c1ae57ffbf9cfcc02eeccc1d04f5ede06ce2867c17b46a",
+          "question": "Read public instrument manual and linked interface schemas and clients."
+        },
+        {
+          "id": "source:c508997b9f57177bf724e18dd350b40ffd99712240c079ac2222d263c0ef9358",
+          "uri": "http://127.0.0.1:64121/public/client.py",
+          "sha256": "4e6880d2a3ff1669b4db9483b4007771de32f7dbd137a0eaa87a980c526011d1",
+          "question": "Read pure request encoder, dependencies, operation mappings and any response decoding."
+        },
+        {
+          "id": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+          "uri": "http://127.0.0.1:64121/public/examples.json",
+          "sha256": "b519571cb497129c01c38147445fe2714cba2e9270f23c6e13599e7c2aff6467",
+          "question": "Read independent public encode/decode examples for sample, advance, and status."
+        },
+        {
+          "id": "source:5d1b833876d78f1cd7eda3ae0787d26e6f51aaa5aa6444c4654bcdd5b3463e1e",
+          "uri": "http://127.0.0.1:64121/public/resources.json",
+          "sha256": "d156827fbe76fd16d670e12bef03fdb83111206033c8092d9f705b09dd7af8af",
+          "question": "Read declared public resources and relevant instrument interface evidence."
+        }
+      ]
+    },
+    "registered_scope": [
+      "instrument.advance",
+      "instrument.sample"
+    ],
+    "settled": true,
+    "time_to_first_observation_seconds": 115.49949054094031,
+    "time_to_first_action_seconds": 129.83200524980202,
+    "elapsed_seconds": 171.36492574983276,
+    "phase_seconds": {
+      "source_reads": 0.06257700081914663,
+      "programs_and_validation_codecs": 0.3701725017745048
+    },
+    "validation_reports": {
+      "adapter:d3d6c25100e63caf233cabf93af94a10eae8b1c0b37a59265dedfeaf2e49a516": {
+        "schema": "adapter-validation-v1",
+        "adapter": "adapter:d3d6c25100e63caf233cabf93af94a10eae8b1c0b37a59265dedfeaf2e49a516",
+        "status": "fail",
+        "checks": [
+          {
+            "check": "contract",
+            "status": "fail",
+            "error": "Operation is outside the declared transport root"
+          }
+        ],
+        "review": {
+          "status": "inconclusive",
+          "reason": "No independent reviewer connected"
+        },
+        "local_probe_eligible": false,
+        "publication_eligible": false
+      },
+      "adapter:bc7a42c3e7dd5605a10711a41c980211afdb6158d6b9aed8d4beea7c3a0cc3ce": {
+        "schema": "adapter-validation-v1",
+        "adapter": "adapter:bc7a42c3e7dd5605a10711a41c980211afdb6158d6b9aed8d4beea7c3a0cc3ce",
+        "status": "pass",
+        "checks": [
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.sample",
+              "phase": "encode",
+              "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+              "input_pointer": "/sample/args",
+              "expected_pointer": "/sample/wire"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.sample",
+              "phase": "decode",
+              "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+              "input_pointer": "/sample/response",
+              "expected_pointer": "/sample/response"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.advance",
+              "phase": "encode",
+              "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+              "input_pointer": "/advance/args",
+              "expected_pointer": "/advance/wire"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.advance",
+              "phase": "decode",
+              "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+              "input_pointer": "/advance/response",
+              "expected_pointer": "/advance/response"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.status",
+              "phase": "encode",
+              "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+              "input_pointer": "/status/args",
+              "expected_pointer": "/status/wire"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "public_reference",
+            "case": {
+              "operation": "instrument.status",
+              "phase": "decode",
+              "source": "source:d768ef51a7bb3cd7420d05e9d0277692689491d332ba85b0f2b80c4b2a345dfb",
+              "input_pointer": "/status/response",
+              "expected_pointer": "/status/response"
+            },
+            "status": "pass"
+          },
+          {
+            "check": "syntax_schemas_transport_scope",
+            "status": "pass"
+          }
+        ],
+        "review": {
+          "status": "pass",
+          "reason": "The documented endpoints, methods, input/output fields, millimetre units, rail frame, action costs, timing and lifecycle match the adapter. Advance requires a current observation, costs one native action and returns a fresh sample; status is correctly treated as historical execution evidence, not a fresh observation or task success. The encoder actually reuses the inspected dependency-free public client, constructs requests without dispatching transport, preserves broker request IDs and enforces the documented movement bound. All six public reference cases exercise their claimed operation and codec phase, and all supplied deterministic checks pass. Unspecified revision evolution is not relied upon. This verdict concerns adapter validity only: broker admission must still enforce observation freshness, and no live execution or target completion is established.",
+          "attempts": 1
+        },
+        "local_probe_eligible": true,
+        "publication_eligible": false
+      }
+    },
+    "invalidations": {},
+    "model_requests": 21,
+    "raw_model_usage": [
+      {
+        "input_tokens": 2239,
+        "input_tokens_details": {
+          "cache_write_tokens": 2236,
+          "cached_tokens": 0
+        },
+        "output_tokens": 90,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 2329
+      },
+      {
+        "input_tokens": 5848,
+        "input_tokens_details": {
+          "cache_write_tokens": 5845,
+          "cached_tokens": 0
+        },
+        "output_tokens": 503,
+        "output_tokens_details": {
+          "reasoning_tokens": 12
+        },
+        "total_tokens": 6351
+      },
+      {
+        "input_tokens": 12149,
+        "input_tokens_details": {
+          "cache_write_tokens": 10406,
+          "cached_tokens": 1740
+        },
+        "output_tokens": 452,
+        "output_tokens_details": {
+          "reasoning_tokens": 88
+        },
+        "total_tokens": 12601
+      },
+      {
+        "input_tokens": 13722,
+        "input_tokens_details": {
+          "cache_write_tokens": 11979,
+          "cached_tokens": 1740
+        },
+        "output_tokens": 186,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 13908
+      },
+      {
+        "input_tokens": 15035,
+        "input_tokens_details": {
+          "cache_write_tokens": 13292,
+          "cached_tokens": 1740
+        },
+        "output_tokens": 172,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 15207
+      },
+      {
+        "input_tokens": 17181,
+        "input_tokens_details": {
+          "cache_write_tokens": 15438,
+          "cached_tokens": 1740
+        },
+        "output_tokens": 1580,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 18761
+      },
+      {
+        "input_tokens": 23608,
+        "input_tokens_details": {
+          "cache_write_tokens": 23605,
+          "cached_tokens": 0
+        },
+        "output_tokens": 64,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 23672
+      },
+      {
+        "input_tokens": 23879,
+        "input_tokens_details": {
+          "cache_write_tokens": 23876,
+          "cached_tokens": 0
+        },
+        "output_tokens": 293,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 24172
+      },
+      {
+        "input_tokens": 23985,
+        "input_tokens_details": {
+          "cache_write_tokens": 22238,
+          "cached_tokens": 1744
+        },
+        "output_tokens": 1751,
+        "output_tokens_details": {
+          "reasoning_tokens": 53
+        },
+        "total_tokens": 25736
+      },
+      {
+        "input_tokens": 25639,
+        "input_tokens_details": {
+          "cache_write_tokens": 23893,
+          "cached_tokens": 1743
+        },
+        "output_tokens": 68,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 25707
+      },
+      {
+        "input_tokens": 7924,
+        "input_tokens_details": {
+          "cache_write_tokens": 7921,
+          "cached_tokens": 0
+        },
+        "output_tokens": 630,
+        "output_tokens_details": {
+          "reasoning_tokens": 464
+        },
+        "total_tokens": 8554
+      },
+      {
+        "input_tokens": 15950,
+        "input_tokens_details": {
+          "cache_write_tokens": 15947,
+          "cached_tokens": 0
+        },
+        "output_tokens": 258,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 16208
+      },
+      {
+        "input_tokens": 21191,
+        "input_tokens_details": {
+          "cache_write_tokens": 21188,
+          "cached_tokens": 0
+        },
+        "output_tokens": 359,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 21550
+      },
+      {
+        "input_tokens": 27019,
+        "input_tokens_details": {
+          "cache_write_tokens": 27016,
+          "cached_tokens": 0
+        },
+        "output_tokens": 266,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27285
+      },
+      {
+        "input_tokens": 27125,
+        "input_tokens_details": {
+          "cache_write_tokens": 25269,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 163,
+        "output_tokens_details": {
+          "reasoning_tokens": 40
+        },
+        "total_tokens": 27288
+      },
+      {
+        "input_tokens": 27894,
+        "input_tokens_details": {
+          "cache_write_tokens": 26038,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 276,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 28170
+      },
+      {
+        "input_tokens": 23034,
+        "input_tokens_details": {
+          "cache_write_tokens": 21178,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 201,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 23235
+      },
+      {
+        "input_tokens": 22532,
+        "input_tokens_details": {
+          "cache_write_tokens": 20676,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 108,
+        "output_tokens_details": {
+          "reasoning_tokens": 50
+        },
+        "total_tokens": 22640
+      },
+      {
+        "input_tokens": 27230,
+        "input_tokens_details": {
+          "cache_write_tokens": 25374,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 208,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27438
+      },
+      {
+        "input_tokens": 27238,
+        "input_tokens_details": {
+          "cache_write_tokens": 25382,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 388,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 27626
+      },
+      {
+        "input_tokens": 23244,
+        "input_tokens_details": {
+          "cache_write_tokens": 21388,
+          "cached_tokens": 1853
+        },
+        "output_tokens": 92,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 23336
+      }
+    ],
+    "usage_coverage": {
+      "requests": 21,
+      "with_usage": 21
+    },
+    "runtime_identity": {
+      "command": [
+        "/opt/homebrew/Cellar/node/26.0.0/bin/node",
+        "--experimental-strip-types",
+        "/Users/hengyil6/Projects/HumanCLAW/harnesses/pi-adaptive/src/runner.ts"
+      ],
+      "executable_sha256": "08dad0581f00a0cabf4d49ec92ca1f25fdfd01c2c18fa8e92b35f04d4c24c164",
+      "version": "1.3.0",
+      "profile": "pi-adaptive-v1",
+      "packages": {
+        "pi-coding-agent": "1.3.0",
+        "pi-agent-core": "1.3.0",
+        "pi-ai": "1.3.0",
+        "pi-mcp": "1.3.0"
+      },
+      "policy_files_sha256": {
+        "package.json": "b79f142cfb54f2001a776281048693e80b20f3abf96d4da5775bc20509daaa4a",
+        "package-lock.json": "253b972de2e4fc8b09401dcf93741015bc1e06997fc3bc2fae5107e8d9eb75ba",
+        "src/adaptation.ts": "e8db93d6857f6864a7cee37e38a29175fcce4ef14e2b0e70f075d45f9cd68403",
+        "src/context.ts": "90c38445d3ab4664d4113dd047af5016e7306d1f68dbd1ca5226bc6db93a4900",
+        "src/execution-boundary.ts": "01cc88f356457cb103fe55c9c171eee2df51a835dec8bfa6098c23261329abbf",
+        "src/runner.ts": "581b3dd84f6f3eaeda627a26ed7601c07d794fc7febde455b52a12fc8d1d9e69",
+        "prompts/adaptive.md": "fdd2a108c020c32cfe62e58e78e903629f69c40cc7f1a2ce9b26afb4819d6536",
+        "python/__init__.py": "6e623a8b318c6a7d3d063627322862f8ce5f2989dc0a212a9d42572d2ea89863",
+        "python/adapters.py": "3eddb7392c364ef787b913d4731132b9732bfcaa34fafce1f234bfb0b29e3b0a",
+        "python/bindings.py": "303eb3db3fca129a8f2d1dea99bb8cd375655b8c24664385e658862801e5f144",
+        "python/bootstrap.py": "db044e674b50498108b15c93de500bd561111554fb517d956f7a4ad903cd7205",
+        "python/broker.py": "0877b3f4bc91f91366031e14121bacd0b88f25e1d286c1408e480f3f57ef3ed6",
+        "python/discovery.py": "120c833ebd034211eb2dfb0408a3f2d85e2c808f9fabd2b94d96d872bc742773",
+        "python/lifecycle.py": "360d4b25b3243773ddcefcc67fa6598d694f1e3f1db9e0b0f1e2548282fa281e",
+        "python/programs.py": "ee361bb497c6d819a2e5660a2ef09c49dbe8ca28956cc2b925752c61db063dfd",
+        "python/reviewer.py": "f975f54c9326886175d9b46e125f37c572389e53372d40b16a0fbc0b9c134f81",
+        "python/sandbox.py": "83ef14d3a4b43523c450cb33772343f59a0548dd2dc4c9eac7c50666ce030906",
+        "python/service.py": "7906da5b1ec897644176e5250ff1c808cee711fcf334e8075702e073f9f8839c",
+        "python/smoke.py": "1152724c0589afe2311bf1f037a99d7c90b27fa7a9da89f179b0f7f2a5dd39eb",
+        "python/state.py": "2c83fa8d3bf1bc8cb87d06070134a83f58aa9c74fe9a94cd5a344a68bcd15340",
+        "python/transports.py": "df36727b3176d4c6646c0f947bcbee09c50f82719e8f1f86e226dad14f732c07",
+        "python/workspace.py": "0bc3a321ce6c3725d5dfd996dd8c963ba5f81bc6fecbcdf688421b8046f4ba45",
+        "host/pi_adaptive.py": "aec8265a367eafb2d01e1627034739e12343bb7da4b727c9c3488ad11142b4ae",
+        "host/runtime.py": "d70f17f38fcfbead30a9aa18c99a957a5ff0f2ffe6caf0e7bc34215fe79fd0b5",
+        "host/services.py": "f2ba684998aae05c23684d683af9cc545e361892f22ef6f1900cb97ee32f4ab3",
+        "host/provider_errors.py": "372b643748f9245642089b8c590201224532fe3c1273501e5f7fc8d50d3db658"
+      },
+      "policy_sha256": "011278f79d94bf6127964560010b78a388e3d228169de7037f6560da3cc75749"
+    },
+    "synthetic": false
+  },
+  "elapsed_seconds": 171.6668495410122,
+  "cost": {
+    "decision_steps": 2,
+    "vlm_calls": 21,
+    "token_source": "provider_exact",
+    "input_tokens": 413666,
+    "visible_output_tokens": 7401,
+    "reasoning_tokens": 707,
+    "cached_input_tokens": 23418,
+    "total_tokens": 421774,
+    "input_tokens_per_step": 206833.0,
+    "visible_output_tokens_per_step": 3700.5
+  }
+}

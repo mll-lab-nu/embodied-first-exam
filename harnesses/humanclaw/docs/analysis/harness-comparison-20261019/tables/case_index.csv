@@ -1,0 +1,81 @@
+case_id,phase,quadrant,scene,episode,target,shard,common_prefix,codex_steps,pi_steps,codex_diagnosis,pi_diagnosis,visual_review_selected
+C001,r1,codex_only,106878858_174886965,11,tv,shard-0755,0,100,100,Success,Stopped outside threshold,True
+C002,r1,codex_only,108736800_177263517,25,couch,shard-1183,0,72,63,Success,No valid sitting contact recorded,True
+C003,r1,codex_only,106878960_174887073,11,chair,shard-0845,0,16,11,Success,Stopped outside threshold,False
+C004,r1,codex_only,107734287_176000160,11,couch,shard-1051,0,37,32,Success,No valid sitting contact recorded,False
+C005,r1,codex_only,108736884_177263634,6,potted_plant,shard-1194,0,22,18,Success,Stopped outside threshold,False
+C006,r1,pi_only,102816036,18,potted_plant,shard-0138,0,52,27,Stopped outside threshold,Success,True
+C007,r1,pi_only,103997586_171030666,22,couch,shard-0290,0,64,63,No valid sitting contact recorded,Success,True
+C008,r1,pi_only,103997586_171030669,8,potted_plant,shard-0304,5,30,24,Stopped outside threshold,Success,False
+C009,r1,pi_only,104862384_172226319,18,couch,shard-0494,0,50,95,No valid sitting contact recorded,Success,False
+C010,r1,pi_only,107734056_175999839,17,chair,shard-0967,0,5,14,Stopped outside threshold,Success,False
+C011,r1,both_success,106366410_174226806,3,potted_plant,shard-0717,9,13,12,Success,Success,True
+C012,r1,both_success,108736800_177263517,28,couch,shard-1186,0,78,96,Success,Success,False
+C013,r1,both_success,107734056_175999839,21,tv,shard-0971,0,33,49,Success,Success,False
+C014,r1,both_success,104348028_171512877,24,toilet,shard-0410,1,38,39,Success,Success,False
+C015,r1,both_success,102816756,4,potted_plant,shard-0212,1,36,31,Success,Success,False
+C016,r1,both_fail,108736779_177263484,1,chair,shard-1131,0,18,8,Stopped outside threshold,Stopped outside threshold,True
+C017,r1,both_fail,107734287_176000160,9,couch,shard-1049,0,21,47,No valid sitting contact recorded,No valid sitting contact recorded,False
+C018,r1,both_fail,107734338_176000244,13,tv,shard-1083,1,26,30,Stopped outside threshold,Stopped outside threshold,False
+C019,r1,both_fail,107734056_175999839,26,couch,shard-0976,0,15,10,No valid sitting contact recorded,No valid sitting contact recorded,False
+C020,r1,both_fail,106879080_174887211,19,chair,shard-0911,0,16,17,Stopped outside threshold,Stopped outside threshold,False
+C021,r2,codex_only,104348010_171512832,12,tv,shard-0368,3,76,72,Success,Stopped outside threshold,True
+C022,r2,codex_only,103997586_171030669,21,couch,shard-0317,0,63,75,Success,No valid sitting contact recorded,True
+C023,r2,codex_only,104348328_171513363,1,potted_plant,shard-0417,0,16,6,Success,Stopped outside threshold,False
+C024,r2,codex_only,106366386_174226770,2,bed,shard-0686,6,58,51,Success,No valid sitting contact recorded,False
+C025,r2,codex_only,105515184_173104128,10,chair,shard-0576,2,10,10,Success,Stopped outside threshold,False
+C026,r2,pi_only,108736779_177263484,6,chair,shard-1136,1,22,18,Stopped outside threshold,Success,True
+C027,r2,pi_only,104348010_171512832,19,bed,shard-0375,0,38,44,No valid sitting contact recorded,Success,True
+C028,r2,pi_only,106366386_174226770,19,chair,shard-0703,0,9,11,Stopped outside threshold,Success,False
+C029,r2,pi_only,104862384_172226319,9,bed,shard-0485,0,22,32,No valid sitting contact recorded,Success,False
+C030,r2,pi_only,102343992,18,tv,shard-0018,3,100,66,Stopped outside threshold,Success,False
+C031,r2,both_success,107734287_176000160,5,potted_plant,shard-1045,0,35,38,Success,Success,True
+C032,r2,both_success,108736800_177263517,15,bed,shard-1173,0,68,74,Success,Success,False
+C033,r2,both_success,107734176_176000019,13,potted_plant,shard-0993,2,12,12,Success,Success,False
+C034,r2,both_success,107734338_176000244,9,bed,shard-1079,0,32,27,Success,Success,False
+C035,r2,both_success,107734056_175999839,18,chair,shard-0968,2,40,21,Success,Success,False
+C036,r2,both_fail,106366410_174226806,16,tv,shard-0730,3,100,100,Stopped outside threshold,Stopped outside threshold,True
+C037,r2,both_fail,107734338_176000244,22,toilet,shard-1092,0,80,77,No valid sitting contact recorded,No valid sitting contact recorded,False
+C038,r2,both_fail,104348361_171513414,15,tv,shard-0461,0,43,49,Stopped outside threshold,Stopped outside threshold,False
+C039,r2,both_fail,107734176_176000019,26,toilet,shard-1006,0,24,26,No valid sitting contact recorded,No valid sitting contact recorded,False
+C040,r2,both_fail,108736689_177263340,0,potted_plant,shard-1100,0,49,44,Stopped outside threshold,Stopped outside threshold,False
+C041,r3,codex_only,106878867_174886977,21,tv,shard-0795,3,100,99,Success,Stopped outside threshold,True
+C042,r3,codex_only,102344529,18,couch,shard-0078,0,30,24,Success,No valid sitting contact recorded,True
+C043,r3,codex_only,104348010_171512832,11,tv,shard-0367,0,96,100,Success,Stopped outside threshold,False
+C044,r3,codex_only,104862384_172226319,16,couch,shard-0492,2,100,94,Success,No valid sitting contact recorded,False
+C045,r3,codex_only,106366104_174226332,13,tv,shard-0667,0,92,100,Success,Stopped outside threshold,False
+C046,r3,pi_only,105515211_173104185,22,potted_plant,shard-0616,0,100,28,Stopped outside threshold,Success,True
+C047,r3,pi_only,104348328_171513363,20,bed,shard-0436,0,26,27,No valid sitting contact recorded,Success,True
+C048,r3,pi_only,103997586_171030666,19,chair,shard-0287,0,100,24,Stopped outside threshold,Success,False
+C049,r3,pi_only,108736689_177263340,23,bed,shard-1123,0,19,21,No valid sitting contact recorded,Success,False
+C050,r3,pi_only,106366386_174226770,16,chair,shard-0700,2,32,14,Stopped outside threshold,Success,False
+C051,r3,both_success,108736689_177263340,17,tv,shard-1117,0,12,16,Success,Success,True
+C052,r3,both_success,104862384_172226319,6,bed,shard-0482,0,24,40,Success,Success,False
+C053,r3,both_success,107733960_175999701,23,chair,shard-0945,0,18,16,Success,Success,False
+C054,r3,both_success,102815835,19,toilet,shard-0109,0,41,45,Success,Success,False
+C055,r3,both_success,103997586_171030666,16,chair,shard-0284,0,18,17,Success,Success,False
+C056,r3,both_fail,106878867_174886977,22,tv,shard-0796,1,95,98,Stopped outside threshold,Stopped outside threshold,True
+C057,r3,both_fail,108736800_177263517,21,toilet,shard-1179,1,25,22,No valid sitting contact recorded,No valid sitting contact recorded,False
+C058,r3,both_fail,107734287_176000160,24,tv,shard-1064,1,100,82,Stopped outside threshold,Stopped outside threshold,False
+C059,r3,both_fail,106366386_174226770,28,toilet,shard-0712,0,76,73,No valid sitting contact recorded,No valid sitting contact recorded,False
+C060,r3,both_fail,102816756,7,chair,shard-0215,1,22,23,Stopped outside threshold,Stopped outside threshold,False
+C061,gemini,codex_only,102344529,12,chair,shard-0072,3,33,12,Success,Stopped outside threshold,True
+C062,gemini,codex_only,106366410_174226806,29,toilet,shard-0743,0,50,100,Success,No Sit executed,True
+C063,gemini,codex_only,102816036,8,chair,shard-0128,0,29,17,Success,Stopped outside threshold,False
+C064,gemini,codex_only,108736800_177263517,22,toilet,shard-1180,1,42,41,Success,No valid sitting contact recorded,False
+C065,gemini,codex_only,104862384_172226319,21,tv,shard-0497,2,16,16,Success,Stopped outside threshold,False
+C066,gemini,pi_only,102816600,1,potted_plant,shard-0179,0,21,46,Stopped outside threshold,Success,True
+C067,gemini,pi_only,102816756,17,bed,shard-0225,3,32,30,No valid sitting contact recorded,Success,True
+C068,gemini,pi_only,102816036,15,potted_plant,shard-0135,1,100,63,Stopped outside threshold,Success,False
+C069,gemini,pi_only,102344094,0,couch,shard-0030,2,15,18,No valid sitting contact recorded,Success,False
+C070,gemini,pi_only,108736779_177263484,10,potted_plant,shard-1140,7,21,71,Stopped outside threshold,Success,False
+C071,gemini,both_success,108736800_177263517,11,tv,shard-1169,3,42,29,Success,Success,True
+C072,gemini,both_success,104348361_171513414,28,bed,shard-0474,2,34,25,Success,Success,False
+C073,gemini,both_success,106366410_174226806,2,potted_plant,shard-0716,0,35,47,Success,Success,False
+C074,gemini,both_success,106878960_174887073,22,bed,shard-0856,0,55,61,Success,Success,False
+C075,gemini,both_success,105515379_173104395,29,chair,shard-0653,1,18,23,Success,Success,False
+C076,gemini,both_fail,107734287_176000160,23,chair,shard-1063,4,20,20,Stopped outside threshold,Stopped outside threshold,True
+C077,gemini,both_fail,104348010_171512832,26,toilet,shard-0382,4,14,13,No valid sitting contact recorded,No valid sitting contact recorded,False
+C078,gemini,both_fail,107734254_176000121,1,chair,shard-1011,0,11,10,Stopped outside threshold,Stopped outside threshold,False
+C079,gemini,both_fail,108736689_177263340,9,toilet,shard-1109,13,18,18,No valid sitting contact recorded,No valid sitting contact recorded,False
+C080,gemini,both_fail,108736884_177263634,20,tv,shard-1208,2,19,19,Stopped outside threshold,Stopped outside threshold,False

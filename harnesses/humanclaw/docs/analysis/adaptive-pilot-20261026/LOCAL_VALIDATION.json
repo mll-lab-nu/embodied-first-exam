@@ -1,0 +1,85 @@
+{
+  "status": "local_validation_passed",
+  "date": "2026-10-26",
+  "policy_sha256": "cf26df48fe0d745d8e9e8467e6a76f088c4b506094959df957fe60c5157d6d31",
+  "python_tests": {
+    "passed": 519,
+    "skipped": 5
+  },
+  "typescript": {
+    "typecheck": "pass",
+    "tests_passed": 5
+  },
+  "controlled_real_provider": [
+    {
+      "case": "construct",
+      "passed": true,
+      "checks": {
+        "runtime_ok": true,
+        "trace_valid": true,
+        "candidate_created": true,
+        "validated": true,
+        "activated": true,
+        "independent_result": true
+      },
+      "model_requests": 11,
+      "trace": "outputs/adaptive-validation-20261026-boundary/construct/experiment_runs/run_7236d5556a96479b97922bf342d24e56"
+    },
+    {
+      "case": "repair",
+      "passed": true,
+      "checks": {
+        "runtime_ok": true,
+        "trace_valid": true,
+        "candidate_created": true,
+        "validated": true,
+        "activated": true,
+        "failed_parent_retained": true,
+        "independent_result": true
+      },
+      "model_requests": 17,
+      "trace": "outputs/adaptive-validation-20261026-boundary/repair/experiment_runs/run_48d7553eb44547c381a2ccf5114dc5ae"
+    },
+    {
+      "case": "policy",
+      "passed": true,
+      "checks": {
+        "runtime_ok": true,
+        "trace_valid": true,
+        "candidate_created": true,
+        "validated": true,
+        "activated": true,
+        "fresh_independent_review": true,
+        "prediction_error_recorded": true,
+        "fresh_environment_result": true,
+        "execution_after_activation": true
+      },
+      "model_requests": 17,
+      "trace": "outputs/adaptive-validation-20261026-boundary/policy/experiment_runs/run_18dc15cb49f449dd9f05798894bf78c8"
+    }
+  ],
+  "earlier_attempts_retained": [
+    "outputs/adaptive-validation-20261026",
+    "outputs/adaptive-validation-20261026-r2",
+    "outputs/adaptive-validation-20261026-final"
+  ],
+  "scope": "Controlled fixtures prove the tested mechanisms, not HumanCLAW task success. All candidates remain task-local.",
+  "total_real_provider_calls_including_development_attempts": 125,
+  "earlier_server_validation": {
+    "python_tests_passed": 22,
+    "typescript_tests_passed": 3,
+    "typecheck": "pass",
+    "node": "22.19.0",
+    "os_isolation": "Linux bubblewrap",
+    "code_revision": "84e0e41"
+  },
+  "server_validation": {
+    "python_tests_passed": 23,
+    "typescript_tests_passed": 5,
+    "typecheck": "pass",
+    "node": "22.19.0",
+    "os_isolation": "Linux bubblewrap",
+    "code_revision": "d489c66",
+    "policy_sha256": "cf26df48fe0d745d8e9e8467e6a76f088c4b506094959df957fe60c5157d6d31"
+  }
+}

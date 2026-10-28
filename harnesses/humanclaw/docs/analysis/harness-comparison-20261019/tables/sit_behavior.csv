@@ -1,0 +1,10 @@
+condition,interaction_episodes,total_sit_calls,zero_sit,one_sit,multiple_sit,interaction_successes,historical_valid_sit_contact
+codex_r1,597,637,45,487,65,25,27
+codex_r2,597,1548,39,15,543,219,234
+codex_r3,597,1919,51,3,543,316,336
+codex_gemini,597,1361,32,7,558,265,268
+pi_r1,597,655,50,468,79,10,10
+pi_r2,597,1695,44,14,539,205,219
+pi_r3,597,1969,39,9,549,326,349
+pi_gemini,597,1289,36,3,558,219,221
+psv_r1,597,1421,149,1,447,266,278

@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "search",
+    "status": "pass",
+    "source": "source:f7bfb2bdf72db6b85fa0c00e524359c06c23e16619452c6c08887089c5b6624d",
+    "uri": "https://www.bing.com/search?format=rss&q=Python+urllib.request+documentation",
+    "bytes": 4742,
+    "references": 12,
+    "readable_preview": "Bing: Python urllib.request documentation\nhttp://www.bing.com:80/search?q=Python+urllib.request+documentation\nSearch results\nhttp://www.bing.com:80/s/"
+  },
+  {
+    "kind": "read",
+    "status": "pass",
+    "source": "source:9fdcec1dc6b9a5c64d9924c37ccce0280861e43cb592f95ff45b0737a026536c",
+    "uri": "https://docs.python.org/3/library/urllib.request.html",
+    "bytes": 216510,
+    "references": 209,
+    "readable_preview": "urllib.request \u2014 Extensible library for opening URLs \u2014 Python 3.15.2 documentation\nTheme\nAuto\nLight\nDark\nTable of Contents\nurllib.request\n\u2014 Extensible"
+  }
+]

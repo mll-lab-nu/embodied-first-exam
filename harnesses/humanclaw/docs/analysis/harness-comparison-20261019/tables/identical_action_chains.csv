@@ -1,0 +1,10 @@
+phase,shard,codex_success,pi_success,common_prefix,identical_chain,codex_actions,pi_actions,codex_path_m,pi_path_m,initial_saved_pose_equal,codex_input_tokens,pi_input_tokens,usage_complete
+r1,shard-1087,True,True,9,True,9,9,2.309098958969116,2.309098958969116,True,132130,45772,True
+r1,shard-1196,True,True,14,True,14,14,3.7161660194396973,3.7161660194396973,True,214918,84536,True
+r2,shard-0015,True,True,4,True,4,4,0.2824814021587372,0.2824814021587372,True,60832,18102,True
+r2,shard-0910,True,True,10,True,10,10,3.222963809967041,3.226207971572876,True,148396,53623,True
+r2,shard-1087,True,True,10,True,10,10,2.4063949584960938,2.4063949584960938,True,148560,53686,True
+r3,shard-0330,False,False,6,True,6,6,0.696118175983429,0.6959506869316101,True,93240,28430,True
+r3,shard-0427,True,True,9,True,9,9,2.245913505554199,2.245913505554199,True,146161,47263,True
+gemini,shard-0049,True,True,6,True,6,6,1.7157281637191772,1.7157281637191772,True,129351,58715,True
+gemini,shard-1087,True,True,9,True,9,9,2.5216524600982666,2.5216524600982666,True,207336,104284,True

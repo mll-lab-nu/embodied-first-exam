@@ -1,0 +1,16 @@
+{
+  "model": "gpt-6-astra",
+  "perception_model": "gpt-6-astra",
+  "codex_command": ["codex", "app-server"],
+  "codex_source": "/Users/hengyil6/Projects/codex",
+  "pi_source": "/Users/hengyil6/Projects/pi",
+  "responses_base_url": "https://ai-thopo-9134.services.ai.azure.com/openai/v1",
+  "api_key_env": "AZURE_OPENAI_API_KEY",
+  "auth": "azure",
+  "reasoning_effort": "medium",
+  "context_window": 131072,
+  "max_output_tokens": 8192,
+  "timeout_seconds": 120,
+  "startup_timeout_seconds": 60,
+  "request_timeout_seconds": 600
+}

@@ -1,0 +1,14 @@
+{
+  "codex_r1": {
+    "first_use": 805,
+    "later_use": 117
+  },
+  "codex_r3": {
+    "later_use": 89,
+    "first_use": 379
+  },
+  "codex_r2": {
+    "first_use": 491,
+    "later_use": 56
+  }
+}

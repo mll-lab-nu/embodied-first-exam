@@ -1,0 +1,164 @@
+{
+  "episodes": 10960,
+  "recorded_attempts": 12997,
+  "duplicate_checkpoint_records": 19,
+  "canonical_issues": [],
+  "groups": {
+    "codex_r1": 1218,
+    "codex_r2": 1218,
+    "codex_r3": 1218,
+    "codex_gemini": 1217,
+    "pi_r1": 1218,
+    "pi_r2": 1218,
+    "pi_r3": 1218,
+    "pi_gemini": 1217,
+    "psv_r1": 1218
+  },
+  "missing_shards": {
+    "psv_r1": [],
+    "codex_r1": [],
+    "pi_r1": [],
+    "codex_r2": [],
+    "pi_r2": [],
+    "codex_r3": [],
+    "pi_r3": [],
+    "codex_gemini": [
+      "shard-0184"
+    ],
+    "pi_gemini": [
+      "shard-0184"
+    ]
+  },
+  "paired_input_audit": [
+    {
+      "left": "codex_r1",
+      "right": "pi_r1",
+      "paired": 1218,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    },
+    {
+      "left": "codex_r2",
+      "right": "pi_r2",
+      "paired": 1218,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    },
+    {
+      "left": "codex_r3",
+      "right": "pi_r3",
+      "paired": 1218,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    },
+    {
+      "left": "codex_gemini",
+      "right": "pi_gemini",
+      "paired": 1217,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    },
+    {
+      "left": "codex_r1",
+      "right": "codex_r2",
+      "paired": 1218,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    },
+    {
+      "left": "pi_r1",
+      "right": "pi_r2",
+      "paired": 1218,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    },
+    {
+      "left": "codex_r2",
+      "right": "codex_r3",
+      "paired": 1218,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    },
+    {
+      "left": "pi_r2",
+      "right": "pi_r3",
+      "paired": 1218,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    },
+    {
+      "left": "psv_r1",
+      "right": "codex_r1",
+      "paired": 1218,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    },
+    {
+      "left": "psv_r1",
+      "right": "pi_r1",
+      "paired": 1218,
+      "left_only": 0,
+      "right_only": 0,
+      "instruction_hash_mismatch": 0,
+      "init_hash_mismatch": 0,
+      "goals_hash_mismatch": 0,
+      "profile_hash_mismatch": 0,
+      "seed_mismatch": 0,
+      "model_config_mismatch": 0
+    }
+  ]
+}

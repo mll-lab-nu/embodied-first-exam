@@ -1,0 +1,385 @@
+[
+  {
+    "label": "codex",
+    "events_path": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-codex-copilot-astra-fullval-r2-20261018/results/shard-0317/103997586_171030669_ep21_couch/rollout_00/experiment_runs/run_7c7a6d630cc34ccc94dc7f23d343d081/events.jsonl",
+    "target_object_id": 209,
+    "steps": [
+      {
+        "step_zero_based": 59,
+        "event_line": 4506,
+        "frame_count": 15,
+        "target_contact_counts_by_body_part_by_frame": [
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {
+            "left_knee": 1,
+            "left_ankle": 2
+          }
+        ],
+        "pelvis_contact_frame_indices": [],
+        "final_frame_target_contact_counts": {
+          "left_knee": 1,
+          "left_ankle": 2
+        }
+      },
+      {
+        "step_zero_based": 60,
+        "event_line": 4567,
+        "frame_count": 15,
+        "target_contact_counts_by_body_part_by_frame": [
+          {
+            "left_knee": 1,
+            "left_ankle": 2
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          }
+        ],
+        "pelvis_contact_frame_indices": [],
+        "final_frame_target_contact_counts": {
+          "left_knee": 1,
+          "left_ankle": 1
+        }
+      },
+      {
+        "step_zero_based": 61,
+        "event_line": 4631,
+        "frame_count": 15,
+        "target_contact_counts_by_body_part_by_frame": [
+          {
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1,
+            "right_hip": 2
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1,
+            "right_hip": 3
+          },
+          {
+            "left_knee": 2,
+            "left_ankle": 1,
+            "right_hip": 4
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1,
+            "right_hip": 5
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1,
+            "right_hip": 6
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1,
+            "right_hip": 6
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1,
+            "right_hip": 7
+          },
+          {
+            "left_knee": 1,
+            "left_ankle": 1,
+            "right_hip": 6
+          },
+          {
+            "right_hip": 7,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 6,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "pelvis": 1,
+            "right_hip": 6,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "pelvis": 1,
+            "right_hip": 6,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "pelvis": 2,
+            "right_hip": 6,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "pelvis": 2,
+            "right_hip": 5,
+            "left_knee": 1,
+            "left_ankle": 1
+          }
+        ],
+        "pelvis_contact_frame_indices": [
+          11,
+          12,
+          13,
+          14
+        ],
+        "final_frame_target_contact_counts": {
+          "pelvis": 2,
+          "right_hip": 5,
+          "left_knee": 1,
+          "left_ankle": 1
+        }
+      }
+    ]
+  },
+  {
+    "label": "pi",
+    "events_path": "/gscratch/scrubbed/linjli/humanclaw/experiments/humanclaw-pi-copilot-astra-fullval-r2-20261018/results/shard-0317/103997586_171030669_ep21_couch/rollout_00/experiment_runs/run_cb6e53f85622400ca13da81bc205761d/events.jsonl",
+    "target_object_id": 209,
+    "steps": [
+      {
+        "step_zero_based": 71,
+        "event_line": 9626,
+        "frame_count": 15,
+        "target_contact_counts_by_body_part_by_frame": [
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {},
+          {}
+        ],
+        "pelvis_contact_frame_indices": [],
+        "final_frame_target_contact_counts": {}
+      },
+      {
+        "step_zero_based": 72,
+        "event_line": 9746,
+        "frame_count": 15,
+        "target_contact_counts_by_body_part_by_frame": [
+          {},
+          {},
+          {
+            "left_knee": 1
+          },
+          {
+            "left_knee": 1
+          },
+          {
+            "left_knee": 2,
+            "left_ankle": 1
+          },
+          {
+            "left_knee": 2
+          },
+          {
+            "left_knee": 2
+          },
+          {
+            "left_knee": 2
+          },
+          {
+            "left_knee": 2
+          },
+          {
+            "left_knee": 2
+          },
+          {
+            "left_knee": 2,
+            "left_ankle": 2
+          },
+          {
+            "left_knee": 3,
+            "left_ankle": 2
+          },
+          {
+            "left_knee": 4,
+            "left_ankle": 2
+          },
+          {
+            "left_knee": 4,
+            "left_ankle": 2
+          },
+          {
+            "left_knee": 4,
+            "left_ankle": 1
+          }
+        ],
+        "pelvis_contact_frame_indices": [],
+        "final_frame_target_contact_counts": {
+          "left_knee": 4,
+          "left_ankle": 1
+        }
+      },
+      {
+        "step_zero_based": 73,
+        "event_line": 9872,
+        "frame_count": 15,
+        "target_contact_counts_by_body_part_by_frame": [
+          {
+            "left_knee": 4,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 1,
+            "left_knee": 4,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 2,
+            "left_knee": 4,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 2,
+            "left_knee": 4,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 3,
+            "left_knee": 3,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 2,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 2,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 2,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 2,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 3,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 3,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 3,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 2,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 2,
+            "left_knee": 1,
+            "left_ankle": 1
+          },
+          {
+            "right_hip": 3,
+            "left_knee": 1,
+            "left_ankle": 1
+          }
+        ],
+        "pelvis_contact_frame_indices": [],
+        "final_frame_target_contact_counts": {
+          "right_hip": 3,
+          "left_knee": 1,
+          "left_ankle": 1
+        }
+      }
+    ]
+  }
+]

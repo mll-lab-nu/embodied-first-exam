@@ -1,0 +1,664 @@
+<div align="right"><a href="README_zh.md">中文</a></div>
+
+<div align="center">
+
+# HumanCLAW: Can Vision-Language Models Act<br>Through a Body?
+
+[![arXiv](https://img.shields.io/badge/arXiv-2607.27180-b31b1b.svg?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2607.27180)
+[![Project Page](https://img.shields.io/badge/🌐_Project-Page-1f6feb)](https://human-claw.github.io)
+[![Leaderboard](https://img.shields.io/badge/🏆_Leaderboard-live-2ea44f)](https://human-claw.github.io/#leaderboard)
+
+[![Weights](https://img.shields.io/badge/🤗_Weights-HumanCLAW-ffd21e)](https://huggingface.co/HumanCLAW/HumanCLAW)
+[![Dataset](https://img.shields.io/badge/🤗_Dataset-HumanCLAW--HSSD-ffd21e)](https://huggingface.co/datasets/HumanCLAW/HumanCLAW-HSSD)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
+</div>
+
+<p align="center">
+  <img src="assets/teaser.png" alt="HumanCLAW teaser" width="100%">
+</p>
+
+**HumanCLAW** is an evaluation framework that decouples a VLM's action decision-making from low-level motor execution. At every sub-second step, a harnessed, off-the-shelf VLM issues an atomic whole-body skill; the skill is realized as continuous full-body motion with real physical consequences—contact, collision, and gravity—while balance and motor-tracking failures are factored out. What remains measurable is the model's **action intelligence**: its moment-to-moment choice of what the body should execute next.
+
+On top of the framework, **HumanCLAW-Bench** provides **1,218 long-horizon, egocentric `find–navigate–interact` episodes across 41 indoor scenes**. Across nine state-of-the-art VLMs, none solves the benchmark—the best model reaches only a **16.8%** success rate. What current VLMs lack is **embodied self-awareness**: they lose track of the body they control—where it is, whether it has arrived, and when it has collided with the world.
+
+## 💥 News
+
+- **[2026.08.17]** 🔥 **Full release!** The complete evaluation harness and benchmark code are now open-sourced in this repository.
+- **[2026.08.17]** 🤗 [Motion weights](https://huggingface.co/HumanCLAW/HumanCLAW) and the gated [HSSD supplement](https://huggingface.co/datasets/HumanCLAW/HumanCLAW-HSSD) are now released on Hugging Face.
+- **[2026.07.29]** 📄 Our paper is now accessible at [arXiv:2607.27180](https://arxiv.org/abs/2607.27180).
+
+HumanClawBench evaluates a vision-language model as a full-body agent in 1,218
+find–navigate–interact episodes across 41 HSSD scenes.
+
+Collaborators using this experiment branch: start with the
+[rollout handoff for another GPU server](docs/COAUTHOR_HANDOFF.md) (Chinese)
+for version selection, setup, episode assignment, and result return.
+
+For the LIBERO-Pro comparison of Bare API, Codex, Pi and RoboRSI Frozen, see the
+[implementation and run guide](docs/LIBERO_IMPLEMENTATION.md),
+[adapter change register](docs/LIBERO_ADAPTATIONS.md), and
+[validation evidence](docs/LIBERO_VALIDATION.md).
+
+Release assets:
+
+- Code: <https://github.com/Human-CLAW/HumanCLAW>
+- Motion weights (`paper_fullval_v1`):
+  <https://huggingface.co/HumanCLAW/HumanCLAW>
+- HSSD supplement (gated dataset):
+  <https://huggingface.co/datasets/HumanCLAW/HumanCLAW-HSSD>
+
+## Quick start
+
+After [installation](#install), [HSSD preparation](#prepare-hssd), and
+[motion-weight setup](#install-motion-weights), copy the model-interface
+template and fill in the served model name and endpoint:
+
+```bash
+cp configs/models/vllm_openai_compatible.json my_model.json
+```
+
+Verify the setup with one episode, then choose the fixed 100-episode subset or
+the complete validation split:
+
+```bash
+# One deterministic smoke episode.
+humanclaw-bench run --episodes one --model-config my_model.json \
+  --gpus auto --output outputs/smoke
+
+# Fixed small validation subset.
+humanclaw-bench run --episodes val100 --model-config my_model.json \
+  --gpus auto --workers-per-gpu 1 --metrics --output outputs/val100
+
+# Complete 1,218-episode evaluation.
+humanclaw-bench run --episodes fullval --model-config my_model.json \
+  --gpus auto --workers-per-gpu 1 --metrics --output outputs/fullval
+```
+
+`--gpus auto` uses exactly the devices exposed by `CUDA_VISIBLE_DEVICES` (or
+all detected GPUs when it is unset). For a local VLM server, reserve its GPUs
+when starting the server and pass only the remaining evaluation GPUs here.
+Add `--video` for synchronized ego/exo MP4 files; video and metrics are
+independent. Without `--metrics`, semantic rendering, contact queries, and all
+metric accumulation are disabled.
+
+To run the same one-episode smoke test with the optional finger-separated
+humanoid, first validate the prepared inputs:
+
+```bash
+python examples/run_finger_separated_episode.py \
+  --model-config my_model.json \
+  --dry-run
+```
+
+Remove `--dry-run` to start the rollout. The example uses the standard prepared
+HSSD path, keeps `paper_fullval_v1` and its motion weights, and changes only the
+explicit agent asset to `finger-separated`. Pass `--scene-dataset-config` if
+HSSD was prepared at a different location.
+
+See [the evaluation flow](docs/ARCHITECTURE.md), [metric definitions](docs/METRICS.md),
+[video tools](docs/VIDEOS.md), and [model-interface contract](docs/MODELS.md).
+
+For instrumented runs, add `--trace --metrics --seed 42`. See the
+[experiment pipeline](docs/EXPERIMENTS.md) for model/tool/module traces, token and
+cost accounting and replay. The [Codex/Pi integration guide](docs/NATIVE_HARNESSES.md)
+describes the four-condition experiment, shared environment tools and local checks
+without paid API calls. See the [Klone guide](docs/KLONE_EXPERIMENTS.md) for the Slurm template.
+For a deployer-owned Codex subscription gateway, see the [Magpie setup and validation guide](docs/MAGPIE.md).
+
+## Benchmark difficulty
+
+Every episode carries a difficulty label built from three properties of the
+shortest collision-free route between the spawn point and the goal object:
+the geodesic distance it covers, the number of choice points along it
+(turns plus rooms entered), and the density of obstacles it passes. Each
+property is binned into easy / medium / hard, and the episode label is the
+mean of the three.
+
+<p align="center">
+  <img src="assets/difficulty_distribution.png" alt="HumanCLAW-Bench difficulty distribution" width="100%">
+</p>
+
+Routes are computed on a Recast navmesh rebuilt with every static object
+present, so furniture blocks the way it does at rollout time. All 1,218
+episodes are reachable under this construction.
+
+## Repository contents
+
+```text
+configs/                     rollout and model-adapter configuration
+patches/habitat-sim/         required Habitat-Sim patch
+resources/benchmark/         fixed 1,218-episode split and transparent val100 index
+resources/hssd/              HumanClaw scene and object configuration
+resources/agent/             humanoid runtime assets
+resources/seeds/             deterministic initial humanoid state
+resources/weights/           external-checkpoint manifest
+src/humanclaw_bench/
+  agent/                     planner, verifier, prompts, action schema
+  benchmark/                 episode loading
+  envs/                      Habitat task/runtime integration
+    half_physics/
+      hp.py                  single production Half-Physics controller
+      humanclaw.physics_config.json  Bullet scene/default settings
+  evaluation/evaluator.py    single rollout loop
+  evaluation/trajectory.py   compact replay bundle writer
+  evaluation/metrics/        paper metric definitions and aggregation
+  evaluation/video.py        direct-to-MP4 streaming
+  rendering/                 delayed rendering and ego/exo/reasoning composition
+  motion/                    motion generation and optional training tools
+  vlm/                       model transports
+```
+
+Official HSSD meshes, motion weights, licensed motion datasets, provider
+credentials, and model rollout results are not included. The repository does
+include the motion-training implementation, exact per-skill source-chunk
+lists, and readable reviewed segment times in seconds and milliseconds; see
+[`src/humanclaw_bench/motion/training/README.md`](src/humanclaw_bench/motion/training/README.md).
+The 1,693 instance-specific HSSD baked meshes are a separately versioned,
+gated Hugging Face asset; the repository contains their exact filename, size,
+and SHA-256 manifest. Inference, replay recording, and metric implementations
+are included.
+
+The reported benchmark uses the bundled hand-merged humanoid. An optional
+finger-separated URDF is included for user extensions and can be selected with
+`--agent-asset finger-separated`; omitting the flag leaves the paper profile
+unchanged. See [the asset guide](docs/ASSETS.md).
+
+## Install
+
+Full rollouts require Linux, Python 3.10+, CUDA-compatible PyTorch, patched
+Habitat-Sim with Bullet, authorized HSSD-Hab val data, HumanClaw motion
+checkpoints, and a VLM endpoint or queue worker.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install torch==2.6.0 \
+  --index-url https://download.pytorch.org/whl/cu124
+python -m pip install -c constraints/eval-cu124.txt -e '.[rollout,test]'
+```
+
+The constraint file records the A100/CUDA 12.4 environment validated for this
+release and prevents a future unconstrained PyTorch wheel from silently
+selecting a newer CUDA runtime. For another driver/toolkit combination, install
+its matching PyTorch wheel first and validate `torch.cuda.is_available()`
+before building Habitat-Sim.
+
+Video uses a system `ffmpeg` when available. To install a packaged fallback:
+
+```bash
+python -m pip install -e '.[video]'
+```
+
+Motion training is optional and isolated from evaluation dependencies:
+
+```bash
+python -m pip install -e '.[training]'
+```
+
+Build Habitat-Sim at the pinned revision and apply the bundled patch:
+
+```bash
+git clone https://github.com/facebookresearch/habitat-sim.git
+cd habitat-sim
+git checkout acbe6f4922e68145e401e55c30f9dfea460a3f24
+git submodule update --init --recursive
+git apply --check /absolute/path/to/HumanCLAW/patches/habitat-sim/humanclaw_halfphysics.patch
+git apply /absolute/path/to/HumanCLAW/patches/habitat-sim/humanclaw_halfphysics.patch
+python -m pip install -r requirements.txt
+python setup.py build_ext --inplace --headless --with-cuda --bullet --cache-args
+HEADLESS=True WITH_CUDA=True WITH_BULLET=True python -m pip install -e .
+python -m pip install -e build/deps/magnum-bindings/src/python
+```
+
+The host prerequisites and fixes for OpenGL/EGL development files, recent
+CMake policies, minimal CUDA toolkits, broken `ccache`, and `libgomp.so.1` are
+documented in
+[`patches/habitat-sim/README.md`](patches/habitat-sim/README.md).
+
+## Prepare HSSD
+
+The original HSSD val download should contain:
+
+```text
+/path/to/hssd-hab/
+├── hssd-hab.scene_dataset_config.json
+├── objects/
+├── stages/
+└── semantics/
+```
+
+Prepare it for HumanClawBench:
+
+Request and receive access on the
+[`HumanCLAW/HumanCLAW-HSSD`](https://huggingface.co/datasets/HumanCLAW/HumanCLAW-HSSD)
+page before authenticating. `hf auth login` alone does not grant gated access;
+an authenticated account without approval receives HTTP 403.
+
+```bash
+hf auth login
+humanclaw-bench prepare-hssd --hssd-root /path/to/hssd-hab
+```
+
+The command validates every mesh by size and SHA-256, combines the official
+HSSD assets with the pinned 1,693-mesh HumanClaw supplement, copies the
+HumanClaw scene and per-instance object JSON files, and symlinks the meshes,
+stages, and semantics. On first use it downloads the 79.8 MiB compressed
+supplement from the gated `HumanCLAW/HumanCLAW-HSSD` dataset and stores its
+verified extraction under `~/.cache/humanclaw-bench/assets/`. This preserves
+baked scale fixes and cases that use the render mesh for collision; it does
+not silently substitute an official coarse collider. The original HSSD
+installation is not modified. The default output is
+`data/humanclaw-hssd-val41/`.
+
+To prepare elsewhere:
+
+```bash
+humanclaw-bench prepare-hssd \
+  --hssd-root /path/to/hssd-hab \
+  --output /path/to/humanclaw-hssd-val41
+```
+
+For an offline machine, transfer the HF archive and pass it directly:
+
+```bash
+humanclaw-bench prepare-hssd \
+  --hssd-root /path/to/hssd-hab \
+  --supplement /path/to/humanclaw-hssd-val41-supplement-v1.tar.gz
+```
+
+Then pass its `hssd-hab.scene_dataset_config.json` with
+`--scene-dataset-config` when running an episode.
+
+The benchmark episodes are already final. Each stores the Habitat start pose
+and HumanClaw `init_offset`/`init_yaw`; no spawn-repair overlay is applied at
+runtime.
+
+For a faster development run, pass `--episodes val100` to
+`humanclaw-bench run`. This selects the transparent list at
+`resources/benchmark/val100.json`: a fixed 100-episode, five-scene subset.
+Reported paper results still use all 1,218 episodes.
+
+## Install motion weights
+
+Download the inference-only archive from the HumanCLAW Hugging Face model
+repository and extract it from the parent directory of this source tree:
+
+```bash
+cd ..
+hf download HumanCLAW/HumanCLAW \
+  HumanCLAW_pretrained_weights_paper_fullval_v1_20260816.tar.gz \
+  --local-dir .
+tar -xzf HumanCLAW_pretrained_weights_paper_fullval_v1_20260816.tar.gz
+cd HumanCLAW
+```
+
+Place the distributed checkpoints at the paths pinned by
+`resources/weights/paper_fullval_v1.json`:
+
+```text
+weights/paper_fullval_v1/
+├── README.md
+├── base/motion_dit.pt
+└── skills/
+    ├── walk_forward.pt
+    ├── side_walk.pt
+    ├── step_back.pt
+    ├── turn.pt
+    ├── step_climb_up.pt
+    ├── step_climb_down.pt
+    ├── stand.pt
+    └── sit.pt
+```
+
+These are inference-only states, not the original trainer checkpoints. The
+release removes optimizer/trainer state and repeated frozen bases while
+reconstructing every evaluated model tensor exactly. See the weight README for
+the audited FP32/BF16 base-variant relationship:
+[`weights/paper_fullval_v1/README.md`](weights/paper_fullval_v1/README.md).
+
+Verify bundled assets and weights:
+
+```bash
+humanclaw-bench assets
+humanclaw-bench assets --weights-root weights/paper_fullval_v1
+```
+
+## Configure a VLM
+
+Store credentials in the project-root `.env` file (copy `.env.example` for a
+new checkout). HumanCLAW automatically loads this file, preserving any existing
+environment variables. `.env` is ignored by Git; do not put keys in model JSON.
+For the configured Azure deployment, fill in `AZURE_OPENAI_API_KEY` and check
+the image/JSON interface without starting simulation:
+
+```bash
+humanclaw-bench api-check --model-config configs/models/azure_gpt6_astra.json
+```
+
+For vLLM or another OpenAI-compatible server, copy
+`configs/models/vllm_openai_compatible.json` and set the model, endpoint, and
+model-specific `max_tokens`:
+
+```json
+{
+  "backend": "openai_compatible",
+  "model": "served-model-name",
+  "base_url": "http://127.0.0.1:8100/v1",
+  "api_key_env": "OPENAI_API_KEY",
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "response_format": {"type": "json_object"},
+  "extra_body": {}
+}
+```
+
+For a local vLLM endpoint no key is required; the adapter supplies the
+placeholder expected by OpenAI-compatible servers. For a remote endpoint,
+set the named variable in `.env` or export it in the terminal.
+
+For Azure OpenAI, use `configs/models/azure_openai_o_series.json`. It reads the
+deployment, endpoint, API version, and key from `AZURE_OPENAI_DEPLOYMENT`,
+`AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_API_VERSION`, and
+`AZURE_OPENAI_API_KEY`. The example uses `max_completion_tokens`, omits the
+unsupported temperature request, and selects low reasoning effort for
+o-series deployments. Credentials are never stored in the model JSON.
+
+For a credential-owning external worker, use
+`configs/models/filesystem_queue.json`. The adapter atomically places a request
+under `<queue_dir>/pending/<call_id>/`; the worker returns
+`<queue_dir>/done/<call_id>/response.json` containing at least:
+
+```json
+{"content": "{...model JSON response...}"}
+```
+
+Request images and queue JSON are transport files, not rollout artifacts. They
+are removed after a response is consumed.
+
+## Run one episode
+
+```bash
+humanclaw-bench run \
+  --episodes one \
+  --profile paper_fullval_v1 \
+  --model-config my_model.json \
+  --scene-id 102343992 \
+  --episode-id 0 \
+  --object-category bed \
+  --gpus 0 \
+  --output outputs/example
+```
+
+The planner uses prompt v4 and the verifier uses verifier v3. The selected
+motion action is always the verifier-final action. Stop ends the episode;
+otherwise the rollout ends at 100 environment steps.
+
+For a bounded provider-to-simulator smoke test, the single-episode `rollout`
+command accepts `--max-steps`. This changes only that invocation and does not
+alter the release profile:
+
+```bash
+humanclaw-bench rollout \
+  --profile paper_fullval_v1 \
+  --model-config configs/models/azure_openai_o_series.json \
+  --scene-id 102343992 \
+  --episode-id 0 \
+  --object-category bed \
+  --device cuda \
+  --max-steps 1 \
+  --video \
+  --output-root outputs/azure_smoke
+```
+
+Each planner or verifier stage retries provider and JSON-parsing failures at
+the current simulator state, up to five attempts. After five failed planner
+attempts, the agent executes one `Walk<forward><slow>` and replans from the new
+observation. Five failed verifier attempts accept the valid planner proposal.
+Neither case restarts the episode.
+
+The files created by a default rollout are:
+
+```text
+outputs/example/
+└── <scene_id>_ep<episode_id>_<category>/
+    └── rollout_00/
+        ├── step000_percept_mid_low.json
+        ├── step000_verifier.json       # only when verifier was called
+        ├── step001_percept_mid_low.json
+        ├── ...
+        ├── trajectory_before.npz
+        ├── trajectory_after.npz
+        └── replay_manifest.json
+```
+
+Each file contains exactly the VLM prompt and final parsed response for that
+logical stage. An `error` field appears only when all attempts for that stage
+failed.
+
+`trajectory_before.npz` contains only the world-frame `xb_world_75` chunks
+actually passed to HalfPhysics, action/step boundaries, fps, and the exact
+initial humanoid and dynamic-object poses and velocities needed to start a
+forward replay. The unused 219-D internal motion feature is not duplicated.
+`trajectory_after.npz` contains the corresponding simulated humanoid pose and
+every dynamic object's position and rotation at every physics frame.
+`replay_manifest.json` pins the episode, physics parameters, critical asset
+hashes, and both NPZ hashes. No duplicate `trajectory.npz` is written.
+
+### Save videos
+
+```bash
+humanclaw-bench run \
+  --episodes one \
+  --model-config my_model.json \
+  --gpus 0 \
+  --video \
+  --output outputs/example_video
+```
+
+This adds `ego.mp4` and `exo.mp4`. Both contain the post-reset frame followed
+by every simulated motion frame at 30 fps. Frames are piped directly to H.264;
+there is no temporary image directory or second encoding pass. Video mode does
+not enable semantic rendering, contact queries, or metrics.
+
+### Render a saved trajectory after rollout
+
+A completed rollout already records the post-physics humanoid pose and every
+dynamic object's pose in `trajectory_after.npz`, so video does not require a
+second physics replay. The delayed renderer loads the scene once, restores
+those poses frame by frame, updates the ego/exo cameras, and streams RGB
+directly to two MP4 encoders:
+
+```bash
+humanclaw-bench render \
+  --rollout-dir outputs/example/102343992_ep0_bed/rollout_00 \
+  --output-dir outputs/example_rendered
+```
+
+This writes only `ego.mp4`, `exo.mp4`, and `render_report.json`. It makes zero
+VLM calls, motion-generation calls, physics steps, contact queries, and
+semantic renders. Habitat initializes its scene and articulated-object runtime
+because those objects are needed for pose assignment and rasterization, but
+simulation time is never advanced. The default `veryfast` H.264 preset favors
+throughput; use `--preset medium --crf 18` to match the online encoder settings.
+
+Render a complete output tree with isolated Habitat/OpenGL processes:
+
+```bash
+humanclaw-bench render-batch \
+  --input-root outputs/fullval \
+  --output-root outputs/fullval_rendered \
+  --max-parallel 8 \
+  --devices 0,1
+```
+
+To combine existing ego/exo streams with the exact saved per-step model text:
+
+```bash
+humanclaw-bench compose-video \
+  --rollout-dir outputs/example/EPISODE/rollout_00
+```
+
+Use `compose-video-batch` for a parallel output tree. This presentation pass
+does not load Habitat, physics, a motion model, or a VLM. See
+[docs/VIDEOS.md](docs/VIDEOS.md).
+
+The output preserves each rollout's relative directory. Process isolation is
+intentional because Habitat/OpenGL contexts are not shared between threads.
+For a modified trajectory, pass a JSONL manifest instead of `--input-root`;
+each row contains `episode_key`, `rollout_dir`, and optional `trajectory_path`.
+
+### Compute the paper metrics
+
+```bash
+humanclaw-bench run \
+  --episodes one \
+  --model-config my_model.json \
+  --gpus 0 \
+  --metrics \
+  --output outputs/example_metrics
+```
+
+This adds exactly one `metrics.json`. During rollout, one semantic observation
+is reused for FindSR and one contact query per physics frame is shared by
+Collision, InteractSR, and disturbance. Motion Jerk reads the already-recorded
+pre-physics trajectory at episode end. No contact replay is performed and no
+intermediate metric artifact is saved.
+
+To summarize any completed output tree, including a parent directory that
+contains multiple distributed-run shards, run:
+
+```bash
+humanclaw-bench metrics outputs/fullval
+```
+
+This recursively reads the per-episode `metrics.json` files and prints the
+paper main table, success variants, collision body groups, and denominators.
+It performs no VLM call, simulation, rendering, or replay, and is read-only by
+default. Add `--json` for the complete machine-readable summary. Add
+`--write-json` to also save `outputs/fullval/metrics_summary.json`.
+
+The reported fields match the paper:
+
+- FindSR requires at least 100 target semantic pixels in the same ego image
+  used for a VLM decision and a non-negated target acknowledgement in that
+  decision's `visible_state`. GeoFindSR uses pixels only.
+- NavSR@20cm requires an active Stop and final minimum 3D distance from
+  any body joint to a target AABB of at most 0.2 m. GeoNavSR@20cm omits the
+  stop requirement. NavSR@1m uses active stop and distance below 1 m.
+- InteractSR applies to bed/couch/toilet episodes. It requires at least one Sit,
+  an active stop, and pelvis-to-target mesh contact on the final frame of the
+  last motion before the stop. GeoInteractSR asks whether the final frame of
+  any Sit decision made that mesh contact.
+- Collisions inspect the realized post-physics pose at 30 Hz and count
+  fixed-geometry contacts more than 0.0205 m above the episode's spawn floor.
+  The score is the fraction of motion decision steps with a collision.
+- Disturbance counts dynamic objects affected directly by the humanoid or
+  indirectly through a time-ordered dynamic-object contact chain. Distance is
+  affected-object path length, pooled over mapped affected objects.
+- Motion Jerk uses the generated pre-physics root-rigid trajectory, neutral
+  22-joint body, centered moving average 3, and stride 8 at 30 fps. The exact
+  pelvis-relative neutral joint constants are included in
+  `resources/metrics/smpl_neutral_body22.json`.
+- Cost reports decision steps and provider token usage per step. Hidden
+  reasoning is excluded from visible output tokens. If a provider omits usage,
+  the file explicitly labels the character-based fallback as estimated.
+
+Initial human penetration is marked in `metrics.json` for diagnosis, but no
+episode is excluded: collision, disturbance, and jerk all use the complete
+1,218-episode split. See [docs/METRICS.md](docs/METRICS.md) for exact data flow.
+
+The two flags can be combined. In that case the same sensor render at each
+physics frame supplies video RGB and semantic data while the metric path still
+writes only `metrics.json`.
+
+## Select episodes and GPUs
+
+```bash
+humanclaw-bench run \
+  --episodes fullval \
+  --model-config my_model.json \
+  --gpus 0,1,2,3 \
+  --workers-per-gpu 2 \
+  --metrics \
+  --resume \
+  --output outputs/fullval
+```
+
+The command above runs at most eight independent episode processes and balances
+them over four GPUs. Use one worker per GPU first; increase it only when the
+available memory can hold multiple motion runtimes. `--episodes` accepts
+`one`, `val100`, `fullval`, or a custom JSON episode-list path. Metric mode
+writes one `metrics_summary.json` after all episodes finish.
+
+## Validate the source release
+
+```bash
+humanclaw-bench config paper_fullval_v1
+pytest -q
+```
+
+For a real runtime check after preparing HSSD, run the manual integration
+smoke below in an environment with Habitat-Sim and ffmpeg:
+
+```bash
+PYTHONPATH=src python tests/runtime_habitat_smoke.py \
+  --output /tmp/humanclaw_habitat_smoke
+```
+
+It uses one fixed episode and 25 stationary requested frames, so it needs no
+VLM credentials or motion weights. It validates scene and target loading,
+HalfPhysics, contacts, dynamic-object trajectories, both MP4 streams, and the
+single final metrics artifact.
+
+The smaller controller-contract check needs Habitat/Magnum bindings but no
+scene data or renderer:
+
+```bash
+PYTHONPATH=src python tests/runtime_hp_contract.py
+```
+
+It directly verifies the four substeps, root x/z writes on substeps 0 and 2,
+one-time root-angular write, 30-degree-per-frame cap, and pre-limit PJSC target.
+
+To verify that a real saved motion can reproduce its post-physics trajectory,
+run one or all recorded action chunks through the same environment:
+
+```bash
+PYTHONPATH=src python tests/runtime_forward_replay.py \
+  outputs/<run>/<scene_id>_ep<episode_id>_<category>/rollout_00 \
+  --max-steps 1
+```
+
+The check restores the saved human and every dynamic-object pose/velocity,
+advances Half-Physics from `trajectory_before.npz`, and compares every frame
+with `trajectory_after.npz`. It also reproduces the original pre-motion metric
+contact query when that execution path is recorded in the replay manifest.
+Use `--max-steps 0` for the complete trajectory.
+
+See `docs/ASSETS.md`, `docs/ARCHITECTURE.md`, `docs/METRICS.md`, and
+`docs/MODELS.md` for the asset, execution, metric, and provider contracts.
+
+## License
+
+This release (code, configuration, and bundled resources) is licensed under the
+[Apache License 2.0](LICENSE); see [NOTICE](NOTICE) for attribution. The motion
+weights and HSSD supplement distributed on Hugging Face carry the same license.
+Official HSSD data remains subject to its own license and access terms.
+
+## 📌 Citation
+
+If you find HumanCLAW useful, please cite:
+
+```bibtex
+@article{siyao2026humanclaw,
+  title   = {HumanCLAW: Can Vision-Language Models Act Through a Body?},
+  author  = {Siyao, Li and Gu, Jiawei and Liu, Shuai and Hu, Kairui and Li, Zekun and
+             Li, Linjie and Tang, Chengcheng and Wu, Po-Chen and Shugurov, Ivan and
+             Ma, Lingni and Zollhoefer, Michael and An, Sizhe and Mittal, Abhay and
+             Zhao, Amy and Krishna, Ranjay and Li, Manling and Liu, Ziwei and Guo, Chuan},
+  journal = {arXiv preprint arXiv:2607.27180},
+  year    = {2026}
+}
+```
