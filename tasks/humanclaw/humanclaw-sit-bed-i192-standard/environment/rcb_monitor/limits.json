@@ -1,0 +1,27 @@
+{
+ "agent_timeout_sec": 3600,
+ "caps": {
+  "main": {
+   "cpus": 4.0,
+   "disk_gb": 10.0,
+   "memory_gb": 3.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 8.0,
+   "gpu_memory_gb": 5.0,
+   "memory_gb": 6.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "standard",
+ "scope_services": [
+  "main"
+ ],
+ "task": "humanclaw-sit-bed-i192-standard",
+ "tick_sec": 5
+}

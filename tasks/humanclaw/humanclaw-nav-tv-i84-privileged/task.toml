@@ -1,0 +1,49 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/output/"]
+
+[task]
+name = "embodied-first-exam/humanclaw-nav-tv-i84-privileged"
+description = "HumanCLAW find-navigate (TV), one frozen HSSD episode: produce one replayable trajectory of at most 100 motion skills for a simulated human body. Find the TV and move until your body is touching the target, with zero distance to the target object."
+keywords = ["robotics", "humanclaw", "habitat-sim", "humanoid", "navigation", "code-as-policy", "trajectory", "tv"]
+
+[metadata]
+task_type = "trajectory"
+simulator = "humanclaw"
+robot = "smplx-human"
+family = "nav-tv"
+dynamics = "static"
+oracle = "none"
+oracle_evidence = "none: no reference solution searched for this episode yet (the navmesh oracle ran on 120 of the 1,218 canonical episodes); human review (PROTOCOL §4)"
+instance_seed = 0
+expert_time_estimate_hours = 0.5
+
+[verifier]
+timeout_sec = 4200.0              # two fresh-process replays at tests/grade.py's limit (1800 s each) + 600 s
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resources (PROTOCOL §6): seal the monitor's record first.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+[agent]
+timeout_sec = 3600.0
+network_mode = "allowlist"      # HumanCLAW's public repository holds recorded rollouts of these episodes (tasks/humanclaw/README.md)
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 5400.0
+cpus = 6
+memory_mb = 8192
+storage_mb = 10240
+
+[verifier.environment]
+build_timeout_sec = 5400.0
+cpus = 8
+memory_mb = 5120
+storage_mb = 10240
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

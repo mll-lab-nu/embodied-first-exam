@@ -1,0 +1,67 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/trajectory_live.f64", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/calls/", service = "sim" },
+  { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "embodied-first-exam/humanclaw-nav-potted-plant-i107-standard"
+description = "HumanCLAW find-navigate (potted plant), standard mode: Find the potted plant and move until your body is touching the target, with zero distance to the target object. A client with the head camera, actions used / left and the pelvis height change; one episode, no reset; graded by the live episode."
+keywords = ["robotics", "humanclaw", "habitat-sim", "humanoid", "navigation", "standard-mode", "trajectory", "potted_plant"]
+
+[metadata]
+task_type = "trajectory"
+simulator = "humanclaw"
+robot = "smplx-human"
+family = "nav-potted-plant"
+dynamics = "static"
+protocol = "eai-standard/2.1"
+instance_seed = 0
+expert_time_estimate_hours = 0.5
+oracle = "none"
+oracle_evidence = "none: no reference solution searched for this episode yet (the navmesh oracle ran on 120 of the 1,218 canonical episodes); human review (PROTOCOL §4)"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resources (PROTOCOL §6): seal the monitor's record first.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running in its container.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: the sim service grades the live episode, then renders the video.
+[[verifier.collect]]
+service = "sim"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+timeout_sec = 900
+
+[agent]
+timeout_sec = 3600.0
+network_mode = "allowlist"      # HumanCLAW's public repository holds recorded rollouts of these episodes (tasks/humanclaw/README.md)
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 5400.0
+cpus = 4
+memory_mb = 3072
+storage_mb = 10240
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

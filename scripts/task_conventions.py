@@ -107,6 +107,7 @@ BENCHMARK_TABLE = [
     ("autobio-", "AutoBio", "autobio"),
     ("abc-sim-", "ABC Sim", "abc-sim"),
     ("embodiedswe-", "EmbodiedSWE", "embodiedswe"),
+    ("humanclaw-", "HumanCLAW", "humanclaw"),  # find / navigate / sit with a simulated human body (HumanClawBench)
 ]
 BENCHMARKS = [(p, label) for p, label, _ in BENCHMARK_TABLE]   # (directory prefix, label): the first matching prefix wins
 # Modes (PROTOCOL §3): a benchmark ships any subset of the modes. A standard or standard-realtime
@@ -271,7 +272,7 @@ CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_CAP = 14400                               # PROTOCOL §2, no benchmark excepted (ci_checks/check-cutoffs.py)
 # The repository's task tree: one folder per benchmark, tasks/<folder>/<task>/ (a task dir's name says its benchmark,
-# bench_of; GitHub lists at most 1000 entries of a folder). The folder of each label: BENCHMARK_TABLE's third column.
+# bench_of; at most FOLDER_MAX entries a folder). The folder of each label: BENCHMARK_TABLE's third column.
 # Everything that finds a task dir in the repository goes through task_dir() / iter_tasks(); `benchmarks --check` holds
 # the tree to it.
 TASKS_DIR = Path(__file__).resolve().parents[1] / "tasks"
@@ -394,7 +395,8 @@ def iter_tasks(tasks_dir: "Path | str | None" = None) -> list[Path]:
 
 TASKS_TOP_FILES = ("README.md", "dataset.toml")   # tasks/ holds the benchmark folders and these (dataset.toml: generated)
 BENCH_DOC_SUFFIXES = (".md", ".png")              # a benchmark folder's own pages (README.md, <topic>.md) and their figures
-FOLDER_MAX = 1000                                 # GitHub's web UI lists at most this many entries of a folder
+FOLDER_MAX = 5000                                 # entries of one benchmark folder at most (GitHub's web UI lists the
+                                                  # first 1000; the rest are reached by path or the file finder)
 
 
 def check_layout(tasks_dir: Path | None = None) -> list[str]:
@@ -418,7 +420,7 @@ def check_layout(tasks_dir: Path | None = None) -> list[str]:
             continue
         entries = sorted(p.iterdir())
         if len(entries) > FOLDER_MAX:
-            bad.append(f"tasks/{p.name}: {len(entries)} entries, over {FOLDER_MAX} (GitHub lists no more)")
+            bad.append(f"tasks/{p.name}: {len(entries)} entries, over {FOLDER_MAX} (task_conventions.FOLDER_MAX)")
         for t in entries:
             if t.is_file() and t.suffix in BENCH_DOC_SUFFIXES:
                 continue                     # the benchmark's pages, not task dirs
@@ -1518,6 +1520,11 @@ BEFORE_YOU_RUN = {
     "YAMLab": ("Before you run", "", f"Builds its image ({ISAAC}): about 25 min, 60 GB free disk."),
     "LabUtopia": ("Before you run", "",
                   f"Builds its image ({ISAAC}; LabUtopia's assets are CC BY-NC 4.0): about 25 min, 90 GB free disk."),
+    "HumanCLAW": ("Before you run",
+                  "Without access to the organization's packages: request access to the gated Hugging Face dataset "
+                  "`HumanCLAW/HumanCLAW-HSSD`, accept the `hssd/hssd-hab` terms, export `HF_TOKEN` and build its "
+                  "image once (HSSD is CC BY-NC 4.0; the body model and motion weights carry SMPL-X / AMASS research "
+                  "terms): about 30 min, 40 GB free disk.", ""),
     "AutoBio": ("Before you run", "",
                 "Builds its image from AutoBio's repository, which states no licence (CPU only): a few minutes, 3 GB free disk."),
 }

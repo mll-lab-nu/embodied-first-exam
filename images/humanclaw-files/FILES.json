@@ -1,0 +1,11 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:humanclaw-files-0.1.0@sha256:8e01e30979d38d60b34e7ce6994b536528fbba4a6018ca4f7cb00b876f21bcfe",
+ "source": "embodied_first_exam/benchmarks/humanclaw",
+ "files": {
+  "grade_privileged.py": "79b9b1e7a1225d4e64a9f5babd6fb9e2175ef1d2937ab69c1748168bc38e1667",
+  "hc_core.py": "8b21b45ae65b07536c5eb8da8e4e1bf270a590a8cadb87aef52e4cf28a3675d0",
+  "hc_tools.py": "1c94dae0ed17c4dad88345be4b62e7c874b9af81b56a8d40edcc9b5f1bea990a",
+  "rcb_service.py": "260821609201c36dbfb1be9cf528b82573d8364fe6f7839c7d11db6a852a7c20",
+  "server.py": "a761039b52758f5341d2ed9d6510e51e7ef27ac23b50a638826c607b8f203d5c"
+ }
+}

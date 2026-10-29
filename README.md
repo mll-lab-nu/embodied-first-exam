@@ -88,7 +88,7 @@ Nine of the suites were written for this exam:
 ### Before you run
 
 - **Host:** Linux x86_64 with git, [uv](https://docs.astral.sh/uv/) (it fetches a Python 3.12-3.14 for Harbor if needed) and Docker Engine with Compose v2 and BuildKit (the `buildx` plugin). Without Docker, e.g. on a Slurm cluster: rootless podman with `-e podman` ([docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).
-- **GPU:** the NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for every task that uses a GPU. An RTX-class GPU (with RT cores; not A100 or H100): AM-Bench, BEHAVIOR-1K, EmbodiedSWE, iSpatialGym, LabUtopia, ManiGuard, RoboARC, RoboDojo, RoboLab, YAMLab. Any NVIDIA GPU: ABC Sim, BiGym 2.0, DexToolBench, MolmoSpaces, Panda Dynamic Scenes, RoboPaint, RoboTwin 2.0, RoboWits. Some tasks: Embodied Olympics - Fun, Embodied Olympics - Match, HumanoidBench, KinDER, MuJoCo Playground, MyoSuite, roboEngineer. No GPU: AutoBio, DexHand, DexJoCo, Embodied Safety Exam, LIBERO-MAX, MetaWorld+, RoboCasa, RoboCasa-GR1, RoboCasa365, VLABench.
+- **GPU:** the NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for every task that uses a GPU. An RTX-class GPU (with RT cores; not A100 or H100): AM-Bench, BEHAVIOR-1K, EmbodiedSWE, iSpatialGym, LabUtopia, ManiGuard, RoboARC, RoboDojo, RoboLab, YAMLab. Any NVIDIA GPU: ABC Sim, BiGym 2.0, DexToolBench, HumanCLAW, MolmoSpaces, Panda Dynamic Scenes, RoboPaint, RoboTwin 2.0, RoboWits. Some tasks: Embodied Olympics - Fun, Embodied Olympics - Match, HumanoidBench, KinDER, MuJoCo Playground, MyoSuite, roboEngineer. No GPU: AutoBio, DexHand, DexJoCo, Embodied Safety Exam, LIBERO-MAX, MetaWorld+, RoboCasa, RoboCasa-GR1, RoboCasa365, VLABench.
 - **Disk:** a benchmark's public images take 1-30 GB, pulled on its first run; a benchmark that builds its image needs the free disk its row below states.
 - **API keys** for the agent's model in `.env` (step 1), or a subscription (step 3).
 
@@ -99,6 +99,7 @@ These benchmarks need a step by hand, or build their image on their first run be
 | [AM-Bench](tasks/ambench/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): about 25 min, 60 GB free disk. |
 | [AutoBio](tasks/autobio/README.md#before-you-run) | - | Builds its image from AutoBio's repository, which states no licence (CPU only): a few minutes, 3 GB free disk. |
 | [BEHAVIOR-1K](tasks/behavior-1k/README.md#before-you-run) | Download the BEHAVIOR dataset (its downloader asks you to accept the BEHAVIOR Data Bundle licence; about 32 GB, 40 GB on disk) and export `RCB_BEHAVIOR_DATA`. | Builds its image (accepts NVIDIA's Isaac Sim terms): about 20 min, 30 GB free disk. |
+| [HumanCLAW](tasks/humanclaw/README.md#before-you-run) | Without access to the organization's packages: request access to the gated Hugging Face dataset `HumanCLAW/HumanCLAW-HSSD`, accept the `hssd/hssd-hab` terms, export `HF_TOKEN` and build its image once (HSSD is CC BY-NC 4.0; the body model and motion weights carry SMPL-X / AMASS research terms): about 30 min, 40 GB free disk. | - |
 | [iSpatialGym](tasks/ispatialgym/README.md#before-you-run) | The BEHAVIOR-1K dataset, `RCB_BEHAVIOR_DATA` (the same directory). | Builds its image (accepts NVIDIA's Isaac Sim terms): about 20 min, 31 GB free disk. |
 | [LabUtopia](tasks/labutopia/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms; LabUtopia's assets are CC BY-NC 4.0): about 25 min, 90 GB free disk. |
 | [LIBERO-MAX](tasks/libero-max/README.md#task-definition) | A CPU with AVX-512 (Intel Ice Lake or newer Xeon, AMD Zen 4 or newer). | - |
@@ -141,7 +142,7 @@ harbor run -d embodied-first-exam --privileged -a codex -m openai/gpt-6-astra
 ```
 
 ```bash
-# every task: 2272 task dirs (1161 tasks in their modes, 35 benchmarks)
+# every task: 4708 task dirs (2379 tasks in their modes, 36 benchmarks)
 harbor run -d embodied-first-exam@all -a codex -m openai/gpt-6-astra
 ```
 

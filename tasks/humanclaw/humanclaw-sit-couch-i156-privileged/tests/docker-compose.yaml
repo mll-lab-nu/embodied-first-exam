@@ -1,0 +1,13 @@
+# The verifier replays on HumanCLAW, which needs the GPU (EGL + CUDA).
+services:
+  main:
+    x-gpu-memory-gb: 8   # GiB   # rcb-monitor
+    pids_limit: 1024
+    shm_size: "4gb"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
