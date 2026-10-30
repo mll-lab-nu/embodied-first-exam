@@ -92,6 +92,7 @@ BENCHMARK_TABLE = [
     ("robocasa-", "RoboCasa", "robocasa"),
     ("robocasa365-", "RoboCasa365", "robocasa365"),
     ("libero-max-", "LIBERO-MAX", "libero-max"),
+    ("tactilelab-", "TactileLab", "tactilelab"),
     ("roboarc-", "RoboARC", "roboarc"),  # with its IKEA furniture-assembly suite, roboarc-ikea-<item>-i00 (tasks/roboarc/README.md)
     ("bigym2-", "BiGym 2.0", "bigym2"),
     ("yamlab-", "YAMLab", "yamlab"),
@@ -1518,6 +1519,10 @@ BEFORE_YOU_RUN = {
     "YAMLab": ("Before you run", "", f"Builds its image ({ISAAC}): about 25 min, 60 GB free disk."),
     "LabUtopia": ("Before you run", "",
                   f"Builds its image ({ISAAC}; LabUtopia's assets are CC BY-NC 4.0): about 25 min, 90 GB free disk."),
+    "TactileLab": ("Before you run",
+                   "An RTX-class GPU, an L40S recommended (its instances were frozen on one: another model may not "
+                   "rebuild them exactly, which ends a run as infrastructure), driver 580.x.",
+                   f"Builds its image ({ISAAC}): a 31 GB image, 70 GB free disk."),
     "AutoBio": ("Before you run", "",
                 "Builds its image from AutoBio's repository, which states no licence (CPU only): a few minutes, 3 GB free disk."),
 }
@@ -1530,6 +1535,17 @@ def before_you_run_link(lab: str) -> tuple[str, str]:
     head = BEFORE_YOU_RUN[lab][0]
     f, _, h = head.rpartition("#")
     return (f, h) if f else (f"tasks/{BENCHMARK_DIRS[lab]}/README.md", head)
+
+
+# Benchmarks whose shared-files pull request comes before their tasks pull request (CONTRIBUTING): until the tasks
+# arrive, their BEFORE_YOU_RUN row is not rendered or link-checked and ci_scope does not check their UNITS paths. The
+# tasks pull request empties its label from this set; a label listed here whose task folder is in the tree is an error.
+PENDING_BENCHMARKS: set[str] = {"TactileLab"}
+
+
+def before_you_run_listed(lab: str, tasks_dir: Path | None = None) -> bool:
+    """A BEFORE_YOU_RUN row is rendered (and its link checked) unless the benchmark is in PENDING_BENCHMARKS."""
+    return lab not in PENDING_BENCHMARKS
 
 
 def gh_anchor(heading: str) -> str:
@@ -1545,6 +1561,10 @@ def check_before_you_run(tasks_dir: Path | None = None) -> list[str]:
         if lab not in BENCHMARK_DIRS:
             bad.append(f"{lab}: not a benchmark label")
             continue
+        if not before_you_run_listed(lab, tasks_dir):
+            if (tasks_dir / BENCHMARK_DIRS[lab]).is_dir():
+                bad.append(f"{lab}: in PENDING_BENCHMARKS, but tasks/{BENCHMARK_DIRS[lab]}/ is in the tree: remove it from the set")
+            continue   # its tasks (and its README) come with its tasks pull request
         f, head = before_you_run_link(lab)
         heads = {gh_anchor(m) for m in re.findall(r"^#+ (.+)$", read_text(tasks_dir.parent / f) or "", re.M)}
         if gh_anchor(head) not in heads:
@@ -1589,6 +1609,8 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
     g = gpu_classes(tasks_dir)
     rows = []
     for lab, (_, hand, first) in sorted(BEFORE_YOU_RUN.items(), key=lambda kv: kv[0].lower()):
+        if lab in BENCHMARK_DIRS and not before_you_run_listed(lab, tasks_dir):
+            continue
         f, head = before_you_run_link(lab)
         rows.append(f"| [{lab}]({f}#{gh_anchor(head)}) | {hand or '-'} | {first or '-'} |")
     return "\n".join([
