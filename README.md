@@ -214,7 +214,7 @@ upstream experts and the contents of the base images keep their own licenses.
 ```bibtex
 @misc{embodiedfirstexam2026,
   title        = {Embodied First Exam},
-  author       = {Kangrui Wang*§ and Qineng Wang*§ and Changhe Chen*§ and Pingyue Zhang*§ and Chi Gui*§ and Feishi Wang§ and Canyu Chen§ and Wenli Xiao§ and Xiaoyu Huang§ and Tonghe Zhang§ and Linjie Li§ and Zihan Wang and Minyeong Kim and Yiyou Sun and Mingkai Deng and Jinyu Hou and Eric P. Xing and Han Liu and Qi Zhu and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Dawn Song and Pieter Abbeel and Jiajun Wu and Yuke Zhu and Guanya Shi† and Ruohan Zhang† and Manling Li†},
+  author       = {Kangrui Wang*§ and Qineng Wang*§ and Changhe Chen*§ and Pingyue Zhang*§ and Chi Gui*§ and Feishi Wang§ and Canyu Chen§ and Wenli Xiao§ and Xiaoyu Huang§ and Tonghe Zhang§ and Linjie Li§ and Zihan Wang and Minyeong Kim and Yiyou Sun and Mingkai Deng and Jinyu Hou and Eric P. Xing and Han Liu and Qi Zhu and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Dawn Song and Pieter Abbeel and Li Fei-Fei and Jiajun Wu and Yuke Zhu and Guanya Shi† and Ruohan Zhang† and Manling Li†},
   year         = {2026},
   url          = {https://www.embodied-first-exam.ai}
 }
