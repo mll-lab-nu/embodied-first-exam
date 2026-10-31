@@ -716,58 +716,6 @@ task = "ese-f11-i00"
 default_mode = "standard"
 
 [[task]]
-task = "embodiedswe-assembly-bulb-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-assembly-ikea-table-bimanual-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-assembly-pc-gpu-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-assembly-pc-gpu-ram-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-assembly-pc-motherboard-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-assembly-so101-bimanual-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-cutting-dice-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-packing-egg-carton-g1-pink-ik-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-packing-tool-packing-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-puzzle-coffee-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-puzzle-spatula-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-puzzle-stack-blocks-g1-pink-ik-i00"
-default_mode = "standard"
-
-[[task]]
-task = "embodiedswe-puzzle-syringe-bimanual-franka-osc-i00"
-default_mode = "standard"
-
-[[task]]
 task = "humanoidbench-loco-balance-hard-i00"
 default_mode = "standard-realtime"
 
