@@ -380,6 +380,21 @@ def sanitize(name: str) -> str:
     return re.sub(r"[^a-z0-9_-]", "-", name)
 
 
+def parse_inspect(out: str) -> dict[str, str]:
+    """IP -> compose project of a trial's main container, from `docker inspect` lines "<project> <ip> <ip>...". A line
+    that does not fit (blank: no compose label and no network; a project but no address) is skipped, never fatal."""
+    projects = {}
+    for line in out.splitlines():
+        fields = line.split()
+        if not fields:
+            continue
+        proj, *ips = fields
+        if proj.endswith("__env"):
+            for ip in ips:
+                projects[ip] = proj[: -len("__env")]
+    return projects
+
+
 class Trials:
     """Source IP -> trial directory, from docker's compose labels. Docker reuses subnets and addresses once a trial's
     network is gone, so a mapping is trusted for TTL seconds only and every scan replaces the whole table; a new trial
@@ -397,16 +412,15 @@ class Trials:
             return
         fmt = '{{index .Config.Labels "com.docker.compose.project"}}{{range .NetworkSettings.Networks}} {{.IPAddress}}{{end}}'
         out = subprocess.run(["docker", "inspect", "-f", fmt, *ids], capture_output=True, text=True, timeout=30).stdout
-        projects = {}
-        for line in out.splitlines():
-            proj, *ips = line.split()
-            if proj.endswith("__env"):
-                for ip in ips:
-                    projects[ip] = proj[: -len("__env")]
+        projects = parse_inspect(out)
         dirs = {}
         for job in self.jobs.iterdir():
             if job.is_dir() and not job.name.startswith("."):
-                for trial in job.iterdir():
+                try:
+                    trials = list(job.iterdir())
+                except OSError:                  # a job dir removed mid-scan: skip it, keep the others
+                    continue
+                for trial in trials:
                     if trial.is_dir() and "__" in trial.name:
                         dirs[sanitize(trial.name)] = trial
         self.by_ip = {ip: dirs[proj] for ip, proj in projects.items() if proj in dirs}
