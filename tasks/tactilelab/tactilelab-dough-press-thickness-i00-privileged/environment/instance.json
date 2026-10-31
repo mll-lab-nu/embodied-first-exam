@@ -1,0 +1,11 @@
+{
+ "task": "dough_press_thickness",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "489487487e67016740ed9fc502e31aa7ae7446d4",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

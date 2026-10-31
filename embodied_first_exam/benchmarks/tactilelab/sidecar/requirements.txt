@@ -1,0 +1,4 @@
+# Newton sidecar environment (Python 3.12).  Install into its own virtual environment, never into the Isaac Sim one.
+newton>=1.7
+warp-lang>=1.17
+numpy

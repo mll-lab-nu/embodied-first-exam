@@ -1,0 +1,11 @@
+{
+ "task": "cable_route_channel",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "67ac658d054b438af99345d80389be3b8a55b0ba",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

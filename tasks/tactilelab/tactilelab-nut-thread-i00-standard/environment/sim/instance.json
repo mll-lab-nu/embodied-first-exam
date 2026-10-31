@@ -1,0 +1,11 @@
+{
+ "task": "nut_thread",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "5fdd9b244ae58ea266f228cfc3da39535ba9495d",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

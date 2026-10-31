@@ -1,0 +1,11 @@
+{
+ "task": "cable_slack_reduce",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "8f23fd780b69b127abc4a4690b1fc982d1af3458",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

@@ -1,0 +1,19 @@
+{
+    "insertion_axis": {
+        "tail_local": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "head_local": [
+            0.0,
+            0.0,
+            -0.053
+        ]
+    },
+    "grasp_mid_local": [
+        0.0,
+        0.0,
+        0.038
+    ]
+}

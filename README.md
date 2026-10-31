@@ -88,7 +88,7 @@ Nine of the suites were written for this exam:
 ### Before you run
 
 - **Host:** Linux x86_64 with git, [uv](https://docs.astral.sh/uv/) (it fetches a Python 3.12-3.14 for Harbor if needed) and Docker Engine with Compose v2 and BuildKit (the `buildx` plugin). Without Docker, e.g. on a Slurm cluster: rootless podman with `-e podman` ([docs/protocol/running.md](docs/protocol/running.md#without-docker-rootless-podman-eg-a-slurm-cluster)).
-- **GPU:** the NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for every task that uses a GPU. An RTX-class GPU (with RT cores; not A100 or H100): AM-Bench, BEHAVIOR-1K, EmbodiedSWE, iSpatialGym, LabUtopia, ManiGuard, RoboARC, RoboDojo, RoboLab, YAMLab. Any NVIDIA GPU: ABC Sim, BiGym 2.0, DexToolBench, MolmoSpaces, Panda Dynamic Scenes, RoboPaint, RoboTwin 2.0, RoboWits. Some tasks: Embodied Olympics - Fun, Embodied Olympics - Match, HumanoidBench, KinDER, MuJoCo Playground, MyoSuite, roboEngineer. No GPU: AutoBio, DexHand, DexJoCo, Embodied Safety Exam, LIBERO-MAX, MetaWorld+, RoboCasa, RoboCasa-GR1, RoboCasa365, VLABench.
+- **GPU:** the NVIDIA driver and the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for every task that uses a GPU. An RTX-class GPU (with RT cores; not A100 or H100): AM-Bench, BEHAVIOR-1K, EmbodiedSWE, iSpatialGym, LabUtopia, ManiGuard, RoboARC, RoboDojo, RoboLab, TactileLab, YAMLab. Any NVIDIA GPU: ABC Sim, BiGym 2.0, DexToolBench, MolmoSpaces, Panda Dynamic Scenes, RoboPaint, RoboTwin 2.0, RoboWits. Some tasks: Embodied Olympics - Fun, Embodied Olympics - Match, HumanoidBench, KinDER, MuJoCo Playground, MyoSuite, roboEngineer. No GPU: AutoBio, DexHand, DexJoCo, Embodied Safety Exam, LIBERO-MAX, MetaWorld+, RoboCasa, RoboCasa-GR1, RoboCasa365, VLABench.
 - **Disk:** a benchmark's public images take 1-30 GB, pulled on its first run; a benchmark that builds its image needs the free disk its row below states.
 - **API keys** for the agent's model in `.env` (step 1), or a subscription (step 3).
 
@@ -108,6 +108,7 @@ These benchmarks need a step by hand, or build their image on their first run be
 | [roboEngineer](tasks/roboengineer/README.md#getting-the-images) | Build the evaluator images with its scripts; the eight Neural Fly tasks also need the force fit made locally (`fetch_assets.sh --fit-fly`). | - |
 | [RoboLab](tasks/robolab/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): 20-60 min, 60 GB free disk. |
 | [RoboWits](tasks/robowits/README.md#getting-the-images) | 24 of its 30 tasks need BlenderKit models in `RCB_ROBOWITS_BLENDERKIT`: from the gated Hugging Face dataset (accept its terms, `hf auth login`) or with your own BlenderKit Full Plan key. | - |
+| [TactileLab](tasks/tactilelab/README.md#before-you-run) | An RTX-class GPU, an L40S recommended (its instances were frozen on one: another model may not rebuild them exactly, which ends a run as infrastructure), driver 580.x. | Builds its image (accepts NVIDIA's Isaac Sim terms): a 31 GB image, 70 GB free disk. |
 | [VLABench](tasks/vlabench/README.md#what-you-need-before-running) | - | Builds its image (CPU only): 5-20 min, 40 GB free disk. |
 | [YAMLab](tasks/yamlab/README.md#before-you-run) | - | Builds its image (accepts NVIDIA's Isaac Sim terms): about 25 min, 60 GB free disk. |
 
@@ -141,7 +142,7 @@ harbor run -d embodied-first-exam --privileged -a codex -m openai/gpt-6-astra
 ```
 
 ```bash
-# every task: 2272 task dirs (1161 tasks in their modes, 35 benchmarks)
+# every task: 2312 task dirs (1181 tasks in their modes, 36 benchmarks)
 harbor run -d embodied-first-exam@all -a codex -m openai/gpt-6-astra
 ```
 

@@ -1,0 +1,11 @@
+{
+ "task": "handover",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "9e12c1e218fb624f1872e05e9aea4930036cd3f8",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

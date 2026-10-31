@@ -1,0 +1,50 @@
+{
+ "insertion_axis": {
+  "tail_local": [
+   0.0,
+   0.049,
+   -0.03
+  ],
+  "head_local": [
+   0.0,
+   -0.04,
+   -0.03
+  ]
+ },
+ "slots": {
+  "slot_lower": {
+   "slot_center_local": [
+    0.0,
+    0.005,
+    -0.03
+   ],
+   "hole_top_local": [
+    0.0,
+    0.049,
+    -0.03
+   ],
+   "hole_bottom_local": [
+    0.0,
+    -0.04,
+    -0.03
+   ]
+  },
+  "slot_upper": {
+   "slot_center_local": [
+    0.0,
+    0.005,
+    0.015
+   ],
+   "hole_top_local": [
+    0.0,
+    0.049,
+    0.015
+   ],
+   "hole_bottom_local": [
+    0.0,
+    -0.04,
+    0.015
+   ]
+  }
+ }
+}

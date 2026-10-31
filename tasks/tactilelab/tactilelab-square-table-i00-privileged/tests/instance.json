@@ -1,0 +1,11 @@
+{
+ "task": "square_table",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "a2cae91b558305ace4fbac30f02e6ff1ee70f24b",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

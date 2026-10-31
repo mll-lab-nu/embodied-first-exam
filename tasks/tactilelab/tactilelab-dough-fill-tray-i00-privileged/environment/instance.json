@@ -1,0 +1,11 @@
+{
+ "task": "dough_fill_tray",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "0ef160de674626e05e1636cedaee1861c8cbaa96",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

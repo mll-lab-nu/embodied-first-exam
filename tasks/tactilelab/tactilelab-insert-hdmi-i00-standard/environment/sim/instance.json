@@ -1,0 +1,11 @@
+{
+ "task": "insert_hdmi",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "b5c37678fbd24464f120aa1d30d713a4674ec54a",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

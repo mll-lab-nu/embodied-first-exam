@@ -1,0 +1,11 @@
+{
+ "task": "cloth_fold_half",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "e0321f51649ca0d734a309e005a54e6f4202fb1a",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

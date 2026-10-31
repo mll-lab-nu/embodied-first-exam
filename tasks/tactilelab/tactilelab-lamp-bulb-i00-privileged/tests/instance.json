@@ -1,0 +1,11 @@
+{
+ "task": "lamp_bulb",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "be8e318cc1ec59ec45704450805dd2f67b138b2a",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

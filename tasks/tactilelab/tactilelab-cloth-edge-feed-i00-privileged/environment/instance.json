@@ -1,0 +1,11 @@
+{
+ "task": "cloth_edge_feed",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "eb9d9ed02ce5bc2cb7ac505b63a6df0ff0edae37",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

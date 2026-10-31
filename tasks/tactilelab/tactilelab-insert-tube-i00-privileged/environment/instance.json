@@ -1,0 +1,11 @@
+{
+ "task": "insert_tube",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "67e05a825279744e5d9452995b2247ac5343d17b",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

@@ -1,0 +1,11 @@
+{
+ "task": "gear_mesh",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "901a876fbf3ecb5b4143fd0d276c52b6f8bd65a9",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

@@ -1,0 +1,11 @@
+{
+ "task": "drawer_container",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "8fe413364952c8ffec904387bfff923a3d52d17a",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}

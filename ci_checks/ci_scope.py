@@ -54,6 +54,7 @@ UNITS: dict[str, list[str]] = {
     "RoboWits": _own("robowits"),
     "RoboPaint": _own("robopaint", "images/robopaint-pictures-files/"),
     "RoboLab": _own("robolab", "images/robolab-files/"),
+    "TactileLab": _own("tactilelab", "images/tactilelab-files/", "images/tactilelab-assets-files/", "images/tactilelab-thirdparty-files/"),
     "BEHAVIOR-1K": _own("behavior", "images/behavior-files/"),
     "ManiGuard": _own("maniguard"),
     "MolmoSpaces": _own("molmospaces"),
@@ -195,13 +196,18 @@ def scope(paths: list[str]) -> dict:
 
 def check() -> list[str]:
     """The table against the benchmarks (task_conventions.BENCHMARK_TABLE) and the tree: every UNITS key is a label,
-    every FILES_IMAGE key a folder, every hand-written path exists, and every images/<d>/ belongs to a benchmark or is
+    every FILES_IMAGE key a folder, every hand-written path exists (not yet for a benchmark in
+    task_conventions.PENDING_BENCHMARKS), and every images/<d>/ belongs to a benchmark or is
     one of SHARED_IMAGES (an image no unit owns would run the full suite on every change to it, silently)."""
     errs = []
     labels, folders = {lab for _, lab, _ in tc.BENCHMARK_TABLE}, {f for _, _, f in tc.BENCHMARK_TABLE}
     errs += [f"UNITS: {k!r} is not a benchmark label (task_conventions.BENCHMARK_TABLE)" for k in sorted(set(UNITS) - labels)]
     errs += [f"FILES_IMAGE: {k!r} is not a benchmark folder" for k in sorted(set(FILES_IMAGE) - folders)]
-    errs += [f"UNITS[{k!r}]: {p} does not exist" for k, ps in HAND_UNITS.items() for p in ps if not (ROOT / p).exists()]
+    # a benchmark whose shared-files pull request comes before its tasks one (task_conventions.PENDING_BENCHMARKS, an
+    # explicit list the tasks pull request empties): its paths come with its tasks
+    pending = set(tc.PENDING_BENCHMARKS)
+    errs += [f"UNITS[{k!r}]: {p} does not exist" for k, ps in HAND_UNITS.items() if k not in pending for p in ps
+             if not (ROOT / p).exists()]
     errs += [f"RT_CORES_BY_README: {k!r} is not a benchmark label" for k in sorted(set(tc.RT_CORES_BY_README) - labels)]
     for d in sorted(x.name for x in (ROOT / "images").iterdir() if x.is_dir()):
         if d in SHARED_IMAGES:

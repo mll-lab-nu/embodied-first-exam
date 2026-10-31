@@ -1,0 +1,11 @@
+{
+ "task": "fem_plug_insert",
+ "seed": 0,
+ "device": "cuda:0",
+ "state_sha": "3f480836b94fd5ca56c929bce9a3c16ffbd39479",
+ "frozen_on": {
+  "gpu": "NVIDIA L40S",
+  "driver": "580.178.04",
+  "cuda": "12.8"
+ }
+}
