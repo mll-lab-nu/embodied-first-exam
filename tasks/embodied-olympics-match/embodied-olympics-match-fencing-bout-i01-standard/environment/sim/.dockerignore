@@ -1,3 +1,0 @@
-# the build's own files, not part of /srv
-Dockerfile
-.dockerignore

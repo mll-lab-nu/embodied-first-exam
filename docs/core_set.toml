@@ -1592,14 +1592,6 @@ task = "embodied-olympics-match-badminton-duelrl-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "embodied-olympics-match-badminton-match-i01"
-default_mode = "standard-realtime"
-
-[[task]]
-task = "embodied-olympics-match-badminton-match-i02"
-default_mode = "standard-realtime"
-
-[[task]]
 task = "embodied-olympics-match-badminton-match-i04"
 default_mode = "standard-realtime"
 
@@ -1608,7 +1600,7 @@ task = "embodied-olympics-match-badminton-matchlow-i01"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "embodied-olympics-match-fencing-bout-i01"
+task = "embodied-olympics-match-fencing-bout-i02"
 default_mode = "standard"
 
 [[task]]
@@ -1628,27 +1620,11 @@ task = "embodied-olympics-match-soccer-match-i00"
 default_mode = "standard-realtime"
 
 [[task]]
-task = "embodied-olympics-match-soccerssl-match-i00"
-default_mode = "standard-realtime"
-
-[[task]]
 task = "embodied-olympics-match-soccerssl-match-i01"
 default_mode = "standard-realtime"
 
 [[task]]
 task = "embodied-olympics-match-tabletennis-duelrl-i01"
-default_mode = "standard-realtime"
-
-[[task]]
-task = "embodied-olympics-match-tabletennis-match-i01"
-default_mode = "standard-realtime"
-
-[[task]]
-task = "embodied-olympics-match-tabletennis-match-i02"
-default_mode = "standard-realtime"
-
-[[task]]
-task = "embodied-olympics-match-tabletennis-match-i03"
 default_mode = "standard-realtime"
 
 [[task]]

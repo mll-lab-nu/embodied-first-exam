@@ -336,7 +336,7 @@ def test_benchmarks():
     bad = tc.check_benchmarks()
     check(not bad, f"benchmark labels: {bad[:5]}")
     check(tc.bench_of(Path("embodied-olympics-fun-sprint-i00")) == "Embodied Olympics - Fun"
-          and tc.bench_of(Path("embodied-olympics-match-tabletennis-match-i01-standard-realtime")) == "Embodied Olympics - Match"
+          and tc.bench_of(Path("embodied-olympics-match-tabletennis-match-i04-standard-realtime")) == "Embodied Olympics - Match"
           and tc.bench_of(Path("roboolympics-sprint-i00-standard")) == ""
           and tc.bench_of(Path("robocasa-gr1-x-i00-standard")) == "RoboCasa-GR1", "bench_of: the first matching prefix")
     with tempfile.TemporaryDirectory() as td:

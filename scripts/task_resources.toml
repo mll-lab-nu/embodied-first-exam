@@ -589,7 +589,7 @@ sim = { cpus = 6, memory_gb = 7, pids = 1024 }
 measured = "the standard tasks' measurements (the sim sidecar's CPU p90 4.74 / max 5.28 cores while it finalized with two replays and the video; the current finalize, the video only, was not re-measured; its PSS max 2.84 GB; main PSS max 0.74 GB; a whole trial's PSS max 4.75 GB), the same simulator and finalize; the realtime clock keeps about a fifth of one core busy (4 ms of physics per 20 ms step)"
 caps_measured = "per-container peaks in 83 past trials: the agent's container memory 8.0 GiB (OOM-killed at the cap in 1 trial), 403 threads, CPU 2.4 cores, disk 1.1 GiB; the sim service memory 1.2 GiB (2.8 GiB in an earlier measurement), 69 threads, CPU 1.1 cores; the sim service's memory covers its largest legal call (4 cameras 480x640, 750 frames each (3000 images)): 2.6 GiB to build the response on top of the simulator's 2.8 GiB, 1 GiB more for the child process that parses a large JSON request"
 
-# 15 task(s)
+# 9 task(s)
 [[cap]]
 match = "^embodied-olympics-match-(tabletennis|badminton|soccer|soccerssl|foosball)-(match|duelrl|matchlow)-i[0-9]{2}-standard-realtime$"
 main = { cpus = 2, memory_gb = 5, pids = 2048, disk_gb = 10 }
@@ -597,7 +597,7 @@ sim = { cpus = 6, memory_gb = 6, pids = 1024 }
 measured = "the values Embodied Olympics measured for its exported matches (tasks/embodied-olympics-fun/README.md): the sim takes up to 6 CPUs, the agent 2; memory: sim 0.7-1.4 GB, agent 2.2 GB (a per-container memory sampler); CPU only, real time needs the cores"
 caps_measured = "per-container peaks in 131 past trials: the agent's container memory 1.2 GiB (2.2 GiB in an earlier measurement), 593 threads, CPU at its cap (2), disk 1.3 GiB; the sim service memory 2.0 GiB, 58 threads, CPU 2.0 cores"
 
-# 2 task(s)
+# 1 task(s)
 [[cap]]
 match = "^embodied-olympics-match-fencing-bout-i[0-9]{2}-standard$"
 main = { cpus = 2, memory_gb = 4, pids = 1024, disk_gb = 10 }
@@ -704,7 +704,7 @@ recommended_gpu = "RTX 4090 24GB / L4 24GB / L40S 48GB"
 measured = "Embodied Olympics' joint-level soccer pilot on an RTX 4090 workstation (nvidia-smi every 30 s): the agents trained with rsl_rl on the GPU worlds at 3-10 GB of GPU memory (one RTX 4090); the sim and the practice service as the CPU tier"
 caps_measured = "GPU memory: agents trained with rsl_rl at 3-10 GB; capped at 12 GiB; per-container peaks in 7 past trials: the agent's container memory 14.2 GiB, 660 threads, CPU at its cap (6), GPU memory 14.8 GiB (above the cap), disk 1.0 GiB; the practice service memory 4.3 GiB, 57 threads, CPU at its cap (4); the sim service memory 4.3 GiB, 57 threads, CPU 4.0 cores"
 
-# 3 task(s)
+# 0 task(s)
 [[cap]]
 match = "^embodied-olympics-match-(badminton|soccerssl)-match-i[0-9]{2}-privileged$"
 main = { cpus = 4, memory_gb = 8, pids = 1024, disk_gb = 10 }
@@ -718,7 +718,7 @@ main = { cpus = 6, memory_gb = 9, pids = 1024, disk_gb = 10 }
 measured = "a Harbor oracle trial on an RTX 4090 workstation: CPU-only MuJoCo with two Booster T1 humanoids per team; the verifier holds the service, the program, one replay and the video renderer; 6 CPUs pinned (the match runs on the wall clock)"
 caps_measured = "per-container peaks in 8 past trials: the agent's container memory 5.4 GiB, 86 threads, CPU at its cap (6), disk 1.0 GiB"
 
-# 2 task(s)
+# 0 task(s)
 [[cap]]
 match = "^embodied-olympics-match-tabletennis-match-i[0-9]{2}-privileged$"
 main = { cpus = 4, memory_gb = 4, pids = 1024, disk_gb = 10 }

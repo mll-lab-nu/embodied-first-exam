@@ -2,8 +2,7 @@
 # service runs unchanged inside each task (PROTOCOL §3; tasks/embodied-olympics-match/README.md: the benchmark
 # Embodied Olympics - Match). Written by that exporter on this checkout, then `python3 scripts/task_conventions.py` on
 # them (seeds, resources, README; the cutoff is each task's own `[agent] timeout_sec`, which a re-export must keep:
-# 7200 s, 14400 s for soccerssl-match-i00 / i01, badminton-match-i01 / i02 / i04, badminton-duelrl-i01 and
-# foosball-match-i01).
+# 7200 s, 14400 s for soccerssl-match-i01, badminton-match-i04, badminton-duelrl-i01 and foosball-match-i01).
 # `patched`: files this repository changed after the export (PROTOCOL §3: sent upstream; a re-export must keep them).
 # Every task: the standard modes are graded by the live episode: core/service.py, core/grading.py = tests/grade.py,
 # core/realtime.py (real-time: the control step's own error), spectator/sport_video.py (where present),
@@ -25,24 +24,6 @@ standard = ["eai-standard-turn/1.0"]              # the turn-based matches: the 
                                                   # is, a chess clock per player (Embodied Olympics' own service and referee)
 
 [[tasks]]
-name = "embodied-olympics-match-badminton-match-i01-standard-realtime"
-source_task = "roboolympics/badminton-match-wallclock-program-standard"
-revision = "badminton-wallclock-12+duel-14+core-0.2"
-source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py",   # the review time limit and its forfeit stated (instruction, game spec timing)
-           "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/spectator/sport_video.py",
-           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py"]   # a replay video from the players' cameras (no spectator camera / scene in the sport)
-
-[[tasks]]
-name = "embodied-olympics-match-badminton-match-i02-standard-realtime"
-source_task = "roboolympics/badminton-match-wallclock-program-standard"
-revision = "badminton-wallclock-12+duel-14+core-0.2"
-source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py",   # the review time limit and its forfeit stated (instruction, game spec timing)
-           "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/spectator/sport_video.py",
-           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py"]   # a replay video from the players' cameras (no spectator camera / scene in the sport)
-
-[[tasks]]
 name = "embodied-olympics-match-foosball-match-i01-standard-realtime"
 source_task = "roboolympics/foosball-match-wallclock-program-standard"
 revision = "foosball-program-v2+core-0.2"
@@ -51,14 +32,6 @@ patched = ["instruction.md", "environment/docker-compose.yaml",
            "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "task.toml", "README.md",
            "environment/sim/core/realtime.py"]   # LP_NUM_THREADS 2 (OSMesa threads, as the other matches);
              # the start window and its forfeit stated in the instruction
-
-[[tasks]]
-name = "embodied-olympics-match-fencing-bout-i01-standard"
-source_task = "roboolympics/fencing-bout-wallclock-program-standard"
-revision = "fencing-7+core-0.2"
-source_commits = ["a6712a675343"]
-patched = ["task.toml", "environment/docker-compose.yaml",
-           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md"]   # the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
 
 [[tasks]]
 name = "embodied-olympics-match-fencing-bout-i02-standard"
@@ -94,39 +67,6 @@ source_commits = ["7ae66874c32e"]   # the soccer pilot exporter (the joint-level
 patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py",   # the walking-policy audit
            "task.toml", "solution/solve.sh"]   # replays the match only after a live win of seat A, samples the row in effect at every
                                                # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
-
-[[tasks]]
-name = "embodied-olympics-match-soccerssl-match-i00-standard-realtime"
-source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
-revision = "soccer_ssl-1"
-source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py",
-           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md"]   # the review time limit and its forfeit stated (instruction, game spec timing)
-
-[[tasks]]
-name = "embodied-olympics-match-tabletennis-match-i01-standard-realtime"
-source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
-revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py",
-           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md"]   # the review time limit and its forfeit stated (instruction, game spec timing)
-
-[[tasks]]
-name = "embodied-olympics-match-tabletennis-match-i02-standard-realtime"
-source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
-revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["0d7f680cc049"]
-patched = ["instruction.md", "environment/sim/core/realtime.py",
-           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md"]   # the review time limit and its forfeit stated (instruction, game spec timing)
-
-[[tasks]]
-name = "embodied-olympics-match-tabletennis-match-i03-standard-realtime"
-source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
-revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["76cc6251c9ce"]
-patched = ["instruction.md",
-           "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md",
-           "environment/sim/core/realtime.py"]   # the start window and its forfeit stated in the instruction
 
 [[tasks]]
 name = "embodied-olympics-match-tabletennis-match-i04-standard-realtime"
@@ -178,40 +118,8 @@ patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",
            # a duel against a built-in seat: leaving after the start is a valid loss (`abandoned`, core/service.py abandon_single), stated in the instruction with the opponent's true-state reads; test.sh fails closed if fexam_reward.py fails
 
 [[tasks]]
-name = "embodied-olympics-match-tabletennis-match-i01-privileged"
-source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
-revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["0d7f680cc049"]
-kind = "fullsim-policy"
-
-[[tasks]]
-name = "embodied-olympics-match-tabletennis-match-i02-privileged"
-source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
-revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
-source_commits = ["0d7f680cc049"]
-kind = "fullsim-policy"
-
-[[tasks]]
-name = "embodied-olympics-match-badminton-match-i01-privileged"
-source_task = "roboolympics/badminton-match-wallclock-program-standard"
-source_commits = ["0d7f680cc049"]
-kind = "fullsim-policy"
-
-[[tasks]]
-name = "embodied-olympics-match-badminton-match-i02-privileged"
-source_task = "roboolympics/badminton-match-wallclock-program-standard"
-source_commits = ["0d7f680cc049"]
-kind = "fullsim-policy"
-
-[[tasks]]
 name = "embodied-olympics-match-soccer-match-i00-privileged"
 source_task = "roboolympics/soccer-match-wallclock-program-standard"
-source_commits = ["0d7f680cc049"]
-kind = "fullsim-policy"
-
-[[tasks]]
-name = "embodied-olympics-match-soccerssl-match-i00-privileged"
-source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 source_commits = ["0d7f680cc049"]
 kind = "fullsim-policy"
 
