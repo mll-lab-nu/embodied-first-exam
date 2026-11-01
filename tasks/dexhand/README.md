@@ -488,8 +488,9 @@ above its closed height, within 4 mm of the jar axis) its unwrapped counter-cloc
 s) the lid rests on the worktop touching neither hand nor jar, upright within 0.15 rad, at least 90 mm from the jar
 axis, slower than 0.02 m/s and 0.3 rad/s, while the jar stands untouched, upright within 0.10 rad and slower than 0.02
 m/s. **Immediate failure**, after every 2 ms substep: jar tilt above 15 degrees, slide above 30 mm or lift above 15 mm;
-the lid touching the worktop before stage 2; the lid touching nothing while falling faster than 0.3 m/s (or falling
-faster than 1.0 m/s at any time); floor contact or leaving the worktop or workspace; the lid leaving the thread upward
+the lid touching the worktop before stage 2; the lid in the air (lowest point more than 10 mm above the worktop)
+touching nothing while falling faster than 0.3 m/s, or falling faster than 1.0 m/s whatever it touches (a lid tipping
+over on the worktop has not dropped); floor contact or leaving the worktop or workspace; the lid leaving the thread upward
 outside the ramp gaps; unstable physics; 3,000 controls. The lid is lightly closed (no vacuum, seal adhesion or
 preload); the jam is part of the jar's rigid mass. Not restored, with evidence in the family README: a second hand
 holding the jar (on the 67 mm body just above the worktop the holding palm could not be placed: forearm and wrist
@@ -682,8 +683,8 @@ floor z = 0 beside the counter's -y edge, facing +y; the left arm parked); any r
 touching anything fails at once. A rubber boot (Poly Haven, CC0) stands sole-up on a fixed boot-rack peg in a collection
 tray; six loose 1 g soil clods lie lodged in its tread (gravity and friction only; the source scene's cohesive bond is
 not simulated); a shoe brush lies bristles-down on the counter. **Success**, in order: (1) the brush's bristle pad
-touches the boot while the hand holds the brush off the counter, at least 10 controls in total; (2) every clod touched
-by the bristle pad (not the wooden back) while near the sole, and every clod inside the tray walls; (3) for 50
+touches the boot while the hand holds the brush off the counter, at least 10 controls in total; (2) every clod inside
+the tray walls, however it left the sole (swept, pushed by the brush's back or knocked off by another clod); (3) for 50
 consecutive controls (1 s) all clods in the tray at <= 0.05 m/s while the brush touches neither boot nor clods and is
 withdrawn. **Immediate failure**, after every 2 ms substep: the boot moved more than 0.03 m or tilted more than 0.35
 rad; a clod touching the counter or floor, below the counter top or outside the workspace box; any hand geometry

@@ -13,8 +13,10 @@ Ordered stages (each latches once reached, in order):
 Fail-fast (checked after every physics substep; the first failure is permanent and ends the episode):
   jar_tipped (jar tilt > 15 deg), jar_slid (jar centre moved > 30 mm horizontally from its reset position),
   jar_lifted (jar origin > 15 mm above the worktop), lid_knocked_off (the lid touches the worktop before stage 2),
-  lid_dropped (the lid touches nothing - no hand, jar or worktop contact - while its centre of mass moves down faster
-  than 0.3 m/s, about a 5 mm free fall, or moves down faster than 1.0 m/s at any time), lid_off_table (the lid or jar touches the floor,
+  lid_dropped (the lid is in the air - its lowest point more than 10 mm above the worktop top - and touches nothing -
+  no hand, jar or worktop contact - while its centre of mass moves down faster than 0.3 m/s, about a 5 mm free fall, or
+  moves down faster than 1.0 m/s whatever it touches; a lid tipping over or falling flat on the worktop is not a drop),
+  lid_off_table (the lid or jar touches the floor,
   or an object origin is below the worktop top or outside the worktop footprint), object_left_workspace,
   lid_forced_through_thread (the lid leaves the thread zone upward while its lugs are not in the gaps between ramps),
   left_arm_contact (the parked left arm or left hand touches the jar or the lid), unstable_physics.
@@ -35,7 +37,10 @@ JAR_TILT_FAIL = math.radians(15.0)
 JAR_SLIDE_FAIL = 0.03
 JAR_LIFT_FAIL = 0.015
 LID_FREE_FALL_SPEED = 0.3   # m/s downward while the lid touches nothing (about a 5 mm free fall): a drop, no catch window
-LID_FALL_SPEED_FAIL = 1.0   # m/s downward at any time, touching or not (catches drops that graze a finger)
+LID_FALL_SPEED_FAIL = 1.0   # m/s downward, touching or not (catches drops that graze a finger)
+LID_AIR_HEIGHT = 0.010      # both fall rules apply only while the lid's lowest point is this far above the worktop top:
+                            # a lid tipping over on its edge or falling flat on the worktop is not a drop
+LID_TOP = 0.011             # lid body frame: top face of the lid (lid_top), the skirt bottom is SKIRT_BOTTOM
 THREAD_ZONE_HEIGHT = 0.006
 THREAD_ZONE_RADIUS = 0.004
 CLEAR_HEIGHT = 0.03
@@ -143,6 +148,13 @@ class Checker:
         sin_tilt = math.sqrt(max(0.0, 1.0 - rl[2, 2] ** 2))
         return float(centre[2] - LID_RADIUS * sin_tilt)
 
+    def lid_lowest_any(self, data):
+        """World z of the lowest point of the lid cylinder (skirt bottom to top face) in any orientation."""
+        rl = data.xmat[self.lid].reshape(3, 3)
+        sin_tilt = math.sqrt(max(0.0, 1.0 - rl[2, 2] ** 2))
+        ends = (data.xpos[self.lid][2] + rl[2, 2] * z for z in (SKIRT_BOTTOM, LID_TOP))
+        return float(min(ends) - LID_RADIUS * sin_tilt)
+
     def rim_z(self, data):
         rj = data.xmat[self.jar].reshape(3, 3)
         return float(data.xpos[self.jar][2] + rj[2, 2] * RIM_Z)
@@ -214,11 +226,15 @@ class Checker:
         velocity = np.empty(6)
         mujoco.mj_objectVelocity(self.model, data, mujoco.mjtObj.mjOBJ_BODY, self.lid, velocity, 0)
         lid_vz = float(velocity[5])
-        if lid_vz < -LID_FALL_SPEED_FAIL:
-            return fail("lid_dropped", fall_speed_m_s=-lid_vz, touching=bool(lid_touch))
-        if not lid_touch and lid_vz < -LID_FREE_FALL_SPEED:
-            # Fails at the first substep the lid is unsupported and falling: there is no window to catch it again.
-            return fail("lid_dropped", fall_speed_m_s=-lid_vz, touching=False)
+        if lid_vz < -LID_FREE_FALL_SPEED:
+            # Only a lid in the air drops; one tipping over or settling on the worktop (lowest point within
+            # LID_AIR_HEIGHT of the worktop top) does not, however fast its centre sinks.
+            height = self.lid_lowest_any(data) - self.table_z
+            if height > LID_AIR_HEIGHT and lid_vz < -LID_FALL_SPEED_FAIL:
+                return fail("lid_dropped", fall_speed_m_s=-lid_vz, touching=bool(lid_touch), height_m=height)
+            if height > LID_AIR_HEIGHT and not lid_touch:
+                # Fails at the first substep the lid is unsupported and falling: there is no window to catch it again.
+                return fail("lid_dropped", fall_speed_m_s=-lid_vz, touching=False, height_m=height)
         rel_r, rel_p = self.relative_pose(data)
         height = float(rel_p[2] - LID_SEAT_Z)
         radial = float(math.hypot(rel_p[0], rel_p[1]))
