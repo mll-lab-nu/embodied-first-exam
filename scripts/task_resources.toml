@@ -838,3 +838,56 @@ gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
 recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 measured = "the sim service of every one of the 24 scenes on an L40S (48 vCPU host), started alone and given the two largest legal calls (a watch at the full frame rate, every camera, video both, 240 images; the same with depth frames, 120 + 120): cgroup memory 12.5-15.4 GiB idle, memory.peak at most 14.89 GiB, GPU memory at most 11.5 GiB (bulb, three cameras), 239-246 threads; re-measured with the final service (shared layer standard-files-0.4.0, 12 warm-up renders) on the two largest: clear_organic_objects memory.peak 15.61 GiB (15.4 idle), GPU 9.0 GiB; bulb 14.41 GiB, GPU 11.5 GiB, 245 threads; Harbor oracle trials (stack_blocks, fruit_delivery; the resource monitor): the sim 13.2-13.9 GiB, 6.9-8.1 GiB of GPU memory, CPU at its cap (8), 239 threads; the oracle's client 0.03 GiB, 52 threads"
 caps_measured = "the sim service: memory max(1.5 x 15.61, 15.61 + 3) = 23.4 -> 24 GiB (the largest legal call adds at most 1.4 GiB to a 15.4 GiB service: within it); GPU memory max(1.5 x 11.52, 11.52 + 2) = 17.3 -> 18 GiB (at least 16 for Isaac Sim); threads 246 on a 48 vCPU host (Isaac Sim's thread pools grow with the host's cores) -> 2048, room for a host with four times the cores; CPU at its cap in every reading: 8 (the privileged twins' value); main: no agent trial yet, the shared client's caps of RoboLab's standard tasks (the same image), kept until agent trials are measured"
+
+
+# 1 task(s)
+[[cap]]
+match = "^embodied-olympics-match-tabletennisg1-matchcpu-i[0-9]{2}-standard-realtime$"
+main = { cpus = 8, memory_gb = 16, pids = 2048, disk_gb = 10 }
+sim = { cpus = 20, memory_gb = 8, pids = 1024 }
+practice = { cpus = 8, memory_gb = 4, pids = 512 }
+practice_player = { cpus = 1, memory_gb = 1, pids = 64 }
+measured = "Embodied Olympics' release card of tabletennis_g1 (g1tt-10, x1 live runs on a Xeon Platinum 8592+): the world 12 vCPUs (physics and referee 2, cameras 10: 2 render processes x 4 workers) and the platform's G1 8 vCPUs (RO_PLATFORM_CPUS last:8: the learned striker and its planner, a 60 ms budget per decision) pass the x1 integrity rules; a Xeon Gold 6338 at 12 vCPUs does not (world lag p99 33-76 ms); the seat 8 vCPUs and 16 GiB (the release's seat without its GPU: the GPU only serves the training kit), the practice service 4 worlds; Embodied First Exam 11-01, oracle x1 on an idle Xeon Platinum 8488C (64 vCPU, m7i.16xlarge), world 12 + platform 8: 5 matches, world lag p99 1.2-1.7 ms, late step p99 9.4-11.2 ms, render misses 0.08-0.12 % (limits 0.5 s, 0.05 s, 1 %), all valid; on a Ryzen 9 7950X at load 30-50 of 32 threads: voided (late step p99 0.09-0.8 s, render misses 15-86 %). min_world_vcpu = 12 (the fewest measured; below 12 not measured). Hosts: fast cores with 37 vCPUs free for the trial (the pool places these on the Xeon 8488C hosts only)"
+
+# 1 task(s)
+[[cap]]
+match = "^embodied-olympics-match-tabletennisg1-matchcpu-i[0-9]{2}-standard$"
+main = { cpus = 8, memory_gb = 16, pids = 2048, disk_gb = 10 }
+sim = { cpus = 12, memory_gb = 8, pids = 1024 }
+practice = { cpus = 8, memory_gb = 4, pids = 512 }
+practice_player = { cpus = 1, memory_gb = 1, pids = 64 }
+measured = "the standard-realtime twins' world (the release card), in lockstep: the world waits for its cameras and for the opponent's program, so fewer CPUs only slow it down"
+
+# 1 task(s)
+[[cap]]
+match = "^embodied-olympics-match-tabletennisg1-matchcpu-i[0-9]{2}-privileged$"
+main = { cpus = 8, memory_gb = 16, pids = 2048, disk_gb = 10 }
+measured = "the standard twins' seat (8 vCPUs, 16 GiB, no GPU); the verifier (task.toml: 12 CPUs, 16 GiB) holds the in-process match (the world, its two camera render processes, the opponent's program) and the program's process: Embodied First Exam 11-01, the reference program against level 4 at 12 CPUs: 4183 steps in 146 s, its calls at most 0.1 s, the fresh replay and the video 3 min more"
+
+
+# 1 task(s)
+[[cap]]
+match = "^embodied-olympics-match-tabletennisg1-matchgpu-i[0-9]{2}-standard-realtime$"
+main = { cpus = 8, memory_gb = 16, pids = 2048, gpu_memory_gb = 20, disk_gb = 10 }
+sim = { cpus = 20, memory_gb = 8, pids = 1024 }
+practice = { cpus = 8, memory_gb = 4, pids = 512 }
+practice_player = { cpus = 1, memory_gb = 1, pids = 64 }
+recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB"
+measured = "the GPU tier: as the CPU tier (the same world and opponent on CPU), plus one NVIDIA GPU for the seat's training kit (the release's seat: one GPU, half an RTX PRO 6000 Blackwell, 48 GB); capped at 20 GiB of GPU memory"
+
+# 1 task(s)
+[[cap]]
+match = "^embodied-olympics-match-tabletennisg1-matchgpu-i[0-9]{2}-standard$"
+main = { cpus = 8, memory_gb = 16, pids = 2048, gpu_memory_gb = 20, disk_gb = 10 }
+sim = { cpus = 12, memory_gb = 8, pids = 1024 }
+practice = { cpus = 8, memory_gb = 4, pids = 512 }
+practice_player = { cpus = 1, memory_gb = 1, pids = 64 }
+recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB"
+measured = "the GPU tier: as the CPU tier (the same world and opponent on CPU), plus one NVIDIA GPU for the seat's training kit (the release's seat: one GPU, half an RTX PRO 6000 Blackwell, 48 GB); capped at 20 GiB of GPU memory"
+
+# 1 task(s)
+[[cap]]
+match = "^embodied-olympics-match-tabletennisg1-matchgpu-i[0-9]{2}-privileged$"
+main = { cpus = 8, memory_gb = 16, pids = 2048, gpu_memory_gb = 20, disk_gb = 10 }
+recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB"
+measured = "the GPU tier: as the CPU tier (the same world and opponent on CPU), plus one NVIDIA GPU for the seat's training kit (the release's seat: one GPU, half an RTX PRO 6000 Blackwell, 48 GB); capped at 20 GiB of GPU memory; the verifier as the CPU tier's (no GPU)"

@@ -1,0 +1,80 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  "/app/output/",
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/video.json", service = "sim" },
+  { source = "/data/broadcast.jsonl", service = "sim" },
+]
+
+[task]
+name = "embodied-first-exam/embodied-olympics-match-tabletennisg1-matchgpu-i01-standard"
+description = "STANDARD (Embodied Olympics, its own service inside the task; eai-standard-lockstep/1.0: the world advances only while the player waits or a command takes effect and stands still between its calls, the opponent held to the same rule): table tennis between two Unitree G1 humanoids (29 joints within Unitree's URDF limits and motor torque-speed curves, self-collision, falls), each holding a real racket, in a continuous world advanced in lockstep. Engineer track: the agent's program drives every joint of its G1 (joint position targets at 100 Hz with its own PD gains, on the joint sensors' noisy reading; no walking service: the legs are the program's too) and sees the ball only through two cameras (a frame every 10 ms control step, 20 ms old); one game to 5 points (lead by 2 from 4:4, at 6:6 the next point wins); the robots serve by the ITTF service laws with a toss device. One match against the platform's G1 at level 4 of 4, frozen development seed 4; a practice service with full copies of the match world; one NVIDIA GPU with a GPU training kit. Ported from Embodied Olympics tabletennis_g1 (revision g1tt-10+core-0.5)."
+keywords = ["robotics", "embodied-olympics", "sports", "tabletennis", "humanoid", "unitree-g1", "mujoco", "standard-mode", "vision", "lockstep", "joint-level", "gpu-training"]
+
+[metadata]
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "unitree-g1"
+family = "tabletennisg1_match"
+resource_tier = "gpu"
+tier_twin = "embodied-olympics-match-tabletennisg1-matchcpu-i01-standard"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+protocol = "eai-standard-lockstep/1.0"
+instance_seed = 4
+opponent_level = 4
+revision = "g1tt-10+core-0.5"
+play = "program"
+action_level = "joint"
+source_task = "roboolympics/tabletennis_g1-match-wallclock-program-engineer-standard"
+source_commits = ["45ed806a5"]
+player_mode = "unmetered"
+official = false
+expert_time_estimate_hours = 2.0
+oracle = "partial"
+oracle_evidence = "the sport's reference player (solution/: builtin_players:OpenReference, camera images and /spec only, the learned striker of the release on CPU) over HTTP: the camera-only reference won this seed 7:6 live (x1i: 2 of 5 seeds against level 4: 4, 5); in this repository (CPU tier) it lost 2:5 (standard-realtime) and 5:7 (standard): no winning oracle; GPU tier on an EPYC host with L40S GPUs under the pool's load: standard (lockstep) won 5:1, standard-realtime 3 matches all voided by R-INTEGRITY (late step p99 0.053-0.178 s). Embodied First Exam's local Harbor runs: see the benchmark README; nop 0"
+
+[verifier]
+timeout_sec = 1800.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resources (PROTOCOL §6): seal the monitor's record first.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running (a program would keep playing; the match is graded as it stands).
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then SIGUSR1: the session has ended, so a match in play is lost (abandoned) and one not started is a no-show
+# (RO_COLLECT_ENDS_MATCH); the service writes the verdict of the live match ("graded_ready"; no grading replay), then
+# the spectator video.
+[[verifier.collect]]
+service = "sim"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 300); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_RENDER_VIDEO = x1 ] && for i in $(seq 1 1320); do [ -f /data/video.json ] && break; sleep 1; done; cat /data/final.json | head -c 2000"
+timeout_sec = 1680
+
+[agent]
+timeout_sec = 7200
+# The agent reaches the model APIs, the package registries, the match service (localhost:8000) and its practice service
+# (localhost:8100) under Harbor's egress control.
+network_mode = "allowlist"
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 3600.0
+cpus = 8
+memory_mb = 16384
+storage_mb = 10240
+
+[verifier.environment]
+build_timeout_sec = 600.0
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"
