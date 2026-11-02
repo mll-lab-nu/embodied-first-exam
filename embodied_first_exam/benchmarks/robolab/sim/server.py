@@ -481,8 +481,19 @@ def status() -> dict:
             "elapsed_s": round(time.time() - E["t0"], 1)}
 
 
+END_REQUESTED = threading.Event()
+
+
 def end_from_signal() -> None:
-    """The collect hook's SIGUSR1 (rcb_limited.Episode runs this in a thread): end the episode, dump it, exit 0."""
+    """The collect hook's SIGUSR1 (rcb_limited.Episode runs this in a thread): only asks the main thread to end the
+    episode. Isaac Sim is stepped on the main thread only: the hold of the last command (finish("timeout")) steps the
+    simulator, and an env.step from this thread never returns (the service hung, the hook waited out its 2700 s and the
+    trial became an infrastructure failure)."""
+    END_REQUESTED.set()
+
+
+def end_on_main_thread() -> None:
+    """Run by the HTTP loop on the main thread between two requests (the lock is free): end the episode, dump it, exit 0."""
     with LOCK:
         E["exiting"] = True
         if not E["done"]: finish("timeout")
@@ -492,6 +503,17 @@ def end_from_signal() -> None:
             open(PID_FILE, "w").write(str(os.getpid()))
     sys.stdout.flush(); sys.stderr.flush()
     os._exit(0)          # frees the GPU and the memory: finalize.sh writes final.json once this process is gone
+
+
+def serve(svc) -> None:
+    """rcb_limited.serve with the end of the episode on the main thread: serve_forever runs service_actions() on the main
+    thread after every request and every poll (0.5 s), and a collect hook's request is handled there."""
+    svc.spec.setdefault("on_service_error", L.ON_SERVICE_ERROR)
+    svc.spec.setdefault("max_call_wall_s", svc.episode.max_call_wall_s)
+    L.check_spec(svc.spec)
+    srv = L.bind(8000, L.make_handler(svc))
+    srv.service_actions = lambda: END_REQUESTED.is_set() and end_on_main_thread()
+    srv.serve_forever()
 
 
 def replay_row(row) -> None:
@@ -510,5 +532,5 @@ if resumed:
 E["ready"] = True; write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
                   on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row))
