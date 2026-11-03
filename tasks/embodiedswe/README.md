@@ -5,9 +5,9 @@ GPU: the agent writes a program, `solution/solve.py` exposing `solve(env)`, that
 loco-manipulation task by stepping the env. `simulator = "embodiedswe"`. 24 tasks (assembly, packing, puzzle, cutting
 and loco-manipulation scenes, one frozen instance each): EmbodiedSWE's 28 published tasks without its 4 deformable ones
 (they need Newton physics and a networked VLM judge). All 24 are in the `all` set; 12 are in the core set
-(`docs/core_set.toml`), seven in standard mode (assembly-bulb, assembly-pc-gpu, assembly-pc-motherboard, cutting-dice,
-packing-egg-carton, packing-tool-packing, puzzle-stack-blocks) and five in privileged mode (assembly-ikea-table-bimanual,
-assembly-pc-gpu-ram, puzzle-coffee, puzzle-spatula, puzzle-syringe-bimanual).
+(`docs/core_set.toml`), all in standard mode: assembly-bulb, assembly-ikea-table-bimanual, assembly-pc-gpu,
+assembly-pc-gpu-ram, assembly-pc-motherboard, cutting-dice, packing-egg-carton, packing-tool-packing, puzzle-coffee,
+puzzle-spatula, puzzle-stack-blocks and puzzle-syringe-bimanual.
 Each is in privileged mode (`task_type = "policy"`) and, as `<task>-standard`, in standard mode
 (`task_type = "trajectory"`, "Standard mode" below);
 all 24 scenes are static, so there is no standard-realtime mode.
