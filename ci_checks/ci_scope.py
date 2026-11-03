@@ -83,7 +83,7 @@ UNITS: dict[str, list[str]] = {
 }
 HAND_UNITS = {k: list(v) for k, v in UNITS.items()}   # the rows above, before the conventional paths below are added
 # images/ directories every benchmark builds on: a change to one runs the full suite (no unit owns it)
-SHARED_IMAGES = ("monitor", "standard-files")
+SHARED_IMAGES = ("monitor", "standard-files", "agent-end-files")
 # the benchmark's shared task code, embodied_first_exam/benchmarks/<folder>/ (embodied_first_exam/README.md), its CI
 # hooks, ci_checks/benchmarks/<folder>/, and its files-only image, images/<folder>-files/ (task images and sidecars): the folder of its
 # task dirs, tasks/<folder>/ (task_conventions.BENCHMARK_DIRS)

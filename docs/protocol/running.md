@@ -17,7 +17,8 @@ A result is official only when its run had all of these:
 - **Token budget** per trial: 10B input tokens (Harbor `n_input_tokens`: cached input counts in full) and 10B output
   (reasoning included) by default (`TOKEN_BUDGET_IN` / `TOKEN_BUDGET_OUT`), set so high that it almost never binds; with the gateway, exceeding either stops the agent and
   fails the trial (`over_token_budget = 1`; the first refusal also writes `budget_stop` into `totals.json`, which the runner
-  labels `TokenBudgetExceeded`, not a harness or network error). A batch run with another budget records it in its results' metadata.
+  labels `TokenBudgetExceeded`, not a harness or network error; a task with agent-ended episodes, PROTOCOL §3, is instead graded on
+  the state its session ended in). A batch run with another budget records it in its results' metadata.
 - **The task's own cutoff**, no multiplier (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
   `override_timeout_sec`), and **nothing added to the instruction** (no prompt template, no extra instruction, in `AK` or elsewhere).
 - **The runner's seed, the task's network, at most one infrastructure retry** (the next three sections), and the

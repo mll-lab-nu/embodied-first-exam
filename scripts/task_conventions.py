@@ -926,6 +926,92 @@ def no_twin_reason(task: Path) -> str | None:
     return None
 
 
+# PROTOCOL §3 "Agent-ended episodes" (optional, standard mode): a task opts in in its sim service's environment
+# (`RCB_AGENT_END: "1"`, and `RCB_STEP_LIMIT: "<N>"` for a step limit; embodied_first_exam/standard/agent_end/). Its
+# instruction then has `## Episode end` before `## External material`, rendered here (render_agent_end): what the agent
+# sees and does, what is graded, and the limits, of which only the step limit is the task's number. The token budget is
+# the official runs' (docs/protocol/running.md "Official runs"; scripts/run_agent_batch.sh TOKEN_BUDGET_IN / _OUT).
+AGENT_END_HEADING = "## Episode end"
+AGENT_END_RE = re.compile(r'^\s*RCB_AGENT_END:\s*"?1"?\s*(?:#.*)?$', re.M)
+STEP_LIMIT_RE = re.compile(r'^\s*RCB_STEP_LIMIT:\s*"?([0-9]+)"?\s*(?:#.*)?$', re.M)
+TOKEN_BUDGET = (10_000_000_000, 10_000_000_000)   # input, output tokens per trial: running.md "Official runs"
+AGENT_END_INTRO = (
+    "You end this task's episode, not a success. This section overrides anything above, and anything in `/spec`, that "
+    "says a success ends the episode, that `meta[\"reason\"]` can be `\"success\"`, or that a success refuses later calls "
+    "or resets.")
+AGENT_END_BULLETS = (
+    "The robot never tells you whether you have succeeded: reaching the goal changes no response, status, error or "
+    "counter, and the episode does not end there.",
+    "You decide when you are done: send `POST /finish` with an empty JSON body (`{}`) to the service, on the same base "
+    "URL as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example "
+    "`requests.post(base + \"/finish\", json={})`). The state at that moment is graded with the task's success rule (with "
+    "the task's settle or hold time described above, run from that state). After `/finish` every call is refused (409).",
+    "If you do not call it, the state when your session ends (you stop, or your time or token budget runs out) is graded.",
+    "A success reached earlier and then undone does not count: only the state at the end is graded. An event the task "
+    "records once it happens (for example a scored goal or a completed stage sequence) stays part of that state, also "
+    "when one of the task's failure rules ends the episode after it. Resets work as described above, within the budget, "
+    "and only the episode that ends with `/finish` or at the end of your session is graded.",
+    "The episode still ends on its own on a simulator error, at the task's step limit or technical step cap (graded as "
+    "it stands), and where the task's own rules end it as a failure (for example a fall), as described above.")
+AGENT_END_LIMITS = "**Limits.** The episode ends at whichever of these comes first, and the state at that moment is graded as above:"
+AGENT_END_STEP = (
+    "the step limit: **{n:,} steps**{unit}. `meta[\"control_steps\"]` counts the steps used so far; `meta[\"steps_left\"]` "
+    "and `/status` `steps_left` give what is left, `spec[\"max_control_steps\"]` the limit ({n}). At the {nth} step the "
+    "episode ends by itself (`meta[\"done\"]`, `meta[\"reason\"]` = `\"step_limit\"`; a chunk that reaches it stops "
+    "there); after it every `/submit` and `/finish` is refused (409). This overrides anything above, and anything in "
+    "`/spec`, that says there is no step budget, that the time limit is your only budget, or that the episode is capped "
+    "at another number of steps;")
+AGENT_END_TIME = "the time limit (`## Time limit`; `meta[\"time_left_s\"]` is the service's count of what is left);"
+AGENT_END_TOKENS = ("the token budget: {tin:,} input and {tout:,} output tokens of your model for the session (cached "
+                    "input counts in full, output includes reasoning): past it every model request is refused and your "
+                    "session ends;")
+AGENT_END_FINISH = "your `POST /finish`."
+# what one step is, in a benchmark's own terms (the limit's unit): (benchmark label) -> text after the number
+AGENT_END_STEP_UNIT = {
+    "RoboDojo": (
+        ", RoboDojo's own limit for this task (RoboDojo's evaluation ends a policy's episode after that many actions "
+        "[step_lim]). One step is one 25 Hz action: 1/25 s of simulated time (RoboDojo's 14-D action, run over 10 physics "
+        "steps), the unit RoboDojo's evaluator counts. Every call that moves simulated time on uses steps: a "
+        "`joint_position` row with `dt` = k/25 s uses k steps (dt = 0.04: one step per row); an `ee_pose` row uses as many "
+        "steps as its move takes at 0.25 m/s (at least one); `get_obs(seconds=s)` holds the robot for s x 25 steps. "
+        "`get_obs()` without `seconds`, `/spec`, `/status` and `/kinematics` use none"),
+}
+
+
+def agent_end_of(task: Path) -> dict | None:
+    """A standard-mode task's agent-ended episode (PROTOCOL §3): {"step_limit": N or None}, None when it does not opt
+    in (its sim service's RCB_AGENT_END, RCB_STEP_LIMIT)."""
+    if not MODE_REGISTRY.get(mode_of(task), {}).get("sidecar"):
+        return None
+    c = read_text(task / "environment/docker-compose.yaml") or ""
+    if not AGENT_END_RE.search(c):
+        return None
+    m = STEP_LIMIT_RE.search(c)
+    return {"step_limit": int(m.group(1)) if m else None}
+
+
+def _ordinal(n: int) -> str:
+    return f"{n:,}" + ("th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
+
+
+def render_agent_end(task: Path) -> str | None:
+    """instruction.md's `## Episode end` for a task that opts in (agent_end_of), else None; wrapped at 120 columns."""
+    import textwrap
+    ae = agent_end_of(task)
+    if ae is None:
+        return None
+    n = ae["step_limit"]
+    def wrap(t: str, first: str = "", rest: str = "") -> str:      # never inside a code span
+        t = re.sub(r"`[^`]*`", lambda m: m.group(0).replace(" ", "\0"), t)
+        return textwrap.fill(t, 120, initial_indent=first, subsequent_indent=rest, break_long_words=False,
+                             break_on_hyphens=False).replace("\0", " ")
+    limits = ([AGENT_END_STEP.format(n=n, nth=_ordinal(n), unit=AGENT_END_STEP_UNIT.get(bench_of(task), ""))] if n else []) \
+        + [AGENT_END_TIME, AGENT_END_TOKENS.format(tin=TOKEN_BUDGET[0], tout=TOKEN_BUDGET[1]), AGENT_END_FINISH]
+    return (AGENT_END_HEADING + "\n" + wrap(AGENT_END_INTRO) + "\n\n"
+            + "\n".join(wrap(b, "- ", "  ") for b in AGENT_END_BULLETS) + "\n\n"
+            + wrap(AGENT_END_LIMITS) + "\n" + "\n".join(wrap(b, "- ", "  ") for b in limits) + "\n")
+
+
 def render_cutoff(sec: int, mode: str, bench: str = "", name: str = "") -> str:
     """instruction.md's last section (PROTOCOL §5): the heading, the cutoff sentence, then what the cutoff means in
     the mode (`bench`, a BENCHMARKS label: a benchmark whose service counts on a clock of its own has its own note;
@@ -991,7 +1077,8 @@ def set_wall_clock(compose: str, sec: int, name: str = "") -> str:
 
 
 def normalize_instruction(task: Path) -> None:
-    """instruction.md ends with three sections normalize renders, each replacing an earlier one: `## External material`
+    """instruction.md ends with three sections normalize renders, each replacing an earlier one (a task with an
+    agent-ended episode, PROTOCOL §3, has `## Episode end` rendered before them: render_agent_end): `## External material`
     (PROTOCOL §5), `## Resources`, the caps of the agent's own container (§6, render_resources) and, last, `## Time
     limit` rendered from the task's `[agent] timeout_sec` (§2; left out when it has no usable number): the last thing
     the agent reads."""
@@ -1002,9 +1089,10 @@ def normalize_instruction(task: Path) -> None:
     sec = cutoff_for(task)
     if sec is not None:
         s = strip_cutoff(s)
-    for heading in (EXTERNAL_HEADING, RESOURCES_HEADING, *OLD_RESOURCES_HEADINGS):
+    for heading in (AGENT_END_HEADING, EXTERNAL_HEADING, RESOURCES_HEADING, *OLD_RESOURCES_HEADINGS):
         s = re.sub(rf"(?ms)^{re.escape(heading)}[ \t]*(?:\n.*?)?(?=^## |\Z)", "", s)
-    s = s.rstrip() + "\n\n" + render_external(task) + "\n" + render_resources(task)
+    ae = render_agent_end(task)
+    s = s.rstrip() + "\n\n" + (ae + "\n" if ae else "") + render_external(task) + "\n" + render_resources(task)
     if sec is not None:
         s += "\n" + render_cutoff(sec, mode_of(task), bench_of(task), task.name)
     write_if_changed(p, s)
@@ -1370,7 +1458,7 @@ def slowdown_text(S: float) -> str:
 # PROTOCOL §2: the settings a task declares, and the effective configuration of a trial, recorded with every result
 # so that results are ranked only within one comparable configuration (docs/protocol/running.md "Results"). Standard
 # library only: scripts/write_task_results.py, scripts/dataset_manifest.py and a runner's scheduler read these.
-PROTOCOL_VERSION = "2.1"                         # docs/protocol/README.md
+PROTOCOL_VERSION = "2.2"                         # docs/protocol/README.md
 
 
 def metadata_of(task: Path) -> dict:

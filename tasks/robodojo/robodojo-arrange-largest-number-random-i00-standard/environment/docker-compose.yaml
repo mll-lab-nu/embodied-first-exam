@@ -28,6 +28,8 @@ services:
     command: sh /srv/run.sh
     restart: on-failure:6
     environment:
+      RCB_AGENT_END: "1"                               # agent-ended episodes (PROTOCOL §3)
+      RCB_STEP_LIMIT: "1050"                           # RoboDojo's step_lim for this task
       RCB_TASK: arrange_largest_number_random
       RCB_INSTANCE: /srv/instance.json
       RCB_TOOL: /srv/rcb_robodojo.py

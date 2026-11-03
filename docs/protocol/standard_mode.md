@@ -187,6 +187,34 @@ episode and starts a new one from the same frozen state, `N` times in all; `/sta
 when the budget is spent. Only the last episode is graded. With N = 0 (or no declaration) `/reset` is 404. The reset
 budget is part of a result's configuration: results with different budgets are not ranked together (running.md).
 
+### Optional agent-ended episodes
+PROTOCOL §3 "Agent-ended episodes" (an optional task feature). A task opts in in its `sim` service's environment:
+`RCB_AGENT_END: "1"`, and `RCB_STEP_LIMIT: "<N>"` for a step limit (what one step is: the service's `/spec` and the
+task's instruction). The wire:
+- `/spec.success_signal` says the success is hidden; with a step limit `/spec.budget.steps = /spec.max_control_steps = N`,
+  and every `meta` and `/status` add `step_limit` and `steps_left`.
+- No answer depends on the task's success: no `done` / `reason = "success"`, no 409, no early end of a chunk and no
+  per-call work caused by it, `resets_left` and `/reset` as before a success, no success or progress field of the
+  service's own (stages reached, a settled-check counter) in `meta` or `/status`.
+- `POST /finish` (JSON `{}`) ends the episode (`reason = "finished"`) and answers `{"ok": true, ...}` with `/status`'s
+  fields; after it every call but `GET /spec` and `GET /status` is a 409. Without the feature it is a 404.
+- At the step limit the episode ends by itself (`reason = "step_limit"`; the chunk stops at that step); then `/submit`
+  and `/finish` are 409, `/observe` still answers.
+- The collect hook's signal at the end of the agent's session ends the episode with `reason = "timeout"`.
+- The verdict: the task's own rule on the state the episode ended in, with its settle or hold window run from there on
+  the live simulator (a hold window counts the steps already held). A success reached and then undone is 0. A success
+  the task latches as an event (a referee's call, a completed stage sequence) is part of the state: the task's failure
+  rules keep running after it and still end the episode, but do not take it away. A simulator error is judged as
+  without the feature.
+- `final.json` adds `success_signal = "hidden"`, `ended_by` (`finish`, `step_limit`, `session_end`, `failed`: the
+  task's own failure rule, `error`), `hidden_success_seen`, `hidden_success_first_step`, `trial_hidden_success_seen`,
+  `finish_time_s` and, with a step limit, `step_limit` and `steps_used`; `reward.json` adds `ended_finish`,
+  `ended_step_limit`, `ended_session_end` (evidence only). Which limit ended a session (`session_end`) is the runner's
+  record: Harbor's `AgentTimeoutError` for the time limit, the gateway's `budget_stop` for the token budget.
+- Implementation for the 2.2 layer: `embodied_first_exam/standard/agent_end/rcb_agent_end.py` (`Service`, `serve`,
+  `hidden_success`, `final_fields`, `steps_left`; files-only image `agent-end-files`); an adapter without `finish()`
+  refuses to start with the feature on; tests `agent_end_selftest.py`.
+
 ## Part 2 — `eai-standard/2.2`: capabilities added to 2.1
 
 > 2.2 is a minor version of `eai-standard/2.1` (Part 1): everything there holds unless
