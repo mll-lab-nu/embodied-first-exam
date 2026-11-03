@@ -1,0 +1,7 @@
+{
+ "image": "ghcr.io/mll-lab-nu/efe:agent-end-files-0.1.0@sha256:a3622a168ba714ca8d98358d16654e3844cb9e9941651d4a9a47064c005884d7",
+ "source": "embodied_first_exam/standard/agent_end",
+ "files": {
+  "rcb_agent_end.py": "538d25a5c6225b2ca209485fc22a48930a32e95d93be9d8f853bd5173054d8ec"
+ }
+}

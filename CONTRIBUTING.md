@@ -174,7 +174,7 @@ The checklist is in PROTOCOL §4.
    `embodied_first_exam/standard/`, `images/monitor/`, `images/VERSION`, the protocol documents (`docs/protocol/`), or a
    path the scope table does not know -- runs the full suite, as does every push to `main`, the nightly run and a manual
    run (`workflow_dispatch`). The CI mutation self-test (`check-ci-selftest.py`) runs with the full suite.
-   The checks are in two tiers (PROTOCOL v2.1): the job **`invariants`** (`ci_checks/run_invariants.sh`: the checks
+   The checks are in two tiers (PROTOCOL v2.2): the job **`invariants`** (`ci_checks/run_invariants.sh`: the checks
    that enforce PROTOCOL Appendix H) is the only one that blocks a merge, and it fails on any failure, error or
    incomplete run; the job **`advisories`** (`ci_checks/run_all.sh --tier advisory`) reports every other finding as a
    warning (annotations, the job summary). Locally, `bash ci_checks/run_all.sh` runs both: exit 0 clean, 1 an invariant

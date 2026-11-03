@@ -85,7 +85,10 @@ def classify(trial, r, rw):
     # the verifier never graded, or that Harbor or the model account ended (not_a_result). A verdict of success with no
     # infrastructure flag stands; over the token budget is the agent's failure unless the verifier flagged infrastructure.
     infra = bool(rw.get("infra_error") or rw.get("grader_error"))
-    ok = rw.get("success") == 1 and not over and not infra
+    # an agent-ended episode (PROTOCOL §3; reward.json ended_session_end) is graded on the state its session ended in, the
+    # token budget's end included: over the budget it is not failed on top
+    fails = over and "ended_session_end" not in rw
+    ok = rw.get("success") == 1 and not fails and not infra
     why = None if ok or (over and not infra) else not_a_result(trial, r, rw)
     return ("success" if ok else "not_a_result" if why else "fail"), why, over
 
