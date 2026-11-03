@@ -52,4 +52,10 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "gra
            "sim_crashed_on_call": int(d.get("reason") == "sim_crashed_on_call"),
            "sim_startups": int(num("sim_startups")), "resumes": int(num("resumes")),
            "resume_state_mismatch": int(num("resume_state_mismatch")), "resume_max_tcp_dev_m": num("resume_max_tcp_dev_m"),
-           "resume_max_joint_dev": num("resume_max_joint_dev")})
+           "resume_max_joint_dev": num("resume_max_joint_dev"),
+           # an agent-ended episode's record (PROTOCOL §3: final.json success_signal / ended_by, step_limit / steps_used)
+           **({"ended_finish": int(d.get("ended_by") == "finish"), "ended_step_limit": int(d.get("ended_by") == "step_limit"),
+               "ended_session_end": int(d.get("ended_by") == "session_end"),
+               "hidden_success_seen": int(bool(d.get("hidden_success_seen")))}
+              if d.get("success_signal") == "hidden" else {}),
+           **({"step_limit": int(num("step_limit")), "steps_used": int(num("steps_used"))} if d.get("step_limit") else {})})

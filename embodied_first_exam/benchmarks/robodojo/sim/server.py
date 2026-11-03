@@ -19,7 +19,11 @@ RoboDojo specifics:
   recorded (rendering never steps physics), z-depth from the same renders;
 - the episode ends as RoboDojo's does: at the first action where the task's check passes, or when a check fails for good;
   or when the time is up. RoboDojo's per-task step limit (a policy's episode length in its evaluation; no check reads it)
-  is not applied: no step caps (PROTOCOL D1), only a runaway guard;
+  is not applied: no step caps (PROTOCOL D1), only a runaway guard. A task whose service sets RCB_AGENT_END and
+  RCB_STEP_LIMIT (every RoboDojo standard task: PROTOCOL §3 "Agent-ended episodes", rcb_agent_end.py) ends it the
+  agent's way instead: after the task's step_lim actions, or when a check fails for good, or
+  at the agent's POST /finish or the end of its session; a success never ends it and is never shown, and the verdict is
+  RoboDojo's: whether the reward reached 1 in the episode;
 - the episode is graded as it ran (owner 2026-10-17: no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: RoboDojo's check after every action; the
   end-state hash), the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh writes final.json from it;
@@ -39,6 +43,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import rcb_limited as L  # noqa: E402
+import rcb_agent_end as AE  # noqa: E402
 import live_video  # noqa: E402
 
 PROTOCOL = L.PROTOCOL
@@ -55,7 +60,7 @@ E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "succ
 # a task graded by verdict (instance.json "determinism": "verdict", e.g. GPU particle liquids) resumes `approx`
 VERDICT = json.load(open(INSTANCE)).get("determinism") == "verdict"
 RESUME = "approx" if VERDICT else "exact"
-EP = L.Episode(DATA, dim=ACTION_DIM, resume=RESUME)
+EP = L.Episode(DATA, dim=ACTION_DIM, resume=RESUME, persist=AE.persist())
 EP.startup()             # start count, back-off after failed starts, startup watchdog (RCB_STARTUP_TIMEOUT_S) until scene_built()
 log = EP.log
 
@@ -71,7 +76,13 @@ def write_final() -> None:
     L._write_json(os.path.join(DATA, "final.json"),
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "done": E["done"], "task": TASK,
-                   "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields()})
+                   "protocol": PROTOCOL, "finalized": False, "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), **EP.final_fields(),
+                   **AE.final_fields(E, n), **step_fields()})
+
+
+def step_fields() -> dict:
+    """final.json / episode.json: where the step limit comes from (nothing without one; AE.final_fields has the numbers)."""
+    return {"step_limit_source": "RoboDojo step_lim"} if AE.STEP_LIMIT is not None else {}
 
 
 def dump() -> None:
@@ -89,7 +100,7 @@ def dump() -> None:
                   {"success": bool(E["success"]), "steps": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS,
                    "elapsed_s": round((E.get("t_end") or time.time()) - E["t0"], 1), "reason": E["reason"], "task": TASK, "protocol": PROTOCOL,
                    "n_actions": E.get("n_actions"), "live_sha": E.get("live_sha"), "determinism_verdict_mode": VERDICT, **INSTANCE_CHECK,
-                   **EP.final_fields()})
+                   **EP.final_fields(), **AE.final_fields(E, n), **step_fields()})
     write_final()
     VIDEO.last(ctrl_steps(), frame=lambda: S.render_frame("cam_head"))   # the end state, rendered once (after the verdict)
 
@@ -97,7 +108,11 @@ def dump() -> None:
 def finish(reason: str) -> None:
     if E["done"]: return
     E["done"] = True; E["reason"] = reason; E["t_end"] = time.time(); E["episode_control_steps"] = ctrl_steps()
-    if not E["success"]:
+    if AE.ENABLED:       # agent-ended episode: RoboDojo's reward is a latch: its verdict at an end-state end, a failed check
+        # and a simulator error alike (an error is judged as in a task without the feature: the check still runs)
+        try: E["success"] = reason in AE.END_STATE_REASONS + ("failed_check", "error") and S.latched()
+        except Exception: E["success"] = False
+    elif not E["success"]:
         try: E["success"] = check_success()
         except Exception: pass
     log({"ev": "end", "reason": reason, "step": E["step"], "control_steps": ctrl_steps(), "elapsed_s": round(E["t_end"] - E["t0"], 1), "success": bool(E["success"])})
@@ -160,6 +175,11 @@ KIN = {"endpoint": "/kinematics", "joint_names": [f"{a}_{j}" for a in ARMS for j
                            "seed": "12 joint angles (optional; default: the current targets)"}},
        "model": "numpy models of both arms from RoboDojo's ARX X5 URDF at their base poses (no physics, no simulated time)"}
 STEP_GUARD = int(S.step_lim)
+# Agent-ended episodes (PROTOCOL §3; RCB_AGENT_END, RCB_STEP_LIMIT in the task's sim service): the episode's step limit is
+# the task's own RoboDojo step_lim (Session: env.step_lim; RCB_STEP_LIMIT must equal it), one step = one 25 Hz action (one
+# row handed to Session.step, 10 physics steps), as RoboDojo's evaluator counts them; the end there is reason "step_limit",
+# graded as it stands. The spec states the budget; every meta / status gives the steps left.
+STEP_LIMIT = AE.STEP_LIMIT is not None
 
 SPEC = {
     "protocol": PROTOCOL, "protocol_compat": list(L.COMPAT), "simulator": "robodojo (RoboDojo's evaluator on Isaac Lab / Isaac Sim 5.1)",
@@ -198,14 +218,18 @@ SPEC = {
                        "far side of the table, z up; the arm bases and every link are in it (spec.robot_spec)",
               "up": "+z", "units": {"length": "m", "angle": "rad", "time": "s"}, "quaternion_order": "wxyz",
               "camera_axes": "intrinsic_cv / extrinsic_cv: OpenCV camera axes (x right, y down, z forward); cam2world_gl: OpenGL axes (x right, y up, z back)"},
-    "budget": {"reset": 0, "steps": None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
+    "budget": {"reset": 0, "steps": STEP_GUARD if STEP_LIMIT else None, "wall_clock_s": float(os.environ.get("RCB_WALL_CLOCK_S", "3600"))},
     # PROTOCOL §4.5: no step budget, but a technical cap is stated here. The tooling's runaway guard ends the episode after
     # STEP_GUARD actions (reason "step_guard"): 10 min of simulated time.
     "max_control_steps": STEP_GUARD,
-    "episode": f"one episode, no reset: it ends at the first action where RoboDojo's check for the task passes (checked after every "
-               f"action), when a check fails for good, when your time is up, on a simulator error, or after {STEP_GUARD:,} actions "
-               f"({STEP_GUARD / CTRL_HZ / 60:.0f} min of simulated time: a technical cap, reason \"step_guard\", spec.max_control_steps; "
-               f"graded as it stands)",
+    "episode": (f"one episode, no reset, with a step limit of {STEP_GUARD:,} steps (RoboDojo's own limit for this task; one step = one "
+                f"25 Hz action, 1/25 s of simulated time; meta control_steps / steps_left): it ends at the limit (reason \"step_limit\", "
+                f"graded as it stands), when a check fails for good, when your time is up, on a simulator error, or at POST /finish"
+                if STEP_LIMIT else
+                f"one episode, no reset: it ends at the first action where RoboDojo's check for the task passes (checked after every "
+                f"action), when a check fails for good, when your time is up, on a simulator error, or after {STEP_GUARD:,} actions "
+                f"({STEP_GUARD / CTRL_HZ / 60:.0f} min of simulated time: a technical cap, reason \"step_guard\", spec.max_control_steps; "
+                f"graded as it stands)"),
     "robot_spec": RSPEC,
     "kinematics": KIN,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
@@ -265,6 +289,7 @@ def meta_common(cams) -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": n, "physics_steps": n * SUBSTEPS, "sim_time_s": round(n / CTRL_HZ, 3),
             "time_s": round(L.agent_time(E), 2), "time_left_s": max(0.0, round(SPEC["budget"]["wall_clock_s"] - L.agent_time(E), 1)),
             "proprio": {"layout": SPEC["proprio_layout"], "now": proprio_row().tolist()}, "done": E["done"], "reason": E["reason"],
+            **AE.steps_left(n),
             **({"cameras": cal} if OBS_CALIBRATION else {})}
 
 
@@ -301,6 +326,10 @@ def ctrl_step(a: np.ndarray, rec: L.Recorder) -> bool:
     over = S.step(a); stop = EP.journal(a)
     rec.tick()                     # past the call's budget (a long ee_pose move) it films no more; the last frame is taken
     VIDEO.offer(ctrl_steps())      # a frame only if the call rendered this action (past the budget too: Rec._skip)
+    if AE.ENABLED:       # the reward only records the state's success; a failed check ends it, the step limit is the cap
+        AE.hidden_success(E, check_success(), log, ctrl_steps())
+        if over: finish("step_limit" if end_reason() == "step_guard" else end_reason())
+        return E["done"] or stop
     if over: finish(end_reason())
     return E["done"] or stop
 
@@ -468,7 +497,8 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
     if typ == "joint_position": run_joint_position(A, dt, interp, rec, clipped)
     else: run_ee_pose(A, rec, plan, clipped)
     rec.tick(force=True, last=True); VIDEO.offer(ctrl_steps())
-    succ = E["success"] or check_success(); E["success"] = succ
+    succ = bool(E.get("now_success")) if AE.ENABLED else (E["success"] or check_success())   # agent-ended: never latched
+    if not AE.ENABLED: E["success"] = succ
     out = {**meta_common(cams), "chunk_id": E["calls"], "type": typ, "executed_rows": E["step"] - step0, "control_steps_chunk": ctrl_steps() - before,
            "physics_steps_chunk": (ctrl_steps() - before) * SUBSTEPS, "clipped": clipped[:200], "n_clipped": len(clipped), "plan": plan, "rejected": None, "ok": True,
            **({"frames_skipped": rec.skipped} if rec.skipped else {})}
@@ -476,7 +506,7 @@ def do_submit(meta: dict, A: np.ndarray) -> tuple[dict, list]:
          "depth": rec.mode, "control_steps": ctrl_steps() - before, "n_clipped": len(clipped), "plan": plan[:50], "success": succ,
          **({"stopped": EP.stop_reason} if EP.stopping else {})})
     save_call_evidence(E["calls"], {k: v for k, v in out.items() if k != "cameras"}, rec)
-    if succ: finish("success")
+    if succ and not AE.ENABLED: finish("success")
     out["done"] = E["done"]; out["reason"] = E["reason"]
     return out, rec.parts(video, fps)
 
@@ -499,8 +529,9 @@ def do_observe(meta: dict) -> tuple[dict, list]:
         for _ in range(int(round(seconds * CTRL_HZ))):
             if ctrl_step(hold, rec): break
         rec.tick(force=True, last=True); VIDEO.offer(ctrl_steps())
-        succ = E["success"] or check_success(); E["success"] = succ
-        if succ: finish("success")
+        if not AE.ENABLED:         # agent-ended: ctrl_step recorded the state's success, nothing ends here
+            succ = E["success"] or check_success(); E["success"] = succ
+            if succ: finish("success")
     else:
         rec.tick(force=True, last=True)                    # the current frames: no physics
     E["calls"] += 1
@@ -519,7 +550,8 @@ def do_kinematics(req: dict) -> dict:
 
 def status() -> dict:
     return {"step": E["step"], "calls": E["calls"], "control_steps": ctrl_steps(), "done": E["done"], "reason": E["reason"],
-            "elapsed_s": round(time.time() - E["t0"], 1)}
+            "elapsed_s": round(time.time() - E["t0"], 1),
+            **AE.steps_left(ctrl_steps())}
 
 
 def end_from_signal() -> None:
@@ -551,5 +583,6 @@ if resumed:
 E["ready"] = True; write_final()
 open(PID_FILE, "w").write(str(os.getpid()))
 print(f"{PROTOCOL} sim ready (startup {EP.n_startups}, resumes {EP.resumes})", flush=True)
-L.serve(L.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
-                  on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row))
+AE.serve(AE.Service(spec=SPEC, lock=LOCK, state=E, submit=do_submit, observe=do_observe, kinematics=do_kinematics, status=status,
+                  on_submit_error=lambda exc: finish("error"), log=log, episode=EP, state_sha=S.state_sha, proprio=proprio_row,
+                  **({"finish": lambda: finish("finished")} if AE.ENABLED else {})))
