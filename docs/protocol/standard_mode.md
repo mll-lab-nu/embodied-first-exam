@@ -179,7 +179,7 @@ mujoco-playground.md, kinder.md, humanoidbench.md, metaworldplus.md, robocasa.md
 
 ### Optional reset capability
 Each task declares its own budget N (PROTOCOL §2): the `RCB_RESET_BUDGET` default of its `sim` service, served as
-`/spec.budget.reset` and stated in its instruction (templates: 0 in standard mode, 10 in standard-realtime mode). Any
+`/spec.budget.reset` and stated in its instruction (templates: 0 in both standard and standard-realtime mode). Any
 2.x service may implement the capability; which ones do is in their benchmarks' docs. With N > 0, `/spec.budget.reset =
 N`, `/spec.reset` describes it, and `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running
 episode and starts a new one from the same frozen state, `N` times in all; `/status` and `meta` add `episode`,
