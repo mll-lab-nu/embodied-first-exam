@@ -838,3 +838,42 @@ gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
 recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
 measured = "the sim service of every one of the 24 scenes on an L40S (48 vCPU host), started alone and given the two largest legal calls (a watch at the full frame rate, every camera, video both, 240 images; the same with depth frames, 120 + 120): cgroup memory 12.5-15.4 GiB idle, memory.peak at most 14.89 GiB, GPU memory at most 11.5 GiB (bulb, three cameras), 239-246 threads; re-measured with the final service (shared layer standard-files-0.4.0, 12 warm-up renders) on the two largest: clear_organic_objects memory.peak 15.61 GiB (15.4 idle), GPU 9.0 GiB; bulb 14.41 GiB, GPU 11.5 GiB, 245 threads; Harbor oracle trials (stack_blocks, fruit_delivery; the resource monitor): the sim 13.2-13.9 GiB, 6.9-8.1 GiB of GPU memory, CPU at its cap (8), 239 threads; the oracle's client 0.03 GiB, 52 threads"
 caps_measured = "the sim service: memory max(1.5 x 15.61, 15.61 + 3) = 23.4 -> 24 GiB (the largest legal call adds at most 1.4 GiB to a 15.4 GiB service: within it); GPU memory max(1.5 x 11.52, 11.52 + 2) = 17.3 -> 18 GiB (at least 16 for Isaac Sim); threads 246 on a 48 vCPU host (Isaac Sim's thread pools grow with the host's cores) -> 2048, room for a host with four times the cores; CPU at its cap in every reading: 8 (the privileged twins' value); main: no agent trial yet, the shared client's caps of RoboLab's standard tasks (the same image), kept until agent trials are measured"
+
+# 17 task(s)
+[[cap]]
+match = "^tactilelab-.*-privileged$"
+main = { cpus = 8, memory_gb = 13, pids = 2048, gpu_memory_gb = 16, disk_gb = 10 }
+gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]   # RTX-class (Isaac Sim); the instances were frozen on an L40S: another model may rebuild another state hash, an instance_mismatch (tasks/tactilelab/README.md)
+recommended_gpu = "L40S 48GB"
+measured = "on an L40S with efe-private:tactilelab-0.2.0, cgroup memory.peak and the GPU memory of the container's own processes (nvidia-smi, 1 s samples); the agent's container = the oracle with the self-check CLI replay running beside it (two Isaac Sim processes, and two Newton sidecars for a deformable task), the verifier = two fresh-process replays and the video replay, one after the other. Agent's container (memory / GPU memory / mean cores): insert_hdmi 7.3 GiB / 5.7 GiB / 7, cloth_fold_half 8.2 / 6.7 / 5, cable_needle_thread 8.2 / 6.7 / 5, dough_press_thickness 9.1 / 22.3 / 7; verifier: insert_hdmi 12.2 / 5.6 / 6, cloth_fold_half 12.1 / 6.1 / 4, dough_press_thickness 12.4 / 13.9 / 6. With tactilelab-files-0.5.0 (the same sampling, plus cgroup pids.peak and the writable layer's size every 30 s): agent's container fem_plug_insert 7.7 GiB / 6.1 GiB / 399 processes and threads / 0.15 GB written, sleeve_pull_on_forearm 8.0 / 6.8 / 422 / 0.15 GB; verifier fem_plug_insert 12.7 GiB / 5.9 GiB / 379 / 0.39 GB, sleeve_pull_on_forearm 12.1 / 6.2 / 377 / 0.41 GB; the trial's Kit cache volume 0.05 GB"
+caps_measured = "peaks of 6 of the 20 tasks (insert_hdmi, cloth_fold_half, cable_needle_thread, dough_press_thickness, fem_plug_insert, sleeve_pull_on_forearm; `measured`): the agent's container memory 8.2 GiB -> max(1.5 x peak, peak + 2), rounded up: 13 GiB; GPU memory 6.8 GiB -> max(1.5 x peak, peak + 2) = 10.2 GiB, at least 16 GiB for Isaac Sim: 16 GiB; CPU: mean 5-7 cores, the cap 8; processes and threads 422 (Isaac Sim) -> 4 x 422 = 1688, a power of two: 2048; disk 0.15 GB written (the Kit cache is a volume of 0.05 GB) -> at least 10 GiB: 10 GiB; the verifier ([verifier.environment], set in each task) 12.7 GiB (fem_plug_insert) -> max(1.5 x peak, peak + 2) = 19.05, rounded up: 20 GiB, 8 CPUs"
+
+# 3 task(s)
+[[cap]]
+match = "^tactilelab-dough-.*-privileged$"
+main = { cpus = 8, memory_gb = 14, pids = 2048, gpu_memory_gb = 34, disk_gb = 10 }
+gpu_types = ["L40S", "L40", "RTX 6000 Ada"]   # 34 GiB of GPU memory: a 48 GB card; as the rule above
+recommended_gpu = "L40S 48GB"
+measured = "on an L40S with efe-private:tactilelab-0.2.0 (as the rule above): the agent's container 9.1 GiB / 22.3 GiB of GPU memory / 7 mean cores (dough_press_thickness; the implicit-MPM dough sidecar holds about 10 GiB of GPU memory per Session); verifier 12.4 GiB / 13.9 GiB / 6"
+caps_measured = "the agent's container memory 9.1 GiB -> max(1.5 x peak, peak + 2), rounded up: 14 GiB; GPU memory 22.3 GiB -> max(1.5 x peak, peak + 2), rounded up: 34 GiB, so a 48 GB card; processes and threads and disk as the rule above (2048, 10 GiB: the dough sidecar is one more process of the same kind); the verifier as the rule above (20 GiB, 8 CPUs)"
+
+
+# 17 task(s)
+[[cap]]
+match = "^tactilelab-.*-standard$"
+main = { cpus = 8, memory_gb = 16, pids = 1024, disk_gb = 10 }
+sim = { cpus = 8, memory_gb = 22, pids = 2048, gpu_memory_gb = 16 }
+gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]   # as the privileged rule
+recommended_gpu = "L40S 48GB"
+measured = "on an L40S (48 vCPU host shared with other trials), the sim service of every one of the 20 tasks, cgroup memory.peak / pids.peak and the GPU memory of its processes (nvidia-smi, 2 s samples), in an oracle, a nop and (lift) an adversarial trial: memory 11.2-12.8 GiB, 14.1 GiB in the trial that made the largest legal call (an observe with both wrist cameras and per-frame depth, 2,996 images of max_frames_per_call 3,000; the response is cut to its 256 MiB bound by the shared layer), threads 244-366, CPU at its cap (8), GPU memory 5.6-6.5 GiB; the agent's container in a Harbor oracle trial (RCB_LIMITS_ENFORCE=1, lift): 0.03 GiB, 52 threads"
+caps_measured = "the sim service: memory max(1.5 x 14.1, 14.1 + 3) = 21.1 -> 22 GiB (the largest legal call holds max_frames_per_call = 3,000 frames of 640 x 480 before the response is cut to 256 MiB: at most 1,500 RGB (0.92 MB each) + 1,500 float32 depth frames (1.23 MB each) = 3.0 GiB, 2.6 GiB for 3,000 RGB frames; 11.9 GiB idle + 1.2 x 3.0 = 15.5 GiB, within it); GPU memory max(1.5 x 6.5, 6.5 + 2) = 9.8, at least 16 GiB for Isaac Sim: 16 GiB; threads 366 -> 4 x 366 = 1464, a power of two: 2048; CPU 8 (every reading at the cap). The agent's container: no measurement of an agent's own work yet (the oracle client only), kept at the earlier caps (8 CPUs, 16 GiB, 10 GiB of disk); processes 4 x 52, at least 1024: 1024"
+
+# 3 task(s)
+[[cap]]
+match = "^tactilelab-dough-.*-standard$"
+main = { cpus = 8, memory_gb = 16, pids = 1024, disk_gb = 10 }
+sim = { cpus = 8, memory_gb = 22, pids = 2048, gpu_memory_gb = 23 }
+gpu_types = ["L40S", "L40", "RTX 6000 Ada"]   # 23 GiB of GPU memory: a 48 GB card; as the privileged rule
+recommended_gpu = "L40S 48GB"
+measured = "as the rule above; the dough tasks' sim service (the implicit-MPM dough in its Newton sidecar): memory 11.7-12.5 GiB, threads 366, GPU memory 8.2-14.9 GiB"
+caps_measured = "as the rule above, GPU memory max(1.5 x 14.9, 14.9 + 2) = 22.3 -> 23 GiB"
