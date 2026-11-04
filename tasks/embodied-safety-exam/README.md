@@ -676,7 +676,7 @@ protocol's own rules):
    simulator can produce a trajectory Embodied Safety Exam passes) and were reported apart. Removed again on
    2026-10-19 (the author): the benchmark is standard mode only. The realtime
    tasks' own rules (a benchmark may add rules on top of the mode's, stated here): no privileged
-   twin; no reset (the realtime template's default is 10); while the clock runs a picture is charged a fixed 0.24 s of
+   twin; no reset (the realtime template's default, 0); while the clock runs a picture is charged a fixed 0.24 s of
    robot time, a request takes at most 2 cameras, a watch at most 2 pictures per second and no depth; nothing is
    charged before the clock starts.
 2. **Free text in standard mode** (an extension of what the 2.1 layer carries, inside the adapter; protocol-change

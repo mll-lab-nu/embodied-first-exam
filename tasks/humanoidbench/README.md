@@ -68,7 +68,7 @@ Why these (no model's results enter the choice):
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
 | standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, as it ran (live; nothing replayed) |
-| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §2; the realtime template's default is 10) | the last episode, as it ran (live; nothing replayed) |
+| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §2; the realtime template's default is 0) | the last episode, as it ran (live; nothing replayed) |
 
 ### Grading in the standard modes: the live episode
 
@@ -169,7 +169,7 @@ that reads proprioception and streams targets at the control rate through the cl
 `cameras=[]` costs a few ms over the shared network namespace), run in the background, and improved between episodes.
 The agent's code still runs only in its own container, never next to the simulator (standard mode's isolation is
 kept); the 50 resets are what make that loop of writing, running and revising a controller possible at all, which is
-why HumanoidBench's standard-realtime tasks default to 50 resets rather than the mode's 10 (PROTOCOL §2).
+why HumanoidBench's standard-realtime tasks default to 50 resets rather than the mode's 0 (PROTOCOL §2).
 
 World-frame information (PROTOCOL §5): privileged mode gives the full state; standard mode gives none -- no root pose,
 no object or target pose; the room camera's pose is given in the robot's starting frame.

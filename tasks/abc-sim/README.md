@@ -115,7 +115,7 @@ without a colour), and an "all of a colour and shape" directive for the generic 
   modes). The scene-dynamic families get the twin: the conveyor belt carries the objects, and the tray's runtime pushes
   the ball. **S = 1**: the service's real-time factor (0.034 s of simulation per control step) is 11.2 for the conveyor
   and 17.1 for the ball tray without rendering, 5.3 and 10.2 rendering three cameras every step (RTX 4090, EGL), above
-  PROTOCOL §2's 3. Reset budget 10 (the mode's default).
+  PROTOCOL §2's 3. Reset budget 10 (this benchmark's choice; the mode's default is 0).
 
 ## Grading (standard and standard-realtime)
 The verdict is the live episode's (PROTOCOL H.4): the episode the sim sidecar ran, under the task's rule as
