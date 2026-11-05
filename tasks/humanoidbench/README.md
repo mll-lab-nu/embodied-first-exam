@@ -14,7 +14,7 @@ Every image is public: Harbor pulls it.
 | simulator | MuJoCo 3.3.7 + dm_control, CPU (upstream pins 3.1.6; see Physics) |
 | robots | `h1`: Unitree H1, 19 actuators · `h1hand`: H1 + two Shadow hands, 61 actuators |
 | score | an episode's summed reward (≤ 1000 steps); pass = at least upstream's success bar |
-| tasks | 10 × 3 modes: `tasks/humanoidbench/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (the standard-realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
+| tasks | 10 × 3 modes: `tasks/humanoidbench/humanoidbench-<category>-<task>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-realtime` (the realtime mode, `eai-standard/2.3`: standard mode on a clock that does not stop, below) |
 | image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` (`images/humanoidbench/`) |
 | oracle | `sit_simple` (the fixture): full, all three modes; the 9 scored tasks: none, human review (`oracle_evidence` in each task.toml) |
 
@@ -68,11 +68,11 @@ Why these (no model's results enter the choice):
 |---|---|---|---|
 | privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
 | standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, as it ran (live; nothing replayed) |
-| standard-realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §2; the realtime template's default is 0) | the last episode, as it ran (live; nothing replayed) |
+| realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §2; the realtime template's default is 0) | the last episode, as it ran (live; nothing replayed) |
 
 ### Grading in the standard modes: the live episode
 
-The standard and standard-realtime verdict is the live episode's: the sim sidecar judges the episode it runs with HumanoidBench's own rule (the episode's return reaches the pass mark;
+The standard and realtime verdict is the live episode's: the sim sidecar judges the episode it runs with HumanoidBench's own rule (the episode's return reaches the pass mark;
 `step()` in each standard task's `environment/sim/server.py`) and ends it there, and `rcb_service.py` writes that
 verdict (`graded_by = "live"`, `replays = 0`) once the agent's container is stopped; the rule has no settle or hold
 window. The frozen start is checked on the live simulator: `start_sha` is the state `instance.npz` records (the hash
@@ -84,7 +84,7 @@ GPU; median 19 s a trial); it never changes the verdict. `infra_error = 1` only 
 `final.json`, a give-up after crashes not all inside the agent's calls (`sim_crashed`, `resume_failed`), a reset whose
 scene does not rebuild, and
 `instance_mismatch`. Crashes inside the agent's calls (`sim_crashed_on_call`), simulator errors raised by its calls,
-timeouts and failures are the agent's 0. In standard-realtime: once the agent's first command has run, a
+timeouts and failures are the agent's 0. In realtime: once the agent's first command has run, a
 simulator error raised by a control step is the agent's 0 (`sim_error = 1`, no `infra_error`), and so is a simulator
 crash inside a control step (a death whose fatal-signal record in `crash.log` -- SIGSEGV, SIGBUS, SIGFPE, SIGILL,
 SIGABRT -- shows the crashing thread in the step; past
@@ -120,14 +120,14 @@ first guess, and in standard mode there is no simulator to practise in. This is 
 `RCB_RESET_BUDGET=0 harbor run ...` runs the single-episode configuration (no `/reset`, 404); any other value N
 grants N. Results under a budget other than 50 are reported separately.
 
-### Standard-realtime mode: time does not stop
+### Realtime mode: time does not stop
 
 In standard mode the robot waits, frozen, between the agent's calls: a model that thinks for a minute between two
-chunks loses nothing. A real H1 does not wait. The standard-realtime mode (PROTOCOL §3;
-`tasks/humanoidbench/humanoidbench-*-i00-standard-realtime`, 10 tasks, one per family, `mode = "standard-realtime"`) is standard mode with the same
+chunks loses nothing. A real H1 does not wait. The realtime mode (PROTOCOL §3;
+`tasks/humanoidbench/humanoidbench-*-i00-realtime`, 10 tasks, one per family, `mode = "realtime"`) is standard mode with the same
 instance, sensors, success rule, reset budget (50), wall clock (each task's own `[agent] timeout_sec`, stated by the closing `## Time limit` section of every instruction, PROTOCOL §2) and client, on a
 clock that does not stop (each task's `environment/sim/rcb_realtime.py`, which extends `rcb_service.py`; the
-wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Standard-realtime mode"):
+wire protocol is `eai-standard/2.3`, 2.2 plus the realtime capability, docs/protocol/standard_mode.md "Realtime mode"):
 
 - **Clock.** An episode starts paused at the frozen start, its servos holding their starting targets. Its clock starts
   at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every 20 ms of wall time
@@ -169,7 +169,7 @@ that reads proprioception and streams targets at the control rate through the cl
 `cameras=[]` costs a few ms over the shared network namespace), run in the background, and improved between episodes.
 The agent's code still runs only in its own container, never next to the simulator (standard mode's isolation is
 kept); the 50 resets are what make that loop of writing, running and revising a controller possible at all, which is
-why HumanoidBench's standard-realtime tasks default to 50 resets rather than the mode's 0 (PROTOCOL §2).
+why HumanoidBench's realtime tasks default to 50 resets rather than the mode's 0 (PROTOCOL §2).
 
 World-frame information (PROTOCOL §5): privileged mode gives the full state; standard mode gives none -- no root pose,
 no object or target pose; the room camera's pose is given in the robot's starting frame.
@@ -217,8 +217,8 @@ its model-API key in its container, so it could call a search-enabled model thro
 ```bash
 harbor run -p tasks/humanoidbench/humanoidbench-loco-hurdle-i00-standard -a codex -m openai/gpt-6-astra --env-file .env
 harbor run -p tasks/humanoidbench/humanoidbench-loco-sit-simple-i00-standard -a oracle      # or -a nop: scores 0
-harbor run -p tasks/humanoidbench/humanoidbench-loco-walk-i00-standard-realtime -a codex -m openai/gpt-6-astra --env-file .env
-harbor run -p tasks/humanoidbench/humanoidbench-loco-sit-simple-i00-standard-realtime -a oracle   # streams the same 999 rows
+harbor run -p tasks/humanoidbench/humanoidbench-loco-walk-i00-realtime -a codex -m openai/gpt-6-astra --env-file .env
+harbor run -p tasks/humanoidbench/humanoidbench-loco-sit-simple-i00-realtime -a oracle   # streams the same 999 rows
 ```
 Agent, provider and effort settings: docs/protocol/running.md. Standard tasks run with 50 resets by default; `RCB_RESET_BUDGET=0 harbor run ...` runs them
 with none (one episode), whose results are reported separately. Build the image: `docker build -f images/humanoidbench/Dockerfile -t
@@ -229,7 +229,7 @@ repository root).
 
 Agent results are not kept in this repository: they are published on the results site, keyed by run id. Standard-mode
 results state their reset budget (the configuration is 50; runs with another budget are reported separately).
-Standard-realtime results are their own mode and are never pooled with standard ones; they state the reset budget and
+Realtime results are their own mode and are never pooled with standard ones; they state the reset budget and
 `slowdown`. Official runs use `slowdown` 1 (the default); results with `RCB_SLOWDOWN` ≠ 1 are reported separately.
 
 ## Standard-mode service details

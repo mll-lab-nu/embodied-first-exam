@@ -1,8 +1,8 @@
 # MyoSuite
 
 Twenty-two [MyoSuite](https://github.com/MyoHub/myosuite) tasks (2.12.2, Apache-2.0) on MuJoCo 3.6.0, CPU only, in both
-modes: 44 task directories, `tasks/myosuite/myosuite-<family>-i00-{privileged,standard}`, and one standard-realtime twin
-(`tasks/myosuite/myosuite-table-tennis-i00-standard-realtime`: table_tennis is the benchmark's one dynamic family). The robot is a musculoskeletal model of a
+modes: 44 task directories, `tasks/myosuite/myosuite-<family>-i00-{privileged,standard}`, and one realtime twin
+(`tasks/myosuite/myosuite-table-tennis-i00-realtime`: table_tennis is the benchmark's one dynamic family). The robot is a musculoskeletal model of a
 human body: the MyoHand (forearm and hand, 39 muscles), the MyoArm (34 or 63 muscles), MyoSuite's torso-and-arm table
 tennis player, the MyoArm next to a prosthetic MPL arm, and the MyoLegs (with or without a prosthetic leg). The main
 command is **one excitation per muscle** (a few families add non-muscle actuators: a positioned wrist, a sliding pelvis,
@@ -249,8 +249,8 @@ that score 0; an apple_lift trajectory that leaves the apple on the table scores
 - Determinism of set 3 before building: three replays in one process and one in a fresh process gave the same final
   state for random action sequences in every family.
 
-## Standard-realtime (`eai-standard/2.3`)
-The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-standard-realtime` twin. In MyoSuite that is **table_tennis** only (the ball is served at 5.6 m/s at reset;
+## Realtime (`eai-standard/2.3`)
+The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. In MyoSuite that is **table_tennis** only (the ball is served at 5.6 m/s at reset;
 every other family's objects start at rest, and chase_tag's opponent stands still in its frozen instance).
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and Embodied Olympics - Fun, unchanged
   (`rcb_realtime.py` and `rcb_client.py` from `embodied_first_exam/standard/realtime/`; `rcb_service.py` and `grade.py`,
@@ -276,7 +276,7 @@ every other family's objects start at rest, and chase_tag's opponent stands stil
   succeeds live (no stall), and streamed one row per call too; nop (no request) ends `timeout`, not graded a success.
   The cutoff is the standard twin's (3600 s).
 
-## Grading (standard and standard-realtime)
+## Grading (standard and realtime)
 The verdict is the live episode's (PROTOCOL H.4): `success` = the last episode
 the sim service ran ended in success under the task's rule, as `Session.step` applied it to the steps it executed. The
 rule's windows are part of that predicate, so nothing is left for a replay to add: `hold` families end in success only
@@ -291,7 +291,7 @@ only after the whole reference with the on-track share, the final step and the w
   nothing and decides nothing; a render that fails or runs out of the hook's time (`RCB_COLLECT_BUDGET_S` = 1800 s,
   less the end of the episode, less a minute) loses only the video (`video` = false), never infra and never a 0.
   `tests/grade.py`: pass iff `graded_by` = `live`, `success`, and no infrastructure flag.
-- **Standard-realtime** (the twin's `environment/sim/`): the shared layer writes the same fields from the adapter's step() and
+- **Realtime** (the twin's `environment/sim/`): the shared layer writes the same fields from the adapter's step() and
   renders the video from the trajectory after the verdict; `server.py` has no `verify()` and no `live_verdict()` (no
   extra window to apply). The collect hook waits 300 s for the verdict and for the video until 870 s.
 - **Start state.** At a fresh episode's start the service compares the built scene's state hash with the frozen
@@ -308,7 +308,7 @@ only after the whole reference with the on-track share, the final step and the w
 
 ## Files
 Each task directory carries its tooling (`rcb_myosuite.py`), its frozen instance (`instance.npz`) and, where the family
-has one, its reference solution (`solution/`); the standard-realtime twin's service is its `environment/sim/server.py`.
+has one, its reference solution (`solution/`); the realtime twin's service is its `environment/sim/server.py`.
 `images/myosuite/` (Dockerfile, VERSION). The task directories are the deliverable; the tooling that built them is kept
 outside this repository.
 

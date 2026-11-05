@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Standard and standard-realtime mode (PROTOCOL §3, H.3: no simulator or simulation code in the agent container): the agent's image is built
+# Standard and realtime mode (PROTOCOL §3, H.3: no simulator or simulation code in the agent container): the agent's image is built
 # from environment/, but never takes environment/sim/, which compose mounts into the sim sidecar only (and which may
 # hold the scoring code). Every COPY / ADD source of environment/Dockerfile is therefore a named path outside sim/:
 # not `.` or `..`, not a wildcard. Sources from another stage or image (--from) and ADD URLs are not from environment/.
 # Usage: check-standard-agent-image.sh tasks/<benchmark>/<task-dir>
 set -uo pipefail
 t="${1%/}"
-# the sidecar modes of the mode registry (PROTOCOL §3; run_all.sh reads it once): standard, standard-realtime
+# the sidecar modes of the mode registry (PROTOCOL §3; run_all.sh reads it once): standard, realtime
 modes="${RCB_MODES_TABLE:-$(python3 "$(dirname "$0")/../scripts/task_conventions.py" modes)}"
 n="$(basename "$t")"; side=0
 while read -r m sidecar _tw; do [ -n "$m" ] && [[ "$n" == *"-$m" ]] && { side="$sidecar"; break; }; done <<< "$modes"

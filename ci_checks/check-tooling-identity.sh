@@ -21,9 +21,9 @@
 #    The eai-standard/2.4 layer (metadata.protocol 2.4: RoboARC, its IKEA suite included) is held to the same rules, with rcb_limited.py and
 #    rcb_client.py from embodied_first_exam/standard/v2_4/ (docs/protocol/standard_mode.md) and 2.2's rcb1.py and run.sh.
 # 3. The eai-standard/2.3 realtime layer (every task whose metadata.protocol is 2.3: HumanoidBench, BiGym 2.0
-#    standard-realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
+#    realtime): the service's environment/sim/rcb_realtime.py and the agent's environment/rcb_client.py are
 #    byte-identical to their one source, embodied_first_exam/standard/realtime/ (docs/protocol/standard_mode.md,
-#    "Standard-realtime mode").
+#    "Realtime mode").
 # 4. DexToolBench and the MuJoCo Playground tasks that serve the same service (ALOHA, Panda), MetaWorld+ and RoboTwin
 #    2.0. Every file shared by the tasks of a mode is byte-identical
 #    within the benchmark and mode (FAMILY_SHARED: service, client, graders, tests/test.sh, Dockerfiles, the oracle's
@@ -202,7 +202,7 @@ for t in sorted(TDIR):
     if meta.get("exporter"):   # written by the benchmark's own exporter (Embodied Olympics, PROTOCOL §3; Embodied Safety Exam 0.5.4): its own sources
         # one group per exporter and skill-in-the-loop setting: Embodied Olympics - Match's table-tennis privileged twins come
         # from their own simulator's exporter (tools.tt_fullsim, #282 / #325) and the low-level matches with the agent's
-        # skill in the loop have their own standard-realtime grader (#300); each is shared within its group
+        # skill in the loop have their own realtime grader (#300); each is shared within its group
         bench += f" (exported: {meta['exporter']}" + (f", {meta['skill_in_loop']}" if meta.get("skill_in_loop") else "") + ")"
     dirs[bench] += 1
     for dp, dns, fns in os.walk(TDIR[t]):

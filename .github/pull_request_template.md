@@ -9,7 +9,7 @@
 <!-- Written by you. For a fix: which agent behaviour it closes, with before/after runs. -->
 
 ## Contract
-- Mode(s): privileged / standard / standard-realtime — protocol (standard: `eai-standard/2.1`/`2.2`/`2.4`; standard-realtime: `eai-standard/2.3`): `eai-standard/2.__`
+- Mode(s): privileged / standard / realtime — protocol (standard: `eai-standard/2.1`/`2.2`/`2.4`; realtime: `eai-standard/2.3`): `eai-standard/2.__`
 - Oracle: full / partial / none — evidence: ___
 - Base image(s): `efe:<sim>-<ver>` (published) / `efe-private:<sim>-<ver>` (BUILD_ONLY)
 - Agent time cutoff: ___ s per mode, `[agent] timeout_sec` in each task's task.toml (rules: PROTOCOL §2); the reason if not 3600. A change of an existing task's cutoff: old -> new, decided by ___
@@ -22,7 +22,7 @@
 - [ ] New simulator or family: two fresh replays give the same state hash
 - [ ] Oracle `partial`/`none`: per-family table of positive examples (PROTOCOL §4)
 - [ ] Runs with Harbor's native agents (no custom runner, gateway or adapter)
-- [ ] Names `<base>-privileged` / `<base>-standard` / `<base>-standard-realtime`; README in the standard layout; no `results/`
+- [ ] Names `<base>-privileged` / `<base>-standard` / `<base>-realtime`; README in the standard layout; no `results/`
 - [ ] A new benchmark: its row is in `scripts/task_conventions.py` `BENCHMARK_TABLE` (shared-files pull request), with a prefix of its own
 - [ ] The cutoff is each task's `[agent] timeout_sec`; `instruction.md` ends with the `## Time limit` section `normalize` renders from it and states the limit nowhere else (`ci_checks/check-cutoffs.py`; docs/protocol/running.md "The agent's time")
 - [ ] The agent's egress is the allowlist (model APIs + package registries) and the oracle passes under it (the task itself downloads nothing at run time); no file the agent reads, in the task or its image, names or locates a solution, a demonstration or its dataset (PROTOCOL Appendix H.2, H.6)

@@ -21,14 +21,14 @@
 #     ChatGPT login (codex)          CODEX_FORCE_AUTH_JSON=1 (Harbor uploads ~/.codex/auth.json into each trial)
 #     Claude subscription            CLAUDE_FORCE_OAUTH=1 and CLAUDE_CODE_OAUTH_TOKEN (`claude setup-token`)
 #     Azure OpenAI (codex)           AGENT_CONFIG=<config.toml with the Azure provider> and its key variable
-#   MODES        "privileged standard"   K  attempts per task (1); add `standard-realtime` for <base>-standard-realtime where it exists
+#   MODES        "privileged standard"   K  attempts per task (1); add `realtime` for <base>-realtime where it exists
 #   SEQ          1 = one trial at a time per runner (default): task by task, each mode in MODES order, one Harbor job per
 #                task and mode ($JOBS/<batch>-<mode>-<task>/). Start the same command again to add a lane: every job is
 #                claimed (mkdir $JOBS/.claims/<job>) by exactly one runner, so K runners run K trials at a time. A job that
 #                already has its result.json (Harbor writes it when the job starts) is skipped; to rerun an interrupted
 #                job, move its directory and its claim away first.
 #                0 = one job per mode ($JOBS/<batch>-<mode>/), the modes side by side, N_P / N_S concurrent trials (2 / 2;
-#                N_S also for standard-realtime)
+#                N_S also for realtime)
 #   WAIT_FOR     a file that must exist before a mode starts, e.g. "standard:<path>" (default: none)
 #   JOBS         <repo>/jobs/agents     LABEL  the run's title for the results README
 #   RUN_ID       the run id (docs/TAXONOMY.md "Run ids"): <harness>-<model>-<effort>, derived from AGENT / MODEL /
@@ -147,7 +147,7 @@ mkdir -p "$JOBS/.plan"
 python3 - "$R" "$JOBS/.plan/$batch.json" "$batch" "$RUN_ID" "$SEQ" "$MODES" "${tasks[@]}" <<'PY'
 import json, os, pathlib, sys
 repo, out, batch, run_id, seq, modes, *tasks = sys.argv[1:]
-name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "standard-realtime": f"{t}-standard-realtime"}.get(m, f"{t}-privileged")
+name = lambda m, t: {"standard": f"{t}-standard", "limited": f"{t}-standard", "realtime": f"{t}-realtime"}.get(m, f"{t}-privileged")
 jobs = [{"job": f"{batch}-{m}-{t}" if seq == "1" else f"{batch}-{m}", "task": name(m, t), "mode": m}
         for t in tasks for m in modes.split() if any(pathlib.Path(repo).glob(f"tasks/*/{name(m, t)}/task.toml"))]   # tasks/<benchmark folder>/<task>/
 tmp = pathlib.Path(f"{out}.{os.getpid()}")
@@ -450,10 +450,10 @@ PY
   return 0
 }
 
-name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-standard-realtime (PROTOCOL §1)
+name() {  # <mode> <base> -> task dir name: <base>-privileged / <base>-standard / <base>-realtime (PROTOCOL §1)
   case "$1" in
     standard|limited) echo "$2-standard" ;;
-    standard-realtime) echo "$2-standard-realtime" ;;
+    realtime) echo "$2-realtime" ;;
     *) echo "$2-privileged" ;;
   esac
 }
@@ -486,7 +486,7 @@ else
   for m in $MODES; do
     inc=(); for t in "${tasks[@]}"; do [ -d "$(src_of "$(name "$m" "$t")")" ] && inc+=(-i "$(name "$m" "$t")"); done
     [ ${#inc[@]} -eq 0 ] && continue
-    n="$N_P"; case "$m" in standard|limited|standard-realtime) n="$N_S" ;; esac   # sidecar modes
+    n="$N_P"; case "$m" in standard|limited|realtime) n="$N_S" ;; esac   # sidecar modes
     (wait_for "$m"; run_job "$batch-$m" "$n" "${inc[@]}") &
     pids+=($!)
   done

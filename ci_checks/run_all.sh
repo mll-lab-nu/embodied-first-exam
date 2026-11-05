@@ -98,7 +98,7 @@ add python3 ci_checks/check-resources.py"$pargs"
 # the limit (the twins' equal number is an invariant: check-twins.py). Per task: a scoped run checks its benchmarks' tasks only
 add python3 ci_checks/check-cutoffs.py"$targs"
 add python3 ci_checks/check-seeds.py"$pargs"
-# PROTOCOL §2: a standard-realtime task states its slowdown S (its sim service's default, the instruction) and allows resets
+# PROTOCOL §2: a realtime task states its slowdown S (its sim service's default, the instruction) and allows resets
 add python3 ci_checks/check-realtime.py"$pargs"
 # PROTOCOL §4: every task renders a video and the runner can collect it; a declared video time bound is not
 # shorter than the verdict replay's (privileged)

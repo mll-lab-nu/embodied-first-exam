@@ -1,0 +1,33 @@
+{
+ "agent_timeout_sec": 14400,
+ "caps": {
+  "main": {
+   "cpus": 6.0,
+   "disk_gb": 10.0,
+   "gpu_memory_gb": 12.0,
+   "memory_gb": 16.0,
+   "pids": 2048
+  },
+  "practice": {
+   "cpus": 4.0,
+   "memory_gb": 8.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 6.0,
+   "memory_gb": 8.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": true,
+ "gpu_memory_gb": 12.0,
+ "mode": "realtime",
+ "scope_services": [
+  "main"
+ ],
+ "task": "embodied-olympics-match-soccer-jointgpu-i01-realtime",
+ "tick_sec": 5
+}

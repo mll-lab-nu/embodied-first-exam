@@ -16,7 +16,7 @@ Standard-mode twin of `pandadyn-d06-moving-bank-relay-i00-privileged` (same froz
 client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
+episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
 privileged task to measure the cost of losing privileged state, free resets and self-replay. A low-friction puck is already sliding toward the right arm at the start, through the first of two gaps in a row of posts across the table. The right Panda's paddle must strike it back toward the left. The puck must then come back through that same gap, hit a small bank board that slides back and forth by itself on the left arm's side of the posts, while the board is moving, and then hit the left Panda's paddle. The right paddle strikes the puck back a second time. The puck must then come back through the second gap and hit the left paddle again, with the paddle at a clearly different position and angle from the first rebound. Finally the left paddle must send the same puck back out through the second gap and across a goal line in front of a backstop wall on the right arm's side, with the right paddle not touching it after it passes the gap.
 

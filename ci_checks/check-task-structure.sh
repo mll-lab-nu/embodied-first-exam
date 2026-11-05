@@ -25,7 +25,7 @@ pos = [s.find(f"\n## {h}\n") for h in ("Task", "Difficulty", "Reference solution
 if -1 in pos or pos != sorted(pos):
     bad.append("sections ## Task, ## Difficulty, ## Reference solution, ## Verification, ## Resources (in this order) "
                "required (Resources: PROTOCOL §6)")
-# PROTOCOL §3: a standard or standard-realtime task without its privileged twin says why in its Twin row
+# PROTOCOL §3: a standard or realtime task without its privileged twin says why in its Twin row
 sys.path.insert(0, str(pathlib.Path(sys.argv[2]) / "scripts")); import task_conventions as tc
 try:
     tw = tc.twin_of(t)

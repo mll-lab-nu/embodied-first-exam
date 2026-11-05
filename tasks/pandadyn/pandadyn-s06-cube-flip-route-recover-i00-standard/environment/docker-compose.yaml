@@ -1,5 +1,5 @@
 # Standard mode: the simulator runs in the `sim` sidecar (the agent cannot open it); between the agent's calls the world is
-# frozen (sim/server.py, this benchmark's adapter -- the code of its standard-realtime twins' -- served by
+# frozen (sim/server.py, this benchmark's adapter -- the code of its realtime twins' -- served by
 # sim/rcb_service.py, the shared eai-standard/2.1 layer); the agent only reaches port 8000. No `expose`/`ports` on sim:
 # under Harbor's egress control it shares main's network namespace (localhost:8000).
 # SAPIEN needs a Vulkan device (the NVIDIA GPU) to build the scene and render the cameras; physics is CPU PhysX. The
@@ -35,7 +35,7 @@ services:
       PYTHONPATH: /srv:/opt/pandadyn
       OPENBLAS_CORETYPE: Haswell   # this task's start depends on the BLAS kernel (tasks/pandadyn/README.md "Determinism")
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-3}"        # 3 resets, as in the standard-realtime twins (tasks/pandadyn/README.md, "Reset budget"); 0: one episode
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-3}"        # 3 resets, as in the realtime twins (tasks/pandadyn/README.md, "Reset budget"); 0: one episode
     deploy:
       resources:
         reservations:

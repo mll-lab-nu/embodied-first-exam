@@ -3,7 +3,7 @@
 (ci_checks/run_invariants.sh); no task value can turn it off. Where a task's privileged and standard versions both
 exist (the mode registry's `same_cutoff_as` and `twin`, scripts/task_conventions.py MODE_REGISTRY):
   - they have the same cutoff, `[agent] timeout_sec`;
-  - a standard or standard-realtime task has its privileged twin's seeds: `instance_seed`, and `[metadata.seeds]` allowed and build (seeds_of).
+  - a standard or realtime task has its privileged twin's seeds: `instance_seed`, and `[metadata.seeds]` allowed and build (seeds_of).
 The shared frozen instance (byte-identical copies) is ci_checks/check-instance-copies.sh, the other half of H.7.
 
     python3 ci_checks/check-twins.py [task dirs]      # default: every task; a twin outside the given dirs is read too

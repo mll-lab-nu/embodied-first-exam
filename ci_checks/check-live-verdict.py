@@ -3,7 +3,7 @@
 sidecar judges the episode it ran and the verifier transcribes its `final.json`; no replay grades it. Advisory: the
 invariant itself (the verdict from a trusted source) is held by check-verifier-isolation.sh; this check reports a
 standard task whose grader still follows the replay rule, and a grader that breaks the infrastructure rule of
-docs/protocol/running.md ("Infrastructure failures"). For every standard / standard-realtime task:
+docs/protocol/running.md ("Infrastructure failures"). For every standard / realtime task:
   - static: its verifier code (tests/*.py) reports `graded_by_live`; task.toml has a `[[verifier.collect]]` hook on `main` (the agent's
     container: `kill -9 -1`, stopping what the agent left running) before the first hook on the sim sidecar, so
     nothing the agent left running moves the robot before the service is signalled (H.4);
@@ -18,7 +18,7 @@ docs/protocol/running.md ("Infrastructure failures"). For every standard / stand
       a live success that then ended in a simulator error       -> reward 0, infra_error 0 (PROTOCOL §4)
       an unreadable final.json; a scene off the frozen instance -> reward 0, infra_error 1
       a live success whose settle / hold check failed           -> reward 0, infra_error 0 (`success` decides)
-      standard-realtime: a simulator error after the agent's first command -> reward 0, infra_error 0; before it (the
+      realtime: a simulator error after the agent's first command -> reward 0, infra_error 0; before it (the
       service records infra_error = 1) -> infra_error 1
       replay_success / deterministic true, the live episode not -> reward 0 (a replay never grants a success)
     The records are the shared layers' common fields; a benchmark whose grader needs more of its own (e.g. a verdict
@@ -77,13 +77,13 @@ CASES = (
 )
 
 
-# standard-realtime only (docs/protocol/standard_mode.md Part 3): a simulator error after the agent's first command is the
+# realtime only (docs/protocol/standard_mode.md Part 3): a simulator error after the agent's first command is the
 # agent's result; one before it is infrastructure (the service records it so)
 RT_CASES = (
-    ("standard-realtime: a simulator error after the first command",
+    ("realtime: a simulator error after the first command",
      {"finalized": True, "graded_by": "live", "replays": 0, "success": False, "live_success": False, "done": True,
       "reason": "error", "sim_error": 1, "n_actions": 10}, 0, 0),
-    ("standard-realtime: a simulator error before the first command",
+    ("realtime: a simulator error before the first command",
      {"finalized": True, "graded_by": "live", "replays": 0, "success": False, "live_success": False, "done": True,
       "reason": "error", "sim_error": 1, "infra_error": 1, "n_actions": 0}, 0, 1),
 )
@@ -186,7 +186,7 @@ def check(tasks: list[Path]) -> list[str]:
             continue
         seen[h] = task.name
         staged = files if any(p.parent != task / "tests" for p in files.values()) else None   # not all in tests/
-        for name, record, want_reward, want_infra in CASES + (RT_CASES if mode_of(task) == "standard-realtime" else ()):
+        for name, record, want_reward, want_infra in CASES + (RT_CASES if mode_of(task) == "realtime" else ()):
             reward, rw, tail = run_grader(grader, record, staged)
             if reward is None:
                 errs.append(f"{task.name}: tests/grade.py on {name}: no reward.txt ({tail.strip()[-160:]})")

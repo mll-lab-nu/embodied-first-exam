@@ -21,7 +21,7 @@ REGISTRY = ("ghcr.io/mll-lab-nu/efe:", "ghcr.io/mll-lab-nu/efe-private:")   # ef
 sys.path.insert(0, str(ROOT / "scripts"))
 import task_conventions as tc  # noqa: E402  (the mode registry, PROTOCOL §3)
 # the `protocol` values each mode may declare: standard 2.1 / 2.2 / 2.4 (2.4: the operations capability, issue #89),
-# standard-realtime 2.3 (the realtime capability, §3), privileged none
+# realtime 2.3 (the realtime capability, §3), privileged none
 MODE_PROTOCOLS = {m: set(d["protocols"]) for m, d in tc.MODE_REGISTRY.items()}
 # Tasks a benchmark exports with its own service inside (PROTOCOL §3): each such benchmark keeps a manifest,
 # ci_checks/benchmarks/<bench>/exported.toml, that lists the directories (`[[tasks]] name`) and the protocol(s) each mode serves
@@ -96,15 +96,15 @@ def image_refs(task: Path) -> list[str]:
 def check_task(task: Path) -> None:
     name = task.name
     meta = tomllib.loads((task / "task.toml").read_text()).get("metadata", {})
-    # the mode is the directory's whole suffix (`-standard-realtime` does not end in `-standard`)
+    # the mode is the directory's whole suffix (`-realtime` does not end in `-standard`)
     try:
         named = tc.mode_of(task)
     except ValueError:
         named = None
         warn("the directory name ends in no mode (" + " | ".join(tc.MODES) + ")", name)
     mode = named
-    if name.endswith("-realtime") and not name.endswith("-standard-realtime"):
-        warn("mode name `realtime` / `-realtime` (the third mode is `standard-realtime`, PROTOCOL §3)", name)
+    if name.endswith("-realtime") and not name.endswith("-realtime"):
+        warn("mode name `realtime` / `-realtime` (the third mode is `realtime`, PROTOCOL §3)", name)
     proto = meta.get("protocol")
     if proto is not None and proto in own_protocols(name, mode):
         pass                                   # PROTOCOL §3: the benchmark's own protocol

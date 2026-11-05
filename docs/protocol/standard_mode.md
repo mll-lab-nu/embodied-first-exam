@@ -179,7 +179,7 @@ mujoco-playground.md, kinder.md, humanoidbench.md, metaworldplus.md, robocasa.md
 
 ### Optional reset capability
 Each task declares its own budget N (PROTOCOL §2): the `RCB_RESET_BUDGET` default of its `sim` service, served as
-`/spec.budget.reset` and stated in its instruction (templates: 0 in both standard and standard-realtime mode). Any
+`/spec.budget.reset` and stated in its instruction (templates: 0 in both standard and realtime mode). Any
 2.x service may implement the capability; which ones do is in their benchmarks' docs. With N > 0, `/spec.budget.reset =
 N`, `/spec.reset` describes it, and `POST /reset` (RCB1 or JSON `{cameras, video}`, no physics) abandons the running
 episode and starts a new one from the same frozen state, `N` times in all; `/status` and `meta` add `episode`,
@@ -499,10 +499,10 @@ In the benchmarks' docs.
 spellings (`eai-standard/2.`, `rcb-limited/2.`); 2.1 clients work against a 2.2 service (they get float16 per-frame depth
 for `include_depth` and ignore the new parts and keys).
 
-## Part 3 — Standard-realtime mode: `eai-standard/2.3`
+## Part 3 — Realtime mode: `eai-standard/2.3`
 
-Time does not stop. The wire protocol of the standard-realtime mode, served by
-standard-realtime tasks only (directories ending in `-standard-realtime`, `protocol = "eai-standard/2.3"`); the shared implementation
+Time does not stop. The wire protocol of the realtime mode, served by
+realtime tasks only (directories ending in `-realtime`, `protocol = "eai-standard/2.3"`); the shared implementation
 is `embodied_first_exam/standard/realtime/rcb_realtime.py`, which other benchmarks' realtime services use unchanged. 2.3
 is 2.2 plus the realtime capability below; every 2.2 addition stays optional, so a 2.1 service with this capability is a
 2.3 service. Same endpoints, RCB1 frames and grading as 2.1. `/spec.timing` declares it: `realtime: true`, `slowdown` S
@@ -587,7 +587,7 @@ means "required of a service that reports 2.4" (what a 2.4 client may rely on).
 - Every earlier addition stays an optional capability. That covers 2.2's depth, `frame_time_s`, extrinsics,
   `POST /kinematics` and the per-call wall bound, and 2.3's realtime capability (Part 3). So a 2.2 service that adds the
   operations capability is a 2.4 service.
-- Standard-mode tasks may declare `protocol = "eai-standard/2.4"`. Standard-realtime tasks stay on 2.3.
+- Standard-mode tasks may declare `protocol = "eai-standard/2.4"`. Realtime tasks stay on 2.3.
 - Everything in Parts 1 and 2 holds unchanged: four endpoints (plus `/kinematics`, `/reset` within a declared budget and
   the one below), RCB1, and grading by the live episode.
 - `/spec.protocol` is `eai-standard/2.4`.

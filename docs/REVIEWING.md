@@ -49,11 +49,11 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
 - Does the task run with Harbor's native agents, without custom adapters or runners, and without any gateway other than
   the recording-only usage gateway (protocol/running.md "Official runs")?
 - Are images pinned, published (or marked `BUILD_ONLY`), and shared with the other tasks of the same simulator?
-- Names end in their mode, `-privileged` / `-standard` / `-standard-realtime`; README in the standard layout; no `results/` in task directories.
-- Modes (PROTOCOL §3, Appendix H.7): a benchmark may ship any subset of privileged, standard and standard-realtime; a missing
+- Names end in their mode, `-privileged` / `-standard` / `-realtime`; README in the standard layout; no `results/` in task directories.
+- Modes (PROTOCOL §3, Appendix H.7): a benchmark may ship any subset of privileged, standard and realtime; a missing
   mode is not a reason to block, but the benchmark's doc says which modes it ships and why the others are left out.
   Where a family has twins, do they share the frozen instance, success rule and seeds, and is the cutoff of privileged
-  and standard one number? A standard or standard-realtime task without a twin: does it carry its own frozen instance,
+  and standard one number? A standard or realtime task without a twin: does it carry its own frozen instance,
   and does its README's Twin row say why (`— (none: <reason>)`; the advisory check `check-task-structure.sh` warns
   otherwise: a deleted or misnamed twin must not pass silently)?
 - A new mode (PROTOCOL §3): does the pull request have everything §3 lists: the name (the directory suffix),

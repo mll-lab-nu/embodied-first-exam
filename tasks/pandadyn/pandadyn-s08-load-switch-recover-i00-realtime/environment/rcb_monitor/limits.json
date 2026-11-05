@@ -1,0 +1,27 @@
+{
+ "agent_timeout_sec": 3600,
+ "caps": {
+  "main": {
+   "cpus": 4.0,
+   "disk_gb": 10.0,
+   "memory_gb": 10.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 4.0,
+   "gpu_memory_gb": 3.0,
+   "memory_gb": 12.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "realtime",
+ "scope_services": [
+  "main"
+ ],
+ "task": "pandadyn-s08-load-switch-recover-i00-realtime",
+ "tick_sec": 5
+}

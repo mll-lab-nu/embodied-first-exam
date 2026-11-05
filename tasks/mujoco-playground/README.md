@@ -16,7 +16,7 @@ Every image is public: Harbor pulls it.
 | simulator | MuJoCo 3.3.7, CPU physics (bit-exact replay); EGL rendering on a GPU, else OSMesa |
 | robots | `unitree-go1` (Unitree Go1), `boston-dynamics-spot` (Boston Dynamics Spot), `google-barkour-vb` (Google Barkour vB); 12 joint position actuators each |
 | score | binary, defined here from Playground's termination rules and reward targets (Playground has shaped RL rewards only) |
-| tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco-playground/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/2.2`); BarkourJoystick, the one dynamic environment, also `-standard-realtime` (`eai-standard/2.3`) |
+| tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco-playground/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/2.2`); BarkourJoystick, the one dynamic environment, also `-realtime` (`eai-standard/2.3`) |
 | image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged) |
 | oracle | full, both modes |
 
@@ -74,7 +74,7 @@ Every image is public: Harbor pulls it.
 |---|---|---|---|
 | privileged | the simulator (`rcb_quadruped.Session`) and its full state | unlimited | its `trajectory.npz`, replayed in two fresh processes |
 | standard (2.2) | cameras (Go1, Spot: four that follow the robot; Barkour: one that follows it and its head camera; RGB, optional depth), joints, IMU (gyro, accelerometer, gravity's direction, velocimeter), foot contacts; the feet's FK/IK in the trunk frame | 10 (`RCB_RESET_BUDGET`) | the live episode's verdict: the task's check on the last episode as the service ran it |
-| standard-realtime (2.3; BarkourJoystick only) | as standard, minus FK/IK, plus the joystick command in force in the proprioception; time does not stop (S = 1) | 10 (`RCB_RESET_BUDGET`) | the live episode's verdict, as standard |
+| realtime (2.3; BarkourJoystick only) | as standard, minus FK/IK, plus the joystick command in force in the proprioception; time does not stop (S = 1) | 10 (`RCB_RESET_BUDGET`) | the live episode's verdict, as standard |
 
 ## Reference solutions
 - **Go1 joystick:** MuJoCo Playground's own Go1 joystick policy (`experimental/sim2sim/onnx/go1_policy.onnx`, the one its
@@ -157,7 +157,7 @@ Outside Harbor, the standard service run on each reference (`std_local` check): 
   "live"`), then `video.py` renders `replay.mp4` in one fresh process (at most the horizon, ~150 frames: well under a
   minute on the CPU). `server.py` builds the scene with `check_hash=False` and gives up before serving the agent when the
   start's hash is not the instance's `state_sha` (`instance_mismatch`, infrastructure).
-- **Standard-realtime** (BarkourJoystick): the shared layer's live verdict (`rcb_service._finalize`); `server.py`'s
+- **Realtime** (BarkourJoystick): the shared layer's live verdict (`rcb_service._finalize`); `server.py`'s
   `step()` reports `check()` after every control step (joystick: success only at the horizon), its `start_sha` is the
   instance's `state_sha`, and it has no `live_verdict()`. The video is
   the layer's render pass on the service's own simulator after the verdict.
@@ -174,8 +174,8 @@ Outside Harbor, the standard service run on each reference (`std_local` check): 
   the layer's own rule, PROTOCOL §3), a fall, a timeout are the agent's result. A video that fails is only a missing
   video.
 
-## Standard-realtime (`eai-standard/2.3`)
-The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-standard-realtime` twin. Among the quadrupeds that is **BarkourJoystick** (its torso is pushed 12 times at
+## Realtime (`eai-standard/2.3`)
+The dynamic families (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. Among the quadrupeds that is **BarkourJoystick** (its torso is pushed 12 times at
 frozen moments: an external force that is neither the robot's nor gravity).
 - **Service.** The shared realtime layer, unchanged (`rcb_realtime.py` and `rcb_client.py` from
   `embodied_first_exam/standard/realtime/`; `rcb_service.py` and `grade.py`, byte-identical to HumanoidBench's realtime
@@ -199,7 +199,7 @@ frozen moments: an external force that is neither the robot's nor gravity).
 | the standard twin's `environment/sim/server.py` | the 2.2 adapter on `embodied_first_exam/standard/rcb_limited.py`; `finalize.sh`, the collect hook |
 | `environment/instance.json` | the frozen instance |
 | `solution/oracle.npy` | the reference rows |
-| the standard-realtime twin's `environment/sim/server.py`, `solution/` | its service (the 2.3 adapter) and its reference (`oracle_plan.py`, `solve.sh`) |
+| the realtime twin's `environment/sim/server.py`, `solution/` | its service (the 2.3 adapter) and its reference (`oracle_plan.py`, `solve.sh`) |
 
 The task directories are the deliverable; the tooling that built them is kept outside this repository.
 
@@ -226,4 +226,4 @@ run to the end of the agent phase and the final state is graded. The service jou
 layer (journal `record.f64`; startup watchdog `RCB_STARTUP_TIMEOUT_S`, default 300 s) and grades the live episode
 (Grading, above). It implements the optional reset capability.
 
-**Quadrupeds (`eai-standard/2.2`).** MuJoCo Playground's quadruped tasks serve the shared 2.2 layer. Their service implements the optional reset capability; the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`. One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"), in the standard-realtime twin too.
+**Quadrupeds (`eai-standard/2.2`).** MuJoCo Playground's quadruped tasks serve the shared 2.2 layer. Their service implements the optional reset capability; the 2.2 client has no `reset()`, so the instructions call `POST /reset` through `Robot._post`. One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"), in the realtime twin too.

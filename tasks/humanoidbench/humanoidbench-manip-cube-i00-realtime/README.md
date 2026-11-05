@@ -1,0 +1,79 @@
+# humanoidbench-manip-cube-i00-realtime
+
+| | |
+|---|---|
+| Benchmark | HumanoidBench |
+| Mode | realtime (`eai-standard/2.3`) |
+| Twin | `humanoidbench-manip-cube-i00-privileged` |
+| Simulator / robot | `humanoidbench` / `unitree-h1hand` |
+| Family / instance | `cube` / seed 0 |
+| Oracle | `none` — none known: no run has passed it, and published RL reaches 60% of the bar (paper 135, FastTD3 221, bar 370); human review in PR #83 |
+| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
+| Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 50 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
+| Base image | `ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0` |
+
+## Task
+Realtime mode (robot as a service on a clock that does not stop, `eai-standard/2.3`, PROTOCOL §3) of
+`humanoidbench-manip-cube-i00-privileged`: the same frozen instance and the same success rule as it and as
+`humanoidbench-manip-cube-i00-standard`, but time does not stop. Once an episode's clock starts (its first
+`submit`), the robot runs at 50 Hz in real time and holds its last servo targets while the agent thinks, so
+the agent drives it with a controller program of its own that streams targets through the client.
+HumanoidBench runs in the `sim` sidecar (`environment/docker-compose.yaml`, GPU on the sidecar for rendering;
+`environment/sim/rcb_realtime.py` runs the clock), which holds the reward, judges the episode, records every
+control step it ran, judges the episode as it runs and, after the verdict, renders its video from the recorded
+trajectory; the verifier grades the sidecar's record in a container of its own (`tests/Dockerfile`, no
+network).
+
+Note: the head cameras see the cube above one palm. `room_camera` looks at the hands close up
+(`RCB_ROOM_CAMERA_POSE` in the compose file) and sees both hands with their cubes and, floating above them,
+the goal orientation (upstream's `target_cube`); the legs are out of frame.
+
+## Difficulty
+See `humanoidbench-manip-cube-i00-privileged`'s README; here the agent also has no state, no reward and no
+simulator of its own, and 50 resets instead of unlimited ones, as in `humanoidbench-manip-cube-i00-standard`.
+On top of that the robot does not wait: a model's turn takes seconds and the H1 falls within a few seconds of
+robot time without active balance, so the agent cannot steer it turn by turn. It has to write a controller
+that closes the loop at the control rate from proprioception, run it in the background, and improve it between
+episodes from what it observed.
+
+## Reference solution
+None. Requiring one would cap the benchmark at what we can already solve, which systematically removes the
+interesting tasks. What replaces it (docs/protocol/README.md §4): the floor above (doing nothing cannot
+pass), the evidence that the task has a solution (`oracle_evidence` in task.toml), and a human reviewer.
+
+## Verification
+`success` = live success: the episode the sim service ran reached the pass mark (HumanoidBench's own rule,
+judged on the live simulator), for the last episode; nothing is replayed to grade it (owner, 2026-10-17, board
+0151). The scene's start is checked against the frozen instance's recorded state when an episode begins
+(`instance_mismatch`, infrastructure). The trajectory records the servo targets the simulator applied at each
+control step (`trajectory_live.f64`, `trajectory.npz`), not the ones the agent submitted, so it reproduces the
+live run whatever the timing was (the video is rendered from it after the verdict); `ticks.f64` records each
+step's wall time and the call that planned it, `calls.jsonl` and `submitted.f64` every call and every row as
+sent, and `final.json` the clock's lag (`max_lag_s`, `stalls`) and the held and late steps. `tests/grade.py`
+reads `/data/final.json` and copies the evidence to `/logs/verifier/` (`replay.mp4`). After the agent's first
+command, a simulator error raised by a control step and a simulator crash inside a control step (a fatal
+signal) are the agent's 0; a kill, a crash outside a control step, anything before the first command, a failed
+resume and a reset that does not rebuild the scene are infrastructure (`infra_error = 1`; owner, 2026-10-17,
+docs/protocol/standard_mode.md). No oracle; human review in PR #83. `nop` scores 0.
+
+## Resources
+Caps per container (PROTOCOL §6).
+
+| Container | CPUs | Memory | Processes | GPU memory | Disk |
+|---|---|---|---|---|---|
+| `main` (the agent's) | 4 | 4 GiB | 1024 | no GPU | 10 GiB |
+| `sim` | 4 | 4 GiB | 1024 | 5 GiB | — |
+| verifier | no cap | no cap | no cap | no GPU | no cap |
+
+- GPU: any NVIDIA GPU, held by `sim`.
+- Recommended GPU: any 8 GB+ NVIDIA GPU (RTX 4090 / L4).
+
+## Details
+| | |
+|---|---|
+| mode / sensors | realtime: head-camera RGB + joint angles and velocities (HumanoidBench's own `image` and `proprio` sensors), a pelvis IMU and a camera fixed in the room; no root pose, no cube poses, no goal orientation, no reward; 50 resets (a new episode from the frozen start each, paused until its first `submit`; only the last episode is graded) |
+| time | the episode's clock starts at its first `submit` (or `get_obs(seconds > 0)`) and runs one control step every 0.02 s of wall time until the episode ends; `submit` writes a plan of future targets (from step `at`) and answers at once; the last target is held when the plan runs out |
+| action space | HumanoidBench's own: 61 normalised position targets, 50 Hz, streamed one row at a time or in chunks of up to 10 s |
+| knobs (compose env) | `RCB_SLOWDOWN` (1: real time, the official configuration; S: one control step every S x 0.02 s, results reported apart from S = 1), `RCB_RESET_BUDGET` (50: HumanoidBench's configuration, an exception to the mode's default of 0, PROTOCOL §2), `RCB_OBS_PROPRIO` (1), `RCB_OBS_IMU` (1), `RCB_OBS_ROOM_CAMERA` (1), `RCB_OBS_DEPTH` (0): the defaults are this task's configuration; a run that changes one is reported separately, and `episode.jsonl` records the `/spec` it ran under |
+| agent API | `environment/rcb_client.py` (the realtime client; its docstring is the reference); `instruction.md` lists the endpoints |
+| physics vs upstream | upstream's model (HumanoidBench cb11890) on MuJoCo 3.3.7, not the 3.1.6 upstream pins, whose convex collision reported wrong contacts; results on image 0.1.6 or earlier are other physics and are reported apart (tasks/humanoidbench/README.md, Physics). |
