@@ -8,7 +8,7 @@
 `materialize` copies the task directory and, for a seed other than the default, puts that seed's frozen instance
 (`tests/seeds/<S>/instance.{json,npz}` of the task that holds the pair's instances: the privileged twin of a standard
 task, else the task itself) in every place the task runs and grades from: privileged `environment/` (or a scorer
-sidecar's `environment/scorer/`) and `tests/`; standard and standard-realtime `environment/sim/` and, without a twin,
+sidecar's `environment/scorer/`) and `tests/`; standard and realtime `environment/sim/` and, without a twin,
 their own `tests/`; each also in an `instance/` folder one level down (ManiGuard). The copy's `instance_seed` says the
 seed it runs from, so a result records it, and its `[metadata.seeds]` keeps the task's allowed and oracle seeds
 explicitly (their defaults follow instance_seed); its `tests/seeds/`

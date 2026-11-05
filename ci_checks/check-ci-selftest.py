@@ -48,7 +48,7 @@ WITH_NEIGHBOURS = (IDENTITY, TWINS)   # run on the broken copy among (links to) 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
 PRIV = "behavior-boxing-books-up-for-storage-i00-privileged"   # a verifier compose file with a trusted volume
 HEAVY = "maniguard-cabinet-pickup-i19-standard"                # an allowlist; a sidecar that holds the GPU
-RT = "humanoidbench-loco-walk-i00-standard-realtime"           # a standard-realtime task: main and sim capped
+RT = "humanoidbench-loco-walk-i00-realtime"           # a realtime task: main and sim capped
 # benchmarks whose generators have no check mode: their shared files are held together by check-tooling-identity.sh
 DTB, DTB_P = "dextoolbench_hammer_claw_hammer_swing_down-standard", "dextoolbench_hammer_claw_hammer_swing_down-privileged"
 MJ = "mujoco_playground_aloha_hand_over-standard"              # serves DexToolBench's service (server_mj.py)
@@ -440,15 +440,15 @@ MUTATIONS = [
      RP_LEAK, "only an allowed agent-side file of the pinned"),
     ("a RoboPaint task dir's own rcb_brush.py with grader code, next to the files-only image's", RP, "+environment/rcb_brush.py",
      append("def score_canvas(sheet):\n    pass\n"), RP_LEAK, "grader code ('def score_canvas') in the agent's tooling"),
-    # PROTOCOL §2: a standard-realtime task declares its slowdown S and its reset budget once, in its sim service
+    # PROTOCOL §2: a realtime task declares its slowdown S and its reset budget once, in its sim service
     ("a copy of the slowdown S in [metadata]",
-     "humanoidbench-loco-walk-i00-standard-realtime", TOML, sub(r'^(dynamics = .*\n)', r'\1slowdown = 1\n'), REALTIME,
+     "humanoidbench-loco-walk-i00-realtime", TOML, sub(r'^(dynamics = .*\n)', r'\1slowdown = 1\n'), REALTIME,
      "[metadata] slowdown copies its service's default"),
-    ("a standard-realtime service whose reset budget is not the one its instruction states",
-     "humanoidbench-loco-walk-i00-standard-realtime", COMPOSE, sub(r"RCB_RESET_BUDGET:-50\}", "RCB_RESET_BUDGET:-7}"),
+    ("a realtime service whose reset budget is not the one its instruction states",
+     "humanoidbench-loco-walk-i00-realtime", COMPOSE, sub(r"RCB_RESET_BUDGET:-50\}", "RCB_RESET_BUDGET:-7}"),
      REALTIME, "instruction.md states 50 resets, but the task's reset budget is 7"),
-    ("a standard-realtime service that declares no reset budget",
-     "humanoidbench-loco-walk-i00-standard-realtime", COMPOSE, sub(r"^\s*RCB_RESET_BUDGET:.*\n", ""), REALTIME,
+    ("a realtime service that declares no reset budget",
+     "humanoidbench-loco-walk-i00-realtime", COMPOSE, sub(r"^\s*RCB_RESET_BUDGET:.*\n", ""), REALTIME,
      "must declare its reset budget"),
     # PROTOCOL §4: every graded trial leaves a replay video
     ("a privileged verifier that renders no video", TWIN_P, None,

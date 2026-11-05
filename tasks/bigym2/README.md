@@ -22,7 +22,7 @@ Every image is public: Harbor pulls it.
 | sensors | three RGB cameras on the robot (`head`, `left_wrist`, `right_wrist`, 60° fovy; upstream renders 84×84); arm and finger (+ waist) joints, gripper states, pelvis x, y, z, yaw from the base controller |
 | score | upstream's predicate held for 1 s (50 steps) **and** no fall during the episode (pelvis tilt > ~53° or height < 0.30 m); fail-fast: an object on the floor (plates, blocks, dishwasher loads), a gripper on the sandwich |
 | horizon | per task, 700–8750 control steps (14–175 s): twice the longest of 60 human demonstrations |
-| tasks | 13 families × 3 modes: `tasks/bigym2/bigym2-<family>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-standard-realtime` (`eai-standard/2.3`) |
+| tasks | 13 families × 3 modes: `tasks/bigym2/bigym2-<family>-i00-privileged`, `-standard` (`eai-standard/2.1`) and `-realtime` (`eai-standard/2.3`) |
 | image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` (`images/bigym2/`, 1.5 GB; dependencies at upstream's `uv.lock`, plus imageio-ffmpeg for the service's mp4 videos) |
 | oracle | none: upstream has no expert or planner; human review |
 
@@ -81,7 +81,7 @@ check use), as the privileged instruction says.
 |---|---|---|
 | privileged | the `bigym` package (`Session`: step, reset, replay, MuJoCo model and data, onboard images) | `/app/output/trajectory.npz`, replayed in two fresh processes |
 | standard | the robot's three onboard cameras (84×84 as upstream renders them; `RCB_IMAGE_HW` for others, reported apart), upstream's proprioception, `whole_body` chunks; one episode, no reset | the live episode, as it ran (`rcb_service.py`, as HumanoidBench and KinDER; nothing replayed) |
-| standard-realtime | the same on a clock that does not stop; between commands the robot stands still on the last one | as standard (`rcb_realtime.py`, as HumanoidBench) |
+| realtime | the same on a clock that does not stop; between commands the robot stands still on the last one | as standard (`rcb_realtime.py`, as HumanoidBench) |
 
 Every instruction states, besides upstream's task sentence and success rule: where the named objects are at the start
 (one sentence measured on the frozen scene: distance, direction, height; upstream gives its own agents a demonstration
@@ -109,7 +109,7 @@ long as its timeout allows, for the video, so a slow, hung or killed render cost
 
 `infra_error = 1` only for no or an unfinalized `final.json`, a give-up after crashes not all inside the agent's calls,
 a reset whose scene does not rebuild and `instance_mismatch`; simulator errors raised by the agent's calls, crashes
-inside its calls, timeouts and failures are the agent's 0. In standard-realtime: once the agent's first command has
+inside its calls, timeouts and failures are the agent's 0. In realtime: once the agent's first command has
 run, a simulator error raised by a control step is the agent's 0 (`sim_error = 1`, no `infra_error`), and so is a
 simulator crash inside a control step (a death whose fatal-signal record in `crash.log` -- SIGSEGV, SIGBUS, SIGFPE,
 SIGILL, SIGABRT -- shows the crashing thread in the step; past `RCB_MAX_RESUMES` such crashes the trial ends
@@ -119,7 +119,7 @@ resume are infrastructure. Standard mode keeps its rule: a crash is the agent's 
 logged as evidence). A simulator that fails inside `POST /reset` ends the episode `error` (`infra_error = 1`: the
 agent's reset was legitimate), not `reset`. A negative `Content-Length` is refused unread (400).
 
-Standard-realtime (the shared 2.3 layer): a gap before `at` is the plan's last row, walking velocity included; the
+Realtime (the shared 2.3 layer): a gap before `at` is the plan's last row, walking velocity included; the
 agent's requests cannot slow the clock -- bodies are read, decoded and checked off the simulator's thread, waiting
 requests are served once the clock has caught up, the cameras are rendered once per control step
 (`docs/protocol/standard_mode.md`, "What a request can cost the clock") -- and `final.json` / `reward.json` carry the clock's

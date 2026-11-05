@@ -19,12 +19,12 @@
 # The protocol each mode of these tasks serves (PROTOCOL §3): ci_checks/check-protocol.py accepts it for the
 # directories listed below only.
 [protocols]
-standard-realtime = "eai-standard-realtime/1.0"   # the real-time matches: Embodied Olympics' own service and referee
+realtime = "eai-standard-realtime/1.0"   # the real-time matches: Embodied Olympics' own service and referee
 standard = ["eai-standard-turn/1.0"]              # the turn-based matches: the world waits for the player whose turn it
                                                   # is, a chess clock per player (Embodied Olympics' own service and referee)
 
 [[tasks]]
-name = "embodied-olympics-match-foosball-match-i01-standard-realtime"
+name = "embodied-olympics-match-foosball-match-i01-realtime"
 source_task = "roboolympics/foosball-match-wallclock-program-standard"
 revision = "foosball-program-v2+core-0.2"
 source_commits = ["d71e9f642ead"]
@@ -42,7 +42,7 @@ patched = ["task.toml", "environment/docker-compose.yaml",
            "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md"]   # the replay video's time limit 300 -> 900 s (not shorter than the verdict replay's 600 s), the collect / verifier timeouts with it
 
 [[tasks]]
-name = "embodied-olympics-match-soccer-match-i00-standard-realtime"
+name = "embodied-olympics-match-soccer-match-i00-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-standard"
 revision = "soccer-2v2-10+core-0.2"
 source_commits = ["0d7f680cc049"]
@@ -51,7 +51,7 @@ patched = ["instruction.md", "environment/sim/core/realtime.py",   # the review 
            "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py"]   # the replay video's time limits (RCB_VIDEO_TIMEOUT_S 1800 s, collect / verifier timeouts)
 
 [[tasks]]
-name = "embodied-olympics-match-soccer-jointcpu-i01-standard-realtime"
+name = "embodied-olympics-match-soccer-jointcpu-i01-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
 revision = "soccer-2v2-11"
 source_commits = ["7ae66874c32e"]   # the soccer pilot exporter (the joint-level resource-tier pair; v5 pilot rules)
@@ -60,7 +60,7 @@ patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py
                                                # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
 
 [[tasks]]
-name = "embodied-olympics-match-soccer-jointgpu-i01-standard-realtime"
+name = "embodied-olympics-match-soccer-jointgpu-i01-realtime"
 source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
 revision = "soccer-2v2-11"
 source_commits = ["7ae66874c32e"]   # the soccer pilot exporter (the joint-level resource-tier pair; v5 pilot rules)
@@ -69,7 +69,7 @@ patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py
                                                # step (traj plans too) over the whole match, must reproduce the live record; a voided win is no win
 
 [[tasks]]
-name = "embodied-olympics-match-tabletennis-match-i04-standard-realtime"
+name = "embodied-olympics-match-tabletennis-match-i04-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["e25d8cc11861"]
@@ -78,7 +78,7 @@ patched = ["instruction.md",
            "environment/sim/core/realtime.py"]   # the start window and its forfeit stated in the instruction
 
 [[tasks]]
-name = "embodied-olympics-match-badminton-match-i04-standard-realtime"
+name = "embodied-olympics-match-badminton-match-i04-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["62333496959f"]
@@ -88,7 +88,7 @@ patched = ["instruction.md",   # the start window and its forfeit stated in the 
            "environment/sim/core/realtime.py"]   # a replay video from the players' cameras (badminton declares no spectator camera / scene
 
 [[tasks]]
-name = "embodied-olympics-match-soccerssl-match-i01-standard-realtime"
+name = "embodied-olympics-match-soccerssl-match-i01-realtime"
 source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
 revision = "soccer_ssl-1"
 source_commits = ["91156213b0de"]
@@ -97,7 +97,7 @@ patched = ["instruction.md", "task.toml", "README.md",
            "environment/sim/core/realtime.py"]   # the start window and its forfeit stated in the instruction; the level-4 opponent named as the learned tier, not "scripted"
 
 [[tasks]]
-name = "embodied-olympics-match-tabletennis-duelrl-i01-standard-realtime"
+name = "embodied-olympics-match-tabletennis-duelrl-i01-realtime"
 source_task = "roboolympics/tabletennis-duel-wallclock-program-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["13f5e0981a99"]
@@ -107,7 +107,7 @@ patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh",
            # a duel against a built-in seat: leaving after the start is a valid loss (`abandoned`, core/service.py abandon_single), stated in the instruction with the opponent's true-state reads; test.sh fails closed if fexam_reward.py fails
 
 [[tasks]]
-name = "embodied-olympics-match-badminton-duelrl-i01-standard-realtime"
+name = "embodied-olympics-match-badminton-duelrl-i01-realtime"
 source_task = "roboolympics/badminton-duel-wallclock-program-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["b12667a02300"]
@@ -124,7 +124,7 @@ source_commits = ["0d7f680cc049"]
 kind = "fullsim-policy"
 
 [[tasks]]
-name = "embodied-olympics-match-tabletennis-matchlow-i01-standard-realtime"
+name = "embodied-olympics-match-tabletennis-matchlow-i01-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
 source_commits = ["02c93822a35e"]
@@ -140,7 +140,7 @@ patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py",
            # one deadline per live call (send included), 128 KiB step answers, step() retries a down server once a second, sync forced for tcp:, applied_tick counts for agent_sim_error (tests/grade.py = core/grading.py), bounded skill_load rows
 
 [[tasks]]
-name = "embodied-olympics-match-badminton-matchlow-i01-standard-realtime"
+name = "embodied-olympics-match-badminton-matchlow-i01-realtime"
 source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
 revision = "badminton-wallclock-12+duel-14+core-0.2"
 source_commits = ["02c93822a35e"]

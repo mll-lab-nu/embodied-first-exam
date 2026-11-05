@@ -1,0 +1,26 @@
+{
+ "agent_timeout_sec": 3600,
+ "caps": {
+  "main": {
+   "cpus": 4.0,
+   "disk_gb": 20.0,
+   "memory_gb": 16.0,
+   "pids": 8192
+  },
+  "sim": {
+   "cpus": 6.0,
+   "memory_gb": 14.0,
+   "pids": 8192
+  }
+ },
+ "disk_gb": 20.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "realtime",
+ "scope_services": [
+  "main"
+ ],
+ "task": "robocasa365-turn-on-toaster-oven-i00-realtime",
+ "tick_sec": 5
+}

@@ -1,8 +1,8 @@
 # RoboCasa365
 
 50 of [RoboCasa365](https://github.com/robocasa/robocasa)'s kitchen tasks (robocasa 1.0.1) with a mobile manipulator
-(Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks; and one standard-realtime twin:
-`tasks/robocasa365/robocasa365-turn-on-toaster-oven-i00-standard-realtime`, the benchmark's one dynamic task.
+(Franka Panda on an Omron mobile base), each on one frozen instance, in both modes: 100 tasks; and one realtime twin:
+`tasks/robocasa365/robocasa365-turn-on-toaster-oven-i00-realtime`, the benchmark's one dynamic task.
 
 ## Quick start
 ```bash
@@ -78,8 +78,8 @@ replayed, the start checked against the frozen instance (`RCB_INSTANCE_SHA`, `RC
 each task's `environment/docker-compose.yaml`, a mismatch is infrastructure), the video one render pass after the
 verdict; the hook's budget; request validation; the camera calibration is the rendered viewpoint).
 
-## Standard-realtime (`eai-standard/2.3`)
-The dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-standard-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
+## Realtime (`eai-standard/2.3`)
+The dynamic tasks (PROTOCOL §2: each task's `[metadata] dynamics`) get a `-realtime` twin. In RoboCasa365 that is **TurnOnToasterOven** only: once set, the oven's timer knob turns back
 by itself (`ToasterOven.update_state`: 1/3000 of its range per simulated second, on `sim.data.time`, so a replay repeats
 it bit for bit). The toaster ovens and electric kettles of other tasks move by themselves too, but no other task uses them.
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and Embodied Olympics - Fun, unchanged
@@ -148,7 +148,7 @@ Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v
 
 By directory: 70 easy, 6 hard, 25 unverified, 0 pending.
 
-| base | privileged | standard | standard-realtime |
+| base | privileged | standard | realtime |
 |---|---|---|---|
 | `robocasa365-add-lemon-to-fish-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | easy: Astra, Opus, Sol 6.1 | — |
 | `robocasa365-assemble-cooking-array-i00` | easy: Astra, Opus, Sol 6.1, Sol, Gemini 4 Argon | hard (only Astra) | — |

@@ -1,6 +1,6 @@
 # Full-simulator program task: soccer, level 2, seed 7
 
-The development source at `/opt/fullsim` is complete and CPU-only: the frozen simulator of `embodied-olympics-match-soccer-match-i00-standard-realtime` (this task's
+The development source at `/opt/fullsim` is complete and CPU-only: the frozen simulator of `embodied-olympics-match-soccer-match-i00-realtime` (this task's
 camera-only twin), its referee and its scripted opponent. No GPU, renderer or simulator service is needed. Run the
 commands inside the task's agent container from `/app`.
 

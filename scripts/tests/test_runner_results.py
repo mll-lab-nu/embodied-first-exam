@@ -111,8 +111,8 @@ def test_results():
         check("EnvironmentStartTimeoutError" in line and "no reward.json" in line, f"the reason names Harbor's exception: {line}")
 
 
-UNVALIDATED = "humanoidbench-loco-walk-i00-standard-realtime"   # oracle = "none": ranked with validated tasks, marked
-VALIDATED_RT = "humanoidbench-loco-sit-simple-i00-standard-realtime"   # oracle = "full", the same configuration as UNVALIDATED
+UNVALIDATED = "humanoidbench-loco-walk-i00-realtime"   # oracle = "none": ranked with validated tasks, marked
+VALIDATED_RT = "humanoidbench-loco-sit-simple-i00-realtime"   # oracle = "full", the same configuration as UNVALIDATED
 WTR = [sys.executable, str(ROOT / "scripts/write_task_results.py")]
 
 
@@ -247,8 +247,8 @@ def test_summary_grouping():
         make_trial(jobs, "bx-standard-a", "t1", TASK, "2026-10-14T01:00:00Z", {"success": 0, "infra_error": 1})
         make_trial(jobs, "bx-standard-a", "t2", TASK, "2026-10-14T02:00:00Z", {"success": 1})
         make_trial(jobs, "bx-privileged-a", "p1", f"{SMALL}-privileged", "2026-10-14T01:00:00Z", {"success": 0})
-        make_trial(jobs, "bx-standard-realtime-b", "r1", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 1})
-        make_trial(jobs, "bx-standard-realtime-b", "r2", VALIDATED_RT, "2026-10-14T01:00:00Z", {"success": 0})
+        make_trial(jobs, "bx-realtime-b", "r1", UNVALIDATED, "2026-10-14T01:00:00Z", {"success": 1})
+        make_trial(jobs, "bx-realtime-b", "r2", VALIDATED_RT, "2026-10-14T01:00:00Z", {"success": 0})
         # a core set naming the fixed tasks here (the real list changes over time); test_core_set covers the marking
         sys.path.insert(0, str(ROOT / "scripts"))
         import task_conventions as tc
@@ -260,7 +260,7 @@ def test_summary_grouping():
         check(r.returncode == 0, f"summary failed: {r.stderr[-800:]}")
         out = r.stdout
         check("## Unvalidated" not in out and out.count(f"\n## protocol {tc.PROTOCOL_VERSION}, ") == 3, f"not one table per configuration:\n{out}")
-        rt = out[out.index("standard-realtime, "):]
+        rt = out[out.index("realtime, "):]
         check(f"| {UNVALIDATED} (unvalidated) |" in rt and f"| {VALIDATED_RT} |" in rt,
               f"the unvalidated task is not ranked (marked) with the validated one of its configuration:\n{out}")
         check("Success (results only): 1 / 2 (validated tasks: 0 / 1); 0 voided." in rt, f"the shared table's rate:\n{out}")
@@ -336,7 +336,7 @@ def test_benchmarks():
     bad = tc.check_benchmarks()
     check(not bad, f"benchmark labels: {bad[:5]}")
     check(tc.bench_of(Path("embodied-olympics-fun-sprint-i00")) == "Embodied Olympics - Fun"
-          and tc.bench_of(Path("embodied-olympics-match-tabletennis-match-i04-standard-realtime")) == "Embodied Olympics - Match"
+          and tc.bench_of(Path("embodied-olympics-match-tabletennis-match-i04-realtime")) == "Embodied Olympics - Match"
           and tc.bench_of(Path("roboolympics-sprint-i00-standard")) == ""
           and tc.bench_of(Path("robocasa-gr1-x-i00-standard")) == "RoboCasa-GR1", "bench_of: the first matching prefix")
     with tempfile.TemporaryDirectory() as td:

@@ -16,7 +16,7 @@ Standard-mode twin of `pandadyn-s08-load-switch-recover-i00-privileged` (same fr
 client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
+episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
 privileged task to measure the cost of losing privileged state, free resets and self-replay. A small cube (the part) rides a powered roller conveyor, and an unpowered cart is already coasting along a straight channel towards a passive hinged switch that splits the track into two diagonal branches. Grasp the part with both fingers while it is still moving and lift it, drop it into the moving cart without stopping the cart, which must keep coasting until the switch is set, then push the switch with a finger so that it will steer the cart into the branch selected for this instance (one of the two sides, drawn per instance and given under Goal geometry) before the cart reaches it. The cart must then be deflected by the switch into that branch. Finally, grasp the part again, lift it out of the cart and hold it up before the cart runs too far down the branch.
 

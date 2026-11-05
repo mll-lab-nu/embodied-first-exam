@@ -46,7 +46,7 @@ has its own prefix (`task_conventions.py benchmarks --check`, `ci_scope.py --che
 
 ## Authoring a task
 1. Copy the closest existing pair (`tasks/robotwin-2/robotwin_2_0_stack_blocks_two-privileged/` and `-standard/`), or
-   generate tasks with your own tooling (kept outside this repository). Name them `<base>-privileged` / `<base>-standard` (and `<base>-standard-realtime` for the standard-realtime mode, PROTOCOL §1, §3) and write
+   generate tasks with your own tooling (kept outside this repository). Name them `<base>-privileged` / `<base>-standard` (and `<base>-realtime` for the realtime mode, PROTOCOL §1, §3) and write
    the README in the standard layout (§1); there is no `results/` directory.
 2. Fill in `task.toml` (PROTOCOL §1, §2: its settings, among them `[metadata] dynamics` and `[agent] network_mode`),
    `instruction.md` (§5, written by a human), the verifier under `tests/` (Appendix H.1, separate sandbox) and
@@ -94,7 +94,7 @@ has its own prefix (`task_conventions.py benchmarks --check`, `ci_scope.py --che
    ```toml
    [[cap]]
    match = "^mybench-.*-standard$"          # a regular expression on the task directory's name; the last match wins
-                                            # (`-standard$` does not match `-standard-realtime` tasks: give them a rule too)
+                                            # (`-standard$` does not match `-realtime` tasks: give them a rule too)
    main = { cpus = 4, memory_gb = 3, pids = 1024, disk_gb = 10 }      # the agent's container (cpus: a whole number)
    sim = { cpus = 4, memory_gb = 5, pids = 1024, gpu_memory_gb = 4 }   # gpu_memory_gb: only on the service that holds the GPU
    recommended_gpu = "any 8 GB+ NVIDIA GPU (RTX 4090 / L4)"

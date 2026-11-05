@@ -1,0 +1,84 @@
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/trajectory.npz", service = "sim" },
+  { source = "/data/trajectory_live.f64", service = "sim" },
+  { source = "/data/referee.json", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/replay.last.png", service = "sim" },
+  { source = "/data/trajectory.first.npz", service = "sim" },
+  { source = "/data/replay.first.mp4", service = "sim" },
+  { source = "/data/replay.first.last.png", service = "sim" },
+  { source = "/data/ticks.f64", service = "sim" },
+  { source = "/data/calls.jsonl", service = "sim" },
+  { source = "/data/submitted.f64", service = "sim" },
+  { source = "/data/startups.jsonl", service = "sim" },
+  { source = "/data/crash.log", service = "sim" },
+  "/app/output/",
+]
+
+[task]
+name = "embodied-first-exam/embodied-olympics-fun-table-tennis-return-i00-realtime"
+description = "REALTIME MODE (robot as a service on a clock that does not stop, eai-standard/2.3, slowdown S = 1): Embodied Olympics table-tennis-return on the same frozen instance as embodied-olympics-fun-table-tennis-return-i00-privileged. Return the service: after the table tennis ball has bounced once on your court, strike it with the paddle held in your right hand so that it touches the opponent's court, without letting go of the paddle. Once an attempt starts the venue does not wait; the agent drives the robot from a program of its own through the client: the robot's two head cameras (depth on one), its joint sensors and IMUs, the venue's fixed camera, and action chunks (walking, running, joint targets, Unitree LowCmd, the hands' grip). 5 resets, the last attempt graded; no object state, no referee state during an attempt. The sim service records every executed control step and grades the last attempt live with the family's referee (no grading replay)."
+keywords = ["robotics", "embodied-olympics", "sports", "mujoco", "unitree-g1", "humanoid", "realtime-mode", "trajectory", "table-tennis-return"]
+
+[metadata]
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "unitree-g1"
+family = "table_tennis_return"
+category = "basketball-and-rackets"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+protocol = "eai-standard/2.3"
+instance_seed = 0
+expert_time_estimate_hours = 14.0
+oracle = "none"
+oracle_evidence = "no reference solution; the referee is tested: No reference solution (the short service is over the robot's court for a few tenths of a second, 0.7-1.0 m inside the end line). Positive by a declared injection around a real contact: the robot holds the blade still over its end line with the paddle held by contact and friction in its own right Dex3-1 hand (a shakehand grip, the device's joint torques, no weld); after the machine's real service bounces on the robot's court the ball is put 0.10 m in front of the blade moving onto it at 3 m/s, and at the real strike it is moved 3 cm off the blade with a return's velocity (4.0, 0.3, 2.2) m/s; the flight over the net and the landing on the opponent's court are real; the hand's hold broken for at most 0.027 s, the handle at most 0.12 mm into the fingers; the same state hash twice. Negatives: nop (the short service bounces twice), touched before the service, obstruction, the trunk, a second strike, a block onto the robot's own court, the floor, the racket on the net, a fall. Realtime: physics-only RTF on the shared cluster 0.63 against 0.82-0.92 for a reference dynamic family whose workstation RTF is 3.07: about 1.5 (with a measured 2.4-times speed ratio between the two machines) to 2.2 (with the same run's reference) on the workstation.; human review in the pull request that adds the benchmark (PROTOCOL §4)"
+
+[verifier]
+timeout_sec = 900.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resources (PROTOCOL §6): seal the monitor's record first.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running in its container. Harbor stops that container only after
+# collecting from it (~12 s), and a script still running there would keep driving the robot past the deadline.
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades the live
+# episode (no grading replay). The loops run on the clock, inside timeout_sec: the verdict ("finalized":
+# true, written before any video is rendered) may take until 840 s (the end waits through a crash-recovery resume);
+# then the hook waits for the video, one render pass from the trajectory ("video_pending"), until 870 s -- a video that
+# is not ready by then is lost, the verdict is not.
+[[verifier.collect]]
+service = "sim"
+command = "t0=$(date +%s); while [ ! -f /data/server.pid ] && [ $(( $(date +%s) - t0 )) -lt 120 ]; do sleep 2; done; i=0; while [ $(( $(date +%s) - t0 )) -lt 840 ] && ! grep -q '\"finalized\": true' /data/final.json 2>/dev/null; do [ $((i % 15)) -eq 0 ] && kill -USR1 $(cat /data/server.pid 2>/dev/null) 2>/dev/null; i=$((i + 1)); sleep 2; done; while [ $(( $(date +%s) - t0 )) -lt 870 ] && grep -q '\"video_pending\": true' /data/final.json 2>/dev/null; do sleep 2; done; cat /data/final.json"
+timeout_sec = 900
+
+[agent]
+timeout_sec = 7200.0
+# Egress: open, `network_mode = "public"` below (the author's choice). Embodied Olympics lets the agent search for and download
+# public tools, robot models and pretrained controllers (owner, 2026-10-11; tasks/embodied-olympics-fun/README.md). The agent's
+# container holds no simulator, no referee and no instance.
+network_mode = "public"        # open egress, the task author's choice (docs/protocol/README.md Appendix H.6)
+
+[environment]
+build_timeout_sec = 1800.0
+cpus = 4
+memory_mb = 10240
+storage_mb = 20480
+
+[verifier.environment]
+build_timeout_sec = 600.0
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

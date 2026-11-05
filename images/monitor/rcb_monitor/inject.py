@@ -88,7 +88,7 @@ def _docker_copy_line(ln: str) -> bool:
     t = ln.strip()
     return t in ("COPY rcb_limits.py rcb_limits.json /tests/", "COPY rcb_limits.json /tests/rcb_limits.json") or \
         (t.startswith("COPY --from=") and t.endswith(f" {CODE_DIR}/rcb_limits.py /tests/rcb_limits.py"))   # any monitor image name
-SIDECAR_MODES = ("standard", "standard-realtime")
+SIDECAR_MODES = ("standard", "realtime")
 # Privileged mode: compose services that are the benchmark's own, not the agent's to drive (it cannot start, stop or
 # size them): recorded, never part of the scope the limits bind. Today RoboPaint's scoring service.
 BENCHMARK_SERVICES = ("scorer",)
@@ -104,7 +104,7 @@ def _num(v) -> str:
 
 
 def mode_of(task: Path) -> str:
-    for m in ("standard-realtime", "privileged", "standard"):
+    for m in ("realtime", "privileged", "standard"):
         if task.name.endswith("-" + m):
             return m
     raise ValueError(task.name)

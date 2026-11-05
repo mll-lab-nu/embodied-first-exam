@@ -202,7 +202,7 @@ def main(argv):
             if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)
         ok = status == "success"
         lines = [f"# {label} — {task}\n",
-                 f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{ {'standard': 'standard (robot as a service)', 'standard-realtime': 'standard-realtime (robot as a service, time does not stop)'}.get(mode, 'privileged')}**.\n",
+                 f"Run: Harbor job `{job}`, trial `{trial.name}`, {(r.get('started_at') or '')[:10]}. Mode: **{ {'standard': 'standard (robot as a service)', 'realtime': 'realtime (robot as a service, time does not stop)'}.get(mode, 'privileged')}**.\n",
                  "| | |", "|---|---|",
                  f"| result | {'**1 (success)**' if ok else NOT_A_RESULT.format(why) if why else '**0**' + (' — over the token budget' if over else ' — no trajectory handed in' if rw.get('missing_trajectory') else '')} |",
                  f"| configuration | {tc.config_label(cfg)}; seed {cfg.get('seed')} ({cfg.get('seed_source')}); "

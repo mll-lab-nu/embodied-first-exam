@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Standard-realtime tasks (docs/protocol/README.md §2): each task declares its slowdown S and its reset budget, and the
+"""Realtime tasks (docs/protocol/README.md §2): each task declares its slowdown S and its reset budget, and the
 declarations agree. The values are the task's own choice (PROTOCOL §2 gives the defaults); this check holds no
-per-benchmark list. For every task whose directory ends in `-standard-realtime`:
+per-benchmark list. For every task whose directory ends in `-realtime`:
   - slowdown: its sim service sets `RCB_SLOWDOWN` with a default (`"${RCB_SLOWDOWN:-S}"`, S > 0) in
     environment/docker-compose.yaml (a task a benchmark exports with its own service, PROTOCOL §3, may set its own
     variable instead: `RO_SLOWDOWN`); task.toml keeps no copy of it (`[metadata] slowdown`); the instruction states it,
@@ -76,16 +76,16 @@ def check(task: Path) -> list[str]:
 
 def main(argv: list[str]) -> int:
     dirs = [Path(a) for a in argv] or tc.iter_tasks()
-    tasks = [d for d in dirs if d.name.endswith("-standard-realtime")]
+    tasks = [d for d in dirs if d.name.endswith("-realtime")]
     errs = [e for t in tasks for e in check(t)]
     if errs:
-        print("FAIL standard-realtime tasks (PROTOCOL §2: the slowdown S and the reset budget declared and consistent):")
+        print("FAIL realtime tasks (PROTOCOL §2: the slowdown S and the reset budget declared and consistent):")
         for e in errs[:60]:
             print("  -", e)
         if len(errs) > 60:
             print(f"  ... {len(errs) - 60} more")
         return 1
-    print(f"check-realtime: {len(tasks)} standard-realtime task(s) OK")
+    print(f"check-realtime: {len(tasks)} realtime task(s) OK")
     return 0
 
 

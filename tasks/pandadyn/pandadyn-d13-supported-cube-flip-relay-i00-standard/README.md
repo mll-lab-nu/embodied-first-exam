@@ -16,7 +16,7 @@ Standard-mode twin of `pandadyn-d13-supported-cube-flip-relay-i00-privileged` (s
 client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
+episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
 privileged task to measure the cost of losing privileged state, free resets and self-replay. The left arm holds a large shallow tray with a cube on it, and the right arm holds a small flat pusher. The left arm must first bring the tray to a presentation point. The right arm must then tip the cube over onto an adjacent face while the left arm keeps the tray moving. It does so with a short push that sets the cube rotating and ends before the cube is half-way over, so that the cube completes the tip on its own momentum and settles on the tray. The left arm then moves the cube, on the tray, to a new place, and the pusher tips it a second time in the same way, again with the tray moving, so that the cube's original bottom face ends up on top. Finally the tray must carry the correctly oriented cube to an output point and hold it there. The cube must never leave the tray.
 

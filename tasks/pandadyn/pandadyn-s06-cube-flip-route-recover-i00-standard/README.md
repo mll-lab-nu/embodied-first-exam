@@ -16,7 +16,7 @@ Standard-mode twin of `pandadyn-s06-cube-flip-route-recover-i00-privileged` (sam
 client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
+episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
 privileged task to measure the cost of losing privileged state, free resets and self-replay. A cube rests on a raised launch surface. With a short push from the pusher blade, tip it over so that the face that initially faces the robot (-x) ends up on top, the cube completing the tip by its own momentum after the blade has let go, and let it settle. Then push the flipped cube onto an inclined chute, let it slide down by itself, meet it with the blade on its downhill side near the chute's lower end, and bring it to rest in the pocket at the bottom of the chute with the same face still on top.
 

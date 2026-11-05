@@ -1,6 +1,6 @@
 # The core set: the tasks the headline statistics are computed on (PROTOCOL §4). One entry per task (the task dir
 # name without its mode suffix) and its default mode: `harbor run -d embodied-first-exam` runs that mode's dir;
-# `--privileged`, `--standard` or `--standard-realtime` runs another mode of the same tasks.
+# `--privileged`, `--standard` or `--realtime` runs another mode of the same tasks.
 # Checked by `python3 scripts/task_conventions.py core-set --check`.
 
 [[task]]
@@ -297,43 +297,43 @@ default_mode = "standard"
 
 [[task]]
 task = "bigym2-dishwasher-close-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "bigym2-dishwasher-load-plates-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "bigym2-flip-cutlery-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "bigym2-move-two-plates-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "bigym2-pick-box-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "bigym2-put-cups-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "bigym2-sandwich-remove-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "bigym2-saucepan-to-hob-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "bigym2-stack-blocks-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "bigym2-wall-cupboard-open-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "dexhand-assemble-hamburger-i00"
@@ -689,11 +689,11 @@ default_mode = "standard"
 
 [[task]]
 task = "ese-c02-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "ese-c02-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "ese-c04-i01"
@@ -701,7 +701,7 @@ default_mode = "standard"
 
 [[task]]
 task = "ese-c05-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "ese-c05-i02"
@@ -765,35 +765,35 @@ default_mode = "standard"
 
 [[task]]
 task = "humanoidbench-loco-balance-hard-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "humanoidbench-loco-hurdle-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "humanoidbench-manip-bookshelf-simple-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "humanoidbench-manip-cube-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "humanoidbench-manip-door-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "humanoidbench-manip-powerlift-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "humanoidbench-manip-room-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "humanoidbench-manip-window-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "ispatialgym-alignment-axial-i00"
@@ -901,7 +901,7 @@ default_mode = "standard"
 
 [[task]]
 task = "mujoco_playground_barkour_joystick"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "mujoco_playground_go1_handstand"
@@ -977,11 +977,11 @@ default_mode = "standard"
 
 [[task]]
 task = "pandadyn-d01-reciprocal-cup-relay-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "pandadyn-d03-cooperative-puck-course-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "pandadyn-d05-moving-ramp-relay-i00"
@@ -989,15 +989,15 @@ default_mode = "standard"
 
 [[task]]
 task = "pandadyn-d07-spring-gate-switchyard-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "pandadyn-d09-lever-launch-catch-reload-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "pandadyn-s01-cup-route-delivery-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "pandadyn-s06-cube-flip-route-recover-i00"
@@ -1005,15 +1005,15 @@ default_mode = "standard"
 
 [[task]]
 task = "pandadyn-s09-toss-recatch-delivery-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "pandadyn-s11-cylinder-rescue-route-deliver-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "pandadyn-s12-moving-bridge-puck-relay-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "roboarc-blanket-flatten-02-i01"
@@ -1445,11 +1445,11 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-fun-catch-and-shoot-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-catch-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-clean-and-jerk-i00"
@@ -1461,7 +1461,7 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-fun-dodgeball-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-dribble-slalom-i00"
@@ -1489,7 +1489,7 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-fun-goalkeeper-save-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-golf-putt-i00"
@@ -1513,7 +1513,7 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-fun-juggle-three-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-juggling-feet-i00"
@@ -1521,7 +1521,7 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-fun-juggling-head-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-juggling-i00"
@@ -1537,11 +1537,11 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-fun-long-rope-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-paddle-bounce-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-pitch-target-i00"
@@ -1593,7 +1593,7 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-fun-table-tennis-return-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-taekwondo-kick-i00"
@@ -1601,7 +1601,7 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-fun-tennis-return-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-tennis-serve-i00"
@@ -1629,7 +1629,7 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-fun-volleyball-spike-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-fun-wall-ball-i00"
@@ -1637,15 +1637,15 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-match-badminton-duelrl-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-badminton-match-i04"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-badminton-matchlow-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-fencing-bout-i02"
@@ -1653,35 +1653,35 @@ default_mode = "standard"
 
 [[task]]
 task = "embodied-olympics-match-foosball-match-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-soccer-jointcpu-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-soccer-jointgpu-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-soccer-match-i00"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-soccerssl-match-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-tabletennis-duelrl-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-tabletennis-match-i04"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "embodied-olympics-match-tabletennis-matchlow-i01"
-default_mode = "standard-realtime"
+default_mode = "realtime"
 
 [[task]]
 task = "robopaint-acrylic-applesoranges-i00"

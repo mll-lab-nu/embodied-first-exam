@@ -16,7 +16,7 @@ Standard-mode twin of `pandadyn-d12-reciprocal-sliding-transfer-i00-privileged` 
 client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
+episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
 privileged task to measure the cost of losing privileged state, free resets and self-replay. Each arm holds a level scoop, a shallow square tray that is open on the side facing the other arm. A cube on a very slippery surface starts on the left scoop. Without tilting the scoops, the left arm must make the cube slide out over its open edge onto the right scoop, which must be moving in step with the left scoop (at 0.2 m/s or more) when the cube arrives and then brake to rest with the cube on it within 1.5 s. The right arm then carries it to a new place and makes it slide back the same way onto the left scoop, which must likewise be moving in step when it arrives and then brake to rest. Finally the cube must be set down on a fixed output platform and left there at rest. Until that final deposit begins, the scoops may not tilt by more than 2.1 deg, and the cube may never be without scoop contact for more than about a tenth of a second.
 

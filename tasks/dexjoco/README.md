@@ -163,7 +163,7 @@ unchanged), resume class `exact`:
   4 OpenBLAS threads (`too_few_cpus`, with `grader_error = 1`; Threads above). Crashes all inside the agent's calls
   (`sim_crashed_on_call`), a task failure and the timeout are the agent's 0. An episode that a simulator error ended
   (`reason = "error"`) is reported as `sim_error = 1` and stays the trial's result: `eai-standard/2.2` has no rule that
-  makes it an infrastructure failure (that rule is standard-realtime's).
+  makes it an infrastructure failure (that rule is realtime's).
 - **malformed requests:** a request is checked in full before anything is executed (`parse_submit` / `parse_observe`
   under `checked`): a field of the wrong JSON type (a number or an object as `note`, a string or
   a list as `dt` / `seconds` / `video_fps`, a string as `cameras`), a number too large for a float, NaN, a bad `depth`

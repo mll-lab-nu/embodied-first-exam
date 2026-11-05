@@ -1,6 +1,6 @@
 """Loaded at interpreter start by efe-harbor.pth (installed with this repo: `uv tool install --force -e .`): when
 Harbor's CLI module is imported, its `app` is wrapped so that `harbor run` takes --core / --all / --privileged /
---standard / --standard-realtime (scripts/efe.py). Harbor's own options and subcommands are unchanged."""
+--standard / --realtime (scripts/efe.py). Harbor's own options and subcommands are unchanged."""
 import importlib.abc, importlib.machinery, sys
 
 

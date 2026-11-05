@@ -16,7 +16,7 @@ Standard-mode twin of `pandadyn-d10-moving-grasp-handover-i00-privileged` (same 
 client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
+episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
 privileged task to measure the cost of losing privileged state, free resets and self-replay. A long bar-shaped part is already riding a powered roller conveyor when the episode starts. The left arm must grasp it with its gripper while it is still moving and lift it, then carry it, still moving, through a presentation point. It then hands the part over to the right arm while the part keeps moving: both grippers hold it at the same time, then the left gripper opens wide and lets go while the right one keeps holding it. Finally the right arm must lay the part into a long open slot that slides back and forth on a rail and let go of it while the slot is moving, so that the part lies in the slot while the slot is moving.
 

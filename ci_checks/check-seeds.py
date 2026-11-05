@@ -6,7 +6,7 @@
     `build = "runtime"`: the task builds a seed's instance itself, since they cannot all be committed) and `oracle` (the
     seeds the reference solution is for, default [instance_seed] with an oracle, else []: a subset of `allowed`; empty
     when `oracle = "none"`, not empty when it is "full" or "partial"), and no `default` (a second copy of instance_seed);
-  - (a standard or standard-realtime task has its privileged twin's seeds: ci_checks/check-twins.py, an invariant);
+  - (a standard or realtime task has its privileged twin's seeds: ci_checks/check-twins.py, an invariant);
   - `build = "frozen"` (the default): every listed seed other than the default has its frozen instance under the verifier's files of the task that
     holds the pair's instance (the privileged twin; a task without one: itself): `tests/seeds/<seed>/instance.json` or
     `instance.npz`, of the same kind as the default instance; and `tests/seeds/` holds nothing for a seed that is not

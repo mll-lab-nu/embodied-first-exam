@@ -4,8 +4,8 @@ Twenty-nine tasks of [ABC Sim](https://github.com/amazon-far/abc) (`abc_sim` at 
 MIT), the MuJoCo simulator of *ABC: Scalable Behavior Cloning with Open Data, Training, and Evaluation*: two I2RT YAM
 arms (6 revolute joints and a parallel two-finger gripper each, the robot of YAMLab) side by side at a table, controlled
 by joint-position targets. Every task the upstream catalogue scores is here, each as one frozen instance in two modes:
-58 task directories `tasks/abc-sim/abc-sim-<family>-i00-{privileged,standard}`, and a standard-realtime twin for the two
-families whose scene moves by itself (`abc-sim-conveyor-pick-i00-standard-realtime`, `abc-sim-ball-tray-i00-standard-realtime`):
+58 task directories `tasks/abc-sim/abc-sim-<family>-i00-{privileged,standard}`, and a realtime twin for the two
+families whose scene moves by itself (`abc-sim-conveyor-pick-i00-realtime`, `abc-sim-ball-tray-i00-realtime`):
 60 in all.
 
 ## Quick start
@@ -108,7 +108,7 @@ without a colour), and an "all of a colour and shape" directive for the generic 
   - resume class `exact` (MuJoCo on the CPU repeats bit for bit in a fresh process); `max_frames_per_call` 1000;
   - reset budget 0 (the mode's default): one episode. The adapter implements the optional reset capability, so a run
     can grant resets with `RCB_RESET_BUDGET`.
-- **Standard-realtime (`eai-standard/2.3`):** the shared realtime layer (`rcb_realtime.py` from `standard-files`,
+- **Realtime (`eai-standard/2.3`):** the shared realtime layer (`rcb_realtime.py` from `standard-files`,
   `rcb_service.py` byte-identical to the other realtime benchmarks' copies, in the base image at
   `/opt/abc-tools/realtime/`) and the adapter `/opt/abc-tools/realtime/server.py` on the same Session: the standard twin's
   instance, action, success rule, cameras and proprioception (not served: `/kinematics`, per-frame camera poses, depth
@@ -117,7 +117,7 @@ without a colour), and an "all of a colour and shape" directive for the generic 
   and 17.1 for the ball tray without rendering, 5.3 and 10.2 rendering three cameras every step (RTX 4090, EGL), above
   PROTOCOL §2's 3. Reset budget 10 (this benchmark's choice; the mode's default is 0).
 
-## Grading (standard and standard-realtime)
+## Grading (standard and realtime)
 The verdict is the live episode's (PROTOCOL H.4): the episode the sim sidecar ran, under the task's rule as
 `Session.step` applied it (the 1.02 s hold is part of the rule, run on the live simulator). Standard: the collect hook
 (`/opt/abc-tools/standard/finalize.sh`) ends the service, writes `final.json` (`graded_by` = `live`, `replays` = 0) and then
@@ -133,7 +133,7 @@ cut at the success step; spell_bair's is a hand-built trajectory (scripted inver
 grasps with the clearest finger yaw, place checks and re-placing) on its seed-243 layout. The rows are float32 values
 (abc_sim rounds every command to float32 anyway), so the privileged replay and the standard client execute the same rows.
 Privileged: `solution/oracle_replay.py` replays and saves them. Standard: `solution/oracle_stream.py` streams them as
-`joint_position` chunks. Standard-realtime: `solution/oracle_plan.py` plans them into the episode at the control steps
+`joint_position` chunks. Realtime: `solution/oracle_plan.py` plans them into the episode at the control steps
 where they ran (`submit(..., at=step)`, sent ahead of the clock).
 
 How the instances were chosen (the feasibility spike, 2026-10-20/21, issue #473): every validation demonstration of each
@@ -155,7 +155,7 @@ same final state (the hash below), which is also the reference's final state on 
 The realtime oracles (the reference planned with `submit(..., at=step)` at S = 1) ran with no late step and no stall (the
 largest lag 11 ms).
 
-| family | reference rows | oracle, privileged (both replays) | oracle, standard (live) | oracle, standard-realtime (live) | final state | nop (priv / std / realtime) |
+| family | reference rows | oracle, privileged (both replays) | oracle, standard (live) | oracle, realtime (live) | final state | nop (priv / std / realtime) |
 |---|---|---|---|---|---|---|
 | `ball_tray` | 453 | 1 | 1 | 1 | `0d05516cffd7e620` | 0 / 0 / 0 |
 | `chess` | 1872 | 1 | 1 | -- | `95d72acb81802ac4` | 0 / 0 |

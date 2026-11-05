@@ -6,7 +6,7 @@ the clone of an editable install, else a shallow clone of the release tag v<vers
 ~/.cache/embodied-first-exam/<version> (find_root).
 
   harbor run -a codex -m openai/gpt-6-astra            # core: each core task in its default mode (the default)
-  harbor run --core --privileged -a codex -m openai/gpt-6-astra   # the core tasks in another mode (also --standard, --standard-realtime)
+  harbor run --core --privileged -a codex -m openai/gpt-6-astra   # the core tasks in another mode (also --standard, --realtime)
   harbor run --all -a codex -m openai/gpt-6-astra      # every task dir
   harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # mode flags and -i / -x filter within the set
   harbor run --benchmark roboarc -a codex -m openai/gpt-6-astra   # one benchmark's core tasks
@@ -16,7 +16,7 @@ the clone of an editable install, else a shallow clone of the release tag v<vers
 
 Set: --core (default) or --all. core = the tasks of docs/core_set.toml, each in its default_mode; with mode flags, each
 core task in those modes (a task without that mode is skipped, and counted). all = every task dir; mode flags filter it.
-Modes: any of --privileged, --standard, --standard-realtime.
+Modes: any of --privileged, --standard, --realtime.
 -d embodied-first-exam[@core|@all] (also `efe`) is --core / --all (no version: core); any other -d is Harbor's.
 --benchmark <name> keeps a benchmark: its README label or its folder under tasks/ (repeatable). With any of these flags,
 -p <dir> (a task dir, a benchmark folder or tasks/) narrows the set to the task dirs under it, -l <n> keeps the first n of
@@ -116,7 +116,7 @@ tc = _Scripts("task_conventions")
 # ------------------------------------------------------------------------------------------------------------------------
 
 MODES = {"--privileged": "privileged", "--privilege": "privileged", "--standard": "standard",
-         "--standard-realtime": "standard-realtime", "--standard_realtime": "standard-realtime"}
+         "--realtime": "realtime"}
 DATASET = ("embodied-first-exam", "efe")
 SOURCES = ("-p", "--path", "-d", "--dataset", "-t", "--task", "-c", "--config", "--task-git-url")
 

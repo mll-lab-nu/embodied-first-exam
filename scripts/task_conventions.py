@@ -109,7 +109,7 @@ BENCHMARK_TABLE = [
     ("embodiedswe-", "EmbodiedSWE", "embodiedswe"),
 ]
 BENCHMARKS = [(p, label) for p, label, _ in BENCHMARK_TABLE]   # (directory prefix, label): the first matching prefix wins
-# Modes (PROTOCOL §3): a benchmark ships any subset of the modes. A standard or standard-realtime
+# Modes (PROTOCOL §3): a benchmark ships any subset of the modes. A standard or realtime
 # task without a privileged twin says why in its README's Twin row ("— (none: ...)"), the task's own declaration:
 # no_twin_reason() reads it back, so no list of such tasks is kept here.
 # Embodied Olympics' exported tasks (PROTOCOL §3) have a cutoff note of their own (CUTOFF_NOTE_TASK below): the
@@ -148,7 +148,7 @@ MODE_REGISTRY = {
     "standard": {"short": "S", "section": "§3", "sidecar": True, "limit_scope": "agent",
                  "protocols": ("eai-standard/2.1", "eai-standard/2.2", "eai-standard/2.4"),
                  "twin": "privileged", "same_cutoff_as": "privileged"},   # one cutoff for both modes (Appendix H.7)
-    "standard-realtime": {"short": "RT", "section": "§3", "sidecar": True, "limit_scope": "agent",
+    "realtime": {"short": "RT", "section": "§3", "sidecar": True, "limit_scope": "agent",
                           "protocols": ("eai-standard/2.3",), "twin": "privileged", "same_cutoff_as": None},
 }
 MODES = tuple(MODE_REGISTRY)
@@ -164,7 +164,7 @@ DROP_ROWS = {"simulator / robot", "family / instance", "base image"}   # header 
 # PROTOCOL §6: the resource caps of every task, as rules (scripts/task_resources.toml); normalize writes them where
 # Harbor and docker read them (normalize_resources, images/monitor/rcb_monitor/inject.py)
 RESOURCES_FILE = Path(__file__).resolve().parent / "task_resources.toml"
-# PROTOCOL §2: a standard-realtime task's slowdown S is its sim service's `RCB_SLOWDOWN` default
+# PROTOCOL §2: a realtime task's slowdown S is its sim service's `RCB_SLOWDOWN` default
 # (environment/docker-compose.yaml), its reset budget the `RCB_RESET_BUDGET` default there; task.toml keeps no copy of
 # either (ci_checks/check-realtime.py)
 SLOWDOWN_RE = re.compile(r'RCB_SLOWDOWN:\s*"?\$\{RCB_SLOWDOWN:-([0-9.]+)\}"?')
@@ -248,7 +248,7 @@ CUTOFF_NOTE = {
                  "it never runs out before your time does: your real time left is `time_left_s` minus the time you "
                  "spent before that request. Plan by it." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE),
 }
-CUTOFF_NOTE["standard-realtime"] = CUTOFF_NOTE["standard"]
+CUTOFF_NOTE["realtime"] = CUTOFF_NOTE["standard"]
 assert set(CUTOFF_NOTE) == set(MODE_REGISTRY), "every mode of MODE_REGISTRY needs its CUTOFF_NOTE (PROTOCOL §5)"
 # A benchmark whose service counts the limit its own way has a note of its own (PROTOCOL §5).
 CUTOFF_NOTE_OWN = {}   # (benchmark label, mode) -> its note
@@ -287,7 +287,7 @@ def replace_words(s: str) -> str:
 
 
 # PROTOCOL §1, §3: each mode of MODE_REGISTRY is the whole suffix of its task directories. A mode is recognised by
-# its complete suffix only, longest first: `-standard-realtime` is never `-standard` (it does not end in it).
+# its complete suffix only, longest first: `-realtime` is never `-standard` (it does not end in it).
 MODES_LONGEST_FIRST = tuple(sorted(MODES, key=len, reverse=True))
 
 
@@ -305,7 +305,7 @@ def mode_of(task: Path) -> str:
 
 
 def base_of(task: Path) -> str:
-    """The name without its mode suffix (`-privileged`, `-standard`, `-standard-realtime`, ...; PROTOCOL §1)."""
+    """The name without its mode suffix (`-privileged`, `-standard`, `-realtime`, ...; PROTOCOL §1)."""
     mode = mode_suffix(task.name)
     return task.name[: -len(mode) - 1] if mode else task.name
 
@@ -907,7 +907,7 @@ def bench_has_mode(bench: str, mode: str) -> bool:
 
 
 def no_twin_reason(task: Path) -> str | None:
-    """Why a standard or standard-realtime task has no privileged twin `<base>-privileged` (PROTOCOL §3), as its
+    """Why a standard or realtime task has no privileged twin `<base>-privileged` (PROTOCOL §3), as its
     README's Twin row says it; None for a privileged task and for one that names its twin. The reason is the task's own
     declaration: its README's Twin row ("— (none: ...)"), kept by every render (the committed task's row when a
     task is rendered into a scratch directory); a benchmark without a privileged mode gets the generic reason. Whether
@@ -1431,10 +1431,10 @@ def normalize_dynamics(task: Path) -> None:
 
 
 def realtime_of(task: Path) -> tuple[float, int | None] | None:
-    """A standard-realtime task's (slowdown S, reset budget) as its sim service starts by default: the `RCB_SLOWDOWN`
-    and `RCB_RESET_BUDGET` defaults in environment/docker-compose.yaml (PROTOCOL §2). None: not a standard-realtime task,
+    """A realtime task's (slowdown S, reset budget) as its sim service starts by default: the `RCB_SLOWDOWN`
+    and `RCB_RESET_BUDGET` defaults in environment/docker-compose.yaml (PROTOCOL §2). None: not a realtime task,
     or a service without `RCB_SLOWDOWN` (ci_checks/check-realtime.py fails a 2.3 one)."""
-    if mode_of(task) != "standard-realtime":
+    if mode_of(task) != "realtime":
         return None
     c = read_text(task / "environment/docker-compose.yaml") or ""
     m, r = SLOWDOWN_RE.search(c) or OWN_SLOWDOWN_RE.search(c), RESET_DECL_RE.search(c)
@@ -1458,7 +1458,7 @@ def slowdown_text(S: float) -> str:
 # PROTOCOL §2: the settings a task declares, and the effective configuration of a trial, recorded with every result
 # so that results are ranked only within one comparable configuration (docs/protocol/running.md "Results"). Standard
 # library only: scripts/write_task_results.py, scripts/dataset_manifest.py and a runner's scheduler read these.
-PROTOCOL_VERSION = "2.2"                         # docs/protocol/README.md
+PROTOCOL_VERSION = "2.3"                         # docs/protocol/README.md
 
 
 def metadata_of(task: Path) -> dict:
@@ -1482,7 +1482,7 @@ def reset_budget_of(task: Path) -> int | None:
 
 
 def slowdown_of(task: Path) -> float | None:
-    """A standard-realtime task's slowdown S, its sim service's default (realtime_of); None otherwise."""
+    """A realtime task's slowdown S, its sim service's default (realtime_of); None otherwise."""
     rt = realtime_of(task)
     return rt[0] if rt is not None else None
 
@@ -1709,7 +1709,7 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
               "uv tool install embodied-first-exam --with-executables-from harbor"),
         "### 2. Run", "",
         block(f"# the core set: {core} tasks, each in its default mode", f"{d} {m}"),
-        block(f"# the core tasks in another mode: --privileged ({priv} tasks), --standard, --standard-realtime",
+        block(f"# the core tasks in another mode: --privileged ({priv} tasks), --standard, --realtime",
               f"{d} --privileged {m}"),
         block(f"# every task: {len(dirs)} task dirs ({bases} tasks in their modes, {benches} benchmarks)",
               f"{d}@all {m}"),
@@ -1751,7 +1751,7 @@ def taxonomy_protocol_row(tasks_dir: Path | None = None) -> str:
             note = PROTOCOL_NOTES.get(proto)
             vals.append(f"`{proto}` ({(note + ': ') if note else ''}{', '.join(names)})")
         parts.append(f"{m[0].upper() + m[1:]}: " + " · ".join(vals))
-    return ("| `protocol` | standard and standard-realtime modes only; the benchmarks that serve each value (generated: "
+    return ("| `protocol` | standard and realtime modes only; the benchmarks that serve each value (generated: "
             "`python3 scripts/task_conventions.py taxonomy --write`). " + ". ".join(parts) + ". The `eai-standard` "
             "versions are specified in [protocol/standard_mode.md](protocol/standard_mode.md); a benchmark's own runtime "
             "names its protocol (PROTOCOL §3) |")

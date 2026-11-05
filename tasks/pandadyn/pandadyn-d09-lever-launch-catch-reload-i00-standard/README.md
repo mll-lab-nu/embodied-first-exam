@@ -16,7 +16,7 @@ Standard-mode twin of `pandadyn-d09-lever-launch-catch-reload-i00-privileged` (s
 client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
+episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
 privileged task to measure the cost of losing privileged state, free resets and self-replay. A ball starts in the right arm's cup. The right arm must load it into the small basket of a passive see-saw launcher and move its cup away. The left arm, holding a mallet, must strike the lever so that the ball is flung up into free flight, and the right arm must catch it in its cup. The right arm then loads the ball into the basket a second time and clears away, and the left arm launches it again. In the end the ball must come to rest inside an open box that slides back and forth on a rail, while the box is moving. The left arm's mallet must never touch the ball.
 

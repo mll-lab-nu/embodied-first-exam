@@ -16,7 +16,7 @@ Every image is public: Harbor pulls it.
 
 One frozen instance per task (i00), each a privileged task `pandadyn-<code>-<name>-i00-privileged` and its standard twin
 `pandadyn-<code>-<name>-i00-standard` (`eai-standard/2.1`): 50 task directories; the 19 dynamic families (all but D05, D08,
-D11, D12, D13, S06) also have a standard-realtime twin `pandadyn-<code>-<name>-i00-standard-realtime` (`eai-standard/2.3`): 69
+D11, D12, D13, S06) also have a realtime twin `pandadyn-<code>-<name>-i00-realtime` (`eai-standard/2.3`): 69
 task directories.
 
 | Code | Task | Arms | Phases | Seed (i00) | Oracle |
@@ -101,7 +101,7 @@ controller (the benchmark's per-task closed-loop controllers, which read the sim
 (Instances). `solution/oracle_actions.npy` (privileged: run through the agent's own tooling,
 `solution/oracle.py`) and `solution/oracle_qpos.npy` (standard: after one-second scouting episodes that spend the reset
 budget, streamed in the last episode as one-second `joint_position` chunks, `hold`, float64, `solution/oracle_replay.py`;
-standard-realtime: planned from step 0, `solution/oracle_plan.py`) hold the same rows, so all oracles end in the same state. The controllers and the bank are not in the image, not in the
+realtime: planned from step 0, `solution/oracle_plan.py`) hold the same rows, so all oracles end in the same state. The controllers and the bank are not in the image, not in the
 repository and not published; only the rows of the 25 frozen instances are, under `solution/`.
 
 `nop`: privileged, no trajectory (reward 0); standard, no control step runs (reward 0). The benchmark's parked controls
@@ -158,7 +158,7 @@ before official runs there (PROTOCOL §3).
   end in the same state hash (`deterministic`) and both rebuilt the frozen start (`instance_ok`). A replay that gives no
   result or runs out of its time limit (300 s + rows / 10) is `grader_error` = `infra_error` = 1. Then a filmed replay
   (`replay.mp4`, overview camera) that never changes the verdict.
-- **Standard and standard-realtime** (one adapter: `environment/sim/server.py`, an `rcb_service.Sim` on
+- **Standard and realtime** (one adapter: `environment/sim/server.py`, an `rcb_service.Sim` on
   `rcb_pandadyn.Session`, on the shared service layer `rcb_service.py`; the realtime twin adds `rcb_realtime.py`'s clock;
   then `tests/grade.py`, the shared one): graded by the live episode, nothing replayed (PROTOCOL H.4). `success` = the task's own check as the last episode ended (rcb_service's finalize; the
   adapter's `live_verdict` adds the phase and the end reason and takes nothing away): every phase in order with no
@@ -188,7 +188,7 @@ with the same state hash.
 builds in 5-15 s and runs ~40-150 control steps per second, so the budget is the agent's own work, not the simulator's.
 
 ## Standard mode (eai-standard/2.1)
-Standard and standard-realtime differ only in the clock. Both run
+Standard and realtime differ only in the clock. Both run
 the same adapter (each twin's `environment/sim/server.py`: the same code, each copy with its own docstring) on the same
 shared service layer (`rcb_service.py`, with `grade.py` and the 2.1 client: the same files as HumanoidBench's, BiGym
 2.0's and Embodied Olympics - Fun's), with the same reset budget ("Reset budget" below). The static families (D05, D08, D11, D12, D13, S06) have
@@ -202,15 +202,15 @@ only the standard twin and get the same rules.
   `seconds`) up to 30 s, holding the last targets.
 - **Clock.** The simulated clock advances only with the agent's calls (submit rows, observe watches): between calls the
   world is frozen, so the agent can look between control steps at a cost in calls, as on a robot whose controller it
-  pauses. The standard-realtime twin runs the same steps on a clock that does not stop (below).
+  pauses. The realtime twin runs the same steps on a clock that does not stop (below).
 - **Episode.** The only step bound is the task's own horizon (2,500, 3,200 or 3,500 control steps: 25, 32 or 35 s of
   simulated time; `/spec` `max_control_steps` is the environment's cap, 4,500), a failure of the task, stated in `/spec`
   (`episode`), both instructions and the README; resets as in
   the realtime twin; only the last episode is graded.
 
-## Standard-realtime (eai-standard/2.3)
+## Realtime (eai-standard/2.3)
 The dynamic families (`[metadata] dynamics`, declared by each task; D05, D08, D11, D12, D13 and S06 are static: nothing in
-them moves by itself) get a `-standard-realtime` twin, sharing the standard twin's adapter, service layer and reset budget
+them moves by itself) get a `-realtime` twin, sharing the standard twin's adapter, service layer and reset budget
 ("Standard mode" above).
 - **Service.** The shared realtime layer of HumanoidBench, BiGym 2.0 and Embodied Olympics - Fun, unchanged (`rcb_realtime.py`
   and `rcb_client.py` from `embodied_first_exam/standard/realtime/`, `rcb_service.py`, `grade.py`), with the twin's
@@ -255,7 +255,7 @@ them moves by itself) get a `-standard-realtime` twin, sharing the standard twin
   and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing. For 0.2.0
   the oracle (planned from step 0) and nop were rerun with Harbor on S03 (S = 2) and D06 (S = 3): live success with
   `late_steps` 0, and reward 0.
-- **Reset budget: 3**, in both standard modes (below the standard-realtime mode's default of
+- **Reset budget: 3**, in both standard modes (below the realtime mode's default of
   10, the benchmark's choice). Every reset
   restores the same frozen start, and the client lets a program plan up to 10 s ahead (`at`), so the budget is the
   number of times an agent can rerun an open-loop plan on a deterministic scene, watch the outcome and tune it; the
@@ -336,7 +336,7 @@ Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v
 
 By directory: 33 easy, 11 hard, 24 unverified, 1 pending.
 
-| base | privileged | standard | standard-realtime |
+| base | privileged | standard | realtime |
 |---|---|---|---|
 | `pandadyn-d01-reciprocal-cup-relay-i00` | easy: Astra, Opus, GLM 5.3 Flash | hard | easy: Astra (3), Opus (9) |
 | `pandadyn-d02-strike-catch-merge-i00` | easy: Luna | unverified | unverified |
@@ -364,6 +364,6 @@ By directory: 33 easy, 11 hard, 24 unverified, 1 pending.
 | `pandadyn-s11-cylinder-rescue-route-deliver-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | hard | easy: Astra (3), Gemini 3.8 Flash (6) |
 | `pandadyn-s12-moving-bridge-puck-relay-i00` | easy: Astra, Opus | hard | easy: Astra (7), Opus (5) |
 
-Standard-realtime cells name each solving run with the resets it used (the screening allowed 10; a solve that used more
+Realtime cells name each solving run with the resets it used (the screening allowed 10; a solve that used more
 than 3 would not count under today's budget). The standard cells are from standard twins with no reset, a configuration
 being rerun under today's. `pandadyn-d04-shared-tray-transport-discharge-i00`, easy in every mode and so left out of the core set, has realtime solves with 1 reset (Astra, Opus).

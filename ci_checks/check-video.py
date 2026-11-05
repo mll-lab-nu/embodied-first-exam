@@ -4,7 +4,7 @@ able to collect it. Advisory: a video is evidence for people and never the verdi
 tell whether a render finishes in time (the runner flags a graded trial without a video at run time, docs/protocol/running.md
 "Recordings"). For every task:
   - privileged: the verifier renders the video, so a file under tests/ names an `.mp4` output;
-  - standard / standard-realtime: the task's code (environment/ or tests/) renders one (an `.mp4` output, or the
+  - standard / realtime: the task's code (environment/ or tests/) renders one (an `.mp4` output, or the
     exported runtime's `RCB_RENDER_VIDEO` / `RCB_VIDEO_*` switches) -- recorded during the live episode or rendered from
     the trajectory after the verdict (no replay grades these modes, PROTOCOL H.4) -- and it is collected: task.toml
     `artifacts` takes a directory or an `.mp4` from a service other than the resource monitor (the sim sidecar's

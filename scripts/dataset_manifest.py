@@ -34,7 +34,7 @@ HEADER = f'''# Dataset manifest for embodied-first-exam/embodied-first-exam (gen
 [dataset]
 name = "embodied-first-exam/embodied-first-exam"
 version = "{VERSION}"
-description = "Coding agents program robots in simulation: one replayable trajectory per frozen scene, in privileged, standard and standard-realtime mode, across the suites of the Embodied First Exam."
+description = "Coding agents program robots in simulation: one replayable trajectory per frozen scene, in privileged, standard and realtime mode, across the suites of the Embodied First Exam."
 authors = []
 keywords = [ "robotics", "manipulation", "humanoid", "code-as-policy", "harbor",]
 '''

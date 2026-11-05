@@ -1,0 +1,26 @@
+{
+ "agent_timeout_sec": 3600,
+ "caps": {
+  "main": {
+   "cpus": 3.0,
+   "disk_gb": 10.0,
+   "memory_gb": 8.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 6.0,
+   "memory_gb": 7.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "realtime",
+ "scope_services": [
+  "main"
+ ],
+ "task": "ese-c05-i01-realtime",
+ "tick_sec": 5
+}

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # PROTOCOL §1: the agent container and the verifier of every standard task share ONE client base image, pinned by
 # digest, and pinned pip versions. The image and the pins are embodied_first_exam/standard/client.env (CLIENT_IMAGE) and
-# embodied_first_exam/standard/client-requirements.txt. For each standard or standard-realtime task (mode standard /
-# standard-realtime, or a -standard / -standard-realtime name), environment/Dockerfile and tests/Dockerfile:
+# embodied_first_exam/standard/client-requirements.txt. For each standard or realtime task (mode standard /
+# realtime, or a -standard / -realtime name), environment/Dockerfile and tests/Dockerfile:
 #   - every FROM is CLIENT_IMAGE;
 #   - every `pip install` installs the pins: `-r <file>` with a byte-identical copy of client-requirements.txt in the
 #     build context, or the full pin list inline (name==version for every pin, nothing else).

@@ -16,7 +16,7 @@ and numbers.
 
 | | |
 |---|---|
-| tasks | 79 families: 79 `-privileged`, 79 `-standard` (`eai-standard/2.1`) and 21 `-standard-realtime` (`eai-standard/2.3`, the dynamic families), 179 dirs, `embodied-olympics-fun-<family>-i00-<mode>`; core set 56 (45 default standard, 11 default standard-realtime) |
+| tasks | 79 families: 79 `-privileged`, 79 `-standard` (`eai-standard/2.1`) and 21 `-realtime` (`eai-standard/2.3`, the dynamic families), 179 dirs, `embodied-olympics-fun-<family>-i00-<mode>`; core set 56 (45 default standard, 11 default realtime) |
 | simulator | MuJoCo 3.3.7 on the CPU (1 ms physics, 10 ms control), on [Embodied Olympics](https://github.com/CHIGUI0/roboolympics)' robot library and running policy (MIT), unchanged in the image |
 | image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-<images/embodied-olympics-fun/VERSION>`; shared files (tooling `rcb_rfo.py`, the `rfo` core, graders, the standard service, the dynamic families' modules) from `efe:embodied-olympics-fun-files-<VERSION>` (`images/embodied-olympics-fun-files/FILES.json`); source `embodied_first_exam/benchmarks/embodied-olympics-fun/` |
 | actions | one sim row per 10 ms: `stand`, `walk`, `joints`, `lowcmd` (Unitree's LowCmd), on the G1 also `walk_falcon`, `walk_agile`, `run`, `run_arms`; `grip_left`, `grip_right` |
@@ -60,11 +60,11 @@ Every family names its rule book and lists each deviation with its reason in its
 - **standard**: a client only (head cameras with depth, joint encoders, torques, IMUs, the hands' state, the venue's
   camera; action chunks); the rule book and the venue as an athlete knows them, never the robot's or an object's pose
   during an attempt or the referee's state; each attempt ends with the referee's call.
-- **standard-realtime** (21 dynamic families: a ball, keeper, rope, boom or opponent that moves on the venue's clock):
+- **realtime** (21 dynamic families: a ball, keeper, rope, boom or opponent that moves on the venue's clock):
   standard on a clock that does not stop, 100 Hz control, slowdown S = 1 in every family (real time); rendered with EGL on the
   sidecar's GPU.
 
-**Reset budget 5** in standard and standard-realtime: a sport is attempts, and 5 is about the trials a field event
+**Reset budget 5** in standard and realtime: a sport is attempts, and 5 is about the trials a field event
 gives an athlete, enough to correct from the referee's call and too few to search for a plan by trial and error. The
 last attempt is graded and a success ends the trial. With resets the first attempt is kept (`trajectory.first.npz`,
 `replay.first.mp4`; `first_success` in `final.json` and `reward.json`): the no-reset view.
@@ -76,7 +76,7 @@ last attempt is graded and a success ends the trial. With resets the first attem
   a fall, the time limit or a physics blow-up ends the attempt. Its record is part of the state hash.
 - **Privileged**: `tests/grade.py` replays the trajectory in two fresh processes; both must succeed and end in the
   same state hash.
-- **Standard and standard-realtime**: the sidecar's referee calls the live attempt (`final.json`, `graded_by` live,
+- **Standard and realtime**: the sidecar's referee calls the live attempt (`final.json`, `graded_by` live,
   no grading replay); the start is checked against the instance's state hash, and a crash resumes the attempt from the
   sidecar's journal.
 
@@ -97,7 +97,7 @@ official runs; trial rows stay private (a passing trajectory is a complete solut
 ## Compute
 
 Privileged and standard: CPU only (MuJoCo on the CPU, OSMesa rendering); one world steps about 0.8 to 3.6 times real time on one core, depending on the host (the finger-hand families slowest) and holds about 0.4 GB.
-Standard-realtime: the sidecar needs an NVIDIA GPU, which renders the cameras with EGL (the physics stays on the CPU).
+Realtime: the sidecar needs an NVIDIA GPU, which renders the cameras with EGL (the physics stays on the CPU).
 Privileged: agent 8 CPUs / 16 GiB, verifier 4 CPUs / 8 GiB; standard: sidecar 4 CPUs / 8 GiB, agent 4 CPUs / 10 GiB
 (author estimates, `scripts/task_resources.toml`).
 

@@ -16,7 +16,7 @@ Standard-mode twin of `pandadyn-d08-pendulum-energy-relay-i00-privileged` (same 
 client (docs/protocol/standard_mode.md Part 1, with the optional reset capability); the simulator runs in the `sim` sidecar
 (`environment/docker-compose.yaml`, GPU on the sidecar for SAPIEN's renderer), which owns the scene, judges the episode
 live and records every control step it ran. Between the agent's calls the world is frozen; 3 resets, only the last
-episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's standard-realtime twins', code for code,
+episode graded. The sidecar's adapter (`environment/sim/server.py`) is the benchmark's realtime twins', code for code,
 on the same shared service layer, so where a family has that twin the two modes differ only in the clock. Compare against the
 privileged task to measure the cost of losing privileged state, free resets and self-replay. A passive pendulum (a rod with a ball-shaped bob) hangs between the two arms, each of which holds a flat paddle. The left arm must actively push the pendulum so that it swings out toward the right arm. The right arm must catch it while it is still swinging fast and brake it, taking at least 60 % of its swing energy out, then actively drive it back so that it swings out toward the left arm, no longer touching it. The left arm must then touch it again, and the pendulum must end up hanging almost straight down and almost still, and stay that way for one second without the right paddle touching it.
 
