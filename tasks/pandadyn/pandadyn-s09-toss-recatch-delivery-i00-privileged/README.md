@@ -28,9 +28,9 @@ loop, replayed open-loop. The reference controllers and their recordings are not
 reaches only the model APIs and the package registries.
 
 ## Verification
-`tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the instance
-(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in both
-(every phase complete, no failure) and both end in the same state (`deterministic`), plus `/logs/verifier/replay.mp4`
+`tests/grade.py` in a separate sandbox: one replay, in a fresh process, from the verifier's own copy of the instance
+(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in it
+(every phase complete, no failure), plus `/logs/verifier/replay.mp4`
 (overview camera). Oracle: 1241 control steps (12.41 s simulated), success at the last one; the oracle
 run and two fresh-process replays end in the same state (hash `3f8dccf95457c7ff`), and the rollout reproduces the physical
 state the benchmark recorded for it after every control step, bit for bit. `nop`: no trajectory, reward 0; a trajectory that

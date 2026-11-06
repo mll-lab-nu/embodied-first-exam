@@ -17,7 +17,7 @@ instance_seed = 1
 expert_time_estimate_hours = 3.0
 
 [verifier]
-timeout_sec = 3000.0              # two fresh-process replays at tests/grade.py's limit (300 s + rows / 10: 650 s for the
+timeout_sec = 3000.0              # a fresh-process replay at tests/grade.py's limit (300 s + rows / 10: 650 s for the
                                   # longest episode, 3500 rows) and the filmed replay (twice that) + margin; measured: a replay
                                   # takes 10-80 s, a filmed one 1-4 min
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then

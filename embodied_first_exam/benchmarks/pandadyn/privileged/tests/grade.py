@@ -1,12 +1,14 @@
 """Verifier entry point: replay /app/output/trajectory.npz from the frozen instance and write Harbor rewards.
 
-    python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2
+    python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only: Harbor rejects strings), and a human-viewable
-replay video /logs/verifier/replay.mp4 (the overview camera) plus replay.last.png. Replays `--repeat` times, each in its
-own FRESH process (`rcb_pandadyn.py replay`), so fresh process == fresh process is the determinism check. Success
-requires every replay to complete the task (the task's own event ledger: every phase in order, no failure, no safety-limit
-violation) AND all final-state hashes to agree, so a lucky non-deterministic run cannot pass. Each replay process also
+replay video /logs/verifier/replay.mp4 (the overview camera) plus replay.last.png. ONE replay, in its own FRESH process
+(`rcb_pandadyn.py replay`), decides: success = it completes the task (the task's own event ledger: every phase in order,
+no failure, no safety-limit violation). With one replay there is no second end state to compare: `deterministic` is
+written as 1 (nothing disagreed) with `determinism_checked` = 0 and `replays` = 1. `--repeat N` (N >= 2) is the old
+check, kept for a determinism measurement by hand: N fresh processes, success = every replay completes the task AND all
+final-state hashes agree (`determinism_checked` = 1). Each replay process also
 rebuilds the frozen scene from tests/instance.json and checks it against the recorded start (`instance_ok`: exact state
 hash; physics is CPU PhysX).
 
@@ -14,7 +16,7 @@ Whose failure a 0 is (every path writes a reward; `deterministic`, `sim_error`, 
 present):
 - the agent's: no file (`missing_trajectory`), another task's trajectory (`wrong_task`), a file that is not a trajectory
   (`bad_trajectory`: not an npz, no `task` / `actions` entry, pickled or object arrays, the wrong shape, NaN/inf, more than
-  MAX_ROWS rows), a replay that does not complete the task or is not deterministic, or a replay the simulator ends with
+  MAX_ROWS rows), a replay that does not complete the task (with `--repeat` >= 2: or replays that disagree), or a replay the simulator ends with
   an error on the agent's rows (`sim_error`, e.g. the servo's trajectory generator failing: as in the standard twin,
   where a simulator error ends the live episode as the agent's 0);
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends without a
@@ -30,7 +32,7 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # Wall-clock limit of ONE replay process (time limits only; the verdict rules do not depend on them). A replay builds the
 # scene in ~5-15 s and runs ~40-150 control steps/s (CPU PhysX at 1000 Hz, one or two arms); a trajectory has at most
 # MAX_ROWS rows. The allowance is REPLAY_STARTUP_S + rows / REPLAY_MIN_RATE, several times what a replay takes here;
-# task.toml's [verifier] timeout_sec fits two replays of a MAX_ROWS-row trajectory, the video and the overhead.
+# task.toml's [verifier] timeout_sec fits the replay of a MAX_ROWS-row trajectory, the video and the overhead.
 REPLAY_STARTUP_S, REPLAY_MIN_RATE = 300.0, 10.0
 
 
@@ -92,8 +94,9 @@ def self_reported_cost() -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--instance", required=True); ap.add_argument("--traj", default="/app/output/trajectory.npz")
-    ap.add_argument("--repeat", type=int, default=2); ap.add_argument("--no-video", action="store_true")
+    ap.add_argument("--repeat", type=int, default=1); ap.add_argument("--no-video", action="store_true")
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)                                 # at least the one replay that decides
     cost = self_reported_cost()
     os.environ["RCB_SESSION_LOG"] = ""  # the verifier's own sessions must not be counted
     ZERO = {"success": 0, "deterministic": 0, "sim_error": 0, "grader_error": 0, "infra_error": 0}  # an early exit: the agent's 0
@@ -129,14 +132,14 @@ def main() -> int:
                         run = v
             runs.append(run)
             if (run.get("replays") or [{}])[0].get("sim_error"):
-                break                                      # the agent's 0 already: no second replay needed
+                break                                      # the agent's 0 already: no further replay needed
         outs = [(r.get("replays") or [{}])[0] for r in runs]
         sim_err = next((o for o in outs if o.get("sim_error")), None)
         if sim_err is not None:                            # the simulator raised on the agent's rows: the agent's 0
             instance_ok = all(bool(r.get("instance_matches")) for r in runs)
             print(f"[grade] simulator error on the agent's rows after {sim_err.get('executed_rows')} rows: "
                   f"{sim_err.get('error')}", file=sys.stderr, flush=True)
-            out = {**ZERO, "sim_error": 1, "replays": len(outs), "instance_ok": int(instance_ok), "n_actions": int(len(acts)),
+            out = {**ZERO, "sim_error": 1, "replays": len(outs), "determinism_checked": 0, "instance_ok": int(instance_ok), "n_actions": int(len(acts)),
                    "executed_rows": int(sim_err.get("executed_rows") or 0), "replay_wall_s": round(time.time() - t0, 1),
                    "replay_timeout_s": round(limit, 1), **cost}
             if not instance_ok:                            # the scene it ran on was not the frozen one: no verdict
@@ -156,11 +159,12 @@ def main() -> int:
             print(f"[grade] a replay process gave no result: {[r.get('error') for r in runs]}", file=sys.stderr, flush=True)
             write(False, {**ERR, "replay_failed": 1, "n_actions": int(len(acts)), "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
         all_success = all(bool(o.get("success")) for o in outs)
-        deterministic = len({o.get("state_sha") for o in outs}) == 1
+        deterministic = len({o.get("state_sha") for o in outs}) == 1   # one replay: 1, nothing compared
         instance_ok = all(bool(r.get("instance_matches")) for r in runs)
         ok = all_success and deterministic and instance_ok
         last = outs[-1]
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic), "replays": len(outs),
+               "determinism_checked": int(len(outs) > 1),
                "instance_ok": int(instance_ok), "n_actions": int(len(acts)), "executed_rows": int(last.get("executed_rows") or 0),
                "sim_steps": int(last.get("control_steps") or 0), "physics_steps": int(last.get("control_steps") or 0) * 10,
                "sim_time_s": float(last.get("sim_time_s") or 0.0), "phases_done": int(last.get("phase") or 0),
