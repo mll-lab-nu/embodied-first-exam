@@ -4,10 +4,10 @@
 FROM ghcr.io/mll-lab-nu/efe:robopaint-0.2.0
 COPY instance.json truth_alpha.npz test.sh NOTICE-exemplar.md /tests/
 COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-pictures-files-0.1.0@sha256:3ce92526aa79918994ccb934390221e1dd6c3f4364109a40e5746140def6062e /oil-bathers-i01/target.png /tests/target.png
-COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:6b019fee9296acdbebe94e1c665cd53903ee93ae152d179e4b09488e18974971 /privileged/grade.py /tests/grade.py
-COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:6b019fee9296acdbebe94e1c665cd53903ee93ae152d179e4b09488e18974971 /rcb_brush.py /tests/rcb_brush.py
-COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:6b019fee9296acdbebe94e1c665cd53903ee93ae152d179e4b09488e18974971 /rcb_brush_score.py /tests/rcb_brush_score.py
-COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:6b019fee9296acdbebe94e1c665cd53903ee93ae152d179e4b09488e18974971 /rcb_brush_strict.py /tests/rcb_brush_strict.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:22eae59b80f1b92faacd863b866a64263cc5eb9db2362ebe41f6b6192568e6d6 /privileged/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:22eae59b80f1b92faacd863b866a64263cc5eb9db2362ebe41f6b6192568e6d6 /rcb_brush.py /tests/rcb_brush.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:22eae59b80f1b92faacd863b866a64263cc5eb9db2362ebe41f6b6192568e6d6 /rcb_brush_score.py /tests/rcb_brush_score.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:22eae59b80f1b92faacd863b866a64263cc5eb9db2362ebe41f6b6192568e6d6 /rcb_brush_strict.py /tests/rcb_brush_strict.py
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests
 WORKDIR /tests

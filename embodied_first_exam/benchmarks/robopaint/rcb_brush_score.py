@@ -568,11 +568,11 @@ class LetterTarget(GlyphTarget):
 MMAH_COMMIT = "bddc96d41bef78427ed0e034e9f7e31d71fd1b92"
 APL_NOTICE = ("The exemplar's stroke outlines are Make Me a Hanzi's graphics.txt entry for this character (github.com/skishore/makemeahanzi "
               f"@ {MMAH_COMMIT[:7]}; graphics.txt is derived from the fonts AR PL KaitiM GB and AR PL UKai) and are distributed under the "
-              "Arphic Public License (ARPHICPL.TXT next to this file). Modification notice (APL section 2a): 2026-09-28, Embodied First Exam "
+              "Arphic Public License (ARPHICPL.TXT next to this file). Modification notice (APL section 2a): 2026-09-28, robot-coding-bench (now Embodied First Exam) "
               "(RoboPaint) copied the outlines unmodified and added only their placement on the paper (box_mm); the picture made from them "
               "(target.png) is a rendering of the same outlines.")
 PICTURE_NOTICE = ("This picture renders glyph outlines derived from the fonts AR PL KaitiM GB and AR PL UKai (Arphic Technology), distributed "
-                  "under the Arphic Public License (ARPHICPL.TXT); changed 2026-09-28 by Embodied First Exam (RoboPaint; placed on the sheet, rendered).")
+                  "under the Arphic Public License (ARPHICPL.TXT); changed 2026-09-28 by robot-coding-bench (now Embodied First Exam; RoboPaint: placed on the sheet, rendered).")
 
 
 def build_instance(spec: dict) -> dict:

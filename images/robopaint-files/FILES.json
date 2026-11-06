@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:6b019fee9296acdbebe94e1c665cd53903ee93ae152d179e4b09488e18974971",
+ "image": "ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:22eae59b80f1b92faacd863b866a64263cc5eb9db2362ebe41f6b6192568e6d6",
  "source": "embodied_first_exam/benchmarks/robopaint",
  "files": {
   "privileged/grade.py": "eb636c5b64f4da2f4a2d89e35d03a4a0470839ab618983103b2b0045fa294fd8",
   "rcb_brush.py": "f1567cbdd53991b778767a03bb8b95b17f2065889b2071feb267fa6008f7ba1a",
-  "rcb_brush_score.py": "8846d0acc696c80dce252fe436c171f192999870927a96ce9cee299d47169312",
+  "rcb_brush_score.py": "99024042fb1ad4e9eafff90792daff4947803872ebe235d9671839192c4f197e",
   "rcb_brush_strict.py": "5e6197be3d3bf50d7911e4e61ef9d962f3e300722825ef382af16caf15c52c1f",
   "sim/ARPHICPL.TXT": "3a5e90c0957524a89e48203febcd4492ca4393678abaa7e5b4d70f3ff32b386d",
   "sim/NOTICE-exemplar.md": "87c5097c51ab51a6323b42501d410a68205c8b361566d8a739fd54ab2ee06683",
