@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | Embodied Olympics - Match |
 | Mode | realtime (`eai-standard-realtime/1.0`) |
-| Twin | — (none: a task Embodied Olympics exports with its own service, PROTOCOL §3) |
+| Twin | `embodied-olympics-match-tabletennis-match-i04-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `tabletennis_match` / seed 34 |
 | Oracle | `partial` — level 4 (the strongest official level, unchanged): a mirror match (the level-4 opponent copied onto the player's side, same limits, same true-state prediction) won 18 of 40 (seeds 1-20, each side serving first), so level 4 is beatable by a player of its own ability; our truth-state reference beat level 4 in 2 of 40 seeds (re-screen 2026-10-12, revision 15), this seed 5:3; our camera-only reference 0 of 40; every simple baseline 0 of 20; the live oracle run is in the export report |

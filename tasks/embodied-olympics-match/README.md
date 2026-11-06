@@ -2,9 +2,12 @@
 
 The matches [Embodied Olympics](https://github.com/CHIGUI0/roboolympics) (CHIGUI0; MIT, private) exports itself with its own
 service inside the task, and a privileged twin: table tennis, badminton, humanoid soccer, wheeled soccer and
-foosball matches, duels against a learned player, the low-level matches and a turn-based fencing bout. 13 task
-directories: 12 exported (11 realtime, 1 standard; `ci_checks/benchmarks/embodied-olympics-match/exported.toml`) and 1 privileged
-twin.
+foosball matches, duels against a learned player, the low-level matches and a turn-based fencing bout; and table
+tennis between two Unitree G1 humanoids, ported from Embodied Olympics core 0.5. 41 task
+directories: 12 exported (11 realtime, 1 standard; `ci_checks/benchmarks/embodied-olympics-match/exported.toml`), the 11
+standard twins of the real-time matches (below), 12 privileged twins, and the G1 table-tennis task in its three modes,
+in a CPU and a GPU tier (below). 14 tasks: 14 `-privileged`, 14 `-standard` and 13 `-realtime` dirs; core set 13
+(12 default realtime, fencing default standard; the G1 table-tennis task in its CPU tier only).
 
 ## Quick start
 ```bash
@@ -40,10 +43,97 @@ they are refreshed by re-running the exporter on this checkout, then `scripts/ta
 | `embodied-olympics-match-tabletennis-matchlow-i01-realtime` | table tennis at the **low level** (Embodied Olympics' Engineer mode as a match; owner's decision 2026-10-16): the agent implements the robot's `hit` skill itself from the joint interface and the toolkit, serves it from its own container (`game skill serve`; the sim calls it over the shared loopback), and every stroke of the match is played by that skill (the skill in the loop: its compute counts in match time; no execution scatter); success = the agent wins | level 1, seed 22, S = 10, 7200 s | partial: Embodied Olympics' toolkit-only reference skill with the camera-only reference strategy lost 0:5 (valid, replay identical; it lost 0:5 on 8 more seeds: its slow serves bounce twice on its own court); feasibility: the platform's own hit packaged as a skill, with the truth-state strategy, wins level 1 in 7 of 8 seeds of Embodied Olympics' competition test (this seed 5:1; the reference skill 0 of 4); through the live service (core 0.2.32's upload path) with the camera-only strategy it scored 2:5, 1:5, 2:5; GPT-6 Astra (one precheck) lost 2:3 by a missed review (`ready_timeout`, a valid loss; its own skill, then uploaded to the sim (core 0.2.32), won 2 points); nop 0 |
 | `embodied-olympics-match-badminton-matchlow-i01-realtime` | badminton at the **low level**, as the table-tennis one: the agent implements the robot's `act` skill (the racket head's state at contact, optional base position) from the joint interface and the toolkit (bm_kinematics, bm_servo), serves it from its own container (`game skill serve`), and every stroke of the match is played by that skill; success = the agent wins | level 2, seed 8, S = 20, 14400 s | partial: our toolkit-only reference act with the camera-only reference strategy lost 1:11 on this instance (vanilla Harbor 0.23.0, the skill served from the oracle's own container: a valid, replayed match, 30 act calls, none failed); feasibility: our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 4/4 and level 2 2/4 with our toolkit-only reference act (API test 512/519), and in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act; level 2 because models won level 1; nop 0 |
 
-**Privileged twins.** One match has a privileged twin `<base>-privileged` on the same frozen instance: the full
-simulator in development (any state, the whole match reset), the deliverable a closed-loop Python program that plays a
-fresh, unmodified match in the verifier on the original clock, seeing the full state instead of camera images:
-`embodied-olympics-match-soccer-match-i00`.
+**Standard twins of the real-time matches (`eai-standard-lockstep/1.0`).** Each `-realtime` match has a
+`-standard` twin: the same export (instance, seed, level, opponent, rules, referee, observation, action levels, reviews,
+cutoff, live grading, oracle), with the sim service started as `python3 -m core.lockstep` (`environment/sim/core/lockstep.py`,
+Embodied First Exam's, on top of the unchanged `core/realtime.py`). Only the clock differs: the world advances one control
+step at a time, and only while every seat that plays lets it (an open `wait {dt}`, up to its target step; an accepted act,
+up to the step at which it takes effect); between the player's calls it stands still, and nothing advances while any
+act is being prepared (the high level's planning, a low-level skill call), so thinking and computation cost no game
+time. A built-in seat (the duels) is held to the same rule: the world waits for it too, so it plays its loop (observe,
+act, `wait 0.05`) step for step, as the core's in-process play does. The scripted opponents live inside the world's step
+and play exactly as in real time. `/spec` timing has `clock = "lockstep"`, `period_s` null; `final.json` has
+`clock = "lockstep"`; `tests/fexam_reward.py` writes `realtime = 0`. The episode is a realtime episode, so the replay
+video and grading are unchanged. A program that never waits leaves the match standing; it is lost when the session ends
+(`abandoned`). The reviews keep their limit of real time, and the start window is unchanged.
+
+**Privileged twins.** Every exported match has a privileged twin `<base>-privileged` on the same frozen instance: the
+full simulator in development (any state, the whole match reset), the deliverable a closed-loop Python program that
+plays a fresh, unmodified match in the verifier on the original clock (a turn-based bout: the original turns and chess
+clock), seeing the full state instead of camera images. The generic full-simulator layer (`tools/fullsim`) with a per-task
+adapter; a duel's built-in learned seat plays inside the formal match as in the twin. The soccer joint pair keeps its
+resource tiers: the GPU twin's agent container holds a GPU and the twin's training stack, the verifier is CPU-only in both.
+
+| twin | oracle (Harbor; nop: no program, 0) |
+|---|---|
+| `embodied-olympics-match-soccer-match-i00-privileged` | see its README |
+| `embodied-olympics-match-badminton-duelrl-i01-privileged` | untested (oracle runs waived); nop 0 |
+| `embodied-olympics-match-badminton-match-i04-privileged` | partial: lost 2:11 (valid, replay identical) |
+| `embodied-olympics-match-badminton-matchlow-i01-privileged` | partial: lost 0:11 (valid, replay identical) |
+| `embodied-olympics-match-fencing-bout-i02-privileged` | full: won 15:13 (valid, replay identical) |
+| `embodied-olympics-match-foosball-match-i01-privileged` | full: won 5:3 (valid, replay identical) |
+| `embodied-olympics-match-soccer-jointcpu-i01-privileged` | untested (oracle runs waived); nop 0 |
+| `embodied-olympics-match-soccer-jointgpu-i01-privileged` | untested (oracle runs waived) |
+| `embodied-olympics-match-soccerssl-match-i01-privileged` | untested (oracle runs waived); nop 0 |
+| `embodied-olympics-match-tabletennis-duelrl-i01-privileged` | partial: lost 3:5 to the built-in learned seat (valid, replay identical) |
+| `embodied-olympics-match-tabletennis-match-i04-privileged` | partial: lost 4:6 (valid, replay identical) |
+| `embodied-olympics-match-tabletennis-matchlow-i01-privileged` | partial: lost 0:5 (valid, replay identical) |
+
+## G1 table tennis (`tabletennisg1`, ported from Embodied Olympics core 0.5)
+
+Embodied Olympics' `tabletennis_g1` is a separate sport from `tabletennis`'s Franka. It is played by two Unitree G1s, each holding a racket. On the
+Engineer track the agent's program drives all 29 joints of its G1 at 100 Hz and sees the ball only through two cameras. The match is one game to 5 points.
+One task against the hardest opponent, level 4 (owner 2026-11-01), in three modes and two resource tiers. It is ported by Embodied First Exam,
+not exported: core 0.5 has no exporter. The source is the release branch's generated task
+`tabletennis_g1-match-wallclock-program-engineer-standard` (revision `g1tt-10+core-0.5`, commit `45ed806a5`). Its sim
+service, core and judge (`tests/eo_judge`) are kept, and the changed files are listed under `patched` in `exported.toml`.
+The patches switch on through the compose environment:
+- The seat is `unmetered` (`core/metering/think_clock.py`): there is no metering proxy, and Harbor records the usage.
+- The match is graded live (`RO_VERDICT_REPLAY=0`).
+- The verdict ends the session: the agent container's entrypoint (`environment/match_end.sh`) asks the match service whether the result is final (`GET /over`, a patch of `core/http.py`: no seat, no arrival) and, a few seconds after it is, stops every process of the container (the collect hook's `kill -9 -1`). Harbor records the harness's exit (`NonZeroAgentExitCodeError`) and grades as at the cutoff; the result is already final.
+- The session's end decides (`RO_COLLECT_ENDS_MATCH=1`). Without this patch, core 0.5 lets the programs play on after the session.
+  - An end before the start is a no-show.
+  - An end during play is `abandoned`, the agent's R-EXIT.
+  - Both are valid losses.
+- Two tiers (`resource_tier`, `tier_twin`). `matchcpu`: the seat has no GPU; the release's GPU serves only its training kit, and the kit's PyTorch runs on the CPUs. `matchgpu`: the release's seat, one NVIDIA GPU for the kit (20 GiB cap). The world and the opponent run on CPU in both.
+
+The `-standard` twin runs `python3 -m core.lockstep`: the rule of the paragraph above, written for core 0.5. The platform's opponent is
+a program on core 0.5 (`core/platform_seat.py`), so it is held to the same rule (`live = False`): the world waits for its
+reply after every step. The reference plays observe, act, `wait` (`solution/ro_client.py`).
+The `-privileged` twin is Embodied First Exam's (`tools/g1tt_priv`, `tests/formal.py`; the agent plays the computer,
+owner 2026-11-01). Development has the full simulator at `/opt/fullsim`: any level, seed or state, and the formal
+runner itself. The deliverable is a program `make_policy(config).act(view)`; every view has the seat's state, its camera
+images and `truth` (the sport's `practice_truth()`: the ball's position, velocity and spin, both robots, the score). In the
+separate verifier the program, run as `nobody` in its own process, plays seat A of a fresh match with the sport's
+in-process runner (`core/local.py`). The world waits for it at every control step: 0.5 s a call, 1800 s of program time
+in all. The opponent is waited for the same way. The core's fresh-process replay must agree with the match, and the video
+is drawn after the verdict. No duel, no persistent session. The `matchgpu` privileged container adds the seat image's
+GPU kit (`/opt/train`, `/opt/robot`, `/opt/ro`); the formal match runs the program on CPU without PyTorch.
+
+**Hosts (realtime).** x1 needs fast cores. A trial uses:
+- the world: 12 vCPU;
+- the platform's G1: 8 vCPU;
+- the seat: 8 vCPU;
+- the practice service: 8 vCPU;
+- the practice player: 1 vCPU.
+
+Oracle runs (levels 1-4 while porting) on an idle Xeon Platinum 8488C (m7i.16xlarge) passed the integrity rules in all 5 matches:
+- world lag p99: 1.2-1.7 ms;
+- late step p99: 9.4-11.2 ms;
+- render misses: 0.08-0.12 %.
+
+The limits are 0.5 s, 0.05 s and 1 %. On a Ryzen 9 7950X at a load of 30-50 on 32 threads, the matches were voided (late step p99 0.09-0.8 s). A breach
+voids the match as infrastructure (R-INTEGRITY), never as the player's loss. The x1 world's minimum is 12 vCPU, the fewest
+measured (`scripts/task_resources.toml`).
+
+| task | instance | oracle (Harbor 0.23.0; nop: a valid no-show or no deliverable, 0) |
+|---|---|---|
+| `embodied-olympics-match-tabletennisg1-matchcpu-i01-realtime` | level 4 (the BOSS), seed 4 | no winning oracle: the camera-only reference lost 2:5 to level 4 (valid; the release: it won 2 of 5 seeds, this one 7:6) |
+| `embodied-olympics-match-tabletennisg1-matchcpu-i01-standard` | as above, lockstep | no winning oracle: lost 5:7 |
+| `embodied-olympics-match-tabletennisg1-matchcpu-i01-privileged` | as above, full state, in-process runner | full: the reference program (camera-only, it ignores the truth) won 5:3, replay identical |
+| `embodied-olympics-match-tabletennisg1-matchgpu-i01-realtime` | the CPU tier's, one GPU | no valid oracle: on an EPYC host with L40S GPUs (g6e.12xlarge, load 8-27 of 48 from other trials) all 3 x1 matches were voided by R-INTEGRITY (late step p99 0.053-0.178 s, render misses 36-71 %) |
+| `embodied-olympics-match-tabletennisg1-matchgpu-i01-standard` | as above, lockstep | the reference won 5:1 (same host) |
+| `embodied-olympics-match-tabletennisg1-matchgpu-i01-privileged` | as above, full state | partial: the reference program lost 6:7 on that host, replay identical (it won 5:3 on the Xeon 8488C: the in-process match agrees with its replay on one host, not across CPU architectures) |
 
 What differs from Embodied Olympics - Fun's tasks (`eai-standard/2.x`; PROTOCOL §3):
 
@@ -54,7 +144,7 @@ What differs from Embodied Olympics - Fun's tasks (`eai-standard/2.x`; PROTOCOL 
 | slowdown | — | per task, the sport's official slowdown: table tennis 10 (Embodied Olympics PR #138), badminton 20, humanoid soccer 5, wheeled soccer 10, foosball 20 (the sim service's `RO_SLOWDOWN` default); turn-based matches have none (`metadata.chess_clock_s`: fencing 3600 s) | results state S, or the chess clock |
 | agent budget | the benchmark's 7200 s | 7200 s; badminton i04, the badminton duel, wheeled soccer and foosball 14400 s (those tasks' own `[agent] timeout_sec`) | a game to 11 at S = 20 took the reference alone 78 to 93 min; a 5 v 5 match is 2.9 h of wall time at S = 10; foosball's 240 s of play is up to 4800 s at S = 20 |
 | network | open (Embodied Olympics - Fun's exception) | the allowlist (model APIs and package registries), as every other benchmark: these tasks declare it, and PROTOCOL H.6 holds them to it | Embodied Olympics' design; the open-egress exception is Embodied Olympics - Fun's |
-| twin | privileged + standard | a privileged twin for 1 match (below); none for the others (the README's Twin row says why) | no trajectory deliverable; a twin needs a full-state program the verifier can play |
+| twin | privileged + standard | a privileged twin for every match, a standard twin (the world in lockstep) for every real-time match (below) | no trajectory deliverable; a twin needs a full-state program the verifier can play |
 | seeds | the instance's | matches: `instance_seed` = the instance's development seed, the only one allowed (a turn-based match whose world is deterministic has one outcome per sequence of choices: its oracle is `full` when the reference wins that seed); skill tasks: seed 0 = the fixed development request set | development seeds below 100000: previews; Embodied Olympics' official results are produced by Embodied Olympics on its hidden six-digit seeds |
 | metering | the usage gateway | the same (the seat is "unmetered" for Embodied Olympics: no proxy, no credential in the sim; the proxy file `metering/think_proxy.py` is in the image's copy but never started) | |
 
@@ -138,4 +228,6 @@ between requests (it gets no outcome back, so it learns nothing it was not given
 
 Images: `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` (public; the image Embodied Olympics' frozen revisions were screened on;
 built from Embodied Olympics' own tree, not from this repository), for every task but humanoid soccer, which runs on
-`ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-0.1.0` (public). CPU only.
+`ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-0.1.0` (public). CPU only, except the agent's containers of the GPU tiers (`soccer-jointgpu`, `tabletennisg1-matchgpu`). G1 table tennis (public): `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-tabletennisg1-0.1.0` (the sim and
+practice services) and `-tabletennisg1-seat-0.1.1` (the agent's container: the release's seat image, 0.1.0, plus the GPU kit's
+missing `bodies/sources.py` in `/opt/robot/lib/bodies`, the release's fix 7e0b8c573; without it `bodies.gpu.twin.GpuTwin` fails to import `bodies.servo`).

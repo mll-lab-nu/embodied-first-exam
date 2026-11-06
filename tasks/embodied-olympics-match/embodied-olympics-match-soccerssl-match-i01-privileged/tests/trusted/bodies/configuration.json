@@ -1,0 +1,24 @@
+{
+ "arm": "right",
+ "attachment": null,
+ "controllers": [],
+ "files": {
+  "limits.py": "3c1c255c17edcd97e2a9f817632073c72b5e2255b5c9cea92af51c2418ff4fe2",
+  "selfcollision.py": "92634c19d3e7cb005f79b7ffe5af9a119bda1538a4ceab1cd32927029277c7c2",
+  "servo.py": "8fda6665e86e2d214e712013547b0e9235e7f585b6372f0a544eb23902e4613e",
+  "ssl_robot/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "ssl_robot/assist.py": "e8b1bc02b4acf3766aa4944bf8d8b80e061ad2c05eff2e815f83912a2c0a4242",
+  "ssl_robot/body.py": "72ef99899deb5bfbc5459ebd1a60367cdf94f3b0de81fb504d812781f1b0734c",
+  "ssl_robot/body.toml": "04b32392d7dc30b8eff25b2e188505dcda173555c5c2827ab6ed714351fc3b2e",
+  "ssl_robot/kicker.py": "a184088edd598a6438098ca1b53418a1b95bf16f565dd3ce26743acf81830c77",
+  "ssl_robot/model.xml": "9e9a7c1311e890b1f19eef5fc20e2f68a262eb68b89815cd2779c7649f964ad9",
+  "ssl_robot/trajectory.py": "8a63b3765f2451e59eea5d0946540d863b85327a94bfc677541fd89da16ff4d2"
+ },
+ "hash": "00bd4cf7ba92acb7ddc4b992bf8c9d35be3799525ee91b41fb42b5542ecd7b45",
+ "id": "ssl_robot@ssl-1+bare#00bd4cf7ba92",
+ "other_attachment": null,
+ "revision": "ssl-1",
+ "robot": "ssl_robot",
+ "status": "library",
+ "title": "RoboCup SSL robot (after TIGERs Mannheim v2020)"
+}

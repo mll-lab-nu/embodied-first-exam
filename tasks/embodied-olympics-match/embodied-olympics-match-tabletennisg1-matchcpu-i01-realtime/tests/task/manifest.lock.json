@@ -1,0 +1,143 @@
+{
+ "artifacts": {
+  "host_runtime": {
+   "digest": "sha256:8046cb297458a3c5eab64bc6b75c85b12cfaa9b4303fdafbde06d95c966758ab",
+   "in": "official_runtime",
+   "ref": "eo-host@0.5.7"
+  },
+  "judge": {
+   "digest": "sha256:13d20120b0768a023380b0a54fa2b44e9b7cd9d7a8e4c507efadd590395ba0e4",
+   "ref": "tabletennis_g1-judge@g1tt-10+core-0.5"
+  },
+  "official_runtime": {
+   "digest": "sha256:e863659cf719626589ff579f249ff75c833ad618646bc560a052c6a5c8fcac43",
+   "ref": "ghcr.io/mll-lab-nu/eai-olympiad"
+  },
+  "practice": {
+   "digest": "sha256:edcf7a368ab6db685a1feb0f5d3d19da22715e1672dc37b01b92f054fdd9874a",
+   "in": "seat_runtime",
+   "ref": "tabletennis_g1-practice@g1tt-10+core-0.5"
+  },
+  "practice_player": {
+   "digest": "sha256:97123f4877dfa3578b15a220d25abe867b70ff5bb1c25997bab7f02904ebd684",
+   "in": "official_runtime",
+   "ref": "tabletennis_g1-practice-player@g1tt-10+core-0.5"
+  },
+  "practice_world": {
+   "digest": "sha256:8ce712ffdfea463ec24f9ab497f5ec52ccabba568182bbab59bd239f3858b922",
+   "in": "official_runtime",
+   "ref": "tabletennis_g1-practice-world@g1tt-10+core-0.5"
+  },
+  "renderer": {
+   "digest": "sha256:f26020b07d275993c657089adcce61c71b4f4fde45834f7b7bb2298ad069e89b",
+   "in": "official_runtime",
+   "ref": "renderers@0.5.7"
+  },
+  "robot_assets": {
+   "digest": "sha256:033a89e14cff80718ca6790c640dd0ef0e8038d9a88878c978ca737f7baa2f8a",
+   "in": "official_runtime",
+   "ref": "unitree_g1"
+  },
+  "rules": {
+   "digest": "sha256:4888af5aa50a681a25075104bc391c88195dde426a5015c050d79f3d54c9d4a0",
+   "in": "seat_runtime",
+   "ref": "tabletennis-g1-match-engineer-rules"
+  },
+  "seat_runtime": {
+   "digest": "sha256:6edaee12261a905c0b9be84f6870f1dd0614ba70c615b31c83d3951fd3611ede",
+   "ref": "build:environment"
+  },
+  "toolkit": {
+   "digest": "sha256:2e36c481fa2224b8b32664f3d123776fe7a8e1780f47edd6cf4ff2bef87b682c",
+   "in": "seat_runtime",
+   "ref": "tabletennis_g1-toolkit@g1tt-10+core-0.5"
+  },
+  "world_decl": {
+   "digest": "sha256:78ba76e7500e3f428631300a8611e50f6320c763093fffcf0ea36a559f12dcd6",
+   "in": "official_runtime",
+   "ref": "tabletennis_g1-world-decl@g1tt-10+core-0.5"
+  },
+  "world_plugin": {
+   "digest": "sha256:4f540f62e07474b71710eacbafa5b16784f1a734a5e62b4c521ecf820be5155a",
+   "in": "official_runtime",
+   "ref": "tabletennis_g1-world@g1tt-10+core-0.5"
+  }
+ },
+ "compat": {
+  "seat_protocol": "eo-seat/1",
+  "snapshot_format": "eo-snapshot/1",
+  "world_interface": "eo-world/1"
+ },
+ "instruction": {
+  "digest": "sha256:4fe58fe2dde88fef1be104502283bde509baed886ea529b9606a18ec99e9fbb0",
+  "path": "instruction.md"
+ },
+ "private": {
+  "opponent": {
+   "digest": "sha256:80b235a4f1fbe70ac729cc3200b8822d5bf2fedd9fb37668accdf0d0eb203be2",
+   "ref": "private://tabletennis_g1/opponent"
+  },
+  "seed_pool": {
+   "commitment": {
+    "cell": "match",
+    "count": 80,
+    "published": "sha256:47f0a8307daa8431994b3f82edb3c97e327bb95dcd87ee305148c5aad7da5ab8",
+    "scheme": "sha256(ro-hidden-seeds/1|sport|seed|salt)"
+   },
+   "digest": "sha256:61bcac398dab63b676859b6ebbc156be152ec589df3c1396de1ca394cf77b561",
+   "ref": "private://tabletennis_g1/hidden-seeds"
+  }
+ },
+ "provenance": {
+  "core": "0.5.7",
+  "gaps": [
+   {
+    "path": "slots.sides[B].controller.level",
+    "why": "one task holds levels [1, 2, 3, 4] (chosen per match today, RCB_LEVEL); the design makes each level its own Task"
+   },
+   {
+    "path": "slots.first.meaning",
+    "why": "not declared by the sport: a generic sentence"
+   },
+   {
+    "path": "action.safe_action",
+    "why": "the sport declares no safe action yet: defaults.toml [safe_action]; the text is its [timing] failure_rule"
+   },
+   {
+    "path": "integrity.tolerance",
+    "why": "the decided defaults (FWSPEC-4, 10-21: world lag p99 0.5 s and a 2.0 s spike, late p99 0.05 s, misses 1 % with a floor of 2 late items, model access lost max(120 s, 5 %)), not calibrated by the sport's legal full-load test yet"
+   },
+   {
+    "path": "seat_resources.disk",
+    "why": "defaults.toml [seat] disk; no quota is enforced today"
+   },
+   {
+    "path": "seat_resources.memory",
+    "why": "split per container today (player + practice), not one pool per seat"
+   }
+  ],
+  "generator": "gen-2",
+  "images": {
+   "official_runtime": {
+    "repo_digests": [
+     "ghcr.io/mll-lab-nu/eai-olympiad@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7",
+     "ghcr.io/mll-lab-nu/efe@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7"
+    ],
+    "tag": "ghcr.io/mll-lab-nu/eai-olympiad:0.1.0"
+   }
+  },
+  "legacy_task_id": "tabletennis_g1-match-wallclock-program-engineer-standard",
+  "plugin_facts": {
+   "source": "sha256:b8321b109acffdbe04a05f5a46d4e081e4c39d0360658bbed279c69cb1f3b4ff",
+   "stale": null
+  },
+  "resolver": "framework.task.lock",
+  "sport_revision": "g1tt-10+core-0.5"
+ },
+ "schema": "eo-task-lock/1",
+ "task_key": "tabletennis-g1-match-engineer",
+ "taskspec": {
+  "digest": "sha256:2fed948ca2ff6c798749a42d2271923e1a30f98f788edca7ed517f53944def6c",
+  "path": "taskspec.json"
+ }
+}

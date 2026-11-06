@@ -1,0 +1,13 @@
+<mujoco model="hand_paddle">
+  <!-- The table-tennis paddle of the Franka tasks (sports/tabletennis/sim/scene/tt_scene.xml), on the wrist mount:
+       handle along +z, blade centre 0.14 m beyond the flange, face normal = local +x. -->
+  <worldbody>
+    <body name="hand">
+      <geom name="handle" type="capsule" fromto="0 0 0 0 0 0.06" size="0.014" mass="0.05" rgba="0.55 0.35 0.2 1"
+            group="2"/>
+      <geom name="blade" type="box" pos="0 0 0.14" size="0.0075 0.075 0.075" mass="0.09" rgba="0.75 0.08 0.08 1"
+            group="2"/>
+      <site name="center" pos="0 0 0.14" size="0.005" rgba="1 1 1 1" group="4"/>
+    </body>
+  </worldbody>
+</mujoco>
