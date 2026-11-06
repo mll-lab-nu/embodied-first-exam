@@ -1,0 +1,73 @@
+BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:humanclaw-<images/humanclaw/VERSION> is never public (docs/protocol/README.md §2.4,
+D5). It is kept in the organization's private package as the build cache of the HumanCLAW tasks: every task's Dockerfile
+starts with this recipe (images/humanclaw/Dockerfile, copied in by scripts/task_conventions.py normalize) and its compose
+names the private image in `build.cache_from`. A runner that can pull the image takes its layers. Anyone else builds it
+once from this recipe (Build it yourself, below): `harbor run` cannot, because the HSSD layer needs a Hugging Face token
+and a task's compose may not pass build secrets (verifier isolation). After that one build every task finds all its
+layers in the local build cache.
+
+Why
+  The image holds data that may be used but not redistributed: the HSSD scenes (hssd/hssd-hab, CC BY-NC 4.0, on terms
+  each user accepts on Hugging Face), HumanCLAW's HSSD val41 supplement (HumanCLAW/HumanCLAW-HSSD, a gated dataset whose
+  access request affirms the HSSD terms), the SMPL-X-derived body model in HumanCLAW's resources (SMPL-X licence: research
+  use, no redistribution) and the paper_fullval_v1 motion weights (HumanCLAW/HumanCLAW, trained on AMASS). HumanCLAW's
+  code is Apache-2.0 (LICENSE, NOTICE in /opt/humanclaw); Habitat-Sim is MIT.
+
+What the builder accepts
+  - the HSSD terms (CC BY-NC 4.0: non-commercial use) and the terms of the gated HumanCLAW-HSSD dataset;
+  - the SMPL-X / AMASS licences that the body model and the motion weights carry (research use).
+  A Hugging Face token whose account has access to HumanCLAW/HumanCLAW-HSSD (request it on the dataset's page; it is
+  approved automatically) is needed: the build takes it as the BuildKit secret `hf_token` (from the HF_TOKEN environment
+  variable of the shell that runs the build), never stored in a layer. A runner that pulls the private image needs no
+  token.
+
+Inputs (all pinned)
+  docker.io/nvidia/cuda:12.4.1-devel-ubuntu22.04 by digest; Ubuntu packages from the Ubuntu archive (TODO: the
+  snapshot.ubuntu.com pin, which answered 502 on 2026-10-27); PyTorch 2.6.0 + CUDA 12.4 and every other Python package
+  by version, their dependencies included; HumanCLAW's source snapshot, fetched by commit from this repository at
+  fe3d376 (its harnesses/humanclaw tree hash checked), without its docs/, tools/, harnesses/, experiment configs and
+  episode shards; Habitat-Sim at acbe6f4 and every submodule at the commit it records (Bullet 2c204c4 checked;
+  fetched at the exact commit, depth 1, with retries) with HumanCLAW's Half-Physics patch
+  (sha256 checked), built headless with CUDA and Bullet; the paper_fullval_v1 weights archive at revision 77ac3df
+  (sha256 checked, and the manifest compared); the 10,545 official hssd-hab files the 41 scenes use at revision
+  4369cb9 (each by size and sha256 from HumanCLAW's asset_requirements.json) and the supplement archive at revision
+  efced86 (HumanCLAW's prepare-hssd verifies its hashes), combined by HumanCLAW's own prepare-hssd and materialized
+  (no symlinks).
+
+Data
+  None beyond the image: nothing is mounted or downloaded at run time. The frozen episodes live in the task
+  directories (instance.json).
+
+Host
+  Linux x86_64, Docker 23+ (BuildKit) and the NVIDIA Container Toolkit, an NVIDIA GPU to run the tasks (EGL rendering,
+  MotionDiT on CUDA; compute capability 8.0-9.0 is compiled in). The build itself needs no GPU.
+
+Build it yourself (no organization access needed; from the repository root)
+  1. Sign in to Hugging Face and request access to the gated dataset HumanCLAW/HumanCLAW-HSSD
+     (https://huggingface.co/datasets/HumanCLAW/HumanCLAW-HSSD; approved automatically) and accept the terms of
+     hssd/hssd-hab (https://huggingface.co/datasets/hssd/hssd-hab).
+  2. Create a read token (Hugging Face: Settings, Access Tokens) and put it in the environment of your shell:
+       export HF_TOKEN=hf_...
+  3. Build once, with Docker's default builder (its build cache is what the tasks reuse), under the tag that the tasks'
+     `cache_from` names:
+       docker buildx build --builder default --secret id=hf_token,env=HF_TOKEN \
+         -t ghcr.io/mll-lab-nu/efe-private:humanclaw-$(cat images/humanclaw/VERSION) images/humanclaw
+     The token reaches only the HSSD step, as a BuildKit secret; it is never written to a layer or a file.
+     Time and disk: about 30 minutes from an empty cache on a 32-core host (measured 31 min: Habitat-Sim's compile
+     13 min, the HSSD download 9 min); no GPU. The image is 21.8 GB; have about 40 GB free under Docker's data root.
+     Network during the build: github.com, gitlab.com (Eigen, with a GitHub mirror as fallback), huggingface.co and its
+     LFS CDN, download.pytorch.org, pypi.org, the Ubuntu archive. Every source is pinned to a commit, version or
+     sha256, and every download is retried.
+  4. Run the tasks: `harbor run -p tasks/humanclaw/<task> -a <agent> ...`. Each task's Dockerfile starts with this
+     same recipe, so its build takes every one of those layers from the local build cache: no token, no downloads,
+     seconds. Its `cache_from` names the private package: without access, BuildKit logs an error for that cache
+     import (401 Unauthorized) and goes on. Keep the build cache: `docker builder prune` or a build-cache GC drops
+     it, and the next task build would then need step 3 again.
+
+Publish (maintainers)
+    docker push ghcr.io/mll-lab-nu/efe-private:humanclaw-$(cat images/humanclaw/VERSION)
+  A new VERSION: change the tag in the tasks' `cache_from` and normalize them.
+
+Check a build
+  The frozen episodes must rebuild to their recorded start hashes and the oracle's trajectory must replay to success in
+  two fresh processes with equal final hashes: `harbor run -p tasks/humanclaw/<task>-privileged -a oracle` (reward 1).
