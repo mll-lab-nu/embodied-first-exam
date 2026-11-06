@@ -56,7 +56,7 @@ to be solvable. One standard twin has none of its own yet:
 
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
-| privileged | the simulator, its full state (`get_state`/`set_state`) and the goal check | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
+| privileged | the simulator, its full state (`get_state`/`set_state`) and the goal check | unlimited | its `trajectory.npz`, replayed once in a fresh process |
 | standard | the robot's own sensors, through `rcb_client.py`; no world coordinates, no goal check | 0 (the protocol's default) | the last episode, as it ran (live; nothing replayed) |
 
 Grading in standard mode: the live episode. The sim sidecar judges the episode it runs with KinDER's own goal check

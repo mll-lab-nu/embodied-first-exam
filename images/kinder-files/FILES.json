@@ -1,9 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:kinder-files-0.4.0@sha256:803df11db01efc416434ec0fcfc33474856c2e7b7d068efd2c41749ab1b7abd3",
+ "image": "ghcr.io/mll-lab-nu/efe:kinder-files-0.4.1@sha256:6b28cc6adfd2a09667a2ae3b270a507be7eabcc56f450e6e66f818bb20d5dca4",
  "source": "embodied_first_exam/benchmarks/kinder",
  "files": {
   "privileged/environment/rcb_kinder.py": "3ea76496fe64a3b2c670a0688fdb44f5ff59c76ddc900accf02ffc02d14fa8d2",
-  "privileged/tests/grade.py": "cb6c7deb6d961f5176be1b29a5fcd858319f3e9faf4ae2a13777db45ba617444",
+  "privileged/tests/grade.py": "c4761b1cfa6f86251ffafbb8961281794eb679ffcb588a1396de97b3b72e7537",
   "sim/rcb_service.py": "a6c50beec04bdb3b11885939dfe90a249506edcd5c462d2ac10816bbf2a71e2e",
   "sim/server.py": "1b038eb2b5fb4e1d9c39d015cd63efbc68f367e136ca0eb936c4548c08dbd00c"
  }

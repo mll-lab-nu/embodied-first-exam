@@ -24,9 +24,8 @@ Nonprehensile: three chairs stand between the robot and the floor square, and th
 `solution/oracle.py` steers the base from the state around the chairs' north side (three waypoints, every move inside a 0.1 m disc) into the square: success at step 101.
 
 ## Verification
-Two open-loop replays of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, in a container of
-their own (`tests/Dockerfile`, no network): pass iff both reach the goal within 1000 control steps and end in
-the same state. The oracle (`solution/solve.sh`) scores 1; `nop` scores 0.
+One open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, in a container of
+its own (`tests/Dockerfile`, no network): pass iff it reaches the goal within 1000 control steps. The oracle (`solution/solve.sh`) scores 1; `nop` scores 0.
 
 Benchmark notes: `tasks/kinder/README.md`.
 

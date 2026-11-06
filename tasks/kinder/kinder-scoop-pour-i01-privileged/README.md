@@ -24,9 +24,8 @@ Nonprehensile, tool use, dynamics: move 50 small cubes from one bin to another w
 None, and no positive example yet: the task is unvalidated (`validated = false`, docs/protocol/README.md §2, §4) until a human review records one.
 
 ## Verification
-Two open-loop replays of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, in a container of
-their own (`tests/Dockerfile`, no network): pass iff both reach the goal within 1000 control steps and end in
-the same state. No oracle; no positive example yet (human review pending). `nop` scores 0.
+One open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, in a container of
+its own (`tests/Dockerfile`, no network): pass iff it reaches the goal within 1000 control steps. No oracle; no positive example yet (human review pending). `nop` scores 0.
 
 Benchmark notes: `tasks/kinder/README.md`.
 

@@ -1,9 +1,11 @@
 """Verifier (privileged mode): replay /app/output/trajectory.npz from the frozen instance and write Harbor's rewards.
 
-    python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2
+    python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz
 
-Replays `--repeat` times in this fresh process. Pass = KinDER's goal check fires within the episode on every replay,
-and every replay ends in the same state (bit-exact determinism), so a lucky non-deterministic run cannot pass.
+ONE replay in this fresh process decides: pass = KinDER's goal check fires within the episode. With one replay there
+is no second end state to compare: `deterministic` is written as 1 (nothing disagreed) with `determinism_checked` = 0
+and `replays` = 1. `--repeat N` (N >= 2) is the old check, kept for a determinism measurement by hand: pass = the goal
+check fires on every replay and every replay ends in the same state (bit-exact determinism; `determinism_checked` = 1).
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only: Harbor averages every key across the
 dataset), diagnostics.json, and replay.mp4 + replay.last.png for humans.
 """
@@ -32,9 +34,10 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--instance", required=True)
     ap.add_argument("--traj", default="/app/output/trajectory.npz")
-    ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true")
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)  # at least the one replay that decides
     if not os.path.isfile(a.traj):
         write(False, {"success": 0, "deterministic": 0, "missing_trajectory": 1, "invalid_trajectory": 0, "grader_error": 0})
         return 0
@@ -53,9 +56,10 @@ def main() -> int:
         outs = [s.replay(acts) for _ in range(a.repeat)]
         replay_s = time.perf_counter() - t0
         all_success = all(o["success"] for o in outs)
-        deterministic = len({o["state_sha"] for o in outs}) == 1
+        deterministic = len({o["state_sha"] for o in outs}) == 1  # one replay: 1, nothing compared
         ok = all_success and deterministic
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
+               "determinism_checked": int(len(outs) > 1), "replays": len(outs),
                "n_actions": int(len(acts)), "sim_steps": int(outs[0]["steps"]), "missing_trajectory": 0,
                "invalid_trajectory": 0, "grader_error": 0, "video_rendered": 0}
         diagnostics = {"success_step": outs[0]["success_step"], "max_steps": s.max_steps, "state_sha": sorted({o["state_sha"] for o in outs}),

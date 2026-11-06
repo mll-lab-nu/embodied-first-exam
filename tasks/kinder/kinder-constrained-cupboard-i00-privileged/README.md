@@ -24,9 +24,8 @@ Geometric: six identical rods, each into the one narrow compartment it is owed (
 None. Solvability rests on the positive example in `oracle_evidence` (task.toml), checked by a human reviewer (docs/protocol/README.md §4).
 
 ## Verification
-Two open-loop replays of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, in a container of
-their own (`tests/Dockerfile`, no network): pass iff both reach the goal within 1000 control steps and end in
-the same state. No oracle; human review in PR #8. `nop` scores 0.
+One open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, in a container of
+its own (`tests/Dockerfile`, no network): pass iff it reaches the goal within 1000 control steps. No oracle; human review in PR #8. `nop` scores 0.
 
 Benchmark notes: `tasks/kinder/README.md`.
 
