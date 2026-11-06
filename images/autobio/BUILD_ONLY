@@ -1,5 +1,5 @@
 BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:autobio-<images/autobio/VERSION> is never public (docs/protocol/README.md
-§2.4, D5). It is kept in the organization's private package as the build cache of the AutoBio tasks: every task's
+§1, base images). It is kept in the organization's private package as the build cache of the AutoBio tasks: every task's
 Dockerfile starts with this recipe (images/autobio/Dockerfile, copied in by scripts/task_conventions.py normalize) and
 its compose names the private image in `build.cache_from`. A runner that can pull the image takes its layers; any other
 runner builds the same recipe from public sources on its first task (`harbor run` does it; nothing to run by hand).

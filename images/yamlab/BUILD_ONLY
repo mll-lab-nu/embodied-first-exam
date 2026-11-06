@@ -1,5 +1,5 @@
 BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:yamlab-<images/yamlab/VERSION> is never pushed to a public registry
-(docs/protocol/README.md §2.4, D5). Every YAMLab task builds it itself, as its `yamlab-base` stage (this Dockerfile without
+(docs/protocol/README.md §1, base images). Every YAMLab task builds it itself, as its `yamlab-base` stage (this Dockerfile without
 its header, copied into the task's environment/Dockerfile and tests/Dockerfile): Harbor builds it on a machine's first
 YAMLab run from public sources only, and every later task reuses the layers. The organization keeps a prebuilt copy in
 its private package efe-private, pushed with inline cache metadata; the tasks name it as compose `cache_from`, so a

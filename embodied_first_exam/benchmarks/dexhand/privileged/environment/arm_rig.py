@@ -338,7 +338,7 @@ class RigError(ValueError):
 
 
 def _hands_module():
-    """The shared DexHand hand-selection module (beside this file in task dirs, or scripts/dexhand/shared)."""
+    """The shared DexHand hand-selection module (hands.py, beside this file in every task image)."""
     try:
         import hands
 

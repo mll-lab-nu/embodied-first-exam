@@ -293,7 +293,6 @@ def build(config, asset_dir=None, hand="sharpa"):
     candidates.append(Path("/opt/dexhand/hand"))
     # Repository checkouts (images/dexhand/assets/hand is prepared by images/dexhand/prepare_assets.py).
     candidates += [parent / "images/dexhand/assets/hand" for parent in HERE.parents]
-    candidates += [parent / "robot_coding_bench/images/dexhand/assets/hand" for parent in HERE.parents]
     folder = next((c for c in candidates if (c / "right_hand.xml").is_file()), candidates[0])
     root = ET.parse(folder / "right_hand.xml").getroot()
     root.set("model", hands.info(hand_id)["model"] + " batter whisk")

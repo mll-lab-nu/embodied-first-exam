@@ -65,7 +65,7 @@ Caps per container (PROTOCOL §6).
 ### Notes
 Source: the DexHand family of this task. Scene: scene-expansion
 task T48 ("Carry a tray with filled drink cups"); the tray (original ROMANTISK-style perforated oval serving tray, 365
-convex mesh pieces) and the two glasses are frozen verbatim from `scripts/hand_support/tasks/T48/model.xml` in
+convex mesh pieces) and the two glasses are frozen verbatim from the T48 source model (kept outside the repository) in
 `assets/t48_tray_glasses.xml` (sha256 in `assets/manifest.json`); counters, bottle obstacle, glass shells and the
 150 mL water volumes are rebuilt from the T48 scene builder's dimensions. The T48 source was a kinematic demonstration
 with prescribed object motion; here every object moves only through contact. Liquid is not simulated: each glass is a

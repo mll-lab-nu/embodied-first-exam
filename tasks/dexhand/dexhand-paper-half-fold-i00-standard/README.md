@@ -68,7 +68,7 @@ Caps per container (PROTOCOL §6).
 
 ### Notes
 Source: the DexHand family of this task. The scene is the
-accepted T06 paper-fold scene (`scripts/scene_expansion/repairs/paper_recovery/`): `scene_sharpa.xml` is its frozen
+accepted T06 paper-fold scene (its authoring tooling is kept outside the repository): `scene_sharpa.xml` is its frozen
 compiled-model XML, whose compiled binary model is byte-identical to the accepted `model.mjb`
 (sha256 `665706cd6ef8a63dddba743a9d715e7ca289ccc16f9f0514c4cbcd72693afd51`, checked at every session start), and
 `shell.py` is the unchanged elastic/plastic shell. The runtime keeps the original order of operations, so the

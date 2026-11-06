@@ -50,8 +50,8 @@ FINGERS = ("thumb", "index", "middle", "ring", "pinky")
 #   *_mcp_flex about +X curls toward +Y), thumb/index side +X.  R @ (0,0,-1) = +Z, R @ (0,1,0) = +X, R @ (1,0,0) = +Y.
 # * left: the Wave left hand is the right model mirrored in Y (fingers +Z, palm +X, thumb -Y); Wuji left.xml is
 #   mirrored in Y too (flex axis -X: palm normal -Y, thumb +X).  R @ (0,0,-1) = +Z, R @ (0,-1,0) = +X, R @ (1,0,0) = -Y.
-# scripts/hand_support/profiles.py uses the left matrix for both sides, which mounts a RIGHT Wuji palm-down
-# (rotated 180 degrees about the finger axis relative to the Wave it replaces).
+# The authoring tooling's hand profiles (kept outside the repository) use the left matrix for both sides, which
+# mounts a RIGHT Wuji palm-down (rotated 180 degrees about the finger axis relative to the Wave it replaces).
 WUJI_TO_WAVE = {
     "r": np.array([[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, -1.0]]),
     "l": np.array([[0.0, -1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, -1.0]]),
@@ -168,7 +168,7 @@ def _section(root, tag):
 def merge_wuji(root, parent, side="r", *, pos=(0, 0, 0), quat=(1, 0, 0, 0), folder: Path | None = None) -> dict:
     """Attach the genuine left/right Wuji Hand 2.2 under ``parent`` with scoped names and defaults.
 
-    Same naming as scripts/hand_support/profiles.py: every vendor name gets the prefix ``<side>_wuji_``
+    Same naming as the authoring tooling's hand profiles: every vendor name gets the prefix ``<side>_wuji_``
     (``r_wuji_r_FFJ0`` ...). Vendor joint/actuator/contact parameters are unchanged.
     """
     side = {"right": "r", "left": "l"}.get(side, side)

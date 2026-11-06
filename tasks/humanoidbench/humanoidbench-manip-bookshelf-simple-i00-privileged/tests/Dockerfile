@@ -1,7 +1,7 @@
 # Separate verifier sandbox (docs/protocol/README.md Appendix H.1): the same base image, plus the verifier's own copies of the
 # tooling, this task's reward and the frozen instance. Nothing the agent did in its container reaches this one:
 # Harbor uploads only the declared artifacts (/app/output/).
-# Generated from scripts/humanoidbench/templates/tests.Dockerfile -- edit the template, not this copy.
+# One template for every HumanoidBench verifier (the tooling that renders it is kept outside this repository): keep the copies identical.
 FROM ghcr.io/mll-lab-nu/efe:humanoidbench-0.2.0
 COPY instance.npz rewards.json test.sh /tests/
 COPY --from=ghcr.io/mll-lab-nu/efe:humanoidbench-files-0.4.0@sha256:ce4fd00e84bb202de450b54de645a1bdb35b19767d0e07de298c329072632528 /privileged/environment/rcb_hb.py /privileged/tests/grade.py /privileged/tests/rcb_rewards.py /tests/

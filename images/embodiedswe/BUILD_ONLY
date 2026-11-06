@@ -1,5 +1,5 @@
 BUILD_ONLY: ghcr.io/mll-lab-nu/efe-private:embodiedswe-<images/embodiedswe/VERSION> is never public (docs/protocol/README.md
-§2.4, D5). Built locally only, not pushed anywhere yet; the EmbodiedSWE tasks name it in their FROM.
+§1, base images). Built locally only, not pushed anywhere yet; the EmbodiedSWE tasks name it in their FROM.
 
 Why
   It contains NVIDIA Isaac Sim 5.1 / Omniverse Kit and the Isaac Lab 2.3.2 wheels (RoboLab's recipe, images/robolab/):

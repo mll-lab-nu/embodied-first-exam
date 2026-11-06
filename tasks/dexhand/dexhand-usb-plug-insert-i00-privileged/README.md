@@ -55,8 +55,8 @@ Caps per container (PROTOCOL §6).
 ## Details
 
 ### Notes
-Source scene: T24 "Connect a USB cable to a held device" (scene-expansion kinematic demo,
-`scripts/scene_expansion/repairs/usb_cable_meta_delivery_trajectory_r1`): original authored real-scale four-port hub
+Source scene: T24 "Connect a USB cable to a held device" (a scene-expansion kinematic demo, kept outside the
+repository): original authored real-scale four-port hub
 and USB-A-to-B cable dimensions and materials (`assets/usb_scene.json`, sha256 in `assets/manifest.json`). Physical
 modelling for a 2 ms dexterous-hand task: the hand is carried by the right arm of a Tianji Marvin robot standing in
 front of the desk (floor 0.10 m lower than in the source, so the desk top is 0.90 m above it, and the desk's two front
