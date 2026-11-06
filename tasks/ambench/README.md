@@ -178,12 +178,10 @@ Only a process's first episode is guaranteed bit-identical; later resets in the 
 those of this GPU model; another GPU model may differ in the last bits (BUILD_ONLY, "Check a build").
 
 ## Grading
-- **Privileged**: `tests/grade.py` replays `/app/output/trajectory.npz` twice, each in a fresh process (`rcb_ambench.py
-  replay`); success = AM-Bench's check held in both (`deterministic`: the outcome repeats) and the rebuilt start matches
-  `initial_sha`. The end states' hashes are reported (`state_identical`) but do not decide: PROTOCOL §4 recommends
-  matching final-state hashes, and the rare race above breaks them without changing an outcome; the grading kind is the
-  task's to declare (PROTOCOL §2, within H.4), and this is AM-Bench's (RoboDojo's live-graded tasks report the same two
-  fields). The verdict is written first; then a third
+- **Privileged**: `tests/grade.py` replays `/app/output/trajectory.npz` once, in a fresh process (`rcb_ambench.py
+  replay`); success = AM-Bench's check held in it and the rebuilt start matches `initial_sha` (with one replay nothing
+  is compared: `replays` 1, `deterministic` 1, `determinism_checked` 0; the rare race above can change the last bits of
+  an end state without changing an outcome). The verdict is written first; then another
   process films the rows (`/logs/verifier/replay.mp4`). An unreadable deliverable is `bad_trajectory`, another task's
   file `wrong_task` (the agent's 0); so is a row whose quaternion has zero or non-finite length (`bad_quaternion_rows`,
   checked when the file is read; the replay CLI also reports a row it refuses as `bad_trajectory`, a verdict, never a
