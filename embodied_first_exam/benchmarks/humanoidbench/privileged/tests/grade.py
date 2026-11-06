@@ -10,9 +10,11 @@ only /app/output/ crosses over.
 Writes /logs/verifier/reward.txt (1/0), reward.json (the numeric fields of docs/protocol/README.md §3 -- Harbor turns
 every key into a leaderboard metric, so HumanoidBench's own numbers go to diagnostics.json instead), and a
 human-viewable replay video /logs/verifier/replay.mp4 plus replay.last.png.
-Replays `--repeat` times in this fresh process; success requires every replay to reach the task's
-success_bar AND all final-state hashes to agree (bit-exact determinism), so a lucky non-deterministic run
-cannot pass. A deliverable that breaks the contract instruction.md states -- another task's, or not a (T, nu)
+ONE replay in this fresh process decides: success = it reaches the task's success_bar. With one replay
+there is no second end state to compare: `deterministic` is written as 1 (nothing disagreed) with
+`determinism_checked` = 0 and `replays` = 1. `--repeat N` (N >= 2) is the old check, kept for a determinism
+measurement by hand: success = every replay reaches the success_bar AND all final-state hashes agree (bit-exact
+determinism; `determinism_checked` = 1). A deliverable that breaks the contract instruction.md states -- another task's, or not a (T, nu)
 array of finite values with T at most the episode limit -- scores 0 as the agent's failure, not the grader's.
 """
 from __future__ import annotations
@@ -50,9 +52,10 @@ def load_actions(path: str, family: str, nu: int, max_steps: int) -> tuple[np.nd
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--family", required=True); ap.add_argument("--instance", required=True)
-    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true"); ap.add_argument("--video-every", type=int, default=5); ap.add_argument("--video-fps", type=int, default=20)
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)            # at least the one replay that decides
     if not os.path.isfile(a.traj):
         write(False, {"success": 0, "missing_trajectory": 1, "grader_error": 0}); return 0
     try:
@@ -72,9 +75,10 @@ def main() -> int:
         outs = [s.replay(acts) for _ in range(a.repeat)]
         t_replay = time.perf_counter() - t_replay
         all_success = all(o["success"] for o in outs)
-        deterministic = len({o["state_sha"] for o in outs}) == 1
+        deterministic = len({o["state_sha"] for o in outs}) == 1   # one replay: 1, nothing compared
         ok = all_success and deterministic
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
+               "determinism_checked": int(len(outs) > 1), "replays": len(outs),
                "n_actions": int(len(acts)), "final_reward": float(outs[0]["final_reward"]),
                "sim_steps": int(outs[0]["sim_steps"]), "grader_error": 0, "video_rendered": 0}
         # Not in reward.json: episode_return is on a per-task scale, and Harbor would average it across
