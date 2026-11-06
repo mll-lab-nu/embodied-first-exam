@@ -25,7 +25,7 @@ family = "align_blocks"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 protocol = "eai-standard/2.2"
 oracle = "none"
-oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142"
+oracle_evidence = "positive example: a model trial solved this task within its 200-step limit (Codex + GPT-6 Astra, effort high, run `codex-gpt6_astra-high`, 2026-11-02; 190 steps, graded live by this task's service); no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142"
 instance_seed = 0
 expert_time_estimate_hours = 3.0
 

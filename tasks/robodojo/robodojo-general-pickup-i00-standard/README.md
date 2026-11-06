@@ -7,7 +7,7 @@
 | Twin | `robodojo-general-pickup-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `general_pickup` / seed 0 |
-| Oracle | `none` — positive example: a model trial solved this task (Codex + GPT-6 Luna, effort xhigh, run `codex-gpt6_luna-xhigh`, 2026-10-10; 1131 actions, graded by this verifier); no reference solution (RoboDojo releases no expert); human review in PR #142 |
+| Oracle | `none` — positive example: a model trial solved this task within its 200-step limit (Codex + GPT-6 Astra, effort high, 2026-11-02; 106 steps, graded live by this task's service); no reference solution (RoboDojo releases no expert); human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
