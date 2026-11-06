@@ -4,14 +4,14 @@
 FROM ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-0.2.1
 COPY instance.json /app/instance.json
 COPY rfo_task.py /opt/tools/
-COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.1@sha256:bc538b0a8cb2d4ad0b77f79391344a212e977678aa67f5b213b697baf34cd73b /rcb_rfo.py /opt/tools/rcb_rfo.py
-COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.1@sha256:bc538b0a8cb2d4ad0b77f79391344a212e977678aa67f5b213b697baf34cd73b /rfo/__init__.py /opt/tools/rfo/__init__.py
-COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.1@sha256:bc538b0a8cb2d4ad0b77f79391344a212e977678aa67f5b213b697baf34cd73b /rfo/scene.py /opt/tools/rfo/scene.py
-COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.1@sha256:bc538b0a8cb2d4ad0b77f79391344a212e977678aa67f5b213b697baf34cd73b /rfo/looks.py /opt/tools/rfo/looks.py
-COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.1@sha256:bc538b0a8cb2d4ad0b77f79391344a212e977678aa67f5b213b697baf34cd73b /rfo/world.py /opt/tools/rfo/world.py
-COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.1@sha256:bc538b0a8cb2d4ad0b77f79391344a212e977678aa67f5b213b697baf34cd73b /rfo/referee.py /opt/tools/rfo/referee.py
-COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.1@sha256:bc538b0a8cb2d4ad0b77f79391344a212e977678aa67f5b213b697baf34cd73b /rfo/task.py /opt/tools/rfo/task.py
-COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.1@sha256:bc538b0a8cb2d4ad0b77f79391344a212e977678aa67f5b213b697baf34cd73b /rfo/realhand.py /opt/tools/rfo/realhand.py
+COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.5.0@sha256:2d1f8571f22a9fef3e3b5527223d5a966a641fd1592c37943571b63138dd5ae3 /rcb_rfo.py /opt/tools/rcb_rfo.py
+COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.5.0@sha256:2d1f8571f22a9fef3e3b5527223d5a966a641fd1592c37943571b63138dd5ae3 /rfo/__init__.py /opt/tools/rfo/__init__.py
+COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.5.0@sha256:2d1f8571f22a9fef3e3b5527223d5a966a641fd1592c37943571b63138dd5ae3 /rfo/scene.py /opt/tools/rfo/scene.py
+COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.5.0@sha256:2d1f8571f22a9fef3e3b5527223d5a966a641fd1592c37943571b63138dd5ae3 /rfo/looks.py /opt/tools/rfo/looks.py
+COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.5.0@sha256:2d1f8571f22a9fef3e3b5527223d5a966a641fd1592c37943571b63138dd5ae3 /rfo/world.py /opt/tools/rfo/world.py
+COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.5.0@sha256:2d1f8571f22a9fef3e3b5527223d5a966a641fd1592c37943571b63138dd5ae3 /rfo/referee.py /opt/tools/rfo/referee.py
+COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.5.0@sha256:2d1f8571f22a9fef3e3b5527223d5a966a641fd1592c37943571b63138dd5ae3 /rfo/task.py /opt/tools/rfo/task.py
+COPY --from=ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.5.0@sha256:2d1f8571f22a9fef3e3b5527223d5a966a641fd1592c37943571b63138dd5ae3 /rfo/realhand.py /opt/tools/rfo/realhand.py
 ENV PYTHONPATH=/opt/tools
 RUN mkdir -p /app/output
 WORKDIR /app

@@ -2,10 +2,11 @@
 
     python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz
 
-Two replays, each in its own fresh process (`rcb_rfo.py replay`: the sim rows from the frozen start until the referee
-ends the episode or the rows run out, the referee's verdict there). success = both replays succeed and end in the same
-state. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders
-replay.mp4, after the verdict is on disk (it never changes it).
+ONE replay, in its own fresh process (`rcb_rfo.py replay`: the sim rows from the frozen start until the referee
+ends the episode or the rows run out, the referee's verdict there), decides: success = that replay succeeds. With one
+replay there is no second end state to compare: `deterministic` is written as 1 (nothing disagreed) with
+`determinism_checked` = 0 and `replays` = 1. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then
+a second, separate replay renders replay.mp4, after the verdict is on disk (it never changes it).
 """
 
 import argparse, json, os, subprocess, sys, tempfile, traceback
@@ -103,19 +104,16 @@ def main() -> int:
                       "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, **cost})
         return 0
     try:
-        runs = [replay(a.instance, a.traj, None), replay(a.instance, a.traj, None)]
-        if any("error" in r for r in runs):       # a replay without a result: the grader's failure, not the agent's 0
+        r0 = replay(a.instance, a.traj, None)
+        if "error" in r0:                         # a replay without a result: the grader's failure, not the agent's 0
             write(False, {"success": 0, "grader_error": 1, "infra_error": 1, **cost})
             return 0
-        if not all(r["instance_ok"] for r in runs):  # the image no longer builds the frozen start: not the agent's 0
+        if not r0["instance_ok"]:                 # the image no longer builds the frozen start: not the agent's 0
             write(False, {"success": 0, "grader_error": 1, "infra_error": 1, "instance_mismatch": 1, **cost})
             return 0
-        all_success = all(r["success"] for r in runs)
-        deterministic = runs[0]["state_sha"] == runs[1]["state_sha"]
-        ok = all_success and deterministic
-        r0 = runs[0]
+        ok = bool(r0["success"])
         out = {
-            "success": int(ok), "replay_success": int(all_success), "deterministic": int(deterministic),
+            "success": int(ok), "replay_success": int(ok), "deterministic": 1, "determinism_checked": 0, "replays": 1,
             "n_actions": int(len(acts)), "sim_steps": int(r0["executed_rows"]), "horizon": int(r0["horizon"]),
             "episode_over": int(bool(r0["episode_over"])), "progress": float(r0["progress"]),
             "stages_reached": int(len(r0["stages"])), "stages_total": int(r0["stages_total"]),

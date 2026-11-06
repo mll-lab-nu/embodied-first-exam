@@ -22,7 +22,7 @@ oracle_evidence = "Reference, on Unitree's actuator data (H2-class legs, rotor i
 [verifier]
 timeout_sec = 900.0
 # grade.py runs in its own container (tests/Dockerfile): the agent's container is gone by then and only /app/output/
-# crosses over. It replays in two fresh processes, with no network.
+# crosses over. It replays in one fresh process, with no network.
 environment_mode = "separate"
 network_mode = "no-network"
 
