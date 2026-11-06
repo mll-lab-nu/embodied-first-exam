@@ -1,13 +1,13 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.5.1@sha256:9990d2f1e2f7771f2da16ad8f69e07b06a2e8a989ff51f02489178ed0b87fbae",
+ "image": "ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.6.0@sha256:c872eba2aa6b58be57bbfa95c8f6118cd1a65a59ad614807c7542db473d5a4dd",
  "source": "embodied_first_exam/benchmarks/mujoco-playground",
  "files": {
   "privileged/environment/rcb_aloha.py": "a5171af6b6a9f3b2f768f385e500da06c4bfed4ec9176377242f34a9026ea4fa",
   "privileged/environment/rcb_panda.py": "fb5906690e122c082cb7f9ff0292f647ef54c33b9160d8c9429bc059635fbdb1",
   "privileged/environment/rcb_quadruped.py": "acc78e0527e41892e9cadb8ab0c76c36513f20677c75aa98dcad60daffc24dc9",
-  "privileged/tests/grade.py": "541c4ea89ddf535134645c856212ae1087968c41ce70ba14831d4da487ae8d5c",
-  "privileged/tests/variants/72df271117/grade.py": "72df2711178c9aa2b2c7dc300c6f137d589a33bf3ada359b09e22a718c902329",
-  "privileged/tests/variants/c5bde2d42e/grade.py": "c5bde2d42e9c8bedbc90da9fdf9fed7fa0d018fe33e3467c653d6bb580cc9226",
+  "privileged/tests/grade.py": "f87b4ec35b290e25c0152979d17a37ca7e0526b406def1eac341105700a7ceab",
+  "privileged/tests/variants/72df271117/grade.py": "2fb394e9f5e5dfa7cee7a9db284c44281afb9e8edea19c143301e841c02efafb",
+  "privileged/tests/variants/c5bde2d42e/grade.py": "65f11582f4772718469281a5a39c167991fb20c681aef301463625030b62c1a4",
   "sim/finalize.sh": "dc1f2cc06692ca27cc4d695f2370a0e9884ab9aa2d7070cf21a3808eb77b3aa5",
   "sim/rcb_service.py": "6b9786bc4647e8dae7e7d08ac0149bd6149e952db9e50ba2b400b9c1b6b2da0c",
   "sim/server.py": "851ed75e0c20b773a23d24b5e30c628deff8b4186b5fb1224f4148b35f4b499a",

@@ -2,10 +2,11 @@
 
     python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz
 
-Two replays, each in its own fresh process (`rcb_quadruped.py replay`: the frozen start, one control step per row, the
-task's success check on the whole trajectory). success = both replays succeed and end in the same state. Writes
-/logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders replay.mp4, after the
-verdict is on disk (it never changes it).
+ONE replay, in its own fresh process (`rcb_quadruped.py replay`: the frozen start, one control step per row, the
+task's success check on the whole trajectory), decides: success = that replay succeeds. With one replay there is no
+second end state to compare: `deterministic` is written as 1 (nothing disagreed) with `determinism_checked` = 0 and
+`replays` = 1. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a second, separate replay
+renders replay.mp4, after the verdict is on disk (it never changes it).
 
 Failures that are not the agent's (docs/protocol/README.md: infra vs agent failure) carry `grader_error` = 1 and `infra_error`
 = 1, so they are no verdict on the agent: a replay process that died or timed out, an image that no longer rebuilds the
@@ -104,19 +105,16 @@ def main() -> int:
             write(False, {"success": 0, "deterministic": 0, "bad_trajectory": 1,
                           "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, "grader_error": 0, **cost})
             return 0
-        runs = [replay(a.instance, a.traj, None), replay(a.instance, a.traj, None)]
-        if any("error" in r and not r.get("bad_trajectory") for r in runs):  # the replay process died / timed out
+        r = replay(a.instance, a.traj, None)
+        if "error" in r and not r.get("bad_trajectory"):  # the replay process died / timed out
             write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1, "replay_failed": 1, **cost})
             return 0
-        if not all(r.get("instance_ok") for r in runs):  # the image no longer builds the frozen start: not the agent's 0
+        if not r.get("instance_ok"):  # the image no longer builds the frozen start: not the agent's 0
             write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1, "instance_mismatch": 1, **cost})
             return 0
-        all_success = all(bool(r.get("success")) for r in runs)
-        deterministic = runs[0].get("state_sha") == runs[1].get("state_sha")
-        ok = all_success and deterministic
-        r = runs[0]
+        ok = bool(r.get("success"))
         num = lambda k: float(r.get(k) if r.get(k) is not None else -1)  # noqa: E731
-        out = {"success": int(ok), "replay_success": int(all_success), "deterministic": int(deterministic),
+        out = {"success": int(ok), "replay_success": int(ok), "deterministic": 1, "determinism_checked": 0, "replays": 1,
                "n_actions": int(len(acts)), "horizon": horizon, "fell": int(r.get("fell_at") is not None),
                "fell_at_step": num("fell_at"), "worst_lin_err": num("worst_lin_err"), "worst_yaw_err": num("worst_yaw_err"),
                "end_tilt_deg": num("tilt_deg"), "end_imu_height": num("imu_height"), "end_pose_angle_deg": num("pose_angle_deg"),

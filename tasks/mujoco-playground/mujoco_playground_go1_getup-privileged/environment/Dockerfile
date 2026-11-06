@@ -2,7 +2,7 @@
 # (images/mujoco/prepare_assets.sh), the task's tooling and its frozen instance.
 FROM ghcr.io/mll-lab-nu/efe:mujoco-0.1.3
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.5.1@sha256:9990d2f1e2f7771f2da16ad8f69e07b06a2e8a989ff51f02489178ed0b87fbae /privileged/environment/rcb_quadruped.py /opt/tools/rcb_quadruped.py
+COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.6.0@sha256:c872eba2aa6b58be57bbfa95c8f6118cd1a65a59ad614807c7542db473d5a4dd /privileged/environment/rcb_quadruped.py /opt/tools/rcb_quadruped.py
 ENV PYTHONPATH=/opt/tools
 RUN mkdir -p /app/output
 WORKDIR /app
