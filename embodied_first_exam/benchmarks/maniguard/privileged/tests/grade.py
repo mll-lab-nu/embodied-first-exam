@@ -23,7 +23,8 @@ What is whose failure (success is 0 in every case):
 - the agent's: no file (missing_trajectory), a file that is not a trajectory of this task (bad_trajectory: not an npz, no
   `task` / `actions` entry, an entry larger than MAX_STEPS x ACTION_DIM float64 numbers + MAX_MEMBER_MARGIN bytes
   unpacked (checked before it is read), a pickled or non-numeric array, a wrong shape, NaN/inf, more than MAX_STEPS =
-  50,000 rows: also too_long; wrong_task), a trajectory that does not reach the goal or breaks a rule;
+  50,000 rows: also too_long; wrong_task), a trajectory that does not reach the goal or breaks a rule. The replays read
+  a copy holding only the checked `task` and `actions`: no other entry of the agent's file is ever unpacked;
 - the grader's (grader_error = 1 and infra_error = 1, no verdict on the agent): a replay process that died or printed no result, a replay
   that ran out of time (replay_timed_out), a frozen instance this host does not rebuild (instance_ok 0), any other
   exception here.
@@ -198,11 +199,14 @@ def main() -> int:
         if bad:
             write(False, {"success": 0, **bad, "deterministic": 0, "grader_error": 0, **cost}); return 0
         tool = os.path.join(here, "rcb_maniguard.py")
+        # the replays read only what was checked here (the tooling's replay unpacks every entry of the file it is given)
+        traj = os.path.join(tempfile.mkdtemp(prefix="rcb_grade_"), "trajectory.npz")
+        np.savez(traj, actions=acts, task=np.array(a.task))
         t0 = time.time(); runs = []
         limit = a.timeout if a.timeout else replay_limit(len(acts))
         for i in range(a.repeat):
             video = os.path.join(LOG_DIR, "replay.mp4") if (i == a.repeat - 1 and not a.no_video) else None
-            cmd = [sys.executable, tool, "replay", "--task", a.task, "--instance", a.instance, "--traj", a.traj] + (["--video", video] if video else [])
+            cmd = [sys.executable, tool, "replay", "--task", a.task, "--instance", a.instance, "--traj", traj] + (["--video", video] if video else [])
             runs.append(run_replay(cmd, min(limit, a.budget - (time.time() - t_start))))
             if "error" in runs[-1]:
                 break                                      # no verdict any more: the other replays would only use up the time

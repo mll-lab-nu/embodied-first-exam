@@ -14,13 +14,15 @@ Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error
 - the agent's: no file (`missing_trajectory`), another family's trajectory (`wrong_family`), a file that is not a
   trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, an entry larger than MAX_STEPS x ACTION_DIM
   float64 numbers + MAX_MEMBER_MARGIN bytes unpacked (checked before it is read; `too_large`), pickled or object arrays,
-  the wrong shape, NaN/inf, more than MAX_STEPS rows), or a replay that does not complete the task or is not deterministic;
+  the wrong shape, NaN/inf, more than MAX_STEPS rows), or a replay that does not complete the task or is not deterministic.
+  The replays read a copy holding only the checked `task` and `actions`: no other entry of the agent's file is ever
+  unpacked;
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends
   without a result (Isaac died) or runs out of its time limit (`replay_timed_out`), the rebuilt frozen scene not matching
   the recorded instance (`instance_ok` = 0: the host, not the trajectory), or any other error in this script.
 """
 from __future__ import annotations
-import argparse, json, os, subprocess, sys, time, traceback, zipfile
+import argparse, json, os, subprocess, sys, tempfile, time, traceback, zipfile
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
@@ -113,10 +115,13 @@ def main() -> int:
         if bad is not None:
             write(False, {**ZERO, **bad, **cost}); return 0
         tool = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_yamlab.py")
+        # the replays read only what was checked here (the tooling's replay unpacks every entry of the file it is given)
+        traj = os.path.join(tempfile.mkdtemp(prefix="rcb_grade_"), "trajectory.npz")
+        np.savez(traj, actions=acts, task=np.array(a.family))
         t0 = time.time(); runs = []; limit = replay_timeout(int(acts.shape[0]))
         for i in range(a.repeat):
             video = os.path.join(LOG_DIR, "replay.mp4") if (i == a.repeat - 1 and not a.no_video) else None   # never affects the verdict
-            cmd = [sys.executable, tool, "replay", "--task", a.family, "--instance", a.instance, "--traj", a.traj] + (["--video", video, "--fps", str(a.video_fps)] if video else [])
+            cmd = [sys.executable, tool, "replay", "--task", a.family, "--instance", a.instance, "--traj", traj] + (["--video", video, "--fps", str(a.video_fps)] if video else [])
             try:
                 p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=sys.stderr, text=True, timeout=limit, env={**os.environ, "RCB_SESSION_LOG": ""})
             except subprocess.TimeoutExpired:
