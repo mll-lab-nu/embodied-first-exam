@@ -1,4 +1,4 @@
-# LIBERO-MAX · libero_spatial · target relocation — instance i00 — STANDARD MODE (robot as a service)
+# LIBERO-MAX · libero_spatial — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (LIBERO on robosuite / MuJoCo) **as if it were real hardware**: the
 simulator runs in a service you cannot open, and you reach it only through a client. **Task: Pick the akita black bowl next to the cookies box and place it on the plate.** LIBERO-PRO's initial-pose variant moved the target bowl (`akita_black_bowl_1`, the goal's) 0.17 m away from the robot and 0.06 m to the robot's right of where the sentence puts it, and turned it 45 degrees: it no longer stands right next to the cookies box. The bowl to move is still that one; the other black bowl stands on the stove.

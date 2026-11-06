@@ -1,4 +1,4 @@
-# LIBERO-MAX · libero_10 · obstacle insertion — instance i00 — STANDARD MODE (robot as a service)
+# LIBERO-MAX · libero_10 — instance i00 — STANDARD MODE (robot as a service)
 
 You control a simulated **Franka Panda** arm (LIBERO on robosuite / MuJoCo) **as if it were real hardware**: the
 simulator runs in a service you cannot open, and you reach it only through a client. **Task: Put the black bowl in the bottom drawer of the cabinet and close it.**
