@@ -2,6 +2,7 @@
 
 <p align="center">
   <a href="https://www.embodied-first-exam.ai"><img src="https://img.shields.io/badge/Website-embodied--first--exam.ai-2f4f4f" alt="Website"></a>
+  <a href="https://github.com/mll-lab-nu/embodied-first-exam/blob/main/docs/arxiv.pdf"><img src="https://img.shields.io/badge/arXiv-paper-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
   <a href="https://discord.gg/AhC6utNyfk"><img src="https://img.shields.io/badge/Discord-join-5865f2?logo=discord&logoColor=white" alt="Discord"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-b8a133" alt="License: MIT"></a>
   <a href="docs/assets/wechat.jpg"><img src="https://img.shields.io/badge/WeChat-group-07c160?logo=wechat&logoColor=white" alt="WeChat group"></a>
@@ -215,8 +216,8 @@ upstream experts and the contents of the base images keep their own licenses.
 ```bibtex
 @misc{embodiedfirstexam2026,
   title        = {Embodied First Exam},
-  author       = {Kangrui Wang*§ and Qineng Wang*§ and Changhe Chen*§ and Pingyue Zhang*§ and Chi Gui*§ and Feishi Wang§ and Canyu Chen§ and Wenli Xiao§ and Xiaoyu Huang§ and Tonghe Zhang§ and Linjie Li§ and Zihan Wang and Minyeong Kim and Yiyou Sun and Mingkai Deng and Jinyu Hou and Eric P. Xing and Han Liu and Qi Zhu and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Dawn Song and Pieter Abbeel and Li Fei-Fei and Jiajun Wu and Yuke Zhu and Guanya Shi† and Ruohan Zhang† and Manling Li†},
+  author       = {Kangrui Wang and Qineng Wang and Changhe Chen and Pingyue Zhang and Chi Gui and Feishi Wang and Canyu Chen and Wenli Xiao and Xiaoyu Huang and Tonghe Zhang and Linjie Li and Zihan Wang and Minyeong Kim and Yiyou Sun and Mingkai Deng and Jinyu Hou and Qi Zhu and Han Liu and Eric P. Xing and Huaxiu Yao and Zhiwen Fan and Yuejiang Liu and Dawn Song and Pieter Abbeel and Li Fei-Fei and Jiajun Wu and Yuke Zhu and Guanya Shi and Ruohan Zhang and Manling Li},
   year         = {2026},
-  url          = {https://www.embodied-first-exam.ai}
+  url          = {https://github.com/mll-lab-nu/embodied-first-exam/blob/main/docs/arxiv.pdf}
 }
 ```
