@@ -24,6 +24,7 @@ services:
     environment:
       RCB_INSTANCE: /srv/instance.json
       RCB_DATA: /data
+      LP_NUM_THREADS: "1"
       RCB_WALL_CLOCK_S: "3600"
       RCB_STARTUP_TIMEOUT_S: "300"                      # the scene builds in a few seconds
       RCB_RESET_BUDGET: "0"                             # Embodied Safety Exam grades one episode: no reset
