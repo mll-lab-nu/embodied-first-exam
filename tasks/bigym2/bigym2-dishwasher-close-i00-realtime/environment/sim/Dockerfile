@@ -7,7 +7,7 @@ COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.4.1@sha256:7f1a830075fd6dd25
      /rcb1.py \
      /realtime/rcb_realtime.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:bigym2-files-0.4.0@sha256:fe8dd55600b32447391fbe16e1789a0df479ac6a17190ecf2f85cd59af9a5447 \
+COPY --from=ghcr.io/mll-lab-nu/efe:bigym2-files-0.4.1@sha256:7f7725261d7a32d4bb178738cb55ed6869d732385f2f04cab75c7b86e9e0a616 \
      /privileged/environment/rcb_bigym2.py \
      /sim/rcb_service.py \
      /sim/server.py \

@@ -10,7 +10,7 @@ Replays `--repeat` times, each in its own FRESH process (`rcb_ambench.py replay`
 complete the task (AM-Bench's own `_get_success`), so a trajectory whose success does not repeat in a fresh process
 cannot pass (`deterministic` = the replays agree on the outcome). The end-state hashes are compared and reported
 (`state_identical`) but do not decide: with the tooling's five synchronizations every replay outside Harbor ended in the
-frozen state (29 of 29 clean runs), yet under Harbor two of six runs did not (docs/benchmarks/ambench.md, Determinism),
+frozen state (29 of 29 clean runs), yet under Harbor two of six runs did not (tasks/ambench/README.md, Determinism),
 in the last bits, the outcome unchanged. The frozen scene rebuilt here from tests/instance.json must also match the
 recorded one (`instance_ok`: the exact state hash of the seeded reset).
 

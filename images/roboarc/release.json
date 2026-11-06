@@ -1,6 +1,6 @@
 {
  "name": "roboarc-r1",
- "note": "RoboARC (RoboARC on MuJoCo, docs/benchmarks/roboarc.md): written by scripts/robotangle/release_rebuild.py --onto on dev/robotangle_mujoco. release_commit: the dev/robotangle_mujoco commit the image, the tooling and the instances come from; runtime: the image's installed runtime; bases: one record per task base (ported_from / template, instance, facts the texts state, evidence). Until the first release this holds the shared fields of RoboARC's release.json and no base.",
+ "note": "RoboARC (RoboARC on MuJoCo, tasks/roboarc/README.md): written by the release tooling, which is kept outside this repository, from the dev/robotangle_mujoco branch. release_commit: the dev/robotangle_mujoco commit the image, the tooling and the instances come from; runtime: the image's installed runtime; bases: one record per task base (ported_from / template, instance, facts the texts state, evidence).",
  "release_commit": "7947eaa7b3a9533b7bfb29a8caad01899019272e",
  "template_commit": "7947eaa7b3a9533b7bfb29a8caad01899019272e",
  "runtime": {

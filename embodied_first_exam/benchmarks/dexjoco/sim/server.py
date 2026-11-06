@@ -19,7 +19,7 @@ Crash recovery (rcb_limited.Episode, resume class `exact`: MuJoCo on the CPU rep
 every executed row is journaled; after a crash the service rebuilds the instance and replays the journal (a resume, not
 a grading replay). When the episode ends the service writes /data/trajectory.npz + /data/episode.json with the live
 verdict (DexJoCo's own success check on the episode it ran); the collect hook (finalize.sh) makes it exit, writes that
-verdict into final.json (nothing is replayed to grade it: owner, 2026-10-17) and renders the video from the
+verdict into final.json (nothing is replayed to grade it) and renders the video from the
 trajectory. The frozen instance is checked when the episode begins: a scene that does not rebuild to the instance's
 recorded state hash gets no episode (instance_mismatch, an infrastructure failure)."""
 
@@ -46,7 +46,7 @@ MAX_FPS = 50
 # Images one call may return (cameras x frames, per-frame depth counted again), checked before anything is executed:
 # every frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per
 # 1000 RGB frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.9 GB,
-# under the sidecar's 8 GiB cap (docs/benchmarks/dexjoco.md). The 2.1 services' 3000 would need more than the cap.
+# under the sidecar's 8 GiB cap (tasks/dexjoco/README.md, "frames per call"). The 2.1 services' 3000 would need more than the cap.
 MAX_FRAMES = 1000
 CAM_W, CAM_H = 640, 480
 CTRL_HZ = 50.0
@@ -65,7 +65,7 @@ BIM = TASK.startswith("bimanual_")
 ADIM = 46 if BIM else 23
 EP = L.Episode(DATA, dim=ADIM, resume="exact")
 EP.startup()  # start count, back-off after failed starts, the startup watchdog until scene_built()
-# The simulation's result depends on OpenBLAS's thread count below 4 (docs/benchmarks/dexjoco.md, "Threads"), and the
+# The simulation's result depends on OpenBLAS's thread count below 4 (tasks/dexjoco/README.md, "Threads"), and the
 # count cannot exceed the CPUs this container may run on (its affinity; a `cpus:` quota does not change it). With fewer
 # than 4 the episode would run on other numerics than the references and the published results: no episode, no verdict
 # on the agent (an infrastructure failure: final.json too_few_cpus = 1, infra_error = 1; the verifier adds grader_error).

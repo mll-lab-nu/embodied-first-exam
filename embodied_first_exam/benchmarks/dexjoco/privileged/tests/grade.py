@@ -16,7 +16,7 @@ arrays, no `task` or `actions` entry, a wrong shape, NaN/inf, or more than rcb_d
 hand-in cap: what two replays of the slowest family fit into this verifier's timeout). `grader_error` is left for
 failures of the verifier itself, and comes with `infra_error` = 1 (no verdict on the agent). One of them is checked
 before the first replay: the simulation's result depends on OpenBLAS's thread count below 4
-(docs/benchmarks/dexjoco.md, "Threads"), so a verifier whose process runs fewer than 4 OpenBLAS threads (fewer than 4
+(tasks/dexjoco/README.md, "Threads"), so a verifier whose process runs fewer than 4 OpenBLAS threads (fewer than 4
 CPUs visible to it, or OPENBLAS_NUM_THREADS below 4) replays nothing and reports `too_few_cpus`, `grader_error` and
 `infra_error` = 1 with `visible_cpus` and `blas_threads`. Every reward.json carries success, deterministic,
 grader_error, infra_error, missing_trajectory and bad_trajectory. The verdict is on disk before the video is rendered,

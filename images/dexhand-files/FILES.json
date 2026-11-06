@@ -1,8 +1,8 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.5.0@sha256:e90c3817d6fee11cd727b5f82252740849e5b66ced87c7fce411b4747e911166",
+ "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.5.0@sha256:7dd5f1b6f2f7ff07177fd29ca94c58f814020de5ad00367a3f8b617afad3cac8",
  "source": "embodied_first_exam/benchmarks/dexhand",
  "files": {
-  "privileged/environment/arm_rig.py": "5b9e26e313c7a935dfbf04b34aec8047bd713677c638622b8baeaf09453c5a3a",
+  "privileged/environment/arm_rig.py": "8515be979d319759d286d4900d8329743053508016e30e3ffefdd6c441318dde",
   "privileged/environment/assets/aa_cell.obj": "f388190fc963e3e3bbfe466fa55c3b34158d2fad865f79efa59b3ba3c31eca95",
   "privileged/environment/assets/battery_door.obj": "cc314c05423668ecabbf43143d6531506382a2d5a279fced556e975e5b41ddfa",
   "privileged/environment/assets/blade-0.stl": "a2b0873b3d00985550488895738146468977849748eab4381e9a615299ba2c4d",
@@ -595,7 +595,7 @@
   "sim/essential_cube_layer_scene.py": "f401df79c0f6a0945bc5b60bb1fd459edebc02ced7d79f4d145ba7b91d1b8774",
   "sim/essential_cube_reorient_scene.py": "a03a96e1045180abb910370a51888fcdbb1232a52a447acef0bbf4760ff2dff4",
   "sim/essential_registry.json": "8b1b515e7d3a40be186af32ed34e85abd91fd22b985fc2a41aba311bbdc182b7",
-  "sim/finalize.py": "e9f0ae2cb3f816614a164a0ceb2d87f5f8c0c5265a7504433a9f7abd113df8bd",
+  "sim/finalize.py": "1c731da146bc90f0a4877d08fe602adb2173f9c48591508be217d24c16bc2ca3",
   "sim/finalize.sh": "7c347b83c53411c1c010b8a3fb5c2b27869ec597b5231ca125ebb72702a4ef38",
   "sim/rcb_dexhand.py": "3e1bd8364414fa26e2b83710665c44152a6c7d199851f6fab361a31aeb3b9742",
   "sim/server.py": "e3cb5075845493968f9b2fef404a5080d52a3a4b9274e8b61436fe88af60e514",
