@@ -15,7 +15,7 @@ your trajectory right after the task is met is how you stop there. The grader re
 same start in a fresh process, twice; it scores 1 only if both replays succeed and end in the same state.
 
 ## Deliverable
-`/app/output/trajectory.npz` with `actions`: float64 (T, 25), one row per control step, the targets of upstream's
+`/app/output/trajectory.npz` with `actions`: float64 (T, 25) with T at most 100,000 (a longer file scores 0), one row per control step, the targets of upstream's
 joint-position controllers in this order: `base_x`, `base_y`, `base_theta`, `torso_0`, `torso_1`, `torso_2`, `torso_3`, `torso_4`, `torso_5`, `left_arm_0`, `left_arm_1`, `left_arm_2`, `left_arm_3`, `left_arm_4`, `left_arm_5`, `left_arm_6`, `right_arm_0`, `right_arm_1`, `right_arm_2`, `right_arm_3`, `right_arm_4`, `right_arm_5`, `right_arm_6`, `left_gripper`, `right_gripper` (base_x, base_y in m and base_theta in rad (world frame); torso, arm joints in rad; grippers: the finger motor's force, -100 .. 100 (positive closes, negative opens, 0 exerts none)). `s.save_trajectory(rows)` writes it. Also leave the
 script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
 you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling also writes

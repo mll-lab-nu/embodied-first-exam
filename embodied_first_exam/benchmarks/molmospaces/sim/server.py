@@ -1,4 +1,4 @@
-"""eai-standard/2.2 sim service for MolmoSpaces (docs/protocol/standard_mode.md, docs/benchmarks/molmospaces.md): the adapter
+"""eai-standard/2.2 sim service for MolmoSpaces (docs/protocol/standard_mode.md, tasks/molmospaces/README.md): the adapter
 of the shared layer rcb_limited.py; the simulator is rcb_molmospaces.Episode (upstream MolmoSpaces, MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics. Every call is logged to
 /data/episode.jsonl; nothing about objects ever leaves this process.
@@ -12,7 +12,7 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 episode ends the service writes /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit
 and writes final.json from episode.json.
 
-The verdict is the live episode's (owner 2026-10-17): upstream's judge_success() on the state at the
+The verdict is the live episode's: upstream's judge_success() on the state at the
 episode's end, as upstream's evaluation and the privileged verifier's replay judge it; nothing replays it. The frozen
 start is checked when the scene is built, before the agent is served: a start state whose hash is not the instance's
 recorded t = 0 hash gives up as `instance_mismatch` (infra_error)."""

@@ -15,7 +15,7 @@ your trajectory right after the task is met is how you stop there. The grader re
 same start in a fresh process, twice; it scores 1 only if both replays succeed and end in the same state.
 
 ## Deliverable
-`/app/output/trajectory.npz` with `actions`: float64 (T, 8), one row per control step, the targets of upstream's
+`/app/output/trajectory.npz` with `actions`: float64 (T, 8) with T at most 100,000 (a longer file scores 0), one row per control step, the targets of upstream's
 joint-position controllers in this order: `fr3_joint1`, `fr3_joint2`, `fr3_joint3`, `fr3_joint4`, `fr3_joint5`, `fr3_joint6`, `fr3_joint7`, `gripper` (fr3_joint1..7 in rad; gripper: the Robotiq command, 0 = open .. 255 = closed). At t = 0 the gripper is open and its target is 0. `s.save_trajectory(rows)` writes it. Also leave the
 script that produced it at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as
 you improve it: whatever is in `/app/output/` when your time is up is graded. The tooling also writes

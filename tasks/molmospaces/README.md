@@ -57,7 +57,8 @@ to `20260131`), pinned with upstream's `MLSPACES_PINNED_ASSETS_FILE`; navigation
 ProcTHOR-10k one misses objects on 0.2.9's scene version).
 
 ## Upstream decides the outcome
-- The tooling, each task's `environment/rcb_molmospaces.py` (the same file in every task), builds the frozen episode through
+- The tooling, `rcb_molmospaces.py` (one source, `embodied_first_exam/benchmarks/molmospaces/`, in every task from the pinned
+  files-only image `images/molmospaces-files/`: `/opt/tools/` for the agent, `/tests/` and `/srv/` for the graders), builds the frozen episode through
   upstream's evaluation path (`JsonEvalRunner` → `JsonEvalTaskSampler` → `task.reset`, action noise off). One control
   step = one upstream `Task.step` with every move group's targets; each step also polls every camera, as upstream's
   pick-and-place success reads that history. Physics, controllers, kinematics and the success checks are upstream's.
@@ -98,11 +99,13 @@ deletes one left by a call the crash lost), a frozen start that did not rebuild
 raised by the agent's actions stay the agent's failure (reason `error`: the state after the exception is never judged a
 success). `finalize.sh` writes `final.json` whole and renames it into
 place. The privileged verifier's two replays share its 1800 s. Privileged: a file that cannot be read
-as a trajectory (not an npz, a pickled or non-numeric `actions`) is `bad_trajectory`. The service
+as a trajectory (not an npz, a pickled or non-numeric `actions`, more than 100,000 rows, or an entry that unpacks to more
+than that many rows can hold: checked before it is read, `too_large`) is `bad_trajectory`, the agent's 0. The service
 checks a request completely before anything moves: a null or wrongly typed `dt`, `seconds`, `cameras`, `note`, `video`,
 `interpolate` or `type` is a 400. `get_obs(seconds=...)` runs whole control steps (the request rounded to the control period, 66 ms for the
 Franka tasks) and `meta["seconds"]` is what ran, not what was asked for. The only step limit is upstream's horizon, which
-the instruction and `/spec` (`max_control_steps`, `episode`) state.
+the instruction and `/spec` (`max_control_steps`, `episode`) state; a privileged trajectory holds at most 100,000 rows (more
+than 160 times the longest horizon; rows after the episode's end are never executed), which the instruction states too.
 
 ## Image and tasks
 - `images/molmospaces/prepare_assets.sh`, then the image build: the measured environment (`requirements.txt`,

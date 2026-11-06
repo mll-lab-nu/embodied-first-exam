@@ -27,7 +27,7 @@ images, depth and the robot's own proprioception, within the benchmark's 40 s of
 None is shipped (see `molmospaces-pick-and-place-i00-privileged`).
 
 ## Verification
-`success` = the live episode's success, judged by the sim service (graded live, no replay: 2026-10-17). The episode
+`success` = the live episode's success, judged by the sim service (graded live, no replay). The episode
 follows upstream's evaluation: one upstream `Task.step` per executed row; it ends at upstream's `is_done()`
 (606 control steps), at the agent's `done`, or when the agent's time is up; then upstream's
 `judge_success()` on the final state: the robot does not touch the object; the receptacle supports the object (it carries at least 50% of the object's weight through contact, or the object lies on it by upstream's on-receptacle test, or the object is within 5 mm and 10 degrees, relative to the receptacle, of a pose in which it was supported at an earlier control step); and the receptacle has moved at most 15 cm and tilted at most 60 degrees from its start pose. The service checks the frozen start (the instance's t = 0 state hash)
