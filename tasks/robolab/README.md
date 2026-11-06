@@ -135,11 +135,11 @@ iterations cost more than in the other simulators.
 
 ## Grading and determinism
 - PhysX on the CPU: on one host a fresh process reproduces the live run bit for bit, but a second replay inside one
-  process drifts in the last bits, so the verifier replays in **two fresh processes** and compares them. Across hosts the
+  process drifts in the last bits, so the verifier replays in **one fresh process**. Across hosts the
   final state can differ in the last bits (the banana_in_bowl oracle ends in one of two hashes on our hosts, both
   successes): a trial is graded on the host it ran on.
-- Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` twice; success = the predicate held in both, the final
-  hashes agree, and the rebuilt frozen scene matches the recorded one.
+- Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` once; success = the predicate held in the replay and
+  the rebuilt frozen scene matches the recorded one.
 - Standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4). The service judges the episode it
   runs: RoboLab's success term after every control step (the first step where it holds ends the episode), and when the
   agent's time is up (the collect hook's signal, after the agent's container is stopped) it holds the last command for

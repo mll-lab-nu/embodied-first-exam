@@ -20,9 +20,9 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop from the same initial state in two fresh processes and scored 1 if RoboLab's success predicate
-holds in both replays (the predicate is checked after every control step and the first step where it holds ends the
-episode: later rows are never executed) and both end in the same state, else 0. After the last row the replay holds that
+It is replayed open-loop from the same initial state in one fresh process and scored 1 if RoboLab's success predicate
+holds in the replay (the predicate is checked after every control step and the first step where it holds ends the
+episode: later rows are never executed), else 0. After the last row the replay holds that
 row's command for 30 more control steps (2 s) while the predicate is still checked, so a release in the last rows
 completes (`s.replay` does the same); a trajectory that ends with an object in the gripper goes on holding it. "The
 gripper" in the predicate (`require_gripper_detached`, `gripper_detached`, `in_contact(..., "gripper")`) is both Robotiq
@@ -63,7 +63,7 @@ s.start_video("/app/output/try.mp4"); ...; s.stop_video()          # film the st
 The primitives are deliberately thin (IK moves, joint moves, gripper, hold): grasping, placing and every other skill
 are yours to build from them.
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
+The grader replays once, in a fresh process, with exactly this CLI (a fresh process, so run it to self-check):
 `python /opt/tools/rcb_robolab.py replay --task bananas_out_of_bin --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions

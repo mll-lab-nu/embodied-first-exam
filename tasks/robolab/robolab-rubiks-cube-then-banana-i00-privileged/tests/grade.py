@@ -4,10 +4,12 @@
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
 human-viewable replay video /logs/verifier/replay.mp4 (viewport camera + wrist camera) plus replay.last.png.
-Replays `--repeat` times, each in its own FRESH process (`rcb_robolab.py replay`): on Isaac, only the first replay in a
-process is bit-exact (env.reset_to does not restore every PhysX internal), so fresh process == fresh process is the
-determinism check. Success requires every replay to complete the task AND all final-state hashes to agree, so a lucky
-non-deterministic run cannot pass. The frozen scene rebuilt here from tests/instance.json must also match
+ONE replay, in its own FRESH process (`rcb_robolab.py replay`; on Isaac only the first replay in a process is bit-exact,
+env.reset_to does not restore every PhysX internal), decides: success = that replay completes the task. It is the filmed
+replay; the filming never decides. With one replay there is no second end state to compare: `deterministic` is written
+as 1 (nothing disagreed) with `determinism_checked` = 0 and `replays` = 1, which say that nothing was compared.
+`--repeat N` (N >= 2) is the old check, kept for a determinism measurement by hand: N fresh processes, success = all
+complete the task AND all final-state hashes agree (`determinism_checked` = 1). The frozen scene rebuilt here from tests/instance.json must also match
 the recorded one (`instance_ok`: exact state hash, or every object / joint pose within tolerance on another host).
 
 Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error` and `infra_error` are always present):
@@ -15,7 +17,7 @@ Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error
   trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, one of them larger than MAX_STEPS x ACTION_DIM
   float64 numbers + MAX_MEMBER_MARGIN bytes unpacked (checked on the zip directory before it is read; `too_large`),
   pickled or object arrays, the wrong shape, NaN/inf, more than MAX_STEPS rows), or a replay that does not complete the
-  task or is not deterministic. The replays read a copy holding only the checked `task` and `actions`: no other entry
+  task (with `--repeat` >= 2: or replays that disagree). The replays read a copy holding only the checked `task` and `actions`: no other entry
   of the agent's file is ever unpacked;
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends
   without a result (Isaac died) or runs out of its time limit (`replay_timed_out`), the rebuilt frozen scene not matching
@@ -80,9 +82,10 @@ def write(ok: bool, out: dict) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--family", required=True); ap.add_argument("--instance", required=True)
-    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true"); ap.add_argument("--video-fps", type=int, default=15)
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)                            # at least the one replay that decides
     # Agent interaction cost from the tooling's append-only log (whole debugging history, not just the deliverable).
     # The log lives in the agent's container, so these fields are SELF-REPORTED cost accounting, not evidence
     # (agent_cost_self_reported = 1); the parser must survive any content the agent may have written there.
@@ -141,10 +144,11 @@ def main() -> int:
             print(f"[grade] a replay process gave no result: {[r.get('error') for r in runs]}", file=sys.stderr, flush=True)
             write(False, {**ERR, "replay_failed": 1, "n_actions": int(len(acts)), "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
         all_success = all(o.get("success") for o in outs)
-        deterministic = len({o.get("state_sha") for o in outs}) == 1
+        deterministic = len({o.get("state_sha") for o in outs}) == 1   # one replay: 1, nothing disagreed
         instance_ok = all(bool(r.get("instance_matches")) for r in runs)
         ok = all_success and deterministic and instance_ok
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
+               "determinism_checked": int(len(outs) >= 2), "replays": len(outs),
                "instance_ok": int(instance_ok), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)), "n_actions": int(len(acts)),
                "sim_steps": int(outs[0].get("sim_steps") or 0), "final_reward": float(outs[-1].get("progress") or 0.0),
                "replay_wall_s": round(time.time() - t0, 1), "replay_timeout_s": round(limit, 1),

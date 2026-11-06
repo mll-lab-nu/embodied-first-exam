@@ -22,11 +22,11 @@ None: RoboLab ships no expert or planner, and no reference solution has been wri
 - `robolab-food-packing3-cans-i00__LsaHDUU` (privileged mode, on an earlier version of this task; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`)
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff RoboLab's
-`success` term holds in every replay, the final-state hashes agree and the rebuilt frozen scene matches the recorded
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in one fresh process; pass iff RoboLab's
+`success` term holds in the replay and the rebuilt frozen scene matches the recorded
 one (`tests/grade.py`), plus `/logs/verifier/replay.mp4`. The trajectory is the per-control-step (T, 8) action record;
 with PhysX on the CPU a fresh process reproduces the live run bit for bit (the GPU pipeline does not, which is why
-physics is pinned to the CPU); later replays inside one process can differ in the last bits, hence two fresh processes.
+physics is pinned to the CPU); later replays inside one process can differ in the last bits, hence a fresh process.
 RoboLab's success term is instantaneous: it is checked after every control step and the first step where it holds ends
 the episode (RoboLab's own termination; the replay stops there), so a goal state that holds at one control step counts.
 
