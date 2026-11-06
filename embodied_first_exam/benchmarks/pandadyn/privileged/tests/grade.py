@@ -10,10 +10,13 @@ violation) AND all final-state hashes to agree, so a lucky non-deterministic run
 rebuilds the frozen scene from tests/instance.json and checks it against the recorded start (`instance_ok`: exact state
 hash; physics is CPU PhysX).
 
-Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error` and `infra_error` are always present):
+Whose failure a 0 is (every path writes a reward; `deterministic`, `sim_error`, `grader_error` and `infra_error` are always
+present):
 - the agent's: no file (`missing_trajectory`), another task's trajectory (`wrong_task`), a file that is not a trajectory
   (`bad_trajectory`: not an npz, no `task` / `actions` entry, pickled or object arrays, the wrong shape, NaN/inf, more than
-  MAX_ROWS rows), or a replay that does not complete the task or is not deterministic;
+  MAX_ROWS rows), a replay that does not complete the task or is not deterministic, or a replay the simulator ends with
+  an error on the agent's rows (`sim_error`, e.g. the servo's trajectory generator failing: as in the standard twin,
+  where a simulator error ends the live episode as the agent's 0);
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends without a
   result or runs out of its time limit (`replay_timed_out`), the rebuilt frozen scene not matching the recorded instance
   (`instance_ok` = 0: the host, not the trajectory), or any other error in this script.
@@ -92,8 +95,8 @@ def main() -> int:
     a = ap.parse_args()
     cost = self_reported_cost()
     os.environ["RCB_SESSION_LOG"] = ""  # the verifier's own sessions must not be counted
-    ZERO = {"success": 0, "deterministic": 0, "grader_error": 0, "infra_error": 0}     # an early exit: the agent's 0
-    ERR = {"success": 0, "deterministic": 0, "grader_error": 1, "infra_error": 1}      # no verdict on the agent
+    ZERO = {"success": 0, "deterministic": 0, "sim_error": 0, "grader_error": 0, "infra_error": 0}  # an early exit: the agent's 0
+    ERR = {"success": 0, "deterministic": 0, "sim_error": 0, "grader_error": 1, "infra_error": 1}   # no verdict on the agent
     if not os.path.isfile(a.traj):
         write(False, {**ZERO, "missing_trajectory": 1, **cost}); return 0
     try:
@@ -124,7 +127,30 @@ def main() -> int:
                     if isinstance(v, dict) and "replays" in v:
                         run = v
             runs.append(run)
+            if (run.get("replays") or [{}])[0].get("sim_error"):
+                break                                      # the agent's 0 already: no second replay needed
         outs = [(r.get("replays") or [{}])[0] for r in runs]
+        sim_err = next((o for o in outs if o.get("sim_error")), None)
+        if sim_err is not None:                            # the simulator raised on the agent's rows: the agent's 0
+            instance_ok = all(bool(r.get("instance_matches")) for r in runs)
+            print(f"[grade] simulator error on the agent's rows after {sim_err.get('executed_rows')} rows: "
+                  f"{sim_err.get('error')}", file=sys.stderr, flush=True)
+            out = {**ZERO, "sim_error": 1, "replays": len(outs), "instance_ok": int(instance_ok), "n_actions": int(len(acts)),
+                   "executed_rows": int(sim_err.get("executed_rows") or 0), "replay_wall_s": round(time.time() - t0, 1),
+                   "replay_timeout_s": round(limit, 1), **cost}
+            if not instance_ok:                            # the scene it ran on was not the frozen one: no verdict
+                out.update(grader_error=1, infra_error=1, sim_error=0)
+            write(False, {**out, "video_rendered": 0})
+            if not a.no_video and instance_ok:             # the rows up to the error, filmed; never changes the verdict
+                video = os.path.join(LOG_DIR, "replay.mp4")
+                try:
+                    subprocess.run([sys.executable, tool, "replay", "--instance", a.instance, "--traj", a.traj, "--video", video],
+                                   stdout=subprocess.DEVNULL, stderr=sys.stderr, timeout=2 * limit, env={**os.environ, "RCB_SESSION_LOG": ""})
+                except Exception as exc:  # noqa: BLE001
+                    print(f"[grade] video: {exc!r}", file=sys.stderr, flush=True)
+                if os.path.isfile(video) and os.path.getsize(video) > 0:
+                    write(False, {**out, "video_rendered": 1})
+            return 0
         if any("error" in r or not o.get("state_sha") for r, o in zip(runs, outs)):
             print(f"[grade] a replay process gave no result: {[r.get('error') for r in runs]}", file=sys.stderr, flush=True)
             write(False, {**ERR, "replay_failed": 1, "n_actions": int(len(acts)), "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
@@ -137,7 +163,7 @@ def main() -> int:
                "instance_ok": int(instance_ok), "n_actions": int(len(acts)), "executed_rows": int(last.get("executed_rows") or 0),
                "sim_steps": int(last.get("control_steps") or 0), "physics_steps": int(last.get("control_steps") or 0) * 10,
                "sim_time_s": float(last.get("sim_time_s") or 0.0), "phases_done": int(last.get("phase") or 0),
-               "valid": int(bool(last.get("valid"))), "replay_wall_s": round(time.time() - t0, 1), "replay_timeout_s": round(limit, 1),
+               "valid": int(bool(last.get("valid"))), "sim_error": 0, "replay_wall_s": round(time.time() - t0, 1), "replay_timeout_s": round(limit, 1),
                # the rebuilt frozen scene is not the recorded one: this host, not the trajectory (no verdict on the agent)
                "grader_error": int(not instance_ok), "infra_error": int(not instance_ok), **cost}
         print(f"[grade] end_reason={last.get('end_reason')} phase={last.get('phase_name')}", file=sys.stderr, flush=True)

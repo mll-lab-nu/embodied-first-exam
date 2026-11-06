@@ -1,11 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:pandadyn-files-0.4.0@sha256:1fa728bd3b4ce80213fc0f2613f97bbbb51f31a5c5b5aa9ed9aa8582a61fa1e1",
+ "image": "ghcr.io/mll-lab-nu/efe:pandadyn-files-0.5.0@sha256:81f55ad9d89ab24099bceb22c02c2120781df10ac1f350eaac998c058efc0ccc",
  "source": "embodied_first_exam/benchmarks/pandadyn",
  "files": {
-  "privileged/environment/rcb_pandadyn.py": "69dd3863863a85574be96bdbd170865bee563427b6cfa4e68baa7577576f1813",
-  "privileged/tests/grade.py": "5ccaca7177948ba92a687577f8ba1fa93fc8d0bacdd3d00d0fee59de4cd9f7bb",
+  "privileged/environment/rcb_pandadyn.py": "e876db771921bd2b474d98c14466542278937744717ebe9d182a25a783a4abf1",
+  "privileged/tests/grade.py": "859cee31f660fbee42ad79876062456cfae47ec54c4197c2f8883d9e1b0def2a",
   "sim/rcb_service.py": "a6c50beec04bdb3b11885939dfe90a249506edcd5c462d2ac10816bbf2a71e2e",
-  "sim/server.py": "7c6e67174290488557223e84e6d60a78601e390d1917435a1a461a6b41bf957c",
-  "sim/variants/727bef3b2d/server.py": "727bef3b2df41855c362b2564aca69e29ba742c6201b233a143a8db0b9870826"
+  "sim/server.py": "35b9c75ef4ccfee2658632bd555044ee3d2b6f2309dd42fb417d059457224d99"
  }
 }

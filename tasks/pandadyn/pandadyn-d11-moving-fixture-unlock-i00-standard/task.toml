@@ -50,7 +50,7 @@ command = "kill -9 -1 2>/dev/null; exit 0"
 timeout_sec = 30
 
 # Then the episode ends: SIGUSR1 to the service (re-sent every 30 s, in case it was restarting), which grades it: the
-# live episode's verdict, nothing replayed (owner, 2026-10-17), written at once ("finalized": true) unless
+# live episode's verdict, nothing replayed, written at once ("finalized": true) unless
 # the service is resuming after a crash (a scene build + the journal's control steps); the hook waits for it until
 # 1500 s, so a slow resume never turns a live result into an infrastructure failure. Then the video, rendered from the
 # graded episode's rows by the service after the verdict (a scene build + at most the horizon's control steps, filmed:
