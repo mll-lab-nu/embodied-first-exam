@@ -310,10 +310,12 @@ a trial is never rewritten (a later re-grade keeps the original beside it). The 
 sidecar grades against and the one the trial ran from are byte-identical copies.
 *CI:* `check-verifier-isolation.sh` (evidence and collect hook from a sidecar), `check-instance-copies.sh`.
 
-**H.5 Infrastructure retry.** Infrastructure failures allow at most one full retry with the same instance, seed, and
-configuration, clearing all agent and environment state. If that retry also fails, follow the default failure-handling
-behavior; no further retries. Normal task failures do not qualify. (At most two runs of a task under one run id; the
-voided attempt is moved aside and never counted. The rule is the runner's: `scripts/retry_policy.py`, running.md.)
+**H.5 Infrastructure rerun.** An attempt that failed for infrastructure reasons, with positive evidence of it (a model
+API or account error, a usage limit, a host or launch that died, the verifier's `infra_error` / `grader_error`), is
+void: it is moved aside, never counted, and the task may be rerun with the same instance, seed, and configuration,
+clearing all agent and environment state, until an attempt gives a result. A graded failure (the agent's 0, its cutoff,
+its token budget, its own end) is a result and is never rerun; nor is a success. (The rule is the runner's:
+`scripts/retry_policy.py`, running.md.)
 *CI:* `scripts/tests/test_retry_policy.py`, `scripts/tests/test_runner_results.py`.
 
 **H.6 Egress.** During the agent phase the agent's container, and every service in its network namespace, reaches only

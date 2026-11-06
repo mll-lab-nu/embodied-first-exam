@@ -137,8 +137,8 @@ def write(jobs: Path, job: str, out: Path) -> subprocess.CompletedProcess:
 
 def test_config_and_attempts():
     """PROTOCOL v2.1 / docs/protocol/running.md: every result records its effective configuration (config.json); an infrastructure
-    failure (not a result) is voided and never counted, one retry replaces it, a voided attempt never replaces a counted
-    one, more than 2 attempts of one task x run id are flagged; a trial of another task version is legacy."""
+    failure (not a result) is voided and never counted, a rerun replaces it, a voided attempt never replaces a counted
+    one, an attempt after a result is flagged; a trial of another task version is legacy."""
     infra = {"success": 0, "infra_error": 1}
     with tempfile.TemporaryDirectory() as td:
         td = Path(td); jobs, out = td / "jobs", td / "out"
@@ -157,7 +157,7 @@ def test_config_and_attempts():
         att = json.loads((res / "attempts.json").read_text())["attempts"]
         check([a["counted"] for a in att] == [False, True], f"attempts.json: the infra attempt is counted: {att}")
         check(f"| configuration | protocol {tc.PROTOCOL_VERSION}, standard" in (res / "README.md").read_text(), "README has no configuration row")
-        # a later infrastructure failure of the same task x run id never replaces the counted result, and a third attempt is flagged
+        # a later infrastructure failure of the same task x run id never replaces the counted result, and an attempt after a result is flagged
         make_trial(jobs, "b", "t3", TASK, "2026-10-14T03:00:00Z", infra, {"task_checksum": dg})
         r = write(jobs, "b", out)
         cfg = json.loads((res / "config.json").read_text())

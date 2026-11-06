@@ -74,7 +74,7 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   docs/protocol/running.md); its runner-side tools (`log_mirror.py`, `mem_guard.py`, `scan_secrets.py`, `account_failure_check.py`)
   are not task code.
 - `eai-standard/2.2` (docs/protocol/standard_mode.md Part 2; which benchmarks serve it: docs/TAXONOMY.md `protocol`): its layer (`rcb_limited.py` with in-trial crash recovery, an implementation detail; the protocol's rule is the
-  runner's one infrastructure retry, Appendix H.5, `rcb_client.py`, `rcb1.py`, `run.sh`) has one source,
+  runner's infrastructure rerun, Appendix H.5, `rcb_client.py`, `rcb1.py`, `run.sh`) has one source,
   `embodied_first_exam/standard/`, copied unchanged into every 2.2 task (`check-tooling-identity.sh`); each benchmark adds
   only its adapter `environment/sim/server.py` (`embodied_first_exam/standard/toy_server.py` is the smallest one).
 - `eai-standard/2.4` (docs/protocol/standard_mode.md Part 4, RoboARC): 2.3 + the operations capability. Its layer is

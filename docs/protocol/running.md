@@ -21,7 +21,7 @@ A result is official only when its run had all of these:
   the state its session ended in). A batch run with another budget records it in its results' metadata.
 - **The task's own cutoff**, no multiplier (`--timeout-multiplier`, `--agent-timeout-multiplier`, an agent
   `override_timeout_sec`), and **nothing added to the instruction** (no prompt template, no extra instruction, in `AK` or elsewhere).
-- **The runner's seed, the task's network, at most one infrastructure retry** (the next three sections), and the
+- **The runner's seed, the task's network, reruns only after an infrastructure failure** (the next three sections), and the
   effective configuration recorded with the result (Results).
 
 ## Seeds
@@ -77,18 +77,20 @@ The list is the one switch.
   last sentence about the network does not hold for such a run: `EXTERNAL_TEXT` in `scripts/task_conventions.py` is
   the text every allowlist task carries.
 
-## Infrastructure failures: one full retry
+## Infrastructure failures: rerun
 The rule is PROTOCOL Appendix H.5; how the runner applies it:
 - An infrastructure failure is what `scripts/write_task_results.py` publishes as "not a result": the verifier's
   `infra_error` / `grader_error`, no `reward.json`, a Harbor exception other than the agent's cutoff, a model-account or
-  usage-gateway failure (`scripts/account_failure_check.py`). The agent's own end, its cutoff and its token budget are
-  results and are never retried.
-- The voided attempt's directory is moved aside (e.g. into `_superseded/`) and never counted; the retry starts
-  from a new environment with the first attempt's recorded configuration. A failed retry keeps the default handling
-  (it stays an infrastructure failure, reported as such). A launch that never started a trial is no attempt.
+  usage-gateway failure (`scripts/account_failure_check.py`). It needs positive evidence: a trial is not voided because
+  it scored 0. The agent's own end, its cutoff and its token budget are results and are never rerun.
+- The voided attempt's directory is moved aside (e.g. into `_superseded/`) and never counted; the rerun starts
+  from a new environment with the first attempt's recorded configuration. A rerun that fails for infrastructure too is
+  voided the same way and may be rerun again; until an attempt gives a result, the task x run id is reported as an
+  infrastructure failure. A launch that never started a trial is no attempt.
 - One implementation of the rule, `scripts/retry_policy.py` (`decide`, `check_attempts`), tested by the required CI
   job; a runner's scheduler uses it. `write_task_results.py` keeps every attempt of a task x run id in
-  `attempts.json` and flags a sequence that breaks the rule (`attempts_over_cap`).
+  `attempts.json` and flags a sequence that breaks the rule (`attempts_over_cap`: an attempt after a result, or a
+  rerun with another configuration).
 - In-trial crash recovery (a sidecar that replays its journal and resumes the episode, standard_mode.md) is the shared
   layers' implementation, not a rule; a crash it cannot recover is an infrastructure failure, unless every crash was
   the agent's (below).
@@ -100,7 +102,7 @@ The rule is PROTOCOL Appendix H.5; how the runner applies it:
   from the request's deadline); the scene did not start from the frozen instance, at the start or
   after a reset (`instance_mismatch`). Only what the service itself records as `infra_error = 1` (or a missing,
   unreadable or unfinalized record) is one; a grader never infers it from missing fields. What the agent's commands
-  caused stays a result, never an infrastructure failure (a retry would be a free second attempt): crashes all inside
+  caused stays a result, never an infrastructure failure (a rerun would be a free second attempt): crashes all inside
   its calls (`sim_crashed_on_call`), a simulator error its actions raised (PROTOCOL §4; realtime: a simulator
   error or crash after the agent's first command, standard_mode.md Part 3), the cutoff, no actions, a failed settle or hold, and a crash or error while the service
   runs a settle or hold window on the agent's final state (it counts as one inside the agent's last call). The video is

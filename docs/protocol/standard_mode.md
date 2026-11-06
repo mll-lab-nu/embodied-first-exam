@@ -128,7 +128,7 @@ checkpoint (step count + state hash) per completed call; when the service dies m
 (`restart: on-failure:N`) and it resumes the same episode from the journal, the call in flight lost as a whole
 (`spec.on_service_error` tells the agent to check `GET /status` before continuing). This is how the shipped services
 behave by default (details: §13), not a rule: what the protocol says about a trial that failed
-for infrastructure reasons is the runner's single full retry (PROTOCOL Appendix H.5, [running.md](running.md)). A
+for infrastructure reasons is the runner's rerun (PROTOCOL Appendix H.5, [running.md](running.md)). A
 verdict already written is never overwritten. A scene build that hangs is killed by a startup watchdog
 (`RCB_STARTUP_TIMEOUT_S`; each service has its own default, and each task sets the value its build needs, §13.3). A host
 on which the frozen instance does not rebuild to its stored initial state reports `reason = instance_mismatch` with
@@ -397,7 +397,7 @@ helpers: `rcb_limited.frames_per_call`, `check_frames`, `Recorder(max_images=...
 ### 13. Crash recovery (the shared layer's default behaviour)
 The shared layer (`rcb_limited.Episode`; adapters call it as `toy_server.py` does) resumes a crashed service in the same
 episode. This is an implementation of the reference services, not a rule (PROTOCOL Appendix H.5 is the
-runner's single full retry of an infrastructure-failed trial; running.md).
+runner's rerun of an infrastructure-failed trial; running.md).
 - **Journal and checkpoints.** Every executed control step (the exact row given to the simulator's step) is appended to
   `journal.f64` (float64 rows). After every completed call the journal is flushed and a checkpoint is logged in
   `episode.jsonl`: call count, rows, control steps, the state hash, the robot's proprio row, and the adapter's `persist`

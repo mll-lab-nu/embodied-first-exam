@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""INVARIANT test (docs/protocol/README.md Appendix H.5), part of the required CI job `invariants`: infrastructure failures
-allow at most one full retry with the same instance, seed and configuration; a failed retry gets the default handling
-and no further retry; normal task failures never qualify (scripts/retry_policy.py). Standard library only."""
+"""INVARIANT test (docs/protocol/README.md Appendix H.5), part of the required CI job `invariants`: an infrastructure
+failure is void and may be rerun with the same instance, seed and configuration, also after a rerun that failed for
+infrastructure; a result (an agent failure or a success) is never rerun (scripts/retry_policy.py). Standard library only."""
 import sys
 from pathlib import Path
 
@@ -19,15 +19,12 @@ def expect(cond: bool, what: str) -> None:
 CFG = {"digest": "sha256:a", "seed": 7, "mode": "standard", "cutoff_s": 3600, "reset_budget": 0, "slowdown": None,
        "network": "allowlist", "protocol_version": "2.0"}
 
-# decide(): one retry after an infrastructure failure, none after a second one, none after a result
-d = rp.decide("infra_failure", 0)
-expect(d["retry"] and d["void"], f"first infra failure: one full retry, attempt void ({d})")
-d = rp.decide("infra_failure", 1)
-expect(not d["retry"] and not d["void"], f"infra failure of the retry: default handling, no retry ({d})")
-for n in (2, 5):
-    expect(not rp.decide("infra_failure", n)["retry"], f"never a retry after {n} voided attempts")
+# decide(): a rerun after every infrastructure failure, none after a result
+for n in (0, 1, 2, 5):
+    d = rp.decide("infra_failure", n)
+    expect(d["retry"] and d["void"], f"infra failure after {n} voided attempts: void, rerun ({d})")
 for o in ("agent_failure", "success"):
-    for n in (0, 1):
+    for n in (0, 1, 3):
         d = rp.decide(o, n)
         expect(not d["retry"] and not d["void"], f"{o}: a result, never retried, never void ({d})")
 try:
@@ -35,7 +32,7 @@ try:
     fails.append("an unknown outcome must be refused")
 except ValueError:
     pass
-expect(rp.MAX_INFRA_RETRIES == 1, "MAX_INFRA_RETRIES is 1 (PROTOCOL H.5)")
+expect(rp.MAX_INFRA_RETRIES is None, "MAX_INFRA_RETRIES is None: no fixed number of infrastructure reruns (PROTOCOL H.5)")
 
 # retry_config(): the same instance, seed and configuration
 r = rp.retry_config(CFG)
@@ -45,11 +42,13 @@ expect(r == CFG and r is not CFG, "the retry runs the first attempt's configurat
 ok = [[{"outcome": "success", "config": CFG}],
       [{"outcome": "agent_failure", "config": CFG}],
       [{"outcome": "infra_failure", "config": CFG}, {"outcome": "agent_failure", "config": dict(CFG)}],
-      [{"outcome": "infra_failure", "config": CFG}, {"outcome": "infra_failure", "config": dict(CFG)}]]
+      [{"outcome": "infra_failure", "config": CFG}, {"outcome": "infra_failure", "config": dict(CFG)}],
+      [{"outcome": "infra_failure", "config": CFG}] * 3 + [{"outcome": "success", "config": dict(CFG)}]]
 for seq in ok:
     e = rp.check_attempts(seq)
     expect(not e, f"allowed sequence refused: {[a['outcome'] for a in seq]}: {e}")
-bad = {"a third attempt": [{"outcome": "infra_failure", "config": CFG}] * 3,
+bad = {"a rerun after a result": [{"outcome": "infra_failure", "config": CFG}, {"outcome": "agent_failure", "config": CFG},
+                                   {"outcome": "success", "config": CFG}],
        "a retry after an agent failure": [{"outcome": "agent_failure", "config": CFG}, {"outcome": "success", "config": CFG}],
        "a retry after a success": [{"outcome": "success", "config": CFG}, {"outcome": "success", "config": CFG}],
        "a retry on another seed": [{"outcome": "infra_failure", "config": CFG}, {"outcome": "success", "config": dict(CFG, seed=8)}],
@@ -64,12 +63,14 @@ for what, seq in bad.items():
 expect(rp.counted([{"outcome": "infra_failure"}, {"outcome": "agent_failure", "id": 2}]) == {"outcome": "agent_failure", "id": 2},
        "the retry's result counts, the voided attempt does not")
 expect(rp.counted([{"outcome": "infra_failure"}]) is None, "a voided attempt alone is no result")
-expect(rp.counted([{"outcome": "infra_failure"}, {"outcome": "infra_failure", "id": 2}])["id"] == 2,
-       "a failed retry gets the default handling (it is the record), the first attempt stays void")
+expect(rp.counted([{"outcome": "infra_failure"}, {"outcome": "infra_failure", "id": 2}]) is None,
+       "two infrastructure failures: still no result, both void")
+expect(rp.counted([{"outcome": "infra_failure"}] * 2 + [{"outcome": "agent_failure", "id": 3}])["id"] == 3,
+       "the first attempt that is a result counts")
 
 if fails:
     print("FAIL scripts/tests/test_retry_policy.py:")
     for f in fails:
         print("  -", f)
     sys.exit(1)
-print("ok retry policy: one full retry after an infrastructure failure, none after a result or a second failure")
+print("ok retry policy: reruns only after infrastructure failures, never after a result")

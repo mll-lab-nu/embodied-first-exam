@@ -10,10 +10,10 @@ effective_config: protocol version, mode, cutoff, reset budget, slowdown S, seed
 result (`success`, `fail` or `not_a_result` with the reason), whether it is counted and, in the standard modes, the
 first-attempt result `first_success` (PROTOCOL §4: the no-reset performance, reported beside the graded one). Results are ranked only within
 one comparable configuration (task_conventions.config_key), validated and unvalidated tasks together.
-attempts.json: every trial of this task x run id seen so far. docs/protocol/running.md "Infrastructure retry": an infrastructure failure
-(not a result) allows at most one full retry with the same instance, seed and configuration; the voided attempt is never
-counted, an agent's own failure is never retried, and more than 2 attempts of one task x run id is flagged
-(`attempts_over_cap`)."""
+attempts.json: every trial of this task x run id seen so far. docs/protocol/running.md "Infrastructure failures": an
+infrastructure failure (not a result) is void and may be rerun with the same instance, seed and configuration; the voided
+attempt is never counted, a result (the agent's failure or a success) is never rerun, and an attempt after a result is
+flagged (`attempts_over_cap`)."""
 import json, pathlib, shutil, sys, glob, datetime as dt
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import account_failure_check  # noqa: E402
@@ -21,7 +21,6 @@ import task_conventions as tc  # noqa: E402
 import retry_policy as rp  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-MAX_ATTEMPTS = 1 + rp.MAX_INFRA_RETRIES   # PROTOCOL Appendix H.5: the first attempt and at most one retry after an infrastructure failure
 OUTCOME = {"not_a_result": "infra_failure", "success": "success"}   # anything else: the agent's failure (a result)
 OVERRIDES = ("RCB_RESET_BUDGET", "RCB_SLOWDOWN")   # run-time overrides of a task's declared settings (PROTOCOL §2)
 
@@ -190,8 +189,8 @@ def main(argv):
         rule = rp.check_attempts([{"outcome": OUTCOME.get(a["status"], "agent_failure")} for a in led])
         over_cap = bool(rule)
         if over_cap:
-            print(f"WARN {task} / {slug}: {len(led)} attempts break the retry rule (PROTOCOL Appendix H.5, at most "
-                  f"{MAX_ATTEMPTS}: one retry after an infrastructure failure): {'; '.join(rule)}")
+            print(f"WARN {task} / {slug}: {len(led)} attempts break the rerun rule (PROTOCOL Appendix H.5: reruns only "
+                  f"after an infrastructure failure): {'; '.join(rule)}")
         counted = [a for a in led if a["counted"]]
         if status == "not_a_result" and counted:
             # a voided attempt never replaces a counted one: it is recorded in attempts.json only
@@ -212,7 +211,7 @@ def main(argv):
                  f"| configuration | {tc.config_label(cfg)}; seed {cfg.get('seed')} ({cfg.get('seed_source')}); "
                  f"{'validated' if cfg.get('validated') is True else 'unvalidated' if cfg.get('validated') is False else 'legacy'}"
                  f"{'; not in the core set (docs/core_set.toml)' if cfg.get('set') not in (None, '', 'core') else ''} (`config.json`) |",
-                 f"| attempts | {len(led)}" + (f" — **over the cap of {MAX_ATTEMPTS}**" if over_cap else "") + " |",
+                 f"| attempts | {len(led)}" + (" — **breaks the rerun rule (PROTOCOL H.5)**" if over_cap else "") + " |",
                  *([f"| first attempt (no reset) | {cfg['first_success']}; resets {rw.get('resets')} |"]
                    if cfg["first_success"] is not None else []),
                  f"| agent time | {span(r.get('agent_execution') or {})} s |",
