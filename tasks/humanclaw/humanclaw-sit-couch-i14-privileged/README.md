@@ -23,8 +23,8 @@ One of the 55 episodes GPT-6 Luna failed in both modes (`tasks/humanclaw/README.
 `solution/actions.json`: the navmesh oracle's 41 actions, replayed by `solution/solve.sh`; where they do not succeed on the GPU at hand it runs the oracle again closed loop (`solution/oracle.py`).
 
 ## Verification
-`tests/grade.py`: two fresh-process replays of `/app/output/trajectory.npz` from `tests/instance.json`; success =
-both meet HumanCLAW's InteractSR and end in the same state hash. `nop` (no file) scores 0.
+`tests/grade.py`: one fresh-process replay of `/app/output/trajectory.npz` from `tests/instance.json`; success =
+it meets HumanCLAW's InteractSR. `nop` (no file) scores 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

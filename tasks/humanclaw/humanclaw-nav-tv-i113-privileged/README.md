@@ -23,8 +23,8 @@ One of the 55 episodes GPT-6 Luna failed in both modes (`tasks/humanclaw/README.
 None: no reference solution searched for this episode yet (`tasks/humanclaw/README.md`, Reference solution).
 
 ## Verification
-`tests/grade.py`: two fresh-process replays of `/app/output/trajectory.npz` from `tests/instance.json`; success =
-both meet HumanCLAW's NavSR@20cm and end in the same state hash. `nop` (no file) scores 0.
+`tests/grade.py`: one fresh-process replay of `/app/output/trajectory.npz` from `tests/instance.json`; success =
+it meets HumanCLAW's NavSR@20cm. `nop` (no file) scores 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

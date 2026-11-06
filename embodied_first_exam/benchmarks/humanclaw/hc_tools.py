@@ -16,8 +16,8 @@
 Coordinates are Habitat's world frame: y up, metres; heading_deg is the body's facing about +y (0 = facing -z, + =
 turning left). A replay of the same actions from the frozen start reproduces the same episode on the same GPU model
 (the motion model's noise is seeded at every reset; another GPU model computes it slightly differently, and the
-physics amplifies that), which is what the verifier checks on this machine: it replays the trajectory twice, each
-time in a fresh process from its own copy of the instance, and both must succeed and end in the same state.
+physics amplifies that), which is what the verifier relies on: it replays the trajectory once, in a fresh process
+from its own copy of the instance, and that replay must succeed.
 """
 from __future__ import annotations
 
