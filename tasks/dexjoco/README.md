@@ -99,14 +99,14 @@ tasks keep their names.
 ## Privileged mode
 `rcb_dexjoco.Session` on the frozen instance: unlimited exact resets, live object poses (`s.objects()`), DexJoCo's state
 dict, thin primitives (tcp-target moves, hand-joint interpolation, hold), rendering, recording and self-replay. The
-deliverable is `/app/output/trajectory.npz`; the verifier replays it twice in a fresh process from its own copy of the
-instance: success = both replays succeed ∧ same final-state hash. An instance that does not rebuild exactly (its hash
+deliverable is `/app/output/trajectory.npz`; the verifier replays it once in a fresh process from its own copy of the
+instance: success = the replay succeeds. An instance that does not rebuild exactly (its hash
 differs: the image no longer builds the scene) is no verdict: nothing is replayed, `instance_mismatch`, `grader_error`
 and `infra_error` = 1.
 - **Hand-in cap.** A trajectory has at most 50,000 rows (`rcb_dexjoco.MAX_TRAJECTORY_ROWS`: 1000 s of robot time; the
   longest reference has 1085). `save_trajectory` refuses a longer one and the verifier scores it 0 (`bad_trajectory`).
-  The cap is what the verifier can replay: the slowest family (`bimanual_hanoi`) runs about 140 control steps/s, so two
-  replays of 50,000 rows take 12 min of the verifier's 3600 s on an idle host. The agent's own sessions have no step
+  The cap is what the verifier can replay: the slowest family (`bimanual_hanoi`) runs about 140 control steps/s, so a
+  replay of 50,000 rows takes 6 min of the verifier's 3600 s on an idle host. The agent's own sessions have no step
   budget.
 - **What is the agent's 0 and what is not.** A file that is not a readable trajectory (not an npz, pickled or object
   arrays, no `task` or `actions`, a wrong shape, NaN/inf, over the cap) is `bad_trajectory = 1`; `grader_error = 1` is
