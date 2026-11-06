@@ -1,7 +1,7 @@
 """Oracle (standard mode): replays the privileged oracle's joint targets, sampled every K control steps, as
 `joint_position` chunks with dt = K/30 s — i.e. the oracle's own timing, streamed through the same interface an agent
 has. K = 1 with `hold` replays the recorded rows exactly. Uses no privileged information at run time.
-Source: scripts/robowits/shared/oracle_replay.py; the rows come from scripts/robowits/oracles/<family>/oracle_qpos.npy."""
+The rows were recorded by tooling kept outside the repository."""
 import json, os, sys, time
 import numpy as np
 import requests

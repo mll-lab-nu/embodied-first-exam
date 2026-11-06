@@ -61,7 +61,7 @@ WORKDIR /app
 # their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.5.1@sha256:1b44eaf28f2c896a82241ba1a90e8a2b02f8e142c236b06fd302c87664588025 \
+COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.5.2@sha256:860e936d468d8d80389b65455becb67f7d9ddc6525becc59d1fa12bc556e4ed1 \
      /sim/finalize.sh \
      /sim/live_video.py \
      /rcb_robolab.py \

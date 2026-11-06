@@ -29,7 +29,7 @@ marked unvalidated (PROTOCOL §2 `validated`).
 
 ## Verification
 `tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout once, in a fresh process
-(`rcb_robodojo.py replay`); reward 1 iff that replay ends in RoboDojo's success (one replay since 2026-10-12, the owner's decision: before, two replays that also had to end in the same state hash; `deterministic` is reported as 1 with `determinism_checked` = 0, and a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
+(`rcb_robodojo.py replay`); reward 1 iff that replay ends in RoboDojo's success (one replay; `deterministic` is reported as 1 with `determinism_checked` = 0, and a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
 PR #142 (no positive example yet). `nop` (no
 trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
 (`task/RoboDojo/tasks/classify_objects_by_language.py`, `env/reward_manager/`); the code is the reference.

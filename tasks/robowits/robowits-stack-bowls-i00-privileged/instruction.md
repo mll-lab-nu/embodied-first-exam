@@ -108,8 +108,9 @@ inside the object's axis-aligned bounding box grown by 3 cm on every side; the *
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
-completed after the replay: the settle window of the success criterion above, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+It is replayed open-loop twice from the same initial state in a fresh process and scored 1 if the task is
+completed after both replays (the settle window of the success criterion above) and both end in the same
+state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
 one.
 

@@ -16,7 +16,7 @@ What the agent gets: camera RGB (+ depth) with each camera's calibration, the ro
 positions and last command, and the task's instruction. Never an object's pose, the scene layout or the success check.
 The episode runs until the agent's time is up; the state after the last executed control step is graded.
 
-The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): the environment's own success
+The verdict is the live episode's (docs/protocol/README.md H.4): the environment's own success
 check on the state after the last control step this service executed, not already solved at the start, and the
 episode not ended by a simulator error. Nothing is replayed to grade it. The frozen initial state is checked when the
 episode begins (the instance file's hash, RCB_INSTANCE_SHA, and the start state's hash, RCB_START_SHA, both from the
@@ -115,7 +115,7 @@ def _load_final() -> dict:
 
 
 def _graded(d: dict) -> bool:
-    """final.json holds a verdict: "graded_by" since 2026-10-17 (the live episode's), "deterministic" before (a replay's),
+    """final.json holds a verdict: "graded_by" (the live episode's), "deterministic" (an older service's replay verdict),
     or "finalized" (a verdict, or a give-up, that is final)."""
     return bool(d.get("finalized")) or "graded_by" in d or "deterministic" in d
 
@@ -239,7 +239,7 @@ def cam2world(cam: str) -> np.ndarray:
     image is rendered from, in the current state (as server_mj.py). A model camera (every RoboCasa camera): data.cam_xpos
     / data.cam_xmat, which is what the renderer reads. A free camera: the scene's two eye cameras share their axes and sit
     ipd/2 to either side of the viewpoint, so the viewpoint is their mean. scene.camera[0] alone is the LEFT eye, ipd/2 =
-    3.4 cm to the left of the viewpoint: until 2026-10-13 that was reported for every camera."""
+    3.4 cm to the left of the viewpoint."""
     cid, _ = CAMS[cam]
     if cid is not None:
         R = np.array(S.data.cam_xmat[cid], float).reshape(3, 3)
@@ -332,8 +332,8 @@ SPEC = {
 def _agent_time() -> float:
     """Seconds since the agent's first request to the service (0 before it): the agent's clock. Harbor counts the
     agent's cutoff around the agent's run only, and the sidecar starts with the environment, before the harness is
-    installed: counted from this process's first start (until 2026-10-13) the clock ran ahead of the agent's by that
-    set-up time (a median of 79 s over the recorded trials) and time_left_s reached 0 that much too early."""
+    installed: counted from this process's first start, the clock would run ahead of the agent's by that set-up time (a
+    median of 79 s over the recorded trials)."""
     return 0.0 if E["t_first"] is None else time.time() - E["t_first"]
 
 
@@ -697,7 +697,7 @@ def _render_video(A: np.ndarray) -> None:
 
 
 def finalize() -> None:
-    """The episode is over: the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17).
+    """The episode is over: the verdict is the live episode's (docs/protocol/README.md H.4).
     success = the environment's success check (`_check_success`, as the live episode last ran it) holds on the state
     after the last executed control step, the scene was not solved at the start, and the episode did not end on a
     simulator error (whose state is the partial step's, not the last executed one). Nothing is replayed to grade it.

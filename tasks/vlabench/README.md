@@ -44,7 +44,7 @@ The files images `efe:vlabench-files` (the tasks' tooling) and `efe:vlabench-bui
 | image | built by each task from `images/vlabench/Dockerfile` (stage `vlabench-base`), build cache `ghcr.io/mll-lab-nu/efe-private:vlabench-0.2.0`; CPU only, ~15 GB (12 GB assets) |
 | standard service | `rcb_service.py` (main's HumanoidBench copy, `eai-standard/2.1`) + each standard task's `environment/sim/server.py` |
 | standard client | the shared client base and exact pins of `embodied_first_exam/standard/` (`client.env`, `client-requirements.txt`); `rcb_client.py` / `rcb1.py` as in main's HumanoidBench tasks |
-| instances | the instances and references, imported from PR #4 @ ad3c510, each `instance.json` committed in three byte-identical copies (the privileged task's `environment/instance.json` and `tests/instance.json`, the standard twin's `environment/sim/instance.json`; `check-instance-copies.sh`), and the same `solution/oracle.npy` in both twins. The task directories are the deliverable; the tooling that built them is kept outside this repository. |
+| instances | the instances and references, imported from this repository's pull request #4 (PR #4: closed without merging; commit ad3c510, fetchable as `refs/pull/4/head`), each `instance.json` committed in three byte-identical copies (the privileged task's `environment/instance.json` and `tests/instance.json`, the standard twin's `environment/sim/instance.json`; `check-instance-copies.sh`), and the same `solution/oracle.npy` in both twins. The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
 ## Scope
 VLABench @ cf588fe has 96 native tasks that PR #4 surveyed. A task is in when it has a reference solution that this

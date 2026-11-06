@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robocasa365-files-0.5.0@sha256:ecf24cf62b905572241b9746d50055bc7f6526194ef6b31266dc02027681ad0d",
+ "image": "ghcr.io/mll-lab-nu/efe:robocasa365-files-0.5.1@sha256:92bf047ccf714bd8d3cc1dd8ae53d09e972dfe8234a693d49ca4f1c1d109a330",
  "source": "embodied_first_exam/benchmarks/robocasa365",
  "files": {
   "privileged/environment/casa_tool.py": "c7224ba5a63370d29f6631fd2475c0a1b2fdb66e8c4d55580ebcf2b7272b1d47",
   "sim/finalize.sh": "5d962167951ecc53bf38fe3f2e0636ddeff12c967dc82e0218836a152a811595",
-  "sim/rcb_service.py": "a6c50beec04bdb3b11885939dfe90a249506edcd5c462d2ac10816bbf2a71e2e",
-  "sim/server_casa.py": "ff4595472f1213b781fee1117810879328f45e57f200ea361581f9c2ce882247"
+  "sim/rcb_service.py": "6b9786bc4647e8dae7e7d08ac0149bd6149e952db9e50ba2b400b9c1b6b2da0c",
+  "sim/server_casa.py": "2e534ccc4473a281b1c476c2b788b1a8c2a944b2450e7033c38c205960933592"
  }
 }

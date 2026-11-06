@@ -1,6 +1,6 @@
 #!/bin/sh
 # [[verifier.collect]] hook, run inside the `sim` sidecar once Harbor has stopped the agent's container. The trial is
-# graded by its LIVE episode, the one the agent ran, with no grading replay (owner 2026-10-17).
+# graded by its LIVE episode, the one the agent ran, with no grading replay.
 #   1. `rcb_limited.py end` (the shared first half, docs/protocol/standard_mode.md §13.3): SIGUSR1 to the service, which ends
 #      the episode (when the agent's time is up it first holds the last command for SETTLE_STEPS control steps while the
 #      success term is checked, on the live simulator), writes trajectory.npz + episode.json (the live result, the
@@ -16,8 +16,7 @@
 #      the video fields. A failed or slow encode costs the video only (`video` false), never the verdict, never infra.
 # Time: the hook has HOOK_BUDGET_S (task.toml's [[verifier.collect]] timeout_sec; keep the two equal): the episode end
 # (up to RCB_COLLECT_END_TIMEOUT_S = 2700 s through a resume, which replays the journal at ~15-20 control steps/s) +
-# the encode (at most VIDEO_LIMIT_S; at most 3001 frames, live_video.MAX_FRAMES) + a margin. Before 2026-10-17 this hook
-# also replayed the trajectory in two fresh Isaac processes (15000 s budget).
+# the encode (at most VIDEO_LIMIT_S; at most 3001 frames, live_video.MAX_FRAMES) + a margin. Nothing is replayed.
 set -u
 SRV="${RCB_SRV:-/srv}"; DATA="${RCB_DATA:-/data}"
 HOOK_BUDGET_S="${RCB_COLLECT_TIMEOUT_S:-3600}"; VIDEO_LIMIT_S="${RCB_VIDEO_LIMIT_S:-600}"; T0=$(date +%s)

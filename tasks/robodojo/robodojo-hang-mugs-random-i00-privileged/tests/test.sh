@@ -1,6 +1,6 @@
 #!/bin/bash
 # Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) once, in a fresh process (one
-# replay decides: the owner's decision of 2026-10-12; grade.py's --repeat 2 is the earlier two-replay check).
+# replay decides; grade.py's --repeat 2 would require two replays with the same end state).
 # Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/protocol/README.md).
 # Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent
 # left there (a planted reward, a symlink) can count. rm never follows symlinks.

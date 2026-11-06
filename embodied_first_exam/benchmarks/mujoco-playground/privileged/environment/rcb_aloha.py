@@ -23,8 +23,7 @@ sites `socket_rear` and `socket_entrance`) and inside the cavity, at least 12 mm
 parameter t (0 at `socket_rear`, which is the tube's centre, 1 at `socket_entrance`, 48 mm per unit) is in
 [-0.875, 0.75]. The cavity is 88 mm deep: it ends at the inner face of the red rear wall, t = -0.833 (40 mm behind
 the centre; read from the model, Session.t_wall), and the lower bound allows REAR_MARGIN_M = 2 mm more for the
-contact's give when the peg is pushed home. Until 2026-10-13 the rule was 0 <= t <= 0.75 (and the texts said "t = 0
-at the rear wall"), which rejected a peg inserted past the tube's centre.
+contact's give when the peg is pushed home.
 trajectory = (T, 14) actuator targets, one row per control step.
 """
 from __future__ import annotations

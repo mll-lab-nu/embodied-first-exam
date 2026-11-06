@@ -3,7 +3,7 @@
 # FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
 FROM ghcr.io/mll-lab-nu/efe:mujoco-0.1.3
 COPY . /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.5.0@sha256:3f0b9610b741f2807ff2c5b545c5287500de98ab1f7dcadc9f4780cd0a6bc42a \
+COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.5.1@sha256:9990d2f1e2f7771f2da16ad8f69e07b06a2e8a989ff51f02489178ed0b87fbae \
      /sim/finalize.sh \
      /privileged/environment/rcb_quadruped.py \
      /sim/server.py \

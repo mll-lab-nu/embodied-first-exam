@@ -29,7 +29,7 @@ through the client; the episode ends with `reason = "success"` at the last of th
 ## Verification
 The sim service ends the episode at the task's success (or at the 9000-step technical cap, when the agent's
 time is up, or on a simulator error) and writes that live verdict to `/data/final.json` (`graded_by = "live"`);
-nothing is replayed to grade it (owner, 2026-10-17). The scene is checked against the frozen instance (its
+nothing is replayed to grade it. The scene is checked against the frozen instance (its
 initial state and compiled model hashes) when it is built, and its start state when the episode begins (a mismatch is
 `instance_mismatch`, infrastructure). `tests/grade.py` (separate sandbox, no network) grades `final.json`:
 `success = live_success`. The video (`replay.mp4`) is rendered from `trajectory.npz` in one pass after the verdict and

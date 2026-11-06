@@ -1,12 +1,12 @@
 #!/bin/sh
-# [[verifier.collect]] hook of the IKEA MuJoCo standard tasks (scripts/ikea_mujoco/standard/finalize.sh, copied unchanged),
+# [[verifier.collect]] hook of the IKEA MuJoCo standard tasks,
 # run inside the `sim` sidecar once Harbor has stopped the agent's container.
 #   1. `rcb_limited.py end` (the shared first half): SIGUSR1 to the service, which ends the episode (judging it as it
 #      stands: the terminal rules and the 1.0 s settled check on the live simulator), writes trajectory.npz and
 #      episode.json (the live verdict, final-state hash, live_rows), closes the live video and exits. It waits through a
 #      crash-recovery resume and exits 2 when final.json already holds the verdict (the service gave up after crashes,
 #      or the instance mismatched at start).
-#   2. final.json = episode.json + finalized, graded by the live episode (owner, 2026-10-17). No
+#   2. final.json = episode.json + finalized, graded by the live episode. No
 #      grading replay runs, here or in the verifier; the video is the live recording (live.mp4, cam_high).
 set -u
 DATA="${RCB_DATA:-/data}"

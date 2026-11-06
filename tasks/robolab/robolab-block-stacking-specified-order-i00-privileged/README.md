@@ -7,7 +7,7 @@
 | Twin | `robolab-block-stacking-specified-order-i00-standard` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `block_stacking_specified_order` / seed 0 |
-| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-block-stacking-specified__DGoPthS (robolab-block-stacking-specified-order-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038); robolab-block-stacking-specified__Mvd28Jf (robolab-block-stacking-specified-order-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §4). |
+| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-block-stacking-specified__DGoPthS (robolab-block-stacking-specified-order-i00-privileged, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038); robolab-block-stacking-specified__Mvd28Jf (robolab-block-stacking-specified-order-i00-standard, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928). The positives were graded under an earlier success term (one-finger gripper contact, no settle hold); not re-graded under the current term (both-finger contact, settle hold) unless stated here. Human review per family (PROTOCOL §4). |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
@@ -19,8 +19,8 @@ RoboLab labels this task "complex" (3 subtasks; attributes: stacking, color); it
 
 ## Reference solution
 None: RoboLab ships no expert or planner, and no reference solution has been written for this family (`oracle = "none"`). Positive examples, model trials the separate verifier scored 1:
-- `robolab-block-stacking-specified__DGoPthS` (privileged mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`)
-- `robolab-block-stacking-specified__Mvd28Jf` (standard mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`)
+- `robolab-block-stacking-specified__DGoPthS` (privileged mode, on an earlier version of this task; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`)
+- `robolab-block-stacking-specified__Mvd28Jf` (standard mode, on an earlier version of this task; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`)
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff RoboLab's

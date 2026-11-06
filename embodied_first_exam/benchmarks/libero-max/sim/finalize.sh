@@ -7,7 +7,7 @@
 #   3. Then the video: the service replays the trajectory once in a fresh process with the camera on (server.py
 #      render_video), "video_pending": true while it does. The hook waits for it up to RCB_COLLECT_WAIT_S from its
 #      start; the video is for humans and decides nothing: a verdict without it stands (grade.py reads "finalized").
-#   The budget (docs/benchmarks/libero-max.md, "Grading (standard mode)"). The verdict needs no replay; only a service
+#   The budget (tasks/libero-max/README.md, "Grading (standard mode)"). The verdict needs no replay; only a service
 #   that crashed late in the episode first replays its journal to resume it (rcb_service.py), at most N*s + B below.
 #   The video pass of N control steps takes B + N*s + V:
 #     B  building the scene in the fresh process: 1-3 min on a busy sidecar                              <=  180 s

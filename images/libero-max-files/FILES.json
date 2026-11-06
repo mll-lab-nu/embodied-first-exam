@@ -1,12 +1,12 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:libero-max-files-0.4.0@sha256:3fc8688820782240c5c75283da820c46a3831ad0b706e6793d91110132a49a3e",
+ "image": "ghcr.io/mll-lab-nu/efe:libero-max-files-0.4.1@sha256:2e9e6f1c7bb3835523d2b6694aaaabb052fee0683abe81e1bf530918428cab11",
  "source": "embodied_first_exam/benchmarks/libero-max",
  "files": {
-  "privileged/environment/lmx_tool.py": "4209d8c52596622e9220fa09c0d3b0317574b9e60823e479b14340e35dff5f7b",
-  "privileged/tests/grade.py": "9a416bac57252c82f7cd95f8c1b9f72aa15db00ccb646f0bb6ddb0cea0262c13",
-  "sim/finalize.sh": "6be0b0f5ccc70af14d52a2c45a6efbb44bf8813838f68f3524ac710d47312a4f",
-  "sim/rcb_service.py": "a6c50beec04bdb3b11885939dfe90a249506edcd5c462d2ac10816bbf2a71e2e",
-  "sim/server.py": "7f9d375212ea9a7f6e7c33d8f5fefae33b80b2502f1eeeb88cece0df48d461d8",
-  "standard/tests/grade.py": "f57e3840217562b8021f7f03f47162922822c1d7790b3898528eb4e2fe372a4e"
+  "privileged/environment/lmx_tool.py": "f5d48cd1fe422bff4deb7544e1f5c983dc0208df60241014bf143b29f044c0f9",
+  "privileged/tests/grade.py": "22e8aecd69ceea3065c8423e693cb3010d01e59f17848198e1b8599767678aa9",
+  "sim/finalize.sh": "70115cf52792185a70a6e588004a00609632cb1a44503f434cb82fdcc4fc59e4",
+  "sim/rcb_service.py": "6b9786bc4647e8dae7e7d08ac0149bd6149e952db9e50ba2b400b9c1b6b2da0c",
+  "sim/server.py": "5d0c4dabee9779817d32da74976535900a11bb2478d3120c558f3abcf1fa47a7",
+  "standard/tests/grade.py": "4b7dfede4e2f81cb9145a49796b4e13c372fd1e4a0c7c455c233636e6ee98add"
  }
 }

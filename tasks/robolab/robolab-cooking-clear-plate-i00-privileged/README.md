@@ -7,7 +7,7 @@
 | Twin | `robolab-cooking-clear-plate-i00-standard` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `cooking_clear_plate` / seed 0 |
-| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-cooking-clear-plate-i00__M9JWo2C (robolab-cooking-clear-plate-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038); robolab-cooking-clear-plate-i00__pjCZgi2 (robolab-cooking-clear-plate-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038; not published: its eai-standard/2.1 batch was withdrawn for the agent's stale wrist-camera pose; grader unaffected). Re-graded with the 2026-10-14 term (one fresh process per trajectory and tooling version): both cited positives pass the earlier term and fail the 2026-10-14 one: in __M9JWo2C the blue scoop (spoon_1) ends on the floor beside the table (z -0.69 m) and the orange cup is not supported by the table, which -i00's object_outside_of counted as outside the plate. No positive confirmed under the 2026-10-14 term yet. Human review per family (PROTOCOL §4). |
+| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-cooking-clear-plate-i00__M9JWo2C (robolab-cooking-clear-plate-i00-privileged, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038); robolab-cooking-clear-plate-i00__pjCZgi2 (robolab-cooking-clear-plate-i00-standard, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038; not published: its eai-standard/2.1 batch was withdrawn for the agent's stale wrist-camera pose; grader unaffected). Re-graded with the current term (one fresh process per trajectory and tooling version): both cited positives pass the earlier term and fail the current one: in __M9JWo2C the blue scoop (spoon_1) ends on the floor beside the table (z -0.69 m) and the orange cup is not supported by the table, which -i00's object_outside_of counted as outside the plate. No positive confirmed under the current term yet. Human review per family (PROTOCOL §4). |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
@@ -19,8 +19,8 @@ RoboLab labels this task "moderate" (2 subtasks; attributes: color, sorting); it
 
 ## Reference solution
 None: RoboLab ships no expert or planner, and no reference solution has been written for this family (`oracle = "none"`). Positive examples, model trials the separate verifier scored 1:
-- `robolab-cooking-clear-plate-i00__M9JWo2C` (privileged mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`)
-- `robolab-cooking-clear-plate-i00__pjCZgi2` (standard mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`): not published: its eai-standard/2.1 batch was withdrawn for the agent's stale wrist-camera pose; grader unaffected
+- `robolab-cooking-clear-plate-i00__M9JWo2C` (privileged mode, on an earlier version of this task; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`)
+- `robolab-cooking-clear-plate-i00__pjCZgi2` (standard mode, on an earlier version of this task; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`): not published: its eai-standard/2.1 batch was withdrawn for the agent's stale wrist-camera pose; grader unaffected
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff RoboLab's

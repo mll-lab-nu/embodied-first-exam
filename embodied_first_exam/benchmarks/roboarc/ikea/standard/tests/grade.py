@@ -1,8 +1,8 @@
-"""Standard-mode verifier of the IKEA MuJoCo tasks (scripts/ikea_mujoco/standard/grade.py, copied unchanged), in the
+"""Standard-mode verifier of the IKEA MuJoCo tasks, in the
 separate verifier sandbox, without network. Reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's result, finalized by environment/sim/finalize.sh) and checks that
 /data/trajectory.npz (every control row the live episode executed, float64: the deliverable) was dumped. It replays
-nothing (owner, 2026-10-17: the standard modes are graded by the live episode).
+nothing (the standard modes are graded by the live episode).
 
 success = the live episode's success AND no infrastructure failure. The live success is the grader's rule on the live
 simulator (server.py: rcb_ikea.Session.status(), then final_check() with the last executed row held 1.0 s more, the

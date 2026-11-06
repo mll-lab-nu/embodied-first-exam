@@ -436,7 +436,7 @@ def top_down_quat(closing_yaw: float, tilt: float = 0.0) -> np.ndarray:
 # own BlenderKit key), which RoboWits reads directly, or our encrypted bundle (<uuid>/obj.glb.enc Fernet tokens +
 # robowits_blenderkit.key). For the bundle, only the models this family loads are decrypted, into a private tmpfs dir
 # that RoboWits finds through GS_GYM_ASSET_PATHS; it is deleted as soon as the scene is built. The privileged agent's
-# container never sees the host's folder or the key (since 2026-10-14): a `blenderkit` service of the task's compose file runs
+# container never sees the host's folder or the key: a `blenderkit` service of the task's compose file runs
 # `blenderkit-serve`, which decrypts this family's models alone and serves them on localhost (RCB_BLENDERKIT_URL); the
 # tooling in `main` fetches them into the same private tmpfs dir for the build and deletes them after it (an agent that
 # is root next to the simulator can read the models its scene loads, not the bundle or the key).

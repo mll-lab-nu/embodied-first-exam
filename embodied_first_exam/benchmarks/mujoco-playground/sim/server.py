@@ -2,7 +2,7 @@
 shared layer rcb_limited.py; the simulator is rcb_quadruped.Session (plain MuJoCo on the CPU).
 HTTP surface: GET /spec, GET /status, POST /observe, POST /submit, POST /kinematics, and POST /reset when the run grants
 resets (RCB_RESET_BUDGET, the optional reset capability of docs/protocol/standard_mode.md / PROTOCOL §4.5; the quadrupeds'
-standard tasks default to 10 in their compose file, owner 2026-10-14). Every call is logged to /data/episode.jsonl.
+standard tasks default to 10 in their compose file). Every call is logged to /data/episode.jsonl.
 
 The episode is the frozen instance's: one control step = the instance's control period (Go1, Spot: 1/50 s; Barkour:
 1/100 s). A joystick episode ends after the whole command schedule
@@ -17,7 +17,7 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 the committed resets did (their journal rows are checkpointed, `persist`; a resume, not a grading replay). When the
 episode ends the service writes /data/trajectory.npz + /data/episode.json with the live verdict (the task's check, run on
 this simulator when the episode ends); the collect hook (finalize.sh) makes it exit, writes that verdict into final.json
-(nothing is replayed to grade it: owner, 2026-10-17) and renders the video from the trajectory. The frozen
+(nothing is replayed to grade it) and renders the video from the trajectory. The frozen
 instance is checked when the service builds it: a scene whose start state does not hash to the instance's recorded
 `state_sha` gets no episode (instance_mismatch, an infrastructure failure)."""
 

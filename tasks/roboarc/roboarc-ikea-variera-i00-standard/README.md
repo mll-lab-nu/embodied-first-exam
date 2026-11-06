@@ -38,9 +38,9 @@ success or at a breakdown, and journals every executed control step; at the end 
 episode that ends otherwise (timeout) is judged as it stands by the same two checks. Before the episode the service checks
 the scene file by file against `runtime_binding.json` and by its initial-state hash (`instance_mismatch`, infrastructure).
 The verifier (`tests/grade.py`, separate sandbox, no network, the shared client base) transcribes `final.json`: pass iff
-the live episode succeeded (`graded_by_live` 1, `replays` 0). No grading replay runs (owner, 2026-10-17).
+the live episode succeeded (`graded_by_live` 1, `replays` 0). No grading replay runs.
 
-Before 2026-10-17 (graded then by the verifier's two replays; history, not re-run since): Harbor checks on workstation B (Ryzen 9 7950X, RTX 4090; shared, loaded) (oracle), workstation C (nop), Harbor 0.23.0, image 0.3.0 sha256:ed950d079b63 / -sim 0f58155b6238 (prisms, EPA-patched MuJoCo, arm clamp, live settled verdict); the live, replay and settled hashes equal the 0.2.0 run's (2026-10-16): `oracle` scored 1 (image -sim 0.3.0 (EGL): live settled success at control step 231903 (58 calls), both replays pass final_check() and end in the live state (live_matches_replay 1, deterministic 1); live service time 4365 s, verifier replays 3251 s); `oracle` scored void (re-run pending) (sim 0.4.0 (Nyx), workstation A: live settled success at control step 231903, live end hash 2cf43598… = the 0.3.0 run's; the verifier's result is void (an I/O stall on the host; infrastructure, neither pass nor fail); a re-run on workstation B is pending. Nyx leaves the live state hashes bit-identical to EGL over the first 2000 ticks); `nop` scored 0.
+Earlier validation, under the former grading by two verifier replays (not re-run under the live grading): Harbor checks on workstation B (Ryzen 9 7950X, RTX 4090; shared, loaded) (oracle), workstation C (nop), Harbor 0.23.0, image 0.3.0 sha256:ed950d079b63 / -sim 0f58155b6238 (prisms, EPA-patched MuJoCo, arm clamp, live settled verdict); the live, replay and settled hashes equal the 0.2.0 run's (2026-10-16): `oracle` scored 1 (image -sim 0.3.0 (EGL): live settled success at control step 231903 (58 calls), both replays pass final_check() and end in the live state (live_matches_replay 1, deterministic 1); live service time 4365 s, verifier replays 3251 s); `oracle` scored void (re-run pending) (sim 0.4.0 (Nyx), workstation A: live settled success at control step 231903, live end hash 2cf43598… = the 0.3.0 run's; the verifier's result is void (an I/O stall on the host; infrastructure, neither pass nor fail); a re-run on workstation B is pending. Nyx leaves the live state hashes bit-identical to EGL over the first 2000 ticks); `nop` scored 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).
@@ -74,7 +74,7 @@ episode with reason `timeout` when it runs out; that count never runs out before
 ### Deviations
 - `ee_pose` is not offered (only `joint_position`, the scene's actuator layout); `/kinematics` gives FK / IK.
 - Graded by the live episode (the settled check on the live simulator); no grading replay, in the sidecar or the
-  verifier (owner, 2026-10-17).
+  verifier.
 
 ### Goal
 Assemble the VARIERA shelf insert: place the two side frames, lower the shelf onto them, and drive the four screws through the shelf holes into the frames' receivers until they seat.

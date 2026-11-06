@@ -1,12 +1,12 @@
 """eai-standard/2.3 sim service for RoboCasa365's realtime tasks -- the adapter behind the shared realtime layer
 (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
-docs/benchmarks/robocasa365.md "Realtime").
+tasks/robocasa365/README.md "Realtime").
 
 The simulator-specific half only: `RoboCasa` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance on the benchmark's own tooling module, casa_tool.Session -- the same scene, native controller
 command and success check (`_check_success`, twice per control step) as the standard twin's service
 (environment/sim/server_casa.py of `-standard`) and the privileged verifier. The verdict is the live episode's
-(docs/protocol/README.md H.4; owner, 2026-10-17): live_verdict() adds the standard twin's rule that the scene was
+(docs/protocol/README.md H.4): live_verdict() adds the standard twin's rule that the scene was
 not solved at the episode's start, and start_sha (RCB_START_SHA, the frozen instance's starting state) is checked when
 the first episode begins; nothing is replayed to grade it, and the video is rendered from the trajectory afterwards. The protocol, the clock, the plan, the
 episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged copies of the
@@ -25,7 +25,7 @@ rule applied to the trajectory up to that step), after max_control_steps (the pr
 150 s of robot time), when the agent's time is up, or on a simulator error; the agent has resets (rcb_service).
 
 Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_START_SHA (the state hash a fresh
-episode of it starts in: scripts/robocasa365/frozen/start_state.json), RCB_MAX_CONTROL_STEPS (3000), RCB_DATA,
+episode of it starts in, recorded when the task was built), RCB_MAX_CONTROL_STEPS (3000), RCB_DATA,
 RCB_RESET_BUDGET, RCB_WALL_CLOCK_S, RCB_SLOWDOWN (rcb_realtime / rcb_service).
 """
 from __future__ import annotations

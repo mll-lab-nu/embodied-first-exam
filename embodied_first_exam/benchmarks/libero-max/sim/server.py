@@ -3,14 +3,14 @@
 The simulator-specific half only: `LiberoMax` implements rcb_service.Sim for one frozen instance (lmx_tool.Session).
 The protocol, the episode, crash recovery and the finalize live in rcb_service.py (a byte copy of main's HumanoidBench /
 VLABench service), which imports no simulator.
-The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): the episode ends the moment
+The verdict is the live episode's (docs/protocol/README.md H.4): the episode ends the moment
 LIBERO's success check holds (step() reports it), and that is the success; nothing is replayed to grade it. The
 frozen start is checked when the episode begins (start_sha: the instance's recorded start-state hash; a scene that
 did not rebuild to it is refused as instance_mismatch, an infrastructure failure, before the agent is served).
 live_verdict() adds LIBERO-MAX's event record of the live episode to final.json (event_fired, event_step).
 The video is one video-only pass after the verdict is on disk: render_video() replays the trajectory in a fresh
 process (one simulator per process, lmx_tool) with the camera on; it can neither change nor cost the verdict
-(docs/benchmarks/libero-max.md, "Grading (standard mode)").
+(tasks/libero-max/README.md, "Grading (standard mode)").
 Settings come from environment/docker-compose.yaml:
   RCB_INSTANCE            the frozen instance (the privileged twin's instance.json)
   RCB_TASK_TEXT           the task as the instruction states it, for /spec

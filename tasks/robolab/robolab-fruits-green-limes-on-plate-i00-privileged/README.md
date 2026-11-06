@@ -7,7 +7,7 @@
 | Twin | `robolab-fruits-green-limes-on-plate-i00-standard` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `fruits_green_limes_on_plate` / seed 0 |
-| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-fruits-green-limes-on-pl__3NH9BN4 (robolab-fruits-green-limes-on-plate-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §4). |
+| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-fruits-green-limes-on-pl__3NH9BN4 (robolab-fruits-green-limes-on-plate-i00-standard, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928). The positives were graded under an earlier success term (one-finger gripper contact, no settle hold); not re-graded under the current term (both-finger contact, settle hold) unless stated here. Human review per family (PROTOCOL §4). |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
@@ -19,7 +19,7 @@ RoboLab labels this task "simple" (2 subtasks; attributes: color); its success t
 
 ## Reference solution
 None: RoboLab ships no expert or planner, and no reference solution has been written for this family (`oracle = "none"`). Positive examples, model trials the separate verifier scored 1:
-- `robolab-fruits-green-limes-on-pl__3NH9BN4` (standard mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`)
+- `robolab-fruits-green-limes-on-pl__3NH9BN4` (standard mode, on an earlier version of this task; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`)
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff RoboLab's

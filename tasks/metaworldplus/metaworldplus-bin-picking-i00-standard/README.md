@@ -26,7 +26,7 @@ is. Success is judged on the final state, so the agent must also end the episode
 submitted through the client, one row per control step.
 
 ## Verification
-Graded by the live episode, nothing replayed (owner 2026-10-17): when the episode ends, the sim
+Graded by the live episode, nothing replayed: when the episode ends, the sim
 service applies Meta-World's success check to the live state after the last executed control step and writes the
 verdict to its `final.json` (`graded_by = "live"`, `replays = 0`); `tests/grade.py` (separate sandbox, no network)
 reads it: `success = live_success`, `infra_error = 1` when there is no verdict on the agent. The frozen start is

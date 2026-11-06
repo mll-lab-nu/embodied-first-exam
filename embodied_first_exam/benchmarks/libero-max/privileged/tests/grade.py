@@ -12,7 +12,7 @@ invalid_trajectory, grader_error, infra_error, n_actions, sim_steps, event_fired
 diagnostics.json, replay-*.json/log.
 grader_error = 1: the grader could not finish (a replay process failed or timed out, an unreadable instance).
 infra_error = 1 (with grader_error): no verdict on the agent, because this host did not rebuild the frozen start
-bit-exactly (its CPU's numeric kernels, docs/benchmarks/libero-max.md "Host CPUs"): the replay process says so with
+bit-exactly (its CPU's numeric kernels, tasks/libero-max/README.md, "Host CPUs"): the replay process says so with
 exit code lmx_tool.EXIT_REBUILD, before it executes any action. Rerun the trial on a supported host.
 """
 

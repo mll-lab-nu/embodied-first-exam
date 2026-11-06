@@ -1,10 +1,10 @@
 """eai-standard/2.2 sim service for RoboWits (Genesis 0.4.7, bimanual Marvin; docs/protocol/standard_mode.md): the RoboWits
-adapter of the shared layer rcb_limited.py (scripts/eai_standard/). Source: scripts/robowits/shared/server.py, copied
-unchanged into every RoboWits standard task as environment/sim/server.py by scripts/robowits/mk_tasks.py.
+adapter of the shared layer rcb_limited.py (embodied_first_exam/standard/). Served from the robowits-files image at
+/srv/server.py in every RoboWits standard task's sim sidecar.
 Owns the scene. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit (RCB1 bodies, RCB1
 responses: videos / frames / depth / proprio / per-frame step, time and camera poses as raw blobs, never base64), POST
 /kinematics (stateless FK / IK on the robot's own model). Logs every call to /data/episode.jsonl, keeps /data/final.json
-current, and grades the live episode (docs/protocol/README.md H.4; owner, 2026-10-17): success = the settle window
+current, and grades the live episode (docs/protocol/README.md H.4): success = the settle window
 that ended the episode passed on this simulator (inside the agent's last call, or after its last command when its phase
 is over: Session.settle_check), nothing replayed. The verdict goes to final.json first ("finalized", "graded_by":
 "live"); then the recorded (T, 16) trajectory, the deliverable, is rendered once into /data/replay.mp4 for people
@@ -207,7 +207,7 @@ import rcb_robowits as M  # noqa: E402
 S = M.Session(TASK, instance=INSTANCE)  # not strict: an instance this host cannot rebuild is reported below, not raised
 EP.scene_built()                        # the startup watchdog stands down: a long resume replay is not a hang
 if not S.instance_matches:
-    # The frozen scene rebuilt here is out of tolerance (another CPU vendor: docs/benchmarks/robowits.md, Hosts; or asset /
+    # The frozen scene rebuilt here is out of tolerance (another CPU vendor: tasks/robowits/README.md, "Hosts: one CPU vendor"; or asset /
     # simulator drift). It would be the same at every restart, and it is not the agent's failure: give up at once with a
     # record (final.json: finalized, gave_up, reason, infra_error = 1) instead of raising into six restarts without one.
     log({"ev": "instance_mismatch", "task": TASK, "state_sha": S.instance_sha, "backend": BACKEND})
@@ -560,8 +560,7 @@ def end_from_signal() -> None:
     """The collect hook's SIGUSR1 (the agent phase is over): end the episode (finish(): the settle window after the agent's
     last command, on the live simulator), then write the verdict (finalize). The reason
     says who ended it: "agent_exit" when the agent ended its session with more than AGENT_EXIT_MARGIN_S left (by the
-    service's clock of the agent, meta time_left_s), "timeout" at the time limit (the reason was "timeout" in both cases
-    before 2026-10-14)."""
+    service's clock of the agent, meta time_left_s), "timeout" at the time limit ."""
     with LOCK:
         if not E["done"]:
             # the agent's clock (from its first request); an agent that never sent one: the service's own uptime, which

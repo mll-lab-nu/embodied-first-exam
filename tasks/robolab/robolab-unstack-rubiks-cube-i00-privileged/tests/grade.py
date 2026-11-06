@@ -25,7 +25,7 @@ import numpy as np
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # Wall-clock limit of ONE replay process, scaled with the trajectory (time limits only; the verdict rules do not depend on
 # them). The grader accepts up to MAX_STEPS rows, and a trajectory that never reaches the goal is replayed to its last row.
-# Measured: Isaac start + scene build ~2 min, replays ~15-20 control steps/s (docs/benchmarks/robolab.md); the allowance is
+# Measured: Isaac start + scene build ~2 min, replays ~15-20 control steps/s; the allowance is
 # REPLAY_STARTUP_S for the start plus half the nominal rate (REPLAY_MIN_RATE control steps/s), never below the old flat
 # 1800 s. task.toml's [verifier] timeout_sec fits two replays of a MAX_STEPS-row trajectory plus overhead, so a
 # replay that is too slow ends here with a written reward (`replay_timed_out`), never with Harbor killing the verifier.

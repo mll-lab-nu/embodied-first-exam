@@ -7,7 +7,7 @@ COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.4.0@sha256:90253c4cb419668f8
      /rcb1.py \
      /realtime/rcb_realtime.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.5.0@sha256:3f0b9610b741f2807ff2c5b545c5287500de98ab1f7dcadc9f4780cd0a6bc42a \
+COPY --from=ghcr.io/mll-lab-nu/efe:mujoco-playground-files-0.5.1@sha256:9990d2f1e2f7771f2da16ad8f69e07b06a2e8a989ff51f02489178ed0b87fbae \
      /privileged/environment/rcb_quadruped.py \
      /sim/rcb_service.py \
      /srv/

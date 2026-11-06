@@ -29,7 +29,7 @@ The sim service ends the episode on RoboDojo's own check (success), a failed che
 writes `/data/trajectory.npz` and `/data/episode.json` (the live result); the collect hook (`environment/sim/finalize.sh`)
 writes `final.json` from them (no replay) and encodes the video the service kept during the episode (`live.mp4`, a frame of
 `cam_head` at the actions the agent's calls rendered; a failed encode costs the video only); `tests/grade.py` scores 1 iff
-the live episode succeeded: every standard task is graded by its live episode, which the trusted service ran, with no grading replay (since 2026-10-17; before, `success` = `live_success` and the success of one fresh-process replay); this task already was (`instance.json` sets `"determinism": "verdict"` because the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism)). Before serving, the service checks the rebuilt layout's state hash against the frozen instance's
+the live episode succeeded: every standard task is graded by its live episode, which the trusted service ran, with no grading replay; a replay could not grade this task anyway (`instance.json` sets `"determinism": "verdict"` because the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism)). Before serving, the service checks the rebuilt layout's state hash against the frozen instance's
 (`instance_mismatch`: an infrastructure failure). The collect hook needs no GPU after the service exits. No oracle;
 human review in PR #142 (no positive example yet). `nop` (no actions) scores 0.
 

@@ -26,7 +26,7 @@ That of `robolab-rubiks-cube-left-of-bowl-i00-privileged` (its README), without 
 `solution/oracle_replay.py` streams the privileged oracle's joint targets (`oracle_qpos.npy`, one row per control step, `hold`) as one-second `joint_position` chunks through the client; after a service crash it waits for the resumed episode and continues from the control step the service reports.
 
 ## Verification
-Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, judged by the sim
+Graded by the live episode: `success` = the live episode's success, judged by the sim
 service on the episode the agent ran, with no grading replay. RoboLab's success term is instantaneous: it is checked
 after every control step and the first step where it holds ends the episode (RoboLab's own termination); when the
 agent's time is up, the service holds the last command for 30 more control steps (2 s) on the live simulator, after the
@@ -36,8 +36,7 @@ infrastructure failure (`instance_mismatch`). `tests/grade.py` reads `final.json
 fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields), plus `/logs/verifier/live.mp4`:
 the service films the live episode (a frame of the viewport and wrist cameras every 3 control steps, from the renders
 Isaac Lab makes with every step), and the collect hook encodes it after the verdict (a failed encode costs the video
-only). Compute: the collect hook needs no GPU after the service exits (it replayed the episode in two fresh Isaac
-processes before 2026-10-17).
+only). Compute: the collect hook needs no GPU after the service exits.
 
 ## Resources
 Caps per container (PROTOCOL §6).

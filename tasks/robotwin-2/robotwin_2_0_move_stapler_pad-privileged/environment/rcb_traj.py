@@ -65,8 +65,7 @@ TRACE_DIR = os.environ.get("RCB_AGENT_TRACE_DIR", "/app/output/rcb_trace")
 TRACE_MAX_FILES = 300; TRACE_MAX_BYTES = 400 * 1024 * 1024
 # The longest trajectory the verifier grades (tests/grade.py MAX_T: about 13 minutes of physics at 250 Hz; a longer file
 # is `bad_trajectory`). Session.save_trajectory and Session.replay refuse more rows, so that the tool never saves, or
-# reports as a success, a file the verifier rejects (until 2026-10-13 it did: a 209,233-row trajectory replayed to
-# success here and was graded 0). Session.max_rows = None lifts it: the standard-mode service, whose episode has no
+# reports as a success, a file the verifier rejects. Session.max_rows = None lifts it: the standard-mode service, whose episode has no
 # row cap and is not handed in as a file, does that for its own Session.
 MAX_T = 200_000
 

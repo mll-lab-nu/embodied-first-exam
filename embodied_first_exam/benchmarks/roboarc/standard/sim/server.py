@@ -1,5 +1,5 @@
 """eai-standard/2.2 sim service for TopoGym (Genesis 1.2.1 on CUDA, Nyx RGB; docs/protocol/standard_mode.md): the TopoGym
-adapter of the shared layer rcb_limited.py (scripts/eai_standard/, copied unchanged into every standard task). Adapted from
+adapter of the shared layer rcb_limited.py (embodied_first_exam/standard/v2_4/). Adapted from
 Embodied First Exam's RoboWits service. HTTP surface (rcb_limited.py): GET /spec, GET /status, POST /observe, POST /submit
 (RCB1 bodies, RCB1 responses), POST /kinematics (stateless FK / IK on the robot's own model). Logs every call to
 /data/episode.jsonl and keeps /data/final.json current. Nothing about objects ever leaves this process.
@@ -11,7 +11,7 @@ compose restarts the container (`restart: on-failure:6`) and this service rebuil
 up to the last checkpoint and continues the SAME episode, never a reset; a hash mismatch is recorded, not fatal, unless a
 TCP is more than RCB_RESUME_MAX_DEV_M from its checkpoint.
 
-Episode end and grading (the live episode is the verdict; owner 2026-10-17: no grading replay): when the
+Episode end and grading (the live episode is the verdict: no grading replay): when the
 episode ends (success, the task's failure predicate, the wall clock, an error) the service writes /data/trajectory.npz and
 /data/episode.json (the live verdict: the task predicate on the live simulator with the instance's own thresholds, its
 review / forcing / instability evidence, the final-state hash, `live_rows`: the rows the live episode executed). The
@@ -386,7 +386,7 @@ def recorder(cams: list[str], fps: int, meta: dict) -> L.Recorder:
     return Rec(cams, int(round(CTRL_HZ / max(1, fps))), grab, proprio_row, extrinsics, ctrl_steps, depth=L.depth_mode(meta), clock_hz=CTRL_HZ, time_clock=lambda: S.sim_time_s, fps=fps)
 
 
-# RoboARC's declared safety telemetry (PROTOCOL §4.5; main's docs/benchmarks/roboarc.md, "Safety readings in
+# RoboARC's declared safety telemetry (tasks/roboarc/README.md, "Safety readings in
 # standard mode"): meta["safety"] carries exactly the fields rcb_topogym._SafetyMonitor.read returns, as on main, with
 # the names of the parts involved (user decision 2026-10-13: names are allowed in standard mode; only positions / poses
 # in the simulator's world frame, the table height and physics parameters are withheld). The fields are forces, depths
