@@ -49,8 +49,8 @@ Caps per container (PROTOCOL §6).
 | `sim` | 11 | 21 GiB | 1024 | 16 GiB | — |
 | verifier (as `main`) | 2 | 4 GiB | no cap | no GPU | 10 GiB |
 
-- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, RTX PRO 6000 Blackwell, held by `sim`.
-- Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
+- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, RTX 4090, RTX PRO 6000 Blackwell, held by `sim`.
+- Recommended GPU: L40S 48GB / RTX 4090 24GB.
 
 ## Details
 | | |

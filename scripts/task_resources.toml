@@ -635,8 +635,8 @@ caps_measured = "per-container peaks in 66 past trials: the agent's container me
 [[cap]]
 match = "^ambench-.*-privileged$"
 main = { cpus = 8, memory_gb = 34, pids = 1024, gpu_memory_gb = 16, disk_gb = 10 }
-gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blackwell"]
-recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+gpu_types = ["L40S", "L40", "RTX 4090"]   # the GPUs with graded trials or oracle runs on record (tasks/ambench/README.md)
+recommended_gpu = "L40S 48GB / RTX 4090 24GB"
 measured = "freezing the instances, oracle trials and replays on an RTX 4090 (docker stats and nvidia-smi every 2-10 s, the trial's resource monitor): with one environment's PhysX buffers (the tooling's), a camera-free Isaac process (the default Session, the grader's replays) peaks at 2.0 GiB of memory and 1.2 GiB of GPU memory (Isaac Lab's default buffers: 2.9 / 3.2); the render worker that draws the cameras (Session(cameras=True), the verifier's filmed illustration) adds 11.9 GiB and 3.4 GiB (3.3-3.6 under every RTX preset tried); 6-10 cores while Isaac starts, about 1.5 after; the verifier runs one process at a time"
 caps_measured = "GPU memory: a Session with cameras peaks at 4.6 GiB (its render worker included), a camera-free one at 1.2 GiB; an agent may run two Sessions with cameras at once (9.2 GiB) -> at least 16 GiB for Isaac Sim: 16 GiB; per-container peaks in 10 past trials: the agent's container memory 3.3 GiB (27.8 GiB in an earlier measurement), 227 threads, CPU 4.0 cores, GPU memory 1.7 GiB (9.2 GiB in an earlier measurement), disk 0.8 GiB"
 
@@ -645,8 +645,8 @@ caps_measured = "GPU memory: a Session with cameras peaks at 4.6 GiB (its render
 match = "^ambench-.*-standard$"
 main = { cpus = 2, memory_gb = 4, pids = 1024, disk_gb = 10 }
 sim = { cpus = 11, memory_gb = 21, pids = 1024, gpu_memory_gb = 16 }
-gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blackwell"]
-recommended_gpu = "L40S 48GB / L4 24GB / RTX 4090 24GB"
+gpu_types = ["L40S", "L40", "RTX 4090", "RTX PRO 6000 Blackwell"]   # the GPUs with graded trials or oracle runs on record (tasks/ambench/README.md)
+recommended_gpu = "L40S 48GB / RTX 4090 24GB"
 measured = "an RTX 4090 (conformance run and oracle trials, nvidia-smi every 15 s): the sim sidecar runs the camera-free physics process (2.0 GiB of memory, 1.2 GiB of GPU memory with one environment's PhysX buffers; 2.65 GiB with Isaac Lab's) and the render worker (11.9 GiB, 3.4 GiB): 14 GiB and 4.6 GiB; the agent's container holds the client only; the collect hook films through the render worker (4.6 GiB)"
 caps_measured = "GPU memory (the sim service): the physics process and the render worker, 4.6 GiB at most -> at least 16 GiB for Isaac Sim: 16 GiB; per-container peaks in 11 past trials: the agent's container memory 0.3 GiB, 85 threads, CPU 1.1 cores, disk 0.9 GiB; the sim service memory 10.0 GiB (14.0 GiB in an earlier measurement), 221 threads, CPU 7.8 cores, GPU memory 5.6 GiB; the sim service's memory covers its largest legal call (observe, 2 cameras 384x384 with depth, 750 frames each (3000 images)): 1.3 GiB to build the response on top of the simulator's 14.0 GiB, 2 GiB more for thin data"
 

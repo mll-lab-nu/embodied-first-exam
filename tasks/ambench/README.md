@@ -20,10 +20,10 @@ Read [Before you run](#before-you-run) first: the first run builds the simulator
   run these tasks. No account, login or token is needed.
 - **Host.** Linux x86_64, Docker with BuildKit (the `buildx` plugin) and the NVIDIA Container Toolkit, one RTX-class NVIDIA
   GPU (Isaac renders with RTX even headless) with a driver Isaac Sim 5.1 supports (checked: 580.159 on an RTX 4090).
-  `gpu_types` lists six RTX-class models; four are verified: the RTX 4090 (Validation, below) and L40, L40S and RTX PRO
-  6000 Blackwell (graded evaluation trials: every start rebuilt to its `initial_sha`, and successes in both modes on L40
-  and L40S, in standard mode on the RTX PRO 6000 Blackwell). L4 and RTX 6000 Ada are not verified (Determinism: the
-  hashes are per GPU model).
+  `gpu_types` lists the verified models only: the RTX 4090 (Validation, below) and L40 and L40S (graded evaluation
+  trials: every start rebuilt to its `initial_sha`, and successes in both modes), and for the standard tasks also the RTX
+  PRO 6000 Blackwell (graded standard trials). Other RTX-class GPUs are not verified (Determinism: the hashes are per
+  GPU model).
 - **Disk.** About 60 GB free for the first build (the image is about 22 GB, plus BuildKit's cache while it builds).
 - **First run: the image builds itself (about 25 min on a fast link).** Harbor builds the simulator image from public sources only
   (Docker Hub `nvidia/cuda`, snapshot.ubuntu.com, github.com, pypi.org, download.pytorch.org,
