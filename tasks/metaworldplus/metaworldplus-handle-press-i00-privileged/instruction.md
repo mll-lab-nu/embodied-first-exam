@@ -10,7 +10,7 @@ is right: the verifier reads a plain `.npz` of at most 2 MB that holds arrays on
 members), and grades anything else as an invalid trajectory. Leave the script that produced it at `/app/output/gen.py`.
 
 ## Success
-The verifier replays your actions from the frozen start in a separate sandbox (twice, in fresh processes; MuJoCo on the
+The verifier replays your actions from the frozen start in a separate sandbox (once, in a fresh process; MuJoCo on the
 CPU is bit-exact) and applies Meta-World's own success check for `handle-press-v3` (`evaluate_state`) to the state **after
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` computes exactly this check on the current state.

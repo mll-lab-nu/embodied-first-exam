@@ -28,9 +28,9 @@ Meta-World's scripted policy for `hammer-v3` (`metaworld/policies/`, removed fro
 its first success: 71 actions in `solution/oracle.npz`.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of
-the instance; `success = deterministic ∧ success on the final state`. Oracle: two fresh-process replays end in the
-live episode's state (hash `004869eda16d…`) and succeed. `nop`: no trajectory, reward 0; the instance is
+`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of
+the instance; `success` = success on the final state. Oracle: a fresh-process replay ends in the
+live episode's state (hash `004869eda16d…`) and succeeds. `nop`: no trajectory, reward 0; the instance is
 not solved at the start.
 
 ## Resources

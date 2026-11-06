@@ -30,9 +30,9 @@ its first success: 119 actions in `solution/oracle.npz`.
 In this environment the success state does not persist on its own: after the oracle's last action, holding still for 10 control steps loses it. Graded on the final state, a trajectory must end at that moment.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of
-the instance; `success = deterministic ∧ success on the final state`. Oracle: two fresh-process replays end in the
-live episode's state (hash `16d2898c4471…`) and succeed. `nop`: no trajectory, reward 0; the instance is
+`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of
+the instance; `success` = success on the final state. Oracle: a fresh-process replay ends in the
+live episode's state (hash `16d2898c4471…`) and succeeds. `nop`: no trajectory, reward 0; the instance is
 not solved at the start.
 
 ## Resources

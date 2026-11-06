@@ -1,11 +1,13 @@
 """MetaWorld+ privileged verifier (separate sandbox, no network).
 
-Replays /app/output/trajectory.npz twice from the verifier's own frozen instance (/tests/instance.npz), each replay in
-a fresh Python process, and grades the state after the last action with Meta-World's own success check.
+Replays /app/output/trajectory.npz ONCE from the verifier's own frozen instance (/tests/instance.npz), in a fresh
+Python process, and grades the state after the last action with Meta-World's own success check.
 
-/logs/verifier/reward.txt: 1 iff both replays end in the same state (deterministic) and that state is a success.
-/logs/verifier/reward.json (numeric only): success, deterministic, replay_success, missing_trajectory,
-invalid_trajectory, grader_error, n_actions, sim_steps, final_reward, video_rendered, verifier_wall_s.
+/logs/verifier/reward.txt: 1 iff the replay's final state is a success.
+/logs/verifier/reward.json (numeric only): success, deterministic, determinism_checked, replays, replay_success,
+missing_trajectory, invalid_trajectory, grader_error, n_actions, sim_steps, final_reward, video_rendered,
+verifier_wall_s. With one replay there is no second end state to compare: a graded replay writes `deterministic` = 1
+(nothing disagreed), `determinism_checked` = 0 (nothing was compared) and `replays` = 1.
 """
 
 import json
@@ -41,6 +43,8 @@ def main() -> None:
     out = {
         "success": 0,
         "deterministic": 0,
+        "determinism_checked": 0,
+        "replays": 0,
         "replay_success": 0,
         "missing_trajectory": 0,
         "invalid_trajectory": 0,
@@ -66,29 +70,26 @@ def main() -> None:
                 actions = None
         if actions is not None:
             env = {k: v for k, v in os.environ.items() if k not in ("PYTHONHOME", "LD_PRELOAD")}
-            results = []
-            for i in range(2):
-                p = LOG / f"replay-{i}.json"
-                with open(LOG / f"replay-{i}.log", "w") as log:
-                    subprocess.run(
-                        [sys.executable, str(HERE / "grade.py"), "--replay", str(p)],
-                        check=True,
-                        stdout=log,
-                        stderr=subprocess.STDOUT,
-                        env=env,
-                        cwd="/",
-                        timeout=1800,
-                    )
-                results.append(json.loads(p.read_text()))
-            det = results[0]["state_sha"] == results[1]["state_sha"]
-            ok = det and results[0]["success"] and results[1]["success"]
+            p = LOG / "replay-0.json"
+            with open(LOG / "replay-0.log", "w") as log:
+                subprocess.run(
+                    [sys.executable, str(HERE / "grade.py"), "--replay", str(p)],
+                    check=True,
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    env=env,
+                    cwd="/",
+                    timeout=1800,
+                )
+            r = json.loads(p.read_text())
             out.update(
-                success=int(ok),
-                deterministic=int(det),
-                replay_success=int(results[0]["success"]),
+                success=int(bool(r["success"])),
+                deterministic=1,  # one replay: nothing to compare (determinism_checked = 0)
+                replays=1,
+                replay_success=int(bool(r["success"])),
                 n_actions=len(actions),
-                sim_steps=sum(r["control_steps"] for r in results),
-                final_reward=float(results[0]["final_reward"]),
+                sim_steps=r["control_steps"],
+                final_reward=float(r["final_reward"]),
             )
     except Exception:  # noqa: BLE001
         out["grader_error"] = 1

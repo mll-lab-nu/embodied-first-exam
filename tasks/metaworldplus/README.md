@@ -70,7 +70,7 @@ Protocol: `eai-standard/2.1` (`/spec`, `task.toml`, instructions). Every task is
 
 ## Grading (standard mode): the live episode
 The standard twin is graded by the live episode and nothing is replayed to grade it (privileged mode: the verifier's
-two fresh-process replays).
+one fresh-process replay).
 - **Verdict.** When the episode ends (the collect hook's SIGUSR1, after the agent's container is stopped), the service
   reads Meta-World's own success check on the live simulator's state after the last executed control step
   (`server_mw.py` `finalize()`: `S.check()`, i.e. `evaluate_state` as of the last `env.step`) and writes it to
