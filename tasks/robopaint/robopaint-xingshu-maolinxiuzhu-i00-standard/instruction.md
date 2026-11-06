@@ -70,9 +70,9 @@ episode with two numbers you can compute yourself; only inked strokes on the mai
   where different strokes overlap, each counts its own), summed over the strokes, divided by `path_mm`.
 
 **Colouring in = `path_mm` > 3160 mm and `mark_width_mm` < 1.12 mm** (a long path of thin marks): it
-fails the task. Our reference solution writes this exemplar with `path_mm` 1051 mm and `mark_width_mm`
-3.76 mm; the limits are 3 times its path (rounded up) and 0.3 times its mark width
-(rounded down). A pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
+fails the task. Our reference solution writes this exemplar with `path_mm` 1412 mm and `mark_width_mm`
+2.79 mm; the limits are 3 times the path (rounded up) and 0.3 times the mark width (rounded down)
+of an earlier reference solution, which wrote it with `path_mm` 1051 mm and `mark_width_mm` 3.76 mm. A pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
 under the path limit: both are fine.
 
 **The stroke cap counts strokes as they are written, not contacts** (this refines "one continuous contact is one stroke"

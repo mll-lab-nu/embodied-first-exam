@@ -14,7 +14,7 @@ A file the agent got wrong is the agent's 0, `bad_trajectory` (not `grader_error
 itself (a replay process that gave no result or ran past --replay-timeout-s, a frozen instance that does not rebuild here:
 `instance_ok` 0), and `infra_error` = 1 goes with it: no verdict on the agent. Every reward.json carries success, final_reward,
 deterministic, grader_error, infra_error, missing_trajectory and bad_trajectory. Time: two replays of at most MAX_STEPS (72,000) control steps
-at the 67-102 steps/s measured (docs/benchmarks/robopaint.md) take up to 36 min plus two scene builds; [verifier] timeout_sec is
+at the 67-102 steps/s measured (tasks/robopaint/README.md) take up to 36 min plus two scene builds; [verifier] timeout_sec is
 3600 s and each replay process gets --replay-timeout-s (1650 s).
 """
 from __future__ import annotations

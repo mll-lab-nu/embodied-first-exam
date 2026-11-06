@@ -40,8 +40,8 @@ CLI
   python rcb_brush.py selftest --instance instance.json [--traj traj.npz]
   (graders only, with rcb_brush_score.py: make-instance, make-agent-instance, score)
 
-Python (what the unlimited agent gets)
---------------------------------------
+Python (what the privileged agent gets)
+---------------------------------------
   from rcb_brush import Session
   s = Session(instance="/app/instance.json")
   p = s.primitives()                  # thin wrappers of the low-level action: move_tip, move_joints, hold, set_joint_targets, ik, fk
@@ -51,7 +51,7 @@ Python (what the unlimited agent gets)
   s.render_frame("canvas_cam"); s.render_grid(); s.render_video(actions, path)
   s.record_start(); ...; a = s.record_stop(); s.replay(a); s.save_trajectory(a, path)
   s.camera_info(); s.render_depth("canvas_cam")                  # calibration + mounting; z-depth (m) pixel-aligned with render_frame
-  s.robot_spec(); s.kinematics_spec(); s.kinematics(req)         # the robot's spec sheet; stateless FK / IK (= the limited /kinematics)
+  s.robot_spec(); s.kinematics_spec(); s.kinematics(req)         # the robot's spec sheet; stateless FK / IK (= the standard mode's /kinematics)
   s.joint_velocities(); s.joint_efforts()                        # measured joint velocities; PD drive-effort estimate
 """
 from __future__ import annotations
@@ -1419,7 +1419,7 @@ class Session:
         """Brush pointing straight down, rotated by `yaw` (rad) about the vertical axis relative to the start orientation."""
         return quat_mul([math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2)], self._down_quat)
 
-    # ---- the robot's spec sheet and a stateless kinematics query (rcb-limited/2.2; the limited sidecar serves the same answers)
+    # ---- the robot's spec sheet and a stateless kinematics query (eai-standard/2.2; the standard sidecar serves the same answers)
     def _frame_index(self, frame: str) -> int:
         return self._tcp_idx if frame == TOOL_FRAME else self._links.index(frame)
 
@@ -1493,7 +1493,7 @@ class Session:
                                                    f"the hand (no gripper)"}}}
 
     def _kin_request(self, body: dict) -> dict:
-        """Validate a kinematics request (the limited /kinematics rules: ValueError on a malformed one) and fill its defaults."""
+        """Validate a kinematics request (the standard mode's /kinematics rules: ValueError on a malformed one) and fill its defaults."""
         if not isinstance(body, dict):
             raise ValueError("the request must be a dict")
         kin = self.kinematics_spec()
@@ -1537,7 +1537,7 @@ class Session:
           {"op": "ik", "targets": {"tip": pose7}, "seed": q7?, "tol_pos_m"?, "tol_rot_rad"?, "max_iters"?}
               -> {"ok", "op": "ik", "frame": "world", "q": q7 | None, "error": {"tip": {"pos_m", "rot_rad"}}}
         Frames: kinematics_spec()["links"] (the Panda's links and "tip", the tool point). IK starts from the seed (default: the start
-        joint positions), clamps the result to the joint limits; ok = it meets both tolerances. Exactly the limited /kinematics answer."""
+        joint positions), clamps the result to the joint limits; ok = it meets both tolerances. Exactly the standard mode's /kinematics answer."""
         import sapien
         r = self._kin_request(req)
         if r["op"] == "fk":

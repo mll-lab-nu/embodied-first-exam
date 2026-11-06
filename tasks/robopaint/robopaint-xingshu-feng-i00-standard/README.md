@@ -13,9 +13,8 @@
 
 ## Task
 **Process rules** (tasks/robopaint/README.md) on top of the picture rule, so that the exemplar has to be made with strokes rather
-than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 2150 mm (3 × the reference
-solution's 714 mm) made of marks narrower than 2.42 mm on average (`mark_width_mm`: each stroke's own
-inked area / `path_mm`; 0.3 × the reference's 8.09 mm). The cap counts strokes as written: a contact is cut where the brush moves more than 5 mm without a mark
+than coloured in: colouring in fails: a brush-tip path on the main sheet (`path_mm`) longer than 2150 mm (3 × an earlier reference solution's 714 mm) made of marks narrower than 2.42 mm on average (`mark_width_mm`: each stroke's own
+inked area / `path_mm`; 0.3 × that reference's 8.09 mm; the current reference solution: 1181 mm and 5.00 mm). The cap counts strokes as written: a contact is cut where the brush moves more than 5 mm without a mark
 0.1 mm wide, and a stroke longer than 2240 mm (5 × the reference's
 longest, 446 mm) counts once per started 2240 mm; at most 10 % of the
 path in strokes longer than 12 × their bounding box's diagonal (sweeps). They are part of the frozen instance (the rules added to its `target.success`); the sim service

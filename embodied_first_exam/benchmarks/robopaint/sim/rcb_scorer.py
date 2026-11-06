@@ -1,7 +1,8 @@
 """
-rcb_scorer.py — the RoboPaint scoring service of the UNLIMITED mode. It runs in the `scorer` sidecar of the task's compose file,
+rcb_scorer.py — the RoboPaint scoring service of the privileged mode. It runs in the `scorer` sidecar of the task's compose file,
 never in the agent's container, with the graders' copy of the frozen instance (/srv/instance.json: it holds what the score needs)
-and the tooling module (RCB_TOOL_MODULE: rcb_paint for line drawings, rcb_brush for the brush families).
+and the tooling module RCB_TOOL_MODULE (every task's compose file sets it: rcb_brush_strict, the brush tooling with the process
+rules).
 
 The agent's Session.score() posts the actions it has executed since its last reset; the service replays them on its own Session
 (same frozen instance, same deterministic simulation, so the canvas is the agent's canvas bit for bit) and answers with the task's
