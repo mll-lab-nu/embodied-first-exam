@@ -128,7 +128,7 @@ CPU PhysX with `enable_enhanced_determinism`, one simulated scene per process, o
   action replay with zero state error and the same events and outcome;
 - a seed reset alone rebuilds the recorded start (`initial_state.pkl` of the bank adds nothing), and rendering, the render
   backend (`render_backend="cpu"`, below) and the cameras do not change the physics (same hashes);
-- across hosts (measured for pandadyn 0.1.0, 2026-10-17; not repeated for 0.2.0): S06's arm start comes from the IK fallback (scipy `least_squares`: Pinocchio's
+- across hosts (measured for pandadyn 0.1.0; not repeated for 0.2.0): S06's arm start comes from the IK fallback (scipy `least_squares`: Pinocchio's
   IK does not converge there, joint 4 ends on its bound), whose last bits follow the BLAS kernel OpenBLAS picks for the
   CPU. Frozen under the AVX-512 kernel, its start never rebuilt on AVX2 hosts (e.g. AMD EPYC 7R13, EPYC 7402,
   EPYC 7763; 4 joints differ in the last float32 bit: `instance_mismatch`). Its containers now pin the kernel
@@ -319,7 +319,7 @@ Serves `eai-standard/2.1` with the optional reset capability (3 resets). Resume 
 
 ## Screening
 
-The screening below ran on pandadyn 0.1.0 (task digests from before 2026-10-23). 0.2.0 changed every task (new digests; results are attributed by digest), so it describes 0.1.0 and has not been rerun yet.
+The screening below ran on pandadyn 0.1.0. 0.2.0 changed every task (new digests; results are attributed by digest), so it describes 0.1.0; it has not been rerun on 0.2.0.
 
 The benchmark owner's screening (ten runs, one trial per run and task directory). A directory is **easy** when a run solved it: a graded success within the task's time limit.
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
