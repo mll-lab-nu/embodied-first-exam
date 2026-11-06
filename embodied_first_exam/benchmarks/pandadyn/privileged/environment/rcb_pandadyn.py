@@ -448,6 +448,12 @@ def load_trajectory(path: str | Path, task: str, dim: int) -> np.ndarray:
     return A
 
 
+# Errors of our tooling or the host, never of the agent's rows: a replay that raises one of these prints no result, an
+# infrastructure failure (the grader: no verdict on the agent). Anything else the simulator raises while it runs the rows
+# (the servo's "Ruckig failed", a physics error) is the agent's sim_error.
+INFRA_ERRORS = (MemoryError, ImportError, OSError, AttributeError, NameError, TypeError, RecursionError, NotImplementedError)
+
+
 def _cli_replay(a) -> int:
     t0 = time.time()
     s = Session(a.instance)
@@ -458,6 +464,8 @@ def _cli_replay(a) -> int:
         out["error"] = f"bad trajectory: {exc!r}"[:300]; print(json.dumps(out), flush=True); return 2
     try:
         res = s.replay(A)
+    except INFRA_ERRORS:
+        raise                                               # no result: an infrastructure failure, not the agent's 0
     except Exception as exc:  # noqa: BLE001
         # The simulator raised on the agent's rows (e.g. the servo's "Ruckig failed"): the replay ran and failed, the
         # agent's 0 (sim_error), as a simulator error ends the standard twin's live episode. The scene was built and

@@ -18,8 +18,9 @@ present):
   an error on the agent's rows (`sim_error`, e.g. the servo's trajectory generator failing: as in the standard twin,
   where a simulator error ends the live episode as the agent's 0);
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends without a
-  result or runs out of its time limit (`replay_timed_out`), the rebuilt frozen scene not matching the recorded instance
-  (`instance_ok` = 0: the host, not the trajectory), or any other error in this script.
+  result (among them an error of the tooling or the host during the replay: out of memory, a missing module or file, a
+  bug; rcb_pandadyn.INFRA_ERRORS) or runs out of its time limit (`replay_timed_out`), the rebuilt frozen scene not
+  matching the recorded instance (`instance_ok` = 0: the host, not the trajectory), or any other error in this script.
 """
 from __future__ import annotations
 import argparse, json, os, subprocess, sys, time, traceback

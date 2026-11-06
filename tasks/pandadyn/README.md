@@ -156,7 +156,8 @@ before official runs there (PROTOCOL §3).
 - **Privileged** (`tests/grade.py`): the trajectory (`task`, `actions` (T, 8 per arm) float, at most 4,500 rows) is
   replayed open-loop from the verifier's own copy of the instance in two fresh processes; success iff both succeed, both
   end in the same state hash (`deterministic`) and both rebuilt the frozen start (`instance_ok`). A replay that gives no
-  result or runs out of its time limit (300 s + rows / 10) is `grader_error` = `infra_error` = 1. A replay the simulator
+  result (an error of the tooling or the host during the replay, such as running out of memory, included) or runs out
+  of its time limit (300 s + rows / 10) is `grader_error` = `infra_error` = 1. A replay the simulator
   ends with an error on the agent's rows (e.g. the servo's trajectory generator failing) is the agent's 0 (`sim_error` = 1,
   `infra_error` = 0), as a simulator error from a call is in the standard twins. Then a filmed replay (`replay.mp4`,
   overview camera; up to the error, if there was one) that never changes the verdict.
