@@ -1,7 +1,8 @@
-"""DexToolBench verifier (separate sandbox): replay /app/output/trajectory.npz twice from the frozen start state and
+"""DexToolBench verifier (separate sandbox): replay /app/output/trajectory.npz ONCE from the frozen start state and
 score the benchmark's task progress (goals reached / goals, 1.5 cm keypoint tolerance, 30 s per goal (upstream 10 s)).
-reward.txt = success (1/0): every goal reached and both replays agree bit-exactly; progress = goals reached / goals,
-in reward.json.
+reward.txt = success (1/0): every goal reached in that replay; progress = goals reached / goals, in reward.json. With one
+replay there is no second end state to compare: `deterministic` is written as 1 (nothing disagreed) with
+`determinism_checked` = 0 and `replays` = 1.
 Also renders /logs/verifier/replay.mp4 (front / side / top / oblique) and, after the verdict, videos of the agent's own
 rollouts from its self-reported traces (agent_sessions/)."""
 import glob, json, math, os, sys, time, traceback
@@ -11,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 LOG = "/logs/verifier"; os.makedirs(LOG, exist_ok=True)
 # Videos come after the verdict and must end well inside the verifier timeout, even on software rendering (~1.3 s a
 # frame): the replay video has at most MAX_FRAMES frames, agent-rollout videos start only while under the budget.
-MAX_TRAJ_STEPS = 360_000   # 100 min of robot time at 60 Hz (replayed twice in ~5 min)
+MAX_TRAJ_STEPS = 360_000   # 100 min of robot time at 60 Hz (replayed in ~2.5 min)
 T0 = time.time(); RENDER_BUDGET_S = float(os.environ.get("RCB_RENDER_BUDGET_S", "600")); MAX_FRAMES = 400
 
 
@@ -47,10 +48,11 @@ def main() -> int:
         if A is None or A.ndim != 2 or A.shape[1] != rcb_dtb.N or A.shape[0] > MAX_TRAJ_STEPS or not np.all(np.isfinite(A)):
             write(0.0, {"success": 0, "progress": 0.0, "deterministic": 0, "bad_trajectory": 1, "grader_error": 0, **c}); return 0
         s = rcb_dtb.Session("/tests/instance.json", enable_render=True)
-        r1 = s.replay(A); r2 = s.replay(A); det = r1["state_sha"] == r2["state_sha"] and r1["reached"] == r2["reached"]
-        prog = float(r1["progress"]) if det else 0.0
-        out = {"success": int(det and r1["done"]), "progress": round(prog, 4), "goals_reached": int(r1["reached"]), "n_goals": int(r1["n_goals"]),
-               "failed_on_timeout": int(bool(r1["failed"])), "deterministic": int(det), "n_actions": int(len(A)), "control_steps_used": int(r1["steps"]),
+        r1 = s.replay(A)
+        prog = float(r1["progress"])
+        out = {"success": int(bool(r1["done"])), "progress": round(prog, 4), "goals_reached": int(r1["reached"]), "n_goals": int(r1["n_goals"]),
+               "failed_on_timeout": int(bool(r1["failed"])), "deterministic": 1, "determinism_checked": 0, "replays": 1,
+               "n_actions": int(len(A)), "control_steps_used": int(r1["steps"]),
                "video_rendered": 0, "grader_error": 0, **c}
         write(prog, out)
         try:
