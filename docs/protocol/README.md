@@ -328,11 +328,9 @@ of `tests/docker-compose.yaml` with a network setting other than `none`). *CI:* 
 share one frozen instance (byte-identical copies), one success rule and the same seeds (`instance_seed`, and
 `[metadata.seeds]` `allowed` and `build`), and the privileged and standard versions have the same cutoff (`same_cutoff_as` in the mode registry).
 *CI:* `check-twins.py`, `check-instance-copies.sh`.
-One success rule is not one length rule: in some suites the privileged deliverable has an action or time limit that its
-standard twin does not (LIBERO-MAX: 220-520 control steps privileged, a technical cap of 9,000 in standard;
-DexToolBench: 30 s per goal privileged, none in standard), so a cross-mode comparison of those twins compares under
-different length rules; each such suite states its rules in its `tasks/<benchmark>/README.md` (LIBERO-MAX "Length",
-DexToolBench's modes table).
+One success rule is not one length rule: where a privileged deliverable has an action or time limit its standard twin
+does not, the suite's `tasks/<benchmark>/README.md` states both, and cross-mode comparisons of those twins are read
+with that in mind.
 
 **H.8 DIGEST.** `tasks/<benchmark>/<task>/DIGEST` is the digest Harbor publishes the task under (`sha256:<hex>` over the relative
 path and content hash of `task.toml`, `instruction.md`, `README.md` and every file under `environment/`, `tests/`,

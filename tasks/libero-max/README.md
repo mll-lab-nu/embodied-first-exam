@@ -72,7 +72,8 @@ Every image is public: Harbor pulls it.
   service ends the episode with `reason = "success"` there.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ the suite's limit (220 / 280 / 300 / 520 control steps, LIBERO's
   evaluation horizons), counted after the 10 warm-up steps. Standard episodes have only a technical cap of 9,000 control
-  steps (450 s of robot time) so that the episode's video pass fits the collect hook's wait (see Grading).
+  steps (450 s of robot time) so that the episode's video pass fits the collect hook's wait (see Grading). The twins
+  therefore share the success rule but not the length rule: compare privileged and standard results with that in mind.
   LIBERO's environment is built with a horizon beyond both (robosuite refuses actions after its horizon; it does not
   touch the physics).
 - **World frame.** Metres; the robot's base (fixed mount) at (-0.66, 0, 0.912) facing +x: x forward, y left, z up.
