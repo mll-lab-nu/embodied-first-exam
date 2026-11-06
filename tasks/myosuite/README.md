@@ -108,8 +108,12 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 - **Privileged:** `rcb_myosuite.Session` in the agent's container: reset, the task's observation dict, MuJoCo model and
   data, actuator descriptions and moment arms, rendering, recording and self-replay. Deliverable
   `/app/output/trajectory.npz`, `(T, nu)` actuator commands, one row per control step. `tests/grade.py` checks the
-  file (readable, `(T, nu)` for this instance's `nu`, at most 1,000,000 rows, finite: otherwise `bad_trajectory`, the
-  agent's 0) before it replays it; a replay process that then gives no result (out of time, killed, not started) is
+  file (readable, `(T, nu)` for this instance's `nu`, finite, at most the family's row limit, which its instruction
+  states: 360 s of replay at the family's stated rate, 108,000 rows for table tennis and MyoDex airplane to 864,000 for
+  pen twirl, and no `.npz` entry larger than those rows unpack to; otherwise `bad_trajectory`, the agent's 0) before it
+  replays it. Each of the two grading replays may take 780 s (the longest legal trajectory at half its family's stated
+  rate, plus the start), so both fit in the verifier's 1800 s; the video replay runs after the verdict only in the time
+  left (none when under 60 s remain). A replay process that then gives no result (out of time, killed, not started) is
   `replay_failed` with `grader_error = 1` and `infra_error = 1`, never the agent's 0, and every `reward.json` carries
   `infra_error`.
 - **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` and the adapter

@@ -18,7 +18,7 @@ every executed row is journaled; after a crash the service rebuilds the episode 
 the committed resets did (their journal rows are checkpointed, `persist`). When the episode ends the service writes
 /data/trajectory.npz + /data/episode.json; the collect hook (finalize.sh) makes it exit and writes the verdict.
 
-The verdict is the live episode's (owner, 2026-10-17): `success` in episode.json is the task's rule as
+The verdict is the live episode's: `success` in episode.json is the task's rule as
 Session.step applied it to the steps this service ran (MyoSuite's goal held for the family's hold time, the challenge's
 own success event, or the MyoDex track over the whole reference: the windows are part of the rule, so the episode only
 ends in success once its window is complete). Nothing is replayed to grade it. The frozen initial state is checked when
@@ -49,7 +49,7 @@ W, H = 640, 480
 # Images one call may return (cameras x frames, per-frame depth counted again), checked before anything runs: every
 # frame is held until the response is sent. Measured on the layer's Recorder with 640x480 frames: 2.7 GB per 1000 RGB
 # frames and 5.1 GB per 1000 images of one camera with per-frame depth, on top of the simulator's 1.4 GB, under the
-# sidecar's 8 GiB cap (docs/benchmarks/myosuite.md). The 2.1 services' 3000 would need more than the cap.
+# sidecar's 8 GiB cap (tasks/myosuite/README.md). The 2.1 services' 3000 would need more than the cap.
 MAX_FRAMES = 1000
 LOCK = threading.Lock()
 PID_FILE = os.path.join(DATA, "server.pid")
