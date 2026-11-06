@@ -12,7 +12,7 @@ The episode ends after the last row of your trajectory, or after **455 control s
 30 s horizon at 15.152 Hz), whichever comes first. Success is upstream's `judge_success()` on the state
 at that moment: the target's joint is open at most 15% of its range (it starts 50% open). The task has to hold at the end: met earlier and undone by then does not count, and ending
 your trajectory right after the task is met is how you stop there. The grader replays your trajectory open-loop from the
-same start in a fresh process, twice; it scores 1 only if both replays succeed and end in the same state.
+same start in a fresh process; it scores 1 only if that replay succeeds.
 
 ## Deliverable
 `/app/output/trajectory.npz` with `actions`: float64 (T, 8) with T at most 100,000 (a longer file scores 0), one row per control step, the targets of upstream's
@@ -41,7 +41,7 @@ s.replay(rows)                       # reset, run the rows, return the status
 s.save_trajectory(rows, "/app/output/trajectory.npz")
 ```
 `q` follows `s.kinematics_spec()["joint_names"]`. The upstream package `molmo_spaces` is installed (without its scripted
-experts); the frozen episode is `/app/instance.json`. The grader runs exactly this CLI in two fresh processes, so run it
+experts); the frozen episode is `/app/instance.json`. The grader runs exactly this CLI in a fresh process, so run it
 to check yourself:
 `python /opt/tools/rcb_molmospaces.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 

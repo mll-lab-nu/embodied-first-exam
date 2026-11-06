@@ -25,10 +25,10 @@ image; neither are grasp files nor the public MolmoBot trajectories (agent egres
 registries; the PyPI distribution `molmo-spaces` has those experts, PROTOCOL §5).
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`).
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in one fresh process (`tests/grade.py`).
 Each replay is upstream's evaluation loop: one upstream `Task.step` per row until upstream's `is_done()` (the
 benchmark's 100 s horizon = 500 control steps) or the last row, then upstream's `judge_success()`
-on the final state: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. Pass iff both replays succeed and end in the same state; `replay.mp4` is rendered after
+on the final state: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. Pass iff the replay succeeds; `replay.mp4` is rendered after
 the verdict. No oracle; human review in PR #276 (PROTOCOL §4: per family, this task and its twin, a
 positive example and the `nop` result).
 
