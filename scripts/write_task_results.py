@@ -93,14 +93,18 @@ def classify(trial, r, rw):
     return ("success" if ok else "not_a_result" if why else "fail"), why, over
 
 
-def first_success(rw, mode):
+def first_success(rw, mode, reset_budget=None):
     """The first attempt's result in the standard modes (PROTOCOL §4): reward.json's first_success; a verifier that does
-    not write it: the graded success when no reset was made, else 0 (a success ends the trial); None when reward.json
-    says neither (privileged mode, no verdict, no `resets`)."""
+    not write it: the graded success when the trial's reset budget (its effective configuration) is 0, as no reset
+    could be made (whatever a service counts as `resets`), else the graded success when no reset was made, else 0 (a
+    success ends the trial). None when none of these is known (privileged mode, no verdict, no `resets` and a reset
+    budget other than 0 or unknown)."""
     if mode == "privileged" or not rw or rw.get("infra_error") or rw.get("grader_error"):
         return None
     if rw.get("first_success") is not None:
         return int(bool(rw["first_success"]))
+    if type(reset_budget) is int and reset_budget == 0:
+        return int(rw.get("success") == 1)
     if rw.get("resets") is None:
         return None
     return int(rw.get("success") == 1 and int(rw.get("resets") or 0) == 0)
@@ -196,7 +200,7 @@ def main(argv):
         cfg = trial_config(trial, task, r)
         cfg.update({"run_id": slug, "job": job, "trial": trial.name, "result": status, "not_a_result_reason": why,
                     "counted": status != "not_a_result", "attempts": len(led), "attempts_over_cap": over_cap,
-                    "first_success": first_success(rw, mode)})
+                    "first_success": first_success(rw, mode, cfg.get("reset_budget"))})
         (out / "config.json").write_text(json.dumps(cfg, indent=1) + "\n")
         for f in ("replay.mp4", "replay.last.png", "replay.first.mp4", "replay.first.last.png"):
             if (trial / "verifier" / f).exists(): shutil.copy(trial / "verifier" / f, out / f)

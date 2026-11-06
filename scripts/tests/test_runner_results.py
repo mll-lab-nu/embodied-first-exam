@@ -29,6 +29,7 @@ TASK = "robotwin_2_0_stack_blocks_two-standard"          # any task of the repos
 BIG = "behavior-boxing-food-after-dinner-i00"             # its standard twin's sidecar caps are 12 CPUs
 HB = "humanoidbench-loco-walk-i00-privileged"            # [environment] cpus = 16
 SMALL = "robotwin_2_0_stack_blocks_two"                  # caps of at most 8
+RESETS = "dexhand-assemble-hamburger-i00-standard"       # a standard task with a reset budget (20)
 fails = []
 
 
@@ -208,24 +209,27 @@ def test_config_and_attempts():
 
 def test_first_attempt():
     """PROTOCOL §4: the standard modes report the first-attempt (no-reset) result beside the graded one: reward.json's
-    first_success, else the graded success when no reset was made; the first attempt's video is published next to the
-    graded one; privileged results and infrastructure failures carry none."""
+    first_success; else, on a task whose reset budget is 0, the graded success (no reset could be made, whatever the
+    service counts as `resets`); else the graded success when no reset was made (no `resets`: unknown). The first
+    attempt's video is published next to the graded one; privileged results and infrastructure failures carry none."""
     with tempfile.TemporaryDirectory() as td:
         td = Path(td); jobs, out = td / "jobs", td / "out"
-        cases = {"j1": ({"success": 1, "resets": 0}, 1), "j2": ({"success": 1, "resets": 2}, 0),
-                 "j3": ({"success": 1, "resets": 2, "first_success": 0}, 0), "j4": ({"success": 0, "resets": 0}, 0),
-                 "j5": ({"success": 1}, None), "j6": ({"success": 0, "infra_error": 1, "resets": 0}, None)}
-        for job, (reward, want) in cases.items():
-            t = make_trial(jobs, job, "f1", f"{SMALL}-standard", "2026-10-14T01:00:00Z", reward)
+        small, rst = f"{SMALL}-standard", RESETS                     # reset budget 0 / a task that grants resets
+        cases = {"j1": (rst, {"success": 1, "resets": 0}, 1), "j2": (rst, {"success": 1, "resets": 2}, 0),
+                 "j3": (rst, {"success": 1, "resets": 2, "first_success": 0}, 0), "j4": (rst, {"success": 0, "resets": 0}, 0),
+                 "j5": (rst, {"success": 1}, None), "j6": (rst, {"success": 0, "infra_error": 1, "resets": 0}, None),
+                 "j7": (small, {"success": 1}, 1), "j8": (small, {"success": 0}, 0), "j9": (small, {"success": 1, "resets": 1}, 1)}
+        for job, (task, reward, want) in cases.items():
+            t = make_trial(jobs, job, "f1", task, "2026-10-14T01:00:00Z", reward)
             if job == "j2":
                 (t / "verifier/replay.first.mp4").write_bytes(b"mp4")
             res = out / job
             write(jobs, job, res)
-            cfg = json.loads((res / f"{SMALL}-standard" / "codex-x-high" / "config.json").read_text())
-            check(cfg.get("first_success") == want, f"{job} {reward}: first_success {cfg.get('first_success')!r}, want {want!r}")
-            readme = (res / f"{SMALL}-standard" / "codex-x-high" / "README.md").read_text()
+            cfg = json.loads((res / task / "codex-x-high" / "config.json").read_text())
+            check(cfg.get("first_success") == want, f"{job} {task} {reward}: first_success {cfg.get('first_success')!r}, want {want!r}")
+            readme = (res / task / "codex-x-high" / "README.md").read_text()
             check(("| first attempt (no reset) |" in readme) == (want is not None), f"{job}: first-attempt row: {readme[:400]}")
-        check((out / "j2" / f"{SMALL}-standard" / "codex-x-high" / "replay.first.mp4").exists(), "replay.first.mp4 not published")
+        check((out / "j2" / rst / "codex-x-high" / "replay.first.mp4").exists(), "replay.first.mp4 not published")
         make_trial(jobs, "p1", "f1", f"{SMALL}-privileged", "2026-10-14T01:00:00Z", {"success": 1, "resets": 0})
         write(jobs, "p1", out / "p1")
         cfg = json.loads((out / "p1" / f"{SMALL}-privileged" / "codex-x-high" / "config.json").read_text())
