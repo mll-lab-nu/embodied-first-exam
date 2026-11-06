@@ -12,25 +12,27 @@ joint within tolerance on another host).
 
 Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error` and `infra_error` are always present):
 - the agent's: no file (`missing_trajectory`), another family's trajectory (`wrong_family`), a file that is not a
-  trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, pickled or object arrays, the wrong shape, NaN/inf,
-  more than MAX_STEPS rows), or a replay that does not complete the task or is not deterministic;
+  trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, an entry larger than MAX_STEPS x ACTION_DIM
+  float64 numbers + MAX_MEMBER_MARGIN bytes unpacked (checked before it is read; `too_large`), pickled or object arrays,
+  the wrong shape, NaN/inf, more than MAX_STEPS rows), or a replay that does not complete the task or is not deterministic;
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends
   without a result (Isaac died) or runs out of its time limit (`replay_timed_out`), the rebuilt frozen scene not matching
   the recorded instance (`instance_ok` = 0: the host, not the trajectory), or any other error in this script.
 """
 from __future__ import annotations
-import argparse, json, os, subprocess, sys, time, traceback
+import argparse, json, os, subprocess, sys, time, traceback, zipfile
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # Wall-clock limit of ONE replay process, scaled with the trajectory (time limits only; the verdict rules do not depend on
 # them). The grader accepts up to MAX_STEPS rows, and a trajectory that never reaches the goal is replayed to its last row.
 # Measured: Isaac start + scene build 1.5-2.5 min, 629 s with a cold shader cache on a loaded host (the verifier's first
-# replay starts cold), replays 60-120 control steps/s unfilmed (docs/benchmarks/yamlab.md); the allowance is
-# REPLAY_STARTUP_S for the start plus a third of the slow nominal rate (REPLAY_MIN_RATE control steps/s), never below the
-# old flat 1800 s. task.toml's [verifier] timeout_sec fits two replays of a MAX_STEPS-row trajectory plus overhead, so a
+# replay starts cold), replays 60-120 control steps/s unfilmed (tasks/yamlab/README.md); the allowance is
+# REPLAY_STARTUP_S for the start plus a third of the slow nominal rate (REPLAY_MIN_RATE control steps/s), never below
+# REPLAY_FLOOR_S. task.toml's [verifier] timeout_sec fits two replays of a MAX_STEPS-row trajectory plus overhead, so a
 # replay that is too slow ends here with a written reward (`replay_timed_out`), never with Harbor killing the verifier.
 REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 1800.0, 1200.0, 20.0
+MAX_MEMBER_MARGIN = 1 << 20   # bytes an .npz entry may hold beyond MAX_STEPS x ACTION_DIM float64 numbers (the .npy header)
 
 
 def replay_timeout(n_steps: int) -> float:
@@ -41,7 +43,16 @@ def load_trajectory(path: str, family: str, action_dim: int, max_steps: int):
     """(actions, None), or (None, reward fields) when the file is not a gradable trajectory of this family. Everything
     here is the agent's deliverable: a file that cannot be read is the agent's 0 (`bad_trajectory`), not a grader error."""
     try:
-        d = np.load(path, allow_pickle=False)              # not an npz / a bare .npy / pickled content: ValueError, OSError, ...
+        if not zipfile.is_zipfile(path):                   # a bare .npy (or anything else) is not the tooling's .npz
+            return None, {"bad_trajectory": 1}
+        limit = max_steps * action_dim * 8 + MAX_MEMBER_MARGIN
+        with zipfile.ZipFile(path) as z:                   # entry sizes before anything is unpacked: a small file that
+            sizes = {i.filename: i.file_size for i in z.infolist()}   # inflates to gigabytes is the agent's 0, not an OOM
+        if "task.npy" not in sizes or "actions.npy" not in sizes:
+            return None, {"bad_trajectory": 1}
+        if max(sizes["task.npy"], sizes["actions.npy"]) > limit:
+            return None, {"bad_trajectory": 1, "too_large": 1}
+        d = np.load(path, allow_pickle=False)              # not an npz / pickled content: ValueError, OSError, ...
         task = str(d["task"])                              # no `task` entry: KeyError; an object array: ValueError
     except Exception as exc:  # noqa: BLE001
         print(f"[grade] unreadable trajectory: {exc!r}", file=sys.stderr, flush=True)

@@ -10,7 +10,7 @@ reset and retry as many times as you want. Your deliverable is **one replayable 
 
 ## Success (YAMLab's own check, with its evaluation thresholds)
 1. **pick**: the pot's centre is more than 5 cm above its resting height (z > 0.8887 m) while **both** grippers grasp it (YAMLab's grasp detection: both fingers of that gripper touch the pot with at least 0.1 N, on their pads), for 8 consecutive control steps;
-2. **place**: the pot rests on the cooktop: its centre within 0.216 m (horizontally) of the cooktop's centre, its centre's height within 2 cm of the cooktop's centre + half the cooktop's height (3.2 cm) + half the pot's height (8.2 cm), upright (its z axis within 0.2 rad of vertical), and **neither** gripper grasping it, for 30 consecutive control steps.
+2. **place**: the pot rests on the cooktop: its centre within 0.21564 m (horizontally) of the cooktop's centre, its centre's height within 2 cm of the cooktop's centre + half the cooktop's height (0.06482 m / 2) + half the pot's height (0.16399 m / 2), upright (its z axis within 0.2 rad of vertical), and **neither** gripper grasping it, for 30 consecutive control steps.
 
 The stages are checked after every control step, in order (a stage is only checked once the previous one has latched),
 and a latched stage stays latched. The episode **ends by itself** at the first control step where every stage has latched

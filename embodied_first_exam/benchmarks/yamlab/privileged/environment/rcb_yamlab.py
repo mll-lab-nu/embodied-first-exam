@@ -1366,7 +1366,7 @@ def cmd_make_instance(a) -> None:
            "robot_joint_positions": {arm: [round(float(x), 6) for x in s.joint_positions(arm)] for arm in ARMS},
            "objects": s.objects(), "success_params": s.success_params(), "table_top_z": None,
            # no provenance here: the instance is in the agent's container, and where its scene came from is the address
-           # of a solution (PROTOCOL §2.7); the maintainers' record is scripts/yamlab/instances.json
+           # of a solution (PROTOCOL §2.7); the maintainers keep that record outside the repository
            "versions": _versions()}
     try:
         from yamlab.robot.yam import ROBOT

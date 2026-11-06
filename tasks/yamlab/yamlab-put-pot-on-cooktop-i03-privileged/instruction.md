@@ -9,8 +9,8 @@ This is a *fixed scene instance*: the objects' poses and the robot's start pose 
 reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## Success (YAMLab's own check, with its evaluation thresholds)
-1. **pick**: the pot's centre is more than 5 cm above its resting height (z > 0.9075 m) while **both** grippers grasp it (YAMLab's grasp detection: both fingers of that gripper touch the pot with at least 0.1 N, on their pads), for 8 consecutive control steps;
-2. **place**: the pot rests on the cooktop: its centre within 0.230 m (horizontally) of the cooktop's centre, its centre's height within 2 cm of the cooktop's centre + half the cooktop's height (2.7 cm) + half the pot's height (10.1 cm), upright (its z axis within 0.2 rad of vertical), and **neither** gripper grasping it, for 30 consecutive control steps.
+1. **pick**: the pot's centre is more than 5 cm above its resting height (z > 0.90745 m) while **both** grippers grasp it (YAMLab's grasp detection: both fingers of that gripper touch the pot with at least 0.1 N, on their pads), for 8 consecutive control steps;
+2. **place**: the pot rests on the cooktop: its centre within 0.22995 m (horizontally) of the cooktop's centre, its centre's height within 2 cm of the cooktop's centre + half the cooktop's height (0.05409 m / 2) + half the pot's height (0.20151 m / 2), upright (its z axis within 0.2 rad of vertical), and **neither** gripper grasping it, for 30 consecutive control steps.
 
 The stages are checked after every control step, in order (a stage is only checked once the previous one has latched),
 and a latched stage stays latched. The episode **ends by itself** at the first control step where every stage has latched

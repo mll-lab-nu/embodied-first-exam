@@ -32,7 +32,7 @@ pose and the recorded teleoperation demonstration `hangmug_010.hdf5 demo_1`, one
 control step the service reports.
 
 ## Verification
-Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, judged by the sim
+Graded by the live episode: `success` = the live episode's success, judged by the sim
 service on the episode the agent ran, with no grading replay. YAMLab's success check (evaluation thresholds) is evaluated
 after every control step; the episode ends at the first step where every stage has latched. Before serving, the service
 checks the rebuilt scene against the frozen instance (`instance.json` `state_sha`, else every object pose and joint within
@@ -40,9 +40,8 @@ tolerance); a mismatch is an infrastructure failure (`instance_mismatch`). `test
 network and writes the reward fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields), plus
 `/logs/verifier/live.mp4`: the service keeps a frame (top + both wrist cameras) at the control steps the agent's own calls
 rendered (at most one per 6 steps; no extra render for the video), and the collect hook encodes it after the verdict (a
-failed encode costs the video only). Compute: the collect hook needs no GPU after the service exits (it replayed the
-episode in two fresh Isaac processes before 2026-10-17). Oracle: the live episode ended in the privileged oracle's final
-state (hash `d378d0490454b5f6`; under the earlier rule both replays did too). `nop`: the episode ends on the time-out with no
+failed encode costs the video only). Compute: the collect hook needs no GPU after the service exits. Oracle: the live episode ended in the privileged oracle's final
+state (hash `d378d0490454b5f6`). `nop`: the episode ends on the time-out with no
 stage reached, reward 0.
 
 ## Resources

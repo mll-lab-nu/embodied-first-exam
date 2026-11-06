@@ -6,7 +6,7 @@ You control two **I2RT YAM arms with parallel two-finger grippers** on a worksta
 
 ## Success
 1. **pick**: the pot's centre is more than 5 cm above its resting height while **both** grippers grasp it (YAMLab's grasp detection: both fingers of that gripper touch the pot with at least 0.1 N, on their pads), for 8 consecutive control steps;
-2. **place**: the pot rests on the cooktop: its centre within 0.207 m (horizontally) of the cooktop's centre, its centre's height within 2 cm of the cooktop's centre + half the cooktop's height (2.8 cm) + half the pot's height (6.3 cm), upright (its z axis within 0.2 rad of vertical), and **neither** gripper grasping it, for 30 consecutive control steps.
+2. **place**: the pot rests on the cooktop: its centre within 0.20721 m (horizontally) of the cooktop's centre, its centre's height within 2 cm of the cooktop's centre + half the cooktop's height (0.05641 m / 2) + half the pot's height (0.12532 m / 2), upright (its z axis within 0.2 rad of vertical), and **neither** gripper grasping it, for 30 consecutive control steps.
 
 Each condition must hold for the stated number of consecutive control steps (1/30 s each); the stages count in order and
 stay counted once reached. The episode **ends by itself** at the first control step where every stage has been reached

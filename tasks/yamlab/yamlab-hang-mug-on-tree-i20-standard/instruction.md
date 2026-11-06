@@ -7,7 +7,7 @@ You control two **I2RT YAM arms with parallel two-finger grippers** on a worksta
 ## Success
 1. **pick**: the **left** gripper grasps the mug (YAMLab's grasp detection: both fingers of that gripper touch the mug with at least 0.1 N, on their pads) and the mug's centre is more than 5 cm above its resting height, for 8 consecutive control steps;
 2. **handover**: the **right** gripper grasps the mug, the left gripper does not, and the mug's centre stays more than 5 cm above its resting height, for 30 consecutive control steps (as in YAMLab, the left fingers' friction is raised when the left gripper first grasps the mug and lowered again when both grippers hold it: YAMLab's own handover aid);
-3. **hang**: the mug's centre within 0.138 m (horizontally) of the mug tree's centre and more than 5 cm above the height it would rest at on the table, **neither** gripper grasping it, and its height steady (within 3.0 cm of where this stage started), for 30 consecutive control steps.
+3. **hang**: the mug's centre within 0.13844 m (horizontally) of the mug tree's centre and more than 5 cm above the height it would rest at on the table, **neither** gripper grasping it, and its height steady (within 3.0 cm of where this stage started), for 30 consecutive control steps.
 
 Each condition must hold for the stated number of consecutive control steps (1/30 s each); the stages count in order and
 stay counted once reached. The episode **ends by itself** at the first control step where every stage has been reached

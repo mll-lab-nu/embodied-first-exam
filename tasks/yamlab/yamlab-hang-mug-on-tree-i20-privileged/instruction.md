@@ -9,9 +9,9 @@ This is a *fixed scene instance*: the objects' poses and the robot's start pose 
 reset and retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.
 
 ## Success (YAMLab's own check, with its evaluation thresholds)
-1. **pick**: the **left** gripper grasps the mug (YAMLab's grasp detection: both fingers of that gripper touch the mug with at least 0.1 N, on their pads) and the mug's centre is more than 5 cm above its resting height (z > 0.8570 m), for 8 consecutive control steps;
+1. **pick**: the **left** gripper grasps the mug (YAMLab's grasp detection: both fingers of that gripper touch the mug with at least 0.1 N, on their pads) and the mug's centre is more than 5 cm above its resting height (z > 0.85701 m), for 8 consecutive control steps;
 2. **handover**: the **right** gripper grasps the mug, the left gripper does not, and the mug's centre stays more than 5 cm above its resting height, for 30 consecutive control steps (as in YAMLab, the left fingers' friction is raised when the left gripper first grasps the mug and lowered again when both grippers hold it: YAMLab's own handover aid);
-3. **hang**: the mug's centre within 0.138 m (horizontally) of the mug tree's centre and more than 5 cm above the height it would rest at on the table (z > 0.8520 m), **neither** gripper grasping it, and its height steady (within 3.0 cm of where this stage started), for 30 consecutive control steps.
+3. **hang**: the mug's centre within 0.13844 m (horizontally) of the mug tree's centre and more than 5 cm above the height it would rest at on the table (z > 0.85201 m), **neither** gripper grasping it, and its height steady (within 3.0 cm of where this stage started), for 30 consecutive control steps.
 
 The stages are checked after every control step, in order (a stage is only checked once the previous one has latched),
 and a latched stage stays latched. The episode **ends by itself** at the first control step where every stage has latched
