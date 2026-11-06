@@ -14,7 +14,7 @@ robot = "aloha-2"
 family = "knot_untying"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 oracle = "full"
-difficulty = "medium"               # the variation's tier (docs/rcb/TAXONOMY.md)
+difficulty = "medium"               # the variation's tier (docs/TAXONOMY.md)
 grasp = "assisted (the contact_weld_v1 grasp regions on rope)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision terminal_v5_fixed_contact_active_clearance_1mm)"
 instance_seed = 0                 # scene = environment/instance.json (variation knot_untying_rd_medium, eval index None); identity = dataset.toml digest

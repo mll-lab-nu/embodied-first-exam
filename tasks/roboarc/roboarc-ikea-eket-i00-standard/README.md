@@ -67,7 +67,7 @@ Caps per container (PROTOCOL §6).
 | Initial state | sha256 `9815e6dc4b4a9856…` of the mjSTATE_INTEGRATION vector |
 
 ### Budget
-The wall clock only, the privileged twin's cutoff (PROTOCOL v2.0 H.7): `[agent] timeout_sec` = 10800 s. The service
+The wall clock only, the privileged twin's cutoff (PROTOCOL H.7): `[agent] timeout_sec` = 10800 s. The service
 counts the same limit from the agent's first request (`spec.budget.wall_clock_s`, `meta.time_left_s`) and ends the
 episode with reason `timeout` when it runs out; that count never runs out before Harbor's.
 

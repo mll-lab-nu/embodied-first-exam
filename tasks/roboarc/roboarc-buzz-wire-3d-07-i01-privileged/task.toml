@@ -14,7 +14,7 @@ robot = "franka-robotiq-2f85"
 family = "buzz_wire_3d"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 oracle = "full"
-difficulty = "easier"               # the variation's tier (docs/rcb/TAXONOMY.md)
+difficulty = "easier"               # the variation's tier (docs/TAXONOMY.md)
 grasp = "assisted (the contact_weld_v1 grasp regions on wand)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision terminal_v4_traversal_then_deck_release)"
 instance_seed = 0                 # scene = environment/instance.json (variation buzz_wire_3d_rd_easier, eval index None); identity = dataset.toml digest

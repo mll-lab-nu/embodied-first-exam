@@ -14,7 +14,7 @@ robot = "aloha-2"
 family = "blanket_flatten"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 oracle = "full"
-difficulty = "easier"               # the variation's tier (docs/rcb/TAXONOMY.md)
+difficulty = "easier"               # the variation's tier (docs/TAXONOMY.md)
 grasp = "assisted (the pbd_local_patch_v1 grasp regions on blanket)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision release_settling_v1)"
 instance_seed = 0                 # scene = environment/instance.json (variation easier, eval index None); identity = dataset.toml digest

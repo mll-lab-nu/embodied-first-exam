@@ -14,7 +14,7 @@ robot = "aloha-2"
 family = "slotted_post_ring"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 oracle = "full"
-difficulty = "hard"               # the variation's tier (docs/rcb/TAXONOMY.md)
+difficulty = "hard"               # the variation's tier (docs/TAXONOMY.md)
 grasp = "assisted (the contact_weld_v1 grasp regions on slotted_chain)"
 success_rule = "task-native success (goal_complete True; frozen parameters; terminal revision placement_region_v2_default_success)"
 instance_seed = 0                 # scene = environment/instance.json (variation slotted_post_ring_hard_chain, eval index None); identity = dataset.toml digest
