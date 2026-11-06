@@ -12,7 +12,7 @@ gripper open, already part of the frozen start). Write it with `s.save_trajector
 script that produced it at `/app/output/gen.py`.
 
 ## Success
-The verifier replays your actions from the frozen start in a separate sandbox (twice, each in a fresh process; the
+The verifier replays your actions from the frozen start in a separate sandbox (once, in a fresh process; the
 event is applied by the same trigger), and applies LIBERO's own success check: the task's goal, all of
 - `wooden_cabinet_1_bottom_region` is closed (LIBERO's Close: its drawer's slide joint is all the way in, past its closed position (q > 0); a drawer left out by a few millimetres is not closed)
 - `black_bowl_1` is in `wooden_cabinet_1_bottom_region` (LIBERO's In: `black_bowl_1`'s origin lies inside the region's box, whose floor counts 1 cm lower, and it touches the region's object)

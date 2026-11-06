@@ -12,7 +12,7 @@ gripper open, already part of the frozen start). Write it with `s.save_trajector
 script that produced it at `/app/output/gen.py`.
 
 ## Success
-The verifier replays your actions from the frozen start in a separate sandbox (twice, each in a fresh process; the
+The verifier replays your actions from the frozen start in a separate sandbox (once, in a fresh process; the
 event is applied by the same trigger), and applies LIBERO's own success check: the task's goal, all of
 - `cream_cheese_1` is on `akita_black_bowl_1` (LIBERO's On: `cream_cheese_1`'s origin is no lower than `akita_black_bowl_1`'s, less than 3 cm from it horizontally, and the two touch)
 The episode ends the moment the check holds, so the trajectory must end there: actions after that make it invalid.
