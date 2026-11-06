@@ -143,9 +143,14 @@ under an unrelated name would be missed. A new benchmark whose solution is one `
 | RoboCasa, RoboCasa365, RoboCasa-GR1 | `praxis-robocasa`, `rlinf-robocasa365`, `rpent-robocasa365`, `praxis-robocasa-gr1` | task sources with `_check_success`; no kitchen assets |
 | LIBERO-MAX | `libero`, `hf-libero`, `rlinf-libero`, `rpent-libero`, `praxis-libero`, `libero-infinity`, `rlinf-liberopro`, `rpent-liberopro`, `rlinf-liberoplus` | LIBERO's goal definitions and initial states; no meshes, no demonstrations, not LIBERO-MAX's events |
 
-Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits, RoboLab,
-ManiGuard, DexJoCo, VLABench, RoboDojo, RoboARC, Embodied Olympics, BiGym,
-YAMLab, Panda Dynamic Scenes (not published at all: its environment package is this repository's `images/pandadyn/`),
-DexHand (not published at all: its scenes and tooling are this repository's task dirs and `images/dexhand/`),
-AM-Bench, iSpatialGym (GitHub and Hugging Face only), RoboARC's IKEA suite (not published at all: its scenes are this repository's
-`images/ikea-mujoco/scenes/` with meshes on a public Hugging Face dataset); Isaac Sim does not install from pypi.org.
+Not on PyPI under any name found: RoboTwin's own package, DexToolBench / SimToolReal, HumanoidBench, RoboWits,
+ManiGuard, DexJoCo, VLABench, RoboDojo, RoboARC, Embodied Olympics (Fun and Match), BiGym / BiGym2, LabUtopia,
+ABC Sim (`abc_sim`), EmbodiedSWE, RoboEngineer, YAMLab, AM-Bench, iSpatialGym (GitHub and Hugging Face only), Panda
+Dynamic Scenes (not published at all: its environment package is this repository's `images/pandadyn/`), DexHand (not
+published at all: its scenes and tooling are this repository's task dirs and `images/dexhand/`), RoboARC's IKEA suite
+(not published at all: its scenes are this repository's `images/ikea-mujoco/scenes/` with meshes on a public Hugging
+Face dataset). Names that exist on PyPI but carry nothing of the benchmark: `robolab` (Robot Framework RPA tools,
+unrelated to RoboLab), `autobio` (an empty 0.0.1 of another author, unrelated to AutoBio), `dexhand` (an empty
+placeholder, unrelated to DexHand), `embodied-safety-exam` (0.0.1, a name reservation of the Embodied Safety Exam
+authors: an `__init__.py` only; a later release with the package's code would belong in the table). Isaac Sim does
+not install from pypi.org.
