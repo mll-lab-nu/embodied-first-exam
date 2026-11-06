@@ -12,14 +12,15 @@ the recorded one (`instance_ok`: exact state hash, or every object / joint pose 
 
 Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error` and `infra_error` are always present):
 - the agent's: no file (`missing_trajectory`), another family's trajectory (`wrong_family`), a file that is not a
-  trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, pickled or object arrays, the wrong shape, NaN/inf,
+  trajectory (`bad_trajectory`: not an npz, a member over MAX_MEMBER_BYTES, no `task` / `actions` entry, pickled or object
+  arrays, the wrong shape, NaN/inf,
   more than MAX_STEPS rows), or a replay that does not complete the task or is not deterministic;
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends
   without a result (Isaac died) or runs out of its time limit (`replay_timed_out`), the rebuilt frozen scene not matching
   the recorded instance (`instance_ok` = 0: the host, not the trajectory), or any other error in this script.
 """
 from __future__ import annotations
-import argparse, json, os, subprocess, sys, time, traceback
+import argparse, json, os, subprocess, sys, time, traceback, zipfile
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
@@ -30,6 +31,9 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # 1800 s. task.toml's [verifier] timeout_sec fits two replays of a MAX_STEPS-row trajectory plus overhead, so a
 # replay that is too slow ends here with a written reward (`replay_timed_out`), never with Harbor killing the verifier.
 REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 1800.0, 900.0, 7.5
+# An .npz member larger than this is not a trajectory (MAX_STEPS x ACTION_DIM float64 rows: 6.4 MB); checked on the zip
+# directory before anything is decompressed, so a compressed bomb is the agent's 0, never a verifier killed for memory.
+MAX_MEMBER_BYTES = 32 * 1024 * 1024
 
 
 def replay_timeout(n_steps: int) -> float:
@@ -40,7 +44,11 @@ def load_trajectory(path: str, family: str, action_dim: int, max_steps: int):
     """(actions, None), or (None, reward fields) when the file is not a gradable trajectory of this family. Everything
     here is the agent's deliverable: a file that cannot be read is the agent's 0 (`bad_trajectory`), not a grader error."""
     try:
-        d = np.load(path, allow_pickle=False)              # not an npz / a bare .npy / pickled content: ValueError, OSError, ...
+        with zipfile.ZipFile(path) as z:                   # not a zip (a bare .npy, anything else): BadZipFile
+            big = [i.filename for i in z.infolist() if i.file_size > MAX_MEMBER_BYTES]
+        if big:
+            raise ValueError(f"members larger than {MAX_MEMBER_BYTES} bytes: {big[:3]}")
+        d = np.load(path, allow_pickle=False)              # pickled content, a corrupt member: ValueError, OSError, ...
         task = str(d["task"])                              # no `task` entry: KeyError; an object array: ValueError
     except Exception as exc:  # noqa: BLE001
         print(f"[grade] unreadable trajectory: {exc!r}", file=sys.stderr, flush=True)

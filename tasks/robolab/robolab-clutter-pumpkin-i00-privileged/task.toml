@@ -44,6 +44,8 @@ gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blac
 
 [verifier.environment]
 build_timeout_sec = 5400.0
+cpus = 8                          # one Isaac replay process at a time (tests/grade.py), the simulator the sim sidecar of the
+memory_mb = 32768                 # standard twin runs: measured peak 17.3 GiB there (scripts/task_resources.toml); a margin
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"
