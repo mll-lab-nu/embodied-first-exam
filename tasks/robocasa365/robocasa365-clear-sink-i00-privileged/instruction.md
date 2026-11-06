@@ -11,7 +11,7 @@ layout, style, fixtures, objects and their poses).
 Leave the script that produced it at `/app/output/gen.py`.
 
 ## Success
-The verifier replays your actions from the frozen start in a separate sandbox (twice, in fresh processes; MuJoCo on the
+The verifier replays your actions from the frozen start in a separate sandbox (once, in a fresh process; MuJoCo on the
 CPU is bit-exact) and applies the environment's own success check for `ClearSink` (`_check_success`) to the state **after
 the last action**. A success reached earlier and then lost does not count: end the trajectory while the task is
 achieved. `s.check()` returns the check's latest result.

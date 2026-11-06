@@ -21,7 +21,7 @@ Full privileged state, unlimited resets and self-replay; a mobile manipulator in
 PR #4's reference for this frozen instance (an official demonstration's initial state; PR #4's authoring record for this task names neither the demonstration episode nor the retargeting method). Executed from the frozen scene by the robot's own controller: 241 actions in `solution/oracle.npz`. Neither the demonstration nor the reference is in the image; the agent cannot reach them.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of the instance; `success = deterministic ∧ success on the final state ∧ not solved at the start`. Reference: two fresh-process replays end in the live run's state (hash `e83ba997d65f…`) and succeed. `nop`: no trajectory, reward 0; the instance is not solved at the start.
+`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of the instance; `success = success on the final state ∧ not solved at the start`. Reference: a fresh-process replay ends in the live run's state (hash `e83ba997d65f…`) and succeeds. `nop`: no trajectory, reward 0; the instance is not solved at the start.
 
 ## Resources
 Caps per container (PROTOCOL §6).

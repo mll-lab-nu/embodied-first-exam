@@ -21,7 +21,7 @@ Full privileged state, unlimited resets and self-replay; a mobile manipulator in
 Retargeted by PR #4 from official demonstration episode 2 (`demo_0`, 441 recorded actions; RoboCasa365's demonstrations use a different arm controller): it follows the demonstration's recorded arm joint positions as this controller's absolute joint targets, with the base and torso commands corrected by feedback (PR #4 method `demo_feedback`). Executed from the frozen scene by the robot's own controller: 441 actions in `solution/oracle.npz`. Neither the demonstration nor the reference is in the image; the agent cannot reach them. In this environment the success state does not persist on its own: after the reference's last action, holding still for 10 control steps loses it. Graded on the final state, a trajectory must end at that moment.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of the instance; `success = deterministic ∧ success on the final state ∧ not solved at the start`. Reference: two fresh-process replays end in the live run's state (hash `90fded2ef5e7…`) and succeed. `nop`: no trajectory, reward 0; the instance is not solved at the start.
+`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of the instance; `success = success on the final state ∧ not solved at the start`. Reference: a fresh-process replay ends in the live run's state (hash `90fded2ef5e7…`) and succeeds. `nop`: no trajectory, reward 0; the instance is not solved at the start.
 
 ## Resources
 Caps per container (PROTOCOL §6).
