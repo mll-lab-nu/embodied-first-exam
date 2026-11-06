@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """scripts/efe.py prepull (standard library only, no docker, no Harbor needed):
 
+- version_key() / release_tag() find the release tag of an installed version after PEP 440 normalization (the wheel's
+  1.0.0rc0 is the tag v1.0.0-preview), and no tag for a version that has none;
 - qualified() gives a Docker Hub short name its registry and leaves a ref that names one alone;
 - engine_of() reads -e / --env: docker by default, podman, None for any other environment;
 - prepull() asks the engine for each ref, pulls only the missing ones by that name, reports a failed pull, and does
@@ -30,6 +32,20 @@ def check(cond, msg):
     if not cond:
         fails.append(msg)
 
+
+TAGS = {"v0.1.0", "v1.0.0-preview", "v2.0", "unrelated"}
+check(efe.release_tag("1.0.0rc0", TAGS) == "v1.0.0-preview", "1.0.0rc0 is the release tag v1.0.0-preview")
+check(efe.release_tag("1.0.0-preview", TAGS) == "v1.0.0-preview", "the version as written finds its tag")
+check(efe.release_tag("0.1.0", TAGS) == "v0.1.0", "a plain version finds v<version>")
+check(efe.release_tag("2.0.0", TAGS) == "v2.0", "2.0.0 == 2.0")
+check(efe.release_tag("1.0.0", TAGS) is None, "the final 1.0.0 is not the preview")
+check(efe.release_tag("1.0.0rc1", TAGS) is None, "rc1 is not rc0")
+check(efe.release_tag("main", TAGS) is None, "no version, no tag")
+for a_, b_ in (("1.0.0.post1", "1.0.0-1"), ("1.0.dev0", "1.0-dev"), ("1.0a1", "1.0.0-alpha.1"), ("1!2.0", "1!2"),
+               ("1.0.0c2", "1.0.0rc2"), ("1.0+Ub.1", "1.0+ub-1")):
+    check(efe.version_key(a_) == efe.version_key(b_) is not None, f"{a_} == {b_}")
+check(efe.version_key("1.0.0.post1") != efe.version_key("1.0.0"), "post != release")
+check(efe.version_key("1.0.dev0") != efe.version_key("1.0"), "dev != release")
 
 A = "alpine:3.23.4@sha256:" + "5" * 64
 G = "gogost/gost:3.2.7@sha256:" + "a" * 64

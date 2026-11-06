@@ -2,8 +2,9 @@
 """Embodied First Exam runs on Harbor. `uv tool install --force -e . --with-executables-from harbor` (in a clone) or
 `pip install embodied-first-exam` installs `harbor` (Harbor 0.23.0, plus the flags below on `harbor run`) and `efe` (the
 same, `efe run ...`). Run from anywhere. The tasks: $EFE_ROOT, else the clone that contains the working directory, else
-the clone of an editable install, else a shallow clone of the release tag v<version> made on first use in
-~/.cache/embodied-first-exam/<version> (find_root).
+the clone of an editable install, else a shallow clone of the release tag (v<version> as pyproject.toml writes it, matched
+to the installed version after PEP 440 normalization) made on first use in ~/.cache/embodied-first-exam/<version>
+(find_root).
 
   harbor run -a codex -m openai/gpt-6-astra            # core: each core task in its default mode (the default)
   harbor run --core --privileged -a codex -m openai/gpt-6-astra   # the core tasks in another mode (also --standard, --realtime)
@@ -11,8 +12,10 @@ the clone of an editable install, else a shallow clone of the release tag v<vers
   harbor run --all --privileged -i 'robotwin_2_0_*' -a oracle          # mode flags and -i / -x filter within the set
   harbor run --benchmark roboarc -a codex -m openai/gpt-6-astra   # one benchmark's core tasks
   harbor run -d embodied-first-exam@core -a codex -m openai/gpt-6-astra   # the same sets as a dataset: @core, @all
-  harbor run -p tasks/<benchmark>/<task> -a nop       # one task: Harbor's own -p, untouched
-  harbor run -p tasks/<benchmark> -a nop              # every task of one benchmark: Harbor's own -p, untouched
+  c=$(python3 scripts/stamp_mtimes.py stage tasks/<benchmark>/<task> "$(mktemp -d)") && harbor run -p "$c" -a nop
+                                                      # one task, from a stamped copy: Harbor's own -p, untouched
+  python3 scripts/stamp_mtimes.py tasks/<benchmark> && harbor run -p tasks/<benchmark> -a nop
+                                                      # every task of one benchmark, stamped in place: Harbor's own -p
 
 Set: --core (default) or --all. core = the tasks of docs/core_set.toml, each in its default_mode; with mode flags, each
 core task in those modes (a task without that mode is skipped, and counted). all = every task dir; mode flags filter it.
@@ -50,18 +53,55 @@ def cache_dir() -> Path:
     return Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache") / "embodied-first-exam" / ver
 
 
+_PEP440 = re.compile(r"v?(?:(?P<epoch>\d+)!)?(?P<release>\d+(?:\.\d+)*)"
+                     r"(?:[-_.]?(?P<pre_l>alpha|a|beta|b|preview|pre|c|rc)[-_.]?(?P<pre_n>\d*))?"
+                     r"(?P<post>-(?P<post_n1>\d+)|[-_.]?(?:post|rev|r)[-_.]?(?P<post_n2>\d*))?"
+                     r"(?P<dev>[-_.]?dev[-_.]?(?P<dev_n>\d*))?(?:\+(?P<local>[a-z0-9]+(?:[-_.][a-z0-9]+)*))?")
+_PRE = {"alpha": "a", "a": "a", "beta": "b", "b": "b", "c": "rc", "rc": "rc", "pre": "rc", "preview": "rc"}
+
+
+def version_key(v: str):
+    """A version string after PEP 440 normalization (standard library only), as a comparable key: `1.0.0-preview`,
+    `v1.0.0rc0` and `1.0.0rc0` give the same key; None when v is no PEP 440 version."""
+    m = _PEP440.fullmatch(v.strip().lower())
+    if not m:
+        return None
+    g = m.groupdict()
+    release = [int(x) for x in g["release"].split(".")]
+    while len(release) > 1 and release[-1] == 0:          # 1.0 == 1.0.0
+        release.pop()
+    return (int(g["epoch"] or 0), tuple(release),
+            (_PRE[g["pre_l"]], int(g["pre_n"] or 0)) if g["pre_l"] else None,
+            int(g["post_n1"] or g["post_n2"] or 0) if g["post"] else None,
+            int(g["dev_n"] or 0) if g["dev"] else None,
+            re.sub(r"[-_]", ".", g["local"]) if g["local"] else None)
+
+
+def release_tag(version: str, tags) -> str | None:
+    """The tag among tags (names, without refs/tags/) whose PEP 440 normalized version equals version's: the release tag
+    is v<pyproject version> as written (e.g. v1.0.0-preview), the installed version its normalized form (1.0.0rc0)."""
+    key = version_key(version)
+    if key is None:
+        return None
+    hits = sorted(t for t in tags if version_key(t) == key)
+    return next((t for t in hits if t == f"v{version}"), hits[0] if hits else None)
+
+
 def cached_clone(d: Path) -> Path:
-    """`git clone --depth 1` of the tag v<version> (main when there is no such tag) into d, once; SystemExit(2) on failure."""
-    tag = "main" if d.name == "main" else f"v{d.name}"
+    """`git clone --depth 1` of the release tag of version d.name (the tag whose PEP 440 normalized version equals it,
+    release_tag; main when there is no such tag) into d, once; SystemExit(2) on failure."""
     try:
-        r = subprocess.run(["git", "ls-remote", "--exit-code", "--tags", REPO_URL, f"refs/tags/{tag}"], capture_output=True)
+        r = subprocess.run(["git", "ls-remote", "--tags", REPO_URL], capture_output=True, text=True)
     except FileNotFoundError:
         print("efe: the tasks need git (no clone here, no EFE_ROOT)", file=sys.stderr); raise SystemExit(2)
-    if r.returncode not in (0, 2):
+    if r.returncode:
         print(f"efe: cannot reach {REPO_URL} (git ls-remote exit {r.returncode}); clone it and run from there, or set "
               "EFE_ROOT", file=sys.stderr); raise SystemExit(2)
-    if tag != "main" and r.returncode == 2:
-        print(f"efe: {REPO_URL} has no tag {tag}: using main instead (delete {d} to clone again later)", file=sys.stderr)
+    tags = {ln.split("refs/tags/", 1)[1].removesuffix("^{}") for ln in r.stdout.splitlines() if "refs/tags/" in ln}
+    tag = "main" if d.name == "main" else release_tag(d.name, tags)
+    if tag is None:
+        print(f"efe: {REPO_URL} has no release tag for version {d.name}: using main instead (delete {d} to clone again "
+              "later)", file=sys.stderr)
         tag = "main"
     print(f"efe: no clone here and no EFE_ROOT: cloning the tasks ({tag}) into {d}, once", file=sys.stderr)
     d.parent.mkdir(parents=True, exist_ok=True)
