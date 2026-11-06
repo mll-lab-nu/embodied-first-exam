@@ -22,7 +22,7 @@ Guide for maintainers. The contract is [protocol/README.md](protocol/README.md);
    or changes, at its head commit, on the GPU runner (`.github/workflows/validate-task.yml`; the results come back as a
    comment; not working yet: it needs a dedicated runner with the `docker` label, which is not attached, and the CI
    runners must never get that label). By hand (the only runtime check until then): oracle and `nop` on a sample (≥ 2 per mode shipped); for a new simulator or family, a determinism check (two
-   fresh replays, same hash) on the hardware used for evaluation.
+   fresh replays, same hash) on the hardware used for evaluation (PROTOCOL §4: graded trials replay once).
 6. **Adversarial trial.** For new benchmarks, one agent trial instructed to make the verifier pass without solving the
    task. Any success blocks the merge until the verifier is fixed.
 7. **Human review** for tasks whose `oracle` is not `full` (below).
@@ -83,7 +83,7 @@ Review per family (same scene template and predicate), at least two instances pe
    trajectory or state) that the verifier scores 1.
 2. **Correct predicate** — the grader matches the instruction and cannot be satisfied trivially.
 3. **Negative control** — `nop` scores 0; ideally a wrong trajectory scores 0 too.
-4. **Determinism** — privileged: the positive example gives the same verdict in two fresh replays; standard: its
+4. **Determinism** — privileged: the positive example gives the same verdict in two fresh replays (PROTOCOL §4); standard: its
    recorded trajectory reproduces the live end state where the simulator replays bit for bit (an audit, not the verdict).
 5. **Record** — post a review comment listing the instances and evidence you checked, check that the task README's
    Verification section says "no oracle; human review in PR #N", then approve and remove the `needs-human-review` label.

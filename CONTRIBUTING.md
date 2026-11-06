@@ -155,7 +155,8 @@ mtime match, and a checkout gives many files one mtime, so a task can silently r
 (`stamp_mtimes.py stage`); a new one does the same.
 
 For a new simulator or family, also replay the oracle (or a positive example) twice in fresh processes and include
-the matching state hashes (the privileged verdict replays; the standard modes' video is rendered from the trajectory).
+the matching state hashes (the determinism check of a task's construction, PROTOCOL §4; the standard modes' video is
+rendered from the trajectory).
 
 ## Tasks without an oracle
 Allowed (`oracle = "partial"` or `"none"` with `oracle_evidence`), but they need **human review**: the pull request is

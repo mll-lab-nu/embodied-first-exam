@@ -1,6 +1,6 @@
 # AGENTS.md — map for coding agents working in this repo
 
-Read `README.md`, `docs/protocol/README.md` (v2.3: recommended conventions, each task declares its own settings, §2; the eight
+Read `README.md`, `docs/protocol/README.md` (v2.4: recommended conventions, each task declares its own settings, §2; the eight
 invariants of Appendix H bind and no task value overrides them), `docs/protocol/running.md` (official runs) and `CONTRIBUTING.md` first.
 
 - Modes: **privileged**, **standard** (wire protocol `eai-standard/2.x`) and **realtime** (standard mode on a

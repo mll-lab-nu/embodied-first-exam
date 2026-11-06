@@ -1457,7 +1457,7 @@ def slowdown_text(S: float) -> str:
 # PROTOCOL §2: the settings a task declares, and the effective configuration of a trial, recorded with every result
 # so that results are ranked only within one comparable configuration (docs/protocol/running.md "Results"). Standard
 # library only: scripts/write_task_results.py, scripts/dataset_manifest.py and a runner's scheduler read these.
-PROTOCOL_VERSION = "2.3"                         # docs/protocol/README.md
+PROTOCOL_VERSION = "2.4"                         # docs/protocol/README.md
 
 
 def metadata_of(task: Path) -> dict:
