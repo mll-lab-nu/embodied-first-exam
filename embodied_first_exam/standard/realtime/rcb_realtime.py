@@ -1,5 +1,5 @@
-"""eai-standard/2.3, the standard-realtime mode's protocol: the sim service of HumanoidBench's `-standard-realtime` tasks
-(docs/protocol/README.md §4b, docs/protocol/standard_mode.md "Standard-realtime mode"; docs/benchmarks/humanoidbench.md). Entry
+"""eai-standard/2.3, the realtime mode's protocol: the sim service of the `-realtime` tasks built on rcb_service.py
+(docs/protocol/README.md §3, docs/protocol/standard_mode.md "Part 3 — Realtime mode"). Entry
 point of the sidecar: `python /srv/rcb_realtime.py` (the adapter is server.py's, unchanged). 2.3 is 2.2 plus the realtime
 capability, every 2.2 addition optional: this service is rcb_service's 2.1 service with the capability, and reports
 eai-standard/2.3.
@@ -101,7 +101,7 @@ import rcb1
 import rcb_service
 from rcb_service import MAX_BODY, Recorder, Refused, Service, bad_request
 
-PROTOCOL = "eai-standard/2.3"   # the standard-realtime mode's protocol (PROTOCOL §4b); rcb_service.py itself serves 2.1
+PROTOCOL = "eai-standard/2.3"   # the realtime mode's protocol (PROTOCOL §3); rcb_service.py itself serves 2.1
 MAX_LAG_S = 0.5          # behind the clock by more than this: drop the debt (a stall) instead of catching up
 CHECKPOINT_S = 1.0       # robot time between checkpoints while the clock runs (the most a crash loses)
 HELD = (None, None, -1)  # a plan entry for a step with nothing planned: the simulator's hold row, taken at that step
