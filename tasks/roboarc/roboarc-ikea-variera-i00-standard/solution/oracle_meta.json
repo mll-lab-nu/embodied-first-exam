@@ -2,7 +2,7 @@
  "K": 1,
  "interpolate": "hold",
  "dtype": "float64",
- "rows": "the privileged twin's solution/trajectory.npz, time-dilated to the joint-speed rule by scripts/ikea_mujoco/standard/std_reference.py",
+ "rows": "the privileged twin's solution/trajectory.npz, time-dilated to the joint-speed rule by tooling kept outside the repository",
  "rows_in": 231903,
  "rows_out": 231903,
  "method": "centred",

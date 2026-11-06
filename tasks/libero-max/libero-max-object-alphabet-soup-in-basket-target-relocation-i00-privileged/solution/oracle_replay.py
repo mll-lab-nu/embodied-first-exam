@@ -1,4 +1,4 @@
-"""Oracle (privileged): a scripted reference controller with privileged state (scripts/libero-max/shared/reference.py,
+"""Oracle (privileged): a scripted reference controller with privileged state (kept outside the repository,
 not in the image), recorded as control steps on this frozen instance up to LIBERO's success, replayed with the task's
 tooling and handed in."""
 

@@ -1,10 +1,10 @@
 """Oracle (standard mode, IKEA MuJoCo): submits the standard reference's control steps (solution/oracle_actions.npz,
 `ctrl` (N, nu) float64: the privileged twin's reference trajectory, time-dilated to the joint-speed rule by
-scripts/ikea_mujoco/standard/std_reference.py) through the client, one control step per row (dt = 1 / control_hz,
+tooling kept outside the repository) through the client, one control step per row (dt = 1 / control_hz,
 `hold`), in chunks of max_chunk_s, so that the service executes exactly these rows (no row needs the speed limiter:
 n_clipped stays 0). The rows are sent as float64 (the client's own transport, Robot._post; Robot.submit sends float32):
 MuJoCo on the CPU then reproduces them bit for bit. Uses no privileged information at run time (only the pre-recorded
-rows). Source: scripts/ikea_mujoco/standard/oracle_replay.py (adapted from the RoboTangle standard oracle)."""
+rows)."""
 import os, sys, time
 import numpy as np
 import requests

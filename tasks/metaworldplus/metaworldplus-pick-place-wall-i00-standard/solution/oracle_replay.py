@@ -1,5 +1,5 @@
 """Oracle (standard): the privileged oracle's recorded actions, submitted through the client (one row per control
-step). No privileged information at run time; the rows were recorded offline (scripts/metaworldplus/freeze.py)."""
+step). No privileged information at run time; the rows were recorded offline (by tooling kept outside the repository)."""
 
 import json
 from pathlib import Path

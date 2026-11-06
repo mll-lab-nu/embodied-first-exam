@@ -2,7 +2,7 @@
 `joint_position` chunks with dt = K/control_hz s, using the frozen service's reported control frequency (normally 40 Hz).
 They are streamed through the same interface an agent
 has. K = 1 with `hold` replays the recorded rows exactly. Uses no privileged information at run time.
-Source: scripts/robowits/shared/oracle_replay.py; the rows come from scripts/robowits/oracles/<family>/oracle_qpos.npy."""
+The rows were recorded by tooling kept outside the repository."""
 import json, os, sys, time
 import numpy as np
 import requests

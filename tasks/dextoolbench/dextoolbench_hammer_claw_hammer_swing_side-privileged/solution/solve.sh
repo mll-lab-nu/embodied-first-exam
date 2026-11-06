@@ -1,5 +1,5 @@
 #!/bin/bash
-# Oracle: replay SimToolReal's pretrained policy's joint targets (recorded offline with scripts/dtb_mk_oracle.py in this
+# Oracle: replay SimToolReal's pretrained policy's joint targets (recorded offline, by tooling kept outside the repository, in this
 # exact scene; the policy itself is never shipped) and hand them in as the trajectory.
 set -e
 mkdir -p /app/output
