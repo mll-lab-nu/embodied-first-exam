@@ -1,9 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:bigym2-files-0.4.1@sha256:24254d5f542668008c4221fabb37428aa3f6abbe70bf462f4cddbdd13cfa2095",
+ "image": "ghcr.io/mll-lab-nu/efe:bigym2-files-0.5.0@sha256:bc43ced5557b34292c8c35b227e5c21ce406a022de924a6eeb2daa69d9920cdb",
  "source": "embodied_first_exam/benchmarks/bigym2",
  "files": {
   "privileged/environment/rcb_bigym2.py": "a7e509626618adc30201fc67d0718503c86342722fc90078526d33a8f763a141",
-  "privileged/tests/grade.py": "fe5eaa42bf417b3b259ce975f96f288aad4ec83f06a3ed80321d75b2a65bc659",
+  "privileged/tests/grade.py": "521abbeac15a1e6b8a153a3d52f59b2c53da3019402bfd1f46545250f8c8a83f",
   "sim/rcb_service.py": "a6c50beec04bdb3b11885939dfe90a249506edcd5c462d2ac10816bbf2a71e2e",
   "sim/server.py": "7c42d2f430212c496c93564e7772d69143cd378f872426899e653a9d84bf1605"
  }

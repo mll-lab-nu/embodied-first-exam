@@ -22,9 +22,9 @@ None. BiGym 2.0 has no scripted expert or planner; its human demonstrations and 
 on the Hugging Face Hub and never reach the agent (no network but the model APIs; seed 0 is none of their seeds).
 
 ## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen instance in two fresh processes (`rcb_bigym2.py
+`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen instance in one fresh process (`rcb_bigym2.py
 replay`: upstream's official env, one step per row until upstream ends the episode). Pass iff upstream's `is_success`
-holds in both (the task's success held for 1 s, no fall) and both end in the same state. Success condition: the sandwich lies flat (either face up, within 10 degrees of level) touching the chopping board.
+holds (the task's success held for 1 s, no fall). Success condition: the sandwich lies flat (either face up, within 10 degrees of level) touching the chopping board.
 A finger of either gripper touching the sandwich ends the episode as a failure: move it with the spatula. No oracle; human review in PR #123 (PROTOCOL §4).
 
 ## Resources

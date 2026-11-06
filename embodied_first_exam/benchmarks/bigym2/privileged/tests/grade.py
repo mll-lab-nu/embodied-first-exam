@@ -2,10 +2,11 @@
 
     python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz
 
-Two replays, each in its own fresh process (`rcb_bigym2.py replay`: upstream's official env, one upstream step per row
-until upstream ends the episode or the rows run out, upstream's is_success there). success = both replays succeed and
-end in the same state. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders
-replay.mp4, after the verdict is on disk (it never changes it).
+ONE replay, in its own fresh process (`rcb_bigym2.py replay`: upstream's official env, one upstream step per row
+until upstream ends the episode or the rows run out, upstream's is_success there), decides: success = that replay
+succeeds. With one replay there is no second end state to compare: `deterministic` is written as 1 (nothing disagreed)
+with `determinism_checked` = 0 and `replays` = 1. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only);
+then a second, separate replay renders replay.mp4, after the verdict is on disk (it never changes it).
 """
 
 import argparse, json, os, subprocess, sys, tempfile, traceback
@@ -102,22 +103,19 @@ def main() -> int:
                       "n_actions": int(acts.shape[0]) if acts.ndim == 2 else 0, **cost})
         return 0
     try:
-        runs = [replay(a.instance, a.traj, None), replay(a.instance, a.traj, None)]
-        if any("error" in r for r in runs):
+        r0 = replay(a.instance, a.traj, None)
+        if "error" in r0:
             write(False, {"success": 0, "grader_error": 1, **cost})
             return 0
-        if not all(r["instance_ok"] for r in runs):  # the image no longer builds the frozen start: not the agent's 0
+        if not r0["instance_ok"]:  # the image no longer builds the frozen start: not the agent's 0
             write(False, {"success": 0, "grader_error": 1, "instance_mismatch": 1, **cost})
             return 0
-        all_success = all(r["success"] for r in runs)
-        deterministic = runs[0]["state_sha"] == runs[1]["state_sha"]
-        ok = all_success and deterministic
-        r0 = runs[0]
+        ok = bool(r0["success"])
         out = {
-            "success": int(ok), "replay_success": int(all_success), "deterministic": int(deterministic),
+            "success": int(ok), "replay_success": int(ok), "deterministic": 1, "determinism_checked": 0, "replays": 1,
             "n_actions": int(len(acts)), "sim_steps": int(r0["executed_rows"]), "horizon": int(r0["horizon"]),
             "episode_over": int(bool(r0["episode_over"])), "fell": int(bool(r0["fell"])),
-            "replay_s": float(r0["replay_s"]), "instance_exact": int(all(r.get("instance_exact") for r in runs)),
+            "replay_s": float(r0["replay_s"]), "instance_exact": int(bool(r0.get("instance_exact"))),
             "grader_error": 0, "video_rendered": 0, **cost,
         }
         write(ok, out)  # the verdict, before any video

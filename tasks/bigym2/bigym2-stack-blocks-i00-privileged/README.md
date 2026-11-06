@@ -22,9 +22,9 @@ None. BiGym 2.0 has no scripted expert or planner; its human demonstrations and 
 on the Hugging Face Hub and never reach the agent (no network but the model APIs; seed 0 is none of their seeds).
 
 ## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen instance in two fresh processes (`rcb_bigym2.py
+`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen instance in one fresh process (`rcb_bigym2.py
 replay`: upstream's official env, one step per row until upstream ends the episode). Pass iff upstream's `is_success`
-holds in both (the task's success held for 1 s, no fall) and both end in the same state. Success condition: the three blocks form one stack on the green pad: the lowest touching the pad, each of the others touching the block below it, at least 0.03 m higher and within 0.05 m of it horizontally; no block held by a gripper.
+holds (the task's success held for 1 s, no fall). Success condition: the three blocks form one stack on the green pad: the lowest touching the pad, each of the others touching the block below it, at least 0.03 m higher and within 0.05 m of it horizontally; no block held by a gripper.
 A block touching the floor ends the episode as a failure. No oracle; human review in PR #123 (PROTOCOL §4).
 
 ## Resources

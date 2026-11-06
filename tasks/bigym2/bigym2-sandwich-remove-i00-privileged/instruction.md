@@ -24,7 +24,7 @@ afterwards, so keep them short and factual.
 
 | file | what goes in it |
 |---|---|
-| `trajectory.npz` | the trajectory, written with `s.save_trajectory(rows)` (below): `actions`, one row of 21 floats per control step. Replayed open-loop from the frozen instance in two fresh processes, one row per step until the episode ends; scored 1 if both replays succeed and end in the same state, else 0. At most 3150 rows; rows after the episode's end are ignored |
+| `trajectory.npz` | the trajectory, written with `s.save_trajectory(rows)` (below): `actions`, one row of 21 floats per control step. Replayed open-loop from the frozen instance in one fresh process, one row per step until the episode ends; scored 1 if the replay succeeds, else 0. At most 3150 rows; rows after the episode's end are ignored |
 | `gen.py` | the script that produced it. It must **run and reproduce `trajectory.npz`**, reading nothing but `/app/instance.json` and files under `/app/output/` |
 | `NOTES.md` | **at most 20 lines**: your final approach and why it works, and the approaches that failed and what each told you |
 

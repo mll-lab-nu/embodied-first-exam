@@ -79,7 +79,7 @@ check use), as the privileged instruction says.
 
 | mode | the agent gets | graded |
 |---|---|---|
-| privileged | the `bigym` package (`Session`: step, reset, replay, MuJoCo model and data, onboard images) | `/app/output/trajectory.npz`, replayed in two fresh processes |
+| privileged | the `bigym` package (`Session`: step, reset, replay, MuJoCo model and data, onboard images) | `/app/output/trajectory.npz`, replayed in one fresh process |
 | standard | the robot's three onboard cameras (84×84 as upstream renders them; `RCB_IMAGE_HW` for others, reported apart), upstream's proprioception, `whole_body` chunks; one episode, no reset | the live episode, as it ran (`rcb_service.py`, as HumanoidBench and KinDER; nothing replayed) |
 | realtime | the same on a clock that does not stop; between commands the robot stands still on the last one | as standard (`rcb_realtime.py`, as HumanoidBench) |
 
