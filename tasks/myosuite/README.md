@@ -271,7 +271,7 @@ every other family's objects start at rest, and chase_tag's opponent stands stil
   out; PROTOCOL §2's S = ceil(1.5 / 2.08) = 1. At S = 1 a
   controller at the control rate (`cameras=[]`) with a camera image every 0.25 s ran 11 episodes (10 resets) with no
   stall and a largest lag of 0.23 s. An episode that does nothing ends after 121 control steps (1.21 s): the serve
-  passes. The reset budget is the mode's default, 10; a reset takes about 1 s (MyoSuite's env reset).
+  passes. The reset budget is 10 (this benchmark's choice; the mode's default is 0); a reset takes about 1 s (MyoSuite's env reset).
 - **Checked at S = 1**: a successful privileged episode (82 rows) planned from step 0 in one `submit(..., at=0)`
   succeeds live (no stall), and streamed one row per call too; nop (no request) ends `timeout`, not graded a success.
   The cutoff is the standard twin's (3600 s).
