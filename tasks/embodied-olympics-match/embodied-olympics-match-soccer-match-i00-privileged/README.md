@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | Embodied Olympics - Match |
 | Mode | privileged |
-| Twin | `embodied-olympics-match-soccer-match-i00-realtime` |
+| Twin | `embodied-olympics-match-soccer-match-i00-standard` |
 | Simulator / robot | `mujoco` / `booster-t1` |
 | Family / instance | `soccer_match` / seed 7 |
 | Oracle | `partial` — full-state reference program (solution/): the screening's truth reference (the frozen scripted coach at the reference level: both robots go for the ball, in-walk kick) as a program reading the declared truth; in step timing it reproduces the in-world truth reference bit for bit; its results at levels 2 and 3 and on this instance are in the Embodied Olympics privileged report (soccer section); not reproduced in this repository: the owner waived the oracle runs on 2026-10-17 (validated = false) |

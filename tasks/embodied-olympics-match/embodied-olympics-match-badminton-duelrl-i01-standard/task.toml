@@ -1,0 +1,82 @@
+# Exported by Embodied Olympics from badminton-duel-wallclock-program-standard (sports/badminton/sport.toml): do not edit.
+# Embodied First Exam: the standard twin of the exported realtime task (the same export; the world in lockstep:
+# environment/sim/core/lockstep.py; ci_checks/benchmarks/embodied-olympics-match/exported.toml).
+schema_version = "1.3"
+artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, 
+  "/app/output/",
+  { source = "/data/final.json", service = "sim" },
+  { source = "/data/episode.jsonl", service = "sim" },
+  { source = "/data/replay.mp4", service = "sim" },
+  { source = "/data/video.json", service = "sim" },
+  { source = "/data/broadcast.jsonl", service = "sim" },
+]
+
+[task]
+name = "embodied-first-exam/embodied-olympics-match-badminton-duelrl-i01-standard"
+description = "STANDARD (Embodied Olympics / Embodied Agent Olympics, our own service): robot badminton, one duel-wallclock against a built-in opponent player (seat B, builtin_players:RLOpponent), program play (eai-standard-lockstep/1.0: the world advances only while the player waits or an act takes effect and stands still between its calls; it freezes after every point for the player's review, at most 300 s). Camera images and the robot's own state only. Frozen development instance (seed and level fixed, not an official seed). robot singles badminton on a small court (the BWF court's lengths x 0.4, the net at its BWF height 1.524 m) in real time (slowed down): a Franka Panda arm held to the real Panda's limits, with a racket, on an x-y gantry of ball-screw axes (2 m/s, 15 m/s^2), a point-mass shuttle with the real shuttle's high quadratic drag (terminal speed 6.8 m/s) and no bounce, a racket contact law of gain 4 (shuttles leave the racket at up to about 10 m/s); rally scoring, one game to 11 points; the players' robots serve (the rally winner serves next): the server tosses the shuttle (from rest or rising up to 0.5 m) at a point it chooses and hits it underhand, below 1.15 m, into the diagonal service court; format match-wallclock: you against a scripted computer opponent (levels 1-3, `game spec` match.opponent_level), format duel-wallclock: two players. Exported from Embodied Olympics task badminton-duel-wallclock-program-standard."
+keywords = ["robotics", "embodied-olympics", "sports", "badminton", "mujoco", "standard-mode", "vision", "lockstep"]
+
+[metadata]
+task_type = "trajectory"
+simulator = "mujoco"
+robot = "franka-panda"
+family = "badminton_duel"
+dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+protocol = "eai-standard-lockstep/1.0"
+instance_seed = 1001
+opponent_level = 0
+builtin_opponent = "B=builtin_players:RLOpponent"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+play = "program"
+action_level = "high"
+source_task = "roboolympics/badminton-duel-wallclock-program-standard"
+source_commits = ["b12667a02300"]
+exporter = "Embodied Olympics task exporter"
+player_mode = "unmetered"
+official = false
+expert_time_estimate_hours = 0.5
+oracle = "partial"
+oracle_evidence = "RLBM 2026-10-16, policy bm_cem_v1 with the true shuttle state (v1.1; the shipped policy has no swing option): on this instance (seed 1001, vanilla Harbor 0.23.0) our camera-only reference lost 1:11 (valid, deterministic) and an Azure Astra precheck was 5:5 when Astra forfeited by ready_timeout; live service batch (built-in RL on B, camera reference over HTTP on A, seeds 1-10 x both first servers): reference 0/20 (16 valid, 40:176); in-process (truth, S = 20): mirror RL vs RL seat A 21/40, first server 15/40; as seat A of match-wallclock it beat level 3 in 19 of 20 seeds (217:124) and levels 4 and 5 in 20 of 20; against it on seat B the truth reference won 1/20, short-random, centre, random and nop 0/20; replays identical; limits as the reference"
+
+[verifier]
+timeout_sec = 2820.0
+environment_mode = "separate"
+network_mode = "no-network"
+
+# Resources (PROTOCOL §6): seal the monitor's record first.
+[[verifier.collect]]
+service = "rcb_monitor"
+command = "python3 /opt/rcb_monitor/monitor.py seal --wait 90"
+timeout_sec = 120
+
+# The agent's time is up: stop whatever it left running (a program would keep playing; the match is graded as it stands).
+[[verifier.collect]]
+service = "main"
+command = "kill -9 -1 2>/dev/null; exit 0"
+timeout_sec = 30
+
+# Then SIGUSR1 ends the match: the service writes the verdict of the live match ("graded_ready"; no grading replay)
+# Badminton declares no spectator camera or scene (core/spectator.py renders nothing): the replay
+# video is drawn with the players' cameras by spectator/sport_video.py (Embodied First Exam), after the verdict.
+[[verifier.collect]]
+service = "sim"
+command = "for i in $(seq 1 90); do [ -f /data/server.pid ] && break; sleep 2; done; kill -USR1 $(cat /data/server.pid); for i in $(seq 1 600); do grep -q '\"graded_ready\": true' /data/final.json 2>/dev/null && break; sleep 1; done; [ x$RCB_SPORT_VIDEO = x1 ] && timeout ${RCB_VIDEO_TIMEOUT_S:-1800} python3 /srv/spectator/sport_video.py /srv/sport/plugin.py /data > /dev/null 2>&1; cat /data/final.json | head -c 2000"
+timeout_sec = 2640
+
+[agent]
+timeout_sec = 14400
+# The agent reaches the model APIs, the package registries and the sim (localhost:8000, Harbor's egress control).
+network_mode = "allowlist"
+allowed_hosts = ["chatgpt.com", "*.chatgpt.com", "auth.openai.com", "api.openai.com", "*.openai.com", "api.anthropic.com", "*.anthropic.com", "openrouter.ai", "*.openai.azure.com", "*.cognitiveservices.azure.com", "pypi.org", "files.pythonhosted.org", "deb.debian.org", "security.debian.org", "archive.ubuntu.com", "security.ubuntu.com", "snapshot.ubuntu.com"]
+
+[environment]
+build_timeout_sec = 1200.0
+cpus = 2
+memory_mb = 5120
+storage_mb = 10240
+
+[verifier.environment]
+build_timeout_sec = 600.0
+
+[verifier.env]
+RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

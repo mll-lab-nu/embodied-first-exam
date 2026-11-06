@@ -1,0 +1,18 @@
+<mujoco model="hand_gripper">
+  <!-- Draft: a parallel gripper that holds and releases (throwing). Two fingers on slide joints, 0-4 cm each; the
+       sport adds the finger actuators and the release rule. -->
+  <worldbody>
+    <body name="hand">
+      <geom name="palm" type="box" pos="0 0 0.04" size="0.03 0.06 0.04" mass="0.40" rgba="0.2 0.2 0.22 1" group="2"/>
+      <body name="finger_l_body" pos="0 0.045 0.08">
+        <joint name="finger_l" type="slide" axis="0 1 0" range="0 0.04"/>
+        <geom name="finger_l" type="box" pos="0 0 0.04" size="0.012 0.008 0.04" mass="0.05" rgba="0.8 0.8 0.85 1" group="2"/>
+      </body>
+      <body name="finger_r_body" pos="0 -0.045 0.08">
+        <joint name="finger_r" type="slide" axis="0 -1 0" range="0 0.04"/>
+        <geom name="finger_r" type="box" pos="0 0 0.04" size="0.012 0.008 0.04" mass="0.05" rgba="0.8 0.8 0.85 1" group="2"/>
+      </body>
+      <site name="center" pos="0 0 0.12" size="0.005" group="4"/>
+    </body>
+  </worldbody>
+</mujoco>

@@ -160,7 +160,7 @@ One row per family; "ref." marks the 19 with a reference solution. The robot is 
 ## Tasks exported by Embodied Olympics
 
 The matches Embodied Olympics exports with its own service (PROTOCOL §3), listed in
-`ci_checks/benchmarks/embodied-olympics-match/exported.toml`, and their privileged twins are the benchmark
+`ci_checks/benchmarks/embodied-olympics-match/exported.toml`, and their standard and privileged twins are the benchmark
 [Embodied Olympics - Match](../embodied-olympics-match/README.md) (task prefix `embodied-olympics-match-`).
 
 ## Licences

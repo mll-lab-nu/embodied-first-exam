@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | Embodied Olympics - Match |
 | Mode | realtime (`eai-standard-realtime/1.0`) |
-| Twin | — (none: a task Embodied Olympics exports with its own service, PROTOCOL §3) |
+| Twin | `embodied-olympics-match-badminton-match-i04-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
 | Family / instance | `badminton_match` / seed 1034 |
 | Oracle | `partial` — TOPBM calibration 2026-10-16 (a CPU cluster, S = 20, perception-free players, seeds 1001-1040): the reference's own prediction and strokes placing every shot short to a random front corner won 5 of 40 (this seed 11:8), the reference itself 0 of 40 (this seed 1:11), short alternating 0 of 40 (the other simple baselines: Embodied Olympics PR #181); our camera-only reference does not win level 2, so the oracle run checks the pipeline (a valid, replayed match), not a win |

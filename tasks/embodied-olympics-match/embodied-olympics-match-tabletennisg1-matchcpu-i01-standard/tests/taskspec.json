@@ -1,0 +1,59 @@
+{
+ "arm": {},
+ "core": "0.5.7",
+ "deliverables": {
+  "final_program": "post_match",
+  "post_match": {
+   "file": "/app/output/controller.toml",
+   "text": "The match is over and its result is final: nothing you do now changes it. One last short step, never scored (within 4 minutes and about 20k output tokens; skip it if you cannot): write `/app/output/controller.toml` for the program you fielded last, so that the platform can restart it on its own in a clean seat. Fields: `entry` = the command that starts it (one shell line, or an argv list), `cwd` = its working directory, `deps` = what it needs (its own program and data files, and the pip packages it imports), optionally `env` = {NAME = \"value\"}. Example: entry = \"python3 /app/output/runner.py\", cwd = \"/app/output\", deps = [\"/app/output/runner.py\", \"/app/output/plan.json\", \"numpy\"]. Do not change or restart the program. The platform restarts it from this file to check that it joins and acts; without the file, or if that fails, it restarts the process of your last deploy instead. Then end your session.",
+   "token_budget": 20000,
+   "window_s": 240.0
+  }
+ },
+ "format": "match",
+ "generator": "gen-2",
+ "id": "tabletennis_g1-match-wallclock-program-engineer-standard",
+ "level": null,
+ "options": {
+  "act.limits": "derived",
+  "api.outage_rule": "unrecovered_or_cap",
+  "final_program": "post_match",
+  "practice.access": "throughout",
+  "practice.package": "open",
+  "review.source": "shell",
+  "timing.match_cap": "void",
+  "timing.slowdown": 1,
+  "timing.t0": "barrier"
+ },
+ "policies": [],
+ "practice": {
+  "max_worlds": 4,
+  "opponents": [
+   "none",
+   "practice_player"
+  ],
+  "truth": true
+ },
+ "protocol": "eai-standard-realtime/1.0",
+ "resource": {
+  "cpus": 8,
+  "gpus": 1,
+  "memory": "16g"
+ },
+ "revision": "g1tt-10+core-0.5",
+ "schema": "ro-taskspec/1",
+ "seats": [
+  "A"
+ ],
+ "seed_cell": "match",
+ "sides": null,
+ "sport": "tabletennis_g1",
+ "timing": {
+  "clock_s": null,
+  "match_s": 6360,
+  "prepare_s": 1800,
+  "review_s": 300
+ },
+ "track": "engineer",
+ "variant_of": null
+}

@@ -1,0 +1,38 @@
+{
+ "agent_timeout_sec": 7200,
+ "caps": {
+  "main": {
+   "cpus": 8.0,
+   "disk_gb": 10.0,
+   "gpu_memory_gb": 20.0,
+   "memory_gb": 16.0,
+   "pids": 2048
+  },
+  "practice": {
+   "cpus": 8.0,
+   "memory_gb": 8.0,
+   "pids": 512
+  },
+  "practice_player": {
+   "cpus": 1.0,
+   "memory_gb": 1.0,
+   "pids": 64
+  },
+  "sim": {
+   "cpus": 12.0,
+   "memory_gb": 8.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": true,
+ "gpu_memory_gb": 20.0,
+ "mode": "standard",
+ "scope_services": [
+  "main"
+ ],
+ "task": "embodied-olympics-match-tabletennisg1-matchgpu-i01-standard",
+ "tick_sec": 5
+}
