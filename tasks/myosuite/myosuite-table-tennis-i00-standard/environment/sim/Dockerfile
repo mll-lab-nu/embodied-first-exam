@@ -10,7 +10,7 @@ COPY --from=ghcr.io/mll-lab-nu/efe:myosuite-files-0.5.0@sha256:365a827768d42a493
      /sim/task.json \
      /sim/video.py \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.4.0@sha256:90253c4cb419668f84c6728dc6d6e23ea55ef8d7f7e7835a5eb65015729f91b0 \
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.4.1@sha256:7f1a830075fd6dd25e7a20a340316c041df583a29062796f59a4fa63b6f76946 \
      /rcb1.py \
      /rcb_limited.py \
      /run.sh \
