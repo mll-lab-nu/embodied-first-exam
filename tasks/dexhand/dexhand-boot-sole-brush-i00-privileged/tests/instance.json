@@ -380,6 +380,10 @@
   "rig": "marvin",
   "schema_version": 1,
   "settle_steps": 250,
+  "start_state_sha": {
+    "sharpa": "c9a70c9d98b26755855ba69aa2b5e689b488df58c477a36b4ac68e63218f60e1",
+    "wuji": "3a907e6857f7353c9793f0c68bbbe5237459aa165fb9b84a0b2276e566bb2798"
+  },
   "table_z": 0.886,
   "title": "Brush the debris off a boot sole",
   "tray": {

@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.4.0@sha256:f9bfacf8829c29d55552a1646f4af4878a958a06025452a1fa6ada74d530c556",
+ "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.5.0@sha256:e90c3817d6fee11cd727b5f82252740849e5b66ced87c7fce411b4747e911166",
  "source": "embodied_first_exam/benchmarks/dexhand",
  "files": {
   "privileged/environment/arm_rig.py": "5b9e26e313c7a935dfbf04b34aec8047bd713677c638622b8baeaf09453c5a3a",
@@ -589,7 +589,8 @@
   "privileged/environment/variants/feaa1d1d97/checker.py": "feaa1d1d97ced143c7b8370c394a9017b133dfe889d3624708647f664f1c4e5c",
   "privileged/environment/variants/fef84ad4b3/replay.py": "fef84ad4b3f15ec9661542a161a8322accb4c8c7b17e0ec55dab9bf47d94f7dc",
   "privileged/environment/wuji_reset.json": "f35d7139d7abd0daaa5e1df73d8fe4f3097abe9d918f2fd4d8094130ec0e0cca",
-  "privileged/tests/grade.py": "c04d0556d19c73528c19faaa9b20ae22c2474448ba003af326be409ae50aa306",
+  "privileged/tests/checked_replay.py": "59e8a004e67ec6f8ef02d979129665604ee9b3327874eb0573b732525ebd425d",
+  "privileged/tests/grade.py": "2d1e495c6b08f7c7d4e40c94a3340703d63d853a2c96a912f6d6b953db560d19",
   "sim/essential_assets.py": "6327cb949e18a2096ed22248c10e1dc4e53ae3416fbaf18f91ef78d916e00c0d",
   "sim/essential_cube_layer_scene.py": "f401df79c0f6a0945bc5b60bb1fd459edebc02ced7d79f4d145ba7b91d1b8774",
   "sim/essential_cube_reorient_scene.py": "a03a96e1045180abb910370a51888fcdbb1232a52a447acef0bbf4760ff2dff4",
@@ -597,7 +598,7 @@
   "sim/finalize.py": "e9f0ae2cb3f816614a164a0ceb2d87f5f8c0c5265a7504433a9f7abd113df8bd",
   "sim/finalize.sh": "7c347b83c53411c1c010b8a3fb5c2b27869ec597b5231ca125ebb72702a4ef38",
   "sim/rcb_dexhand.py": "3e1bd8364414fa26e2b83710665c44152a6c7d199851f6fab361a31aeb3b9742",
-  "sim/server.py": "8e6dd5515aebfe8082cb4302ece369ab2b3fcb4f623c642f6a3a9398f3bd104f",
-  "standard/tests/grade.py": "529e596131fd1c998711316464aa4227dbbd1dac1db6354d094945a64f1b3b4c"
+  "sim/server.py": "e3cb5075845493968f9b2fef404a5080d52a3a4b9274e8b61436fe88af60e514",
+  "standard/tests/grade.py": "7891d9b4808ec9f8a6946f262a27067b4ed2559db7b92ef9e83f0b1fcfc6a14a"
  }
 }

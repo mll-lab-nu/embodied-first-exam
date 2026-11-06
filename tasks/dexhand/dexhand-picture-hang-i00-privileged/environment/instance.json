@@ -147,5 +147,9 @@
     0.0,
     0.72
   ],
+  "start_state_sha": {
+    "sharpa": "826180d006d09111e699725b6c46007f47ab39c6f87536661e711a6210adeef4",
+    "wuji": "0d54b6a83f3db924cc79a2d6756bc5cbe50f02ddd2ff99446f7ed9d42bf491dc"
+  },
   "title": "Hang a large picture on two wall hooks"
 }

@@ -199,6 +199,10 @@
   "schema_version": 1,
   "socket_half_gap_m": 0.00083,
   "socket_key_half_m": 0.00035,
+  "start_state_sha": {
+    "sharpa": "b5edb1d5dcd2b2748818d5da01a72226a49e2c038cda9ebb435ce295442a66d2",
+    "wuji": "1bbc9410088bdc20abc161246a17f8225bada1912130317a319ab462116a5202"
+  },
   "title": "Install a desktop DDR4 RAM module",
   "wrist_base": [
     0.0,

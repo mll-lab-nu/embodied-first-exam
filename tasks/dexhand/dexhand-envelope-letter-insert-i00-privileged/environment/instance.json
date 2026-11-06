@@ -238,5 +238,9 @@
   "rig": "marvin",
   "robot": "marvin-bimanual-sharpa-wave",
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "c5e5b6f7e5122a40fcb0e246cce3f22b79bc512334cf7db9a19e584307fc8100",
+    "wuji": "dd7931ce864e18845814a94faef23689a63701ab3b4ce85cf715a763d59a931e"
+  },
   "title": "Put a folded letter into an envelope"
 }

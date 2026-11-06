@@ -847,9 +847,12 @@ MuJoCo model and state, exact resets, snapshots where the family offers them, re
 `/app/output/trajectory.npz` (above) and the script that made it, `/app/output/gen.py`. The separate verifier
 (`[verifier] environment_mode = "separate"`) runs the shared `tests/grade.py`: two concurrent fresh-process runs of the
 family's `replay.py`, reward 1 iff both succeed with identical final state hashes. `replay.py` reports an invalid
-archive as `bad_trajectory` and exits 0; a crashed replay is an infrastructure error. `reward.json` is numeric
+archive as `bad_trajectory` and exits 0; a crashed replay is an infrastructure error. Each replay runs through
+`tests/checked_replay.py`, which checks every scene the replay builds, and every reset of it, against the frozen start
+(Start state, below): a scene that starts elsewhere is `instance_mismatch = 1`, an infrastructure error, and no row is
+replayed. `reward.json` is numeric
 (`success, deterministic, infra_error, bad_trajectory, missing_trajectory, n_actions, sim_steps, stages_completed,
-hand_wuji`); text diagnostics go to `/logs/verifier/details.json`. After `reward.json` is written, a third fresh
+hand_wuji`, and `instance_mismatch` when it occurs); text diagnostics go to `/logs/verifier/details.json`. After `reward.json` is written, a third fresh
 replay renders the replay video (`/logs/verifier/replay.mp4`, its record in `video.json`) in the verifier's remaining
 time (`timeout_sec` minus 180 s, at most `video_timeout_s`, which is never below the replay timeout); it never changes the verdict. The essential families' `replay.py` films every 2nd step, at most 1500 frames
 (`VIDEO_MAX_FRAMES`; a 640x480 OSMesa frame costs ~0.3 s on one core).
@@ -945,16 +948,27 @@ added. The collect hook: `finalize.py` copies the record into `final.json` with 
 `video_source = "render"`); a failed or late video sets `video = false` and changes nothing else. `reward.json` carries
 `graded_by_live`, `replays`, `gave_up`, `instance_mismatch` and `video_rendered`. When a fresh episode begins (not on a crash resume) the service compares the
 sha256 of the frozen instance's files (`instance.json`, `catalog.json` and, where present, `task.json`,
-`wuji_reset.json`, `offered_hands.json`) with the record in `grading.json` (`instance_sha256`); a
-difference ends the trial before the agent is served (`instance_mismatch`, an infrastructure error). There is no
-recorded reference hash of the built starting state (computing one needs a MuJoCo run): the start event logs the state
-hash the service built and `episode.json` repeats it (`start_sha`), so trials of a task can be compared afterwards.
+`wuji_reset.json`, `offered_hands.json`) with the record in `grading.json` (`instance_sha256`), then the state it built
+with the frozen start of the selected hand (Start state, below); a difference ends the trial before the agent is
+served (`instance_mismatch`, an infrastructure error). Every `POST /reset` is checked the same way: a reset that does not
+bring the scene to the frozen start ends the trial at once as a give-up (`instance_mismatch`, `infra_error = 1`, every
+later call refused with 409). The start event logs the built hash and `episode.json` repeats it (`start_sha`).
+
 Infrastructure errors (`infra_error = 1`): no, unreadable or unfinished `final.json`, the service not ending and
 dumping its episode within 300 s, a give-up after crashes not all inside the agent's calls (`sim_crashed`,
 `resume_failed`), `instance_mismatch`, a hand the task does not offer. A crash inside the agent's calls
 (`sim_crashed_on_call`), a simulator error from the agent's actions (`reason = "error"`, `sim_error = 1`), a timeout and
 a failed predicate are the agent's 0. The collect hook runs one replay process (the video's); its `timeout_sec` is the
 end wait plus the video's bound (`std_collect_s`).
+
+### Start state
+
+Each `instance.json` records the start state per hand (`start_state_sha`: `{"sharpa": ..., "wuji": ...}`), the
+`Session.state_sha()` of a fresh build of the frozen scene with that hand, which `Session.reset()` restores exactly. The
+values were taken from two fresh processes each in the verifier's and the sidecar's images (MuJoCo 3.4.0, CPU physics)
+and agree in all four for every task and hand; the Sharpa values also equal the start hash of every logged standard
+evaluation trial and of each of its resets, on several host types. Both graders check it (privileged: every replay;
+standard: the episode's start and every reset).
 
 ### In-hand cameras of the essential families
 

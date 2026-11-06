@@ -147,6 +147,10 @@
       "name": "return_to_initial"
     }
   ],
+  "start_state_sha": {
+    "sharpa": "cb88757f5797388687c9429e06bf3d1fcbbafae2d7eb6bb0b3c517b93fe7cc25",
+    "wuji": "b376e5a46fc9c098072ab0b21d86c1d2580fd50faaa1b0608c83babaa51fc5f8"
+  },
   "terminal": {
     "bounds": {
       "contacts": [

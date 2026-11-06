@@ -117,6 +117,10 @@
       "name": "one_reverse_turn"
     }
   ],
+  "start_state_sha": {
+    "sharpa": "64272b8b100f919cc8d96ec0e320dd3b7bd9316ee70ce06d18b92ce7922968f8",
+    "wuji": "7b2e1540b7539db5aa02ba6826f8a1bfd95d1ed9122f821e6602a2f25e9c9553"
+  },
   "terminal": {
     "bounds": {
       "rotor_fingers": [

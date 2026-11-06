@@ -312,6 +312,10 @@
     0.031674734130483814,
     0.9164623072080313
   ],
+  "start_state_sha": {
+    "sharpa": "15b2c143829e934c5ffa1149474afda19d6507b571c6e54ec09c247b9ddb105a",
+    "wuji": "7f461c92b50b7c713292b323efb5718788182b624fbe3b5a53ad1c8c854066c8"
+  },
   "stir_max_step_rad": 0.785398,
   "stir_min_radius_m": 0.008,
   "stir_revolutions": 6,

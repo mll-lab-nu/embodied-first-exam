@@ -170,6 +170,10 @@
       "name": "turn_and_tripod_grip"
     }
   ],
+  "start_state_sha": {
+    "sharpa": "f9f96ca271cdd8d237fd6297c542269f687ab00b061799095928cfb9567bcf74",
+    "wuji": "9e996502c8552742b8080f69575b0caacf5f41ddf25915c04542db94efe12802"
+  },
   "terminal": {
     "bounds": {
       "contact_index": [

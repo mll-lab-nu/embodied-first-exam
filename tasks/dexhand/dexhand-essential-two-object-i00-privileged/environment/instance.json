@@ -250,6 +250,10 @@
       "name": "release_a_only"
     }
   ],
+  "start_state_sha": {
+    "sharpa": "d751bb1c048ffebe4c0f766c770977636a71f0a8aa4eec0408115d2c990f2001",
+    "wuji": "016d9a9f626bdd20be33ab5a117e84943256474a0442194481a3313c36a73b38"
+  },
   "terminal": {
     "bounds": {
       "a_deposit_distance": [

@@ -432,6 +432,10 @@
       ]
     ]
   },
+  "start_state_sha": {
+    "sharpa": "21273d6d836920f3f840683eec21bc7d2b71fdc7c02045f0e48e1b24c56854a7",
+    "wuji": "65d279d1fcf15f1c091a1ceecd258f05921068717251571888afd78f7ecd90b1"
+  },
   "table_z": 0.68,
   "title": "Whisk batter in a bowl, drain and set the whisk down",
   "whisk_pos": [

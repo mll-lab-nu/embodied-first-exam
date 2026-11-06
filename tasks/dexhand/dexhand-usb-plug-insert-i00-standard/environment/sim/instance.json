@@ -231,6 +231,10 @@
   "rig": "marvin",
   "robot": "marvin-bimanual-sharpa-wave",
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "768688f7c1e6ef8ac78283bf8896c9e54cb56d01564ca4bd2bad9afb069b76c0",
+    "wuji": "7ea9e8a7eaf204784c26b6de505d399826e9532904b9951216c7549486c71341"
+  },
   "target_port": 3,
   "title": "Plug a USB cable into a hub port",
   "workspace": {
