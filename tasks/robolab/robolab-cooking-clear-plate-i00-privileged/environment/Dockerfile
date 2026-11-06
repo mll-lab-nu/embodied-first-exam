@@ -28,13 +28,15 @@ RUN rm -f /etc/apt/sources.list.d/cuda*.list && \
     printf '{\n    "file_format_version" : "1.0.0",\n    "ICD" : {\n        "library_path" : "libEGL_nvidia.so.0"\n    }\n}\n' > /usr/share/glvnd/egl_vendor.d/10_nvidia.json
 COPY --from=ghcr.io/astral-sh/uv:0.13.0@sha256:cdc6093146eb3ff6a40107b38f008b789e050e77ad87865e381d9917da55a168 /uv /uvx /root/.local/bin/
 ENV PATH="/root/.local/bin:${PATH}"
-# RoboLab's code at v0.3.1 (LFS pointers only), then the asset library as its own layer (every LFS file present)
+# RoboLab's code at v0.3.1 and its asset library (every LFS file present), in one RUN that then deletes the repository's
+# .git (its objects hold every committed file: `git show` would rebuild what is removed) and examples/recorded_data
+# (RoboLab's one recorded episode, a successful run of one of the RoboLab tasks: its actions, log and video; PROTOCOL H.2)
 RUN git init -q /opt/robolab && cd /opt/robolab && git remote add origin https://github.com/NVlabs/RoboLab && \
     git fetch -q --depth 1 origin 9db0aaf09d9fe5d4f37b168320788258c7012463 && GIT_LFS_SKIP_SMUDGE=1 git checkout -q FETCH_HEAD && \
-    test "$(git rev-parse HEAD)" = 9db0aaf09d9fe5d4f37b168320788258c7012463
+    test "$(git rev-parse HEAD)" = 9db0aaf09d9fe5d4f37b168320788258c7012463 && \
+    git lfs pull && test -z "$(git lfs ls-files | grep -v '^[0-9a-f]* \* ')" && \
+    rm -rf /opt/robolab/.git /opt/robolab/examples/recorded_data && test ! -e /opt/robolab/.git
 WORKDIR /opt/robolab
-RUN git lfs pull && test -z "$(git lfs ls-files | grep -v '^[0-9a-f]* \* ')" && \
-    (git lfs prune -f --verify-remote=false >/dev/null 2>&1 || true) && rm -rf /opt/robolab/.git/lfs
 # lockfile-exact install of RoboLab + the Isaac 5.1 stack (isaacsim wheels from pypi.nvidia.com, declared in RoboLab's pyproject)
 ADD --chmod=644 --checksum=sha256:8e7ff47350cbce86ba30ec9cf59dcb5737efdbfc367a30144a9a7ea857e7c588 https://raw.githubusercontent.com/mll-lab-nu/embodied-first-exam/ce96d0f0ad5ae48c818deb1ad770cf5d89abb08b/images/robolab/uv.lock /opt/robolab/uv.lock
 RUN uv python install 3.11.17 && uv venv -p 3.11.17 .venv && uv sync --frozen --extra isaac51 && rm -rf /root/.cache/uv
@@ -58,10 +60,6 @@ WORKDIR /app
 # Base image = RoboLab v0.3.1 + Isaac Lab 2.3.2 / Isaac Sim 5.1 + RoboLab's asset library (see images/robolab/).
 # Everything task-specific is copied here.
 FROM robolab-base
-# RoboLab's repository ships one recorded episode (examples/recorded_data/RubiksCubeAndBananaTask: the actions of a successful
-# run, replayed by examples/run_recorded.py): a solution of one of these tasks within the agent's reach (PROTOCOL H.2).
-# Nothing at run time reads it (only that example script does); the agent's image does not keep it.
-RUN rm -rf /opt/robolab/examples/recorded_data
 COPY instance.json /app/instance.json
 COPY --from=ghcr.io/mll-lab-nu/efe:robolab-files-0.5.1@sha256:1b44eaf28f2c896a82241ba1a90e8a2b02f8e142c236b06fd302c87664588025 /rcb_robolab.py /opt/tools/rcb_robolab.py
 ENV PYTHONPATH=/opt/tools

@@ -36,8 +36,9 @@ about making that true.
 | Package metadata | `*.egg-info/SOURCES.txt` lists files you deleted | generate metadata after the removal |
 | Sibling tasks | one task's `tests/` must not carry another's answer | ship one task's answer per task |
 
-Layers and `.git` are invisible from inside the container — overlayfs shows the agent only the merged
-view. They leak to whoever pulls the image, which for a public benchmark is the same people.
+Earlier layers are invisible from inside the container — overlayfs shows the agent only the merged view — but they
+leak to whoever pulls the image, which for a public benchmark is the same people. A `.git` directory left in the final
+file system is not invisible: `git show` inside the container rebuilds every file it ever held, deleted ones included.
 
 **Read the agent's transcript.** Two of these rows came from watching one go looking: `grep -rn` over the
 package, `cat` on the likely file, then `import dis, marshal` against the bytecode caches.
