@@ -35,7 +35,8 @@ Data
   None beyond the image: HF_HUB_OFFLINE=1; nothing is downloaded at run time. Frozen instances live in the task dirs.
 
 Host
-  As RoboLab's (an RTX-class NVIDIA GPU, NVIDIA Container Toolkit, driver 580.x checked); PhysX runs on the CPU.
+  As RoboLab's (an RTX-class NVIDIA GPU, NVIDIA Container Toolkit, driver 580.x checked). Unlike RoboLab, PhysX runs on the GPU
+  (`device="cuda:0"`, as in EmbodiedSWE; embodied_first_exam/benchmarks/embodiedswe/rcb_embodiedswe.py).
 
 Build (from the repository root)
   docker build -t ghcr.io/mll-lab-nu/efe-private:embodiedswe-$(cat images/embodiedswe/VERSION) images/embodiedswe
