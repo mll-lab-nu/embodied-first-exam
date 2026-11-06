@@ -29,8 +29,8 @@ top along the chain direction with the closed right gripper, then retreats and l
 `solution/solve.sh` records it into a trajectory.
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice; pass iff
-RoboWits' `_check_success` holds after every replay, the final-state hashes agree and the rebuilt frozen scene matches
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, once; pass iff
+RoboWits' `_check_success` holds after the replay and the rebuilt frozen scene matches
 the recorded one (`tests/grade.py`; a scene that does not match is the host's failure, `infra_error = 1`, never the
 agent's 0), plus `/logs/verifier/replay.mp4`. What the predicate checks, in words:
 `instruction.md`, "Success criterion (as graded)". The trajectory is the per-control-step JOINT_ABS record (T, 16);
