@@ -27,7 +27,8 @@ The first task builds the simulator image from public sources (below); later tas
   educational use only. Read them before your first run. No account, login or token is needed.
 - **GPU and driver.** Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU (Isaac
   renders with RTX even headless; PhysX runs on the CPU) with a driver Isaac Sim 6.1.0 supports (NVIDIA lists 595.58.03
-  on Linux; checked on 595.91.07 with an RTX PRO 6000 Blackwell Server Edition). 32 GB of RAM per simulator that
+  on Linux; checked on 595.91.07 with an RTX PRO 6000 Blackwell Server Edition and on 580.178.04 with an RTX 4090).
+  32 GB of RAM per simulator that
   renders.
 - **Disk.** About 90 GB free for the first build (the image is about 40 GB).
 - **First build.** The image is not on a public registry, so the first task builds it with Docker from public sources:
@@ -163,7 +164,8 @@ driver. So the image has 6.1.0, and every instance and reference here is for it.
   each checked by sha256: `images/labutopia/nvidia_assets.sha256`) and the tooling redirects the server's URLs to the
   mirror (`omni.client.set_alias`), so LabUtopia's files stay as they are. Without them the cabinet is simply missing;
   the instance check notices (`instance_ok`).
-- Not checked: what LabUtopia's controllers do on 5.1.0 (it does not start here), and 6.1.0 on a 580-branch driver.
+- 6.1.0 also runs on a 580-branch driver (580.178.04, RTX 4090: every oracle and nop scored as expected, see
+  Verification). Not checked: what LabUtopia's controllers do on 5.1.0 (it does not start here).
 
 ## Determinism
 PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the image on the authoring host:
@@ -303,8 +305,14 @@ On the authoring host (RTX PRO 6000 Blackwell Server Edition, driver 595.91.07),
 `harbor run -a oracle` scored 1 on all 18 task directories (both fresh-process replays and, in standard mode, the live
 episode ending in the reference's recorded state) and `harbor run -a nop` scored 0 on all 18; the reference, its first
 half, the reference without its last 30 rows and holding the initial targets for 10 s were run through the grader's
-own replay in every family (1, 0, 0, 0). The standard tasks have since moved to live grading (the verdict = the live
-episode's, which those runs also checked); they were not run again after that change.
+own replay in every family (1, 0, 0, 0).
+
+On an RTX 4090 host (driver 580.178.04), with the standard tasks graded live: `harbor run -a oracle` scored 1 and
+`harbor run -a nop` 0 on all 9 standard tasks (live verdicts, no infrastructure, grader or sim error), and the
+privileged oracle scored 1 on pick and pour. In 8 of 9 families the live end state equals the reference's recorded
+state hash; in pour every run on that host (live and both privileged replays) starts and ends in the same other last
+bits (end `2da5a7461d15403e` instead of `4a617cdeb8353c13`) with the same verdict, as "Determinism" describes for
+other hosts. The three `lab_003` tasks (press, shake, heat-liquid) peaked at 22-23 GiB in the sim sidecar.
 
 ## Files
 Every task directory is self-contained: `environment/rcb_labutopia.py` (privileged; the verifier's own copy in
