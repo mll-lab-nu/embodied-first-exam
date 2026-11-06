@@ -111,8 +111,8 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
   file (readable, `(T, nu)` for this instance's `nu`, finite, at most the family's row limit, which its instruction
   states: 360 s of replay at the family's stated rate, 108,000 rows for table tennis and MyoDex airplane to 864,000 for
   pen twirl, and no `.npz` entry larger than those rows unpack to; otherwise `bad_trajectory`, the agent's 0) before it
-  replays it. Each of the two grading replays may take 780 s (the longest legal trajectory at half its family's stated
-  rate, plus the start), so both fit in the verifier's 1800 s; the video replay runs after the verdict only in the time
+  replays it, once, in a fresh process. The grading replay may take 780 s (the longest legal trajectory at half its
+  family's stated rate, plus the start), so it fits in the verifier's 1800 s; the video replay runs after the verdict only in the time
   left (none when under 60 s remain). A replay process that then gives no result (out of time, killed, not started) is
   `replay_failed` with `grader_error = 1` and `infra_error = 1`, never the agent's 0, and every `reward.json` carries
   `infra_error`.

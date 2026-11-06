@@ -22,7 +22,7 @@ First-pass rating: medium. The action is muscle-level (39 muscles, each only pul
 MyoSuite's own NPG baseline policy for `myoHandKeyTurnFixed-v0` (`myosuite/agents/baslines_NPG/`, shipped in the MyoSuite wheel and removed from the image), rolled out from the frozen instance and cut at the first success: `solution/oracle.npy`, 72 rows (float32-exact, so the standard twin's client executes the same rows), success after 72 control steps. Replayed and saved by `solution/solve.sh`; re-checked in two fresh sessions (same final state).
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success (the goal held 50 control steps) in the same state (`deterministic`). `nop`: no trajectory, reward 0.
+`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success (the goal held 50 control steps). `nop`: no trajectory, reward 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

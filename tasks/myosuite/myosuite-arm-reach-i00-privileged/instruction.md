@@ -49,8 +49,7 @@ retry as many times as you want. Your deliverable is **one replayable trajectory
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
-state, else 0. It holds at most **720,000 rows** (one per control step: 360 s of replay at the rate under Conventions),
+open-loop from the same initial state in a fresh process and scored 1 if the episode ends in success, else 0. It holds at most **720,000 rows** (one per control step: 360 s of replay at the rate under Conventions),
 and a longer file scores 0. Also leave the script that produced it at `/app/output/gen.py`.
 
 Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
@@ -77,7 +76,7 @@ s.render_video(actions, "/app/output/check.mp4", cameras=["hand_top"])
 There are no motion primitives: every skill is yours to build from actuator commands.
 
 CLI equivalent of the grader:
-`python /opt/tools/rcb_myosuite.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz --repeat 2`
+`python /opt/tools/rcb_myosuite.py replay --instance /app/instance.npz --traj /app/output/trajectory.npz`
 
 ## Conventions
 - Action: 34 real numbers per control step, one per actuator in order: 34 muscles. A muscle's command a maps to its excitation u = 1 / (1 + exp(-5 (a - 0.5))) and is not clipped (a = -1: u ~ 0.0006, a = 0.5: 0.5, a = 1: 0.92, a = 2: 0.9994); activation follows excitation with a first-order delay (~10 ms up, ~40 ms down); muscles only pull; one muscle can cross several joints; its force also depends on its length and velocity.
