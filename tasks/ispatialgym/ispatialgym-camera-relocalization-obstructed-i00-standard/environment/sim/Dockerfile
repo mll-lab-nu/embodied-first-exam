@@ -9,7 +9,7 @@
 # No dataset: the BEHAVIOR Data Bundle (licence: no redistribution) is mounted read-only from $RCB_BEHAVIOR_DATA at /bdata;
 # the image holds only iSpatialGym's own small dataset `ispatialgym-assets` (its Kohs block, tray and puzzle pieces). The
 # tasks' frozen instances come from the eval data in the task directories, never from a download at run time.
-# ---- images/behavior/Dockerfile, verbatim:
+# >>> images/behavior/Dockerfile
 # behavior: BEHAVIOR-1K v3.9.2 (OmniGibson 3.9.2 + Isaac Sim 5.1.0 + cuRobo, the version the 2026 BEHAVIOR Challenge pins):
 # the official image by digest + ffmpeg, from public sources only. Every BEHAVIOR-1K task Dockerfile that runs the
 # simulator holds this recipe verbatim (normalize_base_stages) and its compose service names our prebuilt copy,
@@ -35,6 +35,7 @@ RUN apt-get -o Acquire::Retries=10 update --snapshot 20260920T090000Z && \
       { echo "package state differs from images/behavior/dpkg.lock (the tested image):" >&2; cat /tmp/dpkg.state >&2; exit 1; }; } && \
     rm -rf /var/lib/apt/lists/* /tmp/dpkg.state && mkdir -p /app/output /cache/appdata /data
 WORKDIR /app
+# <<< images/behavior/Dockerfile
 # ---- iSpatialGym on it:
 FROM behavior-base AS ispatialgym-base
 ARG B1K_COMMIT=6a6194600939179671054e1ae5e78b0a158f996c

@@ -90,6 +90,7 @@ fi
 pargs=""; [ $explicit -eq 1 ] && pargs="$targs"
 add bash ci_checks/check-tooling-identity.sh                # shared sources (PROTOCOL §1); the eai-standard/2.2 layer = embodied_first_exam/standard/
 add bash ci_checks/check-standard-client.sh                 # standard agent + verifier images: the pinned client base and pins
+add python3 ci_checks/check-recipe-copies.py               # base-image recipes inside other images' recipes: byte-identical to their source
 # PROTOCOL §6: the caps of every container ([environment], the compose files, x-gpu-memory-gb), the rules of
 # scripts/task_resources.toml applied, and the instruction's and README's `## Resources` rendered from them
 add python3 ci_checks/check-resources.py"$pargs"
