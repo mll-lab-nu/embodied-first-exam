@@ -9,7 +9,7 @@ as often as you like. Your deliverable is **one replayable trajectory** of contr
 
 ## Success
 VLABench's own success check for `select_billiards` (the task's termination condition). The episode **ends the moment it
-holds**. The verifier replays your trajectory from the frozen start in a separate sandbox (twice, in fresh processes;
+holds**. The verifier replays your trajectory from the frozen start in a separate sandbox (once, in a fresh process;
 MuJoCo on the CPU is bit-exact) and passes it iff the task succeeds at its **last** action, the final state. A
 trajectory that goes on after the task has terminated is invalid; one that never gets there fails. `s.step()` and
 `s.status()` report `success` and `done`; `s.replay(A)` does exactly what the verifier does.

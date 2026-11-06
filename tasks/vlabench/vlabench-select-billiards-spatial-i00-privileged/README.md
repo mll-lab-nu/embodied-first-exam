@@ -29,10 +29,10 @@ VLABench's own expert (get_expert_skill_sequence) driving its general skills, re
 replay ends with the task's success at its last step.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of
-the instance (`tests/instance.json`); pass iff both end in the same state (`deterministic`) and the task succeeds at
-the last action (VLABench's termination condition; actions after it make the trajectory invalid). Oracle: the replays
-end in the live state (hash `b1c967d47764…`) and succeed. `nop`: no trajectory, reward 0; the instance is not solved at
+`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of
+the instance (`tests/instance.json`); pass iff the task succeeds at
+the last action (VLABench's termination condition; actions after it make the trajectory invalid). Oracle: the replay
+ends in the live state (hash `b1c967d47764…`) and succeeds. `nop`: no trajectory, reward 0; the instance is not solved at
 the start (checked on every load).
 
 ## Resources

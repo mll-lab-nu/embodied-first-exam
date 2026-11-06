@@ -44,7 +44,7 @@ WORKDIR /app
 # only the declared artifacts (/app/output/) arrive from the agent.
 FROM vlabench-base
 COPY test.sh instance.json /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.5.1@sha256:5190dedccb8e48609058ce5782424ccf66e6c64ae9c5dd3d2a0f6ab032688445 /privileged/environment/vlb_tool.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:vlabench-files-0.5.2@sha256:77d048d70d23290179f7f4e6bb58628bb3d24d4b8f7c35051000dc43060d60cb /privileged/environment/vlb_tool.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV PYTHONPATH=/tests:/opt/VLABench:/opt/rrt-algorithms
 WORKDIR /tests
