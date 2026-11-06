@@ -17,7 +17,7 @@ Every image is public: Harbor pulls it.
 | robots | `unitree-go1` (Unitree Go1), `boston-dynamics-spot` (Boston Dynamics Spot), `google-barkour-vb` (Google Barkour vB); 12 joint position actuators each |
 | score | binary, defined here from Playground's termination rules and reward targets (Playground has shaped RL rewards only) |
 | tasks | Playground's 9 quadruped environments × 2 modes: `tasks/mujoco-playground/mujoco_playground_<env>-privileged` and `-standard` (`eai-standard/2.2`); BarkourJoystick, the one dynamic environment, also `-realtime` (`eai-standard/2.3`) |
-| image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged) |
+| image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.3` (`images/mujoco/`: 0.1.2 plus Playground's `locomotion/{go1,spot}` scenes and Menagerie's Go1, Spot and Barkour; every 0.1.2 file is unchanged; the four manipulation tasks build on `efe:mujoco-0.1.2`) |
 | oracle | full, both modes |
 
 ## Tasks
@@ -195,11 +195,10 @@ frozen moments: an external force that is neither the robot's nor gravity).
 ## Files
 | | |
 |---|---|
-| each task's `rcb_quadruped.py` (`environment/`, `tests/`, the standard twin's `environment/sim/`) | the tooling (privileged), the verifier's replay CLI and the service's simulator |
-| the standard twin's `environment/sim/server.py` | the 2.2 adapter on `embodied_first_exam/standard/rcb_limited.py`; `finalize.sh`, the collect hook |
-| `environment/instance.json` | the frozen instance |
-| `solution/oracle.npy` | the reference rows |
-| the realtime twin's `environment/sim/server.py`, `solution/` | its service (the 2.3 adapter) and its reference (`oracle_plan.py`, `solve.sh`) |
+| the privileged task's `environment/instance.json` and `tests/instance.json`, a standard or realtime twin's `environment/sim/instance.json` | the frozen instance (byte-identical copies) |
+| privileged and standard `solution/` (`oracle.npy`, `oracle_replay.py`, `solve.sh`) | the reference rows and their replay (privileged: into `trajectory.npz`; standard: through the client) |
+| the realtime twin's `environment/sim/server.py`, `solution/` | its service (the 2.3 adapter) and its reference (`oracle.npy`, `oracle_plan.py`, `solve.sh`) |
+| `embodied_first_exam/benchmarks/mujoco-playground/` (files-only image `efe:mujoco-playground-files-<images/mujoco-playground-files/VERSION>`, copied by digest) | `privileged/environment/rcb_quadruped.py` (the tooling, the verifier's replay CLI and the services' simulator), `privileged/tests/grade.py`, `standard/tests/grade.py`, `sim/server.py` (the standard 2.2 adapter on `embodied_first_exam/standard/rcb_limited.py`), `sim/video.py`, `sim/finalize.sh` (the collect hook), `sim/rcb_service.py` (the realtime twin's simulator service); the manipulation tasks' `rcb_aloha.py`, `rcb_panda.py` and `sim/server_mj.py` |
 
 The task directories are the deliverable; the tooling that built them is kept outside this repository.
 

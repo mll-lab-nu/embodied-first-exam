@@ -307,8 +307,13 @@ only after the whole reference with the on-track share, the final step and the w
   GPU is for the agent's images.
 
 ## Files
-Each task directory carries its tooling (`rcb_myosuite.py`), its frozen instance (`instance.npz`) and, where the family
-has one, its reference solution (`solution/`); the realtime twin's service is its `environment/sim/server.py`.
+Each task directory carries its frozen instance (`instance.npz`: the privileged task's `environment/` and `tests/`, a
+standard or realtime twin's `environment/sim/`) and, where the family has one, its reference solution (`solution/`); a
+standard twin also carries its service settings (`environment/sim/task.json`), the realtime twin its own service
+(`environment/sim/server.py`). The shared code (the tool `rcb_myosuite.py`, the graders, the standard service
+`server.py` with `video.py`, `finalize.sh`, the realtime twin's `rcb_service.py` and `task.json`) is in
+`embodied_first_exam/benchmarks/myosuite/`; the task Dockerfiles copy it by digest from the files-only image
+`efe:myosuite-files-<images/myosuite-files/VERSION>` (`images/myosuite-files/FILES.json`). Base image:
 `images/myosuite/` (Dockerfile, VERSION). The task directories are the deliverable; the tooling that built them is kept
 outside this repository.
 
