@@ -67,7 +67,7 @@ MAX_STEPS = 10_000_000          # runaway guard only; the wall clock is the budg
 # 1085 rows). The verifier replays a trajectory twice inside its timeout; the slowest family runs ~140 control steps/s.
 # The verifier scores a longer file 0 (bad_trajectory). The standard service's recorded episode has no such cap.
 MAX_TRAJECTORY_ROWS = 50_000
-# Threads (docs/benchmarks/dexjoco.md, "Threads"): DexJoCo's operational-space controller does its linear algebra in numpy,
+# Threads (tasks/dexjoco/README.md, "Threads"): DexJoCo's operational-space controller does its linear algebra in numpy,
 # and OpenBLAS gives one result on 4 or more threads (the references' and every published result's numerics), others on
 # 1 and on 2-3. Every container sets OPENBLAS_NUM_THREADS=4, but OpenBLAS never runs more threads than the CPUs the
 # process may run on (its affinity: a cpuset, taskset, a Slurm allocation; a docker `cpus:` quota does not change it).
@@ -118,7 +118,7 @@ def blas_threads() -> dict[str, Any]:
 def threads_message(t: dict) -> str:
     return (f"OpenBLAS runs {t['blas_threads']} thread(s) here ({t['visible_cpus']} CPU(s) visible to this process, "
             f"OPENBLAS_NUM_THREADS={t['openblas_num_threads_env'] or 'unset'}); DexJoCo's simulation gives the references' "
-            f"numerics only on {MIN_BLAS_THREADS} or more (docs/benchmarks/dexjoco.md, Threads)")
+            f"numerics only on {MIN_BLAS_THREADS} or more (tasks/dexjoco/README.md, Threads)")
 
 
 # Order of the 16 hand values in an action row (and in the measured joints) per arm. DexJoCo's bimanual envs list the

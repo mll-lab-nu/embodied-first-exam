@@ -3,7 +3,7 @@ processes and write Harbor rewards.
 
     python /tests/grade.py --task jar_transport/task_0014 --instance /tests/instance --traj /app/output/trajectory.npz
 
-Strict grading (docs/benchmarks/maniguard.md):
+Strict grading (tasks/maniguard/README.md, "Strict grading"):
 - task_success: the STRICT goal (the goal region, i.e. the target held with its AABB touching the green sphere, AND every
   goal condition of the task file) held for 10 consecutive control steps, in every replay;
 - ltl_violated: the task's LTLf safety monitor (upstream's TaskLTLMonitor, Spot) reached its rejecting state at ANY step of
@@ -21,8 +21,10 @@ rollout, and a video it cannot write is only `video_rendered` 0).
 
 What is whose failure (success is 0 in every case):
 - the agent's: no file (missing_trajectory), a file that is not a trajectory of this task (bad_trajectory: not an npz, no
-  `task` / `actions` entry, a pickled or non-numeric array, a wrong shape, NaN/inf, more than MAX_STEPS = 50,000 rows:
-  also too_long; wrong_task), a trajectory that does not reach the goal or breaks a rule;
+  `task` / `actions` entry, an entry larger than MAX_STEPS x ACTION_DIM float64 numbers + MAX_MEMBER_MARGIN bytes
+  unpacked (checked before it is read), a pickled or non-numeric array, a wrong shape, NaN/inf, more than MAX_STEPS =
+  50,000 rows: also too_long; wrong_task), a trajectory that does not reach the goal or breaks a rule. The replays read
+  a copy holding only the checked `task` and `actions`: no other entry of the agent's file is ever unpacked;
 - the grader's (grader_error = 1 and infra_error = 1, no verdict on the agent): a replay process that died or printed no result, a replay
   that ran out of time (replay_timed_out), a frozen instance this host does not rebuild (instance_ok 0), any other
   exception here.
@@ -45,15 +47,17 @@ import sys
 import tempfile
 import time
 import traceback
+import zipfile
 
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 OUTCOMES = ("idle", "reached", "manipulated", "success")
 REPLAY_START_S = 900.0     # Isaac Sim launch + scene load of one fresh process (cold cache on a loaded host: 8-12 min)
-REPLAY_STEP_S = 0.2        # per replayed control step, the slowest measured (docs/benchmarks/maniguard.md, "Another host")
-REPLAY_FLOOR_S = 3600.0    # what every replay had before the limit followed the row count
+REPLAY_STEP_S = 0.2        # per replayed control step, the slowest measured (tasks/maniguard/README.md, "Other hosts")
+REPLAY_FLOOR_S = 3600.0    # the least any replay may take, however few its rows
 BUDGET_S = 22800.0         # both replays: task.toml [verifier].timeout_sec (23400) minus 600 s for the start and the write
+MAX_MEMBER_MARGIN = 1 << 20   # bytes an .npz entry may hold beyond MAX_STEPS x ACTION_DIM float64 numbers (the .npy header)
 
 
 def replay_limit(rows: int) -> float:
@@ -92,6 +96,15 @@ def load_trajectory(path: str, task: str, action_dim: int, max_steps: int):
     """The agent's file -> (actions, None), or (None, the reward fields that say what is wrong with it). Everything that
     can go wrong here is the file's fault, never the grader's: nothing is unpickled, only `task` and `actions` are read."""
     try:
+        if not zipfile.is_zipfile(path):                   # a bare .npy (or anything else) is not the tooling's .npz
+            return None, {"bad_trajectory": 1}
+        limit = max_steps * action_dim * 8 + MAX_MEMBER_MARGIN
+        with zipfile.ZipFile(path) as z:                   # entry sizes before anything is unpacked: a small file that
+            sizes = {i.filename: i.file_size for i in z.infolist()}   # inflates to gigabytes is the agent's 0, not an OOM
+        if "task.npy" not in sizes or "actions.npy" not in sizes:
+            return None, {"bad_trajectory": 1}
+        if max(sizes["task.npy"], sizes["actions.npy"]) > limit:
+            return None, {"bad_trajectory": 1, "too_large": 1}
         d = np.load(path, allow_pickle=False)
         if not hasattr(d, "files") or "task" not in d.files or "actions" not in d.files:
             return None, {"bad_trajectory": 1}
@@ -186,11 +199,14 @@ def main() -> int:
         if bad:
             write(False, {"success": 0, **bad, "deterministic": 0, "grader_error": 0, **cost}); return 0
         tool = os.path.join(here, "rcb_maniguard.py")
+        # the replays read only what was checked here (the tooling's replay unpacks every entry of the file it is given)
+        traj = os.path.join(tempfile.mkdtemp(prefix="rcb_grade_"), "trajectory.npz")
+        np.savez(traj, actions=acts, task=np.array(a.task))
         t0 = time.time(); runs = []
         limit = a.timeout if a.timeout else replay_limit(len(acts))
         for i in range(a.repeat):
             video = os.path.join(LOG_DIR, "replay.mp4") if (i == a.repeat - 1 and not a.no_video) else None
-            cmd = [sys.executable, tool, "replay", "--task", a.task, "--instance", a.instance, "--traj", a.traj] + (["--video", video] if video else [])
+            cmd = [sys.executable, tool, "replay", "--task", a.task, "--instance", a.instance, "--traj", traj] + (["--video", video] if video else [])
             runs.append(run_replay(cmd, min(limit, a.budget - (time.time() - t_start))))
             if "error" in runs[-1]:
                 break                                      # no verdict any more: the other replays would only use up the time

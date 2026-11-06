@@ -12,7 +12,7 @@ Differences from the RoboLab service, all from the task:
   target at the 20 Hz control rate, one IK solve per control step (SAPIEN's Pinocchio CLIK, no collision checking), at most
   0.25 m/s (a faster row is slowed down and reported);
 - painting has no terminal state: the episode ends only when the agent phase ends (the collect hook) or on a simulator error;
-- the verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): when the collect hook ends the episode
+- the verdict is the live episode's (docs/protocol/README.md H.4): when the collect hook ends the episode
   (environment/sim/finalize.sh, after the agent's container is stopped) this service commits a stroke still pressed, scores its
   live main sheet with the graders' scorer and rules (rcb_brush_strict.py: the picture rule and the process rules, the same
   Session.score() the privileged verifier's replays use) and writes final.json at once ("graded_by": "live"); nothing is
@@ -123,7 +123,7 @@ def dump() -> list | None:
 
 def render(acts) -> None:
     """The one render pass after the verdict: the recorded trajectory from the frozen instance into replay.mp4 (+ .last.png),
-    as the replays used to film it. A failed render loses the video only; the verdict on disk is not touched."""
+    filmed as the privileged verifier films its replay. A failed render loses the video only; the verdict on disk is not touched."""
     v = E["verdict"]
     if acts is not None:
         try:
@@ -211,7 +211,7 @@ elif S.medium == "mypaint":
 else:
     ROBOT_TEXT = "franka-panda holding a brush"
     TOOL = {"kind": S.medium}
-WHERE = ("center_xy", "surface_z")      # where things are in the world is never given in standard mode (user, 2026-09-28 20:30)
+WHERE = ("center_xy", "surface_z")      # where things are in the world is never given in standard mode (tasks/robopaint/README.md)
 STATIC = {
     "sheets": {n: {**{k: v for k, v in f.items() if k not in WHERE}, "scored": n == "main",
                    "note": ("scored" if n == "main" else "for test strokes: never scored, never counted")} for n, f in SH.items()},
@@ -435,7 +435,7 @@ def note_of(meta: dict) -> str:
 
 def video_fps(meta: dict) -> int:
     """Frames per second of the returned video (absent or null: 5). A rate the mp4 encoder cannot write (negative, or
-    beyond any real rate) is a 400 here: it used to fail after the chunk had run, which ended the episode."""
+    beyond any real rate) is a 400 here, before the chunk runs (failing after it had run would end the episode)."""
     fps = number(meta, "video_fps", 5)
     if not (0 <= fps <= MAX_VIDEO_FPS): raise ValueError(f"video_fps must be in [0, {MAX_VIDEO_FPS}]")
     return int(fps)

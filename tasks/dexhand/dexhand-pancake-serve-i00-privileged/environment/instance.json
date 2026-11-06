@@ -384,6 +384,10 @@
   "schema_version": 1,
   "serve_radius_m": 0.058,
   "serve_tilt_deg": 20.0,
+  "start_state_sha": {
+    "sharpa": "b10ea3a1dc75f31536d97e37270f92bb50176234ff002359f5f8cb9fabbfc965",
+    "wuji": "c8359b8c2a327c5b3ce7af0803cf01a63db701de06878a752dc0cdf032f491bc"
+  },
   "support_shift_m": 0.03,
   "support_tilt_deg": 15.0,
   "title": "Serve a pancake from a frying pan with a spatula",

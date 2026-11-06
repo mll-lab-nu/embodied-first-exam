@@ -21,7 +21,7 @@ trajectory once (the video only); the verifier runs in a separate sandbox (`test
 resets and privileged state.
 
 ## Difficulty
-That of `ambench-push-slider-fahexa-i00-privileged` (its README), without resets, object poses or the success signal: The fixture's pose and the knob's position along the rail are not given: the red knob and the rail on the concrete wall have to be located with the onboard cameras, and progress is visible only as the knob's position along the rail. Left and right refer to the robot's view of the wall at reset.
+That of `ambench-push-slider-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): The fixture's pose and the knob's position along the rail are not given: the red knob and the rail on the concrete wall have to be located with the onboard cameras, and progress is visible only as the knob's position along the rail. Left and right refer to the robot's view of the wall at reset.
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for
@@ -49,8 +49,8 @@ Caps per container (PROTOCOL §6).
 | `sim` | 11 | 21 GiB | 1024 | 16 GiB | — |
 | verifier (as `main`) | 2 | 4 GiB | no cap | no GPU | 10 GiB |
 
-- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, RTX PRO 6000 Blackwell, held by `sim`.
-- Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
+- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, RTX 4090, RTX PRO 6000 Blackwell, held by `sim`.
+- Recommended GPU: L40S 48GB / RTX 4090 24GB.
 
 ## Details
 | | |

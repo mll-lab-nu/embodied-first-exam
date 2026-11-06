@@ -94,6 +94,10 @@
     0.14,
     0.28
   ],
+  "start_state_sha": {
+    "sharpa": "6b1814b58861ab525af63c2c796dcdcaa3e76a012e20b27a32ee467085442a3f",
+    "wuji": "1a415158fdf230f2ca6abf7a4454c11a1c35793914ee00af21774ac1bc663542"
+  },
   "table_z": 0.3,
   "target_xy": [
     -0.16,

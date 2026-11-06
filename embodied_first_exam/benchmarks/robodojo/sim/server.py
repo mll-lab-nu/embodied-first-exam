@@ -24,7 +24,7 @@ RoboDojo specifics:
   agent's way instead: after the task's step_lim actions, or when a check fails for good, or
   at the agent's POST /finish or the end of its session; a success never ends it and is never shown, and the verdict is
   RoboDojo's: whether the reward reached 1 in the episode;
-- the episode is graded as it ran (owner 2026-10-17: no grading replay): when it ends the service writes
+- the episode is graded as it ran (no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: RoboDojo's check after every action; the
   end-state hash), the collect hook's SIGUSR1 makes it exit, and environment/sim/finalize.sh writes final.json from it;
 - the start state is checked before the agent is served: the rebuilt layout's state hash against the frozen instance's

@@ -292,6 +292,10 @@
   "release_status": "provisional",
   "robot": "sharpa-wave-floating-bimanual",
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "520f16b5d75365a792363b58b9dde826b9bcbd97326cfe03e97cf9ca899aafe5",
+    "wuji": "e8b61edc879f8b9e254f996284ba656782a817ef222593ca1af298e669d4337f"
+  },
   "title": "Remove and reinstall a vacuum dust bin",
   "visual_only_prefixes": [
     "filter_rim_",

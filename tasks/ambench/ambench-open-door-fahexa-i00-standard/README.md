@@ -21,7 +21,7 @@ trajectory once (the video only); the verifier runs in a separate sandbox (`test
 resets and privileged state.
 
 ## Difficulty
-That of `ambench-open-door-fahexa-i00-privileged` (its README), without resets, object poses or the success signal: The door's pose (position and yaw), its hinge angle and hinge damping are not given: the frame and panel have to be located with the onboard cameras (the forward-looking airframe camera and the end-effector camera) and related to the robot through proprioception (base and end-effector poses). The opening angle can only be judged visually from the panel's position relative to the frame.
+That of `ambench-open-door-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): The door's pose (position and yaw), its hinge angle and hinge damping are not given: the frame and panel have to be located with the onboard cameras (the forward-looking airframe camera and the end-effector camera) and related to the robot through proprioception (base and end-effector poses). The opening angle can only be judged visually from the panel's position relative to the frame.
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for
@@ -49,8 +49,8 @@ Caps per container (PROTOCOL §6).
 | `sim` | 11 | 21 GiB | 1024 | 16 GiB | — |
 | verifier (as `main`) | 2 | 4 GiB | no cap | no GPU | 10 GiB |
 
-- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, RTX PRO 6000 Blackwell, held by `sim`.
-- Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
+- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, RTX 4090, RTX PRO 6000 Blackwell, held by `sim`.
+- Recommended GPU: L40S 48GB / RTX 4090 24GB.
 
 ## Details
 | | |

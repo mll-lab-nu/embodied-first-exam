@@ -63,9 +63,10 @@ has a positive; their frozen instances are in dev branch 9eb18edf.
 
 ## Tasks
 - The task directories are the deliverable; the tooling that built them is kept outside this repository. Every task
-  carries the shared sources unchanged: the tooling `rcb_robowits.py`, the standard sim adapter `server.py`, the mode's
-  grader (`tests/grade.py`), the standard oracle player `solution/oracle_replay.py`; the eai-standard/2.2 layer
-  (`rcb_limited.py`, `rcb_client.py`, `rcb1.py`, `run.sh`) comes from `embodied_first_exam/standard/`. The privileged
+  gets the shared sources from files images (Tooling, below): the tooling `rcb_robowits.py`, the standard sim adapter
+  `server.py` and the mode's grader from `robowits-files`, the eai-standard/2.2 layer (`rcb_limited.py`, `rcb_client.py`,
+  `rcb1.py`, `run.sh`) from `standard-files` (`embodied_first_exam/standard/`); the standard oracle player
+  `solution/oracle_replay.py` is the same file in each standard task that has a reference. The privileged
   instruction quotes RoboWits' `_check_success` verbatim (MIT, RoboWits @ 9cc30ae).
   The frozen instance is `tasks/robowits/robowits-<family>-i00-privileged/environment/instance.json` (copied to `tests/` and to
   the standard twin's `environment/sim/`). `python3 scripts/task_conventions.py --check tasks/robowits/robowits-*` passes.
@@ -214,16 +215,18 @@ pinocchio (14 arm joints); 80 proprio columns; the end condition in `/spec` (`ep
   caused, or a record that never finished grading).
 
 ## Tooling (file names)
-| main's convention | RoboWits |
-|---|---|
-| `environment/rcb_traj.py` (privileged tooling, `Session`) | `environment/rcb_robowits.py` (`Session`: the frozen instance in `instance.json`, thin primitives, rendering, recording, replay) |
-| `tests/rcb_traj.py` (the verifier's copy) | `tests/rcb_robowits.py` |
-| standard sidecar (`environment/sim/server.py`) | `environment/sim/server.py` (the 2.2 adapter) + `environment/sim/rcb_robowits.py` |
-| `rcb_client.py`, `rcb1.py` | the same names (`embodied_first_exam/standard/`) |
+No task directory carries a copy of the tooling: the task Dockerfiles copy it from the files image `robowits-files`
+(`images/robowits-files/FILES.json`, sources in `embodied_first_exam/benchmarks/robowits/`).
 
-The tooling records (T, 16) JOINT_ABS rows (per arm 7 joints + gripper width) at the 30 Hz control rate. Every copy of
-`rcb_robowits.py`, of the standard sidecar files and of each mode's grader is byte-identical across the benchmark
-(`check-tooling-identity.sh`).
+| main's convention | RoboWits (path in the container) |
+|---|---|
+| `environment/rcb_traj.py` (privileged tooling, `Session`) | `/opt/tools/rcb_robowits.py` (`Session`: the frozen instance in `instance.json`, thin primitives, rendering, recording, replay; source `privileged/tests/rcb_robowits.py`) |
+| `tests/rcb_traj.py` (the verifier's copy) | `/tests/rcb_robowits.py` and the grader `/tests/grade.py` (sources `privileged/tests/`) |
+| standard sidecar (`environment/sim/server.py`) | `/srv/server.py` (the 2.2 adapter, source `sim/server.py`) + `/srv/rcb_robowits.py`; the standard grader `/tests/grade.py` (source `standard/tests/grade.py`) |
+| `rcb_client.py`, `rcb1.py` | the same names in `/opt/tools/` (from `standard-files`, `embodied_first_exam/standard/`) |
+
+The tooling records (T, 16) JOINT_ABS rows (per arm 7 joints + gripper width) at the 30 Hz control rate. Every task
+pins the same `robowits-files` digest, so every task runs the same tooling, sidecar and graders.
 
 ## Declarations
 - **Tooling: thin wrappers only.** The agent's tooling gives the frozen instance, the privileged state, recording and

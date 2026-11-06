@@ -1,8 +1,8 @@
 """T21 picture-hanging scene: a free 52 x 52 x 6 cm framed print with two passive hinged D-rings, two installed
 brass wall hooks, a console and a Tianji Marvin dual-arm robot with a dexterous hand on each arm.
 
-Scene geometry, masses and materials follow the accepted T21 source scene
-(``scripts/scene_expansion/repairs/picture_sharpa/meta_delivery_trajectory_r1/hardware.py`` and ``scene.py``).
+Scene geometry, masses and materials follow the accepted T21 source scene (its authoring files are kept outside the
+repository).
 The only physical object that moves is the frame (with its two D-rings on passive hinges); hooks, wall and
 console are static. Nothing is attached to a hand.
 
@@ -111,7 +111,7 @@ def asset_path(name: str) -> Path:
 
 def sharpa_folder(asset_dir=None) -> Path:
     candidates = [asset_dir, os.environ.get("DEXHAND_ASSET_DIR"), "/opt/dexhand/hand"]
-    if len(HERE.parents) > 3:  # repository checkout: scripts/dexhand/families/<family>/
+    if len(HERE.parents) > 3:  # an authoring checkout (its tooling is kept outside the repository)
         candidates += [HERE.parents[3] / "images/dexhand/assets/hand"]
     for candidate in candidates:
         if candidate and (Path(candidate) / "right_hand.xml").is_file():

@@ -37,7 +37,7 @@ HERE = Path(__file__).resolve().parent
 def _sharpa_folder(asset_dir=None):
     """The Sharpa Wave asset folder: argument, DEXHAND_ASSET_DIR, the image path, else a repository checkout."""
     candidates = [asset_dir, os.environ.get("DEXHAND_ASSET_DIR"), "/opt/dexhand/hand"]
-    if len(HERE.parents) > 4:  # repository layout scripts/dexhand/families/<family>/ (task copies are shallower)
+    if len(HERE.parents) > 4:  # an authoring checkout (its tooling is kept outside the repository); task copies are shallower
         candidates.append(HERE.parents[4] / "images/dexhand/assets/hand")
     for candidate in candidates:
         if candidate and (Path(candidate) / "right_hand.xml").is_file():

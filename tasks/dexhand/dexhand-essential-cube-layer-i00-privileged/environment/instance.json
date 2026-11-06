@@ -138,6 +138,10 @@
       "name": "repeat_quarter_turn"
     }
   ],
+  "start_state_sha": {
+    "sharpa": "8b0f2926ec2ccbf3acd1a0e8063d914d429ea0ba39892b0dcf72731c06d72748",
+    "wuji": "c77ef5b7759fc797b362ef491609dc39a4f901e153517a3266653e4b50de8e93"
+  },
   "terminal": {
     "bounds": {
       "base_contacts": [

@@ -78,6 +78,10 @@
   "robot": "sharpa-wave-floating",
   "scene_xml": "scene_sharpa.xml",
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "0afd78a0854f51a8bb5468ca918be969113e9ce490b4cd363555fcd012cc2251",
+    "wuji": "76bfd542ef58de7eca05524ee6e70d8b5b4140725d2613a6ab0e10d5448b3e25"
+  },
   "support": {
     "below_table_tolerance_m": 0.01,
     "released_on_table_tolerance_m": 0.002,

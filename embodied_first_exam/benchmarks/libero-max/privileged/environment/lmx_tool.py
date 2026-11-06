@@ -45,7 +45,7 @@ HORIZON = 1_000_000
 OBS_RES = 128  # resolution of LIBERO's own camera observations (only used by LIBERO-MAX's internal render checks)
 _BUILT = {"n": 0}
 # The replay video (`--replay ... <video>`): evidence for humans, never part of a verdict. What it may add to a replay
-# before the verdict is out is bounded (docs/benchmarks/libero-max.md, "Collect budget").
+# before the verdict is out is bounded (tasks/libero-max/README.md, "Collect budget").
 VIDEO_FPS = 10  # one frame per 2 control steps is real time
 VIDEO_MAX_FRAMES = 1200  # frames at most: longer episodes get one frame per ceil(steps / 1200) control steps
 VIDEO_BUDGET_S = 240.0  # seconds at most that rendering and encoding may take before the verdict is printed

@@ -48,6 +48,8 @@ gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
 
 [verifier.environment]
 build_timeout_sec = 5400.0
+cpus = 8                          # the agent container's (tasks/maniguard/README.md, Other hosts: CPU)
+memory_mb = 24576                 # 1.5 x the verifier's measured 15.8 GB peak, rounded up (PROTOCOL §6)
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

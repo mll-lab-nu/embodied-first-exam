@@ -1,5 +1,5 @@
 """Verifier entry point: replay /app/output/trajectory.npz from the frozen instance and write Harbor rewards
-(privileged mode; source: scripts/robowits/shared/grade_privileged.py, copied unchanged into every task as tests/grade.py).
+(privileged mode; served from the robowits-files image at /tests/grade.py in every task's verifier).
 
     python /tests/grade.py --family stack_cubes --instance /tests/instance.json --traj /app/output/trajectory.npz
 
@@ -7,7 +7,7 @@ Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Har
 human-viewable replay video /logs/verifier/replay.mp4 (ego camera + both wrist cameras) plus replay.last.png.
 Replays `--repeat` times in this fresh process; success requires every replay to complete the task AND all
 final-state hashes to agree (bit-exact determinism; Genesis' CPU backend restores the frozen snapshot exactly), so
-a lucky non-deterministic run cannot pass. "Complete the task" (since 2026-10-14) is the tooling's settle window after the
+a lucky non-deterministic run cannot pass. "Complete the task" is the tooling's settle window after the
 last action (rcb_robowits.Session.settle_check): the robot holds its last command for 1 s, then for 2 s RoboWits'
 predicate must hold with the graded objects released (no robot contact) and at rest (each moves at most 2 mm);
 reward.json adds `goal_at_end` (the goal right after the last action), `settle_steps` and `settle_max_move_mm`. Exception: with RCB_ROBOWITS_BACKEND=gpu (the particle-heavy tasks,
@@ -22,7 +22,7 @@ Whose failure (reward.json always carries `infra_error` and `grader_error`, 0 or
   (`bad_trajectory`), another family's trajectory (`wrong_family`), or a trajectory that does not complete the task;
 - the infrastructure's (`infra_error` 1, never the agent's 0): the verifier cannot build the frozen scene
   (`instance_build_failed`, with `grader_error` 1), or the scene it rebuilt does not match the frozen instance on the
-  CPU backend (`instance_ok` 0: another CPU vendor, asset or simulator drift; docs/benchmarks/robowits.md, Hosts): the
+  CPU backend (`instance_ok` 0: another CPU vendor, asset or simulator drift; tasks/robowits/README.md, "Hosts: one CPU vendor"): the
   replay then ran on a different scene and says nothing about the trajectory;
 - the grader's (`grader_error` 1): anything else that raises.
 """
@@ -126,7 +126,7 @@ def main() -> int:
                "goal_at_end": int(bool(outs[0].get("goal_at_end"))), "settle_steps": int((outs[0].get("settle") or {}).get("steps") or 0),
                "settle_max_move_mm": round(1000 * float((outs[0].get("settle") or {}).get("max_move_m") or 0.0), 2),
                "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "video_rendered": 0, **cost}
-        write(ok, out)                  # the verdict is on disk before the video is rendered (PROTOCOL §2.6)
+        write(ok, out)                  # the verdict is on disk before the video is rendered (PROTOCOL §4)
         # Human-viewable replay video (never affects the verdict): /logs/verifier/replay.mp4 + replay.last.png
         # It is time-boxed: a verifier that Harbor stops at its timeout_sec loses the verdict that is already on disk.
         if not a.no_video:

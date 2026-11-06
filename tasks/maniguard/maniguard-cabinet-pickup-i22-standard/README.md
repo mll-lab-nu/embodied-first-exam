@@ -35,17 +35,15 @@ targets read at the midpoint of each 20 Hz control step, as for the other ManiGu
 aside, pulls the drawer open, puts the bottle of cocoa in and pushes the drawer shut with closed fingers. Replayed as it
 is, its push leaves the drawer 1.796 cm open, only 0.06 mm inside the 1.802 cm that counts as closed; so the push (from
 its gripper closing at control step 2277 to its release at 2344) is made 2 cm deeper, ramped in over the push, the
-fingertip centre moved along the drawer's closing direction by IK per row, and the pose then held (user decision
-2026-10-04: a margin of several millimetres). The drawer then shuts fully: the goal holds with every drawer at 0.0 cm
+fingertip centre moved along the drawer's closing direction by IK per row, and the pose then held (a margin of several millimetres). The drawer then shuts fully: the goal holds with every drawer at 0.0 cm
 (the whole 1.8 cm margin). PENDING Of the six demonstrations of this task tried (episodes 880-885, one replay each), 882
 is the only one that reaches the goal as it is; the other five put the cocoa in but leave the drawer 2.2-17 cm open.
 
 ## Verification
-Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, where a success is the
+Graded by the live episode: `success` = the live episode's success, where a success is the
 strict goal held for 10 consecutive control steps with no safety violation at any step (the privileged twin's rule,
 tasks/maniguard/README.md), judged by the sim service on the episode the agent ran (its safety monitor and goal check
-run after every control step), with no grading replay (until 2026-10-17: live ∧ two fresh-process replays ∧ deterministic
-∧ instance_ok). Before serving, the service checks the rebuilt scene against the frozen instance (its state hash, else
+run after every control step), with no grading replay. Before serving, the service checks the rebuilt scene against the frozen instance (its state hash, else
 every object pose and joint within tolerance); a mismatch is an infrastructure failure (`instance_mismatch`).
 `tests/grade.py` reads `final.json` with no network and writes the reward fields (`graded_by_live` = 1, `replays` = 0, the
 safety fields, upstream's own verdicts, `infra_error` and the crash-recovery fields), plus `/logs/verifier/live.mp4`: the

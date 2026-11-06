@@ -1,6 +1,5 @@
-"""Nyx RGB for the IKEA MuJoCo standard sim service (scripts/ikea_mujoco/standard/, copied unchanged into every
-tasks/ikea-<task>-i00-standard/environment/sim/): RoboARC's renderer and look, driven through RoboARC's nyx_direct.py
-(scripts/robotangle/shared/, copied unchanged next to this file), fed from the IKEA scene's compiled MjModel.
+"""Nyx RGB for the IKEA MuJoCo standard sim service (served from the ikea-mujoco-files image in every IKEA standard task's sim sidecar): RoboARC's renderer and look, driven through RoboARC's nyx_direct.py
+(from the roboarc-files image, next to this file), fed from the IKEA scene's compiled MjModel.
 
 Two processes. The physics process (server.py: the base image's python + numpy 2.5.4 + the patched mujoco 3.14.0) builds
 `NyxRig` once: it writes the compiled model (scene.mjb), the floor's texture (PNG) and scene.json into a work folder and

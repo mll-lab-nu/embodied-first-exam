@@ -108,8 +108,12 @@ locomotion challenges and by hand_pose); elbow and finger pose / reach (near-dup
 - **Privileged:** `rcb_myosuite.Session` in the agent's container: reset, the task's observation dict, MuJoCo model and
   data, actuator descriptions and moment arms, rendering, recording and self-replay. Deliverable
   `/app/output/trajectory.npz`, `(T, nu)` actuator commands, one row per control step. `tests/grade.py` checks the
-  file (readable, `(T, nu)` for this instance's `nu`, at most 1,000,000 rows, finite: otherwise `bad_trajectory`, the
-  agent's 0) before it replays it; a replay process that then gives no result (out of time, killed, not started) is
+  file (readable, `(T, nu)` for this instance's `nu`, finite, at most the family's row limit, which its instruction
+  states: 360 s of replay at the family's stated rate, 108,000 rows for table tennis and MyoDex airplane to 864,000 for
+  pen twirl, and no `.npz` entry larger than those rows unpack to; otherwise `bad_trajectory`, the agent's 0) before it
+  replays it. Each of the two grading replays may take 780 s (the longest legal trajectory at half its family's stated
+  rate, plus the start), so both fit in the verifier's 1800 s; the video replay runs after the verdict only in the time
+  left (none when under 60 s remain). A replay process that then gives no result (out of time, killed, not started) is
   `replay_failed` with `grader_error = 1` and `infra_error = 1`, never the agent's 0, and every `reward.json` carries
   `infra_error`.
 - **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` and the adapter
@@ -271,7 +275,7 @@ every other family's objects start at rest, and chase_tag's opponent stands stil
   out; PROTOCOL §2's S = ceil(1.5 / 2.08) = 1. At S = 1 a
   controller at the control rate (`cameras=[]`) with a camera image every 0.25 s ran 11 episodes (10 resets) with no
   stall and a largest lag of 0.23 s. An episode that does nothing ends after 121 control steps (1.21 s): the serve
-  passes. The reset budget is the mode's default, 10; a reset takes about 1 s (MyoSuite's env reset).
+  passes. The reset budget is 10 (this benchmark's choice; the mode's default is 0); a reset takes about 1 s (MyoSuite's env reset).
 - **Checked at S = 1**: a successful privileged episode (82 rows) planned from step 0 in one `submit(..., at=0)`
   succeeds live (no stall), and streamed one row per call too; nop (no request) ends `timeout`, not graded a success.
   The cutoff is the standard twin's (3600 s).
@@ -307,8 +311,13 @@ only after the whole reference with the on-track share, the final step and the w
   GPU is for the agent's images.
 
 ## Files
-Each task directory carries its tooling (`rcb_myosuite.py`), its frozen instance (`instance.npz`) and, where the family
-has one, its reference solution (`solution/`); the realtime twin's service is its `environment/sim/server.py`.
+Each task directory carries its frozen instance (`instance.npz`: the privileged task's `environment/` and `tests/`, a
+standard or realtime twin's `environment/sim/`) and, where the family has one, its reference solution (`solution/`); a
+standard twin also carries its service settings (`environment/sim/task.json`), the realtime twin its own service
+(`environment/sim/server.py`). The shared code (the tool `rcb_myosuite.py`, the graders, the standard service
+`server.py` with `video.py`, `finalize.sh`, the realtime twin's `rcb_service.py` and `task.json`) is in
+`embodied_first_exam/benchmarks/myosuite/`; the task Dockerfiles copy it by digest from the files-only image
+`efe:myosuite-files-<images/myosuite-files/VERSION>` (`images/myosuite-files/FILES.json`). Base image:
 `images/myosuite/` (Dockerfile, VERSION). The task directories are the deliverable; the tooling that built them is kept
 outside this repository.
 

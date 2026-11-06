@@ -52,7 +52,7 @@ service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json from the live episode (no replay), encode live.mp4
 timeout_sec = 3600                # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
                                   # resume) + the video encode (at most 600 s, at most 3001 frames, CPU) + a margin; graded by
-                                  # the live episode since 2026-10-17 (15000 s with two fresh-process replays before)
+                                  # the live episode (no grading replay)
 
 [agent]
 timeout_sec = 3600.0              # RoboLab budget, both modes (tasks/robolab/README.md)

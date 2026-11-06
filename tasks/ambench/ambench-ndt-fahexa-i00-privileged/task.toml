@@ -46,7 +46,7 @@ build_timeout_sec = 5400.0           # a first run builds the simulator image fr
 cpus = 8
 memory_mb = 34816
 storage_mb = 10240
-gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blackwell"]
+gpu_types = ["L40S", "L40", "RTX 4090"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

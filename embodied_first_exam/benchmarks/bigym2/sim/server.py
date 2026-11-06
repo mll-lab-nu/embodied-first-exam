@@ -1,4 +1,4 @@
-"""eai-standard/2.1 sim service for BiGym 2.0 -- the sidecar's entry point (`python /srv/server.py`; the standard-realtime
+"""eai-standard/2.1 sim service for BiGym 2.0 -- the sidecar's entry point (`python /srv/server.py`; the realtime
 twin runs `python /srv/rcb_realtime.py`, which uses this adapter unchanged).
 
 The simulator-specific half only: `BiGym2` implements rcb_service.Sim for one frozen instance, through rcb_bigym2.Episode

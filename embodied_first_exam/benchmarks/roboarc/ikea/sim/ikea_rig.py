@@ -1,5 +1,4 @@
-"""Camera rig of the IKEA MuJoCo standard-mode service (scripts/ikea_mujoco/standard/, copied unchanged into every
-tasks/ikea-<task>-i00-standard/environment/sim/): ALOHA-style cameras added at service start WITHOUT touching the model.
+"""Camera rig of the IKEA MuJoCo standard-mode service (served from the ikea-mujoco-files image in every IKEA standard task's sim sidecar): ALOHA-style cameras added at service start WITHOUT touching the model.
 
 The cameras are not model cameras. RGB is drawn by Nyx (ikea_nyx.py, RoboARC's renderer) at this rig's poses; depth (and
 RGB under RCB_RENDER=egl, tests only) by MuJoCo's own renderer (mujoco.Renderer, EGL). Both read a scratch MjData that holds a copy of the live joint positions (mj_kinematics + mj_camlight on the copy), and the OpenGL camera of

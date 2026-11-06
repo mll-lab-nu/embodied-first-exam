@@ -5,9 +5,9 @@
 #      check on the episode the service ran, the final-state hash) and exits. It exits 2 when final.json already holds
 #      the verdict (the service gave up: after crashes, or at the start: too few CPUs, a scene that did not build to the
 #      frozen instance): that verdict stays.
-#   2. write final.json from episode.json: the verdict is the live episode's (owner, 2026-10-17; graded_by
-#      = "live", replays = 0). Nothing is replayed to grade it: DexJoCo's episode ends at the first success, so there is
-#      no settle window after it that a replay would have added (docs/benchmarks/dexjoco.md, Grading).
+#   2. write final.json from episode.json: the verdict is the live episode's (graded_by = "live", replays = 0).
+#      Nothing is replayed to grade it: DexJoCo's episode ends at the first success, so there is no settle window
+#      after it that a replay would have added (tasks/dexjoco/README.md, "grading: the live episode").
 #   3. one video-only pass (`video.py`, a fresh process): the trajectory rendered from the frozen instance into
 #      replay.mp4, after the verdict is on disk ("video_pending" while it runs). It never changes the verdict: a video
 #      that fails or runs out of time loses only the video.

@@ -43,24 +43,6 @@ client and one episode. **Task:** Untie and spread the rope on the tabletop unti
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
 
-## Startup and long-running commands
-
-- Scene initialization and kernel compilation can take minutes. Actual time depends on the task, hardware, and load.
-  Quiet logs during initialization do not by themselves mean failure. Use `python -u` for unbuffered script output.
-- A command tool's wait/yield interval (for example, `yield_time_ms=30000`) is not the command's lifetime.
-  When a command is still running, retain its process/session identifier and continue waiting for that same command.
-  With Codex's `exec_command`, expose the complete result, including `session_id` and `exit_code`, rather than only
-  `output` (for example, `text(r)` instead of only `text(r.output)`). Continue it with `write_stdin` using the returned
-  `session_id` and no input. An outer JavaScript wrapper saying `Script completed` does not prove Python has exited.
-  Use the corresponding wait/status operation if another command tool is provided.
-- Do not rerun a command just because its first wait returned partial logs. Confirm the original process has exited
-  before starting a replacement; if cancellation is necessary, stop only your own identified process and confirm exit.
-- Keep the task's simulator and sensor configuration. Waiting does not extend the actual agent wall-clock budget.
-- Connect with `Robot()` and let its retry loop wait for the existing service (default connection budget: 3600 seconds,
-  still subject to the actual agent deadline). Do not try to start or rebuild a simulator yourself.
-- Reconnecting a client accesses the same episode; it does not reset the world. While an action request is still
-  running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
-
 ## Time per call
 - One control step takes about 0.45 s of wall clock here. A request returns when all of its steps have run, or
   earlier: a call that has run for 900 s (`spec["max_call_wall_s"]`) is stopped by the service at the next control
@@ -146,4 +128,4 @@ Your container: **4 CPUs**, **16 GiB of memory**, **1024 processes and threads**
 ## Time limit
 You have 10800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

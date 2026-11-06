@@ -137,7 +137,10 @@ memory on a 24 GB card and 19.4 GiB on a 48 GB card (the tooling sets no texture
 happens then). This is the one exception to "the oracle stays inside the caps" in ManiGuard.
 
 ## Tasks
-- Every task dir (both modes) carries the tooling (`environment/rcb_maniguard.py`), the task's instance files in
+- The tooling (`rcb_maniguard.py`), the graders and the standard sidecar's files have one source,
+  `embodied_first_exam/benchmarks/maniguard/`, and come from the pinned files-only image `images/maniguard-files/`
+  (`FILES.json`): every task's Dockerfiles `COPY --from` it (the agent's `/opt/tools/rcb_maniguard.py`, the verifier's
+  `/tests/`, the sidecar's `/srv/`). Every task dir carries the task's instance files in
   `environment/instance/` (ManiGuard-Bench's `scene_ep1.json` + `diagnostics.jsonl` at revision `af09438ceb`, unchanged,
   CC BY-NC 4.0 per the `NOTICE` next to them, and our `instance.json`, made with `rcb_maniguard.py make-instance`), and the
   privileged task its reference solution (`solution/oracle_trajectory.npz`). Every text that is in the
@@ -335,17 +338,17 @@ rendered, so the tooling renders until they are valid, else derives K from the U
 ## Tooling (file names)
 | main's convention | ManiGuard |
 |---|---|
-| `environment/rcb_traj.py` (privileged tooling, `Session`) | `environment/rcb_maniguard.py` (`Session`: the frozen task as upstream loads it, thin primitives, privileged state, the live monitor and goal checks, cameras, recording, replay) |
-| `tests/rcb_traj.py` | `tests/rcb_maniguard.py` |
-| standard sidecar | `environment/sim/server.py` (2.2 adapter), `finalize.sh`, `rcb_maniguard.py`, `instance/`; `rcb_limited.py`, `rcb1.py`, `run.sh` from `embodied_first_exam/standard/` |
+| privileged tooling (`Session`) | `/opt/tools/rcb_maniguard.py` in the agent's container (`Session`: the frozen task as upstream loads it, thin primitives, privileged state, the live monitor and goal checks, cameras, recording, replay), from `privileged/environment/rcb_maniguard.py` of the files image |
+| the verifier's copy | `/tests/rcb_maniguard.py` and `/tests/grade.py` (privileged), `/tests/grade.py` (standard), from the files image |
+| standard sidecar | `/srv/server.py` (2.2 adapter), `finalize.sh`, `live_video.py`, `rcb_maniguard.py` from the files image; the task dir's `environment/sim/instance/`; `rcb_limited.py`, `rcb1.py`, `run.sh` from the `standard-files` image (`embodied_first_exam/standard/`) |
 
 The tooling records (T, 8) actions at 20 Hz. Every entry point was exercised in the simulator: FK of the
 measured joints equals the simulator's end-effector pose to 0.2 µm, an IK round trip is within 0.6 mm. `s.reset()` loads
 the frozen state in-process (approximate: PhysX keeps solver state) and then refreshes the fabric poses OmniGibson's
 spatial states read (AABB, Inside, OnTop): PhysX writes them only for bodies awake in a step, so a sleeping body put back
 by `load_state` kept its old pose (measured: a jar reset out of a drawer still counted as inside it); reset wakes every
-object, takes one physics step and loads the state again. Every copy of the tooling and of the standard sidecar files is byte-identical
-across the benchmark (`check-tooling-identity.sh`); `ci_checks/benchmarks/maniguard/invariant-leak.sh` (PROTOCOL Appendix H.2) keeps the agent side to the tooling and the
+object, takes one physics step and loads the state again. Every task takes the tooling and the standard sidecar files from the one
+pinned files image (`python3 scripts/files_image.py check maniguard-files`: the sources still hash to `FILES.json`); `ci_checks/benchmarks/maniguard/invariant-leak.sh` (PROTOCOL Appendix H.2) keeps the agent side to the tooling and the
 frozen instance and checks that nothing the agent reads names ManiGuard's demonstrations, data generator or grasp annotations.
 
 ## Declarations
@@ -393,8 +396,10 @@ with the same locks:
   their images there are not those of the laptop.
 - **CPU.** Without a CPU quota an Isaac process sizes its thread pools to the host: about 930 threads, a mean of 97 cores and
   0.20 s per replayed control step; with an 8-CPU quota (the agent container's) about 420 threads, 4 cores and 0.09 s per
-  step, with the identical final state, labels and checkpoints. The verifier and the standard sidecar have no CPU limit in
-  the task files.
+  step, with the identical final state, labels and checkpoints. The privileged verifier has 8 CPUs and 24 GiB of memory
+  (`[verifier.environment]`: the agent container's CPU count; memory 1.5 x its measured 15.8 GB peak, rounded up,
+  PROTOCOL §6), the standard sidecar 12 CPUs (its compose cap); `tests/grade.py` sizes a replay's time for the slower rate
+  of the two (0.2 s per step).
 - **Start-up.** A cold Isaac start takes 8-12 minutes on that host under load (the laptop: about 4), and 631-715 s on the
   8-vCPU AWS L4 / L40S hosts. The standard client's `Robot()` waits 3600 s (longer than the service's 1800 s start-up
   watchdog) and reports its progress.

@@ -2,9 +2,9 @@
  "K": 1,
  "interpolate": "hold",
  "dtype": "float64",
- "rows": "the privileged twin's solution/trajectory.npz, time-dilated to the joint-speed rule by scripts/ikea_mujoco/standard/std_reference.py",
+ "rows": "the privileged twin's solution/trajectory.npz, time-dilated to the joint-speed rule by tooling kept outside the repository",
  "method": "closed-loop",
- "source": "scripts/ikea_mujoco/oracles/vesken/vesken_oracle.py",
+ "source": "tooling kept outside the repository",
  "rows_out": 353125,
  "steps_over_limit": 0,
  "speed": "robot"

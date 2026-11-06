@@ -27,7 +27,7 @@ images, depth and the robot's own proprioception, within the benchmark's 40 s of
 None is shipped (see `molmospaces-pick-and-place-color-i00-privileged`).
 
 ## Verification
-`success` = the live episode's success, judged by the sim service (graded live, no replay: 2026-10-17). The episode
+`success` = the live episode's success, judged by the sim service (graded live, no replay). The episode
 follows upstream's evaluation: one upstream `Task.step` per executed row; it ends at upstream's `is_done()`
 (606 control steps), at the agent's `done`, or when the agent's time is up; then upstream's
 `judge_success()` on the final state: the rule of pick-and-place, for the receptacle of the named colour (the other, differently coloured receptacle does not count): the robot does not touch the object; that receptacle supports the object (at least 50% of its weight through contact, or upstream's on-receptacle test, or within 5 mm and 10 degrees, relative to the receptacle, of a pose in which it was supported at an earlier control step); and that receptacle has moved at most 15 cm and tilted at most 60 degrees. The service checks the frozen start (the instance's t = 0 state hash)

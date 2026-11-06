@@ -1,22 +1,22 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robopaint-files-0.4.0@sha256:29fcf0df27091722ba435795e24d1f1a6cc5bbf213bf836196c6b35ace6131ed",
+ "image": "ghcr.io/mll-lab-nu/efe:robopaint-files-0.5.0@sha256:22eae59b80f1b92faacd863b866a64263cc5eb9db2362ebe41f6b6192568e6d6",
  "source": "embodied_first_exam/benchmarks/robopaint",
  "files": {
-  "privileged/grade.py": "d7919a39a4e480619aa8512838cab445482f720a7361b567c428f4c03d6515ed",
-  "rcb_brush.py": "0daaec6b6af784eb24154c8dce32b9a24aacff61af777a953d7f646fe613e338",
-  "rcb_brush_score.py": "89211e30ceb054d8257a4b0409a88fc10d4a695d824be40a497fdba98b96e31e",
-  "rcb_brush_strict.py": "faf0973dbd9b8354368b2f1586fba68575de4179f43ba650f6455e7c0d27eebd",
+  "privileged/grade.py": "eb636c5b64f4da2f4a2d89e35d03a4a0470839ab618983103b2b0045fa294fd8",
+  "rcb_brush.py": "f1567cbdd53991b778767a03bb8b95b17f2065889b2071feb267fa6008f7ba1a",
+  "rcb_brush_score.py": "99024042fb1ad4e9eafff90792daff4947803872ebe235d9671839192c4f197e",
+  "rcb_brush_strict.py": "5e6197be3d3bf50d7911e4e61ef9d962f3e300722825ef382af16caf15c52c1f",
   "sim/ARPHICPL.TXT": "3a5e90c0957524a89e48203febcd4492ca4393678abaa7e5b4d70f3ff32b386d",
   "sim/NOTICE-exemplar.md": "87c5097c51ab51a6323b42501d410a68205c8b361566d8a739fd54ab2ee06683",
-  "sim/finalize.sh": "23e3ed4c77a37f1f2c5e9ee703fc340332bd3ac2dc9b4d71414a97c1adbb0a6d",
-  "sim/rcb_scorer.py": "90869361c9fd3fe6472aded81c64632eb2e9738273374c481e33f6a55c269c17",
+  "sim/finalize.sh": "674d696023bae6e71ef064161bd5cfc9b6aee65de57c740b436799933668ec16",
+  "sim/rcb_scorer.py": "9c7265253b21ac5cd79f76066a8f863ea1cf7fd881c0b5659145f8034485af91",
   "sim/run.sh": "87ea1409a7bba77efb90ee29b24660e1fc59ef850d363660a7dbe19c641bc140",
-  "sim/server.py": "425ce3015f83281500728e68a39f95a1ceebbae3816b88aa9319ba704d52c103",
+  "sim/server.py": "a2c2ffef2d8eb8a2422547165d40b5324737f5407567134aa95e95ab65439df6",
   "sim/variants/055fb18b90/NOTICE-exemplar.md": "055fb18b90e5e0a953b4e96c0bd0448f93137153628aca2755c88bb8e9ef6788",
   "sim/variants/16c0bbe684/NOTICE-exemplar.md": "16c0bbe684dc9ab9515ee9e5dfba9f2c310a53723be1b996f631be621ad0baf6",
   "sim/variants/49c8421692/NOTICE-exemplar.md": "49c8421692baba9efe9754d424aa4de8f49939e753f0db186374b86cf9659143",
   "sim/variants/d6118d094a/NOTICE-exemplar.md": "d6118d094a7cfb695f19e9d9f6acfd8c4ce19cb6ce185fd5e5938636e158dc0a",
   "sim/variants/f948360d71/NOTICE-exemplar.md": "f948360d71aa09c39e49f19f774867e7fb437b9939cf4661f54618d87434b57d",
-  "standard/grade.py": "257ca478ad12de23d8936aabce8906eeab3eac2200dc9a14463815d86e44235e"
+  "standard/grade.py": "c8608e9e73693324e710a8a990536496fdc9e5a4a887705354ff17b33e8fb08b"
  }
 }

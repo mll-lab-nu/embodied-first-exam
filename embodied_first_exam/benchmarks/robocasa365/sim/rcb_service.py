@@ -32,7 +32,7 @@ Evidence under DATA, never visible to the agent:
                        final.json's first_success / first_reason say how it ended (a success ends the trial, so
                        first_success is the graded success when no reset was made, else 0)
 
-The verdict is the live episode's (docs/protocol/README.md H.4; owner, 2026-10-17): success = the episode this
+The verdict is the live episode's (docs/protocol/README.md H.4): success = the episode this
 service ran ended in success under the task's rule (the adapter's step()), judged here, after the agent's container is
 gone; nothing is replayed to grade it. An adapter may add its benchmark's own record of the live episode with
 live_verdict(rows, success) -> dict, e.g. a settle window run on the live simulator: its "success" can only take a
@@ -228,8 +228,7 @@ def crashed_in_step(record: bytes) -> bool:
 def deaths(data: str) -> list[dict]:
     """The process deaths startups.jsonl implies, in order: the k-th (0-based) ended process k + 1 (1-based, as a start
     event's `startup` counts) and came before start k + 2. Each: {"process", "restart_ts", "fatal_signal", "in_step"};
-    fatal_signal = crash.log grew between the two starts with a fatal signal's record (None: a start without the size,
-    before 2026-10-17); in_step = that record shows the crashing thread inside a control step (crashed_in_step)."""
+    fatal_signal = crash.log grew between the two starts with a fatal signal's record (None: a start record without the size); in_step = that record shows the crashing thread inside a control step (crashed_in_step)."""
     try:
         with open(os.path.join(data, "startups.jsonl")) as f:
             starts = [json.loads(line) for line in f if line.strip()]
@@ -834,7 +833,7 @@ class Service:
         except Exception:
             # The simulator failed to start the new episode: the trial ends on a simulator error, not on the episode
             # the agent had every right to abandon (handle() answers 500; its _end("error") finds the episode ended).
-            # The agent's reset was legitimate: this error is infrastructure (owner, 2026-10-17; both modes).
+            # The agent's reset was legitimate: this error is infrastructure (both modes).
             self.done, self.reason, self.success, self.error_infra = True, "error", False, True
             try:
                 self._checkpoint("end", reset_failed=True)

@@ -36,6 +36,12 @@ RUN cd /opt/AutoBio/autobio && python -c "import mani_thermal_mixer, mani_pipett
 RUN mkdir -p /app/output
 WORKDIR /app
 # <<< images/autobio/Dockerfile
-# The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above and this
-# directory at /srv. .dockerignore keeps the build's own two files out of /srv.
+# The rest of the `sim` sidecar's image (environment/docker-compose.yaml builds it): the image above, this directory at
+# /srv, and the shared 2.2 layer from the pinned files-only image. .dockerignore keeps the build's own two files out
+# of /srv.
 COPY . /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.4.1@sha256:7f1a830075fd6dd25e7a20a340316c041df583a29062796f59a4fa63b6f76946 \
+     /rcb1.py \
+     /rcb_limited.py \
+     /run.sh \
+     /srv/

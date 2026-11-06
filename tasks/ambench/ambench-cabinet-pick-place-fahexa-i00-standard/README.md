@@ -21,7 +21,7 @@ trajectory once (the video only); the verifier runs in a separate sandbox (`test
 resets and privileged state.
 
 ## Difficulty
-That of `ambench-cabinet-pick-place-fahexa-i00-privileged` (its README), without resets, object poses or the success signal: Neither the cabinet's pose, the sliding door's position nor the can's pose is given: the cabinet, the door and its handle have to be found with the forward-looking onboard cameras, the can is hidden behind the closed door at the start, and whether the can ended at the right height and at rest can only be judged from the images together with proprioception. Success is not reported during the episode.
+That of `ambench-cabinet-pick-place-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): Neither the cabinet's pose, the sliding door's position nor the can's pose is given: the cabinet, the door and its handle have to be found with the forward-looking onboard cameras, the can is hidden behind the closed door at the start, and whether the can ended at the right height and at rest can only be judged from the images together with proprioception. Success is reported only by the episode's end (reason `success`).
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for
@@ -49,8 +49,8 @@ Caps per container (PROTOCOL §6).
 | `sim` | 11 | 21 GiB | 1024 | 16 GiB | — |
 | verifier (as `main`) | 2 | 4 GiB | no cap | no GPU | 10 GiB |
 
-- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, RTX PRO 6000 Blackwell, held by `sim`.
-- Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
+- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, RTX 4090, RTX PRO 6000 Blackwell, held by `sim`.
+- Recommended GPU: L40S 48GB / RTX 4090 24GB.
 
 ## Details
 | | |

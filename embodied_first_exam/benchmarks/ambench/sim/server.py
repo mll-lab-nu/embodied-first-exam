@@ -24,7 +24,7 @@ Differences from the YAMLab service, all from the robot and the simulator:
 - the airframe is free-flying: /kinematics is the arm on its base (frame `base`, or world with `base_pose`);
 - the episode ends at the first control step where AM-Bench's success check holds, or at the task's own time-out (its
   episode length), or when the time is up;
-- the episode is graded as it ran (owner 2026-10-17: no grading replay): when it ends the service writes
+- the episode is graded as it ran (no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result and the end-state hash); the collect hook's
   SIGUSR1 makes it exit, and environment/sim/finalize.sh writes final.json from it, then films the rows once (an
   illustration, never a verdict);
@@ -50,11 +50,10 @@ MAX_FRAMES = L.MAX_FRAMES_PER_CALL   # /spec max_frames_per_call, 3000 images (c
 LOCK = threading.Lock(); PID_FILE = os.path.join(DATA, "server.pid")
 E = {"ready": False, "step": 0, "calls": 0, "done": False, "reason": None, "success": False, "t0": time.time(), "error": None}
 # Resume class `approx` for every AM-Bench task: GPU PhysX replays the journal to the checkpoint's state almost always, but
-# a rare race inside a step can leave the last bits different (docs/benchmarks/ambench.md, Determinism; the kill test
+# a rare race inside a step can leave the last bits different (tasks/ambench/README.md, Determinism; the kill test
 # measured a replayed TCP 1e-6 m from its checkpoint, which `exact` turns into resume_failed). A resume records the
 # deviation (resume_state_mismatch, resume_max_tcp_dev_m) and continues; the verdict is the live episode's after the
-# resume (every task since 2026-10-17; before, fresh replays of the complete recorded trajectory decided, except for a task
-# graded by verdict, instance.json "determinism": "verdict").
+# resume, for every task.
 VERDICT = json.load(open(INSTANCE)).get("determinism") == "verdict"
 EP = L.Episode(DATA, dim=ACTION_DIM, resume="approx")
 EP.startup()             # start count, back-off after failed starts, startup watchdog (RCB_STARTUP_TIMEOUT_S) until scene_built()
@@ -82,9 +81,8 @@ def dump() -> None:
     E["dumped"] = True
     try:
         acts = S.actions(); E["live_sha"] = S.status()["state_sha"]; E["n_actions"] = int(len(acts))
-        # The trajectory is what ran (since 2026-10-17). Until then, after a live success it also held the last command
-        # for up to 2 s (`hold_pad_rows`), for the grading replays: the race of docs/benchmarks/ambench.md
-        # (Determinism) could move a fresh replay's success one step later. No replay grades the episode any more.
+        # The trajectory is what ran: no rows are padded after a live success (`hold_pad_rows` = 0), since no replay
+        # grades the episode (tasks/ambench/README.md, Grading).
         pad = 0
         E["hold_pad_rows"] = pad
         S.save_trajectory(acts, os.path.join(DATA, "trajectory.npz"), meta={"source": "standard-mode episode (eai-standard/2.2)", "steps": E["step"],

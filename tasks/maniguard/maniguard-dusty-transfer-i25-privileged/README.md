@@ -7,7 +7,7 @@
 | Twin | `maniguard-dusty-transfer-i25-standard` |
 | Simulator / robot | `maniguard` / `franka-panda-longfinger` |
 | Family / instance | `dusty_transfer` / seed 25 |
-| Oracle | `none` — No positive example yet (oracle = "none": the 16 ManiGuard tasks added on 2026-10-04 for variety ship without one, user decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 1000-1039 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-dusty-v1-joint-5cam (revision ac57d863, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this verifier and none is copied into the task. The frozen instance (state sha 34f583c2f9bf3d9c) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §4). |
+| Oracle | `none` — No positive example yet (oracle = "none": one of the 16 ManiGuard variety tasks, which ship without one by the maintainers' decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 1000-1039 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-dusty-v1-joint-5cam (revision ac57d863, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this verifier and none is copied into the task. The frozen instance (state sha 34f583c2f9bf3d9c) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §4). |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.1` |
 
@@ -44,7 +44,7 @@ Caps per container (PROTOCOL §6).
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
 | `main` (the agent's) | 8 | 30 GiB | 8192 | 18 GiB | 10 GiB |
-| verifier | no cap | no cap | no cap | 18 GiB | no cap |
+| verifier | 8 | 24 GiB | no cap | 18 GiB | no cap |
 
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.

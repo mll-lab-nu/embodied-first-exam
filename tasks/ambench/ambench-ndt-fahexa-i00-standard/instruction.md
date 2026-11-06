@@ -16,14 +16,15 @@ The episode **ends by itself** at the first control step where the check holds (
 length of **20 s** of simulated time runs out (a failure: AM-Bench's time-out ends the episode at control step
 2399; reason `episode_timeout`).
 
-The goal is given as a fixed world point (goal geometry) and ee_link's pose is part of proprioception; the wall, the taped marker and anything in the way are seen only through the onboard cameras, and at the start the marker is far above their field of view (about 56 degrees). Success and the hold counter are not reported during the episode.
+The goal is given as a fixed world point (goal geometry) and ee_link's pose is part of proprioception; the wall, the taped marker and anything in the way are seen only through the onboard cameras, and at the start the marker is far above their field of view (about 56 degrees). The hold counter is not reported; success only by the episode's end (reason `success`).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, at the time-out above, when your time
   is up, or on a simulator error. Whatever you knock over or push stays that way.
 - **No privileged state.** You see what the two onboard cameras see (RGB, and depth if you ask) plus the robot's own
   proprioception (airframe pose and velocity, arm joints, gripper, tool-frame pose, joint efforts, the target in force).
-  No object poses, no success signal.
+  No object poses and no success measure; when AM-Bench's check holds, the episode ends at that control step
+  (`meta["done"]` true, `meta["reason"]` `"success"`).
 - **Simulated time only moves when you move the robot** (`submit`, or `get_obs(seconds=...)`): between your calls the
   world is frozen, and the episode lasts at most 20 s of simulated time. There is no step budget otherwise:
   the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`).
@@ -105,4 +106,4 @@ Your container: **2 CPUs**, **4 GiB of memory**, **1024 processes and threads** 
 ## Time limit
 You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

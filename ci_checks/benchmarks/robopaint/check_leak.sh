@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # RoboPaint only (tasks/robopaint/robopaint-*): the agent's container may hold nothing derived from the target except target.png
-# (lead, 2026-09-28), and the task texts describe the target as the picture only.
+# (tasks/robopaint/README.md), and the task texts describe the target as the picture only.
 #  1. environment/ (the agent image's build context) holds only whitelisted files; sidecar dirs (sim/, scorer/) are mounted into
 #     their own services by docker-compose.yaml, or are the build context of the service's own image (its Dockerfile there),
 #     and never COPYed by the agent's Dockerfile;

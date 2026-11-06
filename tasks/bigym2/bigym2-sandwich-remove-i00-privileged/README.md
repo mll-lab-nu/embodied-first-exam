@@ -45,4 +45,4 @@ Caps per container (PROTOCOL §6).
 | Instance | `environment/instance.json` = `tests/instance.json`: the task reset with seed 0, t = 0 state hash `8fa8899e3404f119c6c50a189ce9a72f378a107e` |
 | Horizon | 3150 control steps (63 s at 50 Hz), upstream's budget for this task |
 | Action | 21 floats per control step (`instance.json` `t0.layout`) |
-| Tooling | `environment/rcb_bigym2.py` = `tests/rcb_bigym2.py` (scripts/bigym2/shared/) |
+| Tooling | `rcb_bigym2.py`, the same file in the agent's `/opt/tools/` and the verifier's `/tests/` (files image `bigym2-files`, from `embodied_first_exam/benchmarks/bigym2/`) |

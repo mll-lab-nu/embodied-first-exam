@@ -230,6 +230,10 @@
   "rig": "marvin",
   "robot": "marvin-bimanual-sharpa-wave",
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "2607504b976fff3450ecf3c0b3b64cc8660a4fa1ea475e4c2238acae8b2ad60a",
+    "wuji": "0626c71426df6824599243fadd3d6e5a9fe5b528495d81ebad9b4c644addb34a"
+  },
   "strokes": {
     "down_depth_fraction": 0.9,
     "initial_gauge_pa": 200000.0,

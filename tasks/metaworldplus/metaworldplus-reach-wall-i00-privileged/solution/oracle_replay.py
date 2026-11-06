@@ -1,5 +1,5 @@
 """Oracle (privileged): Meta-World's scripted expert for this environment, recorded offline on this frozen instance
-(scripts/metaworldplus/freeze.py) up to its first success, replayed with the task's tooling and handed in."""
+(by tooling kept outside the repository) up to its first success, replayed with the task's tooling and handed in."""
 
 from pathlib import Path
 

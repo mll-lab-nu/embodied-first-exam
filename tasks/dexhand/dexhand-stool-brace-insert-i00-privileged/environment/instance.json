@@ -118,6 +118,10 @@
     -0.1,
     1.15
   ],
+  "start_state_sha": {
+    "sharpa": "6867c837b3997a4f7c6832f00624388718353091cf8ef53fb14939462d5f1066",
+    "wuji": "e81394d88da53ee058a894e21f51e988e78a6be20c0bf0bdf55607887e819629"
+  },
   "table_z": 0.74,
   "title": "Assemble a wooden stool cross brace",
   "upper_frame_pos": [

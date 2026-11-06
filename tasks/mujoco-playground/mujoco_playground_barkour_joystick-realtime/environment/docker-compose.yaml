@@ -35,7 +35,7 @@ services:
       PYTHONPATH: /srv
       RCB_SESSION_LOG: ""           # the sidecar's own Session must not write the agent-side interaction log
       RCB_SLOWDOWN: "${RCB_SLOWDOWN:-1}"                # S = 1: the world runs at 1/S of real speed (this environment's measured RTF; PROTOCOL §2)
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-10}"        # 10 resets (PROTOCOL §2 default); 0: one episode
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-10}"        # 10 resets (this task's budget; the mode's default is 0); 0: one episode
       RCB_GL: "${RCB_GL:-auto}"                     # auto: EGL on the GPU when it works, else OSMesa
       NVIDIA_DRIVER_CAPABILITIES: compute,graphics,utility
     deploy:

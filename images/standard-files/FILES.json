@@ -1,14 +1,14 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.4.0@sha256:90253c4cb419668f84c6728dc6d6e23ea55ef8d7f7e7835a5eb65015729f91b0",
+ "image": "ghcr.io/mll-lab-nu/efe:standard-files-0.4.1@sha256:7f1a830075fd6dd25e7a20a340316c041df583a29062796f59a4fa63b6f76946",
  "source": "embodied_first_exam/standard",
  "files": {
   "rcb1.py": "d8c6ceabdad914afd39ac4a93904e486039c69c14ec5ae140b33aa653ff7979f",
   "rcb_client.py": "8bbaec33b075dc41b9618c582be1d4db09f8ccbe8ab5173f96b4a2f4cb1ddcad",
   "rcb_limited.py": "352cc7efea2846a03b67215b9caf4fcf21da1b1591e63ef4f2435566cf6e84a2",
-  "realtime/rcb_client.py": "b6c08ca8d2b196dd44ed660d1f30b3181f419d38faa728b4fb72b25b15cce8f2",
-  "realtime/rcb_realtime.py": "2a3c9f4ffa95aec5d468078fb5ac3fd043ddc4ef53687d1486a35b1d18aaabc2",
+  "realtime/rcb_client.py": "05fcaa3f7456ac70dbccd8f49709795852df37e085a181aa7f383f42e6c5f557",
+  "realtime/rcb_realtime.py": "fbd5976ae20ec843b86137829d4aee77475373a9b59972ab826fc25bd23dbacc",
   "run.sh": "5a3fb29ea050a005cb0e441f9129b347fa0af5d536d9d210178b1398df032f64",
-  "v2_1/grade.py": "77671160e8dd751435bd6619f2331dd20649a914919aac5f41ea660005b80da8",
+  "v2_1/grade.py": "94d741d8dcea4ba02a343a8d23f1963489c6260aaa4b260efe6e0a09bb46c8ed",
   "v2_1/rcb_client.py": "4a3097258fe55cdd58961f63967ce93a4568ce23a50d7d0b5b0b3763f4e59064",
   "v2_1/variants/042c4ff1e4/rcb_client.py": "042c4ff1e41a475039cebabe648242fd5d7aa00368a8b67e10bdb6aa527dee46",
   "v2_1/variants/62def5e7ce/rcb_client.py": "62def5e7ce8f0006521bd3d1bacf185aeecdcf093c7411d9a790d99b77dce647",

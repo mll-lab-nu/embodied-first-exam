@@ -13,7 +13,7 @@ robot = "franka-panda-longfinger"
 family = "clutter_pickup"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 oracle = "none"
-oracle_evidence = "No positive example yet (oracle = \"none\": the 16 ManiGuard tasks added on 2026-10-04 for variety ship without one, user decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 600-639 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-clutter-v1-joint-5cam (revision e92c75fb, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this verifier and none is copied into the task. The frozen instance (state sha be98dc0729e59682) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §4)."
+oracle_evidence = "No positive example yet (oracle = \"none\": one of the 16 ManiGuard variety tasks, which ship without one by the maintainers' decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 600-639 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-clutter-v1-joint-5cam (revision e92c75fb, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this verifier and none is copied into the task. The frozen instance (state sha be98dc0729e59682) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §4)."
 instance_seed = 15                 # = the ManiGuard-Bench task index (clutter_pickup/task_0015/base); scene = environment/instance/; identity = dataset.toml digest
 expert_time_estimate_hours = 2.0
 maniguard_task = "clutter_pickup/task_0015"
@@ -49,6 +49,8 @@ gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada"]
 
 [verifier.environment]
 build_timeout_sec = 5400.0
+cpus = 8                          # the agent container's (tasks/maniguard/README.md, Other hosts: CPU)
+memory_mb = 24576                 # 1.5 x the verifier's measured 15.8 GB peak, rounded up (PROTOCOL §6)
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

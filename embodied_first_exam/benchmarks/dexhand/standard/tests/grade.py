@@ -4,7 +4,8 @@ success = the live episode's success under the task's predicate, judged by the s
 2026-10-17): nothing is replayed. No verdict on the agent is an infrastructure failure (infra_error = 1),
 never the agent's 0: final.json missing, unreadable or not finalized; the service did not end and dump its episode in
 time; it gave up after crashes that were not all inside the agent's calls (sim_crashed, resume_failed); the frozen
-instance did not build at the episode's start (instance_mismatch); a hand the task does not offer. A crash inside the
+instance did not build to its recorded start at the episode's start or after a reset (instance_mismatch); a hand the task
+does not offer. A crash inside the
 agent's calls (sim_crashed_on_call), a simulator error from the agent's actions (reason "error"), a timeout and a
 failed predicate are the agent's 0. The video is rendered after the verdict and never decides it."""
 

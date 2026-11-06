@@ -141,6 +141,10 @@
   ],
   "robot": "sharpa-wave-floating",
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "bb5e30c9ce60b4fa6bea7c7eb46b4bf2480c44e6c4a5198a3e53248cc74df3ac",
+    "wuji": "e89448a23710a6c7c24f9bcc1602b39055dd7549ec09d7b9a30782964961ed04"
+  },
   "table_z": 0.75,
   "title": "Unfold a folding sweater dryer and stand it on its legs",
   "wrist_stage": {

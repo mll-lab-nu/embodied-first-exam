@@ -25,7 +25,7 @@ family = "general_pickup"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 protocol = "eai-standard/2.2"
 oracle = "none"
-oracle_evidence = "positive example: a model trial solved this task (Codex + GPT-6 Luna, effort xhigh, run `codex-gpt6_luna-xhigh`, 2026-10-10; 1131 actions, graded by this verifier); no reference solution (RoboDojo releases no expert); human review in PR #142"
+oracle_evidence = "positive example: a model trial solved this task within its 200-step limit (Codex + GPT-6 Astra, effort high, 2026-11-02; 106 steps, graded live by this task's service); no reference solution (RoboDojo releases no expert); human review in PR #142"
 instance_seed = 0
 expert_time_estimate_hours = 3.0
 
@@ -52,7 +52,7 @@ service = "sim"
 command = "sh /srv/finalize.sh"   # end + dump + exit the service, write final.json from the live episode (no replay), encode live.mp4
 timeout_sec = 3600                # = finalize.sh's HOOK_BUDGET_S (keep them equal): the episode end (up to 2700 s through a
                                   # resume) + the video encode (at most 600 s, at most 3001 frames, CPU) + a margin; graded by
-                                  # the live episode since 2026-10-17 (10800 s with one fresh-process replay before)
+                                  # the live episode (no grading replay)
 
 [agent]
 timeout_sec = 3600.0              # the agent's cutoff, this task's own (PROTOCOL §2), as the service's RCB_WALL_CLOCK_S

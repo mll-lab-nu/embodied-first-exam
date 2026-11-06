@@ -20,7 +20,7 @@ texts; a rule whose keys are absent is off):
   sweeps (paintings: max_scribble, max_scribble_share, scribble_min_mm): a stroke's scribble ratio = its length / the diagonal of
                       its bounding box (at least scribble_min_mm); scribble_share = the share of path_mm in strokes whose ratio
                       exceeds max_scribble (zigzags, back-and-forth fills, spirals, loops) must be <= max_scribble_share.
-  strokes counted (calligraphy, 2026-10-14: stroke_gap_mm, mark_min_width_mm, max_stroke_path_mm): the stroke cap
+  strokes counted (calligraphy: stroke_gap_mm, mark_min_width_mm, max_stroke_path_mm): the stroke cap
                       (target.success max_strokes) counts strokes, not contacts. A contact is cut into two strokes wherever
                       the brush moves more than stroke_gap_mm along the sheet without marking it (its mark narrower than
                       mark_min_width_mm: a press too light to ink, which joined separately written pieces into one contact),

@@ -226,7 +226,7 @@ def look_at(position, target):
 
 
 def _default_hand_dir():
-    """Repository checkout (scripts/dexhand/families/<family>/ -> images/dexhand/assets/hand), else the image path."""
+    """An authoring checkout's images/dexhand/assets/hand (its tooling is kept outside the repository), else the image path."""
     parents = Path(__file__).resolve().parents
     if len(parents) > 4 and (parents[4] / "images/dexhand/assets/hand/right_hand.xml").is_file():
         return parents[4] / "images/dexhand/assets/hand"

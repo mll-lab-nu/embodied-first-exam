@@ -74,7 +74,8 @@ None: RoboDojo releases no expert or planner script, and its training demonstrat
 initial state or layout, so none replays on a frozen layout. Every task is `oracle = "none"` and needs human review
 (CONTRIBUTING.md; the review is in pull request #142). Model trials gave positive examples (privileged
 `general_pickup`, `deposit_coin`, `match_and_pick_from_conveyor`, `stack_blocks_by_language`; standard
-`general_pickup`); the screening table below lists the bases solved by the screening runs.
+`general_pickup` and `align_blocks`, each within its 200-step limit: 106 and 190 steps); the screening table below lists
+the bases solved by the screening runs.
 
 ## Tooling (`rcb_robodojo.py`)
 `Session(task, instance=...)` builds RoboDojo's own evaluator environment (`src/eval_client/eval_env.py`: one env, the

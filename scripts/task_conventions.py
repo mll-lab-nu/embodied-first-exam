@@ -228,14 +228,12 @@ _CUTOFF_CLOCK = (" Your session started when you received this task. `/run/rcb-l
                  "seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a "
                  "little before your session started, so it never gives you more time than you have: read it (or run "
                  "`date`) before you decide that time is short, never guess.")
-# Agents that keep a simulator open as an interactive REPL send each command with Codex's
-# write_stdin(yield_time_ms=30000); Codex 0.160.1 returns from a write to a still-running process only when the
-# yield is over (196 of 196 such calls in one recorded RoboARC trial took 30.0 s; ~98 min of a 3 h budget), and has no
-# config knob to cap it (background_terminal_max_timeout caps only empty polls). Harness-neutral advice, same text for
-# every agent; no duration in it (ci_checks/check-cutoffs.py).
+# A tool call that writes to a still-running process can return only when its wait is over, even when the answer is
+# printed at once (one recorded trial lost ~98 min of a 3 h budget that way). Harness-neutral advice, same text for
+# every agent, naming no harness or tool parameter; no duration in it (ci_checks/check-cutoffs.py).
 _CUTOFF_WAITS = (" Waiting counts too: a tool call that sends input to a process that keeps running (an interactive "
-                 "interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for "
-                 "example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short "
+                 "interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even "
+                 "when the answer is printed at once, so give such calls a short "
                  "wait and poll again if the output is not complete, or run one-shot scripts that exit when they are "
                  "done.")
 CUTOFF_NOTE = {

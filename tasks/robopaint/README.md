@@ -101,8 +101,10 @@ What still limits the copy:
 - CI:
   - `python3 scripts/files_image.py check robopaint-files`: `embodied_first_exam/benchmarks/robopaint/` still hashes to
     `images/robopaint-files/FILES.json` (the pinned files-only image);
-  - `ci_checks/benchmarks/robopaint/advisory-tooling.sh` keeps every copy of the shared files left in task dirs (the sidecars'),
-    `rcb_brush_strict.py` included, byte-identical to `embodied_first_exam/benchmarks/robopaint/`, within a family and across the families;
+  - `ci_checks/benchmarks/robopaint/advisory-tooling.sh` checks that every task takes that one version: each COPY from a
+    RoboPaint files image in every task Dockerfile names the image and digest `FILES.json` pins and only files it lists;
+    every verifier, privileged agent image and scorer, and standard sim sidecar copies from `robopaint-files`; no task dir
+    holds a differing copy of a shared file; finding no RoboPaint task fails;
   - `ci_checks/benchmarks/robopaint/invariant-leak.sh` (PROTOCOL Appendix H.2) admits the rule keys in the agent's copy of the
     instance, and in the agent's Dockerfile a `COPY --from` only of the pinned files-only image and only for an allowed
     agent-side file (`rcb_brush.py`: its source must hash to FILES.json and, like a task dir's copy, carry no grader code).
@@ -114,12 +116,12 @@ runs in Validation: the pairs with their own evidence to Harbor `-a oracle` (1) 
 their current files, the others to the release validation and the process-rule validation. Human review in PR #3.
 
 ## Validation
-- **Release validation** (the picture-rule version, each family at its release commit): Harbor's oracle scored 1 and nop 0
-  on every target in both modes (kaishu 70, xingshu 32, lettering 20 (earlier words), acrylic 20, oil 22). Changed since,
-  in every pair: the registered scoring (the success rule in `instance.json`, `rcb_brush_score.py`; the saved oracle
-  trajectories re-scored all pass, and Harbor oracle + nop re-checked two pairs per family), the scorer's tooling snapshot
-  (re-scores bit-identical), the 2.2 inputs and rated limits in `rcb_brush.py` (tooling queries only), and the standard
-  twins' service, collect hook, grader and client.
+- **Release validation** (the picture rule, each family at its release commit): Harbor's oracle scored 1 and nop 0 on
+  every target in both modes (kaishu 70, xingshu 32, lettering 20 (on other words), acrylic 20, oil 22). Under the
+  registered scoring (the success rule in `instance.json`, `rcb_brush_score.py`) every saved oracle trajectory re-scores
+  as a pass and the scorer's tooling re-scores bit-identically; Harbor oracle + nop were re-run on two pairs per family.
+  The release runs predate the 2.2 inputs and rated limits in `rcb_brush.py` (tooling queries only) and the standard
+  twins' current service, collect hook, grader and client.
 - **Process rules**, on the built task images (`ghcr.io/mll-lab-nu/efe:robopaint-0.2.0`, each task's verifier image run as Harbor runs it):
   every pair's reference trajectory succeeds in the privileged verifier and through the standard path (82 of 82); Harbor
   oracle 1 and nop 0 on both modes of one pair per family. Re-graded recorded runs of the picture-rule version: the process

@@ -233,6 +233,10 @@
   },
   "stapler_max_shift_m": 0.03,
   "stapler_max_tilt_rad": 0.26,
+  "start_state_sha": {
+    "sharpa": "a431bd6586c466e373d18c8132f17922c60e4f035372c2a1584defece0237f8a",
+    "wuji": "eefbbdd3b8e2030ad85730f5e40f3a4c06f12569aa066e29d8723adbeea67a3f"
+  },
   "stroke_tolerance_rad": 0.01,
   "table_z": 0.78,
   "throat_height_max_m": 0.006,

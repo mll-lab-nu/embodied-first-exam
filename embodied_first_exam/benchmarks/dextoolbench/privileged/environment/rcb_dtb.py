@@ -42,7 +42,7 @@ ROOT = Path(os.environ.get("RCB_MJ_ROOT", "/opt/rcb_mj"))
 SIM_DT = 1.0 / 600.0
 CONTROL_DT = 1.0 / 60.0
 SUBSTEPS = int(round(CONTROL_DT / SIM_DT))          # 10
-# Per-goal time limit. DexToolBench's own eval gives each goal 10 s; ours (owner 2026-09-29): 30 s in privileged mode (the
+# Per-goal time limit. DexToolBench's own eval gives each goal 10 s; ours: 30 s in privileged mode (the
 # default here: the trajectory is replayed offline and the agent can reset freely), none in standard mode (the service
 # sets RCB_DTB_GOAL_TIMEOUT_S=0: one episode, no reset). 0 = no per-goal limit.
 GOAL_TIMEOUT_STEPS = int(round(float(os.environ.get("RCB_DTB_GOAL_TIMEOUT_S", "30")) / (1.0 / 60.0)))

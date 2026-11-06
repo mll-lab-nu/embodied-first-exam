@@ -794,7 +794,7 @@ source as committed (`images/ese/SOURCE.md`; the provenance records carry public
 not the author's paths). Each task's `environment/sim/instance.json` carries a `candidate_identity` (source digest and the
 visual identity: profile, revision, asset-manifest SHA-256, physics catalogue version), also in `task.toml` and the
 README; the sim sidecar refuses to start an episode in an image whose installed assets differ
-(`candidate_identity.assert_runtime`). The compose files name `ghcr.io/mll-lab-nu/efe:ese-0.5.6`.
+(`candidate_identity.assert_runtime`). The sim sidecars build FROM `ghcr.io/mll-lab-nu/efe:ese-0.5.6` (`environment/sim/Dockerfile`).
 
 The reference solutions stream Embodied Safety Exam's native reference as control rows over the task's
 own HTTP client (`solution/oracle_replay.py`); on the fixed arms the plans ask for their pictures through the agent's

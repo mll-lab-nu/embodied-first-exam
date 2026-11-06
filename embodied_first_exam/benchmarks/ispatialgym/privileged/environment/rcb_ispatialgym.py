@@ -1,5 +1,5 @@
 """
-rcb_ispatialgym.py -- iSpatialGym's tooling in a standard task's trusted `sim` sidecar (docs/benchmarks/ispatialgym.md):
+rcb_ispatialgym.py -- iSpatialGym's tooling in a standard task's trusted `sim` sidecar (tasks/ispatialgym/README.md):
 the frozen instance, loaded and judged by upstream's own code, the episode, its record, its live video and the
 fresh-process replay (the privileged twin's grading; the standard episode is graded live and never replayed). The agent
 never imports it: it reaches the robot through the service (server.py) only.

@@ -13,7 +13,7 @@
 #   H.2 no answer in reach      check-agent-pointers.py, the benchmarks' ci_checks/benchmarks/*/invariant-* hooks
 #   H.3 standard trust boundary check-standard-agent-image.sh, check-verifier-isolation.sh (ports, sidecar topology)
 #   H.4 trusted verdict         check-verifier-isolation.sh (evidence from a sidecar), check-instance-copies.sh
-#   H.5 infrastructure retry    scripts/tests/test_retry_policy.py, scripts/tests/test_runner_results.py (a voided
+#   H.5 infrastructure rerun    scripts/tests/test_retry_policy.py, scripts/tests/test_runner_results.py (a voided
 #                               attempt is never counted)
 #   H.6 egress                  check-verifier-isolation.sh (the allowlist unless the task declares open)
 #   H.7 comparable twins        check-twins.py, check-instance-copies.sh

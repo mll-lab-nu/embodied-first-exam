@@ -8,7 +8,7 @@
 # No dataset: the BEHAVIOR Data Bundle (licence: no redistribution) is mounted read-only from $RCB_BEHAVIOR_DATA at /bdata;
 # the image holds only iSpatialGym's own small dataset `ispatialgym-assets` (its Kohs block, tray and puzzle pieces). The
 # tasks' frozen instances come from the eval data in the task directories, never from a download at run time.
-# ---- images/behavior/Dockerfile, verbatim:
+# >>> images/behavior/Dockerfile
 # behavior: BEHAVIOR-1K v3.9.2 (OmniGibson 3.9.2 + Isaac Sim 5.1.0 + cuRobo, the version the 2026 BEHAVIOR Challenge pins):
 # the official image by digest + ffmpeg, from public sources only. Every BEHAVIOR-1K task Dockerfile that runs the
 # simulator holds this recipe verbatim (normalize_base_stages) and its compose service names our prebuilt copy,
@@ -34,6 +34,7 @@ RUN apt-get -o Acquire::Retries=10 update --snapshot 20260920T090000Z && \
       { echo "package state differs from images/behavior/dpkg.lock (the tested image):" >&2; cat /tmp/dpkg.state >&2; exit 1; }; } && \
     rm -rf /var/lib/apt/lists/* /tmp/dpkg.state && mkdir -p /app/output /cache/appdata /data
 WORKDIR /app
+# <<< images/behavior/Dockerfile
 # ---- iSpatialGym on it:
 FROM behavior-base AS ispatialgym-base
 ARG B1K_COMMIT=6a6194600939179671054e1ae5e78b0a158f996c
@@ -73,7 +74,7 @@ ENV OMNI_KIT_ACCEPT_EULA=YES HDF5_USE_FILE_LOCKING=FALSE HF_HUB_OFFLINE=1 \
 # upstream's TRO by sha256), the measured facts and the tooling. Only /app/output/ reaches it.
 FROM ispatialgym-base
 COPY instance.json goal.json facts.json upstream.json test.sh /tests/
-COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.4.0@sha256:84a9a59c9a148fdbe45fa21a59f1d0403cd7949bfbde59e515aa01aeb06f36e8 /privileged/environment/rcb_ispatialgym.py /privileged/tests/grade.py /tests/
+COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.4.1@sha256:1a688fc1caae5f71803e302afdf1c67ce998ad019070a709be6d3278177c4472 /privileged/environment/rcb_ispatialgym.py /privileged/tests/grade.py /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 ENV OMNIGIBSON_HEADLESS=1
 WORKDIR /tests

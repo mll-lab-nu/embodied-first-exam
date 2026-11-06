@@ -166,6 +166,10 @@
       -1.6
     ]
   },
+  "start_state_sha": {
+    "sharpa": "9a709ebc652dca2c8cf355f80c37fbe3d276ae94c66fe99456f4577971f14349",
+    "wuji": "f0c67c7aa6667d29defbeda49e2567c3de75cd57d9f31f1679fc931812e60b20"
+  },
   "table_top_z": 0.88,
   "target_tolerance_xy": [
     0.02,

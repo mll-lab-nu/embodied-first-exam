@@ -2,7 +2,10 @@
 
 The task's replay.py reads the archive (actions + optional hand), rebuilds the frozen scene with that hand and
 writes a JSON verdict; an invalid archive is reported by replay.py as `bad_trajectory` (exit 0). A non-zero exit or
-unreadable verdict is an infrastructure error. Reward 1 needs both replays to succeed with identical final hashes.
+unreadable verdict is an infrastructure error. Each replay runs through checked_replay.py, which compares the scene the
+replay built (and every reset of it) with the frozen instance's start state for that hand (instance.json
+`start_state_sha`): a scene that starts elsewhere is `instance_mismatch`, an infrastructure error, never the agent's 0.
+Reward 1 needs both replays to succeed with identical final hashes.
 
 After reward.json is written, a third fresh replay renders the replay video (replay.mp4, its record in video.json) in
 the verifier's remaining time. The video is evidence for people: it never changes the verdict, and a
@@ -51,7 +54,7 @@ def render_video(log: Path, task: str, trajectory: Path, started: float) -> None
     else:
         try:
             with (log / "video.log").open("w") as stream:
-                subprocess.run([sys.executable, str(Path(__file__).with_name("replay.py")), "--task", task,
+                subprocess.run([sys.executable, str(Path(__file__).with_name("checked_replay.py")), "--task", task,
                                 "--traj", str(trajectory), "--out", str(record), "--video", str(video)],
                                stdout=stream, stderr=stream, timeout=budget, check=True)
             done = json.loads(record.read_text())
@@ -90,7 +93,7 @@ def main() -> None:
                 stream = (log / f"replay{index}.log").open("w")
                 streams.append(stream)
                 processes.append(subprocess.Popen(
-                    [sys.executable, str(Path(__file__).with_name("replay.py")), "--task", task,
+                    [sys.executable, str(Path(__file__).with_name("checked_replay.py")), "--task", task,
                      "--traj", str(trajectory), "--out", str(output)],
                     stdout=stream, stderr=stream,
                 ))
@@ -111,22 +114,30 @@ def main() -> None:
                     raise ValueError("replay verdict must be a JSON object")
                 verdicts.append(verdict)
             a, b = verdicts
-            bad = bool(a.get("bad_trajectory")) or bool(b.get("bad_trajectory"))
-            deterministic = (not bad and isinstance(a.get("state_sha"), str) and bool(a["state_sha"])
-                             and a["state_sha"] == b.get("state_sha"))
-            result.update(
-                success=int(bool(a.get("success") is True) and bool(b.get("success") is True) and deterministic),
-                deterministic=int(deterministic),
-                n_actions=int(a.get("n_actions") or 0),
-                sim_steps=int(a.get("steps") or 0),
-                stages_completed=int(a.get("stage") or 0),
-                hand_wuji=int(a.get("hand") == "wuji"),
-            )
-            details.update(hand=str(a.get("hand", "sharpa")),
-                           reason=str(a.get("reason") or a.get("failure") or a.get("error") or ""))
-            if bad:
-                result["bad_trajectory"] = 1
-            replayed = not bad
+            mismatch = next((verdict for verdict in verdicts if verdict.get("instance_mismatch")), None)
+            if mismatch is not None:
+                # the frozen instance did not build to its recorded start: no verdict on the agent (PROTOCOL H.4)
+                result.update(success=0, infra_error=1, instance_mismatch=1, hand_wuji=int(mismatch.get("hand") == "wuji"))
+                details.update(hand=str(mismatch.get("hand", "sharpa")), reason=str(mismatch.get("error") or ""),
+                               start_sha=str(mismatch.get("start_sha") or ""),
+                               instance_start_sha=str(mismatch.get("instance_start_sha") or ""))
+            else:
+                bad = bool(a.get("bad_trajectory")) or bool(b.get("bad_trajectory"))
+                deterministic = (not bad and isinstance(a.get("state_sha"), str) and bool(a["state_sha"])
+                                 and a["state_sha"] == b.get("state_sha"))
+                result.update(
+                    success=int(bool(a.get("success") is True) and bool(b.get("success") is True) and deterministic),
+                    deterministic=int(deterministic),
+                    n_actions=int(a.get("n_actions") or 0),
+                    sim_steps=int(a.get("steps") or 0),
+                    stages_completed=int(a.get("stage") or 0),
+                    hand_wuji=int(a.get("hand") == "wuji"),
+                )
+                details.update(hand=str(a.get("hand", "sharpa")),
+                               reason=str(a.get("reason") or a.get("failure") or a.get("error") or ""))
+                if bad:
+                    result["bad_trajectory"] = 1
+                replayed = not bad
     except (subprocess.SubprocessError, OSError, ValueError, TypeError) as exc:
         result.update(success=0, infra_error=1, grader_error=1)
         (log / "error.txt").write_text(str(exc))

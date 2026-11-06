@@ -21,7 +21,7 @@ trajectory once (the video only); the verifier runs in a separate sandbox (`test
 resets and privileged state.
 
 ## Difficulty
-That of `ambench-ndt-fahexa-i00-privileged` (its README), without resets, object poses or the success signal: The goal is given as a fixed world point (goal geometry) and ee_link's pose is part of proprioception; the wall, the taped marker and anything in the way are seen only through the onboard cameras, and at the start the marker is far above their field of view (about 56 degrees). Success and the hold counter are not reported during the episode.
+That of `ambench-ndt-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): The goal is given as a fixed world point (goal geometry) and ee_link's pose is part of proprioception; the wall, the taped marker and anything in the way are seen only through the onboard cameras, and at the start the marker is far above their field of view (about 56 degrees). The hold counter is not reported; success only by the episode's end (reason `success`).
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for
@@ -49,8 +49,8 @@ Caps per container (PROTOCOL §6).
 | `sim` | 11 | 21 GiB | 1024 | 16 GiB | — |
 | verifier (as `main`) | 2 | 4 GiB | no cap | no GPU | 10 GiB |
 
-- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, RTX PRO 6000 Blackwell, held by `sim`.
-- Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.
+- GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, RTX 4090, RTX PRO 6000 Blackwell, held by `sim`.
+- Recommended GPU: L40S 48GB / RTX 4090 24GB.
 
 ## Details
 | | |

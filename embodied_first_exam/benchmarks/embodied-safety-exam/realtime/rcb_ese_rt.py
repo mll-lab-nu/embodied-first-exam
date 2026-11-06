@@ -1,5 +1,5 @@
-"""eai-standard/2.3 sim service for Embodied Safety Exam's standard-realtime tasks: the sidecar's entry point
-(`python /srv/rcb_ese_rt.py`; docs/benchmarks/embodied-safety-exam.md, "Standard-realtime tasks").
+"""eai-standard/2.3 sim service for Embodied Safety Exam's realtime tasks: the sidecar's entry point
+(`python /srv/rcb_ese_rt.py`; tasks/embodied-safety-exam/README.md, "Realtime tasks").
 
 The standard tasks' adapter (server.py, rcb_ese.py) and the shared realtime layer (rcb_realtime.py, byte-identical to
 scripts/humanoidbench/shared/realtime/) are used unchanged; this module adds what Embodied Safety Exam needs under the clock:
@@ -62,7 +62,7 @@ import rcb_ese  # noqa: E402
 
 CLOCK = "realtime"
 # CPU rendering (OSMesa in the image): about 0.15-0.19 s per 640 x 480 picture, 0.35 s per depth image, measured in the
-# ese image on a university HPC cluster node (docs/benchmarks/embodied-safety-exam.md, "Standard-realtime tasks"). A request renders on the
+# ese image on a university HPC cluster node (tasks/embodied-safety-exam/README.md, "Realtime tasks"). A request renders on the
 # simulator's thread, a watch inside the control steps it watches: what one frame of a watch, or one request, renders
 # must stay well under rcb_realtime.MAX_LAG_S, and a watch's pictures per second under what the clock leaves free.
 RT_CAMERAS = int(os.environ.get("RCB_RT_CAMERAS") or 2)              # cameras per request while the clock runs
@@ -212,7 +212,7 @@ def build_service():
         def __init__(self, instance: str):
             key = rcb_ese.load_instance(instance).get("key") or {}
             if key.get("interface") != "control" or key.get("clock") != CLOCK:   # before anything is built
-                raise rcb_service.InstanceMismatch(f"a standard-realtime task serves Embodied Safety Exam's control interface under the realtime "
+                raise rcb_service.InstanceMismatch(f"a realtime task serves Embodied Safety Exam's control interface under the realtime "
                                    f"clock; this instance's key has interface={key.get('interface')!r}, "
                                    f"clock={key.get('clock')!r}")
             super().__init__(instance)

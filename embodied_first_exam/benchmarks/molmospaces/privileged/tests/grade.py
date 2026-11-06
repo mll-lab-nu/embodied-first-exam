@@ -8,19 +8,33 @@ same state. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only
 replay.mp4, after the verdict is on disk (it never changes it).
 
 What is whose failure (success is 0 in every case): the agent's is a missing file (missing_trajectory), a file that is not
-a trajectory of this task (bad_trajectory: not an npz, no `actions`, a pickled or non-numeric array, a wrong shape,
-NaN/inf; wrong_family) and a trajectory upstream judges a failure; the grader's (grader_error = 1 and infra_error = 1,
+a trajectory of this task (bad_trajectory: not an npz, no `actions`, an entry larger than MAX_ROWS x the row width
+float64 numbers + MAX_MEMBER_MARGIN bytes unpacked (checked before it is read; too_large), a pickled or non-numeric
+array, a wrong shape, NaN/inf, more than MAX_ROWS rows; wrong_family) and a trajectory upstream judges a failure; the grader's (grader_error = 1 and infra_error = 1,
 no verdict on the agent) is a replay process that died or ran out of time, a frozen start the image no longer builds (instance_mismatch),
 any other exception here.
 """
 
-import argparse, json, os, subprocess, sys, tempfile, time, traceback
+import argparse, json, os, subprocess, sys, tempfile, time, traceback, zipfile
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_molmospaces.py")
 BUDGET_S = float(os.environ.get("RCB_VERIFIER_BUDGET_S", 1740))  # task.toml's [verifier] timeout_sec (1800) minus a margin
 T0 = time.monotonic()  # the replays share BUDGET_S (a replay takes 20-120 s, over 500 s on a loaded host)
+# A trajectory holds at most MAX_ROWS rows (the instruction says so): more than 160 times the longest horizon (606 control
+# steps), and rows after the episode's end are never executed. Its .npz entries are size-checked before they are read, so a
+# small file that inflates to gigabytes is the agent's 0 (bad_trajectory), not a verifier killed for memory (infra).
+MAX_ROWS = 100_000
+MAX_MEMBER_MARGIN = 1 << 20  # bytes an entry may hold beyond MAX_ROWS rows of float64 numbers (the .npy header; `family`)
+
+
+def member_sizes(path: str) -> dict | None:
+    """{entry name: unpacked bytes} of an .npz, without unpacking anything; None when the file is not a zip archive."""
+    if not zipfile.is_zipfile(path):
+        return None
+    with zipfile.ZipFile(path) as z:
+        return {i.filename: i.file_size for i in z.infolist()}
 
 
 def write(ok: bool, out: dict) -> None:
@@ -100,6 +114,13 @@ def main() -> int:
         inst = json.load(open(a.instance))
         dim = int(inst["t0"]["action_dim"])
         try:  # the agent's file: whatever is wrong with it is its failure, not the grader's (nothing is unpickled)
+            sizes = member_sizes(a.traj)
+            limit = MAX_ROWS * dim * 8 + MAX_MEMBER_MARGIN
+            if sizes is not None and max((sizes.get(k, 0) for k in ("actions.npy", "family.npy")), default=0) > limit:
+                write(False, {"success": 0, "bad_trajectory": 1, "too_large": 1, "deterministic": 0, "grader_error": 0, **cost})
+                return 0
+            if sizes is None:
+                raise ValueError("not an .npz (zip) file")
             d = np.load(a.traj, allow_pickle=False)
             acts = np.asarray(d["actions"], dtype=np.float64) if "actions" in d.files else np.zeros((0, 0))
             family = str(d["family"]) if "family" in d.files else None
@@ -110,7 +131,7 @@ def main() -> int:
         if family is not None and family != inst["family"]:
             write(False, {"success": 0, "wrong_family": 1, "deterministic": 0, "grader_error": 0, **cost})
             return 0
-        if acts.ndim != 2 or acts.shape[1] != dim or not np.all(np.isfinite(acts)):
+        if acts.ndim != 2 or acts.shape[1] != dim or acts.shape[0] > MAX_ROWS or not np.all(np.isfinite(acts)):
             write(
                 False,
                 {

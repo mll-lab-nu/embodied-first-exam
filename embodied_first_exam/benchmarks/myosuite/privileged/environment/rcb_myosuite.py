@@ -71,7 +71,7 @@ TASKS = {
     "obj_reorient": "myoHandReorient8-v0",      # MyoDex / SAR: reorient one of 8 objects (one frozen draw)
     "arm_reach": "myoArmReachFixed-v0",         # MyoArm (34 muscles): index fingertip to a target in space
     "relocate": "myoChallengeRelocateP1-v0",    # MyoChallenge 2023: MyoArm (63 muscles) moves an object into a box
-    # set 3 (2026-10-06)
+    # set 3
     "sarc_key_turn": "myoSarcHandKeyTurnFixed-v0",          # key_turn with sarcopenic (weaker) muscles
     "table_tennis": "myoChallengeTableTennisP1-v0",         # MyoChallenge 2025: return a served ball with a paddle
     "bimanual": "myoChallengeBimanual-v0",                  # MyoChallenge 2024: MyoArm hands an object to a robotic arm

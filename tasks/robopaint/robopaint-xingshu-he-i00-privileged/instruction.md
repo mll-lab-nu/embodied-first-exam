@@ -63,9 +63,9 @@ trajectory with two numbers you can compute yourself; only inked strokes on the 
   where different strokes overlap, each counts its own), summed over the strokes, divided by `path_mm`.
 
 **Colouring in = `path_mm` > 1850 mm and `mark_width_mm` < 1.93 mm** (a long path of thin marks): it
-fails the task. Our reference solution writes this exemplar with `path_mm` 616 mm and `mark_width_mm`
-6.47 mm; the limits are 3 times its path (rounded up) and 0.3 times its mark width
-(rounded down). A pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
+fails the task. Our reference solution writes this exemplar with `path_mm` 927 mm and `mark_width_mm`
+4.56 mm; the limits are 3 times the path (rounded up) and 0.3 times the mark width (rounded down)
+of an earlier reference solution, which wrote it with `path_mm` 616 mm and `mark_width_mm` 6.47 mm. A pressed brush, even over a stroke again, keeps the marks wide enough, and a light hand on a short path stays
 under the path limit: both are fine.
 
 **The stroke cap counts strokes as they are written, not contacts** (this refines "one continuous contact is one stroke"
@@ -152,4 +152,4 @@ Your container: **8 CPUs**, **12 GiB of memory**, **2048 processes and threads**
 ## Time limit
 You have 3600 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

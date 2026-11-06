@@ -1,6 +1,6 @@
 """Standard-mode verifier (MuJoCo Playground quadrupeds): reads what the sim service (which the agent could not touch) wrote:
 /data/final.json (the live episode's verdict, crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. success =
-the task's check on the live episode passed (graded_by = "live": owner, 2026-10-17; nothing is replayed to
+the task's check on the live episode passed (graded_by = "live"; nothing is replayed to
 grade it), the episode having started in the instance's t = 0 state. Numeric-only reward.json.
 infra_error = 1: there is no verdict on the agent (final.json missing or unreadable; not finalized, or neither the live
 verdict nor a give-up: the collect hook never ran or was cut short before it wrote the verdict; the service gave up
@@ -72,7 +72,7 @@ write(
         # the image no longer builds the frozen start: not the agent's 0
         "grader_error": int(bool(d.get("instance_mismatch"))),
         "instance_mismatch": int(bool(d.get("instance_mismatch"))),
-        # an infrastructure failure, not the agent's (PROTOCOL §2.6): a give-up after crashes between calls or a failed
+        # an infrastructure failure, not the agent's (PROTOCOL §4, H.5): a give-up after crashes between calls or a failed
         # resume (docs/protocol/standard_mode.md §13), the service not ending its episode for the collect hook, a scene that did
         # not start in the instance's t = 0 state, a final.json the collect hook never finalized
         "infra_error": int(infra),

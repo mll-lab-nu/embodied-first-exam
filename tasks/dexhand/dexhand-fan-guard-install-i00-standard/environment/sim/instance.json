@@ -144,6 +144,10 @@
   "physics_dt": 0.002,
   "robot": "sharpa-wave-floating",
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "818995ac046497a0562e4f76fdbc64bf283b6204f2380fb051fe47333a98b3d0",
+    "wuji": "aada937a76465e48e5b4ec72037e5c1e0243e3c9b6007b3dd9bcaef89e3e1db1"
+  },
   "title": "Install a desk fan front guard",
   "wrist_stage": {
     "origin": [

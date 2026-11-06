@@ -27,7 +27,7 @@ images, depth and the robot's own proprioception, within the benchmark's 100 s o
 None is shipped (see `molmospaces-navigate-to-i00-privileged`).
 
 ## Verification
-`success` = the live episode's success, judged by the sim service (graded live, no replay: 2026-10-17). The episode
+`success` = the live episode's success, judged by the sim service (graded live, no replay). The episode
 follows upstream's evaluation: one upstream `Task.step` per executed row; it ends at upstream's `is_done()`
 (500 control steps), at the agent's `done`, or when the agent's time is up; then upstream's
 `judge_success()` on the final state: for the one of the 2 target objects nearest to the robot base (horizontal distance), the horizontal distance from the base to its position (the origin of its body, not its nearest surface) is less than 1.5 m and at least one of its pixels shows in head_camera. The service checks the frozen start (the instance's t = 0 state hash)

@@ -66,7 +66,7 @@ build_timeout_sec = 5400.0           # a first run builds the simulator image fr
 cpus = 2                          # the agent's container (the client only); the sim sidecar's caps: scripts/task_resources.toml
 memory_mb = 4096
 storage_mb = 10240
-gpu_types = ["L40S", "L40", "L4", "RTX 4090", "RTX 6000 Ada", "RTX PRO 6000 Blackwell"]
+gpu_types = ["L40S", "L40", "RTX 4090", "RTX PRO 6000 Blackwell"]
 
 [verifier.env]
 RCB_LIMITS_ENFORCE = "${RCB_LIMITS_ENFORCE:-0}"

@@ -5,6 +5,10 @@ MyoSuite 2.2 service adds it (the shared layer has none): with RCB_RESET_BUDGET 
 POST /reset abandons the running episode, or follows one that has ended, and starts a new one from the frozen start
 (Session.reset(): the same state hash as a fresh process); only the last episode is graded. A crash resume replays the
 journal and resets where the committed resets did (their journal rows are checkpointed, `persist`).
+
+The frozen start is checked against the instance's record (instance.json `start_state_sha`, one hash per hand) when a
+fresh episode begins and after every reset: a scene that does not start there is no trial of this task (instance_mismatch,
+an infrastructure failure; PROTOCOL H.4).
 """
 
 from __future__ import annotations
@@ -486,9 +490,31 @@ def do_reset(meta):
     E.update(done=False, reason=None, success=False)
     EP._ck = None  # the state changed without a journal row: the checkpoint after this call must hash it anew
     E["calls"] += 1
+    got = S.state_sha()
     EP.log({"ev": "reset", "call": E["calls"], "episode": E["resets"] + 1, "journal_rows": EP.rows,
-            "abandoned": abandoned, "state_sha": S.state_sha()})
+            "abandoned": abandoned, "state_sha": got})
+    if got != START_SHA:
+        reset_mismatch(got)   # raises Refused: the trial ends here as an infrastructure failure
     return response(recorder, "frames", fps, reset_id=E["resets"])
+
+
+def reset_mismatch(got: str) -> None:
+    """A reset that did not bring the scene to the frozen start: no trial of this task can go on (instance_mismatch,
+    infrastructure). The verdict is written as a give-up (finalized, gave_up, infra_error; the collect hook keeps it), the
+    episode is over, and every later /submit, /observe and /reset is refused (409)."""
+    reason = f"instance_mismatch: a reset brought the scene to {got}, the frozen instance records {START_SHA}"
+    E.update(done=True, success=False, reason="instance_mismatch", exiting=True)
+    EP.log({"ev": "end", "reason": "instance_mismatch", "success": False, "control_steps": clock(),
+            "episode": E["resets"] + 1, "journal_rows": EP.rows, "start_sha": got, "instance_start_sha": START_SHA})
+    print(f"[dexhand] {reason}; the trial ends (infrastructure)", flush=True)
+    if not L.final_verdict(str(DATA)):
+        L._write_json(str(DATA / "final.json"), {
+            **L._read_json(str(DATA / "final.json")), "success": False, "live_success": False, "done": True,
+            "reason": reason, "finalized": True, "gave_up": True, "replays": 0, "protocol": L.PROTOCOL, "hand": HAND,
+            "instance_mismatch": 1, "infra_error": 1, "start_sha": got, "instance_start_sha": START_SHA,
+            "resets": E["resets"], "reset_budget": RESET_BUDGET, **EP.final_fields()})
+    raise Refused({"error": "the sim service gave up on this trial", "reason": reason, "gave_up": True, "infra_error": 1,
+                   "resets_left": 0})
 
 
 def end_episode():
@@ -550,11 +576,25 @@ def resume_sha() -> str:
     return S.state_sha()
 
 
+def start_sha_of(hand: str) -> str:
+    """The frozen instance's record of the start state this hand's scene builds to (instance.json `start_state_sha`:
+    Session.state_sha() of a fresh build, equal after every Session.reset()); "" when it records none."""
+    try:
+        record = json.loads((Path(__file__).resolve().parent / "instance.json").read_text()).get("start_state_sha")
+    except (OSError, ValueError, AttributeError):
+        record = None
+    value = record.get(hand) if isinstance(record, dict) else None
+    return value if isinstance(value, str) else ""
+
+
+START_SHA = start_sha_of(HAND)
+
+
 def instance_check() -> dict:
     """The frozen instance, checked when the episode begins (the verdict is the live episode's, so no later replay
-    rebuilds the scene): the scene files' sha256 against the generator's record (grading.json `instance_sha256`).
-    No reference hash of the built starting state is recorded for DexHand; the start event logs the one this service
-    built (`state_sha`), and episode.json repeats it (`start_sha`)."""
+    rebuilds the scene): the scene files' sha256 against the generator's record (grading.json `instance_sha256`), then
+    the state this service built against the instance's start-state hash for the selected hand (`start_state_sha`).
+    The start event logs the built hash (`state_sha`), and episode.json repeats it (`start_sha`)."""
     here = Path(__file__).resolve().parent
     try:
         want = json.loads((here / "grading.json").read_text()).get("instance_sha256")
@@ -570,8 +610,15 @@ def instance_check() -> dict:
             got = None
         if got != sha:
             bad.append(name)
-    return {"instance_ok": not bad, **({"instance_error": "differs from the generator's record: " + ", ".join(bad)}
-                                       if bad else {})}
+    if bad:
+        return {"instance_ok": False, "instance_error": "differs from the generator's record: " + ", ".join(bad)}
+    got = S.state_sha()
+    if not START_SHA:
+        return {"instance_ok": False, "instance_error": f"instance.json records no start state for the {HAND} hand"}
+    if got != START_SHA:
+        return {"instance_ok": False, "start_sha": got, "instance_start_sha": START_SHA,
+                "instance_error": f"the scene started at {got}, the frozen instance records {START_SHA}"}
+    return {"instance_ok": True, "instance_start_sha": START_SHA}
 
 
 if not any(event.get("ev") == "start" for event in EP.events()):   # a fresh episode, not a resume
@@ -619,8 +666,10 @@ def make_handler(svc: L.Service):
                 return self._json(413 if "too large" in str(exc) else 400, {"error": str(exc)[:200]})
             with LOCK:
                 if E.get("exiting"):
-                    return self._json(409, {"error": "trial finished: your time is up", "reason": E.get("reason"),
-                                            "resets_left": 0})
+                    gave_up = E.get("reason") == "instance_mismatch"   # reset_mismatch(): the trial ended as infrastructure
+                    return self._json(409, {"error": "the sim service gave up on this trial" if gave_up
+                                            else "trial finished: your time is up", "reason": E.get("reason"),
+                                            "resets_left": 0, **({"gave_up": True, "infra_error": 1} if gave_up else {})})
                 cid = EP.call_begin(self.path, self.connection)
                 out = blobs = err = None
                 try:

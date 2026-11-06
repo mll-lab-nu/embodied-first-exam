@@ -21,7 +21,7 @@ The agent has to work out from one picture what differs between the scene and th
 which pose) and then do it with a mobile bimanual robot it only sees through its own cameras and proprioception, within
 2370 control steps (79.0 s of simulated time, iSpatialGym's policy budget: twice the length of upstream's own
 demonstration of this instance, at least 300). Holding still does not succeed (`hold` in
-`scripts/ispatialgym/instances/inter_object_relation_satisfaction_inside_small_scale/facts.json`).
+`environment/sim/facts.json`).
 
 ## Reference solution
 None.

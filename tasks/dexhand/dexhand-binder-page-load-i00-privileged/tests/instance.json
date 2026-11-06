@@ -107,6 +107,10 @@
   "physics_dt": 0.002,
   "robot": "sharpa-wave-floating",
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "1043b6f10de4b25608675fcebf877c715339d12930ecfb50a88d79d386539828",
+    "wuji": "50dfbf5aade20551c742bf253676892b72b31a03d84b1f09cbf372dba3f9863a"
+  },
   "title": "Load two punched pages into a ring binder",
   "wrist_base": [
     0.62,

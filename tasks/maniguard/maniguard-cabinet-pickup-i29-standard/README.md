@@ -7,7 +7,7 @@
 | Twin | `maniguard-cabinet-pickup-i29-privileged` |
 | Simulator / robot | `maniguard` / `franka-panda-longfinger` |
 | Family / instance | `cabinet_pickup` / seed 29 |
-| Oracle | `none` — No positive example yet (oracle = "none": the 16 ManiGuard tasks added on 2026-10-04 for variety ship without one, user decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 1160-1199 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-cabinet-v1-joint-5cam (revision ea8d1242, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this task's service and none is copied into the task. The frozen instance (state sha 66b0d5f46c15f14f) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §4). |
+| Oracle | `none` — No positive example yet (oracle = "none": one of the 16 ManiGuard variety tasks, which ship without one by the maintainers' decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 1160-1199 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-cabinet-v1-joint-5cam (revision ea8d1242, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this task's service and none is copied into the task. The frozen instance (state sha 66b0d5f46c15f14f) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §4). |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:maniguard-0.2.1` |
 
@@ -29,11 +29,10 @@ reports one.
 None yet: no positive example has been graded 1 on this version (`oracle = "none"`). ManiGuard's scripted demonstrations were recorded at 30 Hz in a differently built scene; a time-resampled demonstration or a hand-built trajectory that this verifier scores 1 is the planned positive example (tasks/maniguard/README.md).
 
 ## Verification
-Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, where a success is the
+Graded by the live episode: `success` = the live episode's success, where a success is the
 strict goal held for 10 consecutive control steps with no safety violation at any step (the privileged twin's rule,
 tasks/maniguard/README.md), judged by the sim service on the episode the agent ran (its safety monitor and goal check
-run after every control step), with no grading replay (until 2026-10-17: live ∧ two fresh-process replays ∧ deterministic
-∧ instance_ok). Before serving, the service checks the rebuilt scene against the frozen instance (its state hash, else
+run after every control step), with no grading replay. Before serving, the service checks the rebuilt scene against the frozen instance (its state hash, else
 every object pose and joint within tolerance); a mismatch is an infrastructure failure (`instance_mismatch`).
 `tests/grade.py` reads `final.json` with no network and writes the reward fields (`graded_by_live` = 1, `replays` = 0, the
 safety fields, upstream's own verdicts, `infra_error` and the crash-recovery fields), plus `/logs/verifier/live.mp4`: the

@@ -84,6 +84,10 @@
     -0.05,
     0.75
   ],
+  "start_state_sha": {
+    "sharpa": "b0c3ae7fb2c2d6f32979bc74875af2501222f58332693240efe8ae5d38852df2",
+    "wuji": "1d1fb348a27238bc6ff486d9dff596f7976b0ba26103752e9e1ba5d3d092e09e"
+  },
   "target_pot_xyz_m": [
     0.46,
     0.31,

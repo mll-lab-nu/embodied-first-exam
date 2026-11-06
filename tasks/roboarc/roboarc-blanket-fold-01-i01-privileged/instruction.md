@@ -71,27 +71,8 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
-
-## Startup and long-running commands
-
-- Scene initialization and kernel compilation can take minutes. Actual time depends on the task, hardware, and load.
-  Quiet logs during initialization do not by themselves mean failure. Use `python -u` for unbuffered script output.
-- A command tool's wait/yield interval (for example, `yield_time_ms=30000`) is not the command's lifetime.
-  When a command is still running, retain its process/session identifier and continue waiting for that same command.
-  With Codex's `exec_command`, expose the complete result, including `session_id` and `exit_code`, rather than only
-  `output` (for example, `text(r)` instead of only `text(r.output)`). Continue it with `write_stdin` using the returned
-  `session_id` and no input. An outer JavaScript wrapper saying `Script completed` does not prove Python has exited.
-  Use the corresponding wait/status operation if another command tool is provided.
-- Do not rerun a command just because its first wait returned partial logs. Confirm the original process has exited
-  before starting a replacement; if cancellation is necessary, stop only your own identified process and confirm exit.
-- Keep the task's simulator and sensor configuration. Waiting does not extend the actual agent wall-clock budget.
-- Keep at most one live simulator process in this trial at a time. A new Python process calling `Session(...)`
-  creates another scene and consumes more GPU memory; separate replay/render CLI commands also create scenes.
-- Reuse the initialized Session for observations, actions, reset, and replay. Avoid separate initialization-only probes:
-  put the first useful actions and trajectory save in the same script that initializes the simulator.
-- Initialization consumes the agent budget. Save a real trajectory as soon as practical and keep saving progress.
+It is replayed open-loop twice from the same initial state in a fresh process and scored 1 if the task is
+completed at the end of both replays, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -139,7 +120,9 @@ CLI equivalent of the grader:
 - The task succeeds once its predicate has held continuously for 0.5 s; that, or one of its failure predicates,
   ends the simulated episode: later steps do not change the execution record or move the scene (`s.status()["episode_end"]`), and
   `s.reset()` starts over.
-- One `Session` per process (one simulator per process). Do not call `s.close()` before writing every output.
+- One `Session` per process (one simulator per process). Building the scene and compiling its kernels can take minutes;
+  every `Session`, including the one a replay or render CLI command starts, holds its own scene in GPU memory, so keep
+  one alive at a time. Do not call `s.close()` before writing every output.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
@@ -150,4 +133,4 @@ Your container: **8 CPUs**, **14 GiB of memory**, **1024 processes and threads**
 ## Time limit
 You have 10800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
 
-This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).
+This is wall-clock time from the start of your session; the time a simulator takes to start counts. When it is up you are stopped without warning and only what is in `/app/output/` at that moment is graded, so save a deliverable as soon as you have one and overwrite it whenever you have a better one. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

@@ -19,7 +19,7 @@ that does not stop, at slowdown **S = 2** (one 10 ms control step every 20 ms of
 3 resets (only the last episode is graded). A ball is tossed up next to the robot when the episode starts. Catch it on the flat, rimless plate the Panda holds, settle it at the plate's centre, carry it through two waypoints (a turn) without letting it roll off, settle it again, then tip it off the plate into a basin that slides back and forth along a rail, where it must come to rest while the basin is moving.
 
 ## Difficulty
-That of `pandadyn-s02-plate-catch-transport-release-i00-standard`, and the scene no longer waits between calls: once an episode's clock starts, the moving objects and
+That of `pandadyn-s02-plate-catch-transport-release-i00-standard`, but the scene does not wait between calls: once an episode's clock starts, the moving objects and
 the robot's servos run whatever the agent does, so the agent has to plan or stream the targets from a program of its own
 (the task's horizon is 25 s of robot time, about 50 s of wall-clock time at S = 2), and
 learn the scene from 4 real attempts.
@@ -28,7 +28,7 @@ learn the scene from 4 real attempts.
 `solution/oracle_plan.py` plans the privileged oracle's rows (`solution/oracle_qpos.npy`, one row per control step,
 `hold`) into the episode from control step 0 through the realtime client, one chunk of at most 10 s at a time, each at
 its own step (`at`), so every row runs at the control step it was recorded for; it uses no privileged information at run
-time. Checked at S = 2 (under the grading of then): live success, fresh-process replay success, the
+time. Checked at S = 2: live success, fresh-process replay success, the
 same final state.
 
 ## Verification
@@ -36,7 +36,7 @@ The sim service (`environment/sim/rcb_realtime.py` + `rcb_service.py`, the share
 `environment/sim/server.py`, this benchmark's adapter on `rcb_pandadyn.Session`) judges the episode live and records
 every control step it ran (`trajectory_live.f64`); after the agent's time the collect hook stops the agent's programs and
 signals the service, which writes the live episode's verdict into `final.json` (`graded_by` = `live`, `replays` = 0;
-nothing is replayed to grade it; since 2026-10-17) and then renders the video from the graded episode's rows;
+nothing is replayed to grade it) and then renders the video from the graded episode's rows;
 `tests/grade.py` (separate sandbox, no network) passes iff the last episode ended in the task's success (every phase in
 order, no failure: the episode's end, so there is no settle window to add). The frozen start is checked when the first
 episode begins (the state hash against the instance's `initial_sha`; a mismatch is `instance_mismatch`, an infrastructure

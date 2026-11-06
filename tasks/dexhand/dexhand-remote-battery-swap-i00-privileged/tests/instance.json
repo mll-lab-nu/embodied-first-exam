@@ -257,6 +257,10 @@
     0.0,
     -0.00244
   ],
+  "start_state_sha": {
+    "sharpa": "93d9bb83ebbd4a86190bb8e2cc73247624f571752d7e8e5902a1c063cf0eadf2",
+    "wuji": "9c1caaffa9af686a6d43bf23446db0517160f4c0ae6b50fce54561c7a734b8f5"
+  },
   "tab_stiffness_n_m": 120.0,
   "tab_travel_m": 0.005,
   "table_center": [

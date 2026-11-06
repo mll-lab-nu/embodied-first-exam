@@ -98,7 +98,8 @@ image is rendered from, in the state the response ends in. Cameras carry `moving
 `video_done`, which is what the collect hook waits for (the MetaWorld+ service, `images/metaworld/standard/server_mw.py`,
 follows the same rules). DexToolBench's own eval gives each goal 10 s; here the standard twins have **no per-goal
 limit** and **20 resets** and an episode cap of 360,000 control steps (100 min of robot time, `spec.max_control_steps`),
-while the privileged tasks give each goal 30 s (replayed offline, free resets). DexToolBench episodes end when all goals
+while the privileged tasks give each goal 30 s (replayed offline, free resets); the twins share the success rule but
+not this length rule, so compare privileged and standard results with that in mind. DexToolBench episodes end when all goals
 are reached, at the cap, or when the agent's time is up; Playground episodes run to the end of the agent phase and the
 final state is graded. The service journals and resumes like the shared layer (journal `record.f64`; startup watchdog
 `RCB_STARTUP_TIMEOUT_S`, default 300 s), grades the live episode (Grading in standard mode, above) and implements the

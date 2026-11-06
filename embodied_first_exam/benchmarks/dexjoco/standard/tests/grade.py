@@ -1,6 +1,6 @@
 """Standard-mode verifier (DexJoCo): reads what the sim service (which the agent could not touch) wrote: /data/final.json
 (the live episode's verdict, crash-recovery fields), /data/trajectory.npz, /data/replay.mp4. success = the live episode
-ended in success under DexJoCo's own check (graded_by = "live": owner, 2026-10-17; nothing is replayed to
+ended in success under DexJoCo's own check (graded_by = "live"; nothing is replayed to
 grade it), the episode having started in the instance's frozen state. Numeric-only reward.json.
 
 No verdict on the agent is an infrastructure failure, never the agent's 0 (PROTOCOL §2.6, infra_error = 1):
@@ -9,7 +9,7 @@ verdict (the collect hook did not finish: not `finalized`, or neither the live v
 give-up after crashes that were not all inside the agent's calls (`sim_crashed`, `resume_failed`), the service not
 ending its episode for the collect hook, a scene that did not start in the frozen instance (`instance_mismatch`, with
 grader_error = 1), or the sim sidecar ran fewer than 4 OpenBLAS threads (`too_few_cpus`, with grader_error = 1: the
-simulation's result depends on the thread count below 4, docs/benchmarks/dexjoco.md "Threads"; the service then starts
+simulation's result depends on the thread count below 4, tasks/dexjoco/README.md "Threads"; the service then starts
 no episode). Crashes all inside the agent's calls (`sim_crashed_on_call`), a simulator error raised by the agent's
 actions (`reason = "error"`, sim_error = 1), a timeout or a task failure are the agent's result. The verdict is on disk
 before the hook renders replay.mp4, so a video that did not finish changes nothing.

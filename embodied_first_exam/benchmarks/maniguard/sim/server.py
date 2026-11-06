@@ -15,7 +15,7 @@ Differences from the other 2.2 services, all from the simulator and the benchmar
 - the episode ends when the task's goal has held for 10 consecutive control steps (reason "goal_held"); whether it counts
   also depends on the task's safety specification, which is evaluated after every control step but never reported live
   (it is part of the success predicate, PROTOCOL §4.5): the service applies it to the live episode, which is graded as it
-  ran (owner 2026-10-17: no grading replay; Session.status(): the strict goal held for 10 control steps
+  ran (no grading replay; Session.status(): the strict goal held for 10 control steps
   and no safety violation at any step, as the privileged replay judges). A technical
   cap (PROTOCOL §4.5, `spec.max_control_steps`): the tooling ends an episode after MAX_STEPS = 50,000 control steps
   (reason "runaway_guard"); the instruction and /spec say so;
@@ -34,7 +34,7 @@ Differences from the other 2.2 services, all from the simulator and the benchmar
   (/out/journal.f64), every completed call checkpointed (rows, state hash, proprio row); after a crash compose restarts the
   container (run.sh exits non-zero) and this service replays the journal and continues the SAME episode. Resume class
   `approx` (OmniGibson declares rollouts nondeterministic) until the determinism probe says otherwise
-  (docs/benchmarks/maniguard.md)."""
+  (tasks/maniguard/README.md)."""
 from __future__ import annotations
 import math, os, sys, threading, time, traceback
 import numpy as np
@@ -117,9 +117,9 @@ def finish(reason: str) -> None:
 # ---------------------------------------------------------------- scene
 import rcb_maniguard as M  # noqa: E402
 S = M.Session(TASK, instance=INSTANCE, resolution=int(os.environ.get("RCB_CAM_SIZE", "256")), strict=False)
-# The frozen initial state, checked before anything is served (the start-state check is no longer the replays'): the
-# rebuilt scene's state hash against the instance's, else every object pose and robot joint within the tooling's tolerance
-# (Session.instance_matches, what strict mode refused by raising, which crashed the service until the hook gave up).
+# The frozen initial state, checked before anything is served: the rebuilt scene's state hash against the instance's,
+# else every object pose and robot joint within the tooling's tolerance (Session.instance_matches; strict mode would raise
+# instead, and a service that crashes at start-up only restarts into the same crash).
 INSTANCE_CHECK = {"instance_sha": S.instance_sha, "instance_exact": bool(S.instance_exact), "instance_matches": bool(S.instance_matches),
                   "instance_ok": bool(S.instance_matches)}
 if not S.instance_matches:

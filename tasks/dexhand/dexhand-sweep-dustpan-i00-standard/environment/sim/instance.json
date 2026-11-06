@@ -119,5 +119,9 @@
   "robot": "marvin-bimanual-sharpa-wave",
   "scene_xml": "assets/sweep_sharpa.xml",
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "58a4a93ffb24ffbc8d1055284cd5a7146f96d94273c02a6f140c9b40b76a6b6d",
+    "wuji": "116709268edbfdcbe486f5cd84650103096a7835f0fe610ed50efd65ca25f96d"
+  },
   "title": "Sweep debris into a held dustpan"
 }

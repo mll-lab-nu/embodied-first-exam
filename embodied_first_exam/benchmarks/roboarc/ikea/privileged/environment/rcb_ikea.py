@@ -22,7 +22,7 @@ The trajectory is replayed by the grader exactly like replay(): a fresh process 
     BREAKDOWN_DEPTH_M) makes success impossible for the episode.
 
 CLI (the grader's replay): python rcb_ikea.py replay --task lack --traj /app/output/trajectory.npz [--scene-dir D] [--out F]
-Only mujoco and numpy are needed. Source: scripts/ikea_mujoco/shared/rcb_ikea.py (copied unchanged into every task).
+Only mujoco and numpy are needed.
 """
 from __future__ import annotations
 

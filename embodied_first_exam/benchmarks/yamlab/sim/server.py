@@ -20,7 +20,7 @@ Differences from the RoboLab service, all from the robot and the simulator:
   never steps physics); depth from the same renders; /kinematics from numpy models of both arms;
 - the episode ends at the first control step where YAMLab's success check (evaluation thresholds) has latched every stage,
   or when a task object falls off the table (YAMLab's own termination), or when the time is up;
-- the episode is graded as it ran (owner 2026-10-17: no grading replay): when it ends the service writes
+- the episode is graded as it ran (no grading replay): when it ends the service writes
   /data/trajectory.npz (the deliverable) + /data/episode.json (the live result: YAMLab's success check, latched stage by
   stage after every control step; the end-state hash); the collect hook's SIGUSR1 makes it exit, and
   environment/sim/finalize.sh writes final.json from it;
@@ -413,8 +413,8 @@ EE_POS_MAX_M = 3.0       # an ee_pose target further than this from the world or
 
 def check_ee_rows(A: np.ndarray) -> None:
     """ee_pose rows that cannot be meant (PROTOCOL §4.6: a 400, nothing executed): a position outside the +-EE_POS_MAX_M
-    box around the world origin (a unit slip; such a row used to run tens of thousands of control steps towards nowhere,
-    and a huge value ended the episode with a simulator error), or a quaternion of zero length."""
+    box around the world origin (a unit slip: such a row would run tens of thousands of control steps towards nowhere,
+    and a huge value would end the episode with a simulator error), or a quaternion of zero length."""
     for ri, row in enumerate(A):
         for i, a in enumerate(ARMS):
             r = row[8 * i:8 * i + 8]

@@ -1,32 +1,33 @@
-"""eai-standard/2.1 sim service for Panda Dynamic Scenes' standard tasks -- the adapter behind the shared standard
-service layer (`python /srv/server.py`: rcb_service.main(build); docs/protocol/standard_mode.md Part 1, docs/benchmarks/pandadyn.md
-"Standard mode").
+"""Sim service adapter of Panda Dynamic Scenes' standard (eai-standard/2.1) and realtime (eai-standard/2.3) tasks: one
+file for both modes. A standard task runs it behind the shared standard service layer (`python /srv/server.py`:
+rcb_service.main(build); docs/protocol/standard_mode.md Part 1); a realtime task runs the shared realtime layer
+(`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/standard_mode.md Part 3,
+tasks/pandadyn/README.md "Realtime (eai-standard/2.3)").
 
 The simulator-specific half only: `PandaDyn` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling rcb_pandadyn.Session (ManiSkill 3.0.1 / SAPIEN 3.0.3, CPU PhysX at
-1000 Hz, one or two Franka Pandas behind their Ruckig + torque servos). The code below is the standard-realtime twin's
-adapter, byte for byte (scripts/pandadyn/mk_tasks.py writes this copy): the two standard modes share the scene, the action,
-the cameras, the proprioception, the success rule, the reset and the trajectory, and differ only in the clock (here the
-world is frozen between the agent's calls; the realtime twin runs rcb_realtime.py on top of the same service layer). The
-protocol, the episode, the resets, crash recovery and the finalize are rcb_service.py's, an unchanged copy of the
-HumanoidBench source.
+1000 Hz, one or two Franka Pandas behind their Ruckig + torque servos). The two modes share the scene, the action, the
+cameras, the proprioception, the success rule, the reset and the trajectory, and differ only in the clock: in standard
+mode the world is frozen between the agent's calls; in realtime mode rcb_realtime.py's clock runs on top of the same
+service layer, which does not serve the 2.2 additions (`/kinematics`, per-frame camera poses, depth modes). The
+protocol, the clock, the episode, the resets, crash recovery and the finalize are rcb_service.py's and rcb_realtime.py's,
+unchanged copies of the shared sources (ci_checks/check-tooling-identity.sh).
 
 What the agent gets: the two static cameras (RGB, z-depth on request) with their calibration, the robot's own
 proprioception (joints, fingers, hand TCP and tool poses, velocities, apertures, motor torques, the targets in force), the
 `joint_position` action (per arm 7 absolute joint targets + the total aperture, clipped to the limits) and POST /reset
 within the task's budget (RCB_RESET_BUDGET). Nothing about objects or fixtures leaves this process.
 
-The verdict is the live episode's (owner, 2026-10-17; docs/benchmarks/pandadyn.md "Grading"): the task's
-own check as the last episode ended in this process, judged by rcb_service after the agent's container is gone; nothing
-is replayed to grade it. The task's check is the episode's end (the first control step where it succeeded or failed), so
-there is no settle window to add (live_verdict below only records the phase and the end reason). The frozen start is
-checked when the first episode begins and after every reset: `start_sha` is the instance's recorded `initial_sha`
-(rcb_service refuses a scene that starts elsewhere: instance_mismatch, an infrastructure failure). The video is rendered
-after the verdict from the graded episode's rows by this process's Session (render_video: the scene rebuilt, the rows
-filmed).
+The verdict is the live episode's (tasks/pandadyn/README.md "Grading"): the task's own check as the graded episode ended
+in this process, judged by rcb_service after the agent's container is gone; nothing is replayed to grade it. The task's
+check is the episode's end (the first control step where it succeeded or failed), so there is no settle window to add
+(live_verdict below only records the phase and the end reason). The frozen start is checked when the first episode
+begins and after every reset: `start_sha` is the instance's recorded `initial_sha` (rcb_service refuses a scene that
+starts elsewhere: instance_mismatch, an infrastructure failure). The video is rendered after the verdict from the graded
+episode's rows by this process's Session (render_video: the scene rebuilt, the rows filmed).
 
 Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_TEXTS (texts.json: the task text),
-RCB_DATA, RCB_RESET_BUDGET, RCB_WALL_CLOCK_S (rcb_service).
+RCB_DATA, RCB_RESET_BUDGET, RCB_WALL_CLOCK_S (rcb_service), and in realtime mode RCB_SLOWDOWN (rcb_realtime).
 """
 from __future__ import annotations
 

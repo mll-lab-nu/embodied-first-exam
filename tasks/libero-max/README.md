@@ -18,7 +18,7 @@ Every image is public: Harbor pulls it.
 | metadata | `simulator = "robosuite"`, `robot = "franka-panda"`, `family = "libero-max/<suite>/<event>"`, `oracle = "full"` |
 | image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` (`images/libero-max/`; `sha256:0e5b5e15aaeb761e4b66772a351f4195392fa638572d47bec5d924305c89aa99`), 3.5 GB, CPU only; x86-64 with AVX-512 (see Host CPUs) |
 | standard client | the shared client base and pins of `embodied_first_exam/standard/`; `rcb_client.py` and `rcb1.py` are byte copies of main's (HumanoidBench / VLABench); the standard `grade.py` is LIBERO-MAX's own (every path writes the same `reward.json` fields; it grades the live episode); `rcb_service.py` is a byte copy (the shared service's `live_verdict()` carries LIBERO-MAX's event record, `event_fired` / `event_step`, into `final.json`) |
-| instances | each case's `instance.json` and `oracle.npy` are committed only in its privileged task (`environment/instance.json`, `solution/oracle.npy`; the case is the instance's `case.case_id`, not the task name). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
+| instances | each case's `instance.json` is committed in three byte-identical copies: the privileged task's `environment/instance.json` and `tests/instance.json` and the standard twin's `environment/sim/instance.json` (`check-instance-copies.sh`); both twins carry the same `solution/oracle.npy` (the case is the instance's `case.case_id`, not the task name). The task directories are the deliverable; the tooling that built them is kept outside this repository. |
 
 ## Task definition
 - **Cases.** LIBERO-MAX pairs a Base and a Dynamic rollout that share the policy's executed prefix; a coding agent is
@@ -72,7 +72,8 @@ Every image is public: Harbor pulls it.
   service ends the episode with `reason = "success"` there.
 - **Length.** Privileged deliverables have 1 ≤ T ≤ the suite's limit (220 / 280 / 300 / 520 control steps, LIBERO's
   evaluation horizons), counted after the 10 warm-up steps. Standard episodes have only a technical cap of 9,000 control
-  steps (450 s of robot time) so that the episode's video pass fits the collect hook's wait (see Grading).
+  steps (450 s of robot time) so that the episode's video pass fits the collect hook's wait (see Grading). The twins
+  therefore share the success rule but not the length rule: compare privileged and standard results with that in mind.
   LIBERO's environment is built with a horizon beyond both (robosuite refuses actions after its horizon; it does not
   touch the physics).
 - **World frame.** Metres; the robot's base (fixed mount) at (-0.66, 0, 0.912) facing +x: x forward, y left, z up.

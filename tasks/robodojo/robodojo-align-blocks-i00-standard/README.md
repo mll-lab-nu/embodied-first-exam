@@ -7,7 +7,7 @@
 | Twin | `robodojo-align-blocks-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `align_blocks` / seed 0 |
-| Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
+| Oracle | `none` — positive example: a model trial solved this task within its 200-step limit (Codex + GPT-6 Astra, effort high, run `codex-gpt6_astra-high`, 2026-11-02; 190 steps, graded live by this task's service); no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
@@ -29,9 +29,9 @@ The sim service ends the episode on RoboDojo's own check (success), a failed che
 writes `/data/trajectory.npz` and `/data/episode.json` (the live result); the collect hook (`environment/sim/finalize.sh`)
 writes `final.json` from them (no replay) and encodes the video the service kept during the episode (`live.mp4`, a frame of
 `cam_head` at the actions the agent's calls rendered; a failed encode costs the video only); `tests/grade.py` scores 1 iff
-the live episode succeeded: every standard task is graded by its live episode, which the trusted service ran, with no grading replay (since 2026-10-17; before, `success` = `live_success` and the success of one fresh-process replay). Before serving, the service checks the rebuilt layout's state hash against the frozen instance's
+the live episode succeeded: every standard task is graded by its live episode, which the trusted service ran, with no grading replay. Before serving, the service checks the rebuilt layout's state hash against the frozen instance's
 (`instance_mismatch`: an infrastructure failure). The collect hook needs no GPU after the service exits. No oracle;
-human review in PR #142 (no positive example yet). `nop` (no actions) scores 0.
+human review in PR #142 (a model trial solved it). `nop` (no actions) scores 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

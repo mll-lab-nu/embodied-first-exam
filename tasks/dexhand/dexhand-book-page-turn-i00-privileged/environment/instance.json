@@ -241,6 +241,10 @@
     "lifted": 30.0,
     "past_vertical": 90.0
   },
+  "start_state_sha": {
+    "sharpa": "4d7554ceec94e7836c34cae8afdd82bee79ad000abcb49cc87b7b07e228b3e01",
+    "wuji": "a01fcc88f113136e21c5285fdddc5a6b8c4c0daf31e31a61af98334b76e1014d"
+  },
   "table": {
     "center_x": 0.52,
     "center_y": 0.0,

@@ -1,4 +1,4 @@
-"""Robot Coding Bench tooling for the LabUtopia tasks (privileged mode, the verifier's replays and the standard-mode
+"""Embodied First Exam tooling for the LabUtopia tasks (privileged mode, the verifier's replays and the standard-mode
 service all use this one module).
 
 LabUtopia (Rui-li023/LabUtopia, a chemistry laboratory with a Franka Panda on NVIDIA Isaac Sim) comes from the base

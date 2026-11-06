@@ -1,6 +1,6 @@
 """eai-standard/2.3 sim service for MyoSuite's realtime tasks -- the adapter behind the shared realtime layer
 (`python /srv/rcb_realtime.py`, which imports this module and calls build(); docs/protocol/README.md §3,
-docs/benchmarks/myosuite.md).
+tasks/myosuite/README.md).
 
 The simulator-specific half only: `MyoSuite` implements rcb_service.Sim (the contract documented in rcb_service.py) for
 one frozen instance, on the benchmark's own tooling module rcb_myosuite.Session -- the same scene, action and success
@@ -8,7 +8,7 @@ rule as the standard twin's eai-standard/2.2 service (environment/sim/server.py 
 clock, the plan, the episode, crash recovery and the finalize are rcb_realtime.py's and rcb_service.py's, unchanged
 copies of the HumanoidBench sources (ci_checks/check-tooling-identity.sh).
 
-Grading (owner, 2026-10-17): the verdict is the live episode's, judged by the layer from step(): the task's
+Grading: the verdict is the live episode's, judged by the layer from step(): the task's
 rule as Session.step applies it to the steps this service ran (table_tennis: MyoChallenge's own success event; any hold
 or track window of a family is part of that rule, so the episode only ends in success once it is complete). There is no
 live_verdict(): nothing is left that a replay applied and the live run did not. Nothing is replayed to grade it; the
@@ -279,7 +279,7 @@ class MyoSuite:
     def proprio(self) -> np.ndarray:
         d, phys = self.s.data, self.s.base.robot.mj_data
         # joint_effort from the physics, not the mirror: MyoSuite steps its robot wrapper's own MjData and refreshes
-        # S.data from qpos / qvel / act only (the standard twin's server.py, 2026-10-09)
+        # S.data from qpos / qvel / act only (as the standard twin's server.py does)
         parts = [d.qpos[self.j_q], d.qvel[self.j_v], d.act[self.act_adr], d.actuator_length[self.mus_idx],
                  phys.qfrc_actuator[self.j_v]]
         if self.root is not None:

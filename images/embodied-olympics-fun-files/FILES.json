@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.0@sha256:e30e534e410bb5aa8820d0585348d96cab0551c2215d2835066d69d8558ff939",
+ "image": "ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-files-0.4.1@sha256:bc538b0a8cb2d4ad0b77f79391344a212e977678aa67f5b213b697baf34cd73b",
  "source": "embodied_first_exam/benchmarks/embodied-olympics-fun",
  "files": {
   "grade.py": "45a72043fe35b6de3c201d7b08bc04a18905de504daf43cdd3e7640bd2319730",
@@ -22,7 +22,7 @@
   "rfo/tasks/long_rope.py": "6a7cc976f93cf4da4fe903524c9e740c85310520320632d442592745ecac772b",
   "rfo/tasks/paddle_bounce.py": "6314e8decd1ad8f94e473ea5288cdfa43c05a51c8117c81f146d1f07a2079959",
   "rfo/tasks/penalty_kick.py": "7e0ef5a938a5dba550adbf98f066a1fd8474cddc441bebeb2cb5f670f55fa9a0",
-  "rfo/tasks/sumo.py": "c0e35274e22316330ca060bccbc149ec6779f73dc4c169f91fef2bcd75689cff",
+  "rfo/tasks/sumo.py": "946257e2b5a3c4689b659bceacca5b60f36c9d4ec05d1d2527697a7c9e0bc125",
   "rfo/tasks/sweeper_jump.py": "764977d73e75c400ee5e4e6548d542130330083ddae5d69da63cb9359e30f484",
   "rfo/tasks/table_tennis_return.py": "27cc7f20a3a718b5dd64624a3a1cd9184ba86cd09430e20404cdcb8532b8194c",
   "rfo/tasks/tennis_return.py": "698eb6fcf1ca31d4809bc5dac93c1f781ec483c9d3dc32af91c33dd64cf092a2",

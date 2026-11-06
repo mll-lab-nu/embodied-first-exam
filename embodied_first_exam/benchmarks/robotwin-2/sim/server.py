@@ -3,7 +3,7 @@ Owns the scene and the seed. HTTP surface: GET /spec, GET /status, POST /observe
 RCB1 responses: videos / frames / depth / proprio as raw blobs, never base64). Logs every call to /data/episode.jsonl,
 keeps /data/final.json current, and on episode end grades the live episode: success = RoboTwin's check_success on the
 episode this service ran (it ends at the first call after which the check holds; at the end of the agent's time the
-final state is checked once more), nothing replayed (docs/protocol/README.md H.4; owner, 2026-10-17). The verdict
+final state is checked once more), nothing replayed (docs/protocol/README.md H.4). The verdict
 goes to final.json first ("finalized": true, "graded_by": "live"); then the recorded (T,34) trajectory, which is the
 deliverable, is rendered once for people: the six-view /data/replay.mp4 and /data/live.mp4 (rcb_live.py: call-stamped
 frames only while physics ran, skipped while nothing moved) in one pass ("video_pending": true while it runs; it never
@@ -713,7 +713,7 @@ def _resume_or_start() -> None:
     _first = [e for e in ev if e.get("ev") == "first_request"]
     if _first: E["t_agent0"] = float(_first[0]["ts"])
     # the episode's end, if it is within the last checkpoint: an end past it was logged by a call lost with the crash (an
-    # end before 2026-10-14 carries no rows and is kept, as before)
+    # end record without rows is kept)
     ended = [e for e in ev if e.get("ev") == "end" and int(e.get("rows") or 0) <= n]
     if ended: E["done"] = True; E["reason"] = ended[-1].get("reason"); E["t_end"] = float(ended[-1]["ts"]); E["episode_physics_steps"] = int(ended[-1].get("physics_steps") or n)
     log({"ev": "resumed", "rows": n, "calls": E["calls"], "state_sha": S.state_sha(), "crashed_in_call": in_call, "downtime_s": round(time.time() - float(ev[-1]["ts"]), 1)})

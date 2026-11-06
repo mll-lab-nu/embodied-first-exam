@@ -40,6 +40,7 @@ for t in scripts/usage_gateway/tests/test_rawlog.py scripts/usage_gateway/tests/
   run 300 "$t"
 done
 run 120 scripts/account_failure_check.py --selftest
+run 60 ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py --selftest
 run 120 embodied_first_exam/benchmarks/embodiedswe/rollout_limit_selftest.py
 if python3 -c "import numpy, requests" 2>/dev/null; then
   export PATH="$(dirname "$(command -v python3)"):$PATH"   # run.sh starts `python`: the same interpreter

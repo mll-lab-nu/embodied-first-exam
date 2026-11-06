@@ -448,6 +448,12 @@ def load_trajectory(path: str | Path, task: str, dim: int) -> np.ndarray:
     return A
 
 
+# Errors of our tooling or the host, never of the agent's rows: a replay that raises one of these prints no result, an
+# infrastructure failure (the grader: no verdict on the agent). Anything else the simulator raises while it runs the rows
+# (the servo's "Ruckig failed", a physics error) is the agent's sim_error.
+INFRA_ERRORS = (MemoryError, ImportError, OSError, AttributeError, NameError, TypeError, RecursionError, NotImplementedError)
+
+
 def _cli_replay(a) -> int:
     t0 = time.time()
     s = Session(a.instance)
@@ -456,7 +462,34 @@ def _cli_replay(a) -> int:
         A = load_trajectory(a.traj, s.task, s.dim)
     except Exception as exc:  # noqa: BLE001
         out["error"] = f"bad trajectory: {exc!r}"[:300]; print(json.dumps(out), flush=True); return 2
-    res = s.replay(A)
+    try:
+        res = s.replay(A)
+    except INFRA_ERRORS:
+        raise                                               # no result: an infrastructure failure, not the agent's 0
+    except Exception as exc:  # noqa: BLE001
+        # The simulator raised on the agent's rows (e.g. the servo's "Ruckig failed"): the replay ran and failed, the
+        # agent's 0 (sim_error), as a simulator error ends the standard twin's live episode. The scene was built and
+        # checked above, so this is not the host's failure.
+        try:
+            executed = int(s.n_steps)
+        except Exception:  # noqa: BLE001
+            executed = -1
+        out["replays"] = [{"success": False, "sim_error": True, "end_reason": "sim_error", "executed_rows": executed,
+                           "error": repr(exc)[:300]}]
+        out["n_actions"] = int(len(A)); out["replay_wall_s"] = round(time.time() - t0, 2)
+        print(json.dumps(out), flush=True)
+        if a.video:                                         # film the rows up to the error (never decides the replay)
+            try:
+                s.render_video(A, a.video, fps=a.fps)
+            except Exception as vexc:  # noqa: BLE001
+                out["video_error"] = repr(vexc)[:200]
+            out["video_ok"] = Path(a.video).is_file()
+            print(json.dumps(out), flush=True)
+        try:
+            s.close()
+        except Exception:  # noqa: BLE001
+            pass
+        return 0
     out["replays"] = [{k: res[k] for k in ("success", "state_sha", "end_reason", "control_steps", "executed_rows", "phase",
                                            "phase_name", "sim_time_s", "valid", "failure_reason")}]
     out["n_actions"] = int(len(A)); out["replay_wall_s"] = round(time.time() - t0, 2)

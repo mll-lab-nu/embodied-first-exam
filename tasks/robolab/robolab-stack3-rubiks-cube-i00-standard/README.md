@@ -7,9 +7,9 @@
 | Twin | `robolab-stack3-rubiks-cube-i00-privileged` |
 | Simulator / robot | `robolab` / `franka-robotiq-2f85` |
 | Family / instance | `stack3_rubiks_cube` / seed 0 |
-| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-stack3-rubiks-cube-i00__8hhXJ5w (robolab-stack3-rubiks-cube-i00-privileged before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038); robolab-stack3-rubiks-cube-i00-l__722n2cQ (robolab-stack3-rubiks-cube-i00-standard before 2026-10-14, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928). The positives were graded before 2026-10-14 (one-finger gripper contact, no settle hold); not re-graded under the 2026-10-14 term unless stated here. Human review per family (PROTOCOL §4). |
+| Oracle | `none` — No reference solution: RoboLab ships no expert or planner. Positive examples graded 1 by the separate verifier: robolab-stack3-rubiks-cube-i00__8hhXJ5w (robolab-stack3-rubiks-cube-i00-privileged, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunacx-0925-2038); robolab-stack3-rubiks-cube-i00-l__722n2cQ (robolab-stack3-rubiks-cube-i00-standard, an earlier version of the task, run codex-gpt6_luna-xhigh, robolab-lunaxh-limited-0928). The positives were graded under an earlier success term (one-finger gripper contact, no settle hold); not re-graded under the current term (both-finger contact, settle hold) unless stated here. Human review per family (PROTOCOL §4). |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
 Standard-mode twin of `robolab-stack3-rubiks-cube-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):
@@ -24,11 +24,11 @@ That of `robolab-stack3-rubiks-cube-i00-privileged` (its README), without resets
 
 ## Reference solution
 None: RoboLab ships no expert or planner, and no reference solution has been written for this family (`oracle = "none"`). Positive examples, model trials the separate verifier scored 1:
-- `robolab-stack3-rubiks-cube-i00__8hhXJ5w` (privileged mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`)
-- `robolab-stack3-rubiks-cube-i00-l__722n2cQ` (standard mode, on this task before 2026-10-14; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`)
+- `robolab-stack3-rubiks-cube-i00__8hhXJ5w` (privileged mode, on an earlier version of this task; run `codex-gpt6_luna-xhigh`, batch `robolab-lunacx-0925-2038`)
+- `robolab-stack3-rubiks-cube-i00-l__722n2cQ` (standard mode, on an earlier version of this task; run `codex-gpt6_luna-xhigh`, batch `robolab-lunaxh-limited-0928`)
 
 ## Verification
-Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, judged by the sim
+Graded by the live episode: `success` = the live episode's success, judged by the sim
 service on the episode the agent ran, with no grading replay. RoboLab's success term is instantaneous: it is checked
 after every control step and the first step where it holds ends the episode (RoboLab's own termination); when the
 agent's time is up, the service holds the last command for 30 more control steps (2 s) on the live simulator, after the
@@ -38,8 +38,7 @@ infrastructure failure (`instance_mismatch`). `tests/grade.py` reads `final.json
 fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields), plus `/logs/verifier/live.mp4`:
 the service films the live episode (a frame of the viewport and wrist cameras every 3 control steps, from the renders
 Isaac Lab makes with every step), and the collect hook encodes it after the verdict (a failed encode costs the video
-only). Compute: the collect hook needs no GPU after the service exits (it replayed the episode in two fresh Isaac
-processes before 2026-10-17).
+only). Compute: the collect hook needs no GPU after the service exits.
 
 No oracle; human review in PR #3 (PROTOCOL §4: per family, this task and its twin, a positive example and the `nop` result).
 

@@ -155,7 +155,8 @@ after it, re-check the
 hashes (the same `instance_sha`, `live_state_sha` for every task) before
 publishing. Licences: RoboCasa code MIT, robocasa/robocasa-assets CC-BY-4.0, jianzhang96/robocasa-assets Apache-2.0,
 RoboCasa's own object archives on UT Box (CC-BY-4.0, as RoboCasa licenses its assets on robocasa/robocasa-assets), NVIDIA PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes)
-**CC-BY-NC-4.0** (non-commercial; maintainers to confirm the image may be published, otherwise `BUILD_ONLY`).
+**CC-BY-NC-4.0** (non-commercial use only). The image is public (`ghcr.io/mll-lab-nu/efe:robocasa-<images/robocasa/VERSION>`),
+with these assets under their own licences.
 
 ## Evidence
 Each instance is a demonstration's frozen initial state and each reference its actions executed with the native

@@ -6,10 +6,11 @@ Two replays, each in its own fresh process (`rcb_myosuite.py replay`: the frozen
 episode ends at the first success, i.e. the goal held for the hold time, or at the task's failure). success = both
 replays succeed, end in the same state, and start from the instance's recorded state hash. Writes
 /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders replay.mp4, after the verdict
-is on disk (it never changes it).
+is on disk (it never changes it), and only when what is left of the verifier's time can hold it.
 
-Whose failure a 0 is (PROTOCOL §2.6): a file that is no trajectory for this instance -- unreadable, not (T, actuators),
-empty or too long, NaN/inf -- is the agent's (`bad_trajectory`), checked here before any replay. After that check a
+Whose failure a 0 is (PROTOCOL §4): a file that is no trajectory for this instance -- unreadable, an entry that unpacks
+to more than its row limit allows (checked before it is read), not (T, actuators), empty or longer than the family's
+MAX_ROWS, NaN/inf -- is the agent's (`bad_trajectory`), checked here before any replay. After that check a
 replay process that gives no result (out of time, killed, not started, a failing tool) is the grader's
 (`replay_failed`, `grader_error` and `infra_error` = 1), as is an instance the verifier's host does not rebuild:
 every `grader_error` = 1 has `infra_error` = 1 next to it, and every reward.json carries `infra_error`.
@@ -21,14 +22,29 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
+import zipfile
 
 import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_myosuite.py")
-MAX_ROWS = 1_000_000  # a replay runs ~1000 control steps/s; far beyond any episode an agent can build in its time
-REPLAY_TIMEOUT_S = 1200
+# Time (task.toml [verifier] timeout_sec = 1800 s): two grading replays of REPLAY_TIMEOUT_S each fit in VERIFIER_BUDGET_S,
+# and the video replay runs only in what is left (VIDEO_MIN_S at least). A family's MAX_ROWS (the instruction states it)
+# is 360 s at the replay rate the instruction gives for it ("~N control steps/s here"), so a replay of the longest legal
+# trajectory takes at most 720 s even on a host at half that rate: a legal trajectory is always graded, never timed out.
+T0 = time.monotonic()
+VERIFIER_BUDGET_S = 1680.0  # the verifier's 1800 s minus the monitor's seal and the start-up
+REPLAY_TIMEOUT_S = 780.0    # one grading replay: 720 s of rows at half the stated rate + the Session's start
+VIDEO_MIN_S = 60.0
+STEPS_PER_S = {"arm_reach": 2000, "baoding": 1500, "bimanual": 600, "chase_tag": 1200, "dex_airplane_fly": 300,
+               "dex_apple_lift": 500, "dex_bunny_inspect": 400, "dex_cup_pour": 400, "dex_cylinder_pass": 600,
+               "dex_hammer_use": 500, "die_reorient": 1700, "hand_pose": 1800, "hand_reach": 1400, "key_turn": 1700,
+               "obj_hold": 1700, "obj_reorient": 2000, "osl_run": 600, "pen_twirl": 2400, "relocate": 1400,
+               "sarc_key_turn": 1800, "soccer": 400, "table_tennis": 300}
+MAX_ROWS = {fam: 360 * rate for fam, rate in STEPS_PER_S.items()}
+MAX_MEMBER_MARGIN = 1 << 20  # bytes an .npz entry may hold beyond MAX_ROWS rows of float64 numbers (the .npy header)
 
 
 def write(ok: bool, out: dict) -> None:
@@ -74,7 +90,7 @@ def agent_cost() -> dict:
     return cost
 
 
-def replay(a, traj: str, out: str, video: str | None = None) -> dict:
+def replay(a, traj: str, out: str, video: str | None = None, timeout: float = REPLAY_TIMEOUT_S) -> dict:
     cmd = [sys.executable, TOOL, "replay", "--task", a.family, "--instance", a.instance, "--traj", traj, "--out", out]
     if video:
         cmd += ["--video", video]
@@ -85,7 +101,7 @@ def replay(a, traj: str, out: str, video: str | None = None) -> dict:
     }  # the verifier's sessions are not the agent's
     try:
         subprocess.run(
-            cmd, env=env, stdout=subprocess.DEVNULL, stderr=sys.stderr, timeout=REPLAY_TIMEOUT_S, check=False
+            cmd, env=env, stdout=subprocess.DEVNULL, stderr=sys.stderr, timeout=timeout, check=False
         )
         with open(out) as f:
             r = json.load(f)
@@ -107,7 +123,18 @@ def main() -> int:
     if not os.path.isfile(a.traj):
         write(False, {"success": 0, "deterministic": 0, "missing_trajectory": 1, "grader_error": 0, **cost})
         return 0
+    max_rows = MAX_ROWS.get(a.family, min(MAX_ROWS.values()))
+    try:  # the instance's row width bounds the entries' unpacked size; the guard below is the file's, never the grader's
+        nu0 = int(np.load(a.instance, allow_pickle=False)["model__actuator_ctrlrange"].shape[0])
+    except Exception:  # noqa: BLE001 -- the replays below will say what is wrong with the instance
+        nu0 = 256
     try:
+        if not zipfile.is_zipfile(a.traj):
+            raise ValueError("not an .npz (zip) file")
+        with zipfile.ZipFile(a.traj) as z:  # entry sizes before anything is unpacked: a small file that inflates to
+            sizes = {i.filename: i.file_size for i in z.infolist()}  # gigabytes is the agent's 0, not an OOM
+        if max((sizes.get(k, 0) for k in ("actions.npy", "task.npy")), default=0) > max_rows * nu0 * 8 + MAX_MEMBER_MARGIN:
+            raise ValueError("an entry is larger than the row limit allows")
         d = np.load(a.traj, allow_pickle=False)
         task = str(d["task"]) if "task" in d.files else a.family
         acts = np.asarray(d["actions"], dtype=np.float64)
@@ -123,7 +150,7 @@ def main() -> int:
     except Exception:  # noqa: BLE001 -- the replays below will say what is wrong with the instance
         traceback.print_exc(file=sys.stderr)
         nu = None
-    if (acts.ndim != 2 or not 0 < acts.shape[0] <= MAX_ROWS or (nu is not None and acts.shape[1] != nu)
+    if (acts.ndim != 2 or not 0 < acts.shape[0] <= max_rows or (nu is not None and acts.shape[1] != nu)
             or not np.all(np.isfinite(acts))):
         write(
             False,
@@ -143,9 +170,9 @@ def main() -> int:
         r1 = replay(a, clean, os.path.join(tmp, "r1.json"))
         r2 = replay(a, clean, os.path.join(tmp, "r2.json"))
         if not (r1.get("state_sha") and r2.get("state_sha")):
-            # The rows were checked above (shape, width, finite values), so a replay without a result did not run to a
-            # verdict: out of time, killed (out of memory), not started, or the tool failed. That is no verdict on the
-            # agent (until 2026-10-10 it was booked as its bad_trajectory).
+            # The rows were checked above (shape, width, length, finite values), so a replay without a result did not
+            # run to a verdict: out of time, killed (out of memory), not started, or the tool failed. That is no verdict
+            # on the agent.
             write(
                 False,
                 {
@@ -182,10 +209,13 @@ def main() -> int:
             **cost,
         }
         write(ok, out)
-        if not a.no_video:  # a human-viewable replay (never affects the verdict)
-            r3 = replay(a, clean, os.path.join(tmp, "r3.json"), video=os.path.join(LOG_DIR, "replay.mp4"))
+        left = VERIFIER_BUDGET_S - (time.monotonic() - T0)
+        if not a.no_video and left >= VIDEO_MIN_S:  # a human-viewable replay (never affects the verdict)
+            r3 = replay(a, clean, os.path.join(tmp, "r3.json"), video=os.path.join(LOG_DIR, "replay.mp4"), timeout=left)
             out["video_rendered"] = int(bool(r3.get("video")))
             write(ok, out)
+        elif not a.no_video:
+            print(f"[grade] no video: {left:.0f} s of the verifier's time left", file=sys.stderr, flush=True)
     return 0
 
 

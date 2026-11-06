@@ -27,7 +27,8 @@ The first task builds the simulator image from public sources (below); later tas
   educational use only. Read them before your first run. No account, login or token is needed.
 - **GPU and driver.** Linux x86_64, Docker with BuildKit and the NVIDIA Container Toolkit, an RTX-class NVIDIA GPU (Isaac
   renders with RTX even headless; PhysX runs on the CPU) with a driver Isaac Sim 6.1.0 supports (NVIDIA lists 595.58.03
-  on Linux; checked on 595.91.07 with an RTX PRO 6000 Blackwell Server Edition). 32 GB of RAM per simulator that
+  on Linux; checked on 595.91.07 with an RTX PRO 6000 Blackwell Server Edition and on 580.178.04 with an RTX 4090).
+  32 GB of RAM per simulator that
   renders.
 - **Disk.** About 90 GB free for the first build (the image is about 40 GB).
 - **First build.** The image is not on a public registry, so the first task builds it with Docker from public sources:
@@ -35,8 +36,9 @@ The first task builds the simulator image from public sources (below); later tas
   omniverse-content-production.s3-us-west-2.amazonaws.com. Every task's Dockerfile starts with that recipe
   (`images/labutopia/Dockerfile`), so the build runs once per Docker host and later tasks take it from Docker's build
   cache. Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` get its layers instead (compose
-  `build.cache_from`). To build it ahead of the run: `harbor run -p tasks/labutopia/labutopia-pick-i00-privileged -a
-  oracle` (reward 1).
+  `build.cache_from`). To build it ahead of the run: `c=$(python3 scripts/stamp_mtimes.py stage
+  tasks/labutopia/labutopia-pick-i00-privileged "$(mktemp -d)") && harbor run -p "$c" -a oracle` (reward 1). Each task
+  allows 5400 s for its image build (`build_timeout_sec`), room for a first build on a slower link.
 - **Start-up.** The first simulator with its renderer in a container prepares the laboratory stage: 5 to 27 minutes,
   paid inside the agent's time in standard mode (below, "Two kinds of Session").
 
@@ -114,7 +116,7 @@ through the robot's joint targets alone, (b) whose success check can be stated w
   | `press` | the red button's cap beyond x = 0.405 m (it starts at 0.40 and goes in along +x), for 60 consecutive steps | `press_controller._check_success` |
   | `open_door`, `open_drawer` | the handle's centre more than 0.12 m from where it started and the hand more than 0.04 m from it, for 60 consecutive steps | `open_controller._check_success` |
   | `place` | the beaker lifted more than 0.10 m; then its centre within 0.05 m (horizontally) of the plate's and within 0.05 m of its initial height, the hand more than 0.05 m from it, for 60 consecutive steps | `place_controller._check_phase_success`; the release distance from `pickplace_controller.is_success` |
-  | `pour` | the small beaker lifted more than 0.12 m; then, counted only while its centre is within the pour distance of the large beaker's (horizontally; about 0.08 m): turned more than 50 degrees, turned back to within 30 degrees, then more than 0.05 m above its start for 84 steps | `pour_controller._check_phase_success`, step for step |
+  | `pour` | the small beaker lifted more than 0.12 m; then, counted only while its centre is within the pour distance of the large beaker's (horizontally; 0.0776 m): turned more than 50 degrees, turned back to within 30 degrees, then more than 0.05 m above its start for 84 steps | `pour_controller._check_phase_success`, step for step |
   | `shake` | counted only while the beaker's centre is 0.05 m or more above its start: five times, the centre gets 0.05 m or more (horizontally) from where that count began; then it stays within 0.01 m in x and in y over 60 steps | `shake_controller.is_success`, step for step |
   | `heat_liquid` | the beaker's centre above z = 0.82 m; then the beaker on the plate (centre at or below z = 0.86 m, within 0.05 m in x and in y of the plate's frame); then that and the button's frame below z = 0.761 m | `placepress_controller._check_phase_success`, in its order |
   | `open_close` | the open rule with 0.13 m for 60 consecutive steps; then the handle's centre more than 0.13 m from where it is at that step and nearer to where it started than it is at that step, and the hand more than 0.04 m from it, for 60 consecutive steps | `openclose_controller._check_open_success`, `_check_close_success`; the direction is added here |
@@ -162,7 +164,8 @@ driver. So the image has 6.1.0, and every instance and reference here is for it.
   each checked by sha256: `images/labutopia/nvidia_assets.sha256`) and the tooling redirects the server's URLs to the
   mirror (`omni.client.set_alias`), so LabUtopia's files stay as they are. Without them the cabinet is simply missing;
   the instance check notices (`instance_ok`).
-- Not checked: what LabUtopia's controllers do on 5.1.0 (it does not start here), and 6.1.0 on a 580-branch driver.
+- 6.1.0 also runs on a 580-branch driver (580.178.04, RTX 4090: every oracle and nop scored as expected, see
+  Verification). Not checked: what LabUtopia's controllers do on 5.1.0 (it does not start here).
 
 ## Determinism
 PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the image on the authoring host:
@@ -302,11 +305,19 @@ On the authoring host (RTX PRO 6000 Blackwell Server Edition, driver 595.91.07),
 `harbor run -a oracle` scored 1 on all 18 task directories (both fresh-process replays and, in standard mode, the live
 episode ending in the reference's recorded state) and `harbor run -a nop` scored 0 on all 18; the reference, its first
 half, the reference without its last 30 rows and holding the initial targets for 10 s were run through the grader's
-own replay in every family (1, 0, 0, 0). The standard tasks have since moved to live grading (the verdict = the live
-episode's, which those runs also checked); they were not run again after that change.
+own replay in every family (1, 0, 0, 0).
+
+On an RTX 4090 host (driver 580.178.04), with the standard tasks graded live and their agents on the shared 2.2
+client (the same `rcb_client.py` the tasks now take from `standard-files`): `harbor run -a oracle` scored 1 and
+`harbor run -a nop` 0 on all 9 standard tasks (live verdicts, no infrastructure, grader or sim error), and the
+privileged oracle scored 1 on pick and pour. In 8 of 9 families the live end state equals the reference's recorded
+state hash; in pour every run on that host (live and both privileged replays) starts and ends in the same other last
+bits (end `2da5a7461d15403e` instead of `4a617cdeb8353c13`) with the same verdict, as "Determinism" describes for
+other hosts. The three `lab_003` tasks (press, shake, heat-liquid) peaked at 22-23 GiB in the sim sidecar.
 
 ## Files
 Every task directory is self-contained: `environment/rcb_labutopia.py` (privileged; the verifier's own copy in
-`tests/`) or `environment/sim/` (standard: the adapter `server.py`, `rcb_labutopia.py`, the shared layer, the collect
-hook), `instance.json`, `solution/oracle.npz`. `images/labutopia/` has the image recipe (Dockerfile, VERSION,
+`tests/`) or `environment/sim/` (standard: the adapter `server.py`, `rcb_labutopia.py`, the collect
+hook), `instance.json`, `solution/oracle.npz`; the standard tasks take the shared 2.2 layer and the agent's client
+(`rcb_limited.py`, `run.sh`, `rcb1.py`, `rcb_client.py`) from the pinned `standard-files` image. `images/labutopia/` has the image recipe (Dockerfile, VERSION,
 BUILD_ONLY, requirements.txt, nvidia_assets.sha256, strip_solutions.py).

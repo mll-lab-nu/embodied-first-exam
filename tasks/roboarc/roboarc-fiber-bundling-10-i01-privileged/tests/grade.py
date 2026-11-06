@@ -5,19 +5,18 @@ Adapted from Embodied First Exam's RoboWits grader (fa59c1a6: tasks/robowits-sta
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
 human-viewable replay video /logs/verifier/replay.mp4 (all cameras tiled) plus replay.last.png, rendered during the last of
-the `--repeat` (2) replays in this fresh process: two passes in all, no separate video replay. TopoGym's physics runs on
-the GPU, whose contact solver is not bit-exact (the rule of Embodied First Exam's GPU backend): every replay must complete
-the task. Initial state and runtime binding must match exactly; final-state determinism is reported separately.
-The replays are grading replays (rcb_topogym.Session.replay(grading=True), tooling v16): for the GPU families the rows run
-with the instance's own thresholds and, if the episode has not ended after the last row, the final targets are held for up
-to 2 s with the replay tolerances (rcb_topogym.REPLAY_TOLERANCES). Success needs both replays to succeed AND at least one
-of them to reach the goal with the instance's own (strict) thresholds within the trajectory's rows (2026-10-14, the rule of
-tooling v16 again): the hold only confirms, as in standard mode, where the live episode is strict and its replay may
-confirm in the hold. R-hold (2026-10-05 to 2026-10-14) let every replay confirm within the hold and required no strict
-goal; privileged mode has no graded live run, so the hold's relaxed thresholds became the effective goal (blanket-flatten:
-92 % coverage instead of 95 %; failure analysis 2026-10-14, item 12). The cloth step runs on a deterministic solver and the
-MuJoCo families on the CPU, so a replay reproduces the agent's own run, and a recording that stops on its own (strict)
-success reaches it within its rows. The strict goal is reported (`strict_goal_reached`, `strict_goal_row`; verdict.json
+the `--repeat` (2) replays in this fresh process: two passes in all, no separate video replay. The physics runs where the
+instance's `simulator.compute_backend` says; every replay must complete the task. Initial state and runtime binding must
+match exactly; final-state determinism is reported separately, not required.
+The replays are grading replays (rcb_topogym.Session.replay(grading=True), tooling v16): for the families with a grading
+hold (rcb_topogym.REPLAY_TOLERANCES) the rows run with the instance's own thresholds and, if the episode has not ended
+after the last row, the final targets are held for up to 2 s with the replay tolerances. Success needs both replays to
+succeed AND at least one of them to reach the goal with the instance's own (strict) thresholds within the trajectory's
+rows: the hold only confirms, as in standard mode, where the live episode is strict and its replay may confirm in the
+hold. Without that rule the hold's relaxed thresholds would be the effective goal in privileged mode, which has no graded
+live run (blanket-flatten: 92 % coverage instead of 95 %). The cloth step runs on a deterministic solver and the MuJoCo
+families on the CPU, so a replay on the same host reproduces the agent's own run, and a recording that stops on its own
+(strict) success reaches it within its rows. The strict goal is reported (`strict_goal_reached`, `strict_goal_row`; verdict.json
 `evidence.strict_goal`), `strict_replay_required` 1 marks the rule, and `success_in_hold_only` 1 a trajectory whose replays
 all succeeded but only within the hold (not credited). Each replay's "grading" record is in verdict.json;
 `replay_hold_steps` / `replay_tolerance_needed` summarize them.
@@ -26,7 +25,7 @@ Task-contact penetration is evidence, not a verdict (tooling v16): a success dur
 `success_pending_review` 1, the events in verdict.json `evidence.review` and frames around them in review_frames/ (one more
 replay, after the verdict and the video); a clean success is credited. Forcing (rcb_topogym.FORCING, each replay's status
 "forcing") is evidence only: verdict.json `evidence.forcing`, `forcing_events`, and frames around it when a success is held.
-Limits (2026-10-10): a trajectory has at most rcb_topogym.MAX_STEPS rows (RCB_MAX_STEPS, set per task in tests/Dockerfile
+Limits: a trajectory has at most rcb_topogym.MAX_STEPS rows (RCB_MAX_STEPS, set per task in tests/Dockerfile
 and environment/Dockerfile so that two replays fit the verifier's timeout; a longer one is bad_trajectory); the replay
 Session's own runaway guard sits above that, so the hold after the last row always has room. The review-frame pass is
 skipped when the verifier's time (RCB_VERIFIER_BUDGET_S, the task's [verifier] timeout_sec) would not cover it: the

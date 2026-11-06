@@ -13,7 +13,7 @@ Action layout (one row = every actuator target, model order; identical to pot_sh
     sharpa: 14 + 22 + 22 = 58          wuji: 14 + 20 + 20 = 54
 Any other (non-robot) actuators of a scene would follow the hands; DexHand scenes have none.
 
-See docs/benchmarks/dexhand.md ("Arm rig") for the rig's role in the DexHand families; arm_ik.py (authoring only)
+See tasks/dexhand/README.md ("Arm rig", under "Robot and assets") for the rig's role in the DexHand families; arm_ik.py (authoring only)
 converts a family's wrist-stage episode into arm rows.
 """
 
@@ -338,7 +338,7 @@ class RigError(ValueError):
 
 
 def _hands_module():
-    """The shared DexHand hand-selection module (beside this file in task dirs, or scripts/dexhand/shared)."""
+    """The shared DexHand hand-selection module (hands.py, beside this file in every task image)."""
     try:
         import hands
 

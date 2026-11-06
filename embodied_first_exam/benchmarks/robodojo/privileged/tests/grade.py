@@ -4,8 +4,7 @@
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
 human-viewable replay video /logs/verifier/replay.mp4 (the head camera).
-ONE replay, in its own FRESH process (`rcb_robodojo.py replay`), decides (the owner's decision of 2026-10-12; two before,
-which also had to end in the same state hash): success = that replay completes the task (RoboDojo's own reward check, the
+ONE replay, in its own FRESH process (`rcb_robodojo.py replay`), decides: success = that replay completes the task (RoboDojo's own reward check, the
 episode ending in success). It is the filmed replay; the filming never decides (the tooling reports a failed video as
 `video_ok` false and the replay stands). With one replay there is no second end state to compare: `deterministic` and
 `state_identical` are written as 1 (nothing disagreed) with `determinism_checked` = 0 and `replays` = 1, which say that
@@ -150,7 +149,7 @@ def main() -> int:
             print(f"[grade] a replay process gave no result: {[r.get('error') for r in runs]}", file=sys.stderr, flush=True)
             write(False, {**ERR, "replay_failed": 1, "n_actions": int(len(acts)), "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
         all_success = all(o.get("success") for o in outs)
-        compared = len(outs) >= 2                          # one replay (the rule since 2026-10-12): nothing to compare
+        compared = len(outs) >= 2                          # one replay (the rule): nothing to compare
         state_identical = len({o.get("state_sha") for o in outs}) == 1
         instance_exact = all(bool(r.get("instance_exact")) for r in runs)
         # instance.json "determinism": "state" (default) = the end states must be bit-identical; "verdict" = the replays

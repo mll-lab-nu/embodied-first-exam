@@ -20,8 +20,8 @@ Every image is public: Harbor pulls it.
 | sources | each instance and reference is in its tasks (`environment/instance.npz`, `solution/oracle.npz`); the task directories are the deliverable; the tooling that built them is kept outside this repository |
 
 ## Scope
-All 24 GR1 tabletop environments with an official demonstration whose reference PR #4 validated, one
-instance each (PR #4's `i00`; its other 9 instances of the same environments are not included): PnPBottleToCabinetClose, PnPCanToDrawerClose, PnPCupToDrawerClose, PnPMilkToMicrowaveClose, PnPPotatoToMicrowaveClose, PnPWineToCabinetClose, PosttrainPnPNovelFromCuttingboardToBasketSplitA, PosttrainPnPNovelFromCuttingboardToCardboardboxSplitA, PosttrainPnPNovelFromCuttingboardToPanSplitA, PosttrainPnPNovelFromCuttingboardToPotSplitA, PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA, PosttrainPnPNovelFromPlacematToBasketSplitA, PosttrainPnPNovelFromPlacematToBowlSplitA, PosttrainPnPNovelFromPlacematToPlateSplitA, PosttrainPnPNovelFromPlacematToTieredshelfSplitA, PosttrainPnPNovelFromPlateToBowlSplitA, PosttrainPnPNovelFromPlateToCardboardboxSplitA, PosttrainPnPNovelFromPlateToPanSplitA, PosttrainPnPNovelFromPlateToPlateSplitA, PosttrainPnPNovelFromTrayToCardboardboxSplitA, PosttrainPnPNovelFromTrayToPlateSplitA, PosttrainPnPNovelFromTrayToPotSplitA, PosttrainPnPNovelFromTrayToTieredbasketSplitA, PosttrainPnPNovelFromTrayToTieredshelfSplitA.
+All 24 GR1 tabletop environments with an official demonstration whose reference was validated in this repository's pull
+request #4 (PR #4: closed without merging; commit ad3c510, fetchable as `refs/pull/4/head`), one instance each (PR #4's `i00`; its other 9 instances of the same environments are not included): PnPBottleToCabinetClose, PnPCanToDrawerClose, PnPCupToDrawerClose, PnPMilkToMicrowaveClose, PnPPotatoToMicrowaveClose, PnPWineToCabinetClose, PosttrainPnPNovelFromCuttingboardToBasketSplitA, PosttrainPnPNovelFromCuttingboardToCardboardboxSplitA, PosttrainPnPNovelFromCuttingboardToPanSplitA, PosttrainPnPNovelFromCuttingboardToPotSplitA, PosttrainPnPNovelFromCuttingboardToTieredbasketSplitA, PosttrainPnPNovelFromPlacematToBasketSplitA, PosttrainPnPNovelFromPlacematToBowlSplitA, PosttrainPnPNovelFromPlacematToPlateSplitA, PosttrainPnPNovelFromPlacematToTieredshelfSplitA, PosttrainPnPNovelFromPlateToBowlSplitA, PosttrainPnPNovelFromPlateToCardboardboxSplitA, PosttrainPnPNovelFromPlateToPanSplitA, PosttrainPnPNovelFromPlateToPlateSplitA, PosttrainPnPNovelFromTrayToCardboardboxSplitA, PosttrainPnPNovelFromTrayToPlateSplitA, PosttrainPnPNovelFromTrayToPotSplitA, PosttrainPnPNovelFromTrayToTieredbasketSplitA, PosttrainPnPNovelFromTrayToTieredshelfSplitA.
 
 ## Task definition
 - **Instance.** The initial state of an official demonstration episode, frozen in `instance.npz` (~0.1 MB): the MuJoCo
@@ -75,8 +75,9 @@ contains no demonstration data.
 commits, robosuite's mink controller file and every asset archive by SHA-256 (`fetch_assets.sh`). It reproduces the
 content of the image the tasks were validated with. **Open: a clean rebuild from this Dockerfile** (~9 GB of
 downloads, ~50 GB of disk) and a re-check of the hashes before publishing. Licences: code MIT; RoboCasa's own textures, fixtures and object archives (UT Box) CC-BY-4.0; NVIDIA
-PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes) **CC-BY-NC-4.0** (non-commercial; maintainers to
-confirm publishing, otherwise `BUILD_ONLY`).
+PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes) **CC-BY-NC-4.0** (non-commercial use only). The image
+is public (`ghcr.io/mll-lab-nu/efe:robocasa-gr1-<images/robocasa-gr1/VERSION>`), with these assets under their own
+licences.
 
 ## Evidence
 For all 24: not solved at the start; `reset()` bit-exact; the

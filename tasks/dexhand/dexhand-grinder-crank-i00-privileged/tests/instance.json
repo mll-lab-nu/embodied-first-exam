@@ -150,5 +150,9 @@
     "yaw": 0.0
   },
   "schema_version": 1,
+  "start_state_sha": {
+    "sharpa": "196ac2a9f90f05f44acd0d155d6ca3d931eafda37a8ad44b1c4a07565f7d5f3d",
+    "wuji": "6c12f31c210a6f9c6984f700d6d2cdc4c971a07eebcccdf73e2f93341f318694"
+  },
   "title": "Operate a manual coffee grinder"
 }

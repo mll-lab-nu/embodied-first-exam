@@ -182,7 +182,7 @@ def build(config, asset_dir=None, hand="sharpa"):
     verify_assets()
     folder = asset_dir or os.environ.get("DEXHAND_ASSET_DIR")
     if not folder:
-        # Repository checkout (scripts/dexhand/families/<family>/) or the image default.
+        # An authoring checkout (its tooling is kept outside the repository) or the image default.
         repo = HERE.parents[4] / "images/dexhand/assets/hand" if len(HERE.parents) > 4 else None
         folder = repo if repo is not None and (repo / "right_hand.xml").is_file() else "/opt/dexhand/hand"
     folder = Path(folder)

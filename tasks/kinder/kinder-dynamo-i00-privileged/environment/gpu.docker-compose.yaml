@@ -1,6 +1,7 @@
 # Optional overlay: hand the host's NVIDIA GPU to the task container.
 #
-#   harbor run -p tasks/kinder-dynamo-i00-privileged ... --extra-docker-compose tasks/kinder-dynamo-i00-privileged/environment/gpu.docker-compose.yaml
+#   c=$(python3 scripts/stamp_mtimes.py stage tasks/kinder/kinder-dynamo-i00-privileged "$(mktemp -d)")
+#   harbor run -p "$c" ... --extra-docker-compose "$c/environment/gpu.docker-compose.yaml"
 #
 # Not named docker-compose.yaml on purpose: Harbor loads that name automatically, and a device reservation the host
 # cannot meet stops the container from starting. Passing or failing never depends on it: physics is CPU; the GPU only

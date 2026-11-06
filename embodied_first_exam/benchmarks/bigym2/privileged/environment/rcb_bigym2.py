@@ -1,7 +1,7 @@
-"""rcb_bigym2.py -- BiGym 2.0 tooling for Embodied First Exam (docs/benchmarks/bigym2.md).
+"""rcb_bigym2.py -- BiGym 2.0 tooling for Embodied First Exam (tasks/bigym2/README.md).
 
 One module, copied unchanged into every BiGym 2.0 task: the privileged environment (`Session`), the privileged
-verifier (`replay`) and the standard / standard-realtime sim service (`Episode`, driven by sim/server.py). Everything
+verifier (`replay`) and the standard / realtime sim service (`Episode`, driven by sim/server.py). Everything
 that decides the outcome is upstream code (bigym 1.0.0 at 93ad4b3: MuJoCo 3.8.1 on the CPU, NVIDIA's GR00T-WBC lower
 body on onnxruntime, CPU):
 

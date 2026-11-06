@@ -20,7 +20,7 @@ evaluation; the instruction names no object.
 The agent has the simulator and every object's state, but nothing says which object, relation or pose the picture asks
 for: it has to work that out from one image, then deliver one open-loop trajectory of at most 300 control steps
 (10.0 s of simulated time, iSpatialGym's policy budget) that does it from the frozen start. Holding still does not
-succeed (`hold` in `scripts/ispatialgym/instances/mental_rotation/facts.json`).
+succeed (`hold` in `tests/facts.json`).
 
 ## Reference solution
 None.

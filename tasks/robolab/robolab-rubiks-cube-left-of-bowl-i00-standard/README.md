@@ -9,7 +9,7 @@
 | Family / instance | `rubiks_cube_left_of_bowl` / seed 0 |
 | Oracle | `full` — solution/oracle_replay.py scored 1 under Harbor -a oracle on this version (2026-10-14): trial robolab-rubiks-cube-left-of-bowl__mHPED7Z (2026-10-14, on these files under a temporary -i01 name: they differ from it only in that name in the resource-limit files and in one comment line of rcb_robolab.py; live 1, replay 1, deterministic 1, live_matches_replay 1, 183 control steps). Earlier versions: solution/oracle_replay.py scored 1 in 6/6 recorded runs on the pre-crash-recovery service with the same verdict formula (success = live, replay and deterministic), the latest robolab-rubiks-cube-left-of-bowl__YZj6yTp (job eq-oracle-rubiks-cube-left-of-bowl, 2026-09-29, the dev branch 9eb18edf version); not re-run on this version (crash recovery, the collect hook's `end`, one-second chunks): static validation only, 2026-10-01. Human review per family (PROTOCOL §4). |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.1` |
+| Base image | `ghcr.io/mll-lab-nu/efe-private:robolab-0.2.2` |
 
 ## Task
 Standard-mode twin of `robolab-rubiks-cube-left-of-bowl-i00-privileged` (same frozen instance, the state after RoboLab's canonical seed-0 reset):
@@ -26,7 +26,7 @@ That of `robolab-rubiks-cube-left-of-bowl-i00-privileged` (its README), without 
 `solution/oracle_replay.py` streams the privileged oracle's joint targets (`oracle_qpos.npy`, one row per control step, `hold`) as one-second `joint_position` chunks through the client; after a service crash it waits for the resumed episode and continues from the control step the service reports.
 
 ## Verification
-Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, judged by the sim
+Graded by the live episode: `success` = the live episode's success, judged by the sim
 service on the episode the agent ran, with no grading replay. RoboLab's success term is instantaneous: it is checked
 after every control step and the first step where it holds ends the episode (RoboLab's own termination); when the
 agent's time is up, the service holds the last command for 30 more control steps (2 s) on the live simulator, after the
@@ -36,8 +36,7 @@ infrastructure failure (`instance_mismatch`). `tests/grade.py` reads `final.json
 fields (`graded_by_live` = 1, `replays` = 0, `infra_error`, the crash-recovery fields), plus `/logs/verifier/live.mp4`:
 the service films the live episode (a frame of the viewport and wrist cameras every 3 control steps, from the renders
 Isaac Lab makes with every step), and the collect hook encodes it after the verdict (a failed encode costs the video
-only). Compute: the collect hook needs no GPU after the service exits (it replayed the episode in two fresh Isaac
-processes before 2026-10-17).
+only). Compute: the collect hook needs no GPU after the service exits.
 
 ## Resources
 Caps per container (PROTOCOL §6).

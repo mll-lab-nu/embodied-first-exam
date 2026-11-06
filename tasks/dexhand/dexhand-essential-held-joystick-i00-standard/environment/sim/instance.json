@@ -180,6 +180,10 @@
       "name": "center"
     }
   ],
+  "start_state_sha": {
+    "sharpa": "d3b2db48546017e549b2b0f617c2aed0c898aa54866f4e2b86716dccbf6c811e",
+    "wuji": "f98eb353183fd1a2fdb9681bc92a6a772c385b657bfaedecdcfe388ba7e14021"
+  },
   "terminal": {
     "bounds": {
       "base_contacts": [
