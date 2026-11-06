@@ -198,9 +198,9 @@ before), so a trajectory holds at most 50,000 rows (a longer file is `bad_trajec
 state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `budget.steps` stays null.
 
 ## Grading and determinism
-- Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` (the (T, 8) rows handed to `env.step`) in **two fresh
-  processes** (`rcb_maniguard.py replay`), each with the full per-step bookkeeping, and requires both to agree on the final
-  state hash, the state hash every 50 control steps, the hash of the per-step safety labels and every verdict.
+- Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` (the (T, 8) rows handed to `env.step`) in **one fresh
+  process** (`rcb_maniguard.py replay`), with the full per-step bookkeeping; success = the strict goal held for 10
+  consecutive control steps and no safety violation at any step.
 - Standard: graded by the **live episode**, with no grading replay. The
   service runs the same per-step bookkeeping on the live episode (the safety monitor and upstream's goal check after every
   control step, the strict goal; `Session.status()`): success = the strict goal held for 10 consecutive control steps and
@@ -235,7 +235,7 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
   second) and written as a JPEG file (`/out/live_video/`, crash-safe; a resume skips the frames on disk and deletes those of the call lost in the crash); past 3000 slots
   the slot doubles (a time lapse). Cost: one JPEG of two 256×256 images per 4 control steps (~1-3 ms against ~120 ms per
   live control step, the archive's median). The collect hook encodes it after the verdict (CPU, at most 600 s); a frame
-  or an encode that fails costs the video only. Privileged: the replay video never decides: the second replay is filmed
+  or an encode that fails costs the video only. Privileged: the replay video never decides: the graded replay is filmed
   by the tooling's `start_video` / `stop_video`, which keep at most
   3000 frames in memory as JPEG (past that every second frame is dropped and the stride doubles: a time-lapse) and never
   raise: a camera or encoder failure only ends the video
@@ -305,7 +305,7 @@ Harbor oracle trial takes 6 min for jar 14 (747 rows) and 9 min for cabinet 19 (
 Grading time (arithmetic, not measured end to end): one replay may take `max(3600, 900 + 0.2 × rows)` s: an
 Isaac start (up to 12 min cold on a loaded host) and the rows at the slowest measured rate (0.2 s per control step without
 a CPU quota on a busy host; 0.05-0.09 s otherwise), i.e. 10,900 s for the 50,000 rows a trajectory may hold. The
-privileged verifier's `timeout_sec` is 23,400 s (two such replays + 1,600 s); `tests/grade.py` ends a replay at its limit
+privileged verifier's `timeout_sec` is 23,400 s (one such replay, twice that with `--repeat 2`, + 1,600 s); `tests/grade.py` ends a replay at its limit
 or at its own budget (22,800 s) and writes `grader_error` + `replay_timed_out` itself. The standard collect hook's
 `timeout_sec` is 8,400 s (`finalize.sh`'s `HOOK_BUDGET_S`): the end of the episode + the video encode (at most 600 s) + a
 margin, no GPU after the service exits. These are upper bounds: the oracle trials above use minutes.

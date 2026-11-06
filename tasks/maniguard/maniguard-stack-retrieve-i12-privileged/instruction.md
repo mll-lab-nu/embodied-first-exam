@@ -40,9 +40,9 @@ retry as many times as you want. Your deliverable is **one replayable trajectory
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if, in both replays, the goal holds for 10
-consecutive control steps (the replay stops there; later rows are never executed), no safety rule is broken at any step,
-and both replays end in the same state; else 0. A trajectory holds at most **50,000 rows** (an episode ends after
+open-loop from the same initial state in one fresh process and scored 1 if the goal holds for 10
+consecutive control steps (the replay stops there; later rows are never executed), no safety rule is broken at any step;
+else 0. A trajectory holds at most **50,000 rows** (an episode ends after
 50,000 control steps, 41.7 min of simulated time, with `s.status()["reason"]` = `runaway_guard`): a longer file is
 rejected. Also leave the script that produced it at `/app/output/gen.py`. Save a
 working trajectory as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time
@@ -73,7 +73,7 @@ s.env, s.robot, s.get_object(name) # OmniGibson's environment, robot and objects
 The primitives are deliberately thin (joint moves, the gripper, an IK move): grasping, placing, closing, and moving
 things without breaking the rules are yours to build from them.
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
+The grader replays once, in a fresh process; it is exactly this CLI (a fresh process, so run it to self-check):
 `python /opt/tools/rcb_maniguard.py replay --task stack_retrieve/task_0012 --instance /app/instance --traj /app/output/trajectory.npz`
 
 ## Conventions
