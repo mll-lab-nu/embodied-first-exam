@@ -75,8 +75,9 @@ contains no demonstration data.
 commits, robosuite's mink controller file and every asset archive by SHA-256 (`fetch_assets.sh`). It reproduces the
 content of the image the tasks were validated with. **Open: a clean rebuild from this Dockerfile** (~9 GB of
 downloads, ~50 GB of disk) and a re-check of the hashes before publishing. Licences: code MIT; RoboCasa's own textures, fixtures and object archives (UT Box) CC-BY-4.0; NVIDIA
-PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes) **CC-BY-NC-4.0** (non-commercial; maintainers to
-confirm publishing, otherwise `BUILD_ONLY`).
+PhysicalAI-DigitalCousin-Assets (lightwheel, sketchfab meshes) **CC-BY-NC-4.0** (non-commercial use only). The image
+is public (`ghcr.io/mll-lab-nu/efe:robocasa-gr1-<images/robocasa-gr1/VERSION>`), with these assets under their own
+licences.
 
 ## Evidence
 For all 24: not solved at the start; `reset()` bit-exact; the
