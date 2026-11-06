@@ -7,7 +7,7 @@ position targets.
 On the bench: a rack with an open 50 mL tube standing in it, and the tube's screw cap lying on the bench. The thread is a real one: the cap goes on only by turning it. AutoBio's prompt for this task: "one grips tube while the other twists cap".
 
 AutoBio's own success test is `s.task.check()`: class `ScrewTighten` in `/opt/AutoBio/autobio/screw_tighten.py`.
-Robot Coding Bench evaluates it after every control step: the first step at which it holds ends the episode in success (AutoBio's own rule for this task; its time limit is lifted).
+Embodied First Exam evaluates it after every control step: the first step at which it holds ends the episode in success (AutoBio's own rule for this task; its time limit is lifted).
 
 This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.

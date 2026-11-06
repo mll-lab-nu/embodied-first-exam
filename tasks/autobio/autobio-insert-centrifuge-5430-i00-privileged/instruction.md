@@ -7,7 +7,7 @@ position targets.
 On the bench: a centrifuge (an Eppendorf 5430 model) with its lid open and a 30-slot rotor holding one 1.5 mL tube, and a well plate with a second 1.5 mL tube standing in it.
 
 AutoBio's own success test is `s.task.check()`: class `InsertCentrifuge5430` in `/opt/AutoBio/autobio/load_centrifuge_5430.py`.
-Robot Coding Bench evaluates it after every control step: the first step at which it holds ends the episode in success (AutoBio's own rule for this task; its time limit is lifted).
+Embodied First Exam evaluates it after every control step: the first step at which it holds ends the episode in success (AutoBio's own rule for this task; its time limit is lifted).
 
 This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.

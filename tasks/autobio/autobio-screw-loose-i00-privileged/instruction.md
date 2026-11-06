@@ -2,12 +2,12 @@
 
 You control two **ALOHA arms** (`arm1` and `arm2`; 6 joints and a parallel gripper each), fixed to the bench on either side of the rack, in AutoBio's simulated biology laboratory (MuJoCo 3.3.0), via Python, through joint
 position targets.
-**Task:** Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success at the first control step where the cap is more than 0.15 m above the tube body's origin (screwed on it sits 0.1197 m above it, so 3 cm up), `arm1`'s left finger (geom `1/aloha:leftfinger`) touches the cap (geom `6/cap_cyl`), and the cap's thread (geom `6/nut`) no longer touches the tube's (geom `7/bolt`).
+**Task:** Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success at the first control step where the cap is more than 0.15 m above the tube body's origin (screwed on it sits 0.1197 m above it, so more than 3.03 cm up), `arm1`'s left finger (geom `1/aloha:leftfinger`) touches the cap (geom `6/cap_cyl`), and the cap's thread (geom `6/nut`) no longer touches the tube's (geom `7/bolt`).
 
 On the bench: a rack with a 50 mL tube standing in it, its cap screwed on. The thread is a real one: the cap comes off only by turning it. AutoBio's prompt for this task: "one stabilizes tube while the other twists cap".
 
 AutoBio's own success test is `s.task.check()`: class `ScrewLoose` in `/opt/AutoBio/autobio/screw_loosen.py`.
-Robot Coding Bench evaluates it after every control step: the first step at which it holds ends the episode in success (AutoBio's own rule for this task; its time limit is lifted).
+Embodied First Exam evaluates it after every control step: the first step at which it holds ends the episode in success (AutoBio's own rule for this task; its time limit is lifted).
 
 This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.

@@ -2,7 +2,7 @@
 
 You control a **Franka Panda** arm (7 joints) with its two-finger gripper, fixed to a laboratory bench, **as if it were real**: the simulator (LabUtopia's chemistry laboratory on NVIDIA Isaac
 Sim) runs in a service you cannot open. You get one client and one episode.
-**Task:** Put the glass beaker on the heater's plate and press the heater's round red button. Success the moment the third of these is met: (1) the beaker's centre has been more than 5.9 cm above where it stood; (2) after that, the beaker has stood on the plate: its centre within 5 cm, in each horizontal direction, of the plate's centre and no more than 9.9 cm above where it stood at the start; (3) after that, with the beaker on the plate as in (2), the button is pressed down more than 10 mm.
+**Task:** Put the glass beaker on the heater's plate and press the heater's round red button. Success the moment the third of these is met: (1) the beaker's centre has been more than 5.89 cm above where it stood; (2) after that, the beaker has stood on the plate: its centre within 5 cm, in each horizontal direction, of the plate's centre and no more than 9.89 cm above where it stood at the start; (3) after that, with the beaker on the plate as in (2), the button is pressed down more than 10.3 mm.
 
 On the bench in front of the arm: a small glass beaker, about 6.5 cm across and 10 cm tall, and a heater: a white hot plate about 25 cm x 18 cm x 9 cm with a square plate on top, a display on its front and a round red button at one front corner.
 

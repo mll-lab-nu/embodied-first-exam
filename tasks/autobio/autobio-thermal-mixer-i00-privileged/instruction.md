@@ -7,7 +7,7 @@ position targets.
 On the bench: a thermal mixer (an Eppendorf ThermoMixer C model) with a thermoblock on top and a front panel: a display and buttons for time, temperature and speed (up and down each), menu navigation, five program keys, `short` and `start/stop`.
 
 AutoBio's own success test is `s.task.check()`: class `ThermalMixerManipulate` in `/opt/AutoBio/autobio/mani_thermal_mixer.py`.
-Here it returns AutoBio's score in [0, 1]. Robot Coding Bench evaluates it after every control step but the episode does not end by itself: it is judged in the state after your last row, success iff the score is 1 (AutoBio's own rule for this task, without its time limit).
+Here it returns AutoBio's score in [0, 1]. Embodied First Exam evaluates it after every control step but the episode does not end by itself: it is judged in the state after your last row, success iff the score is 1 (AutoBio's own rule for this task, without its time limit).
 
 This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.

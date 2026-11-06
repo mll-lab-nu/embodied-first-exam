@@ -7,7 +7,7 @@ position targets.
 On the bench: a thermal cycler (a Bio-Rad C1000 model) with its lid closed and locked by the lever on the lid.
 
 AutoBio's own success test is `s.task.check()`: class `ThermalCyclerManipulate` in `/opt/AutoBio/autobio/mani_thermal_cycler.py`.
-Robot Coding Bench evaluates it after every control step: the first step at which it holds ends the episode in success (AutoBio's own rule for this task; its time limit is lifted).
+Embodied First Exam evaluates it after every control step: the first step at which it holds ends the episode in success (AutoBio's own rule for this task; its time limit is lifted).
 
 This is a *fixed scene instance*: the start pose, the objects and the goal never change between resets. You may reset and
 retry as many times as you want. Your deliverable is **one replayable trajectory**, not a general policy.

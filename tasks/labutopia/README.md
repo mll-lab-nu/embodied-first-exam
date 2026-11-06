@@ -35,8 +35,9 @@ The first task builds the simulator image from public sources (below); later tas
   omniverse-content-production.s3-us-west-2.amazonaws.com. Every task's Dockerfile starts with that recipe
   (`images/labutopia/Dockerfile`), so the build runs once per Docker host and later tasks take it from Docker's build
   cache. Maintainers who can pull `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` get its layers instead (compose
-  `build.cache_from`). To build it ahead of the run: `harbor run -p tasks/labutopia/labutopia-pick-i00-privileged -a
-  oracle` (reward 1).
+  `build.cache_from`). To build it ahead of the run: `c=$(python3 scripts/stamp_mtimes.py stage
+  tasks/labutopia/labutopia-pick-i00-privileged "$(mktemp -d)") && harbor run -p "$c" -a oracle` (reward 1). Each task
+  allows 5400 s for its image build (`build_timeout_sec`), room for a first build on a slower link.
 - **Start-up.** The first simulator with its renderer in a container prepares the laboratory stage: 5 to 27 minutes,
   paid inside the agent's time in standard mode (below, "Two kinds of Session").
 
@@ -114,7 +115,7 @@ through the robot's joint targets alone, (b) whose success check can be stated w
   | `press` | the red button's cap beyond x = 0.405 m (it starts at 0.40 and goes in along +x), for 60 consecutive steps | `press_controller._check_success` |
   | `open_door`, `open_drawer` | the handle's centre more than 0.12 m from where it started and the hand more than 0.04 m from it, for 60 consecutive steps | `open_controller._check_success` |
   | `place` | the beaker lifted more than 0.10 m; then its centre within 0.05 m (horizontally) of the plate's and within 0.05 m of its initial height, the hand more than 0.05 m from it, for 60 consecutive steps | `place_controller._check_phase_success`; the release distance from `pickplace_controller.is_success` |
-  | `pour` | the small beaker lifted more than 0.12 m; then, counted only while its centre is within the pour distance of the large beaker's (horizontally; about 0.08 m): turned more than 50 degrees, turned back to within 30 degrees, then more than 0.05 m above its start for 84 steps | `pour_controller._check_phase_success`, step for step |
+  | `pour` | the small beaker lifted more than 0.12 m; then, counted only while its centre is within the pour distance of the large beaker's (horizontally; 0.0776 m): turned more than 50 degrees, turned back to within 30 degrees, then more than 0.05 m above its start for 84 steps | `pour_controller._check_phase_success`, step for step |
   | `shake` | counted only while the beaker's centre is 0.05 m or more above its start: five times, the centre gets 0.05 m or more (horizontally) from where that count began; then it stays within 0.01 m in x and in y over 60 steps | `shake_controller.is_success`, step for step |
   | `heat_liquid` | the beaker's centre above z = 0.82 m; then the beaker on the plate (centre at or below z = 0.86 m, within 0.05 m in x and in y of the plate's frame); then that and the button's frame below z = 0.761 m | `placepress_controller._check_phase_success`, in its order |
   | `open_close` | the open rule with 0.13 m for 60 consecutive steps; then the handle's centre more than 0.13 m from where it is at that step and nearer to where it started than it is at that step, and the hand more than 0.04 m from it, for 60 consecutive steps | `openclose_controller._check_open_success`, `_check_close_success`; the direction is added here |
@@ -307,6 +308,7 @@ episode's, which those runs also checked); they were not run again after that ch
 
 ## Files
 Every task directory is self-contained: `environment/rcb_labutopia.py` (privileged; the verifier's own copy in
-`tests/`) or `environment/sim/` (standard: the adapter `server.py`, `rcb_labutopia.py`, the shared layer, the collect
-hook), `instance.json`, `solution/oracle.npz`. `images/labutopia/` has the image recipe (Dockerfile, VERSION,
+`tests/`) or `environment/sim/` (standard: the adapter `server.py`, `rcb_labutopia.py`, the collect
+hook), `instance.json`, `solution/oracle.npz`; the standard tasks take the shared 2.2 layer and the agent's client
+(`rcb_limited.py`, `run.sh`, `rcb1.py`, `rcb_client.py`) from the pinned `standard-files` image. `images/labutopia/` has the image recipe (Dockerfile, VERSION,
 BUILD_ONLY, requirements.txt, nvidia_assets.sha256, strip_solutions.py).

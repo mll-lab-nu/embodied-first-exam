@@ -1,5 +1,5 @@
 {
- "task_text": "Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success the moment the cap, held by `arm1`'s gripper (the test looks for contact between the cap and that gripper's left finger), is at least 3 cm above where it sat when screwed on and its thread is clear of the tube's.",
+ "task_text": "Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success the moment the cap, held by `arm1`'s gripper (the test looks for contact between the cap and that gripper's left finger), is more than 3.03 cm above where it sat when screwed on and its thread is clear of the tube's.",
  "default_cameras": [
   "table_cam_front",
   "arm1_wrist_cam",

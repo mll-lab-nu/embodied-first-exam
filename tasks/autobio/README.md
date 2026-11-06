@@ -213,6 +213,7 @@ verdict = the live episode's, which those runs also checked); they were not run 
 
 ## Files
 Every task directory is self-contained: `environment/rcb_autobio.py` (privileged; the verifier's own copy in `tests/`)
-or `environment/sim/` (standard: the adapter `server.py`, `rcb_autobio.py`, the shared layer, the collect hook),
-`instance.json`, `solution/oracle.npz`. `images/autobio/` has the image recipe (Dockerfile, VERSION, BUILD_ONLY,
+or `environment/sim/` (standard: the adapter `server.py`, `rcb_autobio.py`, the collect hook),
+`instance.json`, `solution/oracle.npz`; the standard tasks take the shared 2.2 layer and the agent's client
+(`rcb_limited.py`, `run.sh`, `rcb1.py`, `rcb_client.py`) from the pinned `standard-files` image. `images/autobio/` has the image recipe (Dockerfile, VERSION, BUILD_ONLY,
 requirements.txt, strip_experts.py).

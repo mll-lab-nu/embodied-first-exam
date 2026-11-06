@@ -2,7 +2,7 @@
 
 You control two **ALOHA arms** (`arm1` and `arm2`; 6 joints and a parallel gripper each), fixed to the bench on either side of the rack, **as if it were real**: the simulator (AutoBio's biology laboratory on MuJoCo 3.3.0) runs
 in a service you cannot open. You get one client and one episode.
-**Task:** Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success the moment the cap, held by `arm1`'s gripper (the test looks for contact between the cap and that gripper's left finger), is at least 3 cm above where it sat when screwed on and its thread is clear of the tube's.
+**Task:** Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success the moment the cap, held by `arm1`'s gripper (the test looks for contact between the cap and that gripper's left finger), is more than 3.03 cm above where it sat when screwed on and its thread is clear of the tube's.
 
 On the bench: a rack with a 50 mL tube standing in it, its cap screwed on. The thread is a real one: the cap comes off only by turning it. AutoBio's prompt for this task: "one stabilizes tube while the other twists cap".
 

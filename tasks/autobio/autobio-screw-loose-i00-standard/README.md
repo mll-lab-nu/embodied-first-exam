@@ -12,11 +12,11 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |
 
 ## Task
-AutoBio's `screw_loose` (Unscrew centrifuge tube cap) on the same frozen instance as `autobio-screw-loose-i00-privileged`: Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success the moment the cap, held by `arm1`'s gripper (the test looks for contact between the cap and that gripper's left finger), is at least 3 cm above where it sat when screwed on and its thread is clear of the tube's.
+AutoBio's `screw_loose` (Unscrew centrifuge tube cap) on the same frozen instance as `autobio-screw-loose-i00-privileged`: Unscrew the cap of the 50 mL centrifuge tube and lift it off. Success the moment the cap, held by `arm1`'s gripper (the test looks for contact between the cap and that gripper's left finger), is more than 3.03 cm above where it sat when screwed on and its thread is clear of the tube's.
 On the bench: a rack with a 50 mL tube standing in it, its cap screwed on. The thread is a real one: the cap comes off only by turning it. AutoBio's prompt for this task: "one stabilizes tube while the other twists cap". Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty
-Same instance and success rule as `autobio-screw-loose-i00-privileged` (AutoBio's level: medium). A real thread: the cap separates from the tube only after it has been turned off, and the check needs it held 3 cm up by the first arm. In standard mode the agent loses resets, the simulator and the state of the tubes and instruments: it sees camera images and the robot's proprioception, acts in joint-position chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.
+Same instance and success rule as `autobio-screw-loose-i00-privileged` (AutoBio's level: medium). A real thread: the cap separates from the tube only after it has been turned off, and the check needs it held more than 3.03 cm up by the first arm. In standard mode the agent loses resets, the simulator and the state of the tubes and instruments: it sees camera images and the robot's proprioception, acts in joint-position chunks, and gets one episode, so it has to find the things it handles in the images and recover from its own mistakes without starting over.
 
 ## Reference solution
 `solution/oracle_stream.py` streams the privileged reference's rows (`solution/oracle.npz`, 13568 rows, float32-exact) through the client in `hold` chunks; it uses no privileged information at run time. The service's recorded trajectory is then exactly the privileged reference: success after 13568 control steps.

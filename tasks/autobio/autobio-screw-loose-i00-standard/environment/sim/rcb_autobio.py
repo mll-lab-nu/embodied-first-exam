@@ -1,4 +1,4 @@
-"""Robot Coding Bench tooling for the AutoBio tasks (privileged mode, the verifier's replays and the standard-mode
+"""Embodied First Exam tooling for the AutoBio tasks (privileged mode, the verifier's replays and the standard-mode
 service all use this one module).
 
 AutoBio (autobio-bench/AutoBio, MuJoCo 3.3.0) comes from the base image, with its scripted experts removed
