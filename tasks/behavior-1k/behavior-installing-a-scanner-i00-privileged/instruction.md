@@ -62,7 +62,7 @@ The primitives are deliberately thin (joint, base, IK and gripper moves): naviga
 other skill are yours to build from them. OmniGibson itself is installed (`/behavior-src/OmniGibson`) with its own
 libraries; `/behavior-src` and the tooling in `/opt/tools` are mounted read-only (the grader uses its own copies).
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check; a third
+The grader replays once, in a fresh process, with exactly this CLI (a fresh process, so run it to self-check; a second
 replay with the challenge cameras only renders the video and never affects the score):
 `python /opt/tools/rcb_behavior.py replay --task installing_a_scanner --instance /app/instance.json --traj /app/output/trajectory.npz`
 
@@ -78,7 +78,7 @@ replay with the challenge cameras only renders the video and never affects the s
   you deliver has at most 40,000 rows** (22 min of simulated time; a longer one is rejected: `bad_trajectory`, score 0).
   The trajectory must be the file
   `s.save_trajectory()` writes (an `.npz` with `actions` (T, 25) and `task`): a file the grader cannot read, or with
-  the wrong shape, is `bad_trajectory` too. The grader replays it twice at the simulator's own speed, each replay
+  the wrong shape, is `bad_trajectory` too. The grader replays it once at the simulator's own speed, the replay
   within min(28000 s, max(1 h, 20 min + 0.67 s per row)); a replay that runs out of time is reported as a grader error.
   **Success** (`s.status()["success"]`) is the goal holding for 1 s of simulated time in a row (30 control steps) with no
   goal object attached to a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal

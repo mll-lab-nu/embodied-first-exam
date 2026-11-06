@@ -34,10 +34,10 @@ frozen in `solution/rcb_behavior_ref.py` (navigation on a map with the furniture
 `solution/solve.sh` records the trajectory with that copy (5115 control steps).
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes; pass iff the BDDL goal
-holds after every replay, the final-state hashes agree and the rebuilt frozen instance matches the recorded one
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in one fresh process; pass iff the BDDL goal
+holds after the replay and the rebuilt frozen instance matches the recorded one
 (`tests/grade.py`), plus `/logs/verifier/replay.mp4`. A fresh process reproduces the live run bit for bit (the replay
-starts from the loaded state, no reset); an in-process reset is only approximate, hence two fresh processes. A file the
+starts from the loaded state, no reset); an in-process reset is only approximate, hence a fresh process. A file the
 grader cannot read or with the wrong shape is `bad_trajectory`; a replay that dies or runs out of time, and a frozen
 instance that does not rebuild in the verifier (`instance_ok` 0), are `grader_error` + `infra_error` (no verdict on the agent).
 

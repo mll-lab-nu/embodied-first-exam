@@ -153,7 +153,7 @@ Time limits only; the pass rules do not depend on them. The eval hosts are 8-vCP
 start takes up to ~20 min and a replay can run below 2 control steps/s.
 - **Privileged.** The grader accepts at most **40,000 rows** (`MAX_ROWS` in `tests/grade.py`; above every challenge
   timeout, `challenge_max_steps` up to 39,090, and 1.6 times the longest recorded success, 25,404 rows); the instruction
-  states the cap. Each of the two fresh-process replays gets `min(28000 s, max(3600 s, 1200 s + steps / 1.5))` (1.5
+  states the cap. The fresh-process replay gets `min(28000 s, max(3600 s, 1200 s + steps / 1.5))` (1.5
   steps/s is 20 % under the slowest rate measured, 1.88; 1200 s covers the slowest start). A replay over its limit is a
   grader error (`grader_error` = 1, `replay_timed_out` = 1). `[verifier] timeout_sec` = 85800 s: the two capped replays,
   the video replay (after the verdict, with a graded replay's limit, within the verifier's remaining time:
@@ -204,9 +204,9 @@ the oracles give the same rewards and state hashes as with open egress, and Isaa
 dataset alone.
 
 ## Grading and determinism
-- Privileged: the verifier replays `trajectory.npz` from the frozen instance in **two fresh processes** (an in-process
+- Privileged: the verifier replays `trajectory.npz` from the frozen instance in **one fresh process** (an in-process
   reset is approximate; the first replay in a fresh process reproduces a live run bit for bit) and needs the goal after
-  both, equal final-state hashes and `instance_ok`.
+  it and `instance_ok`.
 - **Standard: graded by the live episode.** `success` = the live episode's success, judged by the sim service at every
   control step with the success rule below; nothing replays the episode. On the collect hook's signal (after `main`'s
   `kill -9 -1` hook has stopped the agent's processes) the signal's thread only stops the HTTP loop (Isaac steps on the
@@ -232,8 +232,8 @@ dataset alone.
   diverge between fresh replays. The tooling hashes every prim and particle system by its unique name and every rule by
   its class name (crc32, the same in every process; `_stable_hashes()`) before the scene loads; equality stays identity.
   Every simulator process also runs with `PYTHONHASHSEED=0` (sets of strings).
-- **The graded replays run alike** (privileged). Both graded replays run without video, the same way; the video comes
-  from a third fresh-process replay, run after the verdict is written and bounded like a graded replay (PROTOCOL §4),
+- **The graded replay runs without video** (privileged); the video comes
+  from a second fresh-process replay, run after the verdict is written and bounded like a graded replay (PROTOCOL §4),
   that never decides anything; whether it ended on the same state is reported (`video_replay_matches`).
 - **`s.status()` changes nothing.** The q_score counts the goal's satisfied predicates by evaluating them; that fills the
   object states' value caches, which OmniGibson reuses at later steps while objects have moved less than a tolerance, so
@@ -292,7 +292,7 @@ so the privileged session, the standard service and every fresh-process replay a
 on the same step stands.
 - **Standard:** `reason` "failure: the robot fell over"; `/spec` `episode` states the end conditions; `reward.json`
   `task_failure`. **Privileged:** `Session.status()["fallen"]` and `s.episode_done` (`s.reset()` starts again); the
-  verifier's replays end at the same step (`reward.json` `fallen`).
+  verifier's replay ends at the same step (`reward.json` `fallen`).
 - The R1Pro's base hangs from an upright world-fixed root through six virtual joints (x, y, z, rx, ry, rz; rx and ry
   undriven), so the up axis's z is also cos(rx)·cos(ry) of `base_footprint_rx_joint` / `_ry_joint`, columns the standard
   proprioception always had (checked against the `base_link` quaternion to 1e-6 on 16,973 logged rows).
