@@ -107,6 +107,7 @@ BENCHMARK_TABLE = [
     ("autobio-", "AutoBio", "autobio"),
     ("abc-sim-", "ABC Sim", "abc-sim"),
     ("embodiedswe-", "EmbodiedSWE", "embodiedswe"),
+    ("humanclaw-", "HumanCLAW", "humanclaw"),  # find / navigate / sit with a simulated human body (HumanClawBench)
 ]
 BENCHMARKS = [(p, label) for p, label, _ in BENCHMARK_TABLE]   # (directory prefix, label): the first matching prefix wins
 # Modes (PROTOCOL §3): a benchmark ships any subset of the modes. A standard or realtime
@@ -1606,6 +1607,11 @@ BEFORE_YOU_RUN = {
     "YAMLab": ("Before you run", "", f"Builds its image ({ISAAC}): about 25 min, 60 GB free disk."),
     "LabUtopia": ("Before you run", "",
                   f"Builds its image ({ISAAC}; LabUtopia's assets are CC BY-NC 4.0): about 25 min, 90 GB free disk."),
+    "HumanCLAW": ("Before you run",
+                  "Without access to the organization's packages: request access to the gated Hugging Face dataset "
+                  "`HumanCLAW/HumanCLAW-HSSD`, accept the `hssd/hssd-hab` terms, export `HF_TOKEN` and build its "
+                  "image once (HSSD is CC BY-NC 4.0; the body model and motion weights carry SMPL-X / AMASS research "
+                  "terms): about 30 min, 40 GB free disk.", ""),
     "AutoBio": ("Before you run", "",
                 "Builds its image from AutoBio's repository, which states no licence (CPU only): a few minutes, 3 GB free disk."),
 }

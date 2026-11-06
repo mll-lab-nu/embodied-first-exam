@@ -889,3 +889,20 @@ match = "^embodied-olympics-match-tabletennisg1-matchgpu-i[0-9]{2}-privileged$"
 main = { cpus = 8, memory_gb = 16, pids = 2048, gpu_memory_gb = 20, disk_gb = 10 }
 recommended_gpu = "L40S 48GB / RTX 4090 24GB / L4 24GB"
 measured = "the GPU tier: as the CPU tier (the same world and opponent on CPU), plus one NVIDIA GPU for the seat's training kit (the release's seat: one GPU, half an RTX PRO 6000 Blackwell, 48 GB); capped at 20 GiB of GPU memory; the verifier as the CPU tier's (no GPU)"
+
+# 55 task(s)
+[[cap]]
+match = "^humanclaw-.*-privileged$"
+main = { cpus = 6, memory_gb = 8, pids = 1024, gpu_memory_gb = 8, disk_gb = 10 }
+recommended_gpu = "an NVIDIA GPU of compute capability 8.0-9.0 with EGL (RTX 4090 / L40S / L4)"
+measured = "oracle and nop trials on an RTX 4090 and an L40S host (the trial's resource monitor every 5 s): the agent's container with one simulator session (Habitat-Sim, MotionDiT on CUDA) running the closed-loop oracle 2.8 GiB of memory, 2.4 GiB of GPU memory, 124 threads, 4.3 CPU cores; the common agent pattern on an L40S (cgroup memory.peak, per-process nvidia-smi every second): an open Env that ran 34 actions and rendered, plus a replay with video in a second process, then a reset: 5.27 GiB, 4.92 GiB of GPU memory, 377 threads; the verifier (two replays one after the other, the first with the video; 4 runs): 2.81 GiB, 2.86 GiB of GPU memory, 309 threads"
+caps_measured = "the agent's container, from the two-session peak: memory 5.27 GiB -> max(1.5 x peak, peak + 2), rounded up: 8 GiB; GPU memory 4.92 GiB -> max(1.5 x peak, peak + 2), rounded up: 8 GiB; 377 threads -> 1024 (2 x peak, at least 1024); CPU 4.3 cores (oracle) -> 6; disk: no new files measured, the minimum (10 GiB); all under the earlier caps (29 GiB, 16 GiB of GPU memory); the verifier (set in the tasks by hand): 2.81 GiB -> max(1.5 x peak, peak + 2), rounded up: 5 GiB; 309 threads -> 1024"
+
+# 55 task(s)
+[[cap]]
+match = "^humanclaw-.*-standard$"
+main = { cpus = 4, memory_gb = 3, pids = 1024, disk_gb = 10 }
+sim = { cpus = 8, memory_gb = 6, pids = 1024, gpu_memory_gb = 5 }
+recommended_gpu = "an NVIDIA GPU of compute capability 8.0-9.0 with EGL (RTX 4090 / L40S / L4)"
+measured = "oracle and nop trials on an RTX 4090 (the trial's resource monitor every 5 s) and an L40S (cgroup memory.peak, per-process GPU memory every 2 s; 3 tasks, the episode video rendered at the end): the sim service 2.9 GiB of memory, 2.9 GiB of GPU memory, 259 threads, 7.4 CPU cores while it runs the motion skills; the agent's container (the client) 0.03 GiB, 52 threads"
+caps_measured = "per-container peaks in 9 oracle and nop trials: the sim service memory 2.9 GiB -> max(1.5 x peak, peak + 3), rounded up: 6 GiB; GPU memory 2.9 GiB -> max(1.5 x peak, peak + 2), rounded up: 5 GiB; 259 threads -> 1024; CPU 7.4 cores -> 8; the agent's container memory 0.03 GiB -> peak + 2, rounded up: 3 GiB; 52 threads -> 1024; disk: the minimum (10 GiB); the sim service's memory covers its largest legal call (1 camera 448x448, 62 frames (62 images): a 30 s observe at one frame per control step, the first and the last; max_frames_per_call 3000 is not reachable): 0.05 GiB to build the response on top of the simulator's 2.9 GiB"
