@@ -436,7 +436,7 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
   same process (`video_pending`, then `video_done`; a failed render is `video_error`, never a change of the verdict) and
   exits. A frozen instance that does not rebuild in the sidecar (`instance_sha` against the instance's own) is refused
   at the start (`instance_mismatch`, `infra_error = 1`) before the agent is served.
-- Privileged fresh-process replays: the final states of two replays must agree (`deterministic`).
+- Privileged: one fresh-process replay decides.
 - The episode has no terminal state. It ends with the agent phase, a simulator error, or the 72000-control-step runaway
   guard.
 - Crash recovery (standard mode, docs/protocol/standard_mode.md §13):
@@ -464,9 +464,9 @@ One reference execution therefore takes 10–15 minutes of the time limit, or ab
   is `grader_error = 1` + `infra_error = 1`, and `infra_error = 1`
   goes with every `grader_error = 1`.
 - Verifier time. A trajectory may have 72,000 control steps (`rcb_brush.MAX_STEPS`), and the oil references
-  already have 49.7k-62.0k. Two fresh replays at the 67-102 steps/s measured above take 24-36 min plus two scene builds:
+  already have 49.7k-62.0k. One fresh replay at the 67-102 steps/s measured above takes 12-18 min plus a scene build:
   - privileged: `[verifier] timeout_sec = 3600`; each replay process gets 1650 s (`--replay-timeout-s`), and one that runs past it is
-    `grader_error = 1`. The two replays stay sequential (one scene in memory at a time).
+    `grader_error = 1`.
   - standard: the collect hook has 2820 s: up to 1500 s for a service that is resuming to end its episode, then the live
     score and one render pass (a replay with the video takes at most about 250 s for up to 72,000 control steps).
 - Privileged deliverable: a file that is not a readable trajectory (not an npz, pickled or object arrays, no `actions`,

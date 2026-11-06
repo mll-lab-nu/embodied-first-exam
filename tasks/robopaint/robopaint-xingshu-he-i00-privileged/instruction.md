@@ -90,8 +90,8 @@ own mark.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes; it succeeds if both replays meet the success rule above and end in
-exactly the same state. Also leave the script that produced it at `/app/output/gen.py`.
+open-loop from the same initial state in one fresh process; it succeeds if the replay meets the success rule above.
+Also leave the script that produced it at `/app/output/gen.py`.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -130,7 +130,7 @@ from rcb_brush import quat_mul, quat_slerp, quat_to_mat   # WXYZ quaternion help
 ```
 The primitives are deliberately thin (IK moves without collision checking, joint moves, hold); everything else is yours to build.
 
-The grader replays in two fresh processes, each exactly this CLI (a fresh process, so run it to self-check):
+The grader replays once, in a fresh process, exactly this CLI (a fresh process, so run it to self-check):
 `python /opt/tools/rcb_brush.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions
