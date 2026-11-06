@@ -13,8 +13,8 @@ families whose scene moves by itself (`abc-sim-conveyor-pick-i00-realtime`, `abc
 harbor run -d embodied-first-exam@all -p tasks/abc-sim -a codex -m openai/gpt-6-astra
 ```
 The tasks need an NVIDIA GPU (the cameras render over EGL; the physics runs on the CPU). The base image is
-`ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` (`images/abc-sim/`; the privileged tasks keep `abc-sim-0.1.0`, whose
-simulator and scenes are the same), built from public sources.
+`ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` (`images/abc-sim/`; the standard and realtime tasks keep `abc-sim-0.2.0`, whose
+simulator, scenes and adapters are the same), built from public sources.
 
 ## Tasks
 | family | upstream task | directive of the frozen instance | reference rows |
@@ -90,8 +90,8 @@ without a colour), and an "all of a colour and shape" directive for the generic 
   and data, exact mid-episode snapshots, rendering (RGB, depth, calibration), the robot's kinematics (FK, IK), recording
   and self-replay. Deliverable `/app/output/trajectory.npz`, `(T, 14)` rows, at most 20,000. The grader
   (`/opt/abc-tools/grade.py`) checks the file (readable, `(T, 14)`, finite, not too long: otherwise `bad_trajectory`, the
-  agent's 0) before it replays it twice, side by side, in fresh processes; a replay that then gives no result is
-  `replay_failed` with `grader_error = 1` and `infra_error = 1`. A third replay renders `replay.mp4` after the verdict.
+  agent's 0) before it replays it once, in a fresh process; a replay that then gives no result is
+  `replay_failed` with `grader_error = 1` and `infra_error = 1`. A second replay renders `replay.mp4` after the verdict.
 - **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` (from the pinned
   `standard-files` image) and the adapter `/opt/abc-tools/standard/server.py` (in the base image; `run.sh` starts it
   through `RCB_SERVER`):

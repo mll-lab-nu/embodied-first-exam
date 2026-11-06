@@ -9,7 +9,7 @@
 | Family / instance | `chess` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |
 
 ## Task
 ABC Sim `set_up_chess_pieces_on_board` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Put the 6 pieces that stand next to the board (3 black pawns, a black bishop, the black king, the black queen) on their starting squares: the squares of the standard starting position left empty. Success: each of those pieces stands on a starting square of its own kind that is to be filled: its centre within 0.028 m (half a square) of the square's centre in the board's plane, at most 0.05 m above the board, and upright (tilted at most 32 deg). Disturbing the other pieces does not fail the task. The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
@@ -22,7 +22,7 @@ First-pass rating: hard. Small, tall pieces placed precisely next to standing ne
 The commanded actions of one of upstream's validation demonstrations of this task, replayed from the frozen instance and cut at the success step: `solution/oracle.npy`, 1872 rows (float32 values, so the standard twin's client sends the same rows), success after the last one. Replayed, checked and saved by `solution/solve.sh`.
 
 ## Verification
-`/opt/abc-tools/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process (side by side), from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success in the same state (`deterministic`). `nop`: no trajectory, reward 0.
+`/opt/abc-tools/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success. `nop`: no trajectory, reward 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

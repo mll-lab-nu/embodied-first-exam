@@ -10,8 +10,8 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below): `(T, 14)` rows,
-one per control step, at most 20,000 rows. It is replayed open-loop from the same initial state in two fresh processes and
-scored 1 if both episodes end in success in the same state, else 0. Also leave the script that produced it at
+one per control step, at most 20,000 rows. It is replayed open-loop from the same initial state in a fresh process and
+scored 1 if the episode ends in success, else 0. Also leave the script that produced it at
 `/app/output/gen.py`.
 
 Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.

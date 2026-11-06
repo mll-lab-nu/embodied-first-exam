@@ -9,7 +9,7 @@
 | Family / instance | `nuts_bolts` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |
 
 ## Task
 ABC Sim `sort_nuts_and_bolts` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Sort the parts: the nuts into the teal bin and the bolts into the orange bin. Success: every nut is in one bin and every bolt in the other, at the same time (the rule also accepts the bins swapped); a part is in a bin when its centre is inside the bin's interior region (between its walls, from just above its floor to below its rim). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
@@ -22,7 +22,7 @@ First-pass rating: hard. Long horizon: 19 small parts, each a separate grasp (nu
 The commanded actions of one of upstream's validation demonstrations of this task, replayed from the frozen instance and cut at the success step: `solution/oracle.npy`, 2872 rows (float32 values, so the standard twin's client sends the same rows), success after the last one. Replayed, checked and saved by `solution/solve.sh`.
 
 ## Verification
-`/opt/abc-tools/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process (side by side), from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success in the same state (`deterministic`). `nop`: no trajectory, reward 0.
+`/opt/abc-tools/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success. `nop`: no trajectory, reward 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

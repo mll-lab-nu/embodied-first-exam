@@ -9,7 +9,7 @@
 | Family / instance | `pouring` / seed 0 |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
-| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.1.0` |
+| Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |
 
 ## Task
 ABC Sim `pouring` (two I2RT YAM arms (6 revolute joints and a parallel two-finger gripper each) side by side at the near edge of a table, facing +x (the left arm is the one at +y)): Pour the beads from the mug into the cup. Success: at least 9 of the 10 beads are inside the cup (each bead's centre within 1.05 x the cup's inner wall radius of its axis and between its bottom and its rim) while the cup stands upright (tilted at most 60 deg). The goal must hold for 30 consecutive control steps (1.02 s); the episode then ends in success.
@@ -22,7 +22,7 @@ First-pass rating: medium. Grasping the mug by its body or handle and controllin
 The commanded actions of one of upstream's validation demonstrations of this task, replayed from the frozen instance and cut at the success step: `solution/oracle.npy`, 307 rows (float32 values, so the standard twin's client sends the same rows), success after the last one. Replayed, checked and saved by `solution/solve.sh`.
 
 ## Verification
-`/opt/abc-tools/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process (side by side), from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff both episodes end in success in the same state (`deterministic`). `nop`: no trajectory, reward 0.
+`/opt/abc-tools/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.npz`; the rebuilt start state is checked against its recorded hash); pass iff the episode ends in success. `nop`: no trajectory, reward 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).
