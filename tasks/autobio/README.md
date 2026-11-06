@@ -209,7 +209,7 @@ steps).
 On the image built locally (Intel Xeon Platinum 8559C, 8 vCPUs, no GPU): `harbor run -a oracle` scored 1 on all 18
 task directories (both fresh-process replays and, in standard mode, the live episode ending in the reference's
 recorded state) and `harbor run -a nop` scored 0 on all 18. With the standard tasks graded live
-(on an RTX 4090 host, driver 580.178.04), `harbor run -a oracle` scored 1 and `harbor run -a nop` 0 on all 9 standard
+(on an RTX 4090 host, driver 580.178.04, their agents on the shared 2.2 client the tasks now take from `standard-files`), `harbor run -a oracle` scored 1 and `harbor run -a nop` 0 on all 9 standard
 tasks (live verdicts, no infrastructure, grader or sim error), and the privileged oracle scored 1 on pickup.
 
 ## Files

@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:labutopia-0.1.0` |
 
 ## Task
-LabUtopia's `heat_liquid` (HeatLiquid) on the same frozen instance as `labutopia-heat-liquid-i00-privileged`: Put the glass beaker on the heater's plate and press the heater's round red button. Success the moment the third of these is met: (1) the beaker's centre has been more than 5.89 cm above where it stood; (2) after that, the beaker has stood on the plate: its centre within 5 cm, in each horizontal direction, of the plate's centre and no more than 9.89 cm above where it stood at the start; (3) after that, with the beaker on the plate as in (2), the button is pressed down more than 10.3 mm.
+LabUtopia's `heat_liquid` (HeatLiquid) on the same frozen instance as `labutopia-heat-liquid-i00-privileged`: Put the glass beaker on the heater's plate and press the heater's round red button. Success the moment the third of these is met: (1) the beaker's centre has been more than 5.89 cm above where it stood; (2) after that, the beaker has stood on the plate: its centre within 5 cm, in each horizontal direction, of the plate's centre and no more than 9.88 cm above where it stood at the start; (3) after that, with the beaker on the plate as in (2), the button is pressed down more than 10.32 mm.
 On the bench in front of the arm: a small glass beaker, about 6.5 cm across and 10 cm tall, and a heater: a white hot plate about 25 cm x 18 cm x 9 cm with a square plate on top, a display on its front and a round red button at one front corner. Standard mode (eai-standard/2.2): the agent drives the robot through a client in one episode, with only its proprioception and the scene's cameras.
 
 ## Difficulty

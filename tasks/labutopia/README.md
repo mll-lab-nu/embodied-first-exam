@@ -307,7 +307,8 @@ episode ending in the reference's recorded state) and `harbor run -a nop` scored
 half, the reference without its last 30 rows and holding the initial targets for 10 s were run through the grader's
 own replay in every family (1, 0, 0, 0).
 
-On an RTX 4090 host (driver 580.178.04), with the standard tasks graded live: `harbor run -a oracle` scored 1 and
+On an RTX 4090 host (driver 580.178.04), with the standard tasks graded live and their agents on the shared 2.2
+client (the same `rcb_client.py` the tasks now take from `standard-files`): `harbor run -a oracle` scored 1 and
 `harbor run -a nop` 0 on all 9 standard tasks (live verdicts, no infrastructure, grader or sim error), and the
 privileged oracle scored 1 on pick and pour. In 8 of 9 families the live end state equals the reference's recorded
 state hash; in pour every run on that host (live and both privileged replays) starts and ends in the same other last
