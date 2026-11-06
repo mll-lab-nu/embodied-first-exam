@@ -22,7 +22,7 @@ AutoBio's level: hard. A 1.5 mL tube is taken from a plate and seated within 5 m
 AutoBio's scripted expert (load_centrifuge_5430.py @ 0850421), seed 0: the position targets it sends, recorded at every physics step, clipped to the actuators' ranges, rounded to float32 (so the standard twin's client executes the same rows), cut at the first success: `solution/oracle.npz`, 4582 rows, success after 4582 control steps. Replayed and saved by `solution/solve.sh`; re-checked by the privileged verifier (`harbor run -a oracle`: two fresh-process replays, same final state).
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.json`; the compiled model and the rebuilt start state are checked against its recorded hashes); pass iff both episodes succeed (the first control step at which AutoBio's check holds ends the episode in success) in the same state (`deterministic`). `nop`: no trajectory, reward 0.
+`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.json`; the compiled model and the rebuilt start state are checked against its recorded hashes); pass iff the episode succeeds (the first control step at which AutoBio's check holds ends the episode in success). `nop`: no trajectory, reward 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

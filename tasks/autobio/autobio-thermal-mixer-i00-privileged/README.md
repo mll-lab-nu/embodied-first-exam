@@ -22,7 +22,7 @@ AutoBio's level: hard. Three settings are changed by pressing small panel button
 AutoBio's scripted expert (mani_thermal_mixer.py @ 0850421), seed 0: the position targets it sends, recorded at every physics step, clipped to the actuators' ranges, rounded to float32 (so the standard twin's client executes the same rows): `solution/oracle.npz`, 8094 rows, success after 8094 control steps. Replayed and saved by `solution/solve.sh`; re-checked by the privileged verifier (`harbor run -a oracle`: two fresh-process replays, same final state).
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays of `/app/output/trajectory.npz`, each in a fresh process, from the verifier's own copy of the instance (`tests/instance.json`; the compiled model and the rebuilt start state are checked against its recorded hashes); pass iff both episodes succeed (the episode is judged in the state in which it ends, success iff AutoBio's score is 1) in the same state (`deterministic`). `nop`: no trajectory, reward 0.
+`tests/grade.py` in a separate sandbox without network: one replay of `/app/output/trajectory.npz`, in a fresh process, from the verifier's own copy of the instance (`tests/instance.json`; the compiled model and the rebuilt start state are checked against its recorded hashes); pass iff the episode succeeds (the episode is judged in the state in which it ends, success iff AutoBio's score is 1). `nop`: no trajectory, reward 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

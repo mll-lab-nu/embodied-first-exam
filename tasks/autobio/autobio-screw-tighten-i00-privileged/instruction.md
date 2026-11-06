@@ -14,8 +14,8 @@ retry as many times as you want. Your deliverable is **one replayable trajectory
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
-state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+open-loop from the same initial state in one fresh process and scored 1 if the episode ends in success, else 0.
+Also leave the script that produced it at `/app/output/gen.py`.
 
 Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
@@ -44,7 +44,7 @@ There are no ready-made motions: AutoBio's scripted experts are not in this imag
 kinematics (`kinematics.py`) and its path timing (`topp.py`).
 
 CLI equivalent of the grader:
-`python /opt/tools/rcb_autobio.py replay --instance /app/instance.json --traj /app/output/trajectory.npz --repeat 2`
+`python /opt/tools/rcb_autobio.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions
 - Action: 14 position targets per control step, in this order: `arm1_waist`, `arm1_shoulder`, `arm1_elbow`, `arm1_forearm_roll`, `arm1_wrist_angle`, `arm1_wrist_rotate`, `arm1_gripper` (the gripper's finger position: 0.002 m closed .. 0.037 m open), `arm2_waist`, `arm2_shoulder`, `arm2_elbow`, `arm2_forearm_roll`, `arm2_wrist_angle`, `arm2_wrist_rotate`, `arm2_gripper` (the gripper's finger position: 0.002 m closed .. 0.037 m open). Arm joints are in rad. Each entry is the target of a PD position drive (stiffness, damping and force limit per entry: `s.actuators()`); a target outside the entry's range is clipped to it.

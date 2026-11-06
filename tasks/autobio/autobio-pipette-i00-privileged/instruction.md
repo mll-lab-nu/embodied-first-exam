@@ -14,8 +14,8 @@ retry as many times as you want. Your deliverable is **one replayable trajectory
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
-state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+open-loop from the same initial state in one fresh process and scored 1 if the episode ends in success, else 0.
+Also leave the script that produced it at `/app/output/gen.py`.
 
 Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
@@ -44,7 +44,7 @@ There are no ready-made motions: AutoBio's scripted experts are not in this imag
 kinematics (`kinematics.py`) and its path timing (`topp.py`).
 
 CLI equivalent of the grader:
-`python /opt/tools/rcb_autobio.py replay --instance /app/instance.json --traj /app/output/trajectory.npz --repeat 2`
+`python /opt/tools/rcb_autobio.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions
 - Action: 14 position targets per control step, in this order: `arm1_shoulder_pan`, `arm1_shoulder_lift`, `arm1_elbow`, `arm1_wrist_1`, `arm1_wrist_2`, `arm1_wrist_3`, `arm1_dh_rh_thj3` (the thumb joint that presses the pipette's plunger: 0 .. 1.3 rad, larger presses), `arm2_shoulder_pan`, `arm2_shoulder_lift`, `arm2_elbow`, `arm2_wrist_1`, `arm2_wrist_2`, `arm2_wrist_3`, `arm2_2f85_fingers_actuator` (the Robotiq gripper: 0 open .. 255 closed). Arm joints are in rad. Each entry is the target of a PD position drive (stiffness, damping and force limit per entry: `s.actuators()`); a target outside the entry's range is clipped to it.

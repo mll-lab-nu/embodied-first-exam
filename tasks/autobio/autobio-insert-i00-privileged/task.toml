@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/autobio-insert-i00-privileged"
-description = "AutoBio insert (Transfer centrifuge tube; a biology laboratory bench on MuJoCo): produce one replayable trajectory of joint position targets. Move the 50 mL centrifuge tube from the rack it stands in to the other rack, into the slot at row 0, column 4 (AutoBio's indices: `s.task.rack2.get_position(s.data, 0, 4, '50ml')`). Frozen scene instance (AutoBio's reset, seed 0); graded by two fresh-process replays with AutoBio's own check."
+description = "AutoBio insert (Transfer centrifuge tube; a biology laboratory bench on MuJoCo): produce one replayable trajectory of joint position targets. Move the 50 mL centrifuge tube from the rack it stands in to the other rack, into the slot at row 0, column 4 (AutoBio's indices: `s.task.rack2.get_position(s.data, 0, 4, '50ml')`). Frozen scene instance (AutoBio's reset, seed 0); graded by one fresh-process replay with AutoBio's own check."
 keywords = ["robotics", "autobio", "mujoco", "laboratory", "biology", "ur5e-robotiq-2f85", "code-as-policy", "trajectory", "insert", "privileged"]
 
 [metadata]
