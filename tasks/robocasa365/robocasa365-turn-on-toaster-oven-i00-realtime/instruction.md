@@ -12,33 +12,27 @@ kitchen: the timer knob, once set, turns back by itself (1/3000 of its range per
 S x 0.05 s = 0.1 s of wall-clock time. `spec()["timing"]["slowdown"]` states it.
 
 ## Rules (real-robot rules)
-- **Time does not stop.** An episode starts paused, on the frozen starting state, holding still. Its clock starts at
+- **Time does not stop.** The episode starts paused, on the frozen starting state, holding still. Its clock starts at
   your first `submit` (or `get_obs(seconds=s)`) and from then on the robot runs one control step every 0.1 s of
   wall-clock time, whether or not you send anything, until the episode ends. Between your commands it executes what you
   planned; when the plan runs out it holds still (velocity channels zero, targets, grip and mode kept). Nothing pauses
   for you, not your thinking, not your tool calls.
 - **Drive it with a program.** One turn of yours (a model response, a tool call) takes seconds: write a controller (Python
   in your container, with numpy and the client) that plans or streams the commands, in the background
-  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground; use your turns to start
-  episodes, read what happened, and improve the program.
-- **Episodes and resets.** An episode ends at the first control step after which the environment's success check holds
-  (success), after 3000 control steps (150 s of robot time; failed), when your time is up, or
-  on a simulator error. You have **10 resets** (`spec()["budget"]["reset"]`, which is authoritative: if it
-  says 0, there is no reset and the one episode is the run). `r.reset(cameras=[])` rebuilds the same frozen starting state
-  (it takes about 15-20 s) and starts a new episode, paused until your next `submit`, either abandoning the running
-  episode or after one has ended. Reset with `cameras=[]` and ask for images afterwards: the service holds image
-  requests back for about four times as long as the last request that rendered took, and a reset that renders counts
-  as one (so after `r.reset()` with cameras, images come back only about a minute later). Once an episode has ended, `submit` raises `EpisodeOver` (its message gives `resets_left`) until
-  you reset. **Only the last episode is graded**: an episode you reset away is never graded, a success ends the run at
-  once (no reset after it), and when your time is up the episode then running is the one graded.
+  (`nohup python /app/output/gen.py > /app/output/run.log 2>&1 &`) or in the foreground; use your turns to read what
+  happened and improve the program while the episode runs.
+- **One episode, no reset.** The episode ends at the first control step after which the environment's success check
+  holds (success), after 3000 control steps (150 s of robot time; failed), when your time is up, or on a simulator
+  error. There is no reset (`spec()["budget"]["reset"]` is 0): the one episode is the run, and it is graded. Once it
+  has ended, `submit` raises `EpisodeOver`.
 - **No privileged state.** You see what the robot's cameras see (RGB, optional depth) and the robot's own state:
   joints, end effector, the command in force, and each camera's current pose. No object poses, no scene layout, no
   success signal: the service judges the episode and only tells you that it ended and why (`meta["done"]`,
   `meta["reason"]`: `"success"`, `"failed"`, `"error"`).
-- There is nothing to hand in: the service records every control step it ran and grades the last episode as it ran
+- There is nothing to hand in: the service records every control step it ran and grades the episode as it ran
   (nothing is replayed). Keep the controller at `/app/output/gen.py` for the record.
 - Do not use the benchmark's demonstrations, trained policies or any published solution; write your own controller.
-- Do not stop early: while the episode runs, or a reset is left, the run can still pass.
+- Do not stop early: while the episode runs, the run can still pass.
 
 ## Scoring
 The episode is graded by the environment's own success check for `TurnOnToasterOven` (`_check_success`, run twice after every
@@ -69,7 +63,6 @@ Its docstring is the full reference (`python -c "import rcb_client; help(rcb_cli
 | `r.status()` | `GET /status` | `control_steps`, `done`, `reason`, `running`, `planned_steps`, `lag_s`, `episode`, `resets_left` |
 | `r.submit("joint_position", A, dt=0.05, interpolate="linear", at=None, cameras=None)` | `POST /submit` | plans `A`, rows of 13 channels `dt` apart, from step `at`; answers at once; the first one starts the clock |
 | `r.get_obs(cameras=None, seconds=0, include_depth=False, video="frames")` | `POST /observe` | the robot now, or what the cameras saw over the next `seconds` |
-| `r.reset(cameras=[])` | `POST /reset` | a new episode from the frozen starting state, paused (at most 10 in all); `cameras=[]`: no images (see Rules) |
 
 One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call"). A watch is refused with a 429 while the images in flight (pending watches and answers not read yet) would exceed it or 8 of them are outstanding; a `submit` or a `get_obs()` without seconds is never refused for its images: its answer then comes without its frames and `meta["frames_skipped"]` is set.
 
