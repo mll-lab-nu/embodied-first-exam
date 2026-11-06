@@ -161,7 +161,8 @@ iterations cost more than in the other simulators.
   give-up after crashes between calls and an instance mismatch at the start are `infra_error = 1`, never the agent's 0;
   a crash inside the agent's calls and a simulator error raised by them stay its 0. `finalize.sh` replaces
   `final.json` atomically. Privileged: a deliverable that is not a
-  readable trajectory (not an npz, no `task` / `actions`, object arrays, wrong shape, NaN, more than 100,000 rows) is
+  readable trajectory (not an npz, no `task` / `actions`, one of them over 100,000 x 8 float64 numbers + 1 MiB
+  unpacked (`too_large`, read from the zip directory), object arrays, wrong shape, NaN, more than 100,000 rows) is
   `bad_trajectory` (the agent's 0); a replay process without a result, a replay time-out (`replay_timed_out`) and
   `instance_ok = 0` (the rebuilt scene differs on this host) set `grader_error = infra_error = 1`.
 - Time limits (Isaac start + scene ~2 min, replays 15-20 control steps/s). Privileged: each replay has max(1800 s,
