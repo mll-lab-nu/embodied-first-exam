@@ -13,13 +13,12 @@ You control a simulated robot (**two 6-DoF ALOHA (ViperX) arms with parallel-jaw
 
 ## Task failure conditions
 
-- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.
+- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Contact penetration never ends the episode by itself: a success with a task contact deeper than 3 mm, or deeper than 2 mm for at least 0.25 s (100 consecutive physics ticks), is not credited automatically but reviewed, with the recorded evidence and frames (for a finger contact with a held movable piece: 4 mm, or 2 mm for 0.25 s; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand); a clean success is credited automatically. A task contact deeper than 10 mm is a simulator breakdown (Grader details).
 
 ## Grader details (in addition to the requirements above)
 
 - Goal square in this instance: the inner edge of the 2 mm wide dashed green line is the containment limit (the region's border runs along the middle of the line); it encloses a 278.3 mm x 278.3 mm square. Every point counts: for a rigid part every vertex of its visual and collision meshes.
 - The separator is an invisible, fixed vertical plane parallel to the goal square's near edge, 5 mm beyond the point of all remaining components that was closest to the goal square at the start; the square's near edge is at least 30 mm beyond it. The other claw piece is free to move (its speed is not checked), but no point of it may cross that plane.
-- Contact penetration as this benchmark grades it (it replaces the "at most 1 mm / 2 mm" wording above): penetration is recorded, it never ends the episode by itself. A success with deep interpenetration (a task contact deeper than 3 mm, or deeper than 2 mm for at least 0.25 s: 100 consecutive physics ticks; for a finger contact with a held piece 4 mm, or 2 mm for 0.25 s) is not credited automatically but reviewed, with the recorded evidence and frames; a clean success is credited automatically. A task contact deeper than 10 mm is a simulator breakdown (below).
 - Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per control step). "Held" is decided anew at every tick: a zero-force touch counts, and if one finger loses contact (with no active assisted grasp), the other finger is back at the non-held limits in the same tick.
 - Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it is: its joint targets become its measured joints for that control step, so it stops pushing (the safety readings report these stops as static_guard).
 - Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`s.safety()`, `s.status()["forcing"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
@@ -43,25 +42,6 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
 It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
 completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
-
-## Startup and long-running commands
-
-- Scene initialization and kernel compilation can take minutes. Actual time depends on the task, hardware, and load.
-  Quiet logs during initialization do not by themselves mean failure. Use `python -u` for unbuffered script output.
-- A command tool's wait/yield interval (for example, `yield_time_ms=30000`) is not the command's lifetime.
-  When a command is still running, retain its process/session identifier and continue waiting for that same command.
-  With Codex's `exec_command`, expose the complete result, including `session_id` and `exit_code`, rather than only
-  `output` (for example, `text(r)` instead of only `text(r.output)`). Continue it with `write_stdin` using the returned
-  `session_id` and no input. An outer JavaScript wrapper saying `Script completed` does not prove Python has exited.
-  Use the corresponding wait/status operation if another command tool is provided.
-- Do not rerun a command just because its first wait returned partial logs. Confirm the original process has exited
-  before starting a replacement; if cancellation is necessary, stop only your own identified process and confirm exit.
-- Keep the task's simulator and sensor configuration. Waiting does not extend the actual agent wall-clock budget.
-- Keep at most one live simulator process in this trial at a time. A new Python process calling `Session(...)`
-  creates another scene and consumes more GPU memory; separate replay/render CLI commands also create scenes.
-- Reuse the initialized Session for observations, actions, reset, and replay. Avoid separate initialization-only probes:
-  put the first useful actions and trajectory save in the same script that initializes the simulator.
-- Initialization consumes the agent budget. Save a real trajectory as soon as practical and keep saving progress.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -109,7 +89,9 @@ CLI equivalent of the grader:
 - The task succeeds once its predicate has held continuously for 0.5 s; that, or one of its failure predicates,
   ends the simulated episode: later steps do not change the execution record or move the scene (`s.status()["episode_end"]`), and
   `s.reset()` starts over.
-- One `Session` per process (one simulator per process). Do not call `s.close()` before writing every output.
+- One `Session` per process (one simulator per process). Building the scene and compiling its kernels can take minutes;
+  every `Session`, including the one a replay or render CLI command starts, holds its own scene in GPU memory, so keep
+  one alive at a time. Do not call `s.close()` before writing every output.
 
 ## External material
 You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.

@@ -15,13 +15,12 @@ client and one episode. **Task:** Separate and place the entire removable ring i
 ## Task failure conditions
 
 - Losing any permanent chain/eye connection ends the episode in failure.
-- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Finger contact with a held movable piece may penetrate at most 2 mm; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand. All other task contacts, including piece-piece, table, arm and gripper-housing contacts, may penetrate at most 1 mm. Exceeding either limit ends the episode in failure.
+- A task piece falling more than 100 mm below the tabletop ends the episode in failure. Contact penetration never ends the episode by itself: a success with a task contact deeper than 3 mm, or deeper than 2 mm for at least 0.25 s (100 consecutive physics ticks), is not credited automatically but reviewed, with the recorded evidence and frames (for a finger contact with a held movable piece: 4 mm, or 2 mm for 0.25 s; holding requires both fingers of the same hand to contact the same piece, or an active assisted grasp by that hand); a clean success is credited automatically. A task contact deeper than 10 mm is a simulator breakdown (Grader details).
 
 ## Grader details (in addition to the requirements above)
 
 - Goal square in this instance: the inner edge of the 2 mm wide dashed green line is the containment limit (the region's border runs along the middle of the line); it encloses a 241.3 mm x 241.3 mm square. Every point counts: for a rigid part every vertex of its visual and collision meshes.
 - The separator is an invisible, fixed vertical plane parallel to the goal square's near edge, 5 mm beyond the point of all remaining components that was closest to the goal square at the start; the square's near edge is at least 30 mm beyond it. The horseshoes and chain links are free to move (their speed is not checked), but no point of them may cross that plane.
-- Contact penetration as this benchmark grades it (it replaces the "at most 1 mm / 2 mm" wording above): penetration is recorded, it never ends the episode by itself. A success with deep interpenetration (a task contact deeper than 3 mm, or deeper than 2 mm for at least 0.25 s: 100 consecutive physics ticks; for a finger contact with a held piece 4 mm, or 2 mm for 0.25 s) is not credited automatically but reviewed, with the recorded evidence and frames; a clean success is credited automatically. A task contact deeper than 10 mm is a simulator breakdown (below).
 - Contact penetration is read from the contacts at the end of every physics tick (2.5 ms; 10 ticks per control step). "Held" is decided anew at every tick: a zero-force touch counts, and if one finger loses contact (with no active assisted grasp), the other finger is back at the non-held limits in the same tick.
 - Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 16 mm beyond the tool frame (TCP) along its approach axis, open or closed. Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it is: its joint targets become its measured joints for that control step, so it stops pushing (the response does not report these stops).
 - Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`meta["safety"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
@@ -48,24 +47,6 @@ client and one episode. **Task:** Separate and place the entire removable ring i
   at `/app/output/gen.py` for the record.
 - **Nothing is put into your context automatically.** Images and videos come back as arrays/bytes in a Python object;
   what you look at and where you store it is your code's decision.
-
-## Startup and long-running commands
-
-- Scene initialization and kernel compilation can take minutes. Actual time depends on the task, hardware, and load.
-  Quiet logs during initialization do not by themselves mean failure. Use `python -u` for unbuffered script output.
-- A command tool's wait/yield interval (for example, `yield_time_ms=30000`) is not the command's lifetime.
-  When a command is still running, retain its process/session identifier and continue waiting for that same command.
-  With Codex's `exec_command`, expose the complete result, including `session_id` and `exit_code`, rather than only
-  `output` (for example, `text(r)` instead of only `text(r.output)`). Continue it with `write_stdin` using the returned
-  `session_id` and no input. An outer JavaScript wrapper saying `Script completed` does not prove Python has exited.
-  Use the corresponding wait/status operation if another command tool is provided.
-- Do not rerun a command just because its first wait returned partial logs. Confirm the original process has exited
-  before starting a replacement; if cancellation is necessary, stop only your own identified process and confirm exit.
-- Keep the task's simulator and sensor configuration. Waiting does not extend the actual agent wall-clock budget.
-- Connect with `Robot()` and let its retry loop wait for the existing service (default connection budget: 3600 seconds,
-  still subject to the actual agent deadline). Do not try to start or rebuild a simulator yourself.
-- Reconnecting a client accesses the same episode; it does not reset the world. While an action request is still
-  running, wait for its original command rather than resubmitting the same actions, which could execute them twice.
 
 ## Time per call
 - One control step takes about 0.071 s of wall clock here. A request returns when all of its steps have run, or
