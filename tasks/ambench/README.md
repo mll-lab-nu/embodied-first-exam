@@ -262,8 +262,8 @@ at about 9-15 control steps/s.
 
 ## Screening
 
-A base whose every mode a screening run solved (a graded success within the task's time limit; logs of solves by runs
-other than GPT-6 Luna checked for shortcuts and for access to tests, solutions or graders), and every base GPT-6 Luna
-(`codex-gpt6_luna-xhigh`) solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their
-names. Luna solved 8 of the 9 bases in every mode they ship and `ambench-peg-in-hole-fahexa-i00` in privileged mode
-(standard unverified: only Luna attempted it, and failed), so no AM-Bench task is in the core set.
+Screening runs (a graded success within the task's time limit; logs of solves by runs other than GPT-6 Luna checked
+for shortcuts and for access to tests, solutions or graders): GPT-6 Luna (`codex-gpt6_luna-xhigh`) solved 8 of the 9
+bases in every mode they ship and `ambench-peg-in-hole-fahexa-i00` in privileged mode (standard: only Luna attempted it,
+and failed). The core set (`docs/core_set.toml`) holds two AM-Bench tasks, both in standard mode:
+`ambench-cabinet-pick-place-fahexa-i00` and `ambench-peg-in-hole-fahexa-i00`; every task is in the `all` set.
