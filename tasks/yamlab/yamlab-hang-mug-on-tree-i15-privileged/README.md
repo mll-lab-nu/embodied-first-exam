@@ -29,9 +29,9 @@ YAMLab's demonstrations are not in the image, and the agent's network reaches on
 registries.
 
 ## Verification
-`tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the instance
-(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff YAMLab's success check holds in both
-(every stage latched) and both end in the same state (`deterministic`), plus `/logs/verifier/replay.mp4` (top camera and
+`tests/grade.py` in a separate sandbox: one replay in a fresh process, from the verifier's own copy of the instance
+(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff YAMLab's success check holds in it
+(every stage latched), plus `/logs/verifier/replay.mp4` (top camera and
 both wrist cameras). Oracle: 658 control steps, every stage latched at the last one; the live run and two
 fresh-process replays end in the same state (hash `88753272376676eb`). `nop`: no trajectory, reward 0; no stage holds at
 the start.
