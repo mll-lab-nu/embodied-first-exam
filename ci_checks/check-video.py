@@ -8,7 +8,7 @@ tell whether a render finishes in time (the runner flags a graded trial without 
     exported runtime's `RCB_RENDER_VIDEO` / `RCB_VIDEO_*` switches) -- recorded during the live episode or rendered from
     the trajectory after the verdict (no replay grades these modes, PROTOCOL H.4) -- and it is collected: task.toml
     `artifacts` takes a directory or an `.mp4` from a service other than the resource monitor (the sim sidecar's
-    `/data/replay.mp4`, `/out/`), unless the verifier renders it itself (a video writer under tests/);
+    `/data/replay.mp4`, `/out/`; a first-attempt `*.first.mp4` is evidence, not the graded video), unless the verifier renders it itself (a video writer under tests/);
   - a declared video time bound is not shorter than the verdict replay's in the same file (`video_timeout_s` vs
     `replay_timeout_s` in a JSON/TOML/compose file; privileged, or wherever a task still declares both): the video
     replays the episode again, so a shorter bound loses the video of exactly the long episodes the verdict still grades.
@@ -54,8 +54,10 @@ def texts(d: Path, problems: list[str] | None = None):
 
 
 def collects_video(src: str) -> bool:
-    """An `.mp4`, or a sidecar's whole output directory (`/data/`, `/out/`), not one of its subdirectories (`/data/calls/`)."""
-    return src.endswith(".mp4") or (src.endswith("/") and src.rstrip("/").count("/") == 1)
+    """An `.mp4` other than first-attempt evidence (`replay.first.mp4`: the graded episode's video is another file), or a
+    sidecar's whole output directory (`/data/`, `/out/`), not one of its subdirectories (`/data/calls/`)."""
+    name = src.rsplit("/", 1)[-1]
+    return (src.endswith(".mp4") and ".first." not in name) or (src.endswith("/") and src.rstrip("/").count("/") == 1)
 
 
 def check(task: Path) -> list[str]:
