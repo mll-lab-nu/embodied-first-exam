@@ -2,21 +2,21 @@
 
     python /tests/render_video.py --task lack --traj /app/output/trajectory.npz --out /logs/verifier/replay.mp4
 
-Evidence for people only, never the verdict: the grader (grade.py) runs this in its own process next to the two verdict
-replays and ignores its result. It replays the rows exactly as the grader does (rcb_ikea.Session.step: the joint-speed
+Evidence for people only, never the verdict: the grader (grade.py) runs this in its own process next to the verdict
+replay and ignores its result. It replays the rows exactly as the grader does (rcb_ikea.Session.step: the joint-speed
 clamp, 4 physics steps, the scene's mechanism), then holds the last row for the grader's settle time, and renders
 MuJoCo's free camera on the work surface (tests/video_view.json: the standard twin's rig centre, front and scale; from the
 front, 25 degrees to the side, 35 degrees above; no shadows) with CPU software rendering (OSMesa; the verifier has no
 GPU) at 512 x 288. At most MAX_FRAMES frames, evenly spaced over the episode, played at 25 fps (a
 time-lapse for long episodes; replay.json says the simulated seconds per frame). Writes <out> (H.264 mp4),
-<out without .mp4>.last.png and <out without .mp4>.json (frames, stride, the end state hash = the verdict replays').
+<out without .mp4>.last.png and <out without .mp4>.json (frames, stride, the end state hash = the verdict replay's).
 """
 from __future__ import annotations
 import argparse, json, os, sys, time
 
 os.environ.setdefault("MUJOCO_GL", "osmesa")
 os.environ.setdefault("PYOPENGL_PLATFORM", "osmesa")
-os.environ.setdefault("LP_NUM_THREADS", "2")      # llvmpipe: leave the CPUs to the verdict replays
+os.environ.setdefault("LP_NUM_THREADS", "2")      # llvmpipe: leave the CPUs to the verdict replay
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 

@@ -29,9 +29,8 @@ deliverable is **one replayable trajectory**, not a general policy.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop from the same initial state in a fresh process, twice, and scored 1 if both replays pass
-`final_check()` (the requirements and the terminal rules at the end of your rows and after the 1.0 s hold) and end in
-the same state, else 0. Also leave the script that
+It is replayed open-loop from the same initial state in a fresh process, once, and scored 1 if the replay passes
+`final_check()` (the requirements and the terminal rules at the end of your rows and after the 1.0 s hold), else 0. Also leave the script that
 produced it at `/app/output/gen.py`. Save a real trajectory as soon as practical and keep saving progress; do not stop
 early.
 
@@ -65,7 +64,7 @@ CLI equivalent of the grader's replay (one replay):
   gains and force limits are in the model.
 - Trajectory file: `ctrl` (N, 16) float64, `substeps` = 4, `timestep` = 0.000625 (what `save_trajectory`
   writes). Each row is applied for 4 physics steps of 0.625 ms: a 2.5 ms control tick (400 Hz).
-  At most 714000 rows (1785 s of simulated time): the grader refuses a longer trajectory (`bad_trajectory`), because its replays must fit the verifier's time limit. One control tick takes about 4.2 ms of wall clock here: budget your experiments against the
+  At most 714000 rows (1785 s of simulated time): the grader refuses a longer trajectory (`bad_trajectory`), because its replay must fit the verifier's time limit. One control tick takes about 4.2 ms of wall clock here: budget your experiments against the
   time limit (`## Time limit`).
 - World frame: MuJoCo's, +z up, metres; quaternions are MuJoCo's **WXYZ**. Tool frames (sites): `left/tcp` / `right/tcp` (between the fingertips).
 - The episode does not end on success: the grader checks once, after your last row and again after the 1.0 s hold.

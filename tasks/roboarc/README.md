@@ -75,9 +75,9 @@ the last row, hold the final targets for up to 2 s; during that hold blanket-fla
 speed (95 % and 30 mm/s in the rows) and knot-untying a rope speed 0.25 mm/s higher. Standard mode grades the live episode
 strictly, with no grading replay (Standard grading, below).
 
-**The rule.** Privileged success needs both grading replays to succeed AND at least one of them to reach the goal with the
+**The rule.** Privileged success needs the one grading replay to succeed AND to reach the goal with the
 instance's own thresholds within the trajectory's rows (`tests/grade.py`: `strict_replay_required` 1, `strict_goal_reached`,
-`strict_goal_row`; `success_in_hold_only` 1 marks a trajectory whose replays succeeded only in the hold, not credited). The
+`strict_goal_row`; `success_in_hold_only` 1 marks a trajectory whose replay succeeded only in the hold, not credited). The
 instruction says where `s.replay(actions, grading=True)` reports it (`["grading"]["strict_success"]`). Why: the MuJoCo
 release replays deterministically on the same host (the cloth step on a deterministic GPU solver, the rest on the CPU), so
 a recording that stops on its own success reaches it within its rows; without the strict goal the hold's relaxed
@@ -205,7 +205,7 @@ ALOHA 2, two ViperX 300 s arms). Standard tasks speak `eai-standard/2.4` (the op
 
 The agent budget is 10800 s (3 h) of wall clock in both modes. One reference execution must fit 40 % of it (4320 s) on
 the trial host (IKEA timing, below). A privileged trajectory may have at most the task's row cap (stated in its instruction:
-the verifier's replays must fit its time limit).
+the verifier's replay must fit its time limit).
 
 ### IKEA scenes in progress (not tasks)
 Four more scenes are in the image (`/opt/ikea/scenes/`) but are not tasks: no reference passes every gate yet.
@@ -234,8 +234,8 @@ Four more scenes are in the image (`/opt/ikea/scenes/`) but are not tasks: no re
 - Every task's agent egress is the allowlist of `scripts/set_agent_egress.py`.
 
 ### IKEA grading (both modes, every task)
-One rule in both modes. Privileged: the deliverable (`/app/output/trajectory.npz`) is replayed open-loop in two fresh
-processes from the frozen keyframe. Standard: the rule is evaluated on the live episode by the sim service; nothing is
+One rule in both modes. Privileged: the deliverable (`/app/output/trajectory.npz`) is replayed open-loop in one fresh
+process from the frozen keyframe. Standard: the rule is evaluated on the live episode by the sim service; nothing is
 replayed (below). Success needs all of:
 - **Goal:** the scene's own `success.py`, a port of the source assembly grader.
 - **Terminal rules,** the same in every task: the parts are released (no robot link touches a part); every part is at
@@ -245,7 +245,6 @@ replayed (below). Success needs all of:
   panel (`rcb_ikea.END_POSE_RULES`): the source grader checks the back only at its slide, and the back has no frame joint.
 - These hold at the end of the rows **and** again after the grader holds the last row for 1.0 s
   (`rcb_ikea.Session.final_check()`).
-- Privileged: both replays end in the same state hashes, before and after the hold.
 - A replay that crashes (a simulator crash, `replay_crash`) or in which the scene's code or MuJoCo raises on the state
   the rows drove it into (`replay_exception`) is a breakdown (`sim_breakdown 1`, reward 0), not a grader error: a
   grader or infrastructure error gives the trial a free retry (PROTOCOL H.5), which the deliverable's own failures must
@@ -272,7 +271,7 @@ live success without it is `infra_error`. Infrastructure (a free retry, H.5): no
 
 Every graded trial leaves a video (PROTOCOL §4), evidence only: standard, the sidecar's `/data/live.mp4`, recorded during
 the live episode (Nyx, cam_high, 10 frames per simulated second, on the GPU the sidecar renders the agent's cameras with;
-no extra pass); privileged, `/logs/verifier/replay.mp4`, rendered by a third process next to the two verdict replays
+no extra pass); privileged, `/logs/verifier/replay.mp4`, rendered by another process next to the verdict replay
 (MuJoCo's renderer on CPU OSMesa: the verifier has no GPU; 512 x 288, at most 750 frames).
 
 ### IKEA robot speed (both modes)

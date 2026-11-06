@@ -1,10 +1,10 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.4.1@sha256:0762b1ed42558611d3ad634171b5ce838847013ddb17aa2011f2f397ad800a62",
+ "image": "ghcr.io/mll-lab-nu/efe:ikea-mujoco-files-0.4.2@sha256:0cb74965f760e756ec7ac0bb41b7b16fba27aa12bfc382425945fa0cedd2b201",
  "source": "embodied_first_exam/benchmarks/roboarc/ikea",
  "files": {
   "privileged/environment/rcb_ikea.py": "6002ddc8610ff23c4e929125172e639b395f7d7fe2d07b997cc23e0011a8f40d",
-  "privileged/tests/grade.py": "e2386cfb5fcdfebc048a3b8bbdc91a624a4dccf738d2fc99f4c5e3d210322492",
-  "privileged/tests/render_video.py": "262191b750873950cc849a5526cdf9b9a216a261d3909ab90e250a34fbac3797",
+  "privileged/tests/grade.py": "f8d1319a5e23918926b831317aa27393badc64ff77a5de8e50a401c249bcd864",
+  "privileged/tests/render_video.py": "0930880a072926516f02f15e6d5a8980dd84a8aba120bb5ebfabfdd5c4682766",
   "sim/finalize.sh": "7aad18169115d74b56f34875e89e9a828a4451e329f501c6e72250607979e0bb",
   "sim/ikea_nyx.py": "356ff25e89494122966137e9398bf10e8f0bb9a5e9b99cc17b4f064e3ddfa795",
   "sim/ikea_rig.py": "980a1eb5996ea7762490087a8be02875e0e8da613fab80dcb4b8113e16a26310",
