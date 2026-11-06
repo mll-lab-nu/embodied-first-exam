@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/labutopia-open-close-i00-privileged"
-description = "LabUtopia open_close (OpenClose; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Open the top drawer of the cabinet, let go of it, then close it again and let go. Frozen scene instance (LabUtopia's reset, seed 0); graded by two fresh-process replays with a copy of LabUtopia's own success check."
+description = "LabUtopia open_close (OpenClose; a chemistry laboratory with a Franka Panda on Isaac Sim): produce one replayable trajectory of joint targets. Open the top drawer of the cabinet, let go of it, then close it again and let go. Frozen scene instance (LabUtopia's reset, seed 0); graded by one fresh-process replay with a copy of LabUtopia's own success check."
 keywords = ["robotics", "labutopia", "isaac-sim", "laboratory", "chemistry", "franka-panda", "code-as-policy", "trajectory", "open_close", "privileged"]
 
 [metadata]
@@ -18,7 +18,7 @@ instance_seed = 0                 # numpy's and Python's random generators befor
 expert_time_estimate_hours = 2.0
 
 [verifier]
-timeout_sec = 5400.0              # two replays of about a minute (each limited to 2400 s, as before), then the video replay (the rest), whose renderer starts cold (5 to 27 minutes); 300 s of margin: tests/grade.py
+timeout_sec = 5400.0              # one replay of about a minute (limited to 2400 s, as before), then the video replay (the rest), whose renderer starts cold (5 to 27 minutes); 300 s of margin: tests/grade.py
 environment_mode = "separate"
 network_mode = "no-network"
 

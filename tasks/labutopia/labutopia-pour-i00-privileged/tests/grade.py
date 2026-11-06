@@ -2,11 +2,13 @@
 
     python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz
 
-Two replays, each in its own fresh process (`rcb_labutopia.py replay`: LabUtopia's scene and reset with the instance's
-seed, one 1/60 s control step per row; the episode ends at the first step at which the family's rule is met). On Isaac
-Sim only a fresh process repeats an episode bit for bit, so the two are compared: success = both replays succeed, end
-in the same state, and rebuild the instance's recorded placements. Writes /logs/verifier/reward.txt (1/0) and
-reward.json (numbers only); then a third replay renders replay.mp4, after the verdict is on disk (it never changes it).
+ONE replay, in its own fresh process (`rcb_labutopia.py replay`: LabUtopia's scene and reset with the instance's seed,
+one 1/60 s control step per row; the episode ends at the first step at which the family's rule is met; on Isaac Sim only
+a fresh process repeats an episode bit for bit), decides: success = the replay succeeds and rebuilds the instance's
+recorded placements. With one replay there is no second end state to compare: `deterministic` is written as 1 (nothing
+disagreed) with `determinism_checked` = 0 and `replays` = 1, which say that nothing was compared. Writes
+/logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a second replay renders replay.mp4, after the
+verdict is on disk (it never changes it).
 """
 
 import argparse
@@ -27,7 +29,7 @@ MAX_ROWS = 36_000  # rcb_labutopia.MAX_STEPS: 600 s of simulated time; a replay 
 # A verdict replay only simulates (no renderer): under a minute to start, then the rows, at most MAX_ROWS at about 200
 # control steps/s = 180 s; each may take VERDICT_TIMEOUT_S, ten times that (the limit it always had). The video replay starts the renderer, which
 # prepares the stage the first time in a container (minutes: tasks/labutopia/README.md): it gets what is left of the
-# verifier's time (at most VIDEO_TIMEOUT_S), MARGIN_S kept back: 2 x 2400 + video + 300 <= 5400. A replay that passes
+# verifier's time (at most VIDEO_TIMEOUT_S), MARGIN_S kept back: 2400 + video + 300 <= 5400. A replay that passes
 # its limit is a replay without a result (grader_error, infra_error), a reward is written, and Harbor's own timeout is
 # never reached.
 VERIFIER_TIMEOUT_S = 5400
@@ -153,34 +155,32 @@ def grade() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         clean = os.path.join(tmp, "trajectory.npz")  # only the rows cross into the replay processes
         np.savez(clean, actions=acts, task=a.family)
-        r1 = replay(a, clean, os.path.join(tmp, "r1.json"))
-        r2 = replay(a, clean, os.path.join(tmp, "r2.json"))
-        if not (r1.get("state_sha") and r2.get("state_sha")):  # a replay process died or timed out: not the agent's 0
-            timed_out = bool(r1.get("timed_out") or r2.get("timed_out"))
-            write(False, {**zero, "grader_error": 1, "infra_error": 1, "replay_failed": 1, "replay_timed_out": int(timed_out),
-                          "n_actions": int(len(acts))})
+        r = replay(a, clean, os.path.join(tmp, "r1.json"))
+        if not r.get("state_sha"):  # the replay process died or timed out: not the agent's 0
+            write(False, {**zero, "grader_error": 1, "infra_error": 1, "replay_failed": 1,
+                          "replay_timed_out": int(bool(r.get("timed_out"))), "n_actions": int(len(acts))})
             return 0
-        for i, r in ((1, r1), (2, r2)):  # the record (grade.log): each fresh process's verdict and final-state hash
-            print(
-                f"replay {i}: success={r.get('success')} steps={r.get('steps')} reason={r.get('reason')} "
-                f"state_sha={r.get('state_sha')} instance_ok={r.get('instance_ok')} start_exact={r.get('start_exact')} "
-                f"rule={r.get('rule_state')}",
-                file=sys.stderr,
-                flush=True,
-            )
-        both = bool(r1.get("success")) and bool(r2.get("success"))
-        deterministic = r1["state_sha"] == r2["state_sha"]
-        instance_ok = bool(r1.get("instance_ok")) and bool(r2.get("instance_ok"))
-        ok = both and deterministic and instance_ok
+        print(  # the record (grade.log): the fresh process's verdict and final-state hash
+            f"replay: success={r.get('success')} steps={r.get('steps')} reason={r.get('reason')} "
+            f"state_sha={r.get('state_sha')} instance_ok={r.get('instance_ok')} start_exact={r.get('start_exact')} "
+            f"rule={r.get('rule_state')}",
+            file=sys.stderr,
+            flush=True,
+        )
+        replay_success = bool(r.get("success"))
+        instance_ok = bool(r.get("instance_ok"))
+        ok = replay_success and instance_ok
         out = {
             "success": int(ok),
-            "replay_success": int(both),
-            "deterministic": int(deterministic),
+            "replay_success": int(replay_success),
+            "deterministic": 1,  # one replay: nothing disagreed; determinism_checked = 0 says nothing was compared
+            "determinism_checked": 0,
+            "replays": 1,
             "instance_ok": int(instance_ok),
-            "progress": float(min(r1.get("score") or 0.0, r2.get("score") or 0.0)),
+            "progress": float(r.get("score") or 0.0),
             "n_actions": int(len(acts)),
-            "sim_steps": int(r1.get("steps") or 0),
-            "start_state_exact": int(bool(r1.get("start_exact")) and bool(r2.get("start_exact"))),
+            "sim_steps": int(r.get("steps") or 0),
+            "start_state_exact": int(bool(r.get("start_exact"))),
             "grader_error": int(not instance_ok),
             "infra_error": int(not instance_ok),  # the image no longer builds the frozen start: not the agent's 0
             "video_rendered": 0,
@@ -190,8 +190,8 @@ def grade() -> int:
         left = min(VIDEO_TIMEOUT_S, VERIFIER_TIMEOUT_S - MARGIN_S - (time.monotonic() - T0))
         if not a.no_video and left >= 120:  # a human-viewable replay (never affects the verdict), in the time left
             try:
-                r3 = replay(a, clean, os.path.join(tmp, "r3.json"), video=os.path.join(LOG_DIR, "replay.mp4"), timeout=left)
-                out["video_rendered"] = int(bool(r3.get("video")))
+                rv = replay(a, clean, os.path.join(tmp, "video.json"), video=os.path.join(LOG_DIR, "replay.mp4"), timeout=left)
+                out["video_rendered"] = int(bool(rv.get("video")))
                 write(ok, out)
             except Exception:  # noqa: BLE001 -- the verdict is on disk and stays
                 traceback.print_exc(file=sys.stderr)

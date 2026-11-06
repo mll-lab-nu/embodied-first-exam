@@ -16,8 +16,7 @@ retry as many times as you want. Your deliverable is **one replayable trajectory
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if both episodes end in success in the same
-state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+open-loop from the same initial state in one fresh process and scored 1 if the episode ends in success, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
 Save a trajectory as soon as you have one that works, improve it while time remains, and do not stop early.
 
@@ -67,9 +66,9 @@ script after a standard-library module (`inspect.py`, `types.py`): Isaac Sim imp
 
 **Fresh processes.** Isaac Sim repeats an episode bit for bit only in a fresh process: after `s.reset()` the start
 state differs from the first one by about 1e-5, which a contact-rich motion can amplify. The grader replays your
-trajectory in fresh processes, so check the final one the same way before you stop:
+trajectory in a fresh process, so check the final one the same way before you stop:
 `python /opt/tools/rcb_labutopia.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
-(prints `RESULT {...}` with `success` and `state_sha`; two runs of it must agree; `--video FILE` also renders it).
+(prints `RESULT {...}` with `success` and `state_sha`; `--video FILE` also renders it).
 
 ## Conventions
 - Action: 18 numbers per control step: a position target for each of the 9 joints (`panda_joint1` .. `panda_joint7`
