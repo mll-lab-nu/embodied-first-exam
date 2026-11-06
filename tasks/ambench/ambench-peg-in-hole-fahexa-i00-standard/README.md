@@ -21,7 +21,7 @@ trajectory once (the video only); the verifier runs in a separate sandbox (`test
 resets and privileged state.
 
 ## Difficulty
-That of `ambench-peg-in-hole-fahexa-i00-privileged` (its README), without resets, object poses or the success signal: The socket's pose, the wall's tilt and the opening's size are not given, nor is the peg's pose (it can shift in the grip): the blue socket on the concrete wall has to be found with the onboard cameras (the held peg occupies part of the end-effector camera's view) and related to the robot through proprioception (base and end-effector poses). Insertion depth can only be judged visually.
+That of `ambench-peg-in-hole-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): The socket's pose, the wall's tilt and the opening's size are not given, nor is the peg's pose (it can shift in the grip): the blue socket on the concrete wall has to be found with the onboard cameras (the held peg occupies part of the end-effector camera's view) and related to the robot through proprioception (base and end-effector poses). Insertion depth can only be judged visually.
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for

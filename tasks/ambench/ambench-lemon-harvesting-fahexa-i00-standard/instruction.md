@@ -14,14 +14,15 @@ The episode **ends by itself** at the first control step where the check holds (
 length of **30 s** of simulated time runs out (a failure: AM-Bench's time-out ends the episode at control step
 3599; reason `episode_timeout`).
 
-The fruits' positions, which fruit is the lemon, the tote's and table's poses and whether the lemon is still attached are not given: the yellow lemon has to be told from the green limes and located on the concrete wall with the onboard cameras, and the tote found on the table. The gripper width comes from proprioception; whether the lemon is in the tote can only be judged visually. Success is not reported during the episode.
+The fruits' positions, which fruit is the lemon, the tote's and table's poses and whether the lemon is still attached are not given: the yellow lemon has to be told from the green limes and located on the concrete wall with the onboard cameras, and the tote found on the table. The gripper width comes from proprioception; whether the lemon is in the tote can only be judged visually. Success is reported only by the episode's end (reason `success`).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, at the time-out above, when your time
   is up, or on a simulator error. Whatever you knock over or push stays that way.
 - **No privileged state.** You see what the two onboard cameras see (RGB, and depth if you ask) plus the robot's own
   proprioception (airframe pose and velocity, arm joints, gripper, tool-frame pose, joint efforts, the target in force).
-  No object poses, no success signal.
+  No object poses and no success measure; when AM-Bench's check holds, the episode ends at that control step
+  (`meta["done"]` true, `meta["reason"]` `"success"`).
 - **Simulated time only moves when you move the robot** (`submit`, or `get_obs(seconds=...)`): between your calls the
   world is frozen, and the episode lasts at most 30 s of simulated time. There is no step budget otherwise:
   the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`).

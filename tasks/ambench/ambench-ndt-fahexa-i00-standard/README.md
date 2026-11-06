@@ -21,7 +21,7 @@ trajectory once (the video only); the verifier runs in a separate sandbox (`test
 resets and privileged state.
 
 ## Difficulty
-That of `ambench-ndt-fahexa-i00-privileged` (its README), without resets, object poses or the success signal: The goal is given as a fixed world point (goal geometry) and ee_link's pose is part of proprioception; the wall, the taped marker and anything in the way are seen only through the onboard cameras, and at the start the marker is far above their field of view (about 56 degrees). Success and the hold counter are not reported during the episode.
+That of `ambench-ndt-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): The goal is given as a fixed world point (goal geometry) and ee_link's pose is part of proprioception; the wall, the taped marker and anything in the way are seen only through the onboard cameras, and at the start the marker is far above their field of view (about 56 degrees). The hold counter is not reported; success only by the episode's end (reason `success`).
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for

@@ -7,5 +7,5 @@
  "episode_length_s": 20.0,
  "initial_sha": "03fff74ad82010c02053d997d42a32d4e5dcfad1123d013d49a4d6c6e785f1e3",
  "determinism": "verdict",
- "determinism_why": "GPU PhysX does not replay the gripper's contact with the lever bit for bit: four fresh-process replays of the same rows from this start all succeeded at control step 899 but ended in two different states (identical states and controller outputs until that contact)"
+ "determinism_why": "GPU PhysX does not replay the gripper's contact with the lever bit for bit: six fresh-process replays of the same rows from this start all succeeded at control step 899 but ended in three different states (identical states and controller outputs until that contact)"
 }

@@ -13,10 +13,14 @@
 #      kernels that failed to launch, CUDA out of memory: rcb_ambench.GPU_FAULT, counted in the service's output) make it
 #      no verdict on the agent (`infra_error` = 1): its physics ran without some of its kernels.
 #   3. the video: ONE `film` pass (the tooling's CLI: the recorded rows in a fresh process, the onboard cameras drawn by
-#      the render worker) into replay.mp4, after the verdict. It decides nothing: no success or hash of it is compared,
-#      it is not run again, and its failure or its time limit costs the video only (`video` false), never infra. The
-#      live service does not film: rendering inside the physics process makes AM-Bench's GPU physics timing-dependent,
-#      and its cameras are drawn by a second Isaac process only when the agent asks for a frame.
+#      the render worker) into replay.mp4, after the verdict. It decides nothing: it is not run again, and its failure or
+#      its time limit costs the video only (`video` false), never infra. GPU PhysX does not replay every episode bit for
+#      bit (tasks/ambench/README.md, Determinism), so the film is compared with the live episode, for the video only:
+#      the same outcome (success, control steps) and end-state hash -> `video_matches_live` true; the same outcome in
+#      other last bits -> the video is kept, `video_matches_live` false with a `video_note`; another outcome -> the
+#      video is dropped (`video` false, `video_error`): it would show an episode that did not happen. The live service
+#      does not film: rendering inside the physics process makes AM-Bench's GPU physics timing-dependent, and its
+#      cameras are drawn by a second Isaac process only when the agent asks for a frame.
 # Time: the hook has HOOK_BUDGET_S (task.toml's [[verifier.collect]] timeout_sec; keep the two equal): the episode end
 # (up to RCB_COLLECT_END_TIMEOUT_S = 2700 s through a resume) + the film (at most FILM_LIMIT_S: an Isaac start and the
 # render worker's, 1.5-6 min, + at most one episode, 7200 control steps of the longest task at 10-15 steps/s) + a margin.
@@ -122,14 +126,36 @@ try:
 except Exception:
     pass
 mp4 = os.path.join(d, "replay.mp4")
-ok = os.environ.get("FRC") == "0" and bool(res.get("film")) and os.path.isfile(mp4) and os.path.getsize(mp4) > 0
+film = res.get("film") if isinstance(res.get("film"), dict) else {}
+ok = os.environ.get("FRC") == "0" and bool(film) and os.path.isfile(mp4) and os.path.getsize(mp4) > 0
 out.update({"video": ok, "video_pending": False})
 if not ok:
     out["video_error"] = f"the film pass gave no video (exit {os.environ.get('FRC')})"
+else:
+    # the film against the live episode (the video only; the verdict above is already on disk and stays as it is)
+    def steps(v):
+        try: return int(v)
+        except (TypeError, ValueError): return None
+    live_out = (bool(out.get("success")), steps(out.get("control_steps")))
+    film_out = (bool(film.get("success")), steps(film.get("control_steps")))
+    same_outcome = live_out == film_out and live_out[1] is not None
+    same_state = same_outcome and bool(out.get("live_sha")) and film.get("state_sha") == out.get("live_sha")
+    out.update({"video_matches_live": same_state, "video_outcome_matches_live": same_outcome,
+                "film_success": film_out[0], "film_control_steps": film_out[1], "film_sha": film.get("state_sha")})
+    if not same_outcome:
+        for f in (mp4, os.path.join(d, "replay.last.png")):
+            try: os.remove(f)
+            except OSError: pass
+        out["video"] = False
+        out["video_error"] = (f"video dropped: the film ended with success {film_out[0]} at control step {film_out[1]}, "
+                              f"the live episode with success {live_out[0]} at control step {live_out[1]}")
+    elif not same_state:
+        out["video_note"] = ("the film reached the live outcome at the same control step but another end state (GPU PhysX "
+                             "does not replay bit for bit): an illustration of the episode, not a recording of it")
 tmp = f"{p}.{os.getpid()}.tmp"
 with open(tmp, "w") as f:
     json.dump(out, f); f.flush(); os.fsync(f.fileno())
 os.replace(tmp, p)
-print(json.dumps({k: out.get(k) for k in ("success", "infra_error", "live_gpu_faults", "video", "video_error")}))
+print(json.dumps({k: out.get(k) for k in ("success", "infra_error", "live_gpu_faults", "video", "video_matches_live", "video_error")}))
 PY
 exit 0

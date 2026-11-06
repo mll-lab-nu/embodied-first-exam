@@ -12,7 +12,9 @@ instance not rebuilt at the episode's start (`instance_mismatch`, before the age
 for the hook, no record of the live episode (episode.json), GPU faults in the live episode's physics (`live_gpu_faults`:
 PhysX kernels that failed to launch, CUDA out of memory). A give-up after crashes inside the agent's calls
 (`sim_crashed_on_call`) and a simulator error raised during the agent's calls (reason "error", `sim_error`) stay the
-agent's 0, even after a success the episode had reached (PROTOCOL §4). The video never decides anything (`video_rendered`)."""
+agent's 0, even after a success the episode had reached (PROTOCOL §4). The video never decides anything (`video_rendered`;
+`video_matches_live`: the film ended in the live episode's outcome and end-state hash, `video_outcome_matches_live`: in
+its outcome; a film with another outcome is dropped by the collect hook)."""
 import json, os, shutil, traceback
 LOG = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier"); DATA = os.environ.get("RCB_DATA", "/data")
 os.makedirs(LOG, exist_ok=True)
@@ -46,6 +48,8 @@ write(ok, {"success": int(ok), "live_success": int(bool(d.get("success"))), "gra
            "episode_timeout": int(d.get("reason") == "episode_timeout"), "time_up": int(d.get("reason") == "time_up"),
            "live_gpu_faults": int(num("live_gpu_faults")), "hold_pad_rows": int(num("hold_pad_rows")),
            "determinism_verdict_mode": int(bool(d.get("determinism_verdict_mode"))), "video_rendered": int(bool(d.get("video"))),
+           "video_matches_live": int(bool(d.get("video_matches_live"))),
+           "video_outcome_matches_live": int(bool(d.get("video_outcome_matches_live"))),
            "sim_error": int(sim_error),   # a simulator error during the agent's calls: the agent's 0
            "instance_mismatch": int(bool(d.get("instance_mismatch"))), "instance_exact": int(bool(d.get("instance_exact"))),
            "grader_error": 0,

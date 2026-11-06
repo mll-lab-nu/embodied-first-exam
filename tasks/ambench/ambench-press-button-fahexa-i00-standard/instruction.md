@@ -21,7 +21,8 @@ The button's pose and its pressed state are not given: the red disc on the concr
   is up, or on a simulator error. Whatever you knock over or push stays that way.
 - **No privileged state.** You see what the two onboard cameras see (RGB, and depth if you ask) plus the robot's own
   proprioception (airframe pose and velocity, arm joints, gripper, tool-frame pose, joint efforts, the target in force).
-  No object poses, no success signal.
+  No object poses and no success measure; when AM-Bench's check holds, the episode ends at that control step
+  (`meta["done"]` true, `meta["reason"]` `"success"`).
 - **Simulated time only moves when you move the robot** (`submit`, or `get_obs(seconds=...)`): between your calls the
   world is frozen, and the episode lasts at most 20 s of simulated time. There is no step budget otherwise:
   the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`).

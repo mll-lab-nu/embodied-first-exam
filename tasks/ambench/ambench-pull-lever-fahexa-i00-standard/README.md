@@ -20,7 +20,7 @@ episode, lets the service exit, writes `final.json` from the live episode's reco
 trajectory once (the video only); the verifier runs in a separate sandbox (`tests/Dockerfile`) over those artifacts.
 
 ## Difficulty
-The lever is spring-loaded back to perpendicular and heavily damped, and it has to be driven past 40 degrees, within 5 degrees of its end stop, from a free-flying, hovering base; its place on the wall changes per instance. Here without resets, object poses or the success signal: The lever's pose and angle are not given: the lever on the concrete wall has to be found with the onboard cameras (its base is dark grey) and related to the robot through proprioception (base and end-effector poses). The lever's angle can only be judged visually. The end-effector camera starts rolled by 90 degrees with the wrist.
+The lever is spring-loaded back to perpendicular and heavily damped, and it has to be driven past 40 degrees, within 5 degrees of its end stop, from a free-flying, hovering base; its place on the wall changes per instance. Here without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): The lever's pose and angle are not given: the lever on the concrete wall has to be found with the onboard cameras (its base is dark grey) and related to the robot through proprioception (base and end-effector poses). The lever's angle can only be judged visually. The end-effector camera starts rolled by 90 degrees with the wrist.
 
 ## Reference solution
 `solution/oracle_replay.py` streams the reference rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for
@@ -29,13 +29,14 @@ chunks (`hold`) through the client; after a service crash it waits for the resum
 step the service reports.
 
 ## Verification
-Graded by the live episode, like every standard task since 2026-10-17 (owner), and this one before too: GPU PhysX does not replay it bit for bit (measured: the same rows, from identical states and identical controller outputs, resolve the first gripper contact differently in fresh processes), so `success` = the live episode's success, and no replay runs. The task is standard-only: an open-loop trajectory of it cannot be graded reproducibly. `tests/grade.py` reads `final.json` with no network and writes the reward fields (`graded_by_live` = 1,
+Graded by the live episode, like every standard task: GPU PhysX does not replay it bit for bit (measured: the same rows, from identical states and identical controller outputs, resolve the first gripper contact differently in fresh processes), so `success` = the live episode's success, and no replay runs. The task is standard-only: an open-loop trajectory of it cannot be graded reproducibly. `tests/grade.py` reads `final.json` with no network and writes the reward fields (`graded_by_live` = 1,
 `replays` = 0, `infra_error`, the crash-recovery fields), plus `/logs/verifier/replay.mp4` (the recorded rows drawn by the
-render worker in one film pass after the verdict, an illustration: its failure costs the video only). AM-Bench's success
+render worker in one film pass after the verdict, an illustration: its failure costs the video only; here it usually reaches the
+live outcome in other last bits, `video_matches_live` = 0, and a film with another outcome is dropped). AM-Bench's success
 check is evaluated after every control step; the episode ends at the first step where it holds. Before serving, the
 service checks the rebuilt scene's state hash against the frozen instance's (`instance_mismatch`: an infrastructure
 failure), and GPU faults in the live episode's physics (`live_gpu_faults`) make it no verdict on the agent
-(`infra_error`). Oracle: success at control step 899; the reference rows succeed in every fresh process measured but do not end in the same state (2 different end states in 4 replays): only the outcome is reproducible, which is why the live episode decides. `nop`: the episode ends at the
+(`infra_error`). Oracle: success at control step 899; the reference rows succeed in every fresh process measured but do not end in the same state (3 different end states in 6 fresh-process replays, all succeeding at control step 899): only the outcome is reproducible, which is why the live episode decides. `nop`: the episode ends at the
 agent's time-out with the check never met, reward 0.
 
 ## Resources

@@ -21,7 +21,7 @@ trajectory once (the video only); the verifier runs in a separate sandbox (`test
 resets and privileged state.
 
 ## Difficulty
-That of `ambench-press-button-fahexa-i00-privileged` (its README), without resets, object poses or the success signal: The button's pose and its pressed state are not given: the red disc on the concrete wall has to be found with the forward-looking onboard cameras and related to the robot through proprioception (base and end-effector poses). A press shows only as a few millimetres of plunger travel, and success is not reported during the episode.
+That of `ambench-press-button-fahexa-i00-privileged` (its README), without resets, object poses or a success measure (the episode just ends, reason `success`, when the check holds): The button's pose and its pressed state are not given: the red disc on the concrete wall has to be found with the forward-looking onboard cameras and related to the robot through proprioception (base and end-effector poses). A press shows only as a few millimetres of plunger travel, and success is not reported during the episode.
 
 ## Reference solution
 `solution/oracle_replay.py` streams the privileged oracle's rows (`solution/oracle_qpos.npy`: AM-Bench's scripted expert for

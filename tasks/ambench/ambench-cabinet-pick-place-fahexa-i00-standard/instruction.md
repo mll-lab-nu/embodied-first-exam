@@ -14,14 +14,15 @@ The episode **ends by itself** at the first control step where the check holds (
 length of **60 s** of simulated time runs out (a failure: AM-Bench's time-out ends the episode at control step
 7199; reason `episode_timeout`).
 
-Neither the cabinet's pose, the sliding door's position nor the can's pose is given: the cabinet, the door and its handle have to be found with the forward-looking onboard cameras, the can is hidden behind the closed door at the start, and whether the can ended at the right height and at rest can only be judged from the images together with proprioception. Success is not reported during the episode.
+Neither the cabinet's pose, the sliding door's position nor the can's pose is given: the cabinet, the door and its handle have to be found with the forward-looking onboard cameras, the can is hidden behind the closed door at the start, and whether the can ended at the right height and at rest can only be judged from the images together with proprioception. Success is reported only by the episode's end (reason `success`).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, at the time-out above, when your time
   is up, or on a simulator error. Whatever you knock over or push stays that way.
 - **No privileged state.** You see what the two onboard cameras see (RGB, and depth if you ask) plus the robot's own
   proprioception (airframe pose and velocity, arm joints, gripper, tool-frame pose, joint efforts, the target in force).
-  No object poses, no success signal.
+  No object poses and no success measure; when AM-Bench's check holds, the episode ends at that control step
+  (`meta["done"]` true, `meta["reason"]` `"success"`).
 - **Simulated time only moves when you move the robot** (`submit`, or `get_obs(seconds=...)`): between your calls the
   world is frozen, and the episode lasts at most 60 s of simulated time. There is no step budget otherwise:
   the time limit (`## Time limit`) is your only budget (`meta["time_left_s"]`).

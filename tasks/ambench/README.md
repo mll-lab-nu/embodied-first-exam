@@ -20,6 +20,10 @@ Read [Before you run](#before-you-run) first: the first run builds the simulator
   run these tasks. No account, login or token is needed.
 - **Host.** Linux x86_64, Docker with BuildKit (the `buildx` plugin) and the NVIDIA Container Toolkit, one RTX-class NVIDIA
   GPU (Isaac renders with RTX even headless) with a driver Isaac Sim 5.1 supports (checked: 580.159 on an RTX 4090).
+  `gpu_types` lists six RTX-class models; four are verified: the RTX 4090 (Validation, below) and L40, L40S and RTX PRO
+  6000 Blackwell (graded evaluation trials: every start rebuilt to its `initial_sha`, and successes in both modes on L40
+  and L40S, in standard mode on the RTX PRO 6000 Blackwell). L4 and RTX 6000 Ada are not verified (Determinism: the
+  hashes are per GPU model).
 - **Disk.** About 60 GB free for the first build (the image is about 22 GB, plus BuildKit's cache while it builds).
 - **First run: the image builds itself (about 25 min on a fast link).** Harbor builds the simulator image from public sources only
   (Docker Hub `nvidia/cuda`, snapshot.ubuntu.com, github.com, pypi.org, download.pytorch.org,
@@ -191,10 +195,17 @@ those of this GPU model; another GPU model may differ in the last bits (BUILD_ON
   `live_success`, AM-Bench's check as the service ran it after every control step (no end-of-episode hold: AM-Bench has
   none). The service dumps the episode when the collect hook signals it and exits; the hook
   (`environment/sim/finalize.sh`) writes `final.json` from `episode.json` (`graded_by` "live", `replays` 0), then films
-  the rows once (`rcb_ambench.py film`: a fresh process with the render worker, `replay.mp4`) as the video only: nothing
-  of the film is compared, it is not run again, its failure or its time limit (`RCB_FILM_LIMIT_S` 1800 s) costs the
-  video. The live service does not film: rendering inside the physics process makes AM-Bench's GPU physics
-  timing-dependent (Determinism), and its cameras are drawn by the render worker only for the agent's own frames. No
+  the rows once (`rcb_ambench.py film`: a fresh process with the render worker, `replay.mp4`) as the video only: it is
+  not run again, its failure or its time limit (`RCB_FILM_LIMIT_S` 1800 s) costs the video. GPU PhysX does not replay
+  every episode bit for bit (Determinism; PullLever never), so the film is not taken for the live episode: the hook
+  compares its outcome and end state with the live record, for the video only (`final.json` and `reward.json`
+  `video_matches_live`: the same success, control step and end-state hash; `video_outcome_matches_live`: the same
+  success and control step). A film with the live outcome in other last bits is kept and marked (`video_note`); a film
+  with another outcome is dropped (`video` false, `video_error`), since it would show an episode that did not happen.
+  The verdict is on disk before the film and never changes (`ci_checks/benchmarks/ambench/advisory-finalize-video.py`
+  runs the hook on stubs: matching, other last bits, other outcome, failed film). The live service does not film: rendering inside the
+  physics process makes AM-Bench's GPU physics timing-dependent (Determinism), and its cameras are drawn by the render
+  worker only for the agent's own frames. No
   verdict on the agent (`infra_error`): a missing, unreadable or unfinalized `final.json`, no `episode.json`, a give-up
   after crashes between calls, the episode never ending, GPU faults in the live episode's physics (`live_gpu_faults` >
   0, counted in the service's output from its marker before `EP.begin` to the end of that start, so a start that died
