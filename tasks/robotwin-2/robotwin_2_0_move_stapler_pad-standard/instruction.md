@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · move_stapler_pad — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Use appropriate arm to move the stapler to a colored mat. The success check, run at the end of every call, passes when the centre of the stapler's base is within 2 cm in x and in y and 1 cm in height of the mat's centre, the stapler's orientation is, within about 2 degrees, that of standing upright with its long axis along the mat's long side (the x direction; either way round), and both grippers are commanded open (above 0.8).
+cannot open. You get one client and one episode. **Task:** Use appropriate arm to move the stapler to a colored mat. The success check, run at the end of every call, passes when the centre of the stapler's base is within 2 cm in x and in y and 1 cm in height of the mat's centre, the stapler stands upright with its long axis along the mat's long side (the x direction; either way round) (the check: the absolute values of the four components of the stapler's orientation quaternion in the world frame differ from each other by less than 0.02, largest minus smallest; this holds whenever the stapler is within 1.5 degrees of one of those orientations and can fail from about 1.6 degrees on, depending on the axis of the deviation), and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

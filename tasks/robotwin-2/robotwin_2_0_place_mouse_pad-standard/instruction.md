@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_mouse_pad — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Grab the mouse and place it on a colored mat. The success check, run at the end of every call, passes when the mouse's position is within 1.5 cm in x and 1.2 cm in y of the mat's centre, its orientation is, within about 25 degrees, that of lying flat with its long axis along the mat's long side (the y direction; either way round), and both grippers are commanded open (above 0.8).
+cannot open. You get one client and one episode. **Task:** Grab the mouse and place it on a colored mat. The success check, run at the end of every call, passes when the mouse's position is within 1.5 cm in x and 1.2 cm in y of the mat's centre, it lies flat with its long axis along the mat's long side (the y direction; either way round) (the check: with a = the absolute values of the mouse's orientation quaternion in the world frame, in (w, x, y, z) order, a_w·a_x or a_y·a_z is within 0.015 of 0.49; this holds whenever the mouse is within 18 degrees of one of those two orientations, and a turn about the vertical alone may reach about 25 degrees), and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

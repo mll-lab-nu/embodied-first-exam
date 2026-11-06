@@ -1,7 +1,7 @@
 # RoboTwin 2.0 · place_fan — STANDARD MODE (robot as a service, eai-standard/2.1)
 
 You control a dual-arm **ALOHA-AgileX** robot **as if it were real hardware**: the simulator runs in a service you
-cannot open. You get one client and one episode. **Task:** Grab the fan and place it on a colored mat, and make sure the fan is facing the robot. The success check, run at the end of every call, passes when the centre of the fan's base is within 4 cm in x, in y and in z of the mat's centre, the fan stands upright and faces the robot (its front toward -y) within about 8 degrees, and both grippers are commanded open (above 0.8).
+cannot open. You get one client and one episode. **Task:** Grab the fan and place it on a colored mat, and make sure the fan is facing the robot. The success check, run at the end of every call, passes when the centre of the fan's base is within 4 cm in x, in y and in z of the mat's centre, the fan stands upright and faces the robot (its front toward -y) (the check: the fan's orientation quaternion in the world frame, in (w, x, y, z) order with its sign chosen so that w ≥ 0, differs from (0.707, 0.707, 0, 0) by less than 0.05 in every component; this holds whenever the fan is within 5.5 degrees of that orientation and can fail from about 5.7 degrees on, depending on the axis of the deviation), and both grippers are commanded open (above 0.8).
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends on success, when your time is up, or on a

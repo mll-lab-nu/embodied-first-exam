@@ -22,8 +22,8 @@ times as you want. Your deliverable is **one replayable trajectory**, not a gene
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+It is replayed open-loop twice from the same initial state in a fresh process and scored 1 if the task is
+completed at the end of both replays and both end in the same state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
