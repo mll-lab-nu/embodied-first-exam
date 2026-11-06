@@ -55,6 +55,19 @@ ALLOW = [
      r"^https://github\.com/f1db/f1db/?$",
      "CC BY 4.0 attribution the licence requires, of F1DB's historical circuit outlines (track geometry the instruction "
      "gives the agent, not a controller or a demonstration)"),
+    (r"^embodied-olympics-match-.*-privileged$",
+     r"^(?:files:embodied-olympics-match-files/sim/bodies/[\w-]+/body\.toml|files:embodied-olympics-match-files/sim/variants/[0-9a-f]+/sport/sport\.toml|environment/fullsim/sports/soccer_ssl/sport\.toml)$",
+     r"^https://(?:frankarobotics\.github\.io/docs/robot_specifications\.html|github\.com/frankaemika/(?:libfranka/blob/0\.9\.2/\S+|franka_ros)|"
+     r"github\.com/BoosterRobotics/booster_gym|github\.com/unitreerobotics/(?:unitree_rl_gym|unitree_sdk2)|github\.com/LeCAR-Lab/FALCON|"
+     r"github\.com/nvidia-isaac/WBC-AGILE|github\.com/google-deepmind/mujoco_menagerie/tree/main/unitree_g1|"
+     r"github\.com/RoboCup-HumanoidSoccerLeague/HSL-Rules|github\.com/RoboCup-SSL/ssl-rules)$",
+     "the frozen simulator's own citations in a privileged twin's full simulator: the robot bodies' hardware limits "
+     "(`[sources]` of body.toml) and the sports' rule books (sport.toml `url`), documentation of the simulator the "
+     "agent may read in full; no controller, demonstration or solution of the task"),
+    (r"^embodied-olympics-match-.*-privileged$", r"^files:embodied-olympics-match-files/sim/renderers/presentation/menagerie\.json$",
+     r"^https://(?:github\.com/google-deepmind/mujoco_menagerie|raw\.githubusercontent\.com/google-deepmind/mujoco_menagerie/\{commit\}/\{path\})$",
+     "the spectator renderer's asset manifest (MuJoCo Menagerie visual meshes pinned by commit and sha256), part of the "
+     "full simulator; robot meshes, not task material"),
 ]
 
 

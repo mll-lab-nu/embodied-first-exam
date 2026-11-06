@@ -20,8 +20,10 @@
 # directories listed below only.
 [protocols]
 realtime = "eai-standard-realtime/1.0"   # the real-time matches: Embodied Olympics' own service and referee
-standard = ["eai-standard-turn/1.0"]              # the turn-based matches: the world waits for the player whose turn it
-                                                  # is, a chess clock per player (Embodied Olympics' own service and referee)
+standard = ["eai-standard-turn/1.0",              # the turn-based matches: the world waits for the player whose turn it
+            "eai-standard-lockstep/1.0"]          # is, a chess clock per player (Embodied Olympics' own service and referee);
+                                                  # the real-time matches' standard twins: the same service, the world in
+                                                  # lockstep (environment/sim/core/lockstep.py, Embodied First Exam's)
 
 [[tasks]]
 name = "embodied-olympics-match-foosball-match-i01-realtime"
@@ -124,6 +126,72 @@ source_commits = ["0d7f680cc049"]
 kind = "fullsim-policy"
 
 [[tasks]]
+name = "embodied-olympics-match-badminton-duelrl-i01-privileged"
+source_task = "roboolympics/badminton-duel-wallclock-program-standard"
+source_commits = ["b12667a02300"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-badminton-match-i04-privileged"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+source_commits = ["62333496959f"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-badminton-matchlow-i01-privileged"
+source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
+source_commits = ["02c93822a35e"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-fencing-bout-i02-privileged"
+source_task = "roboolympics/fencing-bout-wallclock-program-standard"
+source_commits = ["a6712a675343"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-foosball-match-i01-privileged"
+source_task = "roboolympics/foosball-match-wallclock-program-standard"
+source_commits = ["d71e9f642ead"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-soccer-jointcpu-i01-privileged"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+source_commits = ["7ae66874c32e"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-soccer-jointgpu-i01-privileged"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+source_commits = ["7ae66874c32e"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-soccerssl-match-i01-privileged"
+source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
+source_commits = ["91156213b0de"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennis-duelrl-i01-privileged"
+source_task = "roboolympics/tabletennis-duel-wallclock-program-standard"
+source_commits = ["13f5e0981a99"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennis-match-i04-privileged"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+source_commits = ["e25d8cc11861"]
+kind = "fullsim-policy"
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennis-matchlow-i01-privileged"
+source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
+source_commits = ["02c93822a35e"]
+kind = "fullsim-policy"
+
+[[tasks]]
 name = "embodied-olympics-match-tabletennis-matchlow-i01-realtime"
 source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
 revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
@@ -154,3 +222,168 @@ patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py",
            # RemoteHost reads only typed fields of the agent's own skill server's answers; fexam_reward.py skips malformed call-log rows; to be sent upstream
            # no upload host / jail in the sim (RCB_SKILL_REMOTE_ONLY), step() one bounded synchronous call per due control step (RCB_SKILL_INLOOP_TIMING sync), skill_load episode rows, bounded live waits (tasks/embodied-olympics-match/README.md)
            # one deadline per live call (send included), 128 KiB step answers, step() retries a down server once a second, sync forced for tcp:, applied_tick counts for agent_sim_error (tests/grade.py = core/grading.py), bounded skill_load rows
+
+# The standard twins of the real-time matches (Embodied First Exam, board 0305): each is its realtime
+# task's export, copied, with the sim service started as core/lockstep.py (the world advances only while the player
+# waits or an act takes effect; tasks/embodied-olympics-match/README.md) and the mode's text (instruction, task.toml,
+# README, fexam_reward.py realtime = 0). A re-export of the realtime task is copied again the same way.
+
+[[tasks]]
+name = "embodied-olympics-match-badminton-duelrl-i01-standard"
+source_task = "roboolympics/badminton-duel-wallclock-program-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["b12667a02300"]
+patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh", "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+realtime_twin = "embodied-olympics-match-badminton-duelrl-i01-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-badminton-match-i04-standard"
+source_task = "roboolympics/badminton-match-wallclock-program-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["62333496959f"]
+patched = ["instruction.md", "task.toml", "environment/docker-compose.yaml", "environment/sim/spectator/sport_video.py", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+realtime_twin = "embodied-olympics-match-badminton-match-i04-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-badminton-matchlow-i01-standard"
+source_task = "roboolympics/badminton-match-wallclock-program-lowlevel-standard"
+revision = "badminton-wallclock-12+duel-14+core-0.2"
+source_commits = ["02c93822a35e"]
+patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "environment/sim/core/realtime.py", "README.md", "environment/sim/skilleval/skillhost.py", "environment/skillkit/skillhost.py", "tests/fexam_reward.py", "environment/sim/skilleval/sandbox.py", "environment/skillkit/sandbox.py", "environment/sim/skilleval/inloop.py", "environment/sim/skilleval/tests/test_skilleval.py", "environment/sim/core/http.py", "environment/sim/core/game.py", "environment/game", "environment/sim/core/__init__.py", "environment/sim/sport/plugin.py", "instruction.md", "environment/sim/core/lockstep.py"]
+realtime_twin = "embodied-olympics-match-badminton-matchlow-i01-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-foosball-match-i01-standard"
+source_task = "roboolympics/foosball-match-wallclock-program-standard"
+revision = "foosball-program-v2+core-0.2"
+source_commits = ["d71e9f642ead"]
+patched = ["instruction.md", "environment/docker-compose.yaml", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "task.toml", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+realtime_twin = "embodied-olympics-match-foosball-match-i01-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-soccer-jointcpu-i01-standard"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+revision = "soccer-2v2-11"
+source_commits = ["7ae66874c32e"]
+patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py", "task.toml", "solution/solve.sh", "environment/sim/core/lockstep.py", "environment/docker-compose.yaml", "instruction.md", "README.md", "solution/joint_oracle.py"]
+realtime_twin = "embodied-olympics-match-soccer-jointcpu-i01-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-soccer-jointgpu-i01-standard"
+source_task = "roboolympics/soccer-match-wallclock-program-lowlevel-standard"
+revision = "soccer-2v2-11"
+source_commits = ["7ae66874c32e"]
+patched = ["environment/sim/audit/policy_fingerprint.py", "tests/fexam_reward.py", "task.toml", "solution/solve.sh", "environment/sim/core/lockstep.py", "environment/docker-compose.yaml", "instruction.md", "README.md", "solution/joint_oracle.py"]
+realtime_twin = "embodied-olympics-match-soccer-jointgpu-i01-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-soccer-match-i00-standard"
+source_task = "roboolympics/soccer-match-wallclock-program-standard"
+revision = "soccer-2v2-10+core-0.2"
+source_commits = ["0d7f680cc049"]
+patched = ["instruction.md", "environment/sim/core/realtime.py", "task.toml", "environment/docker-compose.yaml", "README.md", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+realtime_twin = "embodied-olympics-match-soccer-match-i00-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-soccerssl-match-i01-standard"
+source_task = "roboolympics/soccer_ssl-match-wallclock-program-standard"
+revision = "soccer_ssl-1"
+source_commits = ["91156213b0de"]
+patched = ["instruction.md", "task.toml", "README.md", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+realtime_twin = "embodied-olympics-match-soccerssl-match-i01-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennis-duelrl-i01-standard"
+source_task = "roboolympics/tabletennis-duel-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["13f5e0981a99"]
+patched = ["instruction.md", "environment/sim/core/service.py", "tests/test.sh", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+realtime_twin = "embodied-olympics-match-tabletennis-duelrl-i01-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennis-match-i04-standard"
+source_task = "roboolympics/tabletennis-match-wallclock-program-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["e25d8cc11861"]
+patched = ["instruction.md", "environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "README.md", "environment/sim/core/realtime.py", "environment/sim/core/lockstep.py", "tests/fexam_reward.py"]
+realtime_twin = "embodied-olympics-match-tabletennis-match-i04-realtime"
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennis-matchlow-i01-standard"
+source_task = "roboolympics/tabletennis-match-wallclock-program-lowlevel-standard"
+revision = "wallclock-15+duel-wallclock-12+low-inloop-1+core-0.2"
+source_commits = ["02c93822a35e"]
+patched = ["environment/sim/core/service.py", "environment/sim/core/grading.py", "tests/grade.py", "environment/docker-compose.yaml", "task.toml", "environment/sim/core/realtime.py", "README.md", "environment/sim/skilleval/skillhost.py", "environment/skillkit/skillhost.py", "tests/fexam_reward.py", "environment/sim/skilleval/sandbox.py", "environment/skillkit/sandbox.py", "environment/sim/skilleval/inloop.py", "environment/sim/skilleval/tests/test_skilleval.py", "environment/sim/core/http.py", "environment/sim/core/game.py", "environment/game", "environment/sim/core/__init__.py", "environment/sim/sport/plugin.py", "instruction.md", "environment/sim/core/lockstep.py"]
+realtime_twin = "embodied-olympics-match-tabletennis-matchlow-i01-realtime"
+
+# Table tennis on two Unitree G1s (sport tabletennis_g1, a different sport from `tabletennis`'s Franka Panda): Embodied
+# Olympics' generated task tabletennis_g1-match-wallclock-program-engineer-standard (core 0.5, which has no exporter of
+# its own), turned into one Harbor 0.23.0 task by Embodied First Exam against level 4 (owner 11-01: one task, the hardest opponent). `patched` = the files
+# changed from the generated task: the seat unmetered (core/metering/think_clock.py), the session's end decides
+# (core/realtime.py collect, core/phases.py, tests/eo_judge/verdict.py: no-show / abandoned, RO_COLLECT_ENDS_MATCH), graded by the live match (core/service.py,
+# tests/eo_judge/verdict.py and evidence.py: RO_VERDICT_REPLAY=0), the containers on one network namespace (the
+# compose file, environment/Dockerfile: localhost addresses), the instruction's session rule, in the CPU tier (matchcpu) the
+# seat without its GPU (the release's GPU serves only its training kit), solution/ro_client.py (the reference plays observe, act, wait in
+# lockstep). The x1 world's minimum (sport.toml [machine] min_world_vcpu, VCPUMIN in the release): 12 vCPU passes on a
+# Xeon Platinum 8488C (scripts/task_resources.toml); the image's sport.toml is unchanged (its release lock). The real-time
+# twins: sim/g1duel.py solves the toss speeds of the opponent's serves before play (the opponent's first toss solved it on
+# the world thread: one ~0.15 s step).
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennisg1-matchcpu-i01-realtime"
+source_task = "roboolympics/tabletennis_g1-match-wallclock-program-engineer-standard"
+revision = "g1tt-10+core-0.5"
+source_commits = ["45ed806a5"]
+patched = ["instruction.md", "README.md", "task.toml", "environment/Dockerfile", "environment/docker-compose.yaml", "environment/sim/Dockerfile", "environment/sim/core/realtime.py", "environment/sim/core/service.py", "environment/sim/core/metering/think_clock.py", "environment/sim/core/phases.py", "environment/sim/core/http.py", "environment/match_end.sh", "tests/Dockerfile", "tests/test.sh", "tests/fexam_reward.py", "tests/eo_judge/verdict.py", "tests/eo_judge/evidence.py", "solution/solve.sh", "solution/ro_client.py", "environment/sim/sport/sim/g1duel.py"]
+
+# Its standard twin (the same task; the world in lockstep on core 0.5: environment/sim/core/lockstep.py, Embodied
+# First Exam's, with the platform's opponent held to the same rule: core/platform_seat.py live = False).
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennisg1-matchcpu-i01-standard"
+source_task = "roboolympics/tabletennis_g1-match-wallclock-program-engineer-standard"
+revision = "g1tt-10+core-0.5"
+source_commits = ["45ed806a5"]
+patched = ["instruction.md", "README.md", "task.toml", "environment/Dockerfile", "environment/docker-compose.yaml", "environment/sim/Dockerfile", "environment/sim/core/realtime.py", "environment/sim/core/service.py", "environment/sim/core/metering/think_clock.py", "environment/sim/core/phases.py", "environment/sim/core/http.py", "environment/match_end.sh", "environment/sim/core/lockstep.py", "tests/Dockerfile", "tests/test.sh", "tests/fexam_reward.py", "tests/eo_judge/verdict.py", "tests/eo_judge/evidence.py", "solution/solve.sh", "solution/ro_client.py"]
+realtime_twin = "embodied-olympics-match-tabletennisg1-matchcpu-i01-realtime"
+
+# Its privileged twin (Embodied First Exam's: the full simulator in development; the program plays seat A of a fresh
+# match with the sport's in-process runner, core/local.py, seeing the full state: tools/g1tt_priv, tests/formal.py).
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennisg1-matchcpu-i01-privileged"
+source_task = "roboolympics/tabletennis_g1-match-wallclock-program-engineer-standard"
+revision = "g1tt-10+core-0.5"
+source_commits = ["45ed806a5"]
+kind = "fullsim-policy"
+
+# The GPU tier (matchgpu, the same task with the release's seat GPU: one NVIDIA GPU for the training kit; the
+# privileged twin's container adds the kit, /opt/train, /opt/robot, /opt/ro, from the seat image; its verifier has no GPU).
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennisg1-matchgpu-i01-realtime"
+source_task = "roboolympics/tabletennis_g1-match-wallclock-program-engineer-standard"
+revision = "g1tt-10+core-0.5"
+source_commits = ["45ed806a5"]
+patched = ["instruction.md", "README.md", "task.toml", "environment/Dockerfile", "environment/docker-compose.yaml", "environment/sim/Dockerfile", "environment/sim/core/realtime.py", "environment/sim/core/service.py", "environment/sim/core/metering/think_clock.py", "environment/sim/core/phases.py", "environment/sim/core/http.py", "environment/match_end.sh", "tests/Dockerfile", "tests/test.sh", "tests/fexam_reward.py", "tests/eo_judge/verdict.py", "tests/eo_judge/evidence.py", "solution/solve.sh", "solution/ro_client.py", "environment/sim/sport/sim/g1duel.py"]
+
+# Its standard twin (the same task; the world in lockstep on core 0.5: environment/sim/core/lockstep.py, Embodied
+# First Exam's, with the platform's opponent held to the same rule: core/platform_seat.py live = False).
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennisg1-matchgpu-i01-standard"
+source_task = "roboolympics/tabletennis_g1-match-wallclock-program-engineer-standard"
+revision = "g1tt-10+core-0.5"
+source_commits = ["45ed806a5"]
+patched = ["instruction.md", "README.md", "task.toml", "environment/Dockerfile", "environment/docker-compose.yaml", "environment/sim/Dockerfile", "environment/sim/core/realtime.py", "environment/sim/core/service.py", "environment/sim/core/metering/think_clock.py", "environment/sim/core/phases.py", "environment/sim/core/http.py", "environment/match_end.sh", "environment/sim/core/lockstep.py", "tests/Dockerfile", "tests/test.sh", "tests/fexam_reward.py", "tests/eo_judge/verdict.py", "tests/eo_judge/evidence.py", "solution/solve.sh", "solution/ro_client.py"]
+realtime_twin = "embodied-olympics-match-tabletennisg1-matchgpu-i01-realtime"
+
+# Its privileged twin (Embodied First Exam's: the full simulator in development; the program plays seat A of a fresh
+# match with the sport's in-process runner, core/local.py, seeing the full state: tools/g1tt_priv, tests/formal.py).
+
+[[tasks]]
+name = "embodied-olympics-match-tabletennisg1-matchgpu-i01-privileged"
+source_task = "roboolympics/tabletennis_g1-match-wallclock-program-engineer-standard"
+revision = "g1tt-10+core-0.5"
+source_commits = ["45ed806a5"]
+kind = "fullsim-policy"

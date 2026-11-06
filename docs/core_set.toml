@@ -1684,6 +1684,10 @@ task = "embodied-olympics-match-tabletennis-matchlow-i01"
 default_mode = "realtime"
 
 [[task]]
+task = "embodied-olympics-match-tabletennisg1-matchcpu-i01"
+default_mode = "realtime"
+
+[[task]]
 task = "robopaint-acrylic-applesoranges-i00"
 default_mode = "standard"
 
