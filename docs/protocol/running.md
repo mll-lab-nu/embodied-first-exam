@@ -396,6 +396,14 @@ that has `write:packages`). A new image is a new tag of `efe`, which is public, 
 change (a new package would start private, and the API cannot change that). An image with `images/<name>/BUILD_ONLY` (Isaac Sim inside: RoboLab, BEHAVIOR-1K) is never
 public: every host builds it (the marker file says how, and what licences and data it needs), and maintainers may keep
 a private package for org members.
+A task on such an image starts its Dockerfile with the image's recipe and names the private image as `build.cache_from`
+(README "Before you run"). A runner without access to the private package gets an authorization warning from BuildKit
+and builds the recipe from public sources. Every recipe pins its inputs (base images by digest, system packages from a
+dated snapshot, repositories by commit, files by sha256) and every Python package it installs at the tested image's
+version (a lock or `==` list in `images/<name>/` or in the recipe); most recipes also compare the installed package lists with the tested image's
+and stop when they differ. A build from source therefore gives the private image's package versions, or it fails;
+it never runs a task on other versions. A failure there (a release withdrawn from an index, a mirror serving other
+files) is a fault of the recipe: report it with the step's output.
 A files-only image (`images/<name>/FILES.json`) is no docker build: `scripts/files_image.py build <name>` writes it byte
 for byte from the repository, so it has the digest the task Dockerfiles pin (`COPY --from=<tag>@sha256:…`), and loads it;
 `files_image.py push` pushes those same bytes (`docker push` would recompress the layer). A private one built locally
