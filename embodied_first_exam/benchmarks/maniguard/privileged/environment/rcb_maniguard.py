@@ -719,7 +719,7 @@ class Session:
         bundle = getattr(r, "_franka_panda_asset_bundle", None)
         if bundle != LONGFINGER_BUNDLE:
             raise RuntimeError(f"robot asset bundle is {bundle!r}, not {LONGFINGER_BUNDLE!r}: the long-finger USD is missing from "
-                               "$OMNIGIBSON_DATA_PATH/omnigibson-robot-assets/models/franka/ (scripts/maniguard/prep_data.py)")
+                               "$OMNIGIBSON_DATA_PATH/omnigibson-robot-assets/models/franka/ (images/maniguard/prep_data.py)")
 
     # ---- control
     def hold_action(self) -> np.ndarray:

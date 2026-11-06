@@ -1,8 +1,7 @@
 ManiGuard-Bench task files (scene_ep1.json, diagnostics.jsonl)
 
-The files scene_ep1.json and diagnostics.jsonl under scripts/maniguard/instances/<family>/<task>/ (and their copies in the
-generated task directories tasks/maniguard-*/.../instance/) are the base level of the listed ManiGuard-Bench tasks, copied
-unchanged from
+The files scene_ep1.json and diagnostics.jsonl in this directory are the base level of the ManiGuard-Bench task named in
+instance.json (`task`), copied unchanged from
 
   IDEAS-Lab-Northwestern/ManiGuard-Bench (Hugging Face dataset), revision af09438cebcd8f532e82cb5302701173ebb59f6e
   https://huggingface.co/datasets/IDEAS-Lab-Northwestern/ManiGuard-Bench

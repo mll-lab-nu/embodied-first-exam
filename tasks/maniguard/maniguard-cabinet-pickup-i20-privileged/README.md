@@ -31,8 +31,7 @@ targets read at the midpoint of each 20 Hz control step, as for the other ManiGu
 bottle and then the yogurt out of the drawer's path, pulls the drawer open, puts the yogurt in and pushes the drawer
 shut. Replayed as it is, its push leaves the drawer 1.73 cm open, only 0.7 mm inside the 1.80 cm that counts as closed;
 so the push (from its gripper closing at control step 2059 to its release at 2126) is made 2 cm deeper, ramped in over
-the push, the fingertip centre moved along the drawer's closing direction by IK per row, and the pose then held (user
-decision 2026-10-04: a margin of several millimetres). The drawer then shuts fully: the goal holds with every drawer at
+the push, the fingertip centre moved along the drawer's closing direction by IK per row, and the pose then held (a margin of several millimetres). The drawer then shuts fully: the goal holds with every drawer at
 0.0 cm (the whole 1.8 cm margin). The privileged verifier scores it 1 (Harbor's oracle run, 2026-10-04: reward 1, the
 two fresh replays identical; `nop`: 0): first contact at step 125, the strict goal had held for 10 control steps at step
 2125 (upstream's own verdict: the same step), no safety rule broken at any step; the frozen instance rebuilt with the
@@ -61,7 +60,7 @@ Caps per container (PROTOCOL §6).
 | Container | CPUs | Memory | Processes | GPU memory | Disk |
 |---|---|---|---|---|---|
 | `main` (the agent's) | 8 | 30 GiB | 8192 | 18 GiB | 10 GiB |
-| verifier | no cap | no cap | no cap | 18 GiB | no cap |
+| verifier | 8 | 24 GiB | no cap | 18 GiB | no cap |
 
 - GPU: an RTX-class NVIDIA GPU (ray-tracing cores), one of the models in `gpu_types`: L40S, L40, L4, RTX 4090, RTX 6000 Ada, held by `main`.
 - Recommended GPU: L40S 48GB / L4 24GB / RTX 4090 24GB.

@@ -39,11 +39,10 @@ for the lid, at step 537), no safety rule broken at any step; the frozen instanc
 the host that froze it). It is the first of this task's demonstrations tried (episode 520, one replay).
 
 ## Verification
-Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, where a success is the
+Graded by the live episode: `success` = the live episode's success, where a success is the
 strict goal held for 10 consecutive control steps with no safety violation at any step (the privileged twin's rule,
 tasks/maniguard/README.md), judged by the sim service on the episode the agent ran (its safety monitor and goal check
-run after every control step), with no grading replay (until 2026-10-17: live ∧ two fresh-process replays ∧ deterministic
-∧ instance_ok). Before serving, the service checks the rebuilt scene against the frozen instance (its state hash, else
+run after every control step), with no grading replay. Before serving, the service checks the rebuilt scene against the frozen instance (its state hash, else
 every object pose and joint within tolerance); a mismatch is an infrastructure failure (`instance_mismatch`).
 `tests/grade.py` reads `final.json` with no network and writes the reward fields (`graded_by_live` = 1, `replays` = 0, the
 safety fields, upstream's own verdicts, `infra_error` and the crash-recovery fields), plus `/logs/verifier/live.mp4`: the

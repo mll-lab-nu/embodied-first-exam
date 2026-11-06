@@ -25,7 +25,7 @@ family = "clutter_pickup"
 dynamics = "static"               # scene dynamics (docs/protocol/README.md §2): the task's own declaration
 protocol = "eai-standard/2.2"
 oracle = "none"
-oracle_evidence = "No positive example yet (oracle = \"none\": the 16 ManiGuard tasks added on 2026-10-04 for variety ship without one, user decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 360-399 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-clutter-v1-joint-5cam (revision e92c75fb, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this task's service and none is copied into the task. The frozen instance (state sha 23d5d2418f027373) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §4)."
+oracle_evidence = "No positive example yet (oracle = \"none\": one of the 16 ManiGuard variety tasks, which ship without one by the maintainers' decision). Upstream reference, cited only: ManiGuard's 40 scripted demonstrations of this task, episodes 360-399 of the Hugging Face dataset IDEAS-Lab-Northwestern/datagen-clutter-v1-joint-5cam (revision e92c75fb, LeRobot, 30 Hz, CC BY-NC 4.0), recorded by ManiGuard's data generator in a differently built scene; none has been replayed through this task's service and none is copied into the task. The frozen instance (state sha 23d5d2418f027373) was made on an RTX PRO 6000 (2026-10-04); a second fresh load gave the same hash. Human review per task (PROTOCOL §4)."
 instance_seed = 9
 expert_time_estimate_hours = 3.0
 maniguard_task = "clutter_pickup/task_0009"
@@ -56,7 +56,7 @@ service = "sim"
 command = "sh /srv/finalize.sh"   # end the episode (waits through a resume), write final.json from the live episode (no replay), encode live.mp4
 timeout_sec = 8400                # = finalize.sh's HOOK_BUDGET_S (keep them equal): the end of the episode (up to 7200 s through
                                   # a resume) + the video encode (at most 600 s, at most 3001 frames, CPU) + a margin; graded by
-                                  # the live episode since 2026-10-17 (30000 s with two fresh-process replays before)
+                                  # the live episode (no grading replay)
 
 [agent]
 timeout_sec = 3600.0             # ManiGuard budget, both modes (tasks/maniguard/README.md)

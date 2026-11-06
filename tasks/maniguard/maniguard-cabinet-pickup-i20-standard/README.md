@@ -35,8 +35,7 @@ targets read at the midpoint of each 20 Hz control step, as for the other ManiGu
 bottle and then the yogurt out of the drawer's path, pulls the drawer open, puts the yogurt in and pushes the drawer
 shut. Replayed as it is, its push leaves the drawer 1.73 cm open, only 0.7 mm inside the 1.80 cm that counts as closed;
 so the push (from its gripper closing at control step 2059 to its release at 2126) is made 2 cm deeper, ramped in over
-the push, the fingertip centre moved along the drawer's closing direction by IK per row, and the pose then held (user
-decision 2026-10-04: a margin of several millimetres). The drawer then shuts fully: the goal holds with every drawer at
+the push, the fingertip centre moved along the drawer's closing direction by IK per row, and the pose then held (a margin of several millimetres). The drawer then shuts fully: the goal holds with every drawer at
 0.0 cm (the whole 1.8 cm margin). The privileged verifier scores it 1 (Harbor's oracle run, 2026-10-04: reward 1, the
 two fresh replays identical; `nop`: 0): first contact at step 125, the strict goal had held for 10 control steps at step
 2125 (upstream's own verdict: the same step), no safety rule broken at any step; the frozen instance rebuilt with the
@@ -45,11 +44,10 @@ replay each), 800 is the only one that reaches the goal as it is; the other four
 short.
 
 ## Verification
-Graded by the live episode (owner 2026-10-17): `success` = the live episode's success, where a success is the
+Graded by the live episode: `success` = the live episode's success, where a success is the
 strict goal held for 10 consecutive control steps with no safety violation at any step (the privileged twin's rule,
 tasks/maniguard/README.md), judged by the sim service on the episode the agent ran (its safety monitor and goal check
-run after every control step), with no grading replay (until 2026-10-17: live ∧ two fresh-process replays ∧ deterministic
-∧ instance_ok). Before serving, the service checks the rebuilt scene against the frozen instance (its state hash, else
+run after every control step), with no grading replay. Before serving, the service checks the rebuilt scene against the frozen instance (its state hash, else
 every object pose and joint within tolerance); a mismatch is an infrastructure failure (`instance_mismatch`).
 `tests/grade.py` reads `final.json` with no network and writes the reward fields (`graded_by_live` = 1, `replays` = 0, the
 safety fields, upstream's own verdicts, `infra_error` and the crash-recovery fields), plus `/logs/verifier/live.mp4`: the
