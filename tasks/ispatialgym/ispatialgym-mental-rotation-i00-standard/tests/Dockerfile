@@ -2,7 +2,7 @@
 # client base, embodied_first_exam/standard/client.env; it installs nothing).
 FROM docker.io/library/python:3.12.14-slim@sha256:f77ac9e44ae96ef2c90b8053ea08c31f8be030f824196b0ae4db6d462c84e51f
 COPY test.sh /tests/test.sh
-COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.4.0@sha256:84a9a59c9a148fdbe45fa21a59f1d0403cd7949bfbde59e515aa01aeb06f36e8 /standard/tests/grade.py /tests/grade.py
+COPY --from=ghcr.io/mll-lab-nu/efe:ispatialgym-files-0.4.1@sha256:1a688fc1caae5f71803e302afdf1c67ce998ad019070a709be6d3278177c4472 /standard/tests/grade.py /tests/grade.py
 RUN chmod +x /tests/test.sh
 # resources (PROTOCOL §6) # rcb-monitor
 COPY --from=ghcr.io/mll-lab-nu/efe:monitor-0.5.0@sha256:ecc5f24f1516ca11711d7c2d3ac07c89f79cd9220812c1244498ec71e352402a /opt/rcb_monitor/rcb_limits.py /tests/rcb_limits.py

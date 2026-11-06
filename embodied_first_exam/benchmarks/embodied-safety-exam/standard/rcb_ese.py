@@ -42,7 +42,7 @@ import numpy as np
 NOTE_NONE = -1
 MAX_NOTE = 4000                 # characters of one note (Embodied Safety Exam's MAX_TEXT)
 
-# ee_pose quaternions (Embodied Safety Exam 0.5.4; closes known issue 28 of docs/benchmarks/embodied-safety-exam.md). The episode normalises
+# ee_pose quaternions (Embodied Safety Exam 0.5.4). The episode normalises
 # every non-zero quaternion of a row it runs, so a near-zero "delta" such as (0, 0, 0.02, 0) would become a turn of the
 # hand of up to 180 degrees. The service therefore checks the rows of a /submit as they were sent, before anything runs:
 # a quaternion whose norm n is not finite or has |n - 1| > QUAT_UNIT_TOL refuses the whole request (400, counted in
