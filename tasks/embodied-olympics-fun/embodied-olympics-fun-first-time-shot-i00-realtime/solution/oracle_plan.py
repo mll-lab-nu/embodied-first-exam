@@ -1,4 +1,4 @@
-"""Standard-realtime reference solution: the privileged twin's reference solution (the rows its controller stepped, by
+"""Realtime reference solution: the privileged twin's reference solution (the rows its controller stepped, by
 action type) planned into the attempt at the control steps where they ran there: each run of one type is one chunk,
 `submit(..., at=<its first step>)`, sent ahead of time (at most max_ahead_steps ahead of the clock). The first chunk,
 at step 0, starts the clock; the rows then run at the same control steps as in the privileged replay."""
