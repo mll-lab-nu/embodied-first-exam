@@ -36,8 +36,8 @@ never drives an object pose or applies an object force, and it is never copied i
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
 in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final state hashes; in standard mode the replay
-hash must also equal the live final hash. A replay ends at the first success or the first failure. Failures are
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure. Failures are
 fail-fast and permanent and are checked after every 2 ms physics substep: a cell, the door, the remote or the tray
 below the table top or outside the workspace box, any of them touching the floor, the remote or the tray moved more
 than 3 cm or tilted more than 15 degrees, the gray cell touching the table, the green cell touching the table again

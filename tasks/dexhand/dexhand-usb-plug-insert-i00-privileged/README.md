@@ -34,8 +34,8 @@ environment or image.
 
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
-mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
 Failures are fail-fast and permanent: a dropped plug, the plug below z = 0.685 m, the hub moved more than 20 mm or
 tilted more than 20 degrees, plug or hub outside the workspace box, the cable's far end pulled off the desk, an arm
 link, the robot's stand or the parked hand touching anything, unstable

@@ -34,8 +34,8 @@ agent's environment or image.
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand model (`hand` member of the trajectory
 archive in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor
-targets twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in
-standard mode the replay hash must also equal the live final hash. A replay ends at the first success or the first
+targets in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first
 failure. Failures are fail-fast and permanent: grinder tilt above 10 degrees, base slide above 2 cm, lift above 2 cm,
 base below the counter top, body rotation above 45 degrees about its axis, crank more than 90 degrees net
 counter-clockwise, any arm/torso/stand link contact, unstable physics, or the 3,000-control budget. The frozen thresholds come from the task, never from

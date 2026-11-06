@@ -36,8 +36,8 @@ Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 traje
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
 in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
-mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
 Failures are fail-fast and permanent (checked after every 2 ms physics step): spilled glass (tilt above 15 degrees),
 glass off the tray footprint or lifted off the tray, any contact of the bottle with the tray, a glass or a hand, the
 tray set back on the source counter or dragged on the receiving counter, a tray or glass falling faster than 0.6 m/s

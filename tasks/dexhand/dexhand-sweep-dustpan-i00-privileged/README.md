@@ -35,9 +35,8 @@ force-bearing contacts per handle, grip drift <= 4.4 mm, rotation <= 0.022 rad).
 
 ## Verification
 The isolated verifier reads only the numeric `actions` rows and the `hand` label of `/app/output/trajectory.npz`
-(width must match the hand, finite, within the actuator limits, at most 160000 rows) and replays them twice in
-fresh processes from the frozen reset. Reward 1 requires both replays to succeed and to end in the same state hash
-(integration state, predicate state, hand and instance). The predicate is evaluated after every 0.5 ms physics step
+(width must match the hand, finite, within the actuator limits, at most 160000 rows) and replays them in one
+fresh process from the frozen reset. Reward 1 requires that replay to succeed. The predicate is evaluated after every 0.5 ms physics step
 from simulator state; the first failure is permanent and ends the episode; success ends it as well. A no-op, a
 truncated or partial sweep (five of six pieces, an unlifted pan, a short hold), a dropped tool, a wrong-width or
 wrongly labelled trajectory and agent-written metadata all score 0. Release status: provisional (human review).

@@ -34,10 +34,8 @@ Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 traje
 
 ## Verification
 privileged mode. Privileged: the isolated verifier reads only `actions` and `hand` from `/app/output/trajectory.npz`,
-rebuilds the frozen scene for that hand and replays the rows twice in fresh processes; reward 1 iff both replays
-succeed and their final state hashes are identical. Standard: the trusted simulator service journals every executed
-row; its collect hook replays the episode twice in fresh processes, and the isolated verifier grades only those
-service artifacts (live success, both replay successes, identical hashes, replay hash equal to the live hash).
+rebuilds the frozen scene for that hand and replays the rows in one fresh process; reward 1 iff that replay succeeds. Standard: the trusted simulator service
+judges the live episode it ran, nothing is replayed, and the isolated verifier grades only the service's record.
 
 The verdict is computed from simulator state only: fold angle > 2.6 rad, mean plastic crease angle on the fold line
 > 2.2 rad with coverage >= 0.9, free-edge to fixed-edge distance < 18 mm, strain < 0.08, every paper vertex over the

@@ -32,8 +32,8 @@ it is never copied into the agent's environment or image.
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
 in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
-mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
 Failures are fail-fast and permanent: module contact with anything but the hand, the holder or the target socket, an
 unsupported module falling faster than 0.2 m/s (no drop-and-catch window) or a free fall above 5 cm, a module below
 the bench top or pushed into the socket floor, leaving the workspace box, unstable physics, or the 3,000-control

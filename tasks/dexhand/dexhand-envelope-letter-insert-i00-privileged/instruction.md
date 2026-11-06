@@ -31,8 +31,7 @@ Every target must lie within `s.model.actuator_ctrlrange`. Both hands start from
 Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
 for `wuji`, at most 6000 rows, plus the `hand` member (`s.save_trajectory` writes both), and
 `/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
-hand and replays only these motor targets in two fresh processes; both replays must succeed and end in the identical
-state hash. A replay stops at the first success or the first failure; later rows are not executed. Object poses,
+hand and replays only these motor targets in one fresh process, which must succeed. A replay stops at the first success or the first failure; later rows are not executed. Object poses,
 configuration overrides, pickled arrays and success claims are not deliverables and are never read.
 Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
 

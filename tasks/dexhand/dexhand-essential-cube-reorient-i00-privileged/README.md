@@ -25,9 +25,8 @@ a terminal hold must be reached through contact alone.
 `solution/trajectory.npz` is the validated Sharpa Wave actuator trajectory of this frozen instance: 153 finger-target rows at 50 Hz (3.1 s) with the six wrist targets locked, executed through physical contact only. `solve.sh` hands it in unchanged as `/app/output/trajectory.npz`. It was derived offline by authoring controllers (not part of the repository) and is bound to the validated evidence (byte-identical trajectory, model hash, two fresh-process replays with the validated final state hash). Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 trajectory of this instance (165 rows of motor targets, physical contact only). With `DEXHAND_HAND=wuji` set for the oracle, `solve.sh` hands it in instead of the Sharpa Wave rows; the verifier replays it with the Wuji Hand 2.2.
 
 ## Verification
-The separate verifier replays the submitted numeric rows twice in fresh processes, with the hand recorded in the archive.
-Reward 1 needs every ordered stage and the terminal hold with no invariant or guard violation, and identical final
-state hashes. Invariants and guards are checked at every 2 ms
+The separate verifier replays the submitted numeric rows in one fresh process, with the hand recorded in the archive.
+Reward 1 needs every ordered stage and the terminal hold with no invariant or guard violation. Invariants and guards are checked at every 2 ms
 physics substep and fail the episode immediately (a dropped, slipped or knocked-away object ends it as a failure);
 partial completion fails. Rows of the wrong width for the recorded hand, a forged or unknown hand label, non-finite
 or out-of-range targets and wrist motion are rejected with reward 0. The verifier is tested

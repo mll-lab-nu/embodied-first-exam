@@ -50,7 +50,7 @@ for Wuji (at most 50,000 rows) and the `hand` it was made for, as written by `s.
 without `hand` is replayed as Sharpa), and `/app/output/gen.py`, the script that produced it. Each row is one
 control step: wrist x/y/z targets in metres, wrist XYZ Euler joint targets in radians, then the finger targets in
 `s.actuator_names` order. Do not save object
-states as the deliverable: the verifier executes the actions from the frozen start twice in fresh processes.
+states as the deliverable: the verifier executes the actions from the frozen start in one fresh process.
 NaN, infinity, object arrays and malformed or oversized trajectories are rejected.
 Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
 

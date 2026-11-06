@@ -84,8 +84,7 @@ bimanual carry is counted over the whole episode, and the 2 s released hold must
 Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape `(T, 58)` for `sharpa` or `(T, 54)`
 for `wuji`, 1 <= T <= 30000, plus the `hand` member (`s.save_trajectory(actions, path)` writes both), and
 `/app/output/gen.py`, the script that produced it. The separate verifier rebuilds the frozen scene with the recorded
-hand and replays only these rows twice in fresh processes; both replays must succeed with identical final state
-hashes. Object poses, success flags, configuration overrides and pickled arrays are never read.
+hand and replays only these rows in one fresh process, which must succeed. Object poses, success flags, configuration overrides and pickled arrays are never read.
 Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
 
 ## Tooling
