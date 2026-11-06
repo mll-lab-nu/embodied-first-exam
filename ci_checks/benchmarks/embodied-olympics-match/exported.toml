@@ -2,7 +2,8 @@
 # service runs unchanged inside each task (PROTOCOL §3; tasks/embodied-olympics-match/README.md: the benchmark
 # Embodied Olympics - Match). Written by that exporter on this checkout, then `python3 scripts/task_conventions.py` on
 # them (seeds, resources, README; the cutoff is each task's own `[agent] timeout_sec`, which a re-export must keep:
-# 7200 s, 14400 s for soccerssl-match-i01, badminton-match-i04, badminton-duelrl-i01 and foosball-match-i01).
+# 7200 s, 14400 s for soccerssl-match-i01, badminton-match-i04, badminton-duelrl-i01, badminton-matchlow-i01,
+# foosball-match-i01, soccer-jointcpu-i01 and soccer-jointgpu-i01).
 # `patched`: files this repository changed after the export (PROTOCOL §3: sent upstream; a re-export must keep them).
 # Every task: the standard modes are graded by the live episode: core/service.py, core/grading.py = tests/grade.py,
 # core/realtime.py (real-time: the control step's own error), spectator/sport_video.py (where present),

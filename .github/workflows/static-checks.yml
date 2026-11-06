@@ -1,5 +1,5 @@
 name: static-checks
-# Two tiers (docs/protocol/README.md v2.0): `invariants` (required: Appendix H) and `advisories` (warnings only); `unit-tests`
+# Two tiers (docs/protocol/README.md Appendix H): `invariants` (required: Appendix H) and `advisories` (warnings only); `unit-tests`
 # (not required). Scope (ci_checks/ci_scope.py, docs: CONTRIBUTING.md "Review and merge"): a pull request runs the checks on what it
 # can affect -- one benchmark's own paths changed: that benchmark's tasks, generator check and unit tests (plus the cheap
 # repo-level checks on everything); anything shared (ci_checks/, .github/, shared scripts/ modules and tables, shared

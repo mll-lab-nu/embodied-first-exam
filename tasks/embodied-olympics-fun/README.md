@@ -98,8 +98,8 @@ official runs; trial rows stay private (a passing trajectory is a complete solut
 
 Privileged and standard: CPU only (MuJoCo on the CPU, OSMesa rendering); one world steps about 0.8 to 3.6 times real time on one core, depending on the host (the finger-hand families slowest) and holds about 0.4 GB.
 Realtime: the sidecar needs an NVIDIA GPU, which renders the cameras with EGL (the physics stays on the CPU).
-Privileged: agent 8 CPUs / 16 GiB, verifier 4 CPUs / 8 GiB; standard: sidecar 4 CPUs / 8 GiB, agent 4 CPUs / 10 GiB
-(author estimates, `scripts/task_resources.toml`).
+Privileged: agent 8 CPUs / 16 GiB, verifier 4 CPUs / 8 GiB; standard: sidecar 4 CPUs / 5 GiB, agent 4 CPUs / 10 GiB;
+realtime: sidecar 4 CPUs / 8 GiB and 4 GiB of GPU memory, agent 4 CPUs / 10 GiB (`scripts/task_resources.toml`).
 
 ## Run
 
