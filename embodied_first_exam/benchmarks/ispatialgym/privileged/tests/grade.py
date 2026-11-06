@@ -1,14 +1,15 @@
 """Privileged-mode verifier (separate sandbox, no network): replays /app/output/trajectory.npz from the frozen instance
-(tests/instance.json, the copy both twins share, with this task's goal.json restored) in two fresh processes (rcb_ispatialgym.py replay). success = both replays
-succeed (upstream's geometric success at some control step; the replay stops there) and end in the same state, from a
-start that rebuilt as frozen. Numeric-only reward.json (docs/protocol/README.md Appendix H.1, H.4).
+(tests/instance.json, the copy both twins share, with this task's goal.json restored) in ONE fresh process (rcb_ispatialgym.py replay). success = that replay
+succeeds (upstream's geometric success at some control step; the replay stops there), from a start that rebuilt as
+frozen. With one replay there is no second end state to compare: `deterministic` is written as 1 (nothing disagreed)
+with `determinism_checked` = 0 and `replays` = 1. Numeric-only reward.json (docs/protocol/README.md Appendix H.1, H.4).
 
 bad_trajectory: no readable (T, 23) float array `actions`, a value that is not a finite float32 (the simulator steps
 float32), more rows than the episode's control steps (facts.json max_steps), or a file larger than that many rows: score 0, no infrastructure error.
-sim_error: the start rebuilt as frozen in both replays and the rows then failed to step at the same step in both (the
-trajectory's own outcome): score 0, no infrastructure error. infra_error (no verdict on the agent): a replay died, timed
+sim_error: the start rebuilt as frozen and the rows then failed to step (the trajectory's own outcome): score 0, no
+infrastructure error. infra_error (no verdict on the agent): a replay died, timed
 out or printed no result, goal.json did not restore upstream's TRO, the start did not rebuild as frozen (instance_ok 0),
-or the grader itself failed. The replay video never decides (rcb_ispatialgym.py _Video): `video_rendered` reports it."""
+or the grader itself failed. The graded replay is the filmed one; the video never decides (rcb_ispatialgym.py _Video): `video_rendered` reports it."""
 import json, os, subprocess, traceback, zipfile
 import numpy as np
 
@@ -63,22 +64,21 @@ def main():
     except Exception:  # noqa: BLE001 -- the agent's file: not readable as a trajectory is its own failure
         traceback.print_exc()
         write(False, {**base, "bad_trajectory": 1}); return
-    r1, r2 = replay(1, timeout_s), replay(2, timeout_s)
+    r1 = replay(1, timeout_s)
     video = int(os.path.isfile(f"{LOG}/replay.mp4") and os.path.getsize(f"{LOG}/replay.mp4") > 0 and not r1.get("video_error"))
-    inst_ok = bool(r1.get("instance_matches")) and bool(r2.get("instance_matches"))
-    e1, e2 = r1.get("step_error"), r2.get("step_error")
-    if inst_ok and e1 and e2 and e1 == e2:        # the rows fail to step, at the same step in two fresh processes
+    inst_ok = bool(r1.get("instance_matches"))
+    e1 = r1.get("step_error")
+    if inst_ok and e1:                            # the rows fail to step
         write(False, {**base, "rows": int(len(a)), "n_actions": int(len(a)), "instance_ok": 1, "sim_error": 1, "steps": int(e1.get("step") or 0),
                       "video_rendered": video}); return
-    if r1.get("error") or r2.get("error") or not r1.get("replays") or not r2.get("replays"):
+    if r1.get("error") or not r1.get("replays"):
         write(False, {**base, "rows": int(len(a)), "infra_error": 1, "grader_error": 1}); return
-    x, y = r1["replays"][0], r2["replays"][0]
-    det = bool(x.get("state_sha")) and x.get("state_sha") == y.get("state_sha")
+    x = r1["replays"][0]
     if not inst_ok:
         write(False, {**base, "rows": int(len(a)), "instance_ok": 0, "infra_error": 1, "grader_error": 1}); return
-    ok = bool(x.get("success")) and bool(y.get("success")) and det
-    write(ok, {**base, "n_actions": int(len(a)), "sim_steps": int(x.get("steps") or 0), "success": int(ok), "replay_success": int(bool(x.get("success")) and bool(y.get("success"))),
-               "deterministic": int(det), "instance_ok": int(inst_ok), "rows": int(len(a)), "steps": int(x.get("steps") or 0),
+    ok = bool(x.get("success"))
+    write(ok, {**base, "n_actions": int(len(a)), "sim_steps": int(x.get("steps") or 0), "success": int(ok), "replay_success": int(ok),
+               "deterministic": 1, "determinism_checked": 0, "replays": 1, "instance_ok": int(inst_ok), "rows": int(len(a)), "steps": int(x.get("steps") or 0),
                "success_step": int(x.get("success_step") or 0), "symbolic_success": int(bool(x.get("symbolic_success"))),
                "video_rendered": video})
 

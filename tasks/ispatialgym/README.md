@@ -101,7 +101,7 @@ rule: upstream's BDDL problem from the image (sha256 in `upstream.json`) and the
 |---|---|---|
 | agent gets | `/app/goal.png`; three RGB cameras with calibration; proprioception in the odometry frame; `robot_spec`; stateless FK / IK | the simulator in its container from the frozen start: every object's state, unlimited resets, the robot's cameras, `robot_spec`, stateless FK / IK; `/app/goal.png` |
 | not given | object poses, the world frame, resets, the goal check | the goal, any target, any success check; motion primitives or planners |
-| deliverable, grading | the episode the sidecar records, graded live: the sidecar's success at the episode's end, nothing replayed (Grading) | `/app/output/trajectory.npz` (≤ the step budget); two fresh replays in the verifier, both succeed and agree |
+| deliverable, grading | the episode the sidecar records, graded live: the sidecar's success at the episode's end, nothing replayed (Grading) | `/app/output/trajectory.npz` (≤ the step budget); one fresh replay in the verifier, which must succeed |
 
 The privileged agent's image is the ispatialgym image (`images/ispatialgym/`) with a layer that removes, and the build then asserts gone: every BDDL
 problem (goals), the docs (they preview the reference demonstrations; the fork's link the authors' pages), tests,
@@ -119,7 +119,7 @@ verifier's, for all 12 tasks.
   episode runs (`rcb_ispatialgym.Session.step`); the episode ends at the first step it holds, and `success` in
   `final.json` is that result (`episode.json`, merged by `finalize.sh`). The at-rest window is part of that predicate
   (the last 45 control steps of the live episode), so no hold is added after the agent's container stops; the rule is the
-  privileged twin's, which its verifier judges on two fresh replays.
+  privileged twin's, which its verifier judges on one fresh replay.
 - **The frozen start** is checked when the sidecar builds the scene, before the agent is served (the start-state hash
   of `facts.json`, else every object pose and robot joint within 2 mm / 0.02 rad); a mismatch gives up as
   `instance_mismatch` (`infra_error = 1`). On a resume the rebuilt start is checked again.
