@@ -21,7 +21,7 @@ client and one episode.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
-At the **end of the trajectory** the handle is within **1.5 cm** of the target along x (`s.target_pos[0]`).
+At the **end of the trajectory** the handle is within **1.5 cm** of the target along x (`meta["task"]["target_pos"][0]`).
 The service applies exactly this rule.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)

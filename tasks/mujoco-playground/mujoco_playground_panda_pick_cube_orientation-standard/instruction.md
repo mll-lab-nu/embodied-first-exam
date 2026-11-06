@@ -21,8 +21,8 @@ client and one episode.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
-At the **end of the trajectory** the box's centre is within **2 cm** of the target's centre (`s.target_pos`) and its
-orientation within **15°** of the target's (`s.target_quat_wxyz`, w x y z). The service applies exactly this rule.
+At the **end of the trajectory** the box's centre is within **2 cm** of the target's centre (`meta["task"]["target_pos"]`) and its
+orientation within **15°** of the target's (`meta["task"]["target_quat_wxyz"]`, w x y z). The service applies exactly this rule.
 
 ## Client (`/opt/tools/rcb_client.py`, protocol `eai-standard/2.1`)
 ```python

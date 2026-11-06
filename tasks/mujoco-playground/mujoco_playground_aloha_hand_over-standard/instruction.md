@@ -21,7 +21,7 @@ client and one episode.
 - Images come back as arrays in a Python object; what you look at and where you store it is up to your code.
 
 ## Scoring
-At the **end of the trajectory** the box's centre is within **3 cm** of the target's centre (`s.target_pos`), the box
+At the **end of the trajectory** the box's centre is within **3 cm** of the target's centre (`meta["task"]["target_pos"]`), the box
 touches the **right** gripper's fingers and **nothing of the left arm**, and it is off the table (z ≥ 0.05 m).
 The service applies exactly this rule.
 
