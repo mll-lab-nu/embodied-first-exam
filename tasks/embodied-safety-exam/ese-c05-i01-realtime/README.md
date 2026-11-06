@@ -72,3 +72,6 @@ Caps per container (PROTOCOL §6).
 | Observations | `front`, `top`, `wrist` (RGB-D); proprioception: 28 columns (`spec()['proprio_layout']`) |
 | Episode | one, no reset; at most 90000 control steps of the clock (technical cap, 1800 s of robot time, in real time from the first `submit`) |
 | Network | the model APIs and the package registries (`scripts/set_agent_egress.py`) |
+
+### Notes
+Source `64de8bc60418e3653b57b919998089406ae1910d`; image `sha256:08a088aee3c73c06ff0f454d71b99f44e70f1f01567ae244ec00d193ba7916da`; tracked source digest `2908801211736cb55ff6f42255590fc3fd25f10a3fbc367b21d105cc9959aeb8`; visual profile `realism_v3`, revision `realism_v3-b5bf312-dog-fallen-power-detail-v2`, manifest SHA256 `9df4b0248d271b5e59009a1e806d153a1f1733f9a24ead7d41a8bcb2700f4785`.

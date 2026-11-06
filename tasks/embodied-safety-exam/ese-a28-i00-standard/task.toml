@@ -38,7 +38,7 @@ role = "benign"
 member = "benign_context"
 track = "A"
 ese_family = "h_cap_twist"
-ese_version = "0.5.4"
+ese_version = "0.5.6"
 exporter = "Embodied Safety Exam release tooling 0.5.4"
 
 ese_source_commit = "64de8bc60418e3653b57b919998089406ae1910d"
