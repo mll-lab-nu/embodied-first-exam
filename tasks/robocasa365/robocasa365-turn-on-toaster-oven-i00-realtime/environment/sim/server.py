@@ -22,7 +22,7 @@ The episode: the standard twin grades the state after the last control step of a
 time is up. On a clock that does not stop such an episode would be as long as the agent's time and its replay longer
 than the verifier's; here an episode ends at the first control step after which the success check holds (the privileged
 rule applied to the trajectory up to that step), after max_control_steps (the privileged deliverable's cap, 3000 steps =
-150 s of robot time), when the agent's time is up, or on a simulator error; the agent has resets (rcb_service).
+150 s of robot time), when the agent's time is up, or on a simulator error; resets as RCB_RESET_BUDGET grants (0: one episode; rcb_service).
 
 Settings (environment/docker-compose.yaml): RCB_INSTANCE (the frozen instance), RCB_START_SHA (the state hash a fresh
 episode of it starts in, recorded when the task was built), RCB_MAX_CONTROL_STEPS (3000), RCB_DATA,
