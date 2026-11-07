@@ -83,7 +83,8 @@ infrastructure, a reference implementation, one benchmark using it, CI support t
   sidecar ran (H.4).
 - **realtime** (`-realtime`; `eai-standard/2.3`): standard mode on a clock that does not stop: once
   an episode starts the robot runs at 1/S of real speed whatever the agent does, holds its last targets while the agent
-  thinks, and is driven by a program in the agent's own container.
+  thinks, and is driven by a program in the agent's own container. Resets as in standard: within the declared budget,
+  0 unless the task grants its own (§2).
 - **Agent-ended episodes** (optional; standard mode, `eai-standard/2.2` services; any task may opt in, standard_mode.md
   "Optional agent-ended episodes"). The service never tells the agent whether it has succeeded and a success does not
   end the episode; the agent ends it with `POST /finish`. A task may add a step limit, a number of its own control steps

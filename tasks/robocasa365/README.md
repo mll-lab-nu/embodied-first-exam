@@ -100,7 +100,7 @@ it bit for bit). The toaster ovens and electric kettles of other tasks move by t
   clock that does not stop that episode would be up to an hour long. Here an episode ends at the first
   control step after which the success check holds (the privileged rule applied to the trajectory up to that step),
   after 3000 control steps (150 s of robot time, the privileged deliverable's cap; `RCB_MAX_CONTROL_STEPS`), when the
-  agent's time is up, or on a simulator error. **10 resets** (PROTOCOL §2); a reset rebuilds the scene (15-20 s,
+  agent's time is up, or on a simulator error. **10 resets** (this task's budget; the mode's default is 0, PROTOCOL §2); a reset rebuilds the scene (15-20 s,
   clock paused). The instruction tells the agent to reset with `cameras=[]`: the shared layer holds image requests back
   four times as long as the last rendering request took, and a reset that renders counts as one, so after a reset with
   cameras, images come back only much later (open: a shared-layer change would remove this).
