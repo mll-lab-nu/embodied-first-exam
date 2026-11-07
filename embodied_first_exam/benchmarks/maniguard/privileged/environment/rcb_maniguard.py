@@ -133,6 +133,7 @@ EVAL_EXPECT = {"action_frequency": 20, "rendering_frequency": 20, "physics_frequ
                "controller_preset": "joint_position_raw", "ik_eef_to_joint": False, "gripper_binarize": True,
                "success_hold_steps": 10, "camera_resolution": 256, "longfinger": True, "joint_pos_kp": None}
 LONGFINGER_BUNDLE = "franka_panda_longfinger"
+PHYSX_ERROR_CAP = 2**31 - 1        # Kit's /physics/maxNumberOfPhysXErrors (default 1000): past it omni.physx.ui stops the timeline
 
 
 def _log(*a: Any) -> None:
@@ -232,7 +233,7 @@ def top_down_quat(yaw: float = 0.0) -> np.ndarray:
 
 
 def _deterministic_grasp_anchor() -> None:
-    """The one change to OmniGibson's behaviour, for reproducibility only. An assisted or sticky grasp is a fixed joint
+    """A change to OmniGibson's behaviour, for reproducibility only. An assisted or sticky grasp is a fixed joint
     anchored at a contact point between the finger and the object, and OmniGibson takes the first matching point it finds
     in a Python set of (prim path, point tensor) pairs: tensors hash by identity, so the choice, and with it the last bits of
     every later step, differs between processes (measured: fresh replays of cabinet_pickup/task_0019 diverged at the first
@@ -250,6 +251,38 @@ def _deterministic_grasp_anchor() -> None:
         return data, links
     find_gripper_contacts._rcb_sorted = True
     ManipulationRobot._find_gripper_contacts = find_gripper_contacts
+
+
+def _skip_zero_length_rays() -> None:
+    """No change to the simulation, only to what it reports. Assisted grasping casts rays between the two fingers'
+    grasp points at every control step the gripper closes; with the fingers fully closed on nothing the points coincide
+    (OmniGibson's +1e-8 offset vanishes in float32), the ray has no direction and PhysX rejects it with an error
+    ("unitDir is not valid"), returning no hit. Those errors add up over an episode, and at Kit's error cap omni.physx.ui
+    stops the simulation. A zero-length ray hits nothing: here it returns that answer without asking PhysX."""
+    import omnigibson.utils.sampling_utils as SU
+    orig = SU.raytest
+    if getattr(orig, "_rcb_zero_guard", False):
+        return
+    import torch as th
+
+    def raytest(start_point, end_point, only_closest=True, ignore_bodies=None, ignore_collisions=None, callback=None):
+        start_point = start_point if isinstance(start_point, th.Tensor) else th.tensor(start_point)
+        end_point = end_point if isinstance(end_point, th.Tensor) else th.tensor(end_point)
+        if not bool(th.norm(end_point - start_point) > 0):
+            return {"hit": False} if only_closest else []
+        return orig(start_point, end_point, only_closest=only_closest, ignore_bodies=ignore_bodies,
+                    ignore_collisions=ignore_collisions, callback=callback)
+    raytest._rcb_zero_guard = True
+    SU.raytest = raytest        # raytest_batch (assisted grasping's caller) looks raytest up in this module
+
+
+def _raise_physx_error_cap() -> None:
+    """Kit settings for the launch OmniGibson is about to make (it passes sys.argv to Isaac Sim, as it does for its own
+    settings): past /physics/maxNumberOfPhysXErrors reported PhysX errors, omni.physx.ui stops the timeline, which ends
+    the episode with no robot left to read. The cap is read at launch only (a setting changed later is ignored)."""
+    arg = f"--/physics/maxNumberOfPhysXErrors={PHYSX_ERROR_CAP}"
+    if arg not in sys.argv:
+        sys.argv.append(arg)
 
 
 class _Kin:
@@ -448,11 +481,13 @@ class Session:
             os.environ["EVAL_USE_GPU_DYNAMICS"] = "1"
         else:
             os.environ.pop("EVAL_USE_GPU_DYNAMICS", None)
+        _raise_physx_error_cap()
         B._init_omnigibson(cfg, needs_gpu_dynamics=bool(task_needs_gpu_dynamics(self.inst_dir)))
         import omnigibson as og
         from omnigibson.macros import gm
         self.og, self.gm = og, gm
         _deterministic_grasp_anchor()
+        _skip_zero_length_rays()
         self.gpu_dynamics = bool(gm.USE_GPU_DYNAMICS)
         og_cfg = B.build_og_config(info, cfg)
         # The only change to upstream's environment: all four recorded task cameras instead of its single policy view
@@ -589,7 +624,7 @@ class Session:
         self.target2spawn_max_dist = 0.0; self.eef2target_min_dist = float("inf")
         self.up_consec = 0; self.up_success_step = None; self.up_first_step = None; self.up_detail: dict = {}
         self.consec = 0; self.success_step = None; self.first_goal_step = None; self.goal_detail: dict = {}
-        self.nonfinite_step = None
+        self.nonfinite_step = None; self.sim_stopped_step = None; self._last_robot_state = None
 
     def _feed_constraints(self, step_idx: int, entry: dict) -> None:
         labels = entry.get("ap") or {}
@@ -635,6 +670,9 @@ class Session:
     def _after_step(self) -> None:
         r = self.robot; env = self.env
         self.steps += 1
+        if self.og.sim.is_stopped():                          # Kit stopped the simulation (e.g. too many PhysX errors)
+            self._end_sim_stopped()
+            return
         q = _np(r.get_joint_positions())
         if not np.all(np.isfinite(q)):
             self.nonfinite_step = self.steps; self.done = True; self.reason = "nonfinite"
@@ -680,6 +718,12 @@ class Session:
         if self._video is not None and (self.steps % self._video["every"] == 0 or self.done):
             self._video_grab()                                # never raises: a video cannot change the episode
 
+    def _end_sim_stopped(self) -> None:
+        """The simulator no longer runs (its PhysX scene is released: no state to read, no step to take): the episode ends
+        with reason "sim_stopped", a simulator error."""
+        self.done = True; self.reason = "sim_stopped"; self.sim_stopped_step = self.steps
+        _log(f"the simulation was stopped at control step {self.steps} (Kit stopped the timeline): the episode ends (sim_stopped)")
+
     # ---- state helpers
     def _flat_state(self):
         st = self.og.sim.dump_state(serialized=True)
@@ -691,7 +735,9 @@ class Session:
     def _sha(t) -> str:
         return hashlib.sha1(t.numpy().tobytes()).hexdigest()[:16]
 
-    def state_sha(self) -> str:
+    def state_sha(self) -> str | None:
+        if self.og.sim.is_stopped():                          # a stopped simulator has no state (sim_stopped)
+            return None
         return self._sha(self._flat_state())
 
     def _poses_match(self, pos_tol: float = 2e-3, quat_tol: float = 2e-2, joint_tol: float = 2e-3) -> bool:
@@ -742,6 +788,9 @@ class Session:
         over (the strict goal held for 10 steps, a non-finite robot state, or the runaway guard)."""
         if self.done:
             raise PrimitiveError(f"the episode is over ({self.reason}); reset() before stepping again")
+        if self.og.sim.is_stopped():
+            self._end_sim_stopped()
+            return self.done
         a = self._prepare(action)
         if self._recording is not None:
             self._recording.append(a.copy())
@@ -866,6 +915,8 @@ class Session:
     # ---- the robot's state (both modes' proprioception)
     def joint_positions(self) -> np.ndarray:
         """The 9 measured joints: panda_joint1..7 (rad), then the two finger joints (m)."""
+        if self.og.sim.is_stopped():
+            return self.robot_state()["q"]
         return _np(self.robot.get_joint_positions()).astype(np.float64)
 
     def ee_pose(self, frame: str = "tcp") -> tuple[np.ndarray, np.ndarray]:
@@ -1092,12 +1143,19 @@ class Session:
         }
 
     def robot_state(self) -> dict:
+        """The robot's measured state. A stopped simulator (sim_stopped) has none: the last state read before the stop."""
+        if self.og.sim.is_stopped():
+            if getattr(self, "_last_robot_state", None) is None:
+                raise PrimitiveError("the simulator stopped running (sim_stopped): no robot state to read")
+            return {k: (v.copy() if isinstance(v, np.ndarray) else v) for k, v in self._last_robot_state.items()}
         r = self.robot
         q = _np(r.get_joint_positions()).astype(np.float64)
         e_pos, e_quat = self.ee_pose("eef"); t_pos, t_quat = self.ee_pose("tcp")
-        return {"q": q, "qd": _np(r.get_joint_velocities()).astype(np.float64), "effort": _np(r.get_joint_efforts()).astype(np.float64),
-                "eef": np.concatenate([e_pos, e_quat]), "tcp": np.concatenate([t_pos, t_quat]), "gripper_opening": self.gripper_opening(),
-                "gripper_cmd": float(self.hold_action()[7]), "object_in_hand": self.object_in_hand()}
+        st = {"q": q, "qd": _np(r.get_joint_velocities()).astype(np.float64), "effort": _np(r.get_joint_efforts()).astype(np.float64),
+              "eef": np.concatenate([e_pos, e_quat]), "tcp": np.concatenate([t_pos, t_quat]), "gripper_opening": self.gripper_opening(),
+              "gripper_cmd": float(self.hold_action()[7]), "object_in_hand": self.object_in_hand()}
+        self._last_robot_state = {k: (v.copy() if isinstance(v, np.ndarray) else v) for k, v in st.items()}
+        return st
 
     # ---- cameras
     def _cam_sensors(self) -> dict:

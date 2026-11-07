@@ -229,6 +229,10 @@ state it, and the standard service's `/spec` (`max_control_steps`, `episode`); `
     crashes outside a call, never ended the episode or found at the start that the scene is not the frozen instance
     (`instance_mismatch`). A give-up after crashes during a call (`sim_crashed_on_call`) and a simulator error raised by
     the agent's actions stay the agent's failure.
+  - `sim_stopped` (both modes; standard: also `sim_error`): the simulator stopped running and the episode ended with
+    reason `sim_stopped`. Kit stops its timeline once PhysX has reported `/physics/maxNumberOfPhysXErrors` errors, so the
+    tooling raises that cap at launch, and it answers assisted grasping's zero-length rays (the fingers closed on
+    nothing: PhysX rejects them as `unitDir is not valid`) itself with "no hit", which is PhysX's own answer.
 - The video (standard) is filmed during the live episode by the service (`live_video.py`, `live.mp4`):
   OmniGibson renders every camera with each control step anyway (`render_frame` returns the last render), so the frame of
   the replay video's view (`cam_left` + the wrist camera, `render_grid`) is taken every 4 control steps (5 per simulated
