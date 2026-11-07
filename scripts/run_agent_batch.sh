@@ -184,7 +184,8 @@ if [ "$GATEWAY" = 1 ]; then
     [ -z "$v" ] && [ -n "$ENV_FILE" ] && v=$(sed -n "s/^[[:space:]]*\(export[[:space:]]\+\)\?$1=//p" "$ENV_FILE" | tail -1 | sed -E 's/[[:space:]]+#.*$//; s/[[:space:]]+$//' | tr -d "\"'")   # dotenv: an unquoted value ends at " #"
     printf '%s' "${v:-$2}"
   }
-  gw_args=(--jobs "$JOBS" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
+  gw_jobs="$JOBS/.gateway/jobs.$$"; : > "$gw_jobs"   # this runner's job names (run_job): the only trials its gateway looks up
+  gw_args=(--jobs "$JOBS" --own-jobs "$gw_jobs" --bind "$GATEWAY_BIND" --ready-file "$ready" --budget-input "$TOKEN_BUDGET_IN" --budget-output "$TOKEN_BUDGET_OUT"); for h in ${GATEWAY_EXTRA_HOSTS:-}; do gw_args+=(--extra-host "$h"); done; [ "$GATEWAY_RAW" = 1 ] && gw_args+=(--raw)
   [ "$WEB_SEARCH" = allowed ] && gw_args+=(--server-tools record)   # not an official run: the provider-run tools are only recorded
   # a plain-HTTP base URL (a self-hosted model server, e.g. sglang): the gateway may forward to exactly that host:port
   [ "$AGENT" = claude-code ] && agent_up=$(upstream ANTHROPIC_BASE_URL https://api.anthropic.com) || agent_up=$(upstream OPENAI_BASE_URL https://api.openai.com/v1)
@@ -200,7 +201,7 @@ if [ "$GATEWAY" = 1 ]; then
     kill -0 "$gw_pid" 2>/dev/null && python3 -c 'import sys, urllib.request as u
 u.build_opener(u.ProxyHandler({})).open(sys.argv[1], timeout=15).read()' "$GW/_gateway/health" 2>/dev/null
   }
-  gw_pid=""; trap '[ -n "$gw_pid" ] && kill "$gw_pid" 2>/dev/null' EXIT
+  gw_pid=""; trap '[ -n "$gw_pid" ] && kill "$gw_pid" 2>/dev/null; rm -f "$gw_jobs"' EXIT
   gw_start
   [ -s "$ready" ] || { log "usage gateway did not start within ${GATEWAY_START_WAIT} s (see $JOBS/.gateway/gateway.$$.err); unset GATEWAY to run without it"; exit 2; }
   gw_port="$(cat "$ready")"; GW="http://$GATEWAY_BIND:$gw_port"
@@ -443,6 +444,7 @@ for d in map(pathlib.Path, sys.argv[3:]):
     out[d.name] = {"copy": tc.digest(d), "source": src.read_text().strip() if src.is_file() else ""}
 pathlib.Path(sys.argv[1]).write_text(json.dumps(out, indent=1) + "\n")
 PY
+  [ "$GATEWAY" = 1 ] && printf '%s\n' "$job" >> "$gw_jobs"     # before Harbor starts: the gateway attributes this job's trials
   log "start $job: $* (concurrency $n, attempts $K)"
   (cd "$root" && harbor run -p tasks "$@" "${AGENT_ARGS[@]}" "${envf[@]}" -n "$n" -k "$K" -y -o "$JOBS" --job-name "$job") > "$JOBS/$job.harbor.log" 2>&1
   log "done $job (harbor rc=$?)"
