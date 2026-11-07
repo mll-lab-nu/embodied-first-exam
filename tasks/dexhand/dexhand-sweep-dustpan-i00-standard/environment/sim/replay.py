@@ -153,7 +153,8 @@ def main() -> None:
     )
     if recorder is not None:
         try:
-            result["video"] = recorder.close()
+            result["video_record"] = recorder.close()
+            result["video"] = True
         except Exception as error:
             result["video_error"] = str(error)[:300]
     out.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")

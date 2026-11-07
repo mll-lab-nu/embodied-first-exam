@@ -32,6 +32,7 @@ ACTION_DIM = {"sharpa": 58, "wuji": 54}  # the hands this task accepts and their
 UNSUPPORTED_WIDTH = {}
 WUJI_RESET = "assets/reset_wuji.npz"
 RANGE_TOLERANCE = 1e-9
+UNHASHED_KEYS = ("start_state_sha",)  # the hash of the start state cannot hash itself
 UNSTABLE = (mujoco.mjtWarning.mjWARN_BADQPOS, mujoco.mjtWarning.mjWARN_BADQVEL, mujoco.mjtWarning.mjWARN_BADQACC)
 
 
@@ -325,11 +326,13 @@ class Session:
         }
 
     def state_sha(self) -> str:
-        """sha256 of the native integration state, the predicate state, the hand and the frozen instance."""
+        """sha256 of the native integration state, the predicate state, the hand and the frozen instance (without the
+        instance's own record of this hash, `start_state_sha`)."""
         digest = hashlib.sha256(self.physics_state().astype("<f8").tobytes())
         digest.update(json.dumps(self.checker.summary(), sort_keys=True).encode())
         digest.update(self.hand.encode())
-        digest.update(json.dumps(self.config, sort_keys=True).encode())
+        instance = {k: v for k, v in self.config.items() if k not in UNHASHED_KEYS}
+        digest.update(json.dumps(instance, sort_keys=True).encode())
         return digest.hexdigest()
 
     def physics_state(self) -> np.ndarray:

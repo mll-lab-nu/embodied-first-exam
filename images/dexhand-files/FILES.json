@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.5.0@sha256:ceea7a90b9c905345ca0a18a598fd56c600a9ccdcb633339f0d92b3e7577ca09",
+ "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.5.1@sha256:f851deb355ccfacfb366e8a6acf11fa91e575a4e410fa356db84e3221407ad20",
  "source": "embodied_first_exam/benchmarks/dexhand",
  "files": {
   "privileged/environment/arm_rig.py": "21b1ec8a66402906ae7b228db82a9b0dc8102a501a07caa153217f0f3cb765c0",
@@ -456,6 +456,8 @@
   "privileged/environment/variants/0e164430d9/task.json": "0e164430d9cbd416a9701b445f705c57237b0d24198032d771c1744328e484e2",
   "privileged/environment/variants/0e8a7ea9b2/task.json": "0e8a7ea9b283ac0afcf794af9b8ede45e81d88c676b0e928c8238d2ef43dc204",
   "privileged/environment/variants/0ebff40c75/replay.py": "0ebff40c755ec094aaa68e6459e765a5d584d80d8a537852b89cb07716e511cd",
+  "privileged/environment/variants/0ffe598f38/runtime.py": "0ffe598f38888e94ff8f222d91f3fb592a6472eef287096740d2c132551e8d04",
+  "privileged/environment/variants/10264b47a7/replay.py": "10264b47a755d19c297e9ad7df1ca1fee0f98dac5d3b49864f8135436fdc8d10",
   "privileged/environment/variants/112500031b/checker.py": "112500031b94ffd905cae67e7cc5ae6499133af5cad6b95c56fefcde3165019f",
   "privileged/environment/variants/1395090125/catalog.json": "1395090125660f3c9c9f27ae63f2d12653a20c4652d2f9017443789cb98098de",
   "privileged/environment/variants/13c6999f14/runtime.py": "13c6999f14d66382ad08606382bd30ff4cc59b5a166557fb36bdc3de35f0f9c7",
@@ -480,7 +482,6 @@
   "privileged/environment/variants/2b6719073f/runtime.py": "2b6719073f1528e7a15f58e605ef1cad77b25652c594a3b5dee72cd3a28e40e1",
   "privileged/environment/variants/2bb13ebb1b/checker.py": "2bb13ebb1b99483dcda050e682470fc748b1d3d7f8cf7c27c158a867e6da5d89",
   "privileged/environment/variants/2ee4813352/task.json": "2ee481335263889d3322384b3ab9c8fc35304c14654ba536ddc5bef4f5a31388",
-  "privileged/environment/variants/2ef7f8ba38/runtime.py": "2ef7f8ba38948b9b46b1848a4a1334c038c971397d264a994c1f0829781fd9d3",
   "privileged/environment/variants/2f2a9b1205/catalog.json": "2f2a9b12053a1ee04341b13995725e1b36486bfd25b40ca3ff4ff8060aa45f83",
   "privileged/environment/variants/2f476ee029/checker.py": "2f476ee0298b83c3e2d041789eb7d9b4dc3a41cc8e1e6dc87257c67c6198809d",
   "privileged/environment/variants/328103d2bd/runtime.py": "328103d2bd3bc5e8dbc09e07dc38559df1ea5771d739013483fc4a5b9e103001",
@@ -579,7 +580,6 @@
   "privileged/environment/variants/e30cc06716/task.json": "e30cc067161219ab18ff058f7b47565ed57a9b2db5c78f9a1fbdd6098bab6761",
   "privileged/environment/variants/e6e22842e5/runtime.py": "e6e22842e5d1b0fc50ecc66f7e7b4679771bffbb9bee2a4edc3ad32b81b3bd8f",
   "privileged/environment/variants/e893d23529/scene.py": "e893d2352929c2dc73b67c64365a34b40fe7da07ac6d768b4aa8868a699bd416",
-  "privileged/environment/variants/e8cd4d53ee/replay.py": "e8cd4d53ee16dfa1e0307a545a2b40ebd8999f0cb4f536c8843c513f1e168533",
   "privileged/environment/variants/eb836781a3/runtime.py": "eb836781a3e7fd0ade6954471acf2cf6ba7886cf9d7da447d859ec74c2603e77",
   "privileged/environment/variants/edb2fa483d/runtime.py": "edb2fa483dc7602b1512cdad3d24df930c73fcbd88bda78652ec64ec8162489e",
   "privileged/environment/variants/edbd9a7b31/catalog.json": "edbd9a7b31569c86664dabf132c5a937ad5705d2d1b6820bef89ca23d6da7c0e",
