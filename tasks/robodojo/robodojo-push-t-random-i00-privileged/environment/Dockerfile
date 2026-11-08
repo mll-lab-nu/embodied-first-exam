@@ -108,7 +108,7 @@ WORKDIR /app
 # Everything task-specific is copied here; RoboDojo's training demonstrations and checkpoints are not in the image.
 FROM robodojo-base
 COPY instance.json /app/instance.json
-COPY --from=ghcr.io/mll-lab-nu/efe:robodojo-files-0.6.1@sha256:10ff75a6fa3b2815b763fe276e1746ea5bb55fccfdb9de69c85be157f2c9d2b7 /privileged/environment/rcb_robodojo.py /opt/tools/rcb_robodojo.py
+COPY --from=ghcr.io/mll-lab-nu/efe:robodojo-files-0.7.0@sha256:5aede84cef86d51e3ecfcd091e7c8bb9969d2b5b020a243dbbfde3127bd64377 /privileged/environment/rcb_robodojo.py /opt/tools/rcb_robodojo.py
 ENV PYTHONPATH=/opt/tools
 RUN mkdir -p /app/output
 WORKDIR /app

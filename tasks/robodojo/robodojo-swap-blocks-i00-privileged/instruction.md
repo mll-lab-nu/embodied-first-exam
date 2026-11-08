@@ -102,11 +102,12 @@ directly.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same frozen layout once, in a fresh process, and scored 1 if the task succeeds in that replay, else 0.
+open-loop from the same frozen layout up to 3 times, each in a fresh process, and scored 1 if the task succeeds in any replay, else 0
+(fresh replays can end slightly differently: leave a margin).
 Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
 as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
 The file holds `task` and `actions`, a (T, 14) float array of at most **15,000 rows** (one per action, 10 min of robot
-time); anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0. The replay has
+time); anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0. Each replay has
 max(1800 s, 1200 s + 1 s per 2.5 rows) of wall clock, several times what a replay takes here.
 
 ## Tooling (already installed; run `python` from any directory)
@@ -137,9 +138,9 @@ RoboDojo's source is in `/opt/RoboDojo` (read-only reference: this task's logic 
 
 Resets: RoboDojo's own reset settles the scene again from where it is, so after actions a reset gives the same layout and
 start pose but not bit-for-bit the same state; a replay after such a reset can end slightly differently from the grader's.
-The first episode in a fresh process (nothing stepped since the Session started) is exactly the grader's.
+The first episode in a fresh process (nothing stepped since the Session started) is what each graded replay runs.
 
-The grader replays once, in a fresh process; that replay is exactly this CLI (a fresh process, so run it to self-check):
+Each graded replay is a fresh process running exactly this CLI (so run it to self-check; the grader stops at the first success):
 `python /opt/tools/rcb_robodojo.py replay --task swap_blocks --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions

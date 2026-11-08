@@ -28,8 +28,8 @@ None. RoboDojo releases no expert or planner script, and its training demonstrat
 marked unvalidated (PROTOCOL §2 `validated`).
 
 ## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout once, in a fresh process
-(`rcb_robodojo.py replay`); reward 1 iff that replay ends in RoboDojo's success (one replay; `deterministic` is reported as 1 with `determinism_checked` = 0, and a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
+`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen layout up to 3 times (`[metadata] replays`), each in a
+fresh process (`rcb_robodojo.py replay`), stopping at the first success; reward 1 iff a replay ends in RoboDojo's success (`replays_succeeded`; a replay that did not start from the frozen layout's recorded state hash is `instance_mismatch`, no verdict). No oracle; human review in
 PR #142 (no positive example yet). `nop` (no
 trajectory) scores 0. The success description in `instruction.md` was written from RoboDojo's code
 (`task/RoboDojo/tasks/insert_tubes.py`, `env/reward_manager/`); the code is the reference.
