@@ -12,14 +12,16 @@ simulator = "ambench"             # AM-Bench @ 60bf5b7 on Isaac Lab @ f4aa17f / 
 robot = "ambench-fahexa"
 family = "cabinet_pick_place_fahexa"
 dynamics = "static"               # scene dynamics (PROTOCOL §2): nothing but the robot does work on the scene
+replays = 3                       # fresh-process replays, any success counts (docs/protocol/README.md §4): the simulator
+                                  # does not replay bit-wise
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 2.0
 
 [verifier]
-# 4 x tests/grade.py's per-process limit for this episode (7199 rows: max(1800 s, 1500 s + rows / 4)): two fresh-process
+# 5 x tests/grade.py's per-process limit for this episode (7199 rows: max(1800 s, 1500 s + rows / 4)): up to 3 fresh-process
 # replays (camera-free), one rerun of a replay that died early or had GPU faults, and the filmed illustration
-timeout_sec = 13200.0
+timeout_sec = 16500.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image (images/ambench/web_assets.txt)
 

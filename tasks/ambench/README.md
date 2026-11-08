@@ -178,17 +178,17 @@ Only a process's first episode is guaranteed bit-identical; later resets in the 
 those of this GPU model; another GPU model may differ in the last bits (BUILD_ONLY, "Check a build").
 
 ## Grading
-- **Privileged**: `tests/grade.py` replays `/app/output/trajectory.npz` once, in a fresh process (`rcb_ambench.py
-  replay`); success = AM-Bench's check held in it and the rebuilt start matches `initial_sha` (with one replay nothing
-  is compared: `replays` 1, `deterministic` 1, `determinism_checked` 0; the rare race above can change the last bits of
-  an end state without changing an outcome). The verdict is written first; then another
+- **Privileged**: `tests/grade.py` replays `/app/output/trajectory.npz` up to 3 times (`[metadata] replays`, PROTOCOL
+  §4), each in a fresh process (`rcb_ambench.py replay`), and stops at the first success; success = AM-Bench's check
+  held in a replay whose rebuilt start matches `initial_sha` (`replays_succeeded`, `success_replay`; the rare race above
+  and another GPU model can change the last bits of an end state, hence more than one replay). The verdict is written first; then another
   process films the rows (`/logs/verifier/replay.mp4`). An unreadable deliverable is `bad_trajectory`, another task's
   file `wrong_task` (the agent's 0); so is a row whose quaternion has zero or non-finite length (`bad_quaternion_rows`,
   checked when the file is read; the replay CLI also reports a row it refuses as `bad_trajectory`, a verdict, never a
   replay without a result); a replay without a result, a replay time-out, a replay with GPU faults
   (`replay_gpu_fault`, above) or `instance_ok = 0` is `grader_error = infra_error = 1`; a replay process that ends
   without a result or with GPU faults is run once more. Each process has max(1800 s, 1500 s + runnable rows / 4);
-  `[verifier] timeout_sec` = four of those (7800-13200 s by episode length).
+  `[verifier] timeout_sec` = five of those (three replays, one rerun, the film: 9750-16500 s by episode length).
 - **Standard**: graded by the **live episode**, with no grading replay, the same rule for all nine tasks: success =
   `live_success`, AM-Bench's check as the service ran it after every control step (no end-of-episode hold: AM-Bench has
   none). The service dumps the episode when the collect hook signals it and exits; the hook

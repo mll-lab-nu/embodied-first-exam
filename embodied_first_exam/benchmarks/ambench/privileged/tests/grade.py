@@ -1,30 +1,32 @@
 """Verifier entry point: replay /app/output/trajectory.npz from the frozen instance and write Harbor rewards.
 
-    python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2
+    python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 3
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
 human-viewable video /logs/verifier/replay.mp4 (the robot's two onboard cameras) plus replay.last.png, filmed AFTER the
 verdict by a third process (`rcb_ambench.py film`: the same rows, the cameras drawn by the tooling's render worker; the video
 never enters the reward).
-Replays `--repeat` times, each in its own FRESH process (`rcb_ambench.py replay`). Success requires EVERY replay to
-complete the task (AM-Bench's own `_get_success`), so a trajectory whose success does not repeat in a fresh process
-cannot pass (`deterministic` = the replays agree on the outcome). The end-state hashes are compared and reported
-(`state_identical`) but do not decide: with the tooling's five synchronizations every replay outside Harbor ended in the
-frozen state (29 of 29 clean runs), yet under Harbor two of six runs did not (tasks/ambench/README.md, Determinism),
-in the last bits, the outcome unchanged. The frozen scene rebuilt here from tests/instance.json must also match the
-recorded one (`instance_ok`: the exact state hash of the seeded reset).
+Replays up to `--repeat` N times (default 1; tests/test.sh passes the task's `[metadata] replays`), each in its own FRESH
+process (`rcb_ambench.py replay`), and stops at the first replay that completes the task (AM-Bench's own
+`_get_success`): GPU PhysX does not replay bit-wise here (with the tooling's five synchronizations every replay outside
+Harbor ended in the frozen state, 29 of 29 clean runs, yet under Harbor two of six runs did not, tasks/ambench/README.md,
+Determinism), so the attempt succeeds if ANY replay succeeds (PROTOCOL §4). reward.json: `replays` (run),
+`replays_succeeded`, `success_replay` (1-based, 0 none), `all_success`, `deterministic` (the replays run agree on the
+outcome) and `state_identical` (they ended in one state), both evidence only, and `determinism_checked` (more than one
+replay ran). The frozen scene rebuilt in each replay must match the recorded one (`instance_ok`: the exact state hash of
+the seeded reset).
 
 Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error` and `infra_error` are always present):
 - the agent's: no file (`missing_trajectory`), another task's trajectory (`wrong_task`), a file that is not a
   trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, pickled or object arrays, the wrong shape, NaN/inf,
   more than MAX_STEPS rows, a row whose quaternion has zero or non-finite length: `bad_quaternion_rows`; also when the
-  replay CLI itself reports `bad_trajectory`), or a replay that does not complete the task;
+  replay CLI itself reports `bad_trajectory`), or no replay completing the task;
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends
   without a result (Isaac died) or runs out of its time limit (`replay_timed_out`), a replay whose output reports a GPU
   fault (`replay_gpu_fault`: PhysX kernels that failed to launch or CUDA out of memory, rcb_ambench.GPU_FAULT; PhysX steps
   on without them, so that run is not the trajectory's physics), the rebuilt frozen scene not matching the recorded
   instance (`instance_ok` = 0: the host, not the trajectory), or any other error in this script. A replay without a
-  result or with a GPU fault is run once more first.
+  result or with a GPU fault is run once more first (one such rerun per verifier run).
 """
 from __future__ import annotations
 import argparse, json, os, subprocess, sys, time, traceback
@@ -38,7 +40,7 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # fresh Kit cache), then 20+ control steps/s (camera-free; Harbor: CabinetPickPlace's 2752 steps in ~135 s per replay,
 # start included). The allowance is REPLAY_STARTUP_S for the start plus the runnable rows at REPLAY_MIN_RATE control
 # steps/s (the same for the filming process, whose time-out only ends the video), never below REPLAY_FLOOR_S; task.toml's
-# [verifier] timeout_sec is four such limits (two replays, one rerun, the film), so a replay that is too slow ends here
+# [verifier] timeout_sec is five such limits (the task's three replays, one rerun, the film), so a replay that is too slow ends here
 # with a written reward (`replay_timed_out`), never with Harbor killing the verifier.
 REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 1800.0, 1500.0, 4.0
 
@@ -82,9 +84,10 @@ def write(ok: bool, out: dict) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--instance", required=True)
-    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true"); ap.add_argument("--video-fps", type=int, default=30)
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)                            # at least the one replay that decides
     # Agent interaction cost from the tooling's append-only log (whole debugging history, not just the deliverable).
     # The log lives in the agent's container, so these fields are SELF-REPORTED cost accounting, not evidence
     # (agent_cost_self_reported = 1); the parser must survive any content the agent may have written there.
@@ -145,12 +148,17 @@ def main() -> int:
                 attempts.append(attempt)
                 if n_fault and "replays" in run:           # the physics ran without some of its GPU kernels: not this trajectory's
                     run = {"error": f"{n_fault} GPU fault(s) in the replay's output (rcb_ambench.GPU_FAULT)", "gpu_faults": n_fault}
-                if "replays" in run or run.get("bad_trajectory") or attempt == 2:
-                    break
+                if "replays" in run or run.get("bad_trajectory") or attempt == 2 or sum(x - 1 for x in attempts):
+                    break                                  # one rerun per verifier run (task.toml's timeout_sec counts one)
                 print(f"[grade] replay {i + 1} gave no result ({run.get('error')}): running it once more", file=sys.stderr, flush=True)
             faults.append(int(run.get("gpu_faults", 0)))
             runs.append(run)
             if "error" in run:                             # no verdict either way (or the agent's, below): the next replay is not run
+                break
+            o = (run.get("replays") or [{}])[0]
+            if not run.get("instance_matches"):           # not the frozen start: no verdict (instance_ok 0 below)
+                break
+            if o.get("success"):                           # any success decides: the next replay is not run
                 break
         if any(r.get("bad_trajectory") for r in runs):   # the replay CLI refused the rows: the agent's input, a verdict
             print(f"[grade] the replay refused the trajectory: {[r.get('error') for r in runs]}", file=sys.stderr, flush=True)
@@ -162,15 +170,18 @@ def main() -> int:
                           "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
         replay_wall = round(time.time() - t0, 1)
         all_success = all(o.get("success") for o in outs)
-        state_identical = len({o.get("state_sha") for o in outs}) == 1          # reported; does not decide (module doc)
-        deterministic = len({bool(o.get("success")) for o in outs}) == 1         # the verdict repeats in every fresh process
+        state_identical = len({o.get("state_sha") for o in outs}) == 1          # evidence only (module doc)
+        deterministic = len({bool(o.get("success")) for o in outs}) == 1         # evidence only: the replays run agree
         instance_ok = all(bool(r.get("instance_matches")) for r in runs)
-        ok = all_success and instance_ok
+        won = next((k + 1 for k, o in enumerate(outs) if o.get("success")), 0)
+        ok = bool(won) and instance_ok
+        dec = outs[won - 1] if won else outs[-1]            # the deciding replay: the successful one, else the last
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
                "state_identical": int(state_identical), "determinism_checked": int(len(outs) > 1),
-               "instance_ok": int(instance_ok), "n_actions": int(len(acts)), "replays": len(outs),
-               "sim_steps": int(outs[0].get("control_steps") or 0), "sim_time_s": float(outs[0].get("sim_time_s") or 0.0),
-               "timed_out": int(outs[-1].get("end_reason") == "timeout"),
+               "instance_ok": int(instance_ok), "n_actions": int(len(acts)), "replays": len(outs), "replays_max": a.repeat,
+               "replays_succeeded": int(bool(won)), "success_replay": won,
+               "sim_steps": int(dec.get("control_steps") or 0), "sim_time_s": float(dec.get("sim_time_s") or 0.0),
+               "timed_out": int(dec.get("end_reason") == "timeout"),
                "replay_wall_s": replay_wall, "replay_timeout_s": round(limit, 1),
                # the rebuilt frozen scene is not the recorded one: this host, not the trajectory (no verdict on the agent)
                "grader_error": int(not instance_ok), "infra_error": int(not instance_ok),
