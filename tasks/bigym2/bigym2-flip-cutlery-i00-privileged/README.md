@@ -22,9 +22,9 @@ None. BiGym 2.0 has no scripted expert or planner; its human demonstrations and 
 on the Hugging Face Hub and never reach the agent (no network but the model APIs; seed 0 is none of their seeds).
 
 ## Verification
-`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen instance in two fresh processes (`rcb_bigym2.py
+`tests/grade.py` replays `/app/output/trajectory.npz` from the frozen instance in one fresh process (`rcb_bigym2.py
 replay`: upstream's official env, one step per row until upstream ends the episode). Pass iff upstream's `is_success`
-holds in both (the task's success held for 1 s, no fall) and both end in the same state. Success condition: the spoon is the other way round: the end that points up out of the mug at the start now points down (within 50 degrees of straight down), the spoon touching the mug, neither the spoon nor the mug held by a gripper.
+holds (the task's success held for 1 s, no fall). Success condition: the spoon is the other way round: the end that points up out of the mug at the start now points down (within 50 degrees of straight down), the spoon touching the mug, neither the spoon nor the mug held by a gripper.
 No oracle; human review in PR #123 (PROTOCOL §4).
 
 ## Resources

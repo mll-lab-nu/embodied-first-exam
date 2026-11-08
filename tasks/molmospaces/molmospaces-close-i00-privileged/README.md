@@ -25,10 +25,10 @@ image; neither are grasp files nor the public MolmoBot trajectories (agent egres
 registries; the PyPI distribution `molmo-spaces` has those experts, PROTOCOL §5).
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`tests/grade.py`).
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in one fresh process (`tests/grade.py`).
 Each replay is upstream's evaluation loop: one upstream `Task.step` per row until upstream's `is_done()` (the
 benchmark's 30 s horizon = 455 control steps) or the last row, then upstream's `judge_success()`
-on the final state: the target's joint is open at most 15% of its range (it starts 50% open). Pass iff both replays succeed and end in the same state; `replay.mp4` is rendered after
+on the final state: the target's joint is open at most 15% of its range (it starts 50% open). Pass iff the replay succeeds; `replay.mp4` is rendered after
 the verdict. No oracle; human review in PR #276 (PROTOCOL §4: per family, this task and its twin, a
 positive example and the `nop` result).
 

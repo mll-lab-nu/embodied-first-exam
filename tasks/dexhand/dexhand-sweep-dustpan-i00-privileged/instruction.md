@@ -33,8 +33,7 @@ Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape
 (Wuji), 1 <= T <= 160000,
 as a compressed archive of at most 64 MB, and `/app/output/gen.py`, the script that produced it. Use `s.save_trajectory(actions, "/app/output/trajectory.npz")`, which compresses and records the hand. Row `i` holds the motor
 targets for physics step `i` after the frozen reset, in `s.actuator_names` order, within `s.model.actuator_ctrlrange`.
-The separate verifier starts from its own frozen scene and replays only these rows in two fresh processes; both
-replays must succeed and end in the same state hash. The episode ends at the first success or failure, so rows after
+The separate verifier starts from its own frozen scene and replays only these rows in one fresh process, which must succeed. The episode ends at the first success or failure, so rows after
 it are not executed. Object poses, success flags or other members of the archive are ignored.
 Save the archive compressed (`numpy.savez_compressed`; `s.save_trajectory` does): an archive file larger than 64 MB is rejected with reward 0.
 

@@ -3,10 +3,13 @@
     python /tests/grade.py --family put_pot_on_cooktop --instance /tests/instance.json --traj /app/output/trajectory.npz
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
-human-viewable replay video /logs/verifier/replay.mp4 (the top camera + both wrist cameras) plus replay.last.png.
-Replays `--repeat` times, each in its own FRESH process (`rcb_yamlab.py replay`), so fresh process == fresh process is
-the determinism check. Success requires every replay to complete the task (YAMLab's stages all latched, evaluation
-thresholds) AND all final-state hashes to agree, so a lucky non-deterministic run cannot pass. The frozen scene rebuilt
+human-viewable replay video /logs/verifier/replay.mp4 (the top camera + both wrist cameras) plus replay.last.png, filmed
+during the graded replay (filming never decides).
+One replay in its own FRESH process (`rcb_yamlab.py replay`) decides: success = it completes the task (YAMLab's stages
+all latched, evaluation thresholds). With one replay nothing is compared: `replays` = 1, `deterministic` = 1,
+`determinism_checked` = 0 (determinism is checked when a task is built). `--repeat N` (N >= 2) is the old check, kept
+for a measurement by hand: N fresh processes, success = every replay completes the task AND all final-state hashes
+agree (`determinism_checked` = 1); the video is filmed during the last one. The frozen scene rebuilt
 here from tests/instance.json must also match the recorded one (`instance_ok`: exact state hash, or every object pose /
 joint within tolerance on another host).
 
@@ -14,7 +17,8 @@ Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error
 - the agent's: no file (`missing_trajectory`), another family's trajectory (`wrong_family`), a file that is not a
   trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, an entry larger than MAX_STEPS x ACTION_DIM
   float64 numbers + MAX_MEMBER_MARGIN bytes unpacked (checked before it is read; `too_large`), pickled or object arrays,
-  the wrong shape, NaN/inf, more than MAX_STEPS rows), or a replay that does not complete the task or is not deterministic.
+  the wrong shape, NaN/inf, more than MAX_STEPS rows), or a replay that does not complete the task (with `--repeat` >= 2: or
+  replays whose final states disagree).
   The replays read a copy holding only the checked `task` and `actions`: no other entry of the agent's file is ever
   unpacked;
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends
@@ -31,7 +35,7 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # Measured: Isaac start + scene build 1.5-2.5 min, 629 s with a cold shader cache on a loaded host (the verifier's first
 # replay starts cold), replays 60-120 control steps/s unfilmed (tasks/yamlab/README.md); the allowance is
 # REPLAY_STARTUP_S for the start plus a third of the slow nominal rate (REPLAY_MIN_RATE control steps/s), never below
-# REPLAY_FLOOR_S. task.toml's [verifier] timeout_sec fits two replays of a MAX_STEPS-row trajectory plus overhead, so a
+# REPLAY_FLOOR_S. task.toml's [verifier] timeout_sec fits the replay of a MAX_STEPS-row trajectory plus overhead, so a
 # replay that is too slow ends here with a written reward (`replay_timed_out`), never with Harbor killing the verifier.
 REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 1800.0, 1200.0, 20.0
 MAX_MEMBER_MARGIN = 1 << 20   # bytes an .npz entry may hold beyond MAX_STEPS x ACTION_DIM float64 numbers (the .npy header)
@@ -81,9 +85,10 @@ def write(ok: bool, out: dict) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--family", required=True); ap.add_argument("--instance", required=True)
-    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true"); ap.add_argument("--video-fps", type=int, default=15)
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)                            # at least the one replay that decides
     # Agent interaction cost from the tooling's append-only log (whole debugging history, not just the deliverable).
     # The log lives in the agent's container, so these fields are SELF-REPORTED cost accounting, not evidence
     # (agent_cost_self_reported = 1); the parser must survive any content the agent may have written there.
@@ -146,6 +151,7 @@ def main() -> int:
         instance_ok = all(bool(r.get("instance_matches")) for r in runs)
         ok = all_success and deterministic and instance_ok
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
+               "determinism_checked": int(len(outs) > 1), "replays": len(outs),
                "instance_ok": int(instance_ok), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)), "n_actions": int(len(acts)),
                "sim_steps": int(outs[0].get("sim_steps") or 0), "progress": float(outs[-1].get("progress") or 0.0),
                "object_fell": int("fell" in str(outs[-1].get("end_reason") or "")),

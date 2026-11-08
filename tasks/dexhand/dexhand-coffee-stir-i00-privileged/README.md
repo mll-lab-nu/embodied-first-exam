@@ -36,8 +36,8 @@ never copied into the agent's environment or image. Only a Sharpa reference exis
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
 in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final state hashes; in standard mode the replay
-hash must also equal the live final hash. A replay ends at the first success or the first failure. Failures are
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure. Failures are
 fail-fast and permanent: mug tilted over 10 degrees, slid over 20 mm or lifted over 5 mm, spoon touching the floor, or
 the worktop before the six turns are complete, spoon touching neither hand, mug nor worktop while falling faster than
 0.2 m/s (no catch window), an object below the worktop or out of the workspace box, a fingertip in the coffee, an arm

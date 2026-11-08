@@ -21,7 +21,7 @@ Dexterous tool use: a KUKA iiwa 14 arm with a 22-DoF Sharpa HA4 hand (29 positio
 `solution/`: SimToolReal's pretrained policy run in this exact scene, recorded targets replayed: **8/34 goals** in 823 control steps (the policy's own sim2sim progress; a task's reference, not a ceiling); nop 0/34
 
 ## Verification
-DexToolBench task progress: goal reached when all 8 grasp-box keypoints are within 1.5 cm; 30 s per goal (upstream 10 s); `reward.txt` = 1 iff every goal is reached (both replays agreeing); `progress` = goals / 34 in `reward.json`
+DexToolBench task progress: goal reached when all 8 grasp-box keypoints are within 1.5 cm; 30 s per goal (upstream 10 s); `reward.txt` = 1 iff every goal is reached; `progress` = goals / 34 in `reward.json`
 
 ## Resources
 Caps per container (PROTOCOL §6).

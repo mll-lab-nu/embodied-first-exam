@@ -12,15 +12,17 @@ simulator = "robodojo"            # RoboDojo @ cb2a37d on its Isaac Lab 2.3 fork
 robot = "arx-x5-bimanual"
 family = "play_tic_tac_toe"
 dynamics = "dynamic"              # scene dynamics (docs/protocol/README.md §2): the task's own declaration
+replays = 3                       # fresh-process replays, any success counts (docs/protocol/README.md §4): the simulator
+                                  # does not replay bit-wise
 oracle = "none"
 oracle_evidence = "no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142"
 instance_seed = 0
 expert_time_estimate_hours = 2.0
 
 [verifier]
-timeout_sec = 7800.0              # ONE fresh-process replay at tests/grade.py's
+timeout_sec = 22200.0             # up to 3 fresh-process replays at tests/grade.py's
                                   # limit for the longest accepted trajectory (replay_timeout(15,000 actions) = 1200 s +
-                                  # actions / 2.5 = 7200 s) + 600 s; a usual trajectory (up to 1,500 actions) has 1800 s
+                                  # actions / 2.5 = 7200 s each) + 600 s; a usual trajectory (up to 1,500 actions) has 1800 s
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image
 

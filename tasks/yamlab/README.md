@@ -123,8 +123,8 @@ the simulator to 2e-7 m), and thin primitives: `move_ee` (both arms together, Is
 - Across hosts the last bits can differ (as RoboLab's); a trial is graded on the host it ran on.
 
 ## Grading
-- Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` twice, each in a fresh process; success = YAMLab's check
-  held in both, the final hashes agree, and the rebuilt frozen scene matches the recorded one.
+- Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` once, in a fresh process; success = YAMLab's check
+  held in it and the rebuilt frozen scene matches the recorded one (`replays` 1, `determinism_checked` 0).
 - Standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4). The
   service judges the episode it runs (YAMLab's check after every control step, every stage latched; a task object off the
   table ends it, `object_fell`), dumps it on the collect hook's signal and exits; the hook (`environment/sim/finalize.sh`,
@@ -179,7 +179,7 @@ oracle waits up to an hour for the service.
 
 Verifier-side limits. Privileged: each fresh-process replay has max(1800 s, 1200 s + rows / 20) (the verifier's first
 Isaac start is the cold one; 20 control steps/s is a third of the slow nominal rate) and `[verifier] timeout_sec = 13000`
-fits two replays of the longest accepted trajectory (100,000 rows: 6200 s each) plus 600 s. Standard:
+fits one replay of the longest accepted trajectory (100,000 rows: 6200 s) with a wide margin. Standard:
 `[[verifier.collect]] timeout_sec = 3600` (the episode end + the video encode, at most 600 s on the CPU, + a margin).
 
 The tooling's runaway guard ends an episode after 100,000 control steps (`step_guard`, 55.6 min of simulated time). It

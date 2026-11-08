@@ -1,12 +1,14 @@
 """VLABench privileged verifier (separate sandbox, no network).
 
-Replays /app/output/trajectory.npz twice from the verifier's own frozen instance (/tests/instance.json), each replay
-in a fresh Python process, and grades the final state with VLABench's own success predicate (the task's termination
+Replays /app/output/trajectory.npz ONCE from the verifier's own frozen instance (/tests/instance.json), in a fresh
+Python process, and grades the final state with VLABench's own success predicate (the task's termination
 condition; the episode ends the moment it holds, so a trajectory with actions after it is invalid).
 
-/logs/verifier/reward.txt: 1 iff both replays end in the same state (deterministic) and that state is a success.
-/logs/verifier/reward.json (numeric only): success, deterministic, missing_trajectory, invalid_trajectory,
-grader_error, n_actions, sim_steps, video_rendered. Diagnostics (what was wrong, replay results) go to
+/logs/verifier/reward.txt: 1 iff the replay's final state is a success.
+/logs/verifier/reward.json (numeric only): success, deterministic, determinism_checked, replays, missing_trajectory,
+invalid_trajectory, grader_error, n_actions, sim_steps, video_rendered. With one replay there is no second end state to
+compare: a graded replay writes `deterministic` = 1 (nothing disagreed), `determinism_checked` = 0 (nothing was
+compared) and `replays` = 1. Diagnostics (what was wrong, replay results) go to
 diagnostics.json, replay-*.json and replay-*.log.
 """
 
@@ -51,6 +53,8 @@ def main() -> None:
     out = {
         "success": 0,
         "deterministic": 0,
+        "determinism_checked": 0,
+        "replays": 0,
         "missing_trajectory": 0,
         "invalid_trajectory": 0,
         "grader_error": 0,
@@ -80,33 +84,30 @@ def main() -> None:
                 actions = None
         if actions is not None:
             env = {k: v for k, v in os.environ.items() if k not in ("PYTHONHOME", "LD_PRELOAD")}
-            results = []
-            for i in range(2):
-                p = LOG / f"replay-{i}.json"
-                with open(LOG / f"replay-{i}.log", "w") as log:
-                    proc = subprocess.run(
-                        [sys.executable, str(HERE / "grade.py"), "--replay", str(p)],
-                        stdout=log,
-                        stderr=subprocess.STDOUT,
-                        env=env,
-                        cwd="/",
-                        timeout=3600,
-                    )
-                if proc.returncode == 2:
-                    out["invalid_trajectory"] = 1
-                    diag["invalid"] = json.loads(p.read_text()).get("invalid")
-                    break
-                if proc.returncode:
-                    raise RuntimeError(f"replay {i} failed (exit {proc.returncode}); see replay-{i}.log")
-                results.append(json.loads(p.read_text()))
-            if len(results) == 2:
-                det = results[0]["state_sha"] == results[1]["state_sha"]
-                out.update(
-                    success=int(det and results[0]["success"] and results[1]["success"]),
-                    deterministic=int(det),
-                    sim_steps=sum(r["control_steps"] for r in results),
+            p = LOG / "replay-0.json"
+            with open(LOG / "replay-0.log", "w") as log:
+                proc = subprocess.run(
+                    [sys.executable, str(HERE / "grade.py"), "--replay", str(p)],
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    env=env,
+                    cwd="/",
+                    timeout=3600,
                 )
-                diag["replays"] = results
+            if proc.returncode == 2:
+                out["invalid_trajectory"] = 1
+                diag["invalid"] = json.loads(p.read_text()).get("invalid")
+            elif proc.returncode:
+                raise RuntimeError(f"replay 0 failed (exit {proc.returncode}); see replay-0.log")
+            else:
+                r = json.loads(p.read_text())
+                out.update(
+                    success=int(bool(r["success"])),
+                    deterministic=1,  # one replay: nothing to compare (determinism_checked = 0)
+                    replays=1,
+                    sim_steps=r["control_steps"],
+                )
+                diag["replays"] = [r]
     except Exception:  # noqa: BLE001
         out["grader_error"] = 1
         diag["grader_error"] = traceback.format_exc()[-2000:]

@@ -28,13 +28,13 @@ precision; the rounded rows still succeed) and replayed from the frozen instance
 limited to the model APIs.
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.npz`, twice in a fresh process in the verifier's own
-sandbox (no network); pass iff both episodes end in success and their final-state hashes agree (`tests/grade.py`); plus
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.npz`, once in a fresh process in the verifier's own
+sandbox (no network); pass iff the episode ends in success (`tests/grade.py`); plus
 `/logs/verifier/replay.mp4`, rendered after the verdict is written. A rebuilt instance that does not match its recorded
 hash (the image no longer rebuilds the scene) replays nothing and gives no verdict: `instance_mismatch`, `grader_error`
 and `infra_error` = 1, not the agent's 0.
 A file that is not a readable trajectory (not an npz, no `task` / `actions`, a wrong shape, NaN) or has more than
-50,000 rows scores 0 as `bad_trajectory`: the cap is what two replays of the slowest family fit into the verifier's
+50,000 rows scores 0 as `bad_trajectory`: the cap keeps a replay of the slowest family well inside the verifier's
 3600 s. A verifier that runs fewer than 4 OpenBLAS threads (fewer than 4 CPUs visible to it) replays
 nothing and gives no verdict: `too_few_cpus`, `grader_error` and `infra_error` = 1, not the agent's 0.
 Oracle: success after 375 control steps.

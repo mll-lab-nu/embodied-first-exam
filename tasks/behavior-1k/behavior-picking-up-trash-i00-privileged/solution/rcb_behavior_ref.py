@@ -20,7 +20,7 @@ trajectory : the (T, A) low-level robot actions handed to env.step, one row per 
              left gripper 2, right arm 7, right gripper 2; see robot.controller_action_idx). Replaying them open-loop from
              the frozen instance in a FRESH process reproduces the final state bit-exactly (measured on CPU PhysX).
              In-process reset() is only approximate (~1e-6): the first replay in a process (no reset needed) is exact,
-             later ones drift, so the verifier replays in two fresh processes (the `replay` CLI).
+             later ones drift, so the verifier replays in a fresh process (the `replay` CLI).
 budget     : there is no step budget: the agent's wall clock is the limit. The challenge's timeout termination is lifted to
              MAX_STEPS, which only stops runaway trajectories; the episode still ends the moment the BDDL goal holds.
 

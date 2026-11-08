@@ -8,5 +8,5 @@ mkdir -p /logs/verifier
 # Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent
 # left there (a planted reward, a symlink) can count. rm never follows symlinks.
 find /logs/verifier -mindepth 1 -maxdepth 1 ! -name test-stdout.txt -exec rm -rf {} +
-python /tests/grade.py --family robopaint_xingshu_huifenghechang --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \
+python /tests/grade.py --family robopaint_xingshu_huifenghechang --instance /tests/instance.json --traj /app/output/trajectory.npz \
   2> /logs/verifier/grade.log

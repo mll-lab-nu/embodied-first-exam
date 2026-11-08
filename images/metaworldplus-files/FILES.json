@@ -1,9 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.4.1@sha256:3cb7ada68f966ea42f2bf70c1529a8818ac1bf834d358484d758e756bc451cca",
+ "image": "ghcr.io/mll-lab-nu/efe:metaworldplus-files-0.4.2@sha256:1d0d740401c5cd112f9b09fe23b2abd7ee87cb18eedeb5d5eeb06806eaee5e48",
  "source": "embodied_first_exam/benchmarks/metaworldplus",
  "files": {
   "privileged/environment/mw_tool.py": "899cf5f04443f20043648804f6dfb5f6cc1879f54b8fd95916497818b203e316",
-  "privileged/tests/grade.py": "27479be3860840b4077e82a7b2a97759b774048ecf372602bb33000f48a89246",
+  "privileged/tests/grade.py": "0e24422f8fda297c7e4c53c6578257156f3522b4bb73d801c9d990dcdbee2f49",
   "sim/server_mw.py": "e4fb195434518d1c4bc86def66d04fcb61dc0cf3a90570f8173ae0f84b5926ba",
   "standard/tests/grade.py": "6641408d444ab9ca6606c6c91798d90336071f22b943dd3bf52f0c3d8c56514a"
  }

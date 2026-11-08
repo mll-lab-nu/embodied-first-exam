@@ -28,9 +28,9 @@ None.
 ## Verification
 The verifier restores this task's `goal.json` onto the frozen start (`tests/instance.json`, byte-identical to the
 agent's `environment/instance.json` and to the standard twin's), checks the result against upstream's own TRO by
-sha256, and replays `/app/output/trajectory.npz` in two fresh processes: `success` = both replays reach iSpatialGym's
+sha256, and replays `/app/output/trajectory.npz` in one fresh process: `success` = that replay reaches iSpatialGym's
 geometric success as `run_isg --mode policy` judges it (the BDDL goal and every measured target within the isg-v2
-tolerances x 3, held over the last 45 control steps with the task's objects and the robot at rest: upstream's settle-eval) and end in the same state. `bad_trajectory` (unreadable, not
+tolerances x 3, held over the last 45 control steps with the task's objects and the robot at rest: upstream's settle-eval). `bad_trajectory` (unreadable, not
 `(T, 23)` finite, more than 1612 rows) scores 0; a replay that dies or times out, a failed restore or a start that
 does not rebuild is `infra_error` + `grader_error`. `/logs/verifier/replay.mp4`.
 

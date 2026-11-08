@@ -18,7 +18,7 @@ instance_seed = 0
 expert_time_estimate_hours = 1.0
 
 [verifier]
-timeout_sec = 5400               # two fresh-process replays (a scene load + at most 2076 steps each) with margin
+timeout_sec = 5400               # one fresh-process replay (a scene load + at most 2076 steps) with margin
 environment_mode = "separate"
 network_mode = "no-network"
 

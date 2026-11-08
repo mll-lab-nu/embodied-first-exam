@@ -34,15 +34,15 @@ The exemplar IS the robot's execution of the hidden stroke program (a dip whenev
 `/tests/rcb_brush_strict.py` (`rcb_brush.py` with the rules), and `reward.json` adds the rules' quantities (`path_mm`,
 `max_path_mm`; paintings: `scribble_share`), `image_success` (the picture rule alone) and `strict_ok` (the process rules).
 Oracle label `partial`: the reference solution, scored under the process rules (task.toml `oracle_evidence`).
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in two fresh processes (`/tests/grade.py`); pass iff
-both replayed main sheets meet the rule, the final-state hashes (paint layers of both sheets + robot state + the loaded paint)
-agree and the rebuilt frozen instance matches the recorded one. PhysX and libmypaint (single-threaded, with the image's
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in one fresh process (`/tests/grade.py`); pass iff
+the replayed main sheet meets the rule and the rebuilt frozen instance matches the recorded one.
+PhysX and libmypaint (single-threaded, with the image's
 determinism patch) run on the CPU: a live run, in-process replays and fresh-process replays end in the same state bit for bit
 (`rcb_brush.py selftest`); camera rendering does not change it. `/logs/verifier/replay.mp4` and `canvas.png` never affect the verdict.
 A file that is not a readable trajectory (not an npz, no `actions`, a wrong shape, NaN, more than 72,000 rows) scores 0 as
 `bad_trajectory`; `grader_error` (with `infra_error`) is left for the verifier's own failures (a replay process without a result
 or past its 1650 s, a frozen instance that does not rebuild in the verifier: `instance_ok` 0).
-The verifier has 3600 s: two replays of the 72,000 control steps a trajectory may have take up to 36 min at the measured
+The verifier has 3600 s: a replay of the 72,000 control steps a trajectory may have takes up to 18 min at the measured
 67-102 steps/s (tasks/robopaint/README.md).
 
 ## Resources

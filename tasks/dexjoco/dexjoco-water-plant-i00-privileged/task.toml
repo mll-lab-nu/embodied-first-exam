@@ -17,7 +17,7 @@ instance_seed = 0
 expert_time_estimate_hours = 1.5
 
 [verifier]
-timeout_sec = 3600.0              # two replays of at most 50000 rows (the hand-in cap), then the video
+timeout_sec = 3600.0              # a replay of at most 50000 rows (the hand-in cap), then the video
 environment_mode = "separate"     # the verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"
 

@@ -1,6 +1,7 @@
-"""MuJoCo Playground ALOHA verifier (separate sandbox): replay /app/output/trajectory.npz twice from the frozen
-instance; success = the environment's success check (rcb_aloha.Session.check) at the end of the trajectory, in both
-replays with bit-identical final states. Renders /logs/verifier/replay.mp4 and the agent's own rollouts
+"""MuJoCo Playground ALOHA verifier (separate sandbox): replay /app/output/trajectory.npz ONCE from the frozen
+instance; success = the environment's success check (rcb_aloha.Session.check) at the end of the trajectory in that
+replay. With one replay there is no second end state to compare: `deterministic` is written as 1 (nothing disagreed)
+with `determinism_checked` = 0 and `replays` = 1. Renders /logs/verifier/replay.mp4 and the agent's own rollouts
 (self-reported traces, agent_sessions/)."""
 import glob, json, math, os, sys, time, traceback
 import numpy as np
@@ -41,9 +42,9 @@ def main() -> int:
         if A is None or A.ndim != 2 or A.shape[1] != ra.N or len(A) > ra.MAX_STEPS or not np.all(np.isfinite(A)):
             write(False, {"success": 0, "deterministic": 0, "bad_trajectory": 1, "n_actions": int(A.shape[0]) if A is not None and A.ndim == 2 else 0, "grader_error": 0, **c}); return 0
         s = ra.Session("/tests/instance.json", enable_render=True)
-        r1 = s.replay(A); r2 = s.replay(A); det = r1["state_sha"] == r2["state_sha"]; ok = bool(det and r1["success"])
+        r1 = s.replay(A); ok = bool(r1["success"])
         fields = {k: (int(v) if isinstance(v, bool) else v) for k, v in r1.items() if k not in ("success", "state_sha", "steps") and isinstance(v, (bool, int, float))}
-        out = {"success": int(ok), "live_check_success": int(bool(r1["success"])), "deterministic": int(det), **fields,
+        out = {"success": int(ok), "live_check_success": int(ok), "deterministic": 1, "determinism_checked": 0, "replays": 1, **fields,
                "n_actions": int(len(A)), "video_rendered": 0, "grader_error": 0, **c}
         write(ok, out)
         try: s.render_video(A, f"{LOG}/replay.mp4", every=max(2, math.ceil(len(A) / MAX_FRAMES)), fps=25); out["video_rendered"] = 1

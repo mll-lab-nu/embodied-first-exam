@@ -30,10 +30,10 @@ every step and so follows the change; the event fired at step 21. LIBERO's demon
 image. Re-verified at freeze time: the replay ends with LIBERO's success at its last step.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays, each in a fresh process, from the verifier's own
-copy of the instance (`tests/instance.json`; the rebuilt start is checked against its hash on every load); pass iff both
-end in the same state (`deterministic`) and LIBERO's success check holds at the last action (actions after it make the
-trajectory invalid). Oracle: the replays end in the live state (hash `78527326b14a…`) and succeed. `nop`: no trajectory,
+`tests/grade.py` in a separate sandbox without network: one replay, in a fresh process, from the verifier's own
+copy of the instance (`tests/instance.json`; the rebuilt start is checked against its hash on every load); pass iff
+LIBERO's success check holds at the last action (actions after it make the
+trajectory invalid). Oracle: the replay ends in the live state (hash `78527326b14a…`) and succeed. `nop`: no trajectory,
 reward 0; the instance is not solved at the start.
 
 ## Resources

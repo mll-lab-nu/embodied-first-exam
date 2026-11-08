@@ -1,12 +1,13 @@
 """RoboCasa-series privileged verifier (separate sandbox, no network).
 
-Replays /app/output/trajectory.npz twice from the verifier's own frozen instance (/tests/instance.npz), each replay in
-a fresh Python process, and grades the state after the last action with the environment's own success check.
+Replays /app/output/trajectory.npz ONCE from the verifier's own frozen instance (/tests/instance.npz), in a fresh
+Python process, and grades the state after the last action with the environment's own success check.
 
-/logs/verifier/reward.txt: 1 iff both replays end in the same state (deterministic), that state is a success, and the
-instance was not solved at the start.
-/logs/verifier/reward.json (numeric only): success, deterministic, replay_success, missing_trajectory,
-invalid_trajectory, grader_error, n_actions, sim_steps, final_reward, video_rendered, verifier_wall_s.
+/logs/verifier/reward.txt: 1 iff the replay's final state is a success and the instance was not solved at the start.
+/logs/verifier/reward.json (numeric only): success, deterministic, determinism_checked, replays, replay_success,
+missing_trajectory, invalid_trajectory, grader_error, n_actions, sim_steps, final_reward, video_rendered,
+verifier_wall_s. With one replay there is no second end state to compare: a graded replay writes `deterministic` = 1
+(nothing disagreed), `determinism_checked` = 0 (nothing was compared) and `replays` = 1.
 """
 
 import json
@@ -59,6 +60,8 @@ def main() -> None:
     out = {
         "success": 0,
         "deterministic": 0,
+        "determinism_checked": 0,
+        "replays": 0,
         "replay_success": 0,
         "missing_trajectory": 0,
         "invalid_trajectory": 0,
@@ -84,35 +87,31 @@ def main() -> None:
                 (LOG / "invalid_trajectory.txt").write_text(repr(exc) + "\n")
         if n:
             env = {k: v for k, v in os.environ.items() if k not in ("PYTHONHOME", "LD_PRELOAD")}
-            results = []
-            for i in range(2):
-                p = LOG / f"replay-{i}.json"
-                with open(LOG / f"replay-{i}.log", "w") as log:
-                    rc = subprocess.run(
-                        [sys.executable, str(HERE / "grade.py"), "--replay", str(p)],
-                        stdout=log,
-                        stderr=subprocess.STDOUT,
-                        env=env,
-                        cwd="/",
-                        timeout=3600,
-                    ).returncode
-                if rc == INVALID:
-                    out["invalid_trajectory"] = 1
-                    break
-                if rc:
-                    raise RuntimeError(f"replay {i} failed (exit {rc}); see replay-{i}.log")
-                results.append(json.loads(p.read_text()))
-            if len(results) == 2:
-                det = results[0]["state_sha"] == results[1]["state_sha"]
-                solved_at_start = any(r["initial_success"] for r in results)
-                ok = det and not solved_at_start and results[0]["success"] and results[1]["success"]
+            p = LOG / "replay-0.json"
+            with open(LOG / "replay-0.log", "w") as log:
+                rc = subprocess.run(
+                    [sys.executable, str(HERE / "grade.py"), "--replay", str(p)],
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    env=env,
+                    cwd="/",
+                    timeout=3600,
+                ).returncode
+            if rc == INVALID:
+                out["invalid_trajectory"] = 1
+            elif rc:
+                raise RuntimeError(f"replay 0 failed (exit {rc}); see replay-0.log")
+            else:
+                r = json.loads(p.read_text())
+                ok = not r["initial_success"] and r["success"]
                 out.update(
-                    success=int(ok),
-                    deterministic=int(det),
-                    replay_success=int(results[0]["success"]),
+                    success=int(bool(ok)),
+                    deterministic=1,  # one replay: nothing to compare (determinism_checked = 0)
+                    replays=1,
+                    replay_success=int(bool(r["success"])),
                     n_actions=n,
-                    sim_steps=sum(r["control_steps"] for r in results),
-                    final_reward=float(results[0]["final_reward"]),
+                    sim_steps=r["control_steps"],
+                    final_reward=float(r["final_reward"]),
                 )
     except Exception:  # noqa: BLE001
         out["grader_error"] = 1

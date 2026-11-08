@@ -33,8 +33,8 @@ computes robot motor targets only; it never sets an object pose or applies an ob
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
 in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
-mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
 Failures are fail-fast and permanent (see the task text): a displaced lower frame, a knocked pre-seated rail, a dropped
 or knocked-over brace, a dropped side frame, any free-falling part, floor contact, a part below the table top or out of
 the workspace, unstable physics, or the 6,000-control budget. The thresholds come from the frozen task, never from an

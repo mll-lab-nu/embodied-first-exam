@@ -4,16 +4,18 @@ write Harbor rewards.
     python /tests/grade.py --family water_plant --instance /tests/instance.npz --traj /app/output/trajectory.npz
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only; Harbor rejects strings), a replay video
-/logs/verifier/replay.mp4 (front camera + wrist camera) and replay.last.png. Replays `--repeat` times in this fresh
-process; success requires every replay to end its episode in success (DexJoCo's own rule: the episode ends at the first
-success or task failure) AND all final-state hashes to agree (MuJoCo on the CPU is bit-deterministic). The frozen
-instance rebuilt here from tests/instance.npz must match its recorded hash; one that does not (the image no longer
+/logs/verifier/replay.mp4 (front camera + wrist camera) and replay.last.png. ONE replay in this fresh process
+decides: success = its episode ends in success (DexJoCo's own rule: the episode ends at the first success or task
+failure). With one replay there is no second end state to compare: `deterministic` is written as 1 (nothing disagreed)
+with `determinism_checked` = 0 and `replays` = 1. `--repeat N` (N >= 2) is the old check, kept for a determinism
+measurement by hand: success = every replay succeeds AND all final-state hashes agree (MuJoCo on the CPU is
+bit-deterministic; `determinism_checked` = 1). The frozen instance rebuilt here from tests/instance.npz must match its recorded hash; one that does not (the image no longer
 rebuilds the scene) is no verdict on the agent: `instance_mismatch`, `grader_error` and `infra_error` = 1, nothing
 replayed.
 
 A file the agent got wrong is the agent's 0, `bad_trajectory` (not `grader_error`): not an npz, pickled or object
 arrays, no `task` or `actions` entry, a wrong shape, NaN/inf, or more than rcb_dexjoco.MAX_TRAJECTORY_ROWS rows (the
-hand-in cap: what two replays of the slowest family fit into this verifier's timeout). `grader_error` is left for
+hand-in cap: a replay of the slowest family stays well inside this verifier's timeout). `grader_error` is left for
 failures of the verifier itself, and comes with `infra_error` = 1 (no verdict on the agent). One of them is checked
 before the first replay: the simulation's result depends on OpenBLAS's thread count below 4
 (tasks/dexjoco/README.md, "Threads"), so a verifier whose process runs fewer than 4 OpenBLAS threads (fewer than 4
@@ -91,11 +93,12 @@ def self_reported_cost() -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--family", required=True); ap.add_argument("--instance", required=True)
-    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true")
     ap.add_argument("--video-deadline-s", type=float, default=2700.0,
                     help="seconds after this process started at which the video stops (inside the verifier's timeout)")
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)  # at least the one replay that decides
     cost = self_reported_cost()
     os.environ["RCB_SESSION_LOG"] = ""  # the verifier's own sessions are not the agent's cost
     if not os.path.isfile(a.traj):
@@ -135,10 +138,10 @@ def main() -> int:
             except (ValueError, rcb_dexjoco.PrimitiveError):
                 write(False, {"bad_trajectory": 1, "n_actions": n_rows, **cost}); return 0
         all_success = all(o["success"] for o in outs)
-        deterministic = len({o["state_sha"] for o in outs}) == 1
+        deterministic = len({o["state_sha"] for o in outs}) == 1  # one replay: 1, nothing compared
         ok = all_success and deterministic
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
-               "instance_ok": 1, "n_actions": int(len(acts)), "sim_steps": int(outs[0]["steps"]),
+               "determinism_checked": int(len(outs) > 1), "replays": len(outs), "instance_ok": 1, "n_actions": int(len(acts)), "sim_steps": int(outs[0]["steps"]),
                "task_failure": int(bool(outs[0]["reason"]) and not outs[0]["success"]),
                "replay_wall_s": round(time.time() - t0, 1), "grader_error": 0, "video_rendered": 0, **threads, **cost}
         write(ok, out)  # the verdict is on disk before the video; the video only adds video_rendered

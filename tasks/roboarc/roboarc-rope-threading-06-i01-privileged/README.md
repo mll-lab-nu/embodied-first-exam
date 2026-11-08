@@ -21,15 +21,15 @@ Two 6-dof aloha (viperx) arms with parallel-jaw grippers on a fixed base with a 
 `solution/solve.sh` copies `solution/trajectory.npz` (sha256 `217896a927affcf7…`) to `/app/output/`: the MuJoCo reference (this design's oracle, recorded on MuJoCo), which the verifier scored 1 in two fresh-process replays on an earlier build of this benchmark's image (2026-10-13) that holds the same frozen instance (2026-10-13; simulator source d601866b, tooling fde662d5).
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from the frozen instance (`/tests/instance.json`, staged from the image and checked against `tests/runtime_binding.json`) in a fresh process, twice; pass iff the
-task's predicate holds after every replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during the second
-replay (two passes, no separate video replay). The physics runs on the CPU and is bit-deterministic on one host; the
-final-state hashes (`deterministic`) are still diagnostic; the rebuilt frozen scene must match (`instance_ok`)
+Open-loop replay of `/app/output/trajectory.npz` from the frozen instance (`/tests/instance.json`, staged from the image and checked against `tests/runtime_binding.json`) in one fresh process; pass iff the
+task's predicate holds after the replay (`tests/grade.py`). `/logs/verifier/replay.mp4` is rendered during that
+replay (one pass, no separate video replay). The physics runs on the CPU and is bit-deterministic on one host; with one
+replay no final-state hashes are compared (`determinism_checked` 0); the rebuilt frozen scene must match (`instance_ok`)
 (Embodied First Exam's GPU-backend rule).
-The replays are grading replays (tooling v18): if this family's episode has not ended after the last row, the
-final targets are held for up to 2 s with the replay tolerances of the grader details; at least one replay must
+The replay is a grading replay (tooling v18): if this family's episode has not ended after the last row, the
+final targets are held for up to 2 s with the replay tolerances of the grader details; the replay must
 reach the goal with the instance's own thresholds within the trajectory's rows.
-A trajectory may have at most 41000 rows (`RCB_MAX_STEPS`: two replays must fit the verifier's timeout; a longer one is
+A trajectory may have at most 41000 rows (`RCB_MAX_STEPS`: the replay must fit the verifier's timeout; a longer one is
 `bad_trajectory`).
 
 `nop` scored 0 on this base in both modes (the release image efe:roboarc-0.1.0; harbor run -a nop with rendering off; 2026-10-14).
@@ -71,7 +71,7 @@ Thread the rope through the cyan grommet in the wall (G1) then green ring (A) th
 - The material start is the rope end that is farther from the rings at the start.
 - Only the grippers' fingers collide with the rope and the rings: every other robot part (palms, wrists, arm links, bases) passes through them without contact, so only the fingers can push, pinch or hold the rope.
 - Grasp regions (assisted grasping, see Grippers above; one or more spheres per graspable part): rope: 496 spheres of radius 8 mm. Both finger contacts must lie inside one of the part's spheres; a part touched elsewhere is grasped physically. Each region's centre (in its link's frame) is in `/app/instance.json` under `simulator.grasp_assist.targets`.
-- Grading: the verifier replays your trajectory twice in a fresh process. This family's physics runs on the CPU (MuJoCo, float64), so a replay reproduces your own run on the same host; the rule is kept as a margin: each replay runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final targets for up to 2 s (50 control steps), stopping at the first success or failure, so a confirmation that starts a few physics ticks later than in your own run can still complete; the hold uses the thresholds above too (no tolerance for this family). Success needs both replays to succeed AND at least one of them to reach the goal with the thresholds above within your own rows (not only in the hold). Nothing else changes. A recording stops at your own success, so a replay whose confirmation ends a few ticks later needs more rows: you may append copies of the final row (holding still) before saving. `s.replay(actions, grading=True)` replays as the verifier does.
+- Grading: the verifier replays your trajectory once in a fresh process. This family's physics runs on the CPU (MuJoCo, float64), so a replay reproduces your own run on the same host; the rule is kept as a margin: the replay runs the rows with the thresholds above and, if the episode has not ended after the last row, holds the final targets for up to 2 s (50 control steps), stopping at the first success or failure, so a confirmation that starts a few physics ticks later than in your own run can still complete; the hold uses the thresholds above too (no tolerance for this family). Success needs the replay to succeed AND to reach the goal with the thresholds above within your own rows (not only in the hold). Nothing else changes. A recording stops at your own success, so a replay whose confirmation ends a few ticks later needs more rows: you may append copies of the final row (holding still) before saving. `s.replay(actions, grading=True)` replays as the verifier does.
 - A failure is reported in `s.status()["episode_end"]` as "forced_breakdown: <what>" (<what>: the readable reason); `s.safety()` reports forcing, contact depths, volume ratios and table-guard stops against these limits.
 
 ### Provenance

@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/autobio-screw-tighten-i00-privileged"
-description = "AutoBio screw_tighten (Screw on centrifuge tube cap; a biology laboratory bench on MuJoCo): produce one replayable trajectory of joint position targets. Screw the cap onto the 50 mL centrifuge tube. Frozen scene instance (AutoBio's reset, seed 0); graded by two fresh-process replays with AutoBio's own check."
+description = "AutoBio screw_tighten (Screw on centrifuge tube cap; a biology laboratory bench on MuJoCo): produce one replayable trajectory of joint position targets. Screw the cap onto the 50 mL centrifuge tube. Frozen scene instance (AutoBio's reset, seed 0); graded by one fresh-process replay with AutoBio's own check."
 keywords = ["robotics", "autobio", "mujoco", "laboratory", "biology", "aloha-2", "code-as-policy", "trajectory", "screw_tighten", "privileged"]
 
 [metadata]

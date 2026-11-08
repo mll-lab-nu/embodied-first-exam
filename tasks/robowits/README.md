@@ -146,7 +146,7 @@ its first step, and a standard-mode crash resume replays the episode on the agen
   (`sim_crashed_on_call` when it repeats), never as a free infrastructure retry. A service that cannot export the rows or
   hash the end state afterwards keeps the verdict (`finalize_error`; `journal.f64` holds the rows).
 - Physics on Genesis' CPU backend (single-threaded): bit-exact, in-process repeats included. The privileged verifier
-  replays the trajectory twice in a fresh process and compares the final-state hashes and the rebuilt frozen scene; it
+  replays the trajectory once in a fresh process and checks the rebuilt frozen scene; it
   writes the verdict before it renders the video. The standard service grades the live episode; the separate verifier
   reads `final.json`. After the verdict the service renders the recorded rows once into `replay.mp4` (EGL, ~N/60 s for
   N control steps; `video_pending` while it runs, `video_done` after; the collect hook waits for it); a failed render

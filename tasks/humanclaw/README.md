@@ -26,8 +26,8 @@ allows 100 actions, the stop included, and has no reset; success needs an explic
 |---|---|---|
 | the agent has | the simulator (`hc_tools.Env`): the body's pose, the targets' boxes, the navmesh, free resets | a client: the head camera (448 x 448 RGB, 90° fov), actions used / left, the pelvis' height change |
 | deliverable | `trajectory.npz` (`actions`, T <= 100 rows) | none: the sidecar records and grades the live episode |
-| graded by | two fresh-process replays from the verifier's copy of the instance: both succeed, equal final state hashes | the live episode (HumanCLAW's `finalize` at the stop, in the sidecar); nothing replayed |
-| video | the first replay's recorded poses, rendered after the verdict | the live episode's recorded poses, rendered after the verdict |
+| graded by | one fresh-process replay from the verifier's copy of the instance: it succeeds | the live episode (HumanCLAW's `finalize` at the stop, in the sidecar); nothing replayed |
+| video | the replay's recorded poses, rendered after the verdict | the live episode's recorded poses, rendered after the verdict |
 | time cutoff | 3600 s | 3600 s |
 
 What differs from HumanCLAW's own evaluator:

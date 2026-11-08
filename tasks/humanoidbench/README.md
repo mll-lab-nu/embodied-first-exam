@@ -66,7 +66,7 @@ Why these (no model's results enter the choice):
 
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
-| privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed twice in a fresh process |
+| privileged | the simulator and its full state; no reward | unlimited | its `trajectory.npz`, replayed once in a fresh process |
 | standard | head cameras, joint angles/velocities, a pelvis IMU, a fixed room camera; no reward | 50 (below; `RCB_RESET_BUDGET=0`: none) | the last episode, as it ran (live; nothing replayed) |
 | realtime | the same as standard, but time does not stop: the robot runs at 50 Hz in real time while the agent thinks (below) | 50 (as in standard: HumanoidBench's choice, PROTOCOL §2; the realtime template's default is 0) | the last episode, as it ran (live; nothing replayed) |
 

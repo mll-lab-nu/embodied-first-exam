@@ -4,7 +4,7 @@
 FROM ghcr.io/mll-lab-nu/efe:kinder-0.1.6
 COPY . /srv/
 COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.4.1@sha256:7f1a830075fd6dd25e7a20a340316c041df583a29062796f59a4fa63b6f76946 /rcb1.py /srv/rcb1.py
-COPY --from=ghcr.io/mll-lab-nu/efe:kinder-files-0.4.0@sha256:803df11db01efc416434ec0fcfc33474856c2e7b7d068efd2c41749ab1b7abd3 \
+COPY --from=ghcr.io/mll-lab-nu/efe:kinder-files-0.4.1@sha256:6b28cc6adfd2a09667a2ae3b270a507be7eabcc56f450e6e66f818bb20d5dca4 \
      /privileged/environment/rcb_kinder.py \
      /sim/rcb_service.py \
      /sim/server.py \

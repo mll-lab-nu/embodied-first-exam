@@ -12,7 +12,7 @@ gripper open, already part of the frozen start). Write it with `s.save_trajector
 script that produced it at `/app/output/gen.py`.
 
 ## Success
-The verifier replays your actions from the frozen start in a separate sandbox (twice, each in a fresh process; the
+The verifier replays your actions from the frozen start in a separate sandbox (once, in a fresh process; the
 event is applied by the same trigger), and applies LIBERO's own success check: the task's goal, all of
 - `white_yellow_mug_1` is on `yellow_plate_1` (LIBERO's On: `white_yellow_mug_1`'s origin is no lower than `yellow_plate_1`'s, less than 3 cm from it horizontally, and the two touch)
 - `green_chocolate_pudding_1` is on `living_room_table_yellow_plate_right_region` (LIBERO's On for a region: `green_chocolate_pudding_1`'s origin lies inside the region's footprint and between 0.5 cm below and 10 cm above the region's top, and it touches the region's object)

@@ -74,8 +74,7 @@ last attempt is graded and a success ends the trial. With resets the first attem
 - **The referee** (`rfo/referee.py`) judges from the simulator's state after every 1 ms physics step: stages that
   latch in order, contact events and legal body parts, crossings found between physics steps, flight phases; a foul,
   a fall, the time limit or a physics blow-up ends the attempt. Its record is part of the state hash.
-- **Privileged**: `tests/grade.py` replays the trajectory in two fresh processes; both must succeed and end in the
-  same state hash.
+- **Privileged**: `tests/grade.py` replays the trajectory in one fresh process, which must succeed.
 - **Standard and realtime**: the sidecar's referee calls the live attempt (`final.json`, `graded_by` live,
   no grading replay); the start is checked against the instance's state hash, and a crash resumes the attempt from the
   sidecar's journal.

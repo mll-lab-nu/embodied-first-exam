@@ -18,7 +18,7 @@ instance_seed = 0
 expert_time_estimate_hours = 0.5
 
 [verifier]
-timeout_sec = 4200.0              # two fresh-process replays at tests/grade.py's limit (1800 s each) + 600 s
+timeout_sec = 4200.0              # one fresh-process replay at tests/grade.py's limit (1800 s) + 600 s, with room to spare
 environment_mode = "separate"
 network_mode = "no-network"
 

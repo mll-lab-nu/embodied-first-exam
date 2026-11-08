@@ -44,8 +44,8 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop twice from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of both replays, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+It is replayed open-loop once from the same initial state in a fresh process and scored 1 if the task is
+completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -84,7 +84,7 @@ CLI equivalent of the grader:
 - Action (8): arm `arm`: 7 joint targets (rad), then `arm_native_gripper` = native drive target (rad, limits 0 .. 0.8: 0 = open, 0.8 = closed, the Robotiq 2F-85's driver joint; open/closed targets in robot_spec); absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget, but a trajectory may have at most
-  200000 rows (83.3 min of simulated time): the verifier has to replay it twice within its own time limit, so `s.step` stops
+  200000 rows (83.3 min of simulated time): the verifier has to replay it within its own time limit, so `s.step` stops
   after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). The time limit
   (`## Time limit`) is your only budget. One control step takes about 0.064 s of wall clock here, so budget your experiments.
 - Grippers: assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (wand) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.02 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction).

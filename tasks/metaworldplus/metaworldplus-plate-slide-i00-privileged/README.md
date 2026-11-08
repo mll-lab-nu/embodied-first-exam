@@ -28,9 +28,9 @@ Meta-World's scripted policy for `plate-slide-v3` (`metaworld/policies/`, remove
 its first success: 53 actions in `solution/oracle.npz`.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays in fresh processes from the verifier's own copy of
-the instance; `success = deterministic ∧ success on the final state`. Oracle: two fresh-process replays end in the
-live episode's state (hash `5a21ea6182eb…`) and succeed. `nop`: no trajectory, reward 0; the instance is
+`tests/grade.py` in a separate sandbox without network: one replay in a fresh process from the verifier's own copy of
+the instance; `success` = success on the final state. Oracle: a fresh-process replay ends in the
+live episode's state (hash `5a21ea6182eb…`) and succeeds. `nop`: no trajectory, reward 0; the instance is
 not solved at the start.
 
 ## Resources

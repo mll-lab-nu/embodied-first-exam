@@ -120,19 +120,19 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
 120-action driver trajectory ends in the same state as on the 4090; every graded trial reports `instance_exact`.
 
 ## Grading
-- privileged: **one replay**. `tests/grade.py` replays `/app/output/trajectory.npz` once, in a fresh process (`test.sh`:
-  `--repeat 1`); reward 1 iff that replay succeeds. `no-network`. A file that is not a trajectory of the task (not an
+- privileged: **up to 3 replays** (`[metadata] replays`, PROTOCOL §4). `tests/grade.py` replays
+  `/app/output/trajectory.npz` in a fresh process each time (`test.sh`: `--repeat 3`) and stops at the first success;
+  reward 1 iff a replay succeeds. `no-network`. A file that is not a trajectory of the task (not an
   npz, pickled or object arrays, another shape, NaN/inf, more than 15,000 rows) is the agent's 0 (`bad_trajectory`,
   `wrong_task`); a replay process that ends without a result or runs out of its time is the verifier's (`grader_error` =
   `infra_error` = 1, `replay_failed` / `replay_timed_out`: no verdict on the agent). Only the file's `task` and `actions`
   entries are read (their sizes checked in the archive before anything is decompressed); any other entry is ignored.
-  With one replay there is no second end state: `deterministic` and `state_identical` are written as 1 (nothing
-  disagreed) next to `determinism_checked` = 0 and `replays` = 1, which say that nothing was compared.
-  `replay_success` = `all_success` = the replay's own result. A replay whose process rebuilt the frozen layout to
+  `replays` = the replays run, `replays_succeeded` and `success_replay` (1-based, 0 for none) say which succeeded;
+  `deterministic` and `state_identical` compare the end states of the replays run (evidence only, never the verdict;
+  `determinism_checked` = 0 when only one ran). A replay whose process rebuilt the frozen layout to
   another state than `instance.json` records (`instance_exact` = 0) did not start from the frozen state and gives no
-  verdict (`instance_mismatch`, `grader_error` = `infra_error` = 1). `grade.py --repeat 2` is the two-replay check, for a
-  determinism measurement by hand. What one replay gives up: a trajectory whose outcome differs between fresh
-  processes is not caught; on the 48 privileged tasks the physics replays bit for bit.
+  verdict (`instance_mismatch`, `grader_error` = `infra_error` = 1). Measured on one host, the physics of
+  the 48 privileged tasks replays bit for bit; graded replays run on other hosts and GPU models too, hence up to 3.
 - standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4), the same rule for every task:
   `success = live_success`, RoboDojo's check as the service ran it after every action of the episode the agent ran (no
   end-of-episode hold: RoboDojo has none). The service writes `trajectory.npz` (the deliverable) and `episode.json` on
@@ -152,12 +152,12 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
   actions; only the end state is rendered once more, at the dump. The video's rate is the agent's (at least one frame
   per call); a resume's journal replay adds none and deletes the frames of the call lost in the crash. The collect hook
   encodes it after the verdict (CPU, at most 600 s); a frame or an encode that fails costs the video only. Privileged:
-  the one replay is the filmed one (`replay.mp4`); a video that cannot be written gives `video_ok` false and the replay
+  every replay is filmed and the last one run is kept (`replay.mp4`); a video that cannot be written gives `video_ok` false and the replay
   stands.
 - Time limits (wall clock only; the verdict rules do not depend on them). A replay process takes up to ~7 min until the
   layout is ready (a cold first start, which every privileged verifier's replay is) and runs at about 5-11 actions/s
   filmed. A replay's allowance is max(1800 s, 1200 s + rows / 2.5), so 7200 s for the 15,000 rows a trajectory may
-  have; `[verifier] timeout_sec` (privileged) is **7800 s** (one replay of 15,000 rows + 600 s for the grader and the
+  have; `[verifier] timeout_sec` (privileged) is **22200 s** (three replays of 15,000 rows + 600 s for the grader and the
   resource step). The standard collect hook is **3600 s** (`finalize.sh`'s `HOOK_BUDGET_S`, equal to
   `[[verifier.collect]] timeout_sec`: the episode end, up to 2700 s through a resume, + the video encode, no replay);
   the standard verifier keeps 1200 s (it only reads files).

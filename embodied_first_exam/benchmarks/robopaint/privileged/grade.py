@@ -4,17 +4,20 @@ full instance, with the exemplar's geometry) and write Harbor rewards.
     python /tests/grade.py --family calli_yong --instance /tests/instance.json --traj /app/output/trajectory.npz
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only) and a human-viewable replay video /logs/verifier/replay.mp4
-plus replay.last.png and canvas.png (never part of the verdict). Replays `--repeat` times, each in its own FRESH process
-(`rcb_brush.py replay`). success = every replay meets the task's rule (instance.json target.success, rcb_brush.is_success) AND all
-final-state hashes (sheets' ink + robot state + brush state) agree AND the frozen instance rebuilt here from tests/instance.json
-matches the recorded one (instance_exact). final_reward = the worst replay's final_reward (continuous); every metric is reported.
+plus replay.last.png and canvas.png (never part of the verdict). ONE replay, in its own FRESH process (`rcb_brush.py replay`),
+decides: success = it meets the task's rule (instance.json target.success, rcb_brush.is_success) AND the frozen instance rebuilt
+there from tests/instance.json matches the recorded one (instance_exact). With one replay there is no second end state to
+compare: `deterministic` is written as 1 (nothing disagreed) with `determinism_checked` = 0 and `replays` = 1. `--repeat N`
+(N >= 2) is the old check, kept for a determinism measurement by hand: N fresh processes, every replay must meet the rule AND
+all final-state hashes (sheets' ink + robot state + brush state) agree (`determinism_checked` = 1). final_reward = the (worst)
+replay's final_reward (continuous); every metric is reported.
 
 A file the agent got wrong is the agent's 0, `bad_trajectory` (not `grader_error`): not an npz, pickled or object arrays, no
 `actions` entry, a wrong shape, NaN/inf, more than rcb_brush.MAX_STEPS rows. `grader_error` is left for failures of the verifier
 itself (a replay process that gave no result or ran past --replay-timeout-s, a frozen instance that does not rebuild here:
 `instance_ok` 0), and `infra_error` = 1 goes with it: no verdict on the agent. Every reward.json carries success, final_reward,
-deterministic, grader_error, infra_error, missing_trajectory and bad_trajectory. Time: two replays of at most MAX_STEPS (72,000) control steps
-at the 67-102 steps/s measured (tasks/robopaint/README.md) take up to 36 min plus two scene builds; [verifier] timeout_sec is
+deterministic, grader_error, infra_error, missing_trajectory and bad_trajectory. Time: a replay of at most MAX_STEPS (72,000) control steps
+at the 67-102 steps/s measured (tasks/robopaint/README.md) takes up to 18 min plus a scene build; [verifier] timeout_sec is
 3600 s and each replay process gets --replay-timeout-s (1650 s).
 """
 from __future__ import annotations
@@ -64,10 +67,11 @@ def numeric(d: dict) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--family", required=True); ap.add_argument("--instance", required=True)
-    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true")
-    ap.add_argument("--replay-timeout-s", type=float, default=1650.0, help="per replay process; two fit [verifier] timeout_sec")
+    ap.add_argument("--replay-timeout-s", type=float, default=1650.0, help="per replay process; fits [verifier] timeout_sec")
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)  # at least the one replay that decides
     # agent interaction cost from the tooling's append-only log: SELF-REPORTED (the log lives in the agent's container)
     cost = {"agent_sessions": 0, "agent_resets": 0, "agent_sim_steps": 0, "agent_records": 0, "agent_replays": 0, "agent_cost_self_reported": 1}
     try:
@@ -120,11 +124,12 @@ def main() -> int:
         if any("error" in r or not o for r, o in zip(runs, outs)):
             write(False, {"grader_error": 1, "n_actions": int(len(acts)), **cost}); return 0
         all_success = all(bool(o.get("success")) for o in outs)
-        deterministic = len({o.get("state_sha") for o in outs}) == 1
+        deterministic = len({o.get("state_sha") for o in outs}) == 1  # one replay: 1, nothing compared
         instance_ok = all(bool(r.get("instance_matches")) for r in runs)
         ok = all_success and deterministic and instance_ok
         o = outs[0]
         out = {**numeric(o), "success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
+               "determinism_checked": int(len(outs) > 1), "replays": len(outs),
                "instance_ok": int(instance_ok), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)),
                "n_actions": int(len(acts)), "final_reward": round(min(float(x.get("final_reward") or 0.0) for x in outs), 6),
                # the frozen instance was not rebuilt on this host: the replays say nothing about the agent's trajectory

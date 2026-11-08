@@ -37,9 +37,8 @@ Wuji Hand 2.2: `solution/wuji/trajectory.npz` is a validated Wuji Hand 2.2 traje
 
 ## Verification
 Privileged: the isolated verifier rebuilds the frozen scene with the trajectory's `hand` (default `sharpa`) and replays
-only the `actions` rows twice in fresh processes; reward 1 iff both replays succeed with identical final state hashes.
-Standard: the trusted service journals every executed row; its collect hook replays the episode twice in fresh
-processes; reward 1 iff the live episode, both replays and the hashes agree. Rows of the wrong width for the recorded
+only the `actions` rows in one fresh process; reward 1 iff that replay succeeds.
+Standard: the trusted service judges the live episode it ran; nothing is replayed. Rows of the wrong width for the recorded
 hand, non-finite or out-of-range targets, a wrong `task` or `actuator_names` label and oversized archives are rejected
 (reward 0, `bad_trajectory = 1`). The predicate is evaluated after every physics step from simulator state only
 (contacts, contact forces, poses, velocities, geometric distances): two ordered stages (bimanual carry, released hold

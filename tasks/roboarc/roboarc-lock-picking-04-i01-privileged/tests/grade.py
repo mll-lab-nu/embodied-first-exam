@@ -4,29 +4,31 @@ Adapted from Embodied First Exam's RoboWits grader (fa59c1a6: tasks/robowits-sta
     python /tests/grade.py --family cube_pick_place --instance /tests/instance.json --traj /app/output/trajectory.npz
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
-human-viewable replay video /logs/verifier/replay.mp4 (all cameras tiled) plus replay.last.png, rendered during the last of
-the `--repeat` (2) replays in this fresh process: two passes in all, no separate video replay. The physics runs where the
-instance's `simulator.compute_backend` says; every replay must complete the task. Initial state and runtime binding must
-match exactly; final-state determinism is reported separately, not required.
-The replays are grading replays (rcb_topogym.Session.replay(grading=True), tooling v16): for the families with a grading
+human-viewable replay video /logs/verifier/replay.mp4 (all cameras tiled) plus replay.last.png, rendered during the one
+graded replay in this fresh process (filming never decides; no separate video replay). The physics runs where the
+instance's `simulator.compute_backend` says; the replay must complete the task. Initial state and runtime binding must
+match exactly. With one replay nothing is compared: `replays` = 1, `deterministic` = 1, `determinism_checked` = 0.
+`--repeat N` (N >= 2) is the old check, kept for a measurement by hand: N replays, every one must complete the task, and
+final-state determinism is reported (`deterministic`, `determinism_checked` = 1), not required.
+The replay is a grading replay (rcb_topogym.Session.replay(grading=True), tooling v16): for the families with a grading
 hold (rcb_topogym.REPLAY_TOLERANCES) the rows run with the instance's own thresholds and, if the episode has not ended
-after the last row, the final targets are held for up to 2 s with the replay tolerances. Success needs both replays to
-succeed AND at least one of them to reach the goal with the instance's own (strict) thresholds within the trajectory's
-rows: the hold only confirms, as in standard mode, where the live episode is strict and its replay may confirm in the
-hold. Without that rule the hold's relaxed thresholds would be the effective goal in privileged mode, which has no graded
+after the last row, the final targets are held for up to 2 s with the replay tolerances. Success needs the replay to
+succeed AND to reach the goal with the instance's own (strict) thresholds within the trajectory's rows (with
+`--repeat` N >= 2: every replay succeeds AND at least one reaches it): the hold only confirms, as in standard mode,
+where the live episode is strict and its replay may confirm in the hold. Without that rule the hold's relaxed thresholds would be the effective goal in privileged mode, which has no graded
 live run (blanket-flatten: 92 % coverage instead of 95 %). The cloth step runs on a deterministic solver and the MuJoCo
 families on the CPU, so a replay on the same host reproduces the agent's own run, and a recording that stops on its own
 (strict) success reaches it within its rows. The strict goal is reported (`strict_goal_reached`, `strict_goal_row`; verdict.json
-`evidence.strict_goal`), `strict_replay_required` 1 marks the rule, and `success_in_hold_only` 1 a trajectory whose replays
-all succeeded but only within the hold (not credited). Each replay's "grading" record is in verdict.json;
-`replay_hold_steps` / `replay_tolerance_needed` summarize them.
-Task-contact penetration is evidence, not a verdict (tooling v16): a success during whose replays a task contact went deep
-(rcb_topogym.CONTACT_RULE, each replay's status "review") is not credited automatically: success 0 with
+`evidence.strict_goal`), `strict_replay_required` 1 marks the rule, and `success_in_hold_only` 1 a trajectory whose replay
+succeeded but only within the hold (not credited). The replay's "grading" record is in verdict.json;
+`replay_hold_steps` / `replay_tolerance_needed` summarize it.
+Task-contact penetration is evidence, not a verdict (tooling v16): a success during whose replay a task contact went deep
+(rcb_topogym.CONTACT_RULE, the replay's status "review") is not credited automatically: success 0 with
 `success_pending_review` 1, the events in verdict.json `evidence.review` and frames around them in review_frames/ (one more
-replay, after the verdict and the video); a clean success is credited. Forcing (rcb_topogym.FORCING, each replay's status
+replay, after the verdict and the video); a clean success is credited. Forcing (rcb_topogym.FORCING, the replay's status
 "forcing") is evidence only: verdict.json `evidence.forcing`, `forcing_events`, and frames around it when a success is held.
 Limits: a trajectory has at most rcb_topogym.MAX_STEPS rows (RCB_MAX_STEPS, set per task in tests/Dockerfile
-and environment/Dockerfile so that two replays fit the verifier's timeout; a longer one is bad_trajectory); the replay
+and environment/Dockerfile so that the replay fits the verifier's timeout; a longer one is bad_trajectory); the replay
 Session's own runaway guard sits above that, so the hold after the last row always has room. The review-frame pass is
 skipped when the verifier's time (RCB_VERIFIER_BUDGET_S, the task's [verifier] timeout_sec) would not cover it: the
 verdict is committed by then, and the events stay in verdict.json. An instance this host cannot reconstruct
@@ -62,9 +64,10 @@ def write(ok: bool, out: dict, *, evidence=None) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--family", required=True); ap.add_argument("--instance", required=True)
-    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true"); ap.add_argument("--video-fps", type=int, default=15)
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)                            # at least the one replay that decides
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     # Agent interaction cost from the tooling's append-only log (whole debugging history, not just the deliverable).
     # The log lives in the agent's container, so these fields are SELF-REPORTED cost accounting, not evidence
@@ -100,8 +103,6 @@ def main() -> int:
             atomic_json(os.path.join(LOG_DIR, "submission_error.json"), {"error": str(exc)})
             write(False, {"success": 0, "bad_trajectory": 1, "infra_error": 0, "grader_error": 0, **cost})
             return 0
-        if a.repeat < 2:
-            raise ValueError("grading requires at least two replays")
         s = Session(a.family, instance=a.instance, strict=True, max_steps=MAX_STEPS + HOLD_ROOM)
         # A frozen PBD state prepared on another GPU is generated from the instance's recipe on this one (instance_generated)
         generated = bool(getattr(s, "instance_generated", False))
@@ -124,10 +125,11 @@ def main() -> int:
         # A replay that ended in a numerically unstable simulation (rcb_topogym.SIMULATOR_INSTABILITY) is an infrastructure
         # failure: never success, never the task's failure (the evidence is in verdict.json's replays[].instability).
         unstable = any(o.get("episode_end") == "simulator_instability" for o in outs)
-        # both replays succeed AND one of them reaches the strict goal within the rows (the hold only confirms, as in standard)
+        # the replay succeeds AND reaches the strict goal within the rows (the hold only confirms, as in standard);
+        # with --repeat N >= 2: every replay succeeds AND one of them reaches it
         goal = strict_goal(outs)
         ok = all_success and goal is not None and bool(s.instance_matches) and not unstable
-        # a success with a deep task contact in either replay is held for review, not credited automatically
+        # a success with a deep task contact in a replay is held for review, not credited automatically
         reviews = [o.get("review") for o in outs]
         pending = ok and any(reviews)
         credited = ok and not pending
@@ -137,7 +139,8 @@ def main() -> int:
                "review_events": max(int((r or {}).get("count", 0)) for r in reviews),
                "review_max_depth_mm": max(float((r or {}).get("max_depth_mm", 0.)) for r in reviews),
                "forcing_events": max(int((f or {}).get("count", 0)) for f in forcing),
-               "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": 1,
+               "all_success": int(all_success), "deterministic": int(deterministic),
+               "determinism_checked": int(len(outs) > 1), "gpu_backend": 1,
                "infra_error": int(unstable), "simulator_instability": int(unstable),
                "instance_ok": int(bool(s.instance_matches)), "instance_exact": int(bool(s.instance_exact)),
                "initial_state_generated": int(generated), "instance_realized": int(realized),

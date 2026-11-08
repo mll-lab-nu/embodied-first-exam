@@ -19,7 +19,7 @@
 - [ ] `bash ci_checks/run_all.sh <tasks>` passes
 - [ ] Tasks only: no task-generation code (generators, oracle searches, instance freezers); shared code in the image or `embodied_first_exam/benchmarks/<benchmark>/` (PROTOCOL §1)
 - [ ] Oracle and `nop` on a sample (≥ 2 tasks per mode), table below
-- [ ] New simulator or family: two fresh replays give the same state hash
+- [ ] New simulator or family: two fresh replays give the same state hash (the construction check of PROTOCOL §4)
 - [ ] Oracle `partial`/`none`: per-family table of positive examples (PROTOCOL §4)
 - [ ] Runs with Harbor's native agents (no custom runner, gateway or adapter)
 - [ ] Names `<base>-privileged` / `<base>-standard` / `<base>-realtime`; README in the standard layout; no `results/`

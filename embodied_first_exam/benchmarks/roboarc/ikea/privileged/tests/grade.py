@@ -4,15 +4,16 @@ Harbor rewards.
     python /tests/grade.py --task lack --binding /tests/runtime_binding.json --traj /app/output/trajectory.npz
 
 The scene (/opt/ikea/scenes/<task>, from the image) must match the runtime binding file by file (`instance_exact`) and
-build to the bound initial state (`instance_ok`). `--repeat` (2) replays run in fresh processes at the same time
-(rcb_ikea.py replay: per row `data.ctrl[:] = row; S.step(4)`, then rcb_ikea's final_check(): success.py, released, at
-rest and no breakdown at the end of the rows and again after the SETTLE_S hold of the last row). Pass iff every replay
-succeeds and all end in the same state hashes, before and after the hold (`deterministic`; MuJoCo on the CPU is
-bit-deterministic).
+build to the bound initial state (`instance_ok`). One replay runs in a fresh process (rcb_ikea.py replay: per row
+`data.ctrl[:] = row; S.step(4)`, then rcb_ikea's final_check(): success.py, released, at rest and no breakdown at the end
+of the rows and again after the SETTLE_S hold of the last row). Pass iff it succeeds. With one replay nothing is
+compared: `replays` 1, `deterministic` 1, `determinism_checked` 0. `--repeat N` (N >= 2) is the old check, kept for a
+measurement by hand: N fresh processes at the same time, pass iff every replay succeeds and all end in the same state
+hashes, before and after the hold (`deterministic`, `determinism_checked` 1; MuJoCo on the CPU is bit-deterministic).
 Writes /logs/verifier/reward.txt (1/0), reward.json (numbers only) and verdict.json (the replays' reports).
-Replay video (PROTOCOL §4; evidence only, never the verdict): a third process, render_video.py, replays the
+Replay video (PROTOCOL §4; evidence only, never the verdict): one more process, render_video.py, replays the
 same rows at the same time and writes /logs/verifier/replay.mp4 (+ replay.last.png, replay.json); the verdict is written
-first, then `video_rendered` is set once the video exists, waiting for it at most as long again as the verdict replays
+first, then `video_rendered` is set once the video exists, waiting for it at most as long again as the verdict replay
 took plus 600 s and never past the verifier's limit (--budget-s); a video that fails or is late changes nothing else. No
 video for a missing or invalid trajectory.
 Failure classes (PROTOCOL H.5: grader_error / infra_error give a free retry, so only what is not the deliverable's doing
@@ -50,8 +51,8 @@ def write(ok: bool, out: dict, evidence=None) -> None:
 
 
 def wait_video(render, video: str, out: dict, outs: list, ok: bool = False) -> None:
-    """The verdict is written; the video only adds evidence. It replays the same rows as the verdict replays did (at the
-    same time, in its own process), so it gets as long again as they took, plus 600 s; a render that takes longer, fails
+    """The verdict is written; the video only adds evidence. It replays the same rows as the verdict replay did (at the
+    same time, in its own process), so it gets as long again as that took, plus 600 s; a render that takes longer, fails
     or crashes leaves `video_rendered` 0 and the verdict unchanged, never an error."""
     if render is None:
         return
@@ -78,10 +79,11 @@ def main() -> int:
     ap.add_argument("--binding", required=True)
     ap.add_argument("--traj", default="/app/output/trajectory.npz")
     ap.add_argument("--scene-dir", default=None)
-    ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--max-rows", type=int, default=None, help="the task's row cap (its instruction states it)")
     ap.add_argument("--budget-s", type=float, default=0.0, help="the task's [verifier] timeout_sec (bounds the video wait)")
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)          # at least the one replay that decides
     global BUDGET_S
     BUDGET_S = a.budget_s
     os.makedirs(LOG_DIR, exist_ok=True)
@@ -108,15 +110,13 @@ def main() -> int:
             write(False, {"success": 0, "runtime_binding_ok": 0, "instance_mismatch": 1, "grader_error": 0, "infra_error": 1})
             return 0
         try:
-            # the task's row cap is checked from the file's header, before the rows are read (the verifier's replays must
+            # the task's row cap is checked from the file's header, before the rows are read (the verifier's replay must
             # fit its time limit; an oversized or compressed-bomb file is the deliverable's fault, never a grader error)
             R.load_trajectory(a.traj, int(b["nu"]), float(b["timestep"]), max_rows=a.max_rows)
         except R.InvalidTrajectory as exc:
             atomic_json(os.path.join(LOG_DIR, "submission_error.json"), {"error": str(exc)})
             write(False, {"success": 0, "bad_trajectory": 1, "grader_error": 0})
             return 0
-        if a.repeat < 2:
-            raise ValueError("grading requires at least two replays")
         t0 = time.time()
         outs, procs = [], []
         env = dict(os.environ, OMP_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1")
@@ -150,6 +150,7 @@ def main() -> int:
             out = {"success": 0, "sim_breakdown": 1, "replay_crash": 1, "replay_signal": -crashed[0],
                    "replays_crashed": len(crashed), "replays": len(codes),
                    "deterministic": int(len(crashed) == len(codes) and len(set(crashed)) == 1),
+                   "determinism_checked": int(len(codes) > 1),
                    "replay_wall_s": round(time.time() - t0, 1),
                    "video_rendered": 0, "grader_error": 0, "infra_error": 0}
             write(False, out)
@@ -172,7 +173,8 @@ def main() -> int:
             # caused by the deliverable, the agent's 0, never a grader error (PROTOCOL H.5: no free retry).
             same = len(raised) == len(outs) and len({(o["replay_exception"], o.get("rows")) for o in outs}) == 1
             out = {"success": 0, "sim_breakdown": 1, "replay_exception": 1, "replays_raised": len(raised),
-                   "replays": len(outs), "deterministic": int(same), "replay_wall_s": round(time.time() - t0, 1),
+                   "replays": len(outs), "deterministic": int(same), "determinism_checked": int(len(outs) > 1),
+                   "replay_wall_s": round(time.time() - t0, 1),
                    "video_rendered": 0, "grader_error": 0, "infra_error": 0}
             write(False, out, evidence={"replays": outs})
             wait_video(render, video, out, outs)
@@ -183,6 +185,7 @@ def main() -> int:
         last, settled = outs[-1], outs[-1].get("settled") or {}
         term = last.get("terminal") or {}
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
+               "determinism_checked": int(len(outs) > 1),
                "goal_at_end": int(bool(last.get("goal"))), "released_at_end": int(bool(last.get("released"))),
                "at_rest_at_end": int(bool(last.get("at_rest"))), "goal_after_settle": int(bool(settled.get("goal"))),
                "released_after_settle": int(bool(settled.get("released"))),

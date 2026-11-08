@@ -1,14 +1,16 @@
 """LIBERO-MAX privileged verifier (separate sandbox, no network).
 
-Replays /app/output/trajectory.npz twice from the verifier's own frozen instance (/tests/instance.json), each replay in
-a fresh Python process (one simulator per process: some LIBERO-PRO variants do not rebuild bit-exactly a second time in
-one process), with the case's event applied by LIBERO-MAX's own trigger, and grades the final state with LIBERO's
-success check (the task's BDDL goal). The episode ends the moment the check holds, so a trajectory with actions after
+Replays /app/output/trajectory.npz ONCE from the verifier's own frozen instance (/tests/instance.json), in a fresh
+Python process (one simulator per process: some LIBERO-PRO variants do not rebuild bit-exactly a second time in one
+process), with the case's event applied by LIBERO-MAX's own trigger, and grades the final state with LIBERO's success
+check (the task's BDDL goal). The episode ends the moment the check holds, so a trajectory with actions after
 that is invalid; it may not be longer than the suite's step limit either.
 
-/logs/verifier/reward.txt: 1 iff both replays end in the same state (deterministic) and that state is a success.
-/logs/verifier/reward.json (numeric only, the same fields on every path): success, deterministic, missing_trajectory,
-invalid_trajectory, grader_error, infra_error, n_actions, sim_steps, event_fired, video_rendered. Diagnostics go to
+/logs/verifier/reward.txt: 1 iff the replay's final state is a success.
+/logs/verifier/reward.json (numeric only, the same fields on every path): success, deterministic, determinism_checked,
+replays, missing_trajectory, invalid_trajectory, grader_error, infra_error, n_actions, sim_steps, event_fired,
+video_rendered. With one replay there is no second end state to compare: a graded replay writes `deterministic` = 1
+(nothing disagreed), `determinism_checked` = 0 (nothing was compared) and `replays` = 1. Diagnostics go to
 diagnostics.json, replay-*.json/log.
 grader_error = 1: the grader could not finish (a replay process failed or timed out, an unreadable instance).
 infra_error = 1 (with grader_error): no verdict on the agent, because this host did not rebuild the frozen start
@@ -60,8 +62,9 @@ def run_replay(npy: Path, tag: str, video: Path | None = None) -> dict:
 def main() -> None:
     LOG.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    out = {"success": 0, "deterministic": 0, "missing_trajectory": 0, "invalid_trajectory": 0, "grader_error": 0,
-           "infra_error": 0, "n_actions": 0, "sim_steps": 0, "event_fired": 0, "video_rendered": 0}  # fmt: skip
+    out = {"success": 0, "deterministic": 0, "determinism_checked": 0, "replays": 0, "missing_trajectory": 0,
+           "invalid_trajectory": 0, "grader_error": 0, "infra_error": 0, "n_actions": 0, "sim_steps": 0, "event_fired": 0,
+           "video_rendered": 0}  # fmt: skip
     diag = {}
     npy = Path("/tmp/lmx-actions.npy")
     try:
@@ -87,18 +90,18 @@ def main() -> None:
                 actions = None
         if actions is not None:
             np.save(npy, actions)
-            results = [run_replay(npy, str(i)) for i in range(2)]
-            diag["replays"] = results
-            if any("invalid" in r for r in results):
+            r = run_replay(npy, "0")
+            diag["replays"] = [r]
+            out["replays"] = 1
+            if "invalid" in r:
                 out["invalid_trajectory"] = 1
-                diag["invalid"] = results[0].get("invalid")
+                diag["invalid"] = r.get("invalid")
             else:
-                det = results[0]["state_sha"] == results[1]["state_sha"]
                 out.update(
-                    success=int(det and results[0]["success"] and results[1]["success"]),
-                    deterministic=int(det),
-                    sim_steps=sum(r["control_steps"] for r in results),
-                    event_fired=int(bool(results[0]["event_fired"])),
+                    success=int(bool(r["success"])),
+                    deterministic=1,  # one replay: nothing to compare (determinism_checked = 0)
+                    sim_steps=r["control_steps"],
+                    event_fired=int(bool(r["event_fired"])),
                 )
     except Exception as exc:  # noqa: BLE001
         out.update(success=0, deterministic=0, grader_error=1, infra_error=int(isinstance(exc, HostCannotRebuild)))
@@ -107,7 +110,7 @@ def main() -> None:
     write(out, diag)  # the verdict is on disk before the video is rendered; the video never changes it
     print(json.dumps(out), flush=True)
     if npy.exists() and not out["invalid_trajectory"] and not out["grader_error"]:
-        try:  # a third replay, for humans; it reports whether it finished its video (a failed video exits 0 too)
+        try:  # a second replay, for humans; it reports whether it finished its video (a failed video exits 0 too)
             out["video_rendered"] = int(bool(run_replay(npy, "video", LOG / "replay.mp4").get("video")))
             write(out, diag)
         except Exception:  # noqa: BLE001

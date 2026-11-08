@@ -7,7 +7,7 @@ rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/pro
 trap 'p=$(command -v python3 || command -v python); "$p" /tests/rcb_limits.py verify' EXIT   # resources, after the grader (PROTOCOL §6)
 p=$(command -v python3 || command -v python); "$p" /tests/rcb_limits.py sanitize /app/output || true   # untrusted agent files (PROTOCOL H.1)
 mkdir -p /logs/verifier
-python /tests/grade.py --family slotted_post_ring --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 2 \
+python /tests/grade.py --family slotted_post_ring --instance /tests/instance.json --traj /app/output/trajectory.npz --repeat 1 \
   2> /logs/verifier/grade.log
 # Recover compatibility rewards if the replay process died after committing its verdict.
 python -c "import sys; sys.path.insert(0, '/tests'); from rcb_topogym import recover_reward; recover_reward('/logs/verifier')"

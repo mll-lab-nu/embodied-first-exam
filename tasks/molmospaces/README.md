@@ -74,7 +74,7 @@ ProcTHOR-10k one misses objects on 0.2.9's scene version).
 
 | mode | the agent gets | resets | graded |
 |---|---|---|---|
-| privileged | `Session`: full state (`s.state()`, `s.model` / `s.data`), any camera, upstream's kinematics, reward and success code | unlimited | `tests/grade.py`: `trajectory.npz` replayed in two fresh processes; both succeed with equal final hashes |
+| privileged | `Session`: full state (`s.state()`, `s.model` / `s.data`), any camera, upstream's kinematics, reward and success code | unlimited | `tests/grade.py`: `trajectory.npz` replayed in one fresh process, which must succeed |
 | standard | `joint_position` (Franka 8, RB-Y1 25) and `done`; the robot's cameras (not the third-person follower), proprioception, `/kinematics` | none (D1) | the live episode: upstream's `judge_success()` on the state it ends in, in the sim service; nothing replays it |
 
 Standard mode's texts name objects and the goal only (D7, `ci_checks/benchmarks/molmospaces/advisory-world-frame.sh`); the robot's pose and
@@ -98,7 +98,7 @@ deletes one left by a call the crash lost), a frozen start that did not rebuild
 (`instance_mismatch`, found by the service at its start); a give-up after crashes during a call and a simulator error
 raised by the agent's actions stay the agent's failure (reason `error`: the state after the exception is never judged a
 success). `finalize.sh` writes `final.json` whole and renames it into
-place. The privileged verifier's two replays share its 1800 s. Privileged: a file that cannot be read
+place. The privileged verifier's verdict replay and video replay share its 1800 s. Privileged: a file that cannot be read
 as a trajectory (not an npz, a pickled or non-numeric `actions`, more than 100,000 rows, or an entry that unpacks to more
 than that many rows can hold: checked before it is read, `too_large`) is `bad_trajectory`, the agent's 0. The service
 checks a request completely before anything moves: a null or wrongly typed `dt`, `seconds`, `cameras`, `note`, `video`,

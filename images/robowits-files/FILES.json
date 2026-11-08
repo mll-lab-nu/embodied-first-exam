@@ -1,9 +1,9 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:robowits-files-0.4.1@sha256:b19fe9b88e76bedcda3de829235a451bb3e44c6bc7b214b49e251dbea23c09f0",
+ "image": "ghcr.io/mll-lab-nu/efe:robowits-files-0.4.2@sha256:0c7ba52e4ba979a623776833ccd95c33802c72902acfa9efc0ce68dc7c31898a",
  "source": "embodied_first_exam/benchmarks/robowits",
  "files": {
-  "privileged/tests/grade.py": "856f2787d57be9e44f4c975439c27c08f7073fc76f131aa12136727485023ab0",
-  "privileged/tests/rcb_robowits.py": "f1a44e523c6b252a5c23b0498636a17e6ffc491b9230ad09fbe76760cf60b0f7",
+  "privileged/tests/grade.py": "b86ea7826e503cb5e7f3647995b73ae697063a3da1cb778089c2d1a2739e1f7b",
+  "privileged/tests/rcb_robowits.py": "cb694a3baa08541786c0020fbe2d75f61528d878aec48894d9ab8cda662cdbf9",
   "sim/server.py": "32f450ea05181633a177db0ff7308856fc6fb40459dac1bb79dea8f5b63836e6",
   "standard/tests/grade.py": "f071fc1747a189ccfe71a21bbb72c74882dd37c5b6902161c1c07584cb76b496"
  }

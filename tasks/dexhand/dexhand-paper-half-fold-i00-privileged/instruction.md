@@ -33,7 +33,7 @@ Save `/app/output/trajectory.npz` with a finite numeric `actions` array of shape
 script that produced it. Each row is one 50 Hz control: `wrist_x, wrist_y, wrist_z` targets (metres),
 `wrist_rx, wrist_ry, wrist_rz` (radians, serial XYZ joints), then the finger targets in `s.actuator_names` order.
 Targets must lie within `s.model.actuator_ctrlrange`. The separate verifier starts from its own frozen scene and
-replays only these motor targets in two fresh processes; both must succeed with identical final state hashes. The
+replays only these motor targets in one fresh process, which must succeed. The
 replay stops at the first success or failure, so rows after it are not executed. Object poses, configuration
 overrides, pickled arrays and success claims in the archive are not read. Save a deliverable early and keep
 improving it; the file present when the time budget ends is graded.

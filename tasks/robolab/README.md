@@ -135,11 +135,12 @@ iterations cost more than in the other simulators.
 
 ## Grading and determinism
 - PhysX on the CPU: on one host a fresh process reproduces the live run bit for bit, but a second replay inside one
-  process drifts in the last bits, so the verifier replays in **two fresh processes** and compares them. Across hosts the
+  process drifts in the last bits, so every verifier replay is a **fresh process**. Across hosts the
   final state can differ in the last bits (the banana_in_bowl oracle ends in one of two hashes on our hosts, both
   successes): a trial is graded on the host it ran on.
-- Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` twice; success = the predicate held in both, the final
-  hashes agree, and the rebuilt frozen scene matches the recorded one.
+- Privileged: `tests/grade.py` replays `/app/output/trajectory.npz` up to 3 times (`[metadata] replays`, PROTOCOL §4)
+  and stops at the first success; success = the predicate held in a replay whose rebuilt frozen scene matches the
+  recorded one (`replays_succeeded`, `success_replay`; the end states across hosts above are why more than one).
 - Standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4). The service judges the episode it
   runs: RoboLab's success term after every control step (the first step where it holds ends the episode), and when the
   agent's time is up (the collect hook's signal, after the agent's container is stopped) it holds the last command for
@@ -166,7 +167,7 @@ iterations cost more than in the other simulators.
   `bad_trajectory` (the agent's 0); a replay process without a result, a replay time-out (`replay_timed_out`) and
   `instance_ok = 0` (the rebuilt scene differs on this host) set `grader_error = infra_error = 1`.
 - Time limits (Isaac start + scene ~2 min, replays 15-20 control steps/s). Privileged: each replay has max(1800 s,
-  900 s + rows / 7.5) (half the nominal rate), and `[verifier] timeout_sec = 29100` fits two replays of the longest
+  900 s + rows / 7.5) (half the nominal rate), and `[verifier] timeout_sec = 43400` fits three replays of the longest
   accepted trajectory (100,000 rows: 14,234 s each) plus 600 s. Standard: `[[verifier.collect]] timeout_sec = 3600`
   (`HOOK_BUDGET_S`, the same number) = the episode end (up to 2700 s through a resume) + the video encode (at most 600
   s, CPU, at most 3001 frames) + a margin; the hook uses no GPU after the service exits.

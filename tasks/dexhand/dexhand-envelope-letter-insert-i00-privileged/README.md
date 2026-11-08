@@ -33,8 +33,8 @@ rig (the wave-2 Wuji rows were for the wrist stage); a Wuji run starts from the 
 
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
-mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
 Failures are fail-fast and permanent: the letter pressed through an envelope wall, seam or the mouth lip, or
 interpenetrating the envelope by more than 0.7 mm, the letter or the envelope below the desk top, touching the floor, dropped
 (touching nothing while its centre of mass falls faster than 0.1 m/s) or leaving the desk, the envelope pushed more than 5 cm or tilted more than 0.35 rad, the robot's arm, stand or parked left hand touching the letter or the envelope, unstable physics, or the 6,000-control

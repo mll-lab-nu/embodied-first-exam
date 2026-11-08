@@ -1,13 +1,14 @@
-"""Isolated privileged verifier: two fresh processes replay the agent's numeric rows.
+"""Isolated privileged verifier: ONE fresh process replays the agent's numeric rows.
 
 The task's replay.py reads the archive (actions + optional hand), rebuilds the frozen scene with that hand and
 writes a JSON verdict; an invalid archive is reported by replay.py as `bad_trajectory` (exit 0). A non-zero exit or
-unreadable verdict is an infrastructure error. Each replay runs through checked_replay.py, which compares the scene the
+unreadable verdict is an infrastructure error. The replay runs through checked_replay.py, which compares the scene the
 replay built (and every reset of it) with the frozen instance's start state for that hand (instance.json
 `start_state_sha`): a scene that starts elsewhere is `instance_mismatch`, an infrastructure error, never the agent's 0.
-Reward 1 needs both replays to succeed with identical final hashes.
+Reward 1 = that replay succeeds. With one replay there is no second end state to compare: `deterministic` is 1
+(nothing disagreed; 0 for a bad archive) with `determinism_checked` = 0 and `replays` = 1.
 
-After reward.json is written, a third fresh replay renders the replay video (replay.mp4, its record in video.json) in
+After reward.json is written, a second fresh replay renders the replay video (replay.mp4, its record in video.json) in
 the verifier's remaining time. The video is evidence for people: it never changes the verdict, and a
 render that fails or runs out of time only leaves no video.
 """
@@ -45,7 +46,7 @@ def replay_timeout() -> float:
 
 
 def render_video(log: Path, task: str, trajectory: Path, started: float) -> None:
-    """A third fresh replay with --video, after the verdict is on disk; bounded by the verifier's remaining time."""
+    """A second fresh replay with --video, after the verdict is on disk; bounded by the verifier's remaining time."""
     video, record = log / "replay.mp4", log / "video.json"
     budget = min(limits()["video_timeout_s"], started + limits()["verifier_timeout_s"] - VIDEO_MARGIN_S - time.monotonic())
     why = ""
@@ -76,7 +77,7 @@ def main() -> None:
     task = os.environ.get("RCB_TASK") or json.loads(Path(__file__).with_name("instance.json").read_text())["id"]
     trajectory = Path(os.environ.get("RCB_TRAJECTORY", "/app/output/trajectory.npz"))
     result = {"success": 0, "deterministic": 0, "infra_error": 0, "n_actions": 0, "sim_steps": 0}
-    replayed = False   # both verdict replays ran on a readable archive: the replay video can be rendered
+    replayed = False   # the verdict replay ran on a readable archive: the replay video can be rendered
     details = {}  # text diagnostics; reward.json must stay numeric (Harbor rejects strings)
     try:
         if not trajectory.is_file() or trajectory.is_symlink():
@@ -85,36 +86,25 @@ def main() -> None:
             result["bad_trajectory"] = 1
             (log / "error.txt").write_text("trajectory archive exceeds the size limit")
         else:
-            # The two fresh replays run concurrently (independent processes, same input, deterministic physics).
-            processes, streams = [], []
-            for index in (1, 2):
-                output = log / f"replay{index}.json"
-                output.unlink(missing_ok=True)
-                stream = (log / f"replay{index}.log").open("w")
-                streams.append(stream)
-                processes.append(subprocess.Popen(
+            # One fresh replay decides (task protocol v2.4: determinism is checked when the task is built).
+            output = log / "replay1.json"
+            output.unlink(missing_ok=True)
+            with (log / "replay1.log").open("w") as stream:
+                process = subprocess.Popen(
                     [sys.executable, str(Path(__file__).with_name("checked_replay.py")), "--task", task,
                      "--traj", str(trajectory), "--out", str(output)],
                     stdout=stream, stderr=stream,
-                ))
-            try:
-                for process in processes:
+                )
+                try:
                     if process.wait(timeout=replay_timeout()) != 0:
                         raise subprocess.CalledProcessError(process.returncode, "replay.py")
-            finally:
-                for process in processes:
+                finally:
                     if process.poll() is None:
                         process.kill()
-                for stream in streams:
-                    stream.close()
-            verdicts = []
-            for index in (1, 2):
-                verdict = json.loads((log / f"replay{index}.json").read_text())
-                if not isinstance(verdict, dict):
-                    raise ValueError("replay verdict must be a JSON object")
-                verdicts.append(verdict)
-            a, b = verdicts
-            mismatch = next((verdict for verdict in verdicts if verdict.get("instance_mismatch")), None)
+            a = json.loads(output.read_text())
+            if not isinstance(a, dict):
+                raise ValueError("replay verdict must be a JSON object")
+            mismatch = a if a.get("instance_mismatch") else None
             if mismatch is not None:
                 # the frozen instance did not build to its recorded start: no verdict on the agent (PROTOCOL H.4)
                 result.update(success=0, infra_error=1, instance_mismatch=1, hand_wuji=int(mismatch.get("hand") == "wuji"))
@@ -122,12 +112,10 @@ def main() -> None:
                                start_sha=str(mismatch.get("start_sha") or ""),
                                instance_start_sha=str(mismatch.get("instance_start_sha") or ""))
             else:
-                bad = bool(a.get("bad_trajectory")) or bool(b.get("bad_trajectory"))
-                deterministic = (not bad and isinstance(a.get("state_sha"), str) and bool(a["state_sha"])
-                                 and a["state_sha"] == b.get("state_sha"))
+                bad = bool(a.get("bad_trajectory"))
                 result.update(
-                    success=int(bool(a.get("success") is True) and bool(b.get("success") is True) and deterministic),
-                    deterministic=int(deterministic),
+                    success=int(not bad and a.get("success") is True),
+                    deterministic=int(not bad), determinism_checked=0, replays=1,
                     n_actions=int(a.get("n_actions") or 0),
                     sim_steps=int(a.get("steps") or 0),
                     stages_completed=int(a.get("stage") or 0),

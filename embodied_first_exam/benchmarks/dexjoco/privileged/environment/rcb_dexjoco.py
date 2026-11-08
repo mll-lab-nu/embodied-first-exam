@@ -22,13 +22,13 @@ episode    : as in DexJoCo's own evaluation, an episode ends at the first step w
              illegal tower). `success` = the episode ended in success. Replay stops at that step.
 budget     : there is no step budget: the agent's wall clock is the limit. DexJoCo's 1000-1500-step episode caps and its
              real-time pacing (a sleep to 30 Hz in every step) are lifted; MAX_STEPS only stops runaway episodes.
-             A trajectory handed in (privileged mode) has at most MAX_TRAJECTORY_ROWS rows: what the verifier can
-             replay twice inside its timeout on the slowest family. `save_trajectory` refuses a longer one.
+             A trajectory handed in (privileged mode) has at most MAX_TRAJECTORY_ROWS rows: a replay of the slowest
+             family stays well inside the verifier's timeout. `save_trajectory` refuses a longer one.
 
 CLI
 ---
   python rcb_dexjoco.py make-instance --task water_plant --demo <demo>/replay.zarr --out instance.npz [--oracle-out oracle.npz]
-  python rcb_dexjoco.py replay        --task water_plant --instance instance.npz --traj traj.npz [--repeat 2] [--video replay.mp4] [--out r.json]
+  python rcb_dexjoco.py replay        --task water_plant --instance instance.npz --traj traj.npz [--repeat N] [--video replay.mp4] [--out r.json]
   python rcb_dexjoco.py render        --task water_plant --instance instance.npz --traj traj.npz --out replay.mp4
 
 Python (what the agent gets)
@@ -64,7 +64,7 @@ import numpy as np
 
 MAX_STEPS = 10_000_000          # runaway guard only; the wall clock is the budget
 # Privileged hand-in cap: rows of /app/output/trajectory.npz (1000 s of robot time at 50 Hz; the longest reference has
-# 1085 rows). The verifier replays a trajectory twice inside its timeout; the slowest family runs ~140 control steps/s.
+# 1085 rows). The verifier replays a trajectory once inside its timeout; the slowest family runs ~140 control steps/s.
 # The verifier scores a longer file 0 (bad_trajectory). The standard service's recorded episode has no such cap.
 MAX_TRAJECTORY_ROWS = 50_000
 # Threads (tasks/dexjoco/README.md, "Threads"): DexJoCo's operational-space controller does its linear algebra in numpy,
@@ -877,7 +877,7 @@ def main() -> None:
     m = sub.add_parser("make-instance"); m.add_argument("--task", required=True); m.add_argument("--demo", required=True)
     m.add_argument("--demo-name"); m.add_argument("--out", required=True); m.add_argument("--oracle-out")
     r = sub.add_parser("replay"); r.add_argument("--task", required=True); r.add_argument("--instance", required=True)
-    r.add_argument("--traj", required=True); r.add_argument("--repeat", type=int, default=2); r.add_argument("--video")
+    r.add_argument("--traj", required=True); r.add_argument("--repeat", type=int, default=1); r.add_argument("--video")
     r.add_argument("--out", help="also write the result to this JSON file")
     r.add_argument("--video-deadline-s", type=float, default=0.0, help="stop the video this long after the start (0: never)")
     v = sub.add_parser("render"); v.add_argument("--task", required=True); v.add_argument("--instance", required=True)

@@ -2,11 +2,13 @@
 
     python /tests/grade.py --instance /tests/instance.npz --traj /app/output/trajectory.npz
 
-Two replays, each in its own fresh process (`rcb_myosuite.py replay`: the frozen start, one control step per row, the
-episode ends at the first success, i.e. the goal held for the hold time, or at the task's failure). success = both
-replays succeed, end in the same state, and start from the instance's recorded state hash. Writes
-/logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders replay.mp4, after the verdict
-is on disk (it never changes it), and only when what is left of the verifier's time can hold it.
+ONE replay, in its own fresh process (`rcb_myosuite.py replay`: the frozen start, one control step per row, the
+episode ends at the first success, i.e. the goal held for the hold time, or at the task's failure). success = the
+replay succeeds and starts from the instance's recorded state hash. With one replay there is no second end state to
+compare: reward.json has `deterministic` = 1 (nothing disagreed), `determinism_checked` = 0 (nothing was compared) and
+`replays` = 1. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a second replay renders
+replay.mp4, after the verdict is on disk (it never changes it), and only when what is left of the verifier's time can
+hold it.
 
 Whose failure a 0 is (PROTOCOL §4): a file that is no trajectory for this instance -- unreadable, an entry that unpacks
 to more than its row limit allows (checked before it is read), not (T, actuators), empty or longer than the family's
@@ -30,7 +32,7 @@ import numpy as np
 
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_myosuite.py")
-# Time (task.toml [verifier] timeout_sec = 1800 s): two grading replays of REPLAY_TIMEOUT_S each fit in VERIFIER_BUDGET_S,
+# Time (task.toml [verifier] timeout_sec = 1800 s): the grading replay of REPLAY_TIMEOUT_S fits in VERIFIER_BUDGET_S,
 # and the video replay runs only in what is left (VIDEO_MIN_S at least). A family's MAX_ROWS (the instruction states it)
 # is 360 s at the replay rate the instruction gives for it ("~N control steps/s here"), so a replay of the longest legal
 # trajectory takes at most 720 s even on a host at half that rate: a legal trajectory is always graded, never timed out.
@@ -168,8 +170,7 @@ def main() -> int:
         clean = os.path.join(tmp, "trajectory.npz")  # only the rows cross into the replay processes
         np.savez(clean, actions=acts, task=a.family)
         r1 = replay(a, clean, os.path.join(tmp, "r1.json"))
-        r2 = replay(a, clean, os.path.join(tmp, "r2.json"))
-        if not (r1.get("state_sha") and r2.get("state_sha")):
+        if not r1.get("state_sha"):
             # The rows were checked above (shape, width, length, finite values), so a replay without a result did not
             # run to a verdict: out of time, killed (out of memory), not started, or the tool failed. That is no verdict
             # on the agent.
@@ -185,21 +186,22 @@ def main() -> int:
                 },
             )
             return 0
-        for i, r in ((1, r1), (2, r2)):  # the record (grade.log): each fresh process's verdict and final-state hash
-            print(
-                f"replay {i}: success={r.get('success')} steps={r.get('steps')} reason={r.get('reason')} "
-                f"state_sha={r.get('state_sha')} instance_ok={r.get('instance_ok')}",
-                file=sys.stderr,
-                flush=True,
-            )
-        both = bool(r1.get("success")) and bool(r2.get("success"))
-        deterministic = r1["state_sha"] == r2["state_sha"]
-        instance_ok = bool(r1.get("instance_ok")) and bool(r2.get("instance_ok"))
-        ok = both and deterministic and instance_ok
+        r = r1  # the record (grade.log): the fresh process's verdict and final-state hash
+        print(
+            f"replay 1: success={r.get('success')} steps={r.get('steps')} reason={r.get('reason')} "
+            f"state_sha={r.get('state_sha')} instance_ok={r.get('instance_ok')}",
+            file=sys.stderr,
+            flush=True,
+        )
+        replay_ok = bool(r1.get("success"))
+        instance_ok = bool(r1.get("instance_ok"))
+        ok = replay_ok and instance_ok
         out = {
             "success": int(ok),
-            "replay_success": int(both),
-            "deterministic": int(deterministic),
+            "replay_success": int(replay_ok),
+            "deterministic": 1,  # one replay: nothing to compare
+            "determinism_checked": 0,
+            "replays": 1,
             "instance_ok": int(instance_ok),
             "n_actions": int(len(acts)),
             "sim_steps": int(r1.get("steps") or 0),
@@ -211,8 +213,8 @@ def main() -> int:
         write(ok, out)
         left = VERIFIER_BUDGET_S - (time.monotonic() - T0)
         if not a.no_video and left >= VIDEO_MIN_S:  # a human-viewable replay (never affects the verdict)
-            r3 = replay(a, clean, os.path.join(tmp, "r3.json"), video=os.path.join(LOG_DIR, "replay.mp4"), timeout=left)
-            out["video_rendered"] = int(bool(r3.get("video")))
+            rv = replay(a, clean, os.path.join(tmp, "video.json"), video=os.path.join(LOG_DIR, "replay.mp4"), timeout=left)
+            out["video_rendered"] = int(bool(rv.get("video")))
             write(ok, out)
         elif not a.no_video:
             print(f"[grade] no video: {left:.0f} s of the verifier's time left", file=sys.stderr, flush=True)

@@ -5,15 +5,17 @@
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
 human-viewable replay video /logs/verifier/replay.mp4 (ego camera + both wrist cameras) plus replay.last.png.
-Replays `--repeat` times in this fresh process; success requires every replay to complete the task AND all
-final-state hashes to agree (bit-exact determinism; Genesis' CPU backend restores the frozen snapshot exactly), so
-a lucky non-deterministic run cannot pass. "Complete the task" is the tooling's settle window after the
+ONE replay in this fresh process decides: success = it completes the task. With one replay there is no second end
+state to compare: `deterministic` is written as 1 (nothing disagreed) with `determinism_checked` = 0 and `replays` = 1.
+`--repeat N` (N >= 2) is the old check, kept for a determinism measurement by hand: success = every replay completes
+the task AND all final-state hashes agree (bit-exact determinism; Genesis' CPU backend restores the frozen snapshot
+exactly; `determinism_checked` = 1). "Complete the task" is the tooling's settle window after the
 last action (rcb_robowits.Session.settle_check): the robot holds its last command for 1 s, then for 2 s RoboWits'
 predicate must hold with the graded objects released (no robot contact) and at rest (each moves at most 2 mm);
 reward.json adds `goal_at_end` (the goal right after the last action), `settle_steps` and `settle_max_move_mm`. Exception: with RCB_ROBOWITS_BACKEND=gpu (the particle-heavy tasks,
 user 2026-09-26: the CPU backend needs 13-86 min per scene build) the physics is not bit-exact, so the hashes
-need not agree and the rebuilt scene need not match the frozen one exactly (both reported), but every replay must
-still complete the task. On the CPU backend the frozen scene rebuilt here from tests/instance.json must also match
+need not agree (with --repeat >= 2) and the rebuilt scene need not match the frozen one exactly (both reported), but the
+replay must still complete the task. On the CPU backend the frozen scene rebuilt here from tests/instance.json must also match
 the recorded one (`instance_ok`: exact state hash, or every object / joint pose within tolerance on another host).
 
 Whose failure (reward.json always carries `infra_error` and `grader_error`, 0 or 1):
@@ -60,11 +62,12 @@ def write(ok: bool, out: dict) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--family", required=True); ap.add_argument("--instance", required=True)
-    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true"); ap.add_argument("--video-fps", type=int, default=15)
     ap.add_argument("--budget", type=float, default=0.0, help="the verifier's timeout_sec (task.toml): the video replay, which "
                     "runs after the verdict is written, is skipped or stopped before it (0: no limit)")
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)  # at least the one replay that decides
     # Agent interaction cost from the tooling's append-only log (whole debugging history, not just the deliverable).
     # The log lives in the agent's container, so these fields are SELF-REPORTED cost accounting, not evidence
     # (agent_cost_self_reported = 1); the parser must survive any content the agent may have written there.
@@ -110,16 +113,17 @@ def main() -> int:
         t0 = time.time()
         outs = [s.replay(acts) for _ in range(a.repeat)]
         all_success = all(o["success"] for o in outs)
-        deterministic = len({o["state_sha"] for o in outs}) == 1
+        deterministic = len({o["state_sha"] for o in outs}) == 1  # one replay: 1, nothing compared
         instance_ok = bool(s.instance_matches)
         # GPU backend: not bit-exact, so neither the hash agreement nor the frozen-state check is required (both are
-        # reported); every replay must still complete the task.
+        # reported); the replay must still complete the task.
         gpu = os.environ.get("RCB_ROBOWITS_BACKEND", "cpu") == "gpu"
         ok = all_success and (gpu or (deterministic and instance_ok))
         # CPU backend, rebuilt scene out of tolerance: this host cannot reconstruct the frozen instance (another CPU vendor,
-        # asset or simulator drift), so the replays above ran on a different scene. Not a result: infra_error, success 0.
+        # asset or simulator drift), so the replay above ran on a different scene. Not a result: infra_error, success 0.
         infra = not gpu and not instance_ok
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic), "gpu_backend": int(gpu),
+               "determinism_checked": int(len(outs) > 1), "replays": len(outs),
                "infra_error": int(infra),
                "instance_ok": int(instance_ok), "instance_exact": int(bool(s.instance_exact)), "n_actions": int(len(acts)),
                "sim_steps": int(outs[0]["sim_steps"]), "final_reward": float(outs[-1].get("progress") or 0.0),

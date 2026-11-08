@@ -57,8 +57,8 @@ most 1.05 x 13 m/s² and 1.05 x 25 rad/s²; motor torques at most (87, 87, 87, 8
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if the task succeeds in both replays and both
-end in the same state, else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
+open-loop from the same initial state in one fresh process and scored 1 if the task succeeds in the replay,
+else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
 as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
 The file holds `task` and `actions`, a (T, 16) float array of at most **4,500 rows** (one per control step);
 anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0.
@@ -88,7 +88,7 @@ s.u                                # the ManiSkill environment itself (`panda_dy
 The tooling is deliberately thin: joint targets, kinematics and state. Catching, striking, carrying and timing are yours to
 build. The environment's source, the task included, is in `/opt/pandadyn/panda_dynamics` (`tasks/dual/moving_ramp_relay.py`).
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
+The grader replays once, in a fresh process; it is exactly this CLI (a fresh process, so run it to self-check):
 `python /opt/tools/rcb_pandadyn.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions

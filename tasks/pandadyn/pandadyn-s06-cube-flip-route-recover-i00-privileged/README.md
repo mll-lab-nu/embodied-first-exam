@@ -28,9 +28,9 @@ loop, replayed open-loop. The reference controllers and their recordings are not
 reaches only the model APIs and the package registries.
 
 ## Verification
-`tests/grade.py` in a separate sandbox: two replays, each in a fresh process, from the verifier's own copy of the instance
-(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in both
-(every phase complete, no failure) and both end in the same state (`deterministic`), plus `/logs/verifier/replay.mp4`
+`tests/grade.py` in a separate sandbox: one replay, in a fresh process, from the verifier's own copy of the instance
+(`tests/instance.json`; the rebuilt start is checked against its hash); pass iff the task's success check holds in it
+(every phase complete, no failure), plus `/logs/verifier/replay.mp4`
 (overview camera). Oracle: 1295 control steps (12.95 s simulated), success at the last one; the oracle
 run and two fresh-process replays end in the same state (hash `ad3ddd2643881562`). The start's arm pose
 depends on the BLAS kernel, so every container that builds the scene pins it (`OPENBLAS_CORETYPE=Haswell`: the same

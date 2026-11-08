@@ -72,7 +72,7 @@ runs) and the release and rest condition the grader adds (the last item). Where 
 this section and the code are what count. After the last action of your trajectory the grader holds that action's
 command for a settle window: 1 s (30 control steps) with nothing checked, then 2 s (60 control steps) in which every
 condition below must hold at every 6th control step and at the last one, with each graded object staying within 2 mm
-of where it was when those 2 s began (the *check window*). It must pass in both replays. `s.replay(actions)` runs
+of where it was when those 2 s began (the *check window*). It must pass in the grader's replay. `s.replay(actions)` runs
 exactly this and returns the verdict as `success` (and why in `settle`); `s.status()["success"]` is the same
 conditions at one instant, without the window (`predicate`: RoboWits' alone).
 
@@ -97,9 +97,9 @@ inside the object's axis-aligned bounding box grown by 3 cm on every side; the *
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop twice from the same initial state in a fresh process and scored 1 if the task is
-completed after both replays (the settle window of the success criterion above) and both end in the same
-state, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+It is replayed open-loop once from the same initial state in a fresh process and scored 1 if the task is
+completed after the replay (the settle window of the success criterion above), else 0.
+Also leave the script that produced it at `/app/output/gen.py`.
 Save a trajectory as soon as one replays successfully (you can overwrite it later), and do not stop before you have
 one.
 

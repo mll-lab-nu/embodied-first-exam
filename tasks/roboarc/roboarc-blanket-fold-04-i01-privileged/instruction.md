@@ -71,8 +71,8 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop twice from the same initial state in a fresh process and scored 1 if the task is
-completed at the end of both replays, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+It is replayed open-loop once from the same initial state in a fresh process and scored 1 if the task is
+completed at the end of the replay, else 0. Also leave the script that produced it at `/app/output/gen.py`.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -111,7 +111,7 @@ CLI equivalent of the grader:
 - Action (14): arm `left`: 6 joint targets (rad), then `left_native_gripper` = native drive target (m, limits 0.002 .. 0.037; open/closed targets in robot_spec); arm `right`: 6 joint targets (rad), then `right_native_gripper` = native drive target (m, limits 0.002 .. 0.037; open/closed targets in robot_spec); absolute position targets tracked by PD controllers, out-of-limit
   values clipped. `s.hold_action()` is the no-op.
 - Control runs at 40 Hz (10 physics step(s) per control step). There is no step budget, but a trajectory may have at most
-  37000 rows (15.4 min of simulated time): the verifier has to replay it twice within its own time limit, so `s.step` stops
+  37000 rows (15.4 min of simulated time): the verifier has to replay it within its own time limit, so `s.step` stops
   after that many control steps since the last reset, and a longer trajectory is rejected as invalid (reward 0). The time limit
   (`## Time limit`) is your only budget. One control step takes about 0.38 s of wall clock here, so budget your experiments.
 - Grippers: assisted grasping (pbd_local_patch_v1): closing intent and bilateral finger proximity to a material patch of blanket must persist for 0.03 s, with penetration at most 2 mm and the TCP within 6 cm. The admitted patch follows through a local kinematic PBD attachment; the rest remains deformable. Opening by more than 0.2 % of gripper travel releases it. A hold is lost on excessive opening, material strain, invalid volume or follow error above 10 mm; a lost hand must open before reacquiring. Two hands may hold disjoint material patches of the same object; overlapping patches are rejected. Patch radii, strain limits and the exposed-patch requirement are declared in grasp_assist.targets.

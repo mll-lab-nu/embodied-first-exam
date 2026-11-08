@@ -67,8 +67,7 @@ Every family follows the same three rules, checked by the trusted runtime from s
    window of consecutive samples; four of five layers, five of six debris pieces or a placed but still-held pot is a
    failure. Success ends the episode too.
 3. **Judged by a trusted simulator, never claimed.** Privileged: the grader rebuilds the frozen scene with the
-   recorded hand in fresh processes and replays only the motor targets; two replays must succeed with identical final
-   state hashes. Standard: the sim service's own record of the episode it ran is the verdict (no replay; see
+   recorded hand in a fresh process and replays only the motor targets; that replay must succeed. Standard: the sim service's own record of the episode it ran is the verdict (no replay; see
    "Standard-mode grading by the live episode" below). Success flags, object poses,
    configuration overrides or any other member of an agent's archive are never read.
 
@@ -845,14 +844,14 @@ used (one arm-mounted hand keeps the free pump upright through all strokes). Ora
 **Privileged.** `from rcb_dexhand import Session` (the family's `runtime.py`, copied into `/opt/tools`): the full
 MuJoCo model and state, exact resets, snapshots where the family offers them, renders and `replay`. The deliverable is
 `/app/output/trajectory.npz` (above) and the script that made it, `/app/output/gen.py`. The separate verifier
-(`[verifier] environment_mode = "separate"`) runs the shared `tests/grade.py`: two concurrent fresh-process runs of the
-family's `replay.py`, reward 1 iff both succeed with identical final state hashes. `replay.py` reports an invalid
-archive as `bad_trajectory` and exits 0; a crashed replay is an infrastructure error. Each replay runs through
+(`[verifier] environment_mode = "separate"`) runs the shared `tests/grade.py`: one fresh-process run of the
+family's `replay.py`, reward 1 iff it succeeds. `replay.py` reports an invalid
+archive as `bad_trajectory` and exits 0; a crashed replay is an infrastructure error. The replay runs through
 `tests/checked_replay.py`, which checks every scene the replay builds, and every reset of it, against the frozen start
 (Start state, below): a scene that starts elsewhere is `instance_mismatch = 1`, an infrastructure error, and no row is
 replayed. `reward.json` is numeric
-(`success, deterministic, infra_error, bad_trajectory, missing_trajectory, n_actions, sim_steps, stages_completed,
-hand_wuji`, and `instance_mismatch` when it occurs); text diagnostics go to `/logs/verifier/details.json`. After `reward.json` is written, a third fresh
+(`success, deterministic, determinism_checked, replays, infra_error, bad_trajectory, missing_trajectory, n_actions,
+sim_steps, stages_completed, hand_wuji`, and `instance_mismatch` when it occurs); text diagnostics go to `/logs/verifier/details.json`. After `reward.json` is written, a second fresh
 replay renders the replay video (`/logs/verifier/replay.mp4`, its record in `video.json`) in the verifier's remaining
 time (`timeout_sec` minus 180 s, at most `video_timeout_s`, which is never below the replay timeout); it never changes the verdict. The essential families' `replay.py` films every 2nd step, at most 1500 frames
 (`VIDEO_MAX_FRAMES`; a 640x480 OSMesa frame costs ~0.3 s on one core).

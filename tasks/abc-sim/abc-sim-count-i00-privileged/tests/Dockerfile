@@ -1,7 +1,7 @@
 # Separate verifier sandbox: the same image with the verifier's own copy of the frozen instance (the grader is the
 # image's /opt/abc-tools/grade.py). Nothing the agent did in its container reaches this one: Harbor uploads only the
 # declared artifacts.
-FROM ghcr.io/mll-lab-nu/efe:abc-sim-0.1.0
+FROM ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0
 COPY instance.npz test.sh /tests/
 RUN chmod +x /tests/test.sh && mkdir -p /app/output /logs/verifier
 WORKDIR /tests

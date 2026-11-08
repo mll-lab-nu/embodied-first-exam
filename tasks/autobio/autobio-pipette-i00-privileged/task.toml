@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/autobio-pipette-i00-privileged"
-description = "AutoBio pipette (Aspirate with pipette; a biology laboratory bench on MuJoCo): produce one replayable trajectory of joint position targets. Aspirate from the 50 mL centrifuge tube with the pipette. Frozen scene instance (AutoBio's reset, seed 0); graded by two fresh-process replays with AutoBio's own check."
+description = "AutoBio pipette (Aspirate with pipette; a biology laboratory bench on MuJoCo): produce one replayable trajectory of joint position targets. Aspirate from the 50 mL centrifuge tube with the pipette. Frozen scene instance (AutoBio's reset, seed 0); graded by one fresh-process replay with AutoBio's own check."
 keywords = ["robotics", "autobio", "mujoco", "laboratory", "biology", "ur5e-dexhand-2f85-bimanual", "code-as-policy", "trajectory", "pipette", "privileged"]
 
 [metadata]

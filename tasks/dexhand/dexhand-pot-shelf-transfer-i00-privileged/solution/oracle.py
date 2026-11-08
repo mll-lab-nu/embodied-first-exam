@@ -2,7 +2,7 @@
 
 solution/ holds only actuator rows and the hand: `trajectory.npz`, or `trajectory.json` + `trajectory.partNN.npz`
 (each part below 2 MB; concatenated in order and checked against the manifest's sha256 before use). The isolated
-verifier replays the rows from the frozen start in two fresh processes, exactly as it replays an agent's submission.
+verifier replays the rows from the frozen start in one fresh process, exactly as it replays an agent's submission.
 """
 
 from pathlib import Path

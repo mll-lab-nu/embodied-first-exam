@@ -2,11 +2,13 @@
 
     python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz
 
-Two replays, each in its own fresh process (`rcb_autobio.py replay`: AutoBio's reset with the instance's seed, one
+ONE replay, in its own fresh process (`rcb_autobio.py replay`: AutoBio's reset with the instance's seed, one
 2 ms control step per row; rule `first`: the episode ends at the first step at which AutoBio's check holds; rule
-`final`: it is judged where the rows end). success = both replays succeed, end in the same state, and start from the
-instance's recorded model and initial-state hashes. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers
-only); then a third replay renders replay.mp4, after the verdict is on disk (it never changes it).
+`final`: it is judged where the rows end), decides: success = that replay succeeds and starts from the instance's
+recorded model and initial-state hashes. With one replay there is no second end state to compare: `deterministic` is
+written as 1 (nothing disagreed) with `determinism_checked` = 0 and `replays` = 1. Writes /logs/verifier/reward.txt
+(1/0) and reward.json (numbers only); then a second replay renders replay.mp4, after the verdict is on disk (it never
+changes it).
 """
 
 import argparse
@@ -25,8 +27,8 @@ TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_autobio.py"
 MAX_ROWS = 600_000  # rcb_autobio.MAX_STEPS: 1200 s of simulated time; a replay runs 600 to 20000 control steps/s
 # Time. VERIFIER_TIMEOUT_S is the [verifier] timeout_sec of task.toml (keep the two equal).
 # The longest trajectory the grader accepts (MAX_ROWS) replays in 1000 s in the slowest family (insert_centrifuge_5430,
-# 600 control steps/s), so each verdict replay may take VERDICT_TIMEOUT_S, 2.4 times that; the video replay gets what
-# is left of the verifier's time (at most VIDEO_TIMEOUT_S), MARGIN_S kept back: 2 x 2400 + video + 300 <= 5400. A
+# 600 control steps/s), so the verdict replay may take VERDICT_TIMEOUT_S, 2.4 times that; the video replay gets what
+# is left of the verifier's time (at most VIDEO_TIMEOUT_S), MARGIN_S kept back: 2400 + video + 300 <= 5400. A
 # replay that passes its limit is a replay without a result (grader_error, infra_error), a reward is written, and
 # Harbor's own timeout is never reached.
 VERIFIER_TIMEOUT_S = 5400
@@ -152,30 +154,28 @@ def grade() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         clean = os.path.join(tmp, "trajectory.npz")  # only the rows cross into the replay processes
         np.savez(clean, actions=acts, task=a.family)
-        r1 = replay(a, clean, os.path.join(tmp, "r1.json"))
-        r2 = replay(a, clean, os.path.join(tmp, "r2.json"))
-        if not (r1.get("state_sha") and r2.get("state_sha")):  # a replay process died or timed out: not the agent's 0
-            timed_out = bool(r1.get("timed_out") or r2.get("timed_out"))
-            write(False, {**zero, "grader_error": 1, "infra_error": 1, "replay_failed": 1, "replay_timed_out": int(timed_out),
-                          "n_actions": int(len(acts))})
+        r1 = replay(a, clean, os.path.join(tmp, "r1.json"))  # the one replay that decides
+        if not r1.get("state_sha"):  # the replay process died or timed out: not the agent's 0
+            write(False, {**zero, "grader_error": 1, "infra_error": 1, "replay_failed": 1,
+                          "replay_timed_out": int(bool(r1.get("timed_out"))), "n_actions": int(len(acts))})
             return 0
-        for i, r in ((1, r1), (2, r2)):  # the record (grade.log): each fresh process's verdict and final-state hash
-            print(
-                f"replay {i}: success={r.get('success')} score={r.get('score')} steps={r.get('steps')} "
-                f"reason={r.get('reason')} state_sha={r.get('state_sha')} instance_ok={r.get('instance_ok')}",
-                file=sys.stderr,
-                flush=True,
-            )
-        both = bool(r1.get("success")) and bool(r2.get("success"))
-        deterministic = r1["state_sha"] == r2["state_sha"]
-        instance_ok = bool(r1.get("instance_ok")) and bool(r2.get("instance_ok"))
-        ok = both and deterministic and instance_ok
+        print(  # the record (grade.log): the fresh process's verdict and final-state hash
+            f"replay 1: success={r1.get('success')} score={r1.get('score')} steps={r1.get('steps')} "
+            f"reason={r1.get('reason')} state_sha={r1.get('state_sha')} instance_ok={r1.get('instance_ok')}",
+            file=sys.stderr,
+            flush=True,
+        )
+        replay_ok = bool(r1.get("success"))
+        instance_ok = bool(r1.get("instance_ok"))
+        ok = replay_ok and instance_ok
         out = {
             "success": int(ok),
-            "replay_success": int(both),
-            "deterministic": int(deterministic),
+            "replay_success": int(replay_ok),
+            "deterministic": 1,  # one replay: nothing compared (determinism_checked = 0)
+            "determinism_checked": 0,
+            "replays": 1,
             "instance_ok": int(instance_ok),
-            "progress": float(min(r1.get("score") or 0.0, r2.get("score") or 0.0)),
+            "progress": float(r1.get("score") or 0.0),
             "n_actions": int(len(acts)),
             "sim_steps": int(r1.get("steps") or 0),
             "task_failure": int(str(r1.get("reason") or "").startswith("failure")),
@@ -188,8 +188,8 @@ def grade() -> int:
         left = min(VIDEO_TIMEOUT_S, VERIFIER_TIMEOUT_S - MARGIN_S - (time.monotonic() - T0))
         if not a.no_video and left >= 120:  # a human-viewable replay (never affects the verdict), in the time left
             try:
-                r3 = replay(a, clean, os.path.join(tmp, "r3.json"), video=os.path.join(LOG_DIR, "replay.mp4"), timeout=left)
-                out["video_rendered"] = int(bool(r3.get("video")))
+                rv = replay(a, clean, os.path.join(tmp, "rv.json"), video=os.path.join(LOG_DIR, "replay.mp4"), timeout=left)
+                out["video_rendered"] = int(bool(rv.get("video")))
                 write(ok, out)
             except Exception:  # noqa: BLE001 -- the verdict is on disk and stays
                 traceback.print_exc(file=sys.stderr)

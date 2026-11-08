@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/ambench-rotate-valve-fahexa-i00-privileged"
-description = "AM-Bench RotateValve-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1): produce one replayable trajectory of AM-Bench's absolute end-effector pose actions at 120 Hz. Task: A valve is mounted on the front face of a wall in front of the hovering aerial manipulator: a large red wheel disc on a short shaft, with a handle bar sticking out of the disc's face toward the robot. Turn the valve: rotate the wheel clockwise, as seen from the robot's side of the wall, by at least 170 degrees from its starting angle. Frozen scene instance: AM-Bench's seeded reset, seed 0; graded by AM-Bench's own success check in two fresh-process replays."
+description = "AM-Bench RotateValve-Am-FAHexa-Abs-PID-Direct-v0 (a fully actuated hexarotor with a 4-joint arm and a two-finger gripper, Isaac Lab / Isaac Sim 5.1): produce one replayable trajectory of AM-Bench's absolute end-effector pose actions at 120 Hz. Task: A valve is mounted on the front face of a wall in front of the hovering aerial manipulator: a large red wheel disc on a short shaft, with a handle bar sticking out of the disc's face toward the robot. Turn the valve: rotate the wheel clockwise, as seen from the robot's side of the wall, by at least 170 degrees from its starting angle. Frozen scene instance: AM-Bench's seeded reset, seed 0; graded by AM-Bench's own success check in one fresh-process replay."
 keywords = ["robotics", "ambench", "aerial-manipulation", "isaac-lab", "isaac-sim", "hexarotor", "code-as-policy", "trajectory", "privileged"]
 
 [metadata]
@@ -12,14 +12,16 @@ simulator = "ambench"             # AM-Bench @ 60bf5b7 on Isaac Lab @ f4aa17f / 
 robot = "ambench-fahexa"
 family = "rotate_valve_fahexa"
 dynamics = "static"               # scene dynamics (PROTOCOL §2): nothing but the robot does work on the scene
+replays = 3                       # fresh-process replays, any success counts (docs/protocol/README.md §4): the simulator
+                                  # does not replay bit-wise
 oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 2.0
 
 [verifier]
-# 4 x tests/grade.py's per-process limit for this episode (2399 rows: max(1800 s, 1500 s + rows / 4)): two fresh-process
+# 5 x tests/grade.py's per-process limit for this episode (2399 rows: max(1800 s, 1500 s + rows / 4)): up to 3 fresh-process
 # replays (camera-free), one rerun of a replay that died early or had GPU faults, and the filmed illustration
-timeout_sec = 8400.0
+timeout_sec = 10500.0
 environment_mode = "separate"     # verifier runs in its own sandbox (tests/Dockerfile); the agent container is gone by then
 network_mode = "no-network"       # Isaac Sim starts and renders offline: every asset is in the image (images/ambench/web_assets.txt)
 

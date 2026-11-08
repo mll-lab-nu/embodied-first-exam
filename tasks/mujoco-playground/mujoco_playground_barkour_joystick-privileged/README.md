@@ -25,9 +25,9 @@ standard twin's client executes the same targets. Re-verified: two
 fresh-process replays succeed and end in the same state.
 
 ## Verification
-`tests/grade.py` in a separate sandbox without network: two replays, each in a fresh process, from the verifier's own
-copy of the instance (`tests/instance.json`; the start state is checked against its hash on every load); pass iff both
-succeed and end in the same state (`deterministic`). Oracle: success, worst segment errors 0.033 m/s and 0.028 rad/s. `nop`: no trajectory, reward 0.
+`tests/grade.py` in a separate sandbox without network: one replay, in a fresh process, from the verifier's own
+copy of the instance (`tests/instance.json`; the start state is checked against its hash on every load); pass iff it
+succeeds. Oracle: success, worst segment errors 0.033 m/s and 0.028 rad/s. `nop`: no trajectory, reward 0.
 
 ## Resources
 Caps per container (PROTOCOL §6).

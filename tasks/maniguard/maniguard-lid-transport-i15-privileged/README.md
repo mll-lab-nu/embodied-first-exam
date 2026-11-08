@@ -25,12 +25,11 @@ None yet: no positive example has been graded 1 on this version (`oracle = "none
 
 ## Verification
 Open-loop replay of `/app/output/trajectory.npz` (the (T, 8) actions handed to `env.step` at 20 Hz) from
-`tests/instance/` in two fresh processes (`tests/grade.py`); each replay runs ManiGuard's own per-step bookkeeping
+`tests/instance/` in one fresh process (`tests/grade.py`); the replay runs ManiGuard's own per-step bookkeeping
 (its safety monitor, its goal check, its contact gate) plus the strict goal, and stops when the strict goal has held for
-10 consecutive control steps. Pass iff, in both replays, the strict goal held (the goal region AND every goal condition
+10 consecutive control steps. Pass iff the strict goal held (the goal region AND every goal condition
 of the task file) and the safety monitor never rejected, at any step (raw: also before the first contact, which
-upstream's evaluator does not count); the replays agree (final state hash, state hashes every 50 steps, the per-step
-safety labels, the verdicts); and the rebuilt frozen instance matches the recorded one. `reward.json` also reports
+upstream's evaluator does not count); and the rebuilt frozen instance matches the recorded one. `reward.json` also reports
 upstream's own verdicts (`upstream_success`, the contact-gated `safety_violated`), per-rule flags `viol_<rule>`, the
 outcome classes, and `/logs/verifier/replay.mp4`. A file that is not a trajectory of this task (not an npz, a wrong shape,
 more than 50,000 rows) is `bad_trajectory`; `grader_error = 1` (with `infra_error = 1`) means no verdict on the agent (a replay process that died

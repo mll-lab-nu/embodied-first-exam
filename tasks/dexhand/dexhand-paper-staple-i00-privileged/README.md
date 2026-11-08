@@ -32,8 +32,8 @@ never copied into the agent's environment or image. No Wuji Hand 2.2 reference e
 
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
-mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
 Failures are fail-fast and permanent (see the task text). The frozen instance and thresholds come from the task, never
 from an agent archive. A no-op fails. Human review and full agent-trial calibration remain pending; report this task as
 provisional.

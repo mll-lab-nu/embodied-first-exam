@@ -1,5 +1,5 @@
 {
- "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.5.1@sha256:f851deb355ccfacfb366e8a6acf11fa91e575a4e410fa356db84e3221407ad20",
+ "image": "ghcr.io/mll-lab-nu/efe:dexhand-files-0.6.0@sha256:76ecdba39db6329198383e5fa6c89613bd95185ab974a2895521d32237900b24",
  "source": "embodied_first_exam/benchmarks/dexhand",
  "files": {
   "privileged/environment/arm_rig.py": "21b1ec8a66402906ae7b228db82a9b0dc8102a501a07caa153217f0f3cb765c0",
@@ -590,7 +590,7 @@
   "privileged/environment/variants/fef84ad4b3/replay.py": "fef84ad4b3f15ec9661542a161a8322accb4c8c7b17e0ec55dab9bf47d94f7dc",
   "privileged/environment/wuji_reset.json": "f35d7139d7abd0daaa5e1df73d8fe4f3097abe9d918f2fd4d8094130ec0e0cca",
   "privileged/tests/checked_replay.py": "59e8a004e67ec6f8ef02d979129665604ee9b3327874eb0573b732525ebd425d",
-  "privileged/tests/grade.py": "2d1e495c6b08f7c7d4e40c94a3340703d63d853a2c96a912f6d6b953db560d19",
+  "privileged/tests/grade.py": "c4f1e5eab7a558463dbc767625e3bb9843d9b3d37575d75afe3a114555919b23",
   "sim/essential_assets.py": "6327cb949e18a2096ed22248c10e1dc4e53ae3416fbaf18f91ef78d916e00c0d",
   "sim/essential_cube_layer_scene.py": "f401df79c0f6a0945bc5b60bb1fd459edebc02ced7d79f4d145ba7b91d1b8774",
   "sim/essential_cube_reorient_scene.py": "a03a96e1045180abb910370a51888fcdbb1232a52a447acef0bbf4760ff2dff4",

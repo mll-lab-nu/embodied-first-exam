@@ -36,8 +36,8 @@ environment.
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
 in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
-mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
 Failures are fail-fast and permanent (checked every 1 ms physics substep): the vacuum body moved more than 50 mm or
 tilted more than 0.35 rad; the bin falling (downward speed above 0.99 m/s, or above 0.55 m/s with no contact), touching
 the floor or a table leg, below the counter top or out of the workspace; bin and vacuum geometry interpenetrating by more

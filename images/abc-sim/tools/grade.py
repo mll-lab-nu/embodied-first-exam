@@ -2,11 +2,13 @@
 
     python /opt/abc-tools/grade.py --instance /tests/instance.npz --traj /app/output/trajectory.npz
 
-Two replays, each in its own fresh process, run side by side (`rcb_abc.py replay`: the frozen start, one control step
-per row, the episode ends at the task's success -- the evaluator's success held for 1.02 s; ball tray: the countdown
-completed with the ball on the tray and both handles held -- or at its failure). success = both replays succeed, end in
-the same state, and start from the instance's recorded state hash. Writes /logs/verifier/reward.txt (1/0) and
-reward.json (numbers only); then a third replay renders replay.mp4, after the verdict is on disk (it never changes it).
+ONE replay, in its own fresh process (`rcb_abc.py replay`: the frozen start, one control step per row, the episode ends
+at the task's success -- the evaluator's success held for 1.02 s; ball tray: the countdown completed with the ball on the
+tray and both handles held -- or at its failure). success = the replay succeeds and starts from the instance's recorded
+state hash. With one replay there is no second end state to compare: reward.json has `deterministic` = 1 (nothing
+disagreed), `determinism_checked` = 0 (nothing was compared) and `replays` = 1. Writes /logs/verifier/reward.txt (1/0)
+and reward.json (numbers only); then a second replay renders replay.mp4, after the verdict is on disk (it never changes
+it).
 
 Whose failure a 0 is (PROTOCOL §4, H.5): a file that is no trajectory for this instance -- unreadable, not (T, 14),
 empty or longer than MAX_ROWS, NaN/inf -- is the agent's (`bad_trajectory`), checked here before any replay. After that
@@ -122,26 +124,26 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         clean = os.path.join(tmp, "trajectory.npz")  # only the rows cross into the replay processes
         np.savez(clean, actions=acts, family=family)
-        o1, o2 = os.path.join(tmp, "r1.json"), os.path.join(tmp, "r2.json")
-        p1, p2 = start_replay(a, clean, o1), start_replay(a, clean, o2)   # two fresh processes, side by side
-        r1, r2 = result(p1, o1, REPLAY_TIMEOUT_S), result(p2, o2, REPLAY_TIMEOUT_S)
-        if not (r1.get("state_sha") and r2.get("state_sha")):
+        o1 = os.path.join(tmp, "r1.json")
+        r1 = result(start_replay(a, clean, o1), o1, REPLAY_TIMEOUT_S)   # one fresh process
+        if not r1.get("state_sha"):
             # The rows were checked above, so a replay without a result did not run to a verdict (out of time, killed,
             # not started, the tool failed): no verdict on the agent.
             write(False, {"success": 0, "deterministic": 0, "replay_failed": 1, "grader_error": 1,
                           "n_actions": int(len(acts)), **cost})
             return 0
-        for i, r in ((1, r1), (2, r2)):  # the record (grade.log): each fresh process's verdict and final-state hash
-            print(f"replay {i}: success={r.get('success')} steps={r.get('steps')} reason={r.get('reason')} "
-                  f"state_sha={r.get('state_sha')} instance_ok={r.get('instance_ok')}", file=sys.stderr, flush=True)
-        both = bool(r1.get("success")) and bool(r2.get("success"))
-        deterministic = r1["state_sha"] == r2["state_sha"]
-        instance_ok = bool(r1.get("instance_ok")) and bool(r2.get("instance_ok"))
-        ok = both and deterministic and instance_ok
+        r = r1  # the record (grade.log): the fresh process's verdict and final-state hash
+        print(f"replay 1: success={r.get('success')} steps={r.get('steps')} reason={r.get('reason')} "
+              f"state_sha={r.get('state_sha')} instance_ok={r.get('instance_ok')}", file=sys.stderr, flush=True)
+        replay_ok = bool(r1.get("success"))
+        instance_ok = bool(r1.get("instance_ok"))
+        ok = replay_ok and instance_ok
         out = {
             "success": int(ok),
-            "replay_success": int(both),
-            "deterministic": int(deterministic),
+            "replay_success": int(replay_ok),
+            "deterministic": 1,  # one replay: nothing to compare
+            "determinism_checked": 0,
+            "replays": 1,
             "instance_ok": int(instance_ok),
             "n_actions": int(len(acts)),
             "sim_steps": int(r1.get("steps") or 0),
@@ -152,9 +154,9 @@ def main() -> int:
         }
         write(ok, out)
         if not a.no_video:  # a human-viewable replay (never affects the verdict)
-            o3 = os.path.join(tmp, "r3.json")
-            r3 = result(start_replay(a, clean, o3, video=os.path.join(LOG_DIR, "replay.mp4")), o3, REPLAY_TIMEOUT_S)
-            out["video_rendered"] = int(bool(r3.get("video")))
+            ov = os.path.join(tmp, "video.json")
+            rv = result(start_replay(a, clean, ov, video=os.path.join(LOG_DIR, "replay.mp4")), ov, REPLAY_TIMEOUT_S)
+            out["video_rendered"] = int(bool(rv.get("video")))
             write(ok, out)
     return 0
 

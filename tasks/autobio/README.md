@@ -118,8 +118,8 @@ success rate), load rotor 14.7 / 1.0.
   `check()`), the MuJoCo model and data, reset, step, recording, self-replay, the tool frames, forward and inverse
   kinematics of the arm joints, rendering (RGB and depth, every camera). Deliverable `/app/output/trajectory.npz`,
   `(T, n)` position targets, one row per control step. AutoBio's code other than the experts is in the image (inverse
-  kinematics, path timing, scene helpers). The verifier replays the rows in two fresh processes in its own sandbox: both
-  must succeed and end in the same state.
+  kinematics, path timing, scene helpers). The verifier replays the rows in one fresh process in its own sandbox: the
+  episode must succeed.
 - **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` and the adapter
   `environment/sim/server.py`, the same in all nine families:
   - action types `joint_position` (the action above; rows `dt` apart, a multiple of 2 ms, `linear` or `hold`; clipped
@@ -149,7 +149,7 @@ success rate), load rotor 14.7 / 1.0.
   1800 s) + 300 s.
 - **Time limits, privileged mode.** The longest episode, 600000 rows, replays in 1000 s in the slowest family
   (`insert_centrifuge_5430`, 600 control steps/s); a verdict replay may take 2400 s and is killed at that limit.
-  `[verifier] timeout_sec` 5400 = 2 x 2400 + the video replay (what is left, at most 1800 s; skipped under 120 s) +
+  `[verifier] timeout_sec` 5400 = 2400 (the verdict replay) + the video replay (what is left, at most 1800 s; skipped under 120 s) +
   300 s, so `tests/grade.py` always writes a reward before Harbor's timeout.
 - **What is not the agent's 0** (`infra_error = 1` in `reward.json`, PROTOCOL §4). Standard: `final.json` missing
   (the service writes it as soon as its scene is up), unreadable, or not finalized (the collect hook was killed before

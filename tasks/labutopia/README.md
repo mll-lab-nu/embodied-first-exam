@@ -173,7 +173,7 @@ PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the im
   targets, every rigid body's pose and velocity), in the same container or in another one, with empty or filled
   caches, with or without rendering, with or without cameras;
 - `reset()` inside a process does not: the start state then differs by about 1e-5. So the privileged grader replays in
-  fresh processes and compares two of them, and the privileged instruction tells the agent to check its final
+  a fresh process, and the privileged instruction tells the agent to check its final
   trajectory with the same command;
 - outside the image the last bits can differ (the same rows on the host's own Python environment end in another
   state hash, with the same verdict), as RoboLab's notes report between hosts. A trial is graded on the host it ran on.
@@ -183,8 +183,8 @@ PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the im
   the robot, LabUtopia's readers, the rule's quantities, reset, step, recording, self-replay, the tool frame, forward
   and inverse kinematics of the arm (a numpy chain read from the stage), rendering (RGB and depth, every camera).
   Deliverable `/app/output/trajectory.npz`, `(T, 18)`. LabUtopia's code other than the controllers is in the image, and
-  so is Isaac Sim's own motion generation for the Franka (RMPflow, Lula kinematics). The verifier replays the rows in
-  two fresh processes in its own sandbox: both must succeed and end in the same state.
+  so is Isaac Sim's own motion generation for the Franka (RMPflow, Lula kinematics). The verifier replays the rows once,
+  in a fresh process in its own sandbox: the replay must succeed.
 - **Standard (`eai-standard/2.2`):** the shared layer of `embodied_first_exam/standard/` and the adapter
   `environment/sim/server.py`, the same in all nine families:
   - action types `joint_position` (9 position targets within the joints' ranges; velocity targets zero) and
@@ -236,7 +236,7 @@ PhysX runs on the CPU (LabUtopia's default backend, `numpy`). Measured in the im
   it, so `Session(...)` starts the application without a Vulkan device (the renderer never starts): about 40 s the
   first time in a container, about 20 s later. `Session(..., cameras=True)` starts it with the renderer and the task's
   cameras. The standard service is of the second kind and renders a first frame before it answers; the privileged
-  grader's two verdict replays and the oracle are of the first.
+  grader's verdict replay and the oracle are of the first.
 - **Looking never changes the physics.** The same rows end in the same state with the renderer and without it.
 
 ## Reference solutions

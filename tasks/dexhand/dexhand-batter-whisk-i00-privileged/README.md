@@ -35,8 +35,8 @@ pose or apply an object force, and they are never copied into the agent's enviro
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand (`hand` member of the trajectory archive
 in privileged mode; the hand of the trusted service episode in standard mode) and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final integration state hashes; in standard
-mode the replay hash must also equal the live final hash. A replay ends at the first success or the first failure.
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure.
 Failures are fail-fast and permanent: bowl tipped, moved or lifted; whisk dropped after the pickup (touching nothing
 while falling faster than 0.2 m/s more than 2 mm above the counter, counter contact or no robot contact before it was
 placed, or neither robot nor counter contact for more than 5 controls after it was placed); bowl or whisk on the floor, below the counter top or outside the workspace; unstable physics;

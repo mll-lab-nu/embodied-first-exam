@@ -36,8 +36,8 @@ or apply an object force, and they are not copied into the task.
 
 ## Verification
 privileged mode. The verifier rebuilds the frozen scene with the recorded hand and replays only numeric motor targets
-twice in fresh processes. Both replays must succeed and have identical final state hashes; in standard mode the replay
-hash must also equal the live final hash. A replay ends at the first success or the first failure. Failures are
+in one fresh process, which must succeed;
+in standard mode nothing is replayed: the live episode is graded. A replay ends at the first success or the first failure. Failures are
 fail-fast, checked after every 2 ms physics substep, and permanent: a displaced boot, a clod touching the counter or
 floor or leaving the workspace, a hand-clod contact, a brush that touches the floor, tray or rack or is released in the
 air, any contact of a robot part other than the right hand (stand, torso, arm links, the parked left hand), unstable

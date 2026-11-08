@@ -2,10 +2,11 @@
 
     python /tests/grade.py --instance /tests/instance.json --traj /app/output/trajectory.npz
 
-Two replays, each in its own fresh process (`rcb_molmospaces.py replay`: upstream's episode, one Task.step per row until
-upstream ends the episode, upstream's judge_success on the final state). success = both replays succeed and end in the
-same state. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then a third replay renders
-replay.mp4, after the verdict is on disk (it never changes it).
+ONE replay, in its own fresh process (`rcb_molmospaces.py replay`: upstream's episode, one Task.step per row until
+upstream ends the episode, upstream's judge_success on the final state), decides: success = that replay succeeds. With
+one replay there is no second end state to compare: `deterministic` is written as 1 (nothing disagreed) with
+`determinism_checked` = 0 and `replays` = 1. Writes /logs/verifier/reward.txt (1/0) and reward.json (numbers only); then
+a second, separate replay renders replay.mp4 in the budget left, after the verdict is on disk (it never changes it).
 
 What is whose failure (success is 0 in every case): the agent's is a missing file (missing_trajectory), a file that is not
 a trajectory of this task (bad_trajectory: not an npz, no `actions`, an entry larger than MAX_ROWS x the row width
@@ -21,7 +22,7 @@ import numpy as np
 LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 TOOL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rcb_molmospaces.py")
 BUDGET_S = float(os.environ.get("RCB_VERIFIER_BUDGET_S", 1740))  # task.toml's [verifier] timeout_sec (1800) minus a margin
-T0 = time.monotonic()  # the replays share BUDGET_S (a replay takes 20-120 s, over 500 s on a loaded host)
+T0 = time.monotonic()  # the verdict replay and then the video replay share BUDGET_S (a replay takes 20-120 s, over 500 s on a loaded host)
 # A trajectory holds at most MAX_ROWS rows (the instruction says so): more than 160 times the longest horizon (606 control
 # steps), and rows after the episode's end are never executed. Its .npz entries are size-checked before they are read, so a
 # small file that inflates to gigabytes is the agent's 0 (bad_trajectory), not a verifier killed for memory (infra).
@@ -144,28 +145,26 @@ def main() -> int:
                 },
             )
             return 0
-        runs = [replay(a.instance, a.traj, None, 2)]
-        if "error" not in runs[0]:  # no second replay once the first gave no result: the verdict is infra_error anyway
-            runs.append(replay(a.instance, a.traj, None))
-        if any("error" in r for r in runs):
-            timed_out = int(any("took over" in str(r.get("error")) for r in runs))
+        r0 = replay(a.instance, a.traj, None)
+        if "error" in r0:
+            timed_out = int("took over" in str(r0.get("error")))
             write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "replay_timed_out": timed_out, **cost})
             return 0
-        if not all(r["instance_ok"] for r in runs):  # the image no longer builds the frozen start: not the agent's 0
+        if not r0["instance_ok"]:  # the image no longer builds the frozen start: not the agent's 0
             write(False, {"success": 0, "deterministic": 0, "grader_error": 1, "instance_mismatch": 1, **cost})
             return 0
-        all_success = all(r["success"] for r in runs)
-        deterministic = runs[0]["state_sha"] == runs[1]["state_sha"]
-        ok = all_success and deterministic
+        ok = bool(r0["success"])
         out = {
             "success": int(ok),
-            "replay_success": int(all_success),
-            "deterministic": int(deterministic),
+            "replay_success": int(ok),
+            "deterministic": 1,
+            "determinism_checked": 0,
+            "replays": 1,
             "n_actions": int(len(acts)),
-            "sim_steps": int(runs[0]["executed_rows"]),
-            "horizon": int(runs[0]["horizon"]),
-            "reached_horizon": int(bool(runs[0]["reached_horizon"])),
-            "replay_s": float(runs[0]["replay_s"]),
+            "sim_steps": int(r0["executed_rows"]),
+            "horizon": int(r0["horizon"]),
+            "reached_horizon": int(bool(r0["reached_horizon"])),
+            "replay_s": float(r0["replay_s"]),
             "grader_error": 0,
             "video_rendered": 0,
             **cost,

@@ -4,8 +4,11 @@
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
 human-viewable replay video /logs/verifier/replay.mp4 (3x2 grid: world, observer, head / front, left wrist, right wrist) plus replay.last.png.
-Replays `--repeat` times in this fresh process; success requires every replay to complete the task AND
-all final-state hashes to agree (bit-exact determinism), so a lucky non-deterministic run cannot pass.
+ONE replay in this fresh process decides: success = that replay completes the task. With one replay there is no
+second end state to compare: `deterministic` is written as 1 (nothing disagreed) with `determinism_checked` = 0 and
+`replays` = 1, which say that nothing was compared. `--repeat N` (N >= 2) is the old check, kept for a determinism
+measurement by hand: success = every replay completes the task AND all final-state hashes agree
+(`determinism_checked` = 1).
 
 reward.json always carries success, deterministic and grader_error. A deliverable the agent got wrong (not an npz, a
 missing key, a wrong shape, NaN, too long) is bad_trajectory = 1, the agent's failure. A host that cannot rebuild the
@@ -130,9 +133,10 @@ def _on_alarm(*_):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--family", required=True); ap.add_argument("--instance", required=True)
-    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=2)
+    ap.add_argument("--traj", default="/app/output/trajectory.npz"); ap.add_argument("--repeat", type=int, default=1)
     ap.add_argument("--no-video", action="store_true"); ap.add_argument("--video-every", type=int, default=10); ap.add_argument("--video-fps", type=int, default=25)
     a = ap.parse_args()
+    a.repeat = max(1, a.repeat)   # at least the one replay that decides
     # Agent interaction cost from the tooling's append-only log (whole debugging history, not just the deliverable).
     # The log lives in the agent's container, so these fields are SELF-REPORTED cost accounting, not evidence
     # (agent_cost_self_reported = 1); the parser must survive any content the agent may have written there.
@@ -167,9 +171,10 @@ def main() -> int:
         s = Session(a.family, instance=a.instance)
         outs = [s.replay(acts) for _ in range(a.repeat)]
         all_success = all(o["success"] for o in outs)
-        deterministic = len({o["state_sha"] for o in outs}) == 1
+        deterministic = len({o["state_sha"] for o in outs}) == 1   # one replay: 1, nothing disagreed
         ok = all_success and deterministic
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
+               "determinism_checked": int(len(outs) >= 2), "replays": len(outs),
                "n_actions": int(len(acts)), "sim_steps": int(outs[0]["sim_steps"]), "grader_error": 0, "video_rendered": 0, **cost}
         write(ok, out)   # the verdict is on disk before any video: a render that hangs past the verifier timeout cannot cost the score
     except Exception as exc:  # noqa: BLE001

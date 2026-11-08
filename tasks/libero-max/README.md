@@ -99,7 +99,7 @@ Every image is public: Harbor pulls it.
 
 ## Grading (standard mode)
 The standard mode is graded by the live episode; nothing is replayed to grade it (docs/protocol/README.md H.4). The
-privileged mode: the verifier's two fresh-process replays.
+privileged mode: the verifier's one fresh-process replay.
 
 - **Live success.** LIBERO's success check on the episode the sim service ran: `lmx_tool.Session.step` reports it
   (`wrapped.step`'s `done`), `rcb_service` ends the episode there (`reason = "success"`) and `_finalize()` writes
@@ -185,7 +185,7 @@ bash ci_checks/run_all.sh
 | kernel probes on the 7950X, 6 instances (one per 11 in sorted order) | OpenBLAS Prescott forced: 0/6; Haswell forced: 6/6; Zen with numpy's AVX-512 loops off: 3/6 |
 
 Measured on the reference machine (AMD Ryzen 9 7950X): about 20 ms of physics per control step, about 70 ms per
-256×256 camera image (OSMesa); a privileged oracle trial takes 2–3 min, most of it the verifier's two fresh replays.
+256×256 camera image (OSMesa); a privileged oracle trial takes 2–3 min, most of it the verifier's fresh replay and the video replay.
 Busy hosts are several times slower: see Collect budget.
 
 ## Screening

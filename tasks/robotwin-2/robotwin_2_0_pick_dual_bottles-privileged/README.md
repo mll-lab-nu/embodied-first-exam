@@ -22,8 +22,8 @@ RoboTwin 2.0's expert methods for `pick_dual_bottles` (play_once; scrubbed from 
 `solution/oracle_pick_dual_bottles.py` and bound onto the env; `solution/solve.sh` records it into a trajectory.
 
 ## Verification
-Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, twice;
-pass iff RoboTwin's `check_success` holds after every replay and the final-state hashes agree (`tests/grade.py`),
+Open-loop replay of `/app/output/trajectory.npz` from `tests/instance.json` in a fresh process, once;
+pass iff RoboTwin's `check_success` holds after the replay (`tests/grade.py`),
 plus `/logs/verifier/replay.mp4`. The trajectory is the per-physics-step drive-target record (T, 34) captured by
 hooking `scene.step()`; the instance is rebuilt from the RoboTwin seed and checked against the stored
 initial-state hash on every reset.

@@ -52,7 +52,7 @@ s.replay(rows)                       # reset, run the rows, return the check and
 s.render_video(rows, "/app/output/try.mp4")
 s.save_trajectory(rows, "/app/output/trajectory.npz")
 ```
-The grader runs exactly this CLI in two fresh processes, so run it to check yourself:
+The grader runs exactly this CLI in a fresh process, so run it to check yourself:
 `python /opt/tools/rcb_quadruped.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions

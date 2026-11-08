@@ -45,9 +45,9 @@ and retry as many times as you want. Your deliverable is **one replayable trajec
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below).
-It is replayed open-loop from the same initial state in a fresh process and scored 1 if the task is
-completed (the success rule under `## Conventions`) by the end of the replay, which holds the robot still for up to
-5 s after your last row, else 0. Also leave the script that produced it at `/app/output/gen.py`.
+It is replayed open-loop from the same initial state up to 3 times, each in a fresh process, and scored 1 if the task is
+completed (the success rule under `## Conventions`) by the end of any replay, which holds the robot still for up to
+5 s after your last row, else 0 (fresh replays can end slightly differently: leave a margin). Also leave the script that produced it at `/app/output/gen.py`.
 
 ## Tooling (already installed; run `python` from any directory)
 ```python
@@ -80,8 +80,8 @@ The primitives are deliberately thin (joint, base, IK and gripper moves): naviga
 other skill are yours to build from them. OmniGibson itself is installed (`/behavior-src/OmniGibson`) with its own
 libraries; `/behavior-src` and the tooling in `/opt/tools` are mounted read-only (the grader uses its own copies).
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check; a third
-replay with the challenge cameras only renders the video and never affects the score):
+Each graded replay is a fresh process running exactly this CLI (so run it to self-check; the grader stops at the first
+success, and one more replay with the challenge cameras only renders the video and never affects the score):
 `python /opt/tools/rcb_behavior.py replay --task freeze_fruit --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions
@@ -96,7 +96,7 @@ replay with the challenge cameras only renders the video and never affects the s
   you deliver has at most 40,000 rows** (22 min of simulated time; a longer one is rejected: `bad_trajectory`, score 0).
   The trajectory must be the file
   `s.save_trajectory()` writes (an `.npz` with `actions` (T, 25) and `task`): a file the grader cannot read, or with
-  the wrong shape, is `bad_trajectory` too. The grader replays it twice at the simulator's own speed, each replay
+  the wrong shape, is `bad_trajectory` too. The grader replays it at the simulator's own speed, each replay
   within min(28000 s, max(1 h, 20 min + 0.67 s per row)); a replay that runs out of time is reported as a grader error.
   **Success** (`s.status()["success"]`) is the goal holding for 1 s of simulated time in a row (30 control steps) with no
   goal object attached to a gripper (assisted grasping lets go only when both fingers are commanded open) and every goal

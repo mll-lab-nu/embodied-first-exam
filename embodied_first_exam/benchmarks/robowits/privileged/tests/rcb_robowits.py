@@ -815,7 +815,7 @@ class Session:
 
     def replay(self, actions: np.ndarray, settle: bool = True) -> dict[str, Any]:
         """Open-loop replay after reset() (exact on the CPU backend), then the settle window (settle_check): what the verifier
-        does, twice, in its own process. `success` is the verdict; `goal_at_end` the goal right after the last action;
+        does, once, in its own process. `success` is the verdict; `goal_at_end` the goal right after the last action;
         `state_sha_rows` the state then, `state_sha` the state after the settle window. settle=False: the rows only."""
         self.reset()
         for a in np.asarray(actions, dtype=np.float32):

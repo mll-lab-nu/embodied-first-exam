@@ -3,7 +3,7 @@ artifacts = [{ source = "/var/rcb-monitor/", service = "rcb_monitor" }, "/app/ou
 
 [task]
 name = "embodied-first-exam/autobio-thermal-cycler-close-i00-privileged"
-description = "AutoBio thermal_cycler_close (Close thermal cycler lid; a biology laboratory bench on MuJoCo): produce one replayable trajectory of joint position targets. Close the lid of the thermal cycler and lock it. Frozen scene instance (AutoBio's reset, seed 0); graded by two fresh-process replays with AutoBio's own check."
+description = "AutoBio thermal_cycler_close (Close thermal cycler lid; a biology laboratory bench on MuJoCo): produce one replayable trajectory of joint position targets. Close the lid of the thermal cycler and lock it. Frozen scene instance (AutoBio's reset, seed 0); graded by one fresh-process replay with AutoBio's own check."
 keywords = ["robotics", "autobio", "mujoco", "laboratory", "biology", "ur5e-robotiq-2f85", "code-as-policy", "trajectory", "thermal_cycler_close", "privileged"]
 
 [metadata]

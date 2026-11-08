@@ -49,8 +49,8 @@ task.toml), and a human reviewer.
 ## Verification
 In its own container, built from `tests/Dockerfile` (no network): the agent's container is gone by
 then, and only `/app/output/` crosses over. Open-loop replay of `/app/output/trajectory.npz` from
-`tests/instance.npz` in a fresh process, twice; pass iff every replay's episode return reaches
-`success_bar` **and** the final-state hashes agree (bit-exact determinism). `tests/grade.py` also
+`tests/instance.npz` in a fresh process, once; pass iff the replay's episode return reaches
+`success_bar`. `tests/grade.py` also
 writes `/logs/verifier/replay.mp4` and, because Harbor promotes every `reward.json` key to a
 leaderboard metric, keeps the per-task numbers (`episode_return`, `success_bar`) in
 `/logs/verifier/diagnostics.json`. No oracle; human review in PR #9. `nop` scores 0.

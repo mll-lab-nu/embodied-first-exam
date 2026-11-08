@@ -31,7 +31,7 @@ Leave three files under `/app/output/`. **Only the first is scored.**
 
 | file | what goes in it |
 |---|---|
-| `trajectory.npz` | `actions`: a float array (T, 2), T <= 100, the episode's actions in order (`Env.save()` writes it). The verifier replays it from the frozen start twice, each time in a fresh process, and scores 1 iff both replays succeed under the rule above and end in the same state |
+| `trajectory.npz` | `actions`: a float array (T, 2), T <= 100, the episode's actions in order (`Env.save()` writes it). The verifier replays it from the frozen start once, in a fresh process, and scores 1 iff that replay succeeds under the rule above |
 | `gen.py` | the script that produced it; it must run and reproduce `trajectory.npz`, reading nothing but `/app/instance.json` and files under `/app/output/` |
 | `NOTES.md` | at most 20 lines: your final approach and why it works, and what you tried that failed |
 
@@ -54,7 +54,7 @@ env.save("/app/output/trajectory.npz")
 ```
 `python /opt/tools/hc_tools.py replay /app/output/trajectory.npz` runs what the verifier runs (add `--video
 out.mp4` to watch it). The motion model's noise is seeded at every reset, so the same actions from the start give
-the same episode on this machine's GPU (the verifier replays here); check it with two replays. The source of every module is in `/opt/humanclaw/src/humanclaw_bench`
+the same episode on this machine's GPU (the verifier replays here); check it with a replay. The source of every module is in `/opt/humanclaw/src/humanclaw_bench`
 and `/opt/tools`.
 
 ## External material

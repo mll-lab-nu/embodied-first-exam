@@ -22,8 +22,8 @@ at control step 1799). Isaac Lab resets the scene inside the step that ends an e
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if the task succeeds in both replays, else 0
-(a trajectory that only just succeeds may not succeed in both: leave a margin). Also leave the script that produced it
+open-loop from the same initial state up to 3 times, each in a fresh process, and scored 1 if the task succeeds in any replay, else 0
+(a trajectory that only just succeeds may not succeed in a fresh process: leave a margin). Also leave the script that produced it
 at `/app/output/gen.py`. Save a working trajectory as soon as you have one and overwrite it as you improve it: whatever
 is in `/app/output/` when the time is up is graded. The file holds `task` and `actions`, a (T, 8) float array of at most
 **8,000 rows** (one per control step); anything else (another shape, NaN, more rows, a row whose quaternion
@@ -57,7 +57,7 @@ guaranteed to be bit-identical to a fresh process's: after changes, check your t
 Isaac process then draws them from the physics state (it starts with the Session and takes ~3.5 GB of GPU memory and ~12 GB
 of memory), so looking never changes the physics, which stays exactly the grader's.
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
+Each graded replay is a fresh process running exactly this CLI (so run it to self-check; the grader stops at the first success):
 `python /opt/tools/rcb_ambench.py replay --instance /app/instance.json --traj /app/output/trajectory.npz`
 (`... film --instance ... --traj ... --video out.mp4` films the same rows through the cameras). A process whose output
 shows `PhysX error: GPU ... fail to launch` or `CUDA error: out of memory` ran short of GPU memory and its physics is not

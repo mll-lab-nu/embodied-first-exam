@@ -19,11 +19,11 @@ and a latched stage stays latched. The episode **ends by itself** at the first c
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed
-open-loop from the same initial state in two fresh processes and scored 1 if the task succeeds in both replays and both
-end in the same state, else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
+open-loop from the same initial state in one fresh process and scored 1 if the task succeeds in that replay,
+else 0. Also leave the script that produced it at `/app/output/gen.py`. Save a working trajectory
 as soon as you have one and overwrite it as you improve it: whatever is in `/app/output/` when the time is up is graded.
 The file holds `task` and `actions`, a (T, 14) float array of at most **100,000 rows** (one per control step, 55.6 min of
-robot time); anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0. Each replay has
+robot time); anything else (another shape, NaN, more rows, a file that is not such an npz) scores 0. The replay has
 max(1800 s, 1200 s + 1 s per 20 rows) of wall clock, several times what a replay takes here.
 
 ## Tooling (already installed; run `python` from any directory)
@@ -54,7 +54,7 @@ The primitives are deliberately thin (IK moves, joint moves, grippers, hold): gr
 are yours to build from them. YAMLab's source is in `/opt/yamlab` (read-only reference: the task and its checks are in
 `yamlab/envs/tasks/`).
 
-The grader replays in two fresh processes; each is exactly this CLI (a fresh process, so run it to self-check):
+The grader replays in one fresh process, exactly this CLI (so run it to self-check):
 `python /opt/tools/rcb_yamlab.py replay --task put_pot_on_cooktop --instance /app/instance.json --traj /app/output/trajectory.npz`
 
 ## Conventions
