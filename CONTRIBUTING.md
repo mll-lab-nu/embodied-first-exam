@@ -30,7 +30,7 @@ Open a benchmark-proposal issue first (or e-mail the proposal to embodiedfirstex
   model trial, or a hand-built trajectory (tasks without one are human-reviewed and marked unvalidated, PROTOCOL §2, §4);
 - **difficult** for today's coding agents, for a reason that matters for robotics;
 - **reproducible** — a frozen scene instance; a privileged trajectory replays bit for bit (and the hardware it was
-  checked on); a standard episode's recorded trajectory reproduces it for the video and audits (where the simulator replays
+  checked on), or the task declares `[metadata] replays` (PROTOCOL §4); a standard episode's recorded trajectory reproduces it for the video and audits (where the simulator replays
   bit for bit; else the video is recorded live);
 - **isolatable** — the result is computed by a party the agent cannot reach: the verifier in its own sandbox from the
   declared artifacts (privileged), or the sim sidecar on the live episode after the agent's container stops (standard
@@ -156,7 +156,8 @@ mtime match, and a checkout gives many files one mtime, so a task can silently r
 
 For a new simulator or family, also replay the oracle (or a positive example) twice in fresh processes and include
 the matching state hashes (the determinism check of a task's construction, PROTOCOL §4; the standard modes' video is
-rendered from the trajectory).
+rendered from the trajectory). Where fresh replays end in different states, the task declares `[metadata] replays = 3`
+and its grader stops at the first successful replay.
 
 ## Tasks without an oracle
 Allowed (`oracle = "partial"` or `"none"` with `oracle_evidence`), but they need **human review**: the pull request is

@@ -129,6 +129,14 @@ def check_task(task: Path) -> None:
         if cmds and re.fullmatch(r"exit\s+1", cmds[-1]) and not any(re.search(r"\b(python|harbor|cp|bash)\b", c) for c in cmds):
             warn("`solve.sh` is an `exit 1` placeholder (declare `oracle = \"none\"` and remove it)", name)
 
+    replays = meta.get("replays")              # PROTOCOL §4: up to N fresh replays, any success counts
+    if replays is not None:
+        test = task / "tests/test.sh"
+        if mode != "privileged" or not isinstance(replays, int) or isinstance(replays, bool) or replays < 1:
+            warn("`replays` must be an integer >= 1 on a privileged task (PROTOCOL §4)", f"{name} ({replays!r})")
+        elif not test.is_file() or not re.search(rf"--repeat {replays}\b", test.read_text()):
+            warn("`[metadata] replays` differs from tests/test.sh's `--repeat` (PROTOCOL §4)", f"{name} ({replays})")
+
     for ref in image_refs(task):
         if ref.startswith("ghcr.io/") and not ref.startswith(REGISTRY):
             warn("base image outside the registry (`ghcr.io/mll-lab-nu/efe:<name>-<version>` or `efe-private:<name>-<version>`, PROTOCOL §1)", f"{name}: {ref}")
