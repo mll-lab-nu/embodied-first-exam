@@ -4,20 +4,22 @@
 
 Writes /logs/verifier/reward.txt (1/0), reward.json (numeric fields only — Harbor rejects strings), and a
 human-viewable replay video /logs/verifier/replay.mp4 (viewport camera + wrist camera) plus replay.last.png.
-ONE replay, in its own FRESH process (`rcb_robolab.py replay`; on Isaac only the first replay in a process is bit-exact,
-env.reset_to does not restore every PhysX internal), decides: success = that replay completes the task. It is the filmed
-replay; the filming never decides. With one replay there is no second end state to compare: `deterministic` is written
-as 1 (nothing disagreed) with `determinism_checked` = 0 and `replays` = 1, which say that nothing was compared.
-`--repeat N` (N >= 2) is the old check, kept for a determinism measurement by hand: N fresh processes, success = all
-complete the task AND all final-state hashes agree (`determinism_checked` = 1). The frozen scene rebuilt here from tests/instance.json must also match
+Up to `--repeat` N fresh-process replays (`rcb_robolab.py replay`; default 1, tests/test.sh passes the task's
+`[metadata] replays`; on Isaac only the first replay in a process is bit-exact, env.reset_to does not restore every PhysX
+internal) decide, stopping at the first that completes the task: RoboLab's PhysX does not replay bit-wise across processes
+and hosts (tasks/robolab/README.md), so the attempt succeeds if ANY replay succeeds (PROTOCOL §4). Every graded replay is
+filmed into the same file, so the video kept is the deciding replay's (the successful one, else the last); the filming
+never decides. reward.json: `replays` (run), `replays_succeeded`, `success_replay` (1-based, 0 none), `all_success`,
+`deterministic` (the replays run ended in one final-state hash: evidence only, 1 with one replay) and
+`determinism_checked` (more than one replay ran). The frozen scene rebuilt in each replay must also match
 the recorded one (`instance_ok`: exact state hash, or every object / joint pose within tolerance on another host).
 
 Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error` and `infra_error` are always present):
 - the agent's: no file (`missing_trajectory`), another family's trajectory (`wrong_family`), a file that is not a
   trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, one of them larger than MAX_STEPS x ACTION_DIM
   float64 numbers + MAX_MEMBER_MARGIN bytes unpacked (checked on the zip directory before it is read; `too_large`),
-  pickled or object arrays, the wrong shape, NaN/inf, more than MAX_STEPS rows), or a replay that does not complete the
-  task (with `--repeat` >= 2: or replays that disagree). The replays read a copy holding only the checked `task` and `actions`: no other entry
+  pickled or object arrays, the wrong shape, NaN/inf, more than MAX_STEPS rows), or no replay completing the task. The
+  replays read a copy holding only the checked `task` and `actions`: no other entry
   of the agent's file is ever unpacked;
 - the verifier's (`grader_error` = 1, with `infra_error` = 1: no verdict on the agent): a replay process that ends
   without a result (Isaac died) or runs out of its time limit (`replay_timed_out`), the rebuilt frozen scene not matching
@@ -32,7 +34,7 @@ LOG_DIR = os.environ.get("RCB_VERIFIER_LOG_DIR", "/logs/verifier")
 # them). The grader accepts up to MAX_STEPS rows, and a trajectory that never reaches the goal is replayed to its last row.
 # Measured: Isaac start + scene build ~2 min, replays ~15-20 control steps/s; the allowance is
 # REPLAY_STARTUP_S for the start plus half the nominal rate (REPLAY_MIN_RATE control steps/s), never below the old flat
-# 1800 s. task.toml's [verifier] timeout_sec fits two replays of a MAX_STEPS-row trajectory plus overhead, so a
+# 1800 s. task.toml's [verifier] timeout_sec fits the task's N replays of a MAX_STEPS-row trajectory plus overhead, so a
 # replay that is too slow ends here with a written reward (`replay_timed_out`), never with Harbor killing the verifier.
 REPLAY_FLOOR_S, REPLAY_STARTUP_S, REPLAY_MIN_RATE = 1800.0, 900.0, 7.5
 MAX_MEMBER_MARGIN = 1 << 20   # bytes an .npz entry may hold beyond MAX_STEPS x ACTION_DIM float64 numbers (the .npy header)
@@ -120,16 +122,16 @@ def main() -> int:
         # the replays read only what was checked here (the tooling's replay unpacks every entry of the file it is given)
         traj = os.path.join(tempfile.mkdtemp(prefix="rcb_grade_"), "trajectory.npz")
         np.savez(traj, actions=acts, task=np.array(a.family))
-        t0 = time.time(); runs = []; limit = replay_timeout(int(acts.shape[0]))
-        for i in range(a.repeat):
-            video = os.path.join(LOG_DIR, "replay.mp4") if (i == a.repeat - 1 and not a.no_video) else None   # never affects the verdict
+        t0 = time.time(); runs = []; outs = []; limit = replay_timeout(int(acts.shape[0]))
+        for i in range(a.repeat):                          # stop at the first replay that succeeds
+            video = os.path.join(LOG_DIR, "replay.mp4") if not a.no_video else None   # never affects the verdict
             cmd = [sys.executable, tool, "replay", "--task", a.family, "--instance", a.instance, "--traj", traj] + (["--video", video, "--fps", str(a.video_fps)] if video else [])
             try:
                 p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=sys.stderr, text=True, timeout=limit, env={**os.environ, "RCB_SESSION_LOG": ""})
             except subprocess.TimeoutExpired:
                 print(f"[grade] replay {i + 1} exceeded its {limit:.0f} s limit ({len(acts)} rows)", file=sys.stderr, flush=True)
                 write(False, {**ERR, "replay_timed_out": 1, "replay_timeout_s": round(limit, 1), "n_actions": int(len(acts)),
-                              "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
+                              "replays": len(outs), "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
             run = {"error": f"replay process rc={p.returncode}"}
             for line in p.stdout.splitlines():             # the last JSON object the CLI printed (Isaac writes to stdout too)
                 if line.startswith("{"):
@@ -138,19 +140,25 @@ def main() -> int:
                     except ValueError:
                         continue
                     if isinstance(v, dict): run = v
-            runs.append(run)
-        outs = [(r.get("replays") or [{}])[0] for r in runs]
-        if any("error" in r or not o for r, o in zip(runs, outs)):
-            print(f"[grade] a replay process gave no result: {[r.get('error') for r in runs]}", file=sys.stderr, flush=True)
-            write(False, {**ERR, "replay_failed": 1, "n_actions": int(len(acts)), "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
+            o = (run.get("replays") or [{}])[0]
+            if "error" in run or not o:
+                print(f"[grade] replay {i + 1} gave no result: {run.get('error')}", file=sys.stderr, flush=True)
+                write(False, {**ERR, "replay_failed": 1, "n_actions": int(len(acts)), "replays": len(outs),
+                              "replay_wall_s": round(time.time() - t0, 1), **cost}); return 0
+            runs.append(run); outs.append(o)
+            if not run.get("instance_matches") or o.get("success"):   # no verdict (instance_ok 0 below), or a success
+                break
         all_success = all(o.get("success") for o in outs)
-        deterministic = len({o.get("state_sha") for o in outs}) == 1   # one replay: 1, nothing disagreed
+        deterministic = len({o.get("state_sha") for o in outs}) == 1   # evidence only; one replay: 1, nothing compared
         instance_ok = all(bool(r.get("instance_matches")) for r in runs)
-        ok = all_success and deterministic and instance_ok
+        won = next((k + 1 for k, o in enumerate(outs) if o.get("success")), 0)
+        ok = bool(won) and instance_ok
+        dec = outs[won - 1] if won else outs[-1]            # the deciding replay: the successful one, else the last
         out = {"success": int(ok), "all_success": int(all_success), "deterministic": int(deterministic),
-               "determinism_checked": int(len(outs) >= 2), "replays": len(outs),
+               "determinism_checked": int(len(outs) >= 2), "replays": len(outs), "replays_max": a.repeat,
+               "replays_succeeded": int(bool(won)), "success_replay": won,
                "instance_ok": int(instance_ok), "instance_exact": int(all(bool(r.get("instance_exact")) for r in runs)), "n_actions": int(len(acts)),
-               "sim_steps": int(outs[0].get("sim_steps") or 0), "final_reward": float(outs[-1].get("progress") or 0.0),
+               "sim_steps": int(dec.get("sim_steps") or 0), "final_reward": float(dec.get("progress") or 0.0),
                "replay_wall_s": round(time.time() - t0, 1), "replay_timeout_s": round(limit, 1),
                # the rebuilt frozen scene is not the recorded one: this host, not the trajectory (no verdict on the agent)
                "grader_error": int(not instance_ok), "infra_error": int(not instance_ok),
