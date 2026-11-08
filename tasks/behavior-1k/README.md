@@ -153,9 +153,9 @@ Time limits only; the pass rules do not depend on them. The eval hosts are 8-vCP
 start takes up to ~20 min and a replay can run below 2 control steps/s.
 - **Privileged.** The grader accepts at most **40,000 rows** (`MAX_ROWS` in `tests/grade.py`; above every challenge
   timeout, `challenge_max_steps` up to 39,090, and 1.6 times the longest recorded success, 25,404 rows); the instruction
-  states the cap. The fresh-process replay gets `min(28000 s, max(3600 s, 1200 s + steps / 1.5))` (1.5
+  states the cap. Each fresh-process replay gets `min(28000 s, max(3600 s, 1200 s + steps / 1.5))` (1.5
   steps/s is 20 % under the slowest rate measured, 1.88; 1200 s covers the slowest start). A replay over its limit is a
-  grader error (`grader_error` = 1, `replay_timed_out` = 1). `[verifier] timeout_sec` = 85800 s: the two capped replays,
+  grader error (`grader_error` = 1, `replay_timed_out` = 1). `[verifier] timeout_sec` = 113800 s: three capped replays,
   the video replay (after the verdict, with a graded replay's limit, within the verifier's remaining time:
   `VERIFIER_TIMEOUT_S`), plus 30 min.
 - **Standard.** No grading replay (graded by the live episode, below); the collect hook (`environment/sim/finalize.sh`)
@@ -204,9 +204,10 @@ the oracles give the same rewards and state hashes as with open egress, and Isaa
 dataset alone.
 
 ## Grading and determinism
-- Privileged: the verifier replays `trajectory.npz` from the frozen instance in **one fresh process** (an in-process
-  reset is approximate; the first replay in a fresh process reproduces a live run bit for bit) and needs the goal after
-  it and `instance_ok`.
+- Privileged: the verifier replays `trajectory.npz` from the frozen instance **up to 3 times** (`[metadata] replays`,
+  PROTOCOL §4), each in a fresh process (an in-process reset is approximate), and stops at the first replay that ends
+  with the goal and `instance_ok`; any such replay is a success (`replays_succeeded`, `success_replay`). Fresh replays
+  are not always bit-identical (OmniGibson declares rollouts nondeterministic), hence more than one.
 - **Standard: graded by the live episode.** `success` = the live episode's success, judged by the sim service at every
   control step with the success rule below; nothing replays the episode. On the collect hook's signal (after `main`'s
   `kill -9 -1` hook has stopped the agent's processes) the signal's thread only stops the HTTP loop (Isaac steps on the
