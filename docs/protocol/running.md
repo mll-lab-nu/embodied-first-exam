@@ -425,6 +425,13 @@ provider `base_url`s rewritten and `supports_websockets = false`). The agent is 
 `claude-code` with its own credentials: the gateway forwards model requests unchanged to the same API, never stores a key,
 and refuses any host that is not a model API (`scripts/set_agent_egress.py` HOSTS), so it is no way around an egress
 allowlist.
+One resend: an HTTP 400 from ChatGPT's `POST /backend-api/codex/responses` (since 2026-11-01 the backend answers a
+small share of well-formed requests so, mostly zstd bodies just over a multiple of 128 KiB, and Codex ends its turn on
+a 400) is sent once more without the compression: the same JSON bytes the agent compressed, the same headers without
+`Content-Encoding` and with their `Content-Length`. A body that was not zstd, or that the gateway cannot decode, goes
+again with the same bytes and headers. The agent gets the second answer as it is, or the first 400 if the resend gets
+none. Both attempts are in `usage.jsonl` (`"retried": true, "attempt": 1`, then `"attempt": 2`, both with
+`"retry_mode": "uncompressed"` or `"identical"`), `totals.json` counts `retried_400`; `--no-retry-400` turns it off.
 
 **Model-API calls only, and the only way out (Official runs above).** The gateway forwards the requests listed per provider
 in `scripts/usage_gateway/api_paths.json` (responses, messages, token counting, the model list; chat completions only
