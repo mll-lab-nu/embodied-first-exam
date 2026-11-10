@@ -42,8 +42,9 @@ FIELDS = ["bash", str(ROOT / "ci_checks/check-task-fields.sh")]
 INSTRUCTION = ["bash", str(ROOT / "ci_checks/check-instruction.sh")]
 RP_LEAK = ["bash", str(ROOT / "ci_checks/benchmarks/robopaint/invariant-leak.sh")]
 EOM_MI = [sys.executable, str(ROOT / "ci_checks/benchmarks/embodied-olympics-match/invariant-match-instance.py")]
+ARC_BIND = [sys.executable, str(ROOT / "ci_checks/benchmarks/roboarc/invariant-runtime-binding.py")]
 # the checks that enforce Appendix H (run_invariants.sh); every other check here is advisory
-INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI)
+INVARIANT_CMDS = (ISOLATION, POINTERS, TWINS, INSTANCE, STDIMG, MONITOR, DIGESTS, RP_LEAK, EOM_MI, ARC_BIND)
 WITH_NEIGHBOURS = (IDENTITY, TWINS, EOM_MI)   # run on the broken copy among (links to) every other task
 
 STD = "behavior-boxing-books-up-for-storage-i00-standard"      # a sim sidecar with a trusted cache volume
@@ -419,6 +420,9 @@ MUTATIONS = [
      sub(r"^\{", '{"x": 1, ', count=1, flags=0), INSTANCE, "differ"),
     ("the verifier's instance lock is not the one the task runs from", ARC_P, "tests/runtime_binding.json",
      sub(r"^\{", '{"x": 1, ', count=1, flags=0), INSTANCE, "differ"),
+    ("the tooling a RoboARC container loads is not the one its runtime binding pins", ARC_P, "environment/runtime_binding.json",
+     sub(r'"tooling_sha256": "[0-9a-f]{64}"', '"tooling_sha256": "' + "0" * 64 + '"', flags=0), ARC_BIND,
+     "the simulator refuses this session"),
     ("a match's frozen settings differ from its realtime twin's", EOM_P, "tests/match_instance.json",
      sub(r'"seed": 7\b', '"seed": 8', flags=0), EOM_MI, "has seed = 8"),
     ("a match's frozen level differs from its realtime twin's", EOM_P, "tests/match_instance.json",
