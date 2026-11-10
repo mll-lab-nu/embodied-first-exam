@@ -45,11 +45,13 @@ RUN rm -rf /behavior-src && git init -q /behavior-src && cd /behavior-src && \
     git fetch -q --depth 1 https://github.com/kmy17518/BEHAVIOR-1K.git ${B1K_COMMIT} && git checkout -q FETCH_HEAD && rm -rf .git && \
     pip install --no-cache-dir --no-deps -e /behavior-src/OmniGibson -e /behavior-src/bddl3
 # setup.sh --omnigibson: the OmniGibson dependencies the official install leaves out (its REPAIR_SPECS), then iSpatialGym
-# itself (editable, as setup.sh installs it). The constraints fix every version this adds or changes on behavior-base
-# (from the first build's pip freeze), and the build fails unless the resulting `pip list` is the tested image's (sha256).
+# itself (editable, as setup.sh installs it). setup.sh's version ranges are fixed to the versions of the tested image (the
+# official image already holds av, datasets, pyarrow, pandas and numpy at them; the step changes only pillow and warp-lang),
+# and the build fails unless the resulting `pip list` is images/ispatialgym/pip.lock (the tested image's; compared by
+# sha256, so the recipe needs no file from this repository).
 RUN printf '%s\n' pillow==11.0.0 warp-lang==1.12.0 > /tmp/constraints.txt && export PIP_CONSTRAINT=/tmp/constraints.txt && \
-    pip install --no-cache-dir "warp-lang==1.12.0" "av>=15.0.0,<16.0.0" "datasets>=4.0.0,<5.0.0" "pyarrow<26" \
-        "pillow~=11.0.0" "pandas<3" "numpy<2" && \
+    pip install --no-cache-dir "warp-lang==1.12.0" "av==15.1.0" "datasets==4.8.5" "pyarrow==25.0.1" \
+        "pillow==11.0.0" "pandas==2.3.3" "numpy==1.26.0" && \
     git init -q /opt/ispatialgym && cd /opt/ispatialgym && \
     git fetch -q --depth 1 https://github.com/kmy17518/iSpatialGym.git ${ISG_COMMIT} && git checkout -q FETCH_HEAD && \
     rm -rf .git .gitmodules Behavior-1K && \
@@ -57,8 +59,10 @@ RUN printf '%s\n' pillow==11.0.0 warp-lang==1.12.0 > /tmp/constraints.txt && exp
     mkdir -p /data && cp -r /opt/ispatialgym/ispatialgym/assets/datasets/ispatialgym-assets /data/ispatialgym-assets && \
     python -c "import omnigibson, ispatialgym.run_isg, ispatialgym.eval.loader" && \
     python -m pip list --format=freeze 2>/dev/null | LC_ALL=C sort > /tmp/pip.state && \
-    { echo "2c9f1fb29308dbec2d5c523006d5d4ef7e03b2fc83f600940872ac12f9be35c4  /tmp/pip.state" | sha256sum -c - || \
-      { echo "pip packages differ from the tested image's:" >&2; cat /tmp/pip.state >&2; exit 1; }; } && \
+    { echo "1ca2e10ba91e36facc1ad53b2cd47358374fd7dcda5884fca34c6fcd50906367  /tmp/pip.state" | sha256sum -c - || \
+      { echo "pip packages differ from images/ispatialgym/pip.lock (the tested image): this build cannot reproduce the" \
+          "pinned base (docs/protocol/running.md, Base images). Packages installed here:" >&2; \
+        cat /tmp/pip.state >&2; exit 1; }; } && \
     rm /tmp/constraints.txt /tmp/pip.state
 # the licensed dataset: a task mounts $RCB_BEHAVIOR_DATA whole at /bdata (read-only); OmniGibson reads its parts at /data,
 # next to the image's own ispatialgym-assets

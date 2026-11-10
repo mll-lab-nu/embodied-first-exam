@@ -7,8 +7,8 @@ Nobody has to pull it. Every iSpatialGym task Dockerfile that runs the simulator
 with images/behavior/Dockerfile, verbatim), and its compose service names the private image as `build.cache_from`: a
 runner that can pull it reuses its layers, any other runner builds the same layers from public sources (Docker Hub,
 snapshot.ubuntu.com, github.com: kmy17518/BEHAVIOR-1K and kmy17518/iSpatialGym by commit, pypi.org). The build fails unless
-the apt state is images/behavior/dpkg.lock's and the pip state the tested image's (both compared by sha256). The recipe
-needs no build context. To build the image by hand:
+the apt state is images/behavior/dpkg.lock's and the pip state images/ispatialgym/pip.lock's (the tested image's
+`pip list`; both compared by sha256). The recipe needs no build context. To build the image by hand:
   docker build --build-arg BUILDKIT_INLINE_CACHE=1 -t ghcr.io/mll-lab-nu/efe-private:ispatialgym-$(cat images/ispatialgym/VERSION) \
     - < images/ispatialgym/Dockerfile
 

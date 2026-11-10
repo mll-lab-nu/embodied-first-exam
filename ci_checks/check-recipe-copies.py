@@ -5,20 +5,33 @@ A base image built on another one's recipe (images/<name>/Dockerfile starting wi
 recipe between `# >>> images/<other>/Dockerfile` and `# <<< images/<other>/Dockerfile`, as task Dockerfiles do
 (scripts/task_conventions.py normalize_base_stages writes those; this check covers the images/ side). Every such block
 must be the current images/<other>/Dockerfile byte for byte; `--fix` rewrites the blocks. A change to the inner recipe
-then shows up here, and the outer image needs a new VERSION once its built layers change. Standard library only.
+then shows up here, and the outer image needs a new VERSION once its built layers change.
+A recipe that checks a package state by a literal sha256 (`echo "<sha256>  /tmp/<x>.state" | sha256sum -c -`, so it needs
+no build context) must name the hash of a committed lock file, images/<name>/*.lock: a hash nobody can reproduce makes
+every build from public sources fail. Standard library only.
 Usage: check-recipe-copies.py [--fix]   (repo-level; run_all.sh calls it once)
 """
+import hashlib
 import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 BLOCK_RE = re.compile(r"(?ms)^# >>> (images/[A-Za-z0-9_.-]+/Dockerfile)\n.*?^# <<< \1\n")
+STATE_HASH_RE = re.compile(r'echo "([0-9a-f]{64})  /tmp/[A-Za-z0-9_.-]+\.state" \| sha256sum -c')
 
 
 def main(argv: list[str]) -> int:
     fix = "--fix" in argv
     bad = n = 0
+    locks = {hashlib.sha256(f.read_bytes()).hexdigest(): f for f in sorted((ROOT / "images").glob("*/*.lock"))}
+    for df in sorted((ROOT / "images").glob("*/Dockerfile")):
+        for h in STATE_HASH_RE.findall(df.read_text()):
+            n += 1
+            if h not in locks:
+                bad += 1
+                print(f"FAIL {df.relative_to(ROOT)}: checks a package state against sha256 {h[:12]}..., which is no "
+                      f"committed images/*/*.lock (commit the tested image's list as the lock its message names)")
     for df in sorted((ROOT / "images").glob("*/Dockerfile")):
         s = df.read_text()
         if "# >>> images/" not in s:
@@ -44,7 +57,7 @@ def main(argv: list[str]) -> int:
             print(f"fixed {df.relative_to(ROOT)}")
     if bad:
         return 1
-    print(f"ok recipe copies: {n} block(s) in images/*/Dockerfile match their source")
+    print(f"ok recipe copies: {n} block(s) and state hash(es) in images/*/Dockerfile match their source")
     return 0
 
 
