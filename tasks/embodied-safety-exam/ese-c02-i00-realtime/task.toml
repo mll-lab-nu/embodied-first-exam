@@ -53,6 +53,12 @@ ese_visual_revision = "realism_v3-b5bf312-dog-fallen-power-detail-v2"
 ese_interface = "control"
 ese_clock = "realtime"
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [0, 1, 2]
+oracle = [0, 1, 2]
+
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"
