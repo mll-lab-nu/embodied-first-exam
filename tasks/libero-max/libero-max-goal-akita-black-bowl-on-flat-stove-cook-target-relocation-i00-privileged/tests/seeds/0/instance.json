@@ -1,0 +1,66 @@
+{
+ "case": {
+  "case_id": "pro-semantic-goal-t01-i00-target_relocation-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 0,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/semantic/libero_goal/task_1",
+   "change": {
+    "calibration": "deterministic_candidate_requires_preflight",
+    "delta_position_m": [
+     0.0,
+     -0.12,
+     0.0
+    ],
+    "direction_xy": [
+     0.0,
+     -1.0
+    ],
+    "distance_m": 0.12,
+    "object": "akita_black_bowl_1",
+    "operation": "move_object",
+    "support_entity": "main_table"
+   },
+   "change_family": "GEO",
+   "change_type": "target_relocation",
+   "expected_response_mode": "replan",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 4260983530
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-semantic-goal-t01-i03-target_relocation-d1",
+   "seed": 4260983530,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "akita_black_bowl_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/semantic",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_goal_lan/put_the_bowl_on_the_stove.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "semantic",
+   "init_reference_bddl_file": "libero_goal_lan/put_the_bowl_on_the_stove.bddl",
+   "init_states_file": "libero_goal_lan/put_the_bowl_on_the_stove.pruned_init",
+   "language": "place the bowl on the stove",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 1,
+  "task_name": "put_the_bowl_on_the_stove",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "7ebb80cb3977b0561bd80ff99ce54ed896c4740690ae2076cf6044c203fbe4b8",
+ "instance_sha": "d7c4c77a2bc192e195943433b18a83e45da13ba08c5f281b39bc5b17533d6e9d",
+ "schema": "eai-libero-max-instance/1"
+}

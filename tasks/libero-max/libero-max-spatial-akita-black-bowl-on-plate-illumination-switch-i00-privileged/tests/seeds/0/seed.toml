@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-object-shape-spatial-t01-i01-illumination_switch-d0-p195"
+new = "pro-object-shape-spatial-t01-i00-illumination_switch-d0-p195"
+
+[[replace]]
+old = "initial state 1)"
+new = "initial state 0)"

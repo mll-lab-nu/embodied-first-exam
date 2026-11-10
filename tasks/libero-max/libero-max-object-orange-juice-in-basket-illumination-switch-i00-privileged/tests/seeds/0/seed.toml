@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-object-texture-object-t09-i05-illumination_switch-d1-p195"
+new = "pro-object-texture-object-t09-i00-illumination_switch-d1-p195"
+
+[[replace]]
+old = "initial state 5)"
+new = "initial state 0)"

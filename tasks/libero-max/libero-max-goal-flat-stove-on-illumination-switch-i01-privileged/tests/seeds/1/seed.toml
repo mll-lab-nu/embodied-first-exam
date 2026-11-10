@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-initial-pose-position-angle-goal-t07-i06-illumination_switch-d0-p195"
+new = "pro-initial-pose-position-angle-goal-t07-i01-illumination_switch-d0-p195"
+
+[[replace]]
+old = "initial state 6)"
+new = "initial state 1)"

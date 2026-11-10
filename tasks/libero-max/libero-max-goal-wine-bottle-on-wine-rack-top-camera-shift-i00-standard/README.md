@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-goal-wine-bottle-on-wine-rack-top-camera-shift-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |
-| Family / instance | `libero-max/libero_goal/camera_shift` / seed 195 |
+| Family / instance | `libero-max/libero_goal/camera_shift` / seed 195 (allowed seeds: [195, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |

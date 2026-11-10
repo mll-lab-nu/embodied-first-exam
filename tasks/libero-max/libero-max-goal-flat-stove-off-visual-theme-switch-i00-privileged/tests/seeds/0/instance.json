@@ -1,0 +1,63 @@
+{
+ "case": {
+  "case_id": "pro-task-goal-t07-i00-visual_theme_switch-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 0,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/task/libero_goal/task_7",
+   "change": {
+    "operation": "set_visual_theme",
+    "rgb_multiplier": [
+     1.25,
+     0.7,
+     1.1
+    ],
+    "rgb_permutation": [
+     1,
+     2,
+     0
+    ]
+   },
+   "change_family": "OBS",
+   "change_type": "visual_theme_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 2478260344
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-task-goal-t07-i02-visual_theme_switch-d1",
+   "seed": 2478260344,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "flat_stove_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/task",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_goal_task/turn_on_the_stove.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "task",
+   "init_reference_bddl_file": "libero_goal_task/turn_on_the_stove.bddl",
+   "init_states_file": "libero_goal_task/turn_on_the_stove.pruned_init",
+   "language": "Turn off the stove",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 7,
+  "task_name": "turn_on_the_stove",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "490aac0e08cbd7fb1e4ded7f4beae683464e7b985ac0d93dd3151d38a5b6253a",
+ "instance_sha": "2933bc939a91d6752eee8f20f5001816eb10f46469b44f58ffac33c33464268e",
+ "schema": "eai-libero-max-instance/1"
+}

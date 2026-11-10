@@ -1,0 +1,63 @@
+{
+ "case": {
+  "case_id": "pro-semantic-10-t04-i01-visual_theme_switch-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 1,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/semantic/libero_10/task_4",
+   "change": {
+    "operation": "set_visual_theme",
+    "rgb_multiplier": [
+     1.25,
+     0.7,
+     1.1
+    ],
+    "rgb_permutation": [
+     1,
+     2,
+     0
+    ]
+   },
+   "change_family": "OBS",
+   "change_type": "visual_theme_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 1769684144
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-semantic-10-t04-i09-visual_theme_switch-d1",
+   "seed": 1769684144,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "porcelain_mug_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/semantic",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_10_lan/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "semantic",
+   "init_reference_bddl_file": "libero_10_lan/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.bddl",
+   "init_states_file": "libero_10_lan/LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate.pruned_init",
+   "language": "place white mug on left plate and yellow-white mug on right plate",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 4,
+  "task_name": "LIVING_ROOM_SCENE5_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_right_plate",
+  "task_suite_name": "libero_10",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "66d6339a5048b813ee766bdaf0b645a918e9422779cde121cc82210ddb23be15",
+ "instance_sha": "90820bbfdb0608fa049fef9edb19a46349c72b0d37bb647ffae03184744b9729",
+ "schema": "eai-libero-max-instance/1"
+}

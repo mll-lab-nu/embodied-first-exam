@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-semantic-goal-t04-i02-obstacle_insertion-d0-p195"
+new = "pro-semantic-goal-t04-i00-obstacle_insertion-d0-p195"
+
+[[replace]]
+old = "initial state 2)"
+new = "initial state 0)"

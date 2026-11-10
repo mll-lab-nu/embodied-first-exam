@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-object-shape-object-t09-i04-distractor_burst-d0-p195"
+new = "pro-object-shape-object-t09-i01-distractor_burst-d0-p195"
+
+[[replace]]
+old = "initial state 4)"
+new = "initial state 1)"

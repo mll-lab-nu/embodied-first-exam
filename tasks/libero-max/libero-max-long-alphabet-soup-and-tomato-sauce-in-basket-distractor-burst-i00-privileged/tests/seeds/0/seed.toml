@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-initial-pose-position-angle-10-t00-i01-distractor_burst-d0-p195"
+new = "pro-initial-pose-position-angle-10-t00-i00-distractor_burst-d0-p195"
+
+[[replace]]
+old = "initial state 1)"
+new = "initial state 0)"

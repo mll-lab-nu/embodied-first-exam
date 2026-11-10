@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `libero-max-goal-akita-black-bowl-in-wooden-cabinet-top-target-relocation-i00-privileged` |
 | Simulator / robot | `robosuite` / `franka-panda` |
-| Family / instance | `libero-max/libero_goal/target_relocation` / seed 195 |
+| Family / instance | `libero-max/libero_goal/target_relocation` / seed 195 (allowed seeds: [195, 0, 1]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:libero-max-0.1.1` |
