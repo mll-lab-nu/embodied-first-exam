@@ -131,14 +131,16 @@ def materialize(task: Path, seed: int, out: Path) -> Path:
                 raise SystemExit(f"{task.name}: seed {seed}'s {rel} would replace {rel} (not a per-seed file)")
             if (dst / rel).is_file():
                 shutil.copyfile(src / rel, dst / rel); done.add(rel)
-        if top and not any(d.rsplit("/", 1)[-1] in top for d in done):   # never a copy that says seed S and runs the default instance
-            raise SystemExit(f"{task.name}: no instance copy found to replace with seed {seed}'s ({', '.join(places(task))})")
+        changed = 0
         for f in text_files(dst, done | set(NOT_OVERLAID)):
             s = t = f.read_text()
             for old, new in repl:
                 t = t.replace(old, new)
             if t != s:
-                f.write_text(t)
+                f.write_text(t); changed += 1
+        if not done and not changed:               # never a copy that says seed S and runs the default instance
+            raise SystemExit(f"{task.name}: none of seed {seed}'s files or text found a place in this task "
+                             f"({', '.join(places(task))})")
     elif seed != sd["default"]:
         if sd["build"] != "runtime":
             raise SystemExit(f"{task.name}: seed {seed} has no frozen instance under {src}")

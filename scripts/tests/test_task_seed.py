@@ -72,6 +72,18 @@ def pinned_pair() -> None:
             assert "seed five" in text and line not in text, t.name
             assert start not in "".join(f.read_text(errors="replace") for f in m.rglob("*.yaml")), t.name
         assert f'RCB_START_SHA: "{"5" * 64}"' in (out_dir / std.name / "environment" / "docker-compose.yaml").read_text()
+        # a per-instance file only the privileged task has: the standard copy still gets the seed's text
+        (d / "goal.json").write_text("seed 5 goal")
+        (priv / "environment" / "goal.json").write_text("seed 0 goal")
+        (priv / "tests" / "goal.json").write_text("seed 0 goal")
+        rc, out = run(CHECK + [str(priv), str(std)])
+        assert rc == 0, out
+        for t in (priv, std):
+            rc, out = run(SEED + ["materialize", str(t), "--seed", "5", "--out", str(Path(td) / "run-goal")])
+            assert rc == 0, out
+        assert (Path(td) / "run-goal" / priv.name / "tests" / "goal.json").read_text() == "seed 5 goal"
+        for f in (d / "goal.json", priv / "environment" / "goal.json", priv / "tests" / "goal.json"):
+            f.unlink()
         rc, out = run(SEED + ["materialize", str(std), "--seed", "0", "--out", str(Path(td) / "run0")])
         assert rc == 0 and start in (Path(td) / "run0" / std.name / "environment" / "docker-compose.yaml").read_text(), out
         # files that would land nowhere, text that is in no file, a seed.toml with anything but replacements
