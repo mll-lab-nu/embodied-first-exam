@@ -1,0 +1,7 @@
+[[replace]]
+old = "`kinder/ScoopPour3D-o50-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode"
+new = "`kinder/ScoopPour3D-o50-v0` (Dynamic3D, TidyBot++), seed 1, privileged mode"
+
+[[replace]]
+old = "(`kinder/ScoopPour3D-o50-v0`, seed\n0)"
+new = "(`kinder/ScoopPour3D-o50-v0`, seed\n1)"

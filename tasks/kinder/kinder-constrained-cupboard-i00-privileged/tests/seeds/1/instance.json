@@ -1,0 +1,6 @@
+{
+ "env_id": "kinder/ConstrainedCupboard3D-o6-v0",
+ "seed": 1,
+ "max_steps": 1000,
+ "scene_sha": "9e5b06cef91ccd3d"
+}

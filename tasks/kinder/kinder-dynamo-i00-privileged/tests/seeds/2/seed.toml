@@ -1,0 +1,19 @@
+[[replace]]
+old = "`kinder/Dynamo3D-o3-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode"
+new = "`kinder/Dynamo3D-o3-v0` (Dynamic3D, TidyBot++), seed 2, privileged mode"
+
+[[replace]]
+old = "(`kinder/Dynamo3D-o3-v0`, seed\n0)"
+new = "(`kinder/Dynamo3D-o3-v0`, seed\n2)"
+
+[[replace]]
+old = "Measured at the start, in the odometry frame (below): the green square's centre is at x = 5.12 m, y = -2.48 m, 5.7 m from the centre of the base and 26° to the right of the way it faces; it is 0.85 m along x by 0.85 m along y, its sides turned about 7° counter-clockwise (seen from above) from the frame's axes."
+new = "Measured at the start, in the odometry frame (below): the green square's centre is at x = 1.88 m, y = 4.93 m, 5.3 m from the centre of the base and 69° to the left of the way it faces; it is 0.85 m along x by 0.85 m along y, its sides turned about 28° counter-clockwise (seen from above) from the frame's axes."
+
+[[replace]]
+old = "the privileged oracle's 101 moves"
+new = "the privileged oracle's 87 moves"
+
+[[replace]]
+old = "success at step 101"
+new = "success at step 87"

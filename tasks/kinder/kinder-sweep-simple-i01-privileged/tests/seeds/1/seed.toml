@@ -1,0 +1,11 @@
+[[replace]]
+old = "`kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode"
+new = "`kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0` (Dynamic3D, TidyBot++), seed 1, privileged mode"
+
+[[replace]]
+old = "(`kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0`, seed\n0)"
+new = "(`kinder/SweepSimple3D-o50-sweep_the_blocks_to_the_right_side_of_the_kitchen_island-v0`, seed\n1)"
+
+[[replace]]
+old = "Measured at the start, in the odometry frame (below): the grey box's centre is at x = 0.51 m, y = 0.06 m, 0.5 m from the centre of the base and 7° to the left of the way it faces; it is 0.475 m along x by 0.85 m along y, from the floor to 0.1 m up, its sides turned about 3° clockwise (seen from above) from the frame's axes."
+new = "Measured at the start, in the odometry frame (below): the grey box's centre is at x = 0.42 m, y = 0.02 m, 0.4 m from the centre of the base and straight ahead; it is 0.475 m along x by 0.85 m along y, from the floor to 0.1 m up, its sides turned about 3° clockwise (seen from above) from the frame's axes."
