@@ -1,0 +1,23 @@
+{
+ "benchmark": "MuJoCo Playground",
+ "env": "PandaPickCubeOrientation",
+ "seed": 60418,
+ "box_pos": [
+  0.49517839638862393,
+  0.06765420452806409,
+  0.03
+ ],
+ "target_pos": [
+  0.5664796553284994,
+  -0.13271510362206942,
+  0.2877901892955307
+ ],
+ "target_quat_wxyz": [
+  0.9903790396639737,
+  0.08025794979718544,
+  -0.06760051802465168,
+  -0.0902119130238153
+ ],
+ "text": "Pick up the green box and hold it at the translucent red target box, in the target box orientation.",
+ "state_sha": "64d73adddb1e"
+}

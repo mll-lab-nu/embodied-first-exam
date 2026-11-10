@@ -25,6 +25,12 @@ expert_time_estimate_hours = 2.0
 protocol = "eai-standard/2.1"
 oracle = "full"
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [60417, 60418, 60419]
+oracle = [60417, 60418, 60419]
+
 [verifier]
 timeout_sec = 1200.0
 environment_mode = "separate"

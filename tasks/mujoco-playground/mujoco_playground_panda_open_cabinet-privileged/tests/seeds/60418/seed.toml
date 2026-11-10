@@ -1,0 +1,7 @@
+[[replace]]
+old = "/ seed 60417 (allowed"
+new = "/ seed 60418 (allowed"
+
+[[replace]]
+old = "drawn with seed 60417;"
+new = "drawn with seed 60418;"

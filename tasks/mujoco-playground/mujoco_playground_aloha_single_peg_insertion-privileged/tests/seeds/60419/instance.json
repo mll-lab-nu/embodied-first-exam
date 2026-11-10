@@ -1,0 +1,15 @@
+{
+ "benchmark": "MuJoCo Playground",
+ "env": "AlohaSinglePegInsertion",
+ "seed": 60419,
+ "peg_xy_offset": [
+  0.05615711523864611,
+  -0.07270854640185542
+ ],
+ "socket_xy_offset": [
+  0.08975899104504712,
+  -0.07647672183660843
+ ],
+ "text": "Pick up the blue socket with one arm and the red peg with the other, lift both, and insert the peg end into the socket open end.",
+ "state_sha": "7c32738d8a0c"
+}
