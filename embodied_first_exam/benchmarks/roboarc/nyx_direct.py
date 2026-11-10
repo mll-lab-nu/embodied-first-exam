@@ -24,7 +24,7 @@ export and drive it. This module produces the same Nyx input without genesis-wor
 Imports: numpy, trimesh, mujoco, topogym's Genesis-free helpers and gs_nyx; never genesis. CUDA buffers go through
 the driver API with ctypes (libcuda.so.1). torch, when importable, runs the camera arithmetic so that it matches
 today's host bit for bit (its CPU float32 kernels decide the last bit); without it a numpy replica is used.
-Depth needs an OpenGL context (EGL on headless GPUs).
+Depth needs an OpenGL context (EGL on headless GPUs). docs/rcb/RENDER_BRIDGE.md has the evidence.
 
 Licence note: gs-nyx 0.1.3 / gs-nyx-plugin 0.1.4 ship without a licence file; their documentation repository
 (Genesis-Embodied-AI/nyx-for-genesis) is Apache-2.0. No plugin code is copied here: this module calls gs_nyx's

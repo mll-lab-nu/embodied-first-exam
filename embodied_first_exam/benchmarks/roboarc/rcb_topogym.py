@@ -1,6 +1,6 @@
 """
 rcb_topogym.py — task-local tooling for TopoGym (Genesis 1.2.1 physics on CUDA, Nyx RGB): frozen instance / privileged
-primitives / action recording / replay. Same shape as Embodied First Exam's rcb_robowits.py (fa59c1a6), so agents and
+primitives / action recording / replay. Same shape as robot_coding_bench's rcb_robowits.py (fa59c1a6), so agents and
 verifiers share one mental model across benchmarks.
 
 Concepts
@@ -16,7 +16,7 @@ trajectory : the (T, action_dim) JOINT_ABS actions handed to the simulator, one 
              families and lock_picking, whose contact solver is not bit-deterministic (repeated replays agree to ~1e-11
              in the state but not bit for bit), and the CPU for the other rigid families, whose replays are
              bit-deterministic on one host. Either way `deterministic` (state hashes equal) is reported and not
-             required; every replay must complete the task (the same rule as Embodied First Exam's GPU backend). Nyx
+             required; every replay must complete the task (the same rule as robot_coding_bench's GPU backend). Nyx
              renders on the GPU in both cases.
 episode end: a task's success predicate, or one of its failure predicates (e.g. touching the buzz wire), ends the
              simulated episode: later steps do not change the execution ledger or scene, and status()["episode_end"] says
@@ -198,7 +198,7 @@ def _slog(ev: str, **kw) -> None:
             pass
 
 
-DEFAULT_BACKEND = "cuda"          # Embodied First Exam's GPU-backend rule (determinism reported, not required); the physics device is the instance's
+DEFAULT_BACKEND = "cuda"          # robot_coding_bench's GPU-backend rule (determinism reported, not required); the physics device is the instance's
 MAX_STEPS = int(os.environ.get("RCB_MAX_STEPS", "200000"))   # runaway guard on a trajectory's length, not a budget
 
 # --------------------------------------------------------------------------- task family registry
@@ -318,7 +318,7 @@ TASKS: dict[str, dict] = {
 for _name, _t in TASKS.items():
     _t.setdefault("simulator", {}); _t.setdefault("grasp_assist", None); _t.setdefault("fixture", False)
     _t.update(simulator_name="topogym", image="topogym")
-# Tooling v7 (a speed study): these rigid families simulate
+# Tooling v7 (2026-10-02 speed study, robot_coding_bench jobs/journal/2026-10-02/rigid_fast/): these rigid families simulate
 # on the CPU in float64 with one global constraint solve (use_contact_island False); Nyx still renders on the GPU. Against
 # v6's GPU float32: 2-3x faster control steps, sims on one host do not slow each other, replays bit-deterministic on one
 # host, outcomes / per-substep contact penetration / trajectory deviation inside the GPU's own noise envelope, frames
@@ -330,7 +330,7 @@ for _name in ("buzz_wire_3d", "cast_coil", "cast_keyhole", "fiber_bundling", "he
                                  "rigid_options": {"use_contact_island": False}}
 # lock_picking keeps v6's GPU float32 (slower on the CPU).
 TASKS["lock_picking"]["simulator"] = {**TASKS["lock_picking"]["simulator"], "precision": "32"}
-# MuJoCo (the Genesis -> MuJoCo migration): these families build new instances on
+# MuJoCo (2026-10-09, the Genesis -> MuJoCo migration; docs/rcb/MUJOCO_CORE.md): these families build new instances on
 # topogym.world.mujoco (CPU float64; the scene frozen with the instance). Released Genesis instances keep their own frozen
 # simulator configuration and still load on Genesis.
 for _name in ("interlocked_claws", "fiber_bundling", "hedgehog_in_cage", "cast_keyhole", "lock_picking", "buzz_wire_3d", "horseshoe_ring", "cast_coil"):
@@ -346,7 +346,7 @@ TASKS["lock_picking"]["simulator"]["task_parameters"] = {"stop_frame_cap_step_de
 # (task parameter cord_model "chain"). simulator_config routes inside the family's leave-IPC branch, per variation.
 MUJOCO_CHAIN_FAMILIES = ("slotted_post_ring", "orbits")
 # Their settling before the birth (reset_physics_steps, 2.5 ms ticks; frozen with the instance, mujoco_settled_state),
-# measured on MuJoCo 3.14 with the exact constraint diagonal (2026-10-10):
+# measured on MuJoCo 3.14 with the exact constraint diagonal (2026-10-10; runs/robotangle_mujoco/v2/slotted_orbits/settle):
 # each setting held from its authored pose for 150 s of nop, every movable body sampled each second. The value is the
 # shortest settling after which every 10 s window moves every body at most 1 mm (as far as measured), rounded up with a
 # margin. A light chain draped over the post, the ring or the posts keeps sliding slowly after its fall; the windows
@@ -375,7 +375,7 @@ MUJOCO_CHAIN_SETTLE_S = {
     **dict.fromkeys(("orbits_easy", "orbits_medium", "orbits_hard", "orbits_reference85"), 35.),
     "orbits_very_easy": 3., "orbits_easier": 3.,
 }
-# Tooling v9 (an IPC speed study): one IPC solver substep per
+# Tooling v9 (2026-10-02 IPC speed study, robot_coding_bench jobs/journal/2026-10-02/ipc_fast/): one IPC solver substep per
 # 2.5 ms tick (was four) with Newton / PCG tolerances 1e-3 / 1e-5 (were 1e-4 / 1e-6), from a scene settled for N ticks
 # before the instance is frozen (the v5 instances were not at rest at t = 0). Against substeps 4 from the same settled
 # state: rope_threading 8.1x, slotted_post_ring 9.2x per control step (10.7x / 10.1x with libuipc's linear_bvh broad phase
@@ -392,7 +392,7 @@ for _name, _ticks in (("rope_threading", 300), ("slotted_post_ring", 800), ("kno
     TASKS[_name]["simulator"] = {**TASKS[_name]["simulator"], "solver_substeps": 1, "reset_physics_steps": _ticks,
                                  "ipc_options": {"newton_tolerance": 1e-3, "linear_system_tolerance": 1e-5,
                                                  "collision_detection_method": "linear_bvh"}}
-# Tooling v18 (knot K2, 2026-10-05): knot_untying's IPC frame is 5 ms (5 ticks per
+# Tooling v18 (knot K2, 2026-10-05; lab topogym_v1/topospeed/NOTES.md): knot_untying's IPC frame is 5 ms (5 ticks per
 # 25 ms control step, the control period unchanged) and its Newton solve semi-implicit with at least 3 iterations per frame
 # (libuipc newton_semi_implicit_enable + newton_min_iterations). Its full Newton solve to 1e-3 at 2.5 ms spent 13-16
 # iterations per frame. Rejected on the way (tet volume ratio per phase against
@@ -404,7 +404,7 @@ TASKS["knot_untying"]["simulator"] = {
     **TASKS["knot_untying"]["simulator"], "physics_dt_s": 0.005, "control_decimation": 5, "reset_physics_steps": 300,
     "ipc_options": {**TASKS["knot_untying"]["simulator"]["ipc_options"], "newton_semi_implicit_enable": True,
                     "newton_min_iterations": 3}}
-# MuJoCo: knot_untying builds new instances on topogym.world.mujoco,
+# MuJoCo (docs/rcb/MUJOCO_CORE.md): knot_untying builds new instances on topogym.world.mujoco,
 # the rope a rigid capsule chain (topogym/world/mujoco/rope_chain.py) born from a released instance's frozen IPC state
 # (SimulatorConfig.mujoco_birth). The released control period and tick stay (5 ms x 5 = 25 ms); 8 MuJoCo steps per tick.
 TASKS["knot_untying"]["simulator"] = {
@@ -416,14 +416,14 @@ TASKS["rope_threading"]["simulator"] = {
     **{k: v for k, v in TASKS["rope_threading"]["simulator"].items() if k != "ipc_options"},
     "compute_backend": "cpu", "precision": "64", "physics_engine": "mujoco", "physics_dt_s": 0.04, "control_decimation": 1,
     "solver_substeps": 64, "reset_physics_steps": 0}
-# MuJoCo: blanket_flatten builds new instances on
+# MuJoCo (docs/rcb/MUJOCO_CORE.md): blanket_flatten builds new instances on
 # topogym.world.mujoco, the PBD cloth a 2D flex over contact-sphere vertices (topogym/world/mujoco/cloth.py) born from a
 # released instance's frozen PBD particles (SimulatorConfig.mujoco_birth: that instance.json). The released tick and
 # control period stay (2.5 ms x 10 = 25 ms); one MuJoCo step per tick.
 TASKS["blanket_flatten"]["simulator"] = {**TASKS["blanket_flatten"]["simulator"], "compute_backend": "cpu",
                                          "precision": "64", "physics_engine": "mujoco", "solver_substeps": 1}
 TASKS["blanket_fold"]["simulator"] = dict(TASKS["blanket_flatten"]["simulator"])     # the same cloth scene
-# Renderer (Nyx without Genesis): the MuJoCo instances of these families render
+# Renderer (2026-10-10; docs/rcb/RENDER_BRIDGE.md, "Nyx without Genesis"): the MuJoCo instances of these families render
 # with nyx_direct.py (next to this file), which feeds Nyx from the MuJoCo world without a Genesis host; their binding
 # names it (nyx_direct_sha256). The other families' MuJoCo instances keep the render bridge's Genesis host ("nyx", the
 # default). RCB_RENDER, when set, overrides the field (_render_bridge).
@@ -432,15 +432,15 @@ for _name in ("blanket_flatten", "blanket_fold", "buzz_wire_3d", "fiber_bundling
     TASKS[_name]["renderer"] = "direct"
 # cast_coil: every MuJoCo instance of the family, the five released tiers and the v2 design tiers
 # alike. Released tiers at birth: nyx_direct's input buffers equal the host's bit for bit, at most 12 pixels > 8 levels
-# apart (cam_high).
+# apart (cam_high; runs/robotangle_mujoco/v2/cast_coil/step2_summary.json).
 TASKS["cast_coil"]["renderer"] = "direct"
 # cast_keyhole: the five released tiers. At birth nyx_direct's input buffers equal the host's bit
-# for bit.
+# for bit (runs/robotangle_mujoco/v2/cast_keyhole/step3_summary.json).
 TASKS["cast_keyhole"]["renderer"] = "direct"
 # slotted_post_ring and orbits: every MuJoCo tier, the chain settings and the FEM settings whose cord
 # is a chain (nyx_direct.chain_cord_host draws those as the FEM setting, as the bridge does). At birth and after a 40-row
 # nop: input buffers bitwise but rounding at birth, RGB within the host's own run-to-run spread (#108's coincident post
-# boxes flicker on the host too).
+# boxes flicker on the host too); runs/robotangle_mujoco/v2/slotted_orbits/nyxtest.
 for _name in ("orbits", "slotted_post_ring"):
     TASKS[_name]["renderer"] = "direct"
 
@@ -586,7 +586,7 @@ def _np(x) -> np.ndarray:
 
 # --------------------------------------------------------------------------- the infrastructure family: a cube
 # Not one of the benchmark's 13 families: the example task that exercises the whole pipeline with a short solution
-# (Embodied First Exam's robosuite example plays the same role). Registered in-process by Session.
+# (robot_coding_bench's robosuite example plays the same role). Registered in-process by Session.
 def _cube_classes():
     from copy import deepcopy
     from dataclasses import replace
@@ -1203,7 +1203,7 @@ def _speed_up_knot_predicate(task_id: str) -> bool:
 
 
 # --------------------------------------------------------------------------- physical-validity policy (tooling v16)
-# A rules audit (every finished v12 failure
+# The 2026-10-03 rules audit (robot_coding_bench jobs/journal/2026-10-03/rules_audit/AUDIT.md: every finished v12 failure
 # classified, nine trajectories replayed) found TopoGym's any-tick 1 mm contact limit and its any-tick tet-inversion rule
 # without margin; v14's replacement (R1: a rigid task contact deeper than 3 mm, or deeper than 1 mm for 0.25 s, failed the
 # episode) still ended passive impacts: v14 standard trial QKSrtdL (interlocked_claws hard) had opened both grippers and
@@ -1248,7 +1248,7 @@ def _speed_up_knot_predicate(task_id: str) -> bool:
 RULES_REVISION = "rules_2026-10-03b"
 CONTACT_RULE = dict(deep_m=.003, sustained_m=.002, held_deep_m=.004, held_sustained_m=.002, window_s=.25)   # review events
 SOFT_RULE = dict(window_s=.25, residual_m=.002)
-# Measured 2026-10-03: a drive at its cap reads
+# Measured on lab 2026-10-03 (docs/rcb/benchmarks/topogym.md, "Physical-validity policy"): a drive at its cap reads
 # 0.99-1.00 and a working arm well below (free-air saturation: wrist wraps at 0.99 with 1 N of contact); 20 N excludes
 # light touches and resting parts; event_s 0.5 s: valid runs held the condition up to 0.33 s,
 # the scripted sustained forcing for 1.1 s and more. attribution_s: a breakdown within it is the agent's.
@@ -1257,13 +1257,14 @@ BREAKDOWN_PENETRATION_M = .010
 FORCED_BREAKDOWN = "forced_breakdown"
 # N m per arm joint, in arm-joint order; the effective cap is min(this, the model's own force limit: ALOHA 35 / 144 / 59 /
 # 22 / 35 / 35, Panda 87 x 4 / 12 x 3). The audit proposed the real ViperX actuators (12.9 / 25.8 / 25.8 / 12.9 / 12.9 /
-# 4.8: XM540 stall torque, doubled on the dual-servo shoulder and elbow; XM430 on the wrist rotate). In testing those stopped validated references of the rope families. With these caps every validated reference
+# 4.8: XM540 stall torque, doubled on the dual-servo shoulder and elbow; XM430 on the wrist rotate). On lab (2026-10-03
+# rules fix, NOTES) those stopped validated references of the rope families. With these caps every validated reference
 # still succeeds and the rope keeps a positive tet volume (a wrist rotate cap of 9.6 gave a 0.24 s tet inversion); the waist and forearm roll
 # keep the real-actuator caps. Panda: 50 on joints 1-4 (a stiff-PD transient at the start of
 # each fast step is the only binding).
 ARM_TORQUE_CAPS_NM = {"aloha": (12.9, 80., 59., 12.9, 35., 17.5), "panda_robotiq": (50., 50., 50., 50., 12., 12., 12.)}
 # No gripper vertex (fingers, housing) is commanded lower than the tabletop + this. Negative: below the tabletop. The
-# audit proposed + 2 mm; in testing that broke validated references. - 15 mm keeps them and still
+# audit proposed + 2 mm; on lab that broke validated references (2026-10-03 rules fix, NOTES). - 15 mm keeps them and still
 # stops the gross below-table targets of the v12 failures (an IK swing to -245 mm, -80 mm, -41 mm).
 TABLE_GUARD_MARGIN_M = -.015
 # R5, the static-contact guard (prototype, 2026-10-13; not adopted): a robot geom more than this deep in a static body (a
@@ -2368,7 +2369,7 @@ def _settle_only_when_reached(task) -> bool:
 
 
 
-# ---- deterministic GPU physics (tooling v17)
+# ---- deterministic GPU physics (tooling v17, 2026-10-05; jobs/journal/2026-10-05/determinism)
 # Scope (every Session, installed before the first scene is built):
 #   - every scene on the GPU: the rigid constraint solve is pinned to Genesis' monolith arm. This changes the rounding
 #     of blanket_flatten, lock_picking and of the robots / rigid bodies of the IPC scenes (knot_untying, rope_threading,
@@ -2402,7 +2403,7 @@ def _settle_only_when_reached(task) -> bool:
 # edited (kernels replaced at runtime like _bound_pbd_rigid_contacts), so the frozen blanket states' backend identity,
 # which hashes them, still matches; the integer scratch lives outside the engine-buffer graph that checkpoints and frozen
 # states inventory (it holds zeros between kernels).
-# Measured on an RTX PRO 6000 (image 0.2.14-dev).
+# Measured (lab RTX PRO 6000, image 0.2.14-dev): see docs/rcb/benchmarks/topogym.md "Deterministic GPU physics".
 # The IPC families' libuipc solver keeps its own float atomics (not covered here).
 DETERMINISTIC_GPU_PHYSICS = "fixed_point_pbd_pinned_solve_arm_2026-10-05"
 RIGID_SOLVE_ARM = "func_solve_body_monolith"
@@ -2689,7 +2690,7 @@ def _install_deterministic_gpu_physics() -> dict:
     return info
 
 
-# ---- PBD cloth contact (a blanket blow-up seen in two trials)
+# ---- PBD cloth contact (the blanket blow-up of 2026-10-03: trials mCa9CZt / r42VtjE, jobs/journal/2026-10-03/blanket_debug)
 SIMULATOR_INSTABILITY = "simulator_instability"     # the episode end of a numerically unstable simulation
 # Guard (a backstop; _bound_pbd_rigid_contacts removes the cause). PBD reports a particle's velocity over its last
 # 0.625 ms substep. Runs that did not blow up reached at most 9.2 m/s, with Genesis' contact and the bounded one alike:
@@ -2703,7 +2704,8 @@ SIMULATOR_INSTABILITY = "simulator_instability"     # the episode end of a numer
 # 18). Since tooling 19 the guard reads what every consumer reads, the end-of-tick displacement over the tick
 # (topogym/world/genesis_world.py read_state), an average over the tick's substeps: substep-scale oscillations read
 # lower, and a blow-up's first tick may read lower too. The traced blow-ups reached 1e3-1e5 m/s by their third tick, so
-# their displacement should cross the limit by then as well; this limit was not measured again with the displacement.
+# their displacement should cross the limit by then as well; this limit was not measured again with the displacement
+# (docs/rcb/benchmarks/topogym.md, Cloth settle speed: follow-ups).
 PARTICLE_SPEED_LIMIT_M_S = 20.0
 # Depenetration allowance of the PBD-rigid contact (_bound_pbd_rigid_contacts): the speed beyond the colliding body's own
 # approach and the particle's own inward motion at which a contact may push a particle out (resolving penetration left by
@@ -2980,7 +2982,7 @@ GRADING_HOLD_S = 2.0
 # (topogym/world/genesis_world.py read_state), and these numbers are unchanged. knot's rope speed: 2 x the largest
 # replay-to-replay spread measured in a success's confirmation window (0.12 mm/s, lab 2026-10-03); its release conditions
 # (terminal v5) are geometric and never relaxed. The other families: no measured spread that a small slack would absorb
-# (tasks/roboarc/README.md, "Grading replays"), so the hold only; rope_threading's live thresholds are the release
+# (docs/rcb/benchmarks/topogym.md, "Grading replays"), so the hold only; rope_threading's live thresholds are the release
 # profile's (merged-v16: rope speed 10 mm/s, a 1 mm aperture allowance), never loosened again here.
 REPLAY_TOLERANCES: dict[str, dict[str, tuple[str, str, float]]] = {
     "blanket_flatten": {"coverage": ("minimum_coverage_ratio", "at_least", -.03),
@@ -3096,7 +3098,7 @@ def strict_goal(statuses) -> tuple[int, int] | None:
 # The image holds two builds of one libuipc recipe (pyuipc 0.0.25+topogym.det1.cuda128: libuipc 292c98c3 plus the
 # determinism patches, nvcc 12.8; images/robotangle/Dockerfile). Both have the same version and source commit, which the
 # frozen IPC settled states hold, so either restores them. They differ only in their uipc-build.json, whose sha256 names
-# the build (the release record and every runtime binding: uipc_builds):
+# the build (scripts/robotangle/release.json and every runtime binding: uipc_builds):
 #   audited  the wheel of every evidence run, in site-packages (/opt/uipc-build.json): SASS sm_89 and sm_120, PTX compute_120;
 #   sm86     its own prefix /opt/uipc_sm86: SASS sm_86 (runs on 8.6 and 8.7), PTX compute_86 (JIT-compiled on 9.x and 10.x).
 # The rule: compute capability 8.9 or 12.x loads the audited wheel, any other GPU the sm86 build, no visible GPU the audited
@@ -3338,7 +3340,7 @@ def _render_bridge(instance_path: str, world=None, renderer: str = "nyx"):
         _log("rendering off (RCB_RENDER=off): black frames, depth without a reading, the same camera calibration")
         return render_bridge.headless(source)
     if mode == "direct":
-        # Nyx without Genesis: Nyx fed from this world by nyx_direct.py (next to this file), no
+        # docs/rcb/RENDER_BRIDGE.md, Nyx without Genesis: Nyx fed from this world by nyx_direct.py (next to this file), no
         # Genesis host; the camera calibration of the headless rig of the same scene
         import nyx_direct
         _log("rendering with nyx_direct: Nyx without a Genesis host, MuJoCo raster depth")

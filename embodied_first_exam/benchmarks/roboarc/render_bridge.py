@@ -1,6 +1,6 @@
 """render_bridge.py -- Nyx frames for MuJoCo states: RoboTangle's physics moves to MuJoCo, its rendering does not change.
 
-Route A. The frozen instance's Genesis scene, built by the same TopoGym code as the 0.2.22
+Route A (docs/rcb/RENDER_BRIDGE.md). The frozen instance's Genesis scene, built by the same TopoGym code as the 0.2.22
 runtime (same entities, generated visual assets, materials, lights, HDRI, Nyx camera rig and Nyx settings), is kept only
 as Nyx's render host: it never integrates physics. Each frame, `update(mj_model, mj_data)` copies the MuJoCo joint
 coordinates into the host's rigid solver (one `set_qpos`, bit for bit); Genesis forward kinematics turns them into the
