@@ -133,12 +133,12 @@ uv tool install embodied-first-exam --with-executables-from harbor
 ### 2. Run
 
 ```bash
-# the core set: 456 tasks, each in its default mode
+# the core set: 498 tasks in every mode they have (979 task dirs)
 harbor run -d embodied-first-exam -a codex -m openai/gpt-6-astra
 ```
 
 ```bash
-# the core tasks in another mode: --privileged (391 tasks), --standard, --realtime
+# the core tasks in one mode: --privileged (427 tasks), --standard (498 tasks), --realtime (54 tasks)
 harbor run -d embodied-first-exam --privileged -a codex -m openai/gpt-6-astra
 ```
 

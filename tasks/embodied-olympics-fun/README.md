@@ -16,7 +16,7 @@ and numbers.
 
 | | |
 |---|---|
-| tasks | 79 families: 79 `-privileged`, 79 `-standard` (`eai-standard/2.1`) and 21 `-realtime` (`eai-standard/2.3`, the dynamic families), 179 dirs, `embodied-olympics-fun-<family>-i00-<mode>`; core set 56 (45 default standard, 11 default realtime) |
+| tasks | 79 families: 79 `-privileged`, 79 `-standard` (`eai-standard/2.1`) and 21 `-realtime` (`eai-standard/2.3`, the dynamic families), 179 dirs, `embodied-olympics-fun-<family>-i00-<mode>`; core set 56 |
 | simulator | MuJoCo 3.3.7 on the CPU (1 ms physics, 10 ms control), on [Embodied Olympics](https://github.com/CHIGUI0/roboolympics)' robot library and running policy (MIT), unchanged in the image |
 | image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-fun-<images/embodied-olympics-fun/VERSION>`; shared files (tooling `rcb_rfo.py`, the `rfo` core, graders, the standard service, the dynamic families' modules) from `efe:embodied-olympics-fun-files-<VERSION>` (`images/embodied-olympics-fun-files/FILES.json`); source `embodied_first_exam/benchmarks/embodied-olympics-fun/` |
 | actions | one sim row per 10 ms: `stand`, `walk`, `joints`, `lowcmd` (Unitree's LowCmd), on the G1 also `walk_falcon`, `walk_agile`, `run`, `run_arms`; `grip_left`, `grip_right` |

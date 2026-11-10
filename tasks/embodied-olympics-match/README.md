@@ -7,7 +7,7 @@ tennis between two Unitree G1 humanoids, ported from Embodied Olympics core 0.5.
 directories: 12 exported (11 realtime, 1 standard; `ci_checks/benchmarks/embodied-olympics-match/exported.toml`), the 11
 standard twins of the real-time matches (below), 12 privileged twins, and the G1 table-tennis task in its three modes,
 in a CPU and a GPU tier (below). 14 tasks: 14 `-privileged`, 14 `-standard` and 13 `-realtime` dirs; core set 13
-(12 default realtime, fencing default standard; the G1 table-tennis task in its CPU tier only).
+(the G1 table-tennis task in its CPU tier only).
 
 ## Quick start
 ```bash
