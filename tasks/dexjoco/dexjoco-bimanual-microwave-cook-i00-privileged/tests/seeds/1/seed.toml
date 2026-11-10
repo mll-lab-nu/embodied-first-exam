@@ -1,0 +1,11 @@
+[[replace]]
+old = "The table top is at z = 0.943. Arm base (`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]."
+new = "The table top is at z = 0.932. Arm base (`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]."
+
+[[replace]]
+old = "`microwave_cook_demo_10_2026-02-09_11-56-09_655851`"
+new = "`microwave_cook_demo_10_2026-02-09_16-35-52_103514`"
+
+[[replace]]
+old = "`6c16f3cfa1c737c7`"
+new = "`4e7d7e7571b74995`"
