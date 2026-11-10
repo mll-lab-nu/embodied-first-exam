@@ -143,7 +143,7 @@ harbor run -d embodied-first-exam --privileged -a codex -m openai/gpt-6-astra
 ```
 
 ```bash
-# every task: 2398 task dirs (1211 tasks in their modes, 36 benchmarks)
+# every task: 2398 task dirs (1211 tasks in their modes, 36 benchmarks); the paper and leaderboard count 1156 tasks / 2288 tests / 35 suites, without HumanCLAW
 harbor run -d embodied-first-exam@all -a codex -m openai/gpt-6-astra
 ```
 
