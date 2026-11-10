@@ -517,4 +517,4 @@ compacts it to `raw.jsonl.xz`.
 Switches: `GATEWAY=1` (record usage and, by default, raw bodies), `GATEWAY_RAW=0` (usage only; raw bodies are private: they hold the
 whole conversation). Known limits: no WebSocket (Codex's built-in provider falls back to HTTPS after a few refused
 attempts); Codex's zstd-compressed request bodies are stored as base64, and so not deduplicated, on a runner host
-that has neither the `zstandard` module nor the `zstd` program; OpenAI reasoning arrives encrypted. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.
+that has neither the `zstandard` module nor the `zstd` program; OpenAI reasoning arrives encrypted. A request is matched to its trial by its source address, looked up among the containers of the runner's own running trials only (the runner hands the gateway its job names, `--own-jobs`), never every container on the engine. Requests no trial can be matched to go to `<jobs>/.gateway/unattributed.jsonl`.

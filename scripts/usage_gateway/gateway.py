@@ -4,7 +4,7 @@ request used, as it happens. Runner-side tooling (not task code, not an agent ad
 `codex` / `claude-code`, pointed here by its base URL; it keeps its own credentials, which the gateway passes through
 and never logs or stores.
 
-    scripts/usage_gateway/gateway.py --jobs <harbor -o dir> [--bind 172.17.0.1] [--port 0] [--raw] [--ready-file F]
+    scripts/usage_gateway/gateway.py --jobs <harbor -o dir> [--own-jobs F] [--bind 172.17.0.1] [--port 0] [--raw] [--ready-file F]
 
 Routes: /u/<host>/<path> -> https://<host>/<path>. <host> must be a model API (MODEL_HOSTS below, the hosts
 scripts/set_agent_egress.py allows), so the gateway can never carry an agent past its egress allowlist.
@@ -40,7 +40,8 @@ totals.json; the start-up log says so).
 
 Attribution: a request's source IP is the trial's container (or, under an egress allowlist, its egress sidecar). Harbor
 names a trial's compose project `<trial>__env`, so `docker inspect` maps the IP to the project and the project to the
-trial directory <jobs>/<job>/<trial>/. Everything a trial's requests produce goes to <trial>/gateway/, next to Harbor's
+trial directory <jobs>/<job>/<trial>/. Only this runner's own running trials are looked up (--own-jobs; class Trials),
+never every container on the engine. Everything a trial's requests produce goes to <trial>/gateway/, next to Harbor's
 own agent/ and verifier/ (not inside agent/, which the agent's container mounts and could rewrite):
 
     usage.jsonl        one line per request: time, duration, host, path, status, model, normalized and raw usage
@@ -426,46 +427,95 @@ def parse_inspect(out: str) -> dict[str, str]:
     return projects
 
 
-class Trials:
-    """Source IP -> trial directory, from docker's compose labels. Docker reuses subnets and addresses once a trial's
-    network is gone, so a mapping is trusted for TTL seconds only and every scan replaces the whole table; a new trial
-    needs far longer than that (image build, agent install) before its first model call."""
-    TTL = 5.0
+def read_job_list(path: pathlib.Path) -> list[str]:
+    """The runner's own job names (--own-jobs: one per line, appended before each job starts); a name that is not a
+    plain job name (letters, digits, . _ -) is skipped. A missing file is an empty list (no job started yet)."""
+    try:
+        lines = path.read_text().splitlines()
+    except FileNotFoundError:
+        return []
+    return [s for s in (x.strip() for x in lines) if re.fullmatch(r"[A-Za-z0-9_-][A-Za-z0-9._-]*", s)]
 
-    def __init__(self, jobs: pathlib.Path):
-        self.jobs, self.by_ip, self.last_scan = jobs, {}, 0.0
+
+class Trials:
+    """Source IP -> trial directory, from the compose labels of this gateway's own running trials.
+
+    Which trials: the trial directories <jobs>/<job>/<trial>/ of the runner's own jobs (--own-jobs; without it, of every
+    job under <jobs>) that have no result.json yet (Harbor writes it once the trial's containers are stopped). Many
+    runners can share one container engine and one <jobs> directory, so a scan never lists or inspects the containers of
+    other runners' trials: for each own running trial it asks for the containers of that trial's compose project only
+    (`docker ps --filter label=com.docker.compose.project=<trial>__env`, which podman takes the same way) and inspects
+    those. The cost of a scan follows this runner's trials, not the engine's: under rootless podman an inspect of every
+    container on a busy node holds the engine's locks for long enough to stall everything else on it.
+
+    When: on a request whose address is not in the table (at most once per MISS_S, so a new trial is found at its first
+    model call), and otherwise once the table is older than TTL. Docker reuses subnets and addresses once a trial's
+    network is gone; an address mapped to a trial that has since finished counts as not in the table, so a later own
+    trial that gets the same address is scanned for at once. Nothing else depends on this cadence: the token budget and
+    the records are per request (totals.json), and CPU / GPU time is the monitor sidecar's."""
+    TTL = 20.0
+    MISS_S = 1.0
+    MAX_FILTERED = 16      # more own running trials than this (a runner of high concurrency): one listing of all compose
+                           # containers instead of one per trial
+
+    def __init__(self, jobs: pathlib.Path, own_jobs: pathlib.Path | None = None):
+        self.jobs, self.own_jobs, self.by_ip, self.last_scan = jobs, own_jobs, {}, 0.0
         self.lock = threading.Lock()
 
+    def _running(self) -> dict[str, pathlib.Path]:
+        """Compose project (without "__env") -> trial directory, for this gateway's trials that have not finished."""
+        if self.own_jobs is not None:
+            jobs = [self.jobs / j for j in dict.fromkeys(read_job_list(self.own_jobs))]
+        else:
+            jobs = [j for j in self.jobs.iterdir() if not j.name.startswith(".")]
+        dirs = {}
+        for job in jobs:
+            try:
+                trials = list(job.iterdir()) if job.is_dir() else []
+            except OSError:                      # a job dir removed mid-scan: skip it, keep the others
+                continue
+            for trial in trials:
+                if "__" in trial.name and trial.is_dir() and not (trial / "result.json").exists():
+                    dirs[sanitize(trial.name)] = trial
+        return dirs
+
     def _scan(self) -> None:
-        ids = subprocess.run(["docker", "ps", "-q"], capture_output=True, text=True, timeout=30).stdout.split()
+        dirs = self._running()
+        if not dirs:
+            self.by_ip = {}
+            return
+        label = "com.docker.compose.project"
+        if len(dirs) <= self.MAX_FILTERED:
+            ids = []
+            for proj in sorted(dirs):
+                ids += subprocess.run(["docker", "ps", "-q", "--no-trunc", "--filter", f"label={label}={proj}__env"],
+                                      capture_output=True, text=True, timeout=30).stdout.split()
+        else:
+            ids = subprocess.run(["docker", "ps", "-q", "--no-trunc", "--filter", f"label={label}"],
+                                 capture_output=True, text=True, timeout=30).stdout.split()
+        ids = list(dict.fromkeys(ids))
         if not ids:
             self.by_ip = {}
             return
-        fmt = '{{index .Config.Labels "com.docker.compose.project"}}{{range .NetworkSettings.Networks}} {{.IPAddress}}{{end}}'
+        fmt = '{{index .Config.Labels "' + label + '"}}{{range .NetworkSettings.Networks}} {{.IPAddress}}{{end}}'
         out = subprocess.run(["docker", "inspect", "-f", fmt, *ids], capture_output=True, text=True, timeout=30).stdout
-        projects = parse_inspect(out)
-        dirs = {}
-        for job in self.jobs.iterdir():
-            if job.is_dir() and not job.name.startswith("."):
-                try:
-                    trials = list(job.iterdir())
-                except OSError:                  # a job dir removed mid-scan: skip it, keep the others
-                    continue
-                for trial in trials:
-                    if trial.is_dir() and "__" in trial.name:
-                        dirs[sanitize(trial.name)] = trial
-        self.by_ip = {ip: dirs[proj] for ip, proj in projects.items() if proj in dirs}
+        self.by_ip = {ip: dirs[proj] for ip, proj in parse_inspect(out).items() if proj in dirs}
+
+    def _known(self, ip: str) -> bool:
+        t = self.by_ip.get(ip)
+        return t is not None and not (t / "result.json").exists()
 
     def lookup(self, ip: str) -> pathlib.Path | None:
         with self.lock:
-            if time.time() - self.last_scan > self.TTL or (ip not in self.by_ip and time.time() - self.last_scan > 1):
+            age = time.time() - self.last_scan
+            if age > self.TTL or (not self._known(ip) and age > self.MISS_S):
                 self.last_scan = time.time()
                 try:
                     self._scan()
                 except Exception as exc:  # noqa: BLE001 -- attribution failure must not break the agent's request
                     log(f"docker scan failed: {exc}")
                     self.by_ip = {}
-            return self.by_ip.get(ip)
+            return self.by_ip.get(ip) if self._known(ip) else None
 
 
 # --------------------------------------------------------------------------- server
@@ -865,6 +915,9 @@ def main() -> int:
     p.add_argument("--port", type=int, default=0, help="0 = any free port (written to --ready-file)")
     p.add_argument("--raw", action="store_true", help="also record request and response bodies (raw.jsonl.gz)")
     p.add_argument("--ready-file", type=pathlib.Path, help="written with the port once the gateway listens")
+    p.add_argument("--own-jobs", type=pathlib.Path,
+                   help="a file of this runner's job names, one per line (the runner appends each before it starts it): "
+                        "only these jobs' trials are attributed and scanned for; default: every job under --jobs")
     p.add_argument("--timeout", type=float, default=900.0, help="upstream socket timeout, seconds")
     p.add_argument("--extra-host", action="append", default=[], help="another model API host pattern to forward to (repeatable)")
     p.add_argument("--http-host", action="append", default=[],
@@ -892,7 +945,7 @@ def main() -> int:
     PROVIDERS[:] = load_paths(ARGS.api_paths)
     _, zstd_how = decode_request(b"\x28\xb5\x2f\xfd\x20\x00\x01\x00\x00", "zstd")     # an empty zstd frame
     (ARGS.jobs / ".gateway").mkdir(parents=True, exist_ok=True)
-    TRIALS = Trials(ARGS.jobs)
+    TRIALS = Trials(ARGS.jobs, ARGS.own_jobs.resolve() if ARGS.own_jobs else None)
     srv = ThreadingHTTPServer((ARGS.bind, ARGS.port), Handler)
     srv.daemon_threads = True
     port = srv.server_address[1]
