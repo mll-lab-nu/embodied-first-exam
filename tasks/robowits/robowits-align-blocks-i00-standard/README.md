@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `robowits-align-blocks-i00-privileged` |
 | Simulator / robot | `robowits` / `marvin-bimanual` |
-| Family / instance | `align_blocks` / seed 0 |
+| Family / instance | `align_blocks` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `none` — No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-align-blocks-i00-limite__bbbgbmS (robowits-lunaxh-limited-0929, standard) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §4). Re-graded with the current grader (two AMD workstations; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited __bbbgbmS fails the earlier grader on AMD as well (inconclusive); __r8twyX6 passes the earlier grader but fails the current one (a gripper still touches a cube at the end). No standard positive confirmed under the current grader yet. |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |
