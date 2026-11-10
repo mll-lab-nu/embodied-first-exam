@@ -1,0 +1,19 @@
+[[replace]]
+old = "`reset(seed=0)`"
+new = "`reset(seed=1)`"
+
+[[replace]]
+old = "`26cdc6033fab7de6`"
+new = "`271cefb84542fc82`"
+
+[[replace]]
+old = "/ seed 0 (allowed"
+new = "/ seed 1 (allowed"
+
+[[replace]]
+old = "row 0, column 4 (AutoBio's indices: `s.task.rack2.get_position(s.data, 0, 4, '50ml')`)"
+new = "row 0, column 1 (AutoBio's indices: `s.task.rack2.get_position(s.data, 0, 1, '50ml')`)"
+
+[[replace]]
+old = "row 0, column 4 of that rack: of its two rows the one farther from the robot's base, and in that row the end slot on the side of the first rack"
+new = "row 0, column 1 of that rack: of its two rows the one farther from the robot's base, and in that row the second slot from the end away from the first rack"
