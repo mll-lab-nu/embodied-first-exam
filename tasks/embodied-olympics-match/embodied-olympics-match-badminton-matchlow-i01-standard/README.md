@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard-lockstep/1.0`) |
 | Twin | `embodied-olympics-match-badminton-matchlow-i01-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `badminton_matchlow` / seed 8 |
+| Family / instance | `badminton_matchlow` / seed 8 (allowed seeds: [8, 202, 212]; PROTOCOL §2) |
 | Oracle | `partial` — level 2, the low level (the agent's own act in the loop, served from its own container): our evaluator's competition test (the camera-only reference strategy calling a skill, no wall clock) wins level 1 in 4 of 4 and level 2 in 2 of 4 with our toolkit-only reference act (its API test 512/519 hidden requests), the platform's act 4/4 and 0/4; in the screening's skill-in-the-loop match (revision 12, S = 20) Claude Opus won level 1 11:6 with its own act (348/352 requests); level 2 because models won level 1 |
 | Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |

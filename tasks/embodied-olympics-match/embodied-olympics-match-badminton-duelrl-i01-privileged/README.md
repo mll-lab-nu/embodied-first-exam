@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `embodied-olympics-match-badminton-duelrl-i01-standard` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `badminton_duel` / seed 1001 |
+| Family / instance | `badminton_duel` / seed 1001 (allowed seeds: [1001, 1, 2]; PROTOCOL §2) |
 | Oracle | `partial` — full-state reference program (solution/): the badminton privileged twins' truth reference; the built-in learned opponent (RLOpponent) plays seat B inside the formal match as in the twin; oracle runs were waived for the Embodied Olympics - Match twins: untested; the nop (no program) scores 0 |
 | Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |

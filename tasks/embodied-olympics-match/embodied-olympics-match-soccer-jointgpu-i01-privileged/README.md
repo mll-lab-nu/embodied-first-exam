@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `embodied-olympics-match-soccer-jointgpu-i01-standard` |
 | Simulator / robot | `mujoco` / `booster-t1` |
-| Family / instance | `soccer_jointmatch` / seed 101 |
+| Family / instance | `soccer_jointmatch` / seed 101 (allowed seeds: [101, 1, 2]; PROTOCOL §2) |
 | Oracle | `partial` — full-state reference program (solution/): the twin's joint-level oracle controller (joint_oracle.py with its team, walker and DCM modules) fed the true state; oracle runs were waived for the Embodied Olympics - Match twins: untested |
 | Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-soccer-0.1.0@sha256:b6fbfae73399a7daee9c623eb34cfe18de63b458349b5a2b9d122c00e9f1602b` |

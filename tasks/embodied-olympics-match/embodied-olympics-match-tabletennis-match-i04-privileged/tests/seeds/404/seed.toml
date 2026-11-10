@@ -1,0 +1,38 @@
+# Seed 404 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
+# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+
+[[replace]]
+old = "RO_SEED: \"34\""
+new = "RO_SEED: \"404\""
+
+[[replace]]
+old = "\"seed\": 34}"
+new = "\"seed\": 404}"
+
+[[replace]]
+old = "level=4, seed=34)"
+new = "level=4, seed=404)"
+
+[[replace]]
+old = "level=4,seed=34)"
+new = "level=4,seed=404)"
+
+[[replace]]
+old = "--seed 34 "
+new = "--seed 404 "
+
+[[replace]]
+old = ", seed 34:"
+new = ", seed 404:"
+
+[[replace]]
+old = ", seed 34,"
+new = ", seed 404,"
+
+[[replace]]
+old = ", seed 34\n"
+new = ", seed 404\n"
+
+[[replace]]
+old = "/ seed 34 is"
+new = "/ seed 404 is"

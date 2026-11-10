@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `embodied-olympics-match-tabletennis-matchlow-i01-standard` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `tabletennis_matchlow` / seed 22 |
+| Family / instance | `tabletennis_matchlow` / seed 22 (allowed seeds: [22, 101, 111]; PROTOCOL §2) |
 | Oracle | `partial` — full-state reference program (solution/): the twin's toolkit reference skill (SkillReference, each hit lowered in process by the twin's hit.py) with the true ball state in place of the cameras; a local Harbor oracle run lost 0:5 (valid, replay identical); the twin's toolkit-only reference loses 0:5 too; the nop (no program) scores 0 |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |

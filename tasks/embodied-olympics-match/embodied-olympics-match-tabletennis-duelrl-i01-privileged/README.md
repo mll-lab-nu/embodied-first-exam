@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `embodied-olympics-match-tabletennis-duelrl-i01-standard` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `tabletennis_duel` / seed 8 |
+| Family / instance | `tabletennis_duel` / seed 8 (allowed seeds: [8, 1, 2]; PROTOCOL §2) |
 | Oracle | `partial` — full-state reference program (solution/): the truth-fed serve and stroke planner of the table-tennis privileged twins; the built-in learned opponent (RLOpponentV2) plays seat B inside the formal match as in the twin; a local Harbor oracle run lost 3:5 (valid, replay identical); the nop (no program) scores 0 |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |

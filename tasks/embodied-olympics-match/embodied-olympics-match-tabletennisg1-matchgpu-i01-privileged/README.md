@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `embodied-olympics-match-tabletennisg1-matchgpu-i01-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `tabletennisg1_match` / seed 4 |
+| Family / instance | `tabletennisg1_match` / seed 4 (allowed seeds: [4, 1, 2]; PROTOCOL §2) |
 | Oracle | `partial` — the sport's camera-only reference player (solution/program.py: builtin_players:OpenReference in its in-process form, the learned striker of the release on CPU; it ignores the truth) won 5:3 on a Xeon Platinum 8488C (the CPU tier) and lost 6:7 on the GPU tier's EPYC host (the in-process match is replay-identical on one host, not across CPU architectures) (Embodied First Exam's local Harbor runs: see the benchmark README; replay identical); nop 0 |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-tabletennisg1-0.1.0@sha256:8bc6d02f91aa5730bbf93bc5c1c4a477feee6f5846ff8c609aaa3a25e0eb36af` |
