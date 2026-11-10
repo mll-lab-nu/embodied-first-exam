@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-position-goal-t08-i00-receptacle_relocation-d1-p195"
+new = "pro-position-goal-t08-i02-receptacle_relocation-d1-p195"
+
+[[replace]]
+old = "initial state 0)"
+new = "initial state 2)"

@@ -1,0 +1,62 @@
+{
+ "case": {
+  "case_id": "pro-object-goal-t07-i01-camera_shift-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 1,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/object/libero_goal/task_7",
+   "change": {
+    "calibration": "fixed_global_viewpoint",
+    "camera": "agentview",
+    "delta_fovy_degrees": -12.0,
+    "delta_position_m": [
+     -0.06,
+     0.03,
+     0.0
+    ],
+    "operation": "shift_camera",
+    "yaw_degrees": -22.0
+   },
+   "change_family": "OBS",
+   "change_type": "camera_shift",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3413024396
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-object-goal-t07-i04-camera_shift-d1",
+   "seed": 3413024396,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "yellow_stove_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/object",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_goal_object/turn_on_the_stove.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "object",
+   "init_reference_bddl_file": "libero_goal_object/turn_on_the_stove.bddl",
+   "init_states_file": "libero_goal_object/turn_on_the_stove.pruned_init",
+   "language": "Turn on the stove",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 7,
+  "task_name": "turn_on_the_stove",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "78ff3da15babf415c4fe6ef60febe00646f226e64fb58523b80fdc66f8674ca7",
+ "instance_sha": "e7afc3e17e9ac6b80c2a00f92bd3ec8e6858135948db411d45f03d108d6db7a7",
+ "schema": "eai-libero-max-instance/1"
+}

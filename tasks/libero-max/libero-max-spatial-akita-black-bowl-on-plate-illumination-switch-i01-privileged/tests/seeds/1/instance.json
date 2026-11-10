@@ -1,0 +1,54 @@
+{
+ "case": {
+  "case_id": "pro-semantic-spatial-t05-i01-illumination_switch-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 1,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/semantic/libero_spatial/task_5",
+   "change": {
+    "operation": "set_lighting",
+    "scale": 0.2
+   },
+   "change_family": "OBS",
+   "change_type": "illumination_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 276437460
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-semantic-spatial-t05-i06-illumination_switch-d0",
+   "seed": 276437460,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "akita_black_bowl_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/semantic",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_spatial_lan/pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "semantic",
+   "init_reference_bddl_file": "libero_spatial_lan/pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate.bddl",
+   "init_states_file": "libero_spatial_lan/pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate.pruned_init",
+   "language": "grab black bowl on ramekin and set it on plate",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 5,
+  "task_name": "pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate",
+  "task_suite_name": "libero_spatial",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "9b3dbc64a140b80495981ca4ea972746f6fca1b3fdd89176e09236856fd46150",
+ "instance_sha": "945cd1a73a7f98c953478c18a85c7b23bb9255df14bcc52d4adfabe535d6e213",
+ "schema": "eai-libero-max-instance/1"
+}

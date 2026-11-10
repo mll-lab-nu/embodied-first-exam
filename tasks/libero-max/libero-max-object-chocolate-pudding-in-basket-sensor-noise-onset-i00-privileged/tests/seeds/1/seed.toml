@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-position-object-t08-i02-sensor_noise_onset-d0-p195"
+new = "pro-position-object-t08-i01-sensor_noise_onset-d0-p195"
+
+[[replace]]
+old = "initial state 2)"
+new = "initial state 1)"

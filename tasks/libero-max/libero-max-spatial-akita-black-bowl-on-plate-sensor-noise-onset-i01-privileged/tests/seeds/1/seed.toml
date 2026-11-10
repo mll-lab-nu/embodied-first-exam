@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-initial-pose-position-angle-spatial-t03-i00-sensor_noise_onset-d1-p195"
+new = "pro-initial-pose-position-angle-spatial-t03-i01-sensor_noise_onset-d1-p195"
+
+[[replace]]
+old = "initial state 0)"
+new = "initial state 1)"

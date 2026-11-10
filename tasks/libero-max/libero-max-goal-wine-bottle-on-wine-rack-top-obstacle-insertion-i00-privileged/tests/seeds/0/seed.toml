@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-object-texture-goal-t09-i08-obstacle_insertion-d0-p195"
+new = "pro-object-texture-goal-t09-i00-obstacle_insertion-d0-p195"
+
+[[replace]]
+old = "initial state 8)"
+new = "initial state 0)"

@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-visual-noise-glare-object-t01-i07-visual_theme_switch-d0-p195"
+new = "pro-visual-noise-glare-object-t01-i00-visual_theme_switch-d0-p195"
+
+[[replace]]
+old = "initial state 7)"
+new = "initial state 0)"

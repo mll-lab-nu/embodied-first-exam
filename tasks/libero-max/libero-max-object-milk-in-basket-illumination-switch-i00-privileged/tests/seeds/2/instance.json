@@ -1,0 +1,54 @@
+{
+ "case": {
+  "case_id": "pro-task-object-t04-i02-illumination_switch-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 2,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/task/libero_object/task_4",
+   "change": {
+    "operation": "set_lighting",
+    "scale": 0.2
+   },
+   "change_family": "OBS",
+   "change_type": "illumination_switch",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 3807502981
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-task-object-t04-i01-illumination_switch-d0",
+   "seed": 3807502981,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "milk_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/task",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_object_task/pick_up_the_ketchup_and_place_it_in_the_basket.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "task",
+   "init_reference_bddl_file": "libero_object_task/pick_up_the_ketchup_and_place_it_in_the_basket.bddl",
+   "init_states_file": "libero_object_task/pick_up_the_ketchup_and_place_it_in_the_basket.pruned_init",
+   "language": "Pick the milk and place it in the basket",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 4,
+  "task_name": "pick_up_the_ketchup_and_place_it_in_the_basket",
+  "task_suite_name": "libero_object",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "f32671c1f7e2b14dafe89e8ef71e9ab5415a90f218515ef941afe687fb780c56",
+ "instance_sha": "c090134818875c238ba523c13b85cf91b56a613126afdad20a48fb69a9ee7d3e",
+ "schema": "eai-libero-max-instance/1"
+}
