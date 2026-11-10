@@ -1,0 +1,23 @@
+[[replace]]
+old = "`reset(seed=0)`"
+new = "`reset(seed=2)`"
+
+[[replace]]
+old = "`843c5cc8cbffee91`"
+new = "`abff128788da7fe0`"
+
+[[replace]]
+old = "/ seed 0 (allowed"
+new = "/ seed 2 (allowed"
+
+[[replace]]
+old = "slot 8 of 30, `s.task.slot_id`; the tube in the rotor is in slot 23"
+new = "slot 4 of 30, `s.task.slot_id`; the tube in the rotor is in slot 19"
+
+[[replace]]
+old = "In this instance a tube that has been let go comes to rest 5.0 to 5.1 mm from it, just outside the 5 mm (AutoBio's own expert's tube included), so the check holds while the tube is still being lowered into the slot; the episode ends at that moment."
+new = "In this instance a tube that has been let go comes to rest about 3.6 mm from it, inside the 5 mm (AutoBio's own expert's tube), and the episode ends at the first control step where the check holds, which can come while the tube is still being lowered into the slot."
+
+[[replace]]
+old = "In this instance a tube that has been let go comes to rest just outside the 5 mm (5.0 to 5.1 mm away, AutoBio's own expert's tube included), so the test holds while the tube is still being lowered into the slot, held by the gripper; the episode ends in success at that moment."
+new = "In this instance a tube that has been let go comes to rest inside the 5 mm (about 3.6 mm away, AutoBio's own expert's tube); the episode ends in success the first moment the test holds, which can come while the tube is still being lowered into the slot, held by the gripper."

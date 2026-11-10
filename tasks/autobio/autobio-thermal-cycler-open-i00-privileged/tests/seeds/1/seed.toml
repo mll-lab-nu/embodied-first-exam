@@ -1,0 +1,11 @@
+[[replace]]
+old = "`reset(seed=0)`"
+new = "`reset(seed=1)`"
+
+[[replace]]
+old = "`af233b90fd79689a`"
+new = "`6417655aaa2ac064`"
+
+[[replace]]
+old = "/ seed 0 (allowed"
+new = "/ seed 1 (allowed"

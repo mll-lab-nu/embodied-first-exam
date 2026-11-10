@@ -1,0 +1,15 @@
+[[replace]]
+old = "`reset(seed=0)`"
+new = "`reset(seed=2)`"
+
+[[replace]]
+old = "`40d5857ebf38fb99`"
+new = "`20bfc0a052df917f`"
+
+[[replace]]
+old = "/ seed 0 (allowed"
+new = "/ seed 2 (allowed"
+
+[[replace]]
+old = "time 30 s, temperature 33 °C, mixing speed 600 rpm"
+new = "time 65 s, temperature 31 °C, mixing speed 1050 rpm"
