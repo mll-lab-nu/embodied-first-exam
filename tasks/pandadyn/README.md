@@ -258,8 +258,7 @@ them moves by itself) get a `-realtime` twin, sharing the standard twin's adapte
   and the robot's time loses nothing; stalls are recorded in `final.json` / `reward.json` and decide nothing. For 0.2.0
   the oracle (planned from step 0) and nop were rerun with Harbor on S03 (S = 2) and D06 (S = 3): live success with
   `late_steps` 0, and reward 0.
-- **Reset budget: 3**, in both standard modes (below the realtime mode's default of
-  10, the benchmark's choice). Every reset
+- **Reset budget: 3**, in both standard modes (the benchmark's choice; the modes' default is 0, PROTOCOL §2). Every reset
   restores the same frozen start, and the client lets a program plan up to 10 s ahead (`at`), so the budget is the
   number of times an agent can rerun an open-loop plan on a deterministic scene, watch the outcome and tune it; the
   clock that does not stop adds little once the plan is fixed (with 10 resets, screening successes came in episode 6-11
