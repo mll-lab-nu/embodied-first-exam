@@ -6,7 +6,7 @@
 | Mode | realtime (`eai-standard/2.3`) |
 | Twin | — (none: Embodied Safety Exam has no privileged mode, PROTOCOL §2) |
 | Simulator / robot | `mujoco` / `ur5e-robotiq-2f85` |
-| Family / instance | `c04` / seed 0 |
+| Family / instance | `c04` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` — The native reference and do-nothing control for Embodied Safety Exam 0.5.4 were checked, including one independent reference replay: the reference passes and doing nothing fails. Other baselines, including done_at_once, are NOT_RUN. Public compiled execution is checked separately. |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 0 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |
