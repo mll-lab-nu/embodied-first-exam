@@ -31,7 +31,7 @@ services:
       RCB_TASK_INFO: /srv/task.json
       PYTHONPATH: /opt/abc-tools/realtime:/srv:/opt/abc:/opt/abc-tools
       RCB_SLOWDOWN: "${RCB_SLOWDOWN:-1}"                # S = 1: the world runs at 1/S of real speed
-      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-10}"        # 10 resets (this benchmark's choice; the mode's default is 0); 0: one episode
+      RCB_RESET_BUDGET: "${RCB_RESET_BUDGET:-0}"        # 0: one episode (the mode's default, as the standard twin)
       RCB_GL: "${RCB_GL:-auto}"                     # auto: EGL on the GPU when it works, else OSMesa
     deploy:
       resources:
