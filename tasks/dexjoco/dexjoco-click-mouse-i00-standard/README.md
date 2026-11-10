@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `dexjoco-click-mouse-i00-privileged` |
 | Simulator / robot | `dexjoco` / `franka-allegro` |
-| Family / instance | `click_mouse` / seed 0 |
+| Family / instance | `click_mouse` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |

@@ -1,0 +1,11 @@
+[[replace]]
+old = "The table top is at z = 0.930. Arm base (`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]."
+new = "The table top is at z = 0.953. Arm base (`link0`): link0_right [-0.75, -0.4, 0.924], link0_left [-0.75, 0.4, 0.924]."
+
+[[replace]]
+old = "`photograph_demo_10_2026-03-16_14-31-13_305518`"
+new = "`photograph_demo_11_2026-03-16_14-32-21_244311`"
+
+[[replace]]
+old = "`b8b1dbe8dba6c733`"
+new = "`39cdfba66bed746b`"

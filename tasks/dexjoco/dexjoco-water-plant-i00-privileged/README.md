@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `dexjoco-water-plant-i00-standard` |
 | Simulator / robot | `dexjoco` / `franka-allegro` |
-| Family / instance | `water_plant` / seed 0 |
+| Family / instance | `water_plant` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |
