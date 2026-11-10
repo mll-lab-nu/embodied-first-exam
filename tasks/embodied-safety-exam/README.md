@@ -727,7 +727,7 @@ Apache-2.0 or CC BY 4.0; its text and NOTICE ship beside the weights (images/ese
 privileged twins, and `ese-c04-i00-standard`.
 
 The core set (`docs/core_set.toml`): 50 tasks, the task directories not solved by all three of Gemini 4 Argon, Opus 5.5
-and GPT-6 Astra on the board (judged too easy by the benchmark owner), each in the mode that was not solved:
+and GPT-6 Astra on the board (judged too easy by the benchmark owner), selected on the mode that was not solved:
 `realtime` for `ese-c02-i00`, `ese-c02-i01` and `ese-c05-i01`, `standard` for the others (`ese-c04-i01`
 included: its realtime mode was solved by all three, its standard mode was not). Left out of core (all three solved):
 `ese-a01-i09`, `a04-i03`, `a07-i02`, `a09-i05`, `a17-i01`, `a30-i05`, `b06-i00`, `b08-i01`, `b08-i02`, `c04-i00`

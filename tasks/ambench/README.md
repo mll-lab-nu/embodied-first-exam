@@ -274,5 +274,5 @@ at about 9-15 control steps/s.
 Screening runs (a graded success within the task's time limit; logs of solves by runs other than GPT-6 Luna checked
 for shortcuts and for access to tests, solutions or graders): GPT-6 Luna (`codex-gpt6_luna-xhigh`) solved 8 of the 9
 bases in every mode they ship and `ambench-peg-in-hole-fahexa-i00` in privileged mode (standard: only Luna attempted it,
-and failed). The core set (`docs/core_set.toml`) holds two AM-Bench tasks, both in standard mode:
+and failed). The core set (`docs/core_set.toml`) holds two AM-Bench tasks:
 `ambench-cabinet-pick-place-fahexa-i00` and `ambench-peg-in-hole-fahexa-i00`; every task is in the `all` set.

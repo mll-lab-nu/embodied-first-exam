@@ -1498,48 +1498,48 @@ def validated_of(task: Path) -> bool:
 
 # The core set (PROTOCOL §4, docs/protocol/running.md "Results"): the tasks the headline statistics are computed on, one
 # central list, docs/core_set.toml, not a task field: listing a task changes none of its files, so its DIGEST and the
-# results recorded against it stay as they are. One entry per task: `task` (the task dir name without its mode suffix,
-# base_of()) and `default_mode`, the mode `harbor run --core` runs; another mode of the same tasks can be forced.
+# results recorded against it stay as they are. One entry per task: `task`, the task dir name without its mode suffix
+# (base_of()); every mode dir of a listed task is core.
 CORE_SET_FILE = Path(os.environ.get("RCB_CORE_SET_FILE") or Path(__file__).resolve().parents[1] / "docs" / "core_set.toml")
 # RCB_CORE_SET_FILE: tests only (scripts/tests: a summary test whose fixed tasks must not move with the list)
-CORE_FIELDS = ("task", "default_mode")
+CORE_FIELDS = ("task",)
 
 
 @functools.lru_cache(maxsize=8)
-def _core_set(path: Path, mtime: int) -> dict[str, str]:
+def _core_set(path: Path, mtime: int) -> frozenset[str]:
     d = tomllib.loads(path.read_text(encoding="utf-8"))
-    out: dict[str, str] = {}
+    out: set[str] = set()
     for e in d.get("task", []):
         t = e.get("task") if isinstance(e, dict) else None
         if not isinstance(t, str) or not t:
             raise ValueError(f"{path.name}: an entry without a task: {e!r}")
         if t in out:
             raise ValueError(f"{path.name}: {t} listed twice")
-        out[t] = str(e.get("default_mode") or "")
-    return out
+        out.add(t)
+    return frozenset(out)
 
 
-def core_set(path: Path = CORE_SET_FILE) -> dict[str, str]:
-    """docs/core_set.toml as {task: default mode}; empty when the file is absent. ValueError on a malformed file
+def core_set(path: Path = CORE_SET_FILE) -> frozenset[str]:
+    """docs/core_set.toml as its set of tasks; empty when the file is absent. ValueError on a malformed file
     (ci_checks: `task_conventions.py core-set --check`). Parsed once per version of the file (its mtime), so a
     long-running reader sees an edited list."""
     try:
         mtime = path.stat().st_mtime_ns
     except FileNotFoundError:
-        return {}
-    return dict(_core_set(path, mtime))
+        return frozenset()
+    return _core_set(path, mtime)
 
 
 def core_tasks(modes: "set[str] | None" = None, path: Path = CORE_SET_FILE, tasks_dir: Path | None = None,
                missing: "dict[str, list[str]] | None" = None) -> list[str]:
-    """The task dirs of the core tasks: no modes, each task's default_mode dir; with modes, each task's dir of each of
-    those modes that exists (a task without that mode is skipped and added to missing[mode] when given)."""
+    """The task dirs of the core tasks: every mode dir of each core task; with modes, its dir of each of those modes
+    (a task without that mode is skipped and added to missing[mode] when given)."""
     out = []
-    for t, dm in core_set(path).items():
-        for m in sorted(modes) if modes else [dm]:
+    for t in core_set(path):
+        for m in sorted(modes) if modes else MODES:
             d = f"{t}-{m}"
-            if modes and not (task_dir(d, tasks_dir) / "task.toml").is_file():
-                if missing is not None:
+            if not (task_dir(d, tasks_dir) / "task.toml").is_file():
+                if modes and missing is not None:
                     missing.setdefault(m, []).append(t)
                 continue
             out.append(d)
@@ -1668,11 +1668,13 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
     the line above, so no line needs a horizontal scroll on GitHub."""
     tasks_dir = tasks_dir or TASKS_DIR
     dirs = iter_tasks(tasks_dir)
-    core = len(core_tasks(tasks_dir=tasks_dir))
-    priv = len(core_tasks({"privileged"}, tasks_dir=tasks_dir))
+    core = len(core_set())
+    core_dirs = len(core_tasks(tasks_dir=tasks_dir))
+    per = {m: len(core_tasks({m}, tasks_dir=tasks_dir)) for m in MODES}
     bases = len({base_of(p) for p in dirs})
     benches = len({p.parent.name for p in dirs})
     arc = sum(1 for p in dirs if p.parent.name == "roboarc")
+    paper = [p for p in dirs if p.parent.name != "humanclaw"]
     m = "-a codex -m openai/gpt-6-astra"
     d = "harbor run -d embodied-first-exam"
 
@@ -1712,11 +1714,12 @@ def readme_quick_start(tasks_dir: Path | None = None) -> str:
               "# the tasks are cloned on first use; API keys: in the shell or a .env in the working directory",
               "uv tool install embodied-first-exam --with-executables-from harbor"),
         "### 2. Run", "",
-        block(f"# the core set: {core} tasks, each in its default mode", f"{d} {m}"),
-        block(f"# the core tasks in another mode: --privileged ({priv} tasks), --standard, --realtime",
+        block(f"# the core set: {core} tasks in every mode they have ({core_dirs} task dirs)", f"{d} {m}"),
+        block("# the core tasks in one mode: " + ", ".join(f"--{k} ({n} tasks)" for k, n in per.items()),
               f"{d} --privileged {m}"),
-        block(f"# every task: {len(dirs)} task dirs ({bases} tasks in their modes, {benches} benchmarks)",
-              f"{d}@all {m}"),
+        block(f"# every task: {len(dirs)} task dirs ({bases} tasks in their modes, {benches} benchmarks); the paper and "
+              f"leaderboard count {len({base_of(p) for p in paper})} tasks / {len(paper)} tests / "
+              f"{len({p.parent.name for p in paper})} suites, without HumanCLAW", f"{d}@all {m}"),
         block(f"# one benchmark, here RoboARC ({arc} task dirs)", f"{d}@all -p tasks/roboarc {m}"),
         block("# one task (-y skips Harbor's confirmation prompt, e.g. in a script)",
               f"{d}@all -p tasks/<benchmark>/<task> -a oracle"),
@@ -1763,7 +1766,7 @@ def taxonomy_protocol_row(tasks_dir: Path | None = None) -> str:
 
 def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) -> list[str]:
     """What is wrong with the core set: no file, an unknown top-level key or field, a task that is not a plain task name
-    without a mode suffix, a default_mode that is not a mode, or no task dir of the task in its default_mode."""
+    without a mode suffix, or a task with no task dir in any mode."""
     tasks_dir = tasks_dir or TASKS_DIR
     if not path.is_file():
         return [f"{path.name}: no such file"]
@@ -1780,15 +1783,12 @@ def check_core_set(tasks_dir: Path | None = None, path: Path = CORE_SET_FILE) ->
         u = set(e) - set(CORE_FIELDS)
         if u:
             bad.append(f"{e.get('task')}: unknown field(s) {', '.join(sorted(u))}")
-    for t, dm in cs.items():
+    for t in sorted(cs):
         if t != Path(t).name or base_of(Path(t)) != t:
             bad.append(f"{t}: not a task name (a task dir name without its mode suffix)")
             continue
-        if dm not in MODES:
-            bad.append(f"{t}: default_mode {dm!r} is not one of {', '.join(MODES)}")
-            continue
-        if not (task_dir(f"{t}-{dm}", tasks_dir) / "task.toml").is_file():
-            bad.append(f"{t}: no task directory {t}-{dm} under tasks/")
+        if not any((task_dir(f"{t}-{m}", tasks_dir) / "task.toml").is_file() for m in MODES):
+            bad.append(f"{t}: no task directory {t}-<mode> under tasks/")
     return bad
 
 
@@ -1940,12 +1940,14 @@ def main(argv: list[str]) -> int:
             print("FAIL docs/TAXONOMY.md: the protocol row is stale (python3 scripts/task_conventions.py taxonomy --write)"); return 1
         print("ok docs/TAXONOMY.md protocol row"); return 0
     if argv[:1] == ["core-set"]:       # `core-set --check`: docs/core_set.toml (PROTOCOL §4); `core-set [--<mode>...]`:
-        if "--check" in argv:            # list the core tasks' default-mode dirs, or their dirs of those modes (core_tasks())
+        if "--check" in argv:            # list the core tasks' dirs, or their dirs of those modes (core_tasks())
             bad = check_core_set()
             for b in bad:
                 print(f"FAIL docs/core_set.toml: {b}")
             if not bad:
-                print(f"ok docs/core_set.toml: {len(core_set())} core tasks")
+                per = {m: len(core_tasks({m})) for m in MODES}
+                print(f"ok docs/core_set.toml: {len(core_set())} core tasks, {sum(per.values())} task dirs ("
+                      + ", ".join(f"{m} {n}" for m, n in per.items()) + ")")
             return 1 if bad else 0
         for t in core_tasks({a[2:] for a in argv[1:] if a[2:] in MODES}):
             print(t)

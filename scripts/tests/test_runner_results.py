@@ -257,7 +257,7 @@ def test_summary_grouping():
         sys.path.insert(0, str(ROOT / "scripts"))
         import task_conventions as tc
         (td / "core_set.toml").write_text("".join(
-            f'[[task]]\ntask = "{tc.base_of(Path(t))}"\ndefault_mode = "{tc.mode_of(Path(t))}"\n' for t in
+            f'[[task]]\ntask = "{tc.base_of(Path(t))}"\n' for t in
             (TASK, f"{SMALL}-privileged", UNVALIDATED, VALIDATED_RT)))
         r = subprocess.run([sys.executable, "-", str(jobs), "bx", str(ROOT)], input=summary_code(), capture_output=True, text=True,
                            env={**os.environ, "RCB_CORE_SET_FILE": str(td / "core_set.toml")})
@@ -273,7 +273,7 @@ def test_summary_grouping():
 
 
 def test_core_set():
-    """PROTOCOL §4: the core set (docs/core_set.toml: task + default_mode) is valid, marks every mode dir of its listed
+    """PROTOCOL §4: the core set (docs/core_set.toml: one entry per task) is valid, marks every mode dir of its listed
     tasks `core` and every other dir `excluded` (recorded with the result as `set`, never part of config_key), and the
     batch summary marks the trials outside it and leaves them out of the rate."""
     sys.path.insert(0, str(ROOT / "scripts"))
@@ -282,23 +282,23 @@ def test_core_set():
     names = [p.name for p in tc.iter_tasks()]
     cs = tc.core_set()
     def entry(t, **k):                                   # a valid entry for task t, with the fields in k changed
-        f = {"task": t, "default_mode": cs.get(t, "standard"), **k}
+        f = {"task": t, **k}
         return "[[task]]\n" + "".join(f'{n} = "{v}"\n' for n, v in f.items())
     ANY, ANY2 = sorted(cs)[:2]
     with tempfile.TemporaryDirectory() as td:
         bad = Path(td) / "core_set.toml"
-        bad.write_text(entry("behavior-no-such-task-i00") + entry(ANY, default_mode="x") + entry(ANY2, luna="failed")
-                       + entry("../tasks/" + ANY) + entry(f"{ANY}-{cs[ANY]}"))
+        bad.write_text(entry("behavior-no-such-task-i00") + entry(ANY, default_mode="standard") + entry(ANY2, luna="failed")
+                       + entry("../tasks/" + ANY) + entry(f"{ANY}-standard"))
         found = tc.check_core_set(path=bad)
-        check(len(found) == 5, f"check_core_set: want a missing dir, a wrong mode, an unknown field, a path and a dir name, got {found}")
+        check(len(found) == 5, f"check_core_set: want a missing dir, two unknown fields, a path and a dir name, got {found}")
         (Path(td) / "twice.toml").write_text(entry(ANY) + entry(ANY))
         check(any("twice" in x for x in tc.check_core_set(path=Path(td) / "twice.toml")), "a task listed twice is not found")
         check(tc.check_core_set(path=Path(td) / "none.toml") != [], "a missing list passes")
         (Path(td) / "toplevel.toml").write_text('generated_from = "x"\n' + entry(ANY))
         check(any("top-level" in x for x in tc.check_core_set(path=Path(td) / "toplevel.toml")), "an unknown top-level key passes")
     core = set(tc.core_tasks())
-    check(len(core) == len(cs) and all(tc.mode_of(Path(d)) == cs[tc.base_of(Path(d))] for d in core),
-          "core_tasks(): not one default-mode dir per core task")
+    check(core == {t for t in names if tc.base_of(Path(t)) in cs} and {tc.base_of(Path(d)) for d in core} == set(cs),
+          "core_tasks(): not every mode dir of every core task")
     # a listed standard dir and an unlisted one in the same configuration (one summary table); the list changes over
     # time, so both are looked up
     key = functools.lru_cache(maxsize=None)(lambda t: tc.config_key(tc.effective_config(tc.task_dir(t))))

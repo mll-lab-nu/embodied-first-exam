@@ -125,9 +125,8 @@ version, mode, cutoff, reset budget, S, network), report success together with c
 simulation steps), and align reasoning effort, `max_turns` and the token budget before comparing agents. Validated and
 unvalidated tasks (`validated_of`: `[metadata] validated`, else `oracle = "full"`) are ranked together: totals count
 every core task, the flag is shown as a marker and may be used as a filter. The main table and every headline number
-(success rates, rankings, totals) count core only: the tasks of [`core_set.toml`](../core_set.toml), each in its
-`default_mode` (`task_conventions.core_tasks()`); a run of the core tasks in another mode is reported apart (`set_of`:
-`core` for every mode of a listed task, else `excluded`). Task dirs the list leaves out stay in the repository under
+(success rates, rankings, totals) count core only: every mode dir of the tasks of [`core_set.toml`](../core_set.toml)
+(`task_conventions.core_tasks()`; `set_of`: `core` for every mode of a listed task, else `excluded`). Task dirs the list leaves out stay in the repository under
 their names and are not evaluated by official runs; results they already have are kept and shown marked (the batch
 summary marks them in their configuration's table and leaves them out of its rate). `set` in `config.json` is the
 value when the result was written; a report derives it from `docs/core_set.toml` at the commit it publishes.
