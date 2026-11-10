@@ -1,0 +1,15 @@
+[[replace]]
+old = "state hash `36a10f65fd90f73b`"
+new = "state hash `24456a84b612ea39`"
+
+[[replace]]
+old = "`solution/oracle.npy`, 2872 rows"
+new = "`solution/oracle.npy`, 3591 rows"
+
+[[replace]]
+old = "9 nuts and 10 bolts lie"
+new = "8 nuts and 17 bolts lie"
+
+[[replace]]
+old = "Long horizon: 19 small parts"
+new = "Long horizon: 25 small parts"
