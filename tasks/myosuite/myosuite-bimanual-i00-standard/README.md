@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `myosuite-bimanual-i00-privileged` |
 | Simulator / robot | `myosuite` / `myoarm-mpl` |
-| Family / instance | `bimanual` / seed 0 |
+| Family / instance | `bimanual` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `none` — no positive example yet (two model attempts failed: Codex + GPT-6 Luna, effort high, run `codex-gpt6_luna-high` and Claude Code + Claude Opus 5.5 (run `claude_code-claude_opus_5_5-default`, 2026-10-06)); the task is marked unvalidated (PROTOCOL §2 `validated`); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |
