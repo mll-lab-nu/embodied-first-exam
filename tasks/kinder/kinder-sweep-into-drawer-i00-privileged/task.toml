@@ -19,6 +19,11 @@ expert_time_estimate_hours = 4.0
 oracle = "none"
 oracle_evidence = "GPT-6 Luna's privileged-mode trajectory of 2026-10-04, run `codex-gpt6_luna-medium` on the results site, which today's privileged verifier scores 1 (it moves the base diagonally by up to 0.13 m a step, beyond standard mode's 0.1 m disc, so it is no standard-mode example); in standard mode, the graded episode of run `codex-gpt6_1_sol-high` of 2026-10-03 (960 control steps, no reset), which the standard service scored 1 (live, fresh replay, deterministic); human review in PR #8"
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [0, 1, 2]
+
 [verifier]
 timeout_sec = 900.0
 # grade.py runs in its own container, built from tests/Dockerfile (docs/protocol/README.md Appendix H.1): the agent's container,

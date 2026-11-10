@@ -1,0 +1,11 @@
+[[replace]]
+old = "`kinder/ConstrainedCupboard3D-o6-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode"
+new = "`kinder/ConstrainedCupboard3D-o6-v0` (Dynamic3D, TidyBot++), seed 2, privileged mode"
+
+[[replace]]
+old = "(`kinder/ConstrainedCupboard3D-o6-v0`, seed\n0)"
+new = "(`kinder/ConstrainedCupboard3D-o6-v0`, seed\n2)"
+
+[[replace]]
+old = "they go into the 11th, 5th, 2nd, 8th, 4th and 1st cupboard of the row"
+new = "they go into the 5th, 6th, 7th, 2nd, 9th and 4th cupboard of the row"

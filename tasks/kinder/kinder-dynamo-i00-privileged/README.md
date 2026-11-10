@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `kinder-dynamo-i00-standard` |
 | Simulator / robot | `kinder` / `tidybot-plus-plus` |
-| Family / instance | `dynamo` / seed 0 |
+| Family / instance | `dynamo` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` |
