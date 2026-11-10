@@ -17,6 +17,12 @@ oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 7.5
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [0, 11]
+oracle = [0, 11]
+
 [verifier]
 timeout_sec = 600.0
 environment_mode = "separate"

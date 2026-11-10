@@ -1,0 +1,15 @@
+[[replace]]
+old = "state hash `2ebc48bf64974f98`"
+new = "state hash `b6aab9637937c44e`"
+
+[[replace]]
+old = "`solution/oracle.npy`, 2205 rows"
+new = "`solution/oracle.npy`, 3937 rows"
+
+[[replace]]
+old = "12 LEGO-style blocks -- 6 red, 3 yellow, 3 blue --"
+new = "14 LEGO-style blocks -- 4 red, 5 yellow, 5 blue --"
+
+[[replace]]
+old = "Long horizon: 12 small blocks"
+new = "Long horizon: 14 small blocks"

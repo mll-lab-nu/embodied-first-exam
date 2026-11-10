@@ -1,0 +1,15 @@
+[[replace]]
+old = "state hash `6cdaa86a450092e7`"
+new = "state hash `2cd6488df455f7fd`"
+
+[[replace]]
+old = "`solution/oracle.npy`, 453 rows"
+new = "`solution/oracle.npy`, 582 rows"
+
+[[replace]]
+old = "an 11-second countdown"
+new = "a 15-second countdown"
+
+[[replace]]
+old = "balancing for 11 s"
+new = "balancing for 15 s"

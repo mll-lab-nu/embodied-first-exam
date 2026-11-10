@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `abc-sim-count-four-i00-standard` |
 | Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `count_four` / seed 0 |
+| Family / instance | `count_four` / seed 0 (allowed seeds: [0, 88, 89]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |

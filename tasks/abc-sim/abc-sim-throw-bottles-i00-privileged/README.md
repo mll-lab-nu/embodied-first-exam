@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `abc-sim-throw-bottles-i00-standard` |
 | Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `throw_bottles` / seed 0 |
+| Family / instance | `throw_bottles` / seed 0 (allowed seeds: [0, 1, 6]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |
