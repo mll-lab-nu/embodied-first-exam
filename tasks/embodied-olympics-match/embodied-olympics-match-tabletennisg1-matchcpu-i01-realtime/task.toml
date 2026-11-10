@@ -35,6 +35,11 @@ expert_time_estimate_hours = 2.0
 oracle = "partial"
 oracle_evidence = "the sport's reference player (solution/: builtin_players:OpenReference, camera images and /spec only, the learned striker of the release on CPU) over HTTP: the camera-only reference won this seed 7:6 live (x1i: 2 of 5 seeds against level 4: 4, 5); in this repository it lost 2:5 (realtime) and 5:7 (standard): no winning oracle. Embodied First Exam's local Harbor runs: see the benchmark README; nop 0"
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [4, 1, 2]
+
 [verifier]
 timeout_sec = 1800.0
 environment_mode = "separate"

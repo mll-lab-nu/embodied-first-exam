@@ -23,6 +23,11 @@ oracle = "partial"
 oracle_evidence = "full-state reference program (solution/): the camera-only reference player's serve and stroke planner fed the true ball state (the earlier table-tennis twins' smoke controller); a local Harbor oracle run lost 4:6 (valid, replay identical); the nop (no program) scores 0"
 validated = false
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [34, 404, 414]
+
 [agent]
 timeout_sec = 7200.0
 network_mode = "allowlist"

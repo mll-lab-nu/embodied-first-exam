@@ -24,6 +24,11 @@ oracle = "partial"
 oracle_evidence = "full-state reference program (solution/): the twin's joint-level oracle controller (joint_oracle.py with its team, walker and DCM modules) fed the true state; oracle runs were waived for the Embodied Olympics - Match twins: untested"
 validated = false
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [101, 1, 2]
+
 [agent]
 timeout_sec = 14400.0
 network_mode = "allowlist"

@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `embodied-olympics-match-foosball-match-i01-standard` |
 | Simulator / robot | `mujoco` / `foosball-rods` |
-| Family / instance | `foosball_match` / seed 7 |
+| Family / instance | `foosball_match` / seed 7 (allowed seeds: [7, 303, 313]; PROTOCOL §2) |
 | Oracle | `full` — full-state reference program (solution/): the sport's reference player (builtin_players.Reference) fed the true ball state (0.03 s lead) and the opponent's true figures in place of the cameras; a local Harbor oracle run won 5:3 (valid, replay identical); the nop (no program) scores 0 |
 | Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |

@@ -37,6 +37,11 @@ expert_time_estimate_hours = 0.5
 oracle = "partial"
 oracle_evidence = "RLSSL 2026-10-16 (doc rlssl): L-RL against L3 25 W 5 D 10 L over 40 matches on fresh seeds (64 W 11 D 25 L over 100 with the screening), goals +1.7 per match; mirror match 29 W 5 D 46 L over 80 (two 40-match seed sets: 25 % and 48 %; L3 against itself on the first set 60 %); the truth reference against it 10 W of 20; replay identical; limits through World.execute (0.014 % of commands clipped, as L3). The oracle run checks the pipeline"
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [7, 1, 2]
+
 [verifier]
 timeout_sec = 3960.0
 environment_mode = "separate"

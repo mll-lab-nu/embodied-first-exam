@@ -1,0 +1,30 @@
+# Seed 202 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
+# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+
+[[replace]]
+old = "RO_SEED: \"8\""
+new = "RO_SEED: \"202\""
+
+[[replace]]
+old = "\"seed\": 8}"
+new = "\"seed\": 202}"
+
+[[replace]]
+old = "level=2, seed=8)"
+new = "level=2, seed=202)"
+
+[[replace]]
+old = "--seed 8 "
+new = "--seed 202 "
+
+[[replace]]
+old = ", seed 8:"
+new = ", seed 202:"
+
+[[replace]]
+old = ", seed 8,"
+new = ", seed 202,"
+
+[[replace]]
+old = ", seed 8\n"
+new = ", seed 202\n"

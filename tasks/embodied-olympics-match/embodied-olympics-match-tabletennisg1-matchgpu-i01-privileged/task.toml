@@ -23,6 +23,11 @@ oracle = "partial"
 oracle_evidence = "the sport's camera-only reference player (solution/program.py: builtin_players:OpenReference in its in-process form, the learned striker of the release on CPU; it ignores the truth) won 5:3 on a Xeon Platinum 8488C (the CPU tier) and lost 6:7 on the GPU tier's EPYC host (the in-process match is replay-identical on one host, not across CPU architectures) (Embodied First Exam's local Harbor runs: see the benchmark README; replay identical); nop 0"
 validated = true
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [4, 1, 2]
+
 [agent]
 timeout_sec = 7200.0
 network_mode = "allowlist"
