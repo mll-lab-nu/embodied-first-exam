@@ -1,0 +1,15 @@
+[[replace]]
+old = "At the start the cup stands upside down on the counter in front of you, about 0.6 m away, straight ahead, 0.96 m above the floor."
+new = "At the start the cup stands upside down on the counter in front of you, about 0.5 m away, straight ahead, 0.96 m above the floor."
+
+[[replace]]
+old = "(BiGym's `flip_cup`, reset with seed 0)"
+new = "(BiGym's `flip_cup`, reset with seed 620101)"
+
+[[replace]]
+old = "the task reset with seed 0, t = 0 state hash `1c6b0880642234de1811b403175466eb5544ef4a`"
+new = "the task reset with seed 620101, t = 0 state hash `f94b48dbecc3e9fca00b2f14e769e54b88dc3ae8`"
+
+[[replace]]
+old = "(no network but the model APIs; seed 0 is none of their seeds)"
+new = "(no network but the model APIs; seed 620101 is none of their seeds)"

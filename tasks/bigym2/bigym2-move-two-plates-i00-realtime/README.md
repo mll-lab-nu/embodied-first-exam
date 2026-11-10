@@ -6,7 +6,7 @@
 | Mode | realtime (`eai-standard/2.3`) |
 | Twin | `bigym2-move-two-plates-i00-privileged` |
 | Simulator / robot | `bigym2` / `unitree-g1-dex1` |
-| Family / instance | `move-two-plates` / seed 0 |
+| Family / instance | `move-two-plates` / seed 0 (allowed seeds: [0, 620100, 620101]; PROTOCOL §2) |
 | Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 0 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |

@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `bigym2-reach-target-dual-i00-standard` |
 | Simulator / robot | `bigym2` / `unitree-g1-dex1` |
-| Family / instance | `reach-target-dual` / seed 0 |
+| Family / instance | `reach-target-dual` / seed 0 (allowed seeds: [0, 620100, 620101]; PROTOCOL §2) |
 | Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-reach-target-dual-i00-pri__fxPRBTg (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |

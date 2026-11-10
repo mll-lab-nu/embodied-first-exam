@@ -1,0 +1,706 @@
+{
+ "family": "drawer-top-open",
+ "instance": "i00",
+ "task": "drawer_top_open",
+ "seed": 620101,
+ "scene": "At the start the kitchen cabinet is in front of you; the handle of its top drawer is about 0.5 m away, straight ahead, 0.73 m above the floor.",
+ "upstream": {
+  "package": "bigym",
+  "version": "1.0.0",
+  "commit": "93ad4b3"
+ },
+ "substrate": {
+  "substrate_version": "bigym2-mj381-v1",
+  "mujoco_version": "3.8.1"
+ },
+ "t0": {
+  "state_sha": "d63bfa7206a8929a620b656094af1028b10996ca",
+  "scene_sha": "baaeb48f55f1bdde49796485de7faed000f9107c",
+  "qpos": [
+   0.06210609469336384,
+   -0.03022293820111326,
+   0.7466566744519726,
+   0.0025737335900846295,
+   -0.007271339313206044,
+   -0.04280533947279631,
+   -0.4127086185715617,
+   0.009346670341341418,
+   0.011172131844799146,
+   0.7372639088042188,
+   -0.3185148066084644,
+   -0.0026384266793630087,
+   -0.41593498624534214,
+   -0.007343175887849609,
+   -0.011853367653594259,
+   0.74302288201969,
+   -0.32112524651820645,
+   -0.004666520636520025,
+   0.0006931098533773198,
+   -0.008607944480845073,
+   0.0529246990265973,
+   0.018007283502986582,
+   -0.0012927772962216422,
+   0.00012124838389257432,
+   0.027592023956585124,
+   0.00015754809896584458,
+   0.03824052902330442,
+   0.00010931265372788386,
+   -0.0022025586570259244,
+   -0.0021974451000712184,
+   0.017962360732614053,
+   0.0016481270857388096,
+   8.877286721843738e-05,
+   0.027593028808209154,
+   -0.00012106381568667824,
+   0.038241861825231566,
+   7.304182415703878e-05,
+   -0.0022016150250192693,
+   -0.002198386172875632,
+   0.0,
+   0.0,
+   0.04668649086884509,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "layout": [
+   "vx",
+   "vy",
+   "height",
+   "wz",
+   "left_shoulder_pitch_joint",
+   "left_shoulder_roll_joint",
+   "left_shoulder_yaw_joint",
+   "left_elbow_joint",
+   "left_wrist_roll_joint",
+   "left_wrist_pitch_joint",
+   "left_wrist_yaw_joint",
+   "right_shoulder_pitch_joint",
+   "right_shoulder_roll_joint",
+   "right_shoulder_yaw_joint",
+   "right_elbow_joint",
+   "right_wrist_roll_joint",
+   "right_wrist_pitch_joint",
+   "right_wrist_yaw_joint",
+   "left_gripper",
+   "right_gripper"
+  ],
+  "action_dim": 20,
+  "lower": [
+   -1.0,
+   -1.0,
+   0.4,
+   -1.0,
+   -3.0892,
+   -1.5882,
+   -2.618,
+   -1.0472,
+   -1.9722,
+   -1.6144,
+   -1.6144,
+   -3.0892,
+   -1.5882,
+   -2.618,
+   -1.0472,
+   -1.9722,
+   -1.6144,
+   -1.6144,
+   0.0,
+   0.0
+  ],
+  "upper": [
+   1.0,
+   1.0,
+   1.0,
+   1.0,
+   2.6704,
+   2.2515,
+   2.618,
+   2.0944,
+   1.9722,
+   1.6144,
+   1.6144,
+   2.6704,
+   2.2515,
+   2.618,
+   2.0944,
+   1.9722,
+   1.6144,
+   1.6144,
+   1.0,
+   1.0
+  ],
+  "hold": [
+   0.0,
+   0.0,
+   0.74,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.6,
+   0.6
+  ],
+  "horizon_steps": 1350,
+  "control_dt": 0.02,
+  "proprio_layout": [
+   "left_shoulder_pitch_joint_pos",
+   "left_shoulder_roll_joint_pos",
+   "left_shoulder_yaw_joint_pos",
+   "left_elbow_joint_pos",
+   "left_wrist_roll_joint_pos",
+   "left_wrist_pitch_joint_pos",
+   "left_wrist_yaw_joint_pos",
+   "left_dex1_finger_joint_1_pos",
+   "left_dex1_finger_joint_2_pos",
+   "right_shoulder_pitch_joint_pos",
+   "right_shoulder_roll_joint_pos",
+   "right_shoulder_yaw_joint_pos",
+   "right_elbow_joint_pos",
+   "right_wrist_roll_joint_pos",
+   "right_wrist_pitch_joint_pos",
+   "right_wrist_yaw_joint_pos",
+   "right_dex1_finger_joint_1_pos",
+   "right_dex1_finger_joint_2_pos",
+   "pelvis_x_pos",
+   "pelvis_y_pos",
+   "pelvis_z_pos",
+   "pelvis_rz_pos",
+   "left_shoulder_pitch_joint_vel",
+   "left_shoulder_roll_joint_vel",
+   "left_shoulder_yaw_joint_vel",
+   "left_elbow_joint_vel",
+   "left_wrist_roll_joint_vel",
+   "left_wrist_pitch_joint_vel",
+   "left_wrist_yaw_joint_vel",
+   "left_dex1_finger_joint_1_vel",
+   "left_dex1_finger_joint_2_vel",
+   "right_shoulder_pitch_joint_vel",
+   "right_shoulder_roll_joint_vel",
+   "right_shoulder_yaw_joint_vel",
+   "right_elbow_joint_vel",
+   "right_wrist_roll_joint_vel",
+   "right_wrist_pitch_joint_vel",
+   "right_wrist_yaw_joint_vel",
+   "right_dex1_finger_joint_1_vel",
+   "right_dex1_finger_joint_2_vel",
+   "pelvis_x_vel",
+   "pelvis_y_vel",
+   "pelvis_z_vel",
+   "pelvis_rz_vel",
+   "left_gripper_state",
+   "right_gripper_state",
+   "pelvis_x",
+   "pelvis_y",
+   "pelvis_z",
+   "pelvis_yaw"
+  ],
+  "cameras": {
+   "head": {
+    "fovy_deg": 60.0,
+    "position_m": [
+     0.1325,
+     0.002,
+     1.1547
+    ],
+    "forward": [
+     0.4567,
+     -0.0048,
+     -0.8896
+    ],
+    "up": [
+     0.8896,
+     0.004,
+     0.4566
+    ],
+    "right": [
+     0.0014,
+     -1.0,
+     0.0061
+    ]
+   },
+   "left_wrist": {
+    "fovy_deg": 60.0,
+    "position_m": [
+     0.3259,
+     0.1505,
+     0.8452
+    ],
+    "forward": [
+     0.675,
+     -0.001,
+     -0.7378
+    ],
+    "up": [
+     0.7377,
+     0.0094,
+     0.675
+    ],
+    "right": [
+     0.0063,
+     -1.0,
+     0.0071
+    ]
+   },
+   "right_wrist": {
+    "fovy_deg": 60.0,
+    "position_m": [
+     0.3261,
+     -0.1495,
+     0.8469
+    ],
+    "forward": [
+     0.6751,
+     -0.006,
+     -0.7377
+    ],
+    "up": [
+     0.7377,
+     0.0009,
+     0.6751
+    ],
+    "right": [
+     -0.0034,
+     -1.0,
+     0.005
+    ]
+   }
+  },
+  "robot": {
+   "frame": "the pelvis with every joint at 0: x forward, y left, z up (m)",
+   "joints": {
+    "left_shoulder_pitch_joint": {
+     "type": "hinge",
+     "axis": [
+      0.0002,
+      0.9612,
+      0.2757
+     ],
+     "position_m": [
+      -0.0,
+      0.1002,
+      0.2918
+     ],
+     "range": [
+      -3.0892,
+      2.6704
+     ],
+     "link": "left_shoulder_pitch_link"
+    },
+    "left_shoulder_roll_joint": {
+     "type": "hinge",
+     "axis": [
+      1.0,
+      -0.0002,
+      -0.0001
+     ],
+     "position_m": [
+      0.0,
+      0.1406,
+      0.289
+     ],
+     "range": [
+      -1.5882,
+      2.2515
+     ],
+     "link": "left_shoulder_roll_link"
+    },
+    "left_shoulder_yaw_joint": {
+     "type": "hinge",
+     "axis": [
+      0.0001,
+      -0.0001,
+      1.0
+     ],
+     "position_m": [
+      -0.0,
+      0.1468,
+      0.1858
+     ],
+     "range": [
+      -2.618,
+      2.618
+     ],
+     "link": "left_shoulder_yaw_link"
+    },
+    "left_elbow_joint": {
+     "type": "hinge",
+     "axis": [
+      0.0002,
+      1.0,
+      0.0001
+     ],
+     "position_m": [
+      0.0158,
+      0.1468,
+      0.1052
+     ],
+     "range": [
+      -1.0472,
+      2.0944
+     ],
+     "link": "left_elbow_link"
+    },
+    "left_wrist_roll_joint": {
+     "type": "hinge",
+     "axis": [
+      1.0,
+      -0.0002,
+      -0.0001
+     ],
+     "position_m": [
+      0.1158,
+      0.1487,
+      0.0952
+     ],
+     "range": [
+      -1.9722,
+      1.9722
+     ],
+     "link": "left_wrist_roll_link"
+    },
+    "left_wrist_pitch_joint": {
+     "type": "hinge",
+     "axis": [
+      0.0002,
+      1.0,
+      0.0001
+     ],
+     "position_m": [
+      0.1538,
+      0.1487,
+      0.0952
+     ],
+     "range": [
+      -1.6144,
+      1.6144
+     ],
+     "link": "left_wrist_pitch_link"
+    },
+    "left_wrist_yaw_joint": {
+     "type": "hinge",
+     "axis": [
+      0.0001,
+      -0.0001,
+      1.0
+     ],
+     "position_m": [
+      0.2048,
+      0.1487,
+      0.0952
+     ],
+     "range": [
+      -1.6144,
+      1.6144
+     ],
+     "link": "left_wrist_yaw_link"
+    },
+    "left_dex1_finger_joint_1": {
+     "type": "slide",
+     "axis": [
+      -0.0002,
+      -1.0,
+      -0.0001
+     ],
+     "position_m": [
+      0.2463,
+      0.1487,
+      0.0952
+     ],
+     "range": [
+      -0.02,
+      0.0245
+     ],
+     "link": "left_dex1_finger_link_1"
+    },
+    "left_dex1_finger_joint_2": {
+     "type": "slide",
+     "axis": [
+      0.0002,
+      1.0,
+      0.0001
+     ],
+     "position_m": [
+      0.2463,
+      0.1487,
+      0.0952
+     ],
+     "range": [
+      -0.02,
+      0.0245
+     ],
+     "link": "left_dex1_finger_link_2"
+    },
+    "right_shoulder_pitch_joint": {
+     "type": "hinge",
+     "axis": [
+      -0.0002,
+      0.9612,
+      -0.2757
+     ],
+     "position_m": [
+      -0.0,
+      -0.1002,
+      0.2918
+     ],
+     "range": [
+      -3.0892,
+      2.6704
+     ],
+     "link": "right_shoulder_pitch_link"
+    },
+    "right_shoulder_roll_joint": {
+     "type": "hinge",
+     "axis": [
+      1.0,
+      0.0002,
+      -0.0001
+     ],
+     "position_m": [
+      0.0,
+      -0.1406,
+      0.289
+     ],
+     "range": [
+      -2.2515,
+      1.5882
+     ],
+     "link": "right_shoulder_roll_link"
+    },
+    "right_shoulder_yaw_joint": {
+     "type": "hinge",
+     "axis": [
+      0.0001,
+      0.0001,
+      1.0
+     ],
+     "position_m": [
+      -0.0,
+      -0.1468,
+      0.1858
+     ],
+     "range": [
+      -2.618,
+      2.618
+     ],
+     "link": "right_shoulder_yaw_link"
+    },
+    "right_elbow_joint": {
+     "type": "hinge",
+     "axis": [
+      -0.0002,
+      1.0,
+      -0.0001
+     ],
+     "position_m": [
+      0.0158,
+      -0.1468,
+      0.1052
+     ],
+     "range": [
+      -1.0472,
+      2.0944
+     ],
+     "link": "right_elbow_link"
+    },
+    "right_wrist_roll_joint": {
+     "type": "hinge",
+     "axis": [
+      1.0,
+      0.0002,
+      -0.0001
+     ],
+     "position_m": [
+      0.1158,
+      -0.1487,
+      0.0952
+     ],
+     "range": [
+      -1.9722,
+      1.9722
+     ],
+     "link": "right_wrist_roll_link"
+    },
+    "right_wrist_pitch_joint": {
+     "type": "hinge",
+     "axis": [
+      -0.0002,
+      1.0,
+      -0.0001
+     ],
+     "position_m": [
+      0.1538,
+      -0.1487,
+      0.0952
+     ],
+     "range": [
+      -1.6144,
+      1.6144
+     ],
+     "link": "right_wrist_pitch_link"
+    },
+    "right_wrist_yaw_joint": {
+     "type": "hinge",
+     "axis": [
+      0.0001,
+      0.0001,
+      1.0
+     ],
+     "position_m": [
+      0.2048,
+      -0.1487,
+      0.0952
+     ],
+     "range": [
+      -1.6144,
+      1.6144
+     ],
+     "link": "right_wrist_yaw_link"
+    },
+    "right_dex1_finger_joint_1": {
+     "type": "slide",
+     "axis": [
+      0.0002,
+      -1.0,
+      0.0001
+     ],
+     "position_m": [
+      0.2463,
+      -0.1486,
+      0.0952
+     ],
+     "range": [
+      -0.02,
+      0.0245
+     ],
+     "link": "right_dex1_finger_link_1"
+    },
+    "right_dex1_finger_joint_2": {
+     "type": "slide",
+     "axis": [
+      -0.0002,
+      1.0,
+      -0.0001
+     ],
+     "position_m": [
+      0.2463,
+      -0.1486,
+      0.0952
+     ],
+     "range": [
+      -0.02,
+      0.0245
+     ],
+     "link": "right_dex1_finger_link_2"
+    }
+   },
+   "grippers": {
+    "left": {
+     "link": "left_wrist_yaw_link",
+     "position_m": [
+      0.148,
+      0.0,
+      0.0
+     ]
+    },
+    "right": {
+     "link": "right_wrist_yaw_link",
+     "position_m": [
+      0.148,
+      0.0,
+      0.0
+     ]
+    }
+   },
+   "gripper_point": "each gripper's point between its finger pads, in its link's frame",
+   "joint_sign": "a positive angle turns a hinge's child link about its axis by the right-hand rule (about an axis near +y, left, a link hanging below the joint swings backward); a positive slide moves its link along its axis",
+   "camera_mounts": {
+    "head": {
+     "link": "torso_link",
+     "position_m": [
+      0.12,
+      0.0,
+      0.37
+     ],
+     "forward": [
+      0.4969,
+      -0.0,
+      -0.8678
+     ],
+     "up": [
+      0.8678,
+      0.0008,
+      0.4969
+     ],
+     "right": [
+      0.0007,
+      -1.0,
+      0.0004
+     ],
+     "fovy_deg": 60.0
+    },
+    "left_wrist": {
+     "link": "left_wrist_yaw_link",
+     "position_m": [
+      0.12,
+      0.0,
+      0.04
+     ],
+     "forward": [
+      0.7643,
+      -0.0,
+      -0.6448
+     ],
+     "up": [
+      0.6448,
+      0.0008,
+      0.7643
+     ],
+     "right": [
+      0.0005,
+      -1.0,
+      0.0006
+     ],
+     "fovy_deg": 60.0
+    },
+    "right_wrist": {
+     "link": "right_wrist_yaw_link",
+     "position_m": [
+      0.12,
+      0.0,
+      0.04
+     ],
+     "forward": [
+      0.7643,
+      -0.0,
+      -0.6448
+     ],
+     "up": [
+      0.6448,
+      0.0008,
+      0.7643
+     ],
+     "right": [
+      0.0005,
+      -1.0,
+      0.0006
+     ],
+     "fovy_deg": 60.0
+    }
+   },
+   "camera_mount_frame": "each camera's pose in its link's frame"
+  }
+ }
+}

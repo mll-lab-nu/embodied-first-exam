@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `bigym2-saucepan-to-hob-i00-privileged` |
 | Simulator / robot | `bigym2` / `unitree-g1-dex1` |
-| Family / instance | `saucepan-to-hob` / seed 0 |
+| Family / instance | `saucepan-to-hob` / seed 0 (allowed seeds: [0, 620100, 620101]; PROTOCOL §2) |
 | Oracle | `none` — no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); no positive example yet; human review in PR #123 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:bigym2-0.1.1` |
