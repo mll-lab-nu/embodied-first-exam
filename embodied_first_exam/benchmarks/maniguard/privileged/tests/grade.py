@@ -243,6 +243,7 @@ def main() -> int:
                "first_divergence_step": first_divergence(outs[0].get("checkpoints"), o.get("checkpoints")),
                "instance_ok": int(instance_ok), "instance_exact": int(instance_exact),
                "n_actions": int(len(acts)), "control_steps": int(o.get("sim_steps") or 0), "nonfinite": int(o.get("reason") == "nonfinite"),
+               "sim_stopped": int(o.get("reason") == "sim_stopped"),
                "replay_wall_s": round(time.time() - t0, 1), "monitor_error": 0, "replay_timed_out": 0,
                # the frozen instance was not rebuilt on this host: the replays say nothing about the agent's trajectory
                "grader_error": int(not inst),

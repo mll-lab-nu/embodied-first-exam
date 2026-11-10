@@ -201,7 +201,8 @@ SPEC = {
     "max_control_steps": int(M.MAX_STEPS),
     "episode": f"one episode, no reset: it ends when the goal has held for 10 consecutive control steps (reason goal_held), after "
                f"{int(M.MAX_STEPS)} control steps ({M.MAX_STEPS / CTRL_HZ / 60:.1f} min of simulated time; reason runaway_guard, a "
-               "failure), when your time is over (timeout), or on a simulator error (error, or nonfinite: a non-finite robot state)",
+               "failure), when your time is over (timeout), or on a simulator error (error; nonfinite: a non-finite robot state; "
+               "sim_stopped: the simulator stopped running)",
     "robot_spec": RSPEC,
     "kinematics": KSPEC,
     "depth": {"modes": list(L.DEPTH_MODES), "default": "none", "kind": "z-depth", "unit": "m", "invalid": 0, "max_m": L.DEPTH_MAX_M,
