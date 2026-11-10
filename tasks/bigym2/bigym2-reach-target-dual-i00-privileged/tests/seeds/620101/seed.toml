@@ -1,0 +1,15 @@
+[[replace]]
+old = "At the start the red sphere is about 0.6 m away, 25° to your left, 0.82 m above the floor and the green sphere about 0.6 m away, 22° to your right, 0.83 m above the floor."
+new = "At the start the red sphere is about 0.6 m away, 15° to your left, 0.75 m above the floor and the green sphere about 0.6 m away, 25° to your right, 0.85 m above the floor."
+
+[[replace]]
+old = "(BiGym's `reach_target_dual`, reset with seed 0)"
+new = "(BiGym's `reach_target_dual`, reset with seed 620101)"
+
+[[replace]]
+old = "the task reset with seed 0, t = 0 state hash `c043250ab851bae093876865b52384500b12b477`"
+new = "the task reset with seed 620101, t = 0 state hash `80b73f657b02d53b4592d85a16a079292296d721`"
+
+[[replace]]
+old = "(no network but the model APIs; seed 0 is none of their seeds)"
+new = "(no network but the model APIs; seed 620101 is none of their seeds)"

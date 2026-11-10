@@ -1,0 +1,15 @@
+[[replace]]
+old = "At the start the kitchen cabinet is in front of you; the handle of its top drawer is about 0.5 m away, straight ahead, 0.73 m above the floor."
+new = "At the start the kitchen cabinet is in front of you; the handle of its top drawer is about 0.6 m away, straight ahead, 0.73 m above the floor."
+
+[[replace]]
+old = "(BiGym's `drawer_top_open`, reset with seed 0)"
+new = "(BiGym's `drawer_top_open`, reset with seed 620100)"
+
+[[replace]]
+old = "the task reset with seed 0, t = 0 state hash `1f40440c5bbb26dcfb5e8ec3bfdd166771c883fd`"
+new = "the task reset with seed 620100, t = 0 state hash `9110ed911ec0c58fa5a104299e3ce42f250b7cb0`"
+
+[[replace]]
+old = "(no network but the model APIs; seed 0 is none of their seeds)"
+new = "(no network but the model APIs; seed 620100 is none of their seeds)"

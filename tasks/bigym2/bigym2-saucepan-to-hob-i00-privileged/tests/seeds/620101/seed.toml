@@ -1,0 +1,15 @@
+[[replace]]
+old = "At the start the saucepan is inside the closed cabinet under the counter, about 0.6 m away, 12° to your left, 0.48 m above the floor; the cabinet door's handle is about 0.5 m away, 30° to your left, 0.67 m above the floor; the hob is on the counter top, about 0.7 m away, straight ahead, 0.85 m above the floor."
+new = "At the start the saucepan is inside the closed cabinet under the counter, about 0.6 m away, straight ahead, 0.48 m above the floor; the cabinet door's handle is about 0.5 m away, 30° to your left, 0.67 m above the floor; the hob is on the counter top, about 0.7 m away, straight ahead, 0.85 m above the floor."
+
+[[replace]]
+old = "(BiGym's `saucepan_to_hob`, reset with seed 0)"
+new = "(BiGym's `saucepan_to_hob`, reset with seed 620101)"
+
+[[replace]]
+old = "the task reset with seed 0, t = 0 state hash `edff0b1981fc734ca685a4b94da60a039e844d24`"
+new = "the task reset with seed 620101, t = 0 state hash `898140480f9de4ce41e7871391f5948650492245`"
+
+[[replace]]
+old = "(no network but the model APIs; seed 0 is none of their seeds)"
+new = "(no network but the model APIs; seed 620101 is none of their seeds)"

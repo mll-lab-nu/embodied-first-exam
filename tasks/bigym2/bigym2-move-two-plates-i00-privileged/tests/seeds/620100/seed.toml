@@ -1,0 +1,15 @@
+[[replace]]
+old = "At the start both plates stand in the left dish rack, about 0.7 m away, 29° to your left, 0.82 m above the floor; the right dish rack is about 0.7 m away, 21° to your right, 0.70 m above the floor. Both racks are on the table in front of you."
+new = "At the start both plates stand in the left dish rack, about 0.7 m away, 25° to your left, 0.82 m above the floor; the right dish rack is about 0.7 m away, 24° to your right, 0.70 m above the floor. Both racks are on the table in front of you."
+
+[[replace]]
+old = "(BiGym's `move_two_plates`, reset with seed 0)"
+new = "(BiGym's `move_two_plates`, reset with seed 620100)"
+
+[[replace]]
+old = "the task reset with seed 0, t = 0 state hash `7d1ae45354a715589a6f1220a70c75430d3efc2a`"
+new = "the task reset with seed 620100, t = 0 state hash `56ede224051d78d3f9607b6340c989d43907d7f5`"
+
+[[replace]]
+old = "(no network but the model APIs; seed 0 is none of their seeds)"
+new = "(no network but the model APIs; seed 620100 is none of their seeds)"
