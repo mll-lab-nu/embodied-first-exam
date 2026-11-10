@@ -46,9 +46,12 @@ def pinned_pair() -> None:
         tasks = Path(td) / "tasks"
         tasks.mkdir()
         priv, std = tasks / f"{PINNED}-privileged", tasks / f"{PINNED}-standard"
-        for t in (priv, std):
+        for t in (priv, std):                          # the pair as if it had its default seed only
             shutil.copytree(tc.task_dir(t.name), t, symlinks=True)
-            with_seeds(t / "task.toml", "[0, 5]")
+            shutil.rmtree(t / "tests" / "seeds", ignore_errors=True)
+            toml = t / "task.toml"
+            toml.write_text(re.sub(r"(?ms)^\[metadata\.seeds\]\n.*?(?=^\[|\Z)", "", toml.read_text()))
+            with_seeds(toml, "[0, 5]")
         compose = (std / "environment" / "docker-compose.yaml").read_text()
         start = re.search(r'RCB_START_SHA: "([0-9a-f]+)"', compose).group(1)
         line = "Pick up the ball and place it through the basketball hoop."   # in both instructions
