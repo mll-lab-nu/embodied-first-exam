@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Look at the digit blocks on the table (4 or 5 of them) and place them on the row of mats so that, read in order along the row, they form the largest possible number (largest digit on the first mat, smallest on the last), then return the arm home.
@@ -42,8 +42,7 @@ a mat, the middle of the disc). All of these must hold at the same action bounda
 
 **When it is checked.** After every action (never between actions), block by block in order of the digits (largest
 first: on its mat, upright tests), then the arms, stopping at the first condition that fails; all must hold at the same
-action boundary (one stage). Success is declared at the first action boundary where everything holds, and the episode
-ends. No condition ends the episode early as a failure. A separate partial-credit score (not part of success) climbs
+action boundary (one stage). Success is declared at the first action boundary where everything holds. No condition ends the episode early as a failure. A separate partial-credit score (not part of success) climbs
 the tiers 5, 15, 30, 100 as 1, 2, 3, then all 4 blocks are on their mats and upright as above while both grippers are
 open (each at least 0.8 of its full opening)
 (the 100 tier counts only if the episode succeeds, otherwise the tier below) [process score, transition mode].
@@ -63,7 +62,7 @@ be open.
 
 **Notes from RoboDojo's code.** The order is unique because the digits differ. The turn tolerance is loose (45 deg), but
 the placement tolerance is tight: 0.02 m horizontally between the block's centre and the mat's centre, so a block
-that only overlaps its mat fails. Nothing tests that a block rests on the mat or that the gripper has let go.
+that only overlaps its mat fails.
 Identical check to arrange-largest-number-random; this variant has no clutter.
 
 ## Rules (real-robot rules)

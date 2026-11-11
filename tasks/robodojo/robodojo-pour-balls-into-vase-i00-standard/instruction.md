@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Precision**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up the cup containing 7 balls, pour all the balls into the vase, put the cup back upright and bring the arms home.
@@ -36,7 +36,7 @@ negligible offset at this scale. All nine conditions must hold at the same actio
 
 **When it is checked.** After every action (never between the simulation sub-steps of an action), in the order the
 seven balls, cup, arms, stopping at the first condition that fails; all nine must hold at the same action boundary
-(one stage). Success is declared at the first action boundary where everything holds, and the episode ends. No
+(one stage). Success is declared at the first action boundary where everything holds. No
 condition ends the episode early as a failure; if the conditions never hold together the episode fails at the action
 limit (below).
 

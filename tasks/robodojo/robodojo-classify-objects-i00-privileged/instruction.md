@@ -15,7 +15,7 @@ The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses
 - basket0: basket (category basket, index 2), fixed, x=-0.28, y=0.05, no rotation (leftmost, lowest x)
 - basket1: basket (category basket, index 3), fixed, x=0.0, y=0.05 (middle)
 - basket2: basket (category basket, index 4), fixed, x=+0.28, y=0.05 (rightmost, highest x)
-- cat0, cat1, cat2 (label prefixes; objects are labelled cat0_*, cat1_*, cat2_* by category): 3 distinct categories drawn at random from {toy_car (index 0-4), action_camera, pen (index 0,1,4), watch (index 0-2), garage (index 14,15)}; each category gets 1 to 3 instances (select_instance_nums [1,3], interpreted as an inclusive range, duplicates of the same model allowed). Scattered on the table: x in [-0.43,0.43], y in [-0.23,0.0], random yaw within +/-60 deg, 0.01 m margin.
+- cat0, cat1, cat2: 3 distinct categories drawn at random from {toy_car (index 0-4), action_camera, pen (index 0,1,4), watch (index 0-2), garage (index 14,15)}; each category gets 1 to 3 instances (select_instance_nums [1,3], interpreted as an inclusive range, duplicates of the same model allowed). Scattered on the table: x in [-0.43,0.43], y in [-0.23,0.0], random yaw within +/-60 deg, 0.01 m margin.
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/classify_objects_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is
@@ -25,13 +25,8 @@ robot's start pose never change between resets. You may reset and retry as many 
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
 - the three baskets: open-top plastic bins, 25.2 x 16.8 cm and 7.7 cm high, in a row across the far half of the
   table: white on the left [basket0], blue in the middle [basket1], red on the right [basket2];
-- the objects to sort, three kinds [one label group per kind]:
-  - two pens [cat0]: a black-and-gold pen (18.6 cm) on the right, just in front of the red basket [cat0_0], and a white
-    pen (14.5 cm) in front, right of centre [cat0_1];
-  - two watches [cat1]: a silver-and-black round watch right of centre [cat1_0] and a black band watch just in front of it to the
-    right [cat1_1];
-  - three identical bunny figurines (13 cm tall, tan, in a navy outfit) [cat2]: two on the left, one at the far right
-    next to the right gripper [cat2_0, cat2_1, cat2_2].
+- the objects to sort: the small objects on the table, of three kinds (RoboDojo's object categories) [one label
+  group per kind]. Which objects are of one kind is for you to tell by sight.
 
 An object's *centre* below is the point RoboDojo tests for it (its origin); for every object here that is about the
 middle of its bounding box. All of these must hold at the same action boundary:
@@ -40,8 +35,7 @@ middle of its bounding box. All of these must hold at the same action boundary:
   underside [is_A_in_B]. Since an object can be in only one basket, this means each kind fills its own basket, every
   object is in the basket of its kind, and no basket mixes kinds. Which kind goes into which basket is free.
 - **Released.** Every object's centre less than 0.01 m above the basket rims (the rims are all 7.7 cm above the
-  table) [is_all_A_z_lower_than_B_bbox_zmax, z_threshold=0.01]. RoboDojo compares the pens with the white basket's
-  rim, the watches with the blue one's and the figurines with the red one's, but all three rims are at the same
+  table) [is_all_A_z_lower_than_B_bbox_zmax, z_threshold=0.01]. RoboDojo compares each kind with a different basket's rim, but all three rims are at the same
   height, so this does not depend on where each kind goes. An object resting in a basket passes; one still held up in
   a gripper fails.
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each
@@ -49,7 +43,7 @@ middle of its bounding box. All of these must hold at the same action boundary:
 
 **When it is checked.** After every action (never between actions), in the order baskets, released, arms, stopping at
 the first condition that fails; all must hold at the same action boundary (one stage). Success is declared at the
-first action boundary where everything holds, and the episode ends. No condition ends the episode early as a failure.
+first action boundary where everything holds. No condition ends the episode early as a failure.
 A separate partial-credit score (not part of success) climbs the tiers 15, 40, 100 as 1, 2, then 3 baskets each hold
 exactly one complete kind (all of it, released below the rim, and nothing of another kind) while both grippers are
 open (each at least 0.8 of its full opening)

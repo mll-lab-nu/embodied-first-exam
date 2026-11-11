@@ -233,6 +233,12 @@ each, and one call returns at most 3000 images (`max_frames_per_call`, PROTOCOL 
 - **World-frame information.** Instructions give the world frame (axes, the arm bases, the table, the head camera) and
   state RoboDojo's check exactly, in physical terms, including absolute coordinates where the check uses them (e.g.
   `make_kong`'s target spot); standard tasks never give object poses (privileged tasks give them through the tooling).
+- **What the instructions leave to the agent.** As in RoboDojo's own one-sentence instructions, the texts state the check
+  exactly but not what the task asks the agent to work out: which tile completes `solve_equation`'s equation, which
+  group of `play_stacking_toy` goes on which peg, the size order of the dolls, which objects of `classify_objects` form
+  a kind, the start headings and the turns of the T tasks, and, in the Open tasks, which object the language names,
+  where it is, or which recess of the toolbox belongs to which tool. Nor do they say which step of the task's sentence
+  (a hand-over, the tool, one by one, the reset) the check does not read.
 
 ## Resources (scripts/task_resources.toml)
 Measured on the heaviest scene (`pour_liquid_into_cup_random`: GPU PhysX liquid and 15-20 clutter objects), RTX 4090,

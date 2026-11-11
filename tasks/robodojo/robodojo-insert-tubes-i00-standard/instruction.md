@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Precision**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Insert all three test tubes into the tube rack and return the arms to their start pose.
@@ -35,7 +35,7 @@ these must hold at the same action boundary:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), all conditions together (one stage). Success is
-declared at the first action boundary where everything holds, and the episode ends. No condition ends the episode
+declared at the first action boundary where everything holds. No condition ends the episode
 early as a failure; otherwise it runs on until the length cap (below) [step_lim].
 
 **Episode length.** A step limit of **500 steps** (RoboDojo's own limit for this task, 20 s of
@@ -47,8 +47,7 @@ where the description above mentions step_lim or the length cap, it means this l
 **At the end.** Both arms back near their start poses (above), as part of the success condition; the grippers need not
 be open.
 
-**Notes from RoboDojo's code.** The tubes are interchangeable and no tube is assigned to a particular hole; the
-"one by one" wording is not checked. The tube's long direction runs from its closed bottom, where its tested centre
+**Notes from RoboDojo's code.** The tubes are interchangeable and no tube is assigned to a particular hole. The tube's long direction runs from its closed bottom, where its tested centre
 sits, to the orange cap, so a tube in a hole cap up passes both the upright test and the "over the rack" test (its
 bottom is inside the rack's outline). Thresholds are strict (more than 0.045 m, less than 30 deg).
 

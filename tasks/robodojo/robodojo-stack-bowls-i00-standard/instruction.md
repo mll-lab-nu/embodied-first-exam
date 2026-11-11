@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Nest/stack the three identical bowls into one stack, then return the arm(s) to the start pose.
@@ -36,7 +36,7 @@ A bowl's *centre* below is the point RoboDojo tests for it (its origin): the mid
 
 **When it is checked.** After every action (never between actions), all conditions together; they form a single stage,
 nothing is latched, and the order does not matter. Success is declared at the first action boundary where everything
-holds, and the episode ends. Otherwise the episode runs until the step limit (see Episode length). No condition ends the
+holds. Otherwise the episode runs until the step limit (see Episode length). No condition ends the
 episode early as a failure.
 
 **Episode length.** A step limit of **800 steps** (RoboDojo's own limit for this task, 32 s of
@@ -48,7 +48,7 @@ where the description above mentions step_lim or the length cap, it means this l
 **At the end.** Both arms back near their start poses (above), as part of the success condition; the grippers need not
 be open.
 
-**Notes from RoboDojo's code.** Only the bowls' centres and tilt are tested, not contact or the gripper: a bowl resting
+**Notes from RoboDojo's code.** Only the bowls' centres and tilt are tested: a bowl resting
 in another counts as soon as the centres line up within 0.04 m and step up by at least 5 mm, which nesting identical
 bowls gives. In this frozen instance the three bowls are the same model (RoboDojo picks one model per episode; here
 model 10), so they nest fully. The upper bowls may tilt up to 45 deg, the bottom one only 7 deg; the stack may stand

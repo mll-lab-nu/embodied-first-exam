@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Memory**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Swap the positions of the two cubes using the empty third mat as a parking spot, pressing the spring button after each of the three moves, then return the arm(s) to the start pose.
@@ -63,7 +63,7 @@ failure at once; fewer than 3 at the end means no success.
 the press count, then the current stage; all conditions of a stage must hold at the same action boundary, and at most
 one stage passes per action. A cap pressed and let up again within a single action is never seen. A passed stage stays
 passed. Success is declared at the first action boundary where all 12 stages have passed and exactly 3 presses are
-counted, and the episode ends. A 4th counted press ends the episode as a
+counted. A 4th counted press ends the episode as a
 failure at once.
 
 **Episode length.** A step limit of **700 steps** (RoboDojo's own limit for this task, 28 s of
@@ -89,8 +89,7 @@ stage still needs its own press: the plain plan is to pull the cap above 0.95 an
 three press stages, and never otherwise. Pressing the cap from its rest without pulling it up first is not counted,
 but it is still "pressed" for a press stage, so a first press from rest passes stage 3 while leaving the count one
 short. A block counts as "on" a mat only when nearly centred on it and resting on it (centre within about
-2.2 cm horizontally). The blocks' turn about the vertical is not checked. Release of a block is not checked
-directly.
+2.2 cm horizontally). The blocks' turn about the vertical is not checked.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends as above, when your time is up, or on a simulator

@@ -64,7 +64,7 @@ same action boundary:
   first on the short board, then the roof on the plank.
 - **Lined up, within 20 deg (either way)** [is_axis_aligned, align_threshold=20, local +x vs the other's +x or -x]:
   the plank's long side parallel to the short board's long side; not true at the start (the plank's long side points
-  away from you): turn it a quarter turn. The roof's width across its triangular face (its bottom edge that crosses
+  away from you). The roof's width across its triangular face (its bottom edge that crosses
   the ridge; points right at the start) parallel to the plank's long side, i.e. the ridge runs across the plank: true
   at the start once the plank lies left-right under it.
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each
@@ -72,7 +72,7 @@ same action boundary:
 
 **When it is checked.** After every action (never between actions), in the order upright tests, line-up tests, base,
 middle and top layers, arms, stopping at the first condition that fails; all must hold at the same action boundary
-(one stage). Success is declared at the first action boundary where everything holds, and the episode ends. No
+(one stage). Success is declared at the first action boundary where everything holds. No
 condition ends the episode early as a failure. A separate partial-credit score (not part of success) climbs the tiers
 10, 30, 100: (1) base layer done, the long board at rest (moved less than 0.002 m since the previous time this was
 checked) and both grippers open (each at least 0.8 of its full opening); (2) also the middle layer, the short board at
@@ -92,8 +92,7 @@ be open.
 them against the required 0.025 m, so a pillar sunk, tilted or lying on its side breaks the layer; every piece must
 also stay within 5 deg of its start attitude, so the layers must sit level. The horizontal tolerances are 0.043 m
 (short board over the middle of the long board) and 0.023 m (plank over the middle of the short board, roof over the
-middle of the plank); where the pillars stand on the boards is not tested, nor whether the short board actually rests
-on the upper pillars. Which pillars go under the long board is tested by where they started (one from each side), not
+middle of the plank). Which pillars go under the long board is tested by where they started (one from each side), not
 by where they stand. The arms have to be home while the tower stands.
 
 ## Deliverable

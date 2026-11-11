@@ -48,7 +48,7 @@ And, at the same time:
 
 **When it is checked.** After every action (never between actions), in the order blue, red, pink pair (flat, centred,
 down for each), grippers, arms, stopping at the first condition that fails; all must hold at the same action
-boundary (one stage). Success is declared at the first action boundary where everything holds, and the episode ends.
+boundary (one stage). Success is declared at the first action boundary where everything holds.
 No condition ends the episode early as a failure. A separate partial-credit score (not part of success) climbs the
 tiers 20, 50, 100 as 1, 2, then 3 nuts are flat, centred and down on their bolts while both grippers are open (each
 at least 0.8 of its full opening)
@@ -65,7 +65,7 @@ of the success condition.
 
 **Notes from RoboDojo's code.** The 1 mm horizontal tolerance between the nut's hole axis and the bolt's axis is very
 strict; together with the 9 mm depth and the 10 deg flatness test it means each nut must be seated on its bolt.
-Turning the nut (tightening) is not checked, only where it sits. Pairs go by colour. The bolts cannot be moved; only
+Pairs go by colour. The bolts cannot be moved; only
 the nuts are carried.
 
 ## Deliverable

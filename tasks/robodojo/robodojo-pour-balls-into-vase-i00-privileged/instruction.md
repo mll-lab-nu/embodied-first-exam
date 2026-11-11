@@ -44,7 +44,7 @@ negligible offset at this scale. All nine conditions must hold at the same actio
 
 **When it is checked.** After every action (never between the simulation sub-steps of an action), in the order the
 seven balls, cup, arms, stopping at the first condition that fails; all nine must hold at the same action boundary
-(one stage). Success is declared at the first action boundary where everything holds, and the episode ends. No
+(one stage). Success is declared at the first action boundary where everything holds. No
 condition ends the episode early as a failure; if the conditions never hold together the episode fails at the action
 limit (below).
 
