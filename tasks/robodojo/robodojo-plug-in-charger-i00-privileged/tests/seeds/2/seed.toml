@@ -1,0 +1,19 @@
+[[replace]]
+old = "## Success (RoboDojo's own check for this task)\nThe objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, \"away\" = +y, away from the arms):\n- the charger: the small white wall-charger block (about 4.7 x 7 x 3 cm, the 7 cm including its two metal prongs) on\n  the left, near the left gripper, lying flat with its prongs pointing toward you [charger];\n- the power strip: the long white strip (15.9 x 3.7 cm, 2.1 cm tall) on the right, near you, lying flat, its long side\n  left-right but turned about 20 deg so that its right end is nearer to you; its outlets are on its top face [socket]."
+new = "## Success (RoboDojo's own check for this task)\nThe objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, \"away\" = +y, away from the arms):\n- the charger: the small white wall-charger block (about 4.7 x 7 x 3 cm, the 7 cm including its two metal prongs) just\n  left of centre, near you, about 7 cm to the right of the power strip's right end and 6 cm nearer to you, lying flat\n  with its prongs pointing toward you (turned about 10 deg) [charger];\n- the power strip: the long white strip (15.9 x 3.7 cm, 2.1 cm tall) on the left, lying flat, its long side\n  left-right but turned about 8 deg so that its right end is nearer to you; its outlets are on its top face [socket]."
+
+[[replace]]
+old = "**Notes from RoboDojo's code.** Precision task. The power strip is a free object: it can be pushed or knocked while\nplugging, and the tests use wherever it is at that moment. The heights are compared on the two objects' bounding boxes\nas they are turned (lowest corner of the charger, highest corner of the strip); the \"over the strip\" test uses the\ncharger's centre only and the strip's turned outline seen from above, not a box aligned with the table. Successful\nruns end with the charger standing upright, prongs down, in an outlet left of the strip's middle, its back end up."
+new = "**Notes from RoboDojo's code.** Precision task. The power strip is a free object: it can be pushed or knocked while\nplugging, and the tests use wherever it is at that moment. The heights are compared on the two objects' bounding boxes\nas they are turned (lowest corner of the charger, highest corner of the strip); the \"over the strip\" test uses the\ncharger's centre only and the strip's turned outline seen from above, not a box aligned with the table."
+
+[[replace]]
+old = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/plug_in_charger_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
+new = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/2/plug_in_charger_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
+
+[[replace]]
+old = "arx_x5/0/plug_in_charger_0.json"
+new = "arx_x5/2/plug_in_charger_0.json"
+
+[[replace]]
+old = "sha256 `0fb33f8293090054`"
+new = "sha256 `6ff24328d147ef63`"

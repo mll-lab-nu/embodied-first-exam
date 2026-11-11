@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `robodojo-store-laptop-and-headphones-random-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
-| Family / instance | `store_laptop_and_headphones_random` / seed 0 |
+| Family / instance | `store_laptop_and_headphones_random` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
