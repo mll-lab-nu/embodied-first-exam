@@ -19,7 +19,7 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
 - the keyboard: grey, 32 cm wide and 15 cm deep, lying flat in front of you, its long side left-right [keyboard];
 - the frame: the thin rectangular outline drawn on the table straight ahead, behind the keyboard (24 cm wide, 10 cm deep) [frame];
 - the figurine: a green cactus in a small brown pot, front left near the left gripper [garage];
-- the stand: the small flat dark square (5 x 5 cm) on the table just behind the alarm clock [cube_cushion];
+- the stand: the small flat grey square (5 x 5 cm) on the table just behind the alarm clock [cube_cushion];
 - the alarm clock: the beige clock left of centre [alarm];
 - the drawer: the white drawer unit at the far left, its top 0.227 m above the table [drawer].
 
@@ -35,8 +35,10 @@ its bounding box. All of these must hold at the same action boundary:
   [is_A_bbox_cover_rect_region]. Its front-to-back direction (the short side, pointing away
   from you at the start) within 45 deg of world +y [keyboard local +y; is_axis_aligned]: keep the long side left-right
   and the keys the way they face now; already true at the start. Lying flat, keys up, within 15 deg [keyboard local +z;
-  is_axis_up]; already true. Unturned, this means its centre within x 0.04-0.16 m and |y| <= 0.046 m: slide it about
-  17 cm straight away from you into the frame.
+  is_axis_up]; already true. Unturned, this means its centre within x 0.04-0.16 m and |y| <= 0.046 m: it starts at
+  about (0.017, -0.170), left of that range, so slide it about 17 cm away from you and at least 2.3 cm to the right (to
+  the frame's centre (0.10, 0.0): about 8 cm right). A straight push runs its left end into the alarm clock: clear the
+  clock first or bring the keyboard's centre to x >= 0.055 m before it reaches the clock.
 - **Figurine.** At rest; standing upright within 15 deg (pot down, as at the start) [garage local +z; is_axis_up];
   its centre, which is about 9 cm above the bottom of the pot, between 0.005 and 0.1 m higher than the stand's top
   surface [is_A_up_B]: standing on the stand gives about 0.09 m, so it must stand on it, not be held above it; and its

@@ -14,11 +14,11 @@ RoboDojo's own instruction for this scene: *"Pour all the balls from the cup int
 
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
-- the balls: seven identical small balls (about 1.4 cm across) lying inside the cup at the start [sphere_0 .. sphere_6];
+- the balls: seven identical small balls (about 1 cm across) lying inside the cup at the start [sphere_0 .. sphere_6];
   the check treats them all alike, so which is which does not matter;
-- the cup: the yellow cup (8 cm across, 7.2 cm tall), opening up, on the right near the right gripper [cup];
+- the cup: the yellow cup (7.2 cm across, 7.2 cm tall), opening up, on the right near the right gripper [cup];
 - the vase: the white vase left of centre, a wide flared round base rising to a narrow round neck whose opening is
-  about 19 cm above the table; it is fixed to the table and cannot be moved [vase].
+  about 15 cm above the table; it is fixed to the table and cannot be moved [vase].
 
 A ball's *centre* below is the point RoboDojo tests for it (its origin); it lies about 5 mm from the ball's middle, a
 negligible offset at this scale. All nine conditions must hold at the same action boundary:

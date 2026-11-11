@@ -17,7 +17,7 @@ The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses
 - vertical_laptop_storage_rack: static geometry, 1 total, a rack that stores a laptop standing on its edge, on table at x in [0.30,0.35], y in [-0.15,-0.05], z=0.025, yaw in [75,105] deg
 - stand: static geometry 'headset_stand' (headphone stand), 1 total, on table at x in [-0.35,-0.25], y in [-0.02,0.05], yaw in [0,30] deg
 - headset: headphones (category 'headset', model index 8, 9 or 10 chosen randomly), 1 total, random position on table x in [-0.4,0.4], y in [-0.25,0.0] (Table-relative), random yaw up to +-30 deg
-- clutter: 20 distractor objects (category_unique) spread over x in [-0.6,0.6], y in [-0.5,0.5] (Table-relative), yaw up to +-30 deg, margin 0.015 m; strip [-0.35,-0.5,0.35,-0.4] prohibited. Not part of the success test.
+- clutter: 8 distractor objects in this layout (the config asks for 20; category_unique) spread over x in [-0.6,0.6], y in [-0.5,0.5] (Table-relative), yaw up to +-30 deg, margin 0.015 m; strip [-0.35,-0.5,0.35,-0.4] prohibited. Not part of the success test.
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/store_laptop_and_headphones_random_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is
@@ -46,7 +46,8 @@ All of these must hold at the same action boundary:
   headband up, the ear cups hanging at the left and right ends of the hanger (the ear cup now on the right stays on the
   right), and the side that now lies on the table facing away from you. That is the pose you get by lifting the
   headband end straight up over the ear cups. Not true at the start (they lie flat, about 90 deg off, and turned
-  25 deg). Hanging them turned around (ear cups swapped or the other side facing away) is 180 deg off and fails.
+  about 19 deg anticlockwise relative to the stand: about 103 deg off in all). Hanging them turned around (ear cups
+  swapped or the other side facing away) is 180 deg off and fails.
 - **Laptop closed.** The lid within 16.5 deg of fully closed: the hinge joint's position, as a fraction of its range
   from fully open (110 deg, fraction 0) to closed (fraction 1), above 0.85 [laptop_hinge, is_joint_position_above_ratio
   0.85]. At the start it is fully open (fraction about 0.01).

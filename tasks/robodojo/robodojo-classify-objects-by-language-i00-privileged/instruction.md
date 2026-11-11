@@ -30,7 +30,7 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
     in front, right of centre [cat0_1];
   - "watch": two wristwatches [cat1]: a black band in front, left of centre [cat1_0], and a light, silver-coloured one with a
     small square face just left of centre, a little farther away [cat1_1];
-  - "wooden_toy": two identical small tan lion figurines (8 cm tall) [cat2]: one on the left, just in front of the white
+  - "wooden_toy": two identical small tan lion figurines (6.4 cm tall) [cat2]: one on the left, just in front of the white
     basket [cat2_1], one at the far right near the right gripper [cat2_0].
 
 An object's *centre* below is the point RoboDojo tests for it (its origin); for every object here that is the middle

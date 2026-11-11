@@ -13,7 +13,7 @@ RoboDojo's own instruction for this scene: *"Stack the three blocks with differe
 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - block_0, block_1, block_2: three DIFFERENT instances of 'block' cubes drawn from ONE randomly chosen size group (the three groups are indices [20,23,26] / [21,24,27] / [22,25,28], so the three blocks are exactly that group's three textured blocks) ; 3 total, random positions on table x in [-0.45, 0.45], y in [-0.25, 0.0] (Table-relative), no random rotation; prohibited area [0.1,-0.23,-0.17,-0.1] is excluded
-- clutter: 20 distractor objects (Clutter/clutter.yml, category_unique, 20 distinct categories) spread over x in [-0.6,0.6], y in [-0.5,0.5] (Table-relative), random yaw up to +-30 deg, margin 0.015 m; a strip [-0.35,-0.5,0.35,-0.4] is prohibited. They are not part of the success test but can obstruct/be bumped.
+- clutter: 19 distractor objects in this layout (the config asks for 20: Clutter/clutter.yml, category_unique, 20 distinct categories) spread over x in [-0.6,0.6], y in [-0.5,0.5] (Table-relative), random yaw up to +-30 deg, margin 0.015 m; a strip [-0.35,-0.5,0.35,-0.4] is prohibited. They are not part of the success test but can obstruct/be bumped.
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/stack_blocks_random_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is

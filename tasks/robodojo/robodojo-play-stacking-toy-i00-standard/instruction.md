@@ -18,12 +18,12 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
   blocks, with four upright pegs in a row, about 6.5 cm apart, getting shorter from left to right (the tallest
   reaches 6.5 cm above the table) [stack_base]. "Peg 1" to "peg 4" below are these pegs counted from the left
   [support points pole/0, pole/1, pole/2, pole/3: each is a point on that peg's axis];
-- four identical purple five-pointed stars (7 cm across, 1.3 cm thick), scattered: one near the left gripper, three
+- four identical purple five-pointed stars (6 cm across, 1.3 cm thick), scattered: one near the left gripper, three
   right of centre [block0, block1, block2, block3]; they belong on peg 1;
 - three identical blue rectangular blocks (5.8 x 2.9 cm), left of centre [block4, block5, block6]; they belong on peg 2;
 - two identical yellow square blocks (5.8 cm), one far left, one just left of centre near the base [block7, block8];
   they belong on peg 3;
-- one orange-red round disc (5.8 cm across), right of centre [block9]; it belongs on peg 4.
+- one orange-red round disc (5.6 cm across), right of centre [block9]; it belongs on peg 4.
 
 Each block has a hole through its middle; a block's *centre* below is the point RoboDojo tests for it (its origin),
 which lies on the axis of that hole (the middle of the star, square or disc; for the stars it is on the bottom face, for

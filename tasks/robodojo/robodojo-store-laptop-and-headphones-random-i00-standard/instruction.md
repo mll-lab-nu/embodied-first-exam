@@ -35,7 +35,8 @@ All of these must hold at the same action boundary:
   headband up, the ear cups hanging at the left and right ends of the hanger (the ear cup now on the right stays on the
   right), and the side that now lies on the table facing away from you. That is the pose you get by lifting the
   headband end straight up over the ear cups. Not true at the start (they lie flat, about 90 deg off, and turned
-  25 deg). Hanging them turned around (ear cups swapped or the other side facing away) is 180 deg off and fails.
+  about 19 deg anticlockwise relative to the stand: about 103 deg off in all). Hanging them turned around (ear cups
+  swapped or the other side facing away) is 180 deg off and fails.
 - **Laptop closed.** The lid within 16.5 deg of fully closed: the hinge joint's position, as a fraction of its range
   from fully open (110 deg, fraction 0) to closed (fraction 1), above 0.85 [laptop_hinge, is_joint_position_above_ratio
   0.85]. At the start it is fully open (fraction about 0.01).

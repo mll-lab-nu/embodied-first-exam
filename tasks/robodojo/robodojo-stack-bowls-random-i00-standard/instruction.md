@@ -14,7 +14,7 @@ RoboDojo's own instruction for this scene: *"Stack the three bowls together."*
 
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
-- three identical white bowls (18.2 cm across, 6 cm tall), standing upright, opening up: one at the far right
+- three identical white bowls (16 cm across, 6 cm tall), standing upright, opening up: one at the far right
   in the middle of the table, one on the left, one on the right near the front, just in front of the right gripper
   [bowl0 = far right, bowl1 = left, bowl2 = front right; all the same model, bowl model 14]. The check treats them
   alike: any bowl may end at the bottom, middle or top. The other objects on the table (toys, keyboard, game
@@ -29,7 +29,7 @@ A bowl's *centre* below is the point RoboDojo tests for it (its origin): the mid
   is_axis_up, 7 deg]: it must sit flat, opening up, as all three do at the start (about 1 deg off).
 - **One stack.** Order the three bowls by the height of their centres. Each bowl's centre within 0.04 m horizontally
   (inclusive) of the centre of the bowl just below it, and at least 0.005 m higher (no upper limit) [is_stacked,
-  unordered, xy_threshold 0.04]. With 18.2 cm bowls this means the three nested into each other (or stacked) in one
+  unordered, xy_threshold 0.04]. With 16 cm bowls this means the three nested into each other (or stacked) in one
   column, axes lined up to within 4 cm; any bowl may be at the bottom, middle or top. Not true at the start (the bowls
   stand 0.28-0.71 m apart).
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each of

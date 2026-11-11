@@ -19,7 +19,7 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
 - the liquid: the simulated liquid inside the bottle at the start (it shows light blue once poured), made of many
   small particles [wine];
 - the cup: the red mug in the middle of the table, about 18 cm farther away than the bottle, its handle pointing
-  right; with the handle it is 11.6 x 10.4 cm, 7.6 cm tall [cup].
+  right; with the handle it is 10.3 x 6.9 cm, 7.6 cm tall [cup].
 
 The liquid is tested by counting its particles in two boxes: the *cup's box* (the mug's bounding box as the mug is
 turned, handle included, from its base to its rim; a particle counts only if at least 0.001 m above the box's bottom

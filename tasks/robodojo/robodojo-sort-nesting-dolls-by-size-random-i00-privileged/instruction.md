@@ -13,7 +13,7 @@ RoboDojo's own instruction for this scene: *"Arrange the five nesting dolls in a
 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - doll0..doll4: five matryoshka nesting dolls (Rigid, 'matryoshka_dolls', models 15-19 or 20-24 (two texture groups; 5 distinct dolls of one group)), one of each size; labels are random wrt size, table-frame x in [-0.45,0.45], y in [-0.25,-0.05], random yaw up to +-45 deg, margin 0.02; the config's prohibited rectangles reserve the target-row positions (x = -0.24, -0.12, 0.0, 0.12, 0.24 around y approx -0.12) so dolls do not start on their goal spots
-- clutter: 20 distractor objects (category-unique), table-frame x in [-0.6,0.6], y in [-0.5,0.5], random yaw up to +-30 deg, margin 0.015; prohibited rectangle x [-0.35,0.35], y [-0.5,-0.4] is kept free
+- clutter: 17 distractor objects in this layout (the config asks for 20, category-unique), table-frame x in [-0.6,0.6], y in [-0.5,0.5], random yaw up to +-30 deg, margin 0.015; prohibited rectangle x [-0.35,0.35], y [-0.5,-0.4] is kept free
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/sort_nesting_dolls_by_size_random_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is

@@ -14,7 +14,7 @@ RoboDojo's own instruction for this scene: *"Push the T-shaped block to align it
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - t: the T-shaped block (Rigid, 1; 't' category model 1), table-frame x in [-0.45,0.45], y in [-0.25,-0.1], random yaw over the full 360 deg
 - target_t: the gray T-shaped pad ('t_cushion', Geometry, static, 1), same x/y ranges as the block, random yaw over the full 360 deg
-- clutter: 20 distractor objects (two clutter groups of 10, category-unique): group A x in [-0.6,0.6], y in [-0.5,-0.25] or [0.0,0.5]; group B x in [-0.6,-0.45] or [0.45,0.6], y in [-0.25,0.0]; random yaw up to +-30 deg, margin 0.015; a prohibited rectangle x [-0.35,0.35], y [-0.5,-0.4] (near the robot) is kept free
+- clutter: 14 distractor objects in this layout (the config asks for 20: two clutter groups of 10, category-unique): group A x in [-0.6,0.6], y in [-0.5,-0.25] or [0.0,0.5]; group B x in [-0.6,-0.45] or [0.45,0.6], y in [-0.25,0.0]; random yaw up to +-30 deg, margin 0.015; a prohibited rectangle x [-0.35,0.35], y [-0.5,-0.4] (near the robot) is kept free
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/push_T_random_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is

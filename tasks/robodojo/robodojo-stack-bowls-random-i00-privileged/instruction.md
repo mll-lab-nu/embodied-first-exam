@@ -13,7 +13,7 @@ RoboDojo's own instruction for this scene: *"Stack the three bowls together."*
 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - bowl0, bowl1, bowl2: three bowls, all the SAME asset (select mode 'same' -> one randomly chosen model from category 'bowl', indices 11,12,13,14,15), 3 total, random positions on the table x in [-0.45,0.45], y in [-0.25,0.07] (Table-relative), upright, no random rotation
-- clutter: 20 distractor objects total (two clutter groups of 10, category_unique: one group in the front/back y bands y in [-0.5,-0.15] and [0.05,0.5] over x in [-0.6,0.6]; one group in the middle band y in [-0.15,0.05] with x in [-0.6,-0.1] or [0.1,0.6]), random yaw up to +-30 deg, margin 0.015 m; strip [-0.35,-0.5,0.35,-0.4] prohibited. Not part of the success test.
+- clutter: 18 distractor objects in this layout (the config asks for 20 in total: two clutter groups of 10, category_unique: one group in the front/back y bands y in [-0.5,-0.15] and [0.05,0.5] over x in [-0.6,0.6]; one group in the middle band y in [-0.15,0.05] with x in [-0.6,-0.1] or [0.1,0.6]), random yaw up to +-30 deg, margin 0.015 m; strip [-0.35,-0.5,0.35,-0.4] prohibited. Not part of the success test.
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/stack_bowls_random_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is
@@ -21,7 +21,7 @@ robot's start pose never change between resets. You may reset and retry as many 
 
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
-- three identical white bowls (18.2 cm across, 6 cm tall), standing upright, opening up: one at the far right
+- three identical white bowls (16 cm across, 6 cm tall), standing upright, opening up: one at the far right
   in the middle of the table, one on the left, one on the right near the front, just in front of the right gripper
   [bowl0 = far right, bowl1 = left, bowl2 = front right; all the same model, bowl model 14]. The check treats them
   alike: any bowl may end at the bottom, middle or top. The other objects on the table (toys, keyboard, game
@@ -36,7 +36,7 @@ A bowl's *centre* below is the point RoboDojo tests for it (its origin): the mid
   is_axis_up, 7 deg]: it must sit flat, opening up, as all three do at the start (about 1 deg off).
 - **One stack.** Order the three bowls by the height of their centres. Each bowl's centre within 0.04 m horizontally
   (inclusive) of the centre of the bowl just below it, and at least 0.005 m higher (no upper limit) [is_stacked,
-  unordered, xy_threshold 0.04]. With 18.2 cm bowls this means the three nested into each other (or stacked) in one
+  unordered, xy_threshold 0.04]. With 16 cm bowls this means the three nested into each other (or stacked) in one
   column, axes lined up to within 4 cm; any bowl may be at the bottom, middle or top. Not true at the start (the bowls
   stand 0.28-0.71 m apart).
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each of
