@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """ADVISORY. Seeds (docs/protocol/README.md §2): every task names the frozen instances it may run from. For every task:
   - `[metadata] instance_seed` (an integer) is the default seed, the one field that names it; `[metadata.seeds]`, only
-    where they are not the defaults, has `allowed` (default [instance_seed]: a list of integers, a seed repeated where a task has fewer than three, a range
-    `{ from = A, to = B }` with both ends included, or "any"; the default seed among them; a range or "any" only with
+    where they are not the defaults, has `allowed` (default [instance_seed]: a list of integers of any length, as many
+    seeds as the task has, a seed repeated where it has fewer than three; a range `{ from = A, to = B }` with both ends
+    included; or "any"; the default seed among them; a range or "any" only with
     `build = "runtime"`: the task builds a seed's instance itself, since they cannot all be committed) and `oracle` (the
     seeds the reference solution is for, default [instance_seed] with an oracle, else []: a subset of `allowed`; empty
     when `oracle = "none"`, not empty when it is "full" or "partial"), and no `default` (a second copy of instance_seed);

@@ -136,6 +136,16 @@ def main() -> int:
             with_seeds(t / "task.toml", "[0, 7, 0]")
         rc, out = run(CHECK + [str(priv), str(std)])
         assert rc == 0, out
+        more = [8, 9, 10]                              # as many seeds as a task has: no upper limit (PROTOCOL §2)
+        for s in more:
+            (priv / "tests" / "seeds" / str(s)).mkdir(parents=True)
+            (priv / "tests" / "seeds" / str(s) / "instance.json").write_text(inst.replace('"seed": 0', f'"seed": {s}', 1))
+        for t in (priv, std):
+            with_seeds(t / "task.toml", "[0, 7, 8, 9, 10]")
+        rc, out = run(CHECK + [str(priv), str(std)])
+        assert rc == 0, out
+        for s in more:
+            shutil.rmtree(priv / "tests" / "seeds" / str(s))
         for t in (priv, std):
             with_seeds(t / "task.toml", "[0, 7]")
         # materialize: the seed's instance in every place the task runs and grades from, the seed recorded
