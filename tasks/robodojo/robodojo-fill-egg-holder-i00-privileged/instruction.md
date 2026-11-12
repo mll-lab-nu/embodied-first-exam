@@ -46,7 +46,7 @@ And, at the same time:
 
 **When it is checked.** After every action (never between actions), egg by egg (in the holder, seated), then the lid,
 then the arms, stopping at the first condition that fails; all must hold at the same action boundary (one stage).
-Success is declared at the first action boundary where everything holds, and the episode ends. No condition ends the
+Success is declared at the first action boundary where everything holds. No condition ends the
 episode early as a failure. A separate partial-credit score (not part of success) climbs the tiers 10, 25, 40, 90 as
 1, 2, 3, then 4 eggs are in the holder and seated while both grippers are open (each at least 0.8 of its full
 opening); there is no 100 tier, so this score tops out at 90 whether or not the episode succeeds [process score,

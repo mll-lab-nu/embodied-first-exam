@@ -1,0 +1,7 @@
+[[replace]]
+old = "RCB_INSTANCE_SHA: \"660defd1ddf6290471a601836ce9826805e5759638f09c035884cbfad8583ce2\""
+new = "RCB_INSTANCE_SHA: \"2116b5e99c6538014acc01529045d1f5217eadb1c619a7bf05efd214f0877616\""
+
+[[replace]]
+old = "(object and goal positions; seed 0)"
+new = "(object and goal positions; seed 1)"

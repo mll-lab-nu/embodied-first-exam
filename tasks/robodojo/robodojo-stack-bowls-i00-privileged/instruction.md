@@ -20,7 +20,7 @@ robot's start pose never change between resets. You may reset and retry as many 
 
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
-- three identical white bowls (13.7 cm across, 5 cm tall), standing upright, opening up: one in the centre near the
+- three identical white bowls (12 cm across, 5 cm tall), standing upright, opening up: one in the centre near the
   front, one on the left a little further away, one on the right further away [bowl0 = centre, bowl1 = left,
   bowl2 = right; all the same model, bowl model 10]. The check treats them alike: any bowl may end at the bottom, middle
   or top.
@@ -34,7 +34,7 @@ A bowl's *centre* below is the point RoboDojo tests for it (its origin): the mid
   is_axis_up, 7 deg]: it must sit flat on the table, opening up, as all three do at the start.
 - **One stack.** Order the three bowls by the height of their centres. Each bowl's centre within 0.04 m horizontally
   (inclusive) of the centre of the bowl just below it, and at least 0.005 m higher (no upper limit) [is_stacked,
-  unordered, xy_threshold 0.04]. With 13.7 cm bowls this means the three nested into each other (or stacked) in one
+  unordered, xy_threshold 0.04]. With 12 cm bowls this means the three nested into each other (or stacked) in one
   column, axes lined up to within 4 cm; any bowl may be at the bottom, middle or top. Not true at the start (the bowls
   stand 0.2-0.5 m apart).
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each of
@@ -42,7 +42,7 @@ A bowl's *centre* below is the point RoboDojo tests for it (its origin): the mid
 
 **When it is checked.** After every action (never between actions), all conditions together; they form a single stage,
 nothing is latched, and the order does not matter. Success is declared at the first action boundary where everything
-holds, and the episode ends. Otherwise the episode runs until the step limit (see Episode length). No condition ends the
+holds. Otherwise the episode runs until the step limit (see Episode length). No condition ends the
 episode early as a failure.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
@@ -54,7 +54,7 @@ reads that limit and it does not apply here: where the description above mention
 **At the end.** Both arms back near their start poses (above), as part of the success condition; the grippers need not
 be open.
 
-**Notes from RoboDojo's code.** Only the bowls' centres and tilt are tested, not contact or the gripper: a bowl resting
+**Notes from RoboDojo's code.** Only the bowls' centres and tilt are tested: a bowl resting
 in another counts as soon as the centres line up within 0.04 m and step up by at least 5 mm, which nesting identical
 bowls gives. In this frozen instance the three bowls are the same model (RoboDojo picks one model per episode; here
 model 10), so they nest fully. The upper bowls may tilt up to 45 deg, the bottom one only 7 deg; the stack may stand

@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `metaworldplus-lever-pull-i00-privileged` |
 | Simulator / robot | `mujoco` / `sawyer` |
-| Family / instance | `metaworld/lever-pull` / seed 0 |
+| Family / instance | `metaworld/lever-pull` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |

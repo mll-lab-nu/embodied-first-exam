@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization (randomised variant: other models, clutter)**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up the broom, hand it over to the other (right) arm, and use the broom with the dustpan (which stays on the table) to sweep all the small objects (bricks, earbuds, paper balls) into the dustpan, then return the arm(s) to the start pose.
@@ -50,8 +50,7 @@ off-centre, about 6 mm). All of these must hold at the same action boundary:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), all conditions together as one stage; none of them
-remembers earlier actions. Success is declared at the first action boundary where everything holds, and the episode
-ends. No condition ends the episode early as a failure.
+remembers earlier actions. Success is declared at the first action boundary where everything holds. No condition ends the episode early as a failure.
 
 **Episode length.** A step limit of **1,000 steps** (RoboDojo's own limit for this task, 40 s of
 simulated time) [step_lim]; one step is one 25 Hz action (`## Episode end`, below). The
@@ -62,8 +61,7 @@ where the description above mentions step_lim or the length cap, it means this l
 **At the end.** Both arms back near their start poses (above), as part of the success condition; the grippers need not
 be open.
 
-**Notes from RoboDojo's code.** The hand-over of the broom to the right arm is not checked; only the final state is.
-The dustpan may be slid or turned on the table but not lifted (more than 1 cm) or tipped (5 deg or more). The two
+**Notes from RoboDojo's code.** The dustpan may be slid or turned on the table but not lifted (more than 1 cm) or tipped (5 deg or more). The two
 in-the-pan tests are alternatives, but each one must hold for all five objects at once: one object near the lip corner
 (only in the rectangle) and one at the back of the pan (only in the circle) fails both. An object that stays outside
 the pan or falls off the table fails. The broom test compares only left-right (x) positions of the two centres.

@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Long-Horizon**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Play tic-tac-toe as the first player against the support-arm opponent: place your 5 pieces on the 3x3 board, taking turns with the opponent arm (which places its 4 pieces on random empty cells), until all 9 cells hold a piece.
@@ -41,7 +41,7 @@ middle of the hole at table level).
 
 **When it is checked.** After every action (never between actions). The board-full condition is one stage: all nine
 position tests and all nine height tests at the same action boundary. Success is declared at the first action
-boundary where it holds, and the episode ends. The stay-home rule is counted after every action; the first violation
+boundary where it holds. The stay-home rule is counted after every action; the first violation
 ends the episode as a failure.
 
 **Episode length.** A step limit of **1,100 steps** (RoboDojo's own limit for this task, 44 s of

@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard-lockstep/1.0`) |
 | Twin | `embodied-olympics-match-tabletennisg1-matchgpu-i01-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `tabletennisg1_match` / seed 4 |
+| Family / instance | `tabletennisg1_match` / seed 4 (allowed seeds: [4, 1, 2]; PROTOCOL §2) |
 | Oracle | `partial` — the sport's reference player (solution/: builtin_players:OpenReference, camera images and /spec only, the learned striker of the release on CPU) over HTTP: the camera-only reference won this seed 7:6 live (x1i: 2 of 5 seeds against level 4: 4, 5); in this repository (CPU tier) it lost 2:5 (realtime) and 5:7 (standard): no winning oracle; GPU tier on an EPYC host with L40S GPUs under the pool's load: standard (lockstep) won 5:1, realtime 3 matches all voided by R-INTEGRITY (late step p99 0.053-0.178 s). Embodied First Exam's local Harbor runs: see the benchmark README; nop 0 |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-tabletennisg1-0.1.0@sha256:8bc6d02f91aa5730bbf93bc5c1c4a477feee6f5846ff8c609aaa3a25e0eb36af` |

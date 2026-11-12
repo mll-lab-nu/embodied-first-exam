@@ -43,7 +43,7 @@ Both conditions must hold at the same action boundary:
 
 **When it is checked.** After every action (never between actions), on the current state, in the order basket, lift,
 stopping at the first condition that fails; one stage, both must hold at the same action boundary. Success is declared
-at the first action boundary where both hold, and the episode ends. Because the target starts on the belt, the
+at the first action boundary where both hold. Because the target starts on the belt, the
 lift can only hold while the basket, with the target lying in it, is held up at that moment. Touching or moving the
 other objects is not penalised, and no condition ends the episode early as a failure.
 
@@ -60,8 +60,8 @@ the right after several seconds unless it is picked up, and the objects arrive f
 **What you must read or remember.** Yes (visual): look at the photo on the board to tell which of the four objects is
 the target. The text does not name it.
 
-**Notes from RoboDojo's code.** "Lift the basket more than 8 cm" in the task line is not a separate check: it follows
-from the target's own lift while it lies in the basket. The check reads the current state, so the basket must still be
+**Notes from RoboDojo's code.** "Lift the basket more than 8 cm" in the task line is checked through the target: its
+own lift while it lies in the basket. The check reads the current state, so the basket must still be
 held up at the moment of the check. The heights are compared with each object's position at the start of the episode;
 the belt is flat, so being carried along does not change them.
 

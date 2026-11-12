@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `abc-sim-chess-i00-standard` |
 | Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `chess` / seed 0 |
+| Family / instance | `chess` / seed 0 (allowed seeds: [0, 11]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |

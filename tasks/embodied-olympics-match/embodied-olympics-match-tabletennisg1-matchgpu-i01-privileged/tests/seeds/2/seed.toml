@@ -1,0 +1,26 @@
+# Seed 2 of this match (tests/match_instance.json under this directory: the privileged verifier's frozen settings); the text
+# that names the seed: compose RO_SEED, the privileged instruction, the full-simulator adapter's INSTANCES.
+
+[[replace]]
+old = "RO_SEED: \"4\""
+new = "RO_SEED: \"2\""
+
+[[replace]]
+old = ", seed 4:"
+new = ", seed 2:"
+
+[[replace]]
+old = ", seed 4,"
+new = ", seed 2,"
+
+[[replace]]
+old = "seed: int = 4,"
+new = "seed: int = 2,"
+
+[[replace]]
+old = "seed: int = 4)"
+new = "seed: int = 2)"
+
+[[replace]]
+old = "if len(argv) > 2 else 4\n"
+new = "if len(argv) > 2 else 2\n"

@@ -1,0 +1,554 @@
+{
+ "task": "deposit_coin",
+ "seed": 2,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/2/deposit_coin_0.json",
+ "layout_sha256": "4b3ab0a3c67c48c351f558e96741493cb4e9750931ef56a6d912c8ac80a063de",
+ "layout": {
+  "Rigid": {
+   "coin": [
+    {
+     "category": "coin",
+     "category_idx": 0,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      0.0,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "vertical_coin_stand/vertical_coin_stand/0",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "point",
+     "need_check_stable": true,
+     "label": "coin0",
+     "default_pos": [
+      0.13391812145709991,
+      -0.11441664397716522,
+      0.7803999822616577
+     ],
+     "default_ori": [
+      0.1232306833370361,
+      0.12323068333703602,
+      0.6962860035102582,
+      0.6962860035102582
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.0209,
+       0.0209,
+       0.001
+      ],
+      "mass": 0.005,
+      "friction": 0.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "vertical_coin_stand": [
+    {
+     "category": "vertical_coin_stand",
+     "category_idx": 0,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.2,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 30,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "vertical_coin_stand",
+     "default_pos": [
+      0.13391812564507927,
+      -0.11441664374780842,
+      0.7736000000000001
+     ],
+     "default_ori": [
+      0.9846971091883018,
+      0.0,
+      0.0,
+      -0.17427450518134233
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.85,
+      "friction": 0.45,
+      "size": [
+       0.0324,
+       0.0251,
+       0.023
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "piggy_bank": [
+    {
+     "category": "piggy_bank",
+     "category_idx": 0,
+     "xlim": [
+      [
+       -0.4,
+       -0.3
+      ],
+      [
+       0.3,
+       0.4
+      ]
+     ],
+     "ylim": [
+      -0.2,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 15,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.04,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "piggy_bank",
+     "default_pos": [
+      -0.3156361820980756,
+      -0.16174298387060973,
+      0.765418286267589
+     ],
+     "default_ori": [
+      0.7397807600816073,
+      -0.0019511700299317284,
+      -0.0032299162465984936,
+      -0.6728374154204221
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.159,
+       0.2041,
+       0.146
+      ],
+      "mass": 0.0,
+      "friction": 0.0,
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "755f566321c470bd",
+ "step_lim": 300,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Pick up the coin from the holder and insert it precisely into the coin bank.",
+ "labels": [
+  "coin0",
+  "vertical_coin_stand",
+  "piggy_bank",
+  "camera_stand"
+ ],
+ "objects": {
+  "coin0": {
+   "position": [
+    0.13442,
+    -0.11523,
+    0.78118
+   ],
+   "orientation_wxyz": [
+    0.0961,
+    0.16003,
+    0.70595,
+    0.68322
+   ],
+   "bbox_corners": [
+    [
+     -0.002,
+     0.02,
+     0.0019
+    ],
+    [
+     -0.02,
+     -0.002,
+     0.0019
+    ],
+    [
+     0.02,
+     0.002,
+     0.0019
+    ],
+    [
+     0.002,
+     -0.02,
+     0.0019
+    ],
+    [
+     -0.002,
+     0.02,
+     0.0
+    ],
+    [
+     -0.02,
+     -0.002,
+     0.0
+    ],
+    [
+     0.02,
+     0.002,
+     0.0
+    ],
+    [
+     0.002,
+     -0.02,
+     0.0
+    ]
+   ]
+  },
+  "vertical_coin_stand": {
+   "position": [
+    0.13392,
+    -0.11442,
+    0.7736
+   ],
+   "orientation_wxyz": [
+    0.9847,
+    0.0,
+    0.0,
+    -0.17427
+   ],
+   "bbox_corners": [
+    [
+     0.016,
+     0.0056,
+     -0.0086
+    ],
+    [
+     -0.0161,
+     0.0056,
+     -0.0086
+    ],
+    [
+     0.016,
+     0.0056,
+     0.0085
+    ],
+    [
+     -0.0161,
+     0.0056,
+     0.0085
+    ],
+    [
+     0.016,
+     -0.0055,
+     -0.0086
+    ],
+    [
+     -0.0161,
+     -0.0055,
+     -0.0086
+    ],
+    [
+     0.016,
+     -0.0055,
+     0.0085
+    ],
+    [
+     -0.0161,
+     -0.0055,
+     0.0085
+    ]
+   ]
+  },
+  "piggy_bank": {
+   "position": [
+    -0.31564,
+    -0.16174,
+    0.76542
+   ],
+   "orientation_wxyz": [
+    0.73978,
+    -0.00195,
+    -0.00323,
+    -0.67284
+   ],
+   "bbox_corners": [
+    [
+     0.0745,
+     -0.1112,
+     0.1176
+    ],
+    [
+     0.0731,
+     0.0968,
+     0.1059
+    ],
+    [
+     -0.0739,
+     -0.1121,
+     0.1176
+    ],
+    [
+     -0.0753,
+     0.0959,
+     0.106
+    ],
+    [
+     0.0745,
+     -0.1176,
+     0.0036
+    ],
+    [
+     0.0731,
+     0.0904,
+     -0.0081
+    ],
+    [
+     -0.0739,
+     -0.1185,
+     0.0036
+    ],
+    [
+     -0.0753,
+     0.0895,
+     -0.008
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ]
+}

@@ -1,0 +1,19 @@
+{
+ "env_id": "kinder/Dynamo3D-o3-v0",
+ "seed": 2,
+ "max_steps": 1000,
+ "task_view": {
+  "position": [
+   -1.0,
+   -1.2,
+   2.8
+  ],
+  "lookat": [
+   2.2,
+   1.9,
+   0.0
+  ],
+  "fovy": 70
+ },
+ "scene_sha": "523002b9d0c1c281"
+}

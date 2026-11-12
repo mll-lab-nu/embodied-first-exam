@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-semantic-goal-t02-i03-sensor_noise_onset-d1-p195"
+new = "pro-semantic-goal-t02-i00-sensor_noise_onset-d1-p195"
+
+[[replace]]
+old = "initial state 3)"
+new = "initial state 0)"

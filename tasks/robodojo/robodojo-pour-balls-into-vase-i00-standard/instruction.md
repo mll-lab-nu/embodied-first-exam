@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Precision**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up the cup containing 7 balls, pour all the balls into the vase, put the cup back upright and bring the arms home.
@@ -14,11 +14,11 @@ RoboDojo's own instruction for this scene: *"Pour all the balls from the cup int
 
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
-- the balls: seven identical small balls (about 1.4 cm across) lying inside the cup at the start [sphere_0 .. sphere_6];
+- the balls: seven identical small balls (about 1 cm across) lying inside the cup at the start [sphere_0 .. sphere_6];
   the check treats them all alike, so which is which does not matter;
-- the cup: the yellow cup (8 cm across, 7.2 cm tall), opening up, on the right near the right gripper [cup];
+- the cup: the yellow cup (7.2 cm across, 7.2 cm tall), opening up, on the right near the right gripper [cup];
 - the vase: the white vase left of centre, a wide flared round base rising to a narrow round neck whose opening is
-  about 19 cm above the table; it is fixed to the table and cannot be moved [vase].
+  about 15 cm above the table; it is fixed to the table and cannot be moved [vase].
 
 A ball's *centre* below is the point RoboDojo tests for it (its origin); it lies about 5 mm from the ball's middle, a
 negligible offset at this scale. All nine conditions must hold at the same action boundary:
@@ -36,7 +36,7 @@ negligible offset at this scale. All nine conditions must hold at the same actio
 
 **When it is checked.** After every action (never between the simulation sub-steps of an action), in the order the
 seven balls, cup, arms, stopping at the first condition that fails; all nine must hold at the same action boundary
-(one stage). Success is declared at the first action boundary where everything holds, and the episode ends. No
+(one stage). Success is declared at the first action boundary where everything holds. No
 condition ends the episode early as a failure; if the conditions never hold together the episode fails at the action
 limit (below).
 

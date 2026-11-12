@@ -1,0 +1,56 @@
+{
+ "case": {
+  "case_id": "pro-visual-noise-glare-goal-t07-i00-sensor_noise_onset-d0-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 0,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/visual_noise_glare/libero_goal/task_7",
+   "change": {
+    "noise_std": 24.0,
+    "occlusion_fraction": 0.08,
+    "operation": "set_sensor_corruption",
+    "seed": 2731629874
+   },
+   "change_family": "OBS",
+   "change_type": "sensor_noise_onset",
+   "expected_response_mode": "continue",
+   "randomization": {
+    "draw_id": 0,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 2731629874
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-visual-noise-glare-goal-t07-i08-sensor_noise_onset-d0",
+   "seed": 2731629874,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "flat_stove_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/visual_noise_glare",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "01_visual_noise_glare/bddl/libero_goal/turn_on_the_stove.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "visual_noise_glare",
+   "init_reference_bddl_file": "libero_goal_lan/turn_on_the_stove.bddl",
+   "init_states_file": "libero_goal/turn_on_the_stove.pruned_init",
+   "language": "Turn on the stove",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 7,
+  "task_name": "turn_on_the_stove",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "85f189abaf0bb033103c8052d5dac7600c056b2ea7871f22accbfd92b3090daf",
+ "instance_sha": "834d5cce835c291872f6dec687c66cef50197566fa22aeebd0c5ff52fec56ba7",
+ "schema": "eai-libero-max-instance/1"
+}

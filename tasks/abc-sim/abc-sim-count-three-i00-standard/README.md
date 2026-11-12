@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `abc-sim-count-three-i00-privileged` |
 | Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `count_three` / seed 0 |
+| Family / instance | `count_three` / seed 0 (allowed seeds: [0, 23, 39]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.2.0` |

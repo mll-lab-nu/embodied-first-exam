@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `embodied-olympics-match-tabletennis-match-i04-standard` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `tabletennis_match` / seed 34 |
+| Family / instance | `tabletennis_match` / seed 34 (allowed seeds: [34, 404, 414]; PROTOCOL §2) |
 | Oracle | `partial` — full-state reference program (solution/): the camera-only reference player's serve and stroke planner fed the true ball state (the earlier table-tennis twins' smoke controller); a local Harbor oracle run lost 4:6 (valid, replay identical); the nop (no program) scores 0 |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |

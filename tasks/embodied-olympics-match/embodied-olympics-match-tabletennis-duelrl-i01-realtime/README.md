@@ -6,7 +6,7 @@
 | Mode | realtime (`eai-standard-realtime/1.0`) |
 | Twin | `embodied-olympics-match-tabletennis-duelrl-i01-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `tabletennis_duel` / seed 8 |
+| Family / instance | `tabletennis_duel` / seed 8 (allowed seeds: [8, 1, 2]; PROTOCOL §2) |
 | Oracle | `partial` — screening (a CPU cluster, D = 5): the truth-state reference beats it 15/160 (9 %; it beats level 4 in 2/40), the camera-only reference 3/20 (seed 8, A first: 5:2); mirror RL vs RL 68/120 (57 %, Wilson 48-65 %); simple baselines vs RL: center 4/20, center_truth 3/20, fixed 2/20, random 2/20, short_serve 0/20, no_hit 0/20; same-seed reruns 3/3 identical; 0 refused / rejected commands, fewer joint-velocity reflexes than the reference (74 vs 166 per 40 matches). Realtime play varies run to run, hence partial |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Real time | slowdown S = 10 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §3) |

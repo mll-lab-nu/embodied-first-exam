@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization (randomised variant: other models, clutter)**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up the bottle and pour its liquid into the cup, then stand the bottle upright again.
@@ -38,8 +38,7 @@ box face counts as inside.
 
 **When it is checked.** After every action (never between actions). The bottle's upright test is evaluated at every
 action; at each action where it turns from false to true (the very first action also counts, but then the liquid is
-still in the bottle and the liquid test fails), the liquid test is made. If it passes, that is success and the episode
-ends at once; if it fails, nothing is lost and the next return to upright is judged again. There is no other condition
+still in the bottle and the liquid test fails), the liquid test is made. If it passes, that is success; if it fails, nothing is lost and the next return to upright is judged again. There is no other condition
 and no early failure: without a passing judgement the episode runs on until the cap in **Episode length** below.
 
 **Episode length.** A step limit of **400 steps** (RoboDojo's own limit for this task, 16 s of

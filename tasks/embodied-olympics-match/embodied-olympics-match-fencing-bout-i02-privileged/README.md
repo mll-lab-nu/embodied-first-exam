@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `embodied-olympics-match-fencing-bout-i02-standard` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `fencing_bout` / seed 35 |
+| Family / instance | `fencing_bout` / seed 35 (allowed seeds: [35, 202, 212]; PROTOCOL §2) |
 | Oracle | `full` — full-state reference program (solution/): the twin's reference player (builtin_players.Reference, seed 0) as a program; a local Harbor oracle run won 15:13 (valid, replay identical); the nop (no program) scores 0 |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |

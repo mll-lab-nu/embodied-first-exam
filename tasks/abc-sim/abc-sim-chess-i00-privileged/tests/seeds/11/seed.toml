@@ -1,0 +1,15 @@
+[[replace]]
+old = "state hash `65f14022364f054f`"
+new = "state hash `177889a8ad665363`"
+
+[[replace]]
+old = "`solution/oracle.npy`, 1872 rows"
+new = "`solution/oracle.npy`, 2343 rows"
+
+[[replace]]
+old = "6 pieces -- 3 black pawns, a black bishop, the black king, the black queen --"
+new = "8 pieces -- 3 black pawns, 2 black rooks, a black bishop, the black king, the black queen --"
+
+[[replace]]
+old = "the 6 pieces that stand next to the board (3 black pawns, a black bishop, the black king, the black queen)"
+new = "the 8 pieces that stand next to the board (3 black pawns, 2 black rooks, a black bishop, the black king, the black queen)"

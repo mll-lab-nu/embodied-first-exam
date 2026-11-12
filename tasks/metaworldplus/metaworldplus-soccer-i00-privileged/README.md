@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `metaworldplus-soccer-i00-standard` |
 | Simulator / robot | `mujoco` / `sawyer` |
-| Family / instance | `metaworld/soccer` / seed 1 |
+| Family / instance | `metaworld/soccer` / seed 1 (allowed seeds: [1, 2, 3]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |

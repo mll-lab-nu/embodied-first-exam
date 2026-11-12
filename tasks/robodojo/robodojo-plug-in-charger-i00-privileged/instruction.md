@@ -47,7 +47,7 @@ action boundary:
 
 **When it is checked.** After every action (never between the simulation sub-steps of an action), in the order depth,
 over the strip, standing, arms, stopping at the first condition that fails; all four must hold at the same action
-boundary (one stage). Success is declared at the first action boundary where everything holds, and the episode ends. No
+boundary (one stage). Success is declared at the first action boundary where everything holds. No
 condition ends the episode early as a failure; if the conditions never hold together the episode fails at the action
 limit (below).
 
@@ -58,14 +58,12 @@ reads that limit and it does not apply here: where the description above mention
 `s.status()` reports the end.
 
 **At the end.** Both arms back near their start poses (above), as part of the success condition, while the charger
-stays plugged in; the grippers need not be open, so letting go of the charger first and then bringing the arms back
-is the usual way.
+stays plugged in; the grippers need not be open.
 
 **Notes from RoboDojo's code.** Precision task. The power strip is a free object: it can be pushed or knocked while
 plugging, and the tests use wherever it is at that moment. The heights are compared on the two objects' bounding boxes
 as they are turned (lowest corner of the charger, highest corner of the strip); the "over the strip" test uses the
-charger's centre only and the strip's turned outline seen from above, not a box aligned with the table. Successful
-runs end with the charger standing upright, prongs down, in an outlet left of the strip's middle, its back end up.
+charger's centre only and the strip's turned outline seen from above, not a box aligned with the table.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed

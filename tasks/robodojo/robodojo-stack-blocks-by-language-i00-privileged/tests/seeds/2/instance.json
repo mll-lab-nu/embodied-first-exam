@@ -1,0 +1,549 @@
+{
+ "task": "stack_blocks_by_language",
+ "seed": 2,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/2/stack_blocks_by_language_0.json",
+ "layout_sha256": "38fab165e4dce6580f4e3f9b31a9de6f3aa5ecfbf3daf59975ccaae7e40c5251",
+ "layout": {
+  "Rigid": {
+   "cube": [
+    {
+     "category": "cube",
+     "category_idx": 7,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.25,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "block_0",
+     "default_pos": [
+      0.09972233743008191,
+      -0.13315057691059654,
+      0.7825
+     ],
+     "default_ori": [
+      0.993017902214758,
+      0.0,
+      0.0,
+      -0.11796374816443081
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.3,
+      "size": [
+       0.03500000014901161,
+       0.03500000014901163,
+       0.03500000014901163
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "cube",
+     "category_idx": 2,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.25,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "block_1",
+     "default_pos": [
+      -0.020542913594989276,
+      -0.05219224690096605,
+      0.7825
+     ],
+     "default_ori": [
+      0.9464367153861876,
+      0.0,
+      0.0,
+      -0.32288936769272025
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.3,
+      "size": [
+       0.03500000014901161,
+       0.03500000014901163,
+       0.03500000014901163
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "cube",
+     "category_idx": 3,
+     "group": null,
+     "xlim": [
+      -0.43,
+      0.43
+     ],
+     "ylim": [
+      -0.25,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 45,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "block_2",
+     "default_pos": [
+      0.35163436462337067,
+      -0.12437512849414117,
+      0.7825
+     ],
+     "default_ori": [
+      0.9912413259645547,
+      0.0,
+      0.0,
+      -0.132062991409522
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.25,
+      "friction": 0.3,
+      "size": [
+       0.03500000014901161,
+       0.03500000014901163,
+       0.03500000014901163
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "703c29e88b2317cf",
+ "step_lim": 400,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "stack the blocks from bottom to top in the order of yellow, green, and red, then reset the robot arm.",
+ "labels": [
+  "block_0",
+  "block_1",
+  "block_2",
+  "camera_stand"
+ ],
+ "objects": {
+  "block_0": {
+   "position": [
+    0.09972,
+    -0.13315,
+    0.7825
+   ],
+   "orientation_wxyz": [
+    0.99302,
+    0.0,
+    -0.0,
+    -0.11796
+   ],
+   "bbox_corners": [
+    [
+     -0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     0.0175
+    ]
+   ]
+  },
+  "block_1": {
+   "position": [
+    -0.02054,
+    -0.05219,
+    0.7825
+   ],
+   "orientation_wxyz": [
+    0.94644,
+    -0.0,
+    -0.0,
+    -0.32289
+   ],
+   "bbox_corners": [
+    [
+     -0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     0.0175
+    ]
+   ]
+  },
+  "block_2": {
+   "position": [
+    0.35163,
+    -0.12437,
+    0.7825
+   ],
+   "orientation_wxyz": [
+    0.99124,
+    -0.0,
+    0.0,
+    -0.13206
+   ],
+   "bbox_corners": [
+    [
+     -0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     0.0175
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {}
+}

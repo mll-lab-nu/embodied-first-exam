@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-semantic-goal-t01-i03-target_relocation-d1-p195"
+new = "pro-semantic-goal-t01-i01-target_relocation-d1-p195"
+
+[[replace]]
+old = "initial state 3)"
+new = "initial state 1)"

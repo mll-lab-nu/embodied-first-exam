@@ -9,8 +9,12 @@
   - (a standard or realtime task has its privileged twin's seeds: ci_checks/check-twins.py, an invariant);
   - `build = "frozen"` (the default): every listed seed other than the default has its frozen instance under the verifier's files of the task that
     holds the pair's instance (the privileged twin; a task without one: itself): `tests/seeds/<seed>/instance.json` or
-    `instance.npz`, of the same kind as the default instance; and `tests/seeds/` holds nothing for a seed that is not
-    allowed;
+    `instance.npz`, of the same kind as the default instance (a task whose instance is other files: at least one file);
+    and `tests/seeds/` holds nothing for a seed that is not allowed;
+  - a seed's files land somewhere (scripts/task_seed.py materialize): a file directly in `tests/seeds/<seed>/` is named
+    like a file in an instance place of one of the pair's tasks, a file further down sits at a path one of them has
+    (not task.toml, DIGEST or tests/seeds/), and `seed.toml` has only `[[replace]]` tables of two different strings
+    `old` and `new`, each `old` found in a text file of one of them;
   - nothing under `environment/` is in a directory named `seeds` (another seed's instance where the agent, or the
     agent's image, could reach it: the runner puts the drawn seed's instance in the usual place, scripts/task_seed.py).
 
@@ -38,6 +42,51 @@ def holder(task: Path) -> Path:
     """The task whose tests/ holds the pair's instances: the privileged twin of a standard task, else the task."""
     twin = tc.twin_of(task)          # the mode registry's twin mode (PROTOCOL §3)
     return twin if twin is not None and twin.is_dir() else task
+
+
+def pair(task: Path) -> list[Path]:
+    """The tasks that run from the holder's instances: the holder and every task whose twin it is."""
+    h = holder(task)
+    out = [h] if (h / "task.toml").is_file() else []
+    for m in tc.MODES:
+        t = h.with_name(f"{tc.base_of(h)}-{m}")
+        if t != h and (t / "task.toml").is_file() and tc.twin_of(t) == h:
+            out.append(t)
+    return out or [task]
+
+
+def seed_dir_errors(h: Path, d: Path, tasks: list[Path]) -> list[str]:
+    """A seed's files (scripts/task_seed.py materialize): each lands in one of the pair's tasks."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import task_seed  # noqa: E402
+    errs, where = [], d.relative_to(h.parent)
+    _, top, deep, _ = task_seed.seed_files(h, int(d.name))
+    for f in top:
+        if not any((t / p / f).is_file() for t in tasks for p in task_seed.places(t)):
+            errs.append(f"{where}/{f}: no task of the pair has a file {f} in an instance place ({', '.join(task_seed.places(h))})")
+    for rel in deep:
+        if rel.split("/")[0] in task_seed.NOT_OVERLAID or rel.startswith("tests/seeds/"):
+            errs.append(f"{where}/{rel}: not a per-seed file (the seeds come from task.toml)")
+        elif not any((t / rel).is_file() for t in tasks):
+            errs.append(f"{where}/{rel}: no task of the pair has {rel} to replace")
+    st = d / task_seed.SEED_TOML
+    if st.is_file():
+        try:
+            t = tomllib.loads(st.read_text())
+        except tomllib.TOMLDecodeError as e:
+            return errs + [f"{where}/{task_seed.SEED_TOML}: {e}"]
+        rs = t.get("replace", [])
+        if set(t) - {"replace"} or not isinstance(rs, list) or not all(
+                isinstance(r, dict) and set(r) == {"old", "new"} and all(isinstance(r[k], str) for k in r)
+                and r["old"] and r["old"] != r["new"] for r in rs):
+            errs.append(f"{where}/{task_seed.SEED_TOML}: only [[replace]] tables of two different strings `old` and `new`")
+        else:
+            texts = [f.read_text() for t in tasks for f in task_seed.text_files(t, {"DIGEST", "task.toml"})
+                     if "tests/seeds/" not in f.relative_to(t).as_posix()]
+            for r in rs:
+                if not any(r["old"] in x for x in texts):
+                    errs.append(f"{where}/{task_seed.SEED_TOML}: {r['old'][:60]!r} is in no text file of the pair")
+    return errs
 
 
 def instance_kinds(d: Path) -> set[str]:
@@ -99,15 +148,19 @@ def check(task: Path) -> list[str]:
                 continue
             d = h / "tests" / "seeds" / str(s)
             have = instance_kinds(d)
-            if not have:
+            if kinds and not have:
                 errs.append(f"allowed seed {s} has no frozen instance ({d.relative_to(h.parent)}/instance.json or .npz)")
             elif kinds and have != kinds:
                 errs.append(f"seed {s}'s instance is {sorted(have)}, the default's {sorted(kinds)}")
+            elif not kinds and not (d.is_dir() and any(f.is_file() for f in d.rglob("*"))):
+                errs.append(f"allowed seed {s} has no frozen files ({d.relative_to(h.parent)}/)")
     sdir = h / "tests" / "seeds"
     if sdir.is_dir():
         for d in sorted(sdir.iterdir()):
             if not d.name.isdigit() or not ok(int(d.name)) or int(d.name) == default:
                 errs.append(f"{d.relative_to(h.parent)} is not the instance of an allowed non-default seed")
+            elif task == h:
+                errs += seed_dir_errors(h, d, pair(h))
     env = task / "environment"
     if env.is_dir():
         for d in sorted(env.rglob("seeds")):

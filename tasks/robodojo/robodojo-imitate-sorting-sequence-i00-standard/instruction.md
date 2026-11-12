@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Memory**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Watch the support (opponent) arm place five objects into the far basket one after another, then place your five matching objects into your basket in that same order, and finish with both arms back at their start pose.
@@ -20,8 +20,7 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
 - your five objects, on the near half of the table: a smartwatch with a dark green band (right), a small black action
   camera (centre), a yellow toy school bus (front left), a mobile phone lying flat (front, left of centre) and a bunny
   figurine in a navy outfit (left of centre) [t0 watch, t1 action camera, t2 toy bus, t3 phone, t4 bunny];
-- the opponent's five objects: an identical copy of each of yours, on the far half of the table [aim0..aim4, the copy
-  of t0..t4 in the same order].
+- the opponent's five objects: an identical copy of each of yours, on the far half of the table [aim0..aim4].
 
 The *demonstrated order*: the opponent's arm puts its five objects into the far basket one after another; your object
 that matches the first one it moves is first, and so on [target_label[0..4], read by RoboDojo from the recorded

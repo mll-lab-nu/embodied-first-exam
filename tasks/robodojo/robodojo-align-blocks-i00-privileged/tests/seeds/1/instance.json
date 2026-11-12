@@ -1,0 +1,656 @@
+{
+ "task": "align_blocks",
+ "seed": 1,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/1/align_blocks_0.json",
+ "layout_sha256": "86162256c111b2029eb2ed9ec2b2dcb4a43daa78fded346995559c1bc2fb4ee6",
+ "layout": {
+  "Rigid": {
+   "triangular_prism": [
+    {
+     "category": "triangular_prism",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.05,
+      0.05
+     ],
+     "ylim": [
+      -0.2,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 15,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "target",
+     "default_pos": [
+      0.03360674061684267,
+      -0.16407736870878953,
+      0.774781176577168
+     ],
+     "default_ori": [
+      0.9949338147601045,
+      0.016617056412134956,
+      -0.0016557274869181725,
+      -0.09913544396224436
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.06,
+      "friction": 0.25,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "cube": [
+    {
+     "category": "cube",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.15,
+      0.15
+     ],
+     "ylim": [
+      -0.17,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 35,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cube0",
+     "default_pos": [
+      -0.018507628361876444,
+      -0.08503848821086352,
+      0.7825
+     ],
+     "default_ori": [
+      0.9960002478120573,
+      0.0,
+      0.0,
+      0.089350469267489
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.3,
+      "size": [
+       0.03500000014901161,
+       0.03500000014901163,
+       0.03500000014901163
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "cube",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.15,
+      0.15
+     ],
+     "ylim": [
+      -0.17,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 35,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cube1",
+     "default_pos": [
+      0.03881300808650148,
+      -0.05443251903049612,
+      0.7825
+     ],
+     "default_ori": [
+      0.9592455049486268,
+      0.0,
+      0.0,
+      0.28257399249728204
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.3,
+      "size": [
+       0.03500000014901161,
+       0.03500000014901163,
+       0.03500000014901163
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "cube",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.15,
+      0.15
+     ],
+     "ylim": [
+      -0.17,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 35,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "cube2",
+     "default_pos": [
+      0.11758564784513778,
+      -0.10236289411931224,
+      0.7825
+     ],
+     "default_ori": [
+      0.9579714151988846,
+      0.0,
+      0.0,
+      -0.28686367435045895
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.3,
+      "size": [
+       0.03500000014901161,
+       0.03500000014901163,
+       0.03500000014901163
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "e8469192f148d023",
+ "step_lim": 200,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Use the set square to push the three blocks into a straight, aligned row, then reset the robot arm.",
+ "labels": [
+  "target",
+  "cube0",
+  "cube1",
+  "cube2",
+  "camera_stand"
+ ],
+ "objects": {
+  "target": {
+   "position": [
+    0.03364,
+    -0.16385,
+    0.77472
+   ],
+   "orientation_wxyz": [
+    0.99506,
+    0.00481,
+    -0.00107,
+    -0.09914
+   ],
+   "bbox_corners": [
+    [
+     0.275,
+     0.0046,
+     -0.0216
+    ],
+    [
+     -0.275,
+     0.0046,
+     -0.0216
+    ],
+    [
+     0.275,
+     0.0181,
+     -0.0021
+    ],
+    [
+     -0.275,
+     0.0181,
+     -0.0021
+    ],
+    [
+     0.275,
+     -0.0141,
+     -0.0087
+    ],
+    [
+     -0.275,
+     -0.0141,
+     -0.0086
+    ],
+    [
+     0.275,
+     -0.0006,
+     0.0109
+    ],
+    [
+     -0.275,
+     -0.0006,
+     0.0109
+    ]
+   ]
+  },
+  "cube0": {
+   "position": [
+    -0.01851,
+    -0.08504,
+    0.7825
+   ],
+   "orientation_wxyz": [
+    0.996,
+    0.0,
+    0.0,
+    0.08935
+   ],
+   "bbox_corners": [
+    [
+     -0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     0.0175
+    ]
+   ]
+  },
+  "cube1": {
+   "position": [
+    0.03881,
+    -0.05443,
+    0.7825
+   ],
+   "orientation_wxyz": [
+    0.95925,
+    -0.0,
+    -0.0,
+    0.28257
+   ],
+   "bbox_corners": [
+    [
+     -0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     0.0175
+    ]
+   ]
+  },
+  "cube2": {
+   "position": [
+    0.11759,
+    -0.10236,
+    0.7825
+   ],
+   "orientation_wxyz": [
+    0.95797,
+    -0.0,
+    -0.0,
+    -0.28686
+   ],
+   "bbox_corners": [
+    [
+     -0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     0.0175,
+     0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     -0.0175,
+     -0.0175,
+     0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     -0.0175
+    ],
+    [
+     0.0175,
+     -0.0175,
+     0.0175
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ]
+}

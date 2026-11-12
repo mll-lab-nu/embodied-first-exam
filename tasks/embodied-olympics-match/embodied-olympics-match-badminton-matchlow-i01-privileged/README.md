@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `embodied-olympics-match-badminton-matchlow-i01-standard` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `badminton_matchlow` / seed 8 |
+| Family / instance | `badminton_matchlow` / seed 8 (allowed seeds: [8, 202, 212]; PROTOCOL §2) |
 | Oracle | `partial` — full-state reference program (solution/): the badminton privileged twins' truth reference, each act lowered in process by the twin's act.py into joint rows; a local Harbor oracle run lost 0:11 (valid, replay identical); the nop (no program) scores 0 |
 | Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0@sha256:99255569bf68bcf27f4e4867b58bad55c1d54fe73281920882e97c310836b6c7` |

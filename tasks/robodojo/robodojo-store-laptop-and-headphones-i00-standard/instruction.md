@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Hang the headphones on the headphone stand, close the laptop, then put the closed laptop upright into the vertical laptop storage rack, and finally return the arm(s) to the start pose.
@@ -27,14 +27,13 @@ The black riser under the laptop [laptop_stand] is not checked.
 
 All of these must hold at the same action boundary:
 - **Headphones on the stand.** Two points must be less than 0.05 m apart (3-D): the inside of the headband's crown (the
-  middle of the headband, about 1 cm below its outer top) [headset 'headband_bridge'] and the middle of the stand's
+  middle of the headband, about 0.4 cm below its outer top) [headset 'headband_bridge'] and the middle of the stand's
   curved hanger bar, about 1.6 cm below the stand's top [stand 'support_cradle']; that is, the headband rests on the
   hanger. And the headphones must hang the way the stand is set up, within 30 deg (total 3-D rotation between the
   headphones' and the stand's frames) [is_A_functional_point_close_to_B_functional_point, is_align_qpos, 30 deg]:
   headband up, the ear cups hanging at the left and right ends of the hanger (the ear cup now on the right stays on the
-  right), and the side that now lies on the table facing away from you. That is the pose you get by lifting the
-  headband end straight up over the ear cups. Not true at the start (they lie flat, 90 deg off). Hanging them turned
-  around (ear cups swapped or the other side facing away) is 180 deg off and fails.
+  right), and the side that now lies on the table facing away from you. Not true at the start (they lie flat). Hanging them
+  turned around (ear cups swapped or the other side facing away) is 180 deg off and fails.
 - **Laptop closed.** The lid within 16.5 deg of fully closed: the hinge joint's position, as a fraction of its range
   from fully open (110 deg, fraction 0) to closed (fraction 1), above 0.85 [laptop_hinge, is_joint_position_above_ratio
   0.85]. At the start it is fully open (fraction about 0.01).
@@ -51,8 +50,7 @@ All of these must hold at the same action boundary:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), all five conditions together; they form a single
-stage, and none is remembered from an earlier action. Success is declared at the first action boundary where all hold,
-and the episode ends. No condition ends the episode early as a failure.
+stage, and none is remembered from an earlier action. Success is declared at the first action boundary where all hold. No condition ends the episode early as a failure.
 
 **Episode length.** A step limit of **800 steps** (RoboDojo's own limit for this task, 32 s of
 simulated time) [step_lim]; one step is one 25 Hz action (`## Episode end`, below). The

@@ -1,0 +1,11 @@
+[[replace]]
+old = "RCB_INSTANCE_SHA: \"93c272ea136a94060880b4102f06563d984e8ad1bac11d13c415deedac91dd7d\""
+new = "RCB_INSTANCE_SHA: \"a4bbc05014c93f75424a9711d640088546991529e3533aede94ec09f2ae920e9\""
+
+[[replace]]
+old = "RCB_START_SHA: \"d5aa4a0bae3dbb1cf58ca41863c12a18d25e8884771e0377af724f708de0c142\""
+new = "RCB_START_SHA: \"0987e4072839248505ba65ea1c0bfd8d107d45ff07216142e669408c61a4fc70\""
+
+[[replace]]
+old = "(object and goal positions; seed 0)"
+new = "(object and goal positions; seed 1)"

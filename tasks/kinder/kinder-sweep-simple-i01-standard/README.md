@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.1`) |
 | Twin | `kinder-sweep-simple-i01-privileged` |
 | Simulator / robot | `kinder` / `tidybot-plus-plus` |
-| Family / instance | `sweep-simple` / seed 0 |
+| Family / instance | `sweep-simple` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `none` — none yet: no positive example is known for this instance (human review pending) |
 | Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:kinder-0.1.6` |

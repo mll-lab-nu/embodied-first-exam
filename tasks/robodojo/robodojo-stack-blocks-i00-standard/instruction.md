@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Stack the three blocks (that differ in texture) on top of each other into one tower, then return the arm(s) to the start pose.
@@ -35,7 +35,7 @@ at the same action boundary:
 
 **When it is checked.** After every action (never between actions; once all simulation sub-steps of the action are
 done), both conditions are checked together: one stage, nothing latched or ordered. Success is declared at the first
-action boundary where both hold, and the episode ends. No condition ends the episode early as a failure (only a broken
+action boundary where both hold. No condition ends the episode early as a failure (only a broken
 environment, e.g. a missing object or exploded physics, does). RoboDojo's own 550-action limit [step_lim] applies
 here (Episode length, below).
 
@@ -50,7 +50,7 @@ initial state), as part of the success condition; the grippers need not be open.
 
 **Notes from RoboDojo's code.** RoboDojo draws one size group per episode and three cubes of that group with different
 surfaces, so all three cubes always have the same size (here 3.5 cm), and larger cubes get a larger horizontal limit.
-The test reads only the cubes' centres: it does not need the cubes to touch, to be turned alike, or to be released. A
+The test reads only the cubes' centres. A
 process score (15 for one stacked pair with both grippers open at least 0.8 of their range, 100 for the full tower
 with grippers open) exists but does not decide success.
 

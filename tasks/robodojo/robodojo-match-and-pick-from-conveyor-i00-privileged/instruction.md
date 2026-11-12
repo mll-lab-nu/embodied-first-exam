@@ -13,7 +13,7 @@ RoboDojo's own instruction for this scene: *"Remember the first object on the co
 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - conveyor: moving belt (category conveyor idx 0, 'Dynamic' object), at world (-2.08, 0.175), z 0 on the ground
-- target0: the 'first' object (same model as target1), at conveyor-frame x=1.88, y=-0.13 (downstream: already in the workspace at the start, right of centre at world x ~ +0.24 before the reset settle, ~ +0.45 after it), random yaw up to +-35 deg
+- target0: the 'first' object, at conveyor-frame x=1.88, y=-0.13 (downstream: already in the workspace at the start, right of centre at world x ~ +0.24 before the reset settle, ~ +0.45 after it), random yaw up to +-35 deg
 - target1: the object to pick, one of 10 fixed models (bottle 47, camera 2, game_machine 0, headset 7, ice_cream 0, phone 0, garage 16, puppet 0, bag 0, plate 2), placed at conveyor-frame x in {-0.3,-0.14,0.02,0.2}, y in [-0.3,-0.2]
 - other0, other1, other2: three distractor objects (distinct models from the same 10), also at the four x slots {-0.3,-0.14,0.02,0.2}, y in [-0.3,-0.2]
 
@@ -36,7 +36,7 @@ The success condition:
   how it is turned do not matter.
 
 **When it is checked.** After every action (never between actions), on the current state; one stage, one condition.
-Success is declared at the first action boundary where the matching copy is more than 10 cm up, and the episode ends.
+Success is declared at the first action boundary where the matching copy is more than 10 cm up.
 Nothing else is required: no placing, releasing or returning the arms. Touching or lifting any other object (the first
 object included) is neither penalised nor credited, and no condition ends the episode early as a failure; if the
 matching copy is carried away by the belt or falls off, the episode just runs on until it is stopped and fails.

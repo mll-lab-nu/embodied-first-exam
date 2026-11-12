@@ -57,7 +57,7 @@ All of these must hold at the same action boundary, for each of the three mugs:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), all conditions for all three mugs and the arms
-together (one stage). Success is declared at the first action boundary where everything holds, and the episode ends;
+together (one stage). Success is declared at the first action boundary where everything holds;
 nothing needs to hold for longer. Since the arms must be back, the mugs must be hanging on the rack by themselves at
 that moment. No condition ends the episode early as a failure; otherwise it runs on until the length cap (below)
 [step_lim].
@@ -75,8 +75,7 @@ be open, but the mugs must hang on the rack without being held.
 hook point, so any assignment works. The two direction tests, though, always use the first hook (the lower arm pointing
 right), so in practice only the four arms that point left or right (lower and top level) work, with the mug hanging
 from its handle. The 0.9 m handle height is an absolute world height (13.5 cm above the table top). Partial credit
-(15 / 40 / 100 for one / two / three mugs hung with the grippers open) is separate from success. In a recorded success
-the mugs hung from the lower left, lower right and top left arms.
+(15 / 40 / 100 for one / two / three mugs hung with the grippers open) is separate from success.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed

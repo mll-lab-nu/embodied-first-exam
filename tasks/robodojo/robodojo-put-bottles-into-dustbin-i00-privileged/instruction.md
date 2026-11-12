@@ -41,7 +41,7 @@ bounding box. All of these must hold at the same action boundary:
 
 **When it is checked.** After every action (never between actions). The four bottle conditions and the arms condition
 form one stage and must all hold at the same action boundary; success is declared at the first action boundary where
-they all hold, and the episode ends. Otherwise the episode ends as a failure after the action limit. No condition ends
+they all hold. Otherwise the episode ends as a failure after the action limit. No condition ends
 the episode early as a failure.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
@@ -54,8 +54,8 @@ reads that limit and it does not apply here: where the description above mention
 the dustbin; the grippers need not be open.
 
 **Notes from RoboDojo's code.** The dustbin is beside the left end of the table, so it is within reach of the left arm
-only; RoboDojo's task description suggests handing the bottles on the right side over from the right hand to the left
-hand, but nothing in the check requires a handover: only where the bottles end up counts. Dropping a bottle into the bin
+only; RoboDojo's task description has the bottles on the right side handed over from the right hand to the left
+hand. Dropping a bottle into the bin
 from above counts the same as placing it. All four bottles are tested together at the same action, so a bottle that
 bounces back out undoes the result. The 0.4 m limit on the bottle's height above the bin's bottom does not matter in
 practice: a bottle resting inside the bin is far lower.

@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `metaworldplus-hand-insert-i00-standard` |
 | Simulator / robot | `mujoco` / `sawyer` |
-| Family / instance | `metaworld/hand-insert` / seed 0 |
+| Family / instance | `metaworld/hand-insert` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:metaworld-0.1.0` |

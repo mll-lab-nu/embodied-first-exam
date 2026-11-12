@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-object-goal-t07-i04-camera_shift-d1-p195"
+new = "pro-object-goal-t07-i01-camera_shift-d1-p195"
+
+[[replace]]
+old = "initial state 4)"
+new = "initial state 1)"

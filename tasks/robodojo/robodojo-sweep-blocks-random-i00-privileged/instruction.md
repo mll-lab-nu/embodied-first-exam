@@ -58,8 +58,7 @@ off-centre, about 6 mm). All of these must hold at the same action boundary:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), all conditions together as one stage; none of them
-remembers earlier actions. Success is declared at the first action boundary where everything holds, and the episode
-ends. No condition ends the episode early as a failure.
+remembers earlier actions. Success is declared at the first action boundary where everything holds. No condition ends the episode early as a failure.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
 are never executed) or when a check fails for good (failure); a runaway guard stops it after 15000 actions (10 min of
@@ -70,8 +69,7 @@ reads that limit and it does not apply here: where the description above mention
 **At the end.** Both arms back near their start poses (above), as part of the success condition; the grippers need not
 be open.
 
-**Notes from RoboDojo's code.** The hand-over of the broom to the right arm is not checked; only the final state is.
-The dustpan may be slid or turned on the table but not lifted (more than 1 cm) or tipped (5 deg or more). The two
+**Notes from RoboDojo's code.** The dustpan may be slid or turned on the table but not lifted (more than 1 cm) or tipped (5 deg or more). The two
 in-the-pan tests are alternatives, but each one must hold for all five objects at once: one object near the lip corner
 (only in the rectangle) and one at the back of the pan (only in the circle) fails both. An object that stays outside
 the pan or falls off the table fails. The broom test compares only left-right (x) positions of the two centres.

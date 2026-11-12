@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-view-occlusion-object-t04-i05-distractor_burst-d1-p195"
+new = "pro-view-occlusion-object-t04-i00-distractor_burst-d1-p195"
+
+[[replace]]
+old = "initial state 5)"
+new = "initial state 0)"

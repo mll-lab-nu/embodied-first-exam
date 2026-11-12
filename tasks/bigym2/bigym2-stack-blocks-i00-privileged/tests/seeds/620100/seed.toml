@@ -1,0 +1,15 @@
+[[replace]]
+old = "At the start the three blocks lie on the table in front of you (about 0.5 m away, 10° to your left, 0.72 m above the floor; about 0.6 m away, 27° to your left, 0.72 m above the floor; about 0.5 m away, 13° to your right, 0.72 m above the floor); the green pad is on a second table beyond it, about 1.4 m away, straight ahead, 0.70 m above the floor."
+new = "At the start the three blocks lie on the table in front of you (about 0.5 m away, 26° to your right, 0.72 m above the floor; about 0.5 m away, 13° to your right, 0.72 m above the floor; about 0.4 m away, 10° to your left, 0.72 m above the floor); the green pad is on a second table beyond it, about 1.5 m away, straight ahead, 0.70 m above the floor."
+
+[[replace]]
+old = "(BiGym's `stack_blocks`, reset with seed 0)"
+new = "(BiGym's `stack_blocks`, reset with seed 620100)"
+
+[[replace]]
+old = "the task reset with seed 0, t = 0 state hash `ec4f14c7690291201bca0df5820aabf9266caf76`"
+new = "the task reset with seed 620100, t = 0 state hash `75cfc63101f3e4725b85b89bf59f432de3e5e2f1`"
+
+[[replace]]
+old = "(no network but the model APIs; seed 0 is none of their seeds)"
+new = "(no network but the model APIs; seed 620100 is none of their seeds)"

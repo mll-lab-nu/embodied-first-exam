@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-object-texture-object-t00-i08-receptacle_relocation-d0-p195"
+new = "pro-object-texture-object-t00-i00-receptacle_relocation-d0-p195"
+
+[[replace]]
+old = "initial state 8)"
+new = "initial state 0)"

@@ -26,7 +26,7 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
   the left, nearest to you [cube2]. The check treats the three alike, so which is which does not matter.
 
 The set square (the long light-grey bar with a red stripe, 55 cm long, lying across the front of the table [target]) is
-the tool the task asks you to push with; the check never reads it.
+the tool the task asks you to push with.
 
 A block's *centre* below is the point RoboDojo tests for it (its origin): the middle of the cube. All of these must hold
 at the same action boundary:
@@ -36,8 +36,7 @@ at the same action boundary:
 - **Squared to the row.** Each block must have one of its three face directions within 8 deg of the row's direction
   (either way along it) [one of the cube's local x/y/z axes, align_threshold=8]. Since the row is horizontal, for a
   block lying on a face this means its side faces are square to the row: its edges run along the row and across it,
-  within 8 deg. Not true at the start for all of them (one block is turned about 30 deg): push the blocks so that each
-  is turned square to the line, e.g. by pressing all three against the straight edge of the set square.
+  within 8 deg. Not true at the start for all of them (one block is turned about 30 deg).
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 - **Never lifted (whole episode).** No block's centre may ever be more than 0.007 m higher than it was at the start of
@@ -47,8 +46,7 @@ at the same action boundary:
 **When it is checked.** After every action (never between actions). First the three never-lifted tests: a single
 action at which any block is more than 0.007 m above its start height marks the episode failed at once. Then the main
 check, in the order row (with the squaring test), arms, stopping at the first condition that fails; both must hold at
-the same action boundary (one stage). Success is declared at the first action boundary where they hold, and the episode
-ends; so the arms must be back home while the row stays straight.
+the same action boundary (one stage). Success is declared at the first action boundary where they hold; so the arms must be back home while the row stays straight.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
 are never executed) or when a check fails for good (failure); a runaway guard stops it after 15000 actions (10 min of
@@ -60,10 +58,9 @@ reads that limit and it does not apply here: where the description above mention
 be open.
 
 **Notes from RoboDojo's code.** Only the geometry of the three blocks is checked: the row can be anywhere on the table
-and in any direction, and nothing tests that the set square was used. The tolerances are tight (0.008 m off the line,
+and in any direction. The tolerances are tight (0.008 m off the line,
 8 deg of turn). A block lifted by more than 0.007 m at any checked action fails the episode for good, so slide the
-blocks along the table. A row that is straight and squared at an action where the arms are already home ends the
-episode as a success at once.
+blocks along the table. A row that is straight and squared at an action where the arms are already home counts as a success at once.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed

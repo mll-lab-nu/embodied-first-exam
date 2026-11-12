@@ -1,0 +1,449 @@
+{
+ "task": "plug_in_charger",
+ "seed": 2,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/2/plug_in_charger_0.json",
+ "layout_sha256": "6ff24328d147ef637e7104a5d1c2ae075d28a6412a02f38cd6a20ad2aa123089",
+ "layout": {
+  "Rigid": {
+   "charger": [
+    {
+     "category": "charger",
+     "category_idx": 0,
+     "xlim": [
+      [
+       -0.45,
+       -0.1
+      ],
+      [
+       0.1,
+       0.45
+      ]
+     ],
+     "ylim": [
+      -0.25,
+      -0.1
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 30,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "charger",
+     "default_pos": [
+      -0.10599429041745165,
+      -0.1957784449945644,
+      0.7785608673787927
+     ],
+     "default_ori": [
+      0.9958052198492913,
+      0.0008222044006871125,
+      -0.001983420940039997,
+      -0.09147324276641199
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.03,
+      "friction": 0.45,
+      "size": [
+       0.041993668374983625,
+       0.06306500350970716,
+       0.026999999999999996
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "socket": [
+    {
+     "category": "socket",
+     "category_idx": 0,
+     "xlim": [
+      [
+       -0.4,
+       -0.15
+      ],
+      [
+       0.15,
+       0.4
+      ]
+     ],
+     "ylim": [
+      -0.15,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 30,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "socket",
+     "default_pos": [
+      -0.2552436848317689,
+      -0.12330921391630766,
+      0.7642
+     ],
+     "default_ori": [
+      0.9977442214983441,
+      0.0,
+      0.0,
+      -0.0671302351155084
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "size": [
+       0.1586687078252984,
+       0.03667060473130968,
+       0.021
+      ],
+      "mass": 0.0,
+      "friction": 0.0,
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "74ad81cd30266933",
+ "step_lim": 400,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Plug the charger into the power strip.",
+ "labels": [
+  "charger",
+  "socket",
+  "camera_stand"
+ ],
+ "objects": {
+  "charger": {
+   "position": [
+    -0.10595,
+    -0.19576,
+    0.7785
+   ],
+   "orientation_wxyz": [
+    0.9958,
+    -4e-05,
+    0.0,
+    -0.0916
+   ],
+   "bbox_corners": [
+    [
+     -0.0233,
+     0.0531,
+     0.015
+    ],
+    [
+     -0.0233,
+     -0.0169,
+     0.015
+    ],
+    [
+     0.0233,
+     0.0531,
+     0.015
+    ],
+    [
+     0.0233,
+     -0.0169,
+     0.015
+    ],
+    [
+     -0.0233,
+     0.0531,
+     -0.015
+    ],
+    [
+     -0.0233,
+     -0.0169,
+     -0.015
+    ],
+    [
+     0.0233,
+     0.0531,
+     -0.015
+    ],
+    [
+     0.0233,
+     -0.0169,
+     -0.015
+    ]
+   ]
+  },
+  "socket": {
+   "position": [
+    -0.25524,
+    -0.12329,
+    0.7642
+   ],
+   "orientation_wxyz": [
+    0.99775,
+    -0.00104,
+    7e-05,
+    -0.06697
+   ],
+   "bbox_corners": [
+    [
+     0.0786,
+     0.0181,
+     0.0216
+    ],
+    [
+     -0.0786,
+     0.0181,
+     0.0216
+    ],
+    [
+     0.0786,
+     -0.0182,
+     0.0215
+    ],
+    [
+     -0.0786,
+     -0.0182,
+     0.0215
+    ],
+    [
+     0.0786,
+     0.0182,
+     0.0008
+    ],
+    [
+     -0.0786,
+     0.0182,
+     0.0008
+    ],
+    [
+     0.0786,
+     -0.0181,
+     0.0008
+    ],
+    [
+     -0.0786,
+     -0.0181,
+     0.0008
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {}
+}

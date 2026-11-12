@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard-turn/1.0`) |
 | Twin | `embodied-olympics-match-fencing-bout-i02-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `fencing_bout` / seed 35 |
+| Family / instance | `fencing_bout` / seed 35 (allowed seeds: [35, 202, 212]; PROTOCOL §2) |
 | Oracle | `full` — in process (fencing-7): the oracle beats level 2 on this seed 15:13; over 40 player seeds the reference wins this instance 42.5 %, the equilibrium mix 50 % (fresh-seed means 48.0 %, 53.9 %); none of the nine constant intentions nor a random player wins it; live on vanilla Harbor 0.23.0 (2026-10-15, the exported task) the oracle won 15:13 in 32 phrases, replay identical (the world is deterministic) |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |

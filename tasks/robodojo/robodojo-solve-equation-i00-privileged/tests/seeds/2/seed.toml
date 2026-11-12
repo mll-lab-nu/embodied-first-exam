@@ -1,0 +1,11 @@
+[[replace]]
+old = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/solve_equation_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
+new = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/2/solve_equation_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
+
+[[replace]]
+old = "arx_x5/0/solve_equation_0.json"
+new = "arx_x5/2/solve_equation_0.json"
+
+[[replace]]
+old = "sha256 `df2d8ee1b5e6b3d9`"
+new = "sha256 `720243e1b33f3800`"

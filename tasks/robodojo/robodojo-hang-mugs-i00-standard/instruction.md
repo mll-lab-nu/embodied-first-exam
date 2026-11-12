@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Hang all three mugs by their handles on the mug rack (cup_holder), then bring both arms back to where they started.
@@ -50,7 +50,7 @@ All of these must hold at the same action boundary, for each of the three mugs:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), all conditions for all three mugs and the arms
-together (one stage). Success is declared at the first action boundary where everything holds, and the episode ends;
+together (one stage). Success is declared at the first action boundary where everything holds;
 nothing needs to hold for longer. Since the arms must be back, the mugs must be hanging on the rack by themselves at
 that moment. No condition ends the episode early as a failure; otherwise it runs on until the length cap (below)
 [step_lim].
@@ -68,8 +68,7 @@ be open, but the mugs must hang on the rack without being held.
 hook point, so any assignment works. The two direction tests, though, always use the first hook (the lower arm pointing
 right), so in practice only the four arms that point left or right (lower and top level) work, with the mug hanging
 from its handle. The 0.9 m handle height is an absolute world height (13.5 cm above the table top). Partial credit
-(15 / 40 / 100 for one / two / three mugs hung with the grippers open) is separate from success. In a recorded success
-the mugs hung from the lower left, lower right and top left arms.
+(15 / 40 / 100 for one / two / three mugs hung with the grippers open) is separate from success.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends as above, when your time is up, or on a simulator
