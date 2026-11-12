@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """ADVISORY. Seeds (docs/protocol/README.md §2): every task names the frozen instances it may run from. For every task:
   - `[metadata] instance_seed` (an integer) is the default seed, the one field that names it; `[metadata.seeds]`, only
-    where they are not the defaults, has `allowed` (default [instance_seed]: a list of integers, a seed repeated where a task has fewer than three, a range
-    `{ from = A, to = B }` with both ends included, or "any"; the default seed among them; a range or "any" only with
+    where they are not the defaults, has `allowed` (default [instance_seed]: a list of integers, as many seeds as the
+    task has, at least three recommended (fewer is a note, never a failure); a range `{ from = A, to = B }` with both
+    ends included; or "any"; the default seed among them; a range or "any" only with
     `build = "runtime"`: the task builds a seed's instance itself, since they cannot all be committed) and `oracle` (the
     seeds the reference solution is for, default [instance_seed] with an oracle, else []: a subset of `allowed`; empty
     when `oracle = "none"`, not empty when it is "full" or "partial"), and no `default` (a second copy of instance_seed);
@@ -170,15 +171,31 @@ def check(task: Path) -> list[str]:
     return errs
 
 
+def few_seeds(task: Path) -> bool:
+    """Fewer than three distinct allowed seeds: at least three are recommended (PROTOCOL §2), never a failure."""
+    md, sd = seeds_table(task)
+    allowed = sd.get("allowed", [md.get("instance_seed")]) if isinstance(sd, dict) else []
+    if isinstance(allowed, dict):
+        return isinstance(allowed.get("to"), int) and isinstance(allowed.get("from"), int) \
+            and allowed["to"] - allowed["from"] < 2
+    return isinstance(allowed, list) and len(set(allowed)) < 3
+
+
 def main(argv: list[str]) -> int:
     dirs = [Path(a) for a in argv] or tc.iter_tasks()
-    bad = 0
+    bad, few = 0, []
     for t in dirs:
         if not (t / "task.toml").is_file():
             continue
-        for e in check(t):
+        errs = check(t)
+        for e in errs:
             print(f"FAIL {t}: {e}")
             bad += 1
+        if not errs and few_seeds(t):
+            few.append(t)
+    if few:
+        print(f"NOTE {len(few)} task(s) allow fewer than three distinct seeds (at least three recommended, PROTOCOL §2; "
+              f"not a failure): {', '.join(t.name for t in few[:5])}{' ...' if len(few) > 5 else ''}")
     if not bad:
         print(f"check-seeds: {len(dirs)} task(s) name their seeds (PROTOCOL §2)")
     return 1 if bad else 0

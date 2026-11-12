@@ -126,16 +126,22 @@ def main() -> int:
         d.mkdir(parents=True)
         inst = (priv / "tests" / "instance.json").read_text()
         (d / "instance.json").write_text(inst.replace('"seed": 0', '"seed": 7', 1))
-        for t in (priv, std):
+        for t in (priv, std):                          # fewer than three seeds: a note, not a failure (PROTOCOL §2)
             with_seeds(t / "task.toml", "[0, 7]")
         rc, out = run(CHECK + [str(priv), str(std)])
-        assert rc == 0, out
+        assert rc == 0 and "NOTE 2 task(s) allow fewer than three distinct seeds" in out, out
         rc, out = run(SEED + ["pick", str(std), "--rng", "1"])
         assert rc == 0 and out.strip() in ("0", "7"), out
-        for t in (priv, std):                          # a seed repeated to make three (PROTOCOL §2)
-            with_seeds(t / "task.toml", "[0, 7, 0]")
+        more = [8, 9, 10]                              # as many seeds as a task has: no upper limit (PROTOCOL §2)
+        for s in more:
+            (priv / "tests" / "seeds" / str(s)).mkdir(parents=True)
+            (priv / "tests" / "seeds" / str(s) / "instance.json").write_text(inst.replace('"seed": 0', f'"seed": {s}', 1))
+        for t in (priv, std):
+            with_seeds(t / "task.toml", "[0, 7, 8, 9, 10]")
         rc, out = run(CHECK + [str(priv), str(std)])
-        assert rc == 0, out
+        assert rc == 0 and "NOTE" not in out, out
+        for s in more:
+            shutil.rmtree(priv / "tests" / "seeds" / str(s))
         for t in (priv, std):
             with_seeds(t / "task.toml", "[0, 7]")
         # materialize: the seed's instance in every place the task runs and grades from, the seed recorded
