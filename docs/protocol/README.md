@@ -67,9 +67,8 @@ configuration (`config_key`; running.md "Results").
 | Validated | `[metadata] validated`, else `oracle = "full"` | a recorded marker, not part of the configuration: validated and unvalidated tasks are ranked together |
 | Stricter honour rules | `[metadata.honour] stricter` | none (never looser rules) |
 
-Seeds: each task provides as many seeds as it can, its default seed and every other one it has (`[metadata.seeds]
-allowed`, no upper limit). Where a task has fewer than three distinct seeds, a seed may be repeated to make three; a
-task that declares none has its default seed three times.
+Seeds: each task provides as many seeds as it can (`[metadata.seeds] allowed`, its default seed among them, no upper
+limit); at least three are recommended, and a task with fewer still passes the checks (`check-seeds.py` notes it).
 
 ## 3. Modes
 
