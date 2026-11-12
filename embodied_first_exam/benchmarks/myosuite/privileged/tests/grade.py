@@ -49,6 +49,12 @@ MAX_ROWS = {fam: 360 * rate for fam, rate in STEPS_PER_S.items()}
 MAX_MEMBER_MARGIN = 1 << 20  # bytes an .npz entry may hold beyond MAX_ROWS rows of float64 numbers (the .npy header)
 
 
+def too_large(sizes: dict, max_rows: int, nu: int) -> bool:
+    """Any entry larger than max_rows rows of `nu` float64 numbers + MAX_MEMBER_MARGIN bytes unpacked. Every entry, not
+    only the two read: np.load reads an entry named `actions` (no .npy) before `actions.npy`."""
+    return max(sizes.values(), default=0) > max_rows * nu * 8 + MAX_MEMBER_MARGIN
+
+
 def write(ok: bool, out: dict) -> None:
     out = {**out, "infra_error": int(bool(out.get("grader_error")))}  # no grader error here is the agent's doing
     os.makedirs(LOG_DIR, exist_ok=True)
@@ -135,7 +141,7 @@ def main() -> int:
             raise ValueError("not an .npz (zip) file")
         with zipfile.ZipFile(a.traj) as z:  # entry sizes before anything is unpacked: a small file that inflates to
             sizes = {i.filename: i.file_size for i in z.infolist()}  # gigabytes is the agent's 0, not an OOM
-        if max((sizes.get(k, 0) for k in ("actions.npy", "task.npy")), default=0) > max_rows * nu0 * 8 + MAX_MEMBER_MARGIN:
+        if too_large(sizes, max_rows, nu0):
             raise ValueError("an entry is larger than the row limit allows")
         d = np.load(a.traj, allow_pickle=False)
         task = str(d["task"]) if "task" in d.files else a.family

@@ -129,6 +129,13 @@ def recover_reward(directory):
 def load_trajectory(path, task, dim, *, trusted=False, layout=None):
     """Validate before scene creation. Tick metadata is accepted only from the trusted service."""
     try:
+        # Every entry's unpacked size first, from the zip directory (nothing is decompressed): np.load reads an entry named
+        # `actions` (no .npy) before `actions.npy`, so a bound on the expected names alone would let a zip bomb through.
+        limit = MAX_STEPS * dim * 16 + (1 << 20)
+        with zipfile.ZipFile(path) as archive:
+            for info in archive.infolist():
+                if info.file_size > limit:
+                    raise InvalidTrajectory(f"entry {info.filename!r} is larger than a trajectory can be")
         # Inspect the array header before NumPy allocates from an untrusted shape.
         with zipfile.ZipFile(path) as archive, archive.open("actions.npy") as stream:
             version = np.lib.format.read_magic(stream)

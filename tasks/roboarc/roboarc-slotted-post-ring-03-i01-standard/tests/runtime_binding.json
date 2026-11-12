@@ -8,7 +8,7 @@
     "instance_assets/mujoco/scene.xml": "3c1a974d390f496efa1d7c2ce05aab2a9ae4f20fe46ea66e04ea6e1e8029b576",
     "instance_assets/mujoco_settled.npz": "862a0165215e7f6555647040cc414bf5c48e896de1f533b7a5c94c5ab2b1178c"
   },
-  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "tooling_sha256": "f7f4eda0c86a9dcd68450159a9196660534e34a11c0dc7506d0fc0f00d922d36",
   "creation_source": {
     "sha256": "d601866b4c91c858aa4e249b5bf5145b8fe3263b2885048a86016e34c314c208",
     "files": 444

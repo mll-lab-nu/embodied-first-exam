@@ -1,5 +1,5 @@
 #!/bin/bash
-# Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in two fresh processes.
+# Verifier: replay /app/output/trajectory.npz from the frozen instance (the tests/ copy) in one fresh process.
 # Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see tasks/maniguard/README.md).
 # Harbor also mounts /logs/verifier into the agent's container: start from an empty directory, so nothing the agent left
 # there (a planted reward, a symlink) can count. rm never follows symlinks.

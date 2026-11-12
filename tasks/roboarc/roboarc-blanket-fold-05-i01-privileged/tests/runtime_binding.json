@@ -10,7 +10,7 @@
     "instance_assets/mujoco/scene.xml": "dd9376a606a5bd4ce760ef1c559c0a7ccfec9dc790e1def0b319c377d9fa19ae",
     "instance_assets/mujoco_birth/settled_birth.json": "1d47043c313b115cdc20a5c6cd97230688e65082d1519d5a7ba407a0a5f73c99"
   },
-  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "tooling_sha256": "f7f4eda0c86a9dcd68450159a9196660534e34a11c0dc7506d0fc0f00d922d36",
   "creation_source": {
     "sha256": "de81088e64a201431b18514c769a0ea2d682048cda9491c3da44f3dae25b1897",
     "files": 835

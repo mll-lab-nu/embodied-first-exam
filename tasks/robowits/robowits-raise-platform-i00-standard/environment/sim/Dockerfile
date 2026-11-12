@@ -8,7 +8,7 @@ COPY --from=ghcr.io/mll-lab-nu/efe:standard-files-0.4.1@sha256:7f1a830075fd6dd25
      /rcb_limited.py \
      /run.sh \
      /srv/
-COPY --from=ghcr.io/mll-lab-nu/efe:robowits-files-0.4.2@sha256:0c7ba52e4ba979a623776833ccd95c33802c72902acfa9efc0ce68dc7c31898a \
+COPY --from=ghcr.io/mll-lab-nu/efe:robowits-files-0.4.3@sha256:6dff7e7072f6ab4b71f991b93a54c1152fb47270241826d0802213a39c79e896 \
      /privileged/tests/rcb_robowits.py \
      /sim/server.py \
      /srv/

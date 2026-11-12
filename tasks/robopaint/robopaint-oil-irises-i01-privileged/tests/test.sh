@@ -1,5 +1,5 @@
 #!/bin/bash
-# Verifier: replay /app/output/trajectory.npz from the graders' frozen instance (the tests/ copy) in two fresh processes and score it.
+# Verifier: replay /app/output/trajectory.npz from the graders' frozen instance (the tests/ copy) in one fresh process and score it.
 # Writes /logs/verifier/reward.txt (1/0) and reward.json (numeric fields, see docs/protocol/README.md).
 rm -rf /logs/verifier/*   # verdicts from an earlier run never survive (docs/protocol/README.md Appendix H.1)
 trap 'p=$(command -v python3 || command -v python); "$p" /tests/rcb_limits.py verify' EXIT   # resources, after the grader (PROTOCOL §6)

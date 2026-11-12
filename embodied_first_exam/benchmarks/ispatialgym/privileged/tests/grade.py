@@ -39,6 +39,25 @@ def replay(i, timeout_s):
         return {"error": f"timed out after {timeout_s} s"}
 
 
+def check_trajectory(path, max_rows):
+    """The agent's file, checked before any replay reads it: ValueError (or another exception) when it is no trajectory."""
+    # sizes first: an npz whose header declares a huge array would be allocated by np.load before any shape check
+    if os.path.getsize(path) > 64 << 20:
+        raise ValueError(f"trajectory.npz is {os.path.getsize(path)} bytes")
+    with zipfile.ZipFile(path) as z:
+        z.getinfo("actions.npy")                    # KeyError: no `actions` entry
+        # every entry, not only actions.npy: np.load reads an entry named `actions` (no .npy) before `actions.npy`
+        if max(i.file_size for i in z.infolist()) > max_rows * 23 * 16 + 4096:
+            raise ValueError("an entry is larger than max_rows x 23 numbers")
+    a = np.load(path, allow_pickle=False)["actions"]
+    if a.ndim != 2 or a.shape[1] != 23 or a.shape[0] > max_rows or not np.issubdtype(a.dtype, np.number):
+        raise ValueError(f"actions {a.shape} {a.dtype}")
+    with np.errstate(over="ignore", invalid="ignore"):
+        if not np.all(np.isfinite(a.astype(np.float32))):
+            raise ValueError("a value that is not a finite float32")
+    return a
+
+
 def main():
     facts = json.load(open(f"{INST}/facts.json"))
     max_rows = int(facts["max_steps"])
@@ -49,18 +68,7 @@ def main():
     if not os.path.isfile(TRAJ):
         write(False, {**base, "missing_trajectory": 1}); return
     try:
-        # sizes first: an npz whose header declares a huge array would be allocated by np.load before any shape check
-        if os.path.getsize(TRAJ) > 64 << 20:
-            raise ValueError(f"trajectory.npz is {os.path.getsize(TRAJ)} bytes")
-        with zipfile.ZipFile(TRAJ) as z:
-            if z.getinfo("actions.npy").file_size > max_rows * 23 * 16 + 4096:
-                raise ValueError("actions.npy is larger than max_rows x 23 numbers")
-        a = np.load(TRAJ, allow_pickle=False)["actions"]
-        if a.ndim != 2 or a.shape[1] != 23 or a.shape[0] > max_rows or not np.issubdtype(a.dtype, np.number):
-            raise ValueError(f"actions {a.shape} {a.dtype}")
-        with np.errstate(over="ignore", invalid="ignore"):
-            if not np.all(np.isfinite(a.astype(np.float32))):
-                raise ValueError("a value that is not a finite float32")
+        a = check_trajectory(TRAJ, max_rows)
     except Exception:  # noqa: BLE001 -- the agent's file: not readable as a trajectory is its own failure
         traceback.print_exc()
         write(False, {**base, "bad_trajectory": 1}); return
@@ -83,9 +91,10 @@ def main():
                "video_rendered": video})
 
 
-os.makedirs(LOG, exist_ok=True)
-try:
-    main()
-except Exception:  # noqa: BLE001 -- the grader's own failure is never the agent's 0
-    traceback.print_exc()
-    write(False, {"success": 0, "deterministic": 0, "infra_error": 1, "grader_error": 1})
+if __name__ == "__main__":
+    os.makedirs(LOG, exist_ok=True)
+    try:
+        main()
+    except Exception:  # noqa: BLE001 -- the grader's own failure is never the agent's 0
+        traceback.print_exc()
+        write(False, {"success": 0, "deterministic": 0, "infra_error": 1, "grader_error": 1})
