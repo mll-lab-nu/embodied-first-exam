@@ -132,6 +132,12 @@ def main() -> int:
         assert rc == 0, out
         rc, out = run(SEED + ["pick", str(std), "--rng", "1"])
         assert rc == 0 and out.strip() in ("0", "7"), out
+        for t in (priv, std):                          # a seed repeated to make three (PROTOCOL §2)
+            with_seeds(t / "task.toml", "[0, 7, 0]")
+        rc, out = run(CHECK + [str(priv), str(std)])
+        assert rc == 0, out
+        for t in (priv, std):
+            with_seeds(t / "task.toml", "[0, 7]")
         # materialize: the seed's instance in every place the task runs and grades from, the seed recorded
         out_dir = Path(td) / "run"
         for t, places in ((priv, ["environment", "tests"]), (std, ["environment/sim"])):

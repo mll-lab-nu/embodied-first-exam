@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ADVISORY. Seeds (docs/protocol/README.md §2): every task names the frozen instances it may run from. For every task:
   - `[metadata] instance_seed` (an integer) is the default seed, the one field that names it; `[metadata.seeds]`, only
-    where they are not the defaults, has `allowed` (default [instance_seed]: a list of distinct integers, a range
+    where they are not the defaults, has `allowed` (default [instance_seed]: a list of integers, a seed repeated where a task has fewer than three, a range
     `{ from = A, to = B }` with both ends included, or "any"; the default seed among them; a range or "any" only with
     `build = "runtime"`: the task builds a seed's instance itself, since they cannot all be committed) and `oracle` (the
     seeds the reference solution is for, default [instance_seed] with an oracle, else []: a subset of `allowed`; empty
@@ -112,8 +112,8 @@ def check(task: Path) -> list[str]:
     if build not in ("frozen", "runtime"):
         errs.append(f'seeds.build is "{build}", not "frozen" or "runtime"')
     if isinstance(allowed, list):
-        if not ints(allowed) or len(set(allowed)) != len(allowed):
-            errs.append("seeds.allowed is not a list of distinct integers")
+        if not ints(allowed) or not allowed:
+            errs.append("seeds.allowed is not a list of integers")
     elif isinstance(allowed, dict):
         if set(allowed) != {"from", "to"} or not (isint(allowed["from"]) and isint(allowed["to"])) \
                 or allowed["from"] > allowed["to"]:
