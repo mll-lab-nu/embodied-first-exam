@@ -12,7 +12,7 @@ spends ~3-5 min launching Isaac Sim and building the scene, and that time counts
 RoboDojo's own instruction for this scene: *"stack the blocks from bottom to top in the order of blue, yellow, and orange, then reset the robot arm."*
 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
-- block_0, block_1, block_2: three cubes (category 'cube', three different colours), 3 total, random positions on the table in x in [-0.43, 0.43], y in [-0.25, 0.0] (Table-relative), random yaw within +-45 degrees; a prohibited area rectangle [0.1,-0.23,-0.1,-0.17] is excluded from placement
+- block_0, block_1, block_2: three cubes (category 'cube', model indices drawn without replacement from {1 blue, 2 green, 3 red, 7 yellow, 8 orange, 9 cyan}, so three DIFFERENT colours), 3 total, random positions on the table in x in [-0.43, 0.43], y in [-0.25, 0.0] (Table-relative), random yaw within +-45 degrees; a prohibited area rectangle [0.1,-0.23,-0.1,-0.17] is excluded from placement
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/stack_blocks_by_language_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is
@@ -20,8 +20,10 @@ robot's start pose never change between resets. You may reset and retry as many 
 
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms).
-Three plain cubes, 3.5 cm on each edge, one in each colour the instruction names, lying on the table, each turned
-a little about the vertical [block_0, block_1, block_2].
+Three plain cubes, 3.5 cm on each edge, one per colour, each turned a little (15-24 deg) about the vertical:
+- the blue cube, just right of the table's centre, as near you as the yellow one [block_0];
+- the yellow cube, at the far left, ahead of the left gripper [block_1];
+- the orange cube, right of centre, a little behind and right of the blue cube [block_2].
 
 RoboDojo's instruction asks for the order blue (bottom), yellow (middle), orange (top). A cube's *centre* below is the
 point RoboDojo tests for it (its origin): the middle of the cube. All of these must hold at the same action boundary:
@@ -36,7 +38,7 @@ point RoboDojo tests for it (its origin): the middle of the cube. All of these m
 
 **When it is checked.** After every action (never between actions; once all simulation sub-steps of the action are
 done), both conditions are checked together: one stage, nothing latched or ordered. Success is declared at the first
-action boundary where both hold. No condition ends the episode early as a failure (only a broken
+action boundary where both hold, and the episode ends. No condition ends the episode early as a failure (only a broken
 environment, e.g. a missing object or exploded physics, does). RoboDojo's own 400-action limit [step_lim] does not apply
 here (Episode length, below).
 
@@ -48,14 +50,16 @@ reads that limit and it does not apply here: where the description above mention
 
 **What you must read or remember.** RoboDojo's instruction names the colours from bottom to top (here blue, yellow,
 orange). Each colour is one cube on the table; find it by its colour. RoboDojo builds that sentence from the three
-cubes it drew for the scene.
+cubes it drew for the scene [block_0, block_1, block_2 = bottom, middle, top; cube models 1 blue, 2 green, 3 red,
+7 yellow, 8 orange, 9 cyan; here models 1, 7, 8].
 
 **At the end.** Both arms back near their start poses (above, start = the pose right after the robot is set to its
 initial state), as part of the success condition; the grippers need not be open.
 
 **Notes from RoboDojo's code.** The order matters: a tower of the same three cubes in another colour order fails,
 because each named upper cube must be at least 0.005 m above the one named below it. The horizontal limit of 0.0175 m
-is on the cubes' centres, so the cubes must be well centred on each other (half the 3.5 cm edge). The test reads only the cubes' centres. All three cubes are
+is on the cubes' centres, so the cubes must be well centred on each other (half the 3.5 cm edge). The test reads only
+the cubes' centres: it does not need the cubes to touch, to be turned alike, or to be released. All three cubes are
 the same 3.5 cm size with their centre in the middle of the cube. A process score (20 for yellow stacked on blue with
 the centres at most 0.04 m apart in height, blue not lifted more than 0.01 m from its start height and both grippers
 open at least 0.92 of their range; 100 for the full tower with grippers open) exists but does not decide success.

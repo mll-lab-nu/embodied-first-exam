@@ -1,7 +1,0 @@
-[[replace]]
-old = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/play_tic_tac_toe_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
-new = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/2/play_tic_tac_toe_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
-
-[[replace]]
-old = "arx_x5/0/play_tic_tac_toe_0.json"
-new = "arx_x5/2/play_tic_tac_toe_0.json"

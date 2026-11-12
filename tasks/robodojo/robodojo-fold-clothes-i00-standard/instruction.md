@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open.
@@ -48,7 +48,7 @@ The fold test (all must hold):
 x, y and z separately, and within 20 deg of its start orientation) becomes true after being false at the previous
 action [trigger_check on is_all_gripper_open 0.7 AND all_robot_back_to_origin, rising edge]. It also runs at the very
 first action if the arms are home with open grippers then (the flat shirt fails it). If the fold test passes at such a
-moment the task succeeds; if it fails, it is not tried again until the arms leave home (or a
+moment the task succeeds and the episode ends; if it fails, it is not tried again until the arms leave home (or a
 gripper closes below 0.7) and come back. So after folding, open both grippers and bring both arms home from away.
 A failure test also runs at the action where one arm becomes back at its start pose (rising edge, each arm on its own,
 same 0.15 m / 20 deg limits) [trigger_query, aim 0]: if at that moment the hem is already folded up (the hem tests and

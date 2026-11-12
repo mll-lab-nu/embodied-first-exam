@@ -7,16 +7,16 @@ setup on Isaac Sim 5.1 / Isaac Lab, PhysX) via Python. RoboDojo capability dimen
 trajectory as soon as you have one and overwrite it as you improve it. Every Python process that opens a `Session` first
 spends ~3-5 min launching Isaac Sim and building the scene, and that time counts.
 
-**Task:** Put all ten stacking-toy blocks onto the correct pegs of the base, exactly centred on the pegs, then return both arms to the start pose.
+**Task:** Put all ten stacking-toy blocks onto the base's four pegs (pole 0: 4 blocks, pole 1: 3, pole 2: 2, pole 3: 1), exactly centred on the pegs, then return both arms to the start pose.
 
 RoboDojo's own instruction for this scene: *"Place all stacking toy pieces onto the correct pegs."*
 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - stack_base: stacking-toy base with four poles (category stacking base 'stack_base'), static geometry, x=0.0, y in [-0.225,-0.175], yaw up to +-15 deg
-- block0..block3: 4 blocks of one stackingblocks model (mode 'same'), x in [-0.4,0.4], y in [-0.25,-0.05], yaw up to +-45 deg
-- block4..block6: 3 blocks of another model, x in [-0.45,0.45], same y
-- block7, block8: 2 blocks of a third model
-- block9: 1 block of a fourth model, x in [-0.4,0.4]
+- block0..block3: 4 blocks of one stackingblocks model (mode 'same'), x in [-0.4,0.4], y in [-0.25,-0.05], yaw up to +-45 deg; belong on pole 0
+- block4..block6: 3 blocks of another model, x in [-0.45,0.45], same y; pole 1
+- block7, block8: 2 blocks of a third model; pole 2
+- block9: 1 block of a fourth model, x in [-0.4,0.4]; pole 3
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/play_stacking_toy_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is
@@ -26,33 +26,40 @@ robot's start pose never change between resets. You may reset and retry as many 
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
 - the base: the white board (26 cm long, 6.5 cm deep) lying left-right on the table, centred, nearer to you than the
   blocks, with four upright pegs in a row, about 6.5 cm apart, getting shorter from left to right (the tallest
-  reaches 6.5 cm above the table) [stack_base; support points pole/0, pole/1, pole/2,
-  pole/3, left to right: each is a point on that peg's axis];
-- four identical purple five-pointed stars (6 cm across, 1.3 cm thick), scattered: one near the left gripper, three
-  right of centre [block0, block1, block2, block3];
-- three identical blue rectangular blocks (5.8 x 2.9 cm), left of centre [block4, block5, block6];
+  reaches 6.5 cm above the table) [stack_base]. "Peg 1" to "peg 4" below are these pegs counted from the left
+  [support points pole/0, pole/1, pole/2, pole/3: each is a point on that peg's axis];
+- four identical purple five-pointed stars (7 cm across, 1.3 cm thick), scattered: one near the left gripper, three
+  right of centre [block0, block1, block2, block3]; they belong on peg 1;
+- three identical blue rectangular blocks (5.8 x 2.9 cm), left of centre [block4, block5, block6]; they belong on peg 2;
 - two identical yellow square blocks (5.8 cm), one far left, one just left of centre near the base [block7, block8];
-- one orange-red round disc (5.6 cm across), right of centre [block9].
+  they belong on peg 3;
+- one orange-red round disc (5.8 cm across), right of centre [block9]; it belongs on peg 4.
 
 Each block has a hole through its middle; a block's *centre* below is the point RoboDojo tests for it (its origin),
 which lies on the axis of that hole (the middle of the star, square or disc; for the stars it is on the bottom face, for
-the others half-way up; only its horizontal position is used). Each group of identical blocks (four, three, two and one of a kind) belongs on one peg, a different peg for each
-group. All of these must hold at the same action boundary (every horizontal limit is 1 mm, strict):
-- **Each group on its peg.** For each group, seen from above, the centres of its blocks within 0.001 m of each other in
-  a chain (the first and second, the second and third, ... block of the group, by RoboDojo's labels)
-  [is_AB_xy_distance_within_threshold], and the first block's centre within 0.001 m of the axis of the group's peg
-  [is_A_xy_close_to_B_support_point, one of pole/0..pole/3]; every block's lowest point more than 0.005 m below the top
-  of the base's bounding box, i.e. lower than 6.0 cm above the table [is_A_depth_in_B]. In practice: every group
-  threaded on its own peg, its blocks in any order. Which peg is a group's is for you to work out from the toy.
+the others half-way up; only its horizontal position is used). All of these must hold at the same action boundary
+(every horizontal limit is 1 mm, strict):
+- **Peg 1, the four stars.** Seen from above, the centres of the stars within 0.001 m of each other in a chain (the
+  first and second, the second and third, the third and fourth star, by RoboDojo's labels) [is_AB_xy_distance_within_threshold],
+  and the first star's centre within 0.001 m of peg 1's axis [is_A_xy_close_to_B_support_point, pole/0]; every star's
+  lowest point more than 0.005 m below the top of the base's bounding box, i.e. lower than 6.0 cm above the table
+  [is_A_depth_in_B]. In practice: all four stars threaded on peg 1, in any order.
+- **Peg 2, the three blue blocks.** The same: centres within 0.001 m of each other in a chain, the first one's centre
+  within 0.001 m of peg 2's axis [pole/1], each one's lowest point lower than 6.0 cm above the table: all three threaded
+  on peg 2.
+- **Peg 3, the two yellow squares.** Centres within 0.001 m of each other, the first one's within 0.001 m of peg 3's
+  axis [pole/2], each one's lowest point lower than 6.0 cm above the table: both threaded on peg 3.
+- **Peg 4, the round disc.** Its centre within 0.001 m of peg 4's axis [pole/3], its lowest point lower than 6.0 cm
+  above the table: threaded on peg 4.
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 None of this holds at the start. The height test alone is loose (a block lying on the table passes it); the 1 mm
 horizontal tests are what require each block to sit threaded on its peg.
 
-**When it is checked.** After every action (never between actions), all conditions together group by group, then
-arms; all must hold at the same action boundary (one stage). Success is declared at the first action
-boundary where everything holds. No
+**When it is checked.** After every action (never between actions), all conditions together in the order peg 1, peg 2,
+peg 3, peg 4, arms; all must hold at the same action boundary (one stage). Success is declared at the first action
+boundary where everything holds, and the episode ends. The order of the blocks within a peg is not checked. No
 condition ends the episode early as a failure.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
@@ -61,8 +68,9 @@ simulated time). RoboDojo's own evaluation gives a policy 1200 actions (48 s) fo
 reads that limit and it does not apply here: where the description above mentions step_lim, read the guard.
 `s.status()` reports the end.
 
-**What you must read or remember.** Which group goes on which peg: RoboDojo's instruction only says "the correct
-pegs".
+**What you must read or remember.** Which group goes on which peg is fixed by the group sizes: the 4 stars on the
+tallest peg at the left, then the 3 blue blocks, the 2 yellow squares, and the single disc on the shortest peg at the
+right (each peg's height fits its pile).
 
 **At the end.** Both arms back near their start poses (above), as part of the success condition; the grippers need not
 be open.

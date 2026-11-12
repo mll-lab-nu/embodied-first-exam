@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization (randomised variant: other models, clutter)**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Put two slices of bread from the bread shelf into the two toaster slots, press the toaster lever down, and return both arms to their start pose.
@@ -42,13 +42,14 @@ All of these must hold at the same action boundary:
   Already true at the start; a slice that falls flat anywhere fails.
 - **Two left in the shelf.** Exactly two slices have their centre over the shelf: seen from above inside the shelf's
   outline and higher than its underside [is_N_A_in_B, N=2; is_A_in_B]. Not two, not three: exactly two.
-- **Lever down.** The lever on the front face is pushed down near the bottom of its slot: its joint past 0.85 of its range [is_joint_position_above_ratio, 0.85, on the joint tagged 'toast_botton'
+- **Lever down.** The lever on the front face is pushed down near the bottom of its slot, as in the recorded
+  successes: its joint past 0.85 of its range [is_joint_position_above_ratio, 0.85, on the joint tagged 'toast_botton'
   (sic): (position - lower)/(upper - lower) > 0.85]. Not true at the start. It must be down at that same moment.
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), all conditions together (one stage). Success is
-declared at the first action boundary where everything holds. No condition ends the episode
+declared at the first action boundary where everything holds, and the episode ends. No condition ends the episode
 early as a failure; otherwise it runs on until the length cap (below) [step_lim].
 
 **Episode length.** A step limit of **1,400 steps** (RoboDojo's own limit for this task, 56 s of

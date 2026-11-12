@@ -6,13 +6,13 @@
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `robodojo-play-stacking-toy-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
-| Family / instance | `play_stacking_toy` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
+| Family / instance | `play_stacking_toy` / seed 0 |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-mode twin of `robodojo-play-stacking-toy-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/play_stacking_toy_0.json`). Put all ten stacking-toy blocks onto the correct pegs of the base, exactly centred on the pegs, then return both arms to the start pose. (RoboDojo's `play_stacking_toy`). The agent drives the
+Standard-mode twin of `robodojo-play-stacking-toy-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/play_stacking_toy_0.json`). Put all ten stacking-toy blocks onto the base's four pegs (pole 0: 4 blocks, pole 1: 3, pole 2: 2, pole 3: 1), exactly centred on the pegs, then return both arms to the start pose. (RoboDojo's `play_stacking_toy`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 

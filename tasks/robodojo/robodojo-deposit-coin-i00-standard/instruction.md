@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Precision**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick the coin up from the vertical coin holder and drop it into the piggy bank (coin bank) through its slot, then return the arm home.
@@ -34,7 +34,7 @@ All of these must hold at the same action boundary:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), coin first, then arms; both must hold at the same
-action boundary (one stage). Success is declared at the first action boundary where they hold.
+action boundary (one stage). Success is declared at the first action boundary where they hold, and the episode ends.
 No condition ends the episode early as a failure. A separate partial-credit score (not part of success) climbs the
 tiers 20 (coin lifted more than 0.08 m above where it started) and 100 (coin inside as above)
 (the 100 tier counts only if the episode succeeds, otherwise the tier below) [process score, transition mode].

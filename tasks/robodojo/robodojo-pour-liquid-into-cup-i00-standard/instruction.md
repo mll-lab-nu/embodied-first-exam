@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up the bottle and pour its liquid into the cup, then stand the bottle upright again.
@@ -19,7 +19,7 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
 - the liquid: the simulated liquid inside the bottle at the start (it shows light blue once poured), made of many
   small particles [wine];
 - the cup: the red mug in the middle of the table, about 18 cm farther away than the bottle, its handle pointing
-  right; with the handle it is 10.3 x 6.9 cm, 7.6 cm tall [cup].
+  right; with the handle it is 11.6 x 10.4 cm, 7.6 cm tall [cup].
 
 The liquid is tested by counting its particles in two boxes: the *cup's box* (the mug's bounding box as the mug is
 turned, handle included, from its base to its rim; a particle counts only if at least 0.001 m above the box's bottom
@@ -45,7 +45,7 @@ means the bottle's axis from its base to its cap is within 30 deg of straight up
 was not upright after the previous action. The bottle stands upright at the start, so the first action already counts
 as such a moment, and the test fails then (the liquid is still in the bottle). After that, the bottle must be tilted
 beyond 30 deg (to pour) and brought back within 30 deg; the test runs at each such return. If it passes, the task
-succeeds at once; if it fails, nothing is lost: pour more and bring the bottle upright again.
+succeeds at once and the episode ends; if it fails, nothing is lost: pour more and bring the bottle upright again.
 Nothing is checked between actions. No condition ends the episode early as a failure; if the test never passes the
 episode fails at the action limit (below).
 

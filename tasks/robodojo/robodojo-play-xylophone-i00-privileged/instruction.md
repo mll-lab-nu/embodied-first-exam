@@ -40,7 +40,7 @@ table top), about 0.2-0.9 cm below that key's top surface, roughly in the middle
   than 0.01 m and less than 0.036 m higher than key i's hit point [is_A_point_above_B_point_by_z_range]. That is a
   head point 2.4 to 5.0 cm above the table. With the stick level and the ball not rolled about the handle, this holds
   for a ball centre 1.4 to 6.0 cm above the table: the ball resting on the key (centre about 3 cm up) or hovering up to
-  about 2.5 cm above it passes. Not true at the start.
+  about 2.5 cm above it passes. The head does not have to touch the key. Not true at the start.
 - **Lift after strikes 0 to 6.** The ball's centre more than 0.025 m higher than it was at the action where that strike
   passed [is_lift; the mallet pose is re-recorded when the strike passes, update_object_state].
 - After strike 7 nothing more is required (no final lift, no return of the arms).
@@ -51,7 +51,7 @@ tested, with all its conditions at the same action boundary; once it passes it i
 the next stage waits for a later action, so at most one stage passes per action and at least 15 actions are needed. A
 strike or lift counts only if it is seen at an action boundary: a tap that starts and ends inside one action is
 invisible. Strikes on other keys are ignored, with no penalty. Success is declared at the action where the last stage
-(the strike on key 7) passes. No condition ends the episode early as a failure.
+(the strike on key 7) passes, and the episode ends. No condition ends the episode early as a failure.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
 are never executed) or when a check fails for good (failure); a runaway guard stops it after 15000 actions (10 min of
@@ -62,7 +62,7 @@ reads that limit and it does not apply here: where the description above mention
 **At the end.** Nothing beyond the last strike: no final lift, the arms need not return and the grippers need not open.
 
 **Notes from RoboDojo's code.** Success is geometric: the head only has to be over the key's top and inside the height
-window at an action boundary. The lift is measured on the ball's centre, so
+window at an action boundary; contact, sound and dwell are not needed. The lift is measured on the ball's centre, so
 raising the head itself by more than 2.5 cm is what counts (tilting the stick up while the ball stays low does not).
 The xylophone does not move (it is fixed scenery). The mallet must be picked up first: it starts lying on its stand.
 

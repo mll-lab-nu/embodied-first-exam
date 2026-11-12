@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Long-Horizon**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up all four bottles from the table and throw/put them into the dustbin standing beside the table (use a handover between the two hands when a bottle is out of reach), then return the arms to their start pose.
@@ -34,7 +34,7 @@ bounding box. All of these must hold at the same action boundary:
 
 **When it is checked.** After every action (never between actions). The four bottle conditions and the arms condition
 form one stage and must all hold at the same action boundary; success is declared at the first action boundary where
-they all hold. Otherwise the episode ends as a failure after the action limit. No condition ends
+they all hold, and the episode ends. Otherwise the episode ends as a failure after the action limit. No condition ends
 the episode early as a failure.
 
 **Episode length.** A step limit of **700 steps** (RoboDojo's own limit for this task, 28 s of
@@ -47,8 +47,8 @@ where the description above mentions step_lim or the length cap, it means this l
 the dustbin; the grippers need not be open.
 
 **Notes from RoboDojo's code.** The dustbin is beside the left end of the table, so it is within reach of the left arm
-only; RoboDojo's task description has the bottles on the right side handed over from the right hand to the left
-hand. Dropping a bottle into the bin
+only; RoboDojo's task description suggests handing the bottles on the right side over from the right hand to the left
+hand, but nothing in the check requires a handover: only where the bottles end up counts. Dropping a bottle into the bin
 from above counts the same as placing it. All four bottles are tested together at the same action, so a bottle that
 bounces back out undoes the result. The 0.4 m limit on the bottle's height above the bin's bottom does not matter in
 practice: a bottle resting inside the bin is far lower.

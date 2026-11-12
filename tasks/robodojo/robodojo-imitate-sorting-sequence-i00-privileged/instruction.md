@@ -13,7 +13,7 @@ RoboDojo's own instruction for this scene: *"Observe the object placement order,
 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - t0..t4: five agent-side objects, one from each of five categories (toy_car idx 0-4, action_camera, phone, watch idx 0-2, garage idx 14-15; categories sampled so each of the 5 categories appears once, one unique instance each), start in x in [-0.3,0.4], y in [-0.2,-0.05] (table frame), random yaw up to 180 deg; prohibited area x[-0.1,0.1], y[-0.2,-0.15]
-- aim0..aim4: demonstrator copies of t0..t4, start in x in [-0.3,0.25], y in [0.1,0.3] (table frame), random yaw
+- aim0..aim4: demonstrator copies of t0..t4 (same model each: aim_i same_as t_i), start in x in [-0.3,0.25], y in [0.1,0.3] (table frame), random yaw
 - basket0: basket idx 5, static geometry, fixed at table (-0.4,-0.15), z 0.04 -- the agent's target basket
 - basket1: basket idx 5, fixed at table (0.35, 0.25), z 0.04 -- the demonstrator's basket
 
@@ -29,7 +29,8 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
 - your five objects, on the near half of the table: a smartwatch with a dark green band (right), a small black action
   camera (centre), a yellow toy school bus (front left), a mobile phone lying flat (front, left of centre) and a bunny
   figurine in a navy outfit (left of centre) [t0 watch, t1 action camera, t2 toy bus, t3 phone, t4 bunny];
-- the opponent's five objects: an identical copy of each of yours, on the far half of the table [aim0..aim4].
+- the opponent's five objects: an identical copy of each of yours, on the far half of the table [aim0..aim4, the copy
+  of t0..t4 in the same order].
 
 The *demonstrated order*: the opponent's arm puts its five objects into the far basket one after another; your object
 that matches the first one it moves is first, and so on [target_label[0..4], read by RoboDojo from the recorded

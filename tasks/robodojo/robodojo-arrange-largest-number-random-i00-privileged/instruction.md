@@ -51,7 +51,8 @@ a mat, the middle of the disc). All of these must hold at the same action bounda
 
 **When it is checked.** After every action (never between actions), block by block in order of the digits (largest
 first: on its mat, upright tests), then the arms, stopping at the first condition that fails; all must hold at the same
-action boundary (one stage). Success is declared at the first action boundary where everything holds. No condition ends the episode early as a failure. A separate partial-credit score (not part of success) climbs
+action boundary (one stage). Success is declared at the first action boundary where everything holds, and the episode
+ends. No condition ends the episode early as a failure. A separate partial-credit score (not part of success) climbs
 the tiers 5, 15, 30, 100 as 1, 2, 3, then all 4 blocks are on their mats and upright as above while both grippers are
 open (each at least 0.8 of its full opening)
 (the 100 tier counts only if the episode succeeds, otherwise the tier below) [process score, transition mode].
@@ -71,7 +72,7 @@ be open.
 
 **Notes from RoboDojo's code.** The order is unique because the digits differ. The turn tolerance is loose (45 deg), but
 the placement tolerance is tight: 0.02 m horizontally between the block's centre and the mat's centre, so a block
-that only overlaps its mat fails.
+that only overlaps its mat fails. Nothing tests that a block rests on the mat or that the gripper has let go.
 Identical check to arrange-largest-number; this _random variant uses other digit textures and adds 20 clutter objects
 (the keyboard, dartboard, toy car and the rest), which the check never reads, and a second keep-out area at the front
 edge for the start layout.
