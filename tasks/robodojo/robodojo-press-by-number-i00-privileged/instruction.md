@@ -56,7 +56,7 @@ button's state is remembered as up once seen within 0.5 mm of fully up and as do
 the last state is kept); each change from up to down adds one press. So a press-and-release that starts and ends
 within one action is not seen at all, and a release that stops between 1.0 and 0.5 mm below the top passes the
 stage but the next press is not counted. Success is declared at the first action at which every stage has passed
-and every tally is exact. A tally over its number ends it at once as a failure; otherwise it
+and every tally is exact; the episode then ends. A tally over its number ends it at once as a failure; otherwise it
 runs on until the cap in **Episode length** below.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows

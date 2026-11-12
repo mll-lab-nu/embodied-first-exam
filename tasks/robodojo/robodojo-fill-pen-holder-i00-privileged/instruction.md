@@ -54,7 +54,8 @@ And, at the same time:
 **When it is checked.** After every action (never between actions), in the order: bottom ends inside the cup (all
 four pens), pens down (all four), bottom ends down (all four), holder upright, arms, stopping at the first condition
 that fails; all must hold at the same action boundary (one stage). Success is declared at the first action boundary
-where everything holds. No condition ends the episode early as a failure. A
+where everything holds, and the episode ends. No condition ends the episode early as a failure. Holding the holder
+with one hand and putting it back down, as RoboDojo's instruction says, are not checked; only this end state is. A
 separate partial-credit score (not part of success) climbs the tiers 10, 25, 40, 90 as 1, 2, 3, then 4 pens are
 inside, down and bottom end down, with each pen's bottom end-to-top direction within 45 deg of vertical, the holder
 within 45 deg of upright and both grippers open (each at least 0.8 of its full opening); there is no 100 tier [process
@@ -70,7 +71,7 @@ reads that limit and it does not apply here: where the description above mention
 grippers need not be open.
 
 **Notes from RoboDojo's code.** The holder is loose: steadying it with one arm while the other inserts the pens keeps
-it from sliding or tipping; the holder must end standing within 15 deg of upright.
+it from sliding or tipping, but only the final state counts, and the holder must then stand within 15 deg of upright.
 The 0.035 m distance is measured from the holder's axis (the middle of its base), so a bottom end almost anywhere inside
 the cup passes. Pens may go in in any order and lean against each other or the wall, as long as each bottom end is lower
 than the pen's middle.

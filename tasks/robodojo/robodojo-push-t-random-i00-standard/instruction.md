@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization (randomised variant: other models, clutter)**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Push the T-shaped block (without lifting it) until it lies exactly on top of the gray T-shaped pad, with the same position and orientation, then return the arms to their start pose.
@@ -26,11 +26,13 @@ ignores them, but they can be in the way.
 An object's *centre* below is the point RoboDojo tests for it (its origin): for both the block and the pad it is the
 middle of the T's bounding rectangle (half-way between the outer edge of the crossbar and the tip of the stem, and
 half-way across the crossbar), at mid-thickness for the block. The two shapes share this layout, so when the block lies
-exactly over the drawn T, crossbar on crossbar and stem on stem, their centres coincide and their orientations match. All of these must hold at the same action
+exactly over the drawn T, crossbar on crossbar and stem on stem, their centres coincide and their orientations match
+(a successful trial ends with the blue T covering the grey one exactly). All of these must hold at the same action
 boundary:
 - **Same orientation.** The block's full 3-D orientation within 7 deg of the pad's (one rotation angle, strict)
   [is_qpos_close, dis_threshold=7]. The pad lies flat, so the block must lie flat, face up, as it does now, and its
-  stem must point the same way as the drawn stem. Not true at the start. The T has no symmetry:
+  stem must point the same way as the drawn stem: turn the block about 48 deg counter-clockwise seen from above (its
+  stem from pointing right and toward you to pointing right and away). Not true at the start. The T has no symmetry:
   only this one heading passes.
 - **Same place.** The block's centre within 0.007 m of the pad's centre, measured horizontally (strict)
   [is_AB_xy_distance_within_threshold, threshold=0.007]. Not true at the start.
@@ -43,7 +45,8 @@ boundary:
   all break this; push it along the table.
 
 **When it is checked.** After every action (never between actions). The orientation, place and arms conditions form
-one stage: all three must hold at the same action boundary, and success is declared at the first such boundary. The lift rule is checked after every action as well and ends the episode as a failure as soon as it
+one stage: all three must hold at the same action boundary, and success is declared at the first such boundary; the
+episode then ends. The lift rule is checked after every action as well and ends the episode as a failure as soon as it
 is broken. Otherwise the episode ends as a failure after step_lim actions.
 
 **Episode length.** A step limit of **600 steps** (RoboDojo's own limit for this task, 24 s of

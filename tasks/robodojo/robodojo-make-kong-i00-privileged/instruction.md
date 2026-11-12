@@ -14,7 +14,7 @@ RoboDojo's own instruction for this scene: *"Wait for the opponent to discard a 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - mahjong0_0..0_2, 1_0..1_2, 2_0..2_2, 3_0..3_2: four groups of 3 identical tiles (category mahjong, one model per group), the agent's hand, standing in a row at table y=-0.15, x = -0.325,-0.279,-0.233 / -0.187,-0.141,-0.095 / -0.049,-0.003,0.043 / 0.089,0.135,0.181 (place_tag straight_front, fixed, no yaw randomness)
 - mahjong4_0, 4_1: two identical tiles of another model at y=-0.15, x=0.227, 0.273
-- mahjong5_0..8_0: four 'push' tiles, standing at table y=0.05, x=0.0, 0.046, -0.046, -0.092 (place_tag straight_back)
+- mahjong5_0..8_0: four 'push' tiles, each the same model as groups 0..3 respectively, standing at table y=0.05, x=0.0, 0.046, -0.046, -0.092 (place_tag straight_back)
 - other0 at (-0.4,-0.05) and other1 at (-0.4,-0.002) lying face down; other2 stacked face down on other1 (decor/props, not checked)
 - mahjong9_0: the replacement tile, lying face down on top of other0 (long side along x), same model as mahjong4_0/4_1; checked: it must end standing at (0.319,-0.15), the next place right of mahjong4_1
 
@@ -32,7 +32,7 @@ green back:
   [mahjong4_0, mahjong4_1; not checked];
 - the opponent's row: four tiles standing in the middle of the table in front of the opponent's arm (the white arm on
   the far side), green backs toward you, faces toward the opponent. Each shows the same picture as one of your four
-  groups of three [mahjong5_0..mahjong8_0];
+  groups of three [mahjong5_0..mahjong8_0, matching mahjong0_*..mahjong3_* in that order];
 - the replacement tile: the top tile of the front (nearer) of the two small stacks of face-down tiles at the far left;
   it lies flat, green back up, long side left-right, and has the same picture as the pair at the right end of your row
   [mahjong9_0]. The other three face-down tiles (the bottom tile of that stack and the stack of two just behind it) are

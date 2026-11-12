@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Open**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Following the sentence, pour the liquid of each named bottle into its named bowl, in the order first, second, third, then return the arms to their start pose.
@@ -16,10 +16,10 @@ RoboDojo's own instruction for this scene: *"Pour the liquid from the first viol
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms).
 Three bottles stand in a row across the middle of the table, each 8 cm wide and 22 cm tall, holding liquid; three
 shallow bowls (11 cm across, 4 cm tall) stand in a row in front of them, nearer the arms. The sentence in the task
-names them by colour, and pairs them, in its order:
-- first: the violet bottle [bottle_0, its liquid wine_0] into the black bowl [bowl_0];
-- second: the red bottle [bottle_1, wine_1] into the white bowl [bowl_1];
-- third: the turquoise bottle [bottle_2, wine_2] into the brown bowl [bowl_2].
+names them by colour, and pairs them:
+- first: the violet bottle (left) [bottle_0, its liquid wine_0] into the black bowl (right) [bowl_0];
+- second: the red bottle (centre) [bottle_1, wine_1] into the white bowl (left) [bowl_1];
+- third: the turquoise bottle (right) [bottle_2, wine_2] into the brown bowl (centre) [bowl_2].
 
 What *in the bowl* means [is_A_fluid_in_B(wine_i, bowl_i, label_C=bottle_i) with percentage_threshold 0.95, B_buffer 0,
 C_buffer 0, B_z_threshold 0.001, C_residual_threshold 0.1, ignore_scattered True, scatter_connect_radius 0.006,
@@ -50,7 +50,7 @@ The success condition:
 
 **When it is checked.** After every action (never between actions): first the three pours, then the order rule.
 Success is declared at the first action boundary where all three pours have passed and the order rule has never
-fired; nothing else is checked after that.
+fired, and the episode ends; nothing else is checked after that.
 
 **Episode length.** A step limit of **800 steps** (RoboDojo's own limit for this task, 32 s of
 simulated time) [step_lim]; one step is one 25 Hz action (`## Episode end`, below). The
@@ -58,12 +58,15 @@ episode ends at the limit (reason `step_limit`, `spec["max_control_steps"]` = 80
 where the description above mentions step_lim or the length cap, it means this limit. `res.meta["done"]` /
 `res.meta["reason"]` report the end.
 
-**What you must read or remember.** Yes: the sentence names the bottles and bowls by colour and orders the pairs
-first, second, third; find each named bottle and bowl in the scene by its colour.
+**What you must read or remember.** Yes: the sentence names the bottles and bowls by colour (bottles red, turquoise,
+violet; bowls black, white, brown) and orders the pairs first, second, third; the list above gives the pairs as they
+stand in this scene.
 
-**At the end.** The sentence asks to reset the arms afterwards; an arm coming home triggers the order rule (above).
+**At the end.** The sentence asks to reset the arms afterwards, but the success check does not require it; bringing an
+arm home only triggers the order rule. No gripper requirement.
 
-**Notes from RoboDojo's code.** The order rule fires only when one arm comes home after both were away. Pouring out of order fails only if an arm comes home while the liquid shows the wrong
+**Notes from RoboDojo's code.** The order rule fires only when one arm comes home after both were away; if one arm never
+leaves home, it is never tested. Pouring out of order fails only if an arm comes home while the liquid shows the wrong
 order (for example, the second pair done and the first not). A pour is judged only at the moment its bottle is stood
 back up within 30 deg: by then at least 90% of the liquid must be out of the bottle and at least 95% of it in the
 paired bowl, so finish pouring before standing the bottle up; moving the bowl after that moment no longer matters for

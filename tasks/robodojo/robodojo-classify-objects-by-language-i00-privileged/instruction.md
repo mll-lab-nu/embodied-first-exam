@@ -25,13 +25,18 @@ robot's start pose never change between resets. You may reset and retry as many 
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
 - the three baskets: open-top plastic bins, 25.2 x 16.8 cm and 7.7 cm high, in a row across the far half of the
   table: white on the left [basket0], blue in the middle [basket1], red on the right [basket2];
-- the objects: small objects of the three kinds RoboDojo's instruction names, scattered on the table [cat0_*,
-  cat1_*, cat2_*]. Which objects are of which kind is for you to tell by sight.
+- the objects, three kinds, named in RoboDojo's instruction in this order [one label group per kind]:
+  - "car": two toy cars [cat0]: a yellow SUV at the front left, near the left gripper [cat0_0], and a green sports car
+    in front, right of centre [cat0_1];
+  - "watch": two wristwatches [cat1]: a black band in front, left of centre [cat1_0], and a light, silver-coloured one with a
+    small square face just left of centre, a little farther away [cat1_1];
+  - "wooden_toy": two identical small tan lion figurines (8 cm tall) [cat2]: one on the left, just in front of the white
+    basket [cat2_1], one at the far right near the right gripper [cat2_0].
 
 An object's *centre* below is the point RoboDojo tests for it (its origin); for every object here that is the middle
 of its bounding box. All of these must hold at the same action boundary:
-- **Each kind in its named basket.** Every object of the first named kind in the left (white) basket, of the
-  second in the middle (blue) basket, of the third in the right (red) basket [is_all_A_in_B]. An object is *in* a basket when its centre, seen from above,
+- **Each kind in its named basket.** Both cars in the left (white) basket, both watches in the middle (blue) basket,
+  both lions in the right (red) basket [is_all_A_in_B]. An object is *in* a basket when its centre, seen from above,
   lies inside the basket's outline and is higher than the basket's underside [is_A_in_B]. Objects of another kind in
   a basket do not fail this check (but each object can be in only one basket).
 - **Released.** Every object's centre less than 0.01 m above its basket's rim (7.7 cm above the table)
@@ -40,9 +45,9 @@ of its bounding box. All of these must hold at the same action boundary:
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
-**When it is checked.** After every action (never between actions), in the order first, second, third kind in their
+**When it is checked.** After every action (never between actions), in the order cars, watches, lions in their
 baskets, released, arms, stopping at the first condition that fails; all must hold at the same action boundary (one
-stage). Success is declared at the first action boundary where everything holds. No condition
+stage). Success is declared at the first action boundary where everything holds, and the episode ends. No condition
 ends the episode early as a failure. A separate partial-credit score (not part of success) climbs the tiers 10, 40,
 100 as 1, 2, then 3 kinds are complete in their named baskets, released below the rim, with nothing of another kind in
 those baskets, while both grippers are open (each at least 0.8 of its full opening)
@@ -55,7 +60,8 @@ reads that limit and it does not apply here: where the description above mention
 `s.status()` reports the end.
 
 **What you must read or remember.** RoboDojo's instruction (quoted above) names the three kinds in the order left,
-middle, right basket. The kind names are RoboDojo's category names; match them to the objects by sight.
+middle, right basket: "car" -> left (white), "watch" -> middle (blue), "wooden_toy" (the lion figurines) -> right
+(red). The kind names are RoboDojo's category names; match them to the objects by sight.
 
 **At the end.** Both arms back near their start poses (above), as part of the success condition; the grippers need not
 be open.

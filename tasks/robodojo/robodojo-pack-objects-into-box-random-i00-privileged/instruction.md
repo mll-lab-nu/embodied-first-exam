@@ -49,8 +49,12 @@ hammer's head and the shoe's toe. All of these must hold at the same action boun
     local +x];
   - its front end pointing left: seen from above, the direction from its back end to its front end within 60 deg of
     world -x (left) [car, toothbrush, hammer: 'checkpoint' local -x within 60 deg of world +x; shoe: local +x, which
-    points to the heel, within 60 deg of world +x; is_axis_aligned, project_plane xy]. At the start this already holds for the car and the
-    toothbrush, not for the hammer or the shoe.
+    points to the heel, within 60 deg of world +x; is_axis_aligned, project_plane xy]. At the start this already holds
+    for the car (nose about 21 deg off left) and, barely, for the toothbrush (head about 57 deg off left, but it is not
+    yet along the box: about 74 deg off); not for the hammer (head pointing away, about 101 deg off: turn it a quarter
+    turn so the head points left) or the shoe (toe pointing right and away, about 146 deg off: turn it about end for
+    end). The car also already lies along the box's long side (about 4 deg off): it only has to go into the box with
+    the same heading.
 - **Box** (tested together with every item): upright, within 15 deg of vertical, measured in 3-D [box local +z;
   is_axis_up]; and its long side (29 cm) within 40 deg of the left-right direction, either way round, measured in 3-D
   [box local +y or -y vs world +x; is_axis_aligned]. Both already true at the start (the long side is about
@@ -62,7 +66,7 @@ All angle tests are strict (less than the threshold).
 
 **When it is checked.** After every action (never between actions), in the order car, toothbrush, hammer, shoe, box,
 arms, stopping at the first condition that fails; all must hold at the same action boundary (one stage). Success is
-declared at the first action boundary where everything holds. No condition ends the episode
+declared at the first action boundary where everything holds, and the episode ends. No condition ends the episode
 early as a failure.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
@@ -78,7 +82,8 @@ be open.
 hammer are tested through an asset-defined frame [active functional point 'checkpoint'] whose +x runs along the item's
 length toward the car's nose, the brush head and the hammer head; the shoe is tested through its own body frame, whose
 +x points to the heel, so the code asks for the shoe's +x to point right while it asks for the others' 'checkpoint'
-+x to point left. Physically all four come to the same thing: nose, brush head, hammer head and toe toward the left (the car's nose
++x to point left. Physically all four come to the same thing: nose, brush head, hammer head and toe toward the left
+(confirmed on a successful run's end state: brush head, mallet head and shoe toe all on the left; the car's nose
 already points left at the start). Placement is tested only on each item's centre, seen
 from above, against the box's floor area, with no height test: an item may lean on the box wall or overhang, and in
 principle could rest on the rim as long as its centre is over that area. The heading tests ignore tilt (they are

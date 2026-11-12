@@ -20,9 +20,14 @@ robot's start pose never change between resets. You may reset and retry as many 
 
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x as seen from the arms, "away" = +y).
-The five "nesting dolls" are yellow rubber ducks of five sizes, all standing upright on the table at the start. They are 5 to 13 cm tall [doll0..doll4]. RoboDojo
-ranks them by model [model index mod 5: 0 = largest .. 4 = smallest]; that ranking is the same as ranking them by
-height.
+The five "nesting dolls" are yellow rubber ducks of five sizes, all standing upright on the table at the start:
+- the smallest duck, 5 cm tall, just right of the table's centre [doll0];
+- the second smallest, 7 cm tall, about 12 cm right of the smallest one, in line with it [doll1];
+- the middle-sized one, 9 cm tall, right of centre and nearer to you than the two small ones [doll4];
+- the second largest, 11 cm tall, at the right, under the right gripper [doll2];
+- the largest, 13 cm tall, at the left, under the left gripper [doll3].
+RoboDojo ranks them by model (largest = model index mod 5 of 0, smallest = 4) [doll3 mod 0, doll2 mod 1, doll4 mod 2,
+doll1 mod 3, doll0 mod 4]; that ranking is the same as ranking them by height.
 
 A duck's *centre* below is the point RoboDojo tests for it (its origin): the middle of its bounding box, i.e. half its
 height above its base. All of these must hold at the same action boundary:
@@ -38,7 +43,8 @@ height above its base. All of these must hold at the same action boundary:
   x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions). All of the conditions above form one stage and must
-hold at the same action boundary; success is declared at the first action boundary where they all hold. Otherwise the episode ends as a failure after the action limit. No condition ends the episode early as a failure.
+hold at the same action boundary; success is declared at the first action boundary where they all hold, and the episode
+ends. Otherwise the episode ends as a failure after the action limit. No condition ends the episode early as a failure.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
 are never executed) or when a check fails for good (failure); a runaway guard stops it after 15000 actions (10 min of

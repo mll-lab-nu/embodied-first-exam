@@ -42,7 +42,7 @@ these must hold at the same action boundary:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), all conditions together (one stage). Success is
-declared at the first action boundary where everything holds. No condition ends the episode
+declared at the first action boundary where everything holds, and the episode ends. No condition ends the episode
 early as a failure; otherwise it runs on until the length cap (below) [step_lim].
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
@@ -54,7 +54,8 @@ reads that limit and it does not apply here: where the description above mention
 **At the end.** Both arms back near their start poses (above), as part of the success condition; the grippers need not
 be open.
 
-**Notes from RoboDojo's code.** The tubes are interchangeable and no tube is assigned to a particular hole. The tube's long direction runs from its closed bottom, where its tested centre
+**Notes from RoboDojo's code.** The tubes are interchangeable and no tube is assigned to a particular hole; the
+"one by one" wording is not checked. The tube's long direction runs from its closed bottom, where its tested centre
 sits, to the orange cap, so a tube in a hole cap up passes both the upright test and the "over the rack" test (its
 bottom is inside the rack's outline). Thresholds are strict (more than 0.045 m, less than 30 deg).
 

@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Memory**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Read the two number cards, press the first red button as many times as the first card says, then press the blue button, then press the second red button as many times as the second card says, then press the blue button again, and bring the arms home.
@@ -46,7 +46,7 @@ button's state is remembered as up once seen within 0.5 mm of fully up and as do
 the last state is kept); each change from up to down adds one press. So a press-and-release that starts and ends
 within one action is not seen at all, and a release that stops between 1.0 and 0.5 mm below the top passes the
 stage but the next press is not counted. Success is declared at the first action at which every stage has passed
-and every tally is exact. A tally over its number ends it at once as a failure; otherwise it
+and every tally is exact; the episode then ends. A tally over its number ends it at once as a failure; otherwise it
 runs on until the cap in **Episode length** below.
 
 **Episode length.** A step limit of **700 steps** (RoboDojo's own limit for this task, 28 s of

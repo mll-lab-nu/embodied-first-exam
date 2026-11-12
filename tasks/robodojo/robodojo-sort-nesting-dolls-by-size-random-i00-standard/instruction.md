@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization (randomised variant: other models, clutter)**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Arrange the five nesting dolls upright in a straight row, ordered by size from the smallest at the smallest world x to the largest at the largest world x, and return the arms to their start pose.
@@ -16,9 +16,14 @@ RoboDojo's own instruction for this scene: *"Arrange the five nesting dolls in a
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x as seen from the arms, "away" = +y).
 The five nesting dolls are round, penguin-like dolls with a dark body and a white face (the scene light is purple), of
 five sizes, all standing upright on the table at the start among unrelated clutter (a game console, a calculator, a
-ball, money, a book ...; none of it is checked). They are 5 to 13 cm tall [doll0..doll4]. RoboDojo
-ranks them by model [model index mod 5: 0 = largest .. 4 = smallest]; that ranking is the same as ranking them by
-height.
+ball, money, a book ...; none of it is checked):
+- the smallest doll, 5 cm tall, right of centre, near you [doll1];
+- the second smallest, 7 cm tall, at the left, further back than the others [doll3];
+- the middle-sized one, 9 cm tall, left of centre, near you [doll2];
+- the second largest, 11 cm tall, at the far left, under the left gripper [doll4];
+- the largest, 13 cm tall, at the right, under the right gripper [doll0].
+RoboDojo ranks them by model (largest = model index mod 5 of 0, smallest = 4) [doll0 mod 0, doll4 mod 1, doll2 mod 2,
+doll3 mod 3, doll1 mod 4]; that ranking is the same as ranking them by height.
 
 A doll's *centre* below is the point RoboDojo tests for it (its origin): the middle of its bounding box, i.e. half its
 height above its base. All of these must hold at the same action boundary:
@@ -34,7 +39,8 @@ height above its base. All of these must hold at the same action boundary:
   x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions). All of the conditions above form one stage and must
-hold at the same action boundary; success is declared at the first action boundary where they all hold. Otherwise the episode ends as a failure after the action limit. No condition ends the episode early as a failure.
+hold at the same action boundary; success is declared at the first action boundary where they all hold, and the episode
+ends. Otherwise the episode ends as a failure after the action limit. No condition ends the episode early as a failure.
 
 **Episode length.** A step limit of **1,050 steps** (RoboDojo's own limit for this task, 42 s of
 simulated time) [step_lim]; one step is one 25 Hz action (`## Episode end`, below). The
