@@ -22,7 +22,7 @@
   "uipc_build_sha256": "39781d192a00d0cdc784f76e9ef2aa6fa404da510cf813ff06a04ea33b2597c1"
  },
  "runtime_notes": "source = the public simulator source of release_commit (images/topogym/prune.py rule); python, dependencies: the release's pinned locks; uipc_build_sha256 = the audited libuipc wheel of every lab evidence image (merged-v17..v19), installed with UIPC_WHEEL=prebuilt (images/roboarc/README.md); it is the image's default build (/opt/uipc-build.json). uipc_builds: the two libuipc builds of one recipe (same pyuipc version and source commit, which the frozen IPC settled states hold) that the tooling chooses from at Session start, before uipc is imported (rcb_topogym.select_uipc_build): the audited wheel on compute capability 8.9 and 12.x or without a visible GPU, the sm86 build (/opt/uipc_sm86) on any other GPU. A task's runtime binding carries both (uipc_builds); the session's runtime_binding names the one in use.",
- "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+ "tooling_sha256": "f7f4eda0c86a9dcd68450159a9196660534e34a11c0dc7506d0fc0f00d922d36",
  "tooling_version": "19",
  "uipc_builds": {
   "audited": {

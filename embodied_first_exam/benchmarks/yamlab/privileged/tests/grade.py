@@ -56,8 +56,8 @@ def load_trajectory(path: str, family: str, action_dim: int, max_steps: int):
             sizes = {i.filename: i.file_size for i in z.infolist()}   # inflates to gigabytes is the agent's 0, not an OOM
         if "task.npy" not in sizes or "actions.npy" not in sizes:
             return None, {"bad_trajectory": 1}
-        if max(sizes["task.npy"], sizes["actions.npy"]) > limit:
-            return None, {"bad_trajectory": 1, "too_large": 1}
+        if max(sizes.values()) > limit:                    # every entry: np.load reads an entry named `actions` (no
+            return None, {"bad_trajectory": 1, "too_large": 1}   # .npy) before `actions.npy`
         d = np.load(path, allow_pickle=False)              # not an npz / pickled content: ValueError, OSError, ...
         task = str(d["task"])                              # no `task` entry: KeyError; an object array: ValueError
     except Exception as exc:  # noqa: BLE001

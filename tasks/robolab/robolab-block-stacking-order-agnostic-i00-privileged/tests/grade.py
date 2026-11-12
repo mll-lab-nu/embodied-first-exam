@@ -16,7 +16,7 @@ the recorded one (`instance_ok`: exact state hash, or every object / joint pose 
 
 Whose failure a 0 is (every path writes a reward; `deterministic`, `grader_error` and `infra_error` are always present):
 - the agent's: no file (`missing_trajectory`), another family's trajectory (`wrong_family`), a file that is not a
-  trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, one of them larger than MAX_STEPS x ACTION_DIM
+  trajectory (`bad_trajectory`: not an npz, no `task` / `actions` entry, any entry larger than MAX_STEPS x ACTION_DIM
   float64 numbers + MAX_MEMBER_MARGIN bytes unpacked (checked on the zip directory before it is read; `too_large`),
   pickled or object arrays, the wrong shape, NaN/inf, more than MAX_STEPS rows), or no replay completing the task. The
   replays read a copy holding only the checked `task` and `actions`: no other entry
@@ -55,8 +55,8 @@ def load_trajectory(path: str, family: str, action_dim: int, max_steps: int):
             sizes = {i.filename: i.file_size for i in z.infolist()}   # inflates to gigabytes is the agent's 0, not an OOM
         if "task.npy" not in sizes or "actions.npy" not in sizes:
             return None, {"bad_trajectory": 1}
-        if max(sizes["task.npy"], sizes["actions.npy"]) > limit:
-            return None, {"bad_trajectory": 1, "too_large": 1}
+        if max(sizes.values()) > limit:                    # every entry: np.load reads an entry named `actions` (no
+            return None, {"bad_trajectory": 1, "too_large": 1}   # .npy) before `actions.npy`
         d = np.load(path, allow_pickle=False)              # pickled content, a corrupt member: ValueError, OSError, ...
         task = str(d["task"])                              # no `task` entry: KeyError; an object array: ValueError
     except Exception as exc:  # noqa: BLE001
