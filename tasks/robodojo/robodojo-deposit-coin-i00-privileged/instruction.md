@@ -42,7 +42,7 @@ All of these must hold at the same action boundary:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), coin first, then arms; both must hold at the same
-action boundary (one stage). Success is declared at the first action boundary where they hold, and the episode ends.
+action boundary (one stage). Success is declared at the first action boundary where they hold.
 No condition ends the episode early as a failure. A separate partial-credit score (not part of success) climbs the
 tiers 20 (coin lifted more than 0.08 m above where it started) and 100 (coin inside as above)
 (the 100 tier counts only if the episode succeeds, otherwise the tier below) [process score, transition mode].

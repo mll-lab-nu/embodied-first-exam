@@ -1,0 +1,15 @@
+[[replace]]
+old = "The table top is at z = 0.936. Arm base (`link0`): link0 [-0.75, 0.0, 0.924]."
+new = "The table top is at z = 0.955. Arm base (`link0`): link0 [-0.75, 0.0, 0.924]."
+
+[[replace]]
+old = "At the start the tcp target is [-0.059, 0.008, 1.096] / [1.0, 0.0, 0.0, 0.0]."
+new = "At the start the tcp target is [-0.025, 0.011, 1.115] / [1.0, 0.0, 0.0, 0.0]."
+
+[[replace]]
+old = "`hammer_nail_demo_10_2026-02-05_19-18-55_029010`"
+new = "`hammer_nail_demo_10_2026-03-10_20-11-45_545432`"
+
+[[replace]]
+old = "`095c53d8e9a1cae0`"
+new = "`38a75fc6e7237bea`"

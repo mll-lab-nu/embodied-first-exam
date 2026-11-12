@@ -6,7 +6,7 @@
 | Mode | realtime (`eai-standard-realtime/1.0`) |
 | Twin | `embodied-olympics-match-tabletennisg1-matchcpu-i01-privileged` |
 | Simulator / robot | `mujoco` / `unitree-g1` |
-| Family / instance | `tabletennisg1_match` / seed 4 |
+| Family / instance | `tabletennisg1_match` / seed 4 (allowed seeds: [4, 1, 2]; PROTOCOL §2) |
 | Oracle | `partial` — the sport's reference player (solution/: builtin_players:OpenReference, camera images and /spec only, the learned striker of the release on CPU) over HTTP: the camera-only reference won this seed 7:6 live (x1i: 2 of 5 seeds against level 4: 4, 5); in this repository it lost 2:5 (realtime) and 5:7 (standard): no winning oracle. Embodied First Exam's local Harbor runs: see the benchmark README; nop 0 |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §3) |

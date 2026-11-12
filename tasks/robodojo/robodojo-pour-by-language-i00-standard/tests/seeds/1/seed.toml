@@ -1,0 +1,11 @@
+[[replace]]
+old = "## Success (RoboDojo's own check for this task)\nThe objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, \"away\" = +y, away from the arms).\nThree bottles stand in a row across the middle of the table, each 8 cm wide and 22 cm tall, holding liquid; three\nshallow bowls (11 cm across, 4 cm tall) stand in a row in front of them, nearer the arms. The sentence in the task\nnames them by colour, and pairs them, in its order:\n- first: the violet bottle [bottle_0, its liquid wine_0] into the black bowl [bowl_0];\n- second: the red bottle [bottle_1, wine_1] into the white bowl [bowl_1];\n- third: the turquoise bottle [bottle_2, wine_2] into the brown bowl [bowl_2]."
+new = "## Success (RoboDojo's own check for this task)\nThe objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, \"away\" = +y, away from the arms).\nThree bottles stand in a row across the middle of the table, each 8 cm wide and 22 cm tall, holding liquid; three\nshallow bowls (11 cm across, 4 cm tall) stand in a row in front of them, nearer the arms. The sentence in the task\nnames them by colour, and pairs them, in its order:\n- first: the red bottle [bottle_0, its liquid wine_0] into the black bowl [bowl_0];\n- second: the turquoise bottle [bottle_1, wine_1] into the white bowl [bowl_1];\n- third: the violet bottle [bottle_2, wine_2] into the brown bowl [bowl_2]."
+
+[[replace]]
+old = "RoboDojo's own instruction for this scene: *\"Pour the liquid from the first violet bottle into the first black bowl, from the second red bottle into the second white bowl, and from the third turquoise bottle into the third brown bowl. Then reset the robot arm.\"*"
+new = "RoboDojo's own instruction for this scene: *\"Pour the liquid from the first red bottle into the first black bowl, from the second turquoise bottle into the second white bowl, and from the third violet bottle into the third brown bowl. Then reset the robot arm.\"*"
+
+[[replace]]
+old = "arx_x5/0/pour_by_language_0.json"
+new = "arx_x5/1/pour_by_language_0.json"

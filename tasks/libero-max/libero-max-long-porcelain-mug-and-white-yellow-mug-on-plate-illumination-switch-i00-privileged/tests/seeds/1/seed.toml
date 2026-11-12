@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-camera-view-angle-10-t04-i09-illumination_switch-d0-p195"
+new = "pro-camera-view-angle-10-t04-i01-illumination_switch-d0-p195"
+
+[[replace]]
+old = "initial state 9)"
+new = "initial state 1)"

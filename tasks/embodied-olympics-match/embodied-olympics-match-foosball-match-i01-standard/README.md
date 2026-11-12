@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard-lockstep/1.0`) |
 | Twin | `embodied-olympics-match-foosball-match-i01-privileged` |
 | Simulator / robot | `mujoco` / `foosball-rods` |
-| Family / instance | `foosball_match` / seed 7 |
+| Family / instance | `foosball_match` / seed 7 (allowed seeds: [7, 303, 313]; PROTOCOL §2) |
 | Oracle | `partial` — the hardest level our reference player wins (the rule: each sport at the hardest level the oracle beats): at level 4 (80 ms reactions) it lost 0:5 on this seed on vanilla Harbor and wins 10 of 100 in the screening; at level 3 (90 ms, 21 of 100 in the screening, docs/screening/foosball.md) it won this seed 5:4 on vanilla Harbor 0.23.0 (2026-10-16, an RTX 4090 workstation; seeds 7-9 tried: 1 won). Realtime play varies run to run, hence partial |
 | Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |

@@ -1,0 +1,7 @@
+[[replace]]
+old = "state hash `5099066e29874d64`"
+new = "state hash `fb64f6e11c40c48d`"
+
+[[replace]]
+old = "`solution/oracle.npy`, 291 rows"
+new = "`solution/oracle.npy`, 355 rows"

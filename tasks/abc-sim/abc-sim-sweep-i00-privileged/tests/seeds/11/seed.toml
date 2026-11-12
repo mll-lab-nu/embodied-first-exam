@@ -1,0 +1,15 @@
+[[replace]]
+old = "state hash `acdf58bdd8888ca2`"
+new = "state hash `cd8dad8812eda0cc`"
+
+[[replace]]
+old = "`solution/oracle.npy`, 1288 rows"
+new = "`solution/oracle.npy`, 1424 rows"
+
+[[replace]]
+old = "all 2 scraps"
+new = "all 4 scraps"
+
+[[replace]]
+old = "2 crumpled paper scraps"
+new = "4 crumpled paper scraps"

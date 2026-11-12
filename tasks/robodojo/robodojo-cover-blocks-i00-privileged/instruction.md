@@ -57,7 +57,7 @@ which any block is more than 0.05 m from its start marks the episode failed at o
 reached is tested; when it holds at that action it counts as reached, and the next state is tested from the next action
 on, so at most one state is reached per action. Each state must therefore be held at some action boundary of its own:
 covering two blocks within one action skips the one-block state, and the sequence then waits until that state
-occurs again. Success is declared when state 6 is reached after states 1-5, and the episode ends. A separate
+occurs again. Success is declared when state 6 is reached after states 1-5. A separate
 partial-credit score (not part of success) climbs the tiers 0, 0, 5, 15, 30, 100 as states 1 to 6 are reached (state 6
 there without the arms)
 (the 100 tier counts only if the episode succeeds, otherwise the tier below) [process score, transition mode].

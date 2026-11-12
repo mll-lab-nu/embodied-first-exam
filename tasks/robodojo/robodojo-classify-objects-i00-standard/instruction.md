@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Long-Horizon**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Sort the small objects on the table by category into the three baskets: all objects of one category go into one basket, and the three categories go into the three different baskets. Then put the arm back home.
@@ -16,13 +16,8 @@ RoboDojo's own instruction for this scene: *"Sort the objects by category into t
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
 - the three baskets: open-top plastic bins, 25.2 x 16.8 cm and 7.7 cm high, in a row across the far half of the
   table: white on the left [basket0], blue in the middle [basket1], red on the right [basket2];
-- the objects to sort, three kinds [one label group per kind]:
-  - two pens [cat0]: a black-and-gold pen (18.6 cm) on the right, just in front of the red basket [cat0_0], and a white
-    pen (14.5 cm) in front, right of centre [cat0_1];
-  - two watches [cat1]: a silver-and-black round watch right of centre [cat1_0] and a black band watch just in front of it to the
-    right [cat1_1];
-  - three identical bunny figurines (13 cm tall, tan, in a navy outfit) [cat2]: two on the left, one at the far right
-    next to the right gripper [cat2_0, cat2_1, cat2_2].
+- the objects to sort: the small objects on the table, of three kinds (RoboDojo's object categories) [one label
+  group per kind]. Which objects are of one kind is for you to tell by sight.
 
 An object's *centre* below is the point RoboDojo tests for it (its origin); for every object here that is about the
 middle of its bounding box. All of these must hold at the same action boundary:
@@ -31,8 +26,7 @@ middle of its bounding box. All of these must hold at the same action boundary:
   underside [is_A_in_B]. Since an object can be in only one basket, this means each kind fills its own basket, every
   object is in the basket of its kind, and no basket mixes kinds. Which kind goes into which basket is free.
 - **Released.** Every object's centre less than 0.01 m above the basket rims (the rims are all 7.7 cm above the
-  table) [is_all_A_z_lower_than_B_bbox_zmax, z_threshold=0.01]. RoboDojo compares the pens with the white basket's
-  rim, the watches with the blue one's and the figurines with the red one's, but all three rims are at the same
+  table) [is_all_A_z_lower_than_B_bbox_zmax, z_threshold=0.01]. RoboDojo compares each kind with a different basket's rim, but all three rims are at the same
   height, so this does not depend on where each kind goes. An object resting in a basket passes; one still held up in
   a gripper fails.
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each
@@ -40,7 +34,7 @@ middle of its bounding box. All of these must hold at the same action boundary:
 
 **When it is checked.** After every action (never between actions), in the order baskets, released, arms, stopping at
 the first condition that fails; all must hold at the same action boundary (one stage). Success is declared at the
-first action boundary where everything holds, and the episode ends. No condition ends the episode early as a failure.
+first action boundary where everything holds. No condition ends the episode early as a failure.
 A separate partial-credit score (not part of success) climbs the tiers 15, 40, 100 as 1, 2, then 3 baskets each hold
 exactly one complete kind (all of it, released below the rim, and nothing of another kind) while both grippers are
 open (each at least 0.8 of its full opening)

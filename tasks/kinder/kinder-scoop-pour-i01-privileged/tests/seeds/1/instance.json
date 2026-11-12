@@ -1,0 +1,6 @@
+{
+ "env_id": "kinder/ScoopPour3D-o50-v0",
+ "seed": 1,
+ "max_steps": 1000,
+ "scene_sha": "3a86809da28802c4"
+}

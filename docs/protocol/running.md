@@ -38,10 +38,11 @@ python3 scripts/task_seed.py materialize tasks/<benchmark>/<task> --seed draw --
 harbor run -p /tmp/run1/<task> -a <agent> ...
 ```
 
-The agent never chooses or sees the list: another seed's instance lives under the privileged task's `tests/seeds/`,
-and the copy carries only the drawn one. Every task allows its default seed only, and `scripts/run_agent_batch.sh`
-runs each job on it, from a stamped copy of the task as it is (with the gateway, the copy's egress is the gateway; with
-a CPU cap above the host's count, `HOST_CPUS`, the copy has that cap clamped, Resources below).
+The agent never chooses or sees the list: another seed's instance lives under the privileged task's `tests/seeds/`
+(with the seed's other files and text, `seed.toml`), and the copy carries only the drawn one.
+`scripts/run_agent_batch.sh` runs each job on the task's default seed, from a stamped copy of the task as it is (with
+the gateway, the copy's egress is the gateway; with a CPU cap above the host's count, `HOST_CPUS`, the copy has that cap
+clamped, Resources below).
 
 ## Network
 The default is the allowlist (PROTOCOL Appendix H.6); whether a task has open network is its author's decision,

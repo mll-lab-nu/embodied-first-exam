@@ -50,16 +50,13 @@ All of these must hold at the same action boundary, for each of the three mugs:
 - **First direction test** [handle frame z vs first hook frame z; is_axis_aligned, threshold 60]. Red mug: the
   direction from its axis out through its handle within 60 deg of the first hook's up direction, i.e. it hangs from its
   handle, handle above its centre. Pumpkin mugs: the direction from the mug's bottom to its opening within 60 deg of
-  that up direction, i.e. the opening looks up, or to the left and at least a little up: an opening facing left along
-  a left arm (rising 22 deg) is about 40 deg off and passes; facing left exactly level is 62 deg off and fails; facing
-  right fails. Not true at the start for the red mug; the pumpkin mugs stand opening-up at the start (28 deg off).
+  that up direction, i.e. the opening looks up, or to the left and at least a little up. Not true at the start for the red mug; the pumpkin mugs stand opening-up at the start (28 deg off).
 - **Second direction test** [handle frame x vs first hook frame +x OR -x; is_axis_aligned, threshold 60]. Red mug:
   the direction across its handle (the way a hook passes through it, horizontal at the start) within 60 deg of the
   first hook's arm direction, either way round: it hangs through its handle on an arm that points left or right; on
   the middle arms (toward or away from you) it is about 80 deg off and fails. Pumpkin mugs: the direction from the
   mug's axis out through its handle within 60 deg of that arm direction, either way round: with the handle above the
-  mug's centre it must lean toward the right (handle straight up is 62 deg off and fails; leaning 22 deg right, as on a
-  left arm with the opening along the arm, is about 40 deg off and passes).
+  mug's centre it must lean toward the right.
 - **On a hook.** Its handle point is less than 0.045 m (3-D distance) from some hook point
   [is_A_functional_point_close_to_B_functional_point, threshold 0.045]. Any arm may be used; the test does not need
   different arms for different mugs (physically one arm holds one mug).
@@ -67,7 +64,7 @@ All of these must hold at the same action boundary, for each of the three mugs:
   of x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions), all conditions for all three mugs and the arms
-together (one stage). Success is declared at the first action boundary where everything holds, and the episode ends;
+together (one stage). Success is declared at the first action boundary where everything holds;
 nothing needs to hold for longer. Since the arms must be back, the mugs must be hanging on the rack by themselves at
 that moment. No condition ends the episode early as a failure; otherwise it runs on until the length cap (below)
 [step_lim].
@@ -84,9 +81,7 @@ the rack without being held. The grippers need not be open.
 **Notes from RoboDojo's code.** The code is the same as in hang_mugs; this variant uses other mug models (here one red
 mug and two pumpkin mugs), the second rack model and twenty clutter objects. Each mug is tested against every hook
 point, so any assignment of mugs to arms works, but both direction tests always use the first hook (the lower arm
-pointing right), and the pumpkin mugs' handle frame is turned differently from the red mug's (see above). In a recorded
-success (live standard run) the red mug hung from the lower right arm, opening toward you, and the two pumpkin mugs
-hung from the lower left and top left arms with their openings facing left along the arms. The handle-height limit is
+pointing right), and the pumpkin mugs' handle frame is turned differently from the red mug's (see above). The handle-height limit is
 an absolute world height (0.9 m, 13.5 cm above the table top). Partial credit (15 / 40 / 100 for one / two / three mugs
 hung with the grippers open) is separate from success.
 

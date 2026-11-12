@@ -1,0 +1,1 @@
+{"level": 4, "seed": 2, "call_limit_s": 0.5, "budget_s": 1800, "start_limit_s": 300, "max_steps": 636000, "replay_timeout_s": 1200, "video_timeout_s": 1500}

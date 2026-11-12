@@ -6,7 +6,7 @@
 | Mode | realtime (`eai-standard-realtime/1.0`) |
 | Twin | `embodied-olympics-match-tabletennis-matchlow-i01-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `tabletennis_matchlow` / seed 22 |
+| Family / instance | `tabletennis_matchlow` / seed 22 (allowed seeds: [22, 101, 111]; PROTOCOL §2) |
 | Oracle | `partial` — level 1, the easiest level, the low level (the agent's own hit in the loop, no execution scatter): our toolkit-only reference skill with the camera-only reference strategy lost 0:5 on this seed (twice) and on seeds 2-9 (its slow serves bounce twice on its own court; volleys on the receive), so the oracle is partial. Feasibility: the platform's own hit packaged as a skill (the same sandbox process) with the truth-state reference strategy wins level 1 in 7 of 8 development seeds of our evaluator's competition test (no wall clock), this seed 5:1, where our reference skill wins 0 of 4; through the live service (core 0.2.32's upload path) with the camera-only strategy it scored 2:5, 1:5, 2:5; the platform's hit meets every development request of the contract (118/118) |
 | Agent time budget | 7200 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Real time | slowdown S = 10 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §3) |

@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Precision**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up the charger and plug it into the socket of the power strip so that it sits upright and fully inserted, then return the arms to their start pose.
@@ -40,7 +40,7 @@ action boundary:
 
 **When it is checked.** After every action (never between the simulation sub-steps of an action), in the order depth,
 over the strip, standing, arms, stopping at the first condition that fails; all four must hold at the same action
-boundary (one stage). Success is declared at the first action boundary where everything holds, and the episode ends. No
+boundary (one stage). Success is declared at the first action boundary where everything holds. No
 condition ends the episode early as a failure; if the conditions never hold together the episode fails at the action
 limit (below).
 
@@ -51,14 +51,12 @@ where the description above mentions step_lim or the length cap, it means this l
 `res.meta["reason"]` report the end.
 
 **At the end.** Both arms back near their start poses (above), as part of the success condition, while the charger
-stays plugged in; the grippers need not be open, so letting go of the charger first and then bringing the arms back
-is the usual way.
+stays plugged in; the grippers need not be open.
 
 **Notes from RoboDojo's code.** Precision task. The power strip is a free object: it can be pushed or knocked while
 plugging, and the tests use wherever it is at that moment. The heights are compared on the two objects' bounding boxes
 as they are turned (lowest corner of the charger, highest corner of the strip); the "over the strip" test uses the
-charger's centre only and the strip's turned outline seen from above, not a box aligned with the table. Successful
-runs end with the charger standing upright, prongs down, in an outlet left of the strip's middle, its back end up.
+charger's centre only and the strip's turned outline seen from above, not a box aligned with the table.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends as above, when your time is up, or on a simulator

@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-initial-pose-position-angle-spatial-t06-i01-target_relocation-d0-p195"
+new = "pro-initial-pose-position-angle-spatial-t06-i00-target_relocation-d0-p195"
+
+[[replace]]
+old = "initial state 1)"
+new = "initial state 0)"

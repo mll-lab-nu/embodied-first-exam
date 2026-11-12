@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `robowits-stack-bowls-i00-privileged` |
 | Simulator / robot | `robowits` / `marvin-bimanual` |
-| Family / instance | `stack_bowls` / seed 0 |
+| Family / instance | `stack_bowls` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `none` — No reference solution: RoboWits ships no expert or planner for its seed tasks. Solvable: model trial robowits-stack-bowls-i00__6pB7rjT (robowits-lunaxh-0925-2042, privileged) graded success=1, deterministic=1 by the separate verifier; nop scored 0. These records are from earlier versions of the task (before protocol v1.0, on the same frozen instance and predicate); not re-run on this version (static validation only, 2026-10-01). Human review per family (protocol §4). Re-graded with the current grader (two AMD workstations; the earlier positives were graded on the Intel laptop, so a trajectory that fails the earlier grader on AMD too says nothing either way): the cited robowits-stack-bowls-i00__6pB7rjT (graded on an AMD workstation, instance_exact) passes the earlier grader but fails the current one: the medium bowl is still held above the large one. No positive confirmed under the current grader yet (the 10-14 standard A trials of Opus and Gemini nested and released it; their trajectories are not in our hands). |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:robowits-0.1.1` |

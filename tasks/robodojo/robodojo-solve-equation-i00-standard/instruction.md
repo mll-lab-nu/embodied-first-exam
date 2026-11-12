@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Open**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** An arithmetic equation (a op b = result) is laid out on pads with exactly one number or operator missing; pick the correct missing digit or operator tile from the loose tiles on the table, place it on the empty pad, and bring the arms home.
@@ -15,45 +15,39 @@ RoboDojo's own instruction for this scene: *"Complete the equation by selecting 
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
 - the five round light-wood pads (8 cm across) in a row across the middle of the table, 8.5 cm apart [mat0..mat4, left
-  to right]; on them, left to right, the equation: a red 8 [t0], an empty pad, a yellow 2 [t2], a black disc with a
-  white "=" [t3] and a yellow 4 [t4]. The empty pad is the second from the left, between the 8 and the 2 [mat1, the
-  operator slot];
-- the four loose operator tiles: black discs with a white symbol, in a row near you, left to right "+", "-", "x"
-  (times) and "÷" (divided by) [plus, minus, multiplication, division]; the "÷" disc is 6.4 cm across and 0.8 cm thick,
-  the one furthest right, lying flat with its symbol the right way up as you look at it from the arms (the bar of the
-  "÷" running left-right), like the "=" disc on the pads;
+  to right]. Four of them carry the equation's tiles (digits, an operator disc and a black disc with a white "="); one
+  is empty [t0..t4, the one of the missing slot absent];
+- the four loose operator tiles: black discs with a white symbol ("+", "-", "x" for times and "÷" for divided by),
+  6.4 cm across and 0.8 cm thick, in a row near you [plus, minus, multiplication, division];
 - ten loose coloured digit tiles 0-9 scattered between the pads and the arms [num_0..num_9]. RoboDojo reads the printed
-  digit of a tile [model index mod 10; the labels do not follow the digits]. None of them is needed here.
+  digit of a tile [model index mod 10; the labels do not follow the digits].
 
-The equation reads 8 ? 2 = 4 with the operator missing. RoboDojo's candidates are every loose tile that would make the
-equation true (integer arithmetic; a minus result must not be negative; division must be exact and not by 0): here only
-"÷" (8 ÷ 2 = 4; "+" gives 10, "-" 6, "x" 16), so the only tile the check reads is the "÷" disc [division]. An object's
-*centre* below is the point RoboDojo tests for it (its origin): for the "÷" disc and for the pad, the middle of the disc.
-All of these must hold at the same action boundary:
-- **On the empty pad.** The "÷" disc's centre within 0.018 m of the empty pad's centre, measured horizontally (strict)
-  [is_AB_xy_distance_within_threshold, threshold=0.018; one condition per candidate tile, any candidate passes]. Not
-  true at the start: the disc starts about 24 cm to the right of that pad and 27 cm closer to you.
-- **Reading the right way.** The disc's right-hand direction (the direction its "÷" bar runs, pointing world +x at the
-  start) within 45 deg of world +x, measured in 3-D [local +x; is_axis_aligned, align_threshold=45], and its away
-  direction (from the "÷" dot nearer you to the far dot, pointing world +y at the start) within 45 deg of world +y
-  [local +y; is_axis_aligned, align_threshold=45]: lying face up and turned less than 45 deg either way from how it lies
-  now, the same reading orientation as the tiles already on the pads. Already true at the start: keep the heading while
-  carrying it; turning it over fails. The "÷" looks the same turned 180 deg, but that fails: keep track of how far the
-  disc has turned, not only of how it looks.
+RoboDojo's candidates are every loose tile that would fill the empty pad so that the equation is true (integer
+arithmetic; a minus result must not be negative; division must be exact and not by 0). An object's *centre* below is
+the point RoboDojo tests for it (its origin): for a disc and for the pad, the middle of the disc; for a digit tile, the
+middle of its bounding box. All of these must hold at the same action boundary:
+- **On the empty pad.** A candidate tile's centre within 0.018 m of the empty pad's centre, measured horizontally
+  (strict) [is_AB_xy_distance_within_threshold, threshold=0.018; one condition per candidate tile, any candidate
+  passes]. Not true at the start.
+- **Reading the right way.** That tile's reading direction (from the left side of its symbol or numeral to its right)
+  within 45 deg of world +x, measured in 3-D [local +x; is_axis_aligned, align_threshold=45], and its up direction
+  (from the bottom of the symbol or numeral to its top) within 45 deg of world +y [local +y; is_axis_aligned,
+  align_threshold=45]: lying face up and turned less than 45 deg either way from upright as read from the arms' side,
+  the same reading orientation as the tiles already on the pads. Every loose tile starts that way: keep the heading
+  while carrying it; turning it over fails. A symbol or numeral that looks the same turned 180 deg still fails turned
+  180 deg: keep track of how far the tile has turned, not only of how it looks.
 - **Both arms back** [all_robot_back_to_origin]: each of the two arms you control has its end-effector within 0.15 m
   of its start position on each of x, y and z separately, and within 20 deg of its start orientation. The grippers need
   not be open.
 
 **When it is checked.** After every action (never between actions). The three tile conditions and the arms condition
-form one stage: all must hold at the same action boundary, and success is declared at the first such boundary; the
-episode then ends. Each tile condition passes if any candidate tile meets it (with several candidates, different tiles
-could meet different conditions; here there is only the "÷" disc). Nothing ends the episode early as a failure: a wrong
+form one stage: all must hold at the same action boundary, and success is declared at the first such boundary. Each tile condition passes if any candidate tile meets it (with several candidates, different tiles
+could meet different conditions). Nothing ends the episode early as a failure: a wrong
 tile put on the pad is not penalised, it only blocks the space. Otherwise the episode ends as a failure after step_lim
 actions.
 
-**What you must read or remember.** Read the equation on the pads (the digits and the "=" disc) to see which slot is
-empty and which operator makes it true, and the symbols on the loose discs to pick that tile. The language instruction
-is generic.
+**What you must read or remember.** Read the equation on the pads to see which slot is empty and which tile makes
+it true, and the symbols and digits on the loose tiles to pick that tile. The language instruction is generic.
 
 **Episode length.** A step limit of **300 steps** (RoboDojo's own limit for this task, 12 s of
 simulated time) [step_lim]; one step is one 25 Hz action (`## Episode end`, below). The
@@ -61,14 +55,13 @@ episode ends at the limit (reason `step_limit`, `spec["max_control_steps"]` = 30
 where the description above mentions step_lim or the length cap, it means this limit. `res.meta["done"]` /
 `res.meta["reason"]` report the end.
 
-**At the end.** Both arms near their start poses (above), at the same action as the "÷" disc lies on the empty pad with
-the right orientation; the grippers need not be open.
+**At the end.** Both arms near their start poses (above), at the same action as the right tile lies on the empty pad
+with the right orientation; the grippers need not be open.
 
 **Notes from RoboDojo's code.** RoboDojo works out the missing slot and its candidates from the tiles in the scene at
-each check (here: the operator slot, and only "÷" fits). The position tolerance, 1.8 cm, is small against the 8 cm pad
-and the 8.5 cm pad spacing: the disc must sit nearly concentric with the pad. Only the disc's centre and orientation are
-tested, not whether it rests flat on the pad or touches the neighbouring tiles. Turning the disc more than 45 deg about
-the vertical, flipping it, or leaving an arm away from its start pose fails.
+each check. The position tolerance, 1.8 cm, is small against the 8 cm pad and the 8.5 cm pad spacing: the tile must
+sit nearly centred on the pad. Turning the tile more than 45 deg about the vertical, flipping it, or leaving an arm
+away from its start pose fails.
 
 ## Rules (real-robot rules)
 - **No reset.** The episode starts when the service comes up and ends as above, when your time is up, or on a simulator

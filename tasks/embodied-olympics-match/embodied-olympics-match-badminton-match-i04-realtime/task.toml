@@ -35,6 +35,11 @@ expert_time_estimate_hours = 0.5
 oracle = "partial"
 oracle_evidence = "TOPBM calibration 2026-10-16 (a CPU cluster, S = 20, perception-free players, seeds 1001-1040): the reference's own prediction and strokes placing every shot short to a random front corner won 5 of 40 (this seed 11:8), the reference itself 0 of 40 (this seed 1:11), short alternating 0 of 40 (the other simple baselines: Embodied Olympics PR #181); our camera-only reference does not win level 2, so the oracle run checks the pipeline (a valid, replayed match), not a win"
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [1034, 1, 2]
+
 [verifier]
 timeout_sec = 2820.0
 environment_mode = "separate"

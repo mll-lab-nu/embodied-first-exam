@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `autobio-screw-loose-i00-privileged` |
 | Simulator / robot | `autobio` / `aloha-2` |
-| Family / instance | `screw_loose` / seed 0 |
+| Family / instance | `screw_loose` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |

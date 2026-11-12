@@ -1,0 +1,16 @@
+{
+ "benchmark": "MuJoCo Playground",
+ "env": "AlohaHandOver",
+ "seed": 60418,
+ "box_xy_offset": [
+  -0.0012054009028440102,
+  0.033827102264032044
+ ],
+ "target_pos": [
+  0.2498597414963746,
+  -0.09953632771655206,
+  0.18668528394329606
+ ],
+ "text": "Pick up the red box with the left arm, hand it over to the right arm, and have the right arm hold it at the translucent target.",
+ "state_sha": "fbafbbb3fd52"
+}

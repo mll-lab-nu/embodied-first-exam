@@ -21,18 +21,16 @@ robot's start pose never change between resets. You may reset and retry as many 
 
 ## Success (RoboDojo's own check for this task)
 The object the check reads (RoboDojo's label in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
-- the target: the scissors with mint green handles, 24 cm long, lying flat on the table at the right, a little beyond the
-  right arm's gripper, blades pointing toward you [target].
-The other eight objects on the table (a pink desk fan, a toy keyboard, a yellow utility knife, a pen, a pair of jeans, a
-small red toy figure, a white ball and a table-tennis paddle) are clutter: the check ignores them.
+- the target: the object RoboDojo's instruction names ("the mint green scissors"), one of the objects on the table
+  [target].
+The other eight objects on the table are clutter: the check ignores them.
 
 The scissors' *centre* (the point RoboDojo tests) is about halfway along the scissors, near the pivot.
 - **Lifted.** That centre is more than 0.10 m higher than it was at the start (strictly) [is_lift, z_threshold 0.1].
   Only its height counts: no horizontal place, hold time, gripper or arm pose is checked. Not true at the start.
 
 **When it is checked.** After every action (never between actions). Success is declared at the first action boundary
-where the scissors' centre is more than 10 cm above its start height, and the episode ends; the scissors need not be
-held after that. No condition ends the episode early as a failure; otherwise it runs on until the length cap (below)
+where the scissors' centre is more than 10 cm above its start height. No condition ends the episode early as a failure; otherwise it runs on until the length cap (below)
 [step_lim].
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
@@ -46,8 +44,7 @@ RoboDojo a description drawn at random for the target's category replaces the pl
 10 cm."). Pick that object out of the eight clutter objects on the table.
 
 **Notes from RoboDojo's code.** The lift is measured on the scissors' centre relative to its own start height, not on
-any grasp point, so any grasp that raises the scissors by 10 cm counts. The clutter objects are not checked at all and
-may be pushed aside.
+any grasp point, so any grasp that raises the scissors by 10 cm counts.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed

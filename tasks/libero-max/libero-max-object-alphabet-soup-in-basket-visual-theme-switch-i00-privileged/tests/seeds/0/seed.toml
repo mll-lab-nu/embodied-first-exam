@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-initial-pose-position-angle-object-t00-i01-visual_theme_switch-d1-p195"
+new = "pro-initial-pose-position-angle-object-t00-i00-visual_theme_switch-d1-p195"
+
+[[replace]]
+old = "initial state 1)"
+new = "initial state 0)"

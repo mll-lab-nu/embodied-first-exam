@@ -1,0 +1,11 @@
+[[replace]]
+old = "(BiGym's `sandwich_remove`, reset with seed 0)"
+new = "(BiGym's `sandwich_remove`, reset with seed 620100)"
+
+[[replace]]
+old = "the task reset with seed 0, t = 0 state hash `8fa8899e3404f119c6c50a189ce9a72f378a107e`"
+new = "the task reset with seed 620100, t = 0 state hash `af83df6ddf57c66018e3d98ce47cf1fc196cb772`"
+
+[[replace]]
+old = "(no network but the model APIs; seed 0 is none of their seeds)"
+new = "(no network but the model APIs; seed 620100 is none of their seeds)"

@@ -1,0 +1,7 @@
+[[replace]]
+old = "`kinder/SweepIntoDrawer3D-o5-v0` (Dynamic3D, TidyBot++), seed 0, privileged mode"
+new = "`kinder/SweepIntoDrawer3D-o5-v0` (Dynamic3D, TidyBot++), seed 2, privileged mode"
+
+[[replace]]
+old = "(`kinder/SweepIntoDrawer3D-o5-v0`, seed\n0)"
+new = "(`kinder/SweepIntoDrawer3D-o5-v0`, seed\n2)"

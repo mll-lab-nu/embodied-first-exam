@@ -13,7 +13,7 @@ RoboDojo's own instruction for this scene: *"Arrange the five nesting dolls in a
 
 The scene's labelled objects (RoboDojo's labels; `s.objects()` gives their poses and bounding boxes):
 - doll0..doll4: five matryoshka nesting dolls (Rigid, 'matryoshka_dolls', models 15-19 or 20-24 (two texture groups; 5 distinct dolls of one group)), one of each size; labels are random wrt size, table-frame x in [-0.45,0.45], y in [-0.25,-0.05], random yaw up to +-45 deg, margin 0.02; the config's prohibited rectangles reserve the target-row positions (x = -0.24, -0.12, 0.0, 0.12, 0.24 around y approx -0.12) so dolls do not start on their goal spots
-- clutter: 20 distractor objects (category-unique), table-frame x in [-0.6,0.6], y in [-0.5,0.5], random yaw up to +-30 deg, margin 0.015; prohibited rectangle x [-0.35,0.35], y [-0.5,-0.4] is kept free
+- clutter: 17 distractor objects in this layout (the config asks for 20, category-unique), table-frame x in [-0.6,0.6], y in [-0.5,0.5], random yaw up to +-30 deg, margin 0.015; prohibited rectangle x [-0.35,0.35], y [-0.5,-0.4] is kept free
 
 This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/sort_nesting_dolls_by_size_random_0.json`), frozen; the objects and the
 robot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is
@@ -23,14 +23,9 @@ robot's start pose never change between resets. You may reset and retry as many 
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x as seen from the arms, "away" = +y).
 The five nesting dolls are round, penguin-like dolls with a dark body and a white face (the scene light is purple), of
 five sizes, all standing upright on the table at the start among unrelated clutter (a game console, a calculator, a
-ball, money, a book ...; none of it is checked):
-- the smallest doll, 5 cm tall, right of centre, near you [doll1];
-- the second smallest, 7 cm tall, at the left, further back than the others [doll3];
-- the middle-sized one, 9 cm tall, left of centre, near you [doll2];
-- the second largest, 11 cm tall, at the far left, under the left gripper [doll4];
-- the largest, 13 cm tall, at the right, under the right gripper [doll0].
-RoboDojo ranks them by model (largest = model index mod 5 of 0, smallest = 4) [doll0 mod 0, doll4 mod 1, doll2 mod 2,
-doll3 mod 3, doll1 mod 4]; that ranking is the same as ranking them by height.
+ball, money, a book ...; none of it is checked). They are 5 to 13 cm tall [doll0..doll4]. RoboDojo
+ranks them by model [model index mod 5: 0 = largest .. 4 = smallest]; that ranking is the same as ranking them by
+height.
 
 A doll's *centre* below is the point RoboDojo tests for it (its origin): the middle of its bounding box, i.e. half its
 height above its base. All of these must hold at the same action boundary:
@@ -46,8 +41,7 @@ height above its base. All of these must hold at the same action boundary:
   x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 
 **When it is checked.** After every action (never between actions). All of the conditions above form one stage and must
-hold at the same action boundary; success is declared at the first action boundary where they all hold, and the episode
-ends. Otherwise the episode ends as a failure after the action limit. No condition ends the episode early as a failure.
+hold at the same action boundary; success is declared at the first action boundary where they all hold. Otherwise the episode ends as a failure after the action limit. No condition ends the episode early as a failure.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
 are never executed) or when a check fails for good (failure); a runaway guard stops it after 15000 actions (10 min of

@@ -1,0 +1,3 @@
+[[replace]]
+old = "`myoChallengeDieReorientP1-v0` after `seed(0)` and `reset(seed=0)` (`rcb_myosuite.py make-instance`); state hash `7e5922c982779368`"
+new = "`myoChallengeDieReorientP1-v0` after `seed(2)` and `reset(seed=2)` (built as `rcb_myosuite.py make-instance` builds seed 0); state hash `7460006f03f2cd70`"

@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard-lockstep/1.0`) |
 | Twin | `embodied-olympics-match-soccerssl-match-i01-privileged` |
 | Simulator / robot | `mujoco` / `ssl-robot` |
-| Family / instance | `soccer_ssl_match` / seed 7 |
+| Family / instance | `soccer_ssl_match` / seed 7 (allowed seeds: [7, 1, 2]; PROTOCOL §2) |
 | Oracle | `partial` — RLSSL 2026-10-16 (doc rlssl): L-RL against L3 25 W 5 D 10 L over 40 matches on fresh seeds (64 W 11 D 25 L over 100 with the screening), goals +1.7 per match; mirror match 29 W 5 D 46 L over 80 (two 40-match seed sets: 25 % and 48 %; L3 against itself on the first set 60 %); the truth reference against it 10 W of 20; replay identical; limits through World.execute (0.014 % of commands clipped, as L3). The oracle run checks the pipeline |
 | Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:embodied-olympics-match-0.1.0` |

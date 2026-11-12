@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Long-Horizon**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Wait for the opponent (support arm) to discard a mahjong tile, then declare a kong: flip the three tiles in your row that match the discarded tile and put the extra tile (mahjong9_0) upright at the end of your row, with grippers open.
@@ -22,7 +22,7 @@ green back:
   [mahjong4_0, mahjong4_1; not checked];
 - the opponent's row: four tiles standing in the middle of the table in front of the opponent's arm (the white arm on
   the far side), green backs toward you, faces toward the opponent. Each shows the same picture as one of your four
-  groups of three [mahjong5_0..mahjong8_0, matching mahjong0_*..mahjong3_* in that order];
+  groups of three [mahjong5_0..mahjong8_0];
 - the replacement tile: the top tile of the front (nearer) of the two small stacks of face-down tiles at the far left;
   it lies flat, green back up, long side left-right, and has the same picture as the pair at the right end of your row
   [mahjong9_0]. The other three face-down tiles (the bottom tile of that stack and the stack of two just behind it) are

@@ -1,0 +1,66 @@
+{
+ "case": {
+  "case_id": "pro-task-goal-t08-i01-receptacle_relocation-d1-p195",
+  "dynamic_phase": "pre_grasp_proximity",
+  "init_state_index": 1,
+  "policy_seed": 195,
+  "scenario": {
+   "base_task_id": "libero-pro/task/libero_goal/task_8",
+   "change": {
+    "calibration": "deterministic_candidate_requires_preflight",
+    "delta_position_m": [
+     0.08485281,
+     0.08485281,
+     0.0
+    ],
+    "direction_xy": [
+     0.70710678,
+     0.70710678
+    ],
+    "distance_m": 0.12,
+    "object": "plate_1",
+    "operation": "move_object",
+    "support_entity": "main_table"
+   },
+   "change_family": "GEO",
+   "change_type": "receptacle_relocation",
+   "expected_response_mode": "replan",
+   "randomization": {
+    "draw_id": 1,
+    "sampler": "libero-max-pro-hard-v1.0",
+    "seed": 822611914
+   },
+   "safety_constraints": [
+    "task_remains_feasible",
+    "no_simulator_error",
+    "no_new_unrelated_collision"
+   ],
+   "scenario_id": "pro-task-goal-t08-i02-receptacle_relocation-d1",
+   "seed": 822611914,
+   "severity": "high",
+   "trigger": {
+    "distance_m": 0.18,
+    "type": "on_proximity",
+    "value": "wine_bottle_1"
+   }
+  },
+  "substrate_category": "LIBERO-PRO/task",
+  "substrate_difficulty": null,
+  "substrate_variant": {
+   "bddl_file": "libero_goal_task/put_the_bowl_on_the_plate.bddl",
+   "benchmark": "LIBERO-PRO",
+   "category": "task",
+   "init_reference_bddl_file": "libero_goal_task/put_the_bowl_on_the_plate.bddl",
+   "init_states_file": "libero_goal_task/put_the_bowl_on_the_plate.pruned_init",
+   "language": "Put the wine bottle on the plate",
+   "source_revision": "c86fc3b8293185a6f373677018ff3e37f8391602"
+  },
+  "task_index": 8,
+  "task_name": "put_the_bowl_on_the_plate",
+  "task_suite_name": "libero_goal",
+  "timing_bucket": "middle"
+ },
+ "initial_state_sha": "73c97f7334fed66fe5f2cf33d96b9063a524ecf729235f49c02792f9c68edc94",
+ "instance_sha": "7320ee4753f5b78f90916d411bd2a22146d51e8b7c67e54db401d621f3fc0358",
+ "schema": "eai-libero-max-instance/1"
+}

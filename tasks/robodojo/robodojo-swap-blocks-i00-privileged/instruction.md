@@ -71,7 +71,7 @@ failure at once; fewer than 3 at the end means no success.
 the press count, then the current stage; all conditions of a stage must hold at the same action boundary, and at most
 one stage passes per action. A cap pressed and let up again within a single action is never seen. A passed stage stays
 passed. Success is declared at the first action boundary where all 12 stages have passed and exactly 3 presses are
-counted, and the episode ends. A 4th counted press ends the episode as a
+counted. A 4th counted press ends the episode as a
 failure at once.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows
@@ -97,8 +97,7 @@ stage still needs its own press: the plain plan is to pull the cap above 0.95 an
 three press stages, and never otherwise. Pressing the cap from its rest without pulling it up first is not counted,
 but it is still "pressed" for a press stage, so a first press from rest passes stage 3 while leaving the count one
 short. A block counts as "on" a mat only when nearly centred on it and resting on it (centre within about
-2.2 cm horizontally). The blocks' turn about the vertical is not checked. Release of a block is not checked
-directly.
+2.2 cm horizontally). The blocks' turn about the vertical is not checked.
 
 ## Deliverable
 Write the final trajectory to `/app/output/trajectory.npz` with `Session.save_trajectory(...)` (below). It is replayed

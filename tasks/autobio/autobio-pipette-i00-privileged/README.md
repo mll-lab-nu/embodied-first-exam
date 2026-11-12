@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `autobio-pipette-i00-standard` |
 | Simulator / robot | `autobio` / `ur5e-dexhand-2f85-bimanual` |
-| Family / instance | `pipette` / seed 0 |
+| Family / instance | `pipette` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |

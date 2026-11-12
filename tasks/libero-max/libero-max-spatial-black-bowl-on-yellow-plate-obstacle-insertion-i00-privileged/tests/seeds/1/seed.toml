@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-object-spatial-t00-i08-obstacle_insertion-d1-p195"
+new = "pro-object-spatial-t00-i01-obstacle_insertion-d1-p195"
+
+[[replace]]
+old = "initial state 8)"
+new = "initial state 1)"

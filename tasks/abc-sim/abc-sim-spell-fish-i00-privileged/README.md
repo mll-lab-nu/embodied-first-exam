@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `abc-sim-spell-fish-i00-standard` |
 | Simulator / robot | `mujoco` / `i2rt-yam-bimanual` |
-| Family / instance | `spell_fish` / seed 0 |
+| Family / instance | `spell_fish` / seed 0 (allowed seeds: [0, 13, 14]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:abc-sim-0.3.0` |

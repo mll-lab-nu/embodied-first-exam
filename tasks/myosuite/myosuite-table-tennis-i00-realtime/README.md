@@ -6,7 +6,7 @@
 | Mode | realtime (`eai-standard/2.3`) |
 | Twin | `myosuite-table-tennis-i00-privileged` |
 | Simulator / robot | `myosuite` / `myoarm-torso` |
-| Family / instance | `table_tennis` / seed 0 |
+| Family / instance | `table_tennis` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `none` — a successful episode of the privileged twin (GPT-6 Luna xhigh, trial `myosuite-table-tennis-i00-privil__SMNgbHk`, 82 rows) planned from step 0 in one `submit(..., at=0)` at S = 1 succeeds live and in the fresh replay, with no stall (2026-10-14); the standard twin's evidence holds for the same instance and rule; human review in PR #201 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Real time | slowdown S = 1 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RCB_SLOWDOWN`'s default); reset budget 10 (`RCB_RESET_BUDGET`'s default) (PROTOCOL §3) |

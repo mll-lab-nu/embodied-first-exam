@@ -6,7 +6,7 @@
 | Mode | realtime (`eai-standard-realtime/1.0`) |
 | Twin | `embodied-olympics-match-badminton-duelrl-i01-privileged` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `badminton_duel` / seed 1001 |
+| Family / instance | `badminton_duel` / seed 1001 (allowed seeds: [1001, 1, 2]; PROTOCOL §2) |
 | Oracle | `partial` — RLBM 2026-10-16, policy bm_cem_v1 with the true shuttle state (v1.1; the shipped policy has no swing option): on this instance (seed 1001, vanilla Harbor 0.23.0) our camera-only reference lost 1:11 (valid, deterministic) and an Azure Astra precheck was 5:5 when Astra forfeited by ready_timeout; live service batch (built-in RL on B, camera reference over HTTP on A, seeds 1-10 x both first servers): reference 0/20 (16 valid, 40:176); in-process (truth, S = 20): mirror RL vs RL seat A 21/40, first server 15/40; as seat A of match-wallclock it beat level 3 in 19 of 20 seeds (217:124) and levels 4 and 5 in 20 of 20; against it on seat B the truth reference won 1/20, short-random, centre, random and nop 0/20; replays identical; limits as the reference |
 | Agent time budget | 14400 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Real time | slowdown S = 20 (the world runs at 1/S of real speed: one control step every S x control_dt s of wall time; `RO_SLOWDOWN`'s default) (PROTOCOL §3) |

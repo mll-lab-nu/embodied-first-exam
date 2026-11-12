@@ -1,0 +1,3 @@
+[[replace]]
+old = "entry 0 of RoboWits' `eval_dataset_50/17.json`"
+new = "entry 2 of RoboWits' `eval_dataset_50/17.json`"

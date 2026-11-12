@@ -1,0 +1,11 @@
+[[replace]]
+old = "The table top is at z = 0.946. Arm base (`link0`): link0 [-0.75, 0.0, 0.924]."
+new = "The table top is at z = 0.964. Arm base (`link0`): link0 [-0.75, 0.0, 0.924]."
+
+[[replace]]
+old = "`bucket_pick_demo_10_2026-03-10_18-19-00_120725`"
+new = "`bucket_pick_demo_10_2026-03-11_21-13-31_800437`"
+
+[[replace]]
+old = "`1cb042bf6d46ad45`"
+new = "`9950998ccf5eb941`"

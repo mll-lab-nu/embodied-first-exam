@@ -37,7 +37,9 @@ invariants of Appendix H bind and no task value overrides them), `docs/protocol/
   duration. Checks: `ci_checks/check-cutoffs.py` (advisory), the twins' equal number `ci_checks/check-twins.py` (H.7).
 - Seeds: `[metadata] instance_seed` is the default seed, `[metadata.seeds]` only where a task allows others (PROTOCOL
   §2; how a runner draws one: docs/protocol/running.md "Seeds"). Committed non-default instances live under the
-  privileged task's `tests/seeds/<seed>/` (never under `environment/`); `ci_checks/check-seeds.py` checks them.
+  privileged task's `tests/seeds/<seed>/` (never under `environment/`): the instance files, the seed's other files at
+  their paths (a per-seed `solution/`) and a `seed.toml` of text replacements (pinned hashes, the scene's description),
+  all put in place by `scripts/task_seed.py materialize`; `ci_checks/check-seeds.py` checks them.
 - CI has two tiers. `ci_checks/run_invariants.sh [task dirs]` (the required job `invariants`) runs only the checks that
   enforce PROTOCOL Appendix H and fails on any failure, error or incomplete run; `ci_checks/run_all.sh [task dirs]` runs
   it and then every advisory check (`--tier advisory` alone: exit 3 = warnings only). New per-task check =

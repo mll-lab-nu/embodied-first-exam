@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `dexjoco-bimanual-unlock-ipad-i00-standard` |
 | Simulator / robot | `dexjoco` / `franka-allegro-bimanual` |
-| Family / instance | `bimanual_unlock_ipad` / seed 0 |
+| Family / instance | `bimanual_unlock_ipad` / seed 0 (allowed seeds: [0, 3, 4]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:dexjoco-0.1.2` |

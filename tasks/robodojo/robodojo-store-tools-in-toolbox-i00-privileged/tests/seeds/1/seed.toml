@@ -1,0 +1,15 @@
+[[replace]]
+old = "## Success (RoboDojo's own check for this task)\nThe objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, \"away\" = +y, away from the arms):\n- the toolbox: the open teal tray with moulded tool recesses in the middle of the table, 27.7 cm wide, 27.4 cm deep and\n  5 cm tall, a carrying-handle cut-out in its left wall; it is fixed in place [toolbox];\n- the hammer: silver claw hammer with a dark grip, lying flat on the far left, handle pointing toward you, head at the\n  far end, 24 cm long [hammer];\n- the wrench: black-handled adjustable wrench lying flat left of the toolbox, handle toward you, jaw at the far end,\n  17 cm long [wrench];\n- the tape measure: the small yellow tape measure (7 x 7 cm, 3 cm thick) lying flat on one of its round faces just right of the\n  toolbox\n  [tape_measure];\n- the pliers: yellow-and-black-handled pliers lying flat on the far right, handles toward you, jaws at the far end,\n  15.5 cm long [pliers]."
+new = "## Success (RoboDojo's own check for this task)\nThe objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, \"away\" = +y, away from the arms):\n- the toolbox: the open teal tray with moulded tool recesses in the middle of the table, 27.7 cm wide, 27.4 cm deep and\n  5 cm tall, a carrying-handle cut-out in its left wall; it is fixed in place [toolbox];\n- the hammer: silver claw hammer with a dark grip, lying flat left of the toolbox, handle pointing toward you, head at\n  the far end, 24 cm long [hammer];\n- the wrench: black-handled adjustable wrench lying flat on the far left, a little nearer to you than the hammer, handle\n  toward you, jaw at the far end, 17 cm long [wrench];\n- the tape measure: the small yellow tape measure (7 x 7 cm, 3 cm thick) lying flat on one of its round faces on the\n  far right, toward the back [tape_measure];\n- the pliers: yellow-and-black-handled pliers lying flat right of the toolbox, nearer to you, handles toward you, jaws\n  at the far end, 15.5 cm long [pliers]."
+
+[[replace]]
+old = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/0/store_tools_in_toolbox_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
+new = "This is a *fixed scene instance*: one of RoboDojo's own evaluation layouts (`arx_x5/1/store_tools_in_toolbox_0.json`), frozen; the objects and the\nrobot's start pose never change between resets. You may reset and retry as many times as you want. Your deliverable is\n**one replayable trajectory**, not a general policy."
+
+[[replace]]
+old = "arx_x5/0/store_tools_in_toolbox_0.json"
+new = "arx_x5/1/store_tools_in_toolbox_0.json"
+
+[[replace]]
+old = "sha256 `e5afcda29f1d149b`"
+new = "sha256 `b9c52d46c45e002c`"

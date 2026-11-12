@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-object-texture-10-t00-i02-sensor_noise_onset-d0-p195"
+new = "pro-object-texture-10-t00-i01-sensor_noise_onset-d0-p195"
+
+[[replace]]
+old = "initial state 2)"
+new = "initial state 1)"

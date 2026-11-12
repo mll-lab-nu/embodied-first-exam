@@ -32,6 +32,11 @@ expert_time_estimate_hours = 3.0
 oracle = "none"
 oracle_evidence = "no reference solution (BiGym 2.0 ships no expert or planner; its demonstrations and its agents' programs stay off the agent's network); positive example graded 1 by the separate verifier: bigym2-stack-blocks-i00-privileg__Rz4Pgdi (run codex-gpt6_luna-medium, 2026-10-08, on an earlier text of the privileged task; regraded by its current verifier); human review in PR #123"
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [0, 620100, 620101]
+
 [verifier]
 timeout_sec = 900.0
 environment_mode = "separate"

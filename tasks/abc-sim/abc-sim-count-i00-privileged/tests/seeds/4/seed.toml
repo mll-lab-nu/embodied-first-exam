@@ -1,0 +1,15 @@
+[[replace]]
+old = "state hash `080ddb7334cfb5d4`"
+new = "state hash `81eb5115e9edc384`"
+
+[[replace]]
+old = "`solution/oracle.npy`, 277 rows"
+new = "`solution/oracle.npy`, 714 rows"
+
+[[replace]]
+old = "put all yellow triangles in the box"
+new = "put all purple triangles in the box"
+
+[[replace]]
+old = "every yellow triangular prism on the table"
+new = "every purple triangular prism on the table"

@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Memory**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up the two T-shaped blocks, exchange their positions, and set each down with the orientation the other one had, then return the arm(s) to the start pose.
@@ -15,9 +15,8 @@ RoboDojo's own instruction for this scene: *"Pick up the two T-shaped blocks, sw
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms):
 - the red T: a flat T-shaped block (8 cm long, 6 cm wide across the crossbar, 1.5 cm thick) lying flat just left of
-  centre near the front; its crossbar on its right, its stem pointing left (world -x) [t0];
-- the blue T: the same shape and size, lying flat about 16 cm to its right (centre to centre); its crossbar at its
-  far-left end, its stem pointing toward you and about 40 deg to the right [t1].
+  centre near the front [t0];
+- the blue T: the same shape and size, lying flat about 16 cm to its right (centre to centre) [t1].
 The two blocks are the same model apart from the colour (identical geometry in the asset metadata).
 
 A T's *centre* below is the point RoboDojo tests for it (its origin): the middle of its 8 x 6 cm bounding rectangle,
@@ -30,11 +29,9 @@ action). All of these must hold at the same action boundary:
   root].
 - **Red T turned like the blue T was.** Its full 3-D orientation within 3 deg (strictly less) of the blue T's start
   orientation [t0 quaternion vs t1 initial quaternion; is_qpos_close, 3 deg]: lying flat on the same face as at the
-  start, its stem pointing toward you and about 40 deg to the right. From its start heading that is a turn of about
-  127 deg counterclockwise seen from above (or 233 deg clockwise).
-- **Blue T turned like the red T was.** Its orientation within 3 deg of the red T's start orientation: lying flat, the
-  same face up, its stem pointing left (world -x, 3 deg off it toward the front as the red T is now), its crossbar on
-  its right: a turn of about 127 deg clockwise seen from above.
+  start, turned the way the blue T was turned at the start.
+- **Blue T turned like the red T was.** Its orientation within 3 deg of the red T's start orientation [t1 vs t0
+  initial quaternion]: lying flat, the same face up, turned the way the red T was turned at the start.
 - **Both arms back** [all_robot_back_to_origin]: each arm's end-effector within 0.15 m of its start position on each of
   x, y and z separately, and within 20 deg of its start orientation. The grippers need not be open.
 None of the four block conditions holds at the start. Turning a T over onto its other face makes it look the same from above (the T is
@@ -42,7 +39,7 @@ mirror-symmetric) but is 180 deg off in 3-D and fails.
 
 **When it is checked.** After every action (never between actions), all conditions together; they form a single stage,
 nothing is latched, and the order does not matter. Success is declared at the first action boundary where everything
-holds, and the episode ends. Otherwise the episode runs until the step limit (see Episode length). No condition ends the
+holds. Otherwise the episode runs until the step limit (see Episode length). No condition ends the
 episode early as a failure.
 
 **Episode length.** A step limit of **400 steps** (RoboDojo's own limit for this task, 16 s of

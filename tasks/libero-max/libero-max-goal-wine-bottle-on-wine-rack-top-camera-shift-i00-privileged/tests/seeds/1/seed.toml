@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-view-occlusion-goal-t09-i00-camera_shift-d0-p195"
+new = "pro-view-occlusion-goal-t09-i01-camera_shift-d0-p195"
+
+[[replace]]
+old = "initial state 0)"
+new = "initial state 1)"

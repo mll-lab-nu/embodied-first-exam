@@ -6,7 +6,7 @@
 | Mode | standard (`eai-standard/2.2`) |
 | Twin | `autobio-insert-centrifuge-5430-i00-privileged` |
 | Simulator / robot | `autobio` / `ur5e-robotiq-2f85` |
-| Family / instance | `insert_centrifuge_5430` / seed 0 |
+| Family / instance | `insert_centrifuge_5430` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe-private:autobio-0.1.0` |

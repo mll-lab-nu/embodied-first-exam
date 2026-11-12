@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `mujoco_playground_panda_pick_cube_orientation-standard` |
 | Simulator / robot | `mujoco` / `franka-panda` |
-| Family / instance | `mujoco_playground/PandaPickCubeOrientation` / seed 60417 |
+| Family / instance | `mujoco_playground/PandaPickCubeOrientation` / seed 60417 (allowed seeds: [60417, 60418, 60419]; PROTOCOL §2) |
 | Oracle | `full` |
 | Agent time budget | 1800 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:mujoco-0.1.2` |

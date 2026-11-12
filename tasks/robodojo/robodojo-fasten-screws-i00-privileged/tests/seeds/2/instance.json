@@ -1,0 +1,901 @@
+{
+ "task": "fasten_screws",
+ "seed": 2,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/2/fasten_screws_0.json",
+ "layout_sha256": "b5d53770cb9d8d5fb8355bd896b03207dad7528128eda78ff3535cd523d3b723",
+ "layout": {
+  "Rigid": {
+   "factory_nut": [
+    {
+     "category": "factory_nut",
+     "category_idx": 4,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": "up",
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "nut0",
+     "default_pos": [
+      -0.3843286247349804,
+      -0.16836825741576789,
+      0.7736000000000001
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.03,
+      "friction": 0.25,
+      "size": [
+       0.0351,
+       0.0405,
+       0.019
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "factory_nut",
+     "category_idx": 3,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": "up",
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "nut1",
+     "default_pos": [
+      -0.3265364950906866,
+      -0.12256355948009567,
+      0.7736000000000001
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.03,
+      "friction": 0.25,
+      "size": [
+       0.0351,
+       0.0405,
+       0.019
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    },
+    {
+     "category": "factory_nut",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.45,
+      0.45
+     ],
+     "ylim": [
+      -0.25,
+      -0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": "up",
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "nut2",
+     "default_pos": [
+      -0.21661640926635192,
+      -0.05451638214886492,
+      0.7736000000000001
+     ],
+     "default_ori": [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.03,
+      "friction": 0.25,
+      "size": [
+       0.0351,
+       0.0405,
+       0.019
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Geometry": {
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "factory_bolt": [
+    {
+     "category": "factory_bolt",
+     "category_idx": 4,
+     "group": null,
+     "xlim": [
+      [
+       -0.35,
+       -0.15
+      ],
+      [
+       0.15,
+       0.35
+      ]
+     ],
+     "ylim": [
+      -0.2,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.035,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bolt0",
+     "default_pos": [
+      0.27549462484594833,
+      -0.18748121790966066,
+      0.765
+     ],
+     "default_ori": [
+      0.9999987200024575,
+      0.0,
+      0.0,
+      -0.0015999979520039322
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.05,
+      "friction": 0.25,
+      "size": [
+       0.036,
+       0.0415,
+       0.0525
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    },
+    {
+     "category": "factory_bolt",
+     "category_idx": 3,
+     "group": null,
+     "xlim": [
+      [
+       -0.35,
+       -0.15
+      ],
+      [
+       0.15,
+       0.35
+      ]
+     ],
+     "ylim": [
+      -0.2,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.035,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bolt1",
+     "default_pos": [
+      -0.24354287870895347,
+      -0.17049518496216992,
+      0.765
+     ],
+     "default_ori": [
+      0.9999987200024575,
+      0.0,
+      0.0,
+      -0.0015999979520039322
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.05,
+      "friction": 0.25,
+      "size": [
+       0.036,
+       0.0415,
+       0.0525
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    },
+    {
+     "category": "factory_bolt",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      [
+       -0.35,
+       -0.15
+      ],
+      [
+       0.15,
+       0.35
+      ]
+     ],
+     "ylim": [
+      -0.2,
+      -0.15
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.035,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "bolt2",
+     "default_pos": [
+      0.16456944578467553,
+      -0.19120608346503512,
+      0.765
+     ],
+     "default_ori": [
+      0.9999987200024575,
+      0.0,
+      0.0,
+      -0.0015999979520039322
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.05,
+      "friction": 0.25,
+      "size": [
+       0.036,
+       0.0415,
+       0.0525
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_nolight",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0122",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0564",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "85cb916276262bfa",
+ "step_lim": 1900,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Insert and tighten each screw into the nut of the same color.",
+ "labels": [
+  "nut0",
+  "nut1",
+  "nut2",
+  "camera_stand",
+  "bolt0",
+  "bolt1",
+  "bolt2"
+ ],
+ "objects": {
+  "nut0": {
+   "position": [
+    -0.38433,
+    -0.16837,
+    0.77364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    -0.0,
+    -0.0,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     0.0173,
+     -0.0203,
+     0.0105
+    ],
+    [
+     0.0173,
+     0.0203,
+     0.0105
+    ],
+    [
+     -0.0179,
+     -0.0203,
+     0.0105
+    ],
+    [
+     -0.0179,
+     0.0203,
+     0.0105
+    ],
+    [
+     0.0173,
+     -0.0203,
+     -0.0086
+    ],
+    [
+     0.0173,
+     0.0203,
+     -0.0086
+    ],
+    [
+     -0.0179,
+     -0.0203,
+     -0.0086
+    ],
+    [
+     -0.0179,
+     0.0203,
+     -0.0086
+    ]
+   ]
+  },
+  "nut1": {
+   "position": [
+    -0.32654,
+    -0.12256,
+    0.77364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     0.0173,
+     -0.0203,
+     0.0105
+    ],
+    [
+     0.0173,
+     0.0203,
+     0.0105
+    ],
+    [
+     -0.0179,
+     -0.0203,
+     0.0105
+    ],
+    [
+     -0.0179,
+     0.0203,
+     0.0105
+    ],
+    [
+     0.0173,
+     -0.0203,
+     -0.0086
+    ],
+    [
+     0.0173,
+     0.0203,
+     -0.0086
+    ],
+    [
+     -0.0179,
+     -0.0203,
+     -0.0086
+    ],
+    [
+     -0.0179,
+     0.0203,
+     -0.0086
+    ]
+   ]
+  },
+  "nut2": {
+   "position": [
+    -0.21662,
+    -0.05452,
+    0.77364
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    -0.0
+   ],
+   "bbox_corners": [
+    [
+     0.0173,
+     -0.0203,
+     0.0105
+    ],
+    [
+     0.0173,
+     0.0203,
+     0.0105
+    ],
+    [
+     -0.0179,
+     -0.0203,
+     0.0105
+    ],
+    [
+     -0.0179,
+     0.0203,
+     0.0105
+    ],
+    [
+     0.0173,
+     -0.0203,
+     -0.0086
+    ],
+    [
+     0.0173,
+     0.0203,
+     -0.0086
+    ],
+    [
+     -0.0179,
+     -0.0203,
+     -0.0086
+    ],
+    [
+     -0.0179,
+     0.0203,
+     -0.0086
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  },
+  "bolt0": {
+   "position": [
+    0.27549,
+    -0.18748,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    -0.00158
+   ],
+   "bbox_corners": [
+    [
+     -0.018,
+     0.0208,
+     0.0525
+    ],
+    [
+     -0.018,
+     0.0208,
+     0.0
+    ],
+    [
+     -0.018,
+     -0.0208,
+     0.0525
+    ],
+    [
+     -0.018,
+     -0.0208,
+     0.0
+    ],
+    [
+     0.018,
+     0.0208,
+     0.0525
+    ],
+    [
+     0.018,
+     0.0208,
+     0.0
+    ],
+    [
+     0.018,
+     -0.0208,
+     0.0525
+    ],
+    [
+     0.018,
+     -0.0208,
+     0.0
+    ]
+   ]
+  },
+  "bolt1": {
+   "position": [
+    -0.24354,
+    -0.1705,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    -0.00158
+   ],
+   "bbox_corners": [
+    [
+     -0.018,
+     0.0208,
+     0.0525
+    ],
+    [
+     -0.018,
+     0.0208,
+     0.0
+    ],
+    [
+     -0.018,
+     -0.0208,
+     0.0525
+    ],
+    [
+     -0.018,
+     -0.0208,
+     0.0
+    ],
+    [
+     0.018,
+     0.0208,
+     0.0525
+    ],
+    [
+     0.018,
+     0.0208,
+     0.0
+    ],
+    [
+     0.018,
+     -0.0208,
+     0.0525
+    ],
+    [
+     0.018,
+     -0.0208,
+     0.0
+    ]
+   ]
+  },
+  "bolt2": {
+   "position": [
+    0.16457,
+    -0.19121,
+    0.765
+   ],
+   "orientation_wxyz": [
+    1.0,
+    0.0,
+    0.0,
+    -0.00158
+   ],
+   "bbox_corners": [
+    [
+     -0.018,
+     0.0208,
+     0.0525
+    ],
+    [
+     -0.018,
+     0.0208,
+     0.0
+    ],
+    [
+     -0.018,
+     -0.0208,
+     0.0525
+    ],
+    [
+     -0.018,
+     -0.0208,
+     0.0
+    ],
+    [
+     0.018,
+     0.0208,
+     0.0525
+    ],
+    [
+     0.018,
+     0.0208,
+     0.0
+    ],
+    [
+     0.018,
+     -0.0208,
+     0.0525
+    ],
+    [
+     0.018,
+     -0.0208,
+     0.0
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ]
+}

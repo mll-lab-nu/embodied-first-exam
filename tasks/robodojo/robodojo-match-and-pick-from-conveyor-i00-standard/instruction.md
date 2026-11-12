@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Memory**.
 
-Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
-ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
+Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
+completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Watch the first object that appears on the conveyor, remember it, and pick up the identical object when it shows up again (lift it more than 10 cm).
@@ -27,7 +27,7 @@ The success condition:
   how it is turned do not matter.
 
 **When it is checked.** After every action (never between actions), on the current state; one stage, one condition.
-Success is declared at the first action boundary where the matching copy is more than 10 cm up, and the episode ends.
+Success is declared at the first action boundary where the matching copy is more than 10 cm up.
 Nothing else is required: no placing, releasing or returning the arms. Touching or lifting any other object (the first
 object included) is neither penalised nor credited, and no condition ends the episode early as a failure; if the
 matching copy is carried away by the belt or falls off, the episode just runs on until it is stopped and fails.

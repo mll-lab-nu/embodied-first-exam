@@ -6,7 +6,7 @@
 | Mode | privileged |
 | Twin | `myosuite-relocate-i00-standard` |
 | Simulator / robot | `myosuite` / `myoarm` |
-| Family / instance | `relocate` / seed 0 |
+| Family / instance | `relocate` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `none` — a successful model trial on this frozen instance: Codex + GPT-6 Luna (run `codex-gpt6_luna-high`, via an OpenRouter adapter before protocol v1.0, 2026-09-29), trial `myosuite-relocate-i00__PjqTvZ2` (231 rows); today's verifier scores its trajectory 1 in two fresh trials (tasks/myosuite/README.md); human review in PR #65 |
 | Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
 | Base image | `ghcr.io/mll-lab-nu/efe:myosuite-0.1.1` |

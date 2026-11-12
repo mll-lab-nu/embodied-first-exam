@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-task-10-t05-i00-illumination_switch-d1-p195"
+new = "pro-task-10-t05-i01-illumination_switch-d1-p195"
+
+[[replace]]
+old = "initial state 0)"
+new = "initial state 1)"

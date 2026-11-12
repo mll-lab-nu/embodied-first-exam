@@ -67,6 +67,10 @@ configuration (`config_key`; running.md "Results").
 | Validated | `[metadata] validated`, else `oracle = "full"` | a recorded marker, not part of the configuration: validated and unvalidated tasks are ranked together |
 | Stricter honour rules | `[metadata.honour] stricter` | none (never looser rules) |
 
+Seeds: each task provides three seeds where it can, its default seed and two more (`[metadata.seeds] allowed`). Where
+a task has fewer distinct seeds, a seed may be repeated to make three; a task that declares none has its default seed
+three times.
+
 ## 3. Modes
 
 The modes live in one registry, `MODE_REGISTRY` in `scripts/task_conventions.py`; a new mode is one entry there plus a

@@ -1,0 +1,7 @@
+[[replace]]
+old = "pro-visual-noise-glare-goal-t07-i08-sensor_noise_onset-d0-p195"
+new = "pro-visual-noise-glare-goal-t07-i01-sensor_noise_onset-d0-p195"
+
+[[replace]]
+old = "initial state 8)"
+new = "initial state 1)"

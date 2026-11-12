@@ -1,0 +1,15 @@
+[[replace]]
+old = "At the start the two cups stand on the counter in front of you (about 0.7 m away, 14° to your left, 0.86 m above the floor; about 0.6 m away, straight ahead, 0.86 m above the floor); the wall cabinet above the counter has two closed glass doors, their handles about 0.5 m away, straight ahead, 1.24 m above the floor and about 0.5 m away, straight ahead, 1.24 m above the floor, and its bottom shelf is about 0.8 m away, straight ahead, 1.15 m above the floor."
+new = "At the start the two cups stand on the counter in front of you (about 0.6 m away, 14° to your right, 0.86 m above the floor; about 0.7 m away, straight ahead, 0.86 m above the floor); the wall cabinet above the counter has two closed glass doors, their handles about 0.5 m away, straight ahead, 1.24 m above the floor and about 0.5 m away, straight ahead, 1.24 m above the floor, and its bottom shelf is about 0.8 m away, straight ahead, 1.15 m above the floor."
+
+[[replace]]
+old = "(BiGym's `put_cups`, reset with seed 0)"
+new = "(BiGym's `put_cups`, reset with seed 620100)"
+
+[[replace]]
+old = "the task reset with seed 0, t = 0 state hash `5f4cdf3a89e1fa8ae86ad094e8b0ca9d1f281017`"
+new = "the task reset with seed 620100, t = 0 state hash `a60f3d5e532dec54e4f4374fcc814b3944ec6f0b`"
+
+[[replace]]
+old = "(no network but the model APIs; seed 0 is none of their seeds)"
+new = "(no network but the model APIs; seed 620100 is none of their seeds)"

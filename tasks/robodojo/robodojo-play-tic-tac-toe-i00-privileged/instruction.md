@@ -50,7 +50,7 @@ middle of the hole at table level).
 
 **When it is checked.** After every action (never between actions). The board-full condition is one stage: all nine
 position tests and all nine height tests at the same action boundary. Success is declared at the first action
-boundary where it holds, and the episode ends. The stay-home rule is counted after every action; the first violation
+boundary where it holds. The stay-home rule is counted after every action; the first violation
 ends the episode as a failure.
 
 **Episode length.** No step cap: the episode ends at the first action where the task's check passes (success; later rows

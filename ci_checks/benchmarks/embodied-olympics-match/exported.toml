@@ -16,6 +16,9 @@
 # efe:olympiad-*, efe:olympiad-soccer-* and efe:soccer-joint-* tags) in the Dockerfiles, sport.toml / toolkit.toml image
 # fields, test docstrings and README, the bundle hashes of those files, and the files-only image pin
 # embodied-olympics-match-files 0.3.0 (it also carries the paths and bytes of embodied-olympics-match-sim-files).
+# Every task: [metadata.seeds] in task.toml and the privileged twin's tests/seeds/<seed>/ (two more seeds per match:
+# the first two public seeds of the instance's format and level cell in sport.toml [official], else the sport's
+# development seeds 1 and 2; scripts/task_seed.py materialize sets RO_SEED, match_instance.json and the texts).
 
 # The protocol each mode of these tasks serves (PROTOCOL §3): ci_checks/check-protocol.py accepts it for the
 # directories listed below only.

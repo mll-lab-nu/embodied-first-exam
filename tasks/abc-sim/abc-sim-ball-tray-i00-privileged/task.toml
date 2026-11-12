@@ -16,6 +16,12 @@ oracle = "full"
 instance_seed = 0
 expert_time_estimate_hours = 4.0
 
+[metadata.seeds]
+# the seeds a runner may draw from (a list, { from = A, to = B } or "any") and the ones the reference solution
+# under solution/ is for, where they are not the default seed alone (docs/protocol/README.md §2)
+allowed = [0, 16, 19]
+oracle = [0, 16, 19]
+
 [verifier]
 timeout_sec = 6000.0                # two side-by-side replays of at most 20,000 rows (2400 s each at the slowest scene)
                                    # and the filmed one; a reference replays in 1-100 s
