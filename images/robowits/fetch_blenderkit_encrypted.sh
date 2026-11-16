@@ -43,8 +43,9 @@ command -v "$HF" >/dev/null || { echo "the hf CLI (pip install -U huggingface_hu
 "$HF" auth whoami >/dev/null 2>&1 || { echo "not logged in to Hugging Face: run 'hf auth login' first" >&2; exit 2; }
 
 mkdir -p -m 700 "$DEST"
-if ! "$HF" download "$REPO" --repo-type dataset --local-dir "$DEST" \
-     --include "models/*" "robowits_blenderkit.key" "ATTRIBUTION.csv"; then
+# two calls: hf >= 1.0 takes one pattern per --include, and extra words become FILENAMES that override --include
+if ! { "$HF" download "$REPO" --repo-type dataset --local-dir "$DEST" robowits_blenderkit.key ATTRIBUTION.csv &&
+       "$HF" download "$REPO" --repo-type dataset --local-dir "$DEST" --include "models/*"; }; then
   echo "download failed: request access first at $PAGE (log in and accept the terms), then retry" >&2; exit 1
 fi
 # the dataset keeps the models under models/; the tasks read <dir>/<uuid>/obj.glb.enc next to the key
