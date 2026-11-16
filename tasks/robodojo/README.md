@@ -39,9 +39,9 @@ The first task builds the simulator image from public sources (below); later tas
 ## Tasks
 One frozen default instance per task, RoboDojo's own evaluation layout `Assets/Eval_Layout/RoboDojo/arx_x5/0/<task>_0.json`
 (seed 0; seeds 1 and 2, below), each a privileged task `robodojo-<task>-i00-privileged` and its standard twin `robodojo-<task>-i00-standard`
-(`eai-standard/2.2`), except the six tasks whose physics does not replay bit for bit (Determinism, below): they are
-standard only, graded by the live episode. 48 privileged + 54 standard = 102 task directories. `oracle = "none"` for every
-task (below).
+(`eai-standard/2.2`), the six tasks whose physics does not replay bit for bit (Determinism, below) included: their
+privileged twins are graded as every privileged task, on up to 3 fresh replays, any success counting (PROTOCOL §4).
+54 privileged + 54 standard = 108 task directories. `oracle = "none"` for every task (below).
 
 The task directories are the deliverable; the tooling that built them is kept outside this repository. Each task carries:
 - in its instruction, what the task asks and exactly what its check tests (every predicate, threshold, stage and
@@ -62,8 +62,7 @@ opponent is seeded by the layout index too, so they replay the same game): those
 RoboDojo's instruction (target, colours, numbers, order); the robot's start stays. RoboDojo passes the evaluation seed on
 to the task, so the support arm's recorded moves in `imitate_sorting_sequence` are that seed's too. Each seed's instance
 (`make-instance --seed <k> --layout 0`, with the default instance's `physics` and `determinism` fields) and its
-instruction changes (`seed.toml`) are in `tests/seeds/<k>/` of the privileged task (of the standard task for the six
-standard-only ones); `scripts/task_seed.py materialize` puts them in place. Each seed passed the default's determinism
+instruction changes (`seed.toml`) are in `tests/seeds/<k>/` of the privileged task; `scripts/task_seed.py materialize` puts them in place. Each seed passed the default's determinism
 test (a second fresh process rebuilds the recorded state hash, and the 120-action driver ends in the same state in both
 processes; the six verdict tasks are recorded, not compared), on an L40S, except `store_laptop_and_headphones_random` seed 1:
 its laptop settles in one of two states about 2 µm apart (4 of 9 fresh rebuilds), so that seed's instance is graded by
@@ -125,13 +124,15 @@ Test per task (`make-instance`, then two fresh-process replays of a 120-action t
 
 **The six tasks whose physics does not replay bit for bit** (`fold_clothes`, `fold_clothes_random`, `make_toast_random`,
 `pour_liquid_into_cup`, `pour_liquid_into_cup_random`, `pour_by_language`; instance.json `"determinism": "verdict"` with
-the reason) are **standard only**. An open-loop trajectory of them cannot be graded reproducibly: the same file can
-succeed in one fresh replay and fail in the next, so a privileged twin, whose only evidence is replay, would score
-chance. In standard mode the trusted service runs the episode and the agent never holds the simulator, so the live
-result is the verdict, as for every standard task. A live success may include some luck of the physics. An episode of
-the six that resumed after a service crash (resume class `approx`) is graded on its live state after the resume;
-`reward.json` reports `resumes` and `resume_state_mismatch` (docs/protocol/standard_mode.md §13.1). Their privileged task names
-are not used.
+the reason): the same trajectory can succeed in one fresh replay and fail in the next. PROTOCOL v2.4 §4 grades such a
+privileged task on up to N fresh replays, stopping at the first success, the attempt succeeding if any replay succeeds;
+RoboDojo declares N = 3 for every task (`[metadata] replays`, Grading below), so their privileged twins (added
+2026-11-16; standard only from 2026-10-11, #154, until then) are graded like the other 48. `"determinism": "verdict"` only
+means that the rebuilt layout's hash is recorded, not compared (`instance_exact`): neither a replay nor the standard
+service refuses the instance for it. A success may include some luck of the physics, in either mode. In standard mode
+the live result is the verdict, as for every standard task; an episode of the six that resumed after a service crash
+(resume class `approx`) is graded on its live state after the resume; `reward.json` reports `resumes` and
+`resume_state_mismatch` (docs/protocol/standard_mode.md §13.1).
 Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts rebuild to the recorded hashes and a
 120-action driver trajectory ends in the same state as on the 4090; every graded trial reports `instance_exact`.
 
@@ -147,8 +148,10 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
   `deterministic` and `state_identical` compare the end states of the replays run (evidence only, never the verdict;
   `determinism_checked` = 0 when only one ran). A replay whose process rebuilt the frozen layout to
   another state than `instance.json` records (`instance_exact` = 0) did not start from the frozen state and gives no
-  verdict (`instance_mismatch`, `grader_error` = `infra_error` = 1). Measured on one host, the physics of
-  the 48 privileged tasks replays bit for bit; graded replays run on other hosts and GPU models too, hence up to 3.
+  verdict (`instance_mismatch`, `grader_error` = `infra_error` = 1), except where `instance.json` sets
+  `"determinism": "verdict"` (the six tasks above, `store_laptop_and_headphones_random` seed 1): there the hash is
+  recorded, not compared. Measured on one host, the physics of 48 of the 54 tasks replays bit for bit, and of the six
+  above it does not; graded replays run on other hosts and GPU models too, hence up to 3 for every task.
 - standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4), the same rule for every task:
   `success = live_success`, RoboDojo's check as the service ran it after every action of the episode the agent ran (no
   end-of-episode hold: RoboDojo has none). The service writes `trajectory.npz` (the deliverable) and `episode.json` on
@@ -184,7 +187,7 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
 
 ## Crash recovery (standard mode, docs/protocol/standard_mode.md §13)
 Resume class `exact` (the resumed service is a fresh process whose journal replay is that process's first run), `approx` for
-the six standard-only tasks graded by the live episode. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test: RoboDojo
+the six tasks whose physics does not replay bit for bit. `RCB_STARTUP_TIMEOUT_S = 1800`. Acceptance test: RoboDojo
 has no oracle, so a driver client (12 joint_position chunks; not a solution) runs as Harbor's oracle on a copy of
 `robodojo-general-pickup-i00-standard`, and the service is killed with SIGKILL inside the 6th call, after 5 checkpoints.
 Expected: one exact resume (the checkpoint's state hash), the killed call rolled back, the driver's other chunks run,
@@ -265,7 +268,7 @@ fork: NVIDIA's cuRobo licence. Isaac Sim 5.1 and its wheels: NVIDIA proprietary 
 
 ## Standard-mode service details
 
-Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six standard-only tasks graded by the live episode (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.
+Serves `eai-standard/2.2`. Resume class `exact` (Isaac Lab, GPU PhysX: the resumed service is a fresh process, whose first run is bit-exact, measured on 48 of its 54 tasks; `make_toast` with PhysX enhanced determinism); `approx` for its six tasks whose physics does not replay bit for bit (`make_toast_random`, the three liquid tasks and the two cloth tasks: GPU PhysX particles and cloth do not replay bit for bit). For those six the verdict after a resume is the live state the resumed service continued from; `reward.json` reports `resumes` and `resume_state_mismatch`, at most two resumes are allowed as everywhere, and a success with `resumes > 0` is reported with those fields. `max_frames_per_call` = 3000.
 
 ## Screening
 
@@ -281,7 +284,7 @@ Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-By directory: 80 easy, 13 hard, 9 unverified, 0 pending.
+By directory: 80 easy, 13 hard, 9 unverified, 6 pending.
 
 | base | privileged | standard |
 |---|---|---|
@@ -296,8 +299,8 @@ By directory: 80 easy, 13 hard, 9 unverified, 0 pending.
 | `robodojo-fasten-screws-i00` | easy: Luna | easy: Luna |
 | `robodojo-fill-egg-holder-i00` | easy: Astra | hard |
 | `robodojo-fill-pen-holder-i00` | easy: Astra | easy: Astra, Gemini 4 Argon |
-| `robodojo-fold-clothes-i00` | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-fold-clothes-random-i00` | — | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-fold-clothes-i00` | pending | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-fold-clothes-random-i00` | pending | easy: Astra, Opus, Gemini 4 Argon |
 | `robodojo-general-pickup-i00` | easy: Luna | easy: Luna |
 | `robodojo-hang-mugs-i00` | easy: Astra, Opus | hard |
 | `robodojo-hang-mugs-random-i00` | hard | easy: Gemini 4 Argon |
@@ -306,7 +309,7 @@ By directory: 80 easy, 13 hard, 9 unverified, 0 pending.
 | `robodojo-insert-tubes-i00` | easy: Luna | unverified |
 | `robodojo-make-kong-i00` | easy: Astra, Opus, Gemini 3.8 Flash | hard (only Astra) |
 | `robodojo-make-toast-i00` | easy: Astra | hard |
-| `robodojo-make-toast-random-i00` | — | easy: Opus, Gemini 4 Argon |
+| `robodojo-make-toast-random-i00` | pending | easy: Opus, Gemini 4 Argon |
 | `robodojo-match-and-pick-from-conveyor-i00` | easy: Luna | easy: Luna |
 | `robodojo-organize-table-i00` | easy: Astra, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
 | `robodojo-pack-objects-into-box-i00` | easy: Astra, Opus, Gemini 4 Argon | hard |
@@ -317,9 +320,9 @@ By directory: 80 easy, 13 hard, 9 unverified, 0 pending.
 | `robodojo-play-xylophone-i00` | unverified | easy: Luna |
 | `robodojo-plug-in-charger-i00` | easy: Astra, Opus, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon |
 | `robodojo-pour-balls-into-vase-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash |
-| `robodojo-pour-by-language-i00` | — | easy: Opus |
-| `robodojo-pour-liquid-into-cup-i00` | — | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-pour-liquid-into-cup-random-i00` | — | easy: Astra, Opus, Gemini 3.8 Flash |
+| `robodojo-pour-by-language-i00` | pending | easy: Opus |
+| `robodojo-pour-liquid-into-cup-i00` | pending | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-pour-liquid-into-cup-random-i00` | pending | easy: Astra, Opus, Gemini 3.8 Flash |
 | `robodojo-press-by-number-i00` | easy: Luna | unverified |
 | `robodojo-push-t-i00` | easy: Astra, Opus, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus |
 | `robodojo-push-t-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash |

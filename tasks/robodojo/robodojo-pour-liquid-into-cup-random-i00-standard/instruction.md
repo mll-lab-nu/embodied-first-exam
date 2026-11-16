@@ -68,7 +68,7 @@ all particles.
   `meta["steps_left"]` what is left, `meta["time_left_s"]` the service's count of the time left.
 - There is nothing to hand in: the service records your episode as the trajectory and grades it. Leave your script at
   `/app/output/gen.py` for the record. The episode is graded as it stands when it ends or your time is up.
-- **Graded on your live episode.** This task's physics does not replay bit for bit (the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism)), so it has no privileged twin; the episode as it happened in the service decides.
+- **Graded on your live episode.** This task's physics does not replay bit for bit (the liquid is simulated as GPU PhysX particles, which are not bit-reproducible across processes (also with enhanced determinism)); the episode as it happened in the service decides.
 - **If the service crashes**, a call fails with a connection error: the simulator restarts and resumes the SAME episode
   (never a reset) in the state after the last call it completed, which you may not have received. `r.wait_ready()` waits
   until it answers again (resuming replays the episode so far, which can take minutes; the wall clock keeps running), then
