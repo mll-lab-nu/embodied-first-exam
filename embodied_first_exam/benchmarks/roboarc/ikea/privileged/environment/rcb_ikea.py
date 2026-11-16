@@ -258,8 +258,9 @@ def _zip_entries(path: str) -> int:
 
 def _check_members(path: str, nu: int, max_rows: int) -> None:
     """The file's members, from the zip directory and the .npy headers only (nothing is decompressed beyond a header):
-    `ctrl` a numeric (N, nu) array with 1 <= N <= max_rows, every other member small. A file that would not fit in
-    memory or lies about its contents is refused before it is read (a zip bomb is the deliverable's fault)."""
+    `ctrl` a numeric (N, nu) array with 1 <= N <= max_rows, `substeps` / `timestep` small, no member larger than
+    max_rows x nu numbers. A file that would not fit in memory or lies about its contents is refused before it is read
+    (a zip bomb is the deliverable's fault)."""
     import zipfile
     size = os.path.getsize(path)
     if size > max_rows * nu * 8 + (64 << 20):
@@ -277,9 +278,13 @@ def _check_members(path: str, nu: int, max_rows: int) -> None:
             raise InvalidTrajectory("the archive has two members of one name")
         if "ctrl.npy" not in infos:
             raise InvalidTrajectory("missing key 'ctrl'")
-        for name in ("substeps.npy", "timestep.npy"):
-            if name in infos and infos[name].file_size > MAX_SMALL_MEMBER:
-                raise InvalidTrajectory(f"member {name!r} is {infos[name].file_size} bytes (at most {MAX_SMALL_MEMBER})")
+        # Every member's unpacked size, by key and not only by the expected names: np.load reads a member named
+        # `substeps` (no .npy) as the key `substeps`, so a bound on `substeps.npy` alone would let a zip bomb through.
+        limit = max_rows * nu * 16 + 65536
+        for name, key in zip(names, keys):
+            cap = MAX_SMALL_MEMBER if key in ("substeps", "timestep") else limit
+            if infos[name].file_size > cap:
+                raise InvalidTrajectory(f"member {name!r} is {infos[name].file_size} bytes (at most {cap})")
         with zf.open("ctrl.npy") as f:
             version = np.lib.format.read_magic(f)
             if version == (1, 0):

@@ -47,9 +47,10 @@ def load_deliverable(path: str, max_rows: int, dim: int):
             info = {i.filename: i for i in z.infolist()}
         if "actions.npy" not in info:
             raise ValueError("no `actions` entry")
-        # refuse to load an `actions` array that cannot be within the cap (dim values per row, 16 bytes each at most)
-        if info["actions.npy"].file_size > max_rows * dim * 16 + 65536:
-            raise ValueError("`actions` is larger than the step cap allows")
+        # refuse to load anything larger than an `actions` array within the cap can be (dim values per row, 16 bytes each
+        # at most): every entry, since np.load reads an entry named `actions` (no .npy) before `actions.npy`
+        if max(i.file_size for i in info.values()) > max_rows * dim * 16 + 65536:
+            raise ValueError("an entry is larger than the step cap allows")
         with np.load(path, allow_pickle=False) as d:
             task = str(d["task"]) if "task" in d.files else None
             acts = np.asarray(d["actions"], dtype=np.float32)

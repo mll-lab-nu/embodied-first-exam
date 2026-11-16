@@ -625,7 +625,7 @@
     "instance_assets/mujoco/scene.json": "e04890b234141d9c302067c23138452c6d6f5ed6fc34405c18f8eeeb85feae50",
     "instance_assets/mujoco/scene.xml": "7dc164b9ff0f55de65ffc994c13b94f32f3bcaf17ae191082ff301b35c5ed59e"
   },
-  "tooling_sha256": "d8692e15964ac9f4c536d52b1c86d0418a4f4e37ec94f98e5d91d0b4ad0dd766",
+  "tooling_sha256": "f7f4eda0c86a9dcd68450159a9196660534e34a11c0dc7506d0fc0f00d922d36",
   "creation_source": {
     "sha256": "d1eb6f13b637abfdee0d4bb3aaa675b3ff352d6f02a76f856eb9e42b0e8c2d1b",
     "files": 437

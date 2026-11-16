@@ -65,6 +65,9 @@ def load_trajectory(path: str, task: str, action_dim: int, max_actions: int):
                 size.get("actions.npy", 1 << 62) > 1024 + max_actions * action_dim * 8:
             raise ValueError(f"task.npy / actions.npy missing or larger than a trajectory of this task can be: "
                              f"{ {k: size.get(k) for k in ('task.npy', 'actions.npy')} }")
+        # every entry, not only those two: np.load reads an entry named `actions` (no .npy) before `actions.npy`
+        if max(size.values()) > 1024 + max_actions * action_dim * 8:
+            raise ValueError(f"an entry is larger than a trajectory of this task can be: {max(size.values())} bytes")
         d = np.load(path, allow_pickle=False)              # not an npz / a bare .npy / pickled content: ValueError, OSError, ...
         name = str(d["task"])                              # no `task` entry: KeyError; an object array: ValueError
     except Exception as exc:  # noqa: BLE001

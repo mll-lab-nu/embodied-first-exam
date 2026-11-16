@@ -47,8 +47,11 @@ def load_trajectory(path: str) -> tuple[str, np.ndarray]:
     error is the agent's (the caller books it as bad_trajectory), so nothing but the file is touched here."""
     with np.load(path, allow_pickle=False) as d:          # a pickled / object array raises ValueError; a plain .npy has no `with`
         for key in ("task", "actions"):
-            if d.zip.getinfo(key + ".npy").file_size > MAX_MEMBER_BYTES:   # KeyError: the key is missing
-                raise ValueError(f"{key} is larger than {MAX_MEMBER_BYTES} bytes")
+            d.zip.getinfo(key + ".npy")                    # KeyError: the key is missing
+        # every entry, not only the two read: d["actions"] opens an entry named `actions` (no .npy) before `actions.npy`
+        for info in d.zip.infolist():
+            if info.file_size > MAX_MEMBER_BYTES:
+                raise ValueError(f"entry {info.filename!r} is larger than {MAX_MEMBER_BYTES} bytes")
         return str(d["task"]), np.asarray(d["actions"], dtype=np.float32)
 
 

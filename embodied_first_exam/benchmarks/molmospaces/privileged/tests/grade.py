@@ -38,6 +38,12 @@ def member_sizes(path: str) -> dict | None:
         return {i.filename: i.file_size for i in z.infolist()}
 
 
+def too_large(sizes: dict, dim: int) -> bool:
+    """Any entry larger than MAX_ROWS rows of `dim` float64 numbers + MAX_MEMBER_MARGIN bytes unpacked. Every entry, not
+    only the two read: np.load reads an entry named `actions` (no .npy) before `actions.npy`."""
+    return max(sizes.values(), default=0) > MAX_ROWS * dim * 8 + MAX_MEMBER_MARGIN
+
+
 def write(ok: bool, out: dict) -> None:
     os.makedirs(LOG_DIR, exist_ok=True)
     out.setdefault("infra_error", int(bool(out.get("grader_error"))))   # every grader_error here is the host's, never the agent's (PROTOCOL §2.6)
@@ -116,8 +122,7 @@ def main() -> int:
         dim = int(inst["t0"]["action_dim"])
         try:  # the agent's file: whatever is wrong with it is its failure, not the grader's (nothing is unpickled)
             sizes = member_sizes(a.traj)
-            limit = MAX_ROWS * dim * 8 + MAX_MEMBER_MARGIN
-            if sizes is not None and max((sizes.get(k, 0) for k in ("actions.npy", "family.npy")), default=0) > limit:
+            if sizes is not None and too_large(sizes, dim):
                 write(False, {"success": 0, "bad_trajectory": 1, "too_large": 1, "deterministic": 0, "grader_error": 0, **cost})
                 return 0
             if sizes is None:

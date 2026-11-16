@@ -6,7 +6,8 @@
 #  2. numpy + requests (no simulator, no image, no GPU): the eai-standard/2.2 and 2.4 layers' selftests on a stub
 #     simulator (embodied_first_exam/standard/), the 2.1 service's first-attempt record on a toy simulator (v2_1/), and
 #     the per-call image budget of the 2.1, 2.2 and 2.3 layers (frames_selftest.py), and the 2.2 layer's optional agent-ended
-#     episodes (agent_end/agent_end_selftest.py). Run when both modules can be imported, skipped with a note otherwise;
+#     episodes (agent_end/agent_end_selftest.py), and the privileged graders' zip-bomb refusal (test_npz_member_size.py).
+#     Run when both modules can be imported, skipped with a note otherwise;
 #     `--all` makes a missing module a failure.
 # A benchmark's own tests live with its tasks (their tests/), not here. The resource monitor's tests are run by
 # check-monitor.py.
@@ -47,6 +48,7 @@ if python3 -c "import numpy, requests" 2>/dev/null; then
   for t in embodied_first_exam/standard/selftest.py embodied_first_exam/standard/v2_4/selftest.py \
            embodied_first_exam/standard/v2_1/selftest.py embodied_first_exam/standard/frames_selftest.py \
            embodied_first_exam/standard/agent_end/agent_end_selftest.py; do run 900 "$t"; done
+  run 300 scripts/tests/test_npz_member_size.py
 elif [ $all -eq 1 ]; then
   echo "FAIL check-unit-tests.sh --all: numpy and requests are needed for the second tier (pip install numpy requests)"; rc=1
 else

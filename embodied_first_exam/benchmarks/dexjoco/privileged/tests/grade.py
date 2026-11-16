@@ -54,9 +54,10 @@ def load_deliverable(path: str, max_rows: int) -> tuple[str, np.ndarray]:
             info = {i.filename: i for i in z.infolist()}
         if "task.npy" not in info or "actions.npy" not in info:
             raise ValueError("no `task` / `actions` entry")
-        # refuse to load an `actions` array that cannot be within the cap (46 values per row, 16 bytes each at most)
-        if info["actions.npy"].file_size > max_rows * 46 * 16 + 65536:
-            raise ValueError("`actions` is larger than the hand-in cap allows")
+        # refuse to load anything larger than an `actions` array within the cap can be (46 values per row, 16 bytes each
+        # at most): every entry, since np.load reads an entry named `actions` (no .npy) before `actions.npy`
+        if max(i.file_size for i in info.values()) > max_rows * 46 * 16 + 65536:
+            raise ValueError("an entry is larger than the hand-in cap allows")
         with np.load(path, allow_pickle=False) as d:
             task = str(d["task"])
             acts = np.asarray(d["actions"], dtype=np.float64)

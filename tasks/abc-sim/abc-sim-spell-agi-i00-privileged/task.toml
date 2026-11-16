@@ -23,8 +23,8 @@ allowed = [0, 3, 4]
 oracle = [0, 3, 4]
 
 [verifier]
-timeout_sec = 6000.0                # two side-by-side replays of at most 20,000 rows (2400 s each at the slowest scene)
-                                   # and the filmed one; a reference replays in 1-100 s
+timeout_sec = 6000.0                # one fresh-process replay of at most 20,000 rows (2400 s at the slowest scene),
+                                   # then the filmed one; a reference replays in 1-100 s
 environment_mode = "separate"
 network_mode = "no-network"
 
