@@ -4,7 +4,7 @@
 |---|---|
 | Benchmark | RoboDojo |
 | Mode | standard (`eai-standard/2.2`) |
-| Twin | — (none: standard only, graded by the live episode; its physics does not replay bit for bit, PROTOCOL §4) |
+| Twin | `robodojo-fold-clothes-i00-privileged` |
 | Simulator / robot | `robodojo` / `arx-x5-bimanual` |
 | Family / instance | `fold_clothes` / seed 0 (allowed seeds: [0, 1, 2]; PROTOCOL §2) |
 | Oracle | `none` — no positive example yet; no reference solution (RoboDojo releases no expert, and its training demonstrations carry no initial state); marked unvalidated (PROTOCOL §2 `validated`); human review in PR #142 |
@@ -12,7 +12,7 @@
 | Base image | `ghcr.io/mll-lab-nu/efe-private:robodojo-0.2.1` |
 
 ## Task
-Standard-only task (no privileged twin: its physics does not replay bit for bit, so an open-loop trajectory cannot be graded reproducibly; RoboDojo's `arx_x5/0/fold_clothes_0.json`). Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open. (RoboDojo's `fold_clothes`). The agent drives the
+Standard-mode twin of `robodojo-fold-clothes-i00-privileged` (same frozen layout, RoboDojo's `arx_x5/0/fold_clothes_0.json`). Fold the long-sleeve shirt lying flat on the table: first fold both sleeves in across the chest, then fold the bottom hem up to the shoulders, using both arms, and finish with both arms back home with grippers open. (RoboDojo's `fold_clothes`). The agent drives the
 robot only through the eai-standard/2.2 client (the simulator runs in the `sim` sidecar), which owns the scene and records
 the episode as a (T, 14) trajectory of RoboDojo's own joint action at 25 Hz.
 
@@ -21,7 +21,7 @@ A RoboDojo Generalization task (cloth (deformable garment, mesh-vertex based che
 poses, no success signal, no reset, one episode (no step cap; RoboDojo's own evaluation gives a policy 500 actions).
 
 ## Reference solution
-None: RoboDojo releases no expert or planner script, and its training demonstrations record no
+None (see the privileged twin): RoboDojo releases no expert or planner script, and its training demonstrations record no
 initial state, so none replays on a frozen layout. The task is marked unvalidated (PROTOCOL §2 `validated`).
 
 ## Verification
@@ -29,7 +29,7 @@ The sim service ends the episode on RoboDojo's own check (success), a failed che
 writes `/data/trajectory.npz` and `/data/episode.json` (the live result); the collect hook (`environment/sim/finalize.sh`)
 writes `final.json` from them (no replay) and encodes the video the service kept during the episode (`live.mp4`, a frame of
 `cam_head` at the actions the agent's calls rendered; a failed encode costs the video only); `tests/grade.py` scores 1 iff
-the live episode succeeded: every standard task is graded by its live episode, which the trusted service ran, with no grading replay; a replay could not grade this task anyway (`instance.json` sets `"determinism": "verdict"` because the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10)). Before serving, the service checks the rebuilt layout's state hash against the frozen instance's
+the live episode succeeded: every standard task is graded by its live episode, which the trusted service ran, with no grading replay; its physics does not replay bit for bit (`instance.json` sets `"determinism": "verdict"` because the garment is simulated as GPU PhysX cloth, which is not bit-reproducible across processes once the arms handle it (a live episode and its two fresh-process replays, all started from the exact frozen state, ended in three different states, measured 2026-10-10)), so its privileged twin is graded on up to 3 fresh replays, any success counting (PROTOCOL §4). Before serving, the service checks the rebuilt layout's state hash against the frozen instance's
 (`instance_mismatch`: an infrastructure failure). The collect hook needs no GPU after the service exits. No oracle;
 human review in PR #142 (no positive example yet). `nop` (no actions) scores 0.
 
