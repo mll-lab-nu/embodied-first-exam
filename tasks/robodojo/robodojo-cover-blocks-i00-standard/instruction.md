@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Memory**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Cover the three coloured blocks with the three cups one after another from left to right, remember which colour is under which cup, then uncover them one at a time in the order red, green, blue, and finally return the arm home.
@@ -48,7 +48,7 @@ which any block is more than 0.05 m from its start marks the episode failed at o
 reached is tested; when it holds at that action it counts as reached, and the next state is tested from the next action
 on, so at most one state is reached per action. Each state must therefore be held at some action boundary of its own:
 covering two blocks within one action skips the one-block state, and the sequence then waits until that state
-occurs again. Success is declared when state 6 is reached after states 1-5. A separate
+occurs again. Success is declared when state 6 is reached after states 1-5, and the episode ends. A separate
 partial-credit score (not part of success) climbs the tiers 0, 0, 5, 15, 30, 100 as states 1 to 6 are reached (state 6
 there without the arms)
 (the 100 tier counts only if the episode succeeds, otherwise the tier below) [process score, transition mode].
