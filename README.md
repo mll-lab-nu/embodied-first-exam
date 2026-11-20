@@ -11,7 +11,7 @@
 <p align="center">Coding agents have passed many exams in the digital world.<br>
 <b>What is their first exam before entering the physical world?</b></p>
 
-<p align="center">The Embodied First Exam (EFE) is an agentic robotics benchmark for coding agents in robotics: 1,156 tasks in 35 suites on 47 robots, where the agent chooses to control the robot directly, write code to control it, or train a policy to control it.<br>
+<p align="center">The Embodied First Exam (EFE) is an agentic robotics benchmark that tests coding agents on 1,156 robot tasks in 35 suites with 47 robots, where the agent chooses to control the robot directly, write code to control it, or train a policy to control it.<br>
 <a href="https://www.embodied-first-exam.ai/leaderboard/">Leaderboard</a> · <a href="https://www.embodied-first-exam.ai/blogs/agentic-robotics-benchmark/">Report</a> · <a href="https://www.embodied-first-exam.ai/blogs/failure-analysis/">Where do today’s agentic robots succeed and fail?</a></p>
 
 <p align="center">
