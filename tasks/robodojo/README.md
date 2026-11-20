@@ -276,15 +276,14 @@ The benchmark owner's screening (ten runs, one trial per run and task directory)
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
-**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode), and
-**pending** without a Luna verdict. A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode). A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
 Argon `antigravity_cli-gemini_4_argon-high`; DeepSeek V4.1 Flash `dsh-deepseek_v4_1_flash-high`; GLM 5.3 Flash
 `claude_code-glm_5_3_flash-high`; Qwen3.8 27B `claude_code-qwen3_8_27b-high`.
 
-By directory: 80 easy, 13 hard, 9 unverified, 6 pending.
+By directory: 86 easy, 13 hard, 9 unverified.
 
 | base | privileged | standard |
 |---|---|---|
@@ -299,8 +298,8 @@ By directory: 80 easy, 13 hard, 9 unverified, 6 pending.
 | `robodojo-fasten-screws-i00` | easy: Luna | easy: Luna |
 | `robodojo-fill-egg-holder-i00` | easy: Astra | hard |
 | `robodojo-fill-pen-holder-i00` | easy: Astra | easy: Astra, Gemini 4 Argon |
-| `robodojo-fold-clothes-i00` | pending | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-fold-clothes-random-i00` | pending | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-fold-clothes-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-fold-clothes-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon |
 | `robodojo-general-pickup-i00` | easy: Luna | easy: Luna |
 | `robodojo-hang-mugs-i00` | easy: Astra, Opus | hard |
 | `robodojo-hang-mugs-random-i00` | hard | easy: Gemini 4 Argon |
@@ -309,7 +308,7 @@ By directory: 80 easy, 13 hard, 9 unverified, 6 pending.
 | `robodojo-insert-tubes-i00` | easy: Luna | unverified |
 | `robodojo-make-kong-i00` | easy: Astra, Opus, Gemini 3.8 Flash | hard (only Astra) |
 | `robodojo-make-toast-i00` | easy: Astra | hard |
-| `robodojo-make-toast-random-i00` | pending | easy: Opus, Gemini 4 Argon |
+| `robodojo-make-toast-random-i00` | easy: Astra, Opus | easy: Opus, Gemini 4 Argon |
 | `robodojo-match-and-pick-from-conveyor-i00` | easy: Luna | easy: Luna |
 | `robodojo-organize-table-i00` | easy: Astra, Gemini 4 Argon | easy: Opus, Gemini 4 Argon |
 | `robodojo-pack-objects-into-box-i00` | easy: Astra, Opus, Gemini 4 Argon | hard |
@@ -320,9 +319,9 @@ By directory: 80 easy, 13 hard, 9 unverified, 6 pending.
 | `robodojo-play-xylophone-i00` | unverified | easy: Luna |
 | `robodojo-plug-in-charger-i00` | easy: Astra, Opus, GLM 5.3 Flash | easy: Opus, Gemini 4 Argon |
 | `robodojo-pour-balls-into-vase-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Opus, Gemini 3.8 Flash |
-| `robodojo-pour-by-language-i00` | pending | easy: Opus |
-| `robodojo-pour-liquid-into-cup-i00` | pending | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-pour-liquid-into-cup-random-i00` | pending | easy: Astra, Opus, Gemini 3.8 Flash |
+| `robodojo-pour-by-language-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Opus |
+| `robodojo-pour-liquid-into-cup-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
+| `robodojo-pour-liquid-into-cup-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash |
 | `robodojo-press-by-number-i00` | easy: Luna | unverified |
 | `robodojo-push-t-i00` | easy: Astra, Opus, Gemini 3.8 Flash, DeepSeek V4.1 Flash, GLM 5.3 Flash | easy: Astra, Opus |
 | `robodojo-push-t-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash |
