@@ -963,9 +963,6 @@ task = "robocasa365-searing-meat-i00"
 task = "robodojo-align-blocks-i00"
 
 [[task]]
-task = "robodojo-arrange-largest-number-i00"
-
-[[task]]
 task = "robodojo-arrange-largest-number-random-i00"
 
 [[task]]
@@ -978,13 +975,7 @@ task = "robodojo-classify-objects-by-language-i00"
 task = "robodojo-classify-objects-i00"
 
 [[task]]
-task = "robodojo-cover-blocks-i00"
-
-[[task]]
 task = "robodojo-deposit-coin-i00"
-
-[[task]]
-task = "robodojo-fasten-screws-i00"
 
 [[task]]
 task = "robodojo-fill-egg-holder-i00"
@@ -996,25 +987,13 @@ task = "robodojo-fill-pen-holder-i00"
 task = "robodojo-fold-clothes-i00"
 
 [[task]]
-task = "robodojo-fold-clothes-random-i00"
-
-[[task]]
-task = "robodojo-general-pickup-i00"
-
-[[task]]
 task = "robodojo-hang-mugs-i00"
 
 [[task]]
 task = "robodojo-hang-mugs-random-i00"
 
 [[task]]
-task = "robodojo-imitate-sorting-sequence-i00"
-
-[[task]]
 task = "robodojo-insert-key-i00"
-
-[[task]]
-task = "robodojo-insert-tubes-i00"
 
 [[task]]
 task = "robodojo-make-kong-i00"
@@ -1024,9 +1003,6 @@ task = "robodojo-make-toast-i00"
 
 [[task]]
 task = "robodojo-make-toast-random-i00"
-
-[[task]]
-task = "robodojo-match-and-pick-from-conveyor-i00"
 
 [[task]]
 task = "robodojo-organize-table-i00"
@@ -1042,9 +1018,6 @@ task = "robodojo-pick-from-conveyor-by-image-i00"
 
 [[task]]
 task = "robodojo-play-stacking-toy-i00"
-
-[[task]]
-task = "robodojo-play-tic-tac-toe-i00"
 
 [[task]]
 task = "robodojo-play-xylophone-i00"
@@ -1065,31 +1038,13 @@ task = "robodojo-pour-liquid-into-cup-i00"
 task = "robodojo-pour-liquid-into-cup-random-i00"
 
 [[task]]
-task = "robodojo-press-by-number-i00"
-
-[[task]]
 task = "robodojo-push-t-i00"
-
-[[task]]
-task = "robodojo-push-t-random-i00"
 
 [[task]]
 task = "robodojo-put-bottles-into-dustbin-i00"
 
 [[task]]
-task = "robodojo-solve-equation-i00"
-
-[[task]]
 task = "robodojo-sort-nesting-dolls-by-size-i00"
-
-[[task]]
-task = "robodojo-sort-nesting-dolls-by-size-random-i00"
-
-[[task]]
-task = "robodojo-stack-blocks-by-language-i00"
-
-[[task]]
-task = "robodojo-stack-blocks-i00"
 
 [[task]]
 task = "robodojo-stack-blocks-random-i00"
@@ -1111,12 +1066,6 @@ task = "robodojo-store-tools-in-toolbox-i00"
 
 [[task]]
 task = "robodojo-swap-blocks-i00"
-
-[[task]]
-task = "robodojo-swap-t-i00"
-
-[[task]]
-task = "robodojo-sweep-blocks-i00"
 
 [[task]]
 task = "robodojo-sweep-blocks-random-i00"

@@ -276,7 +276,7 @@ The benchmark owner's screening (ten runs, one trial per run and task directory)
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
-**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode). All 54 RoboDojo bases are in the core set (`docs/core_set.toml`), whatever their verdicts.
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode). The 17 bases GPT-6 Luna solved in some mode are left out of the core set (`docs/core_set.toml`); the other 37 are in it, whatever their later verdicts. The left-out tasks keep their names.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
@@ -299,7 +299,7 @@ By directory: 86 easy, 13 hard, 9 unverified.
 | `robodojo-fill-egg-holder-i00` | easy: Astra | hard |
 | `robodojo-fill-pen-holder-i00` | easy: Astra | easy: Astra, Gemini 4 Argon |
 | `robodojo-fold-clothes-i00` | easy: Astra, Opus, Gemini 4 Argon | easy: Astra, Gemini 3.8 Flash, Gemini 4 Argon |
-| `robodojo-fold-clothes-random-i00` | easy: Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon |
+| `robodojo-fold-clothes-random-i00` | easy: Luna, Astra, Opus, Gemini 3.8 Flash, Gemini 4 Argon, DeepSeek V4.1 Flash | easy: Astra, Opus, Gemini 4 Argon |
 | `robodojo-general-pickup-i00` | easy: Luna | easy: Luna |
 | `robodojo-hang-mugs-i00` | easy: Astra, Opus | hard |
 | `robodojo-hang-mugs-random-i00` | hard | easy: Gemini 4 Argon |
