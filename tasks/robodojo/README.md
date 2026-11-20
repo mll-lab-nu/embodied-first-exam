@@ -276,7 +276,7 @@ The benchmark owner's screening (ten runs, one trial per run and task directory)
 Where only one or two of the later runs solved a directory Luna had failed, their logs were checked for shortcuts and
 for any access to tests, solutions or graders. It is **hard** when GPT-6 Luna and every later run that attempted it
 failed, GPT-6 Astra and Claude Opus 5.5 among them; a standard directory that only Astra solved is hard as well. It is
-**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode). A base whose every mode is easy, and every base Luna solved in some mode, is left out of the core set (`docs/core_set.toml`); its tasks keep their names.
+**unverified** when only Luna attempted it and failed (the later runs only take bases Luna solved in no mode). All 54 RoboDojo bases are in the core set (`docs/core_set.toml`), whatever their verdicts.
 
 Runs: Luna `codex-gpt6_luna-xhigh`; Astra `codex-gpt6_astra-high`; Opus `claude_code-opus_5_5-high`; Sol 6.1
 `codex-gpt6_1_sol-high`; Sol `codex-gpt6_sol-high`; Gemini 3.8 Flash `antigravity_cli-gemini_3_8_flash-high`; Gemini 4
