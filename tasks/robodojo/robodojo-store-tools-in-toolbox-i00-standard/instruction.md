@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Open**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Put the hammer, pliers, tape measure and wrench each into its matching slot inside the toolbox (with the right orientation), then return the arm(s) to the start pose.
@@ -28,9 +28,15 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
 
 A tool's *centre* below is the point RoboDojo tests for it (its origin): for the pliers, tape measure and wrench the
 middle of the tool's bounding box; for the hammer a point about halfway along its length, near the line of the handle,
-level with the middle of its thickness. Each tool's *slot point* is a fixed point inside the toolbox, in the recess moulded to that tool's shape, about 2 cm
-above the table and 3 cm below the rim [hammer_slot, wrench_slot, pliers_slot, tape_measure_slot]. Which recess
-belongs to which tool is for you to see.
+level with the middle of its thickness. Each tool's *slot point* is a fixed point inside the toolbox defined by the
+toolbox's model, about 2 cm above the table and 3 cm below the rim; measured from the middle of the toolbox (seen from
+above) the slots are at:
+- hammer: 6 cm left of the middle, 1 cm farther away [hammer_slot];
+- wrench: at the middle, 1 cm nearer to you [wrench_slot];
+- pliers: 8 cm right of the middle, 2 cm nearer to you [pliers_slot];
+- tape measure: 7.5 cm right of the middle, 9.5 cm farther away (the far-right part of the tray) [tape_measure_slot].
+Each slot point lies in the recess moulded to that tool's shape: solved, the hammer, wrench and pliers lie side by
+side from left to right, handles toward you, with the tape measure in the far-right corner.
 Each slot also carries a required orientation, and for every tool it is the way the tool lies on the table at the
 start (long axis front-to-back with the handle toward you, lying flat on the same face): the start poses differ from it
 by only 0.4 deg (hammer), 3.7 deg (tape measure), 4.9 deg (wrench) and 5.5 deg (pliers).
@@ -55,7 +61,8 @@ All of these must hold at the same action boundary:
 
 **When it is checked.** After every action (once the action's whole control sequence has run; never between
 actions), all conditions are tested together as one stage; nothing is latched or ordered, so all four tools must be in
-place and the arms back at the same action boundary. Success is declared at the first such action boundary. No condition ends the episode early as a failure.
+place and the arms back at the same action boundary. Success is declared at the first such action boundary, and the
+episode ends. No condition ends the episode early as a failure.
 
 **Episode length.** A step limit of **900 steps** (RoboDojo's own limit for this task, 36 s of
 simulated time) [step_lim]; one step is one 25 Hz action (`## Episode end`, below). The

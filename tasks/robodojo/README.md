@@ -37,11 +37,13 @@ The first task builds the simulator image from public sources (below); later tas
   task with `-a nop` (reward 0).
 
 ## Tasks
-One frozen default instance per task, RoboDojo's own evaluation layout `Assets/Eval_Layout/RoboDojo/arx_x5/0/<task>_0.json`
-(seed 0; seeds 1 and 2, below), each a privileged task `robodojo-<task>-i00-privileged` and its standard twin `robodojo-<task>-i00-standard`
+One frozen instance per task, RoboDojo's own evaluation layout `Assets/Eval_Layout/RoboDojo/arx_x5/0/<task>_0.json`,
+each a privileged task `robodojo-<task>-i00-privileged` and its standard twin `robodojo-<task>-i00-standard`
 (`eai-standard/2.2`), the six tasks whose physics does not replay bit for bit (Determinism, below) included: their
 privileged twins are graded as every privileged task, on up to 3 fresh replays, any success counting (PROTOCOL §4).
-54 privileged + 54 standard = 108 task directories. `oracle = "none"` for every task (below).
+54 privileged + 54 standard = 108 task directories. `oracle = "none"` for every task (below). The six privileged twins
+added 2026-11-16 also allow seeds 1 and 2 (`[metadata.seeds]`, instances and instruction changes in `tests/seeds/<k>/`,
+`scripts/task_seed.py materialize`); every other task declares its default seed only.
 
 The task directories are the deliverable; the tooling that built them is kept outside this repository. Each task carries:
 - in its instruction, what the task asks and exactly what its check tests (every predicate, threshold, stage and
@@ -53,21 +55,6 @@ The task directories are the deliverable; the tooling that built them is kept ou
   the state hash after RoboDojo's reset, RoboDojo's language instruction for the layout, and per-task fields
   (`physics`, `determinism`) from the determinism test's output (`rcb_robodojo.py make-instance --task T --seed 0
   --layout 0 [--physx key=value]`). The committed standard tasks are the list of instances.
-
-### Seeds
-Every task allows its default seed 0 and seeds 1 and 2 (`[metadata.seeds]`). Seed k is layout 0 of RoboDojo's own
-evaluation seed k, `Assets/Eval_Layout/RoboDojo/arx_x5/<k>/<task>_0.json` (RoboDojo's own evaluation runs seeds 0, 1 and
-2). Upstream's files for some seeds repeat seed 0's layout (`cover_blocks` seed 1; `play_tic_tac_toe` seeds 1 and 2, whose
-opponent is seeded by the layout index too, so they replay the same game): those seeds are repeats of seed 0. A seed moves the objects, can swap object models and the clutter, and in the language and number tasks changes
-RoboDojo's instruction (target, colours, numbers, order); the robot's start stays. RoboDojo passes the evaluation seed on
-to the task, so the support arm's recorded moves in `imitate_sorting_sequence` are that seed's too. Each seed's instance
-(`make-instance --seed <k> --layout 0`, with the default instance's `physics` and `determinism` fields) and its
-instruction changes (`seed.toml`) are in `tests/seeds/<k>/` of the privileged task; `scripts/task_seed.py materialize` puts them in place. Each seed passed the default's determinism
-test (a second fresh process rebuilds the recorded state hash, and the 120-action driver ends in the same state in both
-processes; the six verdict tasks are recorded, not compared), on an L40S, except `store_laptop_and_headphones_random` seed 1:
-its laptop settles in one of two states about 2 µm apart (4 of 9 fresh rebuilds), so that seed's instance is graded by
-verdict (`"determinism": "verdict"`: a replay or the standard service is not refused for the hash; the grading is as
-below). No reference solution, as for seed 0.
 
 ## Success (RoboDojo's own check)
 RoboDojo's reward manager for the task, unchanged: its `run_reward()` check list (registered at the start of every episode,
@@ -149,7 +136,7 @@ Frozen on one RTX 4090. Across GPU models (L40S, L40, L4) the frozen layouts reb
   `determinism_checked` = 0 when only one ran). A replay whose process rebuilt the frozen layout to
   another state than `instance.json` records (`instance_exact` = 0) did not start from the frozen state and gives no
   verdict (`instance_mismatch`, `grader_error` = `infra_error` = 1), except where `instance.json` sets
-  `"determinism": "verdict"` (the six tasks above, `store_laptop_and_headphones_random` seed 1): there the hash is
+  `"determinism": "verdict"` (the six tasks above): there the hash is
   recorded, not compared. Measured on one host, the physics of 48 of the 54 tasks replays bit for bit, and of the six
   above it does not; graded replays run on other hosts and GPU models too, hence up to 3 for every task.
 - standard: graded by the **live episode**, with no grading replay (PROTOCOL H.4), the same rule for every task:
@@ -236,12 +223,6 @@ each, and one call returns at most 3000 images (`max_frames_per_call`, PROTOCOL 
 - **World-frame information.** Instructions give the world frame (axes, the arm bases, the table, the head camera) and
   state RoboDojo's check exactly, in physical terms, including absolute coordinates where the check uses them (e.g.
   `make_kong`'s target spot); standard tasks never give object poses (privileged tasks give them through the tooling).
-- **What the instructions leave to the agent.** As in RoboDojo's own one-sentence instructions, the texts state the check
-  exactly but not what the task asks the agent to work out: which tile completes `solve_equation`'s equation, which
-  group of `play_stacking_toy` goes on which peg, the size order of the dolls, which objects of `classify_objects` form
-  a kind, the start headings and the turns of the T tasks, and, in the Open tasks, which object the language names,
-  where it is, or which recess of the toolbox belongs to which tool. Nor do they say which step of the task's sentence
-  (a hand-over, the tool, one by one, the reset) the check does not read.
 
 ## Resources (scripts/task_resources.toml)
 Measured on the heaviest scene (`pour_liquid_into_cup_random`: GPU PhysX liquid and 15-20 clutter objects), RTX 4090,

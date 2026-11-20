@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Generalization**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Put the car, electric toothbrush, hammer and shoe into the box, each oriented with its front facing the same way (left), with the box upright and aligned, then return both arms to the start pose.
@@ -39,7 +39,10 @@ hammer's head and the shoe's toe. All of these must hold at the same action boun
     local +x];
   - its front end pointing left: seen from above, the direction from its back end to its front end within 60 deg of
     world -x (left) [car, toothbrush, hammer: 'checkpoint' local -x within 60 deg of world +x; shoe: local +x, which
-    points to the heel, within 60 deg of world +x; is_axis_aligned, project_plane xy]. Not true at the start for any of the four.
+    points to the heel, within 60 deg of world +x; is_axis_aligned, project_plane xy]. Not true at the start for any
+    of the four: the car's front end points right (turn it end for end), the toothbrush's head points away and to the right
+    (about 127 deg off), the hammer's head points right (turn it end for end), and the shoe's toe points toward you and
+    to the right (about 115 deg off).
 - **Box** (tested together with every item): upright, within 15 deg of vertical, measured in 3-D [box local +z;
   is_axis_up]; and its long side (29 cm) within 40 deg of the left-right direction, either way round, measured in 3-D
   [box local +y or -y vs world +x; is_axis_aligned]. Both already true at the start (the long side runs left-right
@@ -51,7 +54,7 @@ All angle tests are strict (less than the threshold).
 
 **When it is checked.** After every action (never between actions), in the order car, toothbrush, hammer, shoe, box,
 arms, stopping at the first condition that fails; all must hold at the same action boundary (one stage). Success is
-declared at the first action boundary where everything holds. No condition ends the episode
+declared at the first action boundary where everything holds, and the episode ends. No condition ends the episode
 early as a failure.
 
 **Episode length.** A step limit of **1,300 steps** (RoboDojo's own limit for this task, 52 s of
@@ -67,7 +70,8 @@ be open.
 hammer are tested through an asset-defined frame [active functional point 'checkpoint'] whose +x runs along the item's
 length toward the car's front end (as defined above), the brush head and the hammer head; the shoe is tested through its own body frame, whose
 +x points to the heel, so the code asks for the shoe's +x to point right while it asks for the others' 'checkpoint'
-+x to point left. Physically all four come to the same thing: the car's front end, brush head, hammer head and toe toward the left. Placement is tested only on each item's centre, seen
++x to point left. Physically all four come to the same thing: the car's front end, brush head, hammer head and toe toward the left
+(confirmed on successful runs: hammer head left, shoe toe left). Placement is tested only on each item's centre, seen
 from above, against the box's floor area, with no height test: an item may lean on the box wall or overhang, and in
 principle could rest on the rim as long as its centre is over that area. The heading tests ignore tilt (they are
 measured seen from above), so an item lying on its side counts; only the box itself must stay upright. The box is

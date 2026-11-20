@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Precision**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up the mallet from its stand and strike the 8 xylophone keys one after another, from left to right, lifting the mallet clear of the keys between strikes.
@@ -32,7 +32,7 @@ table top), about 0.2-0.9 cm below that key's top surface, roughly in the middle
   than 0.01 m and less than 0.036 m higher than key i's hit point [is_A_point_above_B_point_by_z_range]. That is a
   head point 2.4 to 5.0 cm above the table. With the stick level and the ball not rolled about the handle, this holds
   for a ball centre 1.4 to 6.0 cm above the table: the ball resting on the key (centre about 3 cm up) or hovering up to
-  about 2.5 cm above it passes. Not true at the start.
+  about 2.5 cm above it passes. The head does not have to touch the key. Not true at the start.
 - **Lift after strikes 0 to 6.** The ball's centre more than 0.025 m higher than it was at the action where that strike
   passed [is_lift; the mallet pose is re-recorded when the strike passes, update_object_state].
 - After strike 7 nothing more is required (no final lift, no return of the arms).
@@ -43,7 +43,7 @@ tested, with all its conditions at the same action boundary; once it passes it i
 the next stage waits for a later action, so at most one stage passes per action and at least 15 actions are needed. A
 strike or lift counts only if it is seen at an action boundary: a tap that starts and ends inside one action is
 invisible. Strikes on other keys are ignored, with no penalty. Success is declared at the action where the last stage
-(the strike on key 7) passes. No condition ends the episode early as a failure.
+(the strike on key 7) passes, and the episode ends. No condition ends the episode early as a failure.
 
 **Episode length.** A step limit of **500 steps** (RoboDojo's own limit for this task, 20 s of
 simulated time) [step_lim]; one step is one 25 Hz action (`## Episode end`, below). The
@@ -54,7 +54,7 @@ where the description above mentions step_lim or the length cap, it means this l
 **At the end.** Nothing beyond the last strike: no final lift, the arms need not return and the grippers need not open.
 
 **Notes from RoboDojo's code.** Success is geometric: the head only has to be over the key's top and inside the height
-window at an action boundary. The lift is measured on the ball's centre, so
+window at an action boundary; contact, sound and dwell are not needed. The lift is measured on the ball's centre, so
 raising the head itself by more than 2.5 cm is what counts (tilting the stick up while the ball stays low does not).
 The xylophone does not move (it is fixed scenery). The mallet must be picked up first: it starts lying on its stand.
 

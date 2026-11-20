@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Precision**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Pick up the key, pass it between hands, insert it into the keyhole (slot) and turn it so it ends fully inserted, upright and rotated.
@@ -36,10 +36,12 @@ the same action boundary:
   its vertical axis; is_axis_aligned, threshold 30]. The block's x direction points 15 deg anticlockwise from world +x (to the right,
   slightly away from you; the keyhole slit runs about this way), so the required direction points right and toward you,
   45 deg from each (world heading -45 deg): with the key upright, its teeth must point between 15 and 75 deg clockwise
-  from world +x, seen from above. Not true at the start (teeth to the right, about 6 deg clockwise from +x).
+  from world +x, seen from above. Not true at the start (teeth to the right, about 6 deg clockwise from +x). Inserting
+  the key with its teeth toward the right-hand end of the slit and then turning it 60 deg clockwise (seen from above)
+  ends in the middle of that range.
 
 **When it is checked.** After every action (never between actions), all four conditions together (one stage).
-Success is declared at the first action boundary where they all hold. You need not release the
+Success is declared at the first action boundary where they all hold, and the episode ends. You need not release the
 key or bring the arms back. No condition ends the episode early as a failure; otherwise it runs on until the length
 cap (below) [step_lim].
 
@@ -49,7 +51,8 @@ episode ends at the limit (reason `step_limit`, `spec["max_control_steps"]` = 30
 where the description above mentions step_lim or the length cap, it means this limit. `res.meta["done"]` /
 `res.meta["reason"]` report the end.
 
-**Notes from RoboDojo's code.** The turn is measured against the block's own orientation (its x direction turned 60 deg clockwise),
+**Notes from RoboDojo's code.** The hand-over in the instruction is not checked; only the key's final pose in the
+keyhole counts. The turn is measured against the block's own orientation (its x direction turned 60 deg clockwise),
 which in this scene is world heading -45 deg; the test is a 3-D angle (no projection), so a key leaning a few degrees
 loses a little of the 30 deg margin. Which end goes up matters: ring up, blade down (the upright test is one-sided).
 The centring tolerance is tight (7 mm, on the key's centre in its ring), so the key must stand straight in the keyhole.
