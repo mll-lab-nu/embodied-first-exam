@@ -8,29 +8,33 @@
   <a href="docs/assets/wechat.jpg"><img src="https://img.shields.io/badge/WeChat-group-07c160?logo=wechat&logoColor=white" alt="WeChat group"></a>
 </p>
 
-<p align="center">Code agents have passed many exams in the digital world.<br>
+<p align="center">Coding agents have passed many exams in the digital world.<br>
 <b>What is their first exam before entering the physical world?</b></p>
 
+<p align="center">The Embodied First Exam (EFE) is an agentic robotics benchmark for coding agents in robotics: 1,156 tasks in 35 suites on 47 robots, where the agent chooses to control the robot directly, write code to control it, or train a policy to control it.<br>
+<a href="https://www.embodied-first-exam.ai/leaderboard/">Leaderboard</a> · <a href="https://www.embodied-first-exam.ai/blogs/agentic-robotics-benchmark/">Report</a> · <a href="https://www.embodied-first-exam.ai/blogs/failure-analysis/">Where do today’s agentic robots succeed and fail?</a></p>
+
 <p align="center">
-  <a href="https://www.embodied-first-exam.ai/suite/?id=robopaint"><img src="docs/assets/suites/robopaint.gif" alt="RoboPaint" title="RoboPaint" width="32%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=roboarc"><img src="docs/assets/suites/roboarc.gif" alt="RoboARC" title="RoboARC" width="32%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=pandadyn"><img src="docs/assets/suites/pandadyn.gif" alt="RoboDynamicExam" title="RoboDynamicExam" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/robopaint/"><img src="docs/assets/suites/robopaint.gif" alt="RoboPaint" title="RoboPaint" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/roboarc/"><img src="docs/assets/suites/roboarc.gif" alt="RoboARC" title="RoboARC" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/pandadyn/"><img src="docs/assets/suites/pandadyn.gif" alt="RoboDynamicExam" title="RoboDynamicExam" width="32%"></a>
 </p>
 <p align="center">
-  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-fun"><img src="docs/assets/suites/embodied-olympics-fun.gif" alt="Embodied Olympics - Fun" title="Embodied Olympics - Fun" width="32%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-match"><img src="docs/assets/suites/embodied-olympics-match.gif" alt="Embodied Olympics - Match" title="Embodied Olympics - Match" width="32%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=dexhand"><img src="docs/assets/suites/dexhand.gif" alt="DexHandExam" title="DexHandExam" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/embodied-olympics-fun/"><img src="docs/assets/suites/embodied-olympics-fun.gif" alt="Embodied Olympics - Fun" title="Embodied Olympics - Fun" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/embodied-olympics-match/"><img src="docs/assets/suites/embodied-olympics-match.gif" alt="Embodied Olympics - Match" title="Embodied Olympics - Match" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/dexhand/"><img src="docs/assets/suites/dexhand.gif" alt="DexHandExam" title="DexHandExam" width="32%"></a>
 </p>
 <p align="center">
-  <a href="https://www.embodied-first-exam.ai/suite/?id=roboengineer"><img src="docs/assets/suites/roboengineer.gif" alt="RoboEngineer" title="RoboEngineer" width="32%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=embodied-safety-exam"><img src="docs/assets/suites/embodied-safety-exam.gif" alt="Embodied Safety Exam" title="Embodied Safety Exam" width="32%"></a>
-  <a href="https://www.embodied-first-exam.ai/suite/?id=ispatialgym"><img src="docs/assets/suites/ispatialgym.gif" alt="iSpatialGym" title="iSpatialGym" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/roboengineer/"><img src="docs/assets/suites/roboengineer.gif" alt="RoboEngineer" title="RoboEngineer" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/embodied-safety-exam/"><img src="docs/assets/suites/embodied-safety-exam.gif" alt="Embodied Safety Exam" title="Embodied Safety Exam" width="32%"></a>
+  <a href="https://www.embodied-first-exam.ai/suite/ispatialgym/"><img src="docs/assets/suites/ispatialgym.gif" alt="iSpatialGym" title="iSpatialGym" width="32%"></a>
 </p>
 
 <p align="center"><b>Our nine original suites:</b> <b>RoboPaint</b> · <b>RoboARC</b> · <b>RoboDynamicExam</b> · <b>Embodied Olympics - Fun</b> · <b>Embodied Olympics - Match</b> · <b>DexHandExam</b> · <b>RoboEngineer</b> · <b>Embodied Safety Exam</b> · <b>iSpatialGym</b><br><a href="https://huggingface.co/datasets/MLL-Lab/embodied-exam-data/resolve/main/site/blog/efe-intro.mp4"><b>▶ Watch the intro video</b></a></p>
 
 ## News
 
+- **2026-11-12**: [Where Do Today’s Agentic Robots Succeed and Fail?](https://www.embodied-first-exam.ai/blogs/failure-analysis/) Understanding the capability boundary of coding agents in robotics.
 - 🔥 **2026-10-19**: Embodied First Exam is released!
 
 ## Framework
@@ -46,39 +50,39 @@ Nine of the suites were written for this exam:
 <table>
 <tr><th>Suite</th><th>Description</th></tr>
 <tr>
-<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=robopaint">RoboPaint</a></b></td>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/robopaint/">RoboPaint</a></b></td>
 <td><b>Tests fine tool control.</b> A robot arm reproduces a given picture with a brush or pen, from Chinese calligraphy to oil painting.</td>
 </tr>
 <tr>
-<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=roboarc">RoboARC</a></b></td>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/roboarc/">RoboARC</a></b></td>
 <td><b>Tests manipulation of tangled, deformable and multi-part objects.</b> Robot arms take apart metal wire puzzles, tie and thread ropes, fold cloth and assemble IKEA furniture.</td>
 </tr>
 <tr>
-<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=pandadyn">RoboDynamicExam</a></b></td>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/pandadyn/">RoboDynamicExam</a></b></td>
 <td><b>Tests handling of moving objects.</b> One or two robot arms catch, strike, carry and hand over objects in motion: tossed balls, sliding pucks, swinging loads.</td>
 </tr>
 <tr>
-<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-fun">Embodied Olympics - Fun</a></b></td>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/embodied-olympics-fun/">Embodied Olympics - Fun</a></b></td>
 <td><b>Tests humanoid motor skills with fun sports-inspired tasks.</b> The agent gets a humanoid robot to perform moves taken from many sports.</td>
 </tr>
 <tr>
-<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=embodied-olympics-match">Embodied Olympics - Match</a></b></td>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/embodied-olympics-match/">Embodied Olympics - Match</a></b></td>
 <td><b>Tests competitive play against an opponent.</b> Robots play full matches of table tennis, badminton, soccer, foosball and fencing against scripted or learned opponents.</td>
 </tr>
 <tr>
-<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=dexhand">DexHandExam</a></b></td>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/dexhand/">DexHandExam</a></b></td>
 <td><b>Tests dexterous hand manipulation.</b> Five-finger robot hands turn book pages, open jars, stir coffee, plug in a USB stick, fold paper and build a hamburger.</td>
 </tr>
 <tr>
-<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=roboengineer">RoboEngineer</a></b></td>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/roboengineer/">RoboEngineer</a></b></td>
 <td><b>Tests the sim-to-real engineering loop.</b> The agent builds a controller in a public simulator, deploys it to one with hidden dynamics, and fixes it from what the deployment shows.</td>
 </tr>
 <tr>
-<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=embodied-safety-exam">Embodied Safety Exam</a></b></td>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/embodied-safety-exam/">Embodied Safety Exam</a></b></td>
 <td><b>Tests safety.</b> The robot must carry out safe requests, refuse requests that would harm people, and explain the risk.</td>
 </tr>
 <tr>
-<td><b><a href="https://www.embodied-first-exam.ai/suite/?id=ispatialgym">iSpatialGym</a></b></td>
+<td><b><a href="https://www.embodied-first-exam.ai/suite/ispatialgym/">iSpatialGym</a></b></td>
 <td><b>Tests spatial reasoning from images.</b> The goal is given only as a picture: a mobile two-armed robot rearranges the room, or moves itself, until its camera view matches it.</td>
 </tr>
 </table>
