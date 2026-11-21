@@ -50,17 +50,17 @@ gripper): arm (arm: gripper). Cameras: `base`, `wrist`.
 **Notes on this robot.** The base and the arm take one action type, `delta` (11 numbers, one row a 0.1 s step), sent
 with execute_trajectory space native, action_type delta: base_x, base_y = metres to move the base in the odometry frame
 (where the base stood when the episode began: +x the way it faced then, +y to its left), together at most 0.1 a step;
-base_yaw = radians to turn it (+ = counter-clockwise), at most 0.1 a step; arm_1 .. arm_7 = radians added to each arm
-joint's measured angle, at most 0.1 a step; gripper = 0 open .. 1 closed (a command, not a change). Each step's targets
-are the measured pose plus the row; a row of zeros with the gripper as it is holds the robot. To go forward along the
-current heading yaw (base_odometry.yaw in any result), each row has base_x = s cos(yaw), base_y = s sin(yaw) for a step
-length s (0.02 to 0.05 m a step is 0.2 to 0.5 m/s). At most 100 rows (10 s) a call. A held object can swing or slip
-under large steps: carry with small steps. move_robot opens and closes the gripper (below 0.5 open, 0.5 or more closed).
-Nothing plans a way or avoids anything: the base and the arm can run into furniture and people. The state has no hand
-pose: describe_robot's spec_file gives each arm joint's axis and a point on it (the base frame, every joint at 0), the
-hand's position there, the base's outline and the camera poses (base_from_cam, tcp_from_cam, and odom_from_cam for a
-room camera). Time passes only inside calls. Messages that reach the robot come back in `messages` of any result; the
-operator's answer to ask_operator comes back in `operator`. The only free text you send is a signal's note.
+base_yaw = radians to turn it (+ = counter-clockwise), at most 0.1 a step; `arm_1` .. `arm_7` = radians added to each
+arm joint's measured angle, at most 0.1 a step; gripper = 0 open .. 1 closed (a command, not a change). Each step's
+targets are the measured pose plus the row; a row of zeros with the gripper as it is holds the robot. To go forward
+along the current heading yaw (base_odometry.yaw in any result), each row has base_x = s cos(yaw), base_y = s sin(yaw)
+for a step length s (0.02 to 0.05 m a step is 0.2 to 0.5 m/s). At most 100 rows (10 s) a call. A held object can swing
+or slip under large steps: carry with small steps. move_robot opens and closes the gripper (below 0.5 open, 0.5 or more
+closed). Nothing plans a way or avoids anything: the base and the arm can run into furniture and people. The state has
+no hand pose: describe_robot's spec_file gives each arm joint's axis and a point on it (the base frame, every joint at
+0), the hand's position there, the base's outline and the camera poses (base_from_cam, tcp_from_cam, and odom_from_cam
+for a room camera). Time passes only inside calls. Messages that reach the robot come back in `messages` of any result;
+the operator's answer to ask_operator comes back in `operator`. The only free text you send is a signal's note.
 
 ## The request
 
