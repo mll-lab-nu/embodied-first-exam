@@ -1,0 +1,27 @@
+{
+ "agent_timeout_sec": 3600,
+ "caps": {
+  "main": {
+   "cpus": 2.0,
+   "disk_gb": 10.0,
+   "memory_gb": 8.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 16.0,
+   "gpu_memory_gb": 16.0,
+   "memory_gb": 25.0,
+   "pids": 2048
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "standard",
+ "scope_services": [
+  "main"
+ ],
+ "task": "robodojo-sweep-blocks-random-i00-objpose_resetinf-standard",
+ "tick_sec": 5
+}

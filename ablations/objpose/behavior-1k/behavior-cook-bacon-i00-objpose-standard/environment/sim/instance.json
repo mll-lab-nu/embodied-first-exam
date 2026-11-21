@@ -1,0 +1,169 @@
+{
+ "task": "cook_bacon",
+ "challenge_task": "cook_bacon",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Cook the bacon. A tray with six slices of bacon is inside the kitchen refrigerator and a frying pan stands on the stove; cook all six slices and leave the refrigerator closed.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "d205ce25026c44a2",
+ "action_dim": 25,
+ "challenge_max_steps": 11519,
+ "objects": {
+  "bacon.n.01_6": {
+   "category": "bacon",
+   "position": [
+    7.6577,
+    -1.7909,
+    0.4779
+   ],
+   "orientation_xyzw": [
+    -0.0225,
+    -0.0253,
+    -0.6064,
+    0.7945
+   ]
+  },
+  "bacon.n.01_3": {
+   "category": "bacon",
+   "position": [
+    7.6709,
+    -1.8954,
+    0.4777
+   ],
+   "orientation_xyzw": [
+    0.0117,
+    0.0046,
+    0.9989,
+    0.0453
+   ]
+  },
+  "electric_refrigerator.n.01_1": {
+   "category": "fridge",
+   "position": [
+    7.8186,
+    -1.9659,
+    0.9844
+   ],
+   "orientation_xyzw": [
+    0.0007,
+    0.0078,
+    0.6906,
+    0.7232
+   ]
+  },
+  "frying_pan.n.01_1": {
+   "category": "frying_pan",
+   "position": [
+    4.1637,
+    -0.651,
+    0.9321
+   ],
+   "orientation_xyzw": [
+    0.0011,
+    -0.0004,
+    -0.6695,
+    0.7428
+   ]
+  },
+  "bacon.n.01_1": {
+   "category": "bacon",
+   "position": [
+    7.8658,
+    -1.9462,
+    0.4784
+   ],
+   "orientation_xyzw": [
+    0.0032,
+    -0.0206,
+    -0.1244,
+    0.992
+   ]
+  },
+  "bacon.n.01_4": {
+   "category": "bacon",
+   "position": [
+    7.7863,
+    -1.8323,
+    0.4782
+   ],
+   "orientation_xyzw": [
+    -0.0026,
+    -0.0157,
+    -0.6303,
+    0.7762
+   ]
+  },
+  "stove.n.01_1": {
+   "category": "burner",
+   "position": [
+    4.1685,
+    -0.5106,
+    0.8938
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    -0.0,
+    0.0012,
+    1.0
+   ]
+  },
+  "bacon.n.01_2": {
+   "category": "bacon",
+   "position": [
+    7.788,
+    -1.9988,
+    0.4784
+   ],
+   "orientation_xyzw": [
+    0.002,
+    -0.0123,
+    0.1979,
+    0.9801
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    6.5931,
+    -0.2586,
+    -0.1387
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "tray.n.01_1": {
+   "category": "tray",
+   "position": [
+    7.7586,
+    -1.9398,
+    0.4802
+   ],
+   "orientation_xyzw": [
+    -0.0001,
+    -0.0004,
+    0.0923,
+    0.9957
+   ]
+  },
+  "bacon.n.01_5": {
+   "category": "bacon",
+   "position": [
+    7.7291,
+    -1.9868,
+    0.4781
+   ],
+   "orientation_xyzw": [
+    0.0053,
+    -0.0075,
+    0.4853,
+    0.8743
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

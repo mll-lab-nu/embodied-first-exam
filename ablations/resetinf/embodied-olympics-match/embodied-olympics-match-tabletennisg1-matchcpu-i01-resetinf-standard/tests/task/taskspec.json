@@ -1,0 +1,298 @@
+{
+ "action": {
+  "batch": true,
+  "in_flight_per_robot": 1,
+  "layer_delay_steps": 0,
+  "limits": "derived",
+  "safe_action": {
+   "on_exit": "stop",
+   "on_silence": "hold_last",
+   "text": "If your program stops sending commands, your robot keeps its last joint targets (a joints command's last row); every point starts with the body holding the robot at the ready pose. Each serve you do not toss within 5 s is a failed service, and the third one loses the match."
+  }
+ },
+ "action_layer": "joint",
+ "continuity": "fresh",
+ "deliverables": {
+  "final_program": "post_match",
+  "post_match": {
+   "file": "/app/output/controller.toml",
+   "text": "The match is over and its result is final: nothing you do now changes it. One last short step, never scored (within 4 minutes and about 20k output tokens; skip it if you cannot): write `/app/output/controller.toml` for the program you fielded last, so that the platform can restart it on its own in a clean seat. Fields: `entry` = the command that starts it (one shell line, or an argv list), `cwd` = its working directory, `deps` = what it needs (its own program and data files, and the pip packages it imports), optionally `env` = {NAME = \"value\"}. Example: entry = \"python3 /app/output/runner.py\", cwd = \"/app/output\", deps = [\"/app/output/runner.py\", \"/app/output/plan.json\", \"numpy\"]. Do not change or restart the program. The platform restarts it from this file to check that it joins and acts; without the file, or if that fails, it restarts the process of your last deploy instead. Then end your session.",
+   "token_budget": 20000,
+   "window_s": 240.0
+  }
+ },
+ "format": "single",
+ "integrity": {
+  "abort": "at_breach",
+  "on_exceed": "platform_fault",
+  "tolerance": {
+   "late_step_p99_s": 0.05,
+   "model_access_lost": {
+    "match_fraction": 0.05,
+    "min_s": 120
+   },
+   "plan_miss_floor": 2,
+   "plan_miss_fraction": 0.01,
+   "render_miss_floor": 2,
+   "render_miss_fraction": 0.01,
+   "world_lag_max_s": 2.0,
+   "world_lag_p99_s": 0.5
+  }
+ },
+ "machine": {
+  "fits": true,
+  "machine_vcpu": 48,
+  "min_world": {
+   "render": null,
+   "status": "not_measured",
+   "vcpu": null
+  },
+  "platform_seat": {
+   "vcpu": 8
+  },
+  "practice_players": {
+   "count": 1,
+   "vcpu_each": 1
+  },
+  "seats": {
+   "count": 1,
+   "vcpu_each": 8
+  },
+  "status": "set",
+  "system": {
+   "vcpu": 2
+  },
+  "total_vcpu": 31,
+  "unit": "vCPU",
+  "unit_is": "one hardware thread (a logical CPU)",
+  "world": {
+   "physics_referee": 2,
+   "plan": 0,
+   "plan_vcpu_per_seat": 0,
+   "plan_workers_per_seat": 0,
+   "render": 10,
+   "vcpu": 12
+  }
+ },
+ "practice": {
+  "access": "throughout",
+  "package": "open",
+  "sandbox": {
+   "in_seat": true,
+   "resettable_host": true,
+   "truth": true
+  },
+  "sidecar": {
+   "exposes": "public_and_practice_player",
+   "max_worlds": 4,
+   "opponents": [
+    "none",
+    "practice_player"
+   ],
+   "realtime_rehearsal": true
+  }
+ },
+ "protocol": "realtime",
+ "review": {
+  "after": "unit",
+  "diagnostics": [
+   "missing",
+   "empty",
+   "template"
+  ],
+  "early_resume": "all_due_ready",
+  "on_timeout": "auto_resume",
+  "plan_max_chars": 2000,
+  "submitter": "agent",
+  "wake": {
+   "after_window_s": 120.0,
+   "max_calls": 24,
+   "max_wakes": 16,
+   "max_wall_s": 600.0,
+   "on": [
+    "review",
+    "full_time"
+   ]
+  },
+  "why_max_chars": 2000,
+  "window_s": 300.0
+ },
+ "schema": "eo-taskspec/1",
+ "scoring": {
+  "continuous": {
+   "name": "point_share",
+   "range": [
+    0.0,
+    1.0
+   ]
+  },
+  "hook": "judge",
+  "points": null,
+  "result": "winner"
+ },
+ "seat_protocol": "eo-seat/1",
+ "seat_resources": {
+  "cpus": 8,
+  "disk": "40GiB",
+  "gpu_class": "rtxpro6000/mig-2g.48gb+gfx",
+  "gpu_slice": {
+   "equivalent": "about 1.1 × an RTX 4090",
+   "memory": "48GB",
+   "mig_profile": "2g.48gb+gfx",
+   "model": "NVIDIA RTX PRO 6000 Blackwell"
+  },
+  "gpus": 1,
+  "memory": "16GiB",
+  "network": {
+   "install": "egress",
+   "play": "world_and_gateway_only"
+  },
+  "pids": 512,
+  "pool": "shared_per_seat"
+ },
+ "seeds": {
+  "cell": "match",
+  "dev": [
+   1,
+   2,
+   3
+  ],
+  "official_pool": "seed_pool"
+ },
+ "sensors": {
+  "cameras": [
+   {
+    "height": 360,
+    "history": 1,
+    "id": "behind",
+    "latency_steps": 2,
+    "rate_hz": 100.0,
+    "width": 480
+   },
+   {
+    "height": 360,
+    "history": 1,
+    "id": "side",
+    "latency_steps": 2,
+    "rate_hz": 100.0,
+    "width": 480
+   }
+  ],
+  "delivery": "every_step",
+  "renderer": "mujoco",
+  "reply_views": {
+   "enabled": false
+  },
+  "state": {
+   "fields_ref": "observation.fields",
+   "latency_steps": 0
+  }
+ },
+ "slots": {
+  "first": {
+   "choices": [
+    "A"
+   ],
+   "meaning": "the side that starts the match (serves, breaks or moves first, as the sport's rules say)"
+  },
+  "robots": [
+   {
+    "body": "unitree_g1",
+    "id": "r1"
+   },
+   {
+    "body": "unitree_g1",
+    "id": "r2"
+   }
+  ],
+  "sides": [
+   {
+    "id": "A",
+    "kind": "entrant",
+    "robots": [
+     "r1"
+    ],
+    "seats": [
+     {
+      "id": "A",
+      "robots": [
+       "r1"
+      ]
+     }
+    ],
+    "team_channel": false
+   },
+   {
+    "controller": {
+     "kind": "scripted",
+     "params": {
+      "levels": [
+       "L1",
+       "L2",
+       "L3",
+       "L4"
+      ]
+     },
+     "ref": "opponent"
+    },
+    "id": "B",
+    "kind": "platform",
+    "robots": [
+     "r2"
+    ]
+   }
+  ]
+ },
+ "sport": "tabletennis_g1",
+ "task_key": "tabletennis-g1-match-engineer",
+ "termination": {
+  "max_sim_s": 492.96,
+  "max_unit_sim_s": 30.81,
+  "max_units": 16,
+  "rule": {
+   "ref": "tabletennis_g1/match@g1tt-10+core-0.5",
+   "text": "The winner: a player's third undue-delay fault loses it the match; else the first player to 5 points with a lead of 2, or the first to 7, wins the game (the match); a let scores no point (at most 2 service lets in a row); if 16 points (lets included) are played, the player ahead wins and at a level score the player who won the last point (last resort, not from the rulebook); there are no draws."
+  },
+  "wall_bound_s": 7093.2
+ },
+ "timing": {
+  "clock_s": null,
+  "control_dt_s": 0.01,
+  "grace_s": 300,
+  "heartbeat": {
+   "max_stall_s": 30
+  },
+  "period_s": 0.01,
+  "prepare_s": 1800.0,
+  "slowdown": 1.0,
+  "start_barrier": {
+   "lead_s": 0.2,
+   "t0_wait_s": 600
+  },
+  "wall_cap_s": 7448.0
+ },
+ "title": "Table tennis (G1) · Fixed opponent · Engineer",
+ "tools": {
+  "list_ref": "toolkit",
+  "policies": [],
+  "tier": "toolkit"
+ },
+ "track": "engineer",
+ "validity": {
+  "faults": {
+   "agent": "decide",
+   "external": "void",
+   "platform": "void",
+   "plugin": "void",
+   "undetermined": "void"
+  },
+  "separable_results": false,
+  "separable_test_ref": null,
+  "unit": "match"
+ },
+ "world": {
+  "params": {
+   "format": "match"
+  }
+ }
+}

@@ -1,0 +1,85 @@
+{
+ "task": "clean_your_rusty_garden_tools",
+ "challenge_task": "clean_your_rusty_garden_tools",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Clean the rusty garden tools. A rusty trowel and a rusty scraper lie on the driveway in the garden, next to a toolbox with steel wool inside; remove all the rust from both tools, put them inside the toolbox and close it.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "8661e547bb3c081b",
+ "action_dim": 25,
+ "challenge_max_steps": 22736,
+ "objects": {
+  "trowel.n.01_1": {
+   "category": "trowel",
+   "position": [
+    -12.268,
+    22.4504,
+    -0.0096
+   ],
+   "orientation_xyzw": [
+    0.0004,
+    0.0006,
+    0.8797,
+    0.4754
+   ]
+  },
+  "toolbox.n.01_1": {
+   "category": "toolbox",
+   "position": [
+    -13.7994,
+    20.3444,
+    0.0573
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    -0.0,
+    0.4991,
+    0.8666
+   ]
+  },
+  "driveway.n.01_1": {
+   "category": "driveway",
+   "position": [
+    -15.9673,
+    22.8318,
+    -0.1612
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "scraper.n.01_1": {
+   "category": "scraper",
+   "position": [
+    -7.8795,
+    33.6975,
+    -0.0141
+   ],
+   "orientation_xyzw": [
+    -0.0069,
+    -0.0093,
+    0.6903,
+    0.7234
+   ]
+  },
+  "steel_wool.n.01_1": {
+   "category": "steel_wool",
+   "position": [
+    -13.8324,
+    20.4062,
+    0.0012
+   ],
+   "orientation_xyzw": [
+    0.0024,
+    0.0119,
+    -0.8824,
+    -0.4704
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

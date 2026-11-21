@@ -1,0 +1,113 @@
+{
+ "task": "cook_a_brisket",
+ "challenge_task": "cook_a_brisket",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Cook the brisket. It is raw, inside the kitchen refrigerator; a chopping board and a frying pan are on the countertop and there is an oven in the kitchen. Cook the brisket and put it on the chopping board; the frying pan must end up on the countertop.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "06f45d14aea2f392",
+ "action_dim": 25,
+ "challenge_max_steps": 11002,
+ "objects": {
+  "oven.n.01_1": {
+   "category": "oven",
+   "position": [
+    6.9114,
+    -0.6496,
+    0.541
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.7071,
+    0.7071
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    4.8314,
+    1.1399,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "frying_pan.n.01_1": {
+   "category": "frying_pan",
+   "position": [
+    8.1485,
+    1.2576,
+    0.9077
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    -0.2343,
+    0.9722
+   ]
+  },
+  "countertop.n.01_1": {
+   "category": "bar",
+   "position": [
+    8.152,
+    0.1575,
+    0.4491
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    1.0,
+    0.0
+   ]
+  },
+  "chopping_board.n.01_1": {
+   "category": "chopping_board",
+   "position": [
+    8.0775,
+    0.861,
+    0.8968
+   ],
+   "orientation_xyzw": [
+    -0.0004,
+    -0.0003,
+    -0.116,
+    0.9932
+   ]
+  },
+  "brisket.n.01_1": {
+   "category": "brisket",
+   "position": [
+    4.9755,
+    -0.4611,
+    1.6666
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    0.9922,
+    0.1245
+   ]
+  },
+  "electric_refrigerator.n.01_1": {
+   "category": "fridge",
+   "position": [
+    5.2014,
+    -0.5688,
+    0.956
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.7071,
+    0.7071
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

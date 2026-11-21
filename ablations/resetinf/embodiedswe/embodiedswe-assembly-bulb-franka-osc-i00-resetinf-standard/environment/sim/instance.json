@@ -1,0 +1,144 @@
+{
+ "action_dim": 8,
+ "control_dt": 0.066667,
+ "device": "cuda:0",
+ "format": "esw-instance/1",
+ "gpu_model": "NVIDIA L40S",
+ "physics_dt": 0.004166666666666667,
+ "preset": "assembly.bulb.franka.osc",
+ "seed": 0,
+ "start_state": {
+  "layout": [
+   [
+    "/articulation/robot/joint_position",
+    [
+     1,
+     9
+    ]
+   ],
+   [
+    "/articulation/robot/joint_velocity",
+    [
+     1,
+     9
+    ]
+   ],
+   [
+    "/articulation/robot/root_pose",
+    [
+     1,
+     7
+    ]
+   ],
+   [
+    "/articulation/robot/root_velocity",
+    [
+     1,
+     6
+    ]
+   ],
+   [
+    "/articulation/socket_0/joint_position",
+    [
+     1,
+     0
+    ]
+   ],
+   [
+    "/articulation/socket_0/joint_velocity",
+    [
+     1,
+     0
+    ]
+   ],
+   [
+    "/articulation/socket_0/root_pose",
+    [
+     1,
+     7
+    ]
+   ],
+   [
+    "/articulation/socket_0/root_velocity",
+    [
+     1,
+     6
+    ]
+   ],
+   [
+    "/rigid_object/bulb_0/root_pose",
+    [
+     1,
+     7
+    ]
+   ],
+   [
+    "/rigid_object/bulb_0/root_velocity",
+    [
+     1,
+     6
+    ]
+   ]
+  ],
+  "vector": [
+   0.001500000013038516,
+   -0.19699999690055847,
+   -0.00139999995008111,
+   -1.9759999513626099,
+   -0.0002800000074785203,
+   1.7799999713897705,
+   0.7860000133514404,
+   0.03999999910593033,
+   0.03999999910593033,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   1.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.4099999964237213,
+   2.2737367544323206e-13,
+   0.0,
+   1.0,
+   -6.251449011229759e-13,
+   -5.737126268848258e-14,
+   1.3771561668818322e-09,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.25798091292381287,
+   0.2503335773944855,
+   0.024000000208616257,
+   0.7071067690849304,
+   0.7071067690849304,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0
+  ]
+ },
+ "state_sha": "57ccacd9ddad53b98d180579a301c994eba44b77aa3db8c305ea515c10a17526"
+}

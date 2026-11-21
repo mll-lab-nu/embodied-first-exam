@@ -1,0 +1,31 @@
+# The `sim` sidecar's image (environment/docker-compose.yaml builds it): its base image, this directory at /srv, and at
+# their paths under /srv the files it shares with other tasks, from pinned files-only images (images/<name>/
+# FILES.json, scripts/files_image.py). .dockerignore keeps the build's own two files out of /srv.
+FROM ghcr.io/mll-lab-nu/efe-private:control-transfer-0.2.0
+COPY . /srv/
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.0-abl@sha256:a6cc6825562f3c119805f700dcceb7f2cc106eff44bf0873960856de5ab119de /anycarbench/ /srv/anycarbench/
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.0-abl@sha256:a6cc6825562f3c119805f700dcceb7f2cc106eff44bf0873960856de5ab119de /anycarbench/ /srv/scripts/control_transfer/components/anycarbench/
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.0-abl@sha256:a6cc6825562f3c119805f700dcceb7f2cc106eff44bf0873960856de5ab119de /sim/control_assets.py /srv/control_assets.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.0-abl@sha256:a6cc6825562f3c119805f700dcceb7f2cc106eff44bf0873960856de5ab119de \
+     /sim/scripts/__init__.py \
+     /standard/environment/public/control_public/anycar.py \
+     /standard/environment/public/control_public/anycar_drift.py \
+     /standard/environment/public/control_public/anycar_drift_nominal.py \
+     /standard/environment/public/control_public/client.py \
+     /standard/environment/public/control_public/weights.py \
+     /srv/control_public/
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.0-abl@sha256:a6cc6825562f3c119805f700dcceb7f2cc106eff44bf0873960856de5ab119de /sim/scripts/__init__.py /srv/scripts/__init__.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.0-abl@sha256:a6cc6825562f3c119805f700dcceb7f2cc106eff44bf0873960856de5ab119de \
+     /sim/scripts/__init__.py \
+     /sim/scripts/control_transfer/anycar_drift_spec.py \
+     /sim/scripts/control_transfer/anycar_spec.py \
+     /srv/scripts/control_transfer/
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.0-abl@sha256:a6cc6825562f3c119805f700dcceb7f2cc106eff44bf0873960856de5ab119de /sim/scripts/__init__.py /srv/scripts/control_transfer/components/__init__.py
+COPY --from=ghcr.io/mll-lab-nu/efe:roboengineer-files-0.3.0-abl@sha256:a6cc6825562f3c119805f700dcceb7f2cc106eff44bf0873960856de5ab119de \
+     /sim/scripts/__init__.py \
+     /standard/environment/public/control_public/anycar.py \
+     /standard/environment/public/control_public/anycar_drift.py \
+     /standard/environment/public/control_public/anycar_drift_nominal.py \
+     /standard/environment/public/control_public/client.py \
+     /standard/environment/public/control_public/weights.py \
+     /srv/scripts/control_transfer/control_public/

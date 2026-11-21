@@ -1,0 +1,71 @@
+{
+ "task": "put_together_a_basic_pruning_kit",
+ "challenge_task": "put_together_a_basic_pruning_kit",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "In the garage, put the pruner and the shears, which lie on the floor, inside the toolbox, which also stands on the floor, and close the toolbox; the toolbox stays on the floor.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "1f9d35ac47cf8933",
+ "action_dim": 25,
+ "challenge_max_steps": 16896,
+ "objects": {
+  "pruner.n.02_1": {
+   "category": "pruner",
+   "position": [
+    -6.9237,
+    2.984,
+    0.1039
+   ],
+   "orientation_xyzw": [
+    -0.019,
+    0.0477,
+    0.9198,
+    -0.389
+   ]
+  },
+  "shears.n.01_1": {
+   "category": "shears",
+   "position": [
+    -5.472,
+    3.4183,
+    0.0123
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    -0.0,
+    0.3335,
+    0.9427
+   ]
+  },
+  "toolbox.n.01_1": {
+   "category": "toolbox",
+   "position": [
+    -7.5459,
+    5.795,
+    0.0798
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.697,
+    0.717
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -5.3695,
+    5.5058,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

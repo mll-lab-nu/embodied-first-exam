@@ -1,0 +1,257 @@
+{
+ "task": "put_pot_on_cooktop",
+ "yamlab_env": "PutPotOnCooktop-v0",
+ "assets": {
+  "pot": "Pot/pot_000",
+  "cooktop": "Cooktop/cooktop_000"
+ },
+ "text": "Pick up the pot with both arms (both grippers grasping it) and put it down on the cooktop, upright, then release it with both grippers.",
+ "stages": [
+  "pick",
+  "place"
+ ],
+ "initial_state": {
+  "articulation": {
+   "left_arm": {
+    "joint_position": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     -0.04749999940395355,
+     -0.04749999940395355
+    ],
+    "joint_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_pose": [
+     0.2524999976158142,
+     0.3050000071525574,
+     0.7599999904632568,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "right_arm": {
+    "joint_position": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     -0.04749999940395355,
+     -0.04749999940395355
+    ],
+    "joint_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_pose": [
+     0.2524999976158142,
+     -0.3050000071525574,
+     0.7599999904632568,
+     1.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  "deformable_object": {},
+  "gripper": {},
+  "rigid_object": {
+   "cooktop": {
+    "root_pose": [
+     0.7055000066757202,
+     -0.30000001192092896,
+     0.7903739809989929,
+     0.7071068286895752,
+     0.0,
+     0.0,
+     -0.7071067690849304
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "pot": {
+    "root_pose": [
+     0.7105000019073486,
+     0.10972891747951508,
+     0.8258914947509766,
+     0.5141028165817261,
+     0.0,
+     0.0,
+     -0.8577286005020142
+    ],
+    "root_velocity": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  }
+ },
+ "state_sha": "9f938b2967e8bf41",
+ "action_dim": 14,
+ "control_hz": 30,
+ "sim_dt": 0.00833333333333,
+ "decimation": 4,
+ "physics": {
+  "device": "cpu"
+ },
+ "robot_joint_positions": {
+  "left": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   -0.0475
+  ],
+  "right": [
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   0.0,
+   -0.0475
+  ]
+ },
+ "objects": {
+  "pot": {
+   "position": [
+    0.7105,
+    0.10973,
+    0.82589
+   ],
+   "orientation_wxyz": [
+    0.514103,
+    0.0,
+    0.0,
+    -0.857729
+   ],
+   "size": [
+    0.385,
+    0.26456,
+    0.13838
+   ],
+   "bounds": [
+    [
+     0.50309,
+     -0.1224,
+     0.7567
+    ],
+    [
+     0.91791,
+     0.34186,
+     0.89508
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "cooktop": {
+   "position": [
+    0.7055,
+    -0.3,
+    0.79037
+   ],
+   "orientation_wxyz": [
+    0.707107,
+    0.0,
+    0.0,
+    -0.707107
+   ],
+   "size": [
+    0.29473,
+    0.34071,
+    0.06735
+   ],
+   "bounds": [
+    [
+     0.53514,
+     -0.44737,
+     0.7567
+    ],
+    [
+     0.87586,
+     -0.15263,
+     0.82405
+    ]
+   ],
+   "velocity": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "success_params": {
+  "table_z": 0.7517,
+  "pot_height": 0.13838,
+  "cooktop_height": 0.06735,
+  "pot_rest_z": 0.82589,
+  "pick_lift_m": 0.05,
+  "pick_steps": 8,
+  "place_xy_tol_m": 0.23357,
+  "place_z_tol_m": 0.02,
+  "upright_tol_rad": 0.2,
+  "place_steps": 30
+ },
+ "table_top_z": 0.7517,
+ "versions": {
+  "isaaclab": "0.54.3",
+  "isaacsim": "",
+  "torch": "2.7.0+cu128",
+  "yamlab_commit": "ec0455d2b4ce",
+  "isaaclab_commit": "f4aa17f87e2e"
+ }
+}

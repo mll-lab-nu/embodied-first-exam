@@ -1,0 +1,46 @@
+# Install a graphics card and two RAM sticks (Franka, operational-space control) — standard mode
+
+The task of `embodiedswe-assembly-pc-gpu-ram-franka-osc-i00-privileged`, on the same frozen scene. You drive a Franka Panda arm with its parallel gripper, under EmbodiedSWE's operational-space (torque) controller, as if it were real hardware: the simulator runs in a service you cannot open, and you get its client, one episode and no reset. The client's docstring is its manual (`/opt/tools/rcb_client.py`); `r.spec()` gives the numbers.
+
+## The task
+A gaming-PC case lying on its side on a sturdy table, opening up, its motherboard facing the ceiling. The board's primary PCIe x16 slot is empty (the rear I/O panel has an open expansion-slot cutout), and all four memory slots are empty. Beside the case a loose graphics card and two loose RAM sticks stand upright in foam holders, already in their installation orientations.
+Goal: install the card first — grip it by its top edge, lift it out of its holder, lower it into the case with its I/O bracket just forward of the rear panel, slide it rearward until the bracket and ports pass through the cutout, line its PCB edge connector up with the x16 slot, and press it straight down until it bottoms out — then install each RAM stick: carry it over the case wall, line its gold edge connector up with its slot (the outermost and the second-from-socket, the alternating pair a dual-channel kit fills), and press it straight down until it clicks fully home. Every seated part stays put on its own. The task is complete once the card and both sticks are fully seated. A part holds in a firm pinch: close the fingers squarely across the card's body slab or a stick's faces, near the top edge, and the grip locks; open wide to release.
+
+Success, exactly: at the end of the run, the graphics card and both RAM sticks are seated, in the fixed case's frame (board face horizontal, facing up). Card: bottom-centre of its edge-connector tab at most 4.5 mm above the board face (at least 4 mm below the PCIe slot mouth 8.5 mm up; bottomed 3.5 mm), within 3 mm horizontally of its seated point, up axis within 3° of the board normal, length axis within 3° of the seated heading, which is its start heading in the holder turned 90° clockwise seen from above. Sticks: the one starting in the holder farther from the robot base goes in the outermost DIMM slot, the other in the second-from-socket slot; each connector's bottom-centre at most 0.9456 mm above the board face (at least 3.7 mm below the 4.6456 mm wall top), within 3 mm horizontally of its seated point, up axis within 6°, length axis within 3° of its start heading. Not true at the start. [success(); card seat world (0.53405, 0.0693, 0.0324); slots (0.40731, -0.02789, 0.02911), (0.42627, -0.02789, 0.02911)]
+
+## This robot
+- Action: `ee_pose` only, 9 values: the world pose of `panda_hand` (`x y z qw qx qy qz`) and the two finger position targets (m, 0 closed, 0.04 open). Rows are streamed at the 15 Hz control rate with your `dt`; `spec["action_types"]["ee_pose"]` has the layout, the controller and the joint limits. Coordinates are the simulator's world frame (metres, z up; `spec["world"]`).
+- Cameras (RGB 640×480, depth on request): `overview` (static) and `wrist` (on the hand). One call returns at most 240 images (`max_frames_per_call`, PROTOCOL §3 "Images per call": cameras × the frames captured, the first, one every round(15 / `video_fps`) control steps and the last, a per-frame depth one more image; `video="none"` captures only the first and the last); a larger request is refused (400) before anything runs. A call that names no cameras gets `overview`, `wrist` at 4 frames per second, so every call up to `max_chunk_s` / `max_watch_s` fits.
+- The episode ends after the first call at whose end the success condition holds (judged on the live simulator), when your time is up, on a simulator error, or after 400,000 control steps (7.4 h of simulated time, reason `step_guard`); it is graded as it stands then. Simulated time advances only inside your calls.
+- The service answers one request at a time: while a long call runs, every other request waits, so a client-side timeout means "busy", not "crashed".
+- Leave your scripts in `/app/output/` for the record.
+
+## This run: no success signal
+
+This run changes how the episode ends. This section overrides anything above, and anything in `/spec`, that says a
+success ends the episode, that `meta["reason"]` can be `"success"`, or that a success refuses later calls or resets.
+
+- The robot never tells you whether you have succeeded: reaching the goal changes no response, status, error or
+  counter, and the episode does not end there.
+- You decide when you are done: send `POST /finish` with an empty JSON body (`{}`) to the service, on the same base
+  URL as your other calls (`http://sim:8000` or `http://localhost:8000`; in Python, for example
+  `requests.post(base + "/finish", json={})`). The state at that moment is graded with the task's success rule (with
+  the task's settle or hold time described above, run from that state). After `/finish` every call is refused (409).
+- If you do not call it, the state when your session ends (you stop, or your time runs out) is graded.
+- A success reached earlier and then undone does not count: only the state at the end is graded. An event the task
+  records once it happens (for example a scored goal or a completed stage sequence) stays part of that state, also
+  when one of the task's failure rules ends the episode after it. Resets work as described above, within the budget,
+  and only the episode that ends with `/finish` or at the end of your session is graded.
+- The episode still ends on its own on a simulator error, at the task's technical step limit (graded as it stands),
+  and where the task's own rules end it as a failure (for example a fall), as described above.
+
+## External material
+You may install packages you need (pip, apt), and you may read anything installed in your container, the simulator's and this benchmark's own source code included. Please solve the task yourself: do not search the web for, or download, a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed. The network reaches your model's API and the package registries (PyPI, Debian / Ubuntu archives) only.
+
+## Resources
+Your container: **8 CPUs**, **24 GiB of memory**, **1024 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+
+## Time limit
+You have 14400 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time you wait for the simulator service counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. The service's `time_left_s` counts the same limit from your first request to the service, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that request. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it (or run `date`) before you decide that time is short, never guess. Waiting counts too: a tool call that sends input to a process that keeps running (an interactive interpreter, a simulator loop, a server) can wait for the whole wait or yield time you give it (for example Codex's `yield_time_ms`) even when the answer is printed at once, so give such calls a short wait and poll again if the output is not complete, or run one-shot scripts that exit when they are done. Installing packages is not cheating (`## External material` above).

@@ -1,0 +1,130 @@
+{
+  "schema": "control-transfer/1",
+  "protocol": "eai-policy/1.1",
+  "name": "Drift to Park",
+  "goal": "Follow the ordered U-bend, then slide sideways into a parallel-parking space between two stationary cars and hold a precise stop.",
+  "max_rounds": 3,
+  "adaptation_cases": 3,
+  "held_out_cases": 10,
+  "horizon_s": 16.0,
+  "policy_abi": "anycar-drift-controller/1 bounded numeric JSON",
+  "default_policy": {
+    "schema": "anycar-drift-controller/1",
+    "route_speed": 1.2,
+    "entry_speed": 2.632360684649053,
+    "trigger_x": -1.66,
+    "turn_time": 0.31204911369245086,
+    "turn_steer": -0.36,
+    "counter_time": 0.65,
+    "counter_steer": 0.36,
+    "counter_speed": 0.55,
+    "brake": 1.0,
+    "settle_gain": 1.0
+  },
+  "bounds": {
+    "route_speed": [
+      0.2,
+      3.0
+    ],
+    "entry_speed": [
+      0.0,
+      5.0
+    ],
+    "trigger_x": [
+      -2.6,
+      -0.8
+    ],
+    "turn_time": [
+      0.05,
+      1.0
+    ],
+    "turn_steer": [
+      -0.36,
+      0.0
+    ],
+    "counter_time": [
+      0.05,
+      1.0
+    ],
+    "counter_steer": [
+      0.0,
+      0.36
+    ],
+    "counter_speed": [
+      0.0,
+      3.0
+    ],
+    "brake": [
+      0.0,
+      1.0
+    ],
+    "settle_gain": [
+      0.1,
+      3.0
+    ]
+  },
+  "channels": [
+    "x",
+    "y",
+    "yaw",
+    "forward_speed",
+    "lateral_speed",
+    "yaw_rate",
+    "wheel_fl",
+    "wheel_fr",
+    "wheel_bl",
+    "wheel_br",
+    "steering",
+    "requested_speed",
+    "requested_steering",
+    "rear_brake"
+  ],
+  "units": [
+    "m",
+    "m",
+    "rad",
+    "m/s",
+    "m/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad",
+    "m/s",
+    "rad",
+    "1"
+  ],
+  "image_interval_s": 0.1,
+  "training_backend": "nominal MuJoCo CPU",
+  "evaluation_backend": "native MuJoCo CPU + OSMesa",
+  "actions": [
+    "drive velocity command",
+    "front steering",
+    "rear handbrake fraction"
+  ],
+  "score": "Complete the ordered U-route, then slide near the bay with body lateral speed >0.2 m/s, planar speed >0.6 m/s and sideslip >10 degrees continuously for at least 0.15 s, accumulating at least 0.06 m of lateral slide. Park the entire car envelope inside the bay with x error <0.18 m, y error <0.12 m, yaw error <0.14 rad, speed <0.08 m/s and yaw rate <0.1 rad/s for the final 0.5 s. Collision, rollover, chassis-ground contact or route departure fails. A successful case scores 100*exp(-final_position_error_m/0.25-final_yaw_error_rad/0.3); otherwise zero.",
+  "limitations": "Rigid RC tire contact and rear-wheel dry-friction brake; not a calibrated pneumatic-tire drifting or vehicle-damage model.",
+  "task_variant": "drift-park/1",
+  "feedback": "Public course command, 14 noisy sensor/own-action values and 161 images at 10 Hz. No hidden state, plant parameters, seeds, contacts or scores.",
+  "command_fields": [
+    "radius",
+    "park_x",
+    "park_y",
+    "slot_length",
+    "slot_width"
+  ],
+  "command_units": [
+    "m",
+    "m",
+    "m",
+    "m",
+    "m"
+  ],
+  "video_resolution": [
+    1920,
+    540
+  ],
+  "video_fps": 10,
+  "image_sampling": "All 161 frames at fixed 0.1-second times from 0 through 16 s, with all 161 noisy telemetry rows."
+}

@@ -1,0 +1,1014 @@
+{
+ "task": "store_laptop_and_headphones_random",
+ "seed": 0,
+ "layout_index": 0,
+ "layout_file": "Assets/Eval_Layout/RoboDojo/arx_x5/0/store_laptop_and_headphones_random_0.json",
+ "layout_sha256": "1d682a4a3844392f368eea462611bcfea12546d28764654874d8e7e7ce2ce418",
+ "layout": {
+  "Rigid": {
+   "headset": [
+    {
+     "category": "headset",
+     "category_idx": 9,
+     "group": null,
+     "xlim": [
+      -0.4,
+      0.4
+     ],
+     "ylim": [
+      -0.25,
+      0.0
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 30,
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "headset",
+     "default_pos": [
+      -0.06100889920146611,
+      -0.20452888985486944,
+      0.7965853021204498
+     ],
+     "default_ori": [
+      -0.614401101005545,
+      0.759320842711303,
+      0.16710428196755003,
+      -0.1342360005940303
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.22,
+      "friction": 0.45,
+      "size": [
+       0.1581680539746634,
+       0.08063772439281622,
+       0.183
+      ],
+      "type": "rigid"
+     },
+     "visual": {}
+    }
+   ],
+   "minecraft_blocks": [
+    {
+     "category_idx": 1,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.4009162828083932,
+      0.3253166211110861,
+      0.8049999792000057
+     ],
+     "default_ori": [
+      0.9778752892194107,
+      -0.0005098571295779529,
+      -6.7555324401190385e-06,
+      0.20918809415003584
+     ]
+    }
+   ],
+   "toy_plane": [
+    {
+     "category_idx": 2,
+     "physics": {
+      "mass": 0.45,
+      "friction": 0.32,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.1574862432150349,
+      0.14191675344219792,
+      0.8110694266353823
+     ],
+     "default_ori": [
+      0.9999506441531034,
+      0.004039242781651884,
+      0.006274664256829829,
+      -0.006559143542304633
+     ]
+    }
+   ],
+   "stapler": [
+    {
+     "category_idx": 2,
+     "physics": {
+      "mass": 0.12,
+      "friction": 0.3,
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.4803411655751694,
+      0.11718763345950862,
+      0.7977007182491022
+     ],
+     "default_ori": [
+      0.9838469776387456,
+      -0.001073350992342931,
+      0.000312915459411002,
+      0.17900802940837077
+     ]
+    }
+   ],
+   "phone_stand": [
+    {
+     "category_idx": 1,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      0.3367405330591819,
+      0.11525075576831526,
+      0.8412968630517244
+     ],
+     "default_ori": [
+      0.7062093678904033,
+      0.707998117354482,
+      -0.0023767153652575635,
+      -0.0011600648338564714
+     ]
+    }
+   ],
+   "pokeball": [
+    {
+     "category_idx": 1,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.2504285223875852,
+      0.35923914359114484,
+      0.8047909608082155
+     ],
+     "default_ori": [
+      0.9928286522627005,
+      0.02967605914135517,
+      0.11072556900787729,
+      -0.03391824181691196
+     ]
+    }
+   ],
+   "walkie_talkie": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.43966837510556983,
+      -0.24387598924064954,
+      0.7880404744334204
+     ],
+     "default_ori": [
+      0.6970686436909037,
+      -0.6956889961056364,
+      -0.12258415910953228,
+      0.12282202821914673
+     ]
+    }
+   ],
+   "cereal": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.0705049799332466,
+      0.3940787212949055,
+      0.7645000000000001
+     ],
+     "default_ori": [
+      0.9713948248955518,
+      0.0,
+      0.0,
+      -0.23747019637449282
+     ]
+    }
+   ],
+   "ball": [
+    {
+     "category_idx": 0,
+     "physics": {
+      "type": "rigid"
+     },
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "type": "cluttered",
+     "clutter_idx": 0,
+     "yaml_path": "Clutter/clutter.yml",
+     "relative_plane": "Table",
+     "default_pos": [
+      -0.5454211790767329,
+      0.3604846087750716,
+      0.7647818013684299
+     ],
+     "default_ori": [
+      0.9911878172122994,
+      0.0009539461688203979,
+      -0.0034043798752066987,
+      0.1324168085791595
+     ]
+    }
+   ]
+  },
+  "Geometry": {
+   "laptop_stand": [
+    {
+     "category": "laptop_stand",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      0.04,
+      0.09
+     ],
+     "ylim": [
+      0.02,
+      0.02
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      -10,
+      0
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "laptop_stand",
+     "default_pos": [
+      0.0685071950639997,
+      0.019771052441842314,
+      0.804500356355608
+     ],
+     "default_ori": [
+      0.9974377975035378,
+      -0.00086204076670565,
+      0.0005629249954823623,
+      -0.07153167209326056
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.85,
+      "friction": 1.0,
+      "size": [
+       0.3172,
+       0.1269,
+       0.056
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "vertical_laptop_storage_rack": [
+    {
+     "category": "vertical_laptop_storage_rack",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.3,
+      0.35
+     ],
+     "ylim": [
+      -0.15,
+      -0.05
+     ],
+     "zlim": [
+      0.025,
+      0.025
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      75,
+      105
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "vertical_laptop_storage_rack",
+     "default_pos": [
+      0.31330353193682003,
+      -0.11598239079598452,
+      0.79
+     ],
+     "default_ori": [
+      0.67825111806611,
+      0.0,
+      0.0,
+      0.7348301986459672
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.85,
+      "friction": 0.45,
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "headset_stand": [
+    {
+     "category": "headset_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      -0.35,
+      -0.25
+     ],
+     "ylim": [
+      -0.02,
+      0.05
+     ],
+     "zlim": null,
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": [
+      0,
+      30
+     ],
+     "rotate_rand": true,
+     "relative_plane": "Table",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "stand",
+     "default_pos": [
+      -0.3491361104715096,
+      0.004771555017614026,
+      0.9025000000000001
+     ],
+     "default_ori": [
+      0.9988830101439717,
+      0.0,
+      0.0,
+      0.04725179410052125
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.85,
+      "friction": 0.45,
+      "size": [
+       0.178355014162335,
+       0.10429502245117392,
+       0.275
+      ],
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ],
+   "camera_stand": [
+    {
+     "category": "camera_stand",
+     "category_idx": 0,
+     "group": null,
+     "xlim": [
+      0.0,
+      0.0
+     ],
+     "ylim": [
+      -0.47,
+      -0.47
+     ],
+     "zlim": [
+      0.715,
+      0.715
+     ],
+     "qpos": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "Ground",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "bbox",
+     "need_check_stable": true,
+     "label": "camera_stand",
+     "default_pos": [
+      0.0,
+      -0.47,
+      0.765
+     ],
+     "default_ori": [
+      0.707,
+      -0.707,
+      0.0,
+      0.0
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "type": "geometry"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Articulation": {
+   "laptop": [
+    {
+     "category": "laptop",
+     "category_idx": 1,
+     "group": null,
+     "xlim": [
+      -0.05,
+      0.05
+     ],
+     "ylim": [
+      -0.08,
+      -0.08
+     ],
+     "zlim": [
+      0.02,
+      0.02
+     ],
+     "qpos": [
+      1,
+      0,
+      0,
+      0
+     ],
+     "rotate_deg": 0,
+     "rotate_rand": false,
+     "relative_plane": "laptop_stand/laptop_stand/0",
+     "place_tag": null,
+     "margin": 0.01,
+     "check_mode": "none",
+     "need_check_stable": true,
+     "label": "laptop",
+     "default_pos": [
+      0.030424677530909716,
+      -0.05547455645139525,
+      0.8546712462827439
+     ],
+     "default_ori": [
+      0.9974377976244614,
+      -0.0008620407863107881,
+      0.0005629250092189508,
+      -0.07153167040675365
+     ],
+     "scale": [
+      1.0,
+      1.0,
+      1.0
+     ],
+     "physics": {
+      "mass": 0.1,
+      "friction": 0.45,
+      "type": "articulation"
+     },
+     "visual": {}
+    }
+   ]
+  },
+  "Room": {
+   "default": "Simple_Room_teal",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "default_rot": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "Table": {
+   "default": "material_0441",
+   "scale": [
+    1.4,
+    1.1,
+    0.05
+   ],
+   "default_pos": [
+    0.0,
+    -0.05,
+    0.74
+   ],
+   "default_ori": [
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Ground": {
+   "geometry": "cube",
+   "thickness": 0.1,
+   "axis": "Z",
+   "default_pos": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "materials": {
+    "type": "mdl",
+    "default": "material_0562",
+    "random": false
+   },
+   "physics_material": {
+    "static_friction": 1.0,
+    "dynamic_friction": 1.0,
+    "restitution": 0.0,
+    "friction_combine_mode": "multiply",
+    "restitution_combine_mode": "multiply",
+    "compliant_contact_stiffness": 0.0,
+    "compliant_contact_damping": 0.0
+   }
+  },
+  "Background": {
+   "intensity": 1000,
+   "category_name": "brown_photostudio_02_4k.hdr"
+  }
+ },
+ "state_sha": "5cca15479d7c00a9",
+ "step_lim": 800,
+ "control_hz": 25,
+ "action_dim": 14,
+ "instruction": "Hang the headphones on the headphone stand, close the laptop, then place it into the vertical laptop stand.",
+ "labels": [
+  "headset",
+  "laptop",
+  "laptop_stand",
+  "vertical_laptop_storage_rack",
+  "stand",
+  "camera_stand"
+ ],
+ "objects": {
+  "headset": {
+   "position": [
+    -0.06101,
+    -0.20453,
+    0.79614
+   ],
+   "orientation_wxyz": [
+    -0.61437,
+    0.75935,
+    0.16711,
+    -0.13422
+   ],
+   "bbox_corners": [
+    [
+     -0.0791,
+     -0.0401,
+     0.0915
+    ],
+    [
+     -0.0792,
+     -0.0401,
+     -0.0914
+    ],
+    [
+     0.0789,
+     -0.0402,
+     0.0914
+    ],
+    [
+     0.0789,
+     -0.0402,
+     -0.0914
+    ],
+    [
+     -0.0791,
+     0.0405,
+     0.0915
+    ],
+    [
+     -0.0791,
+     0.0404,
+     -0.0914
+    ],
+    [
+     0.079,
+     0.0404,
+     0.0914
+    ],
+    [
+     0.079,
+     0.0404,
+     -0.0915
+    ]
+   ]
+  },
+  "laptop": {
+   "position": [
+    0.03059,
+    -0.05406,
+    0.84601
+   ],
+   "orientation_wxyz": [
+    0.99744,
+    0.00243,
+    -0.00044,
+    -0.07147
+   ],
+   "bbox_corners": [
+    [
+     -0.0896,
+     0.0895,
+     0.1212
+    ],
+    [
+     -0.0896,
+     -0.0787,
+     0.0032
+    ],
+    [
+     0.0897,
+     0.0895,
+     0.1212
+    ],
+    [
+     0.0897,
+     -0.0787,
+     0.0032
+    ],
+    [
+     -0.0896,
+     0.1324,
+     0.06
+    ],
+    [
+     -0.0896,
+     -0.0358,
+     -0.058
+    ],
+    [
+     0.0897,
+     0.1324,
+     0.06
+    ],
+    [
+     0.0897,
+     -0.0358,
+     -0.058
+    ]
+   ]
+  },
+  "laptop_stand": {
+   "position": [
+    0.06851,
+    0.01977,
+    0.8045
+   ],
+   "orientation_wxyz": [
+    0.99744,
+    -0.00086,
+    0.00056,
+    -0.07153
+   ],
+   "bbox_corners": [
+    [
+     -0.1538,
+     -0.0613,
+     0.0388
+    ],
+    [
+     0.1534,
+     -0.0613,
+     0.0388
+    ],
+    [
+     -0.1538,
+     0.0616,
+     0.0388
+    ],
+    [
+     0.1534,
+     0.0616,
+     0.0388
+    ],
+    [
+     -0.1538,
+     -0.0613,
+     -0.0393
+    ],
+    [
+     0.1535,
+     -0.0613,
+     -0.0392
+    ],
+    [
+     -0.1538,
+     0.0616,
+     -0.0393
+    ],
+    [
+     0.1535,
+     0.0616,
+     -0.0392
+    ]
+   ]
+  },
+  "vertical_laptop_storage_rack": {
+   "position": [
+    0.3133,
+    -0.11598,
+    0.79
+   ],
+   "orientation_wxyz": [
+    0.67825,
+    0.0,
+    0.0,
+    0.73483
+   ],
+   "bbox_corners": [
+    [
+     -0.0685,
+     -0.0265,
+     0.0243
+    ],
+    [
+     0.0684,
+     -0.0265,
+     0.0243
+    ],
+    [
+     -0.0685,
+     0.0266,
+     0.0243
+    ],
+    [
+     0.0684,
+     0.0266,
+     0.0243
+    ],
+    [
+     -0.0685,
+     -0.0265,
+     -0.0244
+    ],
+    [
+     0.0684,
+     -0.0265,
+     -0.0244
+    ],
+    [
+     -0.0685,
+     0.0266,
+     -0.0244
+    ],
+    [
+     0.0684,
+     0.0266,
+     -0.0244
+    ]
+   ]
+  },
+  "stand": {
+   "position": [
+    -0.34914,
+    0.00477,
+    0.9025
+   ],
+   "orientation_wxyz": [
+    0.99888,
+    0.0,
+    0.0,
+    0.04725
+   ],
+   "bbox_corners": [
+    [
+     0.089,
+     0.0523,
+     0.1375
+    ],
+    [
+     0.089,
+     0.0522,
+     -0.1375
+    ],
+    [
+     -0.0893,
+     0.0523,
+     0.1375
+    ],
+    [
+     -0.0893,
+     0.0522,
+     -0.1375
+    ],
+    [
+     0.089,
+     -0.0519,
+     0.1375
+    ],
+    [
+     0.089,
+     -0.052,
+     -0.1375
+    ],
+    [
+     -0.0893,
+     -0.0519,
+     0.1375
+    ],
+    [
+     -0.0893,
+     -0.052,
+     -0.1375
+    ]
+   ]
+  },
+  "camera_stand": {
+   "position": [
+    0.0,
+    -0.47,
+    0.765
+   ],
+   "orientation_wxyz": [
+    -0.707,
+    0.70721,
+    0.0,
+    0.0
+   ],
+   "bbox_corners": [
+    [
+     -0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     -0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     -0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     -0.15,
+     0.0145,
+     0.045
+    ],
+    [
+     0.15,
+     -0.5855,
+     -0.0798
+    ],
+    [
+     0.15,
+     -0.5855,
+     0.045
+    ],
+    [
+     0.15,
+     0.0145,
+     -0.0798
+    ],
+    [
+     0.15,
+     0.0145,
+     0.045
+    ]
+   ]
+  }
+ },
+ "start_action": [
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0,
+  0.0,
+  -0.0,
+  0.0,
+  0.0,
+  -0.0,
+  0.0,
+  1.0
+ ],
+ "physics": {}
+}

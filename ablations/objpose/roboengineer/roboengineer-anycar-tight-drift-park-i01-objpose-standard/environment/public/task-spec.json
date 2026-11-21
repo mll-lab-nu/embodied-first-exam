@@ -1,0 +1,166 @@
+{
+  "schema": "control-transfer/1",
+  "protocol": "eai-policy/1.1",
+  "name": "anycar-drift-v3",
+  "goal": "Follow the ordered U-bend, then execute a 180-degree drifting turn into a tight inside parallel-parking space between two stationary cars and hold a precise stop.",
+  "course_revision": "drift-park/3",
+  "nominal_bay_size_m": [
+    0.69,
+    0.43
+  ],
+  "car_envelope_m": [
+    0.49,
+    0.27
+  ],
+  "approach_straight_m": 1.0,
+  "max_rounds": 3,
+  "adaptation_cases": 3,
+  "held_out_cases": 10,
+  "horizon_s": 16.0,
+  "policy_abi": "anycar-drift-controller/3 bounded numeric JSON (legacy /2 accepted)",
+  "default_policy": {
+    "schema": "anycar-drift-controller/3",
+    "route_speed": 1.2,
+    "entry_speed": 4.87477733242999,
+    "accelerate_index": 98.0,
+    "drift_lead_m": 1.49573696028281,
+    "trigger_preview_s": 0.0,
+    "turn_speed": 3.7608570656700038,
+    "turn_steer": 0.3331896227491897,
+    "yaw_preview_s": 0.05530469264397912,
+    "brake_remaining_rad": 1.781540780795078,
+    "brake_speed": 0.2223729129498621,
+    "counter_offset_rad": 0.0,
+    "heading_gain": 0.73,
+    "yaw_rate_gain": 0.46,
+    "brake": 1.0
+  },
+  "bounds": {
+    "route_speed": [
+      0.2,
+      3.0
+    ],
+    "entry_speed": [
+      0.0,
+      5.0
+    ],
+    "accelerate_index": [
+      70.0,
+      110.0
+    ],
+    "drift_lead_m": [
+      0.2,
+      1.8
+    ],
+    "trigger_preview_s": [
+      0.0,
+      0.3
+    ],
+    "turn_speed": [
+      0.0,
+      5.0
+    ],
+    "turn_steer": [
+      0.2,
+      0.36
+    ],
+    "yaw_preview_s": [
+      0.0,
+      0.5
+    ],
+    "brake_remaining_rad": [
+      0.0,
+      3.141592653589793
+    ],
+    "brake_speed": [
+      0.0,
+      3.0
+    ],
+    "counter_offset_rad": [
+      -0.3,
+      0.5
+    ],
+    "heading_gain": [
+      0.1,
+      4.0
+    ],
+    "yaw_rate_gain": [
+      0.0,
+      1.0
+    ],
+    "brake": [
+      0.0,
+      1.0
+    ]
+  },
+  "channels": [
+    "x",
+    "y",
+    "yaw",
+    "forward_speed",
+    "lateral_speed",
+    "yaw_rate",
+    "wheel_fl",
+    "wheel_fr",
+    "wheel_bl",
+    "wheel_br",
+    "steering",
+    "requested_speed",
+    "requested_steering",
+    "rear_brake"
+  ],
+  "units": [
+    "m",
+    "m",
+    "rad",
+    "m/s",
+    "m/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad/s",
+    "rad",
+    "m/s",
+    "rad",
+    "1"
+  ],
+  "image_interval_s": 0.1,
+  "training_backend": "nominal MuJoCo CPU",
+  "evaluation_backend": "native MuJoCo CPU + OSMesa",
+  "actions": [
+    "drive velocity command",
+    "front steering",
+    "rear handbrake fraction"
+  ],
+  "score": "Complete the ordered U-route, then turn by pi radians within 0.25 rad, accumulating at least 120 degrees while sliding. Sliding requires body lateral speed >0.2 m/s, planar speed >0.6 m/s and sideslip >10 degrees near the bay; sustain it for 0.15 s and accumulate 0.06 m of lateral slide. Park the entire car envelope inside the bay with x error <0.18 m, y error <0.12 m, yaw error <0.14 rad, speed <0.08 m/s and yaw rate <0.1 rad/s for the final 0.5 s. Collision, rollover, chassis-ground contact or route departure fails. A successful case scores 100*exp(-final_position_error_m/0.25-final_yaw_error_rad/0.3); otherwise zero.",
+  "limitations": "Rigid RC tire contact and rear-wheel dry-friction brake; not a calibrated pneumatic-tire drifting or vehicle-damage model.",
+  "task_variant": "drift-park/3",
+  "feedback": "Public course command, 14 noisy sensor/own-action values and 161 images at 10 Hz. No hidden state, plant parameters, seeds, contacts or scores.",
+  "command_fields": [
+    "radius",
+    "park_x",
+    "park_y",
+    "slot_length",
+    "slot_width",
+    "target_yaw",
+    "start_x",
+    "revision"
+  ],
+  "command_units": [
+    "m",
+    "m",
+    "m",
+    "m",
+    "m",
+    "rad",
+    "m",
+    "revision string"
+  ],
+  "video_resolution": [
+    1920,
+    540
+  ],
+  "video_fps": 10,
+  "image_sampling": "All 161 frames at fixed 0.1-second times from 0 through 16 s, with all 161 noisy telemetry rows."
+}

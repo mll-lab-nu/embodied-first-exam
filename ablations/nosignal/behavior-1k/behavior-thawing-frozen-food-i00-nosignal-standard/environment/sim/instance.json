@@ -1,0 +1,127 @@
+{
+ "task": "thawing_frozen_food",
+ "challenge_task": "thawing_frozen_food",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Thaw the frozen food. A frozen chicken breast and a frozen slice of bread lie on two plates inside the kitchen refrigerator. Put the chicken breast, on a plate, into the microwave oven, close the microwave and switch it on; put the bread slice, on a plate, on the countertop; close the refrigerator; neither food may still be frozen.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "4c655fc77ae255ea",
+ "action_dim": 25,
+ "challenge_max_steps": 12344,
+ "objects": {
+  "plate.n.04_2": {
+   "category": "plate",
+   "position": [
+    5.48,
+    -0.3701,
+    0.7114
+   ],
+   "orientation_xyzw": [
+    -0.0007,
+    -0.0061,
+    0.9941,
+    -0.1084
+   ]
+  },
+  "plate.n.04_1": {
+   "category": "plate",
+   "position": [
+    5.0317,
+    -0.4469,
+    1.6599
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.7931,
+    -0.6091
+   ]
+  },
+  "microwave.n.02_1": {
+   "category": "microwave",
+   "position": [
+    6.1162,
+    -0.6968,
+    1.0086
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.7071,
+    0.7071
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    4.8314,
+    1.1399,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "bread_slice.n.01_1": {
+   "category": "bread_slice",
+   "position": [
+    5.4806,
+    -0.3658,
+    0.7213
+   ],
+   "orientation_xyzw": [
+    -0.0007,
+    -0.0061,
+    0.9937,
+    -0.1118
+   ]
+  },
+  "electric_refrigerator.n.01_1": {
+   "category": "fridge",
+   "position": [
+    5.2014,
+    -0.5688,
+    0.956
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.7071,
+    0.7071
+   ]
+  },
+  "chicken_breast.n.02_1": {
+   "category": "chicken_breast",
+   "position": [
+    5.0452,
+    -0.4387,
+    1.6701
+   ],
+   "orientation_xyzw": [
+    0.0754,
+    -0.0514,
+    0.8734,
+    0.4783
+   ]
+  },
+  "countertop.n.01_1": {
+   "category": "bar",
+   "position": [
+    6.748,
+    -0.7066,
+    0.4014
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    0.7071,
+    0.7071
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

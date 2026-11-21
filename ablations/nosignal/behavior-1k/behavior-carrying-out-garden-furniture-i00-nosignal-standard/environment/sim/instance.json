@@ -1,0 +1,85 @@
+{
+ "task": "carrying_out_garden_furniture",
+ "challenge_task": "carrying_out_garden_furniture",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Carry the garden furniture out of the house. The lawn chair and the wheelbarrow stand on the living-room floor; put the lawn chair on the garden floor and the wheelbarrow on a lawn.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "9e1831219a9abbb3",
+ "action_dim": 25,
+ "challenge_max_steps": 16588,
+ "objects": {
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    13.4949,
+    0.799,
+    -0.1388
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "barrow.n.03_1": {
+   "category": "wheelbarrow",
+   "position": [
+    16.0512,
+    1.2027,
+    0.44
+   ],
+   "orientation_xyzw": [
+    0.0077,
+    -0.0021,
+    0.9351,
+    0.3544
+   ]
+  },
+  "lawn.n.01_1": {
+   "category": "lawn",
+   "position": [
+    3.0642,
+    14.2264,
+    -0.1612
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "lawn_chair.n.01_1": {
+   "category": "garden_chair",
+   "position": [
+    13.7572,
+    3.1076,
+    0.4434
+   ],
+   "orientation_xyzw": [
+    0.0004,
+    0.0008,
+    -0.7777,
+    0.6286
+   ]
+  },
+  "floor.n.01_2": {
+   "category": "floors",
+   "position": [
+    2.8947,
+    13.8932,
+    -0.1612
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

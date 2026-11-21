@@ -1,0 +1,57 @@
+{
+ "task": "sweeping_garage",
+ "challenge_task": "sweeping_garage",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Sweep the garage. The garage floor is covered with sand and dust, and a broom and a bucket lie on it; remove all the sand and all the dust from the floor.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "abe3a8178d1ff925",
+ "action_dim": 25,
+ "challenge_max_steps": 6709,
+ "objects": {
+  "broom.n.01_1": {
+   "category": "broom",
+   "position": [
+    -6.9196,
+    3.4735,
+    0.0784
+   ],
+   "orientation_xyzw": [
+    0.002,
+    0.0001,
+    -0.1606,
+    0.987
+   ]
+  },
+  "bucket.n.01_1": {
+   "category": "bucket",
+   "position": [
+    -2.5067,
+    4.4155,
+    0.1461
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0249,
+    0.9997
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    -5.3695,
+    5.5058,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

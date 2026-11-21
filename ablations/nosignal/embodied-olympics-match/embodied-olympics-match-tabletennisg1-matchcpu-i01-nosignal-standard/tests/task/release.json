@@ -1,0 +1,19 @@
+{
+ "equivalence": {
+  "certified_against": [],
+  "class": "tabletennis-g1-match-engineer/dc92663ad674",
+  "conformance": null,
+  "golden": null
+ },
+ "frozen_at": null,
+ "preimage": {
+  "instruction": "sha256:4fe58fe2dde88fef1be104502283bde509baed886ea529b9606a18ec99e9fbb0",
+  "lock": "sha256:782f1841f6c00f525233ad35abc2b84ec4698ede8f09535db082d107270cef37",
+  "taskspec": "sha256:2fed948ca2ff6c798749a42d2271923e1a30f98f788edca7ed517f53944def6c"
+ },
+ "release": "sha256:dc92663ad674ae6f4f0e96d24374850c1baf57c9ce35c075c7acbb7b22cdce44",
+ "schema": "eo-task-release/1",
+ "status": "candidate",
+ "supersedes": null,
+ "task_key": "tabletennis-g1-match-engineer"
+}

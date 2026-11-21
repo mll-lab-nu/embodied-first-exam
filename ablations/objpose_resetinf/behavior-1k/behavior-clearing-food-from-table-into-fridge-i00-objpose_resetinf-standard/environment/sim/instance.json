@@ -1,0 +1,155 @@
+{
+ "task": "clearing_food_from_table_into_fridge",
+ "challenge_task": "clearing_food_from_table_into_fridge",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Clear the leftovers from the kitchen breakfast table into the fridge. A half chicken and a half apple pie lie on two plates on the table, and two empty tupperwares stand on the countertop; put the chicken and the pie into tupperwares, put both tupperwares into the refrigerator, and leave it closed.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "bf0c3a2424384424",
+ "action_dim": 25,
+ "challenge_max_steps": 19602,
+ "objects": {
+  "plate.n.04_2": {
+   "category": "plate",
+   "position": [
+    4.5455,
+    1.1571,
+    0.6951
+   ],
+   "orientation_xyzw": [
+    0.0001,
+    -0.0001,
+    0.0454,
+    0.999
+   ]
+  },
+  "half__apple_pie.n.01_1": {
+   "category": "half_apple_pie",
+   "position": [
+    4.538,
+    1.1475,
+    0.7121
+   ],
+   "orientation_xyzw": [
+    0.0319,
+    -0.0117,
+    0.7849,
+    0.6186
+   ]
+  },
+  "plate.n.04_1": {
+   "category": "plate",
+   "position": [
+    4.0051,
+    1.1048,
+    0.6951
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    -0.0001,
+    0.9977,
+    0.0681
+   ]
+  },
+  "countertop.n.01_1": {
+   "category": "bar",
+   "position": [
+    8.152,
+    0.1575,
+    0.4491
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    1.0,
+    0.0
+   ]
+  },
+  "breakfast_table.n.01_1": {
+   "category": "breakfast_table",
+   "position": [
+    4.2911,
+    1.4382,
+    0.6256
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "electric_refrigerator.n.01_1": {
+   "category": "fridge",
+   "position": [
+    5.2014,
+    -0.5688,
+    0.956
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.7071,
+    0.7071
+   ]
+  },
+  "tupperware.n.01_1": {
+   "category": "tupperware",
+   "position": [
+    7.9439,
+    -0.7472,
+    0.9533
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    1.0,
+    0.0075
+   ]
+  },
+  "tupperware.n.01_2": {
+   "category": "tupperware",
+   "position": [
+    8.2352,
+    1.1013,
+    0.9532
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.3756,
+    0.9268
+   ]
+  },
+  "half__chicken.n.01_1": {
+   "category": "half_chicken",
+   "position": [
+    4.0063,
+    1.1038,
+    0.7583
+   ],
+   "orientation_xyzw": [
+    -0.0001,
+    -0.0063,
+    -0.1804,
+    0.9836
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    4.8314,
+    1.1399,
+    -0.15
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}

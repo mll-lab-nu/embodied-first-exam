@@ -1,0 +1,3 @@
+Paper Mate Kilometrico pen, by Chad (cpenfold).
+Licensed under Creative Commons Attribution 4.0 International.
+Modified: cap removed; Z-axis conversion; size adapted to 150 mm length and 12 mm diameter; fitted capsule/convex collision pieces; extracted textures and OBJ.

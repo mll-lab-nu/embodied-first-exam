@@ -1,0 +1,38 @@
+{
+  "source": "T07 'Remote battery replacement' approved presentation export (presentation-r2/studio-v2): meshes 0-3 of geometry.npz and the AA wrap textures; aa_cell.obj generated (original).",
+  "source_sha256": {
+    "geometry.npz": "52ccbbc278eea350219b675a2ad459271ae14f51c5def0cfbe4cdbb4b9e85c57",
+    "new-aa-wrap.png": "f9a27fca976dd5fc2a2e65e1fe848d75bc9a719042cf8b2a0d645e7b1edebfbd",
+    "old-aa-wrap.png": "ca6d70cd5e3af0f51702499211bbc94735ae10f209b645da152d7ad53967e8b3"
+  },
+  "files": {
+    "aa_cell.obj": {
+      "sha256": "f388190fc963e3e3bbfe466fa55c3b34158d2fad865f79efa59b3ba3c31eca95",
+      "bytes": 6951
+    },
+    "battery_door.obj": {
+      "sha256": "cc314c05423668ecabbf43143d6531506382a2d5a279fced556e975e5b41ddfa",
+      "bytes": 59846
+    },
+    "new_aa_wrap.png": {
+      "sha256": "f9a27fca976dd5fc2a2e65e1fe848d75bc9a719042cf8b2a0d645e7b1edebfbd",
+      "bytes": 16161
+    },
+    "old_aa_wrap.png": {
+      "sha256": "ca6d70cd5e3af0f51702499211bbc94735ae10f209b645da152d7ad53967e8b3",
+      "bytes": 16051
+    },
+    "open_arrow.obj": {
+      "sha256": "41e1411ec5b93bf912fe7e761e6cafa5283c02388f5e06a12c02f5a8d1b47752",
+      "bytes": 293
+    },
+    "remote_shell.obj": {
+      "sha256": "99fc12db03737fc262726147b46240b073cf9f04c6844aed0cfd1f5723868e4c",
+      "bytes": 60233
+    },
+    "thumb_pad.obj": {
+      "sha256": "fae62ff9ea04d0aa11cfcec85a50903f90e005c41ab211bbae408120cf40b9a8",
+      "bytes": 59473
+    }
+  }
+}

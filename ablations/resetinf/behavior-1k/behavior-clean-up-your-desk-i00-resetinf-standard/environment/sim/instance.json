@@ -1,0 +1,225 @@
+{
+ "task": "clean_up_your_desk",
+ "challenge_task": "clean_up_your_desk",
+ "instance_id": 301,
+ "mode": "public_test",
+ "text": "Clean up the desk in the child's room. A folder, a pencil, two pens, two paperback books and a pencil box lie on the desk; the other folder lies on the chair, the stapler is inside the bookcase, and the open laptop lies on the bed. Put both folders and both paperback books into the bookcase and the pencil and both pens into the pencil box, which stays on the desk; take the stapler out of the bookcase and put it on the desk; and put the laptop on the desk, closed.",
+ "robot_config": "r1pro_primitives_eval.yaml",
+ "robot_config_sha": "d9d0c8bceea2",
+ "state_sha": "ad46e381cf8b0e1d",
+ "action_dim": 25,
+ "challenge_max_steps": 32126,
+ "objects": {
+  "pencil.n.01_1": {
+   "category": "pencil",
+   "position": [
+    24.0221,
+    12.6476,
+    0.7746
+   ],
+   "orientation_xyzw": [
+    -0.0004,
+    -0.0005,
+    0.8356,
+    0.5493
+   ]
+  },
+  "stapler.n.01_1": {
+   "category": "stapler",
+   "position": [
+    22.8138,
+    12.4985,
+    0.1784
+   ],
+   "orientation_xyzw": [
+    0.0005,
+    -0.0002,
+    0.9103,
+    0.414
+   ]
+  },
+  "pencil_box.n.01_1": {
+   "category": "pencil_case",
+   "position": [
+    23.9074,
+    12.5566,
+    0.8165
+   ],
+   "orientation_xyzw": [
+    -0.0002,
+    -0.0001,
+    0.357,
+    0.9341
+   ]
+  },
+  "bed.n.01_1": {
+   "category": "bed",
+   "position": [
+    21.3342,
+    12.98,
+    0.4037
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.0012,
+    1.0
+   ]
+  },
+  "chair.n.01_1": {
+   "category": "eames_chair",
+   "position": [
+    23.0868,
+    13.2903,
+    0.5246
+   ],
+   "orientation_xyzw": [
+    0.0032,
+    0.0006,
+    0.3844,
+    0.9231
+   ]
+  },
+  "laptop.n.01_1": {
+   "category": "laptop",
+   "position": [
+    21.8978,
+    13.1343,
+    0.502
+   ],
+   "orientation_xyzw": [
+    0.0045,
+    0.0048,
+    0.6276,
+    0.7785
+   ]
+  },
+  "folder.n.02_2": {
+   "category": "folder",
+   "position": [
+    23.1914,
+    13.5102,
+    0.5336
+   ],
+   "orientation_xyzw": [
+    0.0273,
+    0.0445,
+    0.0017,
+    0.9986
+   ]
+  },
+  "folder.n.02_1": {
+   "category": "folder",
+   "position": [
+    23.9448,
+    13.4675,
+    0.7877
+   ],
+   "orientation_xyzw": [
+    -0.0,
+    0.0,
+    0.227,
+    0.9739
+   ]
+  },
+  "desk.n.01_1": {
+   "category": "desk",
+   "position": [
+    23.9094,
+    13.2007,
+    0.4939
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.0012,
+    1.0
+   ]
+  },
+  "pen.n.01_1": {
+   "category": "pen",
+   "position": [
+    23.9456,
+    13.2259,
+    0.7739
+   ],
+   "orientation_xyzw": [
+    0.0001,
+    0.0001,
+    0.5862,
+    0.8101
+   ]
+  },
+  "floor.n.01_1": {
+   "category": "floors",
+   "position": [
+    22.2751,
+    13.6294,
+    -0.1388
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "paperback_book.n.01_2": {
+   "category": "paperback_book",
+   "position": [
+    23.7923,
+    12.843,
+    0.7771
+   ],
+   "orientation_xyzw": [
+    0.0,
+    -0.0,
+    -0.6416,
+    0.7671
+   ]
+  },
+  "bookcase.n.01_1": {
+   "category": "bookcase",
+   "position": [
+    22.8929,
+    12.475,
+    0.9082
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.7062,
+    0.708
+   ]
+  },
+  "pen.n.01_2": {
+   "category": "pen",
+   "position": [
+    24.1275,
+    12.4849,
+    0.7739
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0001,
+    0.9181,
+    0.3964
+   ]
+  },
+  "paperback_book.n.01_1": {
+   "category": "paperback_book",
+   "position": [
+    23.7162,
+    13.8733,
+    0.7771
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.6061,
+    0.7954
+   ]
+  }
+ },
+ "omnigibson_version": "3.9.2"
+}
