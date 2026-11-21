@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Long-Horizon**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Tidy the desk: put the alarm clock on the drawer, put the figurine on its stand (cube cushion), put the mouse on the mouse pad, push the keyboard into the frame, and return both arms to their start pose.
@@ -19,7 +19,7 @@ The objects the check reads (RoboDojo's labels in brackets; left/right = world -
 - the keyboard: grey, 32 cm wide and 15 cm deep, lying flat in front of you, its long side left-right [keyboard];
 - the frame: the thin rectangular outline drawn on the table straight ahead, behind the keyboard (24 cm wide, 10 cm deep) [frame];
 - the figurine: a green cactus in a small brown pot, front left near the left gripper [garage];
-- the stand: the small flat grey square (5 x 5 cm) on the table just behind the alarm clock [cube_cushion];
+- the stand: the small flat dark square (5 x 5 cm) on the table just behind the alarm clock [cube_cushion];
 - the alarm clock: the beige clock left of centre [alarm];
 - the drawer: the white drawer unit at the far left, its top 0.227 m above the table [drawer].
 
@@ -35,7 +35,8 @@ its bounding box. All of these must hold at the same action boundary:
   [is_A_bbox_cover_rect_region]. Its front-to-back direction (the short side, pointing away
   from you at the start) within 45 deg of world +y [keyboard local +y; is_axis_aligned]: keep the long side left-right
   and the keys the way they face now; already true at the start. Lying flat, keys up, within 15 deg [keyboard local +z;
-  is_axis_up]; already true. Unturned, this means its centre within x 0.04-0.16 m and |y| <= 0.046 m; not true at the start.
+  is_axis_up]; already true. Unturned, this means its centre within x 0.04-0.16 m and |y| <= 0.046 m: slide it about
+  17 cm straight away from you into the frame.
 - **Figurine.** At rest; standing upright within 15 deg (pot down, as at the start) [garage local +z; is_axis_up];
   its centre, which is about 9 cm above the bottom of the pot, between 0.005 and 0.1 m higher than the stand's top
   surface [is_A_up_B]: standing on the stand gives about 0.09 m, so it must stand on it, not be held above it; and its
@@ -52,7 +53,7 @@ clock, arms, stopping at the first condition that fails; all must hold at the sa
 rest* [is_not_moved, update=True] means the item moved less than 0.002 m (3-D) since the last action at which the check
 reached it; the first time it is reached after the item moved, it counts as moved. So each item needs two consecutive
 checked actions at rest, and an item's rest is measured only at actions where every earlier item passed. Success is
-declared at the first action boundary where everything holds. No condition ends the episode early
+declared at the first action boundary where everything holds, and the episode ends. No condition ends the episode early
 as a failure.
 
 **Episode length.** A step limit of **1,000 steps** (RoboDojo's own limit for this task, 40 s of

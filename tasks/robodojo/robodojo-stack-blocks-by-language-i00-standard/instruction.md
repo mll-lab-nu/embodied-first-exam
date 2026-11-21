@@ -4,8 +4,8 @@ You control two **ARX X5 arms with parallel two-finger grippers** at a table (Ro
 **as if they were real hardware**: the simulator runs in a service you cannot open. You get one client and one episode.
 RoboDojo capability dimension: **Open**.
 
-Nothing is handed in: the service grades the episode when it ends (`## Episode end`, below), so the task must be
-completed before the time limit (`## Time limit`) is up. The time you wait for the service counts: its first
+Nothing is handed in, so the task must be completed before the time limit (`## Time limit`) is up (the episode
+ends by itself when RoboDojo's check passes: `res.meta["done"]`). The time you wait for the service counts: its first
 start in a trial takes ~4-15 min (Client, below).
 
 **Task:** Stack the three coloured cubes into a tower in the bottom-to-top colour order given by the instruction, then return the robot arm(s) to the start pose.
@@ -14,8 +14,10 @@ RoboDojo's own instruction for this scene: *"stack the blocks from bottom to top
 
 ## Success (RoboDojo's own check for this task)
 The objects the check reads (RoboDojo's labels in brackets; left/right = world -x/+x, "away" = +y, away from the arms).
-Three plain cubes, 3.5 cm on each edge, one in each colour the instruction names, lying on the table, each turned
-a little about the vertical [block_0, block_1, block_2].
+Three plain cubes, 3.5 cm on each edge, one per colour, each turned a little (15-24 deg) about the vertical:
+- the blue cube, just right of the table's centre, as near you as the yellow one [block_0];
+- the yellow cube, at the far left, ahead of the left gripper [block_1];
+- the orange cube, right of centre, a little behind and right of the blue cube [block_2].
 
 RoboDojo's instruction asks for the order blue (bottom), yellow (middle), orange (top). A cube's *centre* below is the
 point RoboDojo tests for it (its origin): the middle of the cube. All of these must hold at the same action boundary:
@@ -30,7 +32,7 @@ point RoboDojo tests for it (its origin): the middle of the cube. All of these m
 
 **When it is checked.** After every action (never between actions; once all simulation sub-steps of the action are
 done), both conditions are checked together: one stage, nothing latched or ordered. Success is declared at the first
-action boundary where both hold. No condition ends the episode early as a failure (only a broken
+action boundary where both hold, and the episode ends. No condition ends the episode early as a failure (only a broken
 environment, e.g. a missing object or exploded physics, does). RoboDojo's own 400-action limit [step_lim] applies
 here (Episode length, below).
 
@@ -42,14 +44,16 @@ where the description above mentions step_lim or the length cap, it means this l
 
 **What you must read or remember.** RoboDojo's instruction names the colours from bottom to top (here blue, yellow,
 orange). Each colour is one cube on the table; find it by its colour. RoboDojo builds that sentence from the three
-cubes it drew for the scene.
+cubes it drew for the scene [block_0, block_1, block_2 = bottom, middle, top; cube models 1 blue, 2 green, 3 red,
+7 yellow, 8 orange, 9 cyan; here models 1, 7, 8].
 
 **At the end.** Both arms back near their start poses (above, start = the pose right after the robot is set to its
 initial state), as part of the success condition; the grippers need not be open.
 
 **Notes from RoboDojo's code.** The order matters: a tower of the same three cubes in another colour order fails,
 because each named upper cube must be at least 0.005 m above the one named below it. The horizontal limit of 0.0175 m
-is on the cubes' centres, so the cubes must be well centred on each other (half the 3.5 cm edge). The test reads only the cubes' centres. All three cubes are
+is on the cubes' centres, so the cubes must be well centred on each other (half the 3.5 cm edge). The test reads only
+the cubes' centres: it does not need the cubes to touch, to be turned alike, or to be released. All three cubes are
 the same 3.5 cm size with their centre in the middle of the cube. A process score (20 for yellow stacked on blue with
 the centres at most 0.04 m apart in height, blue not lifted more than 0.01 m from its start height and both grippers
 open at least 0.92 of their range; 100 for the full tower with grippers open) exists but does not decide success.
