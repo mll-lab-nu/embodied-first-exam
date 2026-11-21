@@ -26,7 +26,7 @@ FILES = json.load(open(os.path.join(root, "images", "robopaint-files", "FILES.js
 STD = json.load(open(os.path.join(root, "images", "standard-files", "FILES.json")))       # the standard client (rcb_client.py, rcb1.py)
 IMAGES = {"--from=" + d["image"]: d for d in (FILES, STD)}
 PICS = json.load(open(os.path.join(root, "images", "robopaint-pictures-files", "FILES.json")))   # the exemplar pictures
-stem = re.sub(r"-(privileged|standard)$", "", name.removeprefix("robopaint-"))
+stem = re.sub(r"-(privileged|standard|standard-mcp|standard-mcp-shell)$", "", name.removeprefix("robopaint-"))
 ALLOWED = {"Dockerfile", "docker-compose.yaml", "instance.json", "target.png", "rcb_brush.py", "rcb_client.py", "rcb1.py",
            "client-requirements.txt", "NOTICE-exemplar.md", "ARPHICPL.TXT"}
 SIDECARS = {"sim", "scorer"}
@@ -34,7 +34,10 @@ MONITOR = "rcb_monitor"   # the resource monitor sidecar's limits, mounted only 
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)
     if os.path.isdir(p):
-        if f not in SIDECARS and f != MONITOR:
+        if f == "efe_mcp" and "-standard-mcp" in name:   # the efe-robot MCP server, unchanged, and this task's manifest
+            sys.path.insert(0, os.path.join(root, "scripts")); import task_conventions as _tc
+            bad.extend(f"environment/efe_mcp/: {x}" for x in _tc.efe_mcp_problems(Path(t)))
+        elif f not in SIDECARS and f != MONITOR:
             bad.append(f"environment/{f}/: unexpected directory")
     elif f not in ALLOWED:
         bad.append(f"environment/{f}: not an allowed agent-side file")
@@ -64,6 +67,8 @@ for m in re.finditer(r"^\s*(COPY|ADD)\s+(.+)$", df, re.M):
                 if not os.path.isfile(src) or hashlib.sha256(open(src, "rb").read()).hexdigest() != img["files"][f]:
                     bad.append(f"{os.path.relpath(src, root)}: not the file its images/*-files/FILES.json pins (sha256)")
                 tooling[f] = src
+        continue
+    if "-standard-mcp" in name and parts in (["efe_mcp", "/opt/tools/efe_mcp"], ["efe_mcp/efe_robot.py", "/opt/tools/efe_robot.py"]):
         continue
     for src in parts[:-1]:
         if src not in ALLOWED or any(c in src for c in "*?[") or "/" in src:
@@ -100,7 +105,7 @@ if os.path.exists(ip):
     for w in ("svg", "<path", "medians", "outline", "strokes\": [", "points_mm", "center_k", "truth"):
         if w in txt:
             bad.append(f"environment/instance.json contains {w!r}")
-elif not name.endswith("-standard"):
+elif name.endswith("-privileged"):
     bad.append("environment/instance.json missing (privileged twin)")
 # 4. agent-visible tooling: simulation only
 for f, p in [(f, p) for f in ("rcb_brush.py",) for p in (os.path.join(env, f), tooling.get(f)) if p]:
@@ -117,6 +122,8 @@ WORDS = [r"\bsvg\b", r"vector", r"cent(re|er)[ -]?lines?", r"skeleton", r"\boutl
 texts = {"instruction.md": open(os.path.join(t, "instruction.md")).read(), "README.md": open(os.path.join(t, "README.md")).read()}
 tm = re.search(r'^description\s*=\s*"(.*)"\s*$', open(os.path.join(t, "task.toml")).read(), re.M)
 texts["task.toml description"] = tm.group(1) if tm else ""
+if os.path.isfile(os.path.join(env, "efe_mcp", "manifest.json")):   # the notes the efe-robot tools give the agent
+    texts["environment/efe_mcp/manifest.json"] = open(os.path.join(env, "efe_mcp", "manifest.json")).read()
 sp = os.path.join(env, "sim", "server.py")
 if not os.path.exists(sp):                   # the sidecar built from sim/ takes it from a files-only image (its Dockerfile)
     sys.path.insert(0, os.path.join(root, "scripts")); import files_image

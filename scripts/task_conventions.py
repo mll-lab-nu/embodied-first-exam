@@ -158,6 +158,40 @@ MODE_REGISTRY = {
                      "twin": "privileged", "same_cutoff_as": "privileged"},
 }
 MCP_MODES = ("standard-mcp",)   # modes whose agent controls the robot through the efe-robot MCP server
+# environment/efe_mcp/ of an MCP task: these files of embodied_first_exam/standard/mcp/, unchanged, + manifest.json
+EFE_MCP_SOURCE = Path(__file__).resolve().parent.parent / "embodied_first_exam" / "standard" / "mcp"
+EFE_MCP_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "mcp_client.py",
+                 "schema/tools.v0.json")
+EFE_MCP_OPTIONAL = ("suites.py", "efe_robot.py")   # a suite tool kind; the shell variant's generated Python client
+
+
+def efe_mcp_problems(task: Path) -> list[str]:
+    """What is wrong with `task`'s environment/efe_mcp/ (the efe-robot MCP server the agent's harness starts): every
+    server file equal to its source, a manifest of the format efe-mcp-manifest/0, nothing else."""
+    import json
+    d = Path(task) / "environment" / "efe_mcp"
+    if not d.is_dir():
+        return ["missing"]
+    bad = []
+    have = {str(f.relative_to(d)) for f in d.rglob("*") if f.is_file()}
+    for f in EFE_MCP_FILES + EFE_MCP_OPTIONAL:
+        if f in have and (EFE_MCP_SOURCE / f).is_file() and (d / f).read_bytes() != (EFE_MCP_SOURCE / f).read_bytes():
+            bad.append(f"{f} differs from embodied_first_exam/standard/mcp/{f}")
+        elif f in EFE_MCP_FILES and f not in have:
+            bad.append(f"{f} missing")
+    if "efe_robot.py" in have:
+        if mode_suffix(Path(task).name) != "standard-mcp-shell":
+            bad.append("efe_robot.py is the shell variant's client only")
+        have.discard("efe_robot.py")       # generated per task (client_gen.py): not a copy of a source file
+    try:
+        m = json.loads((d / "manifest.json").read_text())
+        if m.get("manifest") != "efe-mcp-manifest/0":
+            bad.append("manifest.json: not of the format efe-mcp-manifest/0")
+    except (OSError, ValueError) as e:
+        bad.append(f"manifest.json: {e}")
+    extra = sorted(have - set(EFE_MCP_FILES) - set(EFE_MCP_OPTIONAL) - {"manifest.json"})
+    bad += [f"{f}: not a file of the efe-robot server" for f in extra]
+    return bad
 MODES = tuple(MODE_REGISTRY)
 SIDECAR_MODES = tuple(m for m, d in MODE_REGISTRY.items() if d["sidecar"])   # robot as a service (PROTOCOL §3)
 for _m, _d in MODE_REGISTRY.items():   # a registry that cannot parse names is refused at import (every check imports it)

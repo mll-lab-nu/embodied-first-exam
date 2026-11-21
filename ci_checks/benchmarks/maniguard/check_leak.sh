@@ -24,7 +24,11 @@ else:
     dirs = {"sim": {"server.py", "finalize.sh", "run.sh", "rcb_limited.py", "rcb1.py", "rcb_maniguard.py", "live_video.py", "instance",
              "Dockerfile", ".dockerignore"}}   # the sidecar's image: images/maniguard/Dockerfile (the recipe, normalize writes it),
                                                # then sim/ at /srv and its shared files from files-only images
-dirs["rcb_monitor"] = {"limits.json"}   # the resource monitor sidecar's limits, mounted only into it (its code is in the image; check-monitor.py)
+dirs["rcb_monitor"] = {"limits.json"}
+if "-standard-mcp" in name:   # the efe-robot MCP server, unchanged, and this task's manifest (task_conventions.efe_mcp_problems)
+    sys.path.insert(0, os.path.join(sys.argv[2], "scripts")); import task_conventions as _tc
+    bad.extend(f"environment/efe_mcp/: {x}" for x in _tc.efe_mcp_problems(Path(t)))
+    dirs["efe_mcp"] = set(os.listdir(os.path.join(env, "efe_mcp"))) if os.path.isdir(os.path.join(env, "efe_mcp")) else set()   # the resource monitor sidecar's limits, mounted only into it (its code is in the image; check-monitor.py)
 for f in sorted(os.listdir(env)):
     p = os.path.join(env, f)
     if os.path.isdir(p):

@@ -483,7 +483,8 @@ class RcbAdapter:
             info = c.get(cam) if isinstance(c, dict) else None
             d = {}
             if isinstance(info, dict):
-                for k in ("width", "height", "mount", "moves", "fovy", "resolution", "description"):
+                for k in ("width", "height", "mount", "moves", "mounted", "fovy", "fovy_deg", "hw", "resolution",
+                          "intrinsic_cv", "pose_t0", "description"):
                     if k in info:
                         d[k] = info[k]
             out[cam] = d
@@ -569,7 +570,7 @@ class RcbAdapter:
             if g and g.get("type", typ) == typ and st.get("gripper") and "col" in g:
                 v = self.ref(st["gripper"], now, meta)[0]
                 gu = self.g_from_suite(v, {**g, **st["gripper"]})
-                row[g["col"]] = self.g_to_suite(gu if gu is not None else 0.0, g)
+                self.set_grip(row, g, self.g_to_suite(gu if gu is not None else 0.0, g))
                 filled = True
             ee = P.get("ee")
             if ee and ee["type"] == typ:
@@ -608,17 +609,20 @@ class RcbAdapter:
                 break
         return res, done_rows, metas
 
+    @staticmethod
+    def set_grip(row, g, v):
+        """The gripper value v (suite units) into its column and its mirror columns (manifest gripper.mirror_cols)."""
+        row[g["col"]] = v
+        for c in g.get("mirror_cols", []):
+            row[c] = v
+
     def linked_types(self, typ) -> set:
-        """Action types that command a part `typ` also commands (a joint_position row after an ee_pose row moves the
-        same arm): their remembered last rows no longer hold the arm where it is (manifest types.<t>.independent
-        opts a type out)."""
-        out = set()
-        for P in self.m["parts"].values():
-            ts = {x.get("type") for x in (P.get("joints"), P.get("ee"), P.get("ik"), P.get("gripper"), P.get("ee_delta"))
-                  if isinstance(x, dict) and x.get("type")}
-            if typ in ts:
-                out |= ts
+        """Action types whose remembered last rows a row of `typ` makes stale (a joint_position row after an ee_pose
+        row moves the same arm): every other type, unless the manifest marks one (or `typ`) types.<t>.independent."""
+        out = set(self.last_cmd)
         out.discard(typ)
+        if self.m.get("types", {}).get(typ, {}).get("independent"):
+            return set()
         return {t for t in out if not self.m.get("types", {}).get(t, {}).get("independent")}
 
     @staticmethod
@@ -630,6 +634,12 @@ class RcbAdapter:
                 for p in plan:
                     if isinstance(p, dict) and (p.get("ok") is False or p.get("status") in ("failed", "fail")):
                         out.append({"category": "no_trajectory", "detail": _jsonable(p)})
+                    elif isinstance(p, dict):
+                        for arm, v in p.items():
+                            if isinstance(v, str) and arm not in ("status", "note", "mode") \
+                                    and not v.lower().startswith(("success", "ok")):
+                                cat = "out_of_reach" if ("fail" in v.lower() or "reach" in v.lower()) else "no_trajectory"
+                                out.append({"category": cat, "detail": f"{arm}: {v}" + (f" (row {p['row']})" if "row" in p else "")})
             elif isinstance(plan, dict) and plan.get("ok") is False:
                 out.append({"category": "no_trajectory", "detail": _jsonable(plan)})
             elif isinstance(plan, dict):
@@ -806,15 +816,16 @@ class RcbAdapter:
                 T1, T2 = T1 / s, T2 / s
         rows = []
         base = self.hold_row(typ, now, meta)
+        sc = {k: float(v) for k, v in (B.get("cmd_scale") or {}).items()}     # m/s, rad/s -> the service's units
         for c in cols.values():
             base[c] = 0.0
         if T1 > 0:
             n = max(1, int(round(T1 / dt)))
             vx, vy = dx / (n * dt), dy / (n * dt)
             for _ in range(n):
-                r = base.copy(); r[cols["vx"]] = vx
+                r = base.copy(); r[cols["vx"]] = vx * sc.get("vx", 1.0)
                 if "vy" in cols:
-                    r[cols["vy"]] = vy
+                    r[cols["vy"]] = vy * sc.get("vy", 1.0)
                 elif abs(dy) > 1e-6:
                     raise ToolError("this base cannot move sideways (no vy): turn, then move forward")
                 rows.append(r)
@@ -822,7 +833,7 @@ class RcbAdapter:
             n = max(1, int(round(T2 / dt)))
             wz = dyaw / (n * dt)
             for _ in range(n):
-                r = base.copy(); r[cols["wz"]] = wz; rows.append(r)
+                r = base.copy(); r[cols["wz"]] = wz * sc.get("wz", 1.0); rows.append(r)
         stop_n = max(1, int(round(float(B.get("stop_s", 0.2)) / dt)))
         rows += [base.copy() for _ in range(stop_n)]
         res, ex, ms = self.run_rows(typ, rows, dt, tool="move_robot")
@@ -902,6 +913,13 @@ class RcbAdapter:
         q = np.asarray(sol["q"], dtype=np.float64)
         a, b = ik.get("q_cols", [0, P["joints"]["cols"][1] - P["joints"]["cols"][0]])
         out = {"target": g["target"], "joint_positions": q[a:b].tolist(), "_from_pose": True}
+        extra = {}
+        for e in ik.get("extra_q") or []:
+            (qa, qb), (ca, _) = e["q_cols"], e["cols"]
+            for k in range(qb - qa):
+                extra[ca + k] = float(q[qa + k])
+        if extra:
+            out["_extra_cols"] = extra
         if "gripper" in g:
             out["gripper"] = g["gripper"]
         return out
@@ -930,8 +948,10 @@ class RcbAdapter:
                     raise ToolError(f"{g['target']}: {b - a} joint positions expected, got {len(jp)}")
                 G[a:b] = jp
             if "gripper" in g:
-                G[P["gripper"]["col"]] = self.g_to_suite(g["gripper"], P["gripper"])
-                grip_cols.append(P["gripper"]["col"])
+                self.set_grip(G, P["gripper"], self.g_to_suite(g["gripper"], P["gripper"]))
+                grip_cols += [P["gripper"]["col"], *P["gripper"].get("mirror_cols", [])]
+            for col, v in (g.get("_extra_cols") or {}).items():      # an IK solution's other joints (a torso)
+                G[int(col)] = v
         c = self.m.get("control", {})
         dt = self.step_dt(c.get("dt"))
         cont = [i for i in range(len(S)) if i not in grip_cols]
@@ -1082,7 +1102,7 @@ class RcbAdapter:
                     raise ToolError(f"this robot's controller takes no {k}")
                 continue
             lo, hi = lim.get(k, [-1e9, 1e9])
-            row[cols[k]] = min(hi, max(lo, float(v)))
+            row[cols[k]] = min(hi, max(lo, float(v))) * float((L.get("cmd_scale") or {}).get(k, 1.0))
         if height is not None:
             if "height" not in cols:
                 raise ToolError("this robot's controller takes no height")
@@ -1186,7 +1206,7 @@ class RcbAdapter:
                         raise ToolError(f"{k}: {b - a} joint positions expected, got {len(jp)}")
                     cur[a:b] = jp
                 if "gripper" in v:
-                    cur[P["gripper"]["col"]] = self.g_to_suite(v["gripper"], P["gripper"])
+                    self.set_grip(cur, P["gripper"], self.g_to_suite(v["gripper"], P["gripper"]))
             out.append(cur)
         return np.asarray(out), typ
 
@@ -1278,7 +1298,7 @@ class RcbAdapter:
                         if key in v:
                             if key not in cols:
                                 raise ToolError(f"base: this controller takes no {key}")
-                            cur[cols[key]] = float(v[key])
+                            cur[cols[key]] = float(v[key]) * float((L.get("cmd_scale") or {}).get(key, 1.0))
                     continue
                 P = parts[k]
                 if "joint_positions" in v:
@@ -1287,7 +1307,7 @@ class RcbAdapter:
                     a, b = P["joints"]["cols"]
                     cur[a:b] = np.asarray(v["joint_positions"], dtype=np.float64)[: b - a]
                 if "gripper" in v:
-                    cur[P["gripper"]["col"]] = self.g_to_suite(v["gripper"], P["gripper"])
+                    self.set_grip(cur, P["gripper"], self.g_to_suite(v["gripper"], P["gripper"]))
             out.append(cur)
         return np.asarray(out), typ
 

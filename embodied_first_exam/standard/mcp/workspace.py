@@ -14,6 +14,9 @@ MAX_BYTES = int(float(os.environ.get("EFE_MCP_OBS_MAX_GB", "1")) * 2**30)
 THUMB_PX = 256
 _lock = threading.Lock()
 _counter = [0]
+# a second server process writing to the same /app/obs (the Python client of the shell variant) tags its file names
+TAG = ("_" + re.sub(r"[^a-z0-9]+", "", os.environ.get("EFE_MCP_FILE_TAG", "").lower())[:8]) \
+    if os.environ.get("EFE_MCP_FILE_TAG") else ""
 
 
 def resolve_under_root(path: str, must_exist: bool = False) -> pathlib.Path:
@@ -57,7 +60,7 @@ class Writer:
         return best
 
     def path(self, cam: str, ext: str) -> pathlib.Path:
-        return self.dir / f"{self.n:05d}_{_safe(cam)}.{ext}"
+        return self.dir / f"{self.n:05d}{TAG}_{_safe(cam)}.{ext}"
 
     def jpeg(self, cam: str, img) -> str:
         from PIL import Image

@@ -32,6 +32,8 @@
 #    unchanged; the MuJoCo service: as scripts/task_conventions.py replace_words spells it). RoboTwin's privileged
 #    tests/test.sh and solution/solve.sh differ by the task's name only and are compared with the name replaced.
 #    Not covered here: the per-task texts of these benchmarks (instruction.md, README.md, task.toml).
+# 5. The efe-robot MCP server (standard-mcp tasks, environment/efe_mcp/): its files byte-identical to
+#    embodied_first_exam/standard/mcp/, plus the task's manifest.json (scripts/task_conventions.py efe_mcp_problems).
 # Usage: check-tooling-identity.sh [tasks dir]   (repo-level; run_all.sh calls it once)
 set -uo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
@@ -217,6 +219,12 @@ for t in sorted(TDIR):
         role = module if f == module else f"{mode} {rel}" if rel in SHARED else None
         if role:
             seen[bench][role].setdefault(h, f"{t}/{rel} (files image)")
+# 5. the efe-robot MCP server of every MCP-mode task (environment/efe_mcp/): its files as in embodied_first_exam/standard/mcp/
+n_mcp = 0
+for t in sorted(TDIR):
+    if tc.mode_suffix(t) in getattr(tc, "MCP_MODES", ()) or tc.mode_suffix(t) == "standard-mcp-shell":
+        n_mcp += 1
+        bad += [f"{t}/environment/efe_mcp/: {x}" for x in tc.efe_mcp_problems(Path(TDIR[t]))]
 bad += [f"{b}: {len(v)} versions of {role}: " + ", ".join(f"{h} ({p})" for h, p in sorted(v.items()))
         for b, roles in sorted(seen.items()) for role, v in sorted(roles.items()) if len(v) > 1]
 if bad:
@@ -227,5 +235,6 @@ if bad:
         print(f"  ... {len(bad) - 60} more")
     sys.exit(1)
 print("ok shared sources: " + ("; ".join(f"{b} {dirs[b]} task dirs, {len(seen[b])} shared files" for b in sorted(seen)) or "no BEHAVIOR / RoboLab / RoboWits / ManiGuard / MolmoSpaces / MyoSuite / DexJoCo / DexHand / RoboARC / BiGym 2.0 / YAMLab tasks")
-      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs; the eai-standard/2.3 realtime layer in {n_rt}")
+      + f"; the eai-standard/2.2 / 2.4 layers in {n_layer} task dirs; the eai-standard/2.3 realtime layer in {n_rt}"
+      + f"; the efe-robot MCP server in {n_mcp}")
 PY

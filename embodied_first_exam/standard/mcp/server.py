@@ -13,6 +13,7 @@ Standard library + numpy (+ pillow for images); the robot is reached through the
 The server does not contact the robot before the first tools/call."""
 from __future__ import annotations
 import argparse, json, os, pathlib, sys, threading, time, traceback, uuid
+VIA = os.environ.get("EFE_MCP_VIA", "")[:32]      # who started this server, if not the agent's harness (call log)
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -144,6 +145,7 @@ class Server:
             txt = (out.get("content") or [{}])[0].get("text", "")
             self.log.write(json.dumps({"ts": round(t0, 3), "dur_s": round(time.time() - t0, 3), "tool": name,
                                        "args": small, "error": bool(out.get("isError")),
+                                       **({"via": VIA} if VIA else {}),
                                        "pending": '"pending":true' in txt[:200]}, default=str) + "\n")
         except Exception:      # the log never breaks a call
             pass
