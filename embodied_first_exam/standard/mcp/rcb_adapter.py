@@ -21,6 +21,12 @@ class ToolError(Exception):
         self.category = category
 
 
+# the service's meta keys that every result carries on unchanged (a standard agent reads them in the client's meta);
+# a manifest adds its suite's own with "meta_keys"
+PASS_META = ("messages", "operator", "result", "outcome", "steps_left", "task", "command_now", "progress", "safety",
+             "settle_failed", "warnings")
+
+
 def _f(x, nd=4):
     if isinstance(x, (list, tuple, np.ndarray)):
         return [_f(v, nd) for v in np.asarray(x, dtype=np.float64).tolist()]
@@ -321,12 +327,25 @@ class RcbAdapter:
         out = {}
         if not c:
             return out
+        if c.get("extrinsic_cv") is None and c.get("cam2world_gl") is None:       # a static camera: pose in the spec
+            sc = ((self.spec or {}).get("cameras") or {}).get(cam) or {}
+            mount = sc.get("mount") if isinstance(sc.get("mount"), dict) else {}
+            if (mount.get("type") or sc.get("type")) in (None, "static", "fixed"):
+                for k in ("extrinsic_cv", "cam2world_gl"):
+                    v = sc.get(k) if sc.get(k) is not None else mount.get(k)
+                    if v is not None:
+                        c = {**c, k: v}
+                        break
         if c.get("intrinsic_cv") is not None:
             out["K"] = _f(c["intrinsic_cv"], 3)
+        T_suite_cam = None
         if c.get("extrinsic_cv") is not None:
             E = np.asarray(c["extrinsic_cv"], dtype=np.float64).reshape(3, 4)        # suite frame -> camera (OpenCV)
             T_cam_suite = np.eye(4); T_cam_suite[:3, :] = E
             T_suite_cam = np.linalg.inv(T_cam_suite)
+        elif c.get("cam2world_gl") is not None:                                     # camera (OpenGL) -> suite frame
+            T_suite_cam = np.asarray(c["cam2world_gl"], dtype=np.float64).reshape(4, 4) @ np.diag([1.0, -1, -1, 1])
+        if T_suite_cam is not None:
             T_base_suite = np.eye(4); T_base_suite[:3, :3] = F.R.T; T_base_suite[:3, 3] = -F.R.T @ F.p
             out["T_base_cam_cv"] = _f(T_base_suite @ T_suite_cam, 4)
             out["extrinsic_note"] = "4x4 camera pose in the robot base frame, OpenCV camera axes (x right, y down, z forward)"
@@ -373,7 +392,7 @@ class RcbAdapter:
         if m.get("done"):
             out["done"] = True
             out["reason"] = m.get("reason")
-        for k in ("messages", "operator", "result", "outcome", "steps_left"):
+        for k in PASS_META + tuple(self.m.get("meta_keys") or ()):
             if m.get(k) not in (None, [], {}):
                 out[k] = _jsonable(m[k])
         return out
@@ -440,8 +459,15 @@ class RcbAdapter:
     def limits(self, typ, cols):
         at = (self.spec or {}).get("action_types", {}).get(typ, {})
         lo, hi = at.get("lower"), at.get("upper")
-        if lo is None and isinstance(at.get("limits"), dict):
-            lo, hi = at["limits"].get("lower"), at["limits"].get("upper")
+        L = at.get("limits")
+        if lo is None and isinstance(L, dict) and ("lower" in L or "upper" in L):
+            lo, hi = L.get("lower"), L.get("upper")
+        elif lo is None and isinstance(L, dict) and at.get("layout"):      # {name: [lo, hi]} by layout name
+            lay = list(at["layout"])
+            pairs = [L.get(n) if isinstance(L.get(n), (list, tuple)) and len(L.get(n)) == 2 else (None, None)
+                     for n in lay]
+            if any(x != (None, None) for x in pairs):
+                lo, hi = [x[0] for x in pairs], [x[1] for x in pairs]
         if lo is None or hi is None:
             return None
         try:
@@ -576,9 +602,24 @@ class RcbAdapter:
             self.last_cmd[typ] = chunk[-1].copy()
             for c in T.get("zero_cols_after", []):
                 self.last_cmd[typ][c] = 0.0
+            for other in self.linked_types(typ):
+                self.last_cmd.pop(other, None)
             if res.meta.get("done") or res.meta.get("stopped"):
                 break
         return res, done_rows, metas
+
+    def linked_types(self, typ) -> set:
+        """Action types that command a part `typ` also commands (a joint_position row after an ee_pose row moves the
+        same arm): their remembered last rows no longer hold the arm where it is (manifest types.<t>.independent
+        opts a type out)."""
+        out = set()
+        for P in self.m["parts"].values():
+            ts = {x.get("type") for x in (P.get("joints"), P.get("ee"), P.get("ik"), P.get("gripper"), P.get("ee_delta"))
+                  if isinstance(x, dict) and x.get("type")}
+            if typ in ts:
+                out |= ts
+        out.discard(typ)
+        return {t for t in out if not self.m.get("types", {}).get(t, {}).get("independent")}
 
     @staticmethod
     def failures(metas) -> list:
@@ -591,6 +632,15 @@ class RcbAdapter:
                         out.append({"category": "no_trajectory", "detail": _jsonable(p)})
             elif isinstance(plan, dict) and plan.get("ok") is False:
                 out.append({"category": "no_trajectory", "detail": _jsonable(plan)})
+            elif isinstance(plan, dict):
+                for arm, v in plan.items():       # {"left_arm": "Success" | "failed: ..." | "refused: ..."}
+                    if isinstance(v, str) and not v.lower().startswith(("success", "ok")):
+                        cat = "out_of_reach" if ("fail" in v.lower() or "reach" in v.lower()) else "no_trajectory"
+                        out.append({"category": cat, "detail": f"{arm}: {v}"})
+                    elif isinstance(v, dict) and (v.get("ok") is False or v.get("status") in ("failed", "fail")):
+                        out.append({"category": "no_trajectory", "detail": {arm: _jsonable(v)}})
+            if (m.get("ik_failures") or 0) > 0:
+                out.append({"category": "out_of_reach", "detail": f"{m['ik_failures']} rows had no joint solution"})
             if m.get("n_clipped") or m.get("clipped"):
                 out.append({"category": "limit", "detail": f"{m.get('n_clipped') or len(m.get('clipped') or [])} values clipped to the limits"})
             for r in m.get("results") or []:

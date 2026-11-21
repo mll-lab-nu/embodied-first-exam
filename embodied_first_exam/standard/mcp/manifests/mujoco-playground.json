@@ -1,0 +1,79 @@
+{
+  "manifest": "efe-mcp-manifest/0",
+  "suite": "mujoco-playground",
+  "kind": "rcb",
+  "robot": "Unitree Go1 quadruped (MuJoCo Playground scene): 12 joint position actuators, no walking controller",
+  "frame": {"suite": "the simulator's world frame (z up; the service gives no position of the robot in it)", "quat": "wxyz",
+            "base": {"fixed": [0, 0, 0, 1, 0, 0, 0]},
+            "base_text": "the simulator's world frame (z up), not the trunk: the service reports no trunk pose, so camera poses are given in this frame; no part here takes an end-effector pose"},
+  "cameras": ["track", "side", "back", "top"],
+  "default_cameras": ["track"],
+  "action_cameras": ["track"],
+  "state_cameras": ["track"],
+  "control": {"dt": 0.02, "control_dt": 0.02, "joint_speed": 2.0, "min_move_s": 0.3, "settle_s": 0.0,
+              "tolerance": {"joint": 0.1}, "max_chunk_s": 10.0},
+  "types": {"joint_position": {"dim": 12, "hold": ["last", "initial"],
+                               "initial": [0.1, 0.9, -1.8, -0.1, 0.9, -1.8, 0.1, 0.9, -1.8, -0.1, 0.9, -1.8]}},
+  "parts": {
+    "legs": {"kind": "legs",
+             "joints": {"type": "joint_position", "cols": [0, 12]},
+             "state": {"joints": {"group": "joint_pos"}},
+             "note": "12 absolute joint targets (rad): the FR, FL, RR, RL legs, each hip (abduction), thigh (hip pitch), calf (knee); PD actuators, kp 35 N m/rad"}
+  },
+  "locomotion": null,
+  "base": null,
+  "resets": {"note": "Each episode starts from the same frozen state; only the last episode is graded, and a success ends the run at once."},
+  "notes": "There is no walking or balance controller: every gait, turn and pose comes from the 12 joint targets you send, one row per control step (0.02 s). The joint targets are absolute angles in radians, in the same order as proprio group joint_pos; the state also has joint velocities and torques, the IMU (gyro, accelerometer, gravity direction, the trunk's velocity) and foot contacts (proprio_now, layout in describe_robot's spec_file: proprio_layout, proprio_groups). spec_file also has the home pose, the joint limits, the command schedule where the task has one (every result's command_now is the current command), and forward/inverse kinematics of the feet in the trunk frame for reference. Time passes only inside calls. The robot's own action type done (native, no columns) ends the episode at once.",
+  "variants": [
+    {"match": "mujoco_playground_barkour_*",
+     "patch": {
+       "robot": "Google Barkour vB quadruped (MuJoCo Playground scene): 12 joint position actuators, no walking controller",
+       "cameras": ["track", "realsense/rgb"],
+       "control": {"dt": 0.01, "control_dt": 0.01},
+       "types": {"joint_position": {"initial": [0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0, 0.0, 0.5, 1.0]}},
+       "parts": {"legs": {"note": "12 absolute joint targets (rad): the front-left, hind-left, front-right, hind-right legs, each abduction, hip, knee; PD actuators, kp 35 N m/rad"}},
+       "notes": "There is no walking or balance controller: every gait, turn and pose comes from the 12 joint targets you send, one row per control step (0.01 s). The joint targets are absolute angles in radians, in the same order as proprio group joint_pos; the state also has joint velocities and torques, the IMU (gyro, accelerometer, gravity direction, the trunk's velocity) and foot contacts (proprio_now, layout in describe_robot's spec_file: proprio_layout, proprio_groups). spec_file also has the home pose, the joint limits, the command schedule (every result's command_now is the current command), and forward/inverse kinematics of the feet in the trunk frame for reference. Time passes only inside calls. The robot's own action type done (native, no columns) ends the episode at once."
+     }},
+    {"match": "mujoco_playground_spot_*",
+     "patch": {
+       "robot": "Boston Dynamics Spot quadruped (MuJoCo Playground scene): 12 joint position actuators, no walking controller",
+       "types": {"joint_position": {"initial": [0.0, 1.04, -1.8, 0.0, 1.04, -1.8, 0.0, 1.04, -1.8, 0.0, 1.04, -1.8]}},
+       "parts": {"legs": {"note": "12 absolute joint targets (rad): the FL, FR, HL, HR legs, each hx (abduction), hy (hip pitch), kn (knee); stiff PD actuators (kp in describe_robot's spec_file, robot_spec.controller)"}}
+     }},
+    {"match": "mujoco_playground_go1_getup*",
+     "patch": {"types": {"joint_position": {"initial": [-0.6954, -0.0389, -2.5283, -0.7644, 1.2583, -1.5951, 0.1288, 4.0846, -1.8947, 0.6868, 0.7969, -2.1358]}}}},
+    {"match": "mujoco_playground_spot_getup*",
+     "patch": {"types": {"joint_position": {"initial": [0.5247, 0.1333, -1.1728, 0.7449, -0.0236, -2.5304, 0.4028, 0.9719, -2.2891, -0.1539, 1.0197, -2.621]}}}},
+    {"match": "mujoco_playground_aloha_*",
+     "patch": {
+       "robot": "ALOHA 2 bimanual robot (two ViperX 300s arms facing each other across a table, MuJoCo Playground scene): joint targets only",
+       "frame": {"suite": "the scene's world frame (z up)",
+                 "base_text": "the scene's world frame (z up), not either arm's base: no part here takes an end-effector pose"},
+       "cameras": ["overhead_cam", "teleoperator_pov", "wrist_cam_left", "wrist_cam_right"],
+       "default_cameras": ["overhead_cam", "teleoperator_pov"],
+       "action_cameras": ["overhead_cam"],
+       "state_cameras": ["overhead_cam"],
+       "control": {"joint_speed": 0.8, "min_move_s": 0.5, "gripper_settle_s": 0.6, "settle_s": 0.2,
+                   "tolerance": {"joint": 0.03}},
+       "types": {"joint_position": {"dim": 14, "hold": ["ref", "last"], "initial": null,
+                                    "hold_ref": {"names": ["left/waist_target", "left/shoulder_target", "left/elbow_target", "left/forearm_roll_target", "left/wrist_angle_target", "left/wrist_rotate_target", "left/gripper_target", "right/waist_target", "right/shoulder_target", "right/elbow_target", "right/forearm_roll_target", "right/wrist_angle_target", "right/wrist_rotate_target", "right/gripper_target"]}}},
+       "parts": {
+         "legs": null,
+         "left": {"kind": "arm",
+                  "joints": {"type": "joint_position", "cols": [0, 6]},
+                  "gripper": {"type": "joint_position", "col": 6, "open": 0.037, "closed": 0.002},
+                  "state": {"joints": {"names": ["left/waist_pos", "left/shoulder_pos", "left/elbow_pos", "left/forearm_roll_pos", "left/wrist_angle_pos", "left/wrist_rotate_pos"]},
+                            "gripper": {"names": ["left/gripper_pos"]}},
+                  "note": "waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate (rad); gripper finger target 0.037 m open .. 0.002 m closed"},
+         "right": {"kind": "arm",
+                   "joints": {"type": "joint_position", "cols": [7, 13]},
+                   "gripper": {"type": "joint_position", "col": 13, "open": 0.037, "closed": 0.002},
+                   "state": {"joints": {"names": ["right/waist_pos", "right/shoulder_pos", "right/elbow_pos", "right/forearm_roll_pos", "right/wrist_angle_pos", "right/wrist_rotate_pos"]},
+                             "gripper": {"names": ["right/gripper_pos"]}},
+                   "note": "waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate (rad); gripper finger target 0.037 m open .. 0.002 m closed"}
+       },
+       "resets": null,
+       "notes": "The arms take joint positions only: there is no end-effector pose command and no kinematics service here, so reaching a point means choosing joint angles (each joint's limits are in describe_robot). The state's gripper value comes from the finger's measured opening, so it stops short of 1 when the fingers close on an object. The two wrist cameras move with the arms; the overhead and teleoperator cameras are fixed. One episode, no reset: the state at the end of your time is graded, so finish in the pose you want graded and keep it."
+     }}
+  ]
+}

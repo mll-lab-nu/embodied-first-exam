@@ -1,0 +1,339 @@
+{
+  "manifest": "efe-mcp-manifest/0",
+  "suite": "molmospaces",
+  "kind": "rcb",
+  "robot": "MolmoSpaces robot (per task: a Rainbow Robotics RB-Y1 mobile manipulator, or a Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base)",
+  "frame": {
+    "suite": "the simulator's world frame of this house: z up, metres",
+    "quat": "wxyz"
+  },
+  "control": {
+    "min_move_s": 0.4,
+    "gripper_settle_s": 0.4,
+    "settle_s": 0.0,
+    "joint_speed": 1.0,
+    "tolerance": {
+      "pos_m": 0.01,
+      "rot_rad": 0.05,
+      "joint": 0.03
+    }
+  },
+  "signals": {
+    "done": {
+      "type": "done"
+    }
+  },
+  "signals_text": "signal done ends the episode at once: the state at that moment is judged (the task has to hold then). Without it the episode ends at the step limit or when your time is up, judged the same way.",
+  "base": null,
+  "locomotion": null,
+  "variants": [
+    {
+      "match": "molmospaces-navigate-to-*",
+      "patch": {
+        "robot": "Rainbow Robotics RB-Y1 mobile manipulator: holonomic base, 6-joint torso, two 7-joint arms with parallel grippers, head camera",
+        "frame": {
+          "base": {
+            "pos": {
+              "names": [
+                "base_x",
+                "base_y"
+              ]
+            },
+            "z": 0.0,
+            "yaw": {
+              "names": [
+                "base_theta"
+              ]
+            }
+          },
+          "base_text": "the robot base frame: on the floor under the base's centre (base_x, base_y), +X the way the base faces (base_theta), +Y to its left, +Z up; it moves with the base and is re-read at the start of every call"
+        },
+        "cameras": [
+          "head_camera",
+          "wrist_camera_l",
+          "wrist_camera_r"
+        ],
+        "default_cameras": [
+          "head_camera",
+          "wrist_camera_l",
+          "wrist_camera_r"
+        ],
+        "action_cameras": [
+          "head_camera"
+        ],
+        "state_cameras": [
+          "head_camera"
+        ],
+        "control": {
+          "dt": 0.2,
+          "control_dt": 0.2
+        },
+        "types": {
+          "joint_position": {
+            "dim": 25,
+            "hold": [
+              "last",
+              "measured"
+            ],
+            "initial": [
+              7.675,
+              10.074,
+              0.052565,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.5,
+              0.0,
+              0.0,
+              -2.3,
+              0.0,
+              -0.5,
+              0.0,
+              0.5,
+              0.0,
+              0.0,
+              -2.3,
+              0.0,
+              -0.5,
+              0.0,
+              -0.05,
+              -0.05
+            ]
+          }
+        },
+        "parts": {
+          "torso": {
+            "kind": "torso",
+            "note": "9 values: the base's world pose targets base_x, base_y (m) and base_theta (rad, -pi..pi), then the torso joints torso_0..5 (rad); move the base itself with target base (dx, dy, dyaw)",
+            "joints": {
+              "type": "joint_position",
+              "cols": [
+                0,
+                9
+              ]
+            },
+            "state": {
+              "joints": {
+                "group": "joint_pos",
+                "offset": 0,
+                "n": 9
+              }
+            }
+          },
+          "left": {
+            "kind": "arm",
+            "note": "7 joints (left_arm_0..6, rad); end-effector pose = the grasp point between the fingertips (left_gripper); poses are solved by the service's IK, which moves this arm only (the torso too when the arm alone cannot reach); the gripper is force-commanded: 1 closes with the full finger force, 0 opens with it, 0.5 exerts none",
+            "joints": {
+              "type": "joint_position",
+              "cols": [
+                9,
+                16
+              ]
+            },
+            "gripper": {
+              "type": "joint_position",
+              "col": 23,
+              "open": -100.0,
+              "closed": 100.0
+            },
+            "ik": {
+              "frame": "left_gripper",
+              "seed": {
+                "group": "joint_pos"
+              },
+              "q_cols": [
+                9,
+                16
+              ]
+            },
+            "state": {
+              "joints": {
+                "group": "joint_pos",
+                "offset": 9,
+                "n": 7
+              },
+              "gripper_opening_m": {
+                "names": [
+                  "left_gripper_opening_m"
+                ]
+              },
+              "ee_pose": {
+                "group": "tcp_pose",
+                "offset": 0,
+                "n": 7
+              }
+            }
+          },
+          "right": {
+            "kind": "arm",
+            "note": "7 joints (right_arm_0..6, rad); end-effector pose = the grasp point between the fingertips (right_gripper); poses are solved by the service's IK, which moves this arm only (the torso too when the arm alone cannot reach); the gripper is force-commanded: 1 closes with the full finger force, 0 opens with it, 0.5 exerts none",
+            "joints": {
+              "type": "joint_position",
+              "cols": [
+                16,
+                23
+              ]
+            },
+            "gripper": {
+              "type": "joint_position",
+              "col": 24,
+              "open": -100.0,
+              "closed": 100.0
+            },
+            "ik": {
+              "frame": "right_gripper",
+              "seed": {
+                "group": "joint_pos"
+              },
+              "q_cols": [
+                16,
+                23
+              ]
+            },
+            "state": {
+              "joints": {
+                "group": "joint_pos",
+                "offset": 16,
+                "n": 7
+              },
+              "gripper_opening_m": {
+                "names": [
+                  "right_gripper_opening_m"
+                ]
+              },
+              "ee_pose": {
+                "group": "tcp_pose",
+                "offset": 7,
+                "n": 7
+              }
+            }
+          }
+        },
+        "base": {
+          "type": "joint_position",
+          "mode": "pose",
+          "cols": {
+            "x": 0,
+            "y": 1,
+            "yaw": 2
+          },
+          "dt": 0.2,
+          "max_v": 0.3,
+          "max_w": 0.5,
+          "stop_s": 0.4,
+          "note": "the base holds absolute world pose targets (base_x, base_y, base_theta); move_robot base goals ramp them; base_theta stays within -pi..pi"
+        },
+        "notes": "One control step is 0.2 s of simulated time; the episode ends after spec_file max_control_steps steps (the task's horizon). The base is position-controlled in the house's world frame: base_odometry in every result is its world pose. The arms take joint positions; end-effector goals are solved by the service's IK and sent as joint positions. gripper_opening_m is the measured distance between the fingertips."
+      }
+    },
+    {
+      "match": "molmospaces-pick-*",
+      "patch": {
+        "robot": "Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup)",
+        "frame": {
+          "base": {
+            "fixed": [
+              5.783640408902092,
+              6.147374998963153,
+              0.32917862301225415,
+              0.9974168774094934,
+              0.0,
+              0.0,
+              0.07183016538123609
+            ]
+          },
+          "base_text": "the robot base frame: the arm's fixed base (robot_spec.base.pose in describe_robot's spec_file), +X the way the arm faces, +Y to its left, +Z up"
+        },
+        "cameras": [
+          "wrist_camera_zed_mini",
+          "droid_shoulder_light_randomization",
+          "randomized_zed2_analogue_1",
+          "randomized_zed2_analogue_2",
+          "randomized_gopro_analogue_1"
+        ],
+        "default_cameras": [
+          "wrist_camera_zed_mini",
+          "droid_shoulder_light_randomization",
+          "randomized_zed2_analogue_1"
+        ],
+        "action_cameras": [
+          "randomized_zed2_analogue_1"
+        ],
+        "state_cameras": [
+          "droid_shoulder_light_randomization"
+        ],
+        "control": {
+          "dt": 0.132,
+          "control_dt": 0.066
+        },
+        "types": {
+          "joint_position": {
+            "dim": 8,
+            "hold": [
+              "last",
+              "measured"
+            ],
+            "initial": [
+              -0.251967,
+              -0.933404,
+              0.253507,
+              -2.43268,
+              -0.043359,
+              1.711017,
+              0.216612,
+              0.0
+            ]
+          }
+        },
+        "parts": {
+          "arm": {
+            "kind": "arm",
+            "note": "7 joints (fr3_joint1..7, rad); end-effector pose = the grasp point between the Robotiq fingertips (gripper); poses are solved by the service's IK and sent as joint positions; gripper: the Robotiq command 0 = open .. 255 = closed",
+            "joints": {
+              "type": "joint_position",
+              "cols": [
+                0,
+                7
+              ]
+            },
+            "gripper": {
+              "type": "joint_position",
+              "col": 7,
+              "open": 0.0,
+              "closed": 255.0
+            },
+            "ik": {
+              "frame": "gripper",
+              "seed": {
+                "group": "joint_pos"
+              },
+              "q_cols": [
+                0,
+                7
+              ]
+            },
+            "state": {
+              "joints": {
+                "group": "joint_pos",
+                "offset": 0,
+                "n": 7
+              },
+              "gripper_opening_m": {
+                "group": "gripper_opening"
+              },
+              "ee_pose": {
+                "group": "tcp_pose",
+                "offset": 0,
+                "n": 7
+              }
+            }
+          }
+        },
+        "notes": "One control step is 1/15.152 s; the episode ends after spec_file max_control_steps steps (303, the task's 20 s horizon), so keep moves short and direct. The arm takes joint positions; end-effector goals are solved by the service's IK and sent as joint positions. gripper_opening_m is the measured distance between the fingertips."
+      }
+    }
+  ]
+}
