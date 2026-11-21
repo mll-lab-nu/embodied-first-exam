@@ -71,7 +71,7 @@ def tools_for(m: dict) -> list:
 
     mv = tools["move_robot"]
     gi = mv["inputSchema"]["properties"]["goals"]["items"]["properties"]
-    gi["target"]["enum"] = targets
+    gi["target"]["enum"] = targets or ["none"]
     if not m.get("base"):
         for k in ("dx", "dy", "dyaw"):
             gi.pop(k)
@@ -117,6 +117,14 @@ def tools_for(m: dict) -> list:
     if m.get("signals_text"):
         sg["description"] = m["signals_text"]
     cam_enum(tools["wait"]["inputSchema"]["properties"]["inline_cameras"])
+    if m.get("resets"):
+        cam_enum(tools["reset_episode"]["inputSchema"]["properties"]["inline_cameras"])
+        if isinstance(m["resets"], dict) and m["resets"].get("note"):
+            tools["reset_episode"]["description"] += " " + m["resets"]["note"]
+    else:
+        tools.pop("reset_episode")
+    if not targets:            # no part the unified conventions reach: the robot's own action types only
+        tools.pop("move_robot")
     out = []
     for t in tools.values():
         t["inputSchema"]["$schema"] = DRAFT

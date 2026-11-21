@@ -66,6 +66,58 @@ class RcbAdapter:
         self.rc = rcb_client
         self.r = rcb_client.Robot()
         self.spec = self.r.spec()
+        self.spec_problems = self.check_spec()
+
+    def check_spec(self) -> list:
+        """The manifest against the robot's /spec: a part whose action type or columns the spec does not have is
+        disabled (its goals are refused) instead of sending rows the robot would misread."""
+        probs = []
+        ats = (self.spec or {}).get("action_types") or {}
+        groups = (self.spec or {}).get("proprio_groups") or {}
+        lay = set((self.spec or {}).get("proprio_layout") or [])
+
+        def dim_of(t):
+            T = self.m.get("types", {}).get(t, {})
+            if T.get("dim") is not None:
+                return int(T["dim"])
+            a = ats.get(t)
+            if not isinstance(a, dict):
+                return None
+            return int(a.get("dim") or len(a.get("layout") or []) or 0) or None
+
+        def ref_bad(ref):
+            if not isinstance(ref, dict):
+                return None
+            if "group" in ref and groups and ref["group"] not in groups:
+                return f"proprio group {ref['group']!r} not in the spec"
+            if "names" in ref and lay:
+                miss = [n for n in ref["names"] if n not in lay]
+                if miss:
+                    return f"proprio names {miss[:3]} not in the spec's layout"
+            return None
+        for name, P in list(self.m.get("parts", {}).items()):
+            bad = []
+            for sec in ("joints", "ee", "ee_delta"):
+                X = P.get(sec)
+                if not X:
+                    continue
+                t = X.get("type")
+                if t not in ats and t not in self.m.get("types", {}):
+                    bad.append(f"{sec}: action type {t!r} not in the spec")
+                    continue
+                d = dim_of(t)
+                hi = max([X.get("cols", [0, 0])[1], X.get("gripper_col", -1) + 1,
+                          *(c[1] for c in (X.get("pos_cols"), X.get("rot_cols")) if c)])
+                if d is not None and hi > d:
+                    bad.append(f"{sec}: columns up to {hi} but {t} has {d}")
+            for k, ref in (P.get("state") or {}).items():
+                r = ref_bad(ref)
+                if r:
+                    bad.append(f"state.{k}: {r}")
+            if bad:
+                probs.append({"part": name, "problems": bad})
+                self.m["parts"].pop(name)
+        return probs
 
     def _call(self, fn, *a, **kw):
         params = inspect.signature(fn).parameters
@@ -248,6 +300,13 @@ class RcbAdapter:
                                     "frame": self.m.get("frame", {}).get("suite", "suite")}
         return out
 
+    def native_state(self, now, meta=None) -> dict:
+        """The robot's own proprioception row (its layout: describe_robot's spec_file, `proprio_layout` /
+        `proprio_groups`), for rows in the robot's own action types (execute_trajectory space native)."""
+        if not len(now) or self.m.get("native_state") is False:
+            return {}
+        return {"proprio_now": _f(now, 4)}
+
     # ------------------------------------------------------------------ result packaging
     def meta_now(self, res):
         p = res.meta.get("proprio") or {}
@@ -359,6 +418,13 @@ class RcbAdapter:
             out["signals"] = sorted(self.m["signals"])
         if self.m.get("notes"):
             out["notes"] = self.m["notes"]
+        if getattr(self, "spec_problems", None):
+            out["parts_unavailable"] = self.spec_problems
+            out["parts_unavailable_note"] = ("these parts do not match this robot's spec and are disabled: use "
+                                             "execute_trajectory space native with the robot's own action types")
+        if self.m.get("resets"):
+            b = (s.get("budget") or {}) if isinstance(s.get("budget"), dict) else {}
+            out["resets"] = {"budget": b.get("reset"), "tool": "reset_episode"}
         w = workspace.Writer()
         out["spec_file"] = w.json("spec", _jsonable(s))
         return out, []
@@ -426,7 +492,8 @@ class RcbAdapter:
         F = self.base_frame(now, res.meta)
         w = workspace.Writer(save_to)
         images, extras = self.package(res, F, w, cams, depth=depth, inline=inline_cameras, video=seconds > 0)
-        out = {"cameras": images, **self.robot_state(now, res.meta, F), **self.common_meta(res)}
+        out = {"cameras": images, **self.robot_state(now, res.meta, F), **self.native_state(now, res.meta),
+               **self.common_meta(res)}
         return out, extras
 
     # -- building rows
@@ -1178,7 +1245,32 @@ class RcbAdapter:
         w = workspace.Writer()
         images, extras = self.package(res, F, w, cams, inline=inline_cameras)
         return {"waited_s": float(seconds or 0), "frames": images, **self.robot_state(now, res.meta, F),
-                **self.common_meta(res)}, extras
+                **self.native_state(now, res.meta), **self.common_meta(res)}, extras
+
+    def reset_episode(self, inline_cameras=None, **_):
+        self.connect()
+        if not self.m.get("resets"):
+            raise ToolError("this robot allows no reset: the one episode is the run")
+        self.n += 1
+        cams = self.action_cams()
+        try:
+            if hasattr(self.r, "reset"):
+                res = self._call(self.r.reset, cameras=cams)
+            else:
+                res = self.r._post("/reset", {"cameras": cams}, [], 900)
+        except self.rc.EpisodeOver as e:
+            return self._episode_over(e), []
+        self.last_cmd.clear()
+        now = self.meta_now(res)
+        F = self.base_frame(now, res.meta)
+        w = workspace.Writer()
+        images, extras = self.package(res, F, w, [c for c in cams if c in (getattr(res, "last", {}) or {})],
+                                      inline=inline_cameras)
+        out = {"reset": True, "frames": images, **self.robot_state(now, res.meta, F), **self.common_meta(res)}
+        for k in ("episode", "resets_left"):
+            if res.meta.get(k) is not None:
+                out[k] = _jsonable(res.meta[k])
+        return out, extras
 
     def signal(self, kind, note, category=None, **_):
         self.connect()
