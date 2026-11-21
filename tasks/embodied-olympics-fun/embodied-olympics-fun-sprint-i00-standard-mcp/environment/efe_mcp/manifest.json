@@ -1,0 +1,350 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "embodied-olympics-fun",
+ "kind": "rcb",
+ "robot": "Unitree G1 humanoid, 29 joints (legs 12, waist 3, arms 7 + 7), 1.32 m; Unitree's walking policy and a running policy built in; fist pads on both wrists",
+ "frame": {
+  "suite": "heading only: the yaw of the pelvis IMU in the venue's world frame; the robot senses no position, so x and y stay 0",
+  "quat": "wxyz",
+  "base": {
+   "quat": {
+    "names": [
+     "imu_pelvis_qw",
+     "imu_pelvis_qx",
+     "imu_pelvis_qy",
+     "imu_pelvis_qz"
+    ]
+   },
+   "quat_order": "wxyz"
+  },
+  "base_text": "the robot base frame: on the floor under the pelvis, +X the way the pelvis faces at the start of the call, +Y left, +Z up (only the heading is sensed, from the pelvis IMU)"
+ },
+ "cameras": [
+  "head_left",
+  "head_right",
+  "venue",
+  "start"
+ ],
+ "default_cameras": [
+  "head_left",
+  "venue"
+ ],
+ "action_cameras": [
+  "head_left",
+  "venue"
+ ],
+ "state_cameras": [
+  "head_left"
+ ],
+ "control": {
+  "dt": 0.02,
+  "control_dt": 0.01,
+  "joint_speed": 1.0,
+  "min_move_s": 0.4,
+  "gripper_settle_s": 0.6,
+  "settle_s": 0.1,
+  "tolerance": {
+   "joint": 0.06
+  },
+  "max_chunk_s": 10.0
+ },
+ "types": {
+  "stand": {
+   "dim": 19,
+   "hold": [
+    "last",
+    "initial",
+    "ref"
+   ],
+   "hold_ref": {
+    "names": [
+     "waist_yaw_target",
+     "waist_roll_target",
+     "waist_pitch_target",
+     "left_shoulder_pitch_target",
+     "left_shoulder_roll_target",
+     "left_shoulder_yaw_target",
+     "left_elbow_target",
+     "left_wrist_roll_target",
+     "left_wrist_pitch_target",
+     "left_wrist_yaw_target",
+     "right_shoulder_pitch_target",
+     "right_shoulder_roll_target",
+     "right_shoulder_yaw_target",
+     "right_elbow_target",
+     "right_wrist_roll_target",
+     "right_wrist_pitch_target",
+     "right_wrist_yaw_target",
+     "holding_left",
+     "holding_right"
+    ]
+   },
+   "initial": [
+    0.0,
+    0.0,
+    0.0,
+    0.2,
+    0.2,
+    0.0,
+    1.28,
+    0.0,
+    0.0,
+    0.0,
+    0.2,
+    -0.2,
+    0.0,
+    1.28,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "walk": {
+   "dim": 22,
+   "hold": [
+    "ref",
+    "last"
+   ],
+   "hold_ref": {
+    "names": [
+     "cmd_vx",
+     "cmd_vy",
+     "cmd_wz",
+     "waist_yaw_target",
+     "waist_roll_target",
+     "waist_pitch_target",
+     "left_shoulder_pitch_target",
+     "left_shoulder_roll_target",
+     "left_shoulder_yaw_target",
+     "left_elbow_target",
+     "left_wrist_roll_target",
+     "left_wrist_pitch_target",
+     "left_wrist_yaw_target",
+     "right_shoulder_pitch_target",
+     "right_shoulder_roll_target",
+     "right_shoulder_yaw_target",
+     "right_elbow_target",
+     "right_wrist_roll_target",
+     "right_wrist_pitch_target",
+     "right_wrist_yaw_target",
+     "holding_left",
+     "holding_right"
+    ]
+   },
+   "zero_cols": [
+    0,
+    1,
+    2
+   ]
+  },
+  "joints": {
+   "dim": 31,
+   "hold": [
+    "ref",
+    "last"
+   ],
+   "hold_ref": {
+    "names": [
+     "left_hip_pitch_target",
+     "left_hip_roll_target",
+     "left_hip_yaw_target",
+     "left_knee_target",
+     "left_ankle_pitch_target",
+     "left_ankle_roll_target",
+     "right_hip_pitch_target",
+     "right_hip_roll_target",
+     "right_hip_yaw_target",
+     "right_knee_target",
+     "right_ankle_pitch_target",
+     "right_ankle_roll_target",
+     "waist_yaw_target",
+     "waist_roll_target",
+     "waist_pitch_target",
+     "left_shoulder_pitch_target",
+     "left_shoulder_roll_target",
+     "left_shoulder_yaw_target",
+     "left_elbow_target",
+     "left_wrist_roll_target",
+     "left_wrist_pitch_target",
+     "left_wrist_yaw_target",
+     "right_shoulder_pitch_target",
+     "right_shoulder_roll_target",
+     "right_shoulder_yaw_target",
+     "right_elbow_target",
+     "right_wrist_roll_target",
+     "right_wrist_pitch_target",
+     "right_wrist_yaw_target",
+     "holding_left",
+     "holding_right"
+    ]
+   }
+  },
+  "run": {
+   "dim": 5,
+   "hold": [
+    "ref",
+    "last"
+   ],
+   "hold_ref": {
+    "names": [
+     "cmd_vx",
+     "cmd_vy",
+     "cmd_wz",
+     "holding_left",
+     "holding_right"
+    ]
+   },
+   "zero_cols": [
+    0,
+    1,
+    2
+   ]
+  }
+ },
+ "parts": {
+  "torso": {
+   "kind": "torso",
+   "note": "the waist (yaw, roll, pitch), joint targets through the stand type",
+   "joints": {
+    "type": "stand",
+    "cols": [
+     0,
+     3
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "waist_yaw_pos",
+      "waist_roll_pos",
+      "waist_pitch_pos"
+     ]
+    }
+   }
+  },
+  "left": {
+   "kind": "arm",
+   "note": "7 joints: shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw; joint targets through the stand type",
+   "joints": {
+    "type": "stand",
+    "cols": [
+     3,
+     10
+    ]
+   },
+   "gripper": {
+    "type": "stand",
+    "col": 17,
+    "open": 0.0,
+    "closed": 1.0,
+    "binary": true
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "left_shoulder_pitch_pos",
+      "left_shoulder_roll_pos",
+      "left_shoulder_yaw_pos",
+      "left_elbow_pos",
+      "left_wrist_roll_pos",
+      "left_wrist_pitch_pos",
+      "left_wrist_yaw_pos"
+     ]
+    }
+   }
+  },
+  "right": {
+   "kind": "arm",
+   "note": "7 joints: shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw; joint targets through the stand type",
+   "joints": {
+    "type": "stand",
+    "cols": [
+     10,
+     17
+    ]
+   },
+   "gripper": {
+    "type": "stand",
+    "col": 18,
+    "open": 0.0,
+    "closed": 1.0,
+    "binary": true
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "right_shoulder_pitch_pos",
+      "right_shoulder_roll_pos",
+      "right_shoulder_yaw_pos",
+      "right_elbow_pos",
+      "right_wrist_roll_pos",
+      "right_wrist_pitch_pos",
+      "right_wrist_yaw_pos"
+     ]
+    }
+   }
+  },
+  "legs": {
+   "kind": "legs",
+   "note": "12 joints (left hip pitch, roll, yaw, knee, ankle pitch, roll; then the right leg's) through the joints type: the default gains, nothing balances the robot",
+   "joints": {
+    "type": "joints",
+    "cols": [
+     0,
+     12
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "left_hip_pitch_pos",
+      "left_hip_roll_pos",
+      "left_hip_yaw_pos",
+      "left_knee_pos",
+      "left_ankle_pitch_pos",
+      "left_ankle_roll_pos",
+      "right_hip_pitch_pos",
+      "right_hip_roll_pos",
+      "right_hip_yaw_pos",
+      "right_knee_pos",
+      "right_ankle_pitch_pos",
+      "right_ankle_roll_pos"
+     ]
+    }
+   }
+  }
+ },
+ "locomotion": {
+  "type": "run",
+  "dt": 0.02,
+  "cols": {
+   "vx": 0,
+   "vy": 1,
+   "wz": 2
+  },
+  "limits": {
+   "vx": [
+    0.0,
+    5.0
+   ],
+   "vy": [
+    -0.12,
+    0.12
+   ],
+   "wz": [
+    -0.5,
+    0.5
+   ]
+  },
+  "stop_s": 0.02,
+  "note": "The running policy (`run` rows at 50 Hz; it drives all 29 joints and swings the arms): vx from 0 to about 4 m/s (it falls above that), |vy| up to 0.12, |wz| up to 0.5. The command changes at most 1.5 m/s per second, so a call's closing zero command only starts the slowing: from 2.4 m/s stopping takes about 2 s and 2.3 m. Switching to stand, walk or joints above about 0.6 m/s usually ends in a fall. Unitree's walking policy is the native `walk` type."
+ },
+ "base": null,
+ "resets": {
+  "note": "Embodied Olympics allows 5 resets (describe_robot: resets): each starts a new attempt from the same start; only the last attempt is graded, and a success ends the run."
+ },
+ "notes": "Joint targets are absolute angles (rad); a target moves at most the joint's speed limit per 10 ms step. The arms (left, right) and the waist (torso part) take joint targets through the `stand` action type: the platform holds the legs in the standing stance with stiff gains and gravity support but no balance feedback, so a fast or hard arm swing can tip the robot over; a move_robot call on these parts switches the legs back to `stand`. The legs part uses the `joints` type (every joint at the default gains; nothing balances the robot in that mode). Legs and arm goals use different action types: send them in separate move_robot calls, or send rows of any of the robot's action types with execute_trajectory space native (stand, walk, run, run_arms, joints, lowcmd, walk_falcon, walk_agile; layouts and bounds in describe_robot). move_robot and joint rows for the arms and the waist (torso part) start from the last `stand` row sent through these tools (at the start of an attempt: the start command), grips included; locomote and the legs part start from the joint targets in force and keep a grip closed while that hand holds something (holding_* in proprio_now), open otherwise. On a fist pad a grip of 0.5 or more closes it (it holds a grippable object within 3.5 cm of the palm). locomote drives the running policy here (`run`); a move_robot call on the arms or the waist switches to `stand`, which above about 0.6 m/s usually ends in a fall. Between calls the robot is frozen: time passes only inside calls. There is no end-effector pose command: describe_robot's spec_file (robot_facts) has each joint's range, speed and torque limits, default gains and the stance. The robot senses no position: the state shows its heading (the pelvis IMU's yaw) only, and locomote's displacement reports the turn (dyaw), while dx and dy stay 0: judge distances from the cameras. Once an attempt is over, results carry the referee's call (outcome, stages_reached of stages_total).",
+ "task": "embodied-olympics-fun-sprint-i00"
+}

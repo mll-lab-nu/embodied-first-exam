@@ -1,0 +1,134 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "metaworldplus",
+ "kind": "rcb",
+ "robot": "Rethink Sawyer arm with a two-finger gripper, hand driven by Meta-World's mocap target (position deltas, fixed wrist orientation)",
+ "frame": {
+  "suite": "Meta-World's world frame (metres; x to the robot's right, y forward away from its base, z up; table top at z = 0)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0.0,
+    0.0,
+    0.0,
+    0.7071068,
+    0.0,
+    0.0,
+    0.7071068
+   ]
+  },
+  "base_text": "the robot base frame: at the arm's base link (world origin, table-top height), +X forward across the table (world +y), +Y the robot's left (world -x), +Z up"
+ },
+ "cameras": [
+  "front",
+  "left",
+  "right",
+  "topview"
+ ],
+ "default_cameras": [
+  "front",
+  "topview"
+ ],
+ "action_cameras": [
+  "front"
+ ],
+ "state_cameras": [
+  "front"
+ ],
+ "control": {
+  "dt": 0.0125,
+  "control_dt": 0.0125,
+  "min_move_s": 0.3,
+  "gripper_settle_s": 0.4,
+  "settle_s": 0.0,
+  "tolerance": {
+   "pos_m": 0.01
+  }
+ },
+ "types": {
+  "ee_delta": {
+   "dim": 4,
+   "hold": [
+    "ref",
+    "initial"
+   ],
+   "hold_ref": {
+    "names": [
+     "cmd_dx",
+     "cmd_dy",
+     "cmd_dz",
+     "cmd_grip"
+    ]
+   },
+   "initial": [
+    0.0,
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "zero_cols": [
+    0,
+    1,
+    2
+   ]
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "Sawyer hand on a mocap target: move_robot reaches a hand position by repeated measured steps; the wrist does not rotate and its orientation is not reported. The gripper takes 0 (open) .. 1 (closed).",
+   "gripper": {
+    "type": "ee_delta",
+    "col": 3,
+    "open": -1.0,
+    "closed": 1.0
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "right_j0_pos",
+      "right_j1_pos",
+      "right_j2_pos",
+      "right_j3_pos",
+      "right_j4_pos",
+      "right_j5_pos",
+      "right_j6_pos"
+     ]
+    },
+    "gripper": {
+     "names": [
+      "gripper_opening"
+     ],
+     "open": 1.0,
+     "closed": 0.0
+    },
+    "ee_pose": {
+     "names": [
+      "tcp_x",
+      "tcp_y",
+      "tcp_z"
+     ]
+    }
+   },
+   "ee_delta": {
+    "type": "ee_delta",
+    "pos_cols": [
+     0,
+     3
+    ],
+    "pos_scale": 0.01,
+    "frame": "world",
+    "gain": 0.5,
+    "max_cmd": 0.5,
+    "gripper_col": 3,
+    "dt": 0.0125,
+    "rows_per_step": 16,
+    "max_servo_s": 8.0,
+    "point": "the point between the fingertips (tcp)",
+    "note": "execute_trajectory space ee_delta: each row is one 0.0125 s step; dpos (m) moves the hand's target by that much (at most 0.01 m a step); the wrist does not rotate."
+   }
+  }
+ },
+ "notes": "The hand is moved with execute_trajectory space native, action_type ee_delta: rows [dx, dy, dz, grip], each in [-1, 1], one row per 0.0125 s control step (the default dt); dx, dy, dz move the hand's target by 1 cm per step per unit in the world frame (x = the robot's right, i.e. base -Y; y = forward, i.e. base +X; z up), kept inside x in [-0.5, 0.5], y in [0.4, 1.0], z in [0.05, 0.5]; the hand follows the target within a few steps; grip +1 closes, -1 opens. The wrist orientation is fixed. proprio_now holds tcp_x/y/z (the point between the fingertips, world frame), gripper_opening (0 closed .. 1 open) and mocap_x/y/z (the hand's target). The four cameras are fixed.",
+ "task": "metaworldplus-basketball-i00"
+}

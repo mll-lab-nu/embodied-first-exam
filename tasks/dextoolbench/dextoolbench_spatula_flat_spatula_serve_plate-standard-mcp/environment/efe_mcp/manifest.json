@@ -1,0 +1,163 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "dextoolbench",
+ "kind": "rcb",
+ "robot": "KUKA iiwa 14 arm with a 22-joint Sharpa HA4 left hand on its flange (DexToolBench scene, MuJoCo): 29 joint position targets",
+ "frame": {
+  "suite": "the scene's world frame (z up)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  "base_text": "the scene's world frame (z up), not the arm's base: the table's centre is at x = y = 0 with its top at z = 0.53 m, and the iiwa's base stands at (0, 0.8, 0); no part here takes an end-effector pose"
+ },
+ "cameras": [
+  "front",
+  "side",
+  "top",
+  "oblique"
+ ],
+ "default_cameras": [
+  "front",
+  "oblique"
+ ],
+ "action_cameras": [
+  "front"
+ ],
+ "state_cameras": [
+  "front"
+ ],
+ "control": {
+  "dt": 0.0166667,
+  "control_dt": 0.0166667,
+  "joint_speed": 0.6,
+  "min_move_s": 0.5,
+  "settle_s": 0.2,
+  "tolerance": {
+   "joint": 0.03
+  },
+  "max_chunk_s": 10.0
+ },
+ "types": {
+  "joint_position": {
+   "dim": 29,
+   "hold": [
+    "ref",
+    "last"
+   ],
+   "hold_ref": {
+    "names": [
+     "joint1_target",
+     "joint2_target",
+     "joint3_target",
+     "joint4_target",
+     "joint5_target",
+     "joint6_target",
+     "joint7_target",
+     "palmleft_thumb_CMC_FE_target",
+     "palmleft_thumb_CMC_AA_target",
+     "palmleft_thumb_MCP_FE_target",
+     "palmleft_thumb_MCP_AA_target",
+     "palmleft_thumb_IP_target",
+     "palmleft_index_MCP_FE_target",
+     "palmleft_index_MCP_AA_target",
+     "palmleft_index_PIP_target",
+     "palmleft_index_DIP_target",
+     "palmleft_middle_MCP_FE_target",
+     "palmleft_middle_MCP_AA_target",
+     "palmleft_middle_PIP_target",
+     "palmleft_middle_DIP_target",
+     "palmleft_ring_MCP_FE_target",
+     "palmleft_ring_MCP_AA_target",
+     "palmleft_ring_PIP_target",
+     "palmleft_ring_DIP_target",
+     "palmleft_pinky_CMC_target",
+     "palmleft_pinky_MCP_FE_target",
+     "palmleft_pinky_MCP_AA_target",
+     "palmleft_pinky_PIP_target",
+     "palmleft_pinky_DIP_target"
+    ]
+   }
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "joint1_pos",
+      "joint2_pos",
+      "joint3_pos",
+      "joint4_pos",
+      "joint5_pos",
+      "joint6_pos",
+      "joint7_pos"
+     ]
+    }
+   },
+   "note": "the iiwa's joint1..joint7 (rad); it starts at (-1.571, 1.571, 0, 1.376, 0, 1.485, 1.308)"
+  },
+  "left_hand": {
+   "kind": "hand",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     7,
+     29
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "palmleft_thumb_CMC_FE_pos",
+      "palmleft_thumb_CMC_AA_pos",
+      "palmleft_thumb_MCP_FE_pos",
+      "palmleft_thumb_MCP_AA_pos",
+      "palmleft_thumb_IP_pos",
+      "palmleft_index_MCP_FE_pos",
+      "palmleft_index_MCP_AA_pos",
+      "palmleft_index_PIP_pos",
+      "palmleft_index_DIP_pos",
+      "palmleft_middle_MCP_FE_pos",
+      "palmleft_middle_MCP_AA_pos",
+      "palmleft_middle_PIP_pos",
+      "palmleft_middle_DIP_pos",
+      "palmleft_ring_MCP_FE_pos",
+      "palmleft_ring_MCP_AA_pos",
+      "palmleft_ring_PIP_pos",
+      "palmleft_ring_DIP_pos",
+      "palmleft_pinky_CMC_pos",
+      "palmleft_pinky_MCP_FE_pos",
+      "palmleft_pinky_MCP_AA_pos",
+      "palmleft_pinky_PIP_pos",
+      "palmleft_pinky_DIP_pos"
+     ]
+    }
+   },
+   "note": "the Sharpa HA4 left hand's 22 joints (rad): thumb CMC_FE, CMC_AA, MCP_FE, MCP_AA, IP; index, middle and ring MCP_FE, MCP_AA, PIP, DIP; pinky CMC, MCP_FE, MCP_AA, PIP, DIP; all 0 at the start (open)"
+  }
+ },
+ "locomotion": null,
+ "base": null,
+ "resets": {
+  "note": "Each episode starts from the same frozen state (robot, tool and goals); only the last episode is graded, and reaching every goal ends the run at once."
+ },
+ "notes": "The arm and the hand take joint positions only: there is no end-effector pose command and no kinematics service here, so placing the hand or the tool means choosing the iiwa's 7 joint angles (limits in describe_robot). Rows are one control step apart (1/60 s) and each row's targets are held or ramped linearly between rows. The goals are shown in the images as a green ghost copy of the tool, one goal at a time in order; the current goal counts as reached when the tool's grasp box is within 1.5 cm of it at every corner, and the next one then appears. Goals have no time limit; the episode ends when every goal is reached, at its control-step limit, or when your time is up. Time passes only inside calls.",
+ "task": "dextoolbench_spatula_flat_spatula_serve_plate"
+}

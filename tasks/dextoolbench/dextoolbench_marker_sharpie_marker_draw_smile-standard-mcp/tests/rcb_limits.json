@@ -1,0 +1,27 @@
+{
+ "agent_timeout_sec": 3600,
+ "caps": {
+  "main": {
+   "cpus": 3.0,
+   "disk_gb": 11.0,
+   "memory_gb": 16.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 4.0,
+   "gpu_memory_gb": 5.0,
+   "memory_gb": 4.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 11.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "standard-mcp",
+ "scope_services": [
+  "main"
+ ],
+ "task": "dextoolbench_marker_sharpie_marker_draw_smile-standard-mcp",
+ "tick_sec": 5
+}

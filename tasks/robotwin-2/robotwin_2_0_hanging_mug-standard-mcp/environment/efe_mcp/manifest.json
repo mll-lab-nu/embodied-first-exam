@@ -1,0 +1,168 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "robotwin-2",
+ "kind": "rcb",
+ "robot": "ALOHA-AgileX dual-arm robot: two 6-joint arms with parallel grippers, fixed in front of a table",
+ "frame": {
+  "suite": "RoboTwin world: origin at the table centre on the floor plane, +z up; the robot stands at y = -0.65 facing +y",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0.0,
+    -0.65,
+    0.0,
+    0.70710678,
+    0.0,
+    0.0,
+    0.70710678
+   ]
+  },
+  "base_text": "on the floor under the middle of the robot (world point (0, -0.65, 0)): +X towards the table (world +y), +Y to the robot's left (world -x), +Z up; the table top is at z = 0.74 m"
+ },
+ "cameras": [
+  "head_camera",
+  "front_camera",
+  "left_camera",
+  "right_camera",
+  "observer_camera",
+  "world_camera1"
+ ],
+ "default_cameras": [
+  "head_camera",
+  "front_camera"
+ ],
+ "action_cameras": [
+  "head_camera"
+ ],
+ "state_cameras": [
+  "head_camera"
+ ],
+ "control": {
+  "control_dt": 0.004,
+  "dt": 0.04,
+  "joint_speed": 1.0,
+  "min_move_s": 0.5,
+  "gripper_settle_s": 0.6,
+  "settle_s": 0.2,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  },
+  "collision_aware": "end-effector goals are planned by CuRobo around the table only; objects are not obstacles to it"
+ },
+ "types": {
+  "joint_position": {
+   "dim": 14,
+   "hold": [
+    "ref",
+    "last",
+    "measured"
+   ],
+   "hold_ref": {
+    "group": "joint_cmd"
+   }
+  },
+  "ee_pose": {
+   "dim": 16,
+   "ee_mode": "planner",
+   "max_rows": 50,
+   "hold": [
+    "measured",
+    "last"
+   ]
+  }
+ },
+ "parts": {
+  "left": {
+   "kind": "arm",
+   "note": "6-joint arm (fl_joint1..6) with a parallel gripper",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     6
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 6,
+    "open": 1.0,
+    "closed": 0.0
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "gripper_col": 7,
+    "point": "RoboTwin's end-effector frame: 0.12 m behind the gripper centre along the approach axis",
+    "mode_text": "each goal is planned by CuRobo (table-only collision) and executed; a failed plan holds the arm"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 6
+    },
+    "gripper": {
+     "group": "gripper_cmd",
+     "offset": 0,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "ee_pose",
+     "offset": 0,
+     "n": 7
+    }
+   }
+  },
+  "right": {
+   "kind": "arm",
+   "note": "6-joint arm (fr_joint1..6) with a parallel gripper",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     7,
+     13
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 13,
+    "open": 1.0,
+    "closed": 0.0
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     8,
+     15
+    ],
+    "gripper_col": 15,
+    "point": "RoboTwin's end-effector frame: 0.12 m behind the gripper centre along the approach axis",
+    "mode_text": "each goal is planned by CuRobo (table-only collision) and executed; a failed plan holds the arm"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 7,
+     "n": 6
+    },
+    "gripper": {
+     "group": "gripper_cmd",
+     "offset": 1,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "ee_pose",
+     "offset": 7,
+     "n": 7
+    }
+   }
+  }
+ },
+ "notes": "End-effector poses (goals and state) are RoboTwin's end-effector frame, 0.12 m behind the gripper centre along the approach axis: to put the fingers at p, command p - 0.12 * approach axis. The gripper-centre pose of each arm is the proprio group tcp_pose (proprio_now, layout in describe_robot's spec_file). The reported gripper value is the command; the measured finger opening (0 = closed, 1 = open, in the joint_position units) is in the proprio group joint_pos (columns 36 and 43 of proprio_now), and a gripper closed on an object stays above 0 there. An end-effector goal that also sets the gripper moves the gripper during the arm's motion: to grasp, reach first, then close the gripper in a separate move_robot call. Each end-effector goal takes as long as the planner needs (duration_s does not apply). Static cameras: head_camera (above the table), front_camera (facing the robot), observer_camera and world_camera1; left_camera and right_camera ride on the wrists.",
+ "task": "robotwin_2_0_hanging_mug"
+}

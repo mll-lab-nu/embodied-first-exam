@@ -1,0 +1,126 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "molmospaces",
+ "kind": "rcb",
+ "robot": "Franka FR3 arm with a Robotiq 2F-85 gripper on a fixed base (the DROID setup)",
+ "frame": {
+  "suite": "the simulator's world frame of this house: z up, metres",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    5.783640408902092,
+    6.147374998963153,
+    0.32917862301225415,
+    0.9974168774094934,
+    0.0,
+    0.0,
+    0.07183016538123609
+   ]
+  },
+  "base_text": "the robot base frame: the arm's fixed base (robot_spec.base.pose in describe_robot's spec_file), +X the way the arm faces, +Y to its left, +Z up"
+ },
+ "control": {
+  "min_move_s": 0.4,
+  "gripper_settle_s": 0.4,
+  "settle_s": 0.0,
+  "joint_speed": 1.0,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  },
+  "dt": 0.132,
+  "control_dt": 0.066
+ },
+ "signals": {
+  "done": {
+   "type": "done"
+  }
+ },
+ "signals_text": "signal done ends the episode at once: the state at that moment is judged (the task has to hold then). Without it the episode ends at the step limit or when your time is up, judged the same way.",
+ "base": null,
+ "locomotion": null,
+ "cameras": [
+  "wrist_camera_zed_mini",
+  "droid_shoulder_light_randomization",
+  "randomized_zed2_analogue_1",
+  "randomized_zed2_analogue_2",
+  "randomized_gopro_analogue_1"
+ ],
+ "default_cameras": [
+  "wrist_camera_zed_mini",
+  "droid_shoulder_light_randomization",
+  "randomized_zed2_analogue_1"
+ ],
+ "action_cameras": [
+  "randomized_zed2_analogue_1"
+ ],
+ "state_cameras": [
+  "droid_shoulder_light_randomization"
+ ],
+ "types": {
+  "joint_position": {
+   "dim": 8,
+   "hold": [
+    "last",
+    "measured"
+   ],
+   "initial": [
+    -0.251967,
+    -0.933404,
+    0.253507,
+    -2.43268,
+    -0.043359,
+    1.711017,
+    0.216612,
+    0.0
+   ]
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "7 joints (fr3_joint1..7, rad); end-effector pose = the grasp point between the Robotiq fingertips (gripper); poses are solved by the service's IK and sent as joint positions; gripper: the Robotiq command 0 = open .. 255 = closed",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 7,
+    "open": 0.0,
+    "closed": 255.0
+   },
+   "ik": {
+    "frame": "gripper",
+    "seed": {
+     "group": "joint_pos"
+    },
+    "q_cols": [
+     0,
+     7
+    ]
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 7
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening"
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 0,
+     "n": 7
+    }
+   }
+  }
+ },
+ "notes": "One control step is 1/15.152 s; the episode ends after spec_file max_control_steps steps (303, the task's 20 s horizon), so keep moves short and direct. The arm takes joint positions; end-effector goals are solved by the service's IK and sent as joint positions. gripper_opening_m is the measured distance between the fingertips.",
+ "task": "molmospaces-pick-i00"
+}

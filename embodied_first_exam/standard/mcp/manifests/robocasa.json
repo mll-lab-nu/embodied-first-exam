@@ -1,0 +1,113 @@
+{
+  "manifest": "efe-mcp-manifest/0",
+  "suite": "robocasa",
+  "kind": "rcb",
+  "robot": "Franka Panda on an Omron mobile base with a torso lift (RoboCasa PandaMobile); the arm is driven by robosuite's operational-space controller (end-effector deltas)",
+  "frame": {
+    "suite": "the RoboCasa kitchen's world frame (metres, z up)",
+    "quat": "wxyz",
+    "base": {
+      "fixed": [0.67812, -0.8, 0.0, 0.707098, 0.0, 0.0, 0.707115]
+    },
+    "base_text": "the mobile base's starting placement: on the floor at the base's origin, +X the way the arm faces, +Y the robot's left, +Z up; it stays where the base started (driving the base does not move this frame)"
+  },
+  "cameras": ["robot0_agentview_center", "robot0_agentview_left", "robot0_agentview_right", "robot0_eye_in_hand"],
+  "default_cameras": ["robot0_agentview_center", "robot0_eye_in_hand"],
+  "action_cameras": ["robot0_agentview_center"],
+  "state_cameras": ["robot0_agentview_center"],
+  "control": {
+    "dt": 0.05,
+    "control_dt": 0.05,
+    "min_move_s": 0.5,
+    "gripper_settle_s": 0.8,
+    "settle_s": 0.0,
+    "tolerance": {
+      "pos_m": 0.01,
+      "rot_rad": 0.05
+    }
+  },
+  "types": {
+    "ee_delta": {
+      "dim": 12,
+      "hold": ["ref", "initial"],
+      "hold_ref": {
+        "names": ["cmd_arm_dx", "cmd_arm_dy", "cmd_arm_dz", "cmd_arm_drx", "cmd_arm_dry", "cmd_arm_drz", "cmd_grip", "cmd_base_x", "cmd_base_y", "cmd_base_yaw", "cmd_torso", "cmd_hybrid_mode"]
+      },
+      "initial": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, -1.0],
+      "zero_cols": [0, 1, 2, 3, 4, 5, 7, 8, 9, 10]
+    }
+  },
+  "parts": {
+    "arm": {
+      "kind": "arm",
+      "note": "Panda arm under robosuite's OSC_POSE controller (end-effector deltas in the robot base frame): move_robot reaches a hand position by repeated measured steps; the hand's orientation is not measured. The gripper is open or closed only.",
+      "gripper": {
+        "type": "ee_delta",
+        "col": 6,
+        "open": -1.0,
+        "closed": 1.0,
+        "binary": true
+      },
+      "state": {
+        "joints": {
+          "names": ["robot0_joint1_pos", "robot0_joint2_pos", "robot0_joint3_pos", "robot0_joint4_pos", "robot0_joint5_pos", "robot0_joint6_pos", "robot0_joint7_pos"]
+        },
+        "gripper": {
+          "names": ["cmd_grip"],
+          "open": -1.0,
+          "closed": 1.0
+        },
+        "ee_pose": {
+          "names": ["eef_right_x", "eef_right_y", "eef_right_z"]
+        }
+      },
+      "ee_delta": {
+        "type": "ee_delta",
+        "pos_cols": [0, 3],
+        "rot_cols": [3, 6],
+        "pos_scale": 0.05,
+        "rot_scale": 0.5,
+        "frame": "base",
+        "gain": 2.0,
+        "max_cmd": 1.0,
+        "gripper_col": 6,
+        "dt": 0.05,
+        "rows_per_step": 4,
+        "max_servo_s": 8.0,
+        "point": "the gripper's grip site, between the fingertips",
+        "note": "execute_trajectory space ee_delta: each row is one 0.05 s step; dpos (m) and drot (rad, rotation vector) move the hand's target from the measured hand pose by that much in that step (at most 0.05 m and 0.5 rad); the hand covers only part of it within the step. The hand's orientation is not measured: move_robot takes positions."
+      }
+    }
+  },
+  "notes": "The arm, the base and the torso lift take one action type, ee_delta (12 numbers, one row per 0.05 s control step), sent with execute_trajectory space native, action_type ee_delta: arm_dx, arm_dy, arm_dz, arm_drx, arm_dry, arm_drz move the hand's target from the measured hand pose by 0.05 m / 0.5 rad per unit in that step, in the robot base frame (+x the way the arm faces, +y left, +z up; axis-angle rotation); grip +1 closes, -1 opens; base_x, base_y (1.0 = 1 m/s) and base_yaw (1.0 = 1.5 rad/s) are the mobile base's velocity targets in its own frame; torso moves the lift's height target by 0.05 m per unit per step (range 0 to 0.34 m); hybrid_mode -1 (the default) keeps the arm's goal fixed while the base moves. Each value is clipped to [-1, 1]; a row of zeros with grip and hybrid_mode as they are holds the robot. proprio_now has eef_right_x/y/z (the grip site's position in the world frame), the joints (robot0_joint1..7, the mobile base's mobilebase0_joint_mobile_forward/side/yaw and the torso's mobilebase0_joint_torso_height) and cmd_* (the last command). The poses the tools report are in the base's starting placement. The cameras ride on the robot; each frame comes with its current calibration.",
+  "variants": [
+    {"match": "robocasa-arrange-vegetables-i00", "patch": {"frame": {"base": {"fixed": [3.6, -1.1998, 0.0, 1.0, 0.0, 0.0, -2e-06]}}}},
+    {"match": "robocasa-close-double-door-i00", "patch": {"frame": {"base": {"fixed": [5.6, -1.20001, 0.0, 1.0, 0.0, 0.0, -1.4e-05]}}}},
+    {"match": "robocasa-close-drawer-i00", "patch": {"frame": {"base": {"fixed": [3.55001, -1.005, 0.0, 0.707114, 0.0, 0.0, 0.707099]}}}},
+    {"match": "robocasa-close-single-door-i00", "patch": {"frame": {"base": {"fixed": [1.67508, -2.50016, 0.0, 0.707071, 0.0, 0.0, -0.707143]}}}},
+    {"match": "robocasa-coffee-press-button-i00", "patch": {"frame": {"base": {"fixed": [5.6, -1.11946, 0.0, 1.0, 0.0, 0.0, -1.4e-05]}}}},
+    {"match": "robocasa-coffee-serve-mug-i00", "patch": {"frame": {"base": {"fixed": [1.34458, -0.8, 0.0, 0.707108, 0.0, 0.0, 0.707106]}}}},
+    {"match": "robocasa-microwave-thawing-i00", "patch": {"frame": {"base": {"fixed": [3.54, -1.59959, 0.0, 1.0, 0.0, 0.0, -2e-06]}}}},
+    {"match": "robocasa-open-double-door-i00", "patch": {"frame": {"base": {"fixed": [2.15, -0.8, 0.0, 0.707105, 0.0, 0.0, 0.707109]}}}},
+    {"match": "robocasa-open-drawer-i00", "patch": {"frame": {"base": {"fixed": [5.37, -1.9, 0.0, 1.0, 0.0, 0.0, -2e-06]}}}},
+    {"match": "robocasa-open-single-door-i00", "patch": {"frame": {"base": {"fixed": [0.8, -3.45, 0.0, 1e-06, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa-pnp-cab-to-counter-i00", "patch": {"frame": {"base": {"fixed": [0.79999, -0.94999, 0.0, 1e-06, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa-pnp-counter-to-cab-i00", "patch": {"frame": {"base": {"fixed": [0.79999, -0.95, 0.0, 2e-06, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa-pnp-counter-to-microwave-i00", "patch": {"frame": {"base": {"fixed": [3.54, -1.59959, 0.0, 1.0, 0.0, 0.0, -1e-06]}}}},
+    {"match": "robocasa-pnp-counter-to-sink-i00", "patch": {"frame": {"base": {"fixed": [0.79999, -2.2, 0.0, 8e-06, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa-pnp-counter-to-stove-i00", "patch": {"frame": {"base": {"fixed": [3.69003, -0.77976, 0.0, 0.707219, 0.0, 0.0, 0.706995]}}}},
+    {"match": "robocasa-pnp-microwave-to-counter-i00", "patch": {"frame": {"base": {"fixed": [1.67508, -2.50016, 0.0, 0.707072, 0.0, 0.0, -0.707142]}}}},
+    {"match": "robocasa-pnp-sink-to-counter-i00", "patch": {"frame": {"base": {"fixed": [1.69, -0.8, 0.0, 0.707107, 0.0, 0.0, 0.707106]}}}},
+    {"match": "robocasa-pnp-stove-to-counter-i00", "patch": {"frame": {"base": {"fixed": [0.85999, -1.59958, 0.0, 9e-06, 0.0, 0.0, 1.0]}}}},
+    {"match": "robocasa-pre-soak-pan-i00", "patch": {"frame": {"base": {"fixed": [3.05, -0.8, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa-prepare-coffee-i00", "patch": {"frame": {"base": {"fixed": [4.55, -0.8, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa-restock-pantry-i00", "patch": {"frame": {"base": {"fixed": [1.15, -0.8, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa-turn-off-microwave-i00", "patch": {"frame": {"base": {"fixed": [0.85999, -1.5738, 0.0, 8e-06, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa-turn-off-sink-faucet-i00", "patch": {"frame": {"base": {"fixed": [0.80046, -2.19993, 0.0, 6.1e-05, 0.0, 0.0, 1.0]}}}},
+    {"match": "robocasa-turn-off-stove-i00", "patch": {"frame": {"base": {"fixed": [3.54, -1.5738, 0.0, 1.0, 0.0, 0.0, -1e-06]}}}},
+    {"match": "robocasa-turn-on-microwave-i00", "patch": {"frame": {"base": {"fixed": [1.67508, -2.50016, 0.0, 0.707077, 0.0, 0.0, -0.707137]}}}},
+    {"match": "robocasa-turn-on-sink-faucet-i00", "patch": {"frame": {"base": {"fixed": [3.20009, -1.8, 0.0, 0.707072, 0.0, 0.0, -0.707141]}}}},
+    {"match": "robocasa-turn-on-stove-i00", "patch": {"frame": {"base": {"fixed": [4.19501, -0.77664, 0.0, 0.707146, 0.0, 0.0, 0.707068]}}}},
+    {"match": "robocasa-turn-sink-spout-i00", "patch": {"frame": {"base": {"fixed": [5.09999, -2.2025, 0.0, 1.0, 0.0, 0.0, -1e-06]}}}}
+  ]
+}

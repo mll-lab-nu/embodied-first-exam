@@ -1,0 +1,177 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "robowits",
+ "kind": "rcb",
+ "robot": "Marvin bimanual robot: two 7-joint arms with parallel two-finger grippers at a table (RoboWits on Genesis)",
+ "frame": {
+  "suite": "RoboWits world frame: the robot base at (0, 0, 1.08), x away from the robot, y to its left, z up",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0.0,
+    0.0,
+    1.08,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "base_text": "the robot base frame: the robot's base point (1.08 m above the world origin), +X away from the robot towards the table, +Y to the robot's left, +Z up"
+ },
+ "cameras": [
+  "ego",
+  "wrist_right",
+  "wrist_left"
+ ],
+ "default_cameras": [
+  "ego",
+  "wrist_right",
+  "wrist_left"
+ ],
+ "action_cameras": [
+  "ego"
+ ],
+ "state_cameras": [
+  "ego"
+ ],
+ "control": {
+  "dt": 0.1,
+  "control_dt": 0.0333333,
+  "joint_speed": 0.8,
+  "min_move_s": 0.5,
+  "gripper_settle_s": 0.6,
+  "settle_s": 0.2,
+  "ee_settle_s": 0.0,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 16,
+   "hold": [
+    "ref",
+    "measured"
+   ],
+   "hold_ref": {
+    "group": "joint_cmd"
+   }
+  },
+  "ee_pose": {
+   "dim": 16,
+   "hold": [
+    "measured"
+   ],
+   "ee_mode": "planner",
+   "max_rows": 50,
+   "hold_measured_ee": true
+  }
+ },
+ "parts": {
+  "right": {
+   "kind": "arm",
+   "note": "7 joints (Joint1_R..Joint7_R, rad; the wrist joints are limited to about +-60 deg); end-effector pose = the gripper tip frame Gripper_Tip_R (+z approach, +x the finger-closing direction)",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 7,
+    "open": 0.1,
+    "closed": 0.0
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "gripper_col": 7,
+    "point": "the gripper tip (Gripper_Tip_R: +z approach, +x finger-closing direction)",
+    "mode_text": "the service solves each pose by inverse kinematics (no collision checking) and drives the arm there in joint space (duration_s does not apply); an arm whose IK fails holds and is reported"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 7
+    },
+    "gripper": {
+     "names": [
+      "right_gripper_cmd"
+     ]
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 0,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 0,
+     "n": 7
+    }
+   }
+  },
+  "left": {
+   "kind": "arm",
+   "note": "7 joints (Joint1_L..Joint7_L, rad; the wrist joints are limited to about +-60 deg); end-effector pose = the gripper tip frame Gripper_Tip_L (+z approach, +x the finger-closing direction)",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     8,
+     15
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 15,
+    "open": 0.1,
+    "closed": 0.0
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     8,
+     15
+    ],
+    "gripper_col": 15,
+    "point": "the gripper tip (Gripper_Tip_L: +z approach, +x finger-closing direction)",
+    "mode_text": "the service solves each pose by inverse kinematics (no collision checking) and drives the arm there in joint space (duration_s does not apply); an arm whose IK fails holds and is reported"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 8,
+     "n": 7
+    },
+    "gripper": {
+     "names": [
+      "left_gripper_cmd"
+     ]
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 1,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 7,
+     "n": 7
+    }
+   }
+  }
+ },
+ "base": null,
+ "locomotion": null,
+ "notes": "The gripper value in the state is the commanded opening width (0.1 m = open, 0 = closed); gripper_opening_m is the measured opening (a gripper closed on an object stops above 0). The wrist joints are limited to about +-60 deg, so a vertical approach works only for finger-closing directions within about 60 deg of the +Y axis. Joint efforts (Joint1_R_effort ...) in proprio_now rise when an arm pushes on something. The episode ends by itself once the goal holds with the graded objects released and at rest through a short settle window.",
+ "task": "robowits-retrieve-cube-i00"
+}

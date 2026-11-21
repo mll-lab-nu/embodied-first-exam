@@ -1,0 +1,80 @@
+# dexhand-picture-hang-i00-standard-mcp
+
+| | |
+|---|---|
+| Benchmark | DexHand |
+| Mode | standard-mcp (`eai-standard/2.2`) |
+| Twin | `dexhand-picture-hang-i00-privileged` |
+| Simulator / robot | `mujoco` / `marvin-bimanual-sharpa-wave` |
+| Family / instance | `picture_hang` / seed 0 |
+| Oracle | `full` — solution/trajectory.npz: 869 Sharpa Wave rows on the Marvin dual-arm robot (success after 669 controls, 200 rows of slack), recorded from the authoring controller through its arm layer (IK to arm joint targets; motor targets only). Two fresh-process replays end with identical state hashes; float32-rounded rows also succeed. Wave-3 port of the 2026-10-14 floating-stage oracle. |
+| Agent time budget | 3600 s; tokens: protocol default (docs/protocol/running.md "Official runs") |
+| Base image | `ghcr.io/mll-lab-nu/efe:dexhand-0.2.0@sha256:0d42994b83d95ab5301c592b35586550c9ee426490115e4b43f3b8cf8cc43350` |
+
+## Task
+Hang the framed picture on the two wall hooks. The free 2.0 kg frame (52 x 52 x 6 cm) stands upright on a console; two brass picture hooks are installed on the wall and two D-rings on passive hinges are screwed to the back of the frame. Lift the frame off the console with both hands, engage BOTH D-rings on their matching hooks (left ring on the left hook, right ring on the right hook), then let go: the picture must hang still and level from both hooks with no hand touching it. Success requires, in this order: (1) lift-off: the frame origin (the centre of its bottom edge) at least 0.02 m above its start height z = 0.72 m and no contact with the console; (2) engagement: both rings threaded on their own hooks (the hook's load saddle passes through the ring's D loop, with the ring between the hook's upturned lip and the wall; a ring resting on top of the lip does not count) and each ring touching its hook; (3) a released hang for 50 consecutive controls (1 s): both rings threaded, each hook carrying at least 20 % of the frame's weight vertically through its ring and both hooks together at least 85 %, no hand touching the frame, no frame contact with the console or the floor, the frame's top edge level within 3 degrees, its tilt from upright at most 0.10 rad, its centre-of-mass speed at most 0.02 m/s and its angular speed at most 0.15 rad/s. The episode ends with success at that moment; one engaged hook, or rings left on the hook lips, never counts. The episode ends immediately with failure, checked after every 2 ms physics substep, when the frame touches the floor, when its origin leaves the workspace box x in [0.20, 0.76] m, y in [-0.45, 0.45] m, z in [0.60, 1.30] m, when it tilts more than 0.6 rad from upright, when after lift-off its origin falls more than 0.01 m below its start height, when after both rings were engaged no hand touches the frame while a ring is not threaded (it fell off a hook), when an arm, torso or stand link of the robot touches anything (only the hands may make contact), or when the physics becomes unstable; and when after lift-off the frame is held by nothing (no hand contact, no console contact and not hanging threaded on both hooks with both rings touching them): at the end of any control, or at any substep where its centre of mass is also moving down faster than 0.2 m/s (dropped, even if caught again, released early, dangling from one hook or resting on the hook lips). Later actions cannot undo a failure. Only the robot's actuator targets (14 arm joints and the fingers of both hands) are allowed; no grasp welds, scripted object motion or forces on the frame. The episode allows at most 3000 controls at 50 Hz; reaching that limit without success is a failure.
+
+## Difficulty
+A 2 kg, 52 cm frame has to be lifted and carried by two coordinated arms and hands without dropping or tipping it
+(no arm link may touch anything), and both of
+its passive D-rings (18 x 20 mm loops of 2 mm wire, 3 mm behind the frame's back) have to be passed over two 6 mm hook
+saddles at the same time: the clearance between each hook's upturned lip and the wall is about 1 cm, the rings sit
+behind the frame where cameras cannot see them well, and the frame's back face meets the hook lips just as the rings
+clear them. Then the hands must let go so that the hooks alone carry the frame, level and still. Releasing early,
+hanging the frame from one hook, or leaving the rings on top of the lips is a failure at once; there is no partial
+credit.
+
+## Reference solution
+`solution/trajectory.npz` replays a validated Sharpa Wave trajectory on the dual-arm robot (869 controls; the replay
+ends at success after 669). It was recorded from the authoring controller, which reads the
+simulator state and converts its hand-pose commands into the 14 arm joint targets by inverse kinematics: the two palms
+squeeze the top of the side rails, the arms lift the frame, carry it to the wall with the ring pivots just below the
+hook saddles, slide the rings over the saddles, lower until the hooks carry the frame, open the hands and withdraw. It
+commands only arm and finger targets, never sets an object pose or applies an object force, and it is never copied
+into the agent's environment or image. The standard oracle submits the same rows through the public client.
+
+## Verification
+Standard mode. The trusted sim service judges the episode it ran (the last one after resets) with the task's predicate and
+the selected hand, after the agent's container is stopped; its record (`final.json`, `graded_by = "live"`) is the
+verdict, and nothing is replayed to grade it. The isolated verifier reads only the service's artifacts. The
+service then renders `replay.mp4` from the recorded trajectory in one video-only pass, which never changes the
+verdict. A missing or unfinished record, a give-up after crashes between the agent's calls and a frozen instance
+that does not build at the episode's start are infrastructure errors.
+The episode ends at the first success or the first failure.
+Failures are fail-fast and permanent: the frame touching the floor, leaving the workspace box, tilting more than
+0.6 rad, falling 1 cm below its start height after lift-off, falling off a hook after both rings were engaged, unstable
+physics (all checked after every 2 ms substep), being held by nothing after lift-off (at the end of any control, or
+at any substep while also falling faster than 0.2 m/s), or the 3,000-control budget. The frozen thresholds come from the task, never from an agent archive. A no-op fails. Human
+review and full agent-trial calibration remain pending; report this task as provisional.
+
+## Resources
+Caps per container (PROTOCOL §6).
+
+| Container | CPUs | Memory | Processes | GPU memory | Disk |
+|---|---|---|---|---|---|
+| `main` (the agent's) | 2 | 4 GiB | 1024 | no GPU | 10 GiB |
+| `sim` | 2 | 7 GiB | 1024 | no GPU | — |
+| verifier (as `main`) | 2 | 4 GiB | no cap | no GPU | 10 GiB |
+
+- GPU: not needed.
+
+## Details
+
+### Notes
+Source: the DexHand family of this task. The scene is the
+accepted T21 scene-expansion scene "Hang a large picture on two wall hooks" made physical: a frame with the outer size
+of an IKEA SANNAHED 50 x 50 cm frame (52 x 52 x 6 cm, the 2.0 kg package weight used as the frame mass), two 35 mm-class
+D-rings on passive hinges (damping 0.0004 N m s/rad, friction loss 0.0015 N m, 0 to 1 rad, a 0.005 N m/rad return
+spring standing in for the frame back the ring cannot swing through), two ordinary bent-sheet brass hooks
+(photo-based dimensions), a console and a wall; the print is Claude Monet, Water Lilies (1906), public domain (CC0).
+Frame, rings and hooks are rigid project-authored primitives, not manufacturer CAD. The Sharpa Wave assets are pinned
+to MuJoCo Menagerie commit `0059d4335f8156206f63a35662313385f7ad6d74` (Apache-2.0); the left Sharpa hand is a declared
+mirror image of the right model (positions, rotations, hinge axes, inertial frames and mesh scales reflected), the same
+construction as the dual-arm DexHand families, not a separate manufacturer left-hand model. The Wuji Hand 2.2 models
+(`hand2/hand2_2`, left and right) are pinned to wuji-technology/wuji-description commit
+`829c9aa27cb12c3a49d5b8d63c9869dd8f656702` (MIT) and mounted on the same flanges with their vendor joints, actuators
+and contact geometry unchanged. The robot is the Tianji Marvin dual-arm stand of the accepted pot_shelf_transfer family (two
+7-joint arms, position servos kp 700 N m/rad, kv 48, force limits 108/108/66/66/18/18/18 N m, Tianji meshes pinned in
+the image), standing on a 0.10 m plinth in front of the console (which stands on its two rear legs so that the stand's base plate fits
+under its front half); each hand sits rigidly on its arm's flange. This is a
+simulated bimanual hanging task, not a zero-shot hardware claim.

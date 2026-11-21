@@ -1,0 +1,87 @@
+{
+ "task": "cabinet_pickup/task_0022",
+ "family": "cabinet_pickup",
+ "level": "base",
+ "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+ "scene_sha256": "4886ae64324c2f5741e331749cc79e74547f8c90124d7f382b13e13cdf5d03d5",
+ "diagnostics_sha256": "341cd1a3690025bb9f974267d50cfeeb0831c49844f45ec0f66b73c9214bc109",
+ "pipeline": "cabinet_pickup",
+ "gpu_dynamics": false,
+ "state_sha": "58012fc4249fa3ad",
+ "objects": {
+  "support_surface": {
+   "category": "pedestal_table",
+   "position": [
+    0.0,
+    0.0,
+    0.40205
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  },
+  "cabinet_bottom_cabinet_ep1_1": {
+   "category": "bottom_cabinet",
+   "position": [
+    -0.21537,
+    -0.00786,
+    0.94863
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    -0.0,
+    1.0
+   ]
+  },
+  "target_glaze_bottle_ep1_1": {
+   "category": "glaze_bottle",
+   "position": [
+    0.2012,
+    -0.00772,
+    0.76096
+   ],
+   "orientation_xyzw": [
+    -0.00077,
+    -0.00064,
+    0.0,
+    1.0
+   ]
+  },
+  "obstacle_bottle_of_cocoa_ep1_1": {
+   "category": "bottle_of_cocoa",
+   "position": [
+    0.30131,
+    -0.00786,
+    0.73703
+   ],
+   "orientation_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  }
+ },
+ "robot_q": [
+  0.0,
+  -1.3,
+  0.0,
+  -2.87,
+  0.0,
+  2.0,
+  0.75,
+  0.04,
+  0.04
+ ],
+ "frozen": true,
+ "versions": {
+  "omnigibson": "3.7.2",
+  "maniguard": "NU-IDEAS-Lab/ManiGuard@a1b6444b3d17b2f9e4118c406824d36af6b24187",
+  "maniguard_bench": "IDEAS-Lab-Northwestern/ManiGuard-Bench@af09438cebcd8f532e82cb5302701173ebb59f6e",
+  "robot": "IDEAS-Lab-Northwestern/franka-panda-longfinger@5f65ec0a715bc88ea865c2c69133b08b395c66bc"
+ }
+}

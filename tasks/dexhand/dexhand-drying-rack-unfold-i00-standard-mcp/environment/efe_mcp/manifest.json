@@ -1,0 +1,108 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "dexhand",
+ "kind": "rcb",
+ "robot": "Sharpa Wave dexterous hand (22 finger joints) on a six-axis wrist stage (three prismatic and three serial revolute joints), no arm",
+ "frame": {
+  "suite": "the scene's world frame (z up)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  "base_text": "the scene's world frame (+Z up; the wrist stage is fixed in it): the coordinates of the task text"
+ },
+ "cameras": [
+  "overview",
+  "side",
+  "closeup"
+ ],
+ "default_cameras": [
+  "overview",
+  "closeup"
+ ],
+ "action_cameras": [
+  "overview",
+  "closeup"
+ ],
+ "state_cameras": [
+  "overview"
+ ],
+ "control": {
+  "dt": 0.02,
+  "control_dt": 0.02,
+  "joint_speed": 0.5,
+  "min_move_s": 0.5,
+  "settle_s": 0.2,
+  "tolerance": {
+   "joint": 0.05
+  }
+ },
+ "types": {
+  "joint_position": {
+   "hold": [
+    "ref",
+    "last",
+    "measured"
+   ],
+   "hold_ref": {
+    "group": "joint_target"
+   }
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "the wrist stage: wrist_x, wrist_y, wrist_z (m, translations along the world axes; the task text says where they are measured from) then wrist_rx, wrist_ry, wrist_rz (rad, serial X-Y-Z joints); joint_positions only (no end-effector pose command); its measured hand-mount pose is reported as ee",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     6
+    ]
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 6
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 0,
+     "n": 7
+    }
+   }
+  },
+  "right_hand": {
+   "kind": "hand",
+   "note": "Sharpa Wave finger joint targets (rad, 22, in the spec layout order: thumb CMC_FE, CMC_AA, MCP_FE, MCP_AA, IP; index, middle, ring MCP_FE, MCP_AA, PIP, DIP; pinky CMC, MCP_FE, MCP_AA, PIP, DIP); no scalar gripper: grasp by closing the fingers on the object",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     6,
+     28
+    ]
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 6,
+     "n": 22
+    }
+   }
+  }
+ },
+ "resets": {
+  "note": "20 resets in all (describe_robot resets.budget). Only the last episode is graded, and a success ends the run."
+ },
+ "notes": "One dexterous hand on a wrist stage: move the stage (part arm) and the fingers (part right_hand) with joint positions. Every column is a position target (servo); grasping and carrying work only through contact. The parts follow the Sharpa Wave layout (describe_robot spec_file: hand \"sharpa\"). With the Wuji hand (hand \"wuji\", 20 finger joints per hand) the columns differ: use execute_trajectory space native with the order in spec action_types.joint_position.layout. Rows are 0.02 s apart or a multiple of it; a call covers at most 10 s. Measured poses are in the world frame of the task text, quaternions wxyz.",
+ "task": "dexhand-drying-rack-unfold-i00"
+}

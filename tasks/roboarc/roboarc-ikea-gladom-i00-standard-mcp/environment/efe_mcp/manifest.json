@@ -1,0 +1,173 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "roboarc",
+ "kind": "rcb",
+ "robot": "two 7-joint Franka Panda arms, each with a two-finger Panda hand (tendon-coupled fingers)",
+ "frame": {
+  "suite": "the service's world frame: origin at the left arm's base link on its mounting, +z up, x along that arm's forward direction",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "base_text": "the robot base frame: the left arm's base link (the origin of the service's frame), +X that arm's forward direction, +Z up; the right arm's base pose in it is spec robot_spec.base.right"
+ },
+ "cameras": [
+  "cam_high",
+  "cam_low",
+  "cam_left_wrist",
+  "cam_right_wrist"
+ ],
+ "default_cameras": [
+  "cam_high",
+  "cam_low",
+  "cam_left_wrist",
+  "cam_right_wrist"
+ ],
+ "action_cameras": [
+  "cam_high"
+ ],
+ "state_cameras": [
+  "cam_high"
+ ],
+ "control": {
+  "dt": 0.02,
+  "control_dt": 0.0025,
+  "joint_speed": 0.6,
+  "min_move_s": 0.5,
+  "gripper_settle_s": 0.8,
+  "settle_s": 0.2,
+  "ee_dt": 0.1,
+  "ee_speed": 0.15,
+  "ee_ang_speed": 0.8,
+  "ee_settle_s": 0.2,
+  "tolerance": {
+   "pos_m": 0.005,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 16,
+   "hold": [
+    "ref",
+    "measured"
+   ],
+   "hold_ref": {
+    "group": "joint_cmd"
+   }
+  }
+ },
+ "parts": {
+  "left": {
+   "kind": "arm",
+   "note": "7 joints (actuator1..actuator7; rad; joint 7, the wrist, has no joint limit). The end-effector pose is the tool-frame site between the fingertips. Gripper command 0 = closed (the hand squeezes at its tendon force limit, about 70 N per finger) .. 255 = open.",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 7,
+    "open": 255.0,
+    "closed": 0.0
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 7
+    },
+    "gripper": {
+     "group": "joint_cmd",
+     "offset": 7,
+     "n": 1
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 0,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 0,
+     "n": 7
+    }
+   },
+   "ik": {
+    "frame": "left_tcp",
+    "seed": {
+     "group": "joint_pos"
+    },
+    "q_cols": [
+     0,
+     7
+    ]
+   }
+  },
+  "right": {
+   "kind": "arm",
+   "note": "7 joints (actuator1..actuator7; rad; joint 7, the wrist, has no joint limit). The end-effector pose is the tool-frame site between the fingertips. Gripper command 0 = closed (the hand squeezes at its tendon force limit, about 70 N per finger) .. 255 = open.",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     8,
+     15
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 15,
+    "open": 255.0,
+    "closed": 0.0
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 7,
+     "n": 7
+    },
+    "gripper": {
+     "group": "joint_cmd",
+     "offset": 15,
+     "n": 1
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 1,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 7,
+     "n": 7
+    }
+   },
+   "ik": {
+    "frame": "right_tcp",
+    "seed": {
+     "group": "joint_pos"
+    },
+    "q_cols": [
+     7,
+     14
+    ]
+   }
+  }
+ },
+ "base": null,
+ "locomotion": null,
+ "notes": "The arms take joint targets only: an end-effector goal is solved with the service's inverse kinematics (damped least squares on the robot model, no collision checking, within 1 mm and 0.01 rad) and sent as joint rows. Control runs at 400 Hz (2.5 ms per control step). Arm joint targets move at most at the arm's joint speed limits (spec robot_spec.controller); a faster request takes the control steps it needs. The gripper command switches at the row. Grasps are physical: friction from the finger contacts, nothing attaches a part to a gripper. The episode ends by itself at the first settled success (the task's requirements hold, no robot link touches any part and every part is at rest, then again after the last row is held 1 s more), on a simulator breakdown (reason sim_breakdown) or when your time is up; there is no step budget and nothing to signal. The gripper value in the state is the command in force; gripper_opening_m is the measured opening. Actuator forces (proprio_now, *_effort) rise when an arm pushes on something.",
+ "task": "roboarc-ikea-gladom-i00"
+}

@@ -1,0 +1,121 @@
+{
+  "manifest": "efe-mcp-manifest/0",
+  "suite": "robocasa365",
+  "kind": "rcb",
+  "robot": "Franka Panda on an Omron mobile base with a torso lift (RoboCasa PandaOmron); the arm takes absolute joint position targets",
+  "frame": {
+    "suite": "the RoboCasa kitchen's world frame (metres, z up)",
+    "quat": "wxyz",
+    "base": {
+      "fixed": [2.54253, -0.86372, 0.0, 0.000151, 0.0, 0.0, 1.0]
+    },
+    "base_text": "the mobile base's starting placement: on the floor at the base's origin, +X the way the arm faces, +Y the robot's left, +Z up; it stays where the base started (driving the base does not move this frame)"
+  },
+  "cameras": ["robot0_agentview_center", "robot0_agentview_left", "robot0_agentview_right", "robot0_eye_in_hand"],
+  "default_cameras": ["robot0_agentview_center", "robot0_eye_in_hand"],
+  "action_cameras": ["robot0_agentview_center"],
+  "state_cameras": ["robot0_agentview_center"],
+  "control": {
+    "dt": 0.05,
+    "control_dt": 0.05,
+    "joint_speed": 0.6,
+    "min_move_s": 0.5,
+    "gripper_settle_s": 0.8,
+    "settle_s": 0.2,
+    "tolerance": {
+      "joint": 0.03
+    }
+  },
+  "types": {
+    "joint_position": {
+      "dim": 13,
+      "hold": ["ref"],
+      "hold_ref": {
+        "names": ["cmd_arm_joint1", "cmd_arm_joint2", "cmd_arm_joint3", "cmd_arm_joint4", "cmd_arm_joint5", "cmd_arm_joint6", "cmd_arm_joint7", "cmd_grip", "cmd_base_x", "cmd_base_y", "cmd_base_yaw", "cmd_torso", "cmd_hybrid_mode"]
+      },
+      "zero_cols": [8, 9, 10, 11]
+    }
+  },
+  "parts": {
+    "arm": {
+      "kind": "arm",
+      "note": "Panda arm: 7 absolute joint position targets (rad); the gripper is open or closed only. There is no end-effector command.",
+      "joints": {
+        "type": "joint_position",
+        "cols": [0, 7]
+      },
+      "gripper": {
+        "type": "joint_position",
+        "col": 7,
+        "open": -1.0,
+        "closed": 1.0,
+        "binary": true
+      },
+      "state": {
+        "joints": {
+          "names": ["robot0_joint1_pos", "robot0_joint2_pos", "robot0_joint3_pos", "robot0_joint4_pos", "robot0_joint5_pos", "robot0_joint6_pos", "robot0_joint7_pos"]
+        },
+        "gripper": {
+          "names": ["cmd_grip"],
+          "open": -1.0,
+          "closed": 1.0
+        },
+        "ee_pose": {
+          "names": ["eef_right_x", "eef_right_y", "eef_right_z"]
+        }
+      }
+    }
+  },
+  "notes": "The arm takes absolute joint position targets only (no end-effector command): describe_robot gives the joint limits. The base and the torso lift are driven with execute_trajectory space native, action_type joint_position (13 numbers, one row per 0.05 s control step): arm_joint1..7 (keep the current targets, cmd_* in proprio_now), grip (+1 closes, -1 opens), base_x, base_y, base_yaw (the mobile base's velocities in its own frame, normalised to [-1, 1]), torso (the lift's velocity, normalised), hybrid_mode (-1, the default). proprio_now has eef_right_x/y/z (the grip site's position in the world frame), the joints (robot0_joint1..7, mobilebase0_joint_mobile_forward/side/yaw, mobilebase0_joint_torso_height) and cmd_* (the last command). The poses the tools report are in the base's starting placement. The cameras ride on the robot; each frame comes with its current calibration.",
+  "variants": [
+    {"match": "robocasa365-add-lemon-to-fish-i00", "patch": {"frame": {"base": {"fixed": [1.1402, -4.55976, 0.0, 0.000151, 0.0, 0.0, 1.0]}}}},
+    {"match": "robocasa365-assemble-cooking-array-i00", "patch": {"frame": {"base": {"fixed": [4.87035, -4.60285, 0.0, 1.0, 0.0, 0.0, 0.000151]}}}},
+    {"match": "robocasa365-beverage-sorting-i00", "patch": {"frame": {"base": {"fixed": [3.68384, -0.8295, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa365-bread-and-cheese-i00", "patch": {"frame": {"base": {"fixed": [5.89069, -1.51279, 0.0, 1.0, 0.0, 0.0, -8.3e-05]}}}},
+    {"match": "robocasa365-candle-cleanup-i00", "patch": {"frame": {"base": {"fixed": [2.58393, -3.54565, 0.0, 1.0, 0.0, 0.0, -0.0]}}}},
+    {"match": "robocasa365-choose-measuring-cup-i00", "patch": {"frame": {"base": {"fixed": [1.58649, -4.38933, 0.0, 1.0, 0.0, 0.0, -0.0]}}}},
+    {"match": "robocasa365-clear-food-waste-i00", "patch": {"frame": {"base": {"fixed": [2.72648, -0.79428, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa365-clear-sink-i00", "patch": {"frame": {"base": {"fixed": [4.18709, -0.81729, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa365-close-drawer-i00", "patch": {"frame": {"base": {"fixed": [3.64435, -3.35646, 0.0, 0.0, 0.0, 0.0, 1.0]}}}},
+    {"match": "robocasa365-close-oven-i00", "patch": {"frame": {"base": {"fixed": [1.16016, -2.65904, 0.0, 0.0, 0.0, 0.0, 1.0]}}}},
+    {"match": "robocasa365-close-stand-mixer-head-i00", "patch": {"frame": {"base": {"fixed": [1.1801, -3.17092, 0.0, 1.0, 0.0, 0.0, -0.0]}}}},
+    {"match": "robocasa365-cookie-dough-prep-i00", "patch": {"frame": {"base": {"fixed": [4.56467, -4.38438, 0.0, 1.0, 0.0, 0.0, -0.0]}}}},
+    {"match": "robocasa365-deliver-brewed-coffee-i00", "patch": {"frame": {"base": {"fixed": [5.83088, -2.29962, 0.0, 1.0, 0.0, 0.0, 0.000151]}}}},
+    {"match": "robocasa365-dessert-upgrade-i00", "patch": {"frame": {"base": {"fixed": [0.79578, -5.40566, 0.0, 0.0, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa365-display-meat-variety-i00", "patch": {"frame": {"base": {"fixed": [3.1364, -1.12631, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa365-divide-basins-i00", "patch": {"frame": {"base": {"fixed": [3.71838, -2.12565, 0.0, 0.707107, 0.0, 0.0, -0.707107]}}}},
+    {"match": "robocasa365-drain-veggies-i00", "patch": {"frame": {"base": {"fixed": [6.14439, -2.40844, 0.0, 1.0, 0.0, 0.0, -7.4e-05]}}}},
+    {"match": "robocasa365-drinkware-consolidation-i00", "patch": {"frame": {"base": {"fixed": [2.09967, -2.00469, 0.0, 0.707107, 0.0, 0.0, -0.707107]}}}},
+    {"match": "robocasa365-make-ice-lemonade-i00", "patch": {"frame": {"base": {"fixed": [0.87411, -1.80455, 0.0, 2e-06, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa365-make-loaded-potato-i00", "patch": {"frame": {"base": {"fixed": [2.61353, -1.19765, 0.0, 0.70716, 0.0, 0.0, 0.707053]}}}},
+    {"match": "robocasa365-meal-prep-staging-i00", "patch": {"frame": {"base": {"fixed": [0.81465, -1.86636, 0.0, 0.0, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa365-microwave-defrost-meat-i00", "patch": {"frame": {"base": {"fixed": [3.92333, -1.21334, 0.0, 0.707163, 0.0, 0.0, 0.707051]}}}},
+    {"match": "robocasa365-open-dishwasher-i00", "patch": {"frame": {"base": {"fixed": [3.63108, -2.68593, 0.0, 1.0, 0.0, 0.0, -7.4e-05]}}}},
+    {"match": "robocasa365-organize-coffee-condiments-i00", "patch": {"frame": {"base": {"fixed": [0.78133, -4.75766, 0.0, 0.0, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa365-oven-broil-fish-i00", "patch": {"frame": {"base": {"fixed": [2.82998, -5.5084, 0.0, 0.707107, 0.0, 0.0, -0.707107]}}}},
+    {"match": "robocasa365-pack-dessert-i00", "patch": {"frame": {"base": {"fixed": [2.91134, -2.50858, 0.0, 1.0, 0.0, 0.0, 0.000151]}}}},
+    {"match": "robocasa365-pick-place-cabinet-to-counter-i00", "patch": {"frame": {"base": {"fixed": [0.87672, -0.98046, 0.0, 7.6e-05, 0.0, 0.0, 1.0]}}}},
+    {"match": "robocasa365-pick-place-sink-to-counter-i00", "patch": {"frame": {"base": {"fixed": [3.02526, -0.82489, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa365-plate-steak-meal-i00", "patch": {"frame": {"base": {"fixed": [2.09579, -3.01669, 0.0, 1.0, 0.0, 0.0, -7.6e-05]}}}},
+    {"match": "robocasa365-portion-in-tupperware-i00", "patch": {"frame": {"base": {"fixed": [1.31508, -2.72349, 0.0, 1.0, 0.0, 0.0, 0.0]}}}},
+    {"match": "robocasa365-pre-rinse-station-i00", "patch": {"frame": {"base": {"fixed": [2.50033, -1.96447, 0.0, 0.000151, 0.0, 0.0, 1.0]}}}},
+    {"match": "robocasa365-prep-for-sanitizing-i00", "patch": {"frame": {"base": {"fixed": [2.55, -0.84524, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa365-prep-marinating-meat-i00", "patch": {"frame": {"base": {"fixed": [5.41451, -0.79847, 0.0, 0.707159, 0.0, 0.0, 0.707055]}}}},
+    {"match": "robocasa365-reheat-meal-i00", "patch": {"frame": {"base": {"fixed": [1.08324, -2.74251, 0.0, 0.0, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa365-retrieve-meat-i00", "patch": {"frame": {"base": {"fixed": [1.27712, -3.96078, 0.0, 2e-06, 0.0, 0.0, 1.0]}}}},
+    {"match": "robocasa365-sanitize-prep-cutting-board-i00", "patch": {"frame": {"base": {"fixed": [2.72239, -0.84115, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa365-scrub-bowl-i00", "patch": {"frame": {"base": {"fixed": [3.90398, -0.84983, 0.0, 0.707159, 0.0, 0.0, 0.707055]}}}},
+    {"match": "robocasa365-searing-meat-i00", "patch": {"frame": {"base": {"fixed": [1.1823, -0.7918, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa365-seasoning-spice-setup-i00", "patch": {"frame": {"base": {"fixed": [4.34719, -3.39831, 0.0, 1.0, 0.0, 0.0, 0.0]}}}},
+    {"match": "robocasa365-set-up-cutting-station-i00", "patch": {"frame": {"base": {"fixed": [3.16145, -1.61873, 0.0, 0.707074, 0.0, 0.0, -0.70714]}}}},
+    {"match": "robocasa365-stocking-breakfast-foods-i00", "patch": {"frame": {"base": {"fixed": [7.1867, -0.81086, 0.0, 0.707159, 0.0, 0.0, 0.707055]}}}},
+    {"match": "robocasa365-sweeten-coffee-i00", "patch": {"frame": {"base": {"fixed": [3.39311, -1.14079, 0.0, 1.0, 0.0, 0.0, -0.0]}}}},
+    {"match": "robocasa365-thaw-in-sink-i00", "patch": {"frame": {"base": {"fixed": [2.14436, -3.18377, 0.0, 1.0, 0.0, 0.0, -0.0]}}}},
+    {"match": "robocasa365-tong-buffet-setup-i00", "patch": {"frame": {"base": {"fixed": [3.55992, -0.92953, 0.0, 0.707107, 0.0, 0.0, 0.707107]}}}},
+    {"match": "robocasa365-turn-off-microwave-i00", "patch": {"frame": {"base": {"fixed": [3.2345, -0.96329, 0.0, 0.707163, 0.0, 0.0, 0.707051]}}}},
+    {"match": "robocasa365-turn-on-microwave-i00", "patch": {"frame": {"base": {"fixed": [2.33746, -2.33476, 0.0, 1.0, 0.0, 0.0, -2e-06]}}}},
+    {"match": "robocasa365-turn-on-sink-faucet-i00", "patch": {"frame": {"base": {"fixed": [0.83352, -2.12643, 0.0, 2e-06, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa365-turn-on-stove-i00", "patch": {"frame": {"base": {"fixed": [0.88382, -1.41356, 0.0, 0.0, 0.0, 0.0, -1.0]}}}},
+    {"match": "robocasa365-turn-on-toaster-oven-i00", "patch": {"frame": {"base": {"fixed": [0.79655, -0.4683, 0.0, 0.0, 0.0, 0.0, -1.0]}}}}
+  ]
+}

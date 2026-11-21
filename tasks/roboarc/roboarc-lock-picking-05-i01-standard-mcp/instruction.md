@@ -1,0 +1,187 @@
+# RoboARC (simulator package `topogym`) · lock_picking — STANDARD MODE, MCP TOOLS ONLY (robot as a service, eai-standard/2.4)
+
+You control a robot (**a 7-DoF Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base**) **as if it were real hardware**: the simulator runs in a service you cannot open. You get the `efe-robot` tools and one episode. **Task:** Pick up the two-tab key from its rest. Insert the tabbed key through all four rotor plates and the final END plate, while respecting their slots and stops. The key's leading tab is longer than its second tab, which sits one plate spacing behind it.
+
+## Robot tools (MCP server `efe-robot`)
+You act on the robot only through the tools of the MCP server `efe-robot` (in your tool list as `efe-robot` tools, for
+example `mcp__efe-robot__move_robot`). You have no shell and cannot run code. The robot service and its rules are as
+described in this text; where it names calls of the Python client `rcb_client.py`, which you cannot run here, use the
+tool that does the same:
+
+| Client | Tool |
+|---|---|
+| `Robot()`, `r.spec()` | `describe_robot()`: the robot's parts, joints and limits, cameras, control period, action types and conventions, and the time left; the full spec is saved as a JSON file (`spec_file`) you can read |
+| `r.get_obs(cameras, seconds, depth)` | `observe(cameras, seconds, depth)` |
+| `r.submit(type, A, dt, interpolate)` | `execute_trajectory(space="native", action_type=type, native_rows=A, dt=dt, interpolate=...)`, or `move_robot` / `execute_trajectory` in the conventions below |
+| `r.status()`, `meta[...]` | every tool result: `time_left_s`, `sim_time_s`, `done`, `reason` and the service's messages |
+
+**Conventions** of `move_robot`, `locomote` and `execute_trajectory` (spaces other than `native`): the robot base frame
+at the start of each call (+X forward, +Y left, +Z up), metres and radians, quaternions `wxyz`, gripper 0 = open to 1 =
+closed. Base frame of this robot: the robot base frame: the arm's root link (the origin of the service's frame), +X
+forward from the arm base, +Y left, +Z up. Space `native` sends rows in the robot's own action types exactly as the
+sections below describe them (their frame, units and gripper values).
+
+**This robot** (a 7-joint Franka Panda arm with a Robotiq 2F-85 parallel gripper on a fixed base): arm (arm: 7 joints,
+end-effector pose, gripper). Cameras: `agentview`, `front_oblique`, `wrist`.
+
+- `describe_robot()`: call it first.
+- `observe(cameras?, depth?, seconds?, save_to?, inline_cameras?)`: images are written as JPEG files under `/app/obs/`
+  (depth as `.npy`, float32 metres; with `seconds` > 0 a video `.mp4` too); the result has their paths, each camera's
+  intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
+  (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
+  `inline_cameras` also returns small images in the result.
+- `move_robot(goals, duration_s?)`: one goal per part,
+  `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}`; the parts move together and the call returns when
+  the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and
+  the path of a frame per camera.
+- `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, rows `dt` seconds
+  apart; a long one can come from a file under `/app` (`.npy` / `.csv` of native rows, `.json` of rows).
+- `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending operation.
+- `signal(kind, note)`: `done` records that you are finished (the episode itself ends as described above).
+- One tool call runs at a time. A call still executing after 45 s returns `{"pending": true, "operation": id}` while the
+  robot goes on executing it: call `wait(operation=id)` (it waits up to 45 s more each time) for its result. A result
+  with `"episode_over": true` means the episode has ended.
+- Nothing needs to be saved: the server records every tool call, and the service records the episode.
+
+**Notes on this robot.** The episode ends by itself at the first success (all of the task's final conditions holding for
+its confirmation time: after the last move let simulated time pass with wait or observe seconds), when the task's own
+failure predicate fires (reason task_failed) or when your time is up; there is no step budget and nothing to signal.
+End-effector goals are solved by the service's inverse kinematics (no collision checking) and driven to in joint space;
+a solution more than 0.5 rad from the current joints on any joint is refused for that arm (it holds), so long
+end-effector moves go in steps of a few cm and degrees. Arm joint targets move at most 0.04 rad per control step; a
+faster request takes the steps it needs. No gripper target goes lower than 15 mm below the tabletop. Grasping is
+assisted (spec robot_spec.grippers states the rule): closing on a graspable part inside its grasp region takes hold of
+it, and any command that opens the gripper by more than 0.2 % of its travel lets it go. The gripper value in the state
+is the command in force; gripper_opening_m is the measured gap between the finger pads. Joint efforts (proprio_now,
+*_effort) rise when an arm pushes on something.
+
+## Success requirements
+
+- Keep the finite-length shaft passing through the full thickness of all five plates at once, facing the insertion direction. Reaching END with only the shaft tip is insufficient.
+- The rear edge of the leading tab must clear the outer face of END by at least 1 mm.
+- Normal contact with the bore wall and a small tilt are allowed when the shaft still fits through all five bores. The radial numerical contact tolerance is 0.01 mm; do not push the shaft through solid plate material.
+- Keep every tab clear of solid plate material whenever it overlaps a plate; account for the key's offset and tilt, not just its rotation about the shaft.
+- Keep limited-travel rotor pins within their physical slot bounds (angular tolerance 0.5 degrees).
+- You may keep holding the key. Release and zero velocity are not required; all insertion and clearance conditions must remain satisfied throughout confirmation.
+- Keep all final conditions satisfied together for at least 0.5 s of simulation time. If any final condition stops holding, the confirmation interval starts again. A brief qualifying pose is not enough; let the simulation advance through the full interval.
+
+## Task failure conditions
+
+- A limited-travel rotor exceeding its allowed bounds ends the episode in failure.
+- The key falling more than 100 mm below the tabletop ends the episode in failure.
+
+## Grader details (in addition to the requirements above)
+
+- Robot safety (this benchmark's tooling): no gripper target goes lower than 15 mm below the tabletop; a commanded target that would bring any part of a gripper lower is stopped there, on the commanded path. The fingertips reach about 6 mm beyond the tool frame (TCP) along its approach axis when open and about 19 mm when closed (the Robotiq fingertips move forward as they close). Arm drive torques are capped (the effort limits in robot_spec), so an arm pushing against an obstacle stalls at that torque. An arm with any part more than 5 mm deep in a fixed object (a fixture, the table) is stopped where it is: its joint targets become its measured joints for that control step, so it stops pushing (the response does not report these stops).
+- Forcing is recorded, not judged: an arm drive (not a gripper drive) at 95% of its torque cap or more while that arm's gripper, or a part it holds, presses on anything else with 20 N or more in total is forcing; 0.5 s of it on every physics tick is a forcing event in the evidence (`meta["safety"]`), shown to the reviewer when a success is reviewed. Forcing does not end the episode and does not change the grade by itself.
+- Sizes: bore radius 7.5 mm, shaft radius 6.75 mm. At each of the 10 plate faces (four 10 mm rotor plates and END, 120 mm apart), the shaft axis' distance from the bore axis plus 6.75 mm / cos(tilt) may exceed 7.5 mm by at most 0.01 mm: about 0.76 mm of offset when the key is straight, which over the stack allows only about 0.18 degrees of tilt.
+- The shaft reaches from 545 mm behind the leading tab to 15 mm in front of it; all 10 plate faces must lie within that length.
+- Tabs: half-width 4 degrees; the leading tab reaches radius 36 mm and the second tab, 120 mm behind it, 22 mm. Slots: half-width 5.5 degrees, reaching radius 45 mm (deep) or 28 mm (shallow). A tab that overlaps a plate must sit inside one of that plate's slots that reaches beyond the tab, with an angular margin of at least asin(axis offset / tab radius) + the tilt.
+- Rotor stops (from each rotor's start angle, seen from the side the key enters, looking along the key toward END; rotor 1 is the first plate the key reaches): rotor 1 2 degrees counterclockwise and 32 degrees clockwise; rotor 2 32 degrees counterclockwise and 2 degrees clockwise; rotor 3 2 degrees counterclockwise and 32 degrees clockwise; rotor 4 152 degrees counterclockwise and 2 degrees clockwise. Going more than 0.5 degrees beyond a stop ends the episode.
+- Grasp regions (assisted grasping, see Grippers above; one sphere per graspable part): lock_key: radius 32 mm, on the key's handle. Both finger contacts must lie inside the part's sphere; a part touched elsewhere is grasped physically.
+- Grading: the live episode is the verdict: success needs it to succeed with the thresholds above (within its confirmation time); a live failure is final. Nothing is replayed to grade it: the video is rendered afterwards from the recorded rows and never changes the grade.
+
+## Rules (real-robot rules)
+- **No reset.** The episode ends on success (all final conditions satisfied for
+  0.5 s), when your time is up, on a simulator error, or when the task's own failure predicate fires (then `meta["reason"]` is `task_failed`). Knocked-over objects stay
+  knocked over.
+- **No privileged state.** You see what the cameras see (RGB, and depth when you ask for it) plus the robot's own state:
+  joint positions, velocities and drive efforts, gripper openings, end-effector poses. Nothing tells you where the
+  objects are (no object poses or positions). The success implementation is not exposed, and of the simulator's internal
+  measurements only the safety readings of `meta["safety"]` are (listed under Action types, below); the task
+  requirements above still apply in full.
+- **Your only budget is the time limit (`## Time limit`)**; there is no step budget, but the
+  episode ends after 200000 control steps, watches included (83 min of simulated time; a technical cap,
+  `spec["max_control_steps"]`: `meta["reason"]` is `step_guard`, and the episode is graded as it stands). Actions and simulated time are reported as cost.
+  This service also ends the episode itself (`meta["reason"]` is `timeout`; it is graded as it stands) when its own
+  count of that limit, `meta["time_left_s"]`, reaches 0. That count starts at your first request to the service, so it
+  never reaches 0 before your time is up.
+- There is nothing to hand in: the service records your episode as the trajectory and grades it.
+- **Images are files.** The tools write camera images, depth and video under `/app/obs/` and return their paths with small JSON; open an image with your file-reading tool, or ask for small images in the result with `inline_cameras`.
+
+## Time per call
+- One control step takes about 0.069 s of wall clock here. A request returns when all of its steps have run, or
+  earlier: a call that has run for 900 s (`spec["max_call_wall_s"]`) is stopped by the service at the next control
+  step and returns what it executed (`res.stopped` is `"max_call_wall_s"`; `res.meta["executed_rows"]`, or
+  `res.meta["control_steps_watch"]` for a watch, says how far it got; the robot holds its last target). Check
+  `res.stopped` before you send the next rows. A `submit` of the maximum 10 s chunk takes about 28 s here, and any watch up to 30 s fits (both with a 2x margin).
+- The client waits longer than that (1800 s for `submit`, 1020 s for `get_obs`), so a client timeout or a connection
+  error means the connection or the service failed, not that the call is still on its way. Do NOT send the request
+  again blindly (it could run twice): `r.operation_status()` tells what became of the last one. Its `status` is
+  `completed` or `error` (with `rows_before` and `committed_rows`, the episode's control steps before and after it,
+  and `stopped`), `interrupted` (the service restarted during it and resumes the same episode in the state after the
+  last completed call: `spec["on_service_error"]`, `r.wait_ready()`), or `admitted` (not finished); an HTTP 404 error
+  there means the service never admitted the request, so nothing ran. The service answers one request at a time, so
+  this query waits while a call is running: repeat it if it times out. If your client hangs up, the service stops
+  the call at the next control step. A request that arrives after its deadline is refused (408), and one whose
+  operation id was already admitted is refused (409); neither moves the robot. A control step that hangs for more
+  than 60 s past the call's limit ends the episode as an infrastructure error, not as your failure.
+
+## The robot service through its Python client (reference; act through the `efe-robot` tools above)
+```python
+from rcb_client import Robot
+r = Robot()                                   # connects to the existing service; retries until ready (default timeout 3600 s)
+spec = r.spec()                               # actions, cameras (intrinsics, mounting), robot_spec, world, kinematics, budget
+
+obs = r.get_obs()                             # current frames from 3 cameras: obs.last[cam] -> uint8 (480,848,3)
+obs.meta["proprio"]                           # {"layout": [40 names], "now": [...]}: groups in spec["proprio_groups"]
+obs.meta["cameras"]                           # per camera: intrinsic_cv, extrinsic_cv, cam2world_gl of the LAST frame
+obs = r.get_obs(depth=True)                   # + obs.last_depth[cam]: float32 (480,848) z-depth in metres, 0 = no reading
+obs = r.get_obs(seconds=2.0, video="mp4")     # hold the last command and watch for 2 s (max 30): obs.video[cam] = mp4 bytes
+
+res = r.submit("joint_position", A, dt=0.1)   # A: (T, 8) rows dt seconds apart; streamed at 40 Hz with linear interpolation
+res = r.submit("ee_pose", P)                  # P: (T, 8) tool-frame targets; inverse kinematics per row
+res.meta["done"], res.meta["reason"], res.meta["plan"], res.meta["clipped"], res.meta["control_steps_chunk"]
+res.video["agentview"]                          # mp4 bytes of the execution (video="mp4" | "frames" | "both" | "none")
+res.frames["agentview"]                         # uint8 (N,480,848,3) at video_fps if requested
+res.last["wrist"]; res.proprio              # last frame per camera; float32 (N, 40) proprio, one row per frame
+res.frame_step, res.frame_time_s              # per frame: control steps since the episode start, simulated time (s)
+res.extrinsic_cv["wrist"]                    # (N,3,4) world -> camera at every frame
+res = r.submit("joint_position", A, dt=0.1, depth="frames")   # + res.depth[cam]: (N,480,848) z-depth per frame (1 mm steps)
+res.group("tcp_pose"); res.group("joint_effort", now=True)   # proprio columns by group name
+r.fk(q)["poses"]["arm_tcp"]                   # forward kinematics of the 7 arm joints (spec["kinematics"]); moves nothing
+r.ik({"arm_tcp": pose}, seed=q)             # inverse kinematics -> {"ok", "q", "error"}; moves nothing
+res.save("/app/runs/003")                     # meta.json, <cam>.mp4, last/, frames/, proprio.npy, depth, frame_meta.npz
+```
+Cameras: `agentview` (static); `front_oblique` (static); `wrist` (on the robot link `hand`; it moves, so use the pose that comes with each frame). Resolution 848×480. `spec["cameras"][cam]` gives the
+intrinsics and the mounting: a static pose, or the parent link and the fixed offset (world_T_cam = FK(link) · `link_T_cam_cv`).
+A point (X, Y, Z) in a camera's OpenCV frame (x right, y down, z forward) appears at u = fx·X/Z + cx, v = fy·Y/Z + cy;
+depth is that Z. `spec["robot_spec"]` lists the joints with their position, velocity and effort limits, the grippers,
+the PD gains and the tool frames; `spec["world"]` the frame conventions (the world frame: origin at the robot's root link on its mounting, +z up; no positions of the scene are given).
+
+### Action types
+- `joint_position` (8): `joint1`, `joint2`, `joint3`, `joint4`, `joint5`, `joint6`, `joint7`, `arm_native_gripper`. arm `arm`: 7 joint targets (rad), then `arm_native_gripper` = native drive target (rad, limits 0 .. 0.8: 0 = open, 0.8 = closed, the Robotiq 2F-85's driver joint; open/closed targets in robot_spec). Absolute targets tracked by PD controllers.
+  Rows are `dt` apart (`1/40 ≤ dt ≤ 0.5` s, a multiple of the control period); a chunk may cover at most 10 s;
+  out-of-limit values are clipped and listed in `meta["clipped"]` (limits in the spec). The gripper switches at the
+  row. Use `obs.meta["proprio"]["now"][:8]` as the starting row to move smoothly. An arm joint target moves at most
+  0.04 rad per control step (1.6 rad/s, the same speed as `ee_pose` rows): a row that asks for more takes
+  the control steps it needs, and `meta["clipped"]` says so.
+  The proprio group `gripper_opening` (`res.group("gripper_opening")`) is the measured gap between each gripper's finger
+  pads in metres (0 = the pads touch); the gripper entries of `joint_pos` are in the unit of the gripper command above.
+- `ee_pose` (8): per arm (in the order ['arm']) `x y z qw qx qy qz gripper`; world frame (origin at the robot's root link on its mounting, +z up; the frame of the proprio TCP pose and the camera extrinsics); quaternions wxyz. Each row is solved by inverse kinematics (no collision checking) and driven to in joint
+  space; an arm whose IK fails holds and is reported in `meta["plan"]`. The pose is each gripper's **tool frame** (TCP;
+  its approach and finger-closing axes are in `spec["robot_spec"]["tcp"]`), the same convention as the proprio TCP
+  poses, so an observed pose is a valid target. At most 50 rows per submit. A row whose IK solution lies more than
+  0.5 rad from the current joints on any joint is refused the same way as a failed IK (for a small pose change that is
+  another IK branch, which would swing the arm): split long moves into rows a few cm and degrees apart.
+- One call returns at most 2000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+- Both action types: no gripper target goes lower than 15 mm below the tabletop; a target that would bring any part of
+  a gripper lower is stopped there and listed in `meta["clipped"]`. Every response's `meta["safety"]` reports, since the
+  previous call, forcing (the arms' pressing loads and forcing events), the deepest task contact, the longest time above
+  its sustained limit and the review events (rigid families), the lowest rope / cord volume ratio (soft families) and the
+  table-guard stops, against the limits above.
+
+Grasping: assisted grasping (contact_weld_v1): a gripper whose command moves towards closed takes hold of a graspable part (lock_key) once both fingers touch the same part inside its grasp region, the tool frame within 6 cm of it and the penetration at most 2 mm, for 0.05 s; the part then follows the gripper rigidly. Any command that opens the gripper (by more than 0.2 % of its travel) lets it go. A hold that breaks (the fingers open more than 15 %, the part drifts 1 cm / 0.15 rad from its held pose, the hold has to push or pull its part with more than 65 N averaged over 20 ms, or no finger has touched the part for 0.2 s) is lost, and the gripper must open before it can take hold again; that force is reached when, for example, two held parts that hook into each other are pulled apart, or a held part is pressed into another object. Two grippers never hold the same part; other objects are grasped physically (friction).
+
+Objects here: `lock_base`, `lock_disc_0`, `lock_frame_0`, `lock_disc_1`, `lock_frame_1`, `lock_disc_2`, `lock_frame_2`, `lock_disc_3`, `lock_frame_3`, `key_tray`, `key_tray_post_0`, `key_cradle_0_0`, `key_cradle_0_1`, `key_tray_post_1`, `key_cradle_1_0`, `key_cradle_1_1`, `lock_goal_post`, `lock_goal`, `lock_key`.
+
+## External material
+In this setting you act on the robot only through the `efe-robot` tools: you have no shell, you cannot run code and you cannot install packages. You may read anything installed in your container with your file-reading tools, the files the robot tools write included. Please solve the task yourself: do not look for a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed.
+
+## Resources
+Your container: **4 CPUs**, **16 GiB of memory**, **4096 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+
+## Time limit
+You have 10800 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time the robot tools take counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. Every robot tool result reports `time_left_s`, the service's count of the same limit from your first tool call, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that call. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it with your file-reading tool before you decide that time is short, never guess. A robot tool that is still executing when its call has to return answers `pending` with an operation id: call `wait` with that `operation` to collect the result.

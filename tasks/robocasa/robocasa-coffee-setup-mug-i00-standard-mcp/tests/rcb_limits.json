@@ -1,0 +1,26 @@
+{
+ "agent_timeout_sec": 3600,
+ "caps": {
+  "main": {
+   "cpus": 2.0,
+   "disk_gb": 10.0,
+   "memory_gb": 5.0,
+   "pids": 1024
+  },
+  "sim": {
+   "cpus": 6.0,
+   "memory_gb": 15.0,
+   "pids": 1024
+  }
+ },
+ "disk_gb": 10.0,
+ "disk_tick_sec": 60,
+ "format": "rcb-limits/2",
+ "gpu": false,
+ "mode": "standard-mcp",
+ "scope_services": [
+  "main"
+ ],
+ "task": "robocasa-coffee-setup-mug-i00-standard-mcp",
+ "tick_sec": 5
+}

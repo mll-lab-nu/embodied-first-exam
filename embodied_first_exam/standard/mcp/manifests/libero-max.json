@@ -1,0 +1,74 @@
+{
+  "manifest": "efe-mcp-manifest/0",
+  "suite": "libero-max",
+  "kind": "rcb",
+  "meta_keys": ["cameras_now"],
+  "robot": "Franka Emika Panda on a fixed mount with a two-finger gripper, driven by LIBERO's operational-space controller (end-effector deltas)",
+  "frame": {
+    "suite": "LIBERO's world frame (metres, z up; the robot faces +x)",
+    "quat": "wxyz",
+    "base": {"fixed": [-0.66, 0.0, 0.912, 1.0, 0.0, 0.0, 0.0]},
+    "base_text": "the robot base frame: at the arm's mount, +X forward across the table, +Y the robot's left, +Z up; its axes are parallel to LIBERO's world axes"
+  },
+  "cameras": ["agentview", "wrist"],
+  "default_cameras": ["agentview", "wrist"],
+  "action_cameras": ["agentview"],
+  "state_cameras": ["agentview"],
+  "control": {
+    "dt": 0.05,
+    "control_dt": 0.05,
+    "min_move_s": 0.5,
+    "gripper_settle_s": 0.8,
+    "settle_s": 0.0,
+    "tolerance": {"pos_m": 0.01, "rot_rad": 0.05}
+  },
+  "types": {
+    "ee_delta": {
+      "dim": 7,
+      "hold": ["ref", "initial"],
+      "hold_ref": {"names": ["cmd_dx", "cmd_dy", "cmd_dz", "cmd_drx", "cmd_dry", "cmd_drz", "cmd_grip"]},
+      "initial": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0],
+      "zero_cols": [0, 1, 2, 3, 4, 5]
+    }
+  },
+  "parts": {
+    "arm": {
+      "kind": "arm",
+      "note": "Panda arm under LIBERO's OSC_POSE controller: it takes end-effector deltas only; absolute pose goals are reached by repeated bounded steps, re-measured after each step. The gripper is open or closed only.",
+      "gripper": {"type": "ee_delta", "col": 6, "open": -1.0, "closed": 1.0, "binary": true},
+      "ee_delta": {
+        "type": "ee_delta",
+        "pos_cols": [0, 3],
+        "rot_cols": [3, 6],
+        "pos_scale": 0.05,
+        "rot_scale": 0.5,
+        "frame": "world",
+        "gain": 2.0,
+        "max_cmd": 1.0,
+        "gripper_col": 6,
+        "dt": 0.05,
+        "rows_per_step": 4,
+        "max_servo_s": 8.0,
+        "point": "the gripper's grip site, between the fingertips (orientation: the hand)",
+        "note": "execute_trajectory space ee_delta: each row is one 0.05 s control step; dpos (m) and drot (rad, rotation vector) move the hand's target away from the measured hand pose by that much in that step (at most 0.05 m and 0.5 rad a step); the hand covers only part of it within the step, so a steady motion needs a run of rows."
+      },
+      "state": {
+        "ee_pose": {"names": ["eef_x", "eef_y", "eef_z", "eef_qw", "eef_qx", "eef_qy", "eef_qz"]},
+        "joints": {"names": ["joint1_pos", "joint2_pos", "joint3_pos", "joint4_pos", "joint5_pos", "joint6_pos", "joint7_pos"]},
+        "gripper": {"names": ["cmd_grip"], "open": -1.0, "closed": 1.0}
+      }
+    }
+  },
+  "notes": "The arm takes end-effector deltas only (LIBERO's operational-space controller, 20 Hz): move_robot reaches a hand pose to within about 1 cm and 0.05 rad by repeated measured steps; execute_trajectory space ee_delta sends per-step deltas. The gripper is open or closed (gripper >= 0.5 closes); it takes about 0.4 s to close or open, so give it a gripper-only goal before moving off with a grasped object. The reported gripper value is the last command; the finger positions (finger_left, finger_right, m) are in proprio_now. Native action ee_delta: [dx, dy, dz, drx, dry, drz, grip], each in [-1, 1], one row per 0.05 s step: 1.0 = 0.05 m / 0.5 rad of hand-target motion in the world frame (whose axes are the base frame's), grip +1 closes, -1 opens. The cameras' intrinsics and poses at the start (cam2world_gl, OpenGL axes, world frame) are in describe_robot's spec_file; each action's result carries the current ones (cameras_now; the wrist camera moves with the hand).",
+  "variants": [
+    {"match": ["libero-max-long-alphabet-soup-and-cream-cheese-in-basket-*",
+               "libero-max-long-alphabet-soup-and-tomato-sauce-in-basket-*",
+               "libero-max-long-porcelain-mug-and-white-yellow-mug-on-plate-*",
+               "libero-max-long-white-yellow-mug-and-green-chocolate-pudding-on-yellow-plate-*"],
+     "patch": {"frame": {"base": {"fixed": [-0.51, 0.0, 0.42, 1.0, 0.0, 0.0, 0.0]}}}},
+    {"match": "libero-max-long-white-yellow-mug-in-desk-caddy-back-*",
+     "patch": {"frame": {"base": {"fixed": [-0.75, 0.0, 0.912, 1.0, 0.0, 0.0, 0.0]}}}},
+    {"match": "libero-max-object-*",
+     "patch": {"frame": {"base": {"fixed": [-0.6, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0]}}}}
+  ]
+}

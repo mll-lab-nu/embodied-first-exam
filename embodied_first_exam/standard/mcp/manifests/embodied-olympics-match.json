@@ -1,0 +1,17 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "kind": "eo-match",
+ "suite": "embodied-olympics-match",
+ "url": "http://localhost:8000",
+ "url_env": "SIM_URL",
+ "seat": "A",
+ "seat_env": "SEAT",
+ "max_wait_s": 10,
+ "notes": "The seat service is the same as in the standard task; the tools only carry its calls (the HTTP calls the `game` command makes). Locating the ball or the opponent is done by eye in the tile images, with the cameras' intrinsics and poses from `spec`.",
+ "variants": [
+  {"match": "*-fencing-*", "patch": {"turn": true, "notes": "Turn-based: nothing moves while you think; your chess clock runs on your turn. `spec` (its file) has the phrase table; `status` / `observe` have every phrase so far."}},
+  {"match": "*-matchlow-*", "patch": {"unsupported": "the player delivers Python skill code that the platform runs in the loop (/app/output/skill/); tool calls cannot deliver it"}},
+  {"match": ["*-soccer-jointcpu-*", "*-soccer-jointgpu-*", "*-tabletennisg1-*"], "patch": {"unsupported": "joint-level control (leg or whole-body joint targets every 10-20 ms) needs a running controller program"}},
+  {"match": "*-foosball-*", "patch": {"unsupported": "rod commands at 100 Hz against a ball at up to 5 m/s: thousands of observe/act/wait cycles, more than the model time a trial has"}}
+ ]
+}

@@ -5,7 +5,8 @@
 
 A suite manifest may hold `variants`: [{"match": "<fnmatch glob on the task's base name>", "patch": {...}}, ...]; every
 matching variant is deep-merged in order (a dict merges key by key, anything else replaces, null deletes the key).
-`match` may also be a list of globs. The resolved manifest has no `variants`."""
+`match` may also be a list of globs. The resolved manifest has no `variants`. A task whose resolved manifest has
+`unsupported` (the reason) gets no MCP-only variant."""
 from __future__ import annotations
 import copy, fnmatch, json, pathlib, sys
 
@@ -63,6 +64,11 @@ def check(m: dict) -> list[str]:
         errs.append(f"manifest must be {FORMAT!r}")
     kind = m.get("kind", "rcb")
     if kind != "rcb":
+        try:
+            import suites
+            suites.tools_for(m)
+        except Exception as e:      # an unknown kind, or a manifest its kind cannot list tools for
+            errs.append(f"kind {kind!r}: {e}")
         return errs
     for k in ("suite", "robot"):
         if not m.get(k):
@@ -181,6 +187,9 @@ def main(argv=None):
     bad = 0
     for t in tasks:
         m = resolve(suite, t)
+        if m.get("unsupported"):        # no MCP-only variant of this task (generate.py skips it; the reason is shown)
+            print("none " + base_name(t) + "  (no MCP-only variant: " + str(m["unsupported"])[:160] + ")")
+            continue
         errs = check(m)
         tl = []
         if not errs:

@@ -1,0 +1,120 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "ambench",
+ "kind": "rcb",
+ "robot": "aerial manipulator: a fully actuated hexarotor (six tilted rotors) carrying a 4-joint arm with a two-finger gripper (AM-Bench on Isaac Lab)",
+ "frame": {
+  "suite": "the task's world frame: z up, the ground is the plane z = 0, positions relative to the environment's origin",
+  "quat": "wxyz",
+  "base": {
+   "pos": {
+    "group": "base_pose",
+    "offset": 0,
+    "n": 3
+   },
+   "quat": {
+    "group": "base_pose",
+    "offset": 3,
+    "n": 4
+   },
+   "quat_order": "wxyz"
+  },
+  "base_text": "the robot base frame: at the airframe's centre (measured at the start of each call), +X the airframe's heading, +Y to its left, +Z straight up (level: the heading only, the airframe's tilt is ignored); it moves with the airframe"
+ },
+ "cameras": [
+  "ee_camera",
+  "base_camera"
+ ],
+ "default_cameras": [
+  "ee_camera",
+  "base_camera"
+ ],
+ "action_cameras": [
+  "base_camera"
+ ],
+ "state_cameras": [
+  "base_camera"
+ ],
+ "control": {
+  "dt": 0.05,
+  "control_dt": 0.0083333,
+  "joint_speed": 0.5,
+  "min_move_s": 0.5,
+  "gripper_settle_s": 0.6,
+  "settle_s": 0.3,
+  "ee_dt": 0.05,
+  "ee_speed": 0.15,
+  "ee_ang_speed": 0.5,
+  "ee_settle_s": 0.5,
+  "tolerance": {
+   "pos_m": 0.02,
+   "rot_rad": 0.08
+  }
+ },
+ "types": {
+  "ee_pose": {
+   "dim": 8,
+   "hold": [
+    "ref",
+    "last",
+    "measured"
+   ],
+   "hold_ref": {
+    "names": [
+     "ee_cmd_x",
+     "ee_cmd_y",
+     "ee_cmd_z",
+     "ee_cmd_qw",
+     "ee_cmd_qx",
+     "ee_cmd_qy",
+     "ee_cmd_qz",
+     "gripper_cmd"
+    ]
+   },
+   "ee_mode": "interp",
+   "hold_measured_ee": false
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "the end effector of the whole robot: AM-Bench's whole-body controller places the airframe and the arm's 4 joints so that the tool frame reaches the pose (you command where the end effector should be; the airframe follows); gripper -1 = closed .. +1 = open in AM-Bench's own scale",
+   "gripper": {
+    "type": "ee_pose",
+    "col": 7,
+    "open": 1.0,
+    "closed": -1.0
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "gripper_col": 7,
+    "point": "the tool frame tcp (the end-effector link ee_link)",
+    "mode_text": "a pose target for AM-Bench's whole-body controller (floating-base IK, rotor thrust PID, arm joint drives) every 120 Hz control step; rows are interpolated at a moderate speed and the robot follows with some lag"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 4
+    },
+    "gripper": {
+     "group": "gripper_cmd"
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening"
+    },
+    "ee_pose": {
+     "group": "tcp_pose"
+    }
+   }
+  }
+ },
+ "base": null,
+ "locomotion": null,
+ "notes": "The robot flies: there is no separate base command, the airframe moves wherever the end-effector target needs it (base_odometry in each result is the airframe's world position and heading). At the start the airframe hovers level facing +X with the arm at its zero joints and the gripper closed. Move in small steps and watch the cameras: the airframe, not only the arm, approaches nearby surfaces. The state's gripper value is the command in force; gripper_opening_m is the measured finger opening (0.002 m = closed on nothing). The episode ends by itself at the first control step where the task's success check holds, or at the task's episode length of simulated time (spec_file max_control_steps at 120 Hz).",
+ "task": "ambench-peg-in-hole-fahexa-i00"
+}

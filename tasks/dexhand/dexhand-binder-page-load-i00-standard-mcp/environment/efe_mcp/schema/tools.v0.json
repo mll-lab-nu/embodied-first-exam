@@ -1,0 +1,354 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "efe-robot-mcp/tools/v0",
+ "title": "EFE Robot MCP tools, v0",
+ "description": "Canonical, un-narrowed tool definitions. The server narrows enums and bounds per robot (schema.py). Every inputSchema is a self-contained draft 2020-12 object schema without $ref or top-level combinators, so every harness accepts it as a function definition.",
+ "conventions": {
+  "frame": "the robot base at the start of the call: +X forward, +Y left, +Z up",
+  "units": "metres, radians, seconds",
+  "quaternion": "wxyz, unit length",
+  "gripper": "0 = open, 1 = closed"
+ },
+ "tools": [
+  {
+   "name": "describe_robot",
+   "description": "The robot: its parts (arms, hands, grippers, base, legs) and what each accepts, joint names and limits, cameras, control rate, the action spaces, the conventions and the time left. Call this first.",
+   "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "observe",
+   "description": "Current camera images and robot state. Images, depth and video are written to files in the workspace; the result has their paths plus camera intrinsics and extrinsics, simulated time, time left and each part's joints, gripper and end-effector pose (robot base frame). With seconds > 0 the robot holds its last command while the scene runs for that long, and a video is saved.",
+   "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "cameras": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "uniqueItems": true,
+      "description": "camera names (default: the robot's default cameras)"
+     },
+     "depth": {
+      "type": "boolean",
+      "default": false,
+      "description": "also save a depth map per camera (.npy, float32 metres, 0 = no reading)"
+     },
+     "seconds": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 30,
+      "default": 0,
+      "description": "hold and watch for this long (0: no time passes)"
+     },
+     "save_to": {
+      "type": "string",
+      "description": "directory under /app for the files (default /app/obs)"
+     },
+     "inline_cameras": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "uniqueItems": true,
+      "description": "cameras to also return as small low-resolution images in the result"
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "move_robot",
+   "description": "Move one or more parts to goals and block until done. A part goal sets an end-effector pose (position + quaternion_wxyz in the robot base frame at the start of the call), joint positions, and/or the gripper (0 open, 1 closed). A base goal {target: \"base\", dx, dy, dyaw} moves a mobile base by that much in its own frame. Parts not listed hold still. Returns whether it moved, which goals were reached (with errors), a failure category, the time left and the paths of the frames saved after the move.",
+   "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "goals": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+       "type": "object",
+       "properties": {
+        "target": {
+         "type": "string",
+         "description": "a part of this robot, or base"
+        },
+        "position": {
+         "type": "array",
+         "items": {
+          "type": "number"
+         },
+         "minItems": 3,
+         "maxItems": 3,
+         "description": "end-effector position (m), robot base frame"
+        },
+        "quaternion_wxyz": {
+         "type": "array",
+         "items": {
+          "type": "number",
+          "minimum": -1,
+          "maximum": 1
+         },
+         "minItems": 4,
+         "maxItems": 4,
+         "description": "end-effector orientation (w, x, y, z), robot base frame"
+        },
+        "joint_positions": {
+         "type": "array",
+         "items": {
+          "type": "number"
+         },
+         "description": "absolute joint targets in the part's joint order"
+        },
+        "gripper": {
+         "type": "number",
+         "minimum": 0,
+         "maximum": 1,
+         "description": "0 = open, 1 = closed"
+        },
+        "dx": {
+         "type": "number",
+         "description": "base only: forward displacement (m)"
+        },
+        "dy": {
+         "type": "number",
+         "description": "base only: leftward displacement (m)"
+        },
+        "dyaw": {
+         "type": "number",
+         "description": "base only: counter-clockwise turn (rad)"
+        }
+       },
+       "required": [
+        "target"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "duration_s": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 60,
+      "description": "how long the motion takes (default: from the distance at a moderate speed)"
+     },
+     "collision_aware": {
+      "type": "boolean",
+      "default": false,
+      "description": "plan around obstacles where the robot's controller can (otherwise ignored, and the result says so)"
+     },
+     "inline_cameras": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "uniqueItems": true
+     }
+    },
+    "required": [
+     "goals"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "locomote",
+   "description": "Walk or drive with the robot's own locomotion controller: body-frame velocity (vx forward m/s, vy left m/s, wz counter-clockwise rad/s) for duration_s, then stop. Blocks until done.",
+   "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "vx": {
+      "type": "number"
+     },
+     "vy": {
+      "type": "number"
+     },
+     "wz": {
+      "type": "number"
+     },
+     "duration_s": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 30
+     },
+     "height": {
+      "type": "number",
+      "description": "body or pelvis height command (m), where the controller takes one"
+     },
+     "inline_cameras": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "uniqueItems": true
+     }
+    },
+    "required": [
+     "vx",
+     "vy",
+     "wz",
+     "duration_s"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "execute_trajectory",
+   "description": "Execute a dense trajectory, rows dt seconds apart, and block until done. space joint / ee / ee_delta / whole_body: `rows` is a list of objects naming parts, e.g. {\"left\": {\"joint_positions\": [...], \"gripper\": 1}} (joint), {\"left\": {\"position\": [...], \"quaternion_wxyz\": [...]}} (ee, robot base frame at the start of the call), {\"arm\": {\"dpos\": [...], \"drot\": [...]}} (ee_delta: per-row translation and rotation vector), {\"base\": {\"vx\": .., \"vy\": .., \"wz\": ..}} (whole_body); parts a row does not name hold. space native: `native_rows` are number arrays in one of the robot's own action types (`action_type`, see describe_robot), sent unchanged. A long trajectory can come from a file under /app (`rows_file`: .json list of rows, or .npy / .csv of native rows).",
+   "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "space": {
+      "type": "string",
+      "enum": [
+       "joint",
+       "ee",
+       "ee_delta",
+       "whole_body",
+       "native"
+      ]
+     },
+     "rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+       "type": "object"
+      },
+      "description": "rows for the named spaces"
+     },
+     "native_rows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "number"
+       }
+      },
+      "description": "rows for space native"
+     },
+     "rows_file": {
+      "type": "string",
+      "description": "path under /app of a .json, .npy or .csv file of rows"
+     },
+     "action_type": {
+      "type": "string",
+      "description": "space native: the robot's action type"
+     },
+     "dt": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 0.5,
+      "description": "seconds between rows (default: the control period)"
+     },
+     "interpolate": {
+      "type": "string",
+      "enum": [
+       "linear",
+       "hold"
+      ],
+      "default": "linear"
+     },
+     "inline_cameras": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "uniqueItems": true
+     }
+    },
+    "required": [
+     "space"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "wait",
+   "description": "Hold the current command and let `seconds` of time pass (0 = none); with `operation`, first wait for an operation a previous call left pending. Returns the state afterwards and the paths of saved frames.",
+   "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "seconds": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 30,
+      "default": 0
+     },
+     "operation": {
+      "type": "string",
+      "description": "id of a pending operation"
+     },
+     "inline_cameras": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "uniqueItems": true
+     }
+    },
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "signal",
+   "description": "End the episode or talk to the operator: done (the job is done), infeasible (it cannot be done), ask_operator (a question; the answer comes back), report (tell the operator something). The note says what and why.",
+   "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "kind": {
+      "type": "string",
+      "enum": [
+       "done",
+       "infeasible",
+       "ask_operator",
+       "report"
+      ]
+     },
+     "note": {
+      "type": "string",
+      "maxLength": 2000
+     },
+     "category": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "report: the category, where the robot defines them"
+     }
+    },
+    "required": [
+     "kind",
+     "note"
+    ],
+    "additionalProperties": false
+   }
+  },
+  {
+   "name": "reset_episode",
+   "description": "Start a new episode from the same frozen starting state (robot and every object back where they started), where this robot allows resets: it abandons the running episode, uses one reset of the budget (describe_robot: resets_left) and takes no simulated time. Returns the new episode's state and the paths of its frames.",
+   "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "inline_cameras": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "uniqueItems": true
+     }
+    },
+    "additionalProperties": false
+   }
+  }
+ ]
+}

@@ -1,0 +1,121 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "dexjoco",
+ "kind": "rcb",
+ "robot": "Franka Panda arm with a 16-joint Allegro hand (DexJoCo on MuJoCo)",
+ "frame": {
+  "suite": "DexJoCo's world frame: z up, metres; the robot stands at low x and reaches towards +x",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    -0.75,
+    0.0,
+    0.924,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "base_text": "the robot base frame: the arm's base link (link0), +X forward towards the table, +Y to the left, +Z up"
+ },
+ "control": {
+  "dt": 0.1,
+  "control_dt": 0.02,
+  "joint_speed": 1.0,
+  "min_move_s": 0.5,
+  "settle_s": 0.2,
+  "ee_dt": 0.1,
+  "ee_speed": 0.15,
+  "ee_ang_speed": 0.8,
+  "ee_settle_s": 0.3,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.05
+  }
+ },
+ "base": null,
+ "locomotion": null,
+ "notes": "The arms take flange pose targets (DexJoCo's own action: an operational-space controller with gravity compensation; it lags a moving target and stops where contact blocks it). The hands take joint targets; a hand's joint_positions in the state are the targets in force, the measured finger joints are in proprio_now (joint_pos group). Arm joint targets are available as execute_trajectory space native with action type joint_position (the service turns them into a flange target by forward kinematics). Cameras render on the CPU: ask only for the cameras you need. The episode ends by itself at the first success or at a task failure.",
+ "cameras": [
+  "front",
+  "back",
+  "left",
+  "right",
+  "top0",
+  "handcam_rgb"
+ ],
+ "default_cameras": [
+  "front",
+  "handcam_rgb"
+ ],
+ "action_cameras": [
+  "front"
+ ],
+ "state_cameras": [
+  "front"
+ ],
+ "types": {
+  "ee_pose": {
+   "dim": 23,
+   "hold": [
+    "ref",
+    "last",
+    "measured"
+   ],
+   "hold_ref": {
+    "group": "tcp_target",
+    "n": 23
+   },
+   "ee_mode": "interp",
+   "hold_measured_ee": false
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "a 7-joint Panda arm commanded by its flange pose (DexJoCo's own action); the flange (tcp) is where the hand is mounted, not the fingertips",
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "point": "the hand's mounting flange (tcp), not the fingertips",
+    "mode_text": "DexJoCo's operational-space controller tracks the flange pose target (it lags a moving target and stops where contact blocks it); rows are interpolated at a moderate speed"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 7
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 0,
+     "n": 7
+    }
+   }
+  },
+  "right_hand": {
+   "kind": "hand",
+   "note": "16 Allegro joint targets (rad): index finger 0-3, middle 4-7, ring 8-11, thumb 12-15 (joint 0 of a finger = spread, 1-3 = flexion from the knuckle out; thumb 12 = opposition); position-controlled; the state's joint_positions are the targets in force",
+   "joints": {
+    "type": "ee_pose",
+    "cols": [
+     7,
+     23
+    ]
+   },
+   "state": {
+    "joints": {
+     "group": "hand_target",
+     "offset": 0,
+     "n": 16
+    }
+   }
+  }
+ },
+ "task": "dexjoco-fold-glasses-i00"
+}

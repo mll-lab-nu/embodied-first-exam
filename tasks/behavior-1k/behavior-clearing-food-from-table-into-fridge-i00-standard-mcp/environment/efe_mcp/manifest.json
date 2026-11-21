@@ -1,0 +1,353 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "behavior-1k",
+ "kind": "rcb",
+ "robot": "Galaxea R1 Pro (BEHAVIOR-1K): holonomic wheeled base, 4-joint torso, two 7-joint arms with two-finger parallel grippers, head camera on the torso, a camera on each wrist",
+ "frame": {
+  "suite": "OmniGibson world frame of the scene: metres, +z up, the floor is the plane z = 0",
+  "quat": "xyzw",
+  "base": {
+   "pos": {
+    "group": "base_pose",
+    "offset": 0,
+    "n": 2
+   },
+   "z": 0.0,
+   "quat": {
+    "group": "base_pose",
+    "offset": 3,
+    "n": 4
+   },
+   "quat_order": "xyzw"
+  },
+  "base_text": "on the floor under the robot's base_link: +X the way the base faces, +Y to the robot's left, +Z up (z = height above the floor); it moves with the base"
+ },
+ "cameras": [
+  "robot_r1:zed_link:Camera:0",
+  "robot_r1:left_realsense_link:Camera:0",
+  "robot_r1:right_realsense_link:Camera:0"
+ ],
+ "default_cameras": [
+  "robot_r1:zed_link:Camera:0"
+ ],
+ "action_cameras": [
+  "robot_r1:zed_link:Camera:0"
+ ],
+ "state_cameras": [
+  "robot_r1:zed_link:Camera:0"
+ ],
+ "control": {
+  "control_dt": 0.0333333,
+  "dt": 0.1,
+  "joint_speed": 0.6,
+  "min_move_s": 0.5,
+  "gripper_settle_s": 1.0,
+  "settle_s": 0.2,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 25,
+   "hold": [
+    "last",
+    "measured"
+   ],
+   "zero_cols": [
+    0,
+    1,
+    2
+   ],
+   "initial": [
+    0,
+    0,
+    0,
+    1.025,
+    -1.45,
+    -0.47,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.07,
+    0.07,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.07,
+    0.07
+   ]
+  }
+ },
+ "parts": {
+  "left": {
+   "kind": "arm",
+   "note": "7-joint arm (left_arm_joint1..7) with a two-finger parallel gripper (opens to 10 cm)",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     7,
+     14
+    ],
+    "names": [
+     "left_arm_joint1",
+     "left_arm_joint2",
+     "left_arm_joint3",
+     "left_arm_joint4",
+     "left_arm_joint5",
+     "left_arm_joint6",
+     "left_arm_joint7"
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 14,
+    "mirror_cols": [
+     15
+    ],
+    "open": 0.07,
+    "closed": 0.0,
+    "binary": true
+   },
+   "ik": {
+    "frame": "left_tcp",
+    "quat": "xyzw",
+    "q_cols": [
+     4,
+     11
+    ],
+    "base_pose_ref": {
+     "group": "base_pose"
+    },
+    "seed": {
+     "names": [
+      "torso_joint1",
+      "torso_joint2",
+      "torso_joint3",
+      "torso_joint4",
+      "left_arm_joint1",
+      "left_arm_joint2",
+      "left_arm_joint3",
+      "left_arm_joint4",
+      "left_arm_joint5",
+      "left_arm_joint6",
+      "left_arm_joint7",
+      "right_arm_joint1",
+      "right_arm_joint2",
+      "right_arm_joint3",
+      "right_arm_joint4",
+      "right_arm_joint5",
+      "right_arm_joint6",
+      "right_arm_joint7"
+     ]
+    },
+    "extra_q": [
+     {
+      "q_cols": [
+       0,
+       4
+      ],
+      "cols": [
+       3,
+       7
+      ]
+     }
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "left_arm_joint1",
+      "left_arm_joint2",
+      "left_arm_joint3",
+      "left_arm_joint4",
+      "left_arm_joint5",
+      "left_arm_joint6",
+      "left_arm_joint7"
+     ]
+    },
+    "gripper": {
+     "group": "gripper_opening",
+     "offset": 0,
+     "n": 1,
+     "open": 0.095,
+     "closed": 0.085
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 0,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 0,
+     "n": 7
+    }
+   }
+  },
+  "right": {
+   "kind": "arm",
+   "note": "7-joint arm (right_arm_joint1..7) with a two-finger parallel gripper (opens to 10 cm)",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     16,
+     23
+    ],
+    "names": [
+     "right_arm_joint1",
+     "right_arm_joint2",
+     "right_arm_joint3",
+     "right_arm_joint4",
+     "right_arm_joint5",
+     "right_arm_joint6",
+     "right_arm_joint7"
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 23,
+    "mirror_cols": [
+     24
+    ],
+    "open": 0.07,
+    "closed": 0.0,
+    "binary": true
+   },
+   "ik": {
+    "frame": "right_tcp",
+    "quat": "xyzw",
+    "q_cols": [
+     11,
+     18
+    ],
+    "base_pose_ref": {
+     "group": "base_pose"
+    },
+    "seed": {
+     "names": [
+      "torso_joint1",
+      "torso_joint2",
+      "torso_joint3",
+      "torso_joint4",
+      "left_arm_joint1",
+      "left_arm_joint2",
+      "left_arm_joint3",
+      "left_arm_joint4",
+      "left_arm_joint5",
+      "left_arm_joint6",
+      "left_arm_joint7",
+      "right_arm_joint1",
+      "right_arm_joint2",
+      "right_arm_joint3",
+      "right_arm_joint4",
+      "right_arm_joint5",
+      "right_arm_joint6",
+      "right_arm_joint7"
+     ]
+    },
+    "extra_q": [
+     {
+      "q_cols": [
+       0,
+       4
+      ],
+      "cols": [
+       3,
+       7
+      ]
+     }
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "right_arm_joint1",
+      "right_arm_joint2",
+      "right_arm_joint3",
+      "right_arm_joint4",
+      "right_arm_joint5",
+      "right_arm_joint6",
+      "right_arm_joint7"
+     ]
+    },
+    "gripper": {
+     "group": "gripper_opening",
+     "offset": 1,
+     "n": 1,
+     "open": 0.095,
+     "closed": 0.085
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening",
+     "offset": 1,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 7,
+     "n": 7
+    }
+   }
+  },
+  "torso": {
+   "kind": "torso",
+   "note": "4-joint torso (torso_joint1..4) carrying both arms and the head camera; joint positions only",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     3,
+     7
+    ],
+    "names": [
+     "torso_joint1",
+     "torso_joint2",
+     "torso_joint3",
+     "torso_joint4"
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "torso_joint1",
+      "torso_joint2",
+      "torso_joint3",
+      "torso_joint4"
+     ]
+    }
+   }
+  }
+ },
+ "base": {
+  "type": "joint_position",
+  "mode": "velocity",
+  "cols": {
+   "vx": 0,
+   "vy": 1,
+   "wz": 2
+  },
+  "cmd_scale": {
+   "vx": 0.0333333,
+   "vy": 0.0333333,
+   "wz": 0.0333333
+  },
+  "dt": 0.1,
+  "max_v": 0.4,
+  "max_w": 0.6,
+  "stop_s": 0.2,
+  "note": "holonomic base (it can move sideways); open loop: the result reports where the base got to (base_odometry, world frame)"
+ },
+ "notes": "End-effector poses (goals and state) are the fingertip centre (TCP), midway between the two fingertips: 1.88 cm further along the fingers than the end-effector frame between the finger pads, where a grasped object is held (that frame is the proprio eef_pose group and the native ee_pose action's frame). An end-effector goal is solved by the robot's inverse kinematics from the current joints and moves only that arm, in joint space, without collision checking. Grasping is assisted and the gripper is binary: closing holds what the finger pads touch, opening releases it. The reported gripper value is 1 while the measured opening is below 9 cm (closed, or holding an object) and 0 when fully open; gripper_opening_m is the measured opening. The torso (target torso) bends the upper body: keep the robot balanced, a fall (base tilted more than 41 degrees for 10 s) ends the episode as a failure. Success counts only once the scene has settled: release the objects, move the hand clear, then wait at least 1.5 s. Joint limits are in describe_robot's spec_file (robot_spec.joints). The native ee_pose action type (execute_trajectory space native) re-solves both arms and the torso with a randomly seeded IK on every row. The simulator runs about 7-11 control steps per second of wall time (30 control steps are one simulated second).",
+ "task": "behavior-clearing-food-from-table-into-fridge-i00"
+}

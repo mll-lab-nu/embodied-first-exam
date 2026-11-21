@@ -284,8 +284,11 @@ class RcbAdapter:
             out["gripper_opening_m"] = _f(self.ref(st["gripper_opening_m"], now, meta)[0])
         if st.get("ee_pose"):
             v = self.ref(st["ee_pose"], now, meta)
-            p, q = F.from_parent(v[:3], q_from(v[3:7], st["ee_pose"].get("quat", self.quat_order())))
-            out["ee"] = {"position": _f(p), "quaternion_wxyz": _f(canon_q(q))}
+            if len(v) >= 7:
+                p, q = F.from_parent(v[:3], q_from(v[3:7], st["ee_pose"].get("quat", self.quat_order())))
+                out["ee"] = {"position": _f(p), "quaternion_wxyz": _f(canon_q(q))}
+            else:                                   # position only: the robot reports no hand orientation
+                out["ee"] = {"position": _f(F.from_parent(v[:3])[0])}
         return out
 
     def ee_suite(self, name, now, meta=None):
@@ -294,6 +297,8 @@ class RcbAdapter:
         if not st.get("ee_pose"):
             return None
         v = self.ref(st["ee_pose"], now, meta)
+        if len(v) < 7:                              # position only: the orientation the manifest fixes (else identity)
+            return np.asarray(v[:3], dtype=np.float64), q_from(st["ee_pose"].get("quat_fixed", [1.0, 0.0, 0.0, 0.0]))
         return np.asarray(v[:3], dtype=np.float64), q_from(v[3:7], st["ee_pose"].get("quat", self.quat_order()))
 
     def robot_state(self, now, meta=None, F=None) -> dict:
@@ -323,11 +328,27 @@ class RcbAdapter:
 
     def cam_meta(self, res, cam, F):
         cams = res.meta.get("cameras") or {}
+        if not cams and isinstance(res.meta.get("cameras_now"), dict):     # LIBERO: per-call calibration on submits
+            cams = res.meta["cameras_now"]
         c = cams.get(cam) if isinstance(cams, dict) else None
         out = {}
-        if not c:
-            return out
-        if c.get("extrinsic_cv") is None and c.get("cam2world_gl") is None:       # a static camera: pose in the spec
+        if not c:                                  # no per-call calibration: the spec's, its pose only if fixed
+            sc = ((self.spec or {}).get("cameras") or {}).get(cam)
+            if not isinstance(sc, dict) or sc.get("intrinsic_cv") is None:
+                return out
+            c = {"intrinsic_cv": sc["intrinsic_cv"]}
+            mount = sc.get("mount") if isinstance(sc.get("mount"), dict) else {}
+            how = mount.get("type") or sc.get("type") or sc.get("mounted") or \
+                (sc.get("mount") if isinstance(sc.get("mount"), str) else None) or "fixed"
+            fixed = str(how).startswith(("fixed", "static")) or sc.get("moving") is False
+            for k in ("cam2world_gl", "extrinsic_cv"):
+                v = sc.get(k) if sc.get(k) is not None else mount.get(k)
+                if fixed and v is not None:
+                    c[k] = v
+                    break
+            else:
+                c["_moving"] = True
+        if c.get("extrinsic_cv") is None and c.get("cam2world_gl") is None and not c.get("_moving"):   # a static camera: pose in the spec
             sc = ((self.spec or {}).get("cameras") or {}).get(cam) or {}
             mount = sc.get("mount") if isinstance(sc.get("mount"), dict) else {}
             if (mount.get("type") or sc.get("type")) in (None, "static", "fixed"):
@@ -651,8 +672,10 @@ class RcbAdapter:
                         out.append({"category": "no_trajectory", "detail": {arm: _jsonable(v)}})
             if (m.get("ik_failures") or 0) > 0:
                 out.append({"category": "out_of_reach", "detail": f"{m['ik_failures']} rows had no joint solution"})
-            if m.get("n_clipped") or m.get("clipped"):
-                out.append({"category": "limit", "detail": f"{m.get('n_clipped') or len(m.get('clipped') or [])} values clipped to the limits"})
+            nc = m.get("n_clipped") or m.get("clipped")
+            if nc:
+                n = nc if isinstance(nc, (int, float)) else len(nc)
+                out.append({"category": "limit", "detail": f"{n} values clipped to the limits"})
             for r in m.get("results") or []:
                 if isinstance(r, dict) and r.get("ok") is False:
                     out.append({"category": "blocked", "detail": _jsonable(r)})
@@ -759,7 +782,8 @@ class RcbAdapter:
                         if "position" in g:
                             r["position_error_m"] = _f(np.linalg.norm(p - np.asarray(g["position"])))
                             ok &= r["position_error_m"] <= tol.get("pos_m", 0.01)
-                        if "quaternion_wxyz" in g:
+                        if "quaternion_wxyz" in g and P["state"]["ee_pose"].get("quat_fixed") is None and \
+                                len(self.ref(P["state"]["ee_pose"], now, meta)) >= 7:
                             r["rotation_error_rad"] = _f(q_angle(q, q_from(g["quaternion_wxyz"])))
                             ok &= r["rotation_error_rad"] <= tol.get("rot_rad", 0.05)
                 if "joint_positions" in g and P.get("state", {}).get("joints"):
@@ -1039,6 +1063,10 @@ class RcbAdapter:
         pq = self.ee_suite(g["target"], now, meta)
         if pq is None:
             raise ToolError(f"{g['target']}: no end-effector pose in the state", "internal")
+        if "quaternion_wxyz" in g and len(self.ref(P["state"]["ee_pose"], now, meta)) < 7:
+            raise ToolError(f"{g['target']}: the hand's orientation is not measured, so move_robot takes a position only "
+                            "here" + (" (turn the hand with execute_trajectory space ee_delta, drot)" if D.get("rot_cols")
+                                      else " (the wrist does not rotate)"))
         p_cur, q_cur = F.from_parent(*pq)
         p_goal = np.asarray(g.get("position", p_cur), dtype=np.float64)
         q_goal = q_from(g.get("quaternion_wxyz", q_cur))
@@ -1061,12 +1089,15 @@ class RcbAdapter:
             vec = ep if "position" in g else np.zeros(3)
             if D.get("frame") == "ee":
                 vec = geom.q_to_mat(pq[1]).T @ vec
+            elif D.get("frame") == "base":          # the controller takes deltas in the robot base frame
+                vec = F.R.T @ vec
             step = np.clip(vec / k / ps * float(D.get("gain", 1.0)), -1, 1) * float(D.get("max_cmd", 1.0))
             a, b = D["pos_cols"]
             row[a:b] = step[: b - a] * np.asarray(D.get("pos_sign", [1, 1, 1]))[: b - a]
             if D.get("rot_cols") and "quaternion_wxyz" in g:
                 rs = float(D["rot_scale"])
-                rv = erot if D.get("frame") != "ee" else geom.q_to_mat(pq[1]).T @ erot
+                rv = (geom.q_to_mat(pq[1]).T @ erot if D.get("frame") == "ee" else
+                      F.R.T @ erot if D.get("frame") == "base" else erot)
                 rstep = np.clip(rv / k / rs, -1, 1) * float(D.get("max_cmd", 1.0))
                 a, b = D["rot_cols"]
                 row[a:b] = rstep[: b - a]
@@ -1261,7 +1292,7 @@ class RcbAdapter:
             for k, v in r.items():
                 P = parts[k]; D = P["ee_delta"]
                 if "dpos" in v:
-                    vec = F.vec_to_parent(v["dpos"])
+                    vec = np.asarray(v["dpos"], float) if D.get("frame") == "base" else F.vec_to_parent(v["dpos"])
                     if D.get("frame") == "ee":
                         pq = self.ee_suite(k, now, meta)
                         vec = geom.q_to_mat(pq[1]).T @ vec
@@ -1271,7 +1302,7 @@ class RcbAdapter:
                 if "drot" in v:
                     if not D.get("rot_cols"):
                         raise ToolError(f"{k} takes no rotation deltas")
-                    rv = F.vec_to_parent(v["drot"])
+                    rv = np.asarray(v["drot"], float) if D.get("frame") == "base" else F.vec_to_parent(v["drot"])
                     a, b = D["rot_cols"]
                     cur[a:b] = (np.clip(rv / float(D["rot_scale"]), -1, 1) * float(D.get("max_cmd", 1.0)))[: b - a]
                 if "gripper" in v and D.get("gripper_col") is not None:

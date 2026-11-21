@@ -1,0 +1,109 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "myosuite",
+ "kind": "rcb",
+ "robot": "MyoHand: a musculoskeletal model of a human forearm and hand (MyoSuite, MuJoCo), driven by 39 muscles",
+ "frame": {
+  "suite": "the simulator's world frame (z up)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  "base_text": "the simulator's world frame (z up): camera poses are given in it; no part here takes an end-effector pose"
+ },
+ "cameras": [
+  "side_view",
+  "front_view",
+  "hand_top",
+  "hand_bottom",
+  "hand_side_inter",
+  "hand_side_exter",
+  "plam_lookat"
+ ],
+ "default_cameras": [
+  "hand_top"
+ ],
+ "action_cameras": [
+  "hand_top"
+ ],
+ "state_cameras": [
+  "hand_top"
+ ],
+ "control": {
+  "dt": 0.01,
+  "control_dt": 0.01,
+  "joint_speed": 0.5,
+  "min_move_s": 0.5,
+  "settle_s": 0.0,
+  "tolerance": {
+   "joint": 0.05
+  },
+  "max_chunk_s": 10.0
+ },
+ "types": {
+  "muscle": {
+   "dim": 39,
+   "hold": [
+    "last",
+    "initial"
+   ],
+   "initial": [
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0,
+    -1.0
+   ]
+  }
+ },
+ "parts": {},
+ "locomotion": null,
+ "base": null,
+ "resets": {
+  "note": "Each episode starts from the same frozen state; only the last episode is graded, and a success ends the run at once."
+ },
+ "notes": "A muscle's command a sets its excitation u = 1 / (1 + exp(-5 (a - 0.5))), not clipped (a = -1: about 0.0006, a = 0.5: 0.5, a = 1: 0.92); activation follows excitation with a short delay (about 10 ms up, 40 ms down); muscles only pull, one muscle can cross several joints, and its force depends on its length and speed. Before your first command of an episode every column holds -1 (all muscles relaxed). Every command goes through execute_trajectory space native (action_type muscle, 39 numbers per row). The robot's own action type takes one row per control step (0.01 s, 100 Hz), columns in its layout (describe_robot: action_types_native; spec_file has each actuator, muscle and joint). The state is proprio_now (layout in spec_file: proprio_layout, proprio_groups): joint positions and velocities, muscle activations and lengths, joint efforts. There is no joint-level controller: joints move only through muscle forces. Time passes only inside calls; the service says when the episode ended and why, never the object or goal state.",
+ "task": "myosuite-baoding-i00"
+}

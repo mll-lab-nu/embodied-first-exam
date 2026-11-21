@@ -1,0 +1,120 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "maniguard",
+ "kind": "rcb",
+ "robot": "Franka Panda arm with long fin-ray fingers (a binary parallel gripper) on a fixed base at a table (ManiGuard on OmniGibson)",
+ "frame": {
+  "suite": "the scene's world frame: z up, the floor is the plane z = 0; poses are position + quaternion XYZW",
+  "quat": "xyzw",
+  "base": {
+   "fixed": [
+    0.22631,
+    0.73406,
+    0.69125,
+    0.718916,
+    0.0,
+    0.0,
+    -0.695098
+   ]
+  },
+  "base_text": "the robot base frame: the arm's root link (panda_link0, the base pose in describe_robot's spec_file robot_spec.base.pose), +X the way the arm faces, +Y to its left, +Z up"
+ },
+ "cameras": [
+  "cam_opposite",
+  "cam_left",
+  "cam_right",
+  "cam_left_shoulder",
+  "wrist"
+ ],
+ "default_cameras": [
+  "cam_left",
+  "wrist"
+ ],
+ "action_cameras": [
+  "cam_left"
+ ],
+ "state_cameras": [
+  "cam_left"
+ ],
+ "control": {
+  "dt": 0.1,
+  "control_dt": 0.05,
+  "joint_speed": 0.6,
+  "min_move_s": 0.5,
+  "gripper_settle_s": 0.5,
+  "settle_s": 0.2,
+  "ee_settle_s": 0.0,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 8,
+   "hold": [
+    "measured"
+   ]
+  },
+  "ee_pose": {
+   "dim": 8,
+   "hold": [
+    "measured"
+   ],
+   "ee_mode": "planner",
+   "max_rows": 50,
+   "hold_measured_ee": true
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "7 joints (panda_joint1..7, rad); a binary gripper (any value of 0.5 or more closes it); end-effector pose = the fingertip centre",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 7,
+    "open": 1.0,
+    "closed": -1.0,
+    "binary": true
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "gripper_col": 7,
+    "point": "the fingertip centre (robot_spec.tcp.tcp)",
+    "mode_text": "the service solves each pose by the arm's IK (no collision checking) and drives the joints there at most 0.02 rad per 20 Hz control step (duration_s does not apply); if no IK solution exists nothing moves and the result says so"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 7
+    },
+    "gripper": {
+     "group": "gripper_cmd"
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening"
+    },
+    "ee_pose": {
+     "group": "tcp_pose"
+    }
+   }
+  }
+ },
+ "base": null,
+ "locomotion": null,
+ "notes": "Grasping is sticky: when the gripper closes, an object a finger touches is attached, and it is released when the gripper opens. The gripper value in the state is the command in force; gripper_opening_m is the measured opening (it stays above the closed value when closed on something). Joint efforts (panda_joint1_effort ...) in proprio_now grow when the arm pushes on something. The episode ends by itself when the goal has held for 10 consecutive control steps.",
+ "task": "maniguard-cabinet-pickup-i22"
+}

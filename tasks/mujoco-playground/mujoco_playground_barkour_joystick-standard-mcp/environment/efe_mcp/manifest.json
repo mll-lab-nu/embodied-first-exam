@@ -1,0 +1,94 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "mujoco-playground",
+ "kind": "rcb",
+ "robot": "Google Barkour vB quadruped (MuJoCo Playground scene): 12 joint position actuators, no walking controller",
+ "frame": {
+  "suite": "the simulator's world frame (z up; the service gives no position of the robot in it)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  "base_text": "the simulator's world frame (z up), not the trunk: the service reports no trunk pose, so camera poses are given in this frame; no part here takes an end-effector pose"
+ },
+ "cameras": [
+  "track",
+  "realsense/rgb"
+ ],
+ "default_cameras": [
+  "track"
+ ],
+ "action_cameras": [
+  "track"
+ ],
+ "state_cameras": [
+  "track"
+ ],
+ "control": {
+  "dt": 0.01,
+  "control_dt": 0.01,
+  "joint_speed": 2.0,
+  "min_move_s": 0.3,
+  "settle_s": 0.0,
+  "tolerance": {
+   "joint": 0.1
+  },
+  "max_chunk_s": 10.0
+ },
+ "types": {
+  "joint_position": {
+   "dim": 12,
+   "hold": [
+    "last",
+    "initial"
+   ],
+   "initial": [
+    0.0,
+    0.5,
+    1.0,
+    0.0,
+    0.5,
+    1.0,
+    0.0,
+    0.5,
+    1.0,
+    0.0,
+    0.5,
+    1.0
+   ]
+  }
+ },
+ "parts": {
+  "legs": {
+   "kind": "legs",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     12
+    ]
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos"
+    }
+   },
+   "note": "12 absolute joint targets (rad): the front-left, hind-left, front-right, hind-right legs, each abduction, hip, knee; PD actuators, kp 35 N m/rad"
+  }
+ },
+ "locomotion": null,
+ "base": null,
+ "resets": {
+  "note": "Each episode starts from the same frozen state; only the last episode is graded, and a success ends the run at once."
+ },
+ "notes": "There is no walking or balance controller: every gait, turn and pose comes from the 12 joint targets you send, one row per control step (0.01 s). The joint targets are absolute angles in radians, in the same order as proprio group joint_pos; the state also has joint velocities and torques, the IMU (gyro, accelerometer, gravity direction, the trunk's velocity) and foot contacts (proprio_now, layout in describe_robot's spec_file: proprio_layout, proprio_groups). spec_file also has the home pose, the joint limits, the command schedule (every result's command_now is the current command), and forward/inverse kinematics of the feet in the trunk frame for reference. Time passes only inside calls. The robot's own action type done (native, no columns) ends the episode at once.",
+ "task": "mujoco_playground_barkour_joystick"
+}

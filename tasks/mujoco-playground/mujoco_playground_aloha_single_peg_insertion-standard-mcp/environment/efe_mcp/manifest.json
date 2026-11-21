@@ -1,0 +1,151 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "mujoco-playground",
+ "kind": "rcb",
+ "robot": "ALOHA 2 bimanual robot (two ViperX 300s arms facing each other across a table, MuJoCo Playground scene): joint targets only",
+ "frame": {
+  "suite": "the scene's world frame (z up)",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0
+   ]
+  },
+  "base_text": "the scene's world frame (z up), not either arm's base: no part here takes an end-effector pose"
+ },
+ "cameras": [
+  "overhead_cam",
+  "teleoperator_pov",
+  "wrist_cam_left",
+  "wrist_cam_right"
+ ],
+ "default_cameras": [
+  "overhead_cam",
+  "teleoperator_pov"
+ ],
+ "action_cameras": [
+  "overhead_cam"
+ ],
+ "state_cameras": [
+  "overhead_cam"
+ ],
+ "control": {
+  "dt": 0.02,
+  "control_dt": 0.02,
+  "joint_speed": 0.8,
+  "min_move_s": 0.5,
+  "settle_s": 0.2,
+  "tolerance": {
+   "joint": 0.03
+  },
+  "max_chunk_s": 10.0,
+  "gripper_settle_s": 0.6
+ },
+ "types": {
+  "joint_position": {
+   "dim": 14,
+   "hold": [
+    "ref",
+    "last"
+   ],
+   "hold_ref": {
+    "names": [
+     "left/waist_target",
+     "left/shoulder_target",
+     "left/elbow_target",
+     "left/forearm_roll_target",
+     "left/wrist_angle_target",
+     "left/wrist_rotate_target",
+     "left/gripper_target",
+     "right/waist_target",
+     "right/shoulder_target",
+     "right/elbow_target",
+     "right/forearm_roll_target",
+     "right/wrist_angle_target",
+     "right/wrist_rotate_target",
+     "right/gripper_target"
+    ]
+   }
+  }
+ },
+ "parts": {
+  "left": {
+   "kind": "arm",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     6
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 6,
+    "open": 0.037,
+    "closed": 0.002
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "left/waist_pos",
+      "left/shoulder_pos",
+      "left/elbow_pos",
+      "left/forearm_roll_pos",
+      "left/wrist_angle_pos",
+      "left/wrist_rotate_pos"
+     ]
+    },
+    "gripper": {
+     "names": [
+      "left/gripper_pos"
+     ]
+    }
+   },
+   "note": "waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate (rad); gripper finger target 0.037 m open .. 0.002 m closed"
+  },
+  "right": {
+   "kind": "arm",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     7,
+     13
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 13,
+    "open": 0.037,
+    "closed": 0.002
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "right/waist_pos",
+      "right/shoulder_pos",
+      "right/elbow_pos",
+      "right/forearm_roll_pos",
+      "right/wrist_angle_pos",
+      "right/wrist_rotate_pos"
+     ]
+    },
+    "gripper": {
+     "names": [
+      "right/gripper_pos"
+     ]
+    }
+   },
+   "note": "waist, shoulder, elbow, forearm_roll, wrist_angle, wrist_rotate (rad); gripper finger target 0.037 m open .. 0.002 m closed"
+  }
+ },
+ "locomotion": null,
+ "base": null,
+ "notes": "The arms take joint positions only: there is no end-effector pose command and no kinematics service here, so reaching a point means choosing joint angles (each joint's limits are in describe_robot). The state's gripper value comes from the finger's measured opening, so it stops short of 1 when the fingers close on an object. The two wrist cameras move with the arms; the overhead and teleoperator cameras are fixed. One episode, no reset: the state at the end of your time is graded, so finish in the pose you want graded and keep it.",
+ "task": "mujoco_playground_aloha_single_peg_insertion"
+}

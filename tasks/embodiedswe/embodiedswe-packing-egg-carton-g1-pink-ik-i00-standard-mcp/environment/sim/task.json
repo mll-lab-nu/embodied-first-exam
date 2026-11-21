@@ -1,0 +1,7 @@
+{
+ "preset": "packing.egg_carton.g1.pink_ik",
+ "grader": "grader/egg_carton.py",
+ "title": "Put three eggs in the carton and close the lid (Unitree G1, fixed pelvis, Pink IK)",
+ "text": "Four loose eggs lie on their sides on the left half of the table. On the right is a small four-cell egg carton fixed to the table, with its hinged lid standing fully open. The carton has four distinct pockets in a 2 by 2 layout.\nGoal (three stages): pick eggs from the table one at a time, turn each upright, and place three eggs securely in three DISTINCT carton pockets; then push the hinged lid closed over them. Every seated egg must remain upright and settled, and the lid must rest closed at the end. The fourth egg is a distractor and can stay on the table.",
+ "success": "Success, exactly: at the end of the run three different pockets of the 2 x 2 carton each hold a seated egg (at least three eggs seated, at least three distinct pockets occupied). Pocket centres are 30 mm from the carton's centre along each of its two base axes. An egg counts as seated when, in the carton's base frame (origin at the carton's bottom centre, z along the carton's up), its centre is within 21 mm horizontally of a pocket centre and 15-42 mm above the carton base, its long axis is within 50° of the carton's vertical (either end up), and it moves slower than 0.05 m/s. The hinged lid is within 7° of fully shut; it starts 110° open. All four eggs, the spare included, move slower than 0.05 m/s, and the lid swings slower than 0.10 rad/s. Not true at the start."
+}

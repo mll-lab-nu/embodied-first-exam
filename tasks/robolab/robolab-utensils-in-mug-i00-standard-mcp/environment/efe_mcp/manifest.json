@@ -1,0 +1,116 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "robolab",
+ "kind": "rcb",
+ "robot": "Franka Panda 7-joint arm with a Robotiq 2F-85 gripper (NVIDIA RoboLab's DROID setup), fixed at a table",
+ "frame": {
+  "suite": "env-local = the robot's root frame: the Franka base (panda_link0) at the origin, x forward towards the table, y left, z up",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "base_text": "the Franka base (panda_link0): +X forward towards the table, +Y to the robot's left, +Z up"
+ },
+ "cameras": [
+  "egocentric_mirrored_camera",
+  "over_shoulder_left_camera",
+  "wrist_cam"
+ ],
+ "default_cameras": [
+  "egocentric_mirrored_camera",
+  "over_shoulder_left_camera"
+ ],
+ "action_cameras": [
+  "egocentric_mirrored_camera"
+ ],
+ "state_cameras": [
+  "egocentric_mirrored_camera"
+ ],
+ "control": {
+  "control_dt": 0.0666667,
+  "dt": 0.2,
+  "joint_speed": 0.6,
+  "min_move_s": 0.6,
+  "gripper_settle_s": 0.8,
+  "settle_s": 0.2,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 8,
+   "hold": [
+    "measured",
+    "last"
+   ]
+  },
+  "ee_pose": {
+   "dim": 8,
+   "ee_mode": "planner",
+   "max_rows": 50,
+   "hold": [
+    "measured",
+    "last"
+   ]
+  }
+ },
+ "parts": {
+  "arm": {
+   "kind": "arm",
+   "note": "7-joint Franka arm (panda_joint1..7) with a Robotiq 2F-85 gripper (opens to 8.5 cm); the gripper command is binary",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     7
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 7,
+    "open": 0.0,
+    "closed": 1.0,
+    "binary": true
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "gripper_col": 7,
+    "point": "fingertip centre: the ends of the closed Robotiq fingertips (the gripper flange moved 0.162 m along the approach axis); the pads extend about 5.7 cm back from there",
+    "mode_text": "each goal is reached by differential IK in closed loop along a straight line (at most 0.25 m/s); no obstacle avoidance"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 7
+    },
+    "gripper": {
+     "group": "gripper_cmd"
+    },
+    "gripper_opening_m": {
+     "group": "gripper_opening"
+    },
+    "ee_pose": {
+     "group": "tcp_pose"
+    }
+   }
+  }
+ },
+ "notes": "The end-effector pose (goals and state) is the fingertip-centre tool frame; at the starting pose the gripper points straight down. The gripper is binary (a value of 0.5 or more closes it) and switches at once; the reported gripper value is the command, gripper_opening_m is the measured distance between the finger pads (about 0.085 m open, about 0.002 m closed on nothing, more when closed on an object). An end-effector goal that also sets the gripper switches the gripper at the start of the arm's motion: to grasp, reach first, then close the gripper in a separate move_robot call. End-effector goals move in a straight line and do not avoid objects; each takes as long as the controller needs (duration_s does not apply). The simulator runs at 15 control steps per simulated second and is slower than real time. The episode ends by itself the moment the success condition holds.",
+ "task": "robolab-utensils-in-mug-i00"
+}

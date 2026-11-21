@@ -30,7 +30,7 @@ MODE = "standard-mcp"
 SERVER_FILES = ("server.py", "rcb_adapter.py", "geom.py", "schema.py", "workspace.py", "mcp_client.py",
                 "schema/tools.v0.json")
 SUITE_FILES = ("suites.py",)          # the non-RCB suites' tools, when present
-ORACLE_FILES = ("oracle/rcb_client_mcp.py", "oracle/sitecustomize.py")
+ORACLE_FILES = ("oracle/rcb_client_mcp.py", "oracle/ro_client_mcp.py", "oracle/sitecustomize.py")
 MCP_TOML = """
 # Robot control through the efe-robot MCP server only (mode standard-mcp; embodied_first_exam/standard/mcp/)
 [[environment.mcp_servers]]
@@ -40,12 +40,18 @@ command = "python3"
 args = ["/opt/tools/efe_mcp/server.py"]
 """
 CLIENT_HEADING_RE = re.compile(r"(?m)^## (Client\b[^\n]*|Robot service[^\n]*)$")
-RECORD_START_RE = re.compile(r"(?:Leave|Keep) (?:your|the)\s+(?:script|controller|program|code)\b")
-CONTEXT_BULLET_RE = re.compile(r"(?ms)^- \*\*Nothing is put into your context automatically\.\*\*.*?(?=^- |^\n|^#|\Z)")
+RECORD_START_RE = re.compile(r"(?:Leave|Keep) (?:your|the)\s+(?:scripts?|controllers?|programs?|code)\b")
+CONTEXT_BULLET_RE = re.compile(r"(?ms)^- (?:\*\*Nothing is put into your context automatically\.\*\*|Nothing is put into your context automatically:|Images come back as arrays in a Python object;).*?(?=^- |^\n|^#|\Z)")
 PHRASES = [   # (whitespace-flexible pattern, replacement) in the intro and rules
     (r"You\s+get\s+one\s+client\s+and", "You get the `efe-robot` tools and"),
     (r"you\s+reach\s+it\s+only\s+through\s+a\s+client", "you reach it only through the `efe-robot` tools"),
     (r"you\s+reach\s+it\s+only\s+through\s+its\s+client", "you reach it only through the `efe-robot` tools"),
+    (r"you\s+get\s+one\s+Python\s+client\s+and", "you get the `efe-robot` tools and"),
+    (r"you\s+get\s+its\s+client,", "you get the `efe-robot` tools,"),
+    (r"Your\s+whole\s+interface\s+to\s+the\s+robot\.\s+", ""),
+    (r";\s+write\s+your\s+own\s+controller\.", "."),
+    (r"\(`python\s+-c\s+\"import\s+rcb_client;\s+help\(rcb_client\)\"`\)",
+     "(`/opt/tools/rcb_client.py`, readable with your file-reading tool)"),
 ]
 
 
@@ -68,6 +74,8 @@ def task_manifest(src: pathlib.Path) -> dict:
     if sm is None:
         raise SystemExit(f"{src.name}: no manifests/{suite}.json")
     m = mf.resolve(sm, src.name)
+    if m.get("unsupported"):
+        return m
     if agent_ended(src) and m.get("kind", "rcb") == "rcb":
         m.setdefault("signals", {})["done"] = {"finish": True}
     errs = mf.check(m)
@@ -222,10 +230,11 @@ def transform_instruction(s: str, m: dict, task: pathlib.Path) -> str:
     for pat, rep in PHRASES:
         s = re.sub(pat, rep, s)
     s = _remove_record_sentences(s)
-    s = CONTEXT_BULLET_RE.sub(
+    seen = []
+    s = CONTEXT_BULLET_RE.sub(lambda mm: "" if seen.append(1) or len(seen) > 1 else (
         "- **Images are files.** The tools write camera images, depth and video under `/app/obs/` and return their "
         "paths with small JSON; open an image with your file-reading tool, or ask for small images in the result "
-        "with `inline_cameras`.\n", s)
+        "with `inline_cameras`.\n"), s)
     s = CLIENT_HEADING_RE.sub(lambda mm: "## The robot service through its Python client (reference; act through the "
                                          "`efe-robot` tools above)", s, count=1)
     k = s.find("\n## ")
@@ -290,7 +299,7 @@ def install_server(dst: pathlib.Path, m: dict) -> None:
     if d.exists():
         shutil.rmtree(d)
     (d / "schema").mkdir(parents=True)
-    for f in SERVER_FILES + tuple(x for x in SUITE_FILES if (HERE / x).is_file()):
+    for f in SERVER_FILES + tuple(x for x in SUITE_FILES if (HERE / x).is_file() and m.get("kind", "rcb") != "rcb"):
         shutil.copy2(HERE / f, d / f)
     (d / "manifest.json").write_text(json.dumps(m, indent=1, ensure_ascii=False) + "\n")
 
@@ -301,6 +310,10 @@ def generate(base: str, dry: bool = False) -> dict:
         raise SystemExit(f"{base}: no standard task dir")
     dst = src.with_name(base + "-" + MODE)
     m = task_manifest(src)
+    if m.get("unsupported"):
+        if dst.exists() and not dry:     # a variant generated before the manifest said otherwise
+            shutil.rmtree(dst)
+        return {"task": dst.name, "suite": src.parent.name, "unsupported": m["unsupported"]}
     info = {"task": dst.name, "suite": src.parent.name, "tools": [t["name"] for t in sch.tools_for(m)]}
     if dry:
         return info
@@ -314,7 +327,11 @@ def generate(base: str, dry: bool = False) -> dict:
     tt = dst / "task.toml"
     tt.write_text(transform_toml(tt.read_text()))
     ins = dst / "instruction.md"
-    ins.write_text(transform_instruction(ins.read_text(), m, dst))
+    if m.get("kind", "rcb") != "rcb":
+        import suites
+        ins.write_text(suites.transform_instruction(ins.read_text(), m, dst))
+    else:
+        ins.write_text(transform_instruction(ins.read_text(), m, dst))
     info["oracle"] = convert_solution(dst)
     rd = dst / "README.md"
     if rd.is_file():   # the twin's README rows and sections are kept; normalize re-renders the header
@@ -344,10 +361,16 @@ def main(argv=None):
             skipped.append((b, suite))
             continue
         info = generate(b, a.dry_run)
+        if info.get("unsupported"):
+            skipped.append((b, f"{suite}: {info['task']} has no MCP-only variant"))
+            print(json.dumps(info))
+            continue
         done.append(info)
         print(json.dumps(info))
-    print(f"generated {len(done)}; no manifest for {len(skipped)} "
-          f"({', '.join(sorted({s for _, s in skipped}))})", file=sys.stderr)
+    nm = sorted({s for _, s in skipped if ":" not in s})
+    un = [s for _, s in skipped if ":" in s]
+    print(f"generated {len(done)}; no manifest for {len(skipped) - len(un)} ({', '.join(nm)}); "
+          f"no MCP-only variant for {len(un)}", file=sys.stderr)
     return 0
 
 

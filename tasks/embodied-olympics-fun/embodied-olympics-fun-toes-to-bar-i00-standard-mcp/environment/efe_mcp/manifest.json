@@ -1,0 +1,345 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "embodied-olympics-fun",
+ "kind": "rcb",
+ "robot": "Unitree G1 humanoid, 29 joints (legs 12, waist 3, arms 7 + 7), 1.32 m; Unitree's walking policy and a running policy built in; the G1's own Dex3-1 three-finger hands (thumb 3, index 2, middle 2 joints) on both arms",
+ "frame": {
+  "suite": "heading only: the yaw of the pelvis IMU in the venue's world frame; the robot senses no position, so x and y stay 0",
+  "quat": "wxyz",
+  "base": {
+   "quat": {
+    "names": [
+     "imu_pelvis_qw",
+     "imu_pelvis_qx",
+     "imu_pelvis_qy",
+     "imu_pelvis_qz"
+    ]
+   },
+   "quat_order": "wxyz"
+  },
+  "base_text": "the robot base frame: on the floor under the pelvis, +X the way the pelvis faces at the start of the call, +Y left, +Z up (only the heading is sensed, from the pelvis IMU)"
+ },
+ "cameras": [
+  "head_left",
+  "head_right",
+  "venue"
+ ],
+ "default_cameras": [
+  "head_left",
+  "venue"
+ ],
+ "action_cameras": [
+  "head_left",
+  "venue"
+ ],
+ "state_cameras": [
+  "head_left"
+ ],
+ "control": {
+  "dt": 0.02,
+  "control_dt": 0.01,
+  "joint_speed": 1.0,
+  "min_move_s": 0.4,
+  "gripper_settle_s": 0.6,
+  "settle_s": 0.1,
+  "tolerance": {
+   "joint": 0.06
+  },
+  "max_chunk_s": 10.0
+ },
+ "types": {
+  "stand": {
+   "dim": 19,
+   "hold": [
+    "last",
+    "initial",
+    "ref"
+   ],
+   "hold_ref": {
+    "names": [
+     "waist_yaw_target",
+     "waist_roll_target",
+     "waist_pitch_target",
+     "left_shoulder_pitch_target",
+     "left_shoulder_roll_target",
+     "left_shoulder_yaw_target",
+     "left_elbow_target",
+     "left_wrist_roll_target",
+     "left_wrist_pitch_target",
+     "left_wrist_yaw_target",
+     "right_shoulder_pitch_target",
+     "right_shoulder_roll_target",
+     "right_shoulder_yaw_target",
+     "right_elbow_target",
+     "right_wrist_roll_target",
+     "right_wrist_pitch_target",
+     "right_wrist_yaw_target",
+     "holding_left",
+     "holding_right"
+    ]
+   }
+  },
+  "walk": {
+   "dim": 22,
+   "hold": [
+    "ref",
+    "last"
+   ],
+   "hold_ref": {
+    "names": [
+     "cmd_vx",
+     "cmd_vy",
+     "cmd_wz",
+     "waist_yaw_target",
+     "waist_roll_target",
+     "waist_pitch_target",
+     "left_shoulder_pitch_target",
+     "left_shoulder_roll_target",
+     "left_shoulder_yaw_target",
+     "left_elbow_target",
+     "left_wrist_roll_target",
+     "left_wrist_pitch_target",
+     "left_wrist_yaw_target",
+     "right_shoulder_pitch_target",
+     "right_shoulder_roll_target",
+     "right_shoulder_yaw_target",
+     "right_elbow_target",
+     "right_wrist_roll_target",
+     "right_wrist_pitch_target",
+     "right_wrist_yaw_target",
+     "holding_left",
+     "holding_right"
+    ]
+   },
+   "zero_cols": [
+    0,
+    1,
+    2
+   ]
+  },
+  "joints": {
+   "dim": 31,
+   "hold": [
+    "last",
+    "initial",
+    "ref"
+   ],
+   "hold_ref": {
+    "names": [
+     "left_hip_pitch_target",
+     "left_hip_roll_target",
+     "left_hip_yaw_target",
+     "left_knee_target",
+     "left_ankle_pitch_target",
+     "left_ankle_roll_target",
+     "right_hip_pitch_target",
+     "right_hip_roll_target",
+     "right_hip_yaw_target",
+     "right_knee_target",
+     "right_ankle_pitch_target",
+     "right_ankle_roll_target",
+     "waist_yaw_target",
+     "waist_roll_target",
+     "waist_pitch_target",
+     "left_shoulder_pitch_target",
+     "left_shoulder_roll_target",
+     "left_shoulder_yaw_target",
+     "left_elbow_target",
+     "left_wrist_roll_target",
+     "left_wrist_pitch_target",
+     "left_wrist_yaw_target",
+     "right_shoulder_pitch_target",
+     "right_shoulder_roll_target",
+     "right_shoulder_yaw_target",
+     "right_elbow_target",
+     "right_wrist_roll_target",
+     "right_wrist_pitch_target",
+     "right_wrist_yaw_target",
+     "holding_left",
+     "holding_right"
+    ]
+   },
+   "initial": [
+    -0.1,
+    0.0,
+    0.0,
+    0.3,
+    -0.2,
+    0.0,
+    -0.1,
+    0.0,
+    0.0,
+    0.3,
+    -0.2,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    -2.81,
+    0.72,
+    0.3583,
+    1.3808,
+    1.8,
+    -0.2208,
+    0.1125,
+    -2.81,
+    -0.72,
+    -0.3583,
+    1.3808,
+    -1.8,
+    -0.2208,
+    -0.1125,
+    1.0,
+    1.0
+   ]
+  },
+  "run": {
+   "dim": 5,
+   "hold": [
+    "ref",
+    "last"
+   ],
+   "hold_ref": {
+    "names": [
+     "cmd_vx",
+     "cmd_vy",
+     "cmd_wz",
+     "holding_left",
+     "holding_right"
+    ]
+   },
+   "zero_cols": [
+    0,
+    1,
+    2
+   ]
+  }
+ },
+ "parts": {
+  "torso": {
+   "kind": "torso",
+   "note": "the waist (yaw, roll, pitch), joint targets through the joints type",
+   "joints": {
+    "type": "joints",
+    "cols": [
+     12,
+     15
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "waist_yaw_pos",
+      "waist_roll_pos",
+      "waist_pitch_pos"
+     ]
+    }
+   }
+  },
+  "left": {
+   "kind": "arm",
+   "note": "7 joints: shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw; joint targets through the joints type; the hand is the G1's own Dex3-1 three-finger hand (thumb 3, index 2, middle 2 joints): the gripper is its closure command, 0 open to 1 closed (each drive stops where its force limit is reached); it holds only by contact and friction, and the state's gripper is the measured closure",
+   "joints": {
+    "type": "joints",
+    "cols": [
+     15,
+     22
+    ]
+   },
+   "gripper": {
+    "type": "joints",
+    "col": 29,
+    "open": 0.0,
+    "closed": 1.0
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "left_shoulder_pitch_pos",
+      "left_shoulder_roll_pos",
+      "left_shoulder_yaw_pos",
+      "left_elbow_pos",
+      "left_wrist_roll_pos",
+      "left_wrist_pitch_pos",
+      "left_wrist_yaw_pos"
+     ]
+    },
+    "gripper": {
+     "names": [
+      "hand_closure_left"
+     ]
+    }
+   }
+  },
+  "right": {
+   "kind": "arm",
+   "note": "7 joints: shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw; joint targets through the joints type; the hand is the G1's own Dex3-1 three-finger hand (thumb 3, index 2, middle 2 joints): the gripper is its closure command, 0 open to 1 closed (each drive stops where its force limit is reached); it holds only by contact and friction, and the state's gripper is the measured closure",
+   "joints": {
+    "type": "joints",
+    "cols": [
+     22,
+     29
+    ]
+   },
+   "gripper": {
+    "type": "joints",
+    "col": 30,
+    "open": 0.0,
+    "closed": 1.0
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "right_shoulder_pitch_pos",
+      "right_shoulder_roll_pos",
+      "right_shoulder_yaw_pos",
+      "right_elbow_pos",
+      "right_wrist_roll_pos",
+      "right_wrist_pitch_pos",
+      "right_wrist_yaw_pos"
+     ]
+    },
+    "gripper": {
+     "names": [
+      "hand_closure_right"
+     ]
+    }
+   }
+  },
+  "legs": {
+   "kind": "legs",
+   "note": "12 joints (left hip pitch, roll, yaw, knee, ankle pitch, roll; then the right leg's) through the joints type: the default gains, nothing balances the robot",
+   "joints": {
+    "type": "joints",
+    "cols": [
+     0,
+     12
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "left_hip_pitch_pos",
+      "left_hip_roll_pos",
+      "left_hip_yaw_pos",
+      "left_knee_pos",
+      "left_ankle_pitch_pos",
+      "left_ankle_roll_pos",
+      "right_hip_pitch_pos",
+      "right_hip_roll_pos",
+      "right_hip_yaw_pos",
+      "right_knee_pos",
+      "right_ankle_pitch_pos",
+      "right_ankle_roll_pos"
+     ]
+    }
+   }
+  }
+ },
+ "base": null,
+ "resets": {
+  "note": "Embodied Olympics allows 5 resets (describe_robot: resets): each starts a new attempt from the same start; only the last attempt is graded, and a success ends the run."
+ },
+ "notes": "Joint targets are absolute angles (rad); a target moves at most the joint's speed limit per 10 ms step. Here every part (legs, torso = the waist, arms) takes joint targets through the `joints` type at the default gains (`stand` keeps the legs in the stance with a feed-forward meant for standing on the ground); nothing else holds the body. The bar is not a free body: the holding_* flags stay 0 on it. move_robot and joint rows start from the last `joints` row sent through these tools (at the start of an attempt: the start targets and grips), so a goal without a gripper keeps the last grip sent here; after native rows, give `gripper` in the next goals. A grip is the hand's closure command (0 open, 1 closed; a full close takes about 0.1 s). Other gains, velocities and feed-forward torques are the native `lowcmd` type (execute_trajectory space native; layouts and bounds of every type (stand, walk, run, run_arms, joints, lowcmd, walk_falcon, walk_agile) in describe_robot). locomote is not offered here. Between calls the robot is frozen: time passes only inside calls. There is no end-effector pose command: describe_robot's spec_file (robot_facts) has each joint's range, speed and torque limits, default gains and the stance. The robot senses no position: the state shows its heading (the pelvis IMU's yaw) only, and locomote's displacement reports the turn (dyaw), while dx and dy stay 0: judge distances from the cameras. Once an attempt is over, results carry the referee's call (outcome, stages_reached of stages_total).",
+ "task": "embodied-olympics-fun-toes-to-bar-i00"
+}

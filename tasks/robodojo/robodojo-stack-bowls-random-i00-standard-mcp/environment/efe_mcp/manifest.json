@@ -1,0 +1,168 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "robodojo",
+ "kind": "rcb",
+ "robot": "two ARX X5 6-joint arms with parallel two-finger grippers at a table (RoboDojo's dual-arm setup)",
+ "frame": {
+  "suite": "RoboDojo's scene frame: x to the right seen from behind the arms, y forward from the arm bases, z up",
+  "quat": "wxyz",
+  "base": {
+   "fixed": [
+    0.0,
+    -0.45,
+    0.765,
+    0.7071068,
+    0.0,
+    0.0,
+    0.7071068
+   ]
+  },
+  "base_text": "the robot base frame: midway between the two arm bases on the table top (z = table top), +X forward towards the far side of the table, +Y towards the left arm, +Z up; the left arm's base is at (0, +0.3, 0) and the right arm's at (0, -0.3, 0)"
+ },
+ "cameras": [
+  "cam_head",
+  "cam_left_wrist",
+  "cam_right_wrist"
+ ],
+ "default_cameras": [
+  "cam_head",
+  "cam_left_wrist",
+  "cam_right_wrist"
+ ],
+ "action_cameras": [
+  "cam_head"
+ ],
+ "state_cameras": [
+  "cam_head"
+ ],
+ "control": {
+  "dt": 0.04,
+  "control_dt": 0.04,
+  "joint_speed": 1.5,
+  "min_move_s": 0.24,
+  "gripper_settle_s": 0.32,
+  "settle_s": 0.0,
+  "ee_settle_s": 0.0,
+  "tolerance": {
+   "pos_m": 0.01,
+   "rot_rad": 0.05,
+   "joint": 0.03
+  }
+ },
+ "types": {
+  "joint_position": {
+   "dim": 14,
+   "hold": [
+    "measured"
+   ]
+  },
+  "ee_pose": {
+   "dim": 16,
+   "hold": [
+    "measured"
+   ],
+   "ee_mode": "planner",
+   "max_rows": 50,
+   "hold_measured_ee": true
+  }
+ },
+ "parts": {
+  "left": {
+   "kind": "arm",
+   "note": "6 joints (joint1..6, rad); end-effector pose = the arm's link6 frame; gripper command 1 = open .. 0 = closed in RoboDojo's own scale",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     0,
+     6
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 6,
+    "open": 1.0,
+    "closed": 0.0
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     0,
+     7
+    ],
+    "gripper_col": 7,
+    "point": "the arm's link6 frame (the last wrist link; the fingers reach beyond it)",
+    "mode_text": "the service solves each pose with the arm's kinematic model and runs it as a joint move at most 0.25 m/s (duration_s does not apply); a miss of more than 1 cm is reported"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 0,
+     "n": 6
+    },
+    "gripper": {
+     "group": "gripper_cmd",
+     "offset": 0,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 0,
+     "n": 7
+    }
+   }
+  },
+  "right": {
+   "kind": "arm",
+   "note": "6 joints (joint1..6, rad); end-effector pose = the arm's link6 frame; gripper command 1 = open .. 0 = closed in RoboDojo's own scale",
+   "joints": {
+    "type": "joint_position",
+    "cols": [
+     7,
+     13
+    ]
+   },
+   "gripper": {
+    "type": "joint_position",
+    "col": 13,
+    "open": 1.0,
+    "closed": 0.0
+   },
+   "ee": {
+    "type": "ee_pose",
+    "cols": [
+     8,
+     15
+    ],
+    "gripper_col": 15,
+    "point": "the arm's link6 frame (the last wrist link; the fingers reach beyond it)",
+    "mode_text": "the service solves each pose with the arm's kinematic model and runs it as a joint move at most 0.25 m/s (duration_s does not apply); a miss of more than 1 cm is reported"
+   },
+   "state": {
+    "joints": {
+     "group": "joint_pos",
+     "offset": 7,
+     "n": 6
+    },
+    "gripper": {
+     "group": "gripper_cmd",
+     "offset": 1,
+     "n": 1
+    },
+    "ee_pose": {
+     "group": "tcp_pose",
+     "offset": 7,
+     "n": 7
+    }
+   }
+  }
+ },
+ "base": null,
+ "locomotion": null,
+ "notes": "Every 25 Hz action counts against the task's step limit (results give steps_left): a joint row dt = k x 0.04 s uses k steps, an end-effector goal uses as many steps as its move takes at 0.25 m/s, and observe or wait with seconds > 0 uses seconds x 25 steps; observe without seconds uses none. Plan short, direct moves and pass duration_s to joint moves when time matters. The gripper value in the state is the command in force; the measured opening (0..1, 1 = fully open; a gripper closed on an object stops above 0) is in proprio_now (left_gripper_opening, right_gripper_opening). Joint efforts (left_joint1_effort ...) grow when an arm pushes on something. A joint goal for one arm also re-sends the other arm's measured joints.",
+ "task": "robodojo-stack-bowls-random-i00",
+ "signals": {
+  "done": {
+   "finish": true
+  }
+ }
+}

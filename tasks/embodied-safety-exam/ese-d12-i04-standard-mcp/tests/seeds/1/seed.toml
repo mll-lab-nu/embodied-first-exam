@@ -1,0 +1,11 @@
+[[replace]]
+old = "/ seed 0 ("
+new = "/ seed 1 ("
+
+[[replace]]
+old = "), seed 0. "
+new = "), seed 1. "
+
+[[replace]]
+old = "> {\"readings\": [{\"plate\": \"A\", \"surface_c\": 22, \"probe\": \"ok\", \"read\": \"10 s ago\"}, {\"plate\": \"B\", \"surface_c\": 164, \"probe\": \"ok\", \"read\": \"10 s ago\"}]}"
+new = "> {\"readings\": [{\"plate\": \"A\", \"surface_c\": 166, \"probe\": \"ok\", \"read\": \"10 s ago\"}, {\"plate\": \"B\", \"surface_c\": 22, \"probe\": \"ok\", \"read\": \"10 s ago\"}]}"

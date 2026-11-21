@@ -1,0 +1,237 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "suite": "bigym2",
+ "kind": "rcb",
+ "robot": "Unitree G1 humanoid (29 DoF) with two 7-joint arms and Dex1-1 two-finger grippers; NVIDIA's GR00T whole-body controller drives the legs and waist and keeps it balanced",
+ "frame": {
+  "suite": "the room (z up; heading 0 along the room's +x axis, counter-clockwise positive)",
+  "quat": "wxyz",
+  "base": {
+   "pos": {
+    "names": [
+     "pelvis_x",
+     "pelvis_y"
+    ]
+   },
+   "z": 0.0,
+   "yaw": {
+    "names": [
+     "pelvis_yaw"
+    ]
+   }
+  },
+  "base_text": "on the floor under the pelvis: +X the way the pelvis faces, +Y left, +Z up; it moves with the robot"
+ },
+ "cameras": [
+  "head",
+  "left_wrist",
+  "right_wrist"
+ ],
+ "default_cameras": [
+  "head",
+  "left_wrist",
+  "right_wrist"
+ ],
+ "action_cameras": [
+  "head"
+ ],
+ "state_cameras": [
+  "head"
+ ],
+ "meta_keys": [
+  "control_steps"
+ ],
+ "control": {
+  "dt": 0.02,
+  "joint_speed": 1.0,
+  "min_move_s": 0.6,
+  "gripper_settle_s": 0.6,
+  "tolerance": {
+   "joint": 0.06
+  }
+ },
+ "types": {
+  "whole_body": {
+   "dim": 21,
+   "hold": [
+    "last",
+    "initial"
+   ],
+   "initial": [
+    0,
+    0,
+    0.74,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.6,
+    0.6
+   ],
+   "zero_cols": [
+    0,
+    1,
+    3
+   ]
+  }
+ },
+ "parts": {
+  "left": {
+   "kind": "arm",
+   "note": "7-joint arm (shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw) with a Dex1-1 two-finger gripper",
+   "joints": {
+    "type": "whole_body",
+    "cols": [
+     5,
+     12
+    ]
+   },
+   "gripper": {
+    "type": "whole_body",
+    "col": 19,
+    "open": 0.0,
+    "closed": 1.0
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "left_shoulder_pitch_joint_pos",
+      "left_shoulder_roll_joint_pos",
+      "left_shoulder_yaw_joint_pos",
+      "left_elbow_joint_pos",
+      "left_wrist_roll_joint_pos",
+      "left_wrist_pitch_joint_pos",
+      "left_wrist_yaw_joint_pos"
+     ]
+    },
+    "gripper": {
+     "names": [
+      "left_gripper_state"
+     ],
+     "open": 0.0,
+     "closed": 1.0
+    }
+   }
+  },
+  "right": {
+   "kind": "arm",
+   "note": "7-joint arm (shoulder pitch, roll, yaw, elbow, wrist roll, pitch, yaw) with a Dex1-1 two-finger gripper",
+   "joints": {
+    "type": "whole_body",
+    "cols": [
+     12,
+     19
+    ]
+   },
+   "gripper": {
+    "type": "whole_body",
+    "col": 20,
+    "open": 0.0,
+    "closed": 1.0
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "right_shoulder_pitch_joint_pos",
+      "right_shoulder_roll_joint_pos",
+      "right_shoulder_yaw_joint_pos",
+      "right_elbow_joint_pos",
+      "right_wrist_roll_joint_pos",
+      "right_wrist_pitch_joint_pos",
+      "right_wrist_yaw_joint_pos"
+     ]
+    },
+    "gripper": {
+     "names": [
+      "right_gripper_state"
+     ],
+     "open": 0.0,
+     "closed": 1.0
+    }
+   }
+  },
+  "torso": {
+   "kind": "torso",
+   "note": "one value: the torso lean command (rad, + leans forward, -0.2..0.8); the whole-body controller turns it into waist and leg motion (the waist joints in the proprio show the result)",
+   "joints": {
+    "type": "whole_body",
+    "cols": [
+     4,
+     5
+    ],
+    "names": [
+     "pitch"
+    ]
+   }
+  },
+  "lift": {
+   "kind": "lift",
+   "note": "one value: the pelvis height command (m, 0.4..1.0; 0.74 at the start); lower squats, which reaches low objects; above about 0.8 m the knees lock and the pelvis stays near 0.78 m; while squatting the controller does not step",
+   "joints": {
+    "type": "whole_body",
+    "cols": [
+     2,
+     3
+    ],
+    "names": [
+     "height"
+    ]
+   },
+   "state": {
+    "joints": {
+     "names": [
+      "pelvis_z"
+     ]
+    }
+   }
+  }
+ },
+ "locomotion": {
+  "type": "whole_body",
+  "dt": 0.02,
+  "cols": {
+   "vx": 0,
+   "vy": 1,
+   "height": 2,
+   "wz": 3,
+   "pitch": 4
+  },
+  "extra": [
+   "pitch"
+  ],
+  "limits": {
+   "vx": [
+    -1,
+    1
+   ],
+   "vy": [
+    -1,
+    1
+   ],
+   "wz": [
+    -1,
+    1
+   ],
+   "height": [
+    0.4,
+    1.0
+   ]
+  },
+  "stop_s": 0.3,
+  "note": "NVIDIA's GR00T whole-body controller walks the robot: it follows the velocity with some lag and wobble, so check base_odometry rather than dead-reckon; a planar speed below 0.055 m/s means standing still (use 0 or at least 0.06); standing still, the base drifts a few centimetres, further while the hands push on furniture or the torso leans far; heights above about 0.8 m lock the knees; squatting (a lower height) reaches low objects, and while squatting it does not step: walk first, then squat in place. It keeps the robot balanced but does not stop it from walking into things."
+ },
+ "notes": "The arms take joint positions only (no end-effector pose command); each joint's axis and range and each gripper's point between its finger pads are in describe_robot's spec_file (joints, joint_frame, grippers). The servos track with a small error: the measured arm joints sit a little below their targets, by up to a few hundredths of a radian. The torso lean (target torso) and the pelvis height (target lift) are commands to the whole-body controller, which also moves the waist. Time passes only inside calls; the episode has a fixed number of control steps (50 per simulated second; control_steps in every result counts those used, spec_file max_control_steps is the total). A fall (pelvis tilted more than about 53 degrees, or lower than 0.30 m) makes the episode a failure without ending it.",
+ "task": "bigym2-flip-cutlery-i00"
+}

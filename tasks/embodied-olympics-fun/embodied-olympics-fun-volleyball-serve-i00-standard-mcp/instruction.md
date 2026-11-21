@@ -1,0 +1,229 @@
+# embodied-olympics volleyball-serve — instance i00 — STANDARD MODE, MCP TOOLS ONLY (robot as a service)
+
+You control a simulated Unitree H1-2 humanoid robot (27 joints, 1.78 m tall, 67 kg; the Embodied Olympics simulator on MuJoCo)
+**as if it were real hardware**: the simulator runs in a service you cannot open, and you reach it only through the `efe-robot` tools. **Task:** Serve the volleyball: from behind the end line, toss it up off your open left palm and hit it with one hand or arm over the net into the opponent's court.
+
+## Robot tools (MCP server `efe-robot`)
+You act on the robot only through the tools of the MCP server `efe-robot` (in your tool list as `efe-robot` tools, for
+example `mcp__efe-robot__move_robot`). You have no shell and cannot run code. The robot service and its rules are as
+described in this text; where it names calls of the Python client `rcb_client.py`, which you cannot run here, use the
+tool that does the same:
+
+| Client | Tool |
+|---|---|
+| `Robot()`, `r.spec()` | `describe_robot()`: the robot's parts, joints and limits, cameras, control period, action types and conventions, and the time left; the full spec is saved as a JSON file (`spec_file`) you can read |
+| `r.get_obs(cameras, seconds, depth)` | `observe(cameras, seconds, depth)` |
+| `r.submit(type, A, dt, interpolate)` | `execute_trajectory(space="native", action_type=type, native_rows=A, dt=dt, interpolate=...)`, or `move_robot` / `execute_trajectory` in the conventions below |
+| `r.status()`, `meta[...]` | every tool result: `time_left_s`, `sim_time_s`, `done`, `reason` and the service's messages |
+| `r.reset()` / `POST /reset` | `reset_episode()` |
+
+**Conventions** of `move_robot`, `locomote` and `execute_trajectory` (spaces other than `native`): the robot base frame
+at the start of each call (+X forward, +Y left, +Z up), metres and radians, quaternions `wxyz`, gripper 0 = open to 1 =
+closed. Base frame of this robot: the robot base frame: on the floor under the pelvis, +X the way the pelvis faces at
+the start of the call, +Y left, +Z up (only the heading is sensed, from the pelvis IMU). Space `native` sends rows in
+the robot's own action types exactly as the sections below describe them (their frame, units and gripper values).
+
+**This robot** (Unitree H1-2 humanoid, 27 joints (legs 12, torso 1, arms 7 + 7), 1.78 m; Unitree's walking policy built
+in; fist pads on both wrists): torso (torso: 1 joints); left (arm: 7 joints, gripper); right (arm: 7 joints, gripper);
+legs (legs: 12 joints). Cameras: `head_left`, `head_right`, `venue`.
+
+- `describe_robot()`: call it first.
+- `observe(cameras?, depth?, seconds?, save_to?, inline_cameras?)`: images are written as JPEG files under `/app/obs/`
+  (depth as `.npy`, float32 metres; with `seconds` > 0 a video `.mp4` too); the result has their paths, each camera's
+  intrinsics `K` and pose in the robot base frame, each part's joints, gripper and end-effector pose, and `proprio_now`
+  (the robot's own proprioception row; its layout is in the spec file). Open an image with your file-reading tool;
+  `inline_cameras` also returns small images in the result.
+- `move_robot(goals, duration_s?)`: one goal per part,
+  `{target, position?, quaternion_wxyz?, joint_positions?, gripper?}`; the parts move together and the call returns when
+  the motion is done, with `reached` (errors per goal), a `failure` category if a goal was not reached, the state and
+  the path of a frame per camera.
+- `locomote(vx, vy, wz, duration_s, height?)`: walk with the robot's own controller (body-frame velocities), then stop;
+  returns the displacement.
+- `execute_trajectory(space, rows | native_rows | rows_file, dt?, interpolate?)`: a dense trajectory, rows `dt` seconds
+  apart; a long one can come from a file under `/app` (`.npy` / `.csv` of native rows, `.json` of rows).
+- `wait(seconds?, operation?)`: let time pass holding the current command, or collect a pending operation.
+- `reset_episode()`: a new episode from the same starting state (it uses one reset of the budget).
+- `signal(kind, note)`: `done` records that you are finished (the episode itself ends as described above).
+- One tool call runs at a time. A call still executing after 45 s returns `{"pending": true, "operation": id}` while the
+  robot goes on executing it: call `wait(operation=id)` (it waits up to 45 s more each time) for its result. A result
+  with `"episode_over": true` means the episode has ended.
+- Nothing needs to be saved: the server records every tool call, and the service records the episode.
+
+**Notes on this robot.** Joint targets are absolute angles (rad); a target moves at most the joint's speed limit per 10
+ms step. The arms (left, right) and the torso take joint targets through the `stand` action type: the platform holds the
+legs in the standing stance with stiff gains and gravity support but no balance feedback, so a fast or hard arm swing
+can tip the robot over; a move_robot call on these parts switches the legs back to `stand`. The legs part uses the
+`joints` type (every joint at the default gains; nothing balances the robot in that mode). Legs and arm goals use
+different action types: send them in separate move_robot calls, or send rows of any of the robot's action types with
+execute_trajectory space native (stand, walk, joints, lowcmd; layouts and bounds in describe_robot). move_robot and
+joint rows for the arms and the torso start from the last `stand` row sent through these tools (at the start of an
+attempt: the start command), grips included; locomote and the legs part start from the joint targets in force and keep a
+grip closed while that hand holds something (holding_* in proprio_now), open otherwise. On a fist pad a grip of 0.5 or
+more closes it (it holds a grippable object within 3.5 cm of the palm). Between calls the robot is frozen: time passes
+only inside calls. There is no end-effector pose command: describe_robot's spec_file (robot_facts) has each joint's
+range, speed and torque limits, default gains and the stance. The robot senses no position: the state shows its heading
+(the pelvis IMU's yaw) only, and locomote's displacement reports the turn (dyaw), while dx and dy stay 0: judge
+distances from the cameras. Once an attempt is over, results carry the referee's call (outcome, stages_reached of
+stages_total).
+
+## The venue
+You face the net (+x), which is 9.5 m ahead of you, from the middle of the service zone. Your upper arms hang and your forearms point forward; the left forearm is turned palm up (its elbow roll at -90 degrees) and the ball rests on the middle of the left palm, its centre about 1.3 m above the floor, 0.43 m ahead of your pelvis and 0.21 m to its left. The start command keeps the palm level under the ball (the joint table's start angles are where the arm stands with the ball on it; the command differs from them by the arm's sag).
+
+Directions are from the robot at the start: +x is the way you face, +y is to your left, +z is up; the floor is level.
+
+
+## The rules
+**Rule book:** FIVB Official Volleyball Rules 2025-2028: Rule 1 (the court 18 m x 9 m, the service zone 9 m wide behind the end line), Rule 2 (the men's net, top at 2.43 m, the antennas), Rule 3 (the ball: 65-67 cm round, 260-280 g), Rule 8 (ball in and out: the lines belong to the court; a ball that touches an antenna or crosses the net's plane outside the crossing space is out), Rule 10.2 (the ball may touch the net while crossing it), Rule 12.4 (the service: the ball is hit with one hand or any part of the arm after being tossed or released from the hands; one toss only; the server does not touch the court or the floor outside the service zone at the hit; the hit comes within 8 s of the whistle). Where this task departs from it:
+
+- Rule 12.4.1 (tossed or released from the hand(s)): the robot's hands are flat palm pads without fingers and without grip; the ball starts resting on the open left palm, turned up, and only its weight and friction keep it there (it rolls off a palm that tilts by more than about 2 degrees or moves sideways). The toss is the arm's own movement throwing the ball up off the palm (or letting it fall from it). The ball has left the hand when it has touched no part of the robot for 0.03 s; the release is the end of its last contact; until then only the hands may touch it. The palm pad's contact with the ball is that of a ball on a human hand (a ball thrown at a still palm keeps 0.10 of its speed, as a volleyball dropped onto a supported, relaxed hand does: Ivanova, ISBS 2000), in the world's elliptic friction cones; every other contact keeps the ball's rule-book rebound.
+- Rule 12.4.1 (tossed, then hit): a referee's eye for 'tossed, then hit' is replaced by numbers: after the release the ball must be clear of the robot for at least 0.1 s before the hit, it may move at most 5.0 m/s just before the hit (the speed of a ball that has fallen about 1.3 m: a toss, not a throw), the hit's contacts last at most 0.1 s, and the ball must leave the hit faster than it arrived.
+- Rule 12.4.3 (the server's feet) is judged at the first contact of the hit, or at the take-off before it when the robot is in the air; the whistle is the start of the episode.
+- No opponents (nobody receives the serve), no wind.
+
+You stand behind the end line of an official volleyball court (9.0 m by 9.0 m on each side of the net), facing the net, midway between the side lines; the end line's outer edge is 0.5 m ahead of your pelvis and the net is 9.0 m beyond it, its top 2.43 m high, with an antenna above each side line. A volleyball (0.21 m across, 0.27 kg, in air) starts resting on your open left palm, turned up. Your hands have no fingers and no grip (the grip columns of the action rows do nothing in this task): only the ball's weight and friction keep it on the palm, and it rolls off a palm that tilts or moves sideways. Until the toss only your hands (the palm pads and the wrists) may touch the ball, and the ball may not touch the floor. In order: (1) the toss: the ball has touched no part of you for 0.03 s; the release is the end of its last contact with a hand. For 0.1 s from the release the hand that held it may still touch it (it follows the toss up; any other touch in that time is already the hit), and the ball must be clear of that hand when that time ends. (2) the hit: the next contact of the ball, with one hand or one arm of yours (hand, forearm or upper arm of the same side), within 8.0 s of the start. The ball must have been clear of you for at least 0.1 s before the hit (counted from the end of the last touch of the toss), moving at most 5.0 m/s just before it; the hit's contacts last at most 0.1 s (it is over when the ball has been clear of you for 0.03 s), and the ball leaves the hit faster than it arrived. At the first contact of the hit no foot of yours touches the court (the end line included) or the floor beyond the extensions of the side lines; if you are in the air, this holds for where you took off. (3) the ball crosses the net's plane above the net and between the antennas; it may touch the net. (4) the ball's first contact with the floor is in the opponent's court (9.0 m by 9.0 m, lines included): that is the success. You fail if the hit does not come within 8.0 s, if after the toss the ball touches the floor or any other part of you before the hit, if it is hit before it has been clear for 0.1 s, if it moves faster than 5.0 m/s just before the hit, if the hit is made with more than one arm or another part, lasts longer than 0.1 s or does not add speed, if you touch the ball again or hold it again, if a part of you other than the hands touches it before the toss, at a foot fault, if the ball crosses the net's plane under the net or outside the antennas or touches an antenna, if it lands anywhere else, if you fall (your pelvis lower than 0.35 m above the floor, or any part of you other than the feet on the floor), or after 12 s.
+
+A referee in the service decides this from the simulator's state. The events that must happen, in order, are
+**toss → hit → over the net → in the court**. An attempt (an episode) ends at the success, at the first rule violation, or after 12 s
+(1200 control steps) of robot time.
+
+## Real-robot rules
+- **Attempts.** The first episode starts when the service comes up. `r.reset()` abandons the running attempt (or
+  follows one that has ended) and starts a new one from the same start; `spec()["budget"]["reset"]` says how many
+  resets you have (5 here). **Only your last attempt is graded**, and a success ends the trial at once.
+- **Time moves only inside calls.** `submit` runs your rows and `get_obs(seconds=s)` holds the command in force for
+  s seconds; both use up the attempt's time. Between calls the robot waits, frozen, while you think; `get_obs()` with
+  no seconds is free.
+- **No privileged state.** You get what the robot's own sensors give: its two head cameras (`head_left`,
+  `head_right`, RGB 270 × 480, a stereo pair 5 cm apart, tilted 20° down; depth on `head_left`), its joint encoders,
+  motor torques and two IMUs (below), and the venue's fixed cameras (`venue`; `spec()["cameras"]` says
+  where each is mounted). Not where you or any object is, not the
+  referee's state. Once an attempt is over, every response carries the referee's call: `meta["outcome"]`
+  (`"success"` or the rule that ended it) and `meta["stages_reached"]` of `meta["stages_total"]`.
+- There is nothing to hand in: the service records your last attempt and grades it as it ran live (the referee's
+  call).
+- Wall clock: the time limit (`## Time limit`). It ends without warning, and ending your session earlier ends the run the same
+  way, so do not stop early: while you have attempts left, the run can still pass.
+
+## The robot service through its Python client (reference; act through the `efe-robot` tools above)
+Its docstring is the full reference (`python -c "import rcb_client;
+help(rcb_client)"`; it explains the protocol with another benchmark's example names: for this task `spec()` is
+authoritative).
+
+| call | endpoint | what it does |
+|---|---|---|
+| `r = Robot()` | | connects (`http://sim:8000`, then `http://localhost:8000`) and waits until the service is ready |
+| `r.spec()` | `GET /spec` | the facts: `action_types` (each type's layout, lower, upper, meaning), `control_dt` (0.01 s), `max_control_steps` (1200), `cameras` (field of view, pose at the start), `proprio_layout`, `robot_facts` (joints, limits, default gains, the stance), `rules`, `budget` |
+| `r.status()` | `GET /status` | `calls`, `rows`, `control_steps`, `done`, `reason`, `elapsed_s`, `resets_left` |
+| `r.get_obs(cameras=None, seconds=0, video="frames", include_depth=False)` | `POST /observe` | the current frames (free), or hold the command in force and watch for `seconds` (at most 30) |
+| `r.submit(type, A, dt=0.01, interpolate="linear", cameras=None, video="mp4")` | `POST /submit` | runs `A`, rows of that action type `dt` seconds apart (a multiple of 0.01; a chunk covers at most 10 s); stops early when the attempt ends |
+| `r.reset()` | `POST /reset` | a new attempt from the same start (see above) |
+
+One call returns at most 3000 images (`max_frames_per_call`, PROTOCOL §3 "Images per call").
+
+The answers are binary (RCB1) and come back decoded: `res.meta` (the counters, `done`, `reason`, `proprio["now"]`,
+`clipped`), `res.last[camera]` (the last frame), `res.frames` or `res.video` (what the cameras saw during the call),
+`res.depth`, `res.proprio` (proprioception rows). Values outside the bounds are clipped and reported in
+`meta["clipped"]`, never refused; a malformed request raises `ValueError` and runs nothing. Rendering is most of a
+call's cost: a controller's call should ask for no video (`video="none"`, `cameras=["head_left"]` or fewer) and read
+`res.proprio`. With `interpolate="linear"` (the default) each control step's command is a straight line from the
+command in force to the row; `"hold"` applies the row as it is.
+```python
+from rcb_client import Robot
+r = Robot()
+res = r.submit("walk", A, dt=0.02, video="none")   # A: (T, 20) rows of the `walk` type
+```
+
+## Actions
+One row is one control step (10 ms; the physics runs at 1 kHz) unless `dt` spreads it. Every row ends with `grip_left`,
+`grip_right`.
+
+| type | row (then `grip_left`, `grip_right`) | floats | who drives what |
+|---|---|---|---|
+| `stand` | waist 1 + arms 14 joint targets | 17 | the platform holds the legs in the stance; you give the waist's 1 and the arms' 14 joint targets (rad) |
+| `walk` | `vx`, `vy`, `wz` + waist 1 + arms 14 joint targets | 20 | Unitree's walking policy drives the legs from the velocity command (vx forward, vy to the left, m/s; wz turning left, rad/s; the robot's own frame); you give the waist and arm joint targets |
+| `joints` | all 27 joint targets | 29 | you give all 27 joint targets (rad); the default PD gains, no feed-forward |
+| `lowcmd` | all 27 joints × (`q`, `dq`, `tau`, `kp`, `kd`): 27 targets, then 27 velocities, 27 torques, 27 kp, 27 kd | 137 | Unitree's LowCmd for all 27 joints: position targets (rad), velocity targets (rad/s), feed-forward torques (N m), kp, kd; the motor torque is kp (q - q_measured) + kd (dq - dq_measured) + tau, evaluated at 1 kHz |
+
+Velocity commands are in the robot's own frame (`vx` forward, `vy` to its left, m/s; `wz` turning left, rad/s). Bounds: `walk` |vx| ≤ 0.8, |vy| ≤ 0.5, |wz| ≤ 1.57. Joint targets are absolute angles (rad). Values outside the bounds are clipped. `grip_left`, `grip_right`: ≥ 0.5 closes the hand's grip, < 0.5 opens it. At the start the robot is in `stand` mode, but not with the arms at rest (the venue text says how it starts): the joint table's last column has the angles in force. The `stand` row that keeps the start as it is: `[0, -0.0161, 0.0002, 0, -0.0239, -1.5709, 0, -0.0138, 0, 0, 0, 0, 0, 0, 0, 0, 0]` (`spec()["start_command"]` has it, and `get_obs(seconds=...)` keeps the command in force); a `stand` row with other angles or grips moves the arms or lets go.
+
+Joint order everywhere (Unitree's SDK order), with each joint's range, speed limit, torque limit and default gains
+(also in `spec()["robot_facts"]`):
+
+| # | joint | range (rad) | speed (rad/s) | torque (N m) | kp | kd | at the start (rad) |
+|---|---|---|---|---|---|---|---|
+| 0 | `left_hip_yaw` | [-0.43, 0.43] | 23 | 360 | 800 | 10 | 0 |
+| 1 | `left_hip_pitch` | [-3.14, 2.5] | 23 | 360 | 800 | 10 | -0.16 |
+| 2 | `left_hip_roll` | [-0.43, 3.14] | 23 | 360 | 800 | 10 | 0 |
+| 3 | `left_knee` | [-0.26, 2.05] | 14 | 360 | 1200 | 16 | 0.36 |
+| 4 | `left_ankle_pitch` | [-0.8973, 0.5236] | 9 | 66.88 | 160 | 8 | -0.2 |
+| 5 | `left_ankle_roll` | [-0.2618, 0.2618] | 9 | 40 | 160 | 8 | 0 |
+| 6 | `right_hip_yaw` | [-0.43, 0.43] | 23 | 360 | 800 | 10 | 0 |
+| 7 | `right_hip_pitch` | [-3.14, 2.5] | 23 | 360 | 800 | 10 | -0.16 |
+| 8 | `right_hip_roll` | [-3.14, 0.43] | 23 | 360 | 800 | 10 | 0 |
+| 9 | `right_knee` | [-0.26, 2.05] | 14 | 360 | 1200 | 16 | 0.36 |
+| 10 | `right_ankle_pitch` | [-0.8973, 0.5236] | 9 | 66.88 | 160 | 8 | -0.2 |
+| 11 | `right_ankle_roll` | [-0.2618, 0.2618] | 9 | 40 | 160 | 8 | 0 |
+| 12 | `torso` | [-2.35, 2.35] | 23 | 200 | 600 | 15 | 0 |
+| 13 | `left_shoulder_pitch` | [-3.14, 1.57] | 9 | 130 | 300 | 6 | -0.0161 |
+| 14 | `left_shoulder_roll` | [-0.38, 3.4] | 9 | 60 | 300 | 6 | 0.0002 |
+| 15 | `left_shoulder_yaw` | [-2.66, 3.01] | 20 | 60 | 200 | 4 | 0 |
+| 16 | `left_elbow_pitch` | [-0.95, 3.18] | 20 | 60 | 200 | 4 | -0.0239 |
+| 17 | `left_elbow_roll` | [-3.01, 2.75] | 31.4 | 60 | 80 | 1.5 | -1.5709 |
+| 18 | `left_wrist_pitch` | [-0.47, 0.47] | 31.4 | 19 | 60 | 1 | 0 |
+| 19 | `left_wrist_yaw` | [-1.27, 1.27] | 31.4 | 19 | 60 | 1 | -0.0138 |
+| 20 | `right_shoulder_pitch` | [-3.14, 1.57] | 9 | 130 | 300 | 6 | 0 |
+| 21 | `right_shoulder_roll` | [-3.4, 0.38] | 9 | 60 | 300 | 6 | 0 |
+| 22 | `right_shoulder_yaw` | [-3.01, 2.66] | 20 | 60 | 200 | 4 | 0 |
+| 23 | `right_elbow_pitch` | [-0.95, 3.18] | 20 | 60 | 200 | 4 | 0 |
+| 24 | `right_elbow_roll` | [-2.75, 3.01] | 31.4 | 60 | 80 | 1.5 | 0 |
+| 25 | `right_wrist_pitch` | [-0.47, 0.47] | 31.4 | 19 | 60 | 1 | 0 |
+| 26 | `right_wrist_yaw` | [-1.27, 1.27] | 31.4 | 19 | 60 | 1 | 0 |
+
+What the platform does and does not do for you:
+
+- **`stand`** holds the legs at the standing pose with stiff gains and a gravity-support torque. It is not a balance
+  controller: it does not step and it has no feedback. After an arm movement the body sways a few centimetres for a
+  few seconds; a hard or fast swing of the arms, a push or a load can tip the robot over within a second or two.
+- **`walk`** runs Unitree's own H1-2 walking policy (50 Hz) on the legs. At the largest forward command (0.8) it walks at
+  about 0.6 m/s and its heading drifts (close the loop on the IMU); `vy` up to 0.5 and `wz` up to 1.57 rad/s. At a
+  zero command it marks time on the spot and recovers from small disturbances, which `stand` does not. When the legs
+  come to it from another mode it first blends them to the stance (0.3 s) and holds a zero command until the robot is
+  steady (up to 2 s). It was trained with the arms at their zero pose (upper arms down, forearms forward): moving the
+  arms disturbs it. This robot has no running policy: anything faster than a walk is yours to build or to find. The
+  G1's two other walking policies (FALCON, AGILE) are not offered for it: driven on this robot (joints matched by name)
+  they keep it upright but do not walk it.
+- **`joints` / `lowcmd`** are yours: each motor's torque is `kp (q − q_measured) + kd (dq − dq_measured) + tau`, evaluated
+  at 1 kHz with your row held for its 10 ms, then limited by the motor's torque-speed curve and torque limit. `joints`
+  uses the default gains of the table and zero `dq` and `tau`; `lowcmd` takes yours (kp up to 1500 / 800 / 400 and kd up to
+  30 / 20 / 10 for legs / waist / arms). Nothing balances the robot in these modes but your own targets.
+- **Every joint target** is clipped into the joint's range and moves at most the joint's speed limit × 10 ms per step
+  from the target in force. Joints a type does not name keep their targets. The speed limit is a limit on targets;
+  what bounds the joint itself is the motor's torque-speed curve (a `lowcmd` feed-forward torque can turn a joint up to
+  about 1.15 times that speed, where the motor's torque has fallen to zero).
+- **The hands** have no working fingers here; each carries a fist pad (a box of 4.4 × 8 × 10 cm beyond the wrist, the
+  10 cm along the forearm). Nothing in this task is grippable: `grip_left` and `grip_right` have no effect.
+- **A tool on a hand** (a racket, a paddle, a club; where the task has one) is fixed to the wrist in place of the pad.
+  It collides with the world, the ball and the rest of your own body.
+- **The air** is real: balls and implements feel drag and, when they spin, lift.
+- **If the physics diverges** (a numerical blow-up, typically from a violent joint command), the attempt ends as a
+  failure: "the simulation became unstable".
+
+## Proprioception
+Each row (`meta["proprio"]["now"]`, `res.proprio`) has, in `spec()["proprio_layout"]` order: the 27 joint positions
+(`*_pos`, rad), their velocities (`*_vel`, rad/s), the motor torques applied (`*_torque`, N m), the joint targets in
+force (`*_target`, rad), the pelvis IMU and the torso IMU (each: orientation quaternion `qw, qx, qy, qz`, world from
+sensor; angular velocity `gx, gy, gz`, rad/s; acceleration `ax, ay, az`, m/s², gravity included; in the sensor's frame),
+`holding_left`, `holding_right` (1 while that hand grips something), `mode` (0 stand, 1 walk, 2 run, 3 run_arms,
+4 joints / lowcmd; the G1 also 5 walk_falcon, 6 walk_agile), the velocity command in force (`cmd_vx`, `cmd_vy`, `cmd_wz`) and `time_s`, the attempt's time. A
+real H1-2 has no sensor for its position in the venue, and neither do you: that is what the cameras are for.
+
+## External material
+In this setting you act on the robot only through the `efe-robot` tools: you have no shell, you cannot run code and you cannot install packages. You may read anything installed in your container with your file-reading tools, the files the robot tools write included. Please solve the task yourself: do not look for a ready-made solution to it, such as published or reference solutions, recorded demonstrations, or policies trained for it. This is an honour rule; trials are reviewed.
+
+## Resources
+Your container: **4 CPUs**, **10 GiB of memory**, **8192 processes and threads** and **10 GiB** of disk (new files under `/app`, `/tmp` and `/root`). Your container has no GPU. The simulator runs in its own container and does not count against these. CPU only slows you down; a process that goes over any other cap can be killed. Usage and caps: `/run/rcb-limits/usage.json`.
+
+## Time limit
+You have 7200 seconds to complete this task. Do not cheat by using online solutions or hints specific to this task.
+
+This is wall-clock time from the start of your session; the time the robot tools take counts. When it is up you are stopped without warning and the episode is graded as it stands at that moment. Every robot tool result reports `time_left_s`, the service's count of the same limit from your first tool call, so it never runs out before your time does: your real time left is `time_left_s` minus the time you spent before that call. Plan by it. Your session started when you received this task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time than you have: read it with your file-reading tool before you decide that time is short, never guess. A robot tool that is still executing when its call has to return answers `pending` with an operation id: call `wait` with that `operation` to collect the result.

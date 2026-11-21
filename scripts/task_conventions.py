@@ -323,6 +323,16 @@ CUTOFF_NOTE_TASK = {n: (
     "it is up you are stopped without warning and graded on what stands at that moment, as the sections above say. The "
     "service does not count this limit for you: the clocks it reports are the game's own." + _CUTOFF_CLOCK + _CUTOFF_WAITS + _CUTOFF_CLOSE)
     for n in RO_EXPORTED_TASKS}
+# the same tasks in an MCP mode (the agent plays through the efe-robot tools: no clock of the limit in their results)
+CUTOFF_NOTE_TASK_MCP = (
+    "This is wall-clock time from the start of your session; the time the tools take counts. When it is up you are "
+    "stopped without warning and graded on what stands at that moment, as the sections above say. The service does not "
+    "count this limit for you: the clocks it reports are the game's own. Your session started when you received this "
+    "task. `/run/rcb-limits/usage.json`, rewritten every few seconds, gives the time left on this limit (`time_left_s`) "
+    "and its end (`deadline_utc`), counted from a little before your session started, so it never gives you more time "
+    "than you have: read it with your file-reading tool before you decide that time is short, never guess. A tool that "
+    "is still executing when its call has to return answers `pending` with an operation id: call `wait` with that "
+    "`operation` to collect the result.")
 CUTOFF_NOTE_START = "This is wall-clock time from the start of your session;"   # how an earlier note is recognised
 WALL_CLOCK_ENV = "RCB_WALL_CLOCK_S"              # the standard modes' sim service: what its /spec budget and time_left_s report
 CUTOFF_CAP = 14400                               # PROTOCOL §2, no benchmark excepted (ci_checks/check-cutoffs.py)
@@ -1102,6 +1112,9 @@ def render_cutoff(sec: int, mode: str, bench: str = "", name: str = "") -> str:
     the mode (`bench`, a BENCHMARKS label: a benchmark whose service counts on a clock of its own has its own note;
     `name`, the task directory's name: a task exported with its own service, CUTOFF_NOTE_TASK)."""
     note = CUTOFF_NOTE_TASK.get(name) or CUTOFF_NOTE_OWN.get((bench, mode), CUTOFF_NOTE[mode])
+    if mode in MCP_MODES and name and name.endswith("-" + mode) and \
+            name[: -len(mode)] + "standard" in CUTOFF_NOTE_TASK:
+        note = CUTOFF_NOTE_TASK_MCP
     return CUTOFF_HEADING + "\n" + CUTOFF_SENTENCE.format(sec=sec) + "\n\n" + note + "\n"
 
 

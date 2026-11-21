@@ -1,0 +1,12 @@
+{
+ "manifest": "efe-mcp-manifest/0",
+ "kind": "eo-match",
+ "suite": "embodied-olympics-match",
+ "url": "http://localhost:8000",
+ "url_env": "SIM_URL",
+ "seat": "A",
+ "seat_env": "SEAT",
+ "max_wait_s": 10,
+ "notes": "The seat service is the same as in the standard task; the tools only carry its calls (the HTTP calls the `game` command makes). Locating the ball or the opponent is done by eye in the tile images, with the cameras' intrinsics and poses from `spec`.",
+ "task": "embodied-olympics-match-badminton-match-i04"
+}

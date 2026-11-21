@@ -1,0 +1,44 @@
+{
+  "manifest": "efe-mcp-manifest/0",
+  "suite": "kinder",
+  "kind": "rcb",
+  "robot": "TidyBot++ mobile manipulator (KinDER, MuJoCo): a holonomic base, a Kinova Gen3 7-joint arm and a Robotiq 2F-85 gripper, driven by per-step changes",
+  "frame": {
+    "suite": "the odometry frame: where the base stood when the episode began (origin on the floor under the base's centre, +x the way it faced, +y left, +z up)",
+    "quat": "wxyz",
+    "base": {"pos": {"names": ["base_x", "base_y"]}, "z": 0.0, "yaw": {"names": ["base_yaw"]}},
+    "base_text": "on the floor under the middle of the base as it stands at the start of the call: +X the way the base faces, +Y to its left, +Z up"
+  },
+  "cameras": ["robot_base", "robot_wrist"],
+  "default_cameras": ["robot_base", "robot_wrist"],
+  "action_cameras": ["robot_base"],
+  "state_cameras": ["robot_base"],
+  "control": {
+    "dt": 0.1,
+    "control_dt": 0.1,
+    "min_move_s": 0.5,
+    "gripper_settle_s": 1.0,
+    "settle_s": 0.2
+  },
+  "types": {
+    "delta": {
+      "dim": 11,
+      "hold": ["last", "measured"],
+      "zero_cols": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "zero_cols_after": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "max_rows": 100
+    }
+  },
+  "parts": {
+    "arm": {
+      "kind": "arm",
+      "note": "Kinova Gen3 arm with a Robotiq 2F-85 gripper: move_robot opens and closes the gripper (open or closed only); the joints take per-step changes (execute_trajectory space native, action_type delta). The reported gripper value is the fingers' position: 0 open, about 0.98 when they close on nothing, less when they hold something.",
+      "gripper": {"type": "delta", "col": 10, "open": 0.0, "closed": 1.0, "binary": true},
+      "state": {
+        "joints": {"names": ["arm_1", "arm_2", "arm_3", "arm_4", "arm_5", "arm_6", "arm_7"]},
+        "gripper": {"names": ["gripper"], "open": 0.0, "closed": 1.0}
+      }
+    }
+  },
+  "notes": "The base and the arm take one action type, delta (11 numbers, one row per 0.1 s control step), sent with execute_trajectory space native, action_type delta: base_x, base_y = metres to move the base in the odometry frame (where the base stood when the episode began: +x the way it faced then, +y to its left), together at most 0.1 a step; base_yaw = radians to turn it (+ = counter-clockwise), at most 0.1 a step; arm_1 .. arm_7 = radians added to each arm joint's measured angle, at most 0.1 a step; gripper = 0 open .. 1 closed (a command, not a change). Each step's targets are the measured pose plus the row; a row of zeros with the gripper as it is holds the robot. To go forward along the current heading yaw (base_yaw in proprio_now), each row has base_x = s cos(yaw), base_y = s sin(yaw) for a step length s. At most 100 rows (10 s) a call; the episode has 1000 control steps (100 s of robot time) in all, and watching for some seconds uses them too. The state has no hand pose: describe_robot's spec_file gives each arm joint's axis and a point on it (the base frame, every joint at 0), the gripper's grasp point and the robot cameras' poses. Nothing plans a way or avoids anything."
+}
